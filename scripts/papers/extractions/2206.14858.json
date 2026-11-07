@@ -1,0 +1,613 @@
+{
+ "schema": 1,
+ "key": "2206.14858",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/lewkowycz-2022-solving-quantitative-reasoning-problems-language.pdf",
+ "bib": {
+  "title": "Solving Quantitative Reasoning Problems with Language Models",
+  "authors": [
+   "Aitor Lewkowycz",
+   "Anders Andreassen",
+   "David Dohan",
+   "Ethan Dyer",
+   "Henryk Michalewski",
+   "Vinay Ramasesh",
+   "Ambrose Slone",
+   "Cem Anil",
+   "Imanol Schlag",
+   "Theo Gutman-Solo",
+   "Yuhuai Wu",
+   "Behnam Neyshabur",
+   "Guy Gur-Ari",
+   "Vedant Misra"
+  ],
+  "first_author": "Lewkowycz",
+  "year": 2022,
+  "venue": "preprint",
+  "arxiv": "2206.14858",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 120815,
+  "chars_total": 120815,
+  "engine": "pymupdf",
+  "skipped": "Appendix model-sample pages (G-I examples) skimmed, not read line by line"
+ },
+ "type": "empirical",
+ "question": "Can a large language model continued-trained on mathematical and scientific text solve college-level quantitative problems with step-by-step natural-language answers and no external tools?",
+ "hypothesis": "Training on a high-quality dataset that keeps mathematical notation, plus scale and majority voting, closes the gap on quantitative reasoning benchmarks.",
+ "contributions": [
+  "Minerva: PaLM 8B/62B/540B continued-trained on 38.5B tokens of arXiv and math web pages",
+  "State of the art on MATH, GSM8k (no calculator) and MMLU-STEM without external tools",
+  "OCWCourses: 272 undergraduate STEM problems with automatically checkable answers",
+  "Analyses of failure modes, false positives and memorization"
+ ],
+ "method": {
+  "summary": "PaLM decoder-only models are further trained with the autoregressive objective on math web pages, arXiv and a little general text, then evaluated few-shot with chain-of-thought prompts, greedy or maj1@k voting, checked by SymPy equivalence.",
+  "task": "quantitative reasoning (math, science) with chain-of-thought answers; continued pretraining",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Math Web Pages",
+    "role": "pretrain",
+    "size": "17.5B tokens (47.5%); 60GB",
+    "split": null,
+    "source": "pages with '<math' or 'MathJax-Element-' in HTML, as of January 2022, English only",
+    "preprocessing": "HTML stripped, LaTeX/AsciiMath kept; MathML-only pages (~20%) discarded"
+   },
+   {
+    "name": "arXiv",
+    "role": "pretrain",
+    "size": "21.0B tokens (47.5%); 1.2M papers, 58GB",
+    "split": null,
+    "source": "2M arXiv papers up to February 2021 in LaTeX",
+    "preprocessing": "comments removed; filtered if >75k tokens, >0.6 tokens per character, no \\section, or empty"
+   },
+   {
+    "name": "General Natural Language Data",
+    "role": "pretrain",
+    "size": ">100B tokens (5%)",
+    "split": null,
+    "source": "subset of PaLM pretraining data",
+    "preprocessing": null
+   },
+   {
+    "name": "MATH",
+    "role": "eval",
+    "size": "12K problems; 5,000 test",
+    "split": "test; train split used for fine-tuning ablation",
+    "source": "Hendrycks et al. 2021",
+    "preprocessing": "fixed 4-shot prompt"
+   },
+   {
+    "name": "GSM8k",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Cobbe et al. 2021",
+    "preprocessing": "Wei et al. chain-of-thought prompt, no calculator"
+   },
+   {
+    "name": "MMLU-STEM",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Hendrycks et al. 2020",
+    "preprocessing": "5-shot standard; chain-of-thought variant"
+   },
+   {
+    "name": "OCWCourses",
+    "role": "eval",
+    "size": "272 problems (191 numeric, 81 symbolic)",
+    "split": null,
+    "source": "MIT OpenCourseWare, cleaned by contractors",
+    "preprocessing": "self-contained, delineated final answer"
+   }
+  ],
+  "models": [
+   {
+    "name": "Minerva 8B",
+    "role": "proposed",
+    "params": "8.63B",
+    "architecture": "decoder-only transformer (PaLM)",
+    "init_from": "PaLM 8B",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": 32,
+    "hidden": 4096,
+    "heads": 16,
+    "context": "2048",
+    "other": {
+     "steps": "624k",
+     "tokens": "164B"
+    }
+   },
+   {
+    "name": "Minerva 62B",
+    "role": "proposed",
+    "params": "62.50B",
+    "architecture": "decoder-only transformer (PaLM)",
+    "init_from": "PaLM 62B",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": 64,
+    "hidden": 8192,
+    "heads": 32,
+    "context": "2048",
+    "other": {
+     "steps": "416k",
+     "tokens": "109B"
+    }
+   },
+   {
+    "name": "Minerva 540B",
+    "role": "proposed",
+    "params": "540.35B",
+    "architecture": "decoder-only transformer (PaLM)",
+    "init_from": "PaLM 540B",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": 118,
+    "hidden": 18432,
+    "heads": 48,
+    "context": "2048",
+    "other": {
+     "steps": "399k",
+     "tokens": "26B"
+    }
+   },
+   {
+    "name": "PaLM 8B/62B/540B",
+    "role": "baseline",
+    "params": "8B/62B/540B",
+    "architecture": "decoder-only transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "OpenAI davinci-002",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "temperature": "0.2 (official recommendation)"
+    }
+   }
+  ],
+  "training": {
+   "objective": "autoregressive (unsupervised fine-tuning on technical dataset)",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": "reciprocal square-root decay continuing the pretraining schedule; then LR dropped 10x and trained 4% additional steps",
+   "warmup": null,
+   "batch_size": "128 (32 for 540B)",
+   "steps": "624k (8B), 416k (62B), 399k (540B), continued training",
+   "epochs": null,
+   "tokens": "164B (8B), 109B (62B), 26B (540B)",
+   "seq_len": "2048",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": "none",
+   "regularisation": null,
+   "hardware": "TPU v4 on Google Cloud; 8B on v4-128, 62B on v4-512, 540B on v4-1024; t5x framework",
+   "compute": null,
+   "wall_clock": "8B 14 days, 62B 17 days, 540B 29 days",
+   "seeds": null,
+   "other": {
+    "pretrain_steps": "8B 1M, 62B 520k, 540B 257k",
+    "extra_steps": "8B 600k, 62B 400k, 540B 383k, then 4% more at 10x lower LR",
+    "note": "Table 2 steps equal extra steps plus 4%"
+   }
+  },
+  "inference": {
+   "decoding": "greedy for one sample; nucleus sampling for multiple",
+   "temperature": "0.6 (davinci-002: 0.2)",
+   "top_p": "0.95",
+   "max_tokens": "512 generated; inputs truncated from the left to 1024 tokens",
+   "samples": "maj1@k with k=256 (64 for 540B) MATH; k=64 OCWCourses; k=100 (40 for 540B) GSM8k; k=16 MMLU-STEM",
+   "prompting": "MATH 4-shot fixed prompt (Listing 2); GSM8k Wei et al. CoT; MMLU-STEM 5-shot or CoT; OCW 'Final answer: The final answer is X. I hope it is correct.'",
+   "retrieval": null,
+   "parameters": {
+    "majority_voting": "group by final answer, pick most common (majn@k picks n most common)"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "accuracy (greedy / pass@1)",
+     "definition": "final answer matches ground truth after normalisation and SymPy equivalence (simplify difference == 0, 5s timeout)",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "maj1@k",
+     "definition": "most common final answer among k samples",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "pass@k",
+     "definition": "solved if any of k samples correct",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "PaLM 8B/62B/540B",
+    "OpenAI davinci-002",
+    "published SOTA (GPT-2 on MATH, PaLM 540B maj1@40 on GSM8k, Chinchilla on MMLU-STEM)"
+   ],
+   "protocol": "Single run; no seeds or confidence intervals reported. Correctness judged on final answer only, with manual false-positive audit on 100 MATH problems."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "OCWCourses planned for release; not released at time of writing"
+  },
+  "prompts": [
+   {
+    "purpose": "MATH 4-shot",
+    "text": "Problem:\nFind the domain of the expression $\\frac{\\sqrt{x-2}}{\\sqrt{5-x}}$.} ... Final Answer: The final answer is $[2,5)$. I hope it is correct. (three further examples)",
+    "where": "Appendix D.2, Listing 2"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Minerva 540B with majority voting over 64 samples reaches 50.3% on MATH, versus 6.9% prior SOTA.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MATH accuracy",
+   "value": "50.3",
+   "unit": "%",
+   "baseline_value": "6.9",
+   "n": null,
+   "setup": "Few-shot MATH, 4-shot prompt, SymPy-checked final answer, 5,000 test questions; maj1@k, k=64 for 540B, nucleus T=0.6 p=0.95",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row Minerva 540B, maj1@k, column MATH"
+  },
+  {
+   "claim": "Minerva 540B greedy on MATH is 33.6% against PaLM 540B 8.8%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MATH accuracy",
+   "value": "33.6",
+   "unit": "%",
+   "baseline_value": "8.8",
+   "n": null,
+   "setup": "Few-shot MATH, 4-shot prompt, SymPy-checked final answer, 5,000 test questions; greedy, one sample",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row Minerva 540B, column MATH"
+  },
+  {
+   "claim": "Minerva 62B greedy MATH 27.6%, majority vote k=256 43.4%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MATH accuracy",
+   "value": "43.4",
+   "unit": "%",
+   "baseline_value": "27.6",
+   "n": null,
+   "setup": "Few-shot MATH, 4-shot prompt, SymPy-checked final answer, 5,000 test questions; maj1@k with k=256",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row Minerva 62B, maj1@k, column MATH"
+  },
+  {
+   "claim": "Minerva 8B MATH greedy 14.1%, PaLM 8B 1.5%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MATH accuracy",
+   "value": "14.1",
+   "unit": "%",
+   "baseline_value": "1.5",
+   "n": null,
+   "setup": "Few-shot MATH, 4-shot prompt, SymPy-checked final answer, 5,000 test questions; greedy",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row Minerva 8B, column MATH"
+  },
+  {
+   "claim": "Minerva 540B maj1@k on GSM8k is 78.5%, above published SOTA 74.4%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GSM8k accuracy",
+   "value": "78.5",
+   "unit": "%",
+   "baseline_value": "74.4",
+   "n": null,
+   "setup": "GSM8k, chain-of-thought prompt from Wei et al., no calculator, k=40 for 540B",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row Minerva 540B, maj1@k, column GSM8k"
+  },
+  {
+   "claim": "Minerva 540B maj1@k on MMLU-STEM is 75.0%, above Chinchilla 54.9%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MMLU-STEM accuracy",
+   "value": "75.0",
+   "unit": "%",
+   "baseline_value": "54.9",
+   "n": null,
+   "setup": "MMLU-STEM, chain-of-thought prompt, k=16 samples",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row Minerva 540B, maj1@k, column MMLU-STEM"
+  },
+  {
+   "claim": "Minerva 540B maj1@k on OCWCourses (272 problems) is 30.8%; greedy 17.6%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "OCWCourses accuracy",
+   "value": "30.8",
+   "unit": "%",
+   "baseline_value": "17.6",
+   "n": null,
+   "setup": "OCWCourses, k=64",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row Minerva 540B, maj1@k, column OCWCourses"
+  },
+  {
+   "claim": "Majority voting beats log-likelihood reranking on MATH for Minerva 62B (no SymPy).",
+   "kind": "measured",
+   "source": null,
+   "metric": "MATH accuracy",
+   "value": "42.0",
+   "unit": "%",
+   "baseline_value": "23.8",
+   "n": null,
+   "setup": "MATH, Minerva 62B, exact string match; log-likelihood 1@k 23.8%, pass1 T=0.6 21.8%, pass1 T=0 26.5%",
+   "note": "Main-text SymPy number for the same setting is 43.4%.",
+   "where": "Appendix E.2",
+   "table": "Table 8, row Minerva 62B, Majority Voting 1@k, column MATH"
+  },
+  {
+   "claim": "Majority voting saturates faster than pass@k: 97% of large-k accuracy at k=64 for MATH and k=16 for GSM8k.",
+   "kind": "measured",
+   "source": null,
+   "metric": "fraction of large-k accuracy",
+   "value": "97",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Minerva, MATH and GSM8k, accuracy vs number of samples k",
+   "note": null,
+   "where": "Section 2.5",
+   "quote": "97% of the large k accuracy is achieved at k = 64"
+  },
+  {
+   "claim": "Continuing PaLM training on the technical data lifts 8B MATH from 1.5% to 14.1% few-shot, but fine-tuning Minerva 8B on MATH train does not help (13.4/12.9/13.0%), while PaLM 8B rises to 4.4-5.6%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MATH accuracy",
+   "value": "13.4",
+   "unit": "%",
+   "baseline_value": "14.1",
+   "n": null,
+   "setup": "MATH train fine-tuned 3000 steps, batch 128, dropout 0.1, 8B; custom-prompt FT row",
+   "note": null,
+   "where": "Appendix E.3",
+   "table": "Table 9, row Custom prompt finetuning, column Minerva 8B"
+  },
+  {
+   "claim": "Estimated false-positive rate of 62B on MATH is 8% on average, 30% at level 5.",
+   "kind": "measured",
+   "source": null,
+   "metric": "false positive rate",
+   "value": "8",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "100 random MATH questions (20 per level), 62B zero-temperature answers, manual inspection",
+   "note": null,
+   "where": "Section 4.2",
+   "table": "Table 5, column Average"
+  },
+  {
+   "claim": "pass@256 for 62B on MATH is 84.5% but ~30% false positives among majority-fail pass@k-pass samples; corrected estimate >68%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass@256",
+   "value": "84.5",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Minerva 62B MATH pass@256",
+   "note": null,
+   "where": "Section 4.2",
+   "quote": "is 84.5% for the 62B model"
+  },
+  {
+   "claim": "Minerva 62B scores 57% on the Polish national math exam (national average 2021); 540B 65%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "exam score",
+   "value": "57",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "National Math Exam in Poland, May 2022",
+   "note": null,
+   "where": "Section 3",
+   "quote": "achieves a score of 57%"
+  },
+  {
+   "claim": "540B model fine-tuned on only 26B tokens, highly undertrained versus 8B (164B) and 62B (109B), still best.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "26B",
+   "unit": "tokens",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Continued training tokens, Table 2",
+   "note": null,
+   "where": "Section 2.2",
+   "table": "Table 2, row Minerva 540B, column Tokens"
+  },
+  {
+   "claim": "8B model failures out of 201 samples: 82 incorrect reasoning, 70 incorrect calculation.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "82",
+   "unit": "count",
+   "baseline_value": null,
+   "n": null,
+   "setup": "201 samples 62B solved and 8B did not; high-confidence majority (top answer >=15% votes)",
+   "note": null,
+   "where": "Section 4.1",
+   "table": "Table 4, row Incorrect reasoning"
+  },
+  {
+   "claim": "Minerva 540B gets over 80% on 10-digit addition and over 20% on 18-digit addition.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "80",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Appendix H simple arithmetic, 540B",
+   "note": null,
+   "where": "Section 3.1",
+   "quote": "The model achieves over 80% accuracy on 10-digit addition"
+  }
+ ],
+ "limits": [
+  "No automatic way to verify the model's reasoning; false positives increase with difficulty",
+  "No external tools such as calculator or Python",
+  "Little control over which capabilities are acquired",
+  "540B undertrained relative to 8B and 62B",
+  "No ablation with LaTeX stripped from training data in the text",
+  "Single runs, no seeds or intervals",
+  "Data contamination checked only by BLEU on 100 MATH problems"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "maj1@k",
+   "definition": "k samples per problem and only the most common answer selected",
+   "where": "Section 2.5"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "PaLM: Scaling language modeling with pathways",
+   "year": 2022,
+   "arxiv": "2204.02311",
+   "relation": "extends",
+   "note": "base models continued-trained",
+   "quote": null
+  },
+  {
+   "work": "Measuring mathematical problem solving with the MATH dataset",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "main benchmark",
+   "quote": null
+  },
+  {
+   "work": "Training verifiers to solve math word problems (GSM8k)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "benchmark",
+   "quote": null
+  },
+  {
+   "work": "Measuring massive multitask language understanding",
+   "year": 2020,
+   "arxiv": "2009.03300",
+   "relation": "uses-data",
+   "note": "MMLU-STEM",
+   "quote": null
+  },
+  {
+   "work": "Self-consistency / majority voting (Wang et al. 2022)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "maj1@k",
+   "quote": null
+  },
+  {
+   "work": "Chain-of-thought prompting (Wei et al. 2022)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "prompts",
+   "quote": null
+  },
+  {
+   "work": "Show Your Work: Scratchpads (Nye et al. 2021)",
+   "year": 2021,
+   "arxiv": "2112.00114",
+   "relation": "related",
+   "note": "step-by-step solutions",
+   "quote": null
+  },
+  {
+   "work": "Drori et al. 2021 (davinci-002 on MATH subset)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "re-evaluated davinci-002 under same conditions",
+   "quote": null
+  },
+  {
+   "work": "AlphaCode (Li et al. 2022)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "maj1@k notation, false positives",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 4",
+   "caption": "Performance on MATH and MMLU-STEM by subtopic",
+   "page": 8,
+   "why": "per-subtopic gains by size and voting"
+  },
+  {
+   "figure": "Table 3",
+   "caption": "Model performance on several quantitative reasoning datasets",
+   "page": 8,
+   "why": "main results"
+  }
+ ],
+ "code": [
+  {
+   "where": "Listing 1, Appendix D.1",
+   "snippet": "def normalize_final_answer(final_answer: str) -> str: ... SymPy equivalence via parse_latex and simplify",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text contains NUL bytes in cache; harmless",
+  "Fig 4 values only visible in plots"
+ ]
+}

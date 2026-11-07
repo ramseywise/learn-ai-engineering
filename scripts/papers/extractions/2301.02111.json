@@ -1,0 +1,136 @@
+{
+ "schema": 1,
+ "key": "2301.02111",
+ "pdf": "ai-engineering/08-multimodal-engineering/sources/wang-2023-neural-codec-language-models-zero.pdf",
+ "bib": {
+  "title": "Neural Codec Language Models are Zero-Shot Text to Speech Synthesizers",
+  "authors": ["Chengyi Wang","Sanyuan Chen","Yu Wu","Ziqiang Zhang","Long Zhou","Shujie Liu","Zhuo Chen","Yanqing Liu","Huaming Wang","Jinyu Li","Lei He","Sheng Zhao","Furu Wei"],
+  "first_author": "Wang",
+  "year": 2023,
+  "venue": "preprint",
+  "arxiv": "2301.02111",
+  "doi": null
+ },
+ "read": {"by": "source-reader", "at": "2026-11-07", "chars_read": 57107, "chars_total": 57107, "engine": "pymupdf", "skipped": null},
+ "type": "system",
+ "question": "Can TTS be treated as conditional language modeling over neural audio codec codes, trained on large noisy data, to give zero-shot voice cloning from a 3-second prompt?",
+ "hypothesis": "Scaling semi-supervised training data to 60K hours and modeling codec tokens with a language model yields GPT-style in-context learning for unseen speakers.",
+ "contributions": [
+  "VALL-E, the first TTS framework with in-context learning, treating TTS as a language-model task over audio codec codes instead of mel spectrograms",
+  "A generalized TTS system built on a huge amount of semi-supervised data",
+  "Diverse outputs for the same text, keeping the acoustic environment and speaker emotion of the prompt",
+  "Better zero-shot results than the state-of-the-art zero-shot TTS system on LibriSpeech and VCTK"
+ ],
+ "method": {
+  "summary": "Text is converted to phonemes and speech to EnCodec codes (8 RVQ quantizers). An autoregressive decoder-only transformer predicts the first-quantizer codes, conditioned on phonemes and the 3-second prompt's first-layer codes. A non-autoregressive transformer predicts quantizers 2 to 8. The EnCodec decoder makes the waveform.",
+  "task": "zero-shot text-to-speech (conditional codec language modeling)",
+  "trains": true,
+  "datasets": [
+   {"name": "LibriLight", "role": "train", "size": "60K hours, about 7000 speakers", "split": null, "source": "Kahn et al., 2020; audiobooks, audio only", "preprocessing": "Transcribed by a hybrid DNN-HMM ASR model trained on 960 hours of LibriSpeech (Kaldi recipe); phoneme alignment with 30ms frameshift; EnCodec codes for all audio; random crop to 10 to 20 s; consecutive phoneme repetitions removed; NAR acoustic prompt is a random 3 s segment of the same utterance"},
+   {"name": "LibriSpeech test-clean", "role": "eval", "size": "2.2 hours subset (utterances 4 to 10 s); 40 speakers for human evaluation", "split": "test-clean", "source": "Panayotov et al., 2015", "preprocessing": "enrolled speech is a 3 s crop of another utterance of the same speaker"},
+   {"name": "VCTK", "role": "eval", "size": "108 speakers; 60 for human evaluation", "split": null, "source": "Veaux et al., 2016", "preprocessing": "three utterances per speaker as 3s/5s/10s prompts, text from another utterance"},
+   {"name": "EmoV-DB", "role": "eval", "size": "five emotions", "split": null, "source": "Adigwe et al., 2018", "preprocessing": "prompts for qualitative emotion test only"}
+  ],
+  "models": [
+   {"name": "VALL-E AR model", "role": "proposed", "params": null, "architecture": "decoder-only causal transformer over first-quantizer codes", "init_from": null, "tokenizer": "EnCodec 24 kHz, 75 Hz, 8 quantizers x 1024 entries (6K bitrate); phonemes via G2P", "vocab": "1024 entries per quantizer", "layers": "12", "hidden": "1024", "heads": "16", "context": null, "other": {"ffn_dim": "4096", "dropout": "0.1"}},
+   {"name": "VALL-E NAR model", "role": "proposed", "params": null, "architecture": "same transformer as AR, full attention, eight separate acoustic embeddings, stage injected by AdaLN", "init_from": null, "tokenizer": "EnCodec", "vocab": null, "layers": "12", "hidden": "1024", "heads": "16", "context": null, "other": {"ffn_dim": "4096", "dropout": "0.1"}},
+   {"name": "EnCodec", "role": "base", "params": null, "architecture": "convolutional encoder-decoder with RVQ", "init_from": "pre-trained (Defossez et al., 2022)", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "YourTTS", "role": "baseline", "params": null, "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"training_data": "VCTK, LibriTTS, TTS-Portuguese; released checkpoint"}},
+   {"name": "GSLM", "role": "baseline", "params": null, "architecture": "speech-to-speech LM on HuBERT codes", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"note": "open-sourced code run with released model"}},
+   {"name": "AudioLM", "role": "baseline", "params": null, "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"note": "WER copied from its paper; not open-source"}}
+  ],
+  "training": {
+   "objective": "maximise p(C | x, C~): next-token prediction of first-codebook codes (AR); NAR trained on a randomly sampled stage i in [2,8]",
+   "optimizer": "AdamW",
+   "lr": "5e-4 peak",
+   "lr_schedule": "warm up then linear decay",
+   "warmup": "first 32k updates",
+   "batch_size": "6k acoustic tokens per GPU, 16 GPUs",
+   "steps": "800k",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "random crop of 10 to 20 s of audio (average utterance 60 s)",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": "0.1",
+   "regularisation": null,
+   "hardware": "16x NVIDIA TESLA V100 32GB",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {"AR_prompting_in_training": "no explicit prompt clip; any prefix acts as prompt", "weight_sharing": "output projection shared with acoustic embedding"}
+  },
+  "inference": {
+   "decoding": "AR: sampling-based (beam search can loop forever); NAR: greedy",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "LibriSpeech: each experiment run three times, average reported; diversity figure uses two runs with different seeds",
+   "prompting": "Prepend the enrolled speech's transcript phonemes to the target phonemes; the enrolled speech's first-layer codes are the AR prefix; all eight layers of the prompt are summed for NAR. VALL-E-continual uses the first 3 s of the utterance and its full transcript.",
+   "retrieval": null,
+   "parameters": {"prompt_length": "3 s (VCTK also 5 s and 10 s)"},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "WER", "definition": "HuBERT-Large fine-tuned on LibriSpeech 960h (CTC, no LM) transcribes the output; WER against original transcript", "unit": "%", "higher_is_better": false},
+    {"name": "SPK", "definition": "WavLM-TDNN speaker-verification similarity between prompt (decompressed enrolled speech) and synthesis, range [-1, 1]", "unit": "cosine score", "higher_is_better": true},
+    {"name": "SMOS", "definition": "similarity MOS, 1 to 5 in 0.5 steps, 6 native-speaker raters", "unit": "score", "higher_is_better": true},
+    {"name": "CMOS", "definition": "comparative MOS for naturalness, -3 to 3 in steps of 1, 12 native-speaker raters", "unit": "score", "higher_is_better": true}
+   ],
+   "baselines": ["YourTTS", "GSLM", "AudioLM", "GroundTruth"],
+   "protocol": "Crowdsourced human evaluation; LibriSpeech 40 test cases, VCTK 60 speakers (11 unseen to YourTTS, 49 seen). No significance test described beyond +/- values."
+  },
+  "availability": {"code": "https://github.com/microsoft/unilm (listed on title page; demo at aka.ms/valle)", "weights": null, "data": "LibriLight, LibriSpeech, VCTK are public; generated transcripts not stated as released"},
+  "prompts": [],
+  "evidence": [
+   {"field": "training.hardware", "quote": "The models are trained using 16 NVIDIA TESLA V100 32GB GPUs with a batch size of 6k acoustic tokens per GPU for 800k steps.", "where": "5.1"}
+  ]
+ },
+ "results": [
+  {"claim": "VALL-E gets higher speaker similarity than YourTTS on LibriSpeech test-clean (objective).", "kind": "measured", "source": null, "metric": "SPK", "value": "0.580", "unit": "score", "baseline_value": "0.337", "n": null, "setup": "LibriSpeech test-clean 4-10 s subset, 3 s prompt, three runs averaged", "table": "Table 2, row VALL-E, column SPK", "quote": null, "note": "Table 5 prints the same system as 0.585 SPK", "where": "Table 2"},
+  {"claim": "VALL-E has lower WER than YourTTS on LibriSpeech test-clean.", "kind": "measured", "source": null, "metric": "WER", "value": "5.9", "unit": "%", "baseline_value": "7.7", "n": null, "setup": "LibriSpeech test-clean subset, HuBERT-Large ASR", "table": "Table 2, row VALL-E, column WER", "quote": null, "note": "Ground truth WER 2.2; VALL-E-continual 3.8; GSLM 12.4; AudioLM 6.0 (different ASR)", "where": "Table 2"},
+  {"claim": "VALL-E-continual reaches lower WER because the first 3 s of codes come from ground truth.", "kind": "measured", "source": null, "metric": "WER", "value": "3.8", "unit": "%", "baseline_value": null, "n": null, "setup": "LibriSpeech test-clean, first 3 s of ground truth as prompt", "table": "Table 2, row VALL-E-continual, column WER", "quote": null, "note": "SPK 0.508", "where": "Table 2"},
+  {"claim": "VALL-E improves SMOS over YourTTS by 0.93 on LibriSpeech.", "kind": "measured", "source": null, "metric": "SMOS difference", "value": "+0.93", "unit": "SMOS", "baseline_value": null, "n": 40, "setup": "LibriSpeech test-clean, 40 speakers, 3 s enrolled recording", "table": null, "quote": "It signiﬁcantly outperforms the baseline with +0.93 SMOS", "note": "Table 3: VALL-E 4.38, YourTTS 3.45, ground truth 4.5", "where": "5.2, Table 3"},
+  {"claim": "VALL-E beats YourTTS on naturalness by +0.12 CMOS on LibriSpeech.", "kind": "measured", "source": null, "metric": "CMOS", "value": "+0.12", "unit": "CMOS", "baseline_value": null, "n": 40, "setup": "LibriSpeech test-clean, 40 speakers", "table": null, "quote": "VALL-E beats the baseline with +0.12 CMOS", "note": "Ground truth is +0.17 CMOS over VALL-E in Table 3", "where": "5.2"},
+  {"claim": "On VCTK, VALL-E scores +0.23 CMOS over YourTTS and +0.04 over ground truth, with no statistically significant difference from human recordings.", "kind": "measured", "source": null, "metric": "CMOS", "value": "+0.04", "unit": "CMOS", "baseline_value": null, "n": 60, "setup": "VCTK, 60 speakers, 3 s prompt; YourTTS had seen 49 of them", "table": null, "quote": "VALL-E achieves +0.04", "note": "Table 7 prints GroundTruth CMOS as -0.04 relative to VALL-E; text says VALL-E is +0.04. Authors attribute this to short sentences and noisy ground truth in VCTK.", "where": "5.3, Table 7"},
+  {"claim": "VCTK SMOS: VALL-E 3.81 vs YourTTS 3.70 vs ground truth 4.29.", "kind": "measured", "source": null, "metric": "SMOS", "value": "3.81", "unit": "SMOS", "baseline_value": "3.70", "n": 60, "setup": "VCTK 60 speakers, 3 s prompt", "table": "Table 7, row VALL-E, column SMOS", "quote": null, "note": null, "where": "Table 7"},
+  {"claim": "Removing the AR acoustic prompt collapses speaker similarity while WER stays the same.", "kind": "measured", "source": null, "metric": "SPK", "value": "0.236", "unit": "score", "baseline_value": "0.585", "n": null, "setup": "AR ablation, NAR-2 prompts setting", "table": "Table 5, row w/o acoustic prompt, column SPK", "quote": null, "note": "WER 5.9 in both rows", "where": "Table 5"},
+  {"claim": "The phoneme prompt cuts NAR WER from 19.6 to 3.0; the acoustic prompt raises SPK from 0.541 to 0.732.", "kind": "measured", "source": null, "metric": "WER", "value": "3.0", "unit": "%", "baseline_value": "19.6", "n": null, "setup": "NAR ablation with ground-truth first-level codes", "table": "Table 4, row WER, column NAR-phn prompt", "quote": null, "note": "NAR-2 prompts WER 2.8, SPK 0.732; no prompt SPK 0.518", "where": "Table 4"},
+  {"claim": "VCTK speaker similarity improves with longer prompts; at 11 unseen speakers and 3 s, VALL-E 0.389 vs YourTTS 0.331.", "kind": "measured", "source": null, "metric": "SPK", "value": "0.389", "unit": "score", "baseline_value": "0.331", "n": 11, "setup": "VCTK 11 speakers unseen by both systems, 3 s prompt", "table": "Table 6, row VALL-E (11 unseen speakers), column 3s prompt", "quote": null, "note": "Full 108: VALL-E 0.382/0.423/0.484 at 3/5/10 s vs YourTTS* 0.357/0.377/0.394", "where": "Table 6"},
+  {"claim": "Training data is hundreds of times larger than prior TTS.", "kind": "claim", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "60K hours vs at most 600 hours in Table 1", "table": null, "quote": null, "note": null, "where": "Abstract, Table 1"},
+  {"claim": "Authors qualitatively observe VALL-E keeps prompt reverberation and emotion and gives diverse outputs; shown on demo page only, no metric.", "kind": "claim", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "Qualitative; EmoV-DB prompts", "table": null, "quote": null, "note": null, "where": "5.4"}
+ ],
+ "limits": [
+  "Synthesis robustness: words may be unclear, missed or duplicated because the AR stage has unconstrained attention alignment.",
+  "Data coverage: 60K hours does not cover accented speakers; worse VCTK than LibriSpeech similarity; LibriLight is read-style audiobooks only.",
+  "Two separate models (AR and NAR) for the quantizers; authors suggest a single universal model or fully NAR.",
+  "Misuse risk: spoofing voice identification or impersonation; mitigation suggested is a detection model, not built.",
+  "Comparison with YourTTS on VCTK is unfair because YourTTS trained on 97 of its speakers; GSLM/AudioLM comparison mixes different ASR for AudioLM; AudioLM speaker score not computed.",
+  "Weights not stated as released; no parameter count, precision, seeds, temperature or top-p given; evaluation raters are small (12 and 6) with no significance test described."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "VALL-E-continual", "definition": "the whole transcription and the first 3 seconds of the utterance are the phoneme and acoustic prompts, and the model generates the continuation", "where": "4.3"}
+ ],
+ "lineage": [
+  {"work": "AudioLM", "year": 2022, "arxiv": "2209.03143", "relation": "extends", "note": "follows it in using neural codec tokens; VALL-E is TTS rather than speech-to-speech", "quote": null},
+  {"work": "EnCodec", "year": 2022, "arxiv": "2210.13438", "relation": "uses-method", "note": "off-the-shelf tokenizer and decoder", "quote": null},
+  {"work": "YourTTS", "year": 2022, "arxiv": null, "relation": "baseline", "note": "state-of-the-art zero-shot TTS baseline", "quote": null},
+  {"work": "GSLM (Generative spoken language modeling from raw audio)", "year": 2021, "arxiv": "2102.01192", "relation": "baseline", "note": "HuBERT-code speech-to-speech LM", "quote": null},
+  {"work": "LibriLight", "year": 2020, "arxiv": null, "relation": "uses-data", "note": "60K-hour training corpus", "quote": null},
+  {"work": "LibriSpeech", "year": 2015, "arxiv": null, "relation": "uses-data", "note": "test-clean evaluation and ASR training (960 h)", "quote": null},
+  {"work": "VCTK", "year": 2016, "arxiv": null, "relation": "uses-data", "note": "evaluation, 108 speakers", "quote": null},
+  {"work": "HuBERT", "year": 2021, "arxiv": null, "relation": "uses-method", "note": "ASR model used for WER", "quote": null},
+  {"work": "WavLM", "year": 2022, "arxiv": null, "relation": "uses-method", "note": "WavLM-TDNN speaker verification for SPK", "quote": null},
+  {"work": "GPT-3 (Brown et al.)", "year": 2020, "arxiv": "2005.14165", "relation": "related", "note": "in-context learning motivation", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 1", "caption": "The overview of VALL-E. Unlike the previous pipeline (e.g., phoneme -> mel-spectrogram -> waveform), the pipeline of VALL-E is phoneme -> discrete code -> waveform.", "page": 1, "why": "Shows the swap of intermediate representation"},
+  {"figure": "Fig 3", "caption": "The structure of the conditional codec language modeling, which is built in a hierarchical manner.", "page": 6, "why": "AR then seven NAR calls over quantizers"}
+ ],
+ "code": [
+  {"where": "Eq 3, p. 6", "snippet": "p(C|x, C~; theta) = p(c:,1 | C~:,1, x; theta_AR) * prod_{j=2..8} p(c:,j | c:,<j, x, C~; theta_NAR)", "verbatim": false}
+ ],
+ "problems": ["Figure 3 text is scrambled in the cached text; no embedded instructions found."]
+}

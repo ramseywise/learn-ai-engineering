@@ -2,6 +2,7 @@
 name: chapter
 description: "Fold one book chapter (a PDF under some home's sources/<book-slug>/chNN-*.pdf) into the notes it belongs to: prose, code and figures merged into existing sections, a Books row in references.md that maps chapters to notes, and the ledger row marked integrated. Never writes a chapter-summary note. Usage: /chapter ai-systems-performance-engineering ch05, /chapter huyen-ai-engineering, or /chapter with no argument to take the next queued chapter. Run from the learn-ai-engineering repo."
 ---
+<!-- Generated from .claude/skills/_shared/chapter.md in the librarian repo (uv run python -m librarian.tools.skillsync sync). Edit the template, not this file. -->
 
 You are folding a book chapter into the course notes. The notes are the product. A
 chapter earns its place by sharpening, extending or evidencing what the notes already
@@ -10,6 +11,13 @@ called "Chapter 5 summary". A chapter usually spreads across two or three notes.
 
 Read `../librarian/.claude/skills/pillar/references/pillar-layout.md` first. It defines where things live and the house
 style for notes, figures and references.
+
+## Where commands run
+
+Run from the repo root: the pipeline (`scripts/papers/`), the PDFs under `<home>/sources/` and the notes this skill
+edits are all here. Lessons are also authored in the sibling librarian repo (`../librarian/data/courses/`). Whether
+an edit made here has to be mirrored there is the user's call: ask once per session rather than assuming, and list
+the edit in the report.
 
 ---
 
@@ -96,6 +104,7 @@ adds nothing. Note that in its references row, run
   uv run -q --with pymupdf python scripts/papers/figures.py crop <pdf> --page P --clip x0,y0,x1,y1 \
       --out <home>/sources/images/<book-slug>-fig<N-M>.png
   ```
+  Embed it as `../sources/images/<file>`.
   Look at every saved PNG with Read before embedding it. Caption it:
   `*Image Source: <Author>, *<Book>* (<Publisher>, <year>), Fig. N-M*`
 - **Inline citations.** Cite as `(*<Short title>*, ch. N)`. Do not link the PDF from a note.
@@ -119,7 +128,7 @@ from `../librarian/.claude/skills/pillar/references/pillar-layout.md`.
 ```bash
 python3 scripts/papers/extract.py check <key>
 python3 scripts/papers/potw.py mark integrated <key>
-make link-check
+make link-check   # checks this repo only
 ```
 
 `mark integrated` refuses a key with no citation in the home's notes or `references.md`, and sets the row's `note` to

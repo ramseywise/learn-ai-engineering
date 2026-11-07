@@ -1,0 +1,507 @@
+{
+ "schema": 1,
+ "key": "1910.12840",
+ "pdf": "generative-ai/08-eval/sources/kryscinski-2020-evaluating-factual-consistency-abstractive-text.pdf",
+ "bib": {
+  "title": "Evaluating the Factual Consistency of Abstractive Text Summarization",
+  "authors": [
+   "Wojciech Kryściński",
+   "Bryan McCann",
+   "Caiming Xiong",
+   "Richard Socher"
+  ],
+  "first_author": "Kryściński",
+  "year": 2020,
+  "venue": "Proceedings of EMNLP 2020, pages 9332-9346",
+  "arxiv": "1910.12840",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 61499,
+  "chars_total": 61499,
+  "engine": "pymupdf",
+  "skipped": "Appendix A example predictions skimmed only (qualitative examples)"
+ },
+ "type": "empirical",
+ "question": "Can a model trained on cheap synthetic data verify whether summary sentences are factually consistent with the source document, and explain why?",
+ "hypothesis": "Weakly-supervised in-domain synthetic data beats strongly-supervised data from related tasks (NLI, fact checking) for factual consistency checking of fairly extractive summaries.",
+ "contributions": [
+  "Weakly-supervised BERT-based factual consistency model (FactCC) trained on rule-based synthetic data",
+  "FactCCX with span extraction heads that explain the decision",
+  "Manually annotated CNN/DM validation and test set for factual consistency",
+  "Release of code for training data generation and model weights"
+ ],
+ "method": {
+  "summary": "Sentences are sampled from CNN/DM articles and passed through rule-based transformations (paraphrase by backtranslation as positive; entity, number, pronoun swap, negation as negative; noise injection) to make about 1M labelled (document, claim) pairs. Uncased BERT-base is fine-tuned for binary CONSISTENT/INCONSISTENT classification (FactCC), and a variant adds span-selection heads (FactCCX). Evaluated on hand-annotated CNN/DM summaries and XSum summaries, and in a human study.",
+  "task": "document-sentence factual consistency classification of summaries",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Synthetic FactCC training data",
+    "role": "train",
+    "size": "1,003,355 examples; 50.2% INCONSISTENT, 49.8% CONSISTENT",
+    "split": "train",
+    "source": "generated from CNN/DailyMail (Nallapati et al., 2016) news articles",
+    "preprocessing": "random sentence sampled per document as claim; transformations: paraphrase via backtranslation (French, German, Chinese, Spanish, Russian through Google Cloud Translation API), entity/number swap (SpaCy NER, random unique swap within group), pronoun swap, sentence negation, noise injection (per-token duplicate or drop with a preset probability; value not given)"
+   },
+   {
+    "name": "CNN/DM annotated validation",
+    "role": "dev",
+    "size": "931 examples",
+    "split": "validation",
+    "source": "summaries from ten published summarization systems, annotated by the authors",
+    "preprocessing": "unreadable sentences not labelled"
+   },
+   {
+    "name": "CNN/DM annotated test",
+    "role": "eval",
+    "size": "503 examples",
+    "split": "test",
+    "source": "same, annotated by the authors",
+    "preprocessing": null
+   },
+   {
+    "name": "XSum test (Maynez et al., 2020)",
+    "role": "eval",
+    "size": null,
+    "split": "test",
+    "source": "collected by Maynez et al. (2020)",
+    "preprocessing": null
+   },
+   {
+    "name": "MNLI and FEVER",
+    "role": "train",
+    "size": null,
+    "split": null,
+    "source": "Williams et al. 2018; Thorne et al. 2018",
+    "preprocessing": "neutral class removed from both, to train baseline BERT classifiers"
+   },
+   {
+    "name": "Falke et al. (2019) sentence ranking test data",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "provided by Falke et al.",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "FactCC",
+    "role": "proposed",
+    "params": "110M",
+    "architecture": "BERT-base uncased with single-layer classifier on [CLS]",
+    "init_from": "BERT-base uncased",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "input": "source document and claim sentence"
+    }
+   },
+   {
+    "name": "FactCCX",
+    "role": "proposed",
+    "params": "110M",
+    "architecture": "FactCC plus span selection heads (start/end indices) for source support span and claim error span",
+    "init_from": "BERT-base uncased",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "BERT+MNLI",
+    "role": "baseline",
+    "params": "110M",
+    "architecture": "inferred: BERT-base, same setup",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "BERT+FEVER",
+    "role": "baseline",
+    "params": "110M",
+    "architecture": "inferred: BERT-base, same setup",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "two-way classification (CONSISTENT/INCONSISTENT); FactCCX adds span start/end supervision",
+   "optimizer": null,
+   "lr": "2e-5",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "12 examples",
+   "steps": null,
+   "epochs": "10",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "8 Nvidia V100 GPUs",
+   "compute": null,
+   "wall_clock": "23 hours on average",
+   "seeds": null,
+   "other": {
+    "checkpoint_selection": "best checkpoint on validation set",
+    "library": "Transformers (Wolf et al., 2019), PyTorch"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "weighted (class-balanced) accuracy",
+     "definition": "accuracy weighted to balance classes",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "F1 score",
+     "definition": "F1 on the annotated test set",
+     "unit": "0-1",
+     "higher_is_better": true
+    },
+    {
+     "name": "sentence pair ranking error",
+     "definition": "percent of (positive, negative) claim pairs where the negative gets the higher correctness probability (Falke et al. 2019)",
+     "unit": "% incorrect",
+     "higher_is_better": false
+    },
+    {
+     "name": "span helpfulness and overlap",
+     "definition": "human-rated helpfulness; span accuracy = model span fully contained in human span; token F1 between spans",
+     "unit": "%, F1",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "BERT+MNLI",
+    "BERT+FEVER",
+    "DA, InferSent, SSE, ESIM, BERT (Falke et al., 2019)",
+    "Random"
+   ],
+   "protocol": "Single run reported, no seeds or significance test stated. Human study: 100 examples from CNN/DM test, balanced between classes, 3 judges each from English-speaking countries."
+  },
+  "availability": {
+   "code": "https://github.com/salesforce/factCC",
+   "weights": "https://github.com/salesforce/factCC",
+   "data": "https://github.com/salesforce/factCC (annotated dataset and data generation code)"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.wall_clock",
+    "quote": "Experiments were conducted on 8 Nvidia V100 GPUs, training took 23 hours on average.",
+    "where": "Sec 4.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "FactCC beats BERT trained on MNLI or FEVER on CNN/DM",
+   "kind": "measured",
+   "source": null,
+   "metric": "weighted accuracy",
+   "value": 72.65,
+   "unit": "%",
+   "baseline_value": "51.39 (BERT+MNLI), 52.07 (BERT+FEVER)",
+   "n": null,
+   "setup": "CNN/DM manually annotated test set (503 examples), class-balanced accuracy, BERT-base fine-tuned; FactCC",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row FactCC (ours), column CNN/DailyMail Accuracy (weighted)"
+  },
+  {
+   "claim": "FactCCX is about equal to FactCC on CNN/DM",
+   "kind": "measured",
+   "source": null,
+   "metric": "weighted accuracy",
+   "value": 72.88,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CNN/DM manually annotated test set (503 examples), class-balanced accuracy, BERT-base fine-tuned; FactCCX",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row FactCCX (ours), column CNN/DailyMail Accuracy (weighted)"
+  },
+  {
+   "claim": "On abstractive XSum the MNLI model beats FactCC",
+   "kind": "measured",
+   "source": null,
+   "metric": "weighted accuracy",
+   "value": 59.92,
+   "unit": "%",
+   "baseline_value": "54.11 (FactCC)",
+   "n": null,
+   "setup": "XSum test from Maynez et al. (2020); BERT+MNLI",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row BERT+MNLI, column XSum Accuracy (weighted)"
+  },
+  {
+   "claim": "FactCC on XSum",
+   "kind": "measured",
+   "source": null,
+   "metric": "weighted accuracy",
+   "value": 54.11,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "XSum test from Maynez et al. (2020); FactCC",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row FactCC (ours), column XSum Accuracy (weighted)"
+  },
+  {
+   "claim": "FactCC has lowest sentence-ranking error on Falke et al. test data",
+   "kind": "measured",
+   "source": null,
+   "metric": "incorrectly ordered pairs",
+   "value": 30.0,
+   "unit": "%",
+   "baseline_value": "32.1 (BERT+MNLI)",
+   "n": null,
+   "setup": "Falke et al. (2019) sentence pair ranking; random is 50.0%",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row FactCC (ours), column Incorrect"
+  },
+  {
+   "claim": "Training set size",
+   "kind": "measured",
+   "source": null,
+   "metric": "examples",
+   "value": 1003355,
+   "unit": "examples",
+   "baseline_value": null,
+   "n": null,
+   "setup": "synthetic data from CNN/DM",
+   "note": null,
+   "where": "Sec 4.1",
+   "quote": "1,003,355 training examples were created"
+  },
+  {
+   "claim": "Highlights make annotators faster",
+   "kind": "measured",
+   "source": null,
+   "metric": "average work time",
+   "value": 178.34,
+   "unit": "sec",
+   "baseline_value": "224.89 without highlights",
+   "n": null,
+   "setup": "100 CNN/DM test examples, 3 judges; with FactCCX highlights",
+   "note": "Text says 21% faster",
+   "where": "Table 7",
+   "table": "Table 7, column Task with model highlights, row Average work time (sec)"
+  },
+  {
+   "claim": "Highlights raise inter-annotator agreement",
+   "kind": "measured",
+   "source": null,
+   "metric": "Fleiss kappa",
+   "value": 0.2526,
+   "unit": "kappa",
+   "baseline_value": "0.1571 without highlights",
+   "n": null,
+   "setup": "same human study; with highlights",
+   "note": "Text says increased by 38%; kappa remains low in absolute terms",
+   "where": "Table 7",
+   "table": "Table 7, column Task with model highlights, row Inter-annotator agreement"
+  },
+  {
+   "claim": "Article highlights found at least somewhat helpful",
+   "kind": "measured",
+   "source": null,
+   "metric": "annotators finding helpful",
+   "value": 91.75,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "100 CNN/DM test examples, 3 judges, combined helpful+somewhat",
+   "note": null,
+   "where": "Sec 5.1",
+   "quote": "A combined number of 91.75% annotators found the ar-\nticle highlights at least somewhat helpful"
+  },
+  {
+   "claim": "Claim highlights found at least somewhat helpful",
+   "kind": "measured",
+   "source": null,
+   "metric": "annotators finding helpful",
+   "value": 81.33,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "same",
+   "note": null,
+   "where": "Sec 5.1",
+   "quote": "81.33% of annotators found the claim highlights at least\nsomewhat helpful"
+  },
+  {
+   "claim": "Model span vs unbiased human span overlap, article",
+   "kind": "measured",
+   "source": null,
+   "metric": "span accuracy",
+   "value": 65.33,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "raw data, no highlights shown to annotators",
+   "note": null,
+   "where": "Sec 5.1",
+   "quote": "Results\nshow 65.33% and 65.66% accuracy and 0.6207\nand 0.6650 F1"
+  }
+ ],
+ "limits": [
+  "Transformations lack multi-sentence abstractive paraphrase, so FactCC loses to MNLI on XSum (authors state this was expected)",
+  "Misses commonsense errors, temporal inconsistencies and incorrect coreference",
+  "Test set annotated by the authors; crowdsourced annotation too noisy to use",
+  "Summary re-ranking experiment of Falke et al. could not be replicated",
+  "Single run, no seeds, optimizer, warmup, noise probability or XSum test size stated",
+  "Even with highlights, inter-annotator kappa is only 0.2526",
+  "Human study uses only 100 examples"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "factually consistent summary",
+   "definition": "a factually consistent summary contains only statements that are entailed by the source document",
+   "where": "Sec 1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "BERT",
+   "year": 2018,
+   "arxiv": "1810.04805",
+   "relation": "extends",
+   "note": "base model fine-tuned",
+   "quote": null
+  },
+  {
+   "work": "Ranking generated summaries by correctness (Falke et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "sentence ranking experiment and NLI baselines reused; found off-the-shelf NLI transfers poorly",
+   "quote": null
+  },
+  {
+   "work": "Assessing the factual accuracy of generated text (Goodrich et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "related",
+   "note": "triplet-based factual accuracy metric",
+   "quote": null
+  },
+  {
+   "work": "Faithful to the original (Cao et al.)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "related",
+   "note": "fact-aware dual-encoder summarizer",
+   "quote": null
+  },
+  {
+   "work": "Easy data augmentation (Wei and Zou)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "inspiration for synthetic transformations",
+   "quote": null
+  },
+  {
+   "work": "Adversarial example generation with syntactically controlled paraphrase networks (Iyyer et al.)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "backtranslation paraphrase",
+   "quote": null
+  },
+  {
+   "work": "CNN/DailyMail (Nallapati et al.)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "source documents",
+   "quote": null
+  },
+  {
+   "work": "MNLI (Williams et al.)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "training data for baseline",
+   "quote": null
+  },
+  {
+   "work": "FEVER (Thorne et al.)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "training data for baseline",
+   "quote": null
+  },
+  {
+   "work": "XSum test annotations (Maynez et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "XSum evaluation",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Table 2",
+   "caption": "Examples of text transformations used to generate training data.",
+   "page": 4,
+   "why": "Shows each corruption type at a glance"
+  },
+  {
+   "figure": "Table 3",
+   "caption": "Performance of models evaluated by means of weighted (class-balanced) accuracy and F1 score on CNN/DailyMail and XSum.",
+   "page": 6,
+   "why": "Main result, including the XSum reversal"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Table cells extracted one per line; values matched by row order. Table 6 filter rows are as printed."
+ ]
+}

@@ -1,19 +1,593 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2212.10496",
  "pdf": "generative-ai/02-rag-retrieval/sources/gao-2023-precise-zero-shot-dense-retrieval.pdf",
  "bib": {
   "title": "Precise Zero-Shot Dense Retrieval without Relevance Labels",
+  "authors": [
+   "Luyu Gao",
+   "Xueguang Ma",
+   "Jimmy Lin",
+   "Jamie Callan"
+  ],
   "first_author": "Gao",
   "year": 2023,
-  "venue": "ACL (1) 2023",
+  "venue": "Proceedings of the 61st Annual Meeting of the ACL (Volume 1: Long Papers), pp. 1762-1777",
   "arxiv": "2212.10496",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-04",
-  "session": "5f2f0582-f958-4d9c-8469-02f3d5079657"
+  "at": "2026-11-07",
+  "chars_read": 62390,
+  "chars_total": 62390,
+  "engine": "pymupdf",
+  "skipped": "reference list skimmed only"
  },
- "legacy_report": "SOURCE: \"Precise Zero-Shot Dense Retrieval without Relevance Labels\" (HyDE). Luyu Gao, Xueguang Ma, Jimmy Lin, Jamie Callan (CMU and Waterloo). ACL 2023 (Proceedings of the 61st Annual Meeting, Vol. 1 Long Papers, pp. 1762–1777). arXiv 2212.10496 (Dec 2022). File: /Users/ramsey-wise/workspace/learn-ai-engineering/generative-ai/02-rag-retrieval/sources/gao-2023-precise-zero-shot-dense-retrieval.pdf\n\nCOVERAGE: I read the whole extraction, 62,468 of 62,468 chars. That covers the body, Tables 1–6, Limitations, all of Appendix A.1–A.3 and the ACL checklist. I only skimmed the reference list (about 36k–56k) for where the method comes from. The printed page numbers run 1762–1777 (PDF p1 = 1762).\n\nCLAIMS (ranked)\n- claim: The headline result is on TREC DL19/20 web search. HyDE (InstructGPT plus unsupervised Contriever, with no training) beats both Contriever and BM25 by a wide margin. It roughly matches fine-tuned Contriever-ft on DL19 but falls behind it on DL20.\n  number: DL19 nDCG@10 61.3 (Contriever 44.5, BM25 50.6, Contriever-ft 62.1, DPR 62.2, ANCE 64.5); DL20 nDCG@10 57.9 (Contriever-ft 63.2)\n  setup: TREC DL19/DL20 on the MS MARCO corpus of 8.84M passages. Generator is text-davinci-003 at temperature 0.7. Encoder is Contriever (BERT-base, 110M). DPR, ANCE and Contriever-ft were fine-tuned on MS MARCO, so this is in-domain for them.\n  quote: \"HyDE 41.8 61.3 88.0 38.2 57.9 84.4\" ... \"Contriever 24.0 44.5 74.6 24.0 42.1 75.4\" ... \"Contriever-ft 41.7 62.1 83.6 43.6 63.2 85.8\"; \"On TREC DL19, HyDE shows comparable mAP and nDCG@10 to Contriever-ft and the best Recall@1k. On DL20, HyDE gets around 10% lower mAP and nDCG@10 than Contriever-ft but similar Recall@1k.\"\n  where: Table 1 and §4.2, p.1767–1768 (chars about 22.0k–25.5k)\n- claim: The recall gain on DL19/20 is large. Recall@1k on DL19 goes from 74.6 to 88.0, which beats every supervised model, and on DL20 from 75.4 to 84.4.\n  number: R@1k 88.0 / 84.4\n  setup: as above\n  quote: same Table 1 rows\n  where: p.1767\n- claim: On seven low-resource BEIR tasks HyDE improves on Contriever everywhere. It loses to BM25 only on TREC-COVID nDCG@10, and only barely. It generally beats DPR and ANCE, while Contriever-ft keeps a clear lead on FiQA and DBPedia.\n  number: nDCG@10 HyDE / Contriever / Contriever-ft: Scifact 69.1/64.9/67.7, Arguana 46.6/37.9/44.6, TREC-COVID 59.3/27.3/59.6 (BM25 59.5), FiQA 27.3/24.5/32.9, DBPedia 36.8/29.2/41.3, TREC-NEWS 44.0/34.8/42.8, Climate-Fever 22.3/15.5/23.7\n  setup: Instructions are hand-written per dataset (App. A.1). Corpora range from 5K docs (SciFact) to 5.4M (Climate-Fever).\n  quote: \"HyDE 69.1 46.6 59.3 27.3 36.8 44.0 22.3\"; \"HyDE is only outperformed by BM25 on one dataset, TREC-COVID, but by a tiny margin on nDCG@10; in comparison, the underlying Contriever model alone underperforms by more than 50%.\"; \"Contriever-ft shows non-trivial performance advantages on FiQA and DBPedia.\"\n  where: Table 2 and §4.3, p.1767–1768\n- claim: BEIR Recall@100 also rises over Contriever. On TREC-COVID, though, HyDE recall (41.4) stays well below BM25 (49.8).\n  number: HyDE R@100 96.4, 97.9, 41.4, 62.1, 47.2, 50.9, 53.0\n  quote: \"HyDE 96.4 97.9 41.4 62.1 47.2 50.9 53.0\"; \"BM25 92.5 93.2 49.8 54.0 46.8 44.7 42.5\"\n  where: Table 2, p.1767\n- claim: The quality of the generator matters a great deal. Smaller or weaker instruction LMs still help, but by much less.\n  number: DL19 nDCG@10 Flan-T5-xxl (11B) 48.9, Cohere (52B) 53.8, InstructGPT 61.3 (Contriever 44.5)\n  setup: TREC DL19/20, Contriever encoder\n  quote: \"w/ Flan-T5 32.1 48.9 34.7 52.9\" \"w/ Cohere 34.1 53.8 36.3 53.8\" \"w/ InstructGPT 41.8 61.3 38.2 57.9\"; \"all models bring improvements to the unsupervised Contriever, with larger models bringing bigger improvements.\"\n  where: Table 4 and §5.1, p.1768\n- claim: HyDE also adds to fine-tuned encoders. The gains are smaller on GTR-XL, which the authors put down to it lacking document-document contrastive pre-training.\n  number: Contriever-ft DL19 nDCG@10 62.1→67.4; GTR-XL 69.6→71.9; DL20 GTR-XL 70.7→70.8\n  quote: \"Contriever-ft 41.7 62.1 43.6 63.2 + HyDE 48.6 67.4 46.9 63.5 GTR-XL 46.7 69.6 46.9 70.7 + HyDE 50.6 71.9 51.5 70.8\"; \"HyDE with fine-tuned encoders is not the intended usage\"\n  where: Table 6 and §5.3, p.1769\n- claim: In multilingual Mr.TyDi, HyDE beats mContriever on all four languages and loses to mContriever-ft on all four. On Bengali it is slightly below BM25.\n  number: MRR@100 sw 41.7, ko 30.6, ja 30.7, bn 41.3 (mContriever 38.3/22.3/19.5/35.3; mContriever-ft 51.2/34.2/32.4/42.3; BM25 bn 41.8)\n  quote: \"HyDE 41.7 30.6 30.7 41.3\"; \"we do observe some gaps between HyDE and fine-tuned mContriever-ft ... we hypothesize this is because the non-English languages we considered are under-trained in both pre-training and instruction-learning stages.\"\n  where: Table 3 and §4.4, p.1768\n- claim: A 3-shot base GPT-3 (not instruction-tuned) can stand in for the generator, but its results are less stable. It beats InstructGPT on FiQA and DBPedia and does worse on SciFact.\n  number: nDCG@10 Scifact 65.9 vs 69.1, FiQA 27.9 vs 27.3, DBPedia 40.5 vs 36.8\n  quote: \"w/ GPT-3 65.9 27.9 40.5\"; \"the few-shot model performs less stably\"\n  where: Table 5 and §5.2, p.1769\n- claim: The mechanism is that the generated document carries \"relevance patterns\", possibly with hallucinations. The contrastive encoder acts as a \"lossy compressor\" that filters those details out, so retrieval is document-to-document similarity.\n  number: none\n  quote: \"we expect the encoder's dense bottleneck to serve as a lossy compressor, where the extra (hallucinated) details are filtered out from the embedding.\"\n  where: §1, p.1763\n- claim: The query vector is the mean of N sampled hypothetical-document embeddings, and the query's own embedding is included in that mean (Eq. 6–8).\n  number: none. The extracted text never states the value of N.\n  quote: \"We estimate Equation 5 by sampling N documents from g\" ... \"We also consider the query as a possible hypothesis\"\n  where: §3.2, p.1765–1766\n- claim: No model was trained.\n  quote: \"No models were trained or fine-tuned in writing this paper.\"\n  where: footnote 1, p.1762\n\nLIMITS\n- Cost and latency are never measured: no timings, token counts or API cost appear. The authors concede the point in prose only: \"Our HyDE method relies on real-time generation from LLMs and therefore may not be suitable for tasks that demand high throughput or low latency.\" (Limitations, p.1770)\n- The paper does no failure analysis of hallucinated or wrong generations, and has no slice for queries where the generator lacks the knowledge or vocabulary. The closest it gets is the lossy-compressor argument, the gaps on FiQA, DBPedia and non-English, and \"We believe the performance differences can be attributed to the under-specification of the instructions\" (p.1768).\n- It concedes bias: \"HyDE may prefer certain content in its generation and therefore bias the final search results.\" (p.1770)\n- Only the dense encoder is tested. HyDE is never combined with BM25 or with hybrid search, and no reranker is used.\n- Each configuration is reported as a single run, with no error bars and no significance tests.\n- It depends on text-davinci-003, a closed endpoint that has since been deprecated, so the main numbers can no longer be reproduced exactly. It covers only 7 of the 18 BEIR datasets.\n- The authors position it as a cold-start tool: \"not necessarily over the entire lifespan of a search system ... As search logs grow and relevance data accumulate, a supervised dense retriever can be gradually trained\" (p.1770).\n- Multi-hop and conversational search are left for future work.\n\nBUILDS ON: Contriever (Izacard et al., 2021); InstructGPT (Ouyang et al., 2022); GPT-3 in-context learning (Brown et al., 2020); BEIR (Thakur et al., 2021); DPR (Karpukhin et al., 2020); ANCE (Xiong et al., 2021); GTR (Ni et al., 2022); FLAN (Wei et al., 2022); Pyserini (Lin et al., 2021a); Mr.TyDi (Zhang et al., 2021). It contrasts itself with GPL (Wang et al., 2022), InPars (Bonifacio et al., 2022), Promptagator (Dai et al., 2023), zero-shot question-generation reranking (Sachan et al., 2022), and the concurrent instruction-tuned retrievers of Asai et al. (2022) and Su et al. (2022).\n\nCODE: The paper prints no code and points to https://github.com/texttron/hyde (p.1762, footnote). The prompts are worth keeping verbatim (App. A.1, p.1775):\n\"Please write a passage to answer the question\nQuestion: [QUESTION]\nPassage:\"\n\"Please write a scientific paper passage to support or refute the claim\nClaim: [CLAIM]\nPassage:\"\n\"Please write a financial article passage to answer the question\nQuestion: [QUESTION]\nPassage:\"\n\nFIGURES\n- Fig. 1, p.2 (1762): \"An illustration of the HyDE model...\" It shows the instruction, query, generated document and real document side by side for English, a scientific query and Korean, which explains the pipeline in one glance.\n- Fig. 2, p.4 (1764): \"Illustration of HyDE running on InstructGPT...\" It shows actual generated passages, including a hallucinated \"nine days\" claim, which makes the point that a fake but relevant-looking document is enough.\n- Fig. 3, p.8 (1769): \"T-SNE plots of the embedding space of Contriever...\" HyDE vectors land nearer the relevant-document clusters than the raw query does. This is an intuition picture only, built from two hand-picked queries.\n\nAUDIT OF EXISTING NOTE PASSAGES\n1. /Users/ramsey-wise/workspace/learn-ai-engineering/generative-ai/02-rag-retrieval/notes/01-rag-pipeline.md:86. \"Costs an extra LLM call but often much better recall\"\n   - Supported in direction but missing a number and setup. A suggested anchor: DL19 Recall@1k 74.6 → 88.0 with InstructGPT plus Contriever.\n   - Two qualifications belong next to it. The comparison is against an unsupervised dense baseline. TREC-COVID R@100 (41.4) stays below BM25 (49.8).\n   - \"One extra call\" understates the paper's method, which averages N samples. It is fair for a single-sample implementation.\n   - The \"Variant: generate Q/A pairs per document at index time\" is not in this paper. Credit it to another source.\n2. 01-rag-pipeline.md:90 (\"Paraphrase-heavy or sparse docs → HyDE\") and :130 (HyDE as pre-retrieval). These are classification only and need no number. The paper's own target case is zero-shot, no-labels cold start, which the notes do not mention.\n3. /Users/ramsey-wise/workspace/learn-ai-engineering/generative-ai/02-rag-retrieval/notes/05-chunking-query-parsing-and-reranking.md:196, :251 and :605 (fake answer at query time, one LLM call plus latency). These match the paper. Latency is conceded in its Limitations but never measured.\n4. 05:270 (\"prompt-to-document ... document-to-document, where one side is the 'perfect' document\"). Supported, and it matches §3.2. \"Perfect\" is a little loose: the paper says the document \"is not real\" and \"likely to be ungrounded factually\"; it only has to be \"like\" a relevant document.\n5. 05:274 attributes \"generates several answers ... averages their embeddings\" to Raieli and Iuculano as \"their variant\". This is misattributed. Averaging N sampled documents, plus the query embedding, is the original HyDE method (Eq. 6–8, §3.2, p.1765–1766). The note should cite Gao et al. for it and keep the book only as the source of the five-sample example.\n6. 05:553 and :573 (the Wang et al. 2024 sweep, 1.5 s → 11.7 s). That is Wang et al.'s data, not this paper's, so I cannot audit it here. It does fill the latency gap this paper leaves open.\n7. /Users/ramsey-wise/workspace/learn-ai-engineering/generative-ai/02-rag-retrieval/notes/11-retrieval-improvements.md:214–216 (\"bridges the domain gap ... informal vs formal vocabulary ... HyDE closes this gap\")\n   - This is the note's own reading, not the paper's. The paper frames HyDE as moving relevance modelling into generation, with document-to-document similarity, for zero-shot retrieval without labels. It does not test vocabulary mismatch.\n   - \"HyDE closes this gap\" is stated as fact for a corpus that has not been tested (Status: Planned). That overstates it. Soften the wording, or anchor it to a number with its setup, such as the BEIR FiQA result (27.3 vs Contriever 24.5, but below Contriever-ft 32.9).\n8. 11:218–219 (\"Cost: +1 LLM call\"; \"works best with pure vector retrieval ... HYBRID may dilute\"). The +1 call is fine with the caveat about N samples. \"Works best with pure vector\" is not shown by the paper, which tests dense only and never tests hybrid. The note's own line 254 already says \"untested\", so line 219 should not state it as fact.\n9. 11:234–254 (the gamble on the guess, with the toy corpus). This is consistent with the paper's conceded but unmeasured risks: bias and under-specified instructions. It is fine as hand-built illustration.\n10. 11:472 (\"best with pure vector search\"). Same overstatement as item 8.\n11. The notes leave out several findings that would sharpen them:\n   - Gains depend heavily on generator strength (Flan-T5 48.9, Cohere 53.8, InstructGPT 61.3 nDCG@10 on DL19).\n   - HyDE still helps fine-tuned encoders (Contriever-ft 62.1→67.4).\n   - It does not reach fine-tuned models on DL20, FiQA, DBPedia or the non-English sets.\n   - The authors frame it as a cold-start tool to replace once labels exist.\n   - Per-domain instructions are part of the method (App. A.1).\n12. /Users/ramsey-wise/workspace/learn-ai-engineering/generative-ai/02-rag-retrieval/references.md:59 lists \"(HyDE, 2022)\". The peer-reviewed version is ACL 2023, so consider adding the venue.\n\nPROBLEMS: The extraction is clean, apart from the Japanese and Korean text in the figures (spacing artefacts only) and the equations in Eq. 6–8 being flattened. The value of N, the number of sampled hypothetical documents, is not stated anywhere in the extracted text. There are no embedded instructions."
+ "type": "empirical",
+ "question": "Can an effective dense retriever be built with no relevance labels by having an instruction-following LM write a hypothetical document and encoding that with an unsupervised contrastive encoder?",
+ "hypothesis": "Relevance modeling can be offloaded to a generative LM, and the encoder's dense bottleneck filters hallucinated details, giving performance near fine-tuned retrievers.",
+ "contributions": [
+  "HyDE: pivot query through a generated hypothetical document embedded by an unsupervised contrastive encoder",
+  "Evaluation on web search, 7 BEIR tasks and 4 Mr.TyDi languages, beating Contriever and competitive with fine-tuned retrievers",
+  "Analysis of generator choice, base LMs, fine-tuned encoders"
+ ],
+ "method": {
+  "summary": "For each query, prompt InstructGPT (text-davinci-003, temp 0.7) with a task-specific instruction to write a passage, encode N sampled passages (and optionally the query) with Contriever/mContriever, average the vectors, and retrieve by inner product over precomputed corpus embeddings using Pyserini. Nothing is trained.",
+  "task": "zero-shot dense retrieval (web search, BEIR, multilingual)",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "TREC DL19",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "MS MARCO based; corpus 8.84M documents; MIT licence non-commercial",
+    "preprocessing": null
+   },
+   {
+    "name": "TREC DL20",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "MS MARCO based; corpus 8.84M",
+    "preprocessing": null
+   },
+   {
+    "name": "BEIR: Scifact, Arguana, TREC-COVID, FiQA, DBPedia, TREC-NEWS, Climate-Fever",
+    "role": "eval",
+    "size": "corpora: Scifact 5K, Arguana 8.67K, TREC-COVID 171K, FiQA 57K, DBPedia 4.6M, TREC-NEWS 595K, Climate-Fever 5.4M docs",
+    "split": null,
+    "source": "BEIR, Apache 2.0",
+    "preprocessing": null
+   },
+   {
+    "name": "Mr.TyDi sw/ko/ja/bn",
+    "role": "eval",
+    "size": "corpora: sw 136K, ko 1.5M, ja 7M, bn 300K docs",
+    "split": null,
+    "source": "from TyDi QA; Apache 2.0",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "InstructGPT (text-davinci-003)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "GPT-3 instruct series, API",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Contriever / mContriever",
+    "role": "retriever",
+    "params": "110M",
+    "architecture": "BERT-base, unsupervised contrastive",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "FLAN-T5-xxl",
+    "role": "evaluated",
+    "params": "11B",
+    "architecture": "T5-XXL",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Cohere command-xlarge-20221108",
+    "role": "evaluated",
+    "params": "52B",
+    "architecture": "API only",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-3 base (3-shot)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "API only",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GTR-XL",
+    "role": "evaluated",
+    "params": "1.24B",
+    "architecture": "T5-XL dual encoder",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Contriever-ft / mContriever-ft, DPR, ANCE, mDPR, mBERT, XLM-R",
+    "role": "baseline",
+    "params": null,
+    "architecture": "fine-tuned on MS MARCO; numbers taken from BEIR, Mr.TyDi and Contriever papers",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "sampling from OpenAI API",
+   "temperature": "0.7",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "N samples per query, value of N not stated; no seeds or repeated runs stated",
+   "prompting": "zero-shot, one instruction per dataset (appendix A.1); 3-shot for base GPT-3 in Sec 5.2",
+   "retrieval": "inner product between averaged hypothetical-document vector (optionally plus query vector, 1/(N+1)) and corpus vectors; Pyserini; top-k depth for metrics per official metric",
+   "parameters": {
+    "N": null,
+    "query_included_in_average": "Eq 8 variant, whether used in reported runs not stated"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "mAP",
+     "definition": "official TREC DL metric",
+     "unit": "x100",
+     "higher_is_better": true
+    },
+    {
+     "name": "nDCG@10",
+     "definition": "official",
+     "unit": "x100",
+     "higher_is_better": true
+    },
+    {
+     "name": "Recall@1k",
+     "definition": "DL19/20",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Recall@100",
+     "definition": "BEIR",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "MRR@100",
+     "definition": "Mr.TyDi",
+     "unit": "x100",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "BM25",
+    "Contriever",
+    "mContriever",
+    "DPR",
+    "ANCE",
+    "Contriever-ft",
+    "mContriever-ft",
+    "mDPR",
+    "mBERT",
+    "XLM-R",
+    "GTR-XL"
+   ],
+   "protocol": "single reported number per cell; no seeds, error bars or significance tests stated"
+  },
+  "availability": {
+   "code": "https://github.com/texttron/hyde",
+   "weights": "not applicable (no training); generator via API",
+   "data": "public benchmarks"
+  },
+  "prompts": [
+   {
+    "purpose": "Web search / DBPedia",
+    "text": "Please write a passage to answer the question\nQuestion: [QUESTION]\nPassage:",
+    "where": "A.1"
+   },
+   {
+    "purpose": "SciFact",
+    "text": "Please write a scientific paper passage to support or refute the claim\nClaim: [CLAIM]\nPassage:",
+    "where": "A.1"
+   },
+   {
+    "purpose": "Arguana",
+    "text": "Please write a counter argument for the passage\nPassage: [PASSAGE]\nCounter Argument:",
+    "where": "A.1"
+   },
+   {
+    "purpose": "TREC-COVID",
+    "text": "Please write a scientific paper passage to answer the question\nQuestion: [QUESTION]\nPassage:",
+    "where": "A.1"
+   },
+   {
+    "purpose": "FiQA",
+    "text": "Please write a financial article passage to answer the question\nQuestion: [QUESTION]\nPassage:",
+    "where": "A.1"
+   },
+   {
+    "purpose": "TREC-NEWS",
+    "text": "Please write a news passage about the topic.\nTopic: [TOPIC]\nPassage:",
+    "where": "A.1"
+   },
+   {
+    "purpose": "Climate-Fever",
+    "text": "Please write a Wikipedia passage to verify the claim.\nClaim: [CLAIM]\nPassage:",
+    "where": "A.1"
+   },
+   {
+    "purpose": "Mr.TyDi",
+    "text": "Please write a passage in {Swahili, Korean, Japanese, Bengali} to answer the question in detail.\nQuestion: [QUESTION]\nPassage:",
+    "where": "A.1"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "HyDE lifts Contriever nDCG@10 on TREC DL19 from 44.5 to 61.3, above BM25 (50.6).",
+   "kind": "measured",
+   "source": null,
+   "metric": "nDCG@10 DL19",
+   "value": "61.3",
+   "unit": "nDCG@10 x100",
+   "baseline_value": "44.5 (Contriever); BM25 50.6",
+   "n": null,
+   "setup": "TREC DL19 (and DL20), MS MARCO corpus 8.84M passages; HyDE = text-davinci-003 (temp 0.7) + unsupervised Contriever (110M), no training; one fixed prompt; no seeds or run count stated",
+   "note": null,
+   "where": "Table 1, p.1767",
+   "table": "Table 1, row HyDE, column DL19 nDCG@10"
+  },
+  {
+   "claim": "HyDE DL19 Recall@1k is 88.0 against 74.6 for Contriever and 75.0 for BM25, above the fine-tuned models.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Recall@1k DL19",
+   "value": "88.0",
+   "unit": "%",
+   "baseline_value": "74.6 (Contriever); BM25 75.0; Contriever-ft 83.6",
+   "n": null,
+   "setup": "TREC DL19 (and DL20), MS MARCO corpus 8.84M passages; HyDE = text-davinci-003 (temp 0.7) + unsupervised Contriever (110M), no training; one fixed prompt; no seeds or run count stated",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row HyDE, column DL19 Recall@1k"
+  },
+  {
+   "claim": "On DL20 HyDE nDCG@10 is 57.9, below Contriever-ft (63.2) but above Contriever (42.1) and BM25 (48.0).",
+   "kind": "measured",
+   "source": null,
+   "metric": "nDCG@10 DL20",
+   "value": "57.9",
+   "unit": "nDCG@10 x100",
+   "baseline_value": "42.1 (Contriever); Contriever-ft 63.2",
+   "n": null,
+   "setup": "TREC DL19 (and DL20), MS MARCO corpus 8.84M passages; HyDE = text-davinci-003 (temp 0.7) + unsupervised Contriever (110M), no training; one fixed prompt; no seeds or run count stated",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row HyDE, column DL20 nDCG@10"
+  },
+  {
+   "claim": "On DL19 DPR (62.2) and ANCE (64.5) beat HyDE (61.3) on nDCG@10 but have lower Recall@1k (76.9, 75.5).",
+   "kind": "measured",
+   "source": null,
+   "metric": "nDCG@10 DL19 ANCE",
+   "value": "64.5",
+   "unit": "nDCG@10 x100",
+   "baseline_value": null,
+   "n": null,
+   "setup": "as Table 1; DPR/ANCE/Contriever-ft are fine-tuned on MS MARCO (in-domain)",
+   "note": null,
+   "where": "Sec 4.2",
+   "table": "Table 1, row ANCE, column DL19 nDCG@10",
+   "quote": "The ANCE model shows better nDCG@10 numbers than HyDE but lower recall, suggesting it may be biased to a subset of queries and/or relevant documents."
+  },
+  {
+   "claim": "On seven BEIR low-resource tasks HyDE beats Contriever on nDCG@10 everywhere; e.g. TREC-COVID 59.3 vs 27.3, BM25 59.5.",
+   "kind": "measured",
+   "source": null,
+   "metric": "nDCG@10 TREC-COVID",
+   "value": "59.3",
+   "unit": "nDCG@10 x100",
+   "baseline_value": "27.3 (Contriever); BM25 59.5",
+   "n": null,
+   "setup": "BEIR TREC-COVID; same HyDE setup; per-dataset instruction from appendix A.1",
+   "note": null,
+   "where": "Table 2, Sec 4.3",
+   "table": "Table 2, row HyDE, column Trec-Covid (nDCG@10)",
+   "quote": "HyDE is only outper-\nformed by BM25 on one dataset, TREC-COVID,\nbut by a tiny margin on nDCG@10"
+  },
+  {
+   "claim": "HyDE on Arguana nDCG@10 is 46.6 vs 37.9 for Contriever and 44.6 for Contriever-ft.",
+   "kind": "measured",
+   "source": null,
+   "metric": "nDCG@10 Arguana",
+   "value": "46.6",
+   "unit": "nDCG@10 x100",
+   "baseline_value": "37.9 (Contriever)",
+   "n": null,
+   "setup": "BEIR Arguana",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row HyDE, column Arguana (nDCG@10)"
+  },
+  {
+   "claim": "Contriever-ft keeps an edge on FiQA (32.9 vs 27.3) and DBPedia (41.3 vs 36.8); authors attribute it to under-specified instructions.",
+   "kind": "measured",
+   "source": null,
+   "metric": "nDCG@10 FiQA HyDE",
+   "value": "27.3",
+   "unit": "nDCG@10 x100",
+   "baseline_value": "Contriever-ft 32.9",
+   "n": null,
+   "setup": "BEIR FiQA",
+   "note": null,
+   "where": "Sec 4.3",
+   "table": "Table 2, row HyDE, column FiQA (nDCG@10)",
+   "quote": "We believe the performance differences can be at-\ntributed to the under-specification of the instruc-\ntions; more elaborate prompts may help."
+  },
+  {
+   "claim": "Multilingual (MRR@100, Mr.TyDi): HyDE beats mContriever in all four languages but trails mContriever-ft; Swahili 41.7 vs 38.3 vs 51.2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MRR@100 sw",
+   "value": "41.7",
+   "unit": "MRR@100 x100",
+   "baseline_value": "38.3 (mContriever); mContriever-ft 51.2",
+   "n": null,
+   "setup": "Mr.TyDi sw/ko/ja/bn; mContriever encoder; InstructGPT generator with 'in {language}' instruction",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row HyDE, column sw"
+  },
+  {
+   "claim": "Japanese shows the largest multilingual gain: HyDE 30.7 vs mContriever 19.5.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MRR@100 ja",
+   "value": "30.7",
+   "unit": "MRR@100 x100",
+   "baseline_value": "19.5 (mContriever)",
+   "n": null,
+   "setup": "Mr.TyDi Japanese",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row HyDE, column ja"
+  },
+  {
+   "claim": "Generator size and instruction tuning matter: with Flan-T5-xxl (11B) DL19 nDCG@10 is 48.9, Cohere (52B) 53.8, InstructGPT 61.3.",
+   "kind": "measured",
+   "source": null,
+   "metric": "nDCG@10 DL19 Flan-T5",
+   "value": "48.9",
+   "unit": "nDCG@10 x100",
+   "baseline_value": "44.5 (Contriever)",
+   "n": null,
+   "setup": "TREC DL19, Contriever encoder, swapped generator",
+   "note": null,
+   "where": "Table 4, Sec 5.1",
+   "table": "Table 4, row w/ Flan-T5, column DL19 nDCG@10",
+   "quote": "Generally, we observe that all models bring\nimprovements to the unsupervised Contriever, with\nlarger models bringing bigger improvements."
+  },
+  {
+   "claim": "A 3-shot base GPT-3 generator is unstable: Scifact 65.9 (vs 69.1 InstructGPT) but DBPedia 40.5 (vs 36.8).",
+   "kind": "measured",
+   "source": null,
+   "metric": "nDCG@10 DBPedia GPT-3 3-shot",
+   "value": "40.5",
+   "unit": "nDCG@10 x100",
+   "baseline_value": "36.8 (InstructGPT)",
+   "n": null,
+   "setup": "BEIR Scifact/FiQA/DBPedia, 3 in-context examples, base GPT-3 (model size not stated)",
+   "note": null,
+   "where": "Table 5, Sec 5.2",
+   "table": "Table 5, row w/ GPT-3, column DBPedia"
+  },
+  {
+   "claim": "HyDE on top of fine-tuned Contriever raises DL19 nDCG@10 from 62.1 to 67.4 but DL20 only from 63.2 to 63.5.",
+   "kind": "measured",
+   "source": null,
+   "metric": "nDCG@10 DL19 Contriever-ft+HyDE",
+   "value": "67.4",
+   "unit": "nDCG@10 x100",
+   "baseline_value": "62.1",
+   "n": null,
+   "setup": "TREC DL19/20; fine-tuned encoder; not the intended use",
+   "note": null,
+   "where": "Table 6, Sec 5.3",
+   "table": "Table 6, row + HyDE (after Contriever-ft), column DL19 nDCG@10"
+  },
+  {
+   "claim": "HyDE on GTR-XL (1.2B) gives DL19 nDCG@10 71.9 vs 69.6, DL20 70.8 vs 70.7.",
+   "kind": "measured",
+   "source": null,
+   "metric": "nDCG@10 DL19 GTR-XL+HyDE",
+   "value": "71.9",
+   "unit": "nDCG@10 x100",
+   "baseline_value": "69.6",
+   "n": null,
+   "setup": "TREC DL19/20, GTR-XL fine-tuned",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row + HyDE (after GTR-XL), column DL19 nDCG@10"
+  },
+  {
+   "claim": "Authors state no model was trained or fine-tuned.",
+   "kind": "measured",
+   "source": null,
+   "metric": "trains",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "whole paper",
+   "note": null,
+   "where": "footnote 1, p.1762",
+   "quote": "No models were trained or fine-tuned in writing this paper."
+  }
+ ],
+ "limits": [
+  "Relies on real-time LLM generation, so unsuitable for high-throughput or low-latency tasks (Limitations).",
+  "Generated content may carry LLM bias into search results.",
+  "Multilingual gap to mContriever-ft attributed to under-trained languages (hypothesis, not tested).",
+  "Only dense retrieval with Contriever-family encoders compared; BM25 only as baseline, no hybrid.",
+  "No run counts, seeds, variance or N stated; generator text-davinci-003 is a deprecated API model.",
+  "Prompts were written per dataset; no prompt sensitivity study."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "HyDE",
+   "definition": "Hypothetical Document Embeddings: encode an LM-generated hypothetical document in place of the query",
+   "where": "Sec 3.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Unsupervised dense information retrieval with contrastive learning (Contriever)",
+   "year": 2021,
+   "arxiv": "2112.09118",
+   "relation": "uses-method",
+   "note": "encoder",
+   "quote": null
+  },
+  {
+   "work": "Training language models to follow instructions with human feedback (InstructGPT)",
+   "year": 2022,
+   "arxiv": "2203.02155",
+   "relation": "uses-method",
+   "note": "generator",
+   "quote": null
+  },
+  {
+   "work": "BEIR",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "low-resource tasks and DPR/ANCE baselines",
+   "quote": null
+  },
+  {
+   "work": "Mr. TyDi",
+   "year": 2021,
+   "arxiv": "2108.08787",
+   "relation": "uses-data",
+   "note": "multilingual",
+   "quote": null
+  },
+  {
+   "work": "Improving passage retrieval with zero-shot question generation (Sachan et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "zero-shot LM re-ranking",
+   "quote": null
+  },
+  {
+   "work": "Task-aware retrieval with instructions (Asai et al.)",
+   "year": 2022,
+   "arxiv": "2211.09260",
+   "relation": "related",
+   "note": "concurrent, fine-tunes encoders",
+   "quote": null
+  },
+  {
+   "work": "Large dual encoders are generalizable retrievers (GTR)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "GTR-XL with HyDE",
+   "quote": null
+  },
+  {
+   "work": "Pyserini",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "retrieval toolkit",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Figure 1",
+   "caption": "An illustration of the HyDE model.",
+   "page": 2,
+   "why": "shows query -> generated document -> Contriever -> real documents"
+  },
+  {
+   "figure": "Figure 3",
+   "caption": "T-SNE plots of the embedding space of Contriever for query examples and their nearby documents.",
+   "page": 8,
+   "why": "HyDE vectors sit nearer relevant documents than raw queries"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 7-8, p.1766",
+   "snippet": "v_hat = (1/N) sum_k f(d_k)  ;  v_hat = 1/(N+1) [ sum_k f(d_k) + f(q) ]",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Table values read from line-per-cell text; column mapping done by position."
+ ]
 }

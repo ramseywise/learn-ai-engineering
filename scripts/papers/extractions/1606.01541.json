@@ -1,0 +1,423 @@
+{
+ "schema": 1,
+ "key": "1606.01541",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/li-2016-deep-reinforcement-learning-dialogue-generation.pdf",
+ "bib": {
+  "title": "Deep Reinforcement Learning for Dialogue Generation",
+  "authors": [
+   "Jiwei Li",
+   "Will Monroe",
+   "Alan Ritter",
+   "Michel Galley",
+   "Jianfeng Gao",
+   "Dan Jurafsky"
+  ],
+  "first_author": "Li",
+  "year": 2016,
+  "venue": "Proceedings of the 2016 Conference on Empirical Methods in Natural Language Processing (EMNLP), pages 1192-1202",
+  "arxiv": "1606.01541",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 42803,
+  "chars_total": 42803,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can policy-gradient reinforcement learning with developer-defined rewards make neural chatbots model the long-term course of a dialogue rather than only the next turn?",
+ "hypothesis": "Rewarding ease of answering, information flow and semantic coherence over simulated two-agent dialogues yields more interactive, diverse and sustained conversations than MLE seq2seq or mutual-information models.",
+ "contributions": [
+  "A neural RL framework for open-domain response generation that simulates dialogue between two agents and optimises long-term developer-defined reward with policy gradient",
+  "Three heuristic rewards (ease of answering, information flow, semantic coherence)",
+  "Evaluation on diversity, simulated dialogue length and human judgement"
+ ],
+ "method": {
+  "summary": "A 4-layer LSTM encoder-decoder with attention is trained with MLE on OpenSubtitles, refined with a mutual-information policy-gradient stage, then used to initialise an RL policy. Two copies converse for up to 5 simulated turns (5 candidates per step) and REINFORCE updates the policy on a weighted sum of three heuristic rewards, with curriculum over dialogue length.",
+  "task": "open-domain neural dialogue response generation with RL",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "OpenSubtitles (supervised)",
+    "role": "train",
+    "size": "roughly 80 million source-target pairs",
+    "split": null,
+    "source": "OpenSubtitles",
+    "preprocessing": "each turn is a target, concatenation of two previous sentences is the source"
+   },
+   {
+    "name": "OpenSubtitles subset for simulation seeds",
+    "role": "train",
+    "size": "10 million messages subset; 0.8 million sequences extracted",
+    "split": null,
+    "source": "OpenSubtitles",
+    "preprocessing": "kept the 0.8M sequences with lowest likelihood of generating 'i don't know what you are taking about' so initial inputs are easy to respond to"
+   },
+   {
+    "name": "Test input messages",
+    "role": "eval",
+    "size": "1,000 input messages",
+    "split": null,
+    "source": null,
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "SEQ2SEQ (LSTM encoder-decoder with attention)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "4-layer LSTM encoder-decoder with attention (Bahdanau et al., 2015)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "4 (stated in Table 1 caption)",
+    "hidden": null,
+    "heads": null,
+    "context": "previous two dialogue turns",
+    "other": {}
+   },
+   {
+    "name": "Mutual information model",
+    "role": "baseline",
+    "params": null,
+    "architecture": "seq2seq policy fine-tuned by policy gradient on mutual information reward; also Li et al. 2015 n-best rerank variant",
+    "init_from": "pre-trained SEQ2SEQ",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "RL model",
+    "role": "proposed",
+    "params": null,
+    "architecture": "LSTM encoder-decoder stochastic policy p_RL(p_{i+1}|p_i,q_i)",
+    "init_from": "mutual information model",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "state = previous two turns",
+    "other": {
+     "action_space": "all utterances (infinite)"
+    }
+   }
+  ],
+  "training": {
+   "objective": "Stage 1 MLE seq2seq; stage 2 REINFORCE on mutual information reward with learned baseline b; stage 3 REINFORCE on expected sum of rewards r = 0.25*r1 + 0.25*r2 + 0.5*r3 over simulated dialogue",
+   "optimizer": "stochastic gradient descent for the policy updates; no learning rate stated",
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "reward_weights": "lambda1=0.25, lambda2=0.25, lambda3=0.5",
+    "dull_response_list": "8 manually constructed dull turns (list not given in full)",
+    "curriculum_mi": "MLE loss for first L tokens, REINFORCE for remaining T-L, L annealed to zero",
+    "curriculum_sim": "simulate 2 turns, gradually increase; 5 turns at most; 5 candidate responses per step",
+    "baseline": "separate neural model takes generated target and source and outputs baseline value"
+   }
+  },
+  "inference": {
+   "decoding": "beam search with beam size 10 for SEQ2SEQ and RL; mutual information model: n-best from p(t|s) reranked linearly with p(s|t)",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "1 test pass over 1,000 inputs; no seeds or repeats stated",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "max_simulated_turns_eval": "fewer than 8",
+    "dialogue_end_rule": "an agent produces a dull response (8-phrase rule list) or two consecutive utterances from the same agent share more than 80 percent of words",
+    "rerank_weight": "not stated"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Simulated dialogue length",
+     "definition": "number of turns before a dull response or an 80% overlap repeat, capped below 8",
+     "unit": "turns",
+     "higher_is_better": true
+    },
+    {
+     "name": "Diversity",
+     "definition": "distinct unigrams and bigrams divided by total generated tokens (type-token ratio)",
+     "unit": "ratio",
+     "higher_is_better": true
+    },
+    {
+     "name": "Pairwise human preference",
+     "definition": "3 crowd judges choose better output; win/lose/tie fractions of RL vs mutual information model",
+     "unit": "fraction",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "SEQ2SEQ",
+    "mutual information model (Li et al. 2016a)"
+   ],
+   "protocol": "Human: single-turn quality 500 items x 3 judges, single-turn ease to answer 500 items x 3 judges, multi-turn quality 200 simulated 5-turn conversations x 3 judges; no significance test details given though differences called significant. BLEU and perplexity deliberately not used."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": null
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.other.reward_weights",
+    "quote": "We set λ1 = 0.25, λ2 = 0.25 and λ3 = 0.5.",
+    "where": "Sec 3.4"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "RL model sustains simulated dialogues longer than mutual information and SEQ2SEQ.",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg simulated turns",
+   "value": 4.48,
+   "unit": "turns",
+   "baseline_value": "2.68 SEQ2SEQ; 3.40 mutual information",
+   "n": null,
+   "setup": "OpenSubtitles-trained LSTM seq2seq policy, RL model initialised from mutual-information model; 1,000 test inputs, cap below 8 turns",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row RL, column # of simulated turns"
+  },
+  {
+   "claim": "Mutual information model sustains dialogues longer than plain SEQ2SEQ.",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg simulated turns",
+   "value": 3.4,
+   "unit": "turns",
+   "baseline_value": "2.68 SEQ2SEQ",
+   "n": null,
+   "setup": "1,000 test inputs",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row mutual information"
+  },
+  {
+   "claim": "RL unigram diversity beats baselines.",
+   "kind": "measured",
+   "source": null,
+   "metric": "unigram type-token ratio",
+   "value": 0.017,
+   "unit": "ratio",
+   "baseline_value": "0.0062 SEQ2SEQ; 0.011 mutual information",
+   "n": null,
+   "setup": "beam size 10 for RL and SEQ2SEQ",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row RL, column Unigram"
+  },
+  {
+   "claim": "RL bigram diversity beats baselines.",
+   "kind": "measured",
+   "source": null,
+   "metric": "bigram type-token ratio",
+   "value": 0.041,
+   "unit": "ratio",
+   "baseline_value": "0.015 SEQ2SEQ; 0.031 mutual information",
+   "n": null,
+   "setup": "beam size 10 for RL and SEQ2SEQ",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row RL, column Bigram"
+  },
+  {
+   "claim": "Judges prefer RL multi-turn conversations over mutual information ones.",
+   "kind": "measured",
+   "source": null,
+   "metric": "RL-win rate",
+   "value": 0.72,
+   "unit": "fraction",
+   "baseline_value": "lose 0.12, tie 0.16",
+   "n": 200,
+   "setup": "200 simulated 5-turn conversations, 3 judges each, vs mutual information model",
+   "note": null,
+   "where": "Table 5; Sec 5.2",
+   "table": "Table 5, row multi-turn general quality, column RL-win",
+   "quote": "multi-turn general quality setting (winning 72 percent of time)"
+  },
+  {
+   "claim": "RL responses are easier to answer than mutual information responses.",
+   "kind": "measured",
+   "source": null,
+   "metric": "RL-win rate",
+   "value": 0.52,
+   "unit": "fraction",
+   "baseline_value": "lose 0.23, tie 0.25",
+   "n": 500,
+   "setup": "500 items, 3 judges each, single-turn ease to answer",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row single-turn ease to answer, column RL-win"
+  },
+  {
+   "claim": "No significant single-turn quality gain.",
+   "kind": "measured",
+   "source": null,
+   "metric": "RL-win rate",
+   "value": 0.4,
+   "unit": "fraction",
+   "baseline_value": "lose 0.36, tie 0.24",
+   "n": 500,
+   "setup": "500 items, 3 judges each, single-turn general quality",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row single-turn general quality, column RL-win"
+  },
+  {
+   "claim": "RL model scores lower single-reference BLEU than the mutual information model (and higher than SEQ2SEQ).",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": 1.28,
+   "unit": "BLEU",
+   "baseline_value": "1.44 mutual information; 1.17 SEQ2SEQ",
+   "n": 2500,
+   "setup": "random sample of 2,500 conversational pairs",
+   "note": null,
+   "where": "footnote 2, p.1197",
+   "quote": "single reference BLEU scores for RL models, mutual information models and vanilla SEQ2SEQ models are respectively 1.28, 1.44 and 1.17."
+  }
+ ],
+ "limits": [
+  "Hand-defined reward cannot cover what defines an ideal conversation; ideally rewards come from humans (Sec 5.2 discussion)",
+  "Only a very small number of candidates and simulated turns is affordable because cases grow exponentially",
+  "Dialogues can enter cycles longer than one turn (Table 6) because only limited history is considered",
+  "Model sometimes starts a less relevant topic; relevance vs non-repetition tradeoff",
+  "RL model has lower BLEU than the mutual information model",
+  "Dialogue-end detection uses rule matching over 8 dull phrases, with false positives and negatives",
+  "Reward-related and optimisation hyperparameters (learning rate, batch size, hidden size, steps, compute) are not reported; no code release stated"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Ease of answering",
+   "definition": "reward r1: negative length-normalised log likelihood, averaged over a list of 8 dull responses, of answering the generated turn with a dull response",
+   "where": "Sec 3.4, Eq 1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "A diversity-promoting objective function for neural conversation models",
+   "year": 2016,
+   "arxiv": "1510.03055",
+   "relation": "extends",
+   "note": "mutual information objective used as initialisation and baseline; diversity metric taken from it",
+   "quote": null
+  },
+  {
+   "work": "Sequence level training with recurrent neural networks (Ranzato et al.)",
+   "year": 2015,
+   "arxiv": "1511.06732",
+   "relation": "uses-method",
+   "note": "policy gradient with curriculum from MLE to REINFORCE",
+   "quote": null
+  },
+  {
+   "work": "Reinforcement learning neural Turing machines (Zaremba and Sutskever)",
+   "year": 2015,
+   "arxiv": "1505.00521",
+   "relation": "uses-method",
+   "note": "learned baseline for variance reduction",
+   "quote": null
+  },
+  {
+   "work": "Simple statistical gradient-following algorithms (Williams)",
+   "year": 1992,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "REINFORCE / likelihood ratio gradient",
+   "quote": null
+  },
+  {
+   "work": "Neural machine translation by jointly learning to align and translate",
+   "year": 2015,
+   "arxiv": "1409.0473",
+   "relation": "uses-method",
+   "note": "attention in the seq2seq model",
+   "quote": null
+  },
+  {
+   "work": "A neural conversational model (Vinyals and Le)",
+   "year": 2015,
+   "arxiv": "1506.05869",
+   "relation": "baseline",
+   "note": "supervised seq2seq dialogue",
+   "quote": null
+  },
+  {
+   "work": "Mastering the game of Go (Silver et al.)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "related",
+   "note": "AlphaGo-style supervised initialisation then RL",
+   "quote": null
+  },
+  {
+   "work": "OpenSubtitles",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "training and simulation seed data",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Table 1",
+   "caption": "Dialogue simulation between two agents: mutual information baseline (left) vs RL model (right)",
+   "page": 2,
+   "why": "Shows loops of dull replies versus forward-looking turns"
+  },
+  {
+   "figure": "Figure 1",
+   "caption": "Dialogue simulation between the two agents.",
+   "page": 5,
+   "why": "Shows candidate expansion per turn"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 4",
+   "snippet": "r(a, [pi, qi]) = λ1r1 + λ2r2 + λ3r3, λ1=0.25, λ2=0.25, λ3=0.5",
+   "verbatim": false
+  },
+  {
+   "where": "Eq 7",
+   "snippet": "∇J(θ) = ∇log pRL(â|[pi, qi])[m(â, [pi, qi]) − b]",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "No embedded instructions found. Equations garbled in text extraction; read from layout."
+ ]
+}

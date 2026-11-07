@@ -1,0 +1,143 @@
+{
+ "schema": 1,
+ "key": "1909.08053",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/shoeybi-2019-megatron-lm.pdf",
+ "bib": {
+  "title": "Megatron-LM: Training Multi-Billion Parameter Language Models Using Model Parallelism",
+  "authors": ["Mohammad Shoeybi", "Mostofa Patwary", "Raul Puri", "Patrick LeGresley", "Jared Casper", "Bryan Catanzaro"],
+  "first_author": "Shoeybi",
+  "year": 2019,
+  "venue": "preprint",
+  "arxiv": "1909.08053",
+  "doi": null
+ },
+ "read": {"by": "source-reader", "at": "2026-11-07", "chars_read": 68294, "chars_total": 68294, "engine": "pymupdf", "skipped": null},
+ "type": "system",
+ "question": "How can transformer language models with billions of parameters be trained with a simple intra-layer model parallel scheme in native PyTorch, and does the larger scale improve accuracy?",
+ "hypothesis": "Larger transformer language models improve NLP accuracy, and layer-norm placement matters for BERT-like models as they scale.",
+ "contributions": [
+  "A simple and efficient model parallel approach with only a few targeted modifications to an existing PyTorch transformer implementation.",
+  "In-depth empirical analysis of model and data parallel technique, up to 76% scaling efficiency using 512 GPUs.",
+  "Careful placement of layer normalization in BERT-like models is critical to increased accuracy as the model grows.",
+  "Scaling model size improves accuracy for GPT-2 (up to 8.3 billion) and BERT (up to 3.9B).",
+  "SOTA on WikiText103 (10.8 ppl), LAMBADA (66.5%) and RACE (90.9%).",
+  "Open-sourced code with training and evaluation pipelines."
+ ],
+ "method": {
+  "summary": "Intra-layer (tensor) model parallelism for transformers: the first MLP GEMM is split by columns and the second by rows, attention is split by heads, and the embedding is split along the vocabulary, needing two all-reduces in the forward and two in the backward pass per layer. Combined with data parallelism, GPT-2-style models up to 8.3B and BERT-style models up to 3.9B are trained on up to 512 V100 GPUs.",
+  "task": "autoregressive and masked-LM pretraining with downstream evaluation",
+  "trains": true,
+  "datasets": [
+   {"name": "Aggregate corpus (Wikipedia, CC-Stories, RealNews, OpenWebText; plus BooksCorpus for BERT only)", "role": "pretrain", "size": "174 GB deduplicated text", "split": "3% held out for BERT validation", "source": "Wikipedia, CC-Stories, RealNews, OpenWebText, BooksCorpus", "preprocessing": "Removed WikiText103 test-set Wikipedia articles; removed extra newlines in CC-Stories; dropped documents under 128 tokens; LSH dedup at Jaccard similarity above 0.7; BooksCorpus excluded for GPT-2 (overlaps LAMBADA)."},
+   {"name": "WikiText103", "role": "eval", "size": "test To = 245566 original tokens, T = 270329 subword tokens", "split": "test", "source": "Merity et al., 2016", "preprocessing": "invertible detokenizers"},
+   {"name": "LAMBADA", "role": "eval", "size": null, "split": "test", "source": "Paperno et al., 2016", "preprocessing": "raw unprocessed dataset; multi-subword word prediction with teacher forcing"},
+   {"name": "MNLI, QQP, SQuAD 1.1, SQuAD 2.0, RACE", "role": "eval", "size": null, "split": "dev for MNLI/QQP/SQuAD; test for RACE", "source": "GLUE; Rajpurkar et al.; Lai et al.", "preprocessing": null}
+  ],
+  "models": [
+   {"name": "GPT-2 style 355M", "role": "proposed", "params": "355M", "architecture": "decoder-only transformer", "init_from": null, "tokenizer": "GPT-2 subword", "vocab": "50,257 (padded to 51,200 in scaling study)", "layers": 24, "hidden": 1024, "heads": 16, "context": "1024 tokens", "other": {"gpus": 64, "days_per_epoch": 0.86}},
+   {"name": "GPT-2 style 2.5B", "role": "proposed", "params": "2.5B", "architecture": "decoder-only transformer", "init_from": null, "tokenizer": "GPT-2 subword", "vocab": null, "layers": 54, "hidden": 1920, "heads": 20, "context": "1024 tokens", "other": {"gpus": 128, "days_per_epoch": 2.27, "hidden_per_head": 96}},
+   {"name": "GPT-2 style 8.3B", "role": "proposed", "params": "8.3B", "architecture": "decoder-only transformer", "init_from": null, "tokenizer": "GPT-2 subword", "vocab": null, "layers": 72, "hidden": 3072, "heads": 24, "context": "1024 tokens", "other": {"gpus": 512, "days_per_epoch": 2.10, "hidden_per_head": 128, "note": "scaling-study 8.3B config uses 32 heads"}},
+   {"name": "BERT style 336M", "role": "proposed", "params": "336M", "architecture": "encoder transformer with rearranged layer norm and residual", "init_from": null, "tokenizer": "original BERT dictionary", "vocab": "30,522", "layers": 24, "hidden": 1024, "heads": 16, "context": null, "other": {"gpus": 128}},
+   {"name": "BERT style 1.3B", "role": "proposed", "params": "1.3B", "architecture": "encoder transformer with rearranged layer norm and residual", "init_from": null, "tokenizer": "original BERT dictionary", "vocab": "30,522", "layers": 24, "hidden": 2048, "heads": 32, "context": null, "other": {"gpus": 256}},
+   {"name": "BERT style 3.9B", "role": "proposed", "params": "3.9B", "architecture": "encoder transformer with rearranged layer norm and residual", "init_from": null, "tokenizer": "original BERT dictionary", "vocab": "30,522", "layers": 48, "hidden": 2560, "heads": 40, "context": null, "other": {"gpus": 512, "note": "Table 6 labels it 3.8B"}}
+  ],
+  "training": {
+   "objective": "GPT-2: left-to-right LM. BERT: masked LM with sentence order prediction instead of NSP and whole word n-gram masking",
+   "optimizer": "Adam with weight decay; global gradient norm clipping 1.0",
+   "lr": "GPT-2 1.5e-4 (min 1e-5); BERT 1.0e-4",
+   "lr_schedule": "GPT-2 single-cycle cosine decay over remaining 297k iterations; BERT linear decay over 2 million iterations",
+   "warmup": "GPT-2 3k iterations; BERT 10,000 iterations",
+   "batch_size": "GPT-2 512; BERT 1024",
+   "steps": "GPT-2 300k iterations; BERT 2 million (336M, 1.3B), 1.5 million and still training (3.9B)",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "1024 subword units (GPT-2)",
+   "precision": "mixed precision with dynamic loss scaling",
+   "weight_decay": "0.01",
+   "dropout": "0.1",
+   "regularisation": "activation checkpointing after every transformer layer; weights init N(0, 0.02), residual-layer weights scaled by 1/sqrt(2N)",
+   "hardware": "up to 32 DGX-2H servers, 512 Tesla V100 SXM3 32GB; 300 GB/s NVSwitch in server, 100 GB/s InfiniBand between servers (8 adapters per server)",
+   "compute": "15.1 PetaFLOPs sustained on 512 GPUs for 8.3B",
+   "wall_clock": "one epoch (68,507 iterations) takes 0.86 / 2.27 / 2.10 days for 355M / 2.5B / 8.3B",
+   "seeds": "BERT fine-tuning: median over 5 random seeds",
+   "other": {"finetune_hparams": "Table 6, batch 16-256, lr 1e-5 to 5e-5, 2-12 epochs by task", "scaling_study_batch": "model parallel fixed batch 8; model+data parallel global batch 512 (64-way data parallel)", "vocab_padding": "51,200 = divisible by 128 x 8"}
+  },
+  "inference": {
+   "decoding": null, "temperature": null, "top_p": null, "max_tokens": null,
+   "samples": "BERT fine-tuning: median of 5 seeds; RACE test uses the median-seed checkpoint chosen on dev",
+   "prompting": "zero-shot for WikiText103 and LAMBADA",
+   "retrieval": null,
+   "parameters": {"wikitext_overlapping_eval_overlap": "32", "context_window": "1024"},
+   "other": {"generation_samples": "Appendix C context-conditioned samples from the 8.3B model; sampling settings not stated"}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "WikiText103 perplexity", "definition": "exp of summed subword cross entropy divided by To original word-level tokens; overlapping sliding window with overlap 32", "unit": "perplexity", "higher_is_better": false},
+    {"name": "LAMBADA cloze accuracy", "definition": "all subword tokens of the final word predicted correctly with teacher forcing", "unit": "%", "higher_is_better": true},
+    {"name": "Weak scaling efficiency", "definition": "achieved FLOPS relative to linear scaling of the 1.2B single-GPU baseline (39 TFLOPs)", "unit": "%", "higher_is_better": true},
+    {"name": "Downstream accuracy / F1 / EM", "definition": "MNLI, QQP, SQuAD, RACE", "unit": "%", "higher_is_better": true}
+   ],
+   "baselines": ["Khandelwal et al. 2019 (WikiText103 SOTA)", "Radford et al. 2019 (LAMBADA SOTA)", "RoBERTa", "ALBERT", "XLNet", "ALBERT ensemble", "1.2B model on one GPU (scaling)"],
+   "protocol": "8-gram overlap between test and train: WikiText103 at most 10.8%, LAMBADA at most 1.4%; hyperparameter tuning on batch size and lr, then median of 5 seeds."
+  },
+  "availability": {"code": "https://github.com/NVIDIA/Megatron-LM", "weights": null, "data": "aggregate corpus not released (inferred: no link given)"},
+  "prompts": [],
+  "evidence": [
+   {"field": "models[8.3B].heads", "quote": "the 8.3B model has 24 attention heads instead of 32", "where": "Sec 5.2"},
+   {"field": "models[BERT 3.9B].params", "quote": "3.8B", "where": "Table 6 labels the 3.9B model 3.8B"}
+  ]
+ },
+ "results": [
+  {"claim": "8.3B GPT-2 on 512 GPUs sustains 15.1 PetaFLOPs.", "kind": "measured", "source": null, "metric": "sustained throughput", "value": "15.1", "unit": "PetaFLOPs per second", "baseline_value": null, "n": null, "setup": "8.3B model, 8-way model parallel x 64-way data parallel, 512 V100 32GB, global batch 512", "quote": "we achieve up to 15.1 PetaFLOPs per second sustained", "table": null, "note": "Abstract and intro state 76% scaling efficiency; Sec 5.1.1 text says 74% for the same configuration.", "where": "Sec 1"},
+  {"claim": "Model+data parallel weak scaling at 512 GPUs is 74% of linear in the body text.", "kind": "measured", "source": null, "metric": "weak scaling efficiency", "value": "74", "unit": "%", "baseline_value": null, "n": null, "setup": "8.3B on 512 GPUs vs 1.2B on one GPU (39 TFLOPs)", "quote": "achieve 74% scaling relative to linear scaling of the strong", "table": null, "note": "Abstract and intro say 76%.", "where": "Sec 5.1.1"},
+  {"claim": "Single-GPU baseline sustains 39 TFLOPs.", "kind": "measured", "source": null, "metric": "single GPU throughput", "value": "39", "unit": "TFLOPs", "baseline_value": null, "n": null, "setup": "1.2B model, one V100 32GB in DGX-2H, 30% of peak", "quote": "This is a strong baseline as it achieves 39 TeraFLOPS during", "table": null, "note": null, "where": "Sec 5.1.1"},
+  {"claim": "8-way model parallel alone retains 77% of linear scaling.", "kind": "measured", "source": null, "metric": "weak scaling efficiency", "value": "77", "unit": "%", "baseline_value": null, "n": null, "setup": "8.3B, 8 GPUs, fixed batch 8, 32 heads", "quote": "77% of linear scaling", "table": null, "note": null, "where": "Sec 5.1.1"},
+  {"claim": "Strong scaling of fixed 1.2B model at batch 8: 1.64x on 2 GPUs and 2.98x on 8 GPUs.", "kind": "measured", "source": null, "metric": "speedup", "value": "2.98", "unit": "x", "baseline_value": "1.0", "n": null, "setup": "1.2B model, fixed batch size 8, model parallel only", "quote": null, "table": "Table 8, column 8 GPUs, row Speedup (1.0, 1.64, 2.34, 2.98)", "note": null, "where": "Appendix D.2"},
+  {"claim": "More attention heads lower scaling efficiency: 82% at 16 heads, 77% at 32.", "kind": "measured", "source": null, "metric": "scaling efficiency", "value": "82", "unit": "%", "baseline_value": null, "n": null, "setup": "8.3B, 8-way model parallel", "quote": null, "table": "Table 7, row 16 heads, column Scaling Efficiency (82%, 80%, 77%)", "note": null, "where": "Appendix D.1"},
+  {"claim": "8.3B GPT-2 zero-shot WikiText103 test perplexity 10.81 vs previous SOTA 15.79.", "kind": "measured", "source": null, "metric": "perplexity", "value": "10.81", "unit": "perplexity", "baseline_value": "15.79", "n": null, "setup": "zero-shot, overlap 32, window 1024, adjusted for original token count", "quote": "properly adjusted perplexity of 10.81", "table": null, "note": "355M 19.31, 2.5B 12.76 (Table 3).", "where": "Sec 5.2, Table 3"},
+  {"claim": "8.3B GPT-2 zero-shot LAMBADA accuracy 66.51% vs previous SOTA 63.24%.", "kind": "measured", "source": null, "metric": "accuracy", "value": "66.51", "unit": "%", "baseline_value": "63.24", "n": null, "setup": "zero-shot, raw LAMBADA, all subwords correct", "quote": "At 66.51%", "table": null, "note": "355M 45.18%, 2.5B 61.73%.", "where": "Sec 5.2, Table 3"},
+  {"claim": "8.3B validation perplexity reaches 9.27.", "kind": "measured", "source": null, "metric": "validation perplexity", "value": "9.27", "unit": "perplexity", "baseline_value": null, "n": null, "setup": "300k iterations, aggregate corpus", "quote": "perplexity of 9.27 for the 8.3B model", "table": null, "note": null, "where": "Sec 5.2"},
+  {"claim": "Megatron-3.9B ensemble gets 90.9 RACE test accuracy vs ALBERT ensemble 89.4.", "kind": "measured", "source": null, "metric": "RACE accuracy", "value": "90.9", "unit": "%", "baseline_value": "89.4", "n": 5, "setup": "5-way ensemble, test set", "quote": null, "table": "Table 5, row Megatron-3.9B ensemble, column RACE m/h accuracy (test set): 90.9 (93.1 / 90.0)", "note": "Single Megatron-3.9B: 89.5.", "where": "Table 5"},
+  {"claim": "BERT validation perplexity falls monotonically with size: 1.58, 1.30, 1.16.", "kind": "measured", "source": null, "metric": "validation perplexity", "value": "1.16", "unit": "perplexity", "baseline_value": "1.58", "n": null, "setup": "3% held-out set; 336M, 1.3B, 3.9B", "quote": "validation set perplexity of 1.58, 1.30, and 1.16, respectively", "table": null, "note": null, "where": "Sec 5.3"},
+  {"claim": "Aggregate training corpus is 174 GB after deduplication.", "kind": "measured", "source": null, "metric": "corpus size", "value": "174", "unit": "GB", "baseline_value": null, "n": null, "setup": "after length filter and LSH dedup at Jaccard 0.7", "quote": "contains 174 GB of deduplicated text", "table": null, "note": null, "where": "Sec 4.1"}
+ ],
+ "limits": [
+  "Single-run results, no variance for pretraining; BERT fine-tuning uses median of 5 seeds.",
+  "3.9B BERT was still training when reported (1.5M of 2M iterations).",
+  "Layer-norm rearrangement shown only on BERT with loss curves (Fig 7) at 336M and 752M; no ablation table.",
+  "Models above 16B parameters would exceed one DGX-2H box; authors say hybrid intra-layer, inter-layer and inter-node parallelism is needed.",
+  "Optimizer state memory efficiency left to future work.",
+  "Tensor parallelism studied only up to 8-way, inside one server.",
+  "Efficiency measured on V100 with NVSwitch; 2019 hardware."
+ ],
+ "practices": [],
+ "terms": [],
+ "lineage": [
+  {"work": "GPipe", "year": 2018, "arxiv": "1811.06965", "relation": "related", "note": "pipeline parallelism, said to be orthogonal and complementary", "quote": null},
+  {"work": "Mesh-TensorFlow", "year": 2018, "arxiv": null, "relation": "extends", "note": "similar insights, but no compiler or framework", "quote": null},
+  {"work": "GPT-2", "year": 2019, "arxiv": null, "relation": "uses-method", "note": "decoder architecture trained", "quote": null},
+  {"work": "BERT", "year": 2018, "arxiv": null, "relation": "uses-method", "note": "encoder architecture trained, layer norm rearranged", "quote": null},
+  {"work": "ALBERT", "year": 2019, "arxiv": "1909.11942", "relation": "baseline", "note": "training recipe followed; reported BERT degradation beyond large", "quote": null},
+  {"work": "RoBERTa", "year": 2019, "arxiv": "1907.11692", "relation": "baseline", "note": "fine-tuning procedure and baseline", "quote": null},
+  {"work": "XLNet", "year": 2019, "arxiv": "1906.08237", "relation": "baseline", "note": null, "quote": null},
+  {"work": "Mixed precision training", "year": 2017, "arxiv": "1710.03740", "relation": "uses-method", "note": null, "quote": null},
+  {"work": "Training deep nets with sublinear memory cost", "year": 2016, "arxiv": "1604.06174", "relation": "uses-method", "note": "activation checkpointing", "quote": null},
+  {"work": "Pointer sentinel mixture models (WikiText103)", "year": 2016, "arxiv": "1609.07843", "relation": "uses-data", "note": null, "quote": null},
+  {"work": "LAMBADA", "year": 2016, "arxiv": "1606.06031", "relation": "uses-data", "note": null, "quote": null},
+  {"work": "Nearest neighbor language models", "year": 2019, "arxiv": "1911.00172", "relation": "baseline", "note": "WikiText103 SOTA", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 3", "caption": "Blocks of Transformer with Model Parallelism. f and g are conjugate.", "page": 4, "why": "Shows column then row split of MLP and attention with where the all-reduces go."},
+  {"figure": "Fig 4", "caption": "Communication operations in a transformer layer.", "page": 5, "why": "4 communication ops per layer in forward plus backward."},
+  {"figure": "Fig 5", "caption": "Model and model + data parallel weak scaling efficiency as a function of the number of GPUs.", "page": 5, "why": "Efficiency drops 100% to 77% (MP) and 74% (MP+DP)."},
+  {"figure": "Fig 7", "caption": "Training loss for BERT model using the original architecture (a) and the rearranged architecture (b).", "page": 8, "why": "Layer-norm placement fixes instability at scale."}
+ ],
+ "code": [
+  {"where": "Code 1, Sec 3", "snippet": "class f(torch.autograd.Function):\n def forward(ctx, x):\n  return x\n def backward(ctx, gradient):\n  all_reduce(gradient)\n  return gradient", "verbatim": true}
+ ],
+ "problems": [
+  "Table 3 values and Table 5 cells are flattened by text extraction; values were matched by order.",
+  "Paper states 76% in abstract/intro and 74% in Sec 5.1.1 for the 512 GPU case.",
+  "Appendix C text samples are model output, not instructions."
+ ]
+}

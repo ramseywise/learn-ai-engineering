@@ -1,0 +1,617 @@
+{
+ "schema": 1,
+ "key": "https://doi.org/10.18653/v1/2022.bigscience-1.9",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/black-2022-gpt-neox-20b.pdf",
+ "bib": {
+  "title": "GPT-NeoX-20B: An Open-Source Autoregressive Language Model",
+  "authors": [
+   "Sid Black",
+   "Stella Biderman",
+   "Eric Hallahan",
+   "Quentin Anthony",
+   "Leo Gao",
+   "Laurence Golding",
+   "Horace He",
+   "Connor Leahy",
+   "Kyle McDonell",
+   "Jason Phang",
+   "Michael Pieler",
+   "USVSN Sai Prashanth",
+   "Shivanshu Purohit",
+   "Laria Reynolds",
+   "Jonathan Tow",
+   "Ben Wang",
+   "Samuel Weinbach"
+  ],
+  "first_author": "Black",
+  "year": 2022,
+  "venue": "Proceedings of BigScience Episode #5 Workshop on Challenges & Perspectives in Creating Large Language Models",
+  "arxiv": "2204.06745",
+  "doi": "10.18653/v1/2022.bigscience-1.9"
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 124055,
+  "chars_total": 124055,
+  "engine": "pymupdf",
+  "skipped": "References skimmed; tokenization example figures (12-17) and Hendrycks per-subject tables 10-13 not examined cell by cell."
+ },
+ "type": "empirical",
+ "question": "Can a 20B-parameter dense autoregressive LLM be trained on the Pile and released openly, and how does it compare with GPT-3, FairSeq and GPT-J on language, math and knowledge tasks?",
+ "hypothesis": null,
+ "contributions": [
+  "Release of GPT-NeoX-20B weights (plus checkpoints every 1000 steps) under a permissive license",
+  "Release of training and evaluation code (gpt-neox)",
+  "Architecture/tokenizer changes vs GPT-3: rotary embeddings, parallel attention+FF, new Pile-trained BPE tokenizer, all dense layers",
+  "Evaluation against GPT-3 (API), FairSeq and GPT-J-6B"
+ ],
+ "method": {
+  "summary": "Decoder-only transformer, 44 layers, hidden 6144, 64 heads, trained on the Pile for 150,000 steps at batch ~3.15M tokens with AdamW, with hyperparameters interpolated from GPT-3. Uses rotary embeddings on 25% of dims, parallel attention/FF, and a new 50257-token BPE tokenizer trained on the Pile. Evaluated zero- and five-shot with the EleutherAI LM Evaluation Harness.",
+  "task": "next-token pretraining; evaluation on NLU, arithmetic/MATH and Hendrycks multi-subject QA",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "The Pile",
+    "role": "pretrain",
+    "size": "over 825GiB of raw text, 22 sources",
+    "split": "split 995,4,1 (config)",
+    "source": "Gao et al., 2020",
+    "preprocessing": "Used as-is, no deduplication; some components up-sampled (inherent to the Pile)"
+   },
+   {
+    "name": "Pile validation set (tokenizer analysis)",
+    "role": "eval",
+    "size": "342,887,807 tokens (NeoX tok) / 383,111,734 (GPT-2 tok)",
+    "split": "validation",
+    "source": "Pile",
+    "preprocessing": null
+   },
+   {
+    "name": "AllenAI C4 (en) validation",
+    "role": "eval",
+    "size": "173,768,876 tokens (NeoX tok)",
+    "split": "validation",
+    "source": "AllenAI C4 replication",
+    "preprocessing": null
+   },
+   {
+    "name": "NLU suite (ANLI, ARC, HeadQA, HellaSwag, LAMBADA, LogiQA, OpenBookQA, PiQA, PROST, QA4MRE, SciQ, TriviaQA, Winogrande, WSC)",
+    "role": "eval",
+    "size": null,
+    "split": "Harness tasks, version 0",
+    "source": "cited",
+    "preprocessing": null
+   },
+   {
+    "name": "MATH test and Brown et al. arithmetic",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Hendrycks 2021b; Brown 2020",
+    "preprocessing": null
+   },
+   {
+    "name": "Hendrycks et al. 2021a multiple-choice (MMLU)",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Hendrycks 2021a",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT-NeoX-20B",
+    "role": "proposed",
+    "params": "20B (19.9B non-embedding)",
+    "architecture": "decoder-only transformer, GPT-3-like, all dense layers, parallel attention+FF, rotary",
+    "init_from": "inferred: random init; Wang (2021) init for FF outputs, small init (Nguyen and Salazar 2019) elsewhere",
+    "tokenizer": "BPE trained on the Pile, GPT-2-like",
+    "vocab": "50257",
+    "layers": 44,
+    "hidden": 6144,
+    "heads": 64,
+    "context": "2048 tokens",
+    "other": {
+     "rotary_pct": "0.25 of embedding dims",
+     "untied_layer_norms": "two independent LayerNorms by oversight: x+Attn(LN1(x))+FF(LN2(x))",
+     "no-weight-tying": "True (Table 1)",
+     "repeated-space tokens": "up to 24 spaces"
+    }
+   },
+   {
+    "name": "GPT-J-6B",
+    "role": "baseline",
+    "params": "6B",
+    "architecture": "near-identical to GPT-NeoX-20B",
+    "init_from": null,
+    "tokenizer": "GPT-2",
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "FairSeq dense 125M-13B",
+    "role": "baseline",
+    "params": "125M, 355M, 1.3B, 2.7B, 6.7B, 13B",
+    "architecture": "dense",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-3 Ada/Babbage/Curie/DaVinci (OpenAI API)",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "five-shot omitted for GPT-3 due to financial limitations"
+    }
+   }
+  ],
+  "training": {
+   "objective": "autoregressive next-token (log-likelihood) loss",
+   "optimizer": "AdamW, betas 0.9/0.95, eps 1.0E-8, with ZeRO stage 1",
+   "lr": "0.97E-5 in text; 9.7e-05 in Table 1 config (min-lr 9.7e-06)",
+   "lr_schedule": "cosine decay to 10% of original value at end of training",
+   "warmup": "0.01 (config; unit not stated, inferred: fraction of training)",
+   "batch_size": "approximately 3.15M tokens, or 1538 contexts of 2048 tokens each",
+   "steps": "150,000",
+   "epochs": "inferred: ~1.0+ epochs; paper notes training crossed the 1 epoch boundary (Fig 2)",
+   "tokens": "inferred: ~473B (150,000 x 3.15M)",
+   "seq_len": "2048",
+   "precision": "fp16 (config fp16.enabled True)",
+   "weight_decay": "0.01",
+   "dropout": "0 (attention-dropout 0, hidden-dropout 0)",
+   "regularisation": "gradient clipping 1.0",
+   "hardware": "twelve Supermicro AS-4124GO-NART servers, each 8x NVIDIA A100-SXM4-40GB (96 GPUs), 2x AMD EPYC 7532, InfiniBand; tensor parallel 2, pipeline parallel 4",
+   "compute": "117 teraFLOPS per GPU; 43.92 MWh electricity over 1830 hours of training; 66.24 MWh total incl. 920 further hours",
+   "wall_clock": "1830 hours of training",
+   "seeds": null,
+   "other": {
+    "gradient-accumulation-steps": 32,
+    "train-micro-batch-size-per-gpu": 4,
+    "software": "Megatron + DeepSpeed, PyTorch 1.10.0, CUDA 11.1, NCCL 2.10.3",
+    "hyperparameter tuning": "none at full scale; weight decay from smaller-scale experiments; lr interpolated between GPT-3 13B and 175B",
+    "CO2": "31.73 metric tons for training; just under 35 with eval"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "zero-shot and five-shot; no seeds reported",
+   "prompting": "EleutherAI LM Evaluation Harness task prompts (version 0); few-shot k=5 for five-shot",
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "task accuracy",
+     "definition": "Harness accuracy per task (reported as fraction; error is standard error)",
+     "unit": "fraction",
+     "higher_is_better": true
+    },
+    {
+     "name": "tokens needed to encode corpus",
+     "definition": "count of tokens from tokenizing a validation set",
+     "unit": "tokens",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "GPT-J-6B",
+    "FairSeq 125M-13B",
+    "GPT-3 Ada/Babbage/Curie/DaVinci"
+   ],
+   "protocol": "Plots carry error bars of two standard errors (95% CI); no scaling-law curves fitted; human and random baselines where available"
+  },
+  "availability": {
+   "code": "https://github.com/EleutherAI/gpt-neox",
+   "weights": "permissive license; checkpoints every 1000 steps",
+   "data": "the Pile (public)"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.lr",
+    "quote": "we interpolate between the learning rates of their 13B and 175B models to arrive at a learning rate of 0.97E−5",
+    "where": "Sec 3; Table 1 lists optimizer.params.lr 9.7e-05"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "GPT-NeoX-20B tokenizer represents the Pile validation set with about 10% fewer tokens than GPT-2's",
+   "kind": "measured",
+   "source": null,
+   "metric": "token ratio NeoX/GPT-2",
+   "value": "0.89501",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Pile validation set, GPT-2 vs GPT-NeoX-20B tokenizers",
+   "quote": "Overall, the GPT-NeoX-20B tokenizer represents the Pile\nvalidation set with approximately 10% fewer tokens compared to the GPT-2 tokenizer.",
+   "table": "Table 15, row Total",
+   "note": null,
+   "where": "App F, Table 15"
+  },
+  {
+   "claim": "Excluding whitespace tokens, NeoX tokenizer still uses 5% fewer tokens on the Pile validation set",
+   "kind": "measured",
+   "source": null,
+   "metric": "token ratio",
+   "value": "0.95348",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Pile validation set, whitespace tokens excluded",
+   "quote": "We observe that the GPT-NeoX-20B tokenizer still uses 5% fewer tokens to represent the Pile validation set compared to the GPT-2 tokenizer.",
+   "table": "Table 16, row Total",
+   "note": null,
+   "where": "App F"
+  },
+  {
+   "claim": "On C4 (out of domain) the two tokenizers use about the same number of tokens",
+   "kind": "measured",
+   "source": null,
+   "metric": "token ratio",
+   "value": "1.001",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "AllenAI C4 en validation",
+   "quote": "We find that the GPT-NeoX-20B tokenizer tokenizes\nthe C4 validation set to approximately the same number of tokens as the GPT-2 tokenizer.",
+   "table": "Table 14, row C4",
+   "note": null,
+   "where": "App F"
+  },
+  {
+   "claim": "Fig 1 code example: 55 tokens with GPT-2, 39 with GPT-NeoX-20B tokenizer",
+   "kind": "measured",
+   "source": null,
+   "metric": "tokens",
+   "value": "39",
+   "unit": "tokens",
+   "baseline_value": "55",
+   "n": null,
+   "setup": "single Python fibRec snippet",
+   "quote": "GPT-2\ndef fibRec(n):←-",
+   "table": "Figure 1 (text: 55 tokens vs 39 tokens)",
+   "note": "Quote omitted; value checked against figure text '39 tokens'.",
+   "where": "Fig 1"
+  },
+  {
+   "claim": "GitHub component needs 23% fewer tokens (ratio 0.76820) and PubMed Central 0.76545",
+   "kind": "measured",
+   "source": null,
+   "metric": "token ratio",
+   "value": "0.76820",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Pile validation by component",
+   "quote": "with the biggest gains in whitespace heavy datasets such as arXiv, GitHub and\nStackExchange",
+   "table": "Table 15, row GitHub, column NeoX/GPT-2",
+   "note": null,
+   "where": "Table 15"
+  },
+  {
+   "claim": "Across 32 evaluations GPT-NeoX-20B beats FairSeq 13B on 22, loses on 4, ties on 6",
+   "kind": "measured",
+   "source": null,
+   "metric": "tasks won",
+   "value": "22",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "NLU tasks zero- and five-shot, vs FairSeq 13B",
+   "quote": "In total, across the 32 evaluations we did\nwe outpreform on 22 tasks, underpreform on four\ntasks, and fall within the margin of error on six\ntasks.",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.1"
+  },
+  {
+   "claim": "Zero-shot LAMBADA: GPT-NeoX-20B 0.720 vs GPT-J 0.683",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "0.720±0.006",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "zero-shot, Harness v0",
+   "quote": "",
+   "table": "Table 2, row LAMBADA, column GPT-NeoX 20B (GPT-J 0.683±0.006; DaVinci 0.752±0.006)",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Zero-shot HellaSwag: GPT-NeoX-20B 0.535 below FairSeq 13B 0.554",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "0.535±0.005",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "zero-shot",
+   "quote": "",
+   "table": "Table 2 row HellaSwag col GPT-NeoX; Table 3 FairSeq 13B 0.554±0.005",
+   "note": null,
+   "where": "Tables 2,3"
+  },
+  {
+   "claim": "HellaSwag is the weakest result, four standard deviations below FairSeq 13B",
+   "kind": "measured",
+   "source": null,
+   "metric": "std devs below",
+   "value": "four",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "HellaSwag, GPT-NeoX-20B vs FairSeq 13B",
+   "quote": "By far our weakest performance is on Hel-\nlaSwag, where we score four standard deviations\nbelow FairSeq 13B in both zero- and five-shot eval-\nuations.",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.1"
+  },
+  {
+   "claim": "Five-shot 5-digit-free arithmetic: 2-digit addition 0.992 for NeoX vs 0.880 for GPT-J",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "0.992±0.002",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "five-shot basic arithmetic",
+   "quote": "",
+   "table": "Table 8, row 2D+, column GPT-NeoX 20B",
+   "note": null,
+   "where": "Table 8"
+  },
+  {
+   "claim": "Five-shot 3-digit addition 0.599 NeoX vs 0.357 GPT-J",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "0.599±0.011",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "five-shot",
+   "quote": "",
+   "table": "Table 8, row 3D+",
+   "note": null,
+   "where": "Table 8"
+  },
+  {
+   "claim": "Five-shot MATH is near zero for all models, e.g. Algebra 0.049 NeoX",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "0.049±0.006",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "five-shot MATH Algebra",
+   "quote": "",
+   "table": "Table 8, row MATH (Algebra)",
+   "note": null,
+   "where": "Table 8"
+  },
+  {
+   "claim": "Going from 0 to 5 shots improves GPT-NeoX-20B by 0.0598 and FairSeq 13B by 0.0183",
+   "kind": "measured",
+   "source": null,
+   "metric": "5-shot minus 0-shot gain",
+   "value": "0.0598",
+   "unit": null,
+   "baseline_value": "0.0183",
+   "n": null,
+   "setup": "average over tasks (aggregate not defined precisely)",
+   "quote": "When going from 0-shot to 5-shot evaluations, GPT-J-6B\nimproves by 0.0526 and GPT-NeoX-20B improves\nby 0.0598 while the FairSeq 6.7B and 13B models\nimprove by 0.0051 and 0.0183 respectively.",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.2"
+  },
+  {
+   "claim": "No validation-loss drop at epoch boundary: no gain seen from deduplication-free data crossing 1 epoch",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Pile, 20B, Fig 2",
+   "quote": "even at the 20B parameter scale\nwe see no drop in test validation loss after crossing\nthe 1 epoch boundary.",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.3"
+  },
+  {
+   "claim": "Training emitted 31.73 metric tons CO2, about 10% of Strubell et al.'s 284.01 t estimate",
+   "kind": "measured",
+   "source": null,
+   "metric": "CO2",
+   "value": "31.73",
+   "unit": "metric tons",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Illinois grid mix, 43.92 MWh, 1830 hours",
+   "quote": "We found that the process of develop-\ning and training GPT-NeoX-20B emitted almost\nexactly 10% of Strubell et al. (2019)’s estimate,\ncoming in at a total of 69957 lbs or 31.73 met-\nric tons of CO2.",
+   "table": null,
+   "note": null,
+   "where": "App C.4"
+  },
+  {
+   "claim": "Training reached 117 TFLOPS per GPU with tensor parallel 2 and pipeline parallel 4",
+   "kind": "measured",
+   "source": null,
+   "metric": "throughput",
+   "value": "117",
+   "unit": "teraFLOPS per GPU",
+   "baseline_value": null,
+   "n": null,
+   "setup": "96 A100-40GB GPUs",
+   "quote": "we were able to achieve and maintain an efficiency of 117\nteraFLOPS per GPU.",
+   "table": null,
+   "note": null,
+   "where": "Sec 3"
+  },
+  {
+   "claim": "Parallel attention+FF gave 15% throughput increase in Mesh Transformer JAX with comparable early loss",
+   "kind": "measured",
+   "source": null,
+   "metric": "throughput gain",
+   "value": "15%",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Mesh Transformer JAX (other codebase)",
+   "quote": "In Mesh Transformer\nJAX (Wang, 2021), this led to a 15% throughput\nincrease, while having comparable loss curves with\nrunning them in series during early training.",
+   "table": null,
+   "note": null,
+   "where": "Sec 2.1.2"
+  }
+ ],
+ "limits": [
+  "Hyperparameters were interpolated from GPT-3, not tuned; authors say they are 'almost certainly ... no longer optimal'",
+  "No coding evaluations, though design choices targeted code",
+  "No deduplication of the Pile; effect on downstream performance untested",
+  "Unintended untied layer norms; only small-scale experiments suggest no effect",
+  "GPT-3 five-shot not run; HellaSwag deficit 'largely inexplicable'",
+  "Pile vs GPT-3 data difference is the biggest unknown factor in comparisons",
+  "Tokenizer analysis uses Pile validation, in-domain for the tokenizer",
+  "Single training run, no seeds reported"
+ ],
+ "practices": [],
+ "terms": [],
+ "lineage": [
+  {
+   "work": "Language Models are Few-Shot Learners (GPT-3)",
+   "year": 2020,
+   "arxiv": "2005.14165",
+   "relation": "extends",
+   "note": "architecture and hyperparameters reference",
+   "quote": "architecture largely follows that of GPT-3"
+  },
+  {
+   "work": "GPT-J-6B",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "architecture almost identical (Wang and Komatsuzaki)",
+   "quote": null
+  },
+  {
+   "work": "RoFormer / rotary embeddings (Su et al.)",
+   "year": 2021,
+   "arxiv": "2104.09864",
+   "relation": "uses-method",
+   "note": "rotary applied to 25% of dims",
+   "quote": null
+  },
+  {
+   "work": "Megatron-LM (Shoeybi et al.)",
+   "year": 2020,
+   "arxiv": "1909.08053",
+   "relation": "uses-method",
+   "note": "tensor parallelism",
+   "quote": null
+  },
+  {
+   "work": "ZeRO (Rajbhandari et al.)",
+   "year": 2020,
+   "arxiv": "1910.02054",
+   "relation": "uses-method",
+   "note": "optimizer-state sharding",
+   "quote": null
+  },
+  {
+   "work": "The Pile",
+   "year": 2020,
+   "arxiv": "2101.00027",
+   "relation": "uses-data",
+   "note": "pretraining corpus",
+   "quote": null
+  },
+  {
+   "work": "FairSeq dense models (Artetxe et al.)",
+   "year": 2021,
+   "arxiv": "2112.10684",
+   "relation": "baseline",
+   "note": "2.7B-13B baselines",
+   "quote": null
+  },
+  {
+   "work": "Deduplicating training data (Lee et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "contradicts",
+   "note": "authors saw no benefit from avoiding dedup at 20B but concede it is hard to dismiss",
+   "quote": null
+  },
+  {
+   "work": "Scaling laws (Kaplan et al.)",
+   "year": 2020,
+   "arxiv": "2001.08361",
+   "relation": "related",
+   "note": "non-embedding parameter count",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Figure 1",
+   "caption": "GPT-2 tokenization vs. GPT-NeoX-20B tokenization",
+   "page": 4,
+   "why": "Shows whitespace handling: 55 vs 39 tokens on code"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "The full configuration details for GPT-NeoX-20B training",
+   "page": 110,
+   "why": "Full rerun config"
+  },
+  {
+   "figure": "Table 15",
+   "caption": "Number of tokens from tokenizing the Pile validation set",
+   "page": 131,
+   "why": "Per-component token savings"
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 2.1.2",
+   "snippet": "x+Attn(LN1(x))+FF(LN2(x))",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Learning rate printed as 0.97E-5 in text but Table 1 lists 9.7e-05 (min-lr 9.7e-06)",
+  "Text says batch 1538 contexts; config implies micro-batch 4 x accumulation 32 x data-parallel ranks",
+  "Reference list skimmed only"
+ ]
+}

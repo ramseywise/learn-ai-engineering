@@ -1,0 +1,773 @@
+{
+ "schema": 1,
+ "key": "2104.10350",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/patterson-2021-carbon-emissions-large-neural-network.pdf",
+ "bib": {
+  "title": "Carbon Emissions and Large Neural Network Training",
+  "authors": [
+   "David Patterson",
+   "Joseph Gonzalez",
+   "Quoc Le",
+   "Chen Liang",
+   "Lluis-Miquel Munguia",
+   "Daniel Rothchild",
+   "David So",
+   "Maud Texier",
+   "Jeff Dean"
+  ],
+  "first_author": "Patterson",
+  "year": 2021,
+  "venue": "preprint",
+  "arxiv": "2104.10350",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 97776,
+  "chars_total": 97776,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "How much energy and CO2e does training recent large NLP models (T5, Meena, GShard, Switch Transformer, GPT-3) and the Evolved Transformer NAS actually cost, and which factors reduce it?",
+ "hypothesis": "Choice of DNN, processor, datacenter and location can shrink training carbon footprint by orders of magnitude, and earlier retroactive estimates (Strubell et al. NAS) were badly off without measurement.",
+ "contributions": [
+  "Energy and CO2e estimates for T5, Meena, GShard-600B, Switch Transformer and GPT-3",
+  "Refined 88X-lower estimate for the Evolved Transformer NAS",
+  "Formulas for training energy and carbon footprint",
+  "Recommendations: report energy/CO2e, reward efficiency, report processors and training time"
+ ],
+ "method": {
+  "summary": "Computes training energy (hours x processors x measured average power x PUE) and CO2e (energy x grid kg CO2e/KWh) for five large NLP models and NAS, using measured power and performance for Google models and OpenAI-supplied values for GPT-3. Gross and net (24/7 carbon-free energy) CO2e are both given.",
+  "task": "energy and carbon accounting of neural network training",
+  "trains": false,
+  "datasets": [],
+  "models": [
+   {
+    "name": "Transformer (Big)",
+    "role": "evaluated",
+    "params": "0.21B",
+    "architecture": "Transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "setup": "8 P100 or 8 TPU v2, WMT En-De accuracy goal"
+    }
+   },
+   {
+    "name": "Evolved Transformer (Medium)",
+    "role": "evaluated",
+    "params": "0.13B",
+    "architecture": "NAS-found Transformer variant",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Evolved Transformer NAS",
+    "role": "evaluated",
+    "params": "0.064B per model",
+    "architecture": "search",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "chips": "200 TPU v2",
+     "days": "6.8",
+     "run": "Dec 2018 Google Georgia"
+    }
+   },
+   {
+    "name": "T5",
+    "role": "evaluated",
+    "params": "11B",
+    "architecture": "encoder-decoder",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "chips": "512 TPU v3",
+     "days": "20"
+    }
+   },
+   {
+    "name": "Meena",
+    "role": "evaluated",
+    "params": "2.6B",
+    "architecture": "chatbot Transformer (Evolved Transformer)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "chips": "1024 TPU v3",
+     "days": "30"
+    }
+   },
+   {
+    "name": "GShard-600B",
+    "role": "evaluated",
+    "params": "619B (table); 600B (text)",
+    "architecture": "sparsely gated MoE Transformer, 0.25% activated per token",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "chips": "1024 TPU v3",
+     "days": "3.1"
+    }
+   },
+   {
+    "name": "Switch Transformer",
+    "role": "evaluated",
+    "params": "1500B",
+    "architecture": "MoE, 0.10% activated per token",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "chips": "1024 TPU v3",
+     "days": "27"
+    }
+   },
+   {
+    "name": "GPT-3",
+    "role": "evaluated",
+    "params": "175B",
+    "architecture": "dense autoregressive",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "chips": "10,000 V100",
+     "days": "14.8 (derived)"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "one accounting per model (single training run; no repeats)",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "energy_formula": "KWh = Hours to train x Number of Processors x Average Power per Processor x PUE / 1000",
+    "carbon_formula": "tCO2e = KWh x kg CO2e per KWh / 1000",
+    "GPT-3 inputs": "PUE 1.10 and 330 W V100 from OpenAI; 10,000 GPUs from NVIDIA press release; US-average 0.429 kg/KWh",
+    "avg_power_W": "TPU v2 221, TPU v3 283, P100 271, V100 325"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Energy",
+     "definition": "hours x processors x measured avg system power x PUE / 1000",
+     "unit": "KWh / MWh",
+     "higher_is_better": false
+    },
+    {
+     "name": "Gross CO2e",
+     "definition": "energy x datacenter grid CO2e/KWh when run",
+     "unit": "tCO2e (metric ton)",
+     "higher_is_better": false
+    },
+    {
+     "name": "Net CO2e",
+     "definition": "gross after 24/7 hourly local carbon-free energy purchases",
+     "unit": "tCO2e",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "Strubell et al. 2019 NAS estimate (284 tCO2e)",
+    "ML Emissions Calculator",
+    "Green Algorithms calculator"
+   ],
+   "protocol": "Power and FLOP/s measured for Google models via Xprof; GPT-3 values supplied by OpenAI; 2020 datacenter figures provisional."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": null
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "inference.parameters",
+    "quote": "OpenAI measured V100s as running GPT-3 at 330W.",
+    "where": "Appendix A"
+   },
+   {
+    "field": "models.GPT-3.other",
+    "quote": "NVIDIA’s press release about GPT-3 suggests OpenAI used 10,000 V100 GPUs for GPT-3.",
+    "where": "Appendix A"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "GPT-3 training used 1287 MWh and emitted ~552 tCO2e",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "552",
+   "unit": "tCO2e",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-3 175B on 10,000 V100 GPUs (Microsoft datacenter), 14.8 days, PUE 1.10, US-average 0.429 kg CO2e/KWh, V100 measured 330 W (OpenAI-supplied)",
+   "note": "Table 4 prints 1,287 MWh and 552.1 gross=net tCO2e",
+   "where": "Sec 3; Table 4",
+   "quote": "Its estimated carbon emissions due to training are 552 tCO 2 e and its energy consumption is 1287 MWh."
+  },
+  {
+   "claim": "GPT-3 energy",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "1,287",
+   "unit": "MWh",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-3 175B on 10,000 V100 GPUs (Microsoft datacenter), 14.8 days, PUE 1.10, US-average 0.429 kg CO2e/KWh, V100 measured 330 W (OpenAI-supplied)",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row Energy Consumption (MWh), column GPT-3"
+  },
+  {
+   "claim": "GPT-3 total compute",
+   "kind": "reported",
+   "source": "Brown et al 2020",
+   "metric": null,
+   "value": "3.14E+23",
+   "unit": "FLOPs",
+   "baseline_value": null,
+   "n": null,
+   "setup": "From OpenAI [Bro20]; V100 24.6 TFLOPS/s measured by OpenAI",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row Total Computation, column GPT-3"
+  },
+  {
+   "claim": "GPT-3 training time is derived, not reported: 14.8 days assumed from 10,000 GPUs at 24.6 TFLOPS/s",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": "14.8",
+   "unit": "days",
+   "baseline_value": null,
+   "n": null,
+   "setup": "10,000 V100 is NVIDIA press-release suggestion; 3.14E+23 FLOPs",
+   "note": null,
+   "where": "Appendix A",
+   "quote": "It takes ~14.8 days for 10,000 GPUs at 24.6 TeraFLOPS/sec to compute 3.14E+23 FLOPS."
+  },
+  {
+   "claim": "T5 (11B) training",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "47",
+   "unit": "tCO2e",
+   "baseline_value": null,
+   "n": null,
+   "setup": "T5 11B, TPU v3, 512 chips, 20 days, Google Taiwan, PUE 1.12",
+   "note": "Table 4 prints 85.7 MWh and 46.7 tCO2e",
+   "where": "Sec 3",
+   "quote": "training used 86 MWh and produced 47 tCO 2 e"
+  },
+  {
+   "claim": "Meena (2.6B) training",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "96",
+   "unit": "tCO2e",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Meena 2.6B, TPU v3, 1024 chips, 30 days, Google Georgia, Dec 2019",
+   "note": "Table 4: 96.4 tCO2e",
+   "where": "Sec 3",
+   "quote": "232 MWh and emissions was 96 tCO 2 e."
+  },
+  {
+   "claim": "GShard-600B training net emissions",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "4.3",
+   "unit": "net tCO2e",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GShard 600B MoE, 0.25% activated per token, TPU v3, 1024 chips, 3.1 days, Google North Carolina",
+   "note": null,
+   "where": "Sec 3",
+   "quote": "Training GShard-600B used 24 MWh and produced 4.3 net tCO 2 e."
+  },
+  {
+   "claim": "Switch Transformer (1500B) training net emissions (an estimate)",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "59",
+   "unit": "net tCO2e",
+   "baseline_value": null,
+   "n": null,
+   "setup": "1500B params, 0.10% activated per token, TPU v3, 1024 chips, 27 days, Google Georgia, Oct 2020",
+   "note": "Table 4: 59.1",
+   "where": "Sec 3",
+   "quote": "We estimated it used 179 MWh and produced 59 net tCO 2 e."
+  },
+  {
+   "claim": "Sparse GShard vs dense GPT-3: ~45X fewer processor years, ~55X less energy, ~115X less gross and ~130X less net CO2e",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "~130X",
+   "unit": "net CO2e ratio",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GShard-600B vs GPT-3 (Table 4); differing hardware and datacenters",
+   "note": null,
+   "where": "Sec 3",
+   "quote": "Compared to the dense GPT-3, sparsely activated Gshard needs ~45X fewer processor years, uses ~55X less energy, and reduces gross CO 2 e ~115X and net CO 2 e ~130X."
+  },
+  {
+   "claim": "Choice of DNN, datacenter and processor can cut footprint up to ~100-1000X",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "~100-1000X",
+   "unit": "footprint ratio",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Abstract; combination of sparse DNN, cloud datacenter and ML accelerator",
+   "note": null,
+   "where": "Abstract",
+   "quote": "the choice of DNN, datacenter, and processor can reduce the carbon footprint up to ~100-1000X"
+  },
+  {
+   "claim": "Sparsely activated DNNs can use <1/10th the energy of dense DNNs at equal accuracy",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "<1/10",
+   "unit": "energy ratio",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Abstract; sparse vs dense, as many or more parameters",
+   "note": null,
+   "where": "Abstract",
+   "quote": "Large but sparsely activated DNNs can consume <1/10th the energy of large, dense DNNs without sacrificing accuracy"
+  },
+  {
+   "claim": "Transformer (Big) on P100 in US-average datacenter to Evolved Transformer (Medium) on TPU v2 in Google Iowa: overall CO2e improvement",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "57X",
+   "unit": "gross-to-net CO2e ratio",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Transformer Big 0.21B on 8 P100 US avg (0.1357 t) vs ET Medium 0.13B on 8 TPU v2 Iowa (net 0.0024 t); WMT En-De accuracy goal",
+   "note": null,
+   "where": "Sec 2; Table 1",
+   "quote": "the overall improvement in CO 2 e is 57X"
+  },
+  {
+   "claim": "Earlier Strubell et al. NAS estimate for Evolved Transformer was 88X too high in emissions for Google's actual run",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "88X",
+   "unit": "emissions ratio",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Evolved Transformer NAS: 6.8 days, 200 TPU v2, 208 W, PUE 1.10, 0.431 kg/KWh, Georgia; Strubell 284 tCO2e vs 3.2 tCO2e",
+   "note": null,
+   "where": "Sec 4.1; App D",
+   "quote": "88X off in emissions for energy-efficient organizations like Google"
+  },
+  {
+   "claim": "Strubell NAS estimate was 18.7X too high for an average organization (proxy task, smaller batch)",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "18.7X",
+   "unit": "energy ratio",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Appendix C: Transformer Base proxy (2.3x cheaper per step) and batch 4,096 not 32,768 (8x); 284 t vs 15.2 t",
+   "note": null,
+   "where": "Sec 4.1; App C",
+   "quote": "energy estimate for NAS ended up 18.7X too high for the average organization"
+  },
+  {
+   "claim": "Actual Evolved Transformer NAS emissions",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "3.2",
+   "unit": "tCO2e",
+   "baseline_value": null,
+   "n": null,
+   "setup": "(6.8 days*24*200 chips*208 W*1.10 PUE/1000 KWh)*0.431 kg/KWh; rerun in Iowa with 24/7 CFE would be 0.6 t",
+   "note": null,
+   "where": "App D",
+   "quote": "(6.8 * 24 * 200 * 208 * 1.10 / 1000) * 0.431 / 1000 = 3.2 tCO 2 e (7096 lbs)"
+  },
+  {
+   "claim": "Evolved Transformer reuse in Meena saved 48.5 tCO2e, ~15X the NAS cost",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "48.5",
+   "unit": "tCO2e saved",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Meena trained with ET instead of Transformer; vs 3.2 t NAS cost",
+   "note": null,
+   "where": "Sec 4.1; Table 4",
+   "quote": "saved 48.5 t CO 2 e during the training of the Meena DNN"
+  },
+  {
+   "claim": "Evolved Transformer: 37% fewer parameters and 25% less energy to same accuracy than Transformer (Big)",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "25%",
+   "unit": "energy reduction",
+   "baseline_value": null,
+   "n": null,
+   "setup": "WMT English to German translation; ET Medium 0.13B vs Big 0.21B",
+   "note": null,
+   "where": "Sec 4.1; Table 1",
+   "quote": "has 37% fewer parameters and converges to the same accuracy with 25% less energy expenditure"
+  },
+  {
+   "claim": "Measured average system power per processor",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "221 / 283 / 271 / 325",
+   "unit": "W (TPU v2 / TPU v3 / P100 / V100)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Stdev 5% / 10% / 11% / 2%; system power incl. memory, NIC, fans, host CPU; V100 from GPT-3 and Transformer (Big)",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, column Average (Watts)"
+  },
+  {
+   "claim": "Theoretical performance/Watt misleads: TPU v3 is 2.0X better than V100 on measured performance/Watt although V100 is 1.5X better on theory",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "2.0X",
+   "unit": "perf/Watt ratio",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Large NLP DNNs in Table 4; V100 runs at ~20% of peak",
+   "note": null,
+   "where": "Sec 4.3; Fig 5",
+   "quote": "TPU v3 is 2.0X better than V100 on average for these large NLP DNNs"
+  },
+  {
+   "claim": "Carbon calculators vs measured gross CO2e",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "0.92 and 1.48",
+   "unit": "geometric-mean ratio (ML Emissions, Green Algorithms)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Calculator estimates April 2021 vs Tables 1 and 4; ranges 0.53-1.64 and 0.91-2.42",
+   "note": null,
+   "where": "Sec 4.3; Fig 6",
+   "quote": "they differ by factors of 0.53–1.64 and 0.91–2.42 with geometric means of 0.92 and 1.48"
+  },
+  {
+   "claim": "GPT-3 emissions as fraction of a SF-NY whole-jet round trip",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "~305%",
+   "unit": "% of ~180 t",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Round trip 180.4 t from Google Flights; T5 ~26%, Meena 53%, GShard ~2%, Switch 32%",
+   "note": null,
+   "where": "Sec 4.8",
+   "quote": "GPT-3 is ~305% of such a round trip"
+  },
+  {
+   "claim": "Google's four large NLP models in Table 4 together are under 0.005% of Google 2019 energy",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "<0.005%",
+   "unit": "of 12.2 TWh",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Assumes all four trained in 2019",
+   "note": null,
+   "where": "Sec 4.8",
+   "quote": "the total represents less than 0.005%"
+  },
+  {
+   "claim": "Datacenter PUE: Google Iowa vs US average 2020",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "1.11 vs 1.59",
+   "unit": "PUE",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 1; US 2018 avg was 1.58",
+   "note": null,
+   "where": "Sec 2.3",
+   "quote": "The PUE for the Iowa datacenter where we ran Evolved Transformer is 1.11"
+  },
+  {
+   "claim": "Iowa 24/7 CFE net intensity vs gross grid",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "0.080 vs 0.478",
+   "unit": "kg CO2e/KWh",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Iowa December 2020; 5.4X better than US average 0.429",
+   "note": null,
+   "where": "Sec 2.4",
+   "quote": "a net average of 0.080 kg"
+  },
+  {
+   "claim": "Per-user training CO2e for GShard-600B is below one text message",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": "~0.005",
+   "unit": "g CO2",
+   "baseline_value": null,
+   "n": null,
+   "setup": "24 MWh / 2B users vs SMS 0.014 g",
+   "note": null,
+   "where": "fn 26",
+   "quote": "which yields about 0.005 g of CO 2"
+  },
+  {
+   "claim": "Preliminary experiments roughly equal final training cost (AutoML example)",
+   "kind": "reported",
+   "source": "Li et al 2021 (2102.05610)",
+   "metric": null,
+   "value": "roughly equal",
+   "unit": "exploration cost vs final training cost",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Li et al 2021 AutoML",
+   "note": null,
+   "where": "Sec 4.2 fn 16",
+   "quote": "Their exploration computation cost was roughly equal to the final training cost."
+  },
+  {
+   "claim": "Hypothetical Transformer (Big) on LLNL Quartz-Tundra supercomputer",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": "32",
+   "unit": "tCO2e",
+   "baseline_value": null,
+   "n": null,
+   "setup": "~100,000 cores, ~75 MWh, 40% of peak, US-average intensity and PUE; ~10,000x TPU v2 at Google",
+   "note": null,
+   "where": "Sec 4.3",
+   "quote": "might generate 32 tCO 2 e, ~10,000 times larger than for TPU v2s at Google"
+  }
+ ],
+ "limits": [
+  "Training only; inference energy is acknowledged as the larger share of lifecycle but not measured (Sec 2).",
+  "GPT-3 inputs come from OpenAI and NVIDIA press release; GPU count and 14.8 days are not measured by the authors, and Azure carbon intensity is the US average.",
+  "Final run only; experimentation and failed runs not counted (Sec 4.2).",
+  "Manufacturing and recycling emissions excluded; edge devices excluded.",
+  "2020 datacenter measurements are provisional.",
+  "Net CO2e depends on Google's 24/7 CFE accounting and clean energy purchases; Google models ran where gross and net were similar.",
+  "Authors are from Google and include the Evolved Transformer, Meena, T5, GShard, Switch authors; results are self-reported."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "CO2e",
+   "definition": "CO2 equivalent emissions, accounting for carbon dioxide and all the other greenhouse gases",
+   "where": "footnote 3"
+  },
+  {
+   "term": "PUE",
+   "definition": "Power Usage Effectiveness; overhead above computing equipment, 1.50 means 50% overhead",
+   "where": "Sec 2.3"
+  },
+  {
+   "term": "gross vs net CO2e",
+   "definition": "before and after accounting for 24/7 real time local carbon free energy purchases",
+   "where": "Table 1 caption"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Energy and policy considerations for deep learning in NLP",
+   "year": 2019,
+   "arxiv": "1906.02243",
+   "relation": "contradicts",
+   "note": "Revises its Evolved Transformer NAS estimate down 88X",
+   "quote": null
+  },
+  {
+   "work": "The Evolved Transformer",
+   "year": 2019,
+   "arxiv": "1901.11117",
+   "relation": "evaluates",
+   "note": "NAS cost and model re-estimated",
+   "quote": null
+  },
+  {
+   "work": "Exploring the limits of transfer learning (T5)",
+   "year": 2019,
+   "arxiv": "1910.10683",
+   "relation": "evaluates",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "Towards a Human-like Open-Domain Chatbot (Meena)",
+   "year": 2020,
+   "arxiv": "2001.09977",
+   "relation": "evaluates",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "GShard",
+   "year": 2020,
+   "arxiv": "2006.16668",
+   "relation": "evaluates",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "Switch Transformers",
+   "year": 2021,
+   "arxiv": "2101.03961",
+   "relation": "evaluates",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "Language models are few-shot learners (GPT-3)",
+   "year": 2020,
+   "arxiv": "2005.14165",
+   "relation": "evaluates",
+   "note": "FLOPs 3.14E+23 taken from it",
+   "quote": null
+  },
+  {
+   "work": "Quantifying the carbon emissions of machine learning",
+   "year": 2019,
+   "arxiv": "1910.09700",
+   "relation": "baseline",
+   "note": "ML Emissions Calculator compared",
+   "quote": null
+  },
+  {
+   "work": "Green algorithms",
+   "year": 2020,
+   "arxiv": "2007.07610",
+   "relation": "baseline",
+   "note": "calculator compared",
+   "quote": null
+  },
+  {
+   "work": "Towards the systematic reporting of energy and carbon footprints of ML (Henderson et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "related",
+   "note": "experiment-impact-tracker",
+   "quote": null
+  },
+  {
+   "work": "Green AI (Schwartz et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "related",
+   "note": null,
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Table 4",
+   "caption": "CO2e for NLP models",
+   "page": 6,
+   "why": "All inputs (chips, days, power, PUE, intensity) and outputs for the five models in one place"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Transformer vs Evolved Transformer on P100/TPU v2",
+   "page": 3,
+   "why": "Shows each factor's contribution to the 57X"
+  },
+  {
+   "figure": "Figure 3",
+   "caption": "Accelerator years of computation, energy consumption, and CO2e for five large NLP DNNs",
+   "page": 7,
+   "why": "Sparse vs dense gap"
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 2.5",
+   "snippet": "KWh = Hours to train x Number of Processors x Average Power per Processor x PUE / 1000; tCO2e = KWh x kg CO2e per KWh / 1000",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Table text extraction is column-flattened; table values were matched by order.",
+  "GShard params printed 619B in Table 4 and 600B in text."
+ ]
+}

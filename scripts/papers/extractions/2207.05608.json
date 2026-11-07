@@ -1,0 +1,492 @@
+{
+ "schema": 1,
+ "key": "2207.05608",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/huang-2022-inner-monologue.pdf",
+ "bib": {
+  "title": "Inner Monologue: Embodied Reasoning through Planning with Language Models",
+  "authors": [
+   "Wenlong Huang",
+   "Fei Xia",
+   "Ted Xiao",
+   "Harris Chan",
+   "Jacky Liang",
+   "Pete Florence",
+   "Andy Zeng",
+   "Jonathan Tompson",
+   "Igor Mordatch",
+   "Yevgen Chebotar",
+   "Pierre Sermanet",
+   "Noah Brown",
+   "Tomas Jackson",
+   "Linda Luu",
+   "Sergey Levine",
+   "Karol Hausman",
+   "Brian Ichter"
+  ],
+  "first_author": "Huang",
+  "year": 2022,
+  "venue": "preprint (arXiv:2207.05608v1, cs.RO)",
+  "arxiv": "2207.05608",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 97745,
+  "chars_total": 97745,
+  "engine": "pymupdf",
+  "skipped": "References skimmed only."
+ },
+ "type": "empirical",
+ "question": "To what extent can LLM planners reason over closed-loop environment feedback given in natural language, without extra training, to improve robot instruction completion?",
+ "hypothesis": "Injecting success, object and scene feedback as text into the LLM prompt (an 'inner monologue') improves robustness and long-horizon planning over open-loop LLM planning.",
+ "contributions": [
+  "Inner Monologue: a general formulation that chains perception models, pretrained skills and human feedback in a shared language prompt",
+  "Study of feedback sources (success detection, passive and active scene description, human) in three domains: sim tabletop, real tabletop, real kitchen mobile manipulation",
+  "Qualitative emergent capabilities: adapting to new instructions, self-proposed goals, multilingual input, scene Q&A"
+ ],
+ "method": {
+  "summary": "A frozen LLM plans skills step by step with few-shot prompts; after each step textual feedback (success, visible objects, achieved sub-goals, human answers) is appended to the prompt so the LLM can retry or replan. Three instantiations use different LLMs, skills and feedback modules.",
+  "task": "LLM-based high-level planning for language-conditioned robot manipulation",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "Sim tabletop rearrangement (Ravens-based)",
+    "role": "eval",
+    "size": "8 tasks, 50 episodes each",
+    "split": "4 seen, 4 unseen tasks",
+    "source": "Ravens simulator; up to 4 blocks and up to 3 bowls, 10 colours, 9 locations, 15cm minimum spacing",
+    "preprocessing": "Gaussian noise at test time: N(0,3) pixel observation, N(0,2.5) policy heatmaps, N(0,0.02m) place locations"
+   },
+   {
+    "name": "Low-level policy demonstrations (sim)",
+    "role": "train",
+    "size": "20000 demonstrations",
+    "split": null,
+    "source": "expert pick/place from ground-truth simulator poses",
+    "preprocessing": null
+   },
+   {
+    "name": "Real tabletop rearrangement",
+    "role": "eval",
+    "size": "2 tasks, 10 runs each",
+    "split": null,
+    "source": "UR5e arm, wrist RealSense RGB-D; three 4cm cubes; 3 fruits, 3 bottles, 3 plates",
+    "preprocessing": "Policy noise: planar pick translation, magnitude Normal sigma=1.5cm (stacking) or 0.7cm (sorting), capped at 1.5 sigma (Appendix A.2); main text says sigma=4mm clipped at 2 sigma"
+   },
+   {
+    "name": "Kitchen mobile manipulation (SayCan setup)",
+    "role": "eval",
+    "size": "120 evaluations over 8 instructions",
+    "split": "3 families: manipulation, mobile manipulation, drawers",
+    "source": "Everyday Robots mobile manipulator, office kitchen, 15 household items, 5 locations",
+    "preprocessing": null
+   },
+   {
+    "name": "Kitchen skill demonstrations (from SayCan)",
+    "role": "train",
+    "size": "68000 teleoperated demonstrations and 12000 autonomous successes",
+    "split": null,
+    "source": "collected over 11 months with 10 robots",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "InstructGPT (sim and real tabletop planner)",
+    "role": "proposed",
+    "params": "1.3B",
+    "architecture": "GPT-3 fine-tuned with human feedback, via OpenAI API",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "PaLM (kitchen planner)",
+    "role": "proposed",
+    "params": "540B",
+    "architecture": "LLM",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "CLIP-based Transporter Net pick-place primitive",
+    "role": "base",
+    "params": null,
+    "architecture": "CLIPort-like",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "CLIPort multi-task policy",
+    "role": "baseline",
+    "params": null,
+    "architecture": "CLIPort",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "training": "20000 demonstrations across 4 training tasks"
+    }
+   },
+   {
+    "name": "SayCan",
+    "role": "baseline",
+    "params": null,
+    "architecture": "LLM x value-function affordance grounding",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "MDETR / ViLD",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "open-vocabulary detectors (feedback modules)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Foresight/hindsight success detector (kitchen)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "CLIP image/text encoders + fusion MLPs, fine-tuned; BCE for foresight, CLIP symmetric contrastive loss for hindsight",
+    "init_from": "CLIP",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "threshold_tau": "not stated"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "Sim: 50 episodes per task; real tabletop: 10 runs per task; kitchen: 120 evaluations total; seeds not stated",
+   "prompting": "Few-shot prompts with no fine-tuning; format varies per domain (Robot thought / Robot action / Scene; robot.pick_place with Successful action; numbered steps with [success: no][scene: ...]); max steps k=15 in sim",
+   "retrieval": null,
+   "parameters": {
+    "max_steps_sim": "k=15",
+    "sim_success_rule": "2D distance <4cm and picked object higher than place object",
+    "real_success_threshold": "3cm blocks, 10cm sorting"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Task success rate",
+     "definition": "fraction of episodes/runs completing the instruction (binary reward from ground truth in sim)",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "CLIPort (oracle and fixed-step termination)",
+    "LLM with Object feedback only (open loop)",
+    "SayCan"
+   ],
+   "protocol": "Averaged over 50 episodes (sim), 10 runs (real tabletop), 120 evaluations (kitchen); no significance tests; kitchen adds adversarial human disturbances forcing skill failure"
+  },
+  "availability": {
+   "code": "Project website https://innermonologue.github.io (no code release stated)",
+   "weights": null,
+   "data": null
+  },
+  "prompts": [
+   {
+    "purpose": "Sim tabletop planner few-shot prompt (excerpt)",
+    "text": "Scene: There is a cyan, yellow, brown block.\nHuman: Move all the blocks to the top left corner.\nRobot thought: Goal state is [\"Cyan block is\non the top left corner.\", ...]\nRobot action: Pick the cyan block and place it on the top left corner.\nScene: You have completed [\"Cyan block is on the top left corner.\"]",
+    "where": "Appendix D, Listing 1 (full prompts in paper)"
+   },
+   {
+    "purpose": "Kitchen planner prompt (excerpt)",
+    "text": "Robot: Hi there, I’m a robot operating in an office kitchen.\nYou can ask me to do various tasks and I’ll tell you the sequence of actions I would do to accomplish your task.\nHuman: hold the snickers\nRobot: 1. pick up the snickers[success: no][scene: snickers]",
+    "where": "Appendix D, Listing 3 (Listings 2 and 4 also in paper)"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "In the real kitchen, Inner Monologue with Object + Success feedback raises total success over SayCan.",
+   "kind": "measured",
+   "source": null,
+   "metric": "total success rate",
+   "value": "60.4",
+   "unit": "%",
+   "baseline_value": "30.8",
+   "n": "120 evaluations",
+   "setup": "Everyday Robots kitchen, PaLM planner, learned success detector and human object feedback, across no-disturbance and disturbance conditions, three task families",
+   "quote": null,
+   "table": "Table 3, row Total, columns SayCan and Object + Success",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "With adversarial disturbances, SayCan scores 0% on mobile manipulation while IM Object + Success scores 75%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "success rate",
+   "value": "75.0",
+   "unit": "%",
+   "baseline_value": "0.0",
+   "n": null,
+   "setup": "Mobile manipulation family with disturbances; IM with Success alone reached 25.0%",
+   "quote": null,
+   "table": "Table 3, row Mobile Manipulation (With Disturbances), columns SayCan and Object + Success",
+   "note": "Per-cell trial counts not stated",
+   "where": "Table 3"
+  },
+  {
+   "claim": "Real tabletop: Object + Success feedback gives 90% total success vs 20% for object feedback alone (open loop).",
+   "kind": "measured",
+   "source": null,
+   "metric": "total success rate",
+   "value": "90",
+   "unit": "%",
+   "baseline_value": "20",
+   "n": "10 runs per task",
+   "setup": "UR5e, InstructGPT 1.3B, MDETR, injected policy noise",
+   "quote": null,
+   "table": "Table 2, row Total, columns Object and Object + Success",
+   "note": "Success only: 40%; Object (closed-loop): 45%",
+   "where": "Table 2"
+  },
+  {
+   "claim": "Sim tabletop: Object + Scene feedback is best on unseen task 'Put the blocks in their matching bowls' vs CLIPort 0%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "success rate",
+   "value": "82.0",
+   "unit": "%",
+   "baseline_value": "0.0",
+   "n": "50 episodes",
+   "setup": "Ravens sim with test-time noise, InstructGPT 1.3B, unseen task",
+   "quote": null,
+   "table": "Table 1, row Put the blocks in their matching bowls, column Object + Scene",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Sim: Object-only LLM planning on 'Put the blocks on mismatched bowls' reaches 62% and Object + Scene 86%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "success rate",
+   "value": "86.0",
+   "unit": "%",
+   "baseline_value": "62.0",
+   "n": "50 episodes",
+   "setup": "Ravens sim unseen task",
+   "quote": null,
+   "table": "Table 1, row Put the blocks on mismatched bowls, columns Object and Object + Scene",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Open-vocabulary detectors on 10 kitchen episodes: ViLD precision 85.7%, recall 72.0%, accuracy 88.9%; MDETR 39.6%, 87.5%, 68.2%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "object detection accuracy",
+   "value": "88.9",
+   "unit": "%",
+   "baseline_value": "68.2",
+   "n": "10 episodes",
+   "setup": "ViLD vs MDETR",
+   "quote": "We evaluate these\ntwo pretrained models on 10 representative kitchen mobile\nmanipulation episodes.",
+   "table": "Table 5",
+   "note": null,
+   "where": "Table 5, Appendix A.3"
+  },
+  {
+   "claim": "Emergent behaviours (goal switching, self-proposed goals, multilingual input, scene Q&A) appear but with varying consistency.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Qualitative sim tabletop examples, Fig 5 and Fig 9",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Sec 4.4"
+  }
+ ],
+ "limits": [
+  "Oracle scene descriptors (humans or scripted) assumed in Sec 4.1 and 4.3; learned versions only checked in Table 5",
+  "Failure sources: success detector errors (false negatives cause retries, false positives add partial observability), LLM planning errors, control errors",
+  "LLM planners sometimes ignored feedback and proposed skills with absent objects",
+  "Low-level policies bottleneck what the LLM can achieve",
+  "Emergent capabilities are inconsistent without similar prompt examples",
+  "Small trial counts (10 runs real tabletop), no confidence intervals or seeds",
+  "Different LLMs, skills and feedback per domain, so cross-domain comparisons are not controlled",
+  "Sim and kitchen results use InstructGPT 1.3B and PaLM-540B, both dated"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Success Detection",
+   "definition": "binary classification of whether the low-level skill has succeeded, given to the LLM in language form",
+   "where": "Sec 3.3"
+  },
+  {
+   "term": "Passive Scene Description",
+   "definition": "sources of scene feedback consistently provided and structured, injected without querying by the LLM planner",
+   "where": "Sec 3.3"
+  },
+  {
+   "term": "Active Scene Description",
+   "definition": "feedback provided in response to active queries by the LLM planner, unstructured answers",
+   "where": "Sec 3.3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "SayCan (Ahn et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Kitchen environment, affordance grounding and baseline; SayCan lacks closed-loop feedback",
+   "quote": null
+  },
+  {
+   "work": "Language Models as Zero-Shot Planners (Huang et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "LLM action-plan generation, assumes steps execute successfully",
+   "quote": null
+  },
+  {
+   "work": "Socratic Models (Zeng et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Open-loop object recognition once at start; Object-only variant is similar",
+   "quote": null
+  },
+  {
+   "work": "InstructGPT (Ouyang et al.)",
+   "year": 2022,
+   "arxiv": "2203.02155",
+   "relation": "evaluates",
+   "note": "1.3B planner",
+   "quote": null
+  },
+  {
+   "work": "PaLM (Chowdhery et al.)",
+   "year": 2022,
+   "arxiv": "2204.02311",
+   "relation": "evaluates",
+   "note": "540B kitchen planner",
+   "quote": null
+  },
+  {
+   "work": "CLIPort / Transporter Nets",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Policy primitive and multi-task baseline",
+   "quote": null
+  },
+  {
+   "work": "MDETR (Kamath et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Object detection feedback",
+   "quote": null
+  },
+  {
+   "work": "ViLD",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Alternative detector in Table 5",
+   "quote": null
+  },
+  {
+   "work": "CLIP (Radford et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Success detector backbone",
+   "quote": null
+  },
+  {
+   "work": "Chain of thought prompting (Wei et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Robot thought used with Object + Scene",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Inner Monologue enables grounded closed-loop feedback for robot planning with large language models",
+   "page": 2,
+   "why": "Shows the loop of action, success detector, scene descriptor and human."
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Different instantiations of Inner Monologue in three distinct domains",
+   "page": 5,
+   "why": "Shows the prompt format per domain."
+  },
+  {
+   "figure": "Table 3",
+   "caption": "Averaged success rate across 120 evaluations on several task families",
+   "page": 7,
+   "why": "Headline kitchen result with and without disturbances."
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Real tabletop noise stated as sigma=4mm clipped at 2 sigma in Sec 4.2 but sigma 1.5cm (stacking) / 0.7cm (sorting) capped at 1.5 sigma in Appendix A.2",
+  "Table cells were flattened by text extraction; row/column mapping inferred from order",
+  "No embedded instructions found"
+ ]
+}

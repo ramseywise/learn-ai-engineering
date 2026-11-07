@@ -1,0 +1,518 @@
+{
+ "schema": 1,
+ "key": "2204.03458",
+ "pdf": "ai-engineering/08-multimodal-engineering/sources/ho-2022-video-diffusion-models.pdf",
+ "bib": {
+  "title": "Video Diffusion Models",
+  "authors": [
+   "Jonathan Ho",
+   "Tim Salimans",
+   "Alexey Gritsenko",
+   "William Chan",
+   "Mohammad Norouzi",
+   "David J. Fleet"
+  ],
+  "first_author": "Ho",
+  "year": 2022,
+  "venue": "preprint",
+  "arxiv": "2204.03458",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 48785,
+  "chars_total": 48785,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can the standard Gaussian diffusion model, with a space-time factorized 3D U-Net, generate temporally coherent video, including long and text-conditioned video?",
+ "hypothesis": "Joint image-video training and a new reconstruction-guided conditional sampler improve video sample quality over plain training and replacement sampling.",
+ "contributions": [
+  "Diffusion model for video using a 3D U-Net factorized over space and time, trainable jointly on images and video",
+  "Reconstruction-guided sampling for spatial and temporal extension, better than the replacement method",
+  "First results on large text-conditioned video generation; state of the art on UCF101 unconditional and BAIR/Kinetics-600 video prediction"
+ ],
+ "method": {
+  "summary": "Standard continuous-time Gaussian diffusion with epsilon (or v) prediction and a 3D U-Net with 1x3x3 convs, spatial attention and added temporal attention blocks. Trained on fixed blocks of frames (16x64x64, 9x128x128); longer or higher-resolution video is made by reconstruction-guided conditional sampling from the unconditional model. Video prediction uses the unconditionally trained models.",
+  "task": "video generation (unconditional, video prediction, text-to-video)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "UCF101",
+    "role": "both",
+    "size": "13,320 videos",
+    "split": "all 13,320 videos for training; 10,000 generated samples for FID/IS",
+    "source": "Soomro et al. 2012 via TensorFlow Datasets",
+    "preprocessing": "16-frame segments at 64x64, TFDS loader without further processing"
+   },
+   {
+    "name": "BAIR Robot Pushing",
+    "role": "both",
+    "size": "approximately 44000 videos",
+    "split": "condition on 1 frame, generate next 15; eval set 256 examples",
+    "source": "Ebert et al. 2017",
+    "preprocessing": "64x64; left-right flips augmentation"
+   },
+   {
+    "name": "Kinetics-600",
+    "role": "both",
+    "size": "approximately 400 thousand training videos, 600 activities",
+    "split": "50 thousand randomly sampled test videos; condition on 5 frames, generate next 11",
+    "source": "Kay et al. 2017; Carreira et al. 2018",
+    "preprocessing": "64x64"
+   },
+   {
+    "name": "Text-video dataset",
+    "role": "train",
+    "size": "10 million captioned videos",
+    "split": "4096 samples for metrics, scored against training and validation sets",
+    "source": "not stated",
+    "preprocessing": "captions as BERT-large embeddings with attention pooling"
+   }
+  ],
+  "models": [
+   {
+    "name": "UCF101 model",
+    "role": "proposed",
+    "params": null,
+    "architecture": "3D U-Net, space-time factorized",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "base_channels": 256,
+     "channel_mult": "1,2,4,8",
+     "blocks_per_res": 2,
+     "attn_res": "8,16,32",
+     "head_dim": 64,
+     "cond_mlp_layers": 4,
+     "cond_dim": 1024,
+     "resolution": "16x64x64 frameskip 1"
+    }
+   },
+   {
+    "name": "BAIR model",
+    "role": "proposed",
+    "params": null,
+    "architecture": "3D U-Net, space-time factorized",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "base_channels": 128,
+     "channel_mult": "1,2,3,4",
+     "blocks_per_res": 3,
+     "attn_res": "8,16,32",
+     "head_dim": 64,
+     "cond_mlp_layers": 2,
+     "prediction": "v"
+    }
+   },
+   {
+    "name": "Kinetics model",
+    "role": "proposed",
+    "params": null,
+    "architecture": "3D U-Net, space-time factorized",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "base_channels": 256,
+     "channel_mult": "1,2,4,8",
+     "blocks_per_res": 2,
+     "cond_mlp_layers": 2,
+     "prediction": "v"
+    }
+   },
+   {
+    "name": "Small text-to-video 16x64x64",
+    "role": "proposed",
+    "params": null,
+    "architecture": "3D U-Net, space-time factorized",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "base_channels": 128,
+     "channel_mult": "1,2,4,8",
+     "blocks_per_res": 2,
+     "head_dim": 64,
+     "cond_mlp_layers": 4
+    }
+   },
+   {
+    "name": "Large text-to-video 16x64x64",
+    "role": "proposed",
+    "params": null,
+    "architecture": "3D U-Net, space-time factorized",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "base_channels": 256,
+     "channel_mult": "1,2,4,8",
+     "blocks_per_res": 2,
+     "head_dim": 64,
+     "cond_mlp_layers": 4,
+     "frameskip": "1,4"
+    }
+   },
+   {
+    "name": "Large text-to-video 9x128x128",
+    "role": "proposed",
+    "params": null,
+    "architecture": "3D U-Net, space-time factorized",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "base_channels": 128,
+     "channel_mult": "1,2,4,8,16",
+     "blocks_per_res": 2,
+     "head_dim": 128,
+     "cond_mlp_layers": 4,
+     "role_note": "super-resolution plus autoregressive extension, conditioned on 16x64x64 frameskip-4 samples"
+    }
+   }
+  ],
+  "training": {
+   "objective": "weighted MSE denoising loss; epsilon-prediction with t sampled by cosine schedule; v-prediction for BAIR and Kinetics",
+   "optimizer": "Adam (beta1=0.9, beta2=0.99; BAIR beta2=0.999)",
+   "lr": "0.0003 (UCF101, small and large 16x64x64 text); 0.0002 (BAIR, Kinetics, 9x128x128)",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "128 (256 for Kinetics)",
+   "steps": "UCF101 60000; BAIR 660000; Kinetics 220,000; small text 200000; large 16x64x64 700000; 9x128x128 800000",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "16 frames (9 for the 128x128 model)",
+   "precision": null,
+   "weight_decay": "0.0 (BAIR 0.01)",
+   "dropout": "0.1 (UCF101, BAIR, Kinetics); 0.0 (text-to-video)",
+   "regularisation": "EMA 0.9999 (BAIR 0.999); joint image-video training",
+   "hardware": "TPU-v4: 128 (UCF101), 128 (BAIR), 256 (Kinetics), 64 (small text), 128 (large 16x64x64), 128 (9x128x128)",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "independent_images_per_video": "8 (UCF101, BAIR, Kinetics, large 16x64x64); 0/4/8 small; 7 for 9x128x128",
+    "noise_schedule": "cosine, log SNR range [-20, 20]",
+    "delta_langevin": "0.1"
+   }
+  },
+  "inference": {
+   "decoding": "ancestral sampler; predictor-corrector with Langevin step (delta=0.1)",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "10,000 (UCF101); 100x256 (BAIR); 50 thousand test videos (Kinetics); 4096 (text-to-video)",
+   "prompting": "caption BERT-large embeddings, attention pooled",
+   "retrieval": null,
+   "parameters": {
+    "sampling_timesteps": "256 (UCF101, text); 256+256 Langevin (BAIR); 128+128 Langevin (Kinetics)",
+    "log_variance_gamma": "0.1 UCF101; 0.0 BAIR/Kinetics; 0.3 text",
+    "reconstruction_guidance_weight": "50 BAIR; 9 Kinetics; 2.0 and 5.0 in Table 6",
+    "classifier_free_guidance_w": "1.0, 2.0, 5.0 in Table 5"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "FVD",
+     "definition": "Frechet video distance, I3D features (Unterthiner 2018)",
+     "unit": "score",
+     "higher_is_better": false
+    },
+    {
+     "name": "FID",
+     "definition": "C3D features on UCF101; Inception on text-to-video, avg over frames or first frame only",
+     "unit": "score",
+     "higher_is_better": false
+    },
+    {
+     "name": "IS",
+     "definition": "Inception score; C3D on UCF101, I3D on Kinetics; text-to-video two numbers from 1 and 10 splits",
+     "unit": "score",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "MoCoGAN",
+    "TGAN variants",
+    "VideoGPT",
+    "DVD-GAN",
+    "TrIVD-GAN-FP",
+    "Transframer",
+    "CCVS",
+    "VideoTransformer",
+    "FitVid",
+    "NUWA",
+    "Video VQ-VAE"
+   ],
+   "protocol": "Text-to-video FID and FVD given as two numbers (against training / validation sets). BAIR FVD: 100x256 samples vs 256 eval examples. Kinetics: samples without replacement, same subsequences for samples and ground truth. No seed counts stated."
+  },
+  "availability": {
+   "code": null,
+   "weights": "not released ('we have decided not to release our models')",
+   "data": null
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "availability.weights",
+    "quote": "thus we have decided not to release our models",
+    "where": "Section 6"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Joint training with 8 independent images cuts text-to-video FVD from 202.28 to 57.84 (small 16x64x64 model).",
+   "kind": "measured",
+   "source": null,
+   "metric": "FVD",
+   "value": 57.84,
+   "unit": null,
+   "baseline_value": 202.28,
+   "n": null,
+   "setup": "Small model, text-to-video 16x64x64, FVD against training set (first of two numbers), 0 vs 8 image frames per video",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row 8, column FVD (and row 0: 202.28/205.42)"
+  },
+  {
+   "claim": "Classifier-free guidance weight 5.0 raises FVD to 163.74 from 41.65 at weight 1.0.",
+   "kind": "measured",
+   "source": null,
+   "metric": "FVD",
+   "value": 163.74,
+   "unit": null,
+   "baseline_value": 41.65,
+   "n": null,
+   "setup": "Large 16x64x64 text-to-video, frameskip 1, 8 image frames; FVD vs training set; baseline is w=1.0, no unguided row",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, frameskip 1, guidance 5.0 vs 1.0, column FVD"
+  },
+  {
+   "claim": "Reconstruction guidance beats replacement for 64-frame autoregressive extension (FVD 136.22 vs 451.45).",
+   "kind": "measured",
+   "source": null,
+   "metric": "FVD",
+   "value": 136.22,
+   "unit": null,
+   "baseline_value": 451.45,
+   "n": null,
+   "setup": "Guidance weight 2.0, 64x64x64 from 16x64x64 model, FVD vs training set",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, guidance weight 2.0, rows reconstruction guidance and replacement, column FVD"
+  },
+  {
+   "claim": "UCF101 unconditional: FID 295 and IS 57 at 16x64x64.",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": 295,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "UCF101, 16x64x64, C3D features, 10,000 samples; real data IS 60.2",
+   "note": "Next best listed: TGAN-v2 FID 3431",
+   "where": "Table 1",
+   "table": "Table 1, row Video Diffusion (ours), column FID"
+  },
+  {
+   "claim": "BAIR video prediction FVD 66.92 with Langevin sampler, 256 steps.",
+   "kind": "measured",
+   "source": null,
+   "metric": "FVD",
+   "value": 66.92,
+   "unit": null,
+   "baseline_value": 86.9,
+   "n": null,
+   "setup": "BAIR 64x64, 1 conditioning frame, 15 generated, 100x256 samples vs 256 eval",
+   "note": "Baseline is NUWA 86.9; ancestral 512 steps 68.19",
+   "where": "Table 2",
+   "table": "Table 2, row Langevin sampler 256 steps"
+  },
+  {
+   "claim": "Kinetics-600 video prediction FVD 16.2 with Langevin sampler, 128 steps.",
+   "kind": "measured",
+   "source": null,
+   "metric": "FVD",
+   "value": 16.2,
+   "unit": null,
+   "baseline_value": 25.4,
+   "n": null,
+   "setup": "Kinetics-600 64x64, 5 conditioning frames, 11 generated, 50 thousand test videos",
+   "note": "Baseline Transframer 25.4; ancestral 256 steps 18.6",
+   "where": "Table 3",
+   "table": "Table 3, row Langevin 128 steps, column FVD"
+  },
+  {
+   "claim": "Kinetics FVD changes from 16.2 to 16.9 under the sampling-with-replacement protocol of prior work.",
+   "kind": "measured",
+   "source": null,
+   "metric": "FVD",
+   "value": 16.9,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Kinetics-600 evaluation protocol difference",
+   "note": null,
+   "where": "Section 4.2",
+   "quote": "We ﬁnd that this way of evaluating raises the FVD obtained by our model slightly,\nfrom 16.2 to 16.9."
+  }
+ ],
+ "limits": [
+  "Text-video dataset (10 million captioned videos) is not named or described further; no release of models",
+  "Fixed small blocks (16 frames, 64x64 or 128x128); longer videos come from autoregressive extension",
+  "UCF101 evaluated at 64x64 which the authors say may disadvantage it versus higher-resolution works",
+  "Metric protocols vary across the literature so cross-paper scores differ slightly",
+  "Independent images for joint training are drawn from the same video dataset, larger image datasets left to future work",
+  "Societal harm concerns: authors withhold models; text-to-video inherits bias, not audited"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "reconstruction guidance",
+   "definition": "conditional sampling that adjusts the denoising prediction by the gradient of the reconstruction error of the conditioning data",
+   "where": "Section 3.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Denoising diffusion probabilistic models",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Standard diffusion formulation and ancestral sampler",
+   "quote": null
+  },
+  {
+   "work": "Score-based generative modeling through SDEs (Song et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Replacement method and predictor-corrector sampler",
+   "quote": null
+  },
+  {
+   "work": "Classifier-free diffusion guidance (Ho & Salimans)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Guidance for text-to-video",
+   "quote": null
+  },
+  {
+   "work": "Improved DDPM (Nichol & Dhariwal)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Cosine schedule, variance interpolation",
+   "quote": null
+  },
+  {
+   "work": "Progressive distillation (Salimans & Ho)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "v-prediction",
+   "quote": null
+  },
+  {
+   "work": "3D U-Net (Cicek et al.)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Architecture base",
+   "quote": null
+  },
+  {
+   "work": "NUWA",
+   "year": 2021,
+   "arxiv": "2111.12417",
+   "relation": "baseline",
+   "note": "BAIR",
+   "quote": null
+  },
+  {
+   "work": "Transframer",
+   "year": 2022,
+   "arxiv": "2203.09494",
+   "relation": "baseline",
+   "note": "Kinetics-600",
+   "quote": null
+  },
+  {
+   "work": "Diffusion probabilistic modeling for video generation (Yang et al.)",
+   "year": 2022,
+   "arxiv": "2203.09481",
+   "relation": "related",
+   "note": "Concurrent diffusion video work",
+   "quote": null
+  },
+  {
+   "work": "UCF101, BAIR, Kinetics-600",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Benchmarks",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "The 3D U-Net architecture for x-hat in the diffusion model.",
+   "page": 3,
+   "why": "shows space-time factorized blocks"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Replacement vs reconstruction guidance for block-autoregressive generation of 64 frames from a 16 frame model.",
+   "page": 9,
+   "why": "shows loss of temporal coherence under replacement"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 7",
+   "snippet": "x~b_theta(z_t) = x^b_theta(z_t) - (w_r alpha_t / 2) grad_{z^b_t} ||x^a - x^a_theta(z_t)||^2_2",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Table cell text extracted vertically; rows reconstructed by position",
+  "Table 4-6 cells hold train/validation pairs"
+ ]
+}

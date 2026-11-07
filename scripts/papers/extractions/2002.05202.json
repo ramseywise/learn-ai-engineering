@@ -1,0 +1,413 @@
+{
+ "schema": 1,
+ "key": "2002.05202",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/shazeer-2020-glu-variants-improve-transformer.pdf",
+ "bib": {
+  "title": "GLU Variants Improve Transformer",
+  "authors": [
+   "Noam Shazeer"
+  ],
+  "first_author": "Shazeer",
+  "year": 2020,
+  "venue": "preprint",
+  "arxiv": "2002.05202",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 11937,
+  "chars_total": 11937,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Do Gated Linear Unit variants used in place of the ReLU/GELU feed-forward sublayer improve the Transformer?",
+ "hypothesis": null,
+ "contributions": [
+  "Extends the GLU family with ReGLU, GEGLU and SwiGLU (and Bilinear) and proposes them as Transformer FFN layers",
+  "Tests them in the T5 transfer-learning setup on pre-training perplexity and GLUE, SuperGLUE and SQuAD"
+ ],
+ "method": {
+  "summary": "Replaces the T5-base FFN (two matrices) with GLU-variant FFNs (three matrices, d_ff cut from 3072 to 2048 to match parameters and compute). Each model is pretrained 524,288 steps on C4 span filling without dropout, then fine-tuned once on a mixture of GLUE, SuperGLUE and SQuAD.",
+  "task": "T5 span-filling pretraining then multi-task fine-tuning on language understanding",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "C4",
+    "role": "pretrain",
+    "size": null,
+    "split": "heldout shard of C4 for log-perplexity",
+    "source": "Raffel et al. 2019",
+    "preprocessing": "inputs of 512 tokens, outputs of 114 tokens containing multiple deleted spans"
+   },
+   {
+    "name": "GLUE",
+    "role": "both",
+    "size": null,
+    "split": "dev sets reported",
+    "source": "Wang et al. 2018",
+    "preprocessing": "examples-proportional mixture with SQuAD and SuperGLUE"
+   },
+   {
+    "name": "SuperGLUE",
+    "role": "both",
+    "size": null,
+    "split": "dev sets reported",
+    "source": "Wang et al. 2019",
+    "preprocessing": null
+   },
+   {
+    "name": "SQuAD v1.1",
+    "role": "both",
+    "size": null,
+    "split": "dev set reported",
+    "source": "Rajpurkar et al. 2016",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "T5-base with FFN variants (GLU, Bilinear, ReGLU, GEGLU, SwiGLU)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "encoder-decoder transformer, bias-free FFN",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "12 encoder + 12 decoder",
+    "hidden": "d_model 768",
+    "heads": "12 (d_k = d_v = 64)",
+    "context": null,
+    "other": {
+     "d_ff": "2048 for GLU variants (3 matrices), 3072 for baseline (2 matrices)"
+    }
+   },
+   {
+    "name": "FFN_ReLU, FFN_GELU, FFN_Swish",
+    "role": "baseline",
+    "params": null,
+    "architecture": "same T5-base, d_ff 3072",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "12 + 12",
+    "hidden": "d_model 768",
+    "heads": "12",
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "span-filling (denoising) on C4",
+   "optimizer": "Adafactor",
+   "lr": null,
+   "lr_schedule": "inverse-square-root, decayed linearly for the final 10 percent of steps",
+   "warmup": null,
+   "batch_size": "128 examples (512-token input, 114-token output)",
+   "steps": "524,288 pretraining; 131072 fine-tuning; 65,536 for the 4 variability runs",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "512 input, 114 output",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": "none in pretraining; 0.1 on layer outputs, FFN hidden layers and attention weights in fine-tuning",
+   "regularisation": null,
+   "hardware": "32-core TPUv2 cluster",
+   "compute": null,
+   "wall_clock": "approximately 0.15 seconds per training step",
+   "seeds": "four models per architecture trained 65,536 steps to measure inter-run variability; one run of the full 524,288 steps",
+   "other": {
+    "finetune_lr": "10^-3",
+    "finetune_input_per_step": "approximately 65,536 tokens combined length",
+    "finetune_embeddings": "embedding matrices fixed",
+    "finetune_runs": "one run on a mixed task set (departs from Raffel, who fine-tuned separately)"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "best dev score of any checkpoint recorded during fine-tuning, per task",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "heldout log-perplexity",
+     "definition": "on the span-filling objective, heldout C4 shard",
+     "unit": "nats (log-perplexity)",
+     "higher_is_better": false
+    },
+    {
+     "name": "GLUE/SuperGLUE/SQuAD dev scores",
+     "definition": "per-task metrics, best checkpoint",
+     "unit": "points",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "FFN_ReLU",
+    "FFN_GELU",
+    "FFN_Swish",
+    "Raffel et al. 2019 reported results"
+   ],
+   "protocol": "Single full run per architecture; std in parentheses from four 65,536-step runs; best checkpoint per task on dev sets, so selection on the reported split."
+  },
+  "availability": {
+   "code": "based on the T5 codebase; no release stated",
+   "weights": null,
+   "data": "C4, GLUE, SuperGLUE, SQuAD"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "models.d_ff",
+    "quote": "we reduce the hidden layer to dff = 2048, so as to maintain the same parameter and operation counts as the base model",
+    "where": "3.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "SwiGLU gives lower heldout log-perplexity than ReLU after 524,288 steps",
+   "kind": "measured",
+   "source": null,
+   "metric": "log-perplexity",
+   "value": 1.636,
+   "unit": "nats",
+   "baseline_value": 1.677,
+   "n": null,
+   "setup": "T5-base encoder-decoder (12+12 layers, d_model 768), C4 span-filling pretraining, parameters and compute matched, heldout-shard log-perplexity, 524,288 steps",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row FFNSwiGLU, column 524,288"
+  },
+  {
+   "claim": "GEGLU gives the lowest heldout log-perplexity after 524,288 steps",
+   "kind": "measured",
+   "source": null,
+   "metric": "log-perplexity",
+   "value": 1.633,
+   "unit": "nats",
+   "baseline_value": 1.677,
+   "n": null,
+   "setup": "T5-base encoder-decoder (12+12 layers, d_model 768), C4 span-filling pretraining, parameters and compute matched, heldout-shard log-perplexity, 524,288 steps",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row FFNGEGLU, column 524,288"
+  },
+  {
+   "claim": "GELU FFN reaches 1.679 after 524,288 steps, no better than ReLU",
+   "kind": "measured",
+   "source": null,
+   "metric": "log-perplexity",
+   "value": 1.679,
+   "unit": "nats",
+   "baseline_value": 1.677,
+   "n": null,
+   "setup": "T5-base encoder-decoder (12+12 layers, d_model 768), C4 span-filling pretraining, parameters and compute matched, heldout-shard log-perplexity, 524,288 steps",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row FFNGELU, column 524,288"
+  },
+  {
+   "claim": "At 65,536 steps SwiGLU log-perplexity with std over four runs",
+   "kind": "measured",
+   "source": null,
+   "metric": "log-perplexity",
+   "value": 1.944,
+   "unit": "nats",
+   "baseline_value": 1.997,
+   "n": null,
+   "setup": "T5-base encoder-decoder (12+12 layers, d_model 768), C4 span-filling pretraining, parameters and compute matched, heldout-shard log-perplexity, 65,536 steps, mean of four runs, std 0.010",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row FFNSwiGLU, column 65,536"
+  },
+  {
+   "claim": "SQuAD v1.1 F1 for ReGLU is slightly above ReLU",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 91.18,
+   "unit": "F1",
+   "baseline_value": 90.87,
+   "n": null,
+   "setup": "T5-base encoder-decoder (12+12 layers, d_model 768), C4 span-filling pretraining, parameters and compute matched, heldout-shard log-perplexity, then fine-tuned once on the GLUE+SuperGLUE+SQuAD mixture, dev set, best checkpoint",
+   "note": "Differences are about 0.3 F1; Raffel std is 0.226",
+   "where": "Table 4",
+   "table": "Table 4, row FFNReGLU, column F1"
+  },
+  {
+   "claim": "GLUE average score for ReGLU is above ReLU",
+   "kind": "measured",
+   "source": null,
+   "metric": "GLUE average",
+   "value": 84.67,
+   "unit": "points",
+   "baseline_value": 83.8,
+   "n": null,
+   "setup": "T5-base encoder-decoder (12+12 layers, d_model 768), C4 span-filling pretraining, parameters and compute matched, heldout-shard log-perplexity, fine-tuned, dev set, best checkpoint",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row FFNReGLU, column Score Average"
+  },
+  {
+   "claim": "SuperGLUE average score for SwiGLU is above ReLU",
+   "kind": "measured",
+   "source": null,
+   "metric": "SuperGLUE average",
+   "value": 74.56,
+   "unit": "points",
+   "baseline_value": 72.76,
+   "n": null,
+   "setup": "T5-base encoder-decoder (12+12 layers, d_model 768), C4 span-filling pretraining, parameters and compute matched, heldout-shard log-perplexity, fine-tuned, dev set, best checkpoint",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row FFNSwiGLU, column Score Average"
+  },
+  {
+   "claim": "The Raffel et al. baseline with identical architecture is notably worse, which the author attributes to dropout in pretraining",
+   "kind": "measured",
+   "source": null,
+   "metric": "SQuAD EM",
+   "value": 80.88,
+   "unit": "EM",
+   "baseline_value": 83.18,
+   "n": null,
+   "setup": "T5-base encoder-decoder (12+12 layers, d_model 768), C4 span-filling pretraining, parameters and compute matched, heldout-shard log-perplexity; Raffel et al. 2019 reported SQuAD dev EM",
+   "note": "Author's attribution to dropout is a belief, not tested",
+   "where": "Table 4",
+   "table": "Table 4, row [Raffel et al., 2019], column EM"
+  },
+  {
+   "claim": "The author offers no explanation for why gated variants work.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Conclusions",
+   "note": null,
+   "where": "Section 4"
+  }
+ ],
+ "limits": [
+  "Author offers no explanation: 'We offer no explanation as to why these architectures seem to work'",
+  "Fine-tuning results are noisy; one fine-tuning run per model, best checkpoint chosen on dev sets",
+  "Single pretraining run per architecture at 524,288 steps; variability only measured at 65,536 steps",
+  "Only T5-base scale (12+12 layers, d_model 768); no larger models",
+  "Some downstream tasks favour baseline GELU or ReLU (e.g. CoLA, CB)",
+  "Comparison with Raffel et al. confounded by dropout: author removed dropout in pretraining"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "GLU",
+   "definition": "component-wise product of two linear projections, one first passed through a sigmoid",
+   "where": "Abstract"
+  },
+  {
+   "term": "Bilinear",
+   "definition": "GLU without the activation",
+   "where": "Section 2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Language modeling with gated convolutional networks (Dauphin et al.)",
+   "year": 2016,
+   "arxiv": "1612.08083",
+   "relation": "extends",
+   "note": "introduced GLU",
+   "quote": null
+  },
+  {
+   "work": "Attention is all you need",
+   "year": 2017,
+   "arxiv": "1706.03762",
+   "relation": "extends",
+   "note": "FFN sublayer being modified",
+   "quote": null
+  },
+  {
+   "work": "Exploring the limits of transfer learning (T5)",
+   "year": 2019,
+   "arxiv": "1910.10683",
+   "relation": "uses-method",
+   "note": "code base, setup and baseline results",
+   "quote": null
+  },
+  {
+   "work": "GELU (Hendrycks and Gimpel)",
+   "year": 2016,
+   "arxiv": "1606.08415",
+   "relation": "baseline",
+   "note": "FFN_GELU",
+   "quote": null
+  },
+  {
+   "work": "Searching for activation functions",
+   "year": 2017,
+   "arxiv": "1710.05941",
+   "relation": "baseline",
+   "note": "Swish",
+   "quote": null
+  },
+  {
+   "work": "Adafactor",
+   "year": 2018,
+   "arxiv": "1804.04235",
+   "relation": "uses-method",
+   "note": "optimizer",
+   "quote": null
+  },
+  {
+   "work": "GLUE",
+   "year": 2018,
+   "arxiv": "1804.07461",
+   "relation": "uses-data",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "SuperGLUE",
+   "year": 2019,
+   "arxiv": "1905.00537",
+   "relation": "uses-data",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "SQuAD",
+   "year": 2016,
+   "arxiv": "1606.05250",
+   "relation": "uses-data",
+   "note": "",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Table 1",
+   "caption": "Heldout-set log-perplexity for Transformer models on the segment-filling task from [Raffel et al., 2019]. All models are matched for parameters and computation.",
+   "page": 2,
+   "why": "Main pretraining result across all variants at 65,536 and 524,288 steps"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq. 6",
+   "snippet": "FFNSwiGLU(x, W, V, W2) = (Swish1(xW) ⊗ xV )W2",
+   "verbatim": true
+  }
+ ],
+ "problems": []
+}

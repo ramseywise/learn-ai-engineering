@@ -1,0 +1,418 @@
+{
+ "schema": 1,
+ "key": "1909.09436",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/husain-2019-codesearchnet-challenge.pdf",
+ "bib": {
+  "title": "CodeSearchNet Challenge: Evaluating the State of Semantic Code Search",
+  "authors": [
+   "Hamel Husain",
+   "Ho-Hsiang Wu",
+   "Tiferet Gazit",
+   "Miltiadis Allamanis",
+   "Marc Brockschmidt"
+  ],
+  "first_author": "Husain",
+  "year": 2019,
+  "venue": "preprint",
+  "arxiv": "1909.09436",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 30114,
+  "chars_total": 30114,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "benchmark",
+ "question": "How can progress on semantic code search (natural-language query to code) be measured, and how well do simple neural and keyword baselines do?",
+ "hypothesis": null,
+ "contributions": [
+  "CodeSearchNet Corpus of about 6 million functions in six languages, about 2 million with documentation",
+  "CodeSearchNet Challenge: 99 natural language queries with about 4k expert relevance annotations",
+  "Baseline models (NBoW, 1D-CNN, biRNN, self-attention, ElasticSearch) and a leaderboard"
+ ],
+ "method": {
+  "summary": "Scraped open-source GitHub functions paired with first-paragraph documentation as a proxy training set; built 99 queries from Bing and StaQC with expert relevance labels for top-10 candidates per query and language; trained joint code/query embedding baselines with a softmax contrastive loss and compared with ElasticSearch.",
+  "task": "semantic code search (retrieval of functions for natural language queries)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "CodeSearchNet Corpus",
+    "role": "train",
+    "size": "2 326 976 documented functions; 6 452 446 functions in all (Go 347 789/726 768; Java 542 991/1 569 889; JavaScript 157 988/1 857 835; PHP 717 313/977 821; Python 503 502/1 156 085; Ruby 57 393/164 048)",
+    "split": "80-10-10 train/valid/test",
+    "source": "open-source non-fork GitHub repos via libraries.io, sorted by stars and forks, with redistributable licences",
+    "preprocessing": "TreeSitter tokenisation; docs truncated to first paragraph; pairs with doc under 3 tokens dropped; functions under 3 lines dropped; names containing 'test', constructors and standard extension methods dropped; near-duplicates removed"
+   },
+   {
+    "name": "CodeSearchNet Challenge",
+    "role": "eval",
+    "size": "99 queries, 4 026 annotations, relevance 0-3",
+    "split": null,
+    "source": "Bing queries with high click-through to code plus StaQC intent rewrites; volunteer expert annotators; candidates from ensemble of all neural models and ElasticSearch (top 10 per query and language)",
+    "preprocessing": "queries that are exact technical keywords removed"
+   }
+  ],
+  "models": [
+   {
+    "name": "NBoW",
+    "role": "baseline",
+    "params": null,
+    "architecture": "learnable subtoken embeddings, pooled",
+    "init_from": null,
+    "tokenizer": "code identifiers split into subtokens; natural language BPE",
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "embedding_dim": "128"
+    }
+   },
+   {
+    "name": "1D-CNN",
+    "role": "baseline",
+    "params": null,
+    "architecture": "1D convolution over tokens",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "embedding_dim": "128"
+    }
+   },
+   {
+    "name": "biRNN",
+    "role": "baseline",
+    "params": null,
+    "architecture": "bidirectional GRU",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "embedding_dim": "128"
+    }
+   },
+   {
+    "name": "SelfAtt",
+    "role": "baseline",
+    "params": null,
+    "architecture": "multi-head self-attention",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "embedding_dim": "128"
+    }
+   },
+   {
+    "name": "ElasticSearch",
+    "role": "baseline",
+    "params": null,
+    "architecture": "keyword search, default parameters and tokenizer, two fields: function name in subtokens and entire function text",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "minimise -1/N sum_i log( exp(Ec(ci)^T Eq(di)) / sum_j exp(Ec(cj)^T Eq(di)) ), other snippets in batch as distractors",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "pooling": "mean/max-pooling and attention-like weighted sum implemented; which used per model not stated",
+    "embedding_dim": "128 for all models",
+    "alternatives": "cosine similarity and max-margin objectives tried, no significant change on validation"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single run per model; seeds not stated",
+   "prompting": null,
+   "retrieval": "all functions in the corpus (including undocumented) indexed with Annoy approximate nearest neighbours; query embedded and nearest code returned",
+   "parameters": {
+    "annoy_trees": "not stated; paper says a small number of trees made baselines underperform"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "MRR",
+     "definition": "mean reciprocal rank of the correct snippet for a docstring query among 999 distractors, on corpus test split",
+     "unit": "MRR (0-1)",
+     "higher_is_better": true
+    },
+    {
+     "name": "NDCG Within",
+     "definition": "NDCG over the subset of functions with human annotations",
+     "unit": "NDCG (0-1)",
+     "higher_is_better": true
+    },
+    {
+     "name": "NDCG All",
+     "definition": "NDCG over the whole CodeSearchNet Corpus; unannotated relevant results count against a tool",
+     "unit": "NDCG (0-1)",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "ElasticSearch",
+    "NBoW",
+    "1D-CNN",
+    "biRNN",
+    "SelfAtt",
+    "SelfAtt text / NBoW code"
+   ],
+   "protocol": "Inter-annotator agreement on 891 query-code pairs with more than one annotation: Cohen kappa 0.47. Distractor set of 999 fixed per test pair. No seeds or significance tests."
+  },
+  "availability": {
+   "code": "https://github.com/github/CodeSearchNet",
+   "weights": null,
+   "data": "https://github.com/github/CodeSearchNet; leaderboard on Weights & Biases"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "On the docstring-to-code training task the self-attention model has the best average MRR.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MRR",
+   "value": 0.7011,
+   "unit": "MRR",
+   "baseline_value": 0.6167,
+   "n": null,
+   "setup": "CodeSearchNet Corpus test split, 999 distractors, average over six languages, SelfAtt/SelfAtt",
+   "note": "baseline_value is NBoW average 0.6167",
+   "where": "Table 3",
+   "table": "Table 3, row SelfAtt SelfAtt, column Avg"
+  },
+  {
+   "claim": "On the human-labelled challenge the NBoW model has the best average NDCG Within, ahead of self-attention.",
+   "kind": "measured",
+   "source": null,
+   "metric": "NDCG Within",
+   "value": 0.574,
+   "unit": "NDCG",
+   "baseline_value": 0.493,
+   "n": null,
+   "setup": "99 queries, annotated functions only, average over six languages, NBoW/NBoW",
+   "note": "baseline_value is SelfAtt average 0.493",
+   "where": "Table 4",
+   "table": "Table 4, row NBoW NBoW, column NDCG Within Avg"
+  },
+  {
+   "claim": "ElasticSearch keyword search scores competitively on the challenge.",
+   "kind": "measured",
+   "source": null,
+   "metric": "NDCG Within",
+   "value": 0.337,
+   "unit": "NDCG",
+   "baseline_value": null,
+   "n": null,
+   "setup": "99 queries, annotated functions only, average over six languages, default ElasticSearch",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row ElasticSearch, column NDCG Within Avg"
+  },
+  {
+   "claim": "NDCG over the whole corpus is lower for every model; NBoW leads with 0.340 and ElasticSearch gets 0.205.",
+   "kind": "measured",
+   "source": null,
+   "metric": "NDCG All",
+   "value": 0.34,
+   "unit": "NDCG",
+   "baseline_value": 0.205,
+   "n": null,
+   "setup": "99 queries, whole corpus, average over six languages, NBoW/NBoW",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row NBoW NBoW, column NDCG All Avg"
+  },
+  {
+   "claim": "Inter-annotator agreement is moderate.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Cohen kappa",
+   "value": 0.47,
+   "unit": "kappa",
+   "baseline_value": null,
+   "n": null,
+   "setup": "891 query-code pairs with more than one annotation",
+   "note": null,
+   "where": "Section 3",
+   "quote": "The agreement is\nmoderate with Cohen κ = 0.47."
+  },
+  {
+   "claim": "Number of expert annotations collected.",
+   "kind": "measured",
+   "source": null,
+   "metric": "annotations",
+   "value": 4026,
+   "unit": "count",
+   "baseline_value": null,
+   "n": null,
+   "setup": "six languages, 99 queries",
+   "note": null,
+   "where": "Section 3",
+   "quote": "We collected 4 026 annotations across six\nprogramming languages"
+  },
+  {
+   "claim": "Python has 2 089 of the annotations; Go only 166, a skewed distribution.",
+   "kind": "measured",
+   "source": null,
+   "metric": "annotations",
+   "value": 2089,
+   "unit": "count",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Python, relevance 0-3",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Python, column Total Annotations"
+  },
+  {
+   "claim": "Corpus size after filtering.",
+   "kind": "measured",
+   "source": null,
+   "metric": "documented functions",
+   "value": 2326976,
+   "unit": "functions",
+   "baseline_value": null,
+   "n": null,
+   "setup": "six languages",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row All, column w/ documentation"
+  }
+ ],
+ "limits": [
+  "Training data is documentation-derived, which differs from real queries; authors say it is a noisy proxy and not a good match for code search.",
+  "Annotations are few (about 4k), mostly one per pair, skewed by language (Python 2 089 of 4 026), from volunteers; kappa only 0.47.",
+  "Candidates to annotate were chosen by the baselines themselves, so NDCG Within favours them and NDCG All penalises unannotated relevant results.",
+  "Baselines report no hyperparameters, seeds or variance; pooling choice per model unstated.",
+  "A later indexing bug (Annoy trees) was found by an outside participant and affected results; the v3 numbers are the corrected ones.",
+  "English queries only; whole functions only, not code chunks."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "NDCG Within",
+   "definition": "NDCG computed over the subset of functions with human annotations",
+   "where": "Section 3.1"
+  },
+  {
+   "term": "NDCG All",
+   "definition": "NDCG over the whole CodeSearchNet Corpus",
+   "where": "Section 3.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "When Deep Learning Met Code Search (Cambronero et al.)",
+   "year": 2019,
+   "arxiv": "1905.03813",
+   "relation": "related",
+   "note": "reached similar conclusions that NBoW does well",
+   "quote": null
+  },
+  {
+   "work": "Deep code search (Gu et al.)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "joint embeddings of code and queries",
+   "quote": null
+  },
+  {
+   "work": "StaQC",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "intent rewrites used for queries",
+   "quote": null
+  },
+  {
+   "work": "Attention Is All You Need",
+   "year": 2017,
+   "arxiv": "1706.03762",
+   "relation": "uses-method",
+   "note": "self-attention encoder baseline",
+   "quote": null
+  },
+  {
+   "work": "Neural machine translation of rare words with subword units",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "BPE for natural language",
+   "quote": null
+  },
+  {
+   "work": "The Adverse Effects of Code Duplication in Machine Learning Models of Code",
+   "year": 2018,
+   "arxiv": "1812.06469",
+   "relation": "uses-method",
+   "note": "near-duplicate removal",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Figure 3",
+   "caption": "Model Architecture Overview.",
+   "page": 4,
+   "why": "Shows the two-encoder joint embedding setup"
+  },
+  {
+   "figure": "Table 4",
+   "caption": "NDCG Baseline Results on CodeSearchNet Challenge.",
+   "page": 6,
+   "why": "Shows ranking flip versus Table 3"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Table cells are in column-wise text; values mapped by order. Number of Annoy trees, optimizer and learning rate are not stated."
+ ]
+}

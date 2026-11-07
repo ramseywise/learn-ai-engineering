@@ -1,19 +1,580 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "1710.03740",
  "pdf": "generative-ai/01-llm-fundamentals/sources/micikevicius-2017-mixed-precision-training.pdf",
  "bib": {
   "title": "Mixed Precision Training",
+  "authors": [
+   "Sharan Narang",
+   "Gregory Diamos",
+   "Erich Elsen",
+   "Paulius Micikevicius",
+   "Jonah Alben",
+   "David Garcia",
+   "Boris Ginsburg",
+   "Michael Houston",
+   "Oleksii Kuchaiev",
+   "Ganesh Venkatesh",
+   "Hao Wu"
+  ],
   "first_author": "Micikevicius",
   "year": 2017,
-  "venue": "ICLR (Poster) 2018",
+  "venue": "ICLR 2018 (arXiv v3)",
   "arxiv": "1710.03740",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-04",
-  "session": "30d54947-c623-4dcd-8d29-849be0272621"
+  "at": "2026-11-07",
+  "chars_read": 34285,
+  "chars_total": 34285,
+  "engine": "pymupdf",
+  "skipped": "References skimmed only; no appendix."
  },
- "legacy_report": "SOURCE: \"Mixed Precision Training\", Micikevicius, Narang, Alben, Diamos, Elsen, Garcia, Ginsburg, Houston, Kuchaiev, Venkatesh, Wu (Baidu Research + NVIDIA). ICLR 2018 conference paper, arXiv:1710.03740v3 (15 Feb 2018). Micikevicius and Narang are marked equal contribution. The extracted header lists the Baidu authors (Narang, Diamos, Elsen) first, but citing as \"Micikevicius et al.\" is standard.\n\nCOVERAGE: 34,463 of 34,463 chars, which is all 12 of 12 pages. Pages 1-9 are the body. Pages 10-12 are references, which I skimmed for origins. There is no appendix. File: /Users/ramsey-wise/workspace/learn-ai-engineering/generative-ai/02-rag-retrieval/sources/micikevicius-2017-mixed-precision-training.pdf. The PDF sits under 02-rag-retrieval/sources even though the target note is in 01-llm-fundamentals.\n\nKEY POINT FOR THE TARGET NOTE: the paper does NOT support the \"16 bytes per parameter\" figure. It never counts bytes per parameter, never counts optimizer state, and never mentions Adam momentum or variance. Its only memory accounting is about weights (p3): \"maintaining an additional copy of weights increases the memory requirements for the weights by 50% compared with single precision training\". It says overall memory \"is roughly halved\" because activations dominate. The 2+2+12 = 16-byte breakdown matches the accounting in ZeRO (arXiv:1910.02054), which the note already cites in the next sentence. I did not read ZeRO, so I cannot confirm that it states it. Cite Micikevicius for the method (fp32 master weights, loss scaling, fp32 accumulation), not for the byte count.\n\nCLAIMS\n- claim: The method has three techniques. (1) Keep an FP32 master copy of the weights, updated each optimizer step and rounded to FP16 for the forward and backward passes. (2) Scale the loss so small gradients are not lost. (3) Do FP16 arithmetic that accumulates into FP32 and converts back to FP16 before writing to memory.\n  number: none\n  setup: general method. Weights, activations and gradients are stored in IEEE FP16.\n  quote: \"Firstly, we recommend maintaining a single-precision copy of weights that accumulates the gradients after each optimizer step (this copy is rounded to half-precision for the forward- and back-propagation). Secondly, we propose loss-scaling to preserve gradient values with small magnitudes. Thirdly, we use half-precision arithmetic that accumulates into single-precision outputs, which are converted to half-precision before storing to memory.\"\n  where: p1, abstract\n- claim: Memory is about halved overall, even though the master copy raises weight memory by 50%, because activations dominate training memory and are stored in FP16.\n  number: 50% more weight memory; overall \"roughly halved\"\n  setup: an argument, not measured. No byte-level or optimizer-state accounting.\n  quote: \"Even though maintaining an additional copy of weights increases the memory requirements for the weights by 50% compared with single precision training, impact on overall memory usage is much smaller. For training memory consumption is dominated by activations ... the overall memory consumption for training deep neural networks is roughly halved.\"\n  where: p3, sec 3.1\n- claim: Without FP32 master weights, a speech model loses 80% relative accuracy, because about 5% of weight gradients fall below FP16's smallest value (2^-24) and become zero.\n  number: 80% relative accuracy loss; ~5% of gradients; 2^-24\n  setup: Mandarin DeepSpeech 2 speech model, ~800 h of speech, 20 epochs, pseudo-FP16 run\n  quote: \"updating FP16 weights results in 80% relative accuracy loss.\" / \"any value whose magnitude is smaller than 2−24 becomes zero in FP16. We can see in Figure 2b that approximately 5% of weight gradient values have exponents smaller than−24.\"\n  where: p3, sec 3.1\n- claim: An update is lost when the weight is more than 2048 times larger than the update, because FP16 has 10 mantissa bits.\n  number: 2048\n  setup: a property of the FP16 number format\n  quote: \"This can happen when the magnitude of a normalized weight value is at least 2048 times larger that of the weight update. Since FP16 has 10 bits of mantissa\"\n  where: p3\n- claim: Loss scaling multiplies the loss before backpropagation, so the chain rule scales every gradient by the same amount. Gradients are unscaled before clipping and the weight update. The scale factor must keep the largest gradient times the factor below 65,504. On overflow, the step can be skipped.\n  number: scale factors 8 to 32K; FP16 maximum 65,504\n  setup: many networks needed no scaling at all\n  quote: \"We trained a variety of networks with scaling factors ranging from 8 to 32K (many networks did not require a scaling factor).\" / \"its product with the maximum absolute gradient value is below 65,504 (the maximum value representable in FP16).\" / \"One option is to skip the weight update when an overflow is detected\"\n  where: p4-5, sec 3.2\n- claim: Multibox SSD diverges without loss scaling and matches FP32 with a factor of 8. Faster R-CNN dips slightly without scaling.\n  number: SSD 76.9% baseline mAP vs diverges vs 77.1%; Faster R-CNN 69.1 / 68.6 / 69.7\n  setup: VGG-16 backbone, Pascal VOC 2007 test set\n  quote: \"Faster R-CNN 69.1% 68.6% 69.7%\" / \"Multibox SSD 76.9% diverges 77.1%\" / \"loss-scaling factor of 8 recovers the relevant gradient values\"\n  where: p6, Table 2\n- claim: Six ImageNet CNNs match FP32 top-1 accuracy with the same hyperparameters and no loss scaling.\n  number: e.g. ResNet50 75.92% vs 76.04%; AlexNet 56.77 vs 56.93; Inception v3 73.85 vs 74.13\n  setup: ILSVRC12 validation set, single crop. Caffe with Volta TensorOps; PyTorch for ResNet50. Single runs.\n  quote: \"Resnet50 75.92% 76.04%\" / \"Loss-scaling technique was not required for successful mixed precision training of these networks.\"\n  where: p6, Table 1\n- claim: The language model needs loss scaling. Without it, FP16 diverges after 300K iterations. A factor of 128 matches FP32.\n  number: 128; 300K iterations\n  setup: bigLSTM on 1B Word, 2x8192 LSTM, 793K vocab, Adagrad, 50 epochs, batch 1024 across 4 GPUs\n  quote: \"Without loss scaling the training perplexity curve for FP16 training diverges, compared with the FP32 training, after 300K iterations. Scaling factor of 128 recovers all the relevant gradient values\"\n  where: p7, sec 4.5\n- claim: The speech models came out slightly better in pseudo-FP16 than in FP32. The authors suggest FP16 may act as a regularizer.\n  number: CER English 2.20 vs 1.99; Mandarin 15.82 vs 15.01\n  setup: DeepSpeech 2, 115M params (English, 6000 h) and 215M params (Mandarin, 2600 h), Nesterov SGD, 20 epochs. FP16 storage only, emulated on Maxwell GPUs.\n  quote: \"English 2.20 1.99\" / \"Mandarin 15.82 15.01\" / \"Pseudo FP16 results are roughly 5 to 10% better than the baseline.\"\n  where: p7, Table 3\n- claim: Large reductions such as batch-norm statistics and softmax should be done in FP32. Point-wise operations can use either precision.\n  number: none\n  setup: implementation guidance\n  quote: \"Large reductions (sums across elements of a vector) should be carried out in FP32.\"\n  where: p5, sec 3.3\n- claim: Only operation-level speedups are reported, not end-to-end training speedups.\n  number: 2-6x\n  setup: DeepBench on Volta, for operations limited by memory or arithmetic bandwidth\n  quote: \"DNN operations benchmarked with DeepBench on Volta GPU see 2-6x speedups compared to FP32 implementations if they are limited by memory or arithmetic bandwidth.\"\n  where: p8, sec 5\n- claim: The hardware motivation is that half-precision math runs 2-8x faster than single precision on recent GPUs.\n  number: 2x to 8x\n  setup: GPUs of 2017\n  quote: \"half-precision math throughput in recent GPUs is 2 × to 8× higher than for single-precision.\"\n  where: p1\n\nLIMITS\n- No bytes-per-parameter accounting and no optimizer-state memory. Adam appears only as the DCGAN optimizer (p8). The other runs use SGD, Nesterov SGD or Adagrad.\n- No bf16. The only format covered is IEEE FP16.\n- No LLM-scale or Transformer runs. The largest model is 215M parameters, the Mandarin speech model. The language model is an LSTM, and translation uses 3- or 5-layer LSTMs.\n- Dynamic loss scaling is only proposed as future work (p9): \"Loss-scaling factor could be dynamically increased or decreased by inspecting the weight gradients for overflow\". The experiments use constant factors.\n- No end-to-end wall-clock speedups. The authors write: \"Full network training and inference speedups depend on library and framework optimizations ... experiments in this paper were carried out with early versions\".\n- Results are single runs, apart from the three FP32 reference curves in Figure 4. The authors concede \"There was a noticeable variation in accuracy of different training sessions with the same settings.\"\n- Translation results appear only as curves, with no BLEU. The GAN result is qualitative only (\"Qualitatively the outputs ... appear comparable\").\n- The speech results are emulated (FP16 storage only, on Maxwell), not run on Volta Tensor Cores.\n- The claim of \"no hyper-parameter changes\" sits alongside a loss-scale factor that still has to be chosen per model.\n- Dated: hardware is Volta-era. Text-to-speech and reinforcement learning are listed as future work.\n\nBUILDS ON: Courbariaux et al. (2015), BinaryConnect; Hubara et al. (2016a, 2016b), binarized and quantized networks; Rastegari et al. (2016), XNOR-Net; Zhou et al. (2016), DoReFa-Net; Mishra et al. (2017), WRPN; Gupta et al. (2015), 16-bit fixed point on MNIST and CIFAR-10; He et al. (2016c) and Ott et al. (2016), quantized RNNs; NVIDIA (2017), V100 Tensor Cores. The paper's stated contrast is that prior work kept gradients in FP32 or lost accuracy.\n\nCODE: none in the paper.\n\nFIGURES\n- Fig 1, p3, \"Mixed precision training iteration for a layer.\" Best single figure: it shows the FP32 master copy, the FP16 forward and backward passes, and the update loop in one diagram.\n- Fig 3, p4, histogram of SSD activation gradients against the FP16 representable range (\"67% of values are zero\"). It shows at a glance why loss scaling works: shifting the gradients right moves them into the usable range.\n- Fig 2a/2b, p4, Mandarin training curves with and without the master copy, plus a histogram of weight-gradient exponents. Shows that the master weights are necessary.\n- Fig 5, p8, bigLSTM perplexity with and without loss scaling. Shows the divergence.\n- Fig 4, p7, translation perplexity with three FP32 reference runs (useful for seeing run-to-run variance). Fig 6, p8, DCGAN faces. Both are low priority.\n\nPROBLEMS: Text extraction was clean. Small faults only: ligatures (ﬁ, ﬂ), \"V olta\" split into two words, and a typo in the source (\"experiemnts\"). Some section headings were split (\"I NTRODUCTION\"). There were no embedded instructions."
+ "type": "empirical",
+ "question": "Can deep networks be trained with FP16 storage and arithmetic without losing accuracy or changing hyper-parameters?",
+ "hypothesis": "Three techniques (FP32 master weights, loss scaling, FP32 accumulation) let FP16 training match FP32 accuracy.",
+ "contributions": [
+  "FP32 master copy of weights",
+  "Loss scaling",
+  "FP16 arithmetic accumulating into FP32",
+  "Demonstration across CNNs, detection, speech, translation, language modeling, GAN"
+ ],
+ "method": {
+  "summary": "Store weights, activations and gradients in FP16, keep an FP32 master weight copy for updates, scale the loss to keep small gradients representable, accumulate FP16 products in FP32. Compared against FP32 baselines on six task families with identical hyper-parameters.",
+  "task": "reduced-precision neural network training",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "ILSVRC12",
+    "role": "both",
+    "size": null,
+    "split": "validation set top-1, single crop",
+    "source": null,
+    "preprocessing": "Caffe: random horizontal flip and random crop from 256x256; Resnet50 full PyTorch augmentation"
+   },
+   {
+    "name": "Pascal VOC 2007/2012",
+    "role": "both",
+    "size": null,
+    "split": "Faster-RCNN trained on VOC07 train; SSD on VOC07+12; test VOC07",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "Internal English speech",
+    "role": "train",
+    "size": "6000 hours",
+    "split": null,
+    "source": "internal",
+    "preprocessing": null
+   },
+   {
+    "name": "Internal Mandarin speech",
+    "role": "train",
+    "size": "2600 hours",
+    "split": null,
+    "source": "internal",
+    "preprocessing": null
+   },
+   {
+    "name": "WMT15 English-French",
+    "role": "train",
+    "size": null,
+    "split": null,
+    "source": null,
+    "preprocessing": "word vocab 100K English, 40K French"
+   },
+   {
+    "name": "1 billion word dataset",
+    "role": "train",
+    "size": null,
+    "split": null,
+    "source": null,
+    "preprocessing": "vocab 793K words"
+   },
+   {
+    "name": "CelebFaces",
+    "role": "train",
+    "size": null,
+    "split": null,
+    "source": null,
+    "preprocessing": "128x128 face images"
+   }
+  ],
+  "models": [
+   {
+    "name": "DeepSpeech 2 English",
+    "role": "proposed",
+    "params": "approximately 115 million",
+    "architecture": "2 2D conv, 3 GRU layers, 1 row conv, CTC",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "DeepSpeech 2 Mandarin",
+    "role": "proposed",
+    "params": "215 million",
+    "architecture": "similar to English",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "bigLSTM",
+    "role": "proposed",
+    "params": null,
+    "architecture": "2 layers of 8192 LSTM cells, projection to 1024-d embedding",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": "793K words",
+    "layers": 2,
+    "hidden": "8192 cells",
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GNMT-style seq2seq LSTM (TF tutorial)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "3 or 5 layers encoder and decoder, 1024 LSTM cells each, attention",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": "100K en / 40K fr",
+    "layers": "3 or 5",
+    "hidden": 1024,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "CNNs: AlexNet, VGG-D, GoogLeNet, Inception v2, v3, pre-act Resnet-50; Faster-RCNN and SSD (VGG-16 backbone); DCGAN",
+    "role": "proposed",
+    "params": null,
+    "architecture": "CNN",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "task-specific (CTC for speech)",
+   "optimizer": "Nesterov SGD (speech, 20 epochs); SGD (translation); Adagrad (bigLSTM, 50 epochs); Adam (DCGAN, 100K iterations)",
+   "lr": null,
+   "lr_schedule": "same as baseline",
+   "warmup": null,
+   "batch_size": "1024 aggregated over 4 GPUs (bigLSTM only)",
+   "steps": "100K iterations (DCGAN)",
+   "epochs": "20 (speech), 50 (bigLSTM)",
+   "tokens": null,
+   "seq_len": null,
+   "precision": "FP16 storage for weights, activations, gradients; FP32 master weights; FP16 products accumulated in FP32; reductions (batch norm statistics, softmax) in FP32",
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "Baseline on Maxwell or Pascal GPUs; mixed precision on Volta V100; speech MP emulated on Maxwell with FP16 storage only",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "loss_scale": "constant, 8 to 32K; SSD 8, bigLSTM 128; many networks none",
+    "frameworks": "Caffe modified for Volta TensorOps; PyTorch for Resnet50; TensorFlow for translation"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "top-1",
+     "definition": "ILSVRC12 validation, single crop",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "mAP",
+     "definition": "Pascal VOC 2007 test",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "CER",
+     "definition": "character error rate",
+     "unit": "CER",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "FP32 training with identical hyper-parameters"
+   ],
+   "protocol": "One run per configuration for most tables; translation shows three FP32 runs to expose run-to-run variance; GAN judged qualitatively."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "speech data internal"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Weights, activations and gradients stored in FP16 nearly halve training memory; an FP32 master copy adds 50% to weight memory only.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Section 3.1 argument; activations dominate memory so overall roughly halved. No byte-per-parameter or optimizer-state accounting.",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "3.1"
+  },
+  {
+   "claim": "Extra FP32 master copy increases weight memory by 50% versus single precision training.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "50",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Weights only, relative to FP32 training",
+   "quote": "Even though maintaining an additional copy of weights increases the memory requirements for the weights by 50% compared with single precision training, impact on overall memory usage is much",
+   "table": null,
+   "note": null,
+   "where": "3.1"
+  },
+  {
+   "claim": "Updating FP16 weights without an FP32 master copy loses 80% relative accuracy on Mandarin speech; with the master copy matches FP32.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "80",
+   "unit": "% relative accuracy loss",
+   "baseline_value": null,
+   "n": null,
+   "setup": "DeepSpeech 2 Mandarin, ~800 hours speech, 20 epochs, pseudo FP16",
+   "quote": "updating FP16 weights",
+   "table": null,
+   "note": null,
+   "where": "3.1, Fig 2a"
+  },
+  {
+   "claim": "About 5% of Mandarin weight-gradient values have exponents smaller than -24.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "5",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Mandarin speech model, FP32 weights, gradients sampled every 4,000 iterations",
+   "quote": "approximately 5% of weight gradient",
+   "table": null,
+   "note": null,
+   "where": "3.1, Fig 2b"
+  },
+  {
+   "claim": "SSD diverges in FP16 without loss scaling; scale factor 8 matches FP32 mAP.",
+   "kind": "measured",
+   "source": null,
+   "metric": "mAP",
+   "value": "77.1",
+   "unit": "% mAP (MP with loss-scale)",
+   "baseline_value": "76.9",
+   "n": null,
+   "setup": "Multibox SSD, VGG-16 backbone, VOC07 test, trained on VOC07+12; baseline 76.9",
+   "quote": null,
+   "table": "Table 2, row Multibox SSD, column MP with loss-scale",
+   "note": null,
+   "where": null
+  },
+  {
+   "claim": "Faster R-CNN mAP with loss-scale vs FP32.",
+   "kind": "measured",
+   "source": null,
+   "metric": "mAP",
+   "value": "69.7",
+   "unit": "% mAP",
+   "baseline_value": "69.1",
+   "n": null,
+   "setup": "Faster R-CNN VGG-16, VOC07 train, VOC07 test; baseline 69.1, MP without loss-scale 68.6",
+   "quote": null,
+   "table": "Table 2, row Faster R-CNN, column MP with loss-scale",
+   "note": null,
+   "where": null
+  },
+  {
+   "claim": "Resnet50 top-1 under mixed precision matches FP32.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1",
+   "value": "76.04",
+   "unit": "% top-1",
+   "baseline_value": "75.92",
+   "n": null,
+   "setup": "ILSVRC12 val, single-crop, PyTorch, no loss scaling, identical hyper-parameters",
+   "quote": null,
+   "table": "Table 1, row Resnet50, column Mixed Precision",
+   "note": null,
+   "where": null
+  },
+  {
+   "claim": "AlexNet top-1 under mixed precision.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1",
+   "value": "56.93",
+   "unit": "% top-1",
+   "baseline_value": "56.77",
+   "n": null,
+   "setup": "ILSVRC12 val, Caffe",
+   "quote": null,
+   "table": "Table 1, row AlexNet, column Mixed Precision",
+   "note": null,
+   "where": null
+  },
+  {
+   "claim": "Inception v3 top-1 under mixed precision.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1",
+   "value": "74.13",
+   "unit": "% top-1",
+   "baseline_value": "73.85",
+   "n": null,
+   "setup": "ILSVRC12 val, Caffe",
+   "quote": null,
+   "table": "Table 1, row Inception v3, column Mixed Precision",
+   "note": null,
+   "where": null
+  },
+  {
+   "claim": "English DeepSpeech 2 CER under pseudo FP16 is lower than baseline.",
+   "kind": "measured",
+   "source": null,
+   "metric": "CER",
+   "value": "1.99",
+   "unit": "CER",
+   "baseline_value": "2.20",
+   "n": null,
+   "setup": "WSJ'92 test, ~115M params, 6000 h internal English data, 20 epochs, Nesterov SGD",
+   "quote": null,
+   "table": "Table 3, row English, column Mixed Precision",
+   "note": null,
+   "where": null
+  },
+  {
+   "claim": "Mandarin DeepSpeech 2 CER under pseudo FP16 is lower than baseline.",
+   "kind": "measured",
+   "source": null,
+   "metric": "CER",
+   "value": "15.01",
+   "unit": "CER",
+   "baseline_value": "15.82",
+   "n": null,
+   "setup": "Internal test set, ~215M params, 2600 h internal data",
+   "quote": null,
+   "table": "Table 3, row Mandarin, column Mixed Precision",
+   "note": null,
+   "where": null
+  },
+  {
+   "claim": "bigLSTM language model needs loss scaling 128 to match FP32 perplexity; without it training diverges after 300K iterations.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "128",
+   "unit": "loss scale factor",
+   "baseline_value": null,
+   "n": null,
+   "setup": "bigLSTM, 1 billion word dataset, 50 epochs Adagrad, 793K vocab, sampled softmax 8K negatives, batch 1024 over 4 GPUs",
+   "quote": "Scaling factor of 128 recovers all the relevant gradient values",
+   "table": null,
+   "note": null,
+   "where": "4.5, Fig 5"
+  },
+  {
+   "claim": "Loss scaling factors used ranged from 8 to 32K; many networks needed none.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Across all experiments",
+   "quote": "We trained a variety of networks with scaling factors ranging from 8 to 32K",
+   "table": null,
+   "note": null,
+   "where": "3.2"
+  },
+  {
+   "claim": "Half-precision math throughput on recent GPUs is 2x to 8x single precision; DeepBench operations see 2-6x speedup on Volta when memory or arithmetic limited.",
+   "kind": "reported",
+   "source": null,
+   "metric": null,
+   "value": "2-6",
+   "unit": "x speedup",
+   "baseline_value": null,
+   "n": null,
+   "setup": "DeepBench ops on Volta; not full network training",
+   "quote": "DNN operations benchmarked with DeepBench1 on Volta GPU see 2-6x speedups compared to",
+   "table": null,
+   "note": null,
+   "where": "5"
+  },
+  {
+   "claim": "FP16 cannot represent magnitudes below 2^-24 (become zero); max FP16 value 65,504.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "65,504",
+   "unit": "max FP16 value",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Format property",
+   "quote": "maximum value representable in FP16",
+   "table": null,
+   "note": null,
+   "where": "3.1, 3.2"
+  },
+  {
+   "claim": "A weight update becomes zero if weight magnitude is at least 2048x the update (10-bit mantissa).",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "2048",
+   "unit": "ratio",
+   "baseline_value": null,
+   "n": null,
+   "setup": "FP16 addition alignment",
+   "quote": "at least 2048 times larger that of the weight update",
+   "table": null,
+   "note": null,
+   "where": "3.1"
+  },
+  {
+   "claim": "Translation 3 and 5 layer 1024 LSTM models: mixed precision with loss scaling matches FP32; no scaling slightly degrades.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "WMT15 English-French, 100K/40K vocab, SGD; large run-to-run variation among FP32 runs (Fig 4)",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "4.4, Fig 4"
+  }
+ ],
+ "limits": [
+  "Does not count bytes per parameter or optimizer-state memory (no Adam moments); only states FP32 master copy adds 50% to weight memory.",
+  "Speedups only from DeepBench operations; full network speedups left to future work (early library versions).",
+  "Single runs mostly; translation shows large run-to-run variance.",
+  "GAN quality only qualitative.",
+  "Speech models trained in emulated mode (FP16 storage on Maxwell), and on internal data.",
+  "Uses FP16 with loss scaling; BF16 not discussed. Seeds, learning rates and batch sizes mostly unstated.",
+  "Dynamic loss scaling proposed as future work, not implemented."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "loss scaling",
+   "definition": "scale the loss value computed in the forward pass prior to starting back-propagation so gradients shift into FP16 range; unscale weight gradients before the update",
+   "where": "3.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Deep Speech 2",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "speech model trained",
+   "quote": null
+  },
+  {
+   "work": "Exploring the limits of language modeling (bigLSTM)",
+   "year": 2016,
+   "arxiv": "1602.02410",
+   "relation": "evaluates",
+   "note": "language model",
+   "quote": null
+  },
+  {
+   "work": "Gupta et al. Deep learning with limited numerical precision",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "related",
+   "note": "16-bit fixed point on MNIST/CIFAR",
+   "quote": null
+  },
+  {
+   "work": "SSD",
+   "year": 2015,
+   "arxiv": "1512.02325",
+   "relation": "evaluates",
+   "note": "detector that diverges without loss scaling",
+   "quote": null
+  },
+  {
+   "work": "DCGAN",
+   "year": 2015,
+   "arxiv": "1511.06434",
+   "relation": "evaluates",
+   "note": null,
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Mixed precision training iteration for a layer.",
+   "page": 3,
+   "why": "Shows FP32 master weights, FP16 copy, loss scale and unscale flow."
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Histogram of activation gradient values during the training of Multibox SSD network.",
+   "page": 4,
+   "why": "Shows 67% zeros in FP16 and motivates loss scaling."
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Header lists Narang first though Micikevicius is equal-contribution first author; PDF text had ligatures (ﬁ)."
+ ]
 }

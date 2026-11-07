@@ -1,0 +1,591 @@
+{
+ "schema": 1,
+ "key": "2111.07832",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/zhou-2021-ibot.pdf",
+ "bib": {
+  "title": "iBOT: Image BERT Pre-Training with Online Tokenizer",
+  "authors": [
+   "Jinghao Zhou",
+   "Chen Wei",
+   "Huiyu Wang",
+   "Wei Shen",
+   "Cihang Xie",
+   "Alan Yuille",
+   "Tao Kong"
+  ],
+  "first_author": "Zhou",
+  "year": 2022,
+  "venue": "ICLR 2022 (arXiv v3, 27 Jan 2022)",
+  "arxiv": "2111.07832",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 85741,
+  "chars_total": 85741,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can masked image modeling (BERT-style) train Vision Transformers well when the visual tokenizer is learned online jointly with the model rather than pre-trained offline?",
+ "hypothesis": "A semantically meaningful visual tokenizer is the crux of MIM; self-distilling the teacher's patch outputs, with the teacher semantics from [CLS] cross-view distillation, gives such a tokenizer in a single stage.",
+ "contributions": [
+  "Formulate MIM as knowledge distillation and perform it by self-distillation with the EMA teacher as online tokenizer",
+  "Shared projection head and soft token distributions as targets",
+  "State-of-the-art k-NN, linear, fine-tuning, semi-supervised, unsupervised and dense-task results",
+  "Analysis of emerging part-level patch semantics and robustness",
+  "Multi-crop made stable via random MIM; effective-epochs measure"
+ ],
+ "method": {
+  "summary": "Student sees blockwise-masked views, teacher sees unmasked views; loss is cross-entropy between teacher and student softmax outputs on [CLS] (cross-view, as DINO) plus on masked patch tokens (in-view), summed unscaled. Teacher is EMA of student; projection head shared between [CLS] and patch tokens.",
+  "task": "self-supervised image pre-training (masked image modeling + self-distillation), evaluated by k-NN, linear probe, fine-tuning, detection, segmentation",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "ImageNet-1K",
+    "role": "pretrain",
+    "size": null,
+    "split": "train set for pre-training; val for eval",
+    "source": "Deng et al. 2009",
+    "preprocessing": "224 size images (196 patch tokens); 2 global crops 224 and 10 local crops 96 (multi-crop)"
+   },
+   {
+    "name": "ImageNet-22K",
+    "role": "pretrain",
+    "size": null,
+    "split": "train",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "COCO",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Lin et al. 2014",
+    "preprocessing": null
+   },
+   {
+    "name": "ADE20K",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Zhou et al. 2017",
+    "preprocessing": null
+   },
+   {
+    "name": "CIFAR10/100, iNaturalist18/19, Flowers, Cars",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": null,
+    "preprocessing": "recipe of Dosovitskiy et al. 2021"
+   },
+   {
+    "name": "ImageNet-9, ImageNet-A, ImageNet-C",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Xiao 2020; Hendrycks 2021; Hendrycks & Dietterich 2019",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "iBOT ViT-S/16",
+    "role": "proposed",
+    "params": "21M",
+    "architecture": "ViT, patch 16",
+    "init_from": null,
+    "tokenizer": "online teacher",
+    "vocab": "8192 (head output dim K)",
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "196 patch tokens",
+    "other": {}
+   },
+   {
+    "name": "iBOT ViT-B/16",
+    "role": "proposed",
+    "params": "85M",
+    "architecture": "ViT",
+    "init_from": null,
+    "tokenizer": "online teacher",
+    "vocab": "8192",
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "196 patch tokens",
+    "other": {}
+   },
+   {
+    "name": "iBOT ViT-L/16",
+    "role": "proposed",
+    "params": "307M",
+    "architecture": "ViT",
+    "init_from": null,
+    "tokenizer": "online teacher",
+    "vocab": "8192",
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "196 patch tokens",
+    "other": {}
+   },
+   {
+    "name": "iBOT Swin-T/{7,14}",
+    "role": "proposed",
+    "params": "28M",
+    "architecture": "Swin, window 7 or 14",
+    "init_from": null,
+    "tokenizer": "online teacher",
+    "vocab": "8192",
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "DINO, BEiT, MoCov3, SwAV, BYOL, SimCLRv2, EsViT, MoBY",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": "BEiT: DALL-E dVAE",
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "L_[CLS] + L_MIM (summed without scaling); cross-entropy self-distillation, symmetrised over two views; blockwise masking; soft teacher distribution",
+   "optimizer": "AdamW",
+   "lr": "base 5e-4 x batch size/256 (linear scaling)",
+   "lr_schedule": null,
+   "warmup": "linear ramp-up over first 10 epochs",
+   "batch_size": "1024",
+   "steps": null,
+   "epochs": "ImageNet-1K: ViT-S/16 800, ViT-B/16 400, ViT-L/16 250, Swin-T 300; ImageNet-22K: ViT-B/16 80, ViT-L/16 50. Tables 1-3 list different 'effective epochs' (e.g. ViT-B/16 1600 = 400 x ~4)",
+   "tokens": null,
+   "seq_len": "196 patch tokens (224x224)",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "EMA teacher; centering and sharpening; prediction ratio r=0 w.p. 0.5 else U[0.1,0.5]",
+   "hardware": "two 8-GPU V100 machines (Table 19)",
+   "compute": "ViT-S/16: iBOT 2x224+10x96 crops 193.4h for 800 epochs, 19.5G memory (Table 19)",
+   "wall_clock": "see compute",
+   "seeds": null,
+   "other": {
+    "momentum rates, temperatures": "ablation default patch temp tau't 0.04->0.07, centering momentum m' 0.9, head output K=8192; EMA teacher momentum value not stated in text",
+    "ablation default": "300-epoch ViT-S/16, r=0.3(+-0.2), no multi-crop",
+    "head": "3-layer MLP, l2-normalised bottleneck, shared between CLS and patch",
+    "fine-tune ImageNet": "BEiT recipe, AdamW, layer decay 0.75/0.65/0.75 for S/B/L, 200/100/50 epochs, lr sweep {8e-4,9e-4,1e-3,2e-3}",
+    "COCO": "Cascade Mask R-CNN, lr 1e-4, wd 0.05, 1x schedule (12 epochs), layer decay sweep",
+    "ADE20K": "160k iterations, 512x512, layer decay 0.65, lr sweep {3e-5..8e-4}, UperNet or linear",
+    "effective epochs": "r = 2 + (96/224)^2 x 10 = 3.84 ~ 4 for iBOT/DINO"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "not stated; no seeds or error bars reported",
+   "prompting": null,
+   "retrieval": "k-NN with sweep over number of neighbours (DINO protocol)",
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "k-NN / linear / fine-tune top-1",
+     "definition": "ImageNet-1K val accuracy",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "APb / APm",
+     "definition": "COCO box / mask AP",
+     "unit": "AP",
+     "higher_is_better": true
+    },
+    {
+     "name": "mIoU",
+     "definition": "ADE20K",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "ACC/ARI/NMI/FMI",
+     "definition": "unsupervised clustering",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "mCE",
+     "definition": "ImageNet-C",
+     "unit": "%",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "DINO",
+    "BEiT",
+    "MoCov3",
+    "SwAV",
+    "BYOL",
+    "SimCLRv2",
+    "EsViT",
+    "MoBY",
+    "supervised (Rand.)"
+   ],
+   "protocol": "Single run per setting; lr sweeps; no seeds or significance tests reported"
+  },
+  "availability": {
+   "code": "https://github.com/bytedance/ibot",
+   "weights": "models publicly available",
+   "data": "public datasets"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "iBOT ViT-L/16 pre-trained on ImageNet-22K reaches 82.3% linear probing on ImageNet-1K.",
+   "kind": "measured",
+   "source": null,
+   "metric": "linear top-1",
+   "value": 82.3,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ViT-L/16, ImageNet-22K pre-training, linear probe",
+   "quote": "With ViT-L/16 and ImageNet-22K as pre-training data, iBOT further achieves a linear probing accuracy 82.3%",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.1"
+  },
+  {
+   "claim": "iBOT ViT-L/16 22K pre-trained fine-tuned at image size 512 reaches 87.8%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "fine-tune top-1",
+   "value": 87.8,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ViT512-L/16, ImageNet-22K pre-training, fine-tune ImageNet-1K",
+   "quote": "When ﬁne-tuned on an image size of 512, we achieve 87.8% accuracy.",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.1"
+  },
+  {
+   "claim": "iBOT ViT-B/16 (ImageNet-1K) gets 77.1 k-NN, 79.5 linear and 84.0 fine-tuning.",
+   "kind": "measured",
+   "source": null,
+   "metric": "fine-tune top-1",
+   "value": 84.0,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ViT-B/16, ImageNet-1K, 1600 effective epochs",
+   "quote": "iBOT advances ImageNet-1K classiﬁcation benchmark under k-NN, linear probing and ﬁne-tuning protocols to 77.1%, 79.5%, 84.0% with ViT-Base/16 respectively",
+   "table": null,
+   "note": null,
+   "where": "Intro"
+  },
+  {
+   "claim": "Gain over DINO in linear probing grows with model size (0.9 with ViT-S, 1.3 with ViT-B).",
+   "kind": "measured",
+   "source": null,
+   "metric": "linear gain",
+   "value": 1.3,
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ViT-B/16 vs DINO, ImageNet-1K linear",
+   "quote": "the performance gain over DINO gets larger (0.9% w/ ViT-S versus 1.3% w/ ViT-B) with more parameters",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.1"
+  },
+  {
+   "claim": "MIM without the [CLS] distillation loss gives only 9.5 k-NN and 29.8 linear accuracy.",
+   "kind": "measured",
+   "source": null,
+   "metric": "linear top-1",
+   "value": 29.8,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "300-epoch ViT-S/16, r=0.3, no multi-crop, shared head, L_MIM only",
+   "quote": "performing MIM without L[CLS] leads to undesirable results of 9.5% k-NN accuracy and 29.8% linear accuracy",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.4, Table 9"
+  },
+  {
+   "claim": "Same ablation: BEiT with DALL-E tokenizer gets 6.9 k-NN, 23.5 linear, 81.4 fine-tune; MIM-only fine-tunes 79.4; DINO 80.6.",
+   "kind": "measured",
+   "source": null,
+   "metric": "linear top-1",
+   "value": 23.5,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "300-epoch ViT-S/16, no multi-crop",
+   "quote": "BEiT",
+   "table": "Table 9, row BEiT (DALL-E encoder), column Lin.; MIM-only row Fin. 79.4; DINO row Fin. 80.6",
+   "note": "Table 20 reports BEiT linear as 24.2 and k-NN 6.9 (Fin 81.4) for the same setting; Table 9 prints 23.5.",
+   "where": "Table 9"
+  },
+  {
+   "claim": "Standalone DINO as tokenizer yields 44.3 k-NN against 69.1 for iBOT in the same 300-epoch setting.",
+   "kind": "measured",
+   "source": null,
+   "metric": "k-NN",
+   "value": 44.3,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "300-epoch ViT-S/16",
+   "quote": "(44.3% versus 69.1% in k-NN accuracy)",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.4"
+  },
+  {
+   "claim": "iBOT with multi-crop uses 25% more memory and 7.4% more training time than DINO.",
+   "kind": "measured",
+   "source": null,
+   "metric": "memory overhead",
+   "value": 25,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ViT-S/16, two 8-GPU V100 machines, batch 1024, multi-crop",
+   "quote": "iBOT with MIM induces 25% more memory requirements and 7.4% more actual training time",
+   "table": null,
+   "note": "Table 19 shows 19.5G vs 15.4G with multi-crop (about 27%) and 13.1G vs 9.3G without multi-crop (about 41%).",
+   "where": "App E"
+  },
+  {
+   "claim": "iBOT is no better than DINO at image retrieval (comparable).",
+   "kind": "measured",
+   "source": null,
+   "metric": "retrieval",
+   "value": 36.6,
+   "unit": "mAP",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 16, ROx medium: DINO 37.2, iBOT 36.6",
+   "quote": "iBOT has comparable results with DINO. While iBOT has higher k-NN results on Imagenet-1K, the performance is not better for iBOT in image retrieval.",
+   "table": "Table 16, ROx M, row iBOT",
+   "note": null,
+   "where": "App D"
+  },
+  {
+   "claim": "iBOT ViT-B/16 improves COCO APb to 51.2 and APm to 44.2 (DINO 50.1/43.4).",
+   "kind": "measured",
+   "source": null,
+   "metric": "APb",
+   "value": 51.2,
+   "unit": "AP",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Cascade Mask R-CNN, ViT-B/16, 400 epochs, 1x schedule",
+   "quote": "With ViT-B/16, iBOT achieves an APb of 51.2 and an APm of 44.2",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2"
+  },
+  {
+   "claim": "ADE20K mIoU with UperNet: iBOT ViT-B/16 50.0, +3.2 over DINO.",
+   "kind": "measured",
+   "source": null,
+   "metric": "mIoU",
+   "value": 50.0,
+   "unit": "mIoU",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ViT-B/16 UperNet",
+   "quote": "iBOT advances previous best methods DINO by 3.2 on mIoU with UperNet",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2"
+  },
+  {
+   "claim": "Part-wise probing: top-56 patch tokens, iBOT 5.9 points above DINO; 17.9 with a single token.",
+   "kind": "measured",
+   "source": null,
+   "metric": "part-wise linear",
+   "value": 5.9,
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ViT-S/16 800 epochs, linear on averaged top-k attended patch tokens",
+   "quote": "iBOT is 5.9% higher than DINO",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.3.1"
+  },
+  {
+   "claim": "Soft token distributions help over hard labels (Table 18).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "300-epoch ViT-S/16",
+   "quote": null,
+   "table": null,
+   "note": "Value left null: claim only; see Table 18: hardmax 68.1/73.3 vs softmax† 69.1/74.2 (with centering).",
+   "where": "Table 18"
+  },
+  {
+   "claim": "Text states NMI as 32.8% but Table 5 gives NMI 78.6 and ARI 32.8.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "ViT-S/16 unsupervised ImageNet-1K",
+   "quote": null,
+   "table": null,
+   "note": "Text: 'we achieve a 32.8% NMI, outperforming the previous state of the art by 1.8%'; the table column for 32.8 is ARI.",
+   "where": "Sec 4.1, Table 5"
+  }
+ ],
+ "limits": [
+  "Image-domain paper; no language experiments",
+  "Single runs, no seeds or error bars",
+  "Gain from MIM is largest only with the [CLS] distillation loss; MIM alone fails (29.8 linear)",
+  "ViT-L/16 on 1K data is 0.4 below BEiT in fine-tuning (84.8 vs 85.2 in Table 2); authors infer iBOT needs more data for larger models",
+  "Image retrieval and video object segmentation are not better than DINO",
+  "Authors plan to scale to larger datasets and ViT-H/16",
+  "Multi-crop without random MIM was unstable"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "effective pre-training epochs",
+   "definition": "actual pre-training epochs multiplied with a scaling factor accounting for extra trained images of different resolutions induced by multi-crop augmentation",
+   "where": "App B"
+  },
+  {
+   "term": "online tokenizer",
+   "definition": "the teacher backbone plus projection head, a visual tokenizer that generates online token distributions for each masked patch token",
+   "where": "Sec 3.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "BEiT: BERT pre-training of image transformers",
+   "year": 2021,
+   "arxiv": "2106.08254",
+   "relation": "baseline",
+   "note": "offline DALL-E dVAE tokenizer that iBOT replaces",
+   "quote": null
+  },
+  {
+   "work": "Emerging properties in self-supervised vision transformers (DINO)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "[CLS] self-distillation loss, eval protocols, multi-crop",
+   "quote": null
+  },
+  {
+   "work": "BERT",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "related",
+   "note": "MLM inspiration",
+   "quote": null
+  },
+  {
+   "work": "Vision Transformer (Dosovitskiy et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "backbone",
+   "quote": null
+  },
+  {
+   "work": "Swin Transformer",
+   "year": 2021,
+   "arxiv": "2103.14030",
+   "relation": "uses-method",
+   "note": "backbone",
+   "quote": null
+  },
+  {
+   "work": "Zero-shot text-to-image generation (DALL-E)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "related",
+   "note": "dVAE tokenizer used by BEiT",
+   "quote": null
+  },
+  {
+   "work": "MoCo v3 / SwAV / BYOL / SimCLRv2 / EsViT / MoBY",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "SSL comparisons",
+   "quote": null
+  },
+  {
+   "work": "ImageNet",
+   "year": 2009,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "pre-training",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 3",
+   "caption": "Overview of iBOT framework, performing masked image modeling with an online tokenizer.",
+   "page": 4,
+   "why": "Shows both losses and EMA teacher"
+  },
+  {
+   "figure": "Table 9",
+   "caption": "Effect of design choices of semantically meaningful tokenization.",
+   "page": 9,
+   "why": "Shows MIM alone fails without [CLS] loss"
+  },
+  {
+   "figure": "Fig 7",
+   "caption": "Computation pipelines for iBOT with or without multi-crop augmentation.",
+   "page": 14,
+   "why": "Why random MIM is used"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 3 (Sec 3.1)",
+   "snippet": "L_MIM = - sum_i m_i * P_theta'^patch(u_i)^T log P_theta^patch(u^_i)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Figure text garbled in extraction; table cells read in column order. Table 1 'Epo.' is effective epochs (footnote 1).",
+  "No embedded instructions seen."
+ ]
+}

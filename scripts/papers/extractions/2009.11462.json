@@ -1,0 +1,587 @@
+{
+ "schema": 1,
+ "key": "2009.11462",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/gehman-2020-realtoxicityprompts.pdf",
+ "bib": {
+  "title": "REALTOXICITYPROMPTS: Evaluating Neural Toxic Degeneration in Language Models",
+  "authors": [
+   "Samuel Gehman",
+   "Suchin Gururangan",
+   "Maarten Sap",
+   "Yejin Choi",
+   "Noah A. Smith"
+  ],
+  "first_author": "Gehman",
+  "year": 2020,
+  "venue": "Findings of the Association for Computational Linguistics: EMNLP 2020",
+  "arxiv": "2009.11462",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 59326,
+  "chars_total": 59326,
+  "engine": "pymupdf",
+  "skipped": "The PDF ends with references; the appendices (A-E) cited in the text are not included, so hyperparameters for detox methods are not available."
+ },
+ "type": "benchmark",
+ "question": "To what extent can pretrained LMs be prompted into toxic generations, how well do controllable generation methods prevent it, and where does the toxicity in pretraining data come from?",
+ "hypothesis": "Models acquire toxicity from pretraining data, so steering after pretraining and better data selection are needed.",
+ "contributions": [
+  "RealToxicityPrompts, 100K naturally occurring prompts with Perspective toxicity scores",
+  "Evaluation of five LMs and six detoxification methods",
+  "First large-scale toxicity analysis of OpenAI-WT and OWTC, incl. provenance (unreliable news, banned subreddits)",
+  "Recommendations on pretraining data documentation"
+ ],
+ "method": {
+  "summary": "Sentence-level prompts sampled from OWTC stratified by Perspective toxicity are split into prompt and continuation. Five LMs generate continuations, scored by Perspective API. Six detoxification methods on GPT-2 are compared, and two web corpora are scored.",
+  "task": "toxic degeneration evaluation under prompted generation",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "RealToxicityPrompts",
+    "role": "eval",
+    "size": "100K prompts (21,744 toxic, 77,272 non-toxic per Table 1)",
+    "split": "25K sentences from each of four toxicity ranges [0,.25)...[.75,1], each split in half",
+    "source": "OpenWebText Corpus sentences, scored by Perspective API; released at toxicdegeneration.allenai.org",
+    "preprocessing": "Appendix A not in the PDF"
+   },
+   {
+    "name": "OWTC",
+    "role": "pretrain",
+    "size": "38 GB, ~8M documents",
+    "split": "~150K docs used for detox further pretraining, disjoint from prompts",
+    "source": "Reddit outbound links, karma>=3, English, >128 tokens",
+    "preprocessing": null
+   },
+   {
+    "name": "OpenAI-WT",
+    "role": "eval",
+    "size": "40GB, ~8M documents",
+    "split": null,
+    "source": "GPT-2 training corpus; about 29% overlap with OWTC (>=2.3M docs)",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT-1",
+    "role": "evaluated",
+    "params": "117M",
+    "architecture": "autoregressive Transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-2-small",
+    "role": "evaluated",
+    "params": "inferred: similar to GPT-1 (117M) from 'similarly sized'",
+    "architecture": "autoregressive Transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "also": "GPT-2 base for all detox methods"
+    }
+   },
+   {
+    "name": "GPT-3 davinci",
+    "role": "evaluated",
+    "params": "175B",
+    "architecture": "autoregressive Transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "access": "OpenAI API"
+    }
+   },
+   {
+    "name": "CTRL / CTRL-WIKI",
+    "role": "evaluated",
+    "params": "1.63B",
+    "architecture": "Transformer with control tokens (Links, Wiki)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "nucleus sampling",
+   "temperature": null,
+   "top_p": "0.9",
+   "max_tokens": "20 tokens",
+   "samples": "25 generations per prompt (10 per prompt for PPLM on 10K prompts); unprompted: pool of 10K spans, bootstrap 1K resamples per n",
+   "prompting": "prompt is sentence prefix; unprompted uses start token (<|endoftext|> for GPT-2/3, 'Links'/'Wiki' for CTRL, '. ' for GPT-1); ATCON prepends <|nontoxic|>",
+   "retrieval": null,
+   "parameters": {
+    "vocab_shift_beta": "3",
+    "word_filter": "LDNOOBW list probability set to zero",
+    "DAPT": "continued pretraining on ~150K OWTC docs, non-toxic subset (and toxic as reference)",
+    "PPLM_cost": "14 sec/generation vs 0.2 sec for GPT-2"
+   },
+   "other": {
+    "library": "Hugging Face Transformers"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Expected maximum toxicity",
+     "definition": "mean and std of max Perspective TOXICITY over k=25 generations per prompt",
+     "unit": "score 0-1",
+     "higher_is_better": false
+    },
+    {
+     "name": "Toxicity probability",
+     "definition": "empirical probability of at least one generation with TOXICITY>=0.5 over 25 generations",
+     "unit": "probability",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "GPT-2 unmodified",
+    "DAPT (Toxic) as reference"
+   ],
+   "protocol": "Perspective API TOXICITY (CNN, AUC 0.97, isotonic calibrated); toxic if >=0.5; small manual check on 100 docs and 100 generations; no seeds or significance tests stated for generation"
+  },
+  "availability": {
+   "code": "https://toxicdegeneration.allenai.org/",
+   "weights": null,
+   "data": "https://toxicdegeneration.allenai.org/"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "GPT-2 generated toxic text at least once in 25 samples on non-toxic prompts about half the time",
+   "kind": "measured",
+   "source": null,
+   "metric": "toxicity probability",
+   "value": "0.48",
+   "unit": "probability",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 2, RealToxicityPrompts non-toxic prompts, 25 generations per prompt, nucleus p=0.9, 20 tokens, Perspective TOXICITY>=0.5",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row GPT-2, column Toxicity Prob. Non-Toxic"
+  },
+  {
+   "claim": "GPT-3 (davinci, 175B) toxicity probability on non-toxic prompts",
+   "kind": "measured",
+   "source": null,
+   "metric": "toxicity probability",
+   "value": "0.50",
+   "unit": "probability",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 2, RealToxicityPrompts non-toxic prompts, 25 generations per prompt, nucleus p=0.9, 20 tokens, Perspective TOXICITY>=0.5",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row GPT-3, column Toxicity Prob. Non-Toxic"
+  },
+  {
+   "claim": "GPT-2 toxicity probability on toxic prompts",
+   "kind": "measured",
+   "source": null,
+   "metric": "toxicity probability",
+   "value": "0.88",
+   "unit": "probability",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 2, toxic prompts (22K), 25 generations",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row GPT-2, column Toxicity Prob. Toxic"
+  },
+  {
+   "claim": "All five models have toxicity probability near or above 0.5 on non-toxic prompts",
+   "kind": "measured",
+   "source": null,
+   "metric": "toxicity probability",
+   "value": "0.5",
+   "unit": "probability",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 2, RealToxicityPrompts non-toxic prompts, 25 generations per prompt, nucleus p=0.9, 20 tokens, Perspective TOXICITY>=0.5",
+   "note": null,
+   "where": "4.2",
+   "quote": "all ﬁve models have a toxicity probability near or above 0.5 for non-toxic prompts"
+  },
+  {
+   "claim": "GPT-2 unprompted expected maximum toxicity reaches 0.65 with 100 generations",
+   "kind": "measured",
+   "source": null,
+   "metric": "expected max toxicity",
+   "value": "0.65",
+   "unit": "expected max toxicity",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Start-of-sentence token only, pool of 10K spans, bootstrap 1K resamples",
+   "note": null,
+   "where": "Fig 2 caption",
+   "quote": "GPT-2 generates an expected maximum toxicity of 0.65 with just 100 unprompted generations"
+  },
+  {
+   "claim": "All five LMs reach toxicity over 0.5 within 100 unprompted generations and most exceed 0.9 within 1K",
+   "kind": "measured",
+   "source": null,
+   "metric": "expected max toxicity",
+   "value": "0.5",
+   "unit": "expected max toxicity",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Unprompted, five models",
+   "note": null,
+   "where": "3.1",
+   "quote": "all ﬁve language models can degenerate into toxicity of over 0.5 within 100 generations"
+  },
+  {
+   "claim": "DAPT on non-toxic data lowers GPT-2 toxicity probability on non-toxic prompts",
+   "kind": "measured",
+   "source": null,
+   "metric": "toxicity probability",
+   "value": "0.23",
+   "unit": "probability",
+   "baseline_value": "0.48",
+   "n": null,
+   "setup": "GPT-2 further pretrained on non-toxic subset of ~150K OWTC docs; 100K prompts, 25 gens",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row DAPT (Non-Toxic), column Toxicity Prob. Non-Toxic"
+  },
+  {
+   "claim": "PPLM lowers GPT-2 toxicity probability on non-toxic prompts most",
+   "kind": "measured",
+   "source": null,
+   "metric": "toxicity probability",
+   "value": "0.17",
+   "unit": "probability",
+   "baseline_value": "0.48",
+   "n": null,
+   "setup": "PPLM evaluated on only 10K prompts, 10 generations per prompt (not 25), due to cost",
+   "note": "Evaluation subset and sample count differ from other rows.",
+   "where": "Table 3, 5.2",
+   "table": "Table 3, row PPLM, column Toxicity Prob. Non-Toxic"
+  },
+  {
+   "claim": "Word filter barely reduces toxicity probability on non-toxic prompts",
+   "kind": "measured",
+   "source": null,
+   "metric": "toxicity probability",
+   "value": "0.43",
+   "unit": "probability",
+   "baseline_value": "0.48",
+   "n": null,
+   "setup": "GPT-2 with LDNOOBW word list probabilities set to zero; 100K prompts, 25 gens",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row WORD FILTER, column Toxicity Prob. Non-Toxic"
+  },
+  {
+   "claim": "Vocab-shift (beta=3) toxicity probability on non-toxic prompts",
+   "kind": "measured",
+   "source": null,
+   "metric": "toxicity probability",
+   "value": "0.39",
+   "unit": "probability",
+   "baseline_value": "0.48",
+   "n": null,
+   "setup": "GPT-2, 100K prompts, 25 gens",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row VOCAB-SHIFT, column Toxicity Prob. Non-Toxic"
+  },
+  {
+   "claim": "ATCON barely helps",
+   "kind": "measured",
+   "source": null,
+   "metric": "toxicity probability",
+   "value": "0.44",
+   "unit": "probability",
+   "baseline_value": "0.48",
+   "n": null,
+   "setup": "GPT-2 with <|nontoxic|> token, 100K prompts",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row ATCON, column Toxicity Prob. Non-Toxic"
+  },
+  {
+   "claim": "No steering method fully solves toxic degeneration",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-2 with six detox methods",
+   "note": null,
+   "where": "5.3",
+   "quote": "steering does not completely solve neural toxic degeneration"
+  },
+  {
+   "claim": "4.3% of OpenAI-WT documents have TOXICITY>=0.5",
+   "kind": "measured",
+   "source": null,
+   "metric": "toxic document share",
+   "value": "4.3%",
+   "unit": "% of documents",
+   "baseline_value": null,
+   "n": null,
+   "setup": "OpenAI-WT (GPT-2 corpus), ~8M docs, Perspective API",
+   "note": null,
+   "where": "6.1",
+   "quote": "2.1% of OWTC having TOXICITY ≥0.5, and 4.3% of OPENAI-WT"
+  },
+  {
+   "claim": "2.1% of OWTC documents toxic",
+   "kind": "measured",
+   "source": null,
+   "metric": "toxic document share",
+   "value": "2.1%",
+   "unit": "% of documents",
+   "baseline_value": null,
+   "n": null,
+   "setup": "OWTC, 38 GB, ~8M docs",
+   "note": null,
+   "where": "6.1",
+   "quote": "2.1% of OWTC having TOXICITY ≥0.5"
+  },
+  {
+   "claim": "GPT-2 pretrained on at least 40K documents from quarantined /r/The_Donald",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "40K",
+   "unit": "documents",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Overlap of OPENAI-WT and OWTC; lower bound",
+   "note": null,
+   "where": "6.2",
+   "quote": "GPT-2 was pretrained on at least 40K documents from the quarantined /r/The Donald"
+  },
+  {
+   "claim": "At least 3% (212K) of OWTC docs come from banned or quarantined subreddits",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "3%",
+   "unit": "% of documents",
+   "baseline_value": null,
+   "n": null,
+   "setup": "OWTC; lower bound",
+   "note": null,
+   "where": "6.2",
+   "quote": "at least 3%, 212K"
+  },
+  {
+   "claim": "News reliability correlates negatively with toxic proportion",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "-0.35",
+   "unit": "Spearman rho",
+   "baseline_value": null,
+   "n": null,
+   "setup": "OWTC news sites with Baly et al. 2018 ratings",
+   "note": null,
+   "where": "6.2",
+   "quote": "Spearman ⇢= –0.35"
+  },
+  {
+   "claim": "327 prompts yield toxicity >=0.9 from all models; 1,225 from the five out-of-box models",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "327",
+   "unit": "prompts",
+   "baseline_value": null,
+   "n": null,
+   "setup": "All models incl. steered",
+   "note": null,
+   "where": "5.3",
+   "quote": "there are 327 prompts that yielded at least one generation with 0.9 TOXICITY from all models, and 1,225 prompts"
+  },
+  {
+   "claim": "Perspective API agreement with the authors on OWTC text: 88% pairwise agreement, Pearson 0.83",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "88%",
+   "unit": "pairwise agreement",
+   "baseline_value": null,
+   "n": null,
+   "setup": "100 OWTC documents, three authors",
+   "note": null,
+   "where": "footnote 6",
+   "quote": "found an 88% pairwise agreement (Pearson ⇢=0.83)"
+  },
+  {
+   "claim": "Perspective agreement on GPT-2 generations is lower: 80% agreement, Pearson 0.65",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "80%",
+   "unit": "pairwise agreement",
+   "baseline_value": null,
+   "n": null,
+   "setup": "100 GPT-2 generations",
+   "note": null,
+   "where": "footnote 6",
+   "quote": "our judgments had 80% pairwise agreement and Pearson ⇢=0.65 with TOXICITY"
+  },
+  {
+   "claim": "Prompt and continuation toxicity slightly anti-correlated",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "-0.08",
+   "unit": "Pearson r",
+   "baseline_value": null,
+   "n": null,
+   "setup": "RealToxicityPrompts",
+   "note": null,
+   "where": "4.1",
+   "quote": "r = –0.08"
+  }
+ ],
+ "limits": [
+  "Perspective API is imperfect, biased against minority identity mentions and African American English, lexical-cue driven (Limitations, 2.2)",
+  "Only five LMs studied, no masked LMs",
+  "Web-corpus toxicity numbers are lower bounds because OpenAI-WT lacks metadata",
+  "PPLM evaluated on a 10K-prompt subset with 10 generations",
+  "Appendices not in the supplied PDF",
+  "Dated: GPT-3 davinci, GPT-2-small era models; no instruction-tuned models"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Neural toxic degeneration",
+   "definition": "LMs generating racist, sexist or otherwise toxic language, even from innocuous prompts",
+   "where": "Abstract, fn 1"
+  },
+  {
+   "term": "TOXICITY (Perspective)",
+   "definition": "rude, disrespectful, or unreasonable comment; likely to make people leave a discussion",
+   "where": "fn 4"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Perspective API",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "toxicity scorer",
+   "quote": null
+  },
+  {
+   "work": "Language models are few-shot learners (GPT-3)",
+   "year": 2020,
+   "arxiv": "2005.14165",
+   "relation": "evaluates",
+   "note": "GPT-3 davinci",
+   "quote": null
+  },
+  {
+   "work": "Language Models are Unsupervised Multitask Learners (GPT-2)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "GPT-2-small and its corpus",
+   "quote": null
+  },
+  {
+   "work": "CTRL",
+   "year": 2019,
+   "arxiv": "1909.05858",
+   "relation": "evaluates",
+   "note": "CTRL, CTRL-WIKI",
+   "quote": null
+  },
+  {
+   "work": "Plug and Play Language Models",
+   "year": 2020,
+   "arxiv": "1912.02164",
+   "relation": "baseline",
+   "note": "PPLM decoding detox",
+   "quote": null
+  },
+  {
+   "work": "Don't Stop Pretraining",
+   "year": 2020,
+   "arxiv": "2004.10964",
+   "relation": "uses-method",
+   "note": "DAPT",
+   "quote": null
+  },
+  {
+   "work": "OpenWebText Corpus (Gokaslan and Cohen)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "prompt source",
+   "quote": null
+  },
+  {
+   "work": "Sheng et al. 2019 The woman worked as a babysitter",
+   "year": 2019,
+   "arxiv": "1909.01326",
+   "relation": "related",
+   "note": "60 templated prompts for social bias",
+   "quote": null
+  },
+  {
+   "work": "Wallace et al. 2019 Universal adversarial triggers",
+   "year": 2019,
+   "arxiv": "1908.07125",
+   "relation": "related",
+   "note": "nonsensical triggers",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "Neural models generate toxicity, even with no prompting.",
+   "page": 3,
+   "why": "Expected max toxicity vs number of generations"
+  },
+  {
+   "figure": "Table 3",
+   "caption": "Detoxification methods on GPT-2",
+   "page": 5,
+   "why": "Compares six steering methods on both metrics"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "PDF has no appendices (A-E), so detox hyperparameters and examples tables are unavailable",
+  "Figure text garbled in extraction"
+ ]
+}

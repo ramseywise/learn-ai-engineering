@@ -1,0 +1,156 @@
+{
+ "schema": 1,
+ "key": "2308.12950",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/roziere-2023-code-llama.pdf",
+ "bib": {
+  "title": "Code Llama: Open Foundation Models for Code",
+  "authors": ["Baptiste Rozière", "Jonas Gehring", "Fabian Gloeckle", "Sten Sootla", "Itai Gat", "Xiaoqing Ellen Tan", "Yossi Adi", "Jingyu Liu", "Romain Sauvestre", "Tal Remez", "Jérémy Rapin", "Artyom Kozhevnikov", "Ivan Evtimov", "Joanna Bitton", "Manish Bhatt", "Cristian Canton Ferrer", "Aaron Grattafiori", "Wenhan Xiong", "Alexandre Défossez", "Jade Copet", "Faisal Azhar", "Hugo Touvron", "Louis Martin", "Nicolas Usunier", "Thomas Scialom", "Gabriel Synnaeve"],
+  "first_author": "Rozière",
+  "year": 2023,
+  "venue": "preprint",
+  "arxiv": "2308.12950",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 152878,
+  "chars_total": 152878,
+  "engine": "pymupdf",
+  "skipped": "Bias tables 21-25 (per-group sentiment scores) and qualitative example figures 17-22 skimmed only; not needed for method or main results."
+ },
+ "type": "empirical",
+ "question": "Can a general-purpose LLM (Llama 2) be specialised into open code models with infilling, long-context and instruction-following abilities that are state of the art among open models?",
+ "hypothesis": "Initialising from Llama 2 and applying a cascade of code training, infilling, long-context fine-tuning and instruction fine-tuning outperforms code-only training for a given budget.",
+ "contributions": [
+  "Code Llama, Code Llama - Python and Code Llama - Instruct in 7B, 13B, 34B and 70B sizes, released under a permissive licence",
+  "Infilling (7B, 13B, 70B) via a multitask autoregressive plus causal infilling objective",
+  "Long context fine-tuning stage: 16,384-token sequences with RoPE base period raised from 10,000 to 1,000,000, stable up to 100K tokens",
+  "Instruction fine-tuning with a self-instruct set of unit-test-filtered question-test-solution triplets"
+ ],
+ "method": {
+  "summary": "Llama 2 weights are further trained on 500B tokens (1T for 70B) of a code-heavy mix, optionally with a fill-in-the-middle objective, then fine-tuned for long context (RoPE base 1e6, 16,384-token sequences), and optionally specialised on 100B Python tokens or instruction-tuned on about 5B tokens. Evaluation is by pass@k on HumanEval, MBPP, APPS and MultiPL-E, plus infilling, long-context and safety benchmarks.",
+  "task": "continued pretraining and fine-tuning of a decoder-only LLM for code generation and infilling",
+  "trains": true,
+  "datasets": [
+   {"name": "Code Llama code-heavy mix", "role": "pretrain", "size": "500B tokens (1T for 70B); mix 85% code, 8% natural language related to code, 7% natural language", "split": "Table 1 epochs: code 2.03, NL-related-to-code 1.39, NL 0.01", "source": "near-deduplicated publicly available code; disk sizes 859 GB code, 78 GB NL about code, 3.5 TB NL", "preprocessing": "BPE with the Llama/Llama 2 tokenizer; infilling transform applied with probability 0.9"},
+   {"name": "Python-heavy mix (Code Llama - Python)", "role": "train", "size": "additional 100B tokens", "split": "Python 75% (3.69 epochs, 79 GB), code 10%, NL related to code 10%, NL 5%", "source": "Table 1", "preprocessing": null},
+   {"name": "Proprietary instruction data (Llama 2 RLHF V5)", "role": "train", "size": "thousands of SFT and millions of rejection sampling examples", "split": null, "source": "Llama 2 instruction tuning dataset, multi-turn dialogues, helpfulness and safety", "preprocessing": null},
+   {"name": "Self-instruct code set", "role": "train", "size": "about 14,000 question-tests-solution triplets (62,000 generated questions, about 52,000 after exact dedup)", "split": null, "source": "questions from Llama 2 70B; tests and ten solutions per question from Code Llama 7B; first solution passing the tests kept", "preprocessing": "exact-duplicate removal; execution-feedback filtering"},
+   {"name": "Rehearsal data", "role": "train", "size": "6% code dataset and 2% natural language dataset inside the instruct mix", "split": null, "source": "same code and NL datasets", "preprocessing": null},
+   {"name": "HumanEval", "role": "eval", "size": null, "split": null, "source": "Chen et al., 2021", "preprocessing": null},
+   {"name": "MBPP", "role": "eval", "size": null, "split": null, "source": "Austin et al., 2021", "preprocessing": null},
+   {"name": "APPS", "role": "eval", "size": null, "split": "introductory, interview, competition", "source": "Hendrycks et al., 2021", "preprocessing": "no fine-tuning on the APPS training set"},
+   {"name": "MultiPL-E", "role": "eval", "size": null, "split": null, "source": "Cassano et al., 2023", "preprocessing": null},
+   {"name": "LCC-balanced", "role": "eval", "size": "548 Python, 412 Java and 512 C# data points", "split": null, "source": "resampled from LCC (Guo et al., 2023) validation and test sets with equalised file-size distribution", "preprocessing": "non-LCFT models get prompts truncated to 4,000 tokens"},
+   {"name": "TruthfulQA, ToxiGen, BOLD", "role": "eval", "size": "TruthfulQA 817 questions; BOLD 23,679 prompts", "split": null, "source": "Lin et al. 2022; Hartvigsen et al. 2022; Dhamala et al. 2021", "preprocessing": "BOLD: Hinduism and Atheism prompts excluded"}
+  ],
+  "models": [
+   {"name": "Code Llama", "role": "proposed", "params": "7B, 13B, 34B, 70B", "architecture": "Llama 2 decoder-only transformer with RoPE", "init_from": "Llama 2 weights of the same size", "tokenizer": "BPE, Llama/Llama 2 tokenizer (SentencePiece) extended with four special infilling tokens", "vocab": null, "layers": null, "hidden": null, "heads": null, "context": "trained at 4,096 then 16,384 tokens; inference tested to 100,000 tokens", "other": {"infilling": "7B, 13B, 70B only; 34B trained without infilling"}},
+   {"name": "Code Llama - Python", "role": "proposed", "params": "7B, 13B, 34B, 70B", "architecture": "as Code Llama", "init_from": "Llama 2, then 500B Code Llama tokens, then 100B Python tokens", "tokenizer": "as Code Llama", "vocab": null, "layers": null, "hidden": null, "heads": null, "context": "16,384 fine-tuning", "other": {}},
+   {"name": "Code Llama - Instruct", "role": "proposed", "params": "7B, 13B, 34B, 70B", "architecture": "as Code Llama", "init_from": "Code Llama (70B from Code Llama - Python 70B)", "tokenizer": "as Code Llama", "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "Unnatural Code Llama", "role": "proposed", "params": "34B", "architecture": "as Code Llama", "init_from": "Code Llama - Python 34B fine-tuned on 15,000 unnatural instructions; not released", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "Llama 2", "role": "base", "params": "7B, 13B, 34B, 70B", "architecture": "decoder-only transformer", "init_from": null, "tokenizer": "Llama tokenizer", "vocab": null, "layers": null, "hidden": null, "heads": null, "context": "4,096 tokens", "other": {"pretraining": "2T tokens, including only 80B tokens of code"}},
+   {"name": "StarCoder, code-cushman-001, GPT-3.5, GPT-4, PaLM, PaLM-Coder, PaLM 2-S, CodeGen-Multi, CodeGeeX, InCoder, SantaCoder", "role": "baseline", "params": "as printed in tables", "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}}
+  ],
+  "training": {
+   "objective": "autoregressive next-token; for 7B/13B/70B a multitask objective mixing autoregressive and causal infilling, applied to documents with probability 0.9, half PSM and half SPM format",
+   "optimizer": "AdamW with beta1 0.9 and beta2 0.95",
+   "lr": "3e-4 (13B), 1.5e-4 (34B and 70B), original Llama 2 learning rate retained for 7B (value not stated); 1e-4 for Python fine-tuning; 2e-5 for long context fine-tuning",
+   "lr_schedule": "cosine, final learning rate 1/30th of peak",
+   "warmup": "1000 steps",
+   "batch_size": "4M tokens (sequences of 4,096); instruct 524,288 tokens; LCFT 2M tokens for 7B and 13B, 1M tokens for 34B",
+   "steps": "LCFT 10,000 gradient steps by default; 11,000 for 34B; 3,000 for Code Llama 7B",
+   "epochs": "Table 1: code 2.03, NL related to code 1.39, NL 0.01 (Code Llama); Python 3.69 (Python stage)",
+   "tokens": "500B (1T for 70B) code training; +100B Python; about 5B instruct; LCFT 20B (Fig 2)",
+   "seq_len": "4,096 for code training; 16,384 for LCFT",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "rehearsal data in instruct stage (6% code, 2% natural language)",
+   "hardware": "A100-80GB on Meta's Research Super Cluster",
+   "compute": "1400K GPU hours for all 12 Code Llama models; 228.55 tCO2eq",
+   "wall_clock": null,
+   "seeds": null,
+   "other": {"rope_base": "increased from 10,000 to 1,000,000 for LCFT", "stage_tokens_Fig2": "500B code, 100B Python, 20B long context, 5B instruct (figure labels 100B, 500B, 20B, 20B, 5B)", "70B_pipeline_Fig8": "500B, 20B, 100B, 260M labels; Only base 70B trained with LCFT", "infilling_tokenisation": "implicit leading space suppressed for middle and suffix; four special tokens added"}
+  },
+  "inference": {
+   "decoding": "pass@1 greedy; pass@10 and pass@100 nucleus sampling p=0.95; safety evals temperature 0.1 and top-p 0.9",
+   "temperature": "0.8 for pass@10/100 on HumanEval and MBPP (Table 2); 0.6 on APPS; 0.1 in Table 5; Fig 6 sweeps {0.1, 0.4, 0.6, 0.8}",
+   "top_p": "0.95",
+   "max_tokens": null,
+   "samples": "N = 200 for pass@10 and pass@100",
+   "prompting": "HumanEval zero-shot, MBPP 3-shot (Table 2); APPS two-shot; instruct MBPP zero-shot with [PYTHON] tags",
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "pass@k", "definition": "fraction of problems with at least one of k samples passing unit tests", "unit": "%", "higher_is_better": true},
+    {"name": "exact match and BLEU", "definition": "single-line completion on LCC-balanced and infilling", "unit": "%", "higher_is_better": true},
+    {"name": "key retrieval accuracy", "definition": "correct two-digit value after an inserted function in long Python prompts, 64 examples per length/position", "unit": "%", "higher_is_better": true},
+    {"name": "perplexity", "definition": "over 4M tokens of large source files (>=50kB) from validation data", "unit": "PPL", "higher_is_better": false},
+    {"name": "TruthfulQA, ToxiGen, BOLD", "definition": "percent truthful and informative; percent toxic; mean VADER sentiment", "unit": "%, %, score", "higher_is_better": true}
+   ],
+   "baselines": ["Llama 2", "StarCoder", "code-cushman-001", "GPT-3.5", "GPT-4", "PaLM", "CodeGen-Multi", "InCoder", "SantaCoder", "Falcon", "MPT", "Llama 2 Chat"],
+   "protocol": "Single runs; no seeds or confidence intervals reported; 7B and 13B ablations pre-LCFT."
+  },
+  "availability": {
+   "code": "https://github.com/facebookresearch/codellama",
+   "weights": "released under a custom Llama 2 style permissive licence for research and commercial use",
+   "data": "not released; training data stated to be the same as Llama 2 with different weights; dataset described only in Table 1"
+  },
+  "prompts": [
+   {"purpose": "MBPP zero-shot for instruct models", "text": "You are an expert Python programmer, and here is your task: {task}\nYour code should pass these tests:\n\n{tests}\nYour code should start with a [PYTHON] tag and end with a [/PYTHON] tag.", "where": "Figure 13"},
+   {"purpose": "APPS zero-shot", "text": "[INST] Write a python code to solve the following coding problem that obeys the constraints and passes the example test cases. The output code needs to {QUESTION_GUIDE}. Please wrap your code answer using ```:\n{PROMPT}\n[/INST]", "where": "Figure 14"}
+  ],
+  "evidence": [
+   {"field": "training.lr", "quote": "we obtained best results when retaining the original learning rate of the Llama 2 base model", "where": "Section 2.6"}
+  ]
+ },
+ "results": [
+  {"claim": "Code Llama - Instruct 70B reaches the highest HumanEval pass@1 among the family.", "kind": "measured", "source": null, "metric": "HumanEval pass@1", "value": "67.8", "unit": "%", "baseline_value": "30.5 (Llama 2 70B)", "n": null, "setup": "Greedy decoding, zero-shot, 70B", "quote": null, "table": "Table 2, row Code Llama - Instruct 70B, column HumanEval pass@1", "note": "Abstract says up to 67% on HumanEval", "where": "Table 2"},
+  {"claim": "Code Llama - Python 70B reaches the highest MBPP pass@1.", "kind": "measured", "source": null, "metric": "MBPP pass@1", "value": "65.6", "unit": "%", "baseline_value": "45.4 (Llama 2 70B)", "n": null, "setup": "Greedy decoding, 3-shot, 70B", "quote": null, "table": "Table 2, row Code Llama - Python 70B, column MBPP pass@1", "note": null, "where": "Table 2"},
+  {"claim": "Code Llama 7B (HumanEval pass@1) roughly matches Llama 2 70B after 500B code tokens.", "kind": "measured", "source": null, "metric": "HumanEval pass@1", "value": "33.5", "unit": "%", "baseline_value": "30.5 (Llama 2 70B)", "n": null, "setup": "Greedy, zero-shot, Code Llama 7B with FIM and LCFT", "quote": null, "table": "Table 2, row Code Llama 7B, column HumanEval pass@1", "note": null, "where": "Table 2"},
+  {"claim": "Infilling training costs 0.6 points (7B) and 1.1 points (13B) on average across HumanEval and MBPP pass@k.", "kind": "measured", "source": null, "metric": "average pass@k loss", "value": "0.6", "unit": "percentage points", "baseline_value": null, "n": null, "setup": "7B and 13B, 500B code tokens, before LCFT, temperature 0.1", "quote": "The 7B model loses 0.6 percentage points on average across HumanEval and MBPP pass@1, pass@10 and pass@100 scores if trained with an infilling objective, while the 13B model loses 1.1 percentage points.", "table": null, "note": null, "where": "Section 3.2"},
+  {"claim": "Long context fine-tuning slightly reduces short-context benchmark scores.", "kind": "measured", "source": null, "metric": "HumanEval pass@1 average decrease", "value": "0.52", "unit": "percentage points", "baseline_value": null, "n": null, "setup": "Average over Table 10 configurations", "quote": "an average decrease of 0.52 percentage points on HumanEval pass@1 and 1.9 points on MBPP for the pass@1 metric", "table": null, "note": null, "where": "Section 3.3"},
+  {"claim": "Starting from Llama 2 beats training from scratch on the same code mix: the scratch model reaches Code Llama 7B's mid-training loss only at the end.", "kind": "measured", "source": null, "metric": "training tokens gap", "value": "240B", "unit": "tokens", "baseline_value": null, "n": null, "setup": "7B, same data mix, Fig 5b", "quote": "At the end of training, the loss of the model trained from scratch is equal to the loss of Code Llama 7B at about half of its training (with 240B less training tokens).", "table": null, "note": null, "where": "Section 3.4.1"},
+  {"claim": "Self-instruct data improves HumanEval for 7B instruct and makes MBPP zero-shot format following reliable at 13B.", "kind": "measured", "source": null, "metric": "MBPP zero-shot", "value": "40.2", "unit": "%", "baseline_value": "20.4", "n": null, "setup": "13B, greedy, with vs without self-instruct", "quote": null, "table": "Table 8, row 13B SI check, column MBPP zero-shot", "note": null, "where": "Table 8"},
+  {"claim": "Perplexity keeps decreasing beyond the 16,384-token fine-tuning length, up to 100K tokens.", "kind": "measured", "source": null, "metric": "perplexity vs context", "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "Large source files >=50kB, 4M tokens, all sizes", "quote": "Perplexity decreases for up to 100K tokens for all Code Llama sizes.", "table": null, "note": null, "where": "Figure 4a"},
+  {"claim": "Without changing RoPE base period, LCFT fails to retrieve far keys at 8,000 context; frequency scaling 1/4 fails at longer lengths while theta=1e6 extrapolates.", "kind": "measured", "source": null, "metric": "key retrieval accuracy at 24,000 context, key position 0.4", "value": "85.9", "unit": "%", "baseline_value": "0.0 (freq. scaling 1/4)", "n": 64, "setup": "Earlier 7B version, 16,384-token LCFT", "quote": null, "table": "Table 18, row Ours (theta = 10^6), column 24,000 / 0.4", "note": null, "where": "Table 18"},
+  {"claim": "Code Llama 70B reaches the best average multilingual HumanEval pass@1.", "kind": "measured", "source": null, "metric": "MultiPL-E average pass@1", "value": "45.3", "unit": "%", "baseline_value": "24.4 (Llama-v2 70B)", "n": null, "setup": "Greedy, zero-shot, 7 languages", "quote": null, "table": "Table 4, row Code Llama 70B, column Average", "note": null, "where": "Table 4"},
+  {"claim": "Instruct 34B TruthfulQA (true and informative) rises from 34.64 to 47.37 and ToxiGen toxicity falls from 17.62 to 0.00.", "kind": "measured", "source": null, "metric": "TruthfulQA / ToxiGen", "value": "47.37", "unit": "%", "baseline_value": "34.64", "n": null, "setup": "34B, temperature 0.1, top-p 0.9", "quote": "truthfulness (from 34.64 to 47.37 for 34B) and toxicity (from 17.62 to 0.00 for 34B)", "table": null, "note": null, "where": "Section 4"},
+  {"claim": "Long context fine-tuning improves LCC-balanced single-line completion (Python 34B EM 42.52 to 44.89).", "kind": "measured", "source": null, "metric": "exact match", "value": "44.89", "unit": "%", "baseline_value": "42.52", "n": null, "setup": "34B, non-LCFT prompts truncated to 4,000 tokens", "quote": null, "table": "Table 7, row Code Llama 34B, columns EM", "note": null, "where": "Table 7"}
+ ],
+ "limits": [
+  "Table 2 Llama 2 MBPP pass@100 values (34B 77.6, 70B 83.1) differ from Table 10 (34B 83.1, 70B 85.5); Table 2 Llama 2 70B shows 83.1, Table 10 shows 85.5.",
+  "Random-span infilling in SPM format degrades because token healing was not implemented.",
+  "LCFT and infilling both cost short-context benchmark score; authors judge the trade-off worthwhile.",
+  "LCC data points are included in the code training data (footnote 2); CodeXGLUE overlap possible.",
+  "Key retrieval declines beyond 16K tokens; Instruct 7B fails to retrieve keys at the start for 16K prompts.",
+  "Helpfulness comparison uses only the Llama 2 reward model, taken 'with a grain of salt'.",
+  "No seeds, error bars or significance tests; vocabulary, layer counts and precision not stated; data not released."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "LCFT", "definition": "long context fine-tuning stage using 16,384-token sequences and RoPE base period 1,000,000", "where": "Section 2.4"},
+  {"term": "PSM / SPM", "definition": "prefix-suffix-middle and suffix-prefix-middle infilling formats", "where": "Section 2.3"}
+ ],
+ "lineage": [
+  {"work": "Llama 2", "year": 2023, "arxiv": "2307.09288", "relation": "extends", "note": "initialisation of all models and source of instruction data", "quote": null},
+  {"work": "Efficient training of language models to fill in the middle", "year": 2022, "arxiv": "2207.14255", "relation": "uses-method", "note": "FIM recipe and PSM/SPM formats", "quote": null},
+  {"work": "Extending context window via positional interpolation", "year": 2023, "arxiv": "2306.15595", "relation": "extends", "note": "LCFT similar but changes the RoPE base period instead of linear downscaling", "quote": null},
+  {"work": "RoFormer", "year": 2021, "arxiv": "2104.09864", "relation": "uses-method", "note": "rotary position embedding", "quote": null},
+  {"work": "InCoder", "year": 2023, "arxiv": null, "relation": "uses-method", "note": "causal masking infilling and benchmark", "quote": null},
+  {"work": "Neural machine translation of rare words with subword units", "year": 2016, "arxiv": "1508.07909", "relation": "uses-method", "note": "BPE tokeniser", "quote": null},
+  {"work": "Evaluating large language models trained on code (Codex)", "year": 2021, "arxiv": "2107.03374", "relation": "uses-data", "note": "HumanEval", "quote": null},
+  {"work": "StarCoder", "year": 2023, "arxiv": "2305.06161", "relation": "baseline", "note": "main open code baseline", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Figure 2", "caption": "The Code Llama specialization pipeline. The different stages of fine-tuning annotated with the number of tokens seen during training.", "page": 2, "why": "Shows which stage follows which and the token budgets."},
+  {"figure": "Figure 4", "caption": "Code Llama behavior on long sequences.", "page": 12, "why": "Perplexity to 100K tokens and key retrieval at 16K."}
+ ],
+ "code": [],
+ "problems": ["Text is clean. No embedded instructions found. Table 10 and Table 2 print different Llama 2 MBPP pass@100 values."]
+}

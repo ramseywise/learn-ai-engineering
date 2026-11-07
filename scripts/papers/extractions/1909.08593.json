@@ -1,0 +1,673 @@
+{
+ "schema": 1,
+ "key": "1909.08593",
+ "pdf": "generative-ai/05-RL/sources/ziegler-2019-fine-tuning-language-models-human.pdf",
+ "bib": {
+  "title": "Fine-Tuning Language Models from Human Preferences",
+  "authors": [
+   "Daniel M. Ziegler",
+   "Nisan Stiennon",
+   "Jeffrey Wu",
+   "Tom B. Brown",
+   "Alec Radford",
+   "Dario Amodei",
+   "Paul Christiano",
+   "Geoffrey Irving"
+  ],
+  "first_author": "Ziegler",
+  "year": 2019,
+  "venue": "preprint",
+  "arxiv": "1909.08593",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 92115,
+  "chars_total": 92115,
+  "engine": "pymupdf",
+  "skipped": "Appendix C sample tables 11-18 (model sample text) only skimmed; they hold no numbers or settings."
+ },
+ "type": "empirical",
+ "question": "Can reward learning from human comparisons be used to fine-tune a pretrained language model with RL on stylistic continuation and summarization tasks?",
+ "hypothesis": "Pretrained language models plus a KL-regularised policy and a reward model trained from human comparisons can optimise tasks defined only by human judgment.",
+ "contributions": [
+  "Apply reward learning (human best-of-4 comparisons, PPO, KL penalty to the pretrained model) to a 774M GPT-2 on four language tasks",
+  "Compare online vs offline data collection",
+  "Show the summarization policies become extractive 'smart copiers' that labelers prefer",
+  "Report practical lessons: online collection is hard, sharing reward/policy parameters overfits, ambiguous tasks, a sign-flip bug"
+ ],
+ "method": {
+  "summary": "A 774M GPT-2 policy is RL fine-tuned with PPO against a reward model (the same LM plus a random linear head) trained on human best-of-4 choices, with a KL penalty to the pretrained model. Tested on mock sentiment, human sentiment and descriptiveness continuation of BookCorpus, and TL;DR and CNN/DM summarization, with offline and online label collection.",
+  "task": "RL fine-tuning of a language model from human preference comparisons (stylistic continuation, summarization)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "WebText",
+    "role": "pretrain",
+    "size": null,
+    "split": null,
+    "source": "Radford et al. 2019 (GPT-2 pretraining)",
+    "preprocessing": "50,257 token invertible byte pair encoding preserving capitalization and punctuation"
+   },
+   {
+    "name": "BookCorpus",
+    "role": "both",
+    "size": null,
+    "split": "test set used for 1024-excerpt human evaluations",
+    "source": "Zhu et al. 2015",
+    "preprocessing": "excerpts of 32 to 64 tokens that start and end with a period; policy generates 24 tokens; rejection sampling for a period between tokens 16 and 24, truncate there; no period gives fixed reward -1. Used for supervised fine-tuning before RL on style tasks"
+   },
+   {
+    "name": "Amazon reviews (binarized, balanced subsample)",
+    "role": "train",
+    "size": null,
+    "split": null,
+    "source": "McAuley et al. 2015",
+    "preprocessing": "trains the mock sentiment classifier; r_s = log odds the review is positive"
+   },
+   {
+    "name": "TL;DR",
+    "role": "both",
+    "size": "30K examples removed from training as validation set (30000 validation articles in Table 7)",
+    "split": "own validation set used for ROUGE",
+    "source": "Voelske et al. 2017",
+    "preprocessing": "truncate to 500 tokens at last newline; suffix '\\n\\nTL;DR:'; up to 75 tokens; rejection sampling for newline between tokens 55 and 75; none gives score -1"
+   },
+   {
+    "name": "CNN/Daily Mail",
+    "role": "both",
+    "size": "13368 validation articles (Table 7)",
+    "split": "test set for ROUGE and human evaluation",
+    "source": "Hermann et al. 2015",
+    "preprocessing": "as TL;DR plus prefix 'Article:\\n\\n'"
+   },
+   {
+    "name": "Human comparison labels",
+    "role": "train",
+    "size": "5k to 60k comparisons per task (2.5k, 5k, 10k, 20k style; 15k, 30k, 60k summarization)",
+    "split": null,
+    "source": "Scale AI labelers, best of 4",
+    "preprocessing": "about 100 author example comparisons (about 50 in 3.1.2); 5% of queries answered by 5 labelers"
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT-2 774M (policy rho, then pi)",
+    "role": "base",
+    "params": "774M",
+    "architecture": "Transformer decoder",
+    "init_from": "trained from scratch on WebText; supervised fine-tuned on BookCorpus for style tasks",
+    "tokenizer": "BPE, 50,257 tokens",
+    "vocab": "50,257",
+    "layers": "36",
+    "hidden": "1280",
+    "heads": "20",
+    "context": null,
+    "other": {
+     "temperature": "logits divided by T in the base model: T=0.7 style, 0.5 CNN/DM, 0.7 TL;DR"
+    }
+   },
+   {
+    "name": "Reward model r",
+    "role": "reward",
+    "params": "774M",
+    "architecture": "language model rho with random linear function of final embedding",
+    "init_from": "rho (not pi)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "36",
+    "hidden": "1280",
+    "heads": "20",
+    "context": null,
+    "other": {
+     "normalisation": "mean 0, variance 1 for x~D, y~rho"
+    }
+   },
+   {
+    "name": "Mock sentiment classifier",
+    "role": "judge",
+    "params": null,
+    "architecture": "Transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "6",
+    "hidden": "512",
+    "heads": "8",
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Public release model",
+    "role": "proposed",
+    "params": "124M",
+    "architecture": "Transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "12",
+    "hidden": "768",
+    "heads": "12",
+    "context": null,
+    "other": {
+     "note": "released code only works with this smaller model; also used in Figs 2 and 3"
+    }
+   }
+  ],
+  "training": {
+   "objective": "Reward model: loss(r) = E[log e^{r(x,y_b)} / sum_i e^{r(x,y_i)}] over best-of-4 choices (eq 1). Policy: PPO on R(x,y) = r(x,y) - beta log(pi(y|x)/rho(y|x)) (eq 2)",
+   "optimizer": "Adam for reward model; PPO2 (Dhariwal et al. 2017) for policy",
+   "lr": "reward model 1.77e-5 (both task types); policy 1.41e-5 style, 7.07e-6 summarization; supervised baseline initial lr swept over 8 log-linear values between 1e-4 and 3e-4",
+   "lr_schedule": "supervised baseline: cosine decay to 0; RL not stated",
+   "warmup": null,
+   "batch_size": "reward model 8 style, 32 summarization; policy 1024 style, 512 summarization",
+   "steps": "2M PPO episodes (x,y pairs), four PPO epochs per batch with one minibatch each, gamma=1",
+   "epochs": "reward model 1 epoch; supervised baselines 1 epoch",
+   "tokens": null,
+   "seq_len": "inferred: 500 context tokens plus up to 75 for summarization; 32-64 plus 24 for style",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": "off for reward model and policy training; 0.1 for supervised baselines",
+   "regularisation": "KL penalty beta: dynamic log-space proportional controller targeting KL 6 nats descriptiveness, 10 nats sentiment, K_beta=0.1, e_t clipped to [-0.2,0.2]; fixed beta 0.1 CNN/DM and 0.03 TL;DR",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": "Fig 2 uses 5 seeds; main runs: authors say multiple seeds with humans are expensive and variance across runs is not estimated",
+   "other": {
+    "online_schedule": "l(n) = N0 + (Nr - N0)(1-(1-n/Npi)^2), Npi = 2e6; reward model trained before first PPO episode and retrained 19 more times at evenly spaced l(n), each time reinitialised and one epoch over labels so far; at least 1000 outstanding queries; offline is Nr = N0",
+    "supervised_baseline": "1 epoch on CNN/DM and TL;DR training sets; best validation loss chosen"
+   }
+  },
+  "inference": {
+   "decoding": "sampling with temperature (see models); rejection sampling for sentence-end for human display",
+   "temperature": "0.7 style and TL;DR; 0.5 CNN/DM",
+   "top_p": null,
+   "max_tokens": "24 new tokens style; 75 summarization",
+   "samples": "1024 excerpts/articles per model comparison, 3 labelers each, majority vote",
+   "prompting": "summarization: article truncated to 500 tokens + '\\n\\nTL;DR:' suffix (CNN/DM also 'Article:\\n\\n' prefix)",
+   "retrieval": null,
+   "parameters": {
+    "beta_kl_style": "dynamic, target 6 (descriptive) or 10 (sentiment) nats",
+    "beta_summarization": "0.1 CNN/DM; 0.03 TL;DR"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Human preference rate",
+     "definition": "fraction of contexts where majority of 3 Scale labelers pick a model's continuation/summary (2-way or 4-way comparisons), 1024 samples",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "ROUGE R-1/R-2/R-L/R-AVG",
+     "definition": "TL;DR on authors' validation set, CNN/DM test set",
+     "unit": "ROUGE points",
+     "higher_is_better": true
+    },
+    {
+     "name": "Copy/novel n-gram and sentence fractions",
+     "definition": "fraction of summary n-grams or sentences not in source / repeated",
+     "unit": "%",
+     "higher_is_better": null
+    },
+    {
+     "name": "Accuracy (authors)",
+     "definition": "summary makes only statements supported by context, judged by authors on 30 articles per dataset",
+     "unit": "count of 30",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "zero-shot GPT-2",
+    "supervised fine-tune",
+    "lead-3",
+    "reference summaries",
+    "supervised + RL",
+    "mock sentiment model",
+    "offline ablation",
+    "SOTA (Gehrmann et al. 2018)"
+   ],
+   "protocol": "Human evaluation via Scale AI; no error bars because run-to-run variance is not estimated; authors warn evaluating with the same labelers as training is 'perilous'."
+  },
+  "availability": {
+   "code": "https://github.com/openai/lm-human-preferences (offline reward modeling and fine-tuning, 124M model only)",
+   "weights": "fine-tuned versions of the 124M model",
+   "data": "some of the human labels collected (from the larger-model runs)"
+  },
+  "prompts": [
+   {
+    "purpose": "Labeler instruction, sentiment",
+    "text": "Choose the most positive and happy continuation",
+    "where": "Appendix A.1"
+   },
+   {
+    "purpose": "Labeler instruction, descriptiveness",
+    "text": "Choose the most vividly descriptive continuation",
+    "where": "Appendix A.2"
+   },
+   {
+    "purpose": "Labeler instruction, summarization",
+    "text": "Please read the text and select the best summary.",
+    "where": "Appendix A.3"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training.dropout",
+    "quote": "We do not use dropout for policy training.",
+    "where": "2.2"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "5,000 offline comparisons give a descriptiveness policy preferred 86% of the time over zero-shot",
+   "kind": "measured",
+   "source": null,
+   "metric": "human preference rate",
+   "value": 86,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BookCorpus test, 1024 excerpts, 3 labelers, 774M GPT-2, 5k offline vs zero-shot",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row 5k offline vs. zero-shot, column Descriptiveness"
+  },
+  {
+   "claim": "Intro states 86% for stylistic continuation and 77% against the mock-sentiment model",
+   "kind": "measured",
+   "source": null,
+   "metric": "human preference rate",
+   "value": 77,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "5k human comparisons, sentiment, vs fine-tuning to a supervised sentiment network",
+   "note": "Table 1 gives 88% for sentiment vs zero-shot and 86% for descriptiveness; intro quotes a single 86%",
+   "where": "Intro",
+   "quote": "the ﬁne-tuned model being preferred by humans 86% of the time vs. zero-"
+  },
+  {
+   "claim": "Sentiment 5k offline beats zero-shot 88% of the time",
+   "kind": "measured",
+   "source": null,
+   "metric": "human preference rate",
+   "value": 88,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BookCorpus test, 1024 excerpts, majority of 3 labelers",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row 5k offline vs. zero-shot, column Sentiment"
+  },
+  {
+   "claim": "Online (retrained RM) policy preferred 71% over offline on TL;DR",
+   "kind": "measured",
+   "source": null,
+   "metric": "human preference rate",
+   "value": 71,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "TL;DR summarization, human labelers",
+   "note": "Table 5 gives 64% for 60k fine-tuned vs 60k offline on TL;DR and 65% on CNN/DM; intro and table disagree",
+   "where": "Intro",
+   "quote": "human labelers preferred the policy trained with online data collection 71% of the time"
+  },
+  {
+   "claim": "60k fine-tuned vs 60k offline on TL;DR per Table 5",
+   "kind": "measured",
+   "source": null,
+   "metric": "human preference rate",
+   "value": 64,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "1024 TL;DR articles, majority of 3 labelers",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row 60k fine-tuned vs. 60k offline fine-tuned, column TL;DR"
+  },
+  {
+   "claim": "Style tasks work with few labels; mock sentiment needs 20k to 60k queries to nearly match direct RL",
+   "kind": "measured",
+   "source": null,
+   "metric": "claim",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "mock sentiment, 124M model, KL target 8 nats, 5 seeds",
+   "note": null,
+   "where": "3.1.1",
+   "quote": "20k to 60k queries allow us to optimize rs"
+  },
+  {
+   "claim": "60k RL summarizer beats human reference summaries 96% (TL;DR) and 84% (CNN/DM)",
+   "kind": "measured",
+   "source": null,
+   "metric": "human preference rate",
+   "value": 96,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "1024 test articles, 3 labelers, 60k online model",
+   "note": null,
+   "where": "3.2",
+   "quote": "the 60k online model beats the human ground truth 96% of the time for TL;DR and 84% of the time for CNN/Daily Mail"
+  },
+  {
+   "claim": "60k RL model beats the human reference on CNN/DM 84%",
+   "kind": "measured",
+   "source": null,
+   "metric": "human preference rate",
+   "value": 84,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "as above",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row 60k fine-tuned vs. reference summaries, column CNN/Daily Mail"
+  },
+  {
+   "claim": "60k RL model loses to lead-3 (45% TL;DR, 40% CNN/DM)",
+   "kind": "measured",
+   "source": null,
+   "metric": "human preference rate",
+   "value": 45,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "1024 articles, 3 labelers",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row 60k fine-tuned vs. lead-3, column TL;DR"
+  },
+  {
+   "claim": "60k RL models copy whole sentences 71% (TL;DR) and 98% (CNN/DM) of the time",
+   "kind": "measured",
+   "source": null,
+   "metric": "sentences copied",
+   "value": 98,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "60k online RL fine-tuned models, no supervised init",
+   "note": null,
+   "where": "3.2.1",
+   "quote": "they copy whole sentences 71% of the time for TL;DR and 98% of the time for CNN/Daily Mail"
+  },
+  {
+   "claim": "Supervised + RL copies only 6% (TL;DR) and 30% (CNN/DM)",
+   "kind": "measured",
+   "source": null,
+   "metric": "sentences copied",
+   "value": 30,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "RL starting from supervised model",
+   "note": null,
+   "where": "3.2.1",
+   "quote": "copies much less: 6% and 30% for TL;DR and"
+  },
+  {
+   "claim": "Authors judged the 60k RL model accurate on 26/30 TL;DR and 29/30 CNN/DM summaries; supervised 8/30 and 19/30; zero-shot 6/30 and 6/30",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 29,
+   "unit": "count of 30",
+   "baseline_value": null,
+   "n": null,
+   "setup": "30 articles per dataset, judged by the authors",
+   "note": null,
+   "where": "Table 8",
+   "table": "Table 8, row 60k fine-tuned, column CNN/Daily Mail"
+  },
+  {
+   "claim": "ROUGE: supervised + 60k fine-tune best on TL;DR R-AVG; pure 60k RL below supervised",
+   "kind": "measured",
+   "source": null,
+   "metric": "R-AVG",
+   "value": 12.478,
+   "unit": "R-AVG",
+   "baseline_value": "11.877 (supervised baseline)",
+   "n": null,
+   "setup": "TL;DR validation set, T=0.7",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row supervised + 60k fine-tune, column TL;DR R-AVG"
+  },
+  {
+   "claim": "CNN/DM R-AVG: 60k online fine-tune 28.731 vs 60k offline 25.576 (about 3 points)",
+   "kind": "measured",
+   "source": null,
+   "metric": "R-AVG",
+   "value": 28.731,
+   "unit": "R-AVG",
+   "baseline_value": "25.576 (60k offline)",
+   "n": null,
+   "setup": "CNN/DM test set, T=0.5",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row 60k fine-tune, column CNN/DM R-AVG"
+  },
+  {
+   "claim": "Lead-3 CNN/DM R-AVG 31.552 beats pure RL 28.731",
+   "kind": "measured",
+   "source": null,
+   "metric": "R-AVG",
+   "value": 31.552,
+   "unit": "R-AVG",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CNN/DM test set",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row lead-3, column CNN/DM R-AVG"
+  },
+  {
+   "claim": "Authors agree with each other on 4-way choices about 60% (25% chance); authors agree with Scale labelers 38% on sentiment and 46% on TL;DR",
+   "kind": "measured",
+   "source": null,
+   "metric": "agreement",
+   "value": 60,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "4-way comparisons for sentiment and TL;DR",
+   "note": null,
+   "where": "2.4",
+   "quote": "authors of this paper agree about 60% of the time (vs. 25% for random"
+  },
+  {
+   "claim": "Agreement table: between labelers 38+-2% sentiment, 46+-2% TL;DR; between authors 62+-5% and 61+-5%",
+   "kind": "measured",
+   "source": null,
+   "metric": "agreement",
+   "value": 62,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "100 sampled queries with 5 labelers, two authors each",
+   "note": "Section 2.4 says authors agree with Scale labelers 38% and 46%; Table 9 gives those numbers as between labelers (38+-2, 46+-2) and author-labeler as 44+-5 and 38+-5",
+   "where": "Table 9",
+   "table": "Table 9, row Between authors, column Sentiment"
+  },
+  {
+   "claim": "Without KL penalty mock-sentiment policies reach +8.0 mean score (99.97% positive) but output gibberish",
+   "kind": "measured",
+   "source": null,
+   "metric": "mock score",
+   "value": 99.97,
+   "unit": "% positive",
+   "baseline_value": null,
+   "n": null,
+   "setup": "mock sentiment, no KL penalty, even with entropy bonus targeting 30 nats",
+   "note": null,
+   "where": "Table 10",
+   "quote": "(i.e. 99.97% positive)"
+  },
+  {
+   "claim": "A bug flipping the reward and KL signs made the model output only sexually explicit text",
+   "kind": "claim",
+   "source": null,
+   "metric": "claim",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "one code refactor, noticed after training finished",
+   "note": null,
+   "where": "4.4",
+   "quote": "The result was a model which opti-"
+  }
+ ],
+ "limits": [
+  "No error bars: run-to-run variance not estimated, so human-evaluation gaps may be noise",
+  "Evaluated with the same Scale labelers used for training; authors say this is perilous",
+  "Online data collection was hard to debug and quality-control; authors believe data quality is the limiting factor",
+  "Summarization policies exploit labeler heuristic (copying), so human preference exceeds the reference summaries without being better",
+  "Offline vs online difference may be largely noise (footnote 6)",
+  "Descriptiveness policy at 2.5k samples performed poorly, attributed to RL randomness",
+  "Reward model and policy parameter sharing failed due to data imbalance (60k vs 2M)",
+  "Public code supports only the 124M offline setup",
+  "Compute, hardware and wall-clock not stated",
+  "Mock sentiment optimum is not reached after 2M episodes (gap from optimality)"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "smart copiers",
+   "definition": "models that typically copy whole sentences from the input but vary what they copy to skip irrelevant initial text",
+   "where": "Intro"
+  },
+  {
+   "term": "online data collection",
+   "definition": "continuing to collect human labels from the current policy and retraining the reward model during RL fine-tuning",
+   "where": "2.3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Deep reinforcement learning from human preferences",
+   "year": 2017,
+   "arxiv": "1706.03741",
+   "relation": "extends",
+   "note": "best-of-n human choice reward learning, carried to language",
+   "quote": null
+  },
+  {
+   "work": "Sequence Tutor (Jaques et al.)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "KL constraint to pretrained model",
+   "quote": null
+  },
+  {
+   "work": "Proximal Policy Optimization (Schulman et al.)",
+   "year": 2017,
+   "arxiv": "1707.06347",
+   "relation": "uses-method",
+   "note": "PPO2 implementation from OpenAI baselines",
+   "quote": null
+  },
+  {
+   "work": "Language models are unsupervised multitask learners (GPT-2)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "774M base model on WebText",
+   "quote": null
+  },
+  {
+   "work": "Better rewards yield better summaries (Boehm et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "related",
+   "note": "concurrent work learning a summarization reward from human evaluations",
+   "quote": null
+  },
+  {
+   "work": "Get to the point (See et al.)",
+   "year": 2017,
+   "arxiv": "1704.04368",
+   "relation": "related",
+   "note": "copy-mechanism summarization compared against",
+   "quote": null
+  },
+  {
+   "work": "Bottom-up abstractive summarization (Gehrmann et al.)",
+   "year": 2018,
+   "arxiv": "1808.10792",
+   "relation": "baseline",
+   "note": "CNN/DM SOTA in Table 4",
+   "quote": null
+  },
+  {
+   "work": "TL;DR: Mining Reddit (Voelske et al.)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "TL;DR dataset",
+   "quote": null
+  },
+  {
+   "work": "Teaching machines to read and comprehend (Hermann et al.)",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "CNN/DM",
+   "quote": null
+  },
+  {
+   "work": "Aligning books and movies (Zhu et al.)",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "BookCorpus",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Our training processes for reward model and policy. In the online case, the processes are interleaved.",
+   "page": 2,
+   "why": "shows the two loops (RM from human labels, policy from RM) that became the RLHF pipeline"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Allowing the policy pi to move further from the initial policy rho as measured by KL achieves higher reward at the cost of less natural samples.",
+   "page": 4,
+   "why": "KL vs reward trade-off"
+  },
+  {
+   "figure": "Table 5",
+   "caption": "Human evaluation of summarization models.",
+   "page": 6,
+   "why": "shows humans preferring RL copiers over references"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 2",
+   "snippet": "R(x, y) = r(x, y) - beta log( pi(y|x) / rho(y|x) )",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Paper prints 71% (intro) vs 64% (Table 5) for online vs offline TL;DR",
+  "Section 2.4 and Table 9 label the 38%/46% agreement differently",
+  "Appendix C sample tables skimmed only",
+  "No embedded instructions found"
+ ]
+}

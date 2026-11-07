@@ -1,0 +1,585 @@
+{
+ "schema": 1,
+ "key": "2302.00923",
+ "pdf": "ai-engineering/01-prompt-engineering/sources/zhang-2023-multimodal-chain-thought-reasoning-language.pdf",
+ "bib": {
+  "title": "Multimodal Chain-of-Thought Reasoning in Language Models",
+  "authors": [
+   "Zhuosheng Zhang",
+   "Aston Zhang",
+   "Mu Li",
+   "Hai Zhao",
+   "George Karypis",
+   "Alex Smola"
+  ],
+  "first_author": "Zhang",
+  "year": 2024,
+  "venue": "Transactions on Machine Learning Research (05/2024); arXiv v5",
+  "arxiv": "2302.00923",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 91798,
+  "chars_total": 91798,
+  "engine": "pymupdf",
+  "skipped": "References skimmed only"
+ },
+ "type": "empirical",
+ "question": "Can a sub-1B model be fine-tuned to produce useful chain-of-thought rationales from text plus images, and does separating rationale generation from answer inference help?",
+ "hypothesis": "Hallucinated rationales mislead small models; giving rationale generation vision features yields better rationales and better answers.",
+ "contributions": [
+  "First study of CoT reasoning in different modalities in peer-reviewed literature",
+  "Two-stage framework fine-tuning LMs to fuse vision and language representations",
+  "Analysis of why naive CoT fails and how vision features alleviate it, general across tasks and backbones"
+ ],
+ "method": {
+  "summary": "Two T5 models of identical architecture are fine-tuned independently: stage 1 generates a rationale from question/context/options plus ViT patch features; stage 2 appends the rationale to the text input and predicts the answer. Vision features are fused after the text encoder by single-head attention and gated fusion.",
+  "task": "multimodal multiple-choice science QA with rationales",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "ScienceQA",
+    "role": "both",
+    "size": "21k questions (12k/4k/4k)",
+    "split": "train/val/test 12k/4k/4k; evaluated on test",
+    "source": "Lu et al. 2022a",
+    "preprocessing": "InstructBLIP image captions appended to context; all-zero vectors for questions without an image"
+   },
+   {
+    "name": "A-OKVQA",
+    "role": "both",
+    "size": "25k questions (17k/1k/6k)",
+    "split": "train/val/test; evaluated on validation as test is hidden; multiple-choice setting",
+    "source": "Schwenk et al. 2022",
+    "preprocessing": null
+   },
+   {
+    "name": "MMMU",
+    "role": "eval",
+    "size": null,
+    "split": "no further training",
+    "source": "Yue et al. 2024",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Multimodal-CoT Base",
+    "role": "proposed",
+    "params": "223M (text also says 200M)",
+    "architecture": "T5 encoder-decoder + frozen ViT-large features + gated fusion",
+    "init_from": "FLAN-Alpaca",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "512 input tokens (stage 1), 64 (stage 2)",
+    "other": {
+     "vision": "vit_large_patch32_384, feature shape (145, 1024)"
+    }
+   },
+   {
+    "name": "Multimodal-CoT Large",
+    "role": "proposed",
+    "params": "738M (text also says 700M)",
+    "architecture": "T5 large",
+    "init_from": "FLAN-Alpaca",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "UnifiedQA, FLAN-T5",
+    "role": "base",
+    "params": null,
+    "architecture": "alternate backbones tested in Table 8",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-3.5, ChatGPT, GPT-4, Chameleon, LLaMA-Adapter, LLaVA, InstructBLIP, VQA models, UnifiedQA",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "supervised next-token loss on X->R (stage 1) and XR->A (stage 2), trained independently",
+   "optimizer": null,
+   "lr": "5e-5 (Sec 5.2); selected from {5e-5, 8e-5} (App B.3)",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "8",
+   "steps": null,
+   "epochs": "up to 20",
+   "tokens": null,
+   "seq_len": "512 (rationale generation), 64 (answer inference)",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "8 NVIDIA Tesla V100 32G GPUs",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {}
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "not stated; apparently single run",
+   "prompting": "fine-tuned, no prompts; LLM baselines use 2 in-context examples from training set (as Lu et al. 2022a)",
+   "retrieval": null,
+   "parameters": {},
+   "other": {
+    "input_format": "Q, C, M concatenated; stage 2 appends rationale"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "accuracy",
+     "definition": "percent of correct answers",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "RougeL",
+     "definition": "rationale vs gold rationale",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "VQA models",
+    "UnifiedQA",
+    "GPT-3.5/ChatGPT/GPT-4",
+    "Chameleon",
+    "LLaMA-Adapter",
+    "LLaVA",
+    "InstructBLIP",
+    "Human"
+   ],
+   "protocol": "single reported numbers, no seeds or significance tests stated; error analysis by manual inspection of 50 cases"
+  },
+  "availability": {
+   "code": "https://github.com/amazon-science/mm-cot",
+   "weights": null,
+   "data": "ScienceQA, A-OKVQA public"
+  },
+  "prompts": [
+   {
+    "purpose": "zero-shot rationale generation by InstructBLIP/ChatGPT for pseudo-rationales",
+    "text": "Please explain the rationale to choose the correct answer.\nSolution:",
+    "where": "Fig 10, Appendix C.1"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "models.params",
+    "quote": "Base (200M) and large (700M)",
+    "where": "5.2"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Multimodal-CoT Large (738M) reaches 90.45% average on ScienceQA, above the prior best published 86.54%",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 90.45,
+   "unit": "%",
+   "baseline_value": 86.54,
+   "n": null,
+   "setup": "ScienceQA test, fine-tuned Multimodal-CoT Large (T5 large init from FLAN-Alpaca, ViT-large features), two-stage; human-annotated rationales as stage-1 targets",
+   "note": null,
+   "where": "5.3, Table 4",
+   "quote": "achieves substantial performance gains over the prior best model in publications (86.54%→90.45%)"
+  },
+  {
+   "claim": "Multimodal-CoT Base (223M) reaches 85.31% average on ScienceQA",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 85.31,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ScienceQA test, fine-tuned Multimodal-CoT Base",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row Mutimodal-CoT Base, column Avg"
+  },
+  {
+   "claim": "Text-only one-stage: predicting the rationale before the answer (QCM->RA) drops accuracy from 81.63 to 69.32",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 69.32,
+   "unit": "%",
+   "baseline_value": 81.63,
+   "n": null,
+   "setup": "ScienceQA, FLAN-Alpaca base (200M), text-only one-stage fine-tune",
+   "note": null,
+   "where": "3.1, Table 2",
+   "quote": "we observe a ↓12.31% accuracy decrease (81.63%→69.32%) if the model predicts rationales before answers (QCM→RA)"
+  },
+  {
+   "claim": "Explanation format (answer then rationale, QCM->AR) scores 69.68",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 69.68,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ScienceQA, FLAN-Alpaca base, text-only one-stage",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Explanation, column Accuracy"
+  },
+  {
+   "claim": "Two-stage text-only baseline gets RougeL 90.73 for rationales but only 78.57% answer accuracy, below the no-CoT 81.63%",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 78.57,
+   "unit": "%",
+   "baseline_value": 81.63,
+   "n": null,
+   "setup": "ScienceQA, FLAN-Alpaca base, two-stage without vision",
+   "note": null,
+   "where": "3.2, Table 3",
+   "quote": "the answer inference accuracy is only 78.57%"
+  },
+  {
+   "claim": "Hallucinated rationales account for 56% of 50 randomly sampled error cases of the two-stage text baseline",
+   "kind": "measured",
+   "source": null,
+   "metric": "share of errors",
+   "value": 56,
+   "unit": "%",
+   "baseline_value": null,
+   "n": 50,
+   "setup": "50 randomly sampled errors, two-stage baseline without vision, base model; manual inspection",
+   "note": null,
+   "where": "3.2, Fig 3a",
+   "quote": "such mistakes occur at a ratio of 56% among the error cases"
+  },
+  {
+   "claim": "Captions as image substitute add only 0.80 points (78.57 to 79.37)",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy gain",
+   "value": 0.8,
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ScienceQA, two-stage, base",
+   "note": null,
+   "where": "3.3, Table 3",
+   "quote": "using captions only yields marginal performance gains (↑0.80%)"
+  },
+  {
+   "claim": "Vision features lift two-stage answer accuracy to 85.31% and rationale RougeL to 93.46",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 85.31,
+   "unit": "%",
+   "baseline_value": 78.57,
+   "n": null,
+   "setup": "ScienceQA, two-stage with frozen ViT features, base",
+   "note": null,
+   "where": "3.3, Table 3",
+   "quote": "the RougeL score of the rationale generation has boosted to 93.46% (QCM→R), which correspondingly contributes to better answer accuracy of 85.31% (QCMR→A)"
+  },
+  {
+   "claim": "Vision features correct 60.7% of the hallucination mistakes",
+   "kind": "measured",
+   "source": null,
+   "metric": "share corrected",
+   "value": 60.7,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Same 50 error cases, ScienceQA base",
+   "note": null,
+   "where": "3.3, Fig 3b",
+   "quote": "60.7% hallucination mistakes in Section 3.2 have been corrected"
+  },
+  {
+   "claim": "Ablation: removing two-stage framework drops Base to 82.62 and Large to 84.56",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 82.62,
+   "unit": "%",
+   "baseline_value": 85.31,
+   "n": null,
+   "setup": "ScienceQA, Base; Large 84.56",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row w/o Two-Stage Framework, column Base"
+  },
+  {
+   "claim": "Ablation: removing vision features drops Base to 78.57 and Large to 83.97",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 83.97,
+   "unit": "%",
+   "baseline_value": 90.45,
+   "n": null,
+   "setup": "ScienceQA, Large",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row w/o Vision Features, column Large"
+  },
+  {
+   "claim": "A-OKVQA multiple-choice validation accuracy 50.57 for Base vs 47.86 language-only baseline",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 50.57,
+   "unit": "%",
+   "baseline_value": 47.86,
+   "n": null,
+   "setup": "A-OKVQA val, multiple-choice, Multimodal-CoT Base",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row Multimodal-CoT Base, column Accuracy"
+  },
+  {
+   "claim": "Rationales generated by InstructBLIP/ChatGPT as stage-1 targets give 87.76 avg vs 90.45 with human annotation",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 87.76,
+   "unit": "%",
+   "baseline_value": 90.45,
+   "n": null,
+   "setup": "ScienceQA",
+   "note": "Table 7 AVG for w/ Annotation is 90.45, equal to the Large result in Table 4, although Section 6 says base size is used unless stated",
+   "where": "Table 7",
+   "table": "Table 7, row Multimodal-CoT w/ Generation, column AVG"
+  },
+  {
+   "claim": "Backbone variants: UnifiedQA 82.55, FLAN-T5 83.19, FLAN-Alpaca 85.31",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 83.19,
+   "unit": "%",
+   "baseline_value": 75.17,
+   "n": null,
+   "setup": "ScienceQA, MM-CoT on FLAN-T5",
+   "note": null,
+   "where": "Table 8",
+   "table": "Table 8, row MM-CoT on FLAN-T5, column Accuracy"
+  },
+  {
+   "claim": "Vision feature comparison: ViT 85.31 > CLIP 84.27 > DETR 83.16 > ResNet 82.86",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 84.27,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ScienceQA, base",
+   "note": null,
+   "where": "Table 9",
+   "table": "Table 9, row CLIP, column Accuracy"
+  },
+  {
+   "claim": "Image-grounded text encoder alignment scores 84.60 vs unimodal-encoder fusion 85.31; direct answering 82.62",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 84.6,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ScienceQA, base",
+   "note": null,
+   "where": "Table 10",
+   "table": "Table 10, row Image-grounded text encoder, column Accuracy"
+  },
+  {
+   "claim": "Transfer to MMMU with no further training: 28.7, equal to OpenFlamingo-2 (9B)",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 28.7,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MMMU, Multimodal-CoT 738M, no further training",
+   "note": null,
+   "where": "Table 11",
+   "table": "Table 11, row Multimodal-CoT, column Accuracy"
+  },
+  {
+   "claim": "Error analysis: 80% commonsense, 14% logical, 6% other among 50 wrong answers",
+   "kind": "measured",
+   "source": null,
+   "metric": "commonsense share",
+   "value": 80,
+   "unit": "%",
+   "baseline_value": null,
+   "n": 50,
+   "setup": "50 incorrect answers of Multimodal-CoT, manual categorisation",
+   "note": null,
+   "where": "6.7, Fig 6",
+   "quote": "accounting for 80% of the errors"
+  }
+ ],
+ "limits": [
+  "Needs human-annotated rationales for stage 1; generated rationales lose about 2.7 points (87.76 vs 90.45)",
+  "Errors dominated by commonsense (maps, counting, alphabet)",
+  "Concurrent LLaVA (90.92) beats Multimodal-CoT Large's 90.45 in Table 4",
+  "Seeds, optimizer, schedule, decoding not stated",
+  "Evaluated on science QA benchmarks; MMMU transfer only 28.7"
+ ],
+ "practices": [],
+ "terms": [],
+ "lineage": [
+  {
+   "work": "Learn to Explain (ScienceQA)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Lu et al. 2022a benchmark and UnifiedQA/GPT-3.5 baselines",
+   "quote": null
+  },
+  {
+   "work": "A-OKVQA",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Schwenk et al.",
+   "quote": null
+  },
+  {
+   "work": "Chain of thought prompting elicits reasoning in LLMs",
+   "year": 2022,
+   "arxiv": "2201.11903",
+   "relation": "extends",
+   "note": "CoT; small models yield illogical CoT",
+   "quote": null
+  },
+  {
+   "work": "Large language models are zero-shot reasoners",
+   "year": 2022,
+   "arxiv": "2205.11916",
+   "relation": "related",
+   "note": "Zero-Shot-CoT",
+   "quote": null
+  },
+  {
+   "work": "Auto-CoT",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Zhang et al. 2023d",
+   "quote": null
+  },
+  {
+   "work": "T5 / FLAN-Alpaca",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "backbone init",
+   "quote": null
+  },
+  {
+   "work": "ViT",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "frozen vision extractor",
+   "quote": null
+  },
+  {
+   "work": "Visual instruction tuning (LLaVA)",
+   "year": 2023,
+   "arxiv": "2304.08485",
+   "relation": "baseline",
+   "note": "concurrent",
+   "quote": null
+  },
+  {
+   "work": "InstructBLIP",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "concurrent; also used for captions and rationales",
+   "quote": null
+  },
+  {
+   "work": "MMMU",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Yue et al.",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 4",
+   "caption": "Overview of our Multimodal-CoT framework",
+   "page": 6,
+   "why": "Two-stage data flow"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Example of the two-stage framework without vision features (baseline) and with vision features (ours)",
+   "page": 5,
+   "why": "Shows hallucinated rationale"
+  },
+  {
+   "figure": "Table 2",
+   "caption": "Effects of CoT in the one-stage setting",
+   "page": 4,
+   "why": "Core motivating numbers"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 4-5",
+   "snippet": "λ = Sigmoid(Wl H_language + Wv H_attn_vision); H_fuse = (1 − λ)·H_language + λ·H_attn_vision",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Model sizes inconsistent: Base 200M vs 223M, Large 700M vs 738M",
+  "Table 7 AVG for annotation (90.45) equals the Large result while text says base size for analysis",
+  "Section cross-references in text are off (backbones cited as 6.1, vision features as 6.2)"
+ ]
+}

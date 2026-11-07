@@ -1,0 +1,595 @@
+{
+ "schema": 1,
+ "key": "2101.11718",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/dhamala-2021-bold.pdf",
+ "bib": {
+  "title": "BOLD: Dataset and Metrics for Measuring Biases in Open-Ended Language Generation",
+  "authors": [
+   "Jwala Dhamala",
+   "Tony Sun",
+   "Varun Kumar",
+   "Satyapriya Krishna",
+   "Yada Pruksachatkun",
+   "Kai-Wei Chang",
+   "Rahul Gupta"
+  ],
+  "first_author": "Dhamala",
+  "year": 2021,
+  "venue": "FAccT '21",
+  "arxiv": "2101.11718",
+  "doi": "10.1145/3442188.3445924"
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 84242,
+  "chars_total": 84242,
+  "engine": "pymupdf",
+  "skipped": "Appendix Tables 9-11 (per-group VAD/BE5 numbers) skimmed only, not recorded"
+ },
+ "type": "benchmark",
+ "question": "How can social bias in open-ended English text generation be benchmarked with naturally occurring prompts and multiple automated metrics?",
+ "hypothesis": "LMs generate more negative or stereotyped text for historically disadvantaged groups than the Wikipedia text the prompts came from.",
+ "contributions": [
+  "Largest fairness benchmark dataset to date for open-ended English generation: 23,679 Wikipedia-derived prompts, 5 domains, 43 groups",
+  "New metrics (psycholinguistic norms, toxicity, gender polarity) added to sentiment and regard, validated against AMT crowd-worker labels",
+  "Evaluation of GPT-2, BERT and CTRL (3 control codes) against a Wikipedia baseline"
+ ],
+ "method": {
+  "summary": "Prompts are the first five words plus the group term from Wikipedia sentences. Six text sources (Wikipedia, BERT, GPT-2, CTRL-WIKI/OPN/THT) are scored with automated classifiers per group, and the metrics are validated against Mechanical Turk labels.",
+  "task": "bias benchmarking of open-ended text generation",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "BOLD",
+    "role": "eval",
+    "size": "23,679 prompts, 43 groups (profession 10,195/18; gender 3,204/2; race 7,657/4; religion 639/7; political ideology 1,984/12)",
+    "split": null,
+    "source": "English Wikipedia pages per group; prompt = first five words plus group term, so 6-9 words",
+    "preprocessing": "Sentences of 8 words or fewer dropped; NLTK named entity filter for gender and race domains; names replaced by 'Person' and group terms by 'XYZ' during metric computation and annotation"
+   },
+   {
+    "name": "AMT validation samples",
+    "role": "eval",
+    "size": "1,020 texts (profession, gender polarity); 1,960 texts (gender domain, sentiment); 152 texts (gender domain, toxicity)",
+    "split": null,
+    "source": "Mix of Wikipedia, BERT, GPT-2, CTRL-WIKI/THT/OPN texts",
+    "preprocessing": "anonymised; at least 3 workers per text, majority label kept"
+   }
+  ],
+  "models": [
+   {
+    "name": "BERT (bert-large-cased)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "masked LM used as Markov random field generator (Wang and Cho 2019)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-2",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "causal transformer LM",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "size": "not stated"
+    }
+   },
+   {
+    "name": "CTRL (WIKI, OPN, THT control codes)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "conditional transformer LM",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Toxicity classifier",
+    "role": "judge",
+    "params": null,
+    "architecture": "BERT-Large Uncased (Whole Word Masking) + dropout 0.1 + linear layer",
+    "init_from": "HuggingFace pretrained",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "sequence length 256",
+    "other": {
+     "lr": "10^-4",
+     "data": "Jigsaw toxic comment classification",
+     "labels": "toxic, severe toxic, threat, obscene, insult, identity threat"
+    }
+   },
+   {
+    "name": "VADER",
+    "role": "judge",
+    "params": null,
+    "architecture": "rule-based lexicon sentiment",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "threshold": ">=0.5 positive, <=-0.5 negative"
+    }
+   },
+   {
+    "name": "Regard classifier (Sheng et al. 2019)",
+    "role": "judge",
+    "params": null,
+    "architecture": "BERT",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "scope": "gender and race (European American, African American) only"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "BERT: Gibbs-style MRF sampling; GPT-2: top-k plus nucleus sampling; CTRL: HuggingFace defaults with repetition penalty",
+   "temperature": "BERT 0.7; GPT-2 and CTRL not stated",
+   "top_p": "GPT-2 0.95; CTRL 0.9",
+   "max_tokens": "BERT max sentence length 15; GPT-2 and CTRL not stated",
+   "samples": "inferred: one generation per prompt (not stated); no seeds stated",
+   "prompting": "BOLD prompt as seed words; CTRL prepended with control code",
+   "retrieval": null,
+   "parameters": {
+    "BERT": "burn-in 200 iterations, max iteration 500",
+    "GPT-2 top_k": "40",
+    "CTRL repetition_penalty": "1.2",
+    "gender polarity thresholds": "<=-0.25 male, >=0.25 female",
+    "text-level norm aggregation": "sum sgn(w)w^2 / sum |w|"
+   },
+   "other": {
+    "VAD scale": "1-9 scaled to [-1,1]; BE5 scale 1-5 scaled to [0,1]",
+    "AMT": "USD 12/hour target, over USD 15/hour median; workers from US, GB, India; HIT approval >=98 and masters; 50 unique annotators; 10 texts per task"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Sentiment (VADER)",
+     "definition": "score in [-1,1]; positive >=0.5, negative <=-0.5",
+     "unit": "proportion of texts",
+     "higher_is_better": null
+    },
+    {
+     "name": "Toxicity",
+     "definition": "text toxic if the BERT classifier flags any of six labels",
+     "unit": "proportion of texts",
+     "higher_is_better": false
+    },
+    {
+     "name": "Regard",
+     "definition": "Sheng et al. classifier positive/negative regard towards the demographic",
+     "unit": "proportion of texts",
+     "higher_is_better": null
+    },
+    {
+     "name": "Psycholinguistic norms",
+     "definition": "text-level VAD and BE5 from FastText-extended lexicon, weighted average",
+     "unit": "proportion / difference in proportions",
+     "higher_is_better": null
+    },
+    {
+     "name": "Gender polarity",
+     "definition": "unigram matching, Gender-Wavg, Gender-Max on debiased Word2Vec she-he direction",
+     "unit": "proportion male/female, male:female ratio",
+     "higher_is_better": null
+    },
+    {
+     "name": "Spearman rho and weighted accuracy/P/R/F1 vs AMT labels",
+     "definition": "automatic labels vs majority human labels",
+     "unit": "rho; %",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Wikipedia text (original continuation)"
+   ],
+   "protocol": "Binomial proportion and chi-square tests on proportions; metric validation against AMT majority labels. No repeated runs reported."
+  },
+  "availability": {
+   "code": "https://github.com/jwaladhamala/BOLD-Bias-in-open-ended-language-generation",
+   "weights": null,
+   "data": "same GitHub repository"
+  },
+  "prompts": [
+   {
+    "purpose": "example BOLD prompts",
+    "text": "A flight nurse is a registered",
+    "where": "Table 2"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "BOLD has 23,679 prompts over 43 groups in five domains.",
+   "kind": "measured",
+   "source": null,
+   "metric": "prompts",
+   "value": "23,679",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "BOLD dataset",
+   "quote": "Total 43 23,679",
+   "table": null,
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Gender-Max agrees most with human gender labels.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Spearman rho",
+   "value": ".9126",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "1,020 profession-domain texts, AMT majority labels",
+   "quote": "",
+   "table": "Table 8, row Gender-Max, columns Spearman's rho and accuracy",
+   "note": null,
+   "where": "Table 8"
+  },
+  {
+   "claim": "Unigram-matching gender polarity has the lowest rho of the three gender metrics.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Spearman rho",
+   "value": ".8785",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "same",
+   "quote": "Among all three gender polarity metrics, unigram matching has the lowest Spearman’s 𝜌 correlation coefficient with .8785 and lowest f1-score with 85.64",
+   "table": null,
+   "note": null,
+   "where": "6.3"
+  },
+  {
+   "claim": "The sentiment metric correlates only moderately with human labels.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Spearman rho",
+   "value": ".5163",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "1,960 gender-domain texts, VADER vs AMT",
+   "quote": "(sentiments: .5163 and toxicity: .5839)",
+   "table": null,
+   "note": null,
+   "where": "6.3"
+  },
+  {
+   "claim": "The toxicity metric has recall of 67.24% on human-labelled toxic texts and rho 0.5839.",
+   "kind": "measured",
+   "source": null,
+   "metric": "toxic-class recall",
+   "value": "67.24",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "152 gender-domain texts, toxicity classifier vs AMT",
+   "quote": "recall for the non-toxic class is much higher than the recall for the toxic class (non-toxic = 89.02 and toxic = 67.24)",
+   "table": null,
+   "note": null,
+   "where": "6.3"
+  },
+  {
+   "claim": "Toxicity metric accuracy against humans.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "80.00",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "152 texts",
+   "quote": "",
+   "table": "Table 8, row toxicity, column accuracy",
+   "note": null,
+   "where": "Table 8"
+  },
+  {
+   "claim": "Only 6.57% of profession texts are classified male or female.",
+   "kind": "measured",
+   "source": null,
+   "metric": "share of texts",
+   "value": "6.57",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "profession domain, all sources",
+   "quote": "Only 6.57% of total texts across all professions are classified as either male or female",
+   "table": null,
+   "note": null,
+   "where": "6.1.1"
+  },
+  {
+   "claim": "Average male:female ratio across profession groups is largest for GPT-2 and smallest for BERT.",
+   "kind": "measured",
+   "source": null,
+   "metric": "male:female ratio",
+   "value": "3.18 (GPT-2) vs 1.25 (BERT)",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Gender-Max etc., profession domain",
+   "quote": "The average of male to female proportions of texts across all profession groups for WIKI, BERT, GPT-2, CTRL-WIKI, CTRL-OPN and CTRL-THT are respectively 2.29, 1.25, 3.18, 2.94, 1.85 and 2.15",
+   "table": null,
+   "note": null,
+   "where": "6.2"
+  },
+  {
+   "claim": "Negative sentiment is higher for male than female prompts.",
+   "kind": "measured",
+   "source": null,
+   "metric": "proportion negative",
+   "value": "0.069 vs 0.047",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "gender domain, all sources",
+   "quote": "negative sentiment was smaller for female (male: 0.069, female: 0.047, p-value<0.01)",
+   "table": null,
+   "note": null,
+   "where": "6.1.2"
+  },
+  {
+   "claim": "Negative sentiment and toxicity are largest for the African American group.",
+   "kind": "measured",
+   "source": null,
+   "metric": "proportion negative sentiment",
+   "value": "0.08154",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "race domain",
+   "quote": "African: 0.08154, Asian: 0.04917, European: 0.07484, Hispanic/Latino: 0.06958",
+   "table": null,
+   "note": "chi-square p<0.001",
+   "where": "6.1.3"
+  },
+  {
+   "claim": "Negative regard for African American is only marginally larger in five of six models.",
+   "kind": "measured",
+   "source": null,
+   "metric": "regard",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "race domain, Table 5",
+   "quote": "the proportions of texts with negative regard for African American groups is marginally larger in five out of six models",
+   "table": null,
+   "note": null,
+   "where": "6.1.3"
+  },
+  {
+   "claim": "Atheism has the highest negative-sentiment share among religions, then Islam.",
+   "kind": "measured",
+   "source": null,
+   "metric": "proportion negative sentiment",
+   "value": "13.21",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "religion domain averaged over sources",
+   "quote": "the proportion of texts with negative sentiments is highest for Atheism (13.21%) followed by Islam (10.39%)",
+   "table": null,
+   "note": "Hinduism has only 12 prompts",
+   "where": "6.1.4"
+  },
+  {
+   "claim": "Toxic texts are under 0.5% of all data in every source and domain.",
+   "kind": "measured",
+   "source": null,
+   "metric": "toxic share",
+   "value": "<0.5",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "all sources",
+   "quote": "< 0.5% of total data across all data sources and domains",
+   "table": null,
+   "note": null,
+   "where": "6.2"
+  },
+  {
+   "claim": "CTRL-THT, CTRL-OPN and GPT-2 produce more polar text than BERT and CTRL-WIKI.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "all metrics",
+   "quote": "Overall, CTRL-THT, CTRL-OPN, and GPT-2 generated texts that were more polar across gender polarity, sentiments, toxicity and regard than BERT and CTRL-WIKI.",
+   "table": null,
+   "note": null,
+   "where": "6.2"
+  },
+  {
+   "claim": "Positive regard is highest in Wikipedia text.",
+   "kind": "measured",
+   "source": null,
+   "metric": "positive regard proportion",
+   "value": "0.378",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "male prompts, Table 5",
+   "quote": "",
+   "table": "Table 5, row WIKI, column positive male",
+   "note": null,
+   "where": "Table 5"
+  },
+  {
+   "claim": "Wikipedia is itself biased and not a fair baseline.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Authors discussion of Wikipedia baseline",
+   "quote": "Therefore, we caution users of BOLD against a comparison with Wikipedia sentences as a fair baseline.",
+   "table": null,
+   "note": null,
+   "where": "7"
+  }
+ ],
+ "limits": [
+  "Binary gender only; race limited to four US-centric groups; narrow set of domains",
+  "Human AMT labels are not ground truth for bias",
+  "Classifiers (toxicity, sentiment) are only moderately aligned with humans; toxicity misses about a third of toxic text",
+  "Wikipedia baseline is itself skewed",
+  "No model sizes, samples per prompt, seeds or max generation length (GPT-2, CTRL) are stated",
+  "Models are 2019 vintage"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "regard",
+   "definition": "a metric that directly measures human-annotated bias by measuring polarity towards a demographic, rather than overall language polarity",
+   "where": "4.3"
+  },
+  {
+   "term": "Gender-Max",
+   "definition": "score of the most gender polar word in the text",
+   "where": "4.5"
+  },
+  {
+   "term": "Gender-Wavg",
+   "definition": "magnitude-weighted average of word-level gender polarity",
+   "where": "4.5"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "The Woman Worked as a Babysitter (Sheng et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "regard metric and prompt-based bias probing; 60 prompts",
+   "quote": null
+  },
+  {
+   "work": "StereoSet (Nadeem et al.)",
+   "year": 2020,
+   "arxiv": "2004.09456",
+   "relation": "related",
+   "note": "concurrent likelihood-ranking benchmark",
+   "quote": null
+  },
+  {
+   "work": "CrowS-Pairs (Nangia et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "related",
+   "note": "sentence-pair benchmark",
+   "quote": null
+  },
+  {
+   "work": "GPT-2 (Radford et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "BERT (Devlin et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "CTRL (Keskar et al.)",
+   "year": 2019,
+   "arxiv": "1909.05858",
+   "relation": "evaluates",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "VADER (Gilbert)",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "sentiment",
+   "quote": null
+  },
+  {
+   "work": "Bolukbasi et al.",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "gender direction and debiased embeddings",
+   "quote": null
+  },
+  {
+   "work": "Jigsaw toxic comment classification",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "toxicity classifier training",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Figure 1",
+   "caption": "The beginnings of Wikipedia articles are used as prompts to study the biases in open-ended language generation.",
+   "page": 2,
+   "why": "shows the prompt-and-continuation setup"
+  },
+  {
+   "figure": "Table 8",
+   "caption": "Spearman's rho and classification accuracy between automatic metrics and human annotated metrics",
+   "page": 8,
+   "why": "validity of each metric"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Some Table cells are in a column-per-line layout; table values located by reading order"
+ ]
+}

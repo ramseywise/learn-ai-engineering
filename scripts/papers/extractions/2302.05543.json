@@ -1,0 +1,624 @@
+{
+ "schema": 1,
+ "key": "2302.05543",
+ "pdf": "ai-engineering/08-multimodal-engineering/sources/zhang-2023-adding-conditional-control-text-image.pdf",
+ "bib": {
+  "title": "Adding Conditional Control to Text-to-Image Diffusion Models",
+  "authors": [
+   "Lvmin Zhang",
+   "Anyi Rao",
+   "Maneesh Agrawala"
+  ],
+  "first_author": "Zhang",
+  "year": 2023,
+  "venue": "preprint (arXiv v3, 26 Nov 2023)",
+  "arxiv": "2302.05543",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 53796,
+  "chars_total": 53796,
+  "engine": "pymupdf",
+  "skipped": "References skimmed. Supplementary material (training and inference parameters, ablation details) is referenced but not in the PDF."
+ },
+ "type": "empirical",
+ "question": "How can spatial conditions (edges, depth, pose, segmentation) be added to a large pretrained text-to-image diffusion model without destroying it, even with small condition datasets?",
+ "hypothesis": "Locking the pretrained model, training a copy of its encoder, and joining them with zero-initialized convolutions gives robust learning of conditions without harmful noise or forgetting.",
+ "contributions": [
+  "ControlNet architecture adding spatially localized input conditions to a pretrained text-to-image diffusion model via efficient finetuning",
+  "Pretrained ControlNets for Stable Diffusion on Canny edges, Hough lines, scribbles, human key points, segmentation, normals, depth, cartoon line drawings",
+  "Ablations against alternative architectures and user studies against baselines"
+ ],
+ "method": {
+  "summary": "A trainable copy of Stable Diffusion's 12 encoder blocks and middle block receives a condition (encoded by a small 4-conv network) and feeds back into the locked U-Net through zero-initialized 1x1 convolutions. Trained with the standard noise-prediction loss, with 50% of prompts blanked.",
+  "task": "spatially conditioned text-to-image generation",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Condition datasets (edge, depth, pose, segmentation etc.)",
+    "role": "train",
+    "size": "1k, 50k and 3m images in the dataset-size study (Fig 10); abstract: small (<50k) and large (>1m)",
+    "split": null,
+    "source": null,
+    "preprocessing": "Conditions extracted with Canny, MiDaS-style depth (Ranftl), normal map, M-LSD, HED, ADE20K, Openpose, sketches; details in unseen supplement"
+   },
+   {
+    "name": "Depth training set for SDv2 ControlNet",
+    "role": "train",
+    "size": "200k training samples",
+    "split": null,
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "ADE20K test set",
+    "role": "eval",
+    "size": null,
+    "split": "test set",
+    "source": "Zhou et al. [96]",
+    "preprocessing": null
+   },
+   {
+    "name": "20 unseen hand-drawn sketches",
+    "role": "eval",
+    "size": "20 sketches",
+    "split": null,
+    "source": null,
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Stable Diffusion V1.5 / V2.1 + ControlNet",
+    "role": "proposed",
+    "params": null,
+    "architecture": "Latent-diffusion U-Net: 12 encoder blocks, 1 middle, 12 decoder blocks (25 total; 8 up/down-sampling, 17 main blocks each with 4 resnet layers and 2 ViTs); CLIP text encoder; 64x64 latents from 512x512 images",
+    "init_from": "Stable Diffusion (locked); ControlNet copy initialised from SD encoder weights; zero convs from zero; condition encoder E from Gaussian",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "25 blocks in SD; ControlNet copies 12 encoder + 1 middle",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "condition_encoder": "4 conv layers, 4x4 kernels, stride 2, ReLU, 16/32/64/128 channels",
+     "zero_conv": "1x1 conv, weight and bias zero",
+     "overhead": "about 23% more GPU memory and 34% more time per iteration on one A100 PCIE 40GB"
+    }
+   },
+   {
+    "name": "ControlNet-lite",
+    "role": "baseline",
+    "params": null,
+    "architecture": "Each block's trainable copy replaced with a single convolution layer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "ControlNet without zero convolutions",
+    "role": "baseline",
+    "params": null,
+    "architecture": "Zero convs replaced by Gaussian-initialised standard convs",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "PITI",
+    "role": "baseline",
+    "params": null,
+    "architecture": "Pretrained conditional diffusion on GLIDE",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Sketch-Guided Diffusion",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "beta": "1.6 and 3.2"
+    }
+   },
+   {
+    "name": "VQGAN, LDM (segmentation, trained from scratch)",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "SDv2 Depth-to-Image",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "training": "large NVIDIA A100 cluster, thousands of GPU hours, more than 12M images"
+    }
+   },
+   {
+    "name": "OneFormer",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "segmentation model used to re-detect segments in generated images",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "L = E[ ||eps - eps_theta(z_t, t, c_t, c_f)||_2^2 ] (noise prediction); 50% of text prompts replaced with empty strings",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": "'usually in less than 10K optimization steps' to sudden convergence; Fig 4 shows steps 100 to 12000 (convergence at 6133 in the example)",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "Original SD weights locked; zero convolutions",
+   "hardware": "Depth ControlNet for SDv2: single NVIDIA RTX 3090Ti; overhead test on one A100 PCIE 40GB",
+   "compute": null,
+   "wall_clock": "5 days (SDv2 depth ControlNet, 200k samples)",
+   "seeds": null,
+   "other": {
+    "note": "The paper defers detailed training parameters to the supplementary material, which is not in the PDF"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "Ablation: random batch of 6 samples per setting, no cherry-picking; SDv2-D2I comparison: 200 images; user study: 20 sketches x 5 methods",
+   "prompting": "Default prompt 'a high-quality, detailed, and professional image'; four ablation prompt settings: none, insufficient, conflicting, perfect",
+   "retrieval": null,
+   "parameters": {
+    "cfg_resolution_weighting": "Add condition to eps_c only, then weight each SD-ControlNet connection w_i = 64/h_i with h_1=8, h_2=16, ..., h_13=64",
+    "cfg_formula": "eps_prd = eps_uc + beta_cfg (eps_c - eps_uc)",
+    "multi_condition": "Outputs of multiple ControlNets added directly, no extra weighting"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Average User Ranking (AUR; also called AHR in text)",
+     "definition": "Users rank 5 methods 1 to 5 (worst to best) on result quality and condition fidelity",
+     "unit": "rank 1-5",
+     "higher_is_better": true
+    },
+    {
+     "name": "IoU",
+     "definition": "OneFormer re-segments generated images; IoU against ADE20K ground-truth labels",
+     "unit": "IoU",
+     "higher_is_better": true
+    },
+    {
+     "name": "FID",
+     "definition": "Frechet Inception Distance over randomly generated 512x512 sets",
+     "unit": "FID",
+     "higher_is_better": false
+    },
+    {
+     "name": "CLIP-score",
+     "definition": "CLIP text-image score",
+     "unit": "score",
+     "higher_is_better": true
+    },
+    {
+     "name": "CLIP-aes.",
+     "definition": "CLIP aesthetic score",
+     "unit": "score",
+     "higher_is_better": true
+    },
+    {
+     "name": "User precision in telling SDv2-D2I from ControlNet",
+     "definition": "12 users shown 100 images from each to learn, then tell which model made each of 200 images",
+     "unit": "precision",
+     "higher_is_better": null
+    }
+   ],
+   "baselines": [
+    "PITI",
+    "Sketch-Guided Diffusion beta 1.6 / 3.2",
+    "ControlNet-lite",
+    "VQGAN",
+    "LDM",
+    "Stable Diffusion unconditioned",
+    "SDv2 Depth-to-Image",
+    "Taming Transformers (qualitative)"
+   ],
+   "protocol": "12 users ranked 20 groups of 5 results, giving 100 rankings for quality and 100 for fidelity; single run, no significance test stated; \u00b1 values appear to be spread but are not defined"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": null
+  },
+  "prompts": [
+   {
+    "purpose": "Default prompt for all conditions",
+    "text": "a high-quality, detailed, and professional image",
+    "where": "Fig 1 caption"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training.steps",
+    "quote": "usually in less than 10K optimization steps",
+    "where": "3.3"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Zero-conv ControlNet is preferred over baselines on sketch conditions, in both quality and fidelity.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Result Quality AUR (ControlNet)",
+   "value": 4.22,
+   "unit": "rank 1-5",
+   "baseline_value": "3.21 (SGD beta 1.6, best baseline)",
+   "n": null,
+   "setup": "20 unseen sketches, 12 users, SD + ControlNet vs PITI, SGD, ControlNet-lite",
+   "quote": null,
+   "table": "Table 1, row ControlNet, column Result Quality",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "ControlNet fidelity ranking.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Condition Fidelity AUR (ControlNet)",
+   "value": 4.28,
+   "unit": "rank 1-5",
+   "baseline_value": "3.28 (SGD beta 3.2, best baseline)",
+   "n": null,
+   "setup": "same as above",
+   "quote": null,
+   "table": "Table 1, row ControlNet, column Condition Fidelity",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Users cannot tell a 200k-sample ControlNet from SDv2 Depth-to-Image.",
+   "kind": "measured",
+   "source": null,
+   "metric": "User precision",
+   "value": 0.52,
+   "unit": "precision",
+   "baseline_value": null,
+   "n": null,
+   "setup": "SDv2 depth ControlNet, 200k samples, one RTX 3090Ti, 5 days vs SDv2-D2I trained on over 12M images; 12 users, 200 images",
+   "quote": "The average precision of the users is 0.52 \u00b1 0.17, indicating that the two method yields almost indistinguishable results.",
+   "table": null,
+   "note": null,
+   "where": "4.3"
+  },
+  {
+   "claim": "ControlNet gives best FID among segmentation-conditioned methods.",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": 15.27,
+   "unit": "FID",
+   "baseline_value": "19.74 (PITI)",
+   "n": null,
+   "setup": "ADE20K segmentation conditioning; Stable Diffusion unconditioned is 6.09",
+   "quote": null,
+   "table": "Table 3, row ControlNet, column FID",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "ControlNet-lite FID.",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": 17.92,
+   "unit": "FID",
+   "baseline_value": null,
+   "n": null,
+   "setup": "as above",
+   "quote": null,
+   "table": "Table 3, row ControlNet-lite, column FID",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Reconstructed segmentation IoU: ControlNet 0.35 against ground-truth 0.58.",
+   "kind": "measured",
+   "source": null,
+   "metric": "IoU",
+   "value": 0.35,
+   "unit": "IoU",
+   "baseline_value": "0.58 (ADE20K GT); PITI 0.26; LDM 0.31",
+   "n": null,
+   "setup": "ADE20K test set, OneFormer re-detection",
+   "quote": null,
+   "table": "Table 2, row ControlNet",
+   "note": "Table 2 text extraction lists values 0.58, 0.21, 0.31, 0.26, 0.32, 0.35 in the column order GT, VQGAN, LDM, PITI, ControlNet-lite, ControlNet; mapping assumed from header order",
+   "where": "Table 2"
+  },
+  {
+   "claim": "Training a ControlNet adds about 23% GPU memory and 34% time per iteration over SD alone.",
+   "kind": "measured",
+   "source": null,
+   "metric": "extra training cost",
+   "value": 23,
+   "unit": "% GPU memory (34% time)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "single NVIDIA A100 PCIE 40GB",
+   "quote": "requires only about 23% more GPU memory and 34% more time in each training iteration",
+   "table": null,
+   "note": null,
+   "where": "3.2"
+  },
+  {
+   "claim": "Control is learned abruptly, not gradually: 'sudden convergence', usually in under 10K steps.",
+   "kind": "measured",
+   "source": null,
+   "metric": "steps to follow condition",
+   "value": 10000,
+   "unit": "steps (upper bound)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "training observation, Fig 4 example at step 6133",
+   "quote": "usually in less than 10K optimization steps",
+   "table": null,
+   "note": null,
+   "where": "3.3"
+  },
+  {
+   "claim": "Replacing zero convs with Gaussian-init convs drops quality to about ControlNet-lite level.",
+   "kind": "measured",
+   "source": null,
+   "metric": "qualitative",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Sketch condition, 4 prompt settings, random batch of 6 samples, no metric",
+   "quote": "the performance of ControlNet drops to about the same as ControlNet-lite, indicating that the pretrained backbone of the trainable copy is destroyed during finetuning",
+   "table": null,
+   "note": null,
+   "where": "4.2"
+  },
+  {
+   "claim": "Training does not collapse with 1k images and scales with more data.",
+   "kind": "measured",
+   "source": null,
+   "metric": "qualitative",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 10, 'Lion', 1k / 50k / 3m images",
+   "quote": "The training does not collapse with limited 1k images, and allows",
+   "table": null,
+   "note": null,
+   "where": "4.5"
+  }
+ ],
+ "limits": [
+  "Detailed training and inference hyperparameters (optimizer, learning rate, batch size) are only in supplementary material, absent from the PDF.",
+  "User studies are small (12 users, 20 sketches) and \u00b1 values are undefined.",
+  "Ablation is qualitative (6 uncherry-picked samples per setting) with no metric.",
+  "PITI uses a different backbone (GLIDE), so comparison is not like for like (authors' note).",
+  "Quantitative comparison only covers segmentation and sketch; depth comparison is a user discrimination test only."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "zero convolution",
+   "definition": "1 x 1 convolution layer with both weight and bias initialized to zero",
+   "where": "3.1"
+  },
+  {
+   "term": "sudden convergence phenomenon",
+   "definition": "the model does not gradually learn the control conditions but abruptly succeeds in following the input conditioning image",
+   "where": "3.3"
+  },
+  {
+   "term": "CFG Resolution Weighting",
+   "definition": "add the condition only to eps_c and multiply each SD-ControlNet connection by w_i = 64/h_i",
+   "where": "3.4"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "High-resolution image synthesis with latent diffusion models (Stable Diffusion)",
+   "year": 2022,
+   "arxiv": "2112.10752",
+   "relation": "extends",
+   "note": "Base model locked and extended",
+   "quote": null
+  },
+  {
+   "work": "Classifier-free diffusion guidance",
+   "year": 2022,
+   "arxiv": "2207.12598",
+   "relation": "uses-method",
+   "note": "CFG, modified by resolution weighting",
+   "quote": null
+  },
+  {
+   "work": "PITI",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Pretraining-based image-to-image diffusion",
+   "quote": null
+  },
+  {
+   "work": "Sketch-Guided Text-to-Image Diffusion Models (Voynov et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "T2I-Adapter",
+   "year": 2023,
+   "arxiv": "2302.08453",
+   "relation": "related",
+   "note": "concurrent work",
+   "quote": null
+  },
+  {
+   "work": "LoRA",
+   "year": 2021,
+   "arxiv": "2106.09685",
+   "relation": "related",
+   "note": "alternative way to limit forgetting",
+   "quote": null
+  },
+  {
+   "work": "Side-Tuning",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "related",
+   "note": "side branch with blending",
+   "quote": null
+  },
+  {
+   "work": "Make-A-Scene",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "segmentation tokens control",
+   "quote": null
+  },
+  {
+   "work": "GLIGEN",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "SDv2 Depth-to-Image",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "industrial comparison",
+   "quote": null
+  },
+  {
+   "work": "LAION-5B",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "data SD was trained on",
+   "quote": null
+  },
+  {
+   "work": "ADE20K",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "OneFormer",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "segmentation evaluator",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "A neural block with a locked original and a trainable copy joined by zero convolutions",
+   "page": 3,
+   "why": "Shows the core zero-conv wiring"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "SD U-net connected with a ControlNet on encoder and middle blocks",
+   "page": 4,
+   "why": "Where the copies attach"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "The sudden convergence phenomenon",
+   "page": 4,
+   "why": "Shows abrupt step in following the condition"
+  },
+  {
+   "figure": "Fig 8",
+   "caption": "Ablative study on sketch condition and prompt settings",
+   "page": 6,
+   "why": "Compares zero conv, no zero conv and lite"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 2",
+   "snippet": "yc = F(x; Theta) + Z(F(x + Z(c; Theta_z1); Theta_c); Theta_z2)",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Supplementary material (training hyperparameters) is not in the PDF.",
+  "Table 2 and 3 cells come from flattened text; column order assumed from headers.",
+  "Text calls the metric Average User Ranking (Table 1 caption) and Average Human Ranking (body)."
+ ]
+}

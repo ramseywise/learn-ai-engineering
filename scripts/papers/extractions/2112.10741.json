@@ -1,0 +1,601 @@
+{
+ "schema": 1,
+ "key": "2112.10741",
+ "pdf": "ai-engineering/08-multimodal-engineering/sources/nichol-2021-glide.pdf",
+ "bib": {
+  "title": "GLIDE: Towards Photorealistic Image Generation and Editing with Text-Guided Diffusion Models",
+  "authors": [
+   "Alex Nichol",
+   "Prafulla Dhariwal",
+   "Aditya Ramesh",
+   "Pranav Shyam",
+   "Pamela Mishkin",
+   "Bob McGrew",
+   "Ilya Sutskever",
+   "Mark Chen"
+  ],
+  "first_author": "Nichol",
+  "year": 2021,
+  "venue": "preprint",
+  "arxiv": "2112.10741",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 60182,
+  "chars_total": 60182,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can guided diffusion models produce photorealistic text-conditional images, and which guidance (CLIP or classifier-free) works better?",
+ "hypothesis": "Classifier-free guidance will beat CLIP guidance on human-judged photorealism and caption match, because CLIP guidance exploits the evaluation CLIP model.",
+ "contributions": [
+  "3.5B text-conditional diffusion model with CF guidance preferred by humans over DALL-E",
+  "Comparison of CLIP guidance (noised CLIP) and CF guidance",
+  "Fine-tuning for text-guided inpainting",
+  "Release of a 300M filtered model (GLIDE filtered) and a noised ViT-B CLIP"
+ ],
+ "method": {
+  "summary": "A 3.5B ADM-style 64x64 diffusion model with a transformer text encoder plus a 1.5B 64->256 upsampler, trained on the DALL-E dataset; fine-tuned for CF guidance (20% empty captions) and for inpainting (extra 4 input channels). Compared with noised-CLIP guidance and DALL-E by FID and human Elo/win rates.",
+  "task": "text-conditional image generation and inpainting",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "DALL-E training dataset",
+    "role": "train",
+    "size": null,
+    "split": null,
+    "source": "same dataset as Ramesh et al. 2021; size not stated",
+    "preprocessing": null
+   },
+   {
+    "name": "GLIDE (filtered) dataset",
+    "role": "train",
+    "size": "several hundred million images",
+    "split": null,
+    "source": "internet, largely disjoint from CLIP and DALL-E data",
+    "preprocessing": "people, violent objects and hate symbols (swastika, confederate flag) filtered by SVMs on CLIP ViT-B/16 features at <1% false negative rate"
+   },
+   {
+    "name": "MS-COCO validation",
+    "role": "eval",
+    "size": "30,000 sampled prompts",
+    "split": "validation; entire validation set as FID reference",
+    "source": "MS-COCO",
+    "preprocessing": "center-crop (not squeeze)"
+   }
+  ],
+  "models": [
+   {
+    "name": "GLIDE base",
+    "role": "proposed",
+    "params": "3.5B (about 2.3B visual + about 1.2B text transformer)",
+    "architecture": "ADM ImageNet 64x64 architecture, width 512 channels, text tokens fed via final-token embedding as class embedding and concatenated into attention context",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "text encoder 24 residual blocks",
+    "hidden": "text encoder width 2048",
+    "heads": null,
+    "context": null,
+    "other": {
+     "resolution": "64x64"
+    }
+   },
+   {
+    "name": "GLIDE upsampler",
+    "role": "proposed",
+    "params": "1.5B",
+    "architecture": "ADM ImageNet upsampler, 384 base channels, text encoder width 1024",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": "1024 (text encoder)",
+    "heads": null,
+    "context": null,
+    "other": {
+     "resolution": "64->256"
+    }
+   },
+   {
+    "name": "Noised CLIP ViT-L",
+    "role": "proposed",
+    "params": null,
+    "architecture": "ViT, patch 4x4, 64x64 input, image encoder f(xt,t)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "fine_tune": "30K iterations on broader internet images"
+    }
+   },
+   {
+    "name": "GLIDE (filtered)",
+    "role": "proposed",
+    "params": "300M",
+    "architecture": "small version on filtered data; upsampler 192 base channels, 512 text encoder channels",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "DALL-E",
+    "role": "baseline",
+    "params": "12B",
+    "architecture": "autoregressive on dVAE codes",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "sampling": "temp 0.85 and 1.0, CLIP reranking best of 256 (Fig 5) or 512 (App G)"
+    }
+   }
+  ],
+  "training": {
+   "objective": "Lsimple noise-prediction MSE with learned variance (Nichol & Dhariwal 2021)",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "2048 (base), 512 (upsampler), 32K (noised CLIP)",
+   "steps": "2.5M iterations base; 1.6M upsampler; CLIP 390K + 30K finetune; GLIDE (filtered) 1.1M + 500K finetune; filtered upsampler 400K",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": "16-bit with traditional loss scaling",
+   "weight_decay": "0.0125 (final CLIP ViT-L only)",
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": "roughly equal to DALL-E training compute (no number)",
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "cf_finetune": "after pretraining, fine-tune with 20% of captions replaced by empty sequence",
+    "inpaint_finetune": "random regions erased; 4 extra input channels (second RGB set + mask) zero-initialised; upsampler gets full low-res image but only unmasked high-res",
+    "noised_clip": "same objective as CLIP, 50-50 mix of CLIP and DALL-E datasets, same noise schedule as base model"
+   }
+  },
+  "inference": {
+   "decoding": "diffusion sampling; CF guidance eps_hat = eps(xt|empty) + s*(eps(xt|c)-eps(xt|empty))",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "30,000 prompts for FID; no reranking or cherry-picking for GLIDE",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "cf_scale_best_human": "3.0",
+    "clip_scale_best_human": "2.0",
+    "cf_scale_best_FID": "1.5",
+    "small_300M_scale": "4.0 slightly preferred over 3.0",
+    "base_steps_samples": "150 (inpainting 100)",
+    "base_steps_eval": "250",
+    "upsampler_steps": "27 via 5 segments of 10,10,3,2,2 evenly spaced steps; found by sweeping FID on internal validation",
+    "unnoised_clip_comparison_gradient_scale": "15.0"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "FID",
+     "definition": "30k generated vs entire MS-COCO validation set, center-cropped",
+     "unit": "FID",
+     "higher_is_better": false
+    },
+    {
+     "name": "Elo (photorealism, caption)",
+     "definition": "Bradley-Terry style Elo fit from pairwise human wins; ties count half; sigma init 0; minimises -sum A_ij log(1/(1+10^((s_i-s_j)/400)))",
+     "unit": "Elo",
+     "higher_is_better": true
+    },
+    {
+     "name": "Win probability vs DALL-E",
+     "definition": "share of human pairwise comparisons won, ties half",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "CLIP score",
+     "definition": "E[s(f(image).g(caption))], s = CLIP logit scale 100, CLIP ViT-B/16",
+     "unit": "score",
+     "higher_is_better": true
+    },
+    {
+     "name": "Precision/Recall, IS",
+     "definition": "Kynkaanniemi 2019; Salimans 2016",
+     "unit": null,
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "unguided diffusion",
+    "CLIP guidance",
+    "DALL-E",
+    "XMC-GAN",
+    "LAFITE",
+    "AttnGAN",
+    "DM-GAN",
+    "DF-GAN",
+    "DM-GAN + CL",
+    "Blended Diffusion / PaintByWord++ (inpainting, qualitative)"
+   ],
+   "protocol": "Humans see two 256x256 images and pick better caption match or more photorealistic, or neither. 1,000 comparisons each (500 for guidance-scale sweeps). Number/identity of raters, payment and interface not stated. No significance tests or seeds reported."
+  },
+  "availability": {
+   "code": "https://github.com/openai/glide-text2im",
+   "weights": "only the small filtered 300M model and noised ViT-B CLIP",
+   "data": "not released"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.weight_decay",
+    "quote": "we trained a ViT-L with weight decay 0.0125",
+    "where": "Appendix B.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Human raters prefer GLIDE (classifier-free guidance) to DALL-E on photorealism.",
+   "kind": "measured",
+   "source": null,
+   "metric": "win rate vs DALL-E",
+   "value": "87",
+   "unit": "%",
+   "baseline_value": null,
+   "n": 1000,
+   "setup": "Introduction headline; GLIDE 3.5B with CF guidance vs DALL-E, MS-COCO captions, 256x256",
+   "quote": "preferred to those from DALL-E (Ramesh et al., 2021) 87% of the time when evalu-\nated for photorealism, and 69% of the time when evaluated\nfor caption similarity",
+   "table": null,
+   "note": "Matches Table 3 row 'DALL-E reranked, temp 0.85' (87% photorealism, 69% caption). Quote spans a line break in the cache.",
+   "where": "Introduction"
+  },
+  {
+   "claim": "Against DALL-E with no reranking at temp 1.0, GLIDE wins photorealism 91%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "win probability",
+   "value": "91",
+   "unit": "%",
+   "baseline_value": null,
+   "n": 1000,
+   "setup": "Table 3, no reranking, DALL-E temp 1.0",
+   "quote": null,
+   "table": "Table 3, row No reranking temp 1.0, column Photorealism",
+   "note": "Caption similarity 83% in same row; temp 0.85: 84% and 80%.",
+   "where": "Table 3"
+  },
+  {
+   "claim": "Against DALL-E reranked (temp 0.85), GLIDE wins caption similarity 69%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "win probability",
+   "value": "69",
+   "unit": "%",
+   "baseline_value": null,
+   "n": 1000,
+   "setup": "Table 3, DALL-E CLIP-reranked temp 0.85",
+   "quote": null,
+   "table": "Table 3, row DALL-E reranked temp 0.85, column Caption Similarity",
+   "note": "Photorealism 87%; temp 1.0: 89% and 71%.",
+   "where": "Table 3"
+  },
+  {
+   "claim": "Even with DALL-E reranked and GLIDE outputs passed through DALL-E's dVAE (blurred), GLIDE still wins, by smaller margins.",
+   "kind": "measured",
+   "source": null,
+   "metric": "win probability",
+   "value": "66",
+   "unit": "%",
+   "baseline_value": null,
+   "n": 1000,
+   "setup": "Table 3 last rows, temp 0.85 photorealism; caption 61%; temp 1.0: 72% and 63%",
+   "quote": null,
+   "table": "Table 3, row DALL-E reranked + GLIDE blurred, temp 0.85, column Photorealism",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Classifier-free guidance gets the best human Elo for photorealism (scale 3.0) versus CLIP guidance (scale 2.0) and unguided.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Elo photorealism",
+   "value": "82.7",
+   "unit": "Elo",
+   "baseline_value": "-73.2 (CLIP guidance), -88.6 (unguided)",
+   "n": 1000,
+   "setup": "MS-COCO validation prompts, 256x256, human eval",
+   "quote": null,
+   "table": "Table 1, row Classifier-free guidance, column Photorealism",
+   "note": "Caption Elo: CF 110.9, CLIP 29.3, unguided -106.2.",
+   "where": "Table 1"
+  },
+  {
+   "claim": "Zero-shot MS-COCO 256x256 FID of GLIDE with CF guidance scale 1.5.",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": "12.24",
+   "unit": "FID",
+   "baseline_value": "DALL-E ~28, LAFITE zero-shot 26.94",
+   "n": 30000,
+   "setup": "30k captions sampled, compared to entire validation set, center-cropped, CF scale 1.5, 250 diffusion steps",
+   "quote": "12.24",
+   "table": "Table 2, row GLIDE, column Zero-shot FID",
+   "note": "Trained-on-COCO baselines are better or similar: XMC-GAN 9.33, LAFITE 8.12 (not zero-shot).",
+   "where": "Table 2"
+  },
+  {
+   "claim": "Purging validation images similar to training images raises FID only slightly.",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": "12.89",
+   "unit": "FID",
+   "baseline_value": "12.24",
+   "n": null,
+   "setup": "MS-COCO validation subset reduced by 21%",
+   "quote": "We ﬁnd that our FID increases slightly from 12.24\nto 12.89 in this case",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.2"
+  },
+  {
+   "claim": "CLIP guidance raises CLIP score more than CF guidance, but humans disagree; authors hypothesise CLIP guidance finds adversarial examples for the evaluation CLIP model.",
+   "kind": "measured",
+   "source": null,
+   "metric": "qualitative (Fig 6c vs Table 1)",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "MS-COCO 64x64 sweep over guidance scales",
+   "quote": "We hypothesize that CLIP guidance is ﬁnding adversarial\nexamples for the evaluation CLIP model",
+   "table": null,
+   "note": "Hypothesis, not tested directly beyond human eval.",
+   "where": "Sec 5.2"
+  },
+  {
+   "claim": "CF guidance gives a larger Elo boost than scaling the model about 10x.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Elo",
+   "value": "133.0",
+   "unit": "Elo",
+   "baseline_value": "28.2 (300M, scale 4.0)",
+   "n": null,
+   "setup": "3.5B at scale 3.0 photorealism 133.0 vs 3.5B unguided -23.9; 300M scale 4.0 28.2 vs unguided -131.8",
+   "quote": "classiﬁer-free guidance gives a\nlarger Elo boost than scaling the model by roughly 10x",
+   "table": "Table 4, row 3.5B scale 3.0, column Photorealism",
+   "note": null,
+   "where": "Appendix C, Table 4"
+  },
+  {
+   "claim": "GLIDE matches DALL-E training compute with a much smaller model and no reranking.",
+   "kind": "measured",
+   "source": null,
+   "metric": "parameters",
+   "value": "3.5",
+   "unit": "B vs 12B",
+   "baseline_value": "12B",
+   "n": null,
+   "setup": "3.5B GLIDE (2.3B visual + 1.2B text encoder) vs DALL-E 12B",
+   "quote": "but with a much smaller model (3.5 billion vs. 12 billion\nparameters)",
+   "table": null,
+   "note": "Compute equality is stated as 'roughly'; no FLOP figure.",
+   "where": "Sec 5.2"
+  },
+  {
+   "claim": "Sampling latency of the unoptimised model.",
+   "kind": "measured",
+   "source": null,
+   "metric": "sampling time",
+   "value": "15",
+   "unit": "seconds per image",
+   "baseline_value": null,
+   "n": null,
+   "setup": "single A100 GPU",
+   "quote": "takes 15 seconds to sample one\nimage on a single A100 GPU",
+   "table": null,
+   "note": null,
+   "where": "Sec 7"
+  },
+  {
+   "claim": "Fine-tuning for CF guidance replaces 20% of captions with the empty sequence.",
+   "kind": "measured",
+   "source": null,
+   "metric": "caption drop rate",
+   "value": "20",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fine-tuning of base model after pretraining (not trained with dropout from scratch)",
+   "quote": "20% of text\ntoken sequences are replaced with the empty sequence",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2"
+  }
+ ],
+ "limits": [
+  "Fails on highly unusual objects or scenarios (Fig 8).",
+  "Slow: 15 s per image on one A100, far slower than GANs.",
+  "Optimizer, learning rate, hardware, dataset size and exact compute not stated.",
+  "Human eval details (raters, interface) not stated; no confidence intervals.",
+  "Filtered 300M model keeps and may amplify dataset biases (e.g. toys for girls, Western stereotypes); biases amplified by CF guidance.",
+  "Released filtered model still retains inpainting, with misuse potential.",
+  "Filter is calibrated to two US hate symbols only, Western bias.",
+  "Adversarial-example explanation for CLIP guidance is a hypothesis."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "classifier-free guidance",
+   "definition": "replace the label with a null label with fixed probability in training; at sampling extrapolate from the unconditional toward the conditional prediction by scale s >= 1",
+   "where": "Sec 2.3"
+  },
+  {
+   "term": "noised CLIP",
+   "definition": "CLIP models trained on noised images xt so gradients are correct during diffusion sampling",
+   "where": "Sec 2.4"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Diffusion models beat GANs on image synthesis (ADM)",
+   "year": 2021,
+   "arxiv": "2105.05233",
+   "relation": "extends",
+   "note": "ADM architecture and classifier guidance",
+   "quote": null
+  },
+  {
+   "work": "Classifier-free diffusion guidance",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Ho & Salimans, OpenReview qw8AKxfYbI",
+   "quote": null
+  },
+  {
+   "work": "Improved DDPM",
+   "year": 2021,
+   "arxiv": "2102.09672",
+   "relation": "uses-method",
+   "note": "learned variance",
+   "quote": null
+  },
+  {
+   "work": "Denoising Diffusion Probabilistic Models",
+   "year": 2020,
+   "arxiv": "2006.11239",
+   "relation": "uses-method",
+   "note": "Lsimple",
+   "quote": null
+  },
+  {
+   "work": "Zero-shot text-to-image generation (DALL-E)",
+   "year": 2021,
+   "arxiv": "2102.12092",
+   "relation": "baseline",
+   "note": "same dataset; human comparison",
+   "quote": null
+  },
+  {
+   "work": "CLIP",
+   "year": 2021,
+   "arxiv": "2103.00020",
+   "relation": "uses-method",
+   "note": "basis of noised CLIP and CLIP score",
+   "quote": null
+  },
+  {
+   "work": "Palette",
+   "year": 2021,
+   "arxiv": "2111.05826",
+   "relation": "related",
+   "note": "inpainting fine-tuning similar to Saharia et al.",
+   "quote": null
+  },
+  {
+   "work": "SDEdit",
+   "year": 2021,
+   "arxiv": "2108.01073",
+   "relation": "related",
+   "note": "used in Fig 4",
+   "quote": null
+  },
+  {
+   "work": "Blended Diffusion",
+   "year": 2021,
+   "arxiv": "2111.14818",
+   "relation": "baseline",
+   "note": "qualitative inpainting comparison, Fig 11",
+   "quote": null
+  },
+  {
+   "work": "LAFITE",
+   "year": 2021,
+   "arxiv": "2111.13792",
+   "relation": "baseline",
+   "note": "FID table",
+   "quote": null
+  },
+  {
+   "work": "XMC-GAN",
+   "year": 2021,
+   "arxiv": "2101.04702",
+   "relation": "baseline",
+   "note": "FID table",
+   "quote": null
+  },
+  {
+   "work": "MS-COCO",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "zero-shot evaluation",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 6",
+   "caption": "Comparing the diversity-fidelity trade-off of classifier-free guidance and CLIP guidance on MS-COCO 64 x 64.",
+   "page": 5,
+   "why": "Shows CLIP guidance wins CLIP score but loses on FID, motivating the human eval."
+  },
+  {
+   "figure": "Fig 7",
+   "caption": "Elo scores from human evaluations for finding the optimal guidance scales.",
+   "page": 5,
+   "why": "Guidance-scale sweeps by humans."
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Random image samples on MS-COCO prompts (XMC-GAN, DALL-E, GLIDE CLIP guid., GLIDE CF guid.).",
+   "page": 4,
+   "why": "Visual comparison without cherry-picking."
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Iteratively creating a complex scene using GLIDE.",
+   "page": 3,
+   "why": "Inpainting workflow."
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 2.3",
+   "snippet": "ˆϵθ(xt|c) = ϵθ(xt|∅) + s · (ϵθ(xt|c) −ϵθ(xt|∅))",
+   "verbatim": true
+  },
+  {
+   "where": "Sec 2.4",
+   "snippet": "ˆµθ(xt|c) = µθ(xt|c) + s · Σθ(xt|c)∇xt (f(xt) · g(c))",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Cached text is from the arXiv v3 PDF; equations are partly flattened.",
+  "No embedded instructions seen."
+ ]
+}

@@ -1,0 +1,648 @@
+{
+ "schema": 1,
+ "key": "2302.14045",
+ "pdf": "ai-engineering/08-multimodal-engineering/sources/huang-2023-language-not-all-you-need.pdf",
+ "bib": {
+  "title": "Language Is Not All You Need: Aligning Perception with Language Models",
+  "authors": [
+   "Shaohan Huang",
+   "Li Dong",
+   "Wenhui Wang",
+   "Yaru Hao",
+   "Saksham Singhal",
+   "Shuming Ma",
+   "Tengchao Lv",
+   "Lei Cui",
+   "Owais Khan Mohammed",
+   "Barun Patra",
+   "Qiang Liu",
+   "Kriti Aggarwal",
+   "Zewen Chi",
+   "Johan Bjorck",
+   "Vishrav Chaudhary",
+   "Subhojit Som",
+   "Xia Song",
+   "Furu Wei"
+  ],
+  "first_author": "Huang",
+  "year": 2023,
+  "venue": "preprint",
+  "arxiv": "2302.14045",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 70472,
+  "chars_total": 70472,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can a language model trained from scratch on web-scale interleaved text-image, image-caption and text data perceive images, follow instructions and learn in context across language and multimodal tasks?",
+ "hypothesis": "Aligning perception with LLMs gives zero-shot and few-shot multimodal ability and cross-modal transfer, including better visual commonsense than a text-only LLM.",
+ "contributions": [
+  "KOSMOS-1, an MLLM trained from scratch on text, image-caption pairs and interleaved image-text data",
+  "Evaluation of zero-shot, few-shot and multimodal chain-of-thought prompting across language, perception-language and vision tasks",
+  "Evidence of cross-modal transfer in both directions",
+  "A 50-example Raven IQ test dataset for nonverbal reasoning"
+ ],
+ "method": {
+  "summary": "A 24-layer MAGNETO Transformer decoder (about 1.3B) with xPos, fed by CLIP ViT-L/14 image embeddings through a Resampler, trained with next-token prediction on text only tokens' loss, for 300k steps. Then continued with language-only instruction tuning. Evaluated by prompting only.",
+  "task": "next-token multimodal language modeling; zero/few-shot evaluation",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Text corpora (subset of The Pile, CC-2020-50, CC-2021-04, CC-Stories, RealNews)",
+    "role": "pretrain",
+    "size": "about 360B tokens total training across all sources; per-source tokens in Table 20 (e.g. CC-2021-04 82.6B)",
+    "split": null,
+    "source": "The Pile (excl. GitHub, arXiv, Stack Exchange, PubMed Central), Common Crawl",
+    "preprocessing": "deduplicated and near-duplicates purged, filtered to exclude downstream task data"
+   },
+   {
+    "name": "Image-caption pairs",
+    "role": "pretrain",
+    "size": "LAION-2B ~2B, LAION-400M 400M, COYO-700M 700M, Conceptual Captions 15M",
+    "split": null,
+    "source": "English LAION-2B, LAION-400M, COYO-700M, CC3M/CC12M",
+    "preprocessing": "Conceptual Captions pairs with tags such as <PERSON> discarded"
+   },
+   {
+    "name": "Interleaved image-text",
+    "role": "pretrain",
+    "size": "about 71M web pages from 2B",
+    "split": null,
+    "source": "Common Crawl snapshot",
+    "preprocessing": "English only; pages without images dropped; images <64x64 or single-colored dropped; gibberish heuristics; max 5 images per doc; half of single-image docs randomly dropped"
+   },
+   {
+    "name": "Instruction data",
+    "role": "train",
+    "size": "Unnatural Instructions 68,478 triplets + 54k FLANv2 examples",
+    "split": null,
+    "source": "Unnatural Instructions, FLANv2",
+    "preprocessing": "instructions and inputs not in loss"
+   },
+   {
+    "name": "COCO Caption Karpathy test",
+    "role": "eval",
+    "size": "5,000 test images (113,287/5,000/5,000 split)",
+    "split": "test",
+    "source": "MS COCO",
+    "preprocessing": null
+   },
+   {
+    "name": "Flickr30k Karpathy test",
+    "role": "eval",
+    "size": null,
+    "split": "test",
+    "source": "Flickr30k",
+    "preprocessing": null
+   },
+   {
+    "name": "VQAv2, VizWiz",
+    "role": "eval",
+    "size": null,
+    "split": "test-dev",
+    "source": "VQAv2, VizWiz",
+    "preprocessing": null
+   },
+   {
+    "name": "Raven IQ test (IQ50)",
+    "role": "eval",
+    "size": "50 examples, 6 candidates each",
+    "split": null,
+    "source": "collected from four websites; https://aka.ms/kosmos-iq50",
+    "preprocessing": null
+   },
+   {
+    "name": "CUB-style bird set",
+    "role": "eval",
+    "size": "3 binary groups, 20 images per category",
+    "split": null,
+    "source": "one group from CUB, two from websites",
+    "preprocessing": null
+   },
+   {
+    "name": "Rendered SST-2 / HatefulMemes / WebSRC / ImageNet / RelativeSize / MemoryColor / ColorTerms / 7 language tasks",
+    "role": "eval",
+    "size": "RelativeSize 486 pairs from 41 objects; ImageNet 50k val",
+    "split": "Rendered SST-2 test, HatefulMemes validation",
+    "source": "public",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "KOSMOS-1",
+    "role": "proposed",
+    "params": "about 1.6B total (about 1.3B MLLM component)",
+    "architecture": "MAGNETO Transformer causal decoder, xPos, CLIP ViT-L/14 encoder + Resampler",
+    "init_from": "trained from scratch (CLIP ViT-L/14 pretrained, all frozen except last layer)",
+    "tokenizer": "SentencePiece",
+    "vocab": "64,007",
+    "layers": "24",
+    "hidden": "2,048",
+    "heads": "32",
+    "context": "2,048",
+    "other": {
+     "ffn": "8,192",
+     "soft_tokens_V": "64",
+     "activation": "GeLU",
+     "image_res": "224x224",
+     "clip_features": "1,024"
+    }
+   },
+   {
+    "name": "LLM baseline",
+    "role": "baseline",
+    "params": null,
+    "architecture": "language model trained on same text corpora, same setup",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Flamingo-3B / 9B, METALM, GIT, CLIP, Frozen, ZeroCap, VLKD, FewVLM, VALM",
+    "role": "baseline",
+    "params": "Flamingo 3B/9B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "next-token prediction, maximize log-likelihood; only discrete tokens (text) in the loss",
+   "optimizer": "AdamW (Section 3.2) / Adam (Table 18), beta=(0.9,0.98), eps 1e-6",
+   "lr": "2e-4 (instruction tuning 2e-5)",
+   "lr_schedule": "linear decay to 0",
+   "warmup": "375 steps",
+   "batch_size": "1.2M tokens (0.5M text, 0.5M image-caption, 0.2M interleaved); Table 18: 256 text, 6,144 image-caption, 128 interleaved",
+   "steps": "300k (instruction tuning 10,000)",
+   "epochs": null,
+   "tokens": "about 360 billion",
+   "seq_len": "2,048",
+   "precision": null,
+   "weight_decay": "0.01",
+   "dropout": "0.1 (attention dropout 0.1)",
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "instruction_tuning_batches": "instruction 256, text 32, image-caption 768, interleaved 16; warmup 375",
+    "data_format": "full-sentence packing"
+   }
+  },
+  "inference": {
+   "decoding": "captioning beam size 5; VQA greedy; ImageNet beam size 2",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "few-shot demonstrations randomly sampled from training set; number of runs/seeds not stated",
+   "prompting": "zero-shot, few-shot k=2,4,8 (vision-language), k=0,1,4 (language)",
+   "retrieval": null,
+   "parameters": {},
+   "other": {
+    "image_resolution": "224x224",
+    "imagenet_constraint": "constrained decoding uses the 1k category names"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "CIDEr/SPICE",
+     "definition": "COCOEvalCap",
+     "unit": "score",
+     "higher_is_better": true
+    },
+    {
+     "name": "VQA accuracy",
+     "definition": "VQAv2 normalization rules, open-ended",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Accuracy / ROC AUC / EM / F1 / top-1",
+     "definition": "per task",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Flamingo-3B/9B",
+    "METALM",
+    "LLM trained on same text",
+    "CLIP ViT",
+    "GIT",
+    "VALM"
+   ],
+   "protocol": "single reported number per cell; no seeds, variance or significance tests stated"
+  },
+  "availability": {
+   "code": "https://github.com/microsoft/unilm",
+   "weights": null,
+   "data": "Raven IQ50 at https://aka.ms/kosmos-iq50"
+  },
+  "prompts": [
+   {
+    "purpose": "captioning",
+    "text": "An image of",
+    "where": "4.1.1"
+   },
+   {
+    "purpose": "VQA",
+    "text": "Question: {question} Answer: {answer}",
+    "where": "4.1.1"
+   },
+   {
+    "purpose": "Rendered SST-2",
+    "text": "Question: what is the sentiment of the opinion? Answer: {answer}",
+    "where": "4.3.1"
+   },
+   {
+    "purpose": "HatefulMemes",
+    "text": "Question: does this picture contain real hate speech? Answer: {answer}",
+    "where": "4.3.1"
+   },
+   {
+    "purpose": "Multimodal CoT rationale",
+    "text": "Introduce this picture in detail:",
+    "where": "4.5.1"
+   },
+   {
+    "purpose": "Multimodal CoT answer",
+    "text": "{rationale} Question: what is the sentiment of the opinion? Answer: {answer}",
+    "where": "4.5.1"
+   },
+   {
+    "purpose": "ImageNet",
+    "text": "The photo of the",
+    "where": "4.6.1"
+   },
+   {
+    "purpose": "CUB descriptions",
+    "text": "Question:what is the name of {general category} in the picture? Answer:",
+    "where": "4.7.1"
+   },
+   {
+    "purpose": "Raven IQ",
+    "text": "Here are three/four/eight images: ... The following image is: ... Is it correct?",
+    "where": "4.2.1"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Zero-shot Flickr30k captioning CIDEr beats Flamingo-3B/9B",
+   "kind": "measured",
+   "source": null,
+   "metric": "CIDEr",
+   "value": 67.1,
+   "unit": null,
+   "baseline_value": 61.5,
+   "n": null,
+   "setup": "Flickr30k test, zero-shot, KOSMOS-1 1.6B; Flamingo prompted with two text-only examples",
+   "quote": "our model achieves a CIDEr score of 67.1 on the Flickr30k dataset, compared to 60.6 and 61.5 for the Flamingo-3B and Flamingo-9B models",
+   "note": null,
+   "where": "4.1.2"
+  },
+  {
+   "claim": "Zero-shot COCO captioning CIDEr",
+   "kind": "measured",
+   "source": null,
+   "metric": "CIDEr",
+   "value": 84.7,
+   "unit": null,
+   "baseline_value": 79.4,
+   "n": null,
+   "setup": "COCO Karpathy test, zero-shot",
+   "table": "Table 2, row KOSMOS-1 (1.6B), column COCO CIDEr",
+   "note": "Baseline is Flamingo-9B. Table 14 prints the no-instruction-tuning COCO as 87.6, higher than 84.7.",
+   "where": "Table 2"
+  },
+  {
+   "claim": "Few-shot COCO captioning k=4",
+   "kind": "measured",
+   "source": null,
+   "metric": "CIDEr",
+   "value": 101.7,
+   "unit": null,
+   "baseline_value": 93.1,
+   "n": null,
+   "setup": "COCO Karpathy test, k=4",
+   "table": "Table 3, row KOSMOS-1 (1.6B), column COCO k=4",
+   "note": "k=8 drops to 96.7; Flamingo-9B k=8 is 99.0",
+   "where": "Table 3"
+  },
+  {
+   "claim": "Zero-shot VQAv2 is competitive with Flamingo",
+   "kind": "measured",
+   "source": null,
+   "metric": "VQA acc",
+   "value": 51.0,
+   "unit": null,
+   "baseline_value": 51.8,
+   "n": null,
+   "setup": "VQAv2 test-dev, zero-shot",
+   "table": "Table 4, row KOSMOS-1 (1.6B), column VQAv2",
+   "note": "baseline Flamingo-9B",
+   "where": "Table 4"
+  },
+  {
+   "claim": "Zero-shot VizWiz",
+   "kind": "measured",
+   "source": null,
+   "metric": "VQA acc",
+   "value": 29.2,
+   "unit": null,
+   "baseline_value": 28.9,
+   "n": null,
+   "setup": "VizWiz test-dev, zero-shot",
+   "table": "Table 4, row KOSMOS-1 (1.6B), column VizWiz",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "Few-shot VQAv2 trails Flamingo",
+   "kind": "measured",
+   "source": null,
+   "metric": "VQA acc",
+   "value": 51.8,
+   "unit": null,
+   "baseline_value": 56.3,
+   "n": null,
+   "setup": "VQAv2 k=4",
+   "table": "Table 5, row KOSMOS-1 (1.6B), column VQAv2 k=4",
+   "note": "Flamingo-9B k=4 is 56.3",
+   "where": "Table 5"
+  },
+  {
+   "claim": "Raven IQ zero-shot accuracy barely above random",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 22,
+   "unit": "%",
+   "baseline_value": 17,
+   "n": null,
+   "setup": "50 Raven examples, 6 candidates",
+   "quote": "Random Choice\n17%\nKOSMOS-1\n22%\nw/o language-only instruction tuning\n26%",
+   "table": "Table 6, row KOSMOS-1",
+   "note": "Without instruction tuning 26%; text says 5.3% and 9.3% improvement over random. n=50 so differences are a few examples.",
+   "where": "Table 6"
+  },
+  {
+   "claim": "Rendered SST-2 zero-shot accuracy",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 67.1,
+   "unit": "%",
+   "baseline_value": 64.0,
+   "n": null,
+   "setup": "Rendered SST-2 test, no OCR",
+   "quote": "a test accuracy of 67.1% for the Rendered SST-2 test set",
+   "note": "baseline CLIP ViT-L/14",
+   "where": "4.3.2"
+  },
+  {
+   "claim": "HatefulMemes ROC AUC",
+   "kind": "measured",
+   "source": null,
+   "metric": "ROC AUC",
+   "value": 63.9,
+   "unit": "%",
+   "baseline_value": 63.3,
+   "n": null,
+   "setup": "HatefulMemes validation, zero-shot",
+   "quote": "KOSMOS-1 achieves a ROC AUC of 63.9% for the HatefulMemes validation",
+   "note": null,
+   "where": "4.3.2"
+  },
+  {
+   "claim": "WebSRC: image plus text beats text-only LLM",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 31.3,
+   "unit": null,
+   "baseline_value": 17.9,
+   "n": null,
+   "setup": "WebSRC zero-shot",
+   "table": "Table 8, row KOSMOS-1 (using extracted text), column F1",
+   "note": "EM 15.8 vs 7.6; without extracted text 3.8/10.6",
+   "where": "Table 8"
+  },
+  {
+   "claim": "Multimodal CoT raises Rendered SST-2",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 72.9,
+   "unit": null,
+   "baseline_value": 67.1,
+   "n": null,
+   "setup": "Rendered SST-2, rationale then answer",
+   "quote": "multimodal chain-of-thought prompting achieves a score of 72.9, which is 5.8 points higher than the standard prompting",
+   "note": null,
+   "where": "4.5.2"
+  },
+  {
+   "claim": "ImageNet zero-shot top-1 constrained decoding",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1",
+   "value": 38.1,
+   "unit": null,
+   "baseline_value": 33.5,
+   "n": null,
+   "setup": "ImageNet val, beam 2, 1k names constrain decoding",
+   "table": "Table 10, row KOSMOS-1, column With Constraints",
+   "note": "unconstrained 4.0 vs GIT 1.9",
+   "where": "Table 10"
+  },
+  {
+   "claim": "Verbal descriptions raise bird classification",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 90.0,
+   "unit": null,
+   "baseline_value": 61.7,
+   "n": null,
+   "setup": "3 binary groups, 20 images/category, zero-shot",
+   "table": "Table 12, row With Descriptions",
+   "note": null,
+   "where": "Table 12"
+  },
+  {
+   "claim": "Language-only instruction tuning improves VQAv2 and Flickr30k",
+   "kind": "measured",
+   "source": null,
+   "metric": "VQAv2 accuracy",
+   "value": 51.0,
+   "unit": null,
+   "baseline_value": 46.7,
+   "n": null,
+   "setup": "ablation, KOSMOS-1 with vs without",
+   "quote": "boosts our model's performance by 1.9 points on Flickr30k, 4.3 points on VQAv2, and 1.3 points on VizWiz",
+   "table": "Table 14",
+   "note": "Text quote uses typographic apostrophe; COCO CIDEr falls with tuning (84.7 vs 87.6)",
+   "where": "4.9.1"
+  },
+  {
+   "claim": "KOSMOS-1 beats text-only LLM on MemoryColor",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 76.1,
+   "unit": null,
+   "baseline_value": 61.4,
+   "n": null,
+   "setup": "zero-shot, text-only input, no images",
+   "table": "Table 16, row KOSMOS-1, column MEMORYCOLOR",
+   "note": "RelativeSize 94.2 vs 92.7; ColorTerms 73.1 vs 63.4",
+   "where": "Table 16"
+  },
+  {
+   "claim": "Language tasks: average comparable to LLM",
+   "kind": "measured",
+   "source": null,
+   "metric": "average accuracy",
+   "value": 62.2,
+   "unit": null,
+   "baseline_value": 61.8,
+   "n": null,
+   "setup": "7 language tasks (StoryCloze, HellaSwag, Winograd, Winogrande, PIQA, BoolQ, CB, COPA), k=4",
+   "table": "Table 13, row Average, KOSMOS-1 few-shot",
+   "note": "LLM leads zero-shot (61.1 vs 60.5) and one-shot (61.2 vs 60.9); text says 'eight language tasks'",
+   "where": "Table 13"
+  }
+ ],
+ "limits": [
+  "Only a 1.6B model; scaling and speech left as future work (Section 5).",
+  "Raven IQ set is 50 examples and the model is near chance (22% vs 17%); authors note a large gap to adults.",
+  "No seeds, variance or significance tests; compute and hardware not stated.",
+  "Few-shot VQAv2 and k=8 captioning do not improve and trail Flamingo-9B.",
+  "Flamingo baselines are prompted with text-only examples in zero-shot, so comparisons are not like-for-like.",
+  "Weights not released in paper; 224x224 image resolution."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "MLLM",
+   "definition": "Multimodal Large Language Model that can perceive general modalities, learn in context and follow instructions",
+   "where": "Abstract"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Language models are general-purpose interfaces (METALM)",
+   "year": 2022,
+   "arxiv": "2206.06336",
+   "relation": "extends",
+   "note": "follows METALM to train from scratch",
+   "quote": null
+  },
+  {
+   "work": "Flamingo",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "main comparison; Resampler used",
+   "quote": null
+  },
+  {
+   "work": "MAGNETO",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "backbone and init",
+   "quote": null
+  },
+  {
+   "work": "xPos",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "relative position encoding",
+   "quote": null
+  },
+  {
+   "work": "TorchScale",
+   "year": 2022,
+   "arxiv": "2211.13184",
+   "relation": "uses-method",
+   "note": "implementation library",
+   "quote": null
+  },
+  {
+   "work": "CLIP ViT-L/14",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "vision encoder",
+   "quote": null
+  },
+  {
+   "work": "BLIP-2",
+   "year": 2023,
+   "arxiv": "2301.12597",
+   "relation": "related",
+   "note": "cited as concurrent multimodal input work",
+   "quote": null
+  },
+  {
+   "work": "Unnatural Instructions; FLANv2",
+   "year": 2023,
+   "arxiv": "2301.13688",
+   "relation": "uses-data",
+   "note": "instruction tuning",
+   "quote": null
+  },
+  {
+   "work": "LAION-2B, LAION-400M, COYO-700M, Conceptual Captions, The Pile",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "pretraining data",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 4",
+   "caption": "Top: An example of Raven IQ test. Bottom: Evaluate KOSMOS-1 on Raven IQ test.",
+   "page": 10,
+   "why": "shows scoring by P(Yes) per candidate"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Multimodal Chain-of-Thought prompting enables KOSMOS-1 to generate a rationale first",
+   "page": 13,
+   "why": "two-step prompt"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Venue not printed (preprint v2, 1 Mar 2023).",
+  "Optimizer printed as AdamW in text and Adam in Table 18.",
+  "Text says 'eight language tasks' and Table 13 lists eight rows; ok.",
+  "Figure 1 embedded text; no instructions found."
+ ]
+}

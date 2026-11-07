@@ -1,19 +1,553 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2304.10592",
  "pdf": "ai-engineering/08-multimodal-engineering/sources/zhu-2023-minigpt-4.pdf",
  "bib": {
   "title": "MiniGPT-4: Enhancing Vision-Language Understanding with Advanced Large Language Models",
+  "authors": [
+   "Deyao Zhu",
+   "Jun Chen",
+   "Xiaoqian Shen",
+   "Xiang Li",
+   "Mohamed Elhoseiny"
+  ],
   "first_author": "Zhu",
   "year": 2023,
-  "venue": "ICLR 2024",
+  "venue": "preprint",
   "arxiv": "2304.10592",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-04",
-  "session": "97b4134b-decf-4866-ae85-c6872cbbba19"
+  "at": "2026-11-07",
+  "chars_read": 59071,
+  "chars_total": 59071,
+  "engine": "pymupdf",
+  "skipped": null
  },
- "legacy_report": "SOURCE: \"MiniGPT-4: Enhancing Vision-Language Understanding with Advanced Large Language Models\", Deyao Zhu*, Jun Chen*, Xiaoqian Shen, Xiang Li, Mohamed Elhoseiny (KAUST). Preprint, arXiv:2304.10592v2, 2 Oct 2023.\n\nCOVERAGE: I read all 75,247 of 75,247 characters: the body, Tables 1-6, Appendix A.1-A.4 and the references (skimmed). Nothing was skipped. The extraction repeats the Fig. 4/13/14 panel text several times, and those panels are sample outputs only.\n\nANSWER TO THE 13B QUESTION: \"MiniGPT-4 tunes 13B\" is wrong for this paper. The LLM is frozen in both stages. The only thing trained is one linear projection layer. The paper never gives Vicuna's size: a search for \"13B\", \"7B\" and \"13 B\" finds nothing. It also never gives a count of trainable parameters. So the \"13B\" in the survey cannot be checked against this source. At most it describes the size of the frozen LLM, never the number of tuned parameters. The note's \"trains only a linear projection\" is correct. One caveat for both claims: an appendix ablation (A.2) unfreezes Vicuna with LoRA, but that is a variant, not MiniGPT-4.\n\nCLAIMS\n- claim: Only the linear projection is trained. The ViT, the Q-Former and Vicuna stay frozen in both stages.\n  number: one layer\n  setup: BLIP-2 vision stack (EVA-CLIP ViT-G/14 + Q-Former) feeding Vicuna, which is built on LLaMA\n  quote: \"MiniGPT-4 adds a single projection layer to align the encoded visual features with the Vicuna language model and freezes all the other vision and language components.\" / \"both the pretrained vision encoder and the LLM remain frozen, with only the linear projection layer being pretrained.\" / Fig. 1: \"MiniGPT-4 only requires training the linear projection layer to align the visual features with the Vicuna.\"\n  where: p.2 (~char 4600), p.4 §3.1, Fig. 1 caption p.2\n- claim: Stage 1 pretraining uses about 5M caption pairs, 20k steps, 10 hours on 4 A100s.\n  number: 20,000 steps, batch 256, ~5M pairs, ~10 h, 4x A100 80GB\n  setup: Conceptual Captions + SBU + LAION\n  quote: \"Our model undergoes 20,000 training steps with a batch size of 256, covering approximately 5 million image-text pairs. The entire process takes about 10 hours to complete, utilizing 4 A100 (80GB) GPUs.\"\n  where: p.4 §3.1\n- claim: Stage 2 finetuning takes 400 steps and 7 minutes on one GPU.\n  number: 400 steps, batch 12, ~7 min, 1x A100\n  setup: the 3,500 curated pairs inside a conversational template\n  quote: \"only requiring a mere 400 training steps with a batch size of 12, which takes around 7 minutes with a single A100 GPU.\"\n  where: p.5 §3.3\n- claim: The curated set is about 3,500 of 5,000 machine-generated descriptions. The stage-1 model wrote them, ChatGPT repaired them, then hard-coded rules and a human pass filtered them.\n  number: ~3,500 / 5,000; extension trigger at 80 tokens\n  setup: 5,000 random Conceptual Captions images\n  quote: \"To identify incomplete sentences, we examine whether the generated sentence exceeds 80 tokens. If it does not, we incorporate an additional prompt, ###Human: Continue ###Assistant:\" / \"We randomly select 5,000 images from the Conceptual Caption dataset\" / \"we first identified several frequently shown errors (“I’m sorry I made a mistake... ”, or “I apologize for that ... ” ) and then hard-coded rules to automatically filter them out. We also manually refine the generated captions by eliminating redundant words or sentences that ChatGPT fails to detect. Finally, only approximately 3,500 out of 5,000 image-text pairs satisfy our requirement\"\n  where: p.4-5 §3.2\n- claim: Stage 2 cuts failure rates on detailed captions and poems from about a third to 1-2%.\n  number: 35% to 2% (caption); 32% to 1% (poem)\n  setup: 100 random COCO test images, failures counted by hand\n  quote: \"Before stage-2 35% 32% / After stage-2 2% 1%\" (Table 3)\n  where: p.7 Table 3; §4.3 p.8\n- claim: Captions trained on short pairs only come out degenerate. The paper blames the noise in raw pairs and the gap between caption style and LLM style.\n  number: none\n  setup: stage-1-only model\n  quote: \"we have observed instances where it produces incoherent linguistic outputs, such as repetitive words or sentences, fragmented sentences, or irrelevant content.\" / \"The presence of underlying noise in raw image-text pairs can lead to subpar language outputs.\"\n  where: p.4 §3.1; p.2\n- claim: On advanced tasks judged by humans, MiniGPT-4 meets 65 of 100 requests. BLIP-2 meets 5.\n  number: 65/100 vs 5/100 (memes 8/25, recipes 18/25, ads 19/25, poems 20/25)\n  setup: 100 images, 25 per task, judged by human evaluators\n  quote: \"BLIP-2 0/25 4/25 1/25 0/25 5/100 / MiniGPT-4 8/25 18/25 19/25 20/25 65/100\"\n  where: p.6 Table 1\n- claim: On COCO captions judged by ChatGPT for coverage, MiniGPT-4 scores 66.2% and BLIP-2 scores 27.5%.\n  number: 3310/5000 vs 1376/5000\n  setup: one randomly chosen ground-truth caption per image; ChatGPT answers yes/no on whether the caption covers all objects and relations\n  quote: \"With a success rate of 66.2%, MiniGPT-4 is considerably more accurate than BLIP-2, which achieves only 27.5%.\"\n  where: p.7 Table 2; prompt in A.3\n- claim: Longer descriptions hallucinate more (CHAIRi).\n  number: BLIP-2 1.3 (6.5 words); short 7.2 (28.8); long 9.6 (175)\n  setup: CHAIRi, two prompts that control output length\n  quote: \"Blip-2 1.3 6.5 / MiniGPT-4 (short) 7.2 28.8 / MiniGPT-4 (long) 9.6 175\" / \"Hallucination in detailed image descriptions is still an unresolved issue.\"\n  where: p.8 Table 5; §4.5 p.9\n- claim: MiniGPT-4 trails BLIP-2 on standard VQA. Unfreezing Vicuna with LoRA plus VQA data closes the GQA gap.\n  number: AOK-VQA/GQA: BLIP-2 80.2/42.4 (129M pairs); MiniGPT-4 58.2/32.2 (5M); Finetune Vicuna 67.2/43.5\n  setup: A-OKVQA multi-choice, GQA; the LoRA variant adds VQAv2/OKVQA/A-OKVQA data in stage 2\n  quote: \"we simply unfreeze the LLM using LoRA (Hu et al., 2021) and incorporate more training data from the VQAv2, OKVQA, and A-OKVQA datasets during the second finetuning stage.\" / \"MiniGPT-4 (Finetune Vicuna) 5M image-text pairs 67.2 43.5\"\n  where: p.14 A.2, Table 6\n- claim: Neither a deeper projector nor tuning the Q-Former helps. Dropping the Q-Former changes results little.\n  number: AOK-VQA/GQA: base 58.2/32.2; w/o Q-Former 56.9/33.4; 3 layers 49.7/31.0; +FT Q-Former 52.1/28.0\n  setup: all variants trained the same way\n  quote: \"This indicates a single projection layer is sufficient to align the vision encoder and the large language model in our limited training data setting.\"\n  where: p.8 Table 4; §4.4 p.9\n- claim: The stage-2 data matters only with a strong LLM, and its source matters too. BLIP-2 (FlanT5 XXL) finetuned on it still gives short answers. Localized Narratives in its place produces monotonous output.\n  number: none (qualitative)\n  setup: BLIP-2 FT; MiniGPT-4 LocNa\n  quote: \"BLIP-2’s relatively weaker language model FlanT5 XXL benefits less from such a small dataset\" / \"The performance gap may be due to the monotonous and repeated image descriptions in Localized Narratives.\"\n  where: p.8-9 §4.3\n- claim: In stage 2 the loss skips the prompt tokens.\n  number: none\n  quote: \"we do not calculate the regression loss for this specific text-image prompt.\"\n  where: p.5 §3.3\n\nLIMITS: The authors concede hallucination (Fig. 6 shows tablecloths that are not in the image), weak spatial grounding (\"fails to identify the location of the windows\"; their suggested fix is RefCOCO or Visual Genome), and below-par standard VQA (\"lags behind BLIP-2 by a reasonable margin\"). What the paper does not show:\n- It never states the Vicuna size, the trainable parameter count, the learning rate or the optimiser.\n- Table 1 uses only 100 images, and the paper does not say how many human judges there were or whether they agreed.\n- Tables 2 and A.3 rely on ChatGPT as the judge, with one reference caption per image.\n- Table 3 failure counts are by hand on 100 images, with no definition of what counts as a failure.\n- \"Emergent abilities\" are argued mostly from qualitative examples.\n- The 3,500 pairs are the model's own outputs repaired by ChatGPT, so they are distillation and self-training, not human labels. Their quality depends on ChatGPT plus an unspecified manual pass.\n- It is dated: the comparisons are against BLIP-2 and Flan-T5 from early 2023.\n\nBUILDS ON: BLIP-2 (Li et al., 2023) for the ViT and Q-Former; EVA (Fang et al., 2022) for ViT-G/14; Vicuna (Chiang et al., 2023) on LLaMA (Touvron et al., 2023); Frozen (Tsimpoukelli et al., 2021) and VisualGPT (Chen et al., 2022) for a frozen LM as decoder; Flamingo (Alayrac et al., 2022); InstructGPT (Ouyang et al., 2022) as the analogy for stage 2; LoRA (Hu et al., 2021); CHAIR (Rohrbach et al., 2018); Localized Narratives (Pont-Tuset et al., 2020); data from CC (Sharma et al., 2018; Changpinyo et al., 2021), SBU (Ordonez et al., 2011) and LAION-400M (Schuhmann et al., 2021).\n\nCODE (prompts, verbatim):\n- Generation prompt, p.4 §3.2: \"###Human: <Img><ImageFeature></Img>Describe this image in detail. Give as many details as possible. Say everything you see. ###Assistant:\"\n- ChatGPT repair prompt, p.4 §3.2: \"Fix the error in the given paragraph. Remove any repeating sentences, meaningless characters, not English sentences, and so on. Remove unnecessary repetition. Rewrite any incomplete sentences. Return directly the results without explanation. Return directly the input paragraph if it is already correct without explanation.\"\n- Stage-2 template, p.5 §3.3: \"###Human: <Img><ImageFeature></Img><Instruction>###Assistant:\"\n\nFIGURES:\n- Fig. 1 (p.2), \"The architecture of MiniGPT-4 ... MiniGPT-4 only requires training the linear projection layer\". It shows at a glance what is frozen and what is trained.\n- Fig. 5 (p.8), \"MiniGPT-4 before second-stage fine-tuning fails to output completed texts.\" A before/after pair that makes the data-quality point concrete for notes/02.\n- Fig. 6 (p.8), \"MiniGPT-4 hallucinates unexisting tablecloths and can't locate the windows correctly.\" Both admitted failure modes in one image.\n- Fig. 4 (p.7), the ablation across BLIP-2, BLIP-2 FT, LocNa, No Q-Former and the full model. It shows the BLIP-2 FT \"<unk>\" output and the repetitive LocNa output.\n\nPROBLEMS: Words in the sample-output figures are run together (\"Theimageshowsabusy...\"). Fig. 4/13/14 panel text is extracted several times. The Fig. 7 caption reads \"Advertisement promotion\" but the panel holds the meme example; this is a labelling error in the source. \"Table 6\" carries no AOK-VQA split label beyond \"(multi-choice)\" in the prose. The PDF contains no embedded instructions.\n\nSource path: /Users/ramsey-wise/workspace/learn-ai-engineering/ai-engineering/08-multimodal-engineering/sources/zhu-2023-minigpt-4.pdf"
+ "type": "empirical",
+ "question": "Does aligning a frozen visual encoder with a frozen advanced LLM (Vicuna) through one projection layer reproduce GPT-4-style vision-language abilities?",
+ "hypothesis": "GPT-4's multimodal abilities stem from using a more advanced LLM; aligning visual features properly with such an LLM yields them.",
+ "contributions": [
+  "Aligning visual features with Vicuna gives advanced vision-language abilities comparable to GPT-4 demos",
+  "Training only one projection layer suffices, about 10 hours on 4 A100",
+  "Short caption pairs alone give unnatural output; a small detailed-description set in stage 2 fixes it"
+ ],
+ "method": {
+  "summary": "MiniGPT-4 connects BLIP-2's EVA-CLIP ViT-G/14 and Q-Former to Vicuna via one linear layer; only that layer trains. Stage 1 trains on about 5M caption pairs; stage 2 finetunes on 3,500 self-generated, ChatGPT-repaired, hand-checked detailed descriptions in a conversational template.",
+  "task": "vision-language alignment / visual chat",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Conceptual Captions + SBU + LAION combined",
+    "role": "train",
+    "size": "approximately 5 million image-text pairs",
+    "split": null,
+    "source": "Changpinyo 2021; Sharma 2018; Ordonez 2011; Schuhmann 2021",
+    "preprocessing": null
+   },
+   {
+    "name": "Curated detailed descriptions",
+    "role": "train",
+    "size": "approximately 3,500 pairs (from 5,000)",
+    "split": null,
+    "source": "5,000 random Conceptual Captions images, described by the stage-1 model, repaired by ChatGPT, filtered by hard-coded rules and manually",
+    "preprocessing": "Generation continued with '###Human: Continue ###Assistant:' if output under 80 tokens"
+   },
+   {
+    "name": "Own advanced-ability set",
+    "role": "eval",
+    "size": "100 images, 25 per task",
+    "split": null,
+    "source": "collected by authors",
+    "preprocessing": null
+   },
+   {
+    "name": "COCO captions",
+    "role": "eval",
+    "size": "5000 images (Table 2); 100 test images for failure counts",
+    "split": "test",
+    "source": "COCO",
+    "preprocessing": "one random ground-truth caption as reference"
+   },
+   {
+    "name": "A-OKVQA (multi-choice), GQA",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Schwenk 2022; Hudson & Manning 2019",
+    "preprocessing": null
+   },
+   {
+    "name": "Localized Narratives",
+    "role": "train",
+    "size": null,
+    "split": null,
+    "source": "Pont-Tuset 2020; ablation replacing stage-2 data",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Vicuna",
+    "role": "base",
+    "params": null,
+    "architecture": "decoder LLM built on LLaMA",
+    "init_from": "LLaMA",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "frozen": "both stages",
+     "note": "size not stated in paper"
+    }
+   },
+   {
+    "name": "ViT-G/14 (EVA-CLIP) + Q-Former from BLIP-2",
+    "role": "base",
+    "params": null,
+    "architecture": "vision encoder + Q-Former",
+    "init_from": "BLIP-2 pretrained",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "frozen": "yes"
+    }
+   },
+   {
+    "name": "MiniGPT-4",
+    "role": "proposed",
+    "params": null,
+    "architecture": "frozen vision stack + one linear projection + frozen Vicuna",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "trainable": "one linear projection layer; count not stated"
+    }
+   },
+   {
+    "name": "BLIP-2 (Flan-T5 XXL)",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "Linear-layer output used as soft prompt; LLM generates ground-truth text; no regression loss on the image-prompt part in stage 2",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "stage 1: 256; stage 2: 12",
+   "steps": "stage 1: 20,000; stage 2: 400",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "stage 1: 4 A100 80GB; stage 2: 1 A100",
+   "compute": null,
+   "wall_clock": "stage 1 about 10 hours; stage 2 about 7 minutes",
+   "seeds": null,
+   "other": {
+    "stage2_template": "###Human: <Img><ImageFeature></Img><Instruction>###Assistant:, instruction sampled from a predefined set"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": "Vicuna chat format '###Human: <Img><ImageFeature></Img>... ###Assistant:'",
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Human success count",
+     "definition": "Evaluators judge whether generation satisfies the request",
+     "unit": "count out of 25 per task",
+     "higher_is_better": true
+    },
+    {
+     "name": "COCO coverage correctness",
+     "definition": "ChatGPT answers yes/no whether generated caption covers all objects and relations of one reference caption",
+     "unit": "% of 5000",
+     "higher_is_better": true
+    },
+    {
+     "name": "Failure rate",
+     "definition": "Manually counted failed generations out of 100",
+     "unit": "%",
+     "higher_is_better": false
+    },
+    {
+     "name": "CHAIRi",
+     "definition": "Object hallucination rate (Rohrbach 2018)",
+     "unit": null,
+     "higher_is_better": false
+    },
+    {
+     "name": "AOK-VQA / GQA",
+     "definition": "VQA accuracy",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "BLIP-2 (Flan-T5 XXL)",
+    "BLIP-2 FT (finetuned on stage-2 data)",
+    "MiniGPT-4 LocNa",
+    "MiniGPT-4 without Q-Former"
+   ],
+   "protocol": "Single runs, no seeds or significance tests stated; human judges for Table 1 (number and instructions not stated), ChatGPT judge for Table 2, manual counts for Table 3."
+  },
+  "availability": {
+   "code": "https://minigpt-4.github.io/",
+   "weights": "https://minigpt-4.github.io/",
+   "data": "https://minigpt-4.github.io/"
+  },
+  "prompts": [
+   {
+    "purpose": "Generate detailed descriptions for stage-2 data",
+    "text": "###Human: <Img><ImageFeature></Img>Describe this image in detail. Give as many details as possible. Say everything you see. ###Assistant:",
+    "where": "s3.2"
+   },
+   {
+    "purpose": "Continue short generations",
+    "text": "###Human: Continue ###Assistant:",
+    "where": "s3.2"
+   },
+   {
+    "purpose": "ChatGPT repair of descriptions",
+    "text": "Fix the error in the given paragraph. Remove any repeating sentences, meaningless characters, not English sentences, and so on. Remove unnecessary repetition. Rewrite any incomplete sentences. Return directly the results without explanation. Return directly the input paragraph if it is already correct without explanation.",
+    "where": "s3.2"
+   },
+   {
+    "purpose": "ChatGPT caption-coverage judge",
+    "text": "There is one image caption1 '{ground-truth caption}', and there is another image caption2 '{comparison caption}'. Does image caption2 cover all the objects and visual relations shown in image caption1? Only answer yes or no without any explanation.",
+    "where": "A.3"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Stage-2 finetuning cuts failed detailed-caption generations from 35% to 2% (manual count).",
+   "kind": "measured",
+   "source": null,
+   "metric": "failure rate, detailed caption",
+   "value": "2%",
+   "unit": "%",
+   "baseline_value": "35%",
+   "n": null,
+   "setup": "100 random COCO test images, prompt 'Describe the image in detail.', MiniGPT-4 before vs after stage 2; failures counted by hand",
+   "note": null,
+   "where": "Table 3, s4.3",
+   "table": "Table 3, row After stage-2, column Detailed caption"
+  },
+  {
+   "claim": "Stage-2 finetuning cuts failed poem generations from 32% to 1%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "failure rate, poem",
+   "value": "1%",
+   "unit": "%",
+   "baseline_value": "32%",
+   "n": null,
+   "setup": "100 random COCO test images, prompt 'Can you write a beautiful poem about this image?'; manual count",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row After stage-2, column Poem"
+  },
+  {
+   "claim": "MiniGPT-4 satisfies 65 of 100 advanced-task requests vs 5 of 100 for BLIP-2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "success count",
+   "value": "65/100",
+   "unit": "requests",
+   "baseline_value": "5/100",
+   "n": null,
+   "setup": "Own 100-image set, 25 per task (meme, recipe, ad, poem); human evaluators judge whether the generation satisfies the request",
+   "note": null,
+   "where": "Table 1",
+   "quote": "MiniGPT-4 shows strong performance and successfully responses to 65% of the requests."
+  },
+  {
+   "claim": "MiniGPT-4 explains only 8 of 25 memes correctly (BLIP-2: 0/25).",
+   "kind": "measured",
+   "source": null,
+   "metric": "meme success",
+   "value": "8/25",
+   "unit": "count",
+   "baseline_value": "0/25",
+   "n": null,
+   "setup": "Same 100-image human-judged set, prompt 'Explain why this meme is funny.'",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row MiniGPT-4, column Meme"
+  },
+  {
+   "claim": "COCO caption coverage judged by ChatGPT: MiniGPT-4 66.2% vs BLIP-2 27.5%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "correctness (ChatGPT yes/no coverage of reference caption)",
+   "value": "66.2",
+   "unit": "%",
+   "baseline_value": "27.5",
+   "n": null,
+   "setup": "5000 COCO images, one random ground-truth caption as reference, ChatGPT judge",
+   "note": "Table 2 gives 3310/5000 vs 1376/5000; the 5000 denominator appears only in the table",
+   "where": "Table 2, s4.2",
+   "quote": "With a success rate of 66.2%, MiniGPT-4 is considerably more accurate than BLIP-2, which achieves only 27.5%."
+  },
+  {
+   "claim": "Stage 1 trains in about 10 hours on 4 A100 80GB.",
+   "kind": "measured",
+   "source": null,
+   "metric": "wall clock",
+   "value": "10 hours",
+   "unit": "hours",
+   "baseline_value": null,
+   "n": null,
+   "setup": "20,000 steps, batch 256, about 5M image-text pairs, only the linear layer trained",
+   "note": null,
+   "where": "s3.1",
+   "quote": "Our model undergoes 20,000 training steps with a batch size of 256, covering approximately 5 million image-text pairs. The entire process takes about 10 hours to complete, utilizing 4 A100 (80GB) GPUs."
+  },
+  {
+   "claim": "Stage 2 takes 400 steps at batch 12, around 7 minutes on one A100.",
+   "kind": "measured",
+   "source": null,
+   "metric": "wall clock",
+   "value": "7 minutes",
+   "unit": "minutes",
+   "baseline_value": null,
+   "n": null,
+   "setup": "About 3,500 curated pairs, conversational template",
+   "note": null,
+   "where": "s3.3",
+   "quote": "only requiring a mere 400 training steps with a batch size of 12, which takes around 7 minutes with a single A100 GPU"
+  },
+  {
+   "claim": "About 3,500 of 5,000 generated descriptions survive ChatGPT repair, rule filtering and manual checking.",
+   "kind": "measured",
+   "source": null,
+   "metric": "curated pairs",
+   "value": "3,500",
+   "unit": "pairs",
+   "baseline_value": null,
+   "n": null,
+   "setup": "5,000 random Conceptual Captions images described by the stage-1 model",
+   "note": null,
+   "where": "s3.2",
+   "quote": "only approximately 3,500 out of 5,000 image-text pairs satisfy our requirement"
+  },
+  {
+   "claim": "Without the Q-Former, AOK-VQA is 56.9 and GQA 33.4, similar to the full model (58.2 / 32.2).",
+   "kind": "measured",
+   "source": null,
+   "metric": "AOK-VQA, GQA accuracy",
+   "value": "56.9 / 33.4",
+   "unit": "%",
+   "baseline_value": "58.2 / 32.2",
+   "n": null,
+   "setup": "Ablation, variant trained the same way",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row (a) MiniGPT-4 w/o Q-Former, columns AOK-VQA, GQA"
+  },
+  {
+   "claim": "Three linear layers instead of one lowers AOK-VQA to 49.7 (GQA 31.0).",
+   "kind": "measured",
+   "source": null,
+   "metric": "AOK-VQA accuracy",
+   "value": "49.7",
+   "unit": "%",
+   "baseline_value": "58.2",
+   "n": null,
+   "setup": "Ablation (b)",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row (b) MiniGPT-4 + 3 Layers, column AOK-VQA"
+  },
+  {
+   "claim": "Also finetuning the Q-Former gives AOK-VQA 52.1, GQA 28.0.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AOK-VQA accuracy",
+   "value": "52.1",
+   "unit": "%",
+   "baseline_value": "58.2",
+   "n": null,
+   "setup": "Ablation (c)",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row (c) MiniGPT-4 + Finetune Q-Former, column AOK-VQA"
+  },
+  {
+   "claim": "Longer captions hallucinate more: CHAIRi 9.6 at 175 words vs 7.2 at 28.8 words; BLIP-2 1.3 at 6.5 words.",
+   "kind": "measured",
+   "source": null,
+   "metric": "CHAIRi",
+   "value": "9.6",
+   "unit": "%",
+   "baseline_value": "BLIP-2 1.3",
+   "n": null,
+   "setup": "MiniGPT-4 (long) prompt 'Please describe this image as detailed as possible.'; unit of CHAIRi not printed",
+   "note": "CHAIRi unit not printed; Table 5 also lists average length 175, 28.8, 6.5 words",
+   "where": "Table 5",
+   "table": "Table 5, row MiniGPT-4 (long), column CHAIRi"
+  },
+  {
+   "claim": "On traditional VQA, original MiniGPT-4 trails BLIP-2 (58.2 vs 80.2 AOK-VQA; 32.2 vs 42.4 GQA); unfreezing Vicuna with LoRA plus VQA data gives 67.2 / 43.5.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AOK-VQA accuracy",
+   "value": "58.2",
+   "unit": "%",
+   "baseline_value": "80.2",
+   "n": null,
+   "setup": "BLIP-2 trained on 129M pairs, MiniGPT-4 on 5M; the Finetune Vicuna variant adds LoRA and VQAv2, OKVQA, A-OKVQA data in stage 2",
+   "note": "The Finetune Vicuna variant is an ablation, not the released MiniGPT-4",
+   "where": "Table 6, A.2",
+   "table": "Table 6, row MiniGPT-4, column AOK-VQA"
+  }
+ ],
+ "limits": [
+  "Hallucination in detailed descriptions is unresolved (CHAIRi rises with caption length)",
+  "Weak spatial understanding (Fig 6)",
+  "Lags BLIP-2 on traditional VQA; main evidence is qualitative and a 100-image hand-judged set",
+  "Optimizer, learning rate, schedule, precision, Vicuna size and trainable parameter count not stated",
+  "The claim that GPT-4's abilities come from an advanced LLM is not tested directly; BLIP-2 FT comparison also changes the LLM and training recipe"
+ ],
+ "practices": [],
+ "terms": [],
+ "lineage": [
+  {
+   "work": "BLIP-2",
+   "year": 2023,
+   "arxiv": "2301.12597",
+   "relation": "extends",
+   "note": "Reuses its ViT-G/14 and Q-Former; main baseline",
+   "quote": null
+  },
+  {
+   "work": "Vicuna",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Frozen LLM decoder",
+   "quote": null
+  },
+  {
+   "work": "LLaMA",
+   "year": 2023,
+   "arxiv": "2302.13971",
+   "relation": "uses-method",
+   "note": "Base of Vicuna",
+   "quote": null
+  },
+  {
+   "work": "EVA",
+   "year": 2022,
+   "arxiv": "2211.07636",
+   "relation": "uses-method",
+   "note": "ViT-G/14 from EVA-CLIP",
+   "quote": null
+  },
+  {
+   "work": "Conceptual Captions / SBU / LAION-400M",
+   "year": 2021,
+   "arxiv": "2111.02114",
+   "relation": "uses-data",
+   "note": "Stage-1 data",
+   "quote": null
+  },
+  {
+   "work": "Localized Narratives",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Alternative stage-2 data",
+   "quote": null
+  },
+  {
+   "work": "LoRA",
+   "year": 2021,
+   "arxiv": "2106.09685",
+   "relation": "uses-method",
+   "note": "Used in the A.2 unfrozen-Vicuna ablation",
+   "quote": null
+  },
+  {
+   "work": "Flamingo",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Prior frozen-model alignment",
+   "quote": null
+  },
+  {
+   "work": "CHAIR object hallucination",
+   "year": 2018,
+   "arxiv": "1809.02156",
+   "relation": "uses-method",
+   "note": "CHAIRi metric",
+   "quote": null
+  },
+  {
+   "work": "GPT-4 technical report",
+   "year": 2023,
+   "arxiv": "2303.08774",
+   "relation": "related",
+   "note": "Capabilities MiniGPT-4 aims to reproduce",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "The architecture of MiniGPT-4.",
+   "page": 2,
+   "why": "Shows only the linear layer is trained"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "MiniGPT-4 before second-stage finetuning fails to output completed texts.",
+   "page": 8,
+   "why": "Before and after stage 2"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Text cache is 59071 chars, old schema-0 report said 75247; none skipped",
+  "Figure panel text appears inline in the extraction"
+ ]
 }

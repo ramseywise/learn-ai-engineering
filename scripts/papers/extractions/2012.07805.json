@@ -1,0 +1,417 @@
+{
+ "schema": 1,
+ "key": "2012.07805",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/carlini-2020-extracting-training-data-large-language.pdf",
+ "bib": {
+  "title": "Extracting Training Data from Large Language Models",
+  "authors": [
+   "Nicholas Carlini",
+   "Florian Tramèr",
+   "Eric Wallace",
+   "Matthew Jagielski",
+   "Ariel Herbert-Voss",
+   "Katherine Lee",
+   "Adam Roberts",
+   "Tom Brown",
+   "Dawn Song",
+   "Úlfar Erlingsson",
+   "Alina Oprea",
+   "Colin Raffel"
+  ],
+  "first_author": "Carlini",
+  "year": 2020,
+  "venue": "preprint (arXiv v2, 15 Jun 2021)",
+  "arxiv": "2012.07805",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 89090,
+  "chars_total": 89090,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can an adversary with black-box query access recover verbatim individual training examples from a large language model trained on a large, little-overfit corpus?",
+ "hypothesis": "Even though large LMs show almost no train/test gap, worst-case training examples are memorized and can be extracted.",
+ "contributions": [
+  "Define k-eidetic memorization and a black-box threat model",
+  "A two-step attack: diverse sampling then membership-inference ranking against a reference (smaller LM, zlib, lowercase, sliding window)",
+  "Extract 604 verbatim GPT-2 training examples including PII, UUIDs, code",
+  "Analysis of how model size and insertion frequency affect memorization",
+  "Discussion of mitigations (DP, dedup, auditing)"
+ ],
+ "method": {
+  "summary": "Generate 200,000 256-token samples from GPT-2 XL under each of three sampling strategies, rank each set by six membership-inference metrics, take 100 per configuration from the top 1000 after fuzzy dedup, and verify by Google search and by the GPT-2 authors' check against the training set.",
+  "task": "training data extraction attack (black-box)",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "GPT-2 training data (WebText, Reddit outbound links)",
+    "role": "eval",
+    "size": "40GB of text",
+    "split": "not released; GPT-2 authors gave limited query access",
+    "source": "scraped from links followed from Reddit, document-level dedup, trained ~12 epochs (personal communication)",
+    "preprocessing": "HTML removed, dedup at document level"
+   },
+   {
+    "name": "Common Crawl subset (attack prefixes)",
+    "role": "eval",
+    "size": "50MB of text",
+    "split": "5 to 10 random tokens per sample used as prefix",
+    "source": "Common Crawl",
+    "preprocessing": "HTML and JavaScript removed, line-by-line dedup"
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT-2 XL",
+    "role": "evaluated",
+    "params": "1.5B (1558M)",
+    "architecture": "decoder-only Transformer, BPE word-pieces",
+    "init_from": null,
+    "tokenizer": "byte pair encoder",
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-2 Medium",
+    "role": "evaluated",
+    "params": "334M (also written 345M)",
+    "architecture": "decoder-only Transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-2 Small",
+    "role": "evaluated",
+    "params": "124M (also written 117M)",
+    "architecture": "decoder-only Transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "top-n sampling with n=40; beam-search-like decoding (Carlini 2019) for extending sequences and Table 4 easier variant",
+   "temperature": "1 for top-n and Internet; temperature strategy decays from t=10 to t=1 over first 20 tokens (~10% of sequence)",
+   "top_p": null,
+   "max_tokens": "exactly 256 tokens per sample",
+   "samples": "200,000 samples per sampling strategy (3 strategies, 600,000 total); 100 selected per config (1,800 total); 10,000 generations per model for Table 4 URL test",
+   "prompting": "top-n and temperature: one-token start-of-sentence prompt; Internet: 5 to 10 random tokens from Common Crawl",
+   "retrieval": null,
+   "parameters": {
+    "sliding window": "50 tokens, chosen after a cursory hyper-parameter sweep",
+    "selection": "100 from top-1000 with fraction of selected samples below rank k equal to sqrt(k/1000)",
+    "dedup": "trigram multisets, duplicate if |tri(s1) ∩ tri(s2)| >= |tri(s1)|/2"
+   },
+   "other": {
+    "seeds": null
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "memorized count / true positive rate",
+     "definition": "candidate counts as memorized if a non-trivial substring exactly matches a Google result, and the GPT-2 authors' fuzzy 3-gram match on the training set confirms",
+     "unit": "samples out of 100 per config",
+     "higher_is_better": true
+    },
+    {
+     "name": "membership inference ranking metrics",
+     "definition": "Perplexity, Small and Medium (ratio of log perplexities vs smaller GPT-2), zlib (ratio of log GPT-2 perplexity to zlib entropy), Lowercase (ratio of perplexity original vs lowercased), Window (min perplexity over 50-token windows)",
+     "unit": "score",
+     "higher_is_better": null
+    }
+   ],
+   "baselines": [
+    "top-n sampling with plain perplexity ranking (Sec 4)"
+   ],
+   "protocol": "One of four authors manually labelled each of 1,800 candidates by Google search; confirmed with OpenAI via fuzzy 3-gram match (no false negatives, some false positives); single run, no seeds or confidence intervals stated."
+  },
+  "availability": {
+   "code": "https://github.com/ftramer/LM_Memorization",
+   "weights": "GPT-2 released by OpenAI",
+   "data": "GPT-2 training data not released"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "models.params",
+    "quote": "Speciﬁcally, we use the Small (117M parameters) and Medium (345M parameters) models.",
+    "where": "Sec 5.2 (Sec 2.1 says 124M and 334M)"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "604 unique memorized training examples found among 1,800 inspected candidates",
+   "kind": "measured",
+   "metric": "memorized examples",
+   "value": "604",
+   "unit": "samples",
+   "n": 1800,
+   "setup": "GPT-2 XL, 3 sampling x 6 ranking configs, 100 candidates each, 200,000 samples per sampling strategy, manual Google match plus OpenAI 3-gram check",
+   "quote": "we identify 604 unique memo-\nrized training examples from among the 1,800 possible can-\ndidates, for an aggregate true positive rate of 33.5%",
+   "where": "Sec 6.2"
+  },
+  {
+   "claim": "Aggregate true positive rate over the 1,800 candidates",
+   "kind": "measured",
+   "metric": "true positive rate",
+   "value": "33.5",
+   "unit": "%",
+   "setup": "same as above",
+   "quote": "for an aggregate true positive rate of 33.5% (our best\nvariant has a true positive rate of 67%)",
+   "where": "Sec 6.2"
+  },
+  {
+   "claim": "Best configuration (Internet conditioning ranked by zlib) has 67 of 100 candidates memorized",
+   "kind": "measured",
+   "metric": "precision of top-100 selection",
+   "value": "67",
+   "unit": "%",
+   "setup": "GPT-2 XL, Internet (Common Crawl prefix) sampling, zlib ratio ranking",
+   "table": "Table 2, row zlib, column Internet",
+   "quote": "For example, 67% of\nInternet samples marked by zlib are memorized.",
+   "where": "Table 2, Sec 6.2"
+  },
+  {
+   "claim": "Plain perplexity ranking is a poor membership inference metric for top-n and temperature sampling",
+   "kind": "measured",
+   "metric": "memorized fraction of inspected samples",
+   "value": "9",
+   "unit": "%",
+   "setup": "GPT-2 XL, perplexity ranking, top-n sampling (9) and temperature sampling (3)",
+   "quote": "just 9% and\n3% of inspected samples are memorized, respectively",
+   "where": "Sec 6.2"
+  },
+  {
+   "claim": "Top-n baseline yields 191 unique memorized samples; Internet conditioning yields 273",
+   "kind": "measured",
+   "metric": "unique memorized samples",
+   "value": "273",
+   "unit": "samples",
+   "baseline_value": "191",
+   "setup": "GPT-2 XL, Internet vs top-n sampling, all six rankings pooled",
+   "quote": "yields 191 unique memorized samples, whereas\nconditioning on Internet text increases this to 273",
+   "where": "Sec 6.2"
+  },
+  {
+   "claim": "Full-size GPT-2 emits every Reddit URL inserted 33 or more times in one document; Small memorizes none under the harder attack",
+   "kind": "measured",
+   "metric": "insertion count for full memorization",
+   "value": "33",
+   "unit": "occurrences",
+   "setup": "10,000 top-n generations from a fixed URL prefix, GPT-2 XL 1.5B; Medium 345M got half, Small 117M none",
+   "quote": "the full-sized 1.5 billion\nparameter GPT-2 model emits all examples that are inserted\n33 times or more",
+   "where": "Sec 7, Table 4"
+  },
+  {
+   "claim": "Larger models memorize more: 1.5B GPT-2 memorizes over 18x as much content as the 124M model in one setting",
+   "kind": "measured",
+   "metric": "memorization ratio XL vs Small",
+   "value": "18",
+   "unit": "x",
+   "setup": "Section 7 Reddit URL experiment",
+   "quote": "the 1.5 billion parameter GPT-2 model memorizes\nover 18× as much content as the 124 million parameter model",
+   "where": "Sec 9"
+  },
+  {
+   "claim": "GPT-2 trained about 12 epochs on 40GB, train loss only ~10% below test loss",
+   "kind": "reported",
+   "source": "Personal communication with the GPT-2 authors; Radford et al. 2019",
+   "metric": "train/test loss gap",
+   "value": "10",
+   "unit": "%",
+   "setup": "all GPT-2 sizes",
+   "quote": "the training loss is only\nroughly 10% smaller than the test loss across all model sizes",
+   "where": "Sec 2.1"
+  },
+  {
+   "claim": "At least 0.1% of 600,000 honest generations contain memorized text (loose lower bound)",
+   "kind": "measured",
+   "metric": "memorized fraction",
+   "value": "0.1",
+   "unit": "%",
+   "setup": "604 of 600,000 generated samples; only 1,800 inspected",
+   "quote": "among 600,000 (honestly) generated samples, our attacks\nﬁnd that at least 604 (or 0.1%) contain memorized text",
+   "where": "Sec 9"
+  },
+  {
+   "claim": "Memorized content in 46 samples names individuals and 32 hold contact info (16 business, 16 private)",
+   "kind": "measured",
+   "metric": "PII samples",
+   "value": "46",
+   "unit": "samples",
+   "setup": "604 memorized samples, news names excluded",
+   "quote": "We ﬁnd 46 examples that contain individual peoples’\nnames.",
+   "where": "Sec 6.3"
+  },
+  {
+   "claim": "Memorized high-entropy strings with k=1 up to 87 characters long, 10 occurrences in one document",
+   "kind": "measured",
+   "metric": "longest k=1 string",
+   "value": "87",
+   "unit": "characters",
+   "setup": "Table 3, nine k=1 examples",
+   "quote": "we extract a 87-characters-long sequence that is contained in the training\ndataset just 10 times in total, all in the same document",
+   "where": "Table 3"
+  },
+  {
+   "claim": "Beam-search extension recovers a 1450-line verbatim source file",
+   "kind": "measured",
+   "metric": "lines",
+   "value": "1450",
+   "unit": "lines",
+   "setup": "seeded with a memorized snippet, beam-search-like decoding from Carlini 2019",
+   "quote": "namely 1450 lines of verbatim source code",
+   "where": "Sec 6.4"
+  },
+  {
+   "claim": "Context matters: GPT-2 greedy gives 25 digits of pi from '3.14159', 799 with 'pi is 3.14159', 824 with extra context, 500 with beam search",
+   "kind": "measured",
+   "metric": "digits of pi",
+   "value": "824",
+   "unit": "digits",
+   "setup": "greedy decoding with prompt 'e begins 2.7182818, pi begins 3.14159'",
+   "quote": "GPT-2 greedily completes the ﬁrst 824 digits of π",
+   "where": "Sec 6.5"
+  },
+  {
+   "claim": "Harvested GPT-2 attack is a lower bound; none of 273 Internet-conditioned extractions reproduce reliably from the original short prefix",
+   "kind": "measured",
+   "metric": "reproducible from original prefix",
+   "value": "0",
+   "unit": "of 273",
+   "setup": "Internet-conditioned samples",
+   "quote": "None of the 273 extracted samples found using Internet\nconditioning can be reliably reproduced when using the same\npreﬁx initially provided to GPT-2",
+   "where": "Sec 6.5"
+  }
+ ],
+ "limits": [
+  "Manual evaluation by four authors over only 1,800 candidates; the 604 is a lower bound, recall over the whole training set is not measured",
+  "Memorization is prefix dependent, simple prompts under-estimate it",
+  "Single model family (GPT-2) with training data that is public; text domain only",
+  "Verification uses fuzzy 3-gram match with false positives",
+  "Results cannot say if bigger models of other families behave alike; no mitigation is evaluated",
+  "Definition 1 admits pathological cases such as 'Repeat the following sentence'"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "k-eidetic memorization",
+   "definition": "A string s is k-eidetic memorized by an LM if s is extractable and s appears in at most k examples in the training data",
+   "where": "Sec 3.1.1, Definition 2"
+  },
+  {
+   "term": "extractable",
+   "definition": "A string s is extractable from an LM if there exists a prefix c such that s is the argmax continuation of length N",
+   "where": "Definition 1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "The Secret Sharer (Carlini et al.)",
+   "year": 2019,
+   "arxiv": "1802.08232",
+   "relation": "extends",
+   "note": "canary exposure and beam-search-like extension; this paper moves to naturally occurring data",
+   "quote": null
+  },
+  {
+   "work": "GPT-2 (Radford et al., Language models are unsupervised multitask learners)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "attack target",
+   "quote": null
+  },
+  {
+   "work": "Language Models are Few-Shot Learners (GPT-3)",
+   "year": 2020,
+   "arxiv": "2005.14165",
+   "relation": "related",
+   "note": "motivation; one memorized sample found among 1,000 released GPT-3 samples",
+   "quote": null
+  },
+  {
+   "work": "Shokri et al. membership inference",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "membership inference basis",
+   "quote": null
+  },
+  {
+   "work": "Holtzman et al., curious case of neural text degeneration",
+   "year": 2020,
+   "arxiv": "1904.09751",
+   "relation": "related",
+   "note": "repetition gets high likelihood",
+   "quote": null
+  },
+  {
+   "work": "Abadi et al., DP-SGD",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "related",
+   "note": "mitigation discussed",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Figure 2",
+   "caption": "Workflow of our extraction attack and evaluation",
+   "page": 7,
+   "why": "shows generate, rank, dedup, top-100, search pipeline"
+  },
+  {
+   "figure": "Figure 3",
+   "caption": "The zlib entropy and the perplexity of GPT-2 XL for 200,000 samples generated with top-n sampling",
+   "page": 9,
+   "why": "shows memorized outliers off the diagonal"
+  },
+  {
+   "figure": "Table 2",
+   "caption": "Number of memorized examples out of 100 per sampling and ranking strategy",
+   "page": 10,
+   "why": "full 3x6 attack grid"
+  },
+  {
+   "figure": "Table 4",
+   "caption": "Reddit URLs by insertion count vs model size",
+   "page": 12,
+   "why": "size and repetition effect"
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 4.2",
+   "snippet": "P = exp(-(1/n) sum_{i=1..n} log f_theta(x_i | x_1,...,x_{i-1}))",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Model sizes printed inconsistently: 124M/334M (Sec 2.1) vs 117M/345M (Sec 5.2, 7)",
+  "Table 4 check marks lost in text extraction"
+ ]
+}

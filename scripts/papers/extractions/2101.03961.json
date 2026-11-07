@@ -1,0 +1,187 @@
+{
+ "schema": 1,
+ "key": "2101.03961",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/fedus-2021-switch-transformers.pdf",
+ "bib": {
+  "title": "Switch Transformers: Scaling to Trillion Parameter Models with Simple and Efficient Sparsity",
+  "authors": ["William Fedus", "Barret Zoph", "Noam Shazeer"],
+  "first_author": "Fedus",
+  "year": 2022,
+  "venue": "Journal of Machine Learning Research 23 (2022) 1-40 (arXiv v3, 16 Jun 2022; first posted 2021)",
+  "arxiv": "2101.03961",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 100511,
+  "chars_total": 100511,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can a simplified sparse mixture-of-experts layer (top-1 routing) make it practical to scale parameter count at constant FLOPs per token, with stable training and better speed-quality than dense T5?",
+ "hypothesis": "Parameter count, independent of total computation performed, is a separately important axis on which to scale.",
+ "contributions": [
+  "The Switch Transformer architecture, which simplifies and improves over Mixture of Experts.",
+  "Scaling properties and a benchmark against the strongly tuned T5 model with 7x+ pre-training speedups at the same FLOPS per token.",
+  "Distillation of sparse pre-trained and fine-tuned models into small dense models, preserving 30% of the quality gains with up to 99% fewer parameters.",
+  "Improved training and fine-tuning techniques: selective precision, smaller initialization scale, expert dropout.",
+  "Multilingual pre-training gains across all 101 languages over mT5-Base.",
+  "Models up to 1.6T parameters by combining data, model and expert parallelism."
+ ],
+ "method": {
+  "summary": "Replace the dense FFN in a T5 Transformer with a Switch FFN layer: a learned router sends each token to a single expert FFN (k=1), with a fixed expert capacity and an auxiliary load-balancing loss. Models are FLOP-matched to T5-Base/Large/XXL, pre-trained on C4 with span-corruption MLM on TPUs via Mesh-TensorFlow, then fine-tuned, distilled and tested multilingually.",
+  "task": "Masked-language-model pre-training (T5 span corruption) on C4, then fine-tuning on GLUE, SuperGLUE, SQuAD, summarization, closed-book QA, ARC, ANLI, Winogrande; multilingual pre-training on mC4",
+  "trains": true,
+  "datasets": [
+   {"name": "C4 (improved, de-duplicated within example)", "role": "pretrain", "size": "over 180B target tokens", "split": "pre-train 2^20 tokens per batch for 550k steps = 576B tokens (so repeated); validation neg log perplexity reported", "source": "Colossal Clean Crawled Corpus (Raffel et al. 2019), revised to remove intra-example duplication (Lee et al. 2021)", "preprocessing": "Drop 15% of tokens and replace the masked sequence with a single sentinel token"},
+   {"name": "mC4", "role": "pretrain", "size": "101 languages, 107 tasks due to script variants", "split": "1M steps pre-training", "source": "mT5 (Xue et al. 2020)", "preprocessing": null},
+   {"name": "GLUE and SuperGLUE", "role": "eval", "size": null, "split": "validation sets; tasks blended as composite mixtures in proportion to tokens", "source": "Wang et al. 2018, 2019", "preprocessing": null},
+   {"name": "CNNDM, XSum, SQuAD, ARC, Natural/Web/Trivia Questions (closed book), Winogrande, ANLI", "role": "eval", "size": null, "split": "validation sets", "source": "as cited", "preprocessing": null}
+  ],
+  "models": [
+   {"name": "T5-Base", "role": "baseline", "params": "223M (0.2B)", "architecture": "dense encoder-decoder Transformer", "init_from": null, "tokenizer": null, "vocab": null, "layers": "12", "hidden": "768", "heads": "12", "context": null, "other": {"d_ff": 2048, "d_kv": 64, "FLOPs/seq": "124B", "FFN_GEGLU": true}},
+   {"name": "T5-Large", "role": "baseline", "params": "739M (0.7B)", "architecture": "dense", "init_from": null, "tokenizer": null, "vocab": null, "layers": "24", "hidden": "1024", "heads": "16", "context": null, "other": {"d_ff": 2816, "FLOPs/seq": "425B"}},
+   {"name": "T5-XXL", "role": "baseline", "params": "11B", "architecture": "dense", "init_from": null, "tokenizer": null, "vocab": null, "layers": "24", "hidden": "4096", "heads": "64", "context": null, "other": {"d_ff": 10240, "FLOPs/seq": "6.3T"}},
+   {"name": "Switch-Base", "role": "proposed", "params": "7B (Table 9); 3,800M, 1.1B-14.7B in distillation experiments (varying experts); 7,410M in Table 8", "architecture": "T5-Base with Switch FFN at every other FFN layer (expert freq 1/2), 128 experts", "init_from": null, "tokenizer": null, "vocab": null, "layers": "12", "hidden": "768", "heads": "12", "context": null, "other": {"d_ff": 2048, "FLOPs/seq": "124B", "experts": 128}},
+   {"name": "Switch-Large", "role": "proposed", "params": "26B", "architecture": "FLOP-matched to T5-Large, expert freq 1/2, 128 experts", "init_from": null, "tokenizer": null, "vocab": null, "layers": "24", "hidden": "1024", "heads": "16", "context": null, "other": {"d_ff": 2816, "FLOPs/seq": "425B"}},
+   {"name": "Switch-XXL", "role": "proposed", "params": "395B", "architecture": "FLOP-matched to T5-XXL, expert freq 1/2, 64 experts, uses model parallelism", "init_from": null, "tokenizer": null, "vocab": null, "layers": "24", "hidden": "4096", "heads": "64", "context": null, "other": {"d_ff": 10240, "FLOPs/seq": "6.3T"}},
+   {"name": "Switch-C", "role": "proposed", "params": "1571B (1.6T)", "architecture": "expert-parallel only, expert freq 1 (every layer), 2048 experts", "init_from": null, "tokenizer": null, "vocab": null, "layers": "15", "hidden": "2080", "heads": "32", "context": null, "other": {"d_ff": 6144, "FLOPs/seq": "890B", "note": "Table 9 prints no FFN_GEGLU tick for this row"}},
+   {"name": "MoE-Base (top-2 routing)", "role": "baseline", "params": null, "architecture": "Switch-Base layout with top-2 routing, 128 experts, every other FFN", "init_from": null, "tokenizer": null, "vocab": null, "layers": "12", "hidden": "768", "heads": null, "context": null, "other": {}},
+   {"name": "Switch-Base+", "role": "proposed", "params": null, "architecture": "Switch-Base with hidden size 768 -> 896 and heads 14 -> 16, to match MoE speed", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": "896", "heads": "16", "context": null, "other": {"note": "Table 1 caption says heads 14 -> 16 though T5-Base has 12 heads in Table 9"}},
+   {"name": "mSwitch-Base vs mT5-Base", "role": "proposed", "params": null, "architecture": "FLOP-matched Switch variant of mT5-Base", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}}
+  ],
+  "training": {
+   "objective": "Span-corruption masked LM (15% tokens dropped, single sentinel) plus auxiliary load-balancing loss alpha * N * sum_i f_i * P_i",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "2^20 (1,048,576) tokens per batch for the 550k-step protocol; 524k tokens per batch in Table 10; fine-tuning batch size 1M",
+   "steps": "550k pre-training (T5/Switch fine-tuning protocol); 1M for mSwitch/mT5; 100k in Table 1; fine-tuning 16k steps, evaluated every 200 steps, peak validation score reported",
+   "epochs": null,
+   "tokens": "576B total tokens (550k steps x 2^20); Switch-XXL checkpoint for multi-task: 503B tokens",
+   "seq_len": null,
+   "precision": "bfloat16 with the router computed in float32 (selective precision); float32 router output recast to bfloat16",
+   "weight_decay": null,
+   "dropout": "fine-tuning: 0.1 on all layers except expert layers at 0.4 (expert dropout)",
+   "regularisation": "Load-balancing loss alpha=1e-2 (swept 1e-1 to 1e-5 in powers of 10); input jitter noise on router (multiplicative, eps value not stated); init: truncated normal, std sqrt(s/n), s reduced 1.0 -> 0.1; capacity factor 1.0-2.0; dropped tokens (<1%) pass via residual",
+   "hardware": "TPUv3; 32 cores for Table 1 and Fig 5; Mesh-TensorFlow",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": "3 random seeds for Table 3 (32 experts, 3.5k steps); not stated elsewhere",
+   "other": {"expert_capacity": "(tokens per batch / number of experts) x capacity factor", "capacity_factors_tried": "1.0, 1.25, 2.0", "init": "truncated normal, mean 0, std sqrt(s/n), n = fan-in, values beyond 2 std resampled", "distillation": "init non-expert weights from teacher; 0.25 teacher probabilities + 0.75 ground truth label loss", "optimizer_and_lr_not_stated": "paper gives no optimizer, learning rate or schedule"}
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {"dropped_tokens": "typically < 1%"}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "Negative log perplexity (C4)", "definition": "log base e, so units are nats; higher (closer to 0) is better", "unit": "nats", "higher_is_better": true},
+    {"name": "Time to quality threshold", "definition": "hours to reach Neg. Log Perp. = -1.50", "unit": "hours", "higher_is_better": false},
+    {"name": "Speed", "definition": "training examples per second", "unit": "examples/sec", "higher_is_better": true},
+    {"name": "Step speedup", "definition": "ratio of steps baseline needs to steps model needs to reach the same quality", "unit": "x", "higher_is_better": true},
+    {"name": "GLUE/SuperGLUE", "definition": "average across subtasks", "unit": "score", "higher_is_better": true},
+    {"name": "ROUGE-2", "definition": "CNNDM and XSum", "unit": "score", "higher_is_better": true},
+    {"name": "Exact match", "definition": "SQuAD and closed-book QA (percentage of answers exactly matching target)", "unit": "%", "higher_is_better": true},
+    {"name": "Accuracy", "definition": "ARC Easy/Challenge, ANLI, Winogrande", "unit": "%", "higher_is_better": true},
+    {"name": "Percent of teacher quality gain preserved", "definition": "percent of quality difference between Switch-Base teacher and T5-Base student recovered", "unit": "%", "higher_is_better": true}
+   ],
+   "baselines": ["T5-Base", "T5-Large", "T5-XXL", "MoE-Base (top-2, GShard-style)", "mT5-Base"],
+   "protocol": "Single runs for most comparisons (seeds only given for Table 3); fine-tuning reports peak validation performance evaluated every 200 steps; no significance tests. Authors say further statistics are needed for the upstream/downstream relation."
+  },
+  "availability": {
+   "code": "JAX code and all model checkpoints at https://github.com/google-research/t5x; TensorFlow code at https://github.com/tensorflow/mesh/blob/master/mesh_tensorflow/transformer/moe.py",
+   "weights": "Checkpoints released via t5x (per footnote 1)",
+   "data": "C4 and mC4 (public, from T5/mT5)"
+  },
+  "prompts": [],
+  "evidence": [
+   {"field": "training.batch_size", "quote": "we pre-train with 220 (1,048,576) tokens per batch for 550k steps amounting to 576B total tokens", "where": "Section 4.1 (220 is 2^20 with lost superscript)"},
+   {"field": "training.dropout", "quote": "using a dropout rate of 0.1 for all layers except the Switch layers, which use a dropout rate of 0.4", "where": "Section 4.1"}
+  ]
+ },
+ "results": [
+  {"claim": "A 64-expert Switch-Base reaches T5-Base's quality in one-seventh the wall-clock time at equal FLOPs per example.", "kind": "measured", "source": null, "metric": "wall-clock speedup", "value": "7", "unit": "x", "baseline_value": "1", "n": null, "setup": "Switch-Base 64 experts vs T5-Base, C4 pre-training, 32 TPUv3 cores, equal FLOPs per example (Fig 5)", "quote": "Our 64 expert Switch-Base model achieves the same quality in one-seventh the time of the T5-Base and continues to improve.", "table": null, "note": "Abstract says up to 7x; Fig 5 label 7x Speedup", "where": "Fig 5, Section 3.2"},
+  {"claim": "On a step basis, Switch-Base 64e reaches at step 60k the quality T5-Base has at step 450k.", "kind": "measured", "source": null, "metric": "step speedup", "value": "7.5", "unit": "x", "baseline_value": "1", "n": null, "setup": "Switch-Base 64 experts vs T5-Base, C4 pre-training", "quote": "which is a 7.5x speedup in terms of step time", "table": null, "note": "Text reads 'achieves the same performance of the T5-Base model at step 60k at step 450k' and the sentence order is garbled in the source; the intended meaning is Switch step 60k matches T5-Base step 450k. Read the quote as printed.", "where": "Section 3.1"},
+  {"claim": "Switch-Base is 2.5x faster in wall-clock than T5-Large, which uses 3.5x more FLOPs per token.", "kind": "measured", "source": null, "metric": "wall-clock speedup", "value": "2.5", "unit": "x", "baseline_value": "1", "n": null, "setup": "Switch-Base 64e vs T5-Large, C4 pre-training", "quote": "Switch-Base is still more sample efficient and yields a 2.5x speedup", "table": null, "note": null, "where": "Section 3.3, Fig 6"},
+  {"claim": "Switch-C (1.6T parameters, 2048 experts) is 4x faster to a fixed perplexity than T5-XXL at the same compute budget.", "kind": "measured", "source": null, "metric": "speedup to fixed perplexity", "value": "4", "unit": "x", "baseline_value": "1", "n": null, "setup": "C4 pre-training, Switch-C vs T5-XXL (T5-XXL pre-trained on easier C4 with duplicates, so gap is a lower bound)", "quote": "Switch-C Transformer variant is 4x faster to a fixed perplexity (with the same compute budget) than the T5-XXL model", "table": null, "note": null, "where": "Table 9 caption"},
+  {"claim": "Switch-XXL beats T5-XXL on C4 neg log perplexity by 0.087 at 500k steps.", "kind": "measured", "source": null, "metric": "neg log perplexity gap", "value": "0.087", "unit": "nats", "baseline_value": null, "n": null, "setup": "Switch-XXL (395B) vs T5-XXL at 500k steps; T5-XXL -1.095, Switch-XXL -1.008", "quote": "with the Switch-XXL model out-performing the T5-XXL by 0.087 by 500k steps", "table": null, "note": null, "where": "Section 5.6, Table 9"},
+  {"claim": "Switch-Base (1.0 capacity factor) trains faster and reaches the -1.50 threshold sooner than MoE-Base at every capacity factor tested.", "kind": "measured", "source": null, "metric": "time to Neg. Log Perp. -1.50", "value": "62.8", "unit": "hours", "baseline_value": "80.1", "n": null, "setup": "128 experts, expert every other FFN, 32 TPUv3 cores; Switch-Base cf 1.0 vs MoE-Base cf 1.0", "quote": null, "table": "Table 1, rows Switch-Base 1.0 and MoE-Base 1.0, column Time to Quality Threshold", "note": "T5-Base did not reach threshold in 100k steps; T5-Large 131.1 hours", "where": "Table 1"},
+  {"claim": "Without selective precision, bfloat16 Switch-Base diverges; casting the router to float32 recovers float32 quality at near bfloat16 speed.", "kind": "measured", "source": null, "metric": "neg log perplexity / examples per sec", "value": "-1.716", "unit": "nats", "baseline_value": "-3.780 (bfloat16, diverged)", "n": null, "setup": "32-expert Switch-Base, fixed early step count; float32 -1.718 at 1160 ex/s, selective -1.716 at 1390 ex/s", "quote": null, "table": "Table 2, row Switch-Base (Selective precision), column Quality", "note": null, "where": "Table 2"},
+  {"claim": "Reducing init scale by 10x raises mean quality and cuts run-to-run std from 0.68 to 0.01.", "kind": "measured", "source": null, "metric": "neg log perplexity std", "value": "0.01", "unit": "nats", "baseline_value": "0.68", "n": 3, "setup": "32-expert Switch-Base after 3.5k steps, 3 seeds; mean -2.72 (0.1x) vs -3.60 (1.0x)", "quote": null, "table": "Table 3, row Switch-Base (0.1x-init), column Std. Dev. of Quality", "note": null, "where": "Table 3"},
+  {"claim": "Expert dropout 0.4 with 0.1 elsewhere gives the best fine-tuning on GLUE (85.2) vs 84.7 at uniform dropout 0.1.", "kind": "measured", "source": null, "metric": "GLUE", "value": "85.2", "unit": "score", "baseline_value": "82.9 (T5-Base d=0.1)", "n": null, "setup": "Switch-Base pre-trained on 34B tokens of C4; see Table 4 for CNNDM, SQuAD, SuperGLUE", "quote": null, "table": "Table 4, row Switch-Base (d=0.1, ed=0.4), column GLUE", "note": "Uniform d=0.3 degrades SuperGLUE to 70.7", "where": "Table 4"},
+  {"claim": "Fine-tuned Switch-Base beats T5-Base on SuperGLUE by 4.4 points and Switch-Large beats T5-Large by 2.", "kind": "measured", "source": null, "metric": "SuperGLUE", "value": "79.5", "unit": "score", "baseline_value": "75.1", "n": null, "setup": "FLOP-matched; 550k steps pre-training at 2^20 tokens per batch; validation set; peak over evals every 200 steps", "quote": "FLOP-matched Switch variants improve by 4.4 and 2 percentage points over the T5-Base and T5-Large baselines", "table": null, "note": "Table 5: Switch-Large 84.7 vs T5-Large 82.7", "where": "Section 4.1, Table 5"},
+  {"claim": "Switch-Large reaches 83.0 on Winogrande XL vs 79.1 for T5-Large; Switch-Base 73.3 vs 66.6.", "kind": "measured", "source": null, "metric": "Winogrande (XL)", "value": "83.0", "unit": "accuracy", "baseline_value": "79.1", "n": null, "setup": "Fine-tuned, validation set", "quote": null, "table": "Table 5, row Switch-Large, column Winogrande (XL)", "note": null, "where": "Table 5"},
+  {"claim": "Switch models do not win on ARC: T5-Base beats Switch-Base on ARC Challenge, T5-Large beats Switch-Large on ARC Easy.", "kind": "measured", "source": null, "metric": "ARC Chal. (Switch-Base)", "value": "32.8", "unit": "accuracy", "baseline_value": "35.5", "n": null, "setup": "Fine-tuned, validation set", "quote": null, "table": "Table 5, row Switch-Base, column ARC Chal.", "note": "ARC Easy: T5-Large 68.8 vs Switch-Large 66.0", "where": "Table 5"},
+  {"claim": "Distilling Switch-Base into T5-Base (non-expert init plus 0.75 hard/soft mix) preserves about 30% of the quality gain with about 1/20 of the parameters.", "kind": "measured", "source": null, "metric": "quality gain preserved", "value": "29", "unit": "%", "baseline_value": null, "n": null, "setup": "Teacher Switch-Base 3,800M, student T5-Base 223M; -1.580 distilled vs -1.636 T5-Base vs -1.444 teacher", "quote": "By combining both techniques we preserve ≈30% of the quality gains from the larger sparse models with only ≈1/20th of the parameters.", "table": null, "note": "Table 6 prints 29%; Table 7 prints 30 % for the 3.8B teacher; Table 6 caption says '100x more parameters' while text says 1/20th (3,800M/223M is about 17x)", "where": "Section 4.2, Table 6"},
+  {"claim": "Compressing a 14.7B Switch by 99% still keeps 28% of the quality gain; a 1.1B teacher keeps 37% at 82% compression.", "kind": "measured", "source": null, "metric": "percent of teacher performance", "value": "28", "unit": "%", "baseline_value": null, "n": null, "setup": "Distilled into T5-Base 223M; pre-training neg log perplexity", "quote": "At the extreme, where we compress the model 99%, we are still able to maintain 28% of the teacher’s model quality improvement.", "table": null, "note": null, "where": "Section 4.2, Table 7"},
+  {"claim": "Distilling a SuperGLUE-fine-tuned 7.4B Switch-Base into T5-Base reaches 76.6, preserving 30% of the gain.", "kind": "measured", "source": null, "metric": "SuperGLUE", "value": "76.6", "unit": "score", "baseline_value": "74.6", "n": null, "setup": "Switch-Base 7410M teacher 81.3; student 223M", "quote": null, "table": "Table 8, row Distilled T5-Base, column SuperGLUE", "note": "Table 8 T5-Base 74.6 and Table 5 T5-Base 75.1 differ (different protocols)", "where": "Table 8"},
+  {"claim": "In multilingual pre-training Switch improves on mT5-Base in all 101 languages with a mean 5x step speedup; 91% of languages get at least 4x.", "kind": "measured", "source": null, "metric": "mean step speedup over mT5-Base", "value": "5", "unit": "x", "baseline_value": "1", "n": 101, "setup": "mSwitch-Base vs mT5-Base, mC4, 1M steps, FLOP-matched", "quote": "We find a mean speed-up over mT5-Base of 5x and that 91% of languages achieve at least a 4x speedup.", "table": null, "note": null, "where": "Section 4.3, Fig 7-8"},
+  {"claim": "Switch-XXL multi-task SQuAD validation is 89.7 vs state of the art 91.3; ANLI 65.7 vs prior best 49.4.", "kind": "measured", "source": null, "metric": "ANLI accuracy", "value": "65.7", "unit": "%", "baseline_value": "49.4", "n": null, "setup": "Switch-XXL partially pre-trained on 503B tokens (about half of T5-XXL's), multi-task trained", "quote": "Switch XXL improves over the prior state-of-the-art to get a 65.7 accuracy versus the prior best of 49.4", "table": null, "note": "SuperGLUE test sentence is garbled in source: 87.5 vs T5 89.3 vs state of the art 90.0. Section 8 says Switch-XXL SQuAD is 89.6 while Section 5.6 says 89.7.", "where": "Section 5.6"},
+  {"claim": "Closed-book QA on Switch-XXL: Natural Questions 34.4 (prior 32.8), Web Questions 41.0 (37.2), TriviaQA 47.5 (42.9).", "kind": "measured", "source": null, "metric": "TriviaQA exact match", "value": "47.5", "unit": "%", "baseline_value": "42.9", "n": null, "setup": "Switch-XXL, no Salient Span Masking, prior best T5-XXL", "quote": "TriviaQA increases to 47.5 versus 42.9", "table": null, "note": null, "where": "Section 5.6"},
+  {"claim": "Switch-C (1.6T) gets 87.7 SQuAD exact match, worse than smaller Switch-XXL at 89.6, despite similar C4 perplexity.", "kind": "measured", "source": null, "metric": "SQuAD exact match", "value": "87.7", "unit": "%", "baseline_value": "89.6", "n": null, "setup": "Switch-C vs Switch-XXL", "quote": "the 1.6T parameter Switch-C achieves only an 87.7 exact match score in SQuAD, which compares unfavorably to 89.6 for the smaller Switch-XXL model", "table": null, "note": "Section 5.6 prints 89.7 for Switch-XXL SQuAD", "where": "Section 8, item 2"},
+  {"claim": "Switch-XXL is sometimes unstable while Switch-C shows no instability, so Switch-XXL was not pre-trained for the full 1M steps.", "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "Switch-XXL (about 10x FLOPs per sequence of Switch-C), Switch-C with 2048 experts", "quote": null, "table": null, "note": null, "where": "Section 5.6"},
+  {"claim": "Router exploration: input jitter (-1.468) performs best, sampling from the softmax is worst (-1.570).", "kind": "measured", "source": null, "metric": "neg log perplexity", "value": "-1.468", "unit": "nats", "baseline_value": "-1.471 (argmax)", "n": null, "setup": "Switch Transformer, appendix C", "quote": null, "table": "Table 11, row Input jitter, column Quality", "note": "Table 11 caption says 'lower is better' but the column header has the up arrow (higher is better); the values are negative log perplexity", "where": "Table 11"},
+  {"claim": "Experts in self-attention (Q,K,V) improve quality but diverge in bfloat16, so were not used.", "kind": "measured", "source": null, "metric": "neg log perplexity @100k", "value": "-1.524", "unit": "nats", "baseline_value": "-1.548", "n": null, "setup": "32 experts, 524k tokens per batch, float32; Expert Attention vs Experts FF", "quote": null, "table": "Table 10, row Expert Attention float32, column Quality @100k Steps", "note": "Speed 1330 vs 1480 ex/s", "where": "Table 10"},
+  {"claim": "Dense models often do better than Switch at a fixed upstream perplexity on SuperGLUE in the large regime; on TriviaQA Switch may do better.", "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "Fig 13 scatter of C4 neg log perplexity vs downstream score, validation sets", "quote": null, "table": null, "note": "Authors: further statistics (expensive to collect and left to future work) would be necessary to confirm.", "where": "Appendix E, Fig 13"},
+  {"claim": "Models with as few as two experts improve over FLOP-matched T5-Base.", "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "Switch-Base with 2, 4, 8 experts vs T5-Base (Fig 12, read from figure)", "quote": null, "table": null, "note": null, "where": "Appendix D, Fig 12"}
+ ],
+ "limits": [
+  "Switch-XXL training is sometimes unstable; stability remains unsolved for the largest models (Section 8).",
+  "Upstream perplexity gains do not always translate to downstream: Switch-C (1.6T) SQuAD 87.7 vs Switch-XXL 89.6; on SuperGLUE the dense model often does better at fixed perplexity in the large regime.",
+  "Largest-model downstream results are preliminary, from a partially pre-trained checkpoint (503B tokens), and below SOTA on SQuAD and SuperGLUE.",
+  "No optimizer, learning rate, warmup or schedule is given; most comparisons are single runs.",
+  "Speed measurements depend on implementation (Mesh-TensorFlow on TPUv3) as well as algorithm; MoE capacity 2.0 to 1.25 slowing down is called unexpected.",
+  "Baseline T5-XXL was trained on an easier, duplicated C4, so the gap to Switch-XXL is a lower bound.",
+  "Only the FFN is made sparse; expert attention was unstable in bfloat16. Language only; no other modalities.",
+  "Distillation recovers about 30% of the gain, not the full quality."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "Expert capacity", "definition": "the number of tokens each expert computes, set by evenly dividing tokens in the batch across experts, then multiplying by a capacity factor", "where": "Section 2.2, Eq 3"},
+  {"term": "Switch layer", "definition": "k = 1 routing strategy, routing a token to only a single expert", "where": "Section 2.1"},
+  {"term": "Dropped tokens", "definition": "tokens routed to an expert beyond its capacity; computation is skipped and the representation passes through the residual connection", "where": "Section 2.2"},
+  {"term": "Expert dropout", "definition": "increasing the dropout rate only at the interim feed-forward computation inside each expert during fine-tuning", "where": "Section 2.4"}
+ ],
+ "lineage": [
+  {"work": "Outrageously large neural networks: the sparsely-gated mixture-of-experts layer (Shazeer et al.)", "year": 2017, "arxiv": "1701.06538", "relation": "extends", "note": "Switch simplifies top-k MoE routing to k=1 and merges the two balancing losses", "quote": null},
+  {"work": "GShard (Lepikhin et al.)", "year": 2020, "arxiv": "2006.16668", "relation": "extends", "note": "MoE Transformer; source of the overflow residual handling and auxiliary loss", "quote": null},
+  {"work": "Mesh-TensorFlow (Shazeer et al.)", "year": 2018, "arxiv": null, "relation": "uses-method", "note": "Implementation library", "quote": null},
+  {"work": "T5 (Raffel et al.)", "year": 2019, "arxiv": "1910.10683", "relation": "baseline", "note": "Dense baselines and C4 pre-training recipe", "quote": null},
+  {"work": "mT5 (Xue et al.)", "year": 2020, "arxiv": "2010.11934", "relation": "baseline", "note": "Multilingual baseline and mC4 data", "quote": null},
+  {"work": "Scaling laws for neural language models (Kaplan et al.)", "year": 2020, "arxiv": "2001.08361", "relation": "extends", "note": "Adds parameter count at constant FLOPs as a fourth axis", "quote": null},
+  {"work": "Mixed precision training (Micikevicius et al.)", "year": 2017, "arxiv": "1710.03740", "relation": "uses-method", "note": "Selective precision in line with mixed-precision strategies", "quote": null},
+  {"work": "Distilling the knowledge in a neural network (Hinton et al.)", "year": 2015, "arxiv": "1503.02531", "relation": "uses-method", "note": "Distillation; techniques follow Sanh et al. 2019 (DistilBERT)", "quote": null},
+  {"work": "Shazeer et al. 2017 claim that k>1 is needed for routing gradients", "year": 2017, "arxiv": "1701.06538", "relation": "contradicts", "note": "Switch finds k=1 preserves quality", "quote": "Contrary to these ideas, we instead use a simplified strategy where we route to only a single expert."},
+  {"work": "Deduplicating training data makes language models better (Lee et al.)", "year": 2021, "arxiv": "2107.06499", "relation": "uses-data", "note": "Revised C4 without intra-example duplication", "quote": null},
+  {"work": "GLUE, SuperGLUE, SQuAD, CNNDM, XSum, ARC, Natural Questions, WebQuestions, TriviaQA, Winogrande, ANLI", "year": null, "arxiv": null, "relation": "uses-data", "note": "Fine-tuning evaluations", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 2", "caption": "Illustration of a Switch Transformer encoder block", "page": 5, "why": "Shows the Switch FFN replacing the dense FFN, with two tokens routed to different experts."},
+  {"figure": "Fig 3", "caption": "Illustration of token routing dynamics", "page": 6, "why": "Explains capacity factor and token overflow."},
+  {"figure": "Fig 4", "caption": "Scaling properties of the Switch Transformer", "page": 12, "why": "Loss vs expert count (223M to 14.7B parameters) at constant FLOPs."},
+  {"figure": "Fig 5", "caption": "Speed advantage of Switch Transformer", "page": 13, "why": "The 7x wall-clock claim."},
+  {"figure": "Table 1", "caption": "Benchmarking Switch versus MoE", "page": 9, "why": "Head-to-head Switch vs top-2 MoE vs dense across capacity factors."},
+  {"figure": "Table 9", "caption": "Switch model design and pre-training performance", "page": 23, "why": "Hyperparameters of every model from Base to Switch-C."},
+  {"figure": "Fig 13", "caption": "Upstream pre-trained quality to downstream model quality", "page": 32, "why": "Shows upstream perplexity does not transfer equally to SuperGLUE and TriviaQA."}
+ ],
+ "code": [
+  {"where": "Eq 4-6, Section 2.2", "snippet": "loss = alpha * N * sum_{i=1..N} f_i * P_i; f_i = (1/T) sum_{x in B} 1{argmax p(x) = i}; P_i = (1/T) sum_{x in B} p_i(x)", "verbatim": false},
+  {"where": "Eq 3, Section 2.2", "snippet": "expert capacity = (tokens per batch / number of experts) x capacity factor", "verbatim": false}
+ ],
+ "problems": [
+  "Text extraction loses superscripts: '220 (1,048,576) tokens' means 2^20.",
+  "Mesh-TensorFlow pseudocode in Appendix F lost underscores in extraction.",
+  "Several garbled sentences in Section 3.1 and Section 5.6 (SuperGLUE test sentence)."
+ ]
+}

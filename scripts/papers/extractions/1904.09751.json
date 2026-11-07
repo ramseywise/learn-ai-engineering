@@ -1,0 +1,463 @@
+{
+ "schema": 1,
+ "key": "1904.09751",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/holtzman-2019-curious-case-neural-text-degeneration.pdf",
+ "bib": {
+  "title": "The Curious Case of Neural Text Degeneration",
+  "authors": [
+   "Ari Holtzman",
+   "Jan Buys",
+   "Li Du",
+   "Maxwell Forbes",
+   "Yejin Choi"
+  ],
+  "first_author": "Holtzman",
+  "year": 2020,
+  "venue": "ICLR 2020",
+  "arxiv": "1904.09751",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 51158,
+  "chars_total": 51158,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "What decoding strategy yields open-ended text from a language model that is both high quality and as diverse as human text?",
+ "hypothesis": "Likelihood maximization is inappropriate for open-ended generation, and pure sampling fails because of an unreliable low-probability tail that truncating to a dynamic nucleus removes.",
+ "contributions": [
+  "Show maximization-based decoding degenerates and pure sampling is incoherent",
+  "Propose Nucleus (top-p) Sampling",
+  "Compare decoders against human text on perplexity, Zipf, Self-BLEU, repetition and HUSE"
+ ],
+ "method": {
+  "summary": "Generate 5,000 continuations with GPT-2 Large under many decoding methods and compare likelihood, vocabulary, diversity, repetition and HUSE against human WebText.",
+  "task": "open-ended text generation (continuation)",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "WebText held-out portion",
+    "role": "eval",
+    "size": "5,000 generated passages",
+    "split": "held-out portion of WebText",
+    "source": "OpenAI GPT-2 output dataset (github openai/gpt-2-output-dataset)",
+    "preprocessing": "conditioning on initial paragraph restricted to 1-40 tokens"
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT-2 Large",
+    "role": "evaluated",
+    "params": "762M",
+    "architecture": "Transformer decoder",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "pretraining_data": "WebText, 40GB",
+     "note": "Fig 1 caption calls Large and XL 774M and 1542M; text says 762M"
+    }
+   },
+   {
+    "name": "GPT-2 XL",
+    "role": "evaluated",
+    "params": "1542M",
+    "architecture": "Transformer decoder",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "only mentioned in Fig 1 caption"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "greedy; beam (b=16, also 32 in Fig 1); stochastic beam b=16; pure sampling; temperature; top-k; nucleus",
+   "temperature": "t=0.9 sampling; t=0.7 with top-k=40; sweeps t 0.1-1.0",
+   "top_p": "0.95 in Table 1; sweep 0.1 to 0.99990234375",
+   "max_tokens": "200 tokens or end-of-document token",
+   "samples": "5,000 passages per method; Self-BLEU uses 1000 generations vs 4999 references; HUSE 200 generations x 20 annotators",
+   "prompting": "condition on first paragraph (1-40 tokens) of held-out WebText docs",
+   "retrieval": null,
+   "parameters": {
+    "top-k": "40, 640 in Table 1; sweep 5 to 20480",
+    "HUSE interpolation mass": "0.1",
+    "HUSE KNN k": "13"
+   },
+   "other": {
+    "seeds": null
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Perplexity",
+     "definition": "perplexity of generated text under the generating model; closer to gold is better",
+     "unit": "ppl",
+     "higher_is_better": false
+    },
+    {
+     "name": "Self-BLEU4",
+     "definition": "BLEU of each generation using all other generations as references; lower means more diverse",
+     "unit": "score",
+     "higher_is_better": false
+    },
+    {
+     "name": "Zipf coefficient",
+     "definition": "Zipfian exponent s of rank-frequency distribution; compared to human",
+     "unit": "s",
+     "higher_is_better": false
+    },
+    {
+     "name": "Repetition %",
+     "definition": "share of generations where a phrase (min length 2) repeats at least three times at the end of the first 200 tokens",
+     "unit": "%",
+     "higher_is_better": false
+    },
+    {
+     "name": "HUSE",
+     "definition": "KNN discriminator (k=13) over LM probability and human typicality judgements",
+     "unit": "score",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Greedy",
+    "Beam b=16",
+    "Stochastic Beam b=16",
+    "Pure Sampling",
+    "Sampling t=0.9",
+    "Top-k=40",
+    "Top-k=640",
+    "Top-k=40 t=0.7",
+    "Human text"
+   ],
+   "protocol": "single run per setting; no seeds or significance tests stated; closeness to human value is the criterion except HUSE"
+  },
+  "availability": {
+   "code": "https://github.com/ari-holtzman/degen",
+   "weights": null,
+   "data": "all generations at same GitHub; WebText at openai/gpt-2-output-dataset"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Greedy decoding gets stuck in repetition loops in most generations",
+   "kind": "measured",
+   "source": null,
+   "metric": "Repetition %",
+   "value": "73.66",
+   "unit": "%",
+   "baseline_value": "0.28 (human)",
+   "n": 5000,
+   "setup": "GPT-2 Large (762M), 5,000 generations, max 200 tokens, conditioned on 1-40 token WebText held-out prefixes",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Greedy, column Repetition %"
+  },
+  {
+   "claim": "Beam search b=16 repeats in about 29% of generations",
+   "kind": "measured",
+   "source": null,
+   "metric": "Repetition %",
+   "value": "28.94",
+   "unit": "%",
+   "baseline_value": "0.28 (human)",
+   "n": 5000,
+   "setup": "GPT-2 Large (762M), 5,000 generations, max 200 tokens, conditioned on 1-40 token WebText held-out prefixes",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Beam, b=16, column Repetition %"
+  },
+  {
+   "claim": "Beam search perplexity is far below human text",
+   "kind": "measured",
+   "source": null,
+   "metric": "Perplexity",
+   "value": "1.48",
+   "unit": "ppl",
+   "baseline_value": "12.38 (human)",
+   "n": 5000,
+   "setup": "GPT-2 Large (762M), 5,000 generations, max 200 tokens, conditioned on 1-40 token WebText held-out prefixes",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Beam, b=16, column Perplexity"
+  },
+  {
+   "claim": "Pure sampling perplexity is worse than human",
+   "kind": "measured",
+   "source": null,
+   "metric": "Perplexity",
+   "value": "22.73",
+   "unit": "ppl",
+   "baseline_value": "12.38 (human)",
+   "n": 5000,
+   "setup": "GPT-2 Large (762M), 5,000 generations, max 200 tokens, conditioned on 1-40 token WebText held-out prefixes",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Pure Sampling, column Perplexity"
+  },
+  {
+   "claim": "Nucleus p=0.95 perplexity closest to human among tabulated methods",
+   "kind": "measured",
+   "source": null,
+   "metric": "Perplexity",
+   "value": "13.13",
+   "unit": "ppl",
+   "baseline_value": "12.38 (human)",
+   "n": 5000,
+   "setup": "GPT-2 Large (762M), 5,000 generations, max 200 tokens, conditioned on 1-40 token WebText held-out prefixes",
+   "note": "Top-k=640 is 13.82; Sampling t=0.9 is 10.25",
+   "where": "Table 1",
+   "table": "Table 1, row Nucleus p=0.95, column Perplexity"
+  },
+  {
+   "claim": "Nucleus p=0.95 has the highest HUSE",
+   "kind": "measured",
+   "source": null,
+   "metric": "HUSE",
+   "value": "0.97",
+   "unit": "score",
+   "baseline_value": null,
+   "n": 5000,
+   "setup": "GPT-2 Large (762M), 5,000 generations, max 200 tokens, conditioned on 1-40 token WebText held-out prefixes; 200 generations per method, 20 annotators each; top-k and nucleus HUSE use interpolation (mass 0.1)",
+   "note": null,
+   "where": "Table 1, 6.1",
+   "table": "Table 1, row Nucleus p=0.95, column HUSE"
+  },
+  {
+   "claim": "Top-k=40 with t=0.7 scores near zero on HUSE",
+   "kind": "measured",
+   "source": null,
+   "metric": "HUSE",
+   "value": "0.08",
+   "unit": "score",
+   "baseline_value": null,
+   "n": 5000,
+   "setup": "GPT-2 Large (762M), 5,000 generations, max 200 tokens, conditioned on 1-40 token WebText held-out prefixes",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Top-k=40, t=0.7, column HUSE"
+  },
+  {
+   "claim": "Top-k=40 HUSE is 0.19",
+   "kind": "measured",
+   "source": null,
+   "metric": "HUSE",
+   "value": "0.19",
+   "unit": "score",
+   "baseline_value": null,
+   "n": 5000,
+   "setup": "GPT-2 Large (762M), 5,000 generations, max 200 tokens, conditioned on 1-40 token WebText held-out prefixes",
+   "note": "Text says top-k is second best, but Table 1 gives top-k=640 0.94 and pure sampling 0.67; top-k=40 is low",
+   "where": "Table 1",
+   "table": "Table 1, row Top-k=40, column HUSE"
+  },
+  {
+   "claim": "Nucleus p=0.95 repetition rate is 0.36%, above human 0.28%",
+   "kind": "measured",
+   "source": null,
+   "metric": "Repetition %",
+   "value": "0.36",
+   "unit": "%",
+   "baseline_value": "0.28 (human)",
+   "n": 5000,
+   "setup": "GPT-2 Large (762M), 5,000 generations, max 200 tokens, conditioned on 1-40 token WebText held-out prefixes",
+   "note": "Pure sampling 0.22, stochastic beam 0.32, top-k=640 0.28 are as close or closer to human",
+   "where": "Table 1",
+   "table": "Table 1, row Nucleus p=0.95, column Repetition %"
+  },
+  {
+   "claim": "Nucleus p=0.95 Self-BLEU4 0.32 vs human 0.31",
+   "kind": "measured",
+   "source": null,
+   "metric": "Self-BLEU4",
+   "value": "0.32",
+   "unit": "score",
+   "baseline_value": "0.31 (human)",
+   "n": 5000,
+   "setup": "GPT-2 Large (762M), 5,000 generations, max 200 tokens, conditioned on 1-40 token WebText held-out prefixes",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Nucleus p=0.95, column Self-BLEU4"
+  },
+  {
+   "claim": "Beam search (size 32) degenerates into repetition; at b>=64 GPT-2 Large and XL stop immediately",
+   "kind": "measured",
+   "source": null,
+   "metric": "qualitative",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": 5000,
+   "setup": "GPT-2 Large/XL, unicorn context, Fig 1",
+   "note": null,
+   "where": "Fig 1",
+   "quote": null
+  },
+  {
+   "claim": "Probability of a repeated phrase increases with each repetition (positive feedback loop)",
+   "kind": "measured",
+   "source": null,
+   "metric": "qualitative",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": 5000,
+   "setup": "Phrases tested, human and random",
+   "note": null,
+   "where": "Fig 4",
+   "quote": null
+  },
+  {
+   "claim": "Human text per-token probability is much lower than beam search text; natural language does not maximize probability",
+   "kind": "measured",
+   "source": null,
+   "metric": "qualitative",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": 5000,
+   "setup": "Fig 2 and Fig 6",
+   "note": null,
+   "where": "4.3",
+   "quote": null
+  },
+  {
+   "claim": "Self-BLEU: t in [0.5,1] and k in [1,100] give high self-similarity; p in [0.9,1) closely matches human",
+   "kind": "measured",
+   "source": null,
+   "metric": "qualitative",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": 5000,
+   "setup": "Unconditional generations, 5000 documents",
+   "note": null,
+   "where": "Fig 8",
+   "quote": null
+  }
+ ],
+ "limits": [
+  "Only GPT-2 Large (762M) and English web text; no instruction-tuned models",
+  "Single run, no seeds or confidence intervals stated",
+  "HUSE for top-k and nucleus is computed on a distribution interpolated with mass 0.1, a proxy",
+  "Authors say future work should combine training-time and inference-time fixes and a semantic utility",
+  "Beam search repetition falls with beam width mainly because generations get shorter (Appendix A)"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Nucleus Sampling",
+   "definition": "sample from the top-p vocabulary V(p), the smallest set whose cumulative probability is at least p, with renormalisation",
+   "where": "3.1"
+  },
+  {
+   "term": "open-ended generation",
+   "definition": "generation where the input context restricts but does not determine the output, unlike directed generation (translation, summarisation)",
+   "where": "2.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Hierarchical neural story generation (Fan et al.)",
+   "year": 2018,
+   "arxiv": "1805.04833",
+   "relation": "baseline",
+   "note": "top-k sampling",
+   "quote": null
+  },
+  {
+   "work": "Learning to write with cooperative discriminators",
+   "year": 2018,
+   "arxiv": "1805.06087",
+   "relation": "related",
+   "note": "same first author; top-k use",
+   "quote": null
+  },
+  {
+   "work": "GPT-2 (Radford et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "model used",
+   "quote": null
+  },
+  {
+   "work": "Unifying human and statistical evaluation (HUSE)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "HUSE metric",
+   "quote": null
+  },
+  {
+   "work": "Neural text generation with unlikelihood training (Welleck et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "related",
+   "note": "training-time fix",
+   "quote": null
+  },
+  {
+   "work": "Texygen (Zhu et al.)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Self-BLEU",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Beam search (b=32) repeats; pure sampling gives gibberish",
+   "page": 1,
+   "why": "shows both failure modes"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Probability assigned to tokens by beam search vs human",
+   "page": 2,
+   "why": "beam text is too probable, human varies"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Probability mass over partial human sentences, flat vs peaked",
+   "page": 5,
+   "why": "why fixed k fails"
+  },
+  {
+   "figure": "Fig 9",
+   "caption": "Repetition rate per decoding method",
+   "page": 9,
+   "why": "repetition vs parameter"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 2-3",
+   "snippet": "V(p): smallest set with sum_{x in V(p)} P(x|x_{1:i-1}) >= p ; P'(x)=P(x)/p' if x in V(p) else 0",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Fig 1 caption lists Large/XL as 774M/1542M while 4.1 says Large is 762M",
+  "Table 1 PDF text has no row/column layout; values assigned in order Perplexity, Self-BLEU4, Zipf, Repetition %, HUSE",
+  "Appendix A figure has no numeric table"
+ ]
+}

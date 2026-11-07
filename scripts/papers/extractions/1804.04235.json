@@ -1,0 +1,396 @@
+{
+ "schema": 1,
+ "key": "1804.04235",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/shazeer-2018-adafactor.pdf",
+ "bib": {
+  "title": "Adafactor: Adaptive Learning Rates with Sublinear Memory Cost",
+  "authors": [
+   "Noam Shazeer",
+   "Mitchell Stern"
+  ],
+  "first_author": "Shazeer",
+  "year": 2018,
+  "venue": "preprint",
+  "arxiv": "1804.04235",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 35662,
+  "chars_total": 35662,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can Adam's per-parameter optimizer memory be cut to sublinear while keeping training quality and stability?",
+ "hypothesis": "Out-of-date second-moment estimates cause larger-than-desired updates and instability; factoring the accumulator, update clipping and an increasing decay rate give Adam-like quality with little extra memory.",
+ "contributions": [
+  "Factored second-moment estimate from row and column sums (rank-1, I-divergence optimal)",
+  "Dropping momentum",
+  "Update clipping and 1 - t^-c decay schedule to fix instability",
+  "Relative step sizes scaled by parameter RMS"
+ ],
+ "method": {
+  "summary": "Adafactor: Adam with a rank-1 factored second-moment accumulator for matrices, no momentum, update clipping at RMS threshold d, decay 1 - t^-0.8 and step sizes relative to parameter scale. Compared against Adam and SGD on a Transformer WMT14 En-De task.",
+  "task": "optimizer for neural machine translation (Transformer)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "WMT 2014 English-German",
+    "role": "both",
+    "size": null,
+    "split": "train; dev newstest2013 for reported BLEU",
+    "source": "WMT 2014 as in Vaswani et al. 2017",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Transformer (Tensor2Tensor latest version)",
+    "role": "base",
+    "params": null,
+    "architecture": "encoder-decoder Transformer, Vaswani et al. 2017",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "embedding_init": "stddev 1/sqrt(dmodel), scaled by sqrt(dmodel) in the clever scheme; shared embedding/softmax in main runs; unshared in Table 3 runs"
+    }
+   }
+  ],
+  "training": {
+   "objective": null,
+   "optimizer": "Adam (baseline); Adafactor; SGD",
+   "lr": "Adam: alpha_t = 0.1 * min(1e-6 * t, 1/sqrt(t)) with warmup; 0.1 * min(1e-2, 1/sqrt(t)) without; Adafactor rho_t = min(1e-2, 1/sqrt(t))",
+   "lr_schedule": "linear warmup then inverse sqrt decay; or flat 1e-2 cap without warmup",
+   "warmup": "1e-6 * t ramp; variant with none",
+   "batch_size": "~4,096 input tokens + ~4,096 target tokens (about 8x smaller than Vaswani et al.); 16,384 tokens in Table 3",
+   "steps": "100,000 (50,000 in Table 3)",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "one Google TPU v2",
+   "compute": null,
+   "wall_clock": "less than two hours each",
+   "seeds": null,
+   "other": {
+    "adafactor_hparams": "eps1=1e-30, eps2=1e-3, d=1, rho_t=min(1e-2,1/sqrt(t)), beta2_t=1-t^-0.8",
+    "adam_beta1_beta2": "beta1 0 or 0.9; beta2 0.999 default (0.99, 0.9 tested)",
+    "clipping_d_tested": "1 and 2; d=2 did not help"
+   }
+  },
+  "inference": {
+   "decoding": "beam search, beam 4",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single run per configuration; seeds not stated",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "length_penalty_alpha": "0.6"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "BLEU",
+     "definition": "on newstest2013 dev set, beam 4, length penalty 0.6",
+     "unit": "BLEU",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Adam with and without momentum",
+    "row-mean / column-mean estimates",
+    "SGD with several learning rates"
+   ],
+   "protocol": "One run per row; no variance or significance reported; scores not comparable to Vaswani et al."
+  },
+  "availability": {
+   "code": "Tensor2Tensor open-source library",
+   "weights": null,
+   "data": "WMT 2014 En-De (public)"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.steps",
+    "quote": "Models were trained for 100,000 steps.",
+    "where": "Sec 9"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Factored second moments without momentum (with warmup) match Adam without factoring.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": "25.4",
+   "unit": "BLEU",
+   "baseline_value": "25.6 (A, no factoring, no momentum); 25.4 (B, momentum 0.9)",
+   "n": null,
+   "setup": "WMT 2014 En-De Transformer (Tensor2Tensor), 100,000 steps, ~4,096 input + 4,096 target tokens per batch, dev set newstest2013, beam 4, alpha 0.6",
+   "note": "Row (C) has beta1=0; the 25.4 Adam row (B) uses momentum 0.9.",
+   "where": "Table 2",
+   "table": "Table 2, row (C), column BLEU with warmup"
+  },
+  {
+   "claim": "Without warmup, factored beta2=0.999 without clipping is unstable.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": "0.2",
+   "unit": "BLEU",
+   "baseline_value": null,
+   "n": null,
+   "setup": "WMT 2014 En-De Transformer (Tensor2Tensor), 100,000 steps, ~4,096 input + 4,096 target tokens per batch, dev set newstest2013, beam 4, alpha 0.6",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row (C), column BLEU no warmup"
+  },
+  {
+   "claim": "Factored beta2=0.999 with update clipping d=1 recovers stability without warmup, but below warmup quality.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": "22.4",
+   "unit": "BLEU",
+   "baseline_value": "25.6 with warmup",
+   "n": null,
+   "setup": "WMT 2014 En-De Transformer (Tensor2Tensor), 100,000 steps, ~4,096 input + 4,096 target tokens per batch, dev set newstest2013, beam 4, alpha 0.6",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row (J), column BLEU no warmup"
+  },
+  {
+   "claim": "Removing momentum with warmup leaves quality similar.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": "23.6 vs. 23.4",
+   "unit": "BLEU",
+   "baseline_value": null,
+   "n": null,
+   "setup": "WMT 2014 En-De Transformer (Tensor2Tensor), 100,000 steps, ~4,096 input + 4,096 target tokens per batch, dev set newstest2013, beam 4, alpha 0.6",
+   "note": "Text prints 23.6 vs 23.4 while Table 2 (A) vs (B) with-warmup column prints 25.6 vs 25.4; the text appears to mis-state them.",
+   "where": "Sec 4.1",
+   "quote": "model quality is similar without and with momentum (BLEU = 23.6 vs. 23.4)"
+  },
+  {
+   "claim": "Without warmup and without momentum, baseline Adam collapses.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": "0.1",
+   "unit": "BLEU",
+   "baseline_value": "23.1 with momentum (B)",
+   "n": null,
+   "setup": "WMT 2014 En-De Transformer (Tensor2Tensor), 100,000 steps, ~4,096 input + 4,096 target tokens per batch, dev set newstest2013, beam 4, alpha 0.6",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row (A), column BLEU no warmup"
+  },
+  {
+   "claim": "Fast second-moment decay (beta2=0.9) converges worse (18.4) than slow decay (25.6).",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": "18.4",
+   "unit": "BLEU",
+   "baseline_value": "25.6",
+   "n": null,
+   "setup": "WMT 2014 En-De Transformer (Tensor2Tensor), 100,000 steps, ~4,096 input + 4,096 target tokens per batch, dev set newstest2013, beam 4, alpha 0.6",
+   "note": null,
+   "where": "Table 1, Table 2",
+   "table": "Table 2, row (G), column BLEU with warmup"
+  },
+  {
+   "claim": "Increasing decay 1 - t^-0.8 with clipping d=1 reaches the best warmup score and is stable without warmup.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": "25.9",
+   "unit": "BLEU",
+   "baseline_value": null,
+   "n": null,
+   "setup": "WMT 2014 En-De Transformer (Tensor2Tensor), 100,000 steps, ~4,096 input + 4,096 target tokens per batch, dev set newstest2013, beam 4, alpha 0.6",
+   "note": "Row N no-warmup 22.4.",
+   "where": "Table 2",
+   "table": "Table 2, row (N), column BLEU with warmup"
+  },
+  {
+   "claim": "Full Adafactor (relative step size, clipping, 1-t^-0.8) without momentum: stable with and without warmup.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": "25.0 with warmup, 25.5 without",
+   "unit": "BLEU",
+   "baseline_value": null,
+   "n": null,
+   "setup": "WMT 2014 En-De Transformer (Tensor2Tensor), 100,000 steps, ~4,096 input + 4,096 target tokens per batch, dev set newstest2013, beam 4, alpha 0.6",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row (O), columns BLEU with warmup / no warmup"
+  },
+  {
+   "claim": "Column-mean-only second-moment estimate fails; row-mean works.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": "0.3",
+   "unit": "BLEU",
+   "baseline_value": "25.2 row-mean (D)",
+   "n": null,
+   "setup": "WMT 2014 En-De Transformer (Tensor2Tensor), 100,000 steps, ~4,096 input + 4,096 target tokens per batch, dev set newstest2013, beam 4, alpha 0.6",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row (E), column BLEU with warmup"
+  },
+  {
+   "claim": "Plain SGD is poorer and highly learning-rate dependent; best stable 24.3 at lr 200*s_t with warmup.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": "24.3",
+   "unit": "BLEU",
+   "baseline_value": null,
+   "n": null,
+   "setup": "WMT 2014 En-De Transformer (Tensor2Tensor), 100,000 steps, ~4,096 input + 4,096 target tokens per batch, dev set newstest2013, beam 4, alpha 0.6",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, SGD lr = 200 * st, column BLEU with warmup"
+  },
+  {
+   "claim": "Adafactor with relative step size is more resilient than Adam to naively scaled embeddings (sigma 1/sqrt(dmodel), multiplier 1).",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": "25.4 vs 24.2",
+   "unit": "BLEU",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Embeddings not shared with softmax; 50,000 steps, batch 16,384 tokens; Adam with Vaswani hyperparameters, Adafactor with Algorithm 6",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row sigma=1/sqrt(dmodel), multiplier 1, columns Adafactor / Adam"
+  },
+  {
+   "claim": "Memory of the second-moment accumulator drops from O(nm) to O(n+m) for an n x m matrix.",
+   "kind": "measured",
+   "source": null,
+   "metric": "memory",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Factored rank-1 I-divergence estimate",
+   "note": null,
+   "where": "Sec 1",
+   "quote": "For an n × m matrix, this reduces the memory requirements from O(nm) to O(n+m)."
+  },
+  {
+   "claim": "Adam keeps two extra values per parameter, tripling parameter memory.",
+   "kind": "measured",
+   "source": null,
+   "metric": "memory",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Adam, as described by the authors",
+   "note": null,
+   "where": "Sec 1",
+   "quote": "Adam (Kingma & Ba, 2015) keeps two additional values for each parameter, tripling the memory requirements."
+  }
+ ],
+ "limits": [
+  "Only one task and one architecture; no language-model or multi-billion-parameter run despite the memory motivation.",
+  "Single runs, no seeds or variance; BLEU on dev set.",
+  "Batches 8x smaller than Vaswani et al., so scores are not comparable to published results.",
+  "Authors say relative step size effect on stability is unclear because step sizes are not comparable.",
+  "Gradient convergence guarantees absent for non-convex case."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "update clipping",
+   "definition": "scaling down the update on a weight X whenever RMS(U_t) exceeds threshold d",
+   "where": "Sec 6"
+  },
+  {
+   "term": "relative step size",
+   "definition": "step sizes rho_t multiplied by the RMS of the parameters, lower-bounded by eps2",
+   "where": "Sec 8"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Adam",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "base optimizer",
+   "quote": null
+  },
+  {
+   "work": "Attention is all you need",
+   "year": 2017,
+   "arxiv": "1706.03762",
+   "relation": "uses-data",
+   "note": "Transformer and WMT14 task",
+   "quote": null
+  },
+  {
+   "work": "On the convergence of Adam and beyond",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "related",
+   "note": "increasing beta2 schedule; fast decay non-convergence",
+   "quote": null
+  },
+  {
+   "work": "Outrageously large neural networks",
+   "year": 2017,
+   "arxiv": "1701.06538",
+   "relation": "extends",
+   "note": "preliminary factored version in its Appendix D",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Figure 1",
+   "caption": "With slow decay (beta2 = 0.999), the second-moment estimator is out of date, leading to parameter updates that are larger or smaller than the intended value.",
+   "page": 4,
+   "why": "Shows RMS(U_t) fluctuating for beta2=0.999 vs staying near 1 for 0.9."
+  },
+  {
+   "figure": "Table 2",
+   "caption": "BLEU scores for Transformer on WMT '14 En->De translation task",
+   "page": 5,
+   "why": "Ablation of every proposed component with and without warmup."
+  }
+ ],
+ "code": [
+  {
+   "where": "Algorithm 6",
+   "snippet": "eps1 = 1e-30; eps2 = 1e-3; d = 1; rho_t = min(1e-2, 1/sqrt(t)); beta2_t = 1 - t^-0.8",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Section 4.1 text gives BLEU 23.6 vs 23.4 while Table 2 shows 25.6 vs 25.4 for the same rows/column."
+ ]
+}

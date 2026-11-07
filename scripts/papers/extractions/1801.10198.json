@@ -1,0 +1,474 @@
+{
+ "schema": 1,
+ "key": "1801.10198",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/liu-2018-generating-wikipedia-summarizing-long-sequences.pdf",
+ "bib": {
+  "title": "Generating Wikipedia by Summarizing Long Sequences",
+  "authors": [
+   "Peter J. Liu",
+   "Mohammad Saleh",
+   "Etienne Pot",
+   "Ben Goodrich",
+   "Ryan Sepassi",
+   "Łukasz Kaiser",
+   "Noam Shazeer"
+  ],
+  "first_author": "Liu",
+  "year": 2018,
+  "venue": "ICLR 2018",
+  "arxiv": "1801.10198",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 37804,
+  "chars_total": 37804,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can English Wikipedia lead sections be generated as multi-document summarization of reference documents, and can a decoder-only model handle the very long inputs?",
+ "hypothesis": "A decoder-only Transformer with local and memory-compressed attention handles longer inputs than encoder-decoder models and performs better on long sequences.",
+ "contributions": [
+  "WikiSum: Wikipedia lead generation as a large multi-document summarization dataset",
+  "Two-stage extractive-abstractive framework",
+  "Transformer decoder (T-D) and T-DMCA with local and memory-compressed attention for long sequences",
+  "Preliminary generation of entire Wikipedia articles"
+ ],
+ "method": {
+  "summary": "Stage 1 ranks paragraphs of cited and web-search documents (tf-idf against the title) and keeps the first L tokens. Stage 2 trains an abstractive model (seq2seq-att, Transformer enc-dec, decoder-only T-D, or T-DMCA) to write the Wikipedia lead.",
+  "task": "multi-document abstractive summarization (Wikipedia lead generation)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "WikiSum",
+    "role": "both",
+    "size": "1865750 train / 233252 dev / 232998 test examples",
+    "split": "roughly 80/10/10; only articles with at least one crawlable citation",
+    "source": "Wikipedia articles, text of crawlable cited documents, and top 10 Google results per section-title query (Wikipedia page and clones removed)",
+    "preprocessing": "clone detected if max unigram recall over article sections r>0.5; paragraphs ranked, concatenated with title prefix, sub-word tokenised, truncated to L tokens; output not truncated"
+   }
+  ],
+  "models": [
+   {
+    "name": "seq2seq-att (LSTM encoder-decoder with attention)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "LSTM enc-dec with attention (tensor2tensor lstm_attention)",
+    "init_from": null,
+    "tokenizer": "sub-word (Wu et al. 2016)",
+    "vocab": "32,000",
+    "layers": "2",
+    "hidden": "128",
+    "heads": null,
+    "context": "L=500",
+    "other": {}
+   },
+   {
+    "name": "Transformer encoder-decoder (T-ED)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "transformer_base_v1",
+    "init_from": null,
+    "tokenizer": "sub-word",
+    "vocab": "32,000",
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "best L=500-1000; unable to learn at L=2000",
+    "other": {}
+   },
+   {
+    "name": "Transformer decoder (T-D)",
+    "role": "proposed",
+    "params": "almost half of T-ED for the same hyper-parameter set",
+    "architecture": "decoder part of T-ED; input, separator and output as one sequence, plain LM",
+    "init_from": null,
+    "tokenizer": "sub-word",
+    "vocab": "32,000",
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "up to L=4000 on 16GB P100",
+    "other": {}
+   },
+   {
+    "name": "Transformer decoder with memory-compressed attention (T-DMCA)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "5 layers LMLML alternating local attention (blocks of 256 tokens) and memory-compressed attention (strided conv kernel 3 stride 3 on keys/values); optional MoE layer (128 or 256 experts)",
+    "init_from": null,
+    "tokenizer": "sub-word",
+    "vocab": "32,000",
+    "layers": "5",
+    "hidden": null,
+    "heads": null,
+    "context": "L up to 11000",
+    "other": {
+     "processes_sequences": "3x longer than T-D"
+    }
+   }
+  ],
+  "training": {
+   "objective": "maximum likelihood; T-D/T-DMCA next-token over input and output",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": "1 million steps (T-ED); not stated for others",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "L between 100 and 11000",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "none; little overfitting, no early stopping",
+   "hardware": "machines with 16GB GPU RAM (NVIDIA P100)",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "library": "tensor2tensor",
+    "full_article_models": "T-DMCA with L=6000 reference tokens predicting at most 2192 article tokens; title-only model up to 4000 tokens"
+   }
+  },
+  "inference": {
+   "decoding": "beam search size 4, length penalty alpha=0.6, decode until end-of-sequence",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": "input sequence given first, output generated autoregressively after separator",
+   "retrieval": "tf-idf paragraph ranking against the article title; first L tokens kept",
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "per-wordpiece (log-)perplexity",
+     "definition": "per-wordpiece perplexity on test set; tables print log-perplexity values",
+     "unit": "nats",
+     "higher_is_better": false
+    },
+    {
+     "name": "ROUGE-L F1",
+     "definition": "ROUGE-1.5.5, harmonic mean of recall and precision",
+     "unit": "points",
+     "higher_is_better": true
+    },
+    {
+     "name": "DUC-style linguistic quality",
+     "definition": "1-5 scores on 5 dimensions; 25 examples per model, 3 raters of 7",
+     "unit": "1-5",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "seq2seq-att",
+    "Transformer-ED",
+    "tf-idf only",
+    "SumBasic",
+    "TextRank",
+    "identity and cheating extractors",
+    "Sauper & Barzilay (2009)"
+   ],
+   "protocol": "Welch two sample t-test p=0.001 for human scores; side-by-side 3 raters x 25 examples; single runs"
+  },
+  "availability": {
+   "code": "promised: tensor2tensor extensions, goo.gl/wSuuS9",
+   "weights": null,
+   "data": "promised: URLs from CommonCrawl"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "models.params",
+    "quote": "almost reducing model parameters by half for a given hyper-parameter set",
+    "where": "4.2.3"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "T-DMCA with MoE-256 at L=7500 gives the best ROUGE-L and perplexity",
+   "kind": "measured",
+   "source": null,
+   "metric": "ROUGE-L",
+   "value": 38.8,
+   "unit": "points",
+   "baseline_value": 34.2,
+   "n": null,
+   "setup": "WikiSum, tf-idf extractor, combined corpus, test set, Table 4",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row Transformer-DMCA, MoE-256, L = 7500, column ROUGE-L"
+  },
+  {
+   "claim": "Transformer encoder-decoder at L=500 reaches test perplexity 2.46645 (ROUGE-L 34.2)",
+   "kind": "measured",
+   "source": null,
+   "metric": "test log-perplexity",
+   "value": 2.46645,
+   "unit": "nats",
+   "baseline_value": null,
+   "n": null,
+   "setup": "WikiSum, tf-idf extractor, combined corpus, test set, L=500",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row Transformer-ED, L = 500, column Test perplexity"
+  },
+  {
+   "claim": "Transformer-D at L=4000 reaches test perplexity 2.22216",
+   "kind": "measured",
+   "source": null,
+   "metric": "test log-perplexity",
+   "value": 2.22216,
+   "unit": "nats",
+   "baseline_value": null,
+   "n": null,
+   "setup": "WikiSum, tf-idf extractor, combined corpus, test set, L=4000",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row Transformer-D, L = 4000, column Test perplexity"
+  },
+  {
+   "claim": "T-DMCA without MoE at L=11000 reaches test perplexity 2.05159",
+   "kind": "measured",
+   "source": null,
+   "metric": "test log-perplexity",
+   "value": 2.05159,
+   "unit": "nats",
+   "baseline_value": null,
+   "n": null,
+   "setup": "WikiSum, tf-idf extractor, combined corpus, test set, L=11000",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row Transformer-DMCA, no MoE-layer, L = 11000, column Test perplexity"
+  },
+  {
+   "claim": "seq2seq-attention baseline is far worse",
+   "kind": "measured",
+   "source": null,
+   "metric": "ROUGE-L",
+   "value": 12.7,
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "WikiSum, tf-idf extractor, combined corpus, test set, L=500",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row seq2seq-attention, L = 500, column ROUGE-L"
+  },
+  {
+   "claim": "T-ED cannot learn at L=2000; T-D improves to L=4000 before out of memory",
+   "kind": "measured",
+   "source": null,
+   "metric": "max input length",
+   "value": 4000,
+   "unit": "tokens",
+   "baseline_value": null,
+   "n": null,
+   "setup": "16GB P100",
+   "note": "quote gives L=2000 failure; 4000 is T-D limit",
+   "where": "5.3",
+   "quote": "unable to learn at L = 2000"
+  },
+  {
+   "claim": "MoE with 128 experts lowers log-perplexity at L=11000",
+   "kind": "measured",
+   "source": null,
+   "metric": "test log-perplexity",
+   "value": 1.93,
+   "unit": "nats",
+   "baseline_value": 2.05,
+   "n": null,
+   "setup": "T-DMCA L=11000",
+   "note": null,
+   "where": "5.3",
+   "quote": "dropping log-perplexity from 2.05 to 1.93 at L = 11000 with 128 experts"
+  },
+  {
+   "claim": "Extractor matters: tf-idf vs identity vs cheating (T-ED, L=500, combined)",
+   "kind": "measured",
+   "source": null,
+   "metric": "ROUGE-L",
+   "value": 34.2,
+   "unit": "points",
+   "baseline_value": 4.0,
+   "n": null,
+   "setup": "T-ED L=500, combined corpus",
+   "note": "identity 4.0, cheating 59.3",
+   "where": "Table 3",
+   "table": "Table 3, row tf-idf combined, column ROUGE-L"
+  },
+  {
+   "claim": "Combined corpus beats citations-only and search-only",
+   "kind": "measured",
+   "source": null,
+   "metric": "ROUGE-L",
+   "value": 22.6,
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "T-ED L=500, tf-idf",
+   "note": "search-only 2.8",
+   "where": "Table 3",
+   "table": "Table 3, row tf-idf citations-only, column ROUGE-L"
+  },
+  {
+   "claim": "WikiSum ROUGE-1 recall of output given input is lowest among summarization datasets",
+   "kind": "measured",
+   "source": null,
+   "metric": "ROUGE-1 R",
+   "value": 59.2,
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "dataset statistic",
+   "note": null,
+   "where": "2.1",
+   "quote": "Given a score of only 59.2 compared to 76.1 and 78.7"
+  },
+  {
+   "claim": "T-DMCA human linguistic quality: focus",
+   "kind": "measured",
+   "source": null,
+   "metric": "focus score",
+   "value": 4.5,
+   "unit": "1-5",
+   "baseline_value": null,
+   "n": null,
+   "setup": "25 examples, 3 raters",
+   "note": "tf-idf 3.0, seq2seq 3.0",
+   "where": "Table 5",
+   "table": "Table 5, row T-DMCA (best), column Focus"
+  },
+  {
+   "claim": "T-DMCA beats Sauper & Barzilay ROUGE-1 F1 on American Actors (lead vs article)",
+   "kind": "measured",
+   "source": null,
+   "metric": "ROUGE-1 F1",
+   "value": 54,
+   "unit": "points",
+   "baseline_value": 41,
+   "n": null,
+   "setup": "American Actors n=1322",
+   "note": null,
+   "where": "Table 7",
+   "table": "Table 7, row T-DMCA (Ours), n = 1322, column ROUGE-1 F1"
+  },
+  {
+   "claim": "T-DMCA is worse than Sauper & Barzilay on Diseases",
+   "kind": "measured",
+   "source": null,
+   "metric": "ROUGE-1 F1",
+   "value": 29,
+   "unit": "points",
+   "baseline_value": 37,
+   "n": null,
+   "setup": "Diseases n=161",
+   "note": null,
+   "where": "Table 7",
+   "table": "Table 7, row T-DMCA (Ours), n = 161, column ROUGE-1 F1"
+  },
+  {
+   "claim": "Dataset split sizes",
+   "kind": "measured",
+   "source": null,
+   "metric": "train examples",
+   "value": 1865750,
+   "unit": "examples",
+   "baseline_value": null,
+   "n": null,
+   "setup": "WikiSum",
+   "note": null,
+   "where": "3",
+   "quote": "resulting in 1865750, 233252, and 232998 examples respectively"
+  }
+ ],
+ "limits": [
+  "Full-article generation is preliminary and not tuned",
+  "Comparison with Sauper & Barzilay is best-effort: lead vs article, different subsets, clone detection unknown",
+  "Extractive stage is a coarse bottleneck; authors suggest supervised relevance",
+  "Optimizer, learning rate, batch size and steps for T-D/T-DMCA unstated; single runs",
+  "Side-by-side human evaluation gets harder at the high end",
+  "Models translate names across languages, not systematically evaluated"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "T-DMCA",
+   "definition": "Transformer decoder with local attention blocks and memory-compressed (strided-convolution) keys/values",
+   "where": "4.2.4"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Attention is all you need (Vaswani et al.)",
+   "year": 2017,
+   "arxiv": "1706.03762",
+   "relation": "extends",
+   "note": "decoder-only modification of the Transformer",
+   "quote": null
+  },
+  {
+   "work": "Outrageously large neural networks (Shazeer et al.)",
+   "year": 2017,
+   "arxiv": "1701.06538",
+   "relation": "uses-method",
+   "note": "MoE layer",
+   "quote": null
+  },
+  {
+   "work": "Bahdanau et al. NMT",
+   "year": 2014,
+   "arxiv": "1409.0473",
+   "relation": "baseline",
+   "note": "LSTM seq2seq with attention",
+   "quote": null
+  },
+  {
+   "work": "Sauper & Barzilay, Automatically generating Wikipedia articles",
+   "year": 2009,
+   "arxiv": null,
+   "relation": "related",
+   "note": "closest prior work; compared in Table 7",
+   "quote": null
+  },
+  {
+   "work": "Wu et al. GNMT",
+   "year": 2016,
+   "arxiv": "1609.08144",
+   "relation": "uses-method",
+   "note": "sub-word tokenization and length penalty",
+   "quote": null
+  },
+  {
+   "work": "Mihalcea & Tarau TextRank; Nenkova & Vanderwende SumBasic",
+   "year": 2004,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "extractive methods",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "The architecture of the self-attention layers used in the T-DMCA model.",
+   "page": 6,
+   "why": "shows local vs memory-compressed attention"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Perplexity versus L for tf-idf extraction on combined corpus for different architectures.",
+   "page": 8,
+   "why": "shows where each architecture stops improving"
+  }
+ ],
+ "code": [],
+ "problems": []
+}

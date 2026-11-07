@@ -1,0 +1,558 @@
+{
+ "schema": 1,
+ "key": "2109.01652",
+ "pdf": "generative-ai/05-RL/sources/wei-2021-finetuned-language-models-zero-shot.pdf",
+ "bib": {
+  "title": "Finetuned Language Models Are Zero-Shot Learners",
+  "authors": [
+   "Jason Wei",
+   "Maarten Bosma",
+   "Vincent Y. Zhao",
+   "Kelvin Guu",
+   "Adams Wei Yu",
+   "Brian Lester",
+   "Nan Du",
+   "Andrew M. Dai",
+   "Quoc V. Le"
+  ],
+  "first_author": "Wei",
+  "year": 2022,
+  "venue": "ICLR 2022 (arXiv v5, 8 Feb 2022)",
+  "arxiv": "2109.01652",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 144818,
+  "chars_total": 144818,
+  "engine": "pymupdf",
+  "skipped": "Reference list and appendix D/F qualitative figure text skimmed only; Table 5 rows and Tables 6-22 (dataset descriptions/examples) not recorded in detail."
+ },
+ "type": "empirical",
+ "question": "Does finetuning a language model on a collection of tasks phrased as natural-language instructions improve its zero-shot performance on unseen task types?",
+ "hypothesis": "Instruction tuning on a diverse set of tasks improves performance on unseen tasks.",
+ "contributions": [
+  "Instruction tuning: finetune a 137B pretrained LM on 62 NLP datasets verbalized via instruction templates (FLAN)",
+  "Evaluation on held-out task clusters so no dataset of the same task type is seen in tuning",
+  "Ablations on number of clusters, model scale, role of instructions, few-shot exemplars and prompt tuning"
+ ],
+ "method": {
+  "summary": "LaMDA-PT 137B is finetuned on a mixture of 62 TFDS text datasets in 12 task clusters, each rendered with 10 hand-written instruction templates. To test unseen tasks, one model is tuned per held-out cluster with that cluster (and related clusters) removed, then evaluated zero-shot against LaMDA-PT, GPT-3 175B and GLaM.",
+  "task": "instruction tuning / zero-shot cross-task generalization",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Instruction tuning mixture (62 TFDS datasets, 12 clusters)",
+    "role": "train",
+    "size": "62 datasets; at most 30k examples per dataset; examples-proportional mixing with rate maximum 3k",
+    "split": "training splits; each held-out cluster (and related clusters) removed per model",
+    "source": "publicly available datasets on Tensorflow Datasets; 10 manually written templates per dataset (up to 3 turn-the-task-around)",
+    "preprocessing": "Examples formatted with a randomly selected template per dataset; OPTIONS suffix for classification; packing of examples into one sequence with EOS between input and target"
+   },
+   {
+    "name": "25 NLU/NLG evaluation datasets across NLI, reading comp., closed-book QA, translation, commonsense, coreference, struct-to-text (Tables 1-2)",
+    "role": "eval",
+    "size": "not summarised; e.g. ANLI R1 1,000 and PIQA 1,838 test examples",
+    "split": "test sets; dev set used to pick best template",
+    "source": "public benchmarks (see Appendix A, G)",
+    "preprocessing": "Summarization not evaluated because mean input exceeds 1024 tokens"
+   },
+   {
+    "name": "SuperGLUE (prompt tuning analysis)",
+    "role": "eval",
+    "size": "full train set or 32 training examples",
+    "split": "dev set average",
+    "source": "Wang et al. 2019a",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "LaMDA-PT 137B",
+    "role": "base",
+    "params": "137B",
+    "architecture": "dense left-to-right decoder-only transformer",
+    "init_from": "pretrained on web documents (incl. code), dialog data, Wikipedia; 2.49T BPE tokens",
+    "tokenizer": "SentencePiece BPE",
+    "vocab": "32k",
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "inferred: 1024 input + 256 target tokens in finetuning",
+    "other": {
+     "non_english": "around 10% of pretraining data",
+     "pretraining_energy": "451 MWh, 26 tCO2e (same models as Austin et al. 2021)"
+    }
+   },
+   {
+    "name": "FLAN 137B",
+    "role": "proposed",
+    "params": "137B",
+    "architecture": "LaMDA-PT after instruction tuning",
+    "init_from": "LaMDA-PT",
+    "tokenizer": "SentencePiece",
+    "vocab": "32k",
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "checkpoints": "one model per held-out task cluster"
+    }
+   },
+   {
+    "name": "LaMDA-PT smaller sizes (scaling ablation)",
+    "role": "baseline",
+    "params": "422M, 2B, 8B, 68B (and 137B)",
+    "architecture": "same family",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "text says 422M, Fig 7 axis label says 0.4B"
+    }
+   },
+   {
+    "name": "GPT-3 175B",
+    "role": "evaluated",
+    "params": "175B",
+    "architecture": "decoder-only",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "numbers taken from Brown et al. 2020"
+    }
+   },
+   {
+    "name": "GLaM 64B/64E",
+    "role": "evaluated",
+    "params": "64B/64E",
+    "architecture": "mixture of experts",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "numbers taken from Du et al. 2021"
+    }
+   }
+  ],
+  "training": {
+   "objective": "inferred: next-token (supervised) loss on targets of instruction-formatted examples",
+   "optimizer": "Adafactor",
+   "lr": "3e-5",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "8,192 tokens",
+   "steps": "30k gradient steps",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "1024 input, 256 target",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "TPUv3, 128 cores",
+   "compute": "fewer than 2% of the pretraining gradient steps",
+   "wall_clock": "around 60 hours",
+   "seeds": null,
+   "other": {
+    "checkpoint": "final checkpoint at 30k steps for all evaluations",
+    "prompt_tuning": "Lester et al. 2021 procedure with prompt length 10, weight decay 1e-4, no dropout on attention scores",
+    "few_shot_flan": "exemplars randomly drawn from train set at training and inference time; capped at 16 and total length under 960 tokens"
+   }
+  },
+  "inference": {
+   "decoding": "greedy search for generative tasks (Brown et al. used beam search)",
+   "temperature": "0.9 for qualitative figures only",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "mean and std over up to 10 templates per dataset (#t in Tables 1-2); one best-dev-template run; no seeds stated",
+   "prompting": "zero-shot natural-language instruction template plus OPTIONS suffix; few-shot FLAN concatenates instruct(x_i)+y_i; LaMDA-PT baseline uses GPT-3 prompts with the highest k in {1,3,5,10} fitting 1024 tokens",
+   "retrieval": null,
+   "parameters": {
+    "top_k": "40 (qualitative figures only)",
+    "curly_brackets": "DROP and SQuADv2 answers delimited by { }"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "accuracy / exact match / F1 / BLEU / ROUGE",
+     "definition": "accuracy or EM by default; F1 for DROP, MultiRC, SQuAD v1/v2; BLEU for translation; ROUGE for struct-to-text",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "LaMDA-PT 137B zero and few-shot (GPT-3 prompts)",
+    "GPT-3 175B zero and few-shot (reported)",
+    "GLaM 64B/64E zero and one-shot (reported)",
+    "supervised T5-11B, BERT-large, translation models"
+   ],
+   "protocol": "Unseen task = no dataset from any cluster D belongs to seen in tuning; one model per held-out cluster; report mean over templates and test score of best-dev template; data contamination check with ~13-gram overlap following Brown et al. 2020; no significance test, single tuning run stated"
+  },
+  "availability": {
+   "code": "https://github.com/google-research/flan (loading the instruction tuning dataset)",
+   "weights": null,
+   "data": "datasets public via Tensorflow Datasets; templates in Appendix G"
+  },
+  "prompts": [
+   {
+    "purpose": "NLI example FLAN prompt",
+    "text": "Premise: At my age you will probably have learnt one lesson. Hypothesis: It's not certain how many lessons you'll learn by your thirties. Does the premise entail the hypothesis?",
+    "where": "Appendix E"
+   },
+   {
+    "purpose": "Role of instructions ablation example",
+    "text": "Please translate this sentence to French: 'The dog runs.'",
+    "where": "Section 4.3"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training.batch_size",
+    "quote": "batch size of 8,192 tokens",
+    "where": "Section 2.4"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Zero-shot FLAN 137B beats zero-shot GPT-3 175B on 20 of 25 datasets.",
+   "kind": "measured",
+   "source": null,
+   "metric": "datasets won",
+   "value": "20 of 25",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "FLAN 137B vs GPT-3 175B zero-shot (reported by Brown et al.), 25 unseen datasets, best dev template",
+   "quote": "surpasses zero-shot 175B GPT-3 on 20 of 25 datasets that we evaluate",
+   "table": null,
+   "note": null,
+   "where": "Abstract; Sec 3"
+  },
+  {
+   "claim": "Zero-shot FLAN beats few-shot GPT-3 on 10 datasets.",
+   "kind": "measured",
+   "source": null,
+   "metric": "datasets won",
+   "value": "10",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "FLAN 137B zero-shot best dev template vs GPT-3 175B few-shot",
+   "quote": "on 10 datasets. With the best dev-template, zero-shot FLAN outperforms zero-shot GLaM on 13 of",
+   "table": null,
+   "note": null,
+   "where": "Sec 3"
+  },
+  {
+   "claim": "Zero-shot FLAN beats zero-shot GLaM 64B/64E on 13 of 19 available datasets.",
+   "kind": "measured",
+   "source": null,
+   "metric": "datasets won",
+   "value": "13 of 19",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "best dev template",
+   "quote": "With the best dev-template, zero-shot FLAN outperforms zero-shot GLaM on 13 of",
+   "table": null,
+   "note": null,
+   "where": "Sec 3"
+  },
+  {
+   "claim": "Average held-out accuracy rises from 49.9 to 63.5 as instruction tuning clusters go from 1 to 7.",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg held-out accuracy",
+   "value": "63.5",
+   "unit": "%",
+   "baseline_value": "49.9 (1 cluster)",
+   "n": null,
+   "setup": "Held-out NLI, commonsense, closed-book QA; clusters added in decreasing size order; 137B",
+   "quote": "As expected, we observe that average performance across the three held-out clusters improves as we add additional clusters",
+   "table": "Figure 6, values 49.9, 55.0, 59.3, 59.2, 60.8, 61.9, 63.5 for 1 to 7 clusters",
+   "note": "Performance does not saturate at 7 clusters; sentiment cluster adds minimal value.",
+   "where": "Sec 4.1, Fig 6"
+  },
+  {
+   "claim": "Instruction tuning hurts held-out performance for models of 8B and smaller, helps at 68B and 137B.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Same split as 4.1 (13 held-out tasks avg); sizes 422M, 2B, 8B, 68B, 137B",
+   "quote": "instruction tuning actually hurts performance on held-out tasks",
+   "table": null,
+   "note": "Authors' explanation (capacity filled by ~40 tuning tasks) is a hypothesis, not tested.",
+   "where": "Sec 4.2, Fig 7"
+  },
+  {
+   "claim": "Tuning with natural instructions gives 55.2 four-cluster average vs 37.3 with no template, 46.6 and 47.0 with dataset-name prompts.",
+   "kind": "measured",
+   "source": null,
+   "metric": "four-task avg",
+   "value": "55.2",
+   "unit": "%",
+   "baseline_value": "37.3 (no template)",
+   "n": null,
+   "setup": "Zero-shot, four held-out clusters (NLI, read. comp., closed-book QA, translation)",
+   "quote": null,
+   "table": "Table 3, rows Natural instructions (= FLAN), No template, Task/dataset name; column Four-Task Average (55.2, 37.3, 46.6, 47.0)",
+   "note": "Dataset-name NLI score is inflated by CB 83.9 on a 56-example validation set.",
+   "where": "Sec 4.3, Table 3"
+  },
+  {
+   "claim": "More datasets per cluster improved held-out performance by almost 10%; more templates had negligible effect.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "1 vs 4 datasets per cluster, 1/4/10 templates per dataset; held-out NLI, commonsense, closed-book QA",
+   "quote": "Using more datasets per cluster improved performance by almost 10% on average across the three held-out clusters.",
+   "table": null,
+   "note": null,
+   "where": "Appendix B.1, Fig 11"
+  },
+  {
+   "claim": "Prompt tuning on FLAN beats prompt tuning on LaMDA-PT on SuperGLUE dev average in both settings.",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg accuracy/F1",
+   "value": "78.1",
+   "unit": "%",
+   "baseline_value": "63.8",
+   "n": null,
+   "setup": "SuperGLUE dev average; 32 train examples: 63.8 (LaMDA-PT) vs 78.1 (FLAN); full train set: 79.1 vs 87.4",
+   "quote": null,
+   "table": "Figure 10 values 63.8, 78.1, 79.1, 87.4; per-task in Table 4",
+   "note": "Figure 10 label order is read from text positions; averages of Table 4 rows reproduce 63.8 and 78.1.",
+   "where": "Sec 4.5, Fig 10, Table 4"
+  },
+  {
+   "claim": "FLAN outperforms LaMDA-PT on only three of seven commonsense and coreference tasks.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "zero-shot, tasks that are sentence completion",
+   "quote": "FLAN only outperforms LaMDA-PT on three of the seven tasks.",
+   "table": null,
+   "note": null,
+   "where": "Sec 3"
+  },
+  {
+   "claim": "Few-shot exemplars improve FLAN on all task clusters and reduce template std.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "up to 16 exemplars, under 960 tokens",
+   "quote": "few-shot exemplars improve the performance on all task clusters, compared",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.4, Fig 9"
+  },
+  {
+   "claim": "On RTE, FLAN zero-shot average template reaches 78.3 vs GPT-3 zero-shot 63.5.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "78.3",
+   "unit": "%",
+   "baseline_value": "63.5",
+   "n": null,
+   "setup": "accuracy %, 10 templates",
+   "quote": "",
+   "table": "Table 2, row RTE, columns FLAN zero-shot average template (78.3) and GPT-3 175B zero-shot (63.5)",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Instruction tuning costs under 2% of pretraining steps; pretraining was 451 MWh and 26 tCO2e.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "energy of base model",
+   "quote": "The additional instruction tuning gradient-steps for ﬁnetuning FLAN is less than 2% of the number of pretraining",
+   "table": null,
+   "note": null,
+   "where": "Environmental considerations"
+  },
+  {
+   "claim": "Data contamination analysis finds no correlation between overlap and FLAN performance; ReCoRD and PIQA clean subsets lower by over 1%.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "n-gram (~13) overlap with pretraining, clean vs total subset",
+   "quote": "we do not see a correlation that evaluating on clean data does worse than evaluating on the total dataset",
+   "table": null,
+   "note": "Table 5 lists ReCoRD total acc 4.6 and PIQA 23.7, inconsistent with Table 2 values (about 70 and 80); likely extraction or paper error.",
+   "where": "Appendix C, Table 5"
+  }
+ ],
+ "limits": [
+  "Subjectivity in assigning tasks to clusters",
+  "Only short, typically one-sentence instructions explored",
+  "Individual evaluation examples may appear in pretraining data; post-hoc analysis found no evidence of substantial effect",
+  "137B scale is costly to serve",
+  "Single cluster split for scaling ablation (authors say cross-validation would be better)",
+  "Context 1024 tokens so summarization not evaluated; mostly English",
+  "Not useful for tasks formatted as language modeling (commonsense, coreference)",
+  "Zero-shot DROP and SQuADv2 GPT-3 numbers use same-passage exemplars, not comparable",
+  "Simple failures: returning the nth word, translating a question instead of answering"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "instruction tuning",
+   "definition": "finetuning language models on a collection of datasets described via instructions",
+   "where": "Abstract"
+  },
+  {
+   "term": "unseen task",
+   "definition": "dataset D is unseen only if no dataset from any task cluster D belongs to was seen during instruction tuning",
+   "where": "Sec 2.2"
+  },
+  {
+   "term": "OPTIONS suffix",
+   "definition": "token OPTIONS appended to classification tasks along with the list of output classes",
+   "where": "Sec 2.3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Language models are few-shot learners (GPT-3)",
+   "year": 2020,
+   "arxiv": "2005.14165",
+   "relation": "baseline",
+   "note": "zero/few-shot baseline; contamination method",
+   "quote": null
+  },
+  {
+   "work": "LaMDA (Thoppilan et al.)",
+   "year": 2022,
+   "arxiv": "2201.08239",
+   "relation": "uses-method",
+   "note": "LaMDA-PT is the base model",
+   "quote": null
+  },
+  {
+   "work": "Exploring the limits of transfer learning with T5",
+   "year": 2020,
+   "arxiv": "1910.10683",
+   "relation": "uses-method",
+   "note": "packing and examples-proportional mixing",
+   "quote": null
+  },
+  {
+   "work": "GLaM",
+   "year": 2021,
+   "arxiv": "2112.06905",
+   "relation": "baseline",
+   "note": "zero/one-shot baseline",
+   "quote": null
+  },
+  {
+   "work": "Mishra et al. 2021 (Natural instructions)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "related",
+   "note": "140M BART on instructions with few-shot exemplars",
+   "quote": null
+  },
+  {
+   "work": "Sanh et al. 2021 (T0)",
+   "year": 2021,
+   "arxiv": "2110.08207",
+   "relation": "related",
+   "note": "similar setup with T5 11B",
+   "quote": null
+  },
+  {
+   "work": "Ouyang et al. 2022 (InstructGPT)",
+   "year": 2022,
+   "arxiv": "2203.02155",
+   "relation": "related",
+   "note": "finetuning plus RL for preferred outputs",
+   "quote": null
+  },
+  {
+   "work": "The Power of Scale for Parameter-Efficient Prompt Tuning",
+   "year": 2021,
+   "arxiv": "2104.08691",
+   "relation": "uses-method",
+   "note": "prompt tuning analysis",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Overview of instruction tuning and FLAN; zero-shot FLAN vs GPT-3",
+   "page": 1,
+   "why": "Shows held-out-cluster setup and headline gains"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Datasets and task clusters",
+   "page": 3,
+   "why": "Defines the 12 clusters used to define unseen"
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "Adding task clusters improves held-out zero-shot",
+   "page": 6,
+   "why": "Core evidence for diversity"
+  },
+  {
+   "figure": "Fig 7",
+   "caption": "Instruction tuning helps large models but hurts small",
+   "page": 7,
+   "why": "Scale threshold"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Figure data (Fig 7, 9, 11) not recoverable from text",
+  "Table 5 values for ReCoRD/PIQA look inconsistent with Table 2 (see result note)",
+  "No embedded instructions found"
+ ]
+}

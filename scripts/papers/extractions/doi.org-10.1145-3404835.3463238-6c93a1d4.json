@@ -1,19 +1,584 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "https://doi.org/10.1145/3404835.3463238",
  "pdf": "generative-ai/02-rag-retrieval/sources/lin-2021-pyserini.pdf",
  "bib": {
   "title": "Pyserini: A Python Toolkit for Reproducible Information Retrieval Research with Sparse and Dense Representations",
+  "authors": [
+   "Jimmy Lin",
+   "Xueguang Ma",
+   "Sheng-Chieh Lin",
+   "Jheng-Hong Yang",
+   "Ronak Pradeep",
+   "Rodrigo Nogueira"
+  ],
   "first_author": "Lin",
   "year": 2021,
-  "venue": "SIGIR 2021",
+  "venue": "Proceedings of the 44th International ACM SIGIR Conference (SIGIR '21), Resource Paper",
   "arxiv": null,
-  "doi": null
+  "doi": "10.1145/3404835.3463238"
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-04",
-  "session": "5f2f0582-f958-4d9c-8469-02f3d5079657"
+  "at": "2026-11-07",
+  "chars_read": 48621,
+  "chars_total": 48621,
+  "engine": "pymupdf",
+  "skipped": "References skimmed for lineage only."
  },
- "legacy_report": "SOURCE: \"Pyserini: A Python Toolkit for Reproducible Information Retrieval Research with Sparse and Dense Representations\", Jimmy Lin, Xueguang Ma, Sheng-Chieh Lin, Jheng-Hong Yang, Ronak Pradeep, Rodrigo Nogueira (University of Waterloo). SIGIR '21 Resource Paper, 2021. PDF: /Users/ramsey-wise/workspace/learn-ai-engineering/generative-ai/02-rag-retrieval/sources/lin-2021-pyserini.pdf\n\nCOVERAGE: The extraction is 48,644 chars. I read chars 0 to 40,000 in full, which covers the abstract, sections 1 to 5, Tables 1 and 2, the acknowledgements and references [1] to [8]. I skimmed chars 40,000 to 48,644 (the rest of the references) with a grep that printed entries [12], [13], [14], [15], [17], [18], [23], [26], [27], [28], [38] and [39], plus a few neighbouring lines. I did not read the other reference entries. The results sit entirely in the body.\n\nCLAIMS\n- claim: Pyserini is a pip-installable Python package. It ships queries, qrels, pre-built indexes and evaluation scripts for standard IR collections (\"batteries are included\").\n  number: \"approximately three dozen test collections\"\n  setup: v0.12.0\n  quote: \"Currently, Pyserini provides support for approximately three dozen test collections\"\n  where: p4, section 4\n- claim: Sparse retrieval (BM25, bag of words) comes entirely from Lucene through Anserini. Dense and hybrid retrieval use Faiss, with HNSW for low-latency queries. Anserini itself has no dense or hybrid retrieval.\n  number: none\n  setup: toolkit architecture\n  quote: \"Sparse retrieval support in Pyserini comes entirely from Lucene (via Anserini). To support dense and hybrid retrieval, Pyserini integrates Facebook's Faiss library\"\n  where: p2\n- claim: A single batch command reproduces the Anserini BM25 baseline from the MS MARCO leaderboard.\n  number: MRR@10 0.1874 over 6,980 queries\n  setup: MS MARCO passage dev subset, BM25 on the pre-built index\n  quote: \"The expected MRR@10 score is 0.1874 over 6980 queries.\"\n  where: p4, section 3.3\n- claim: On MS MARCO passage, BM25 is weakest, dense TCT-ColBERT is much stronger, and a weighted-interpolation hybrid beats both.\n  number: dev MRR@10 / R@1k: BM25 default 0.184 / 0.853; dense HNSW 0.335 / 0.962; hybrid 0.353 / 0.970\n  setup: MS MARCO passage (8.8M passages), dev set. BM25 default uses k1=0.9, b=0.4. Both hybrids used brute-force search.\n  quote: \"Original text 0.184 0.853 0.186 BM25, default (k1 = 0.9, b = 0.4)\" / \"(2b) TCT-ColBERT (HNSW) 0.335 0.962 -\" / \"(3a) TCT-ColBERT + original text 0.353 0.970 -\"\n  where: p5, Table 1\n- claim: Tuning BM25 helps a little on the original text. Document expansion (doc2query-T5) gives a large gain while staying bag-of-words. Hybrid plus expansion is the best first-stage result.\n  number: tuned BM25 0.187; doc2query-T5 default 0.272, tuned 0.282; hybrid + doc2query-T5 0.365 / R@1k 0.975\n  setup: same dev set. Tuned values are k1=0.82, b=0.68 for the original text and k1=2.18, b=0.86 for doc2query-T5, found by grid search to maximise R@1k.\n  quote: \"(1b) Original text 0.187 0.857 0.190\" / \"(1d) doc2query–T5 0.282 0.951 -\" / \"TCT-ColBERT + doc2query–T5 0.365 0.975 -\"\n  where: p5, Table 1\n- claim: Approximate HNSW search costs almost nothing in effectiveness compared with an exact brute-force scan.\n  number: R@1k 0.964 brute-force vs 0.962 HNSW, with the same MRR@10\n  setup: TCT-ColBERT, MS MARCO passage dev\n  quote: \"(2a) TCT-ColBERT (brute-force) 0.335 0.964 -\"\n  where: p5, Table 1\n- claim: The dense index is about ten times the size of the sparse one, which the authors call a known weakness of dense retrieval.\n  number: 2.6GB sparse vs 25GB dense\n  setup: MS MARCO passage pre-built indexes\n  quote: \"the complete index, which includes a copy of all the texts, is a modest 2.6GB\" / \"the pre-built dense index is 25GB, which is substantially larger than the sparse index; this is a known weakness of dense retrieval techniques\"\n  where: p3\n- claim: Pyserini's BM25 beats the BM25 baseline from the MS MARCO organisers.\n  number: 0.167 dev / 0.165 test vs 0.184 / 0.186\n  setup: MS MARCO passage\n  quote: \"(4a) BM25 (Microsoft Baseline) 0.167 - 0.165\"\n  where: p5, Table 1\n- claim: The same ordering holds on MS MARCO document ranking: dense beats sparse, and the hybrid beats both, though the margins are smaller. Dense here is zero-shot, using the passage-trained encoder over a per-passage index with MaxP.\n  number: dev MRR@100: tuned BM25 per-document 0.277; dense 0.332; hybrid 0.370; hybrid + doc2query 0.378\n  setup: MS MARCO document dev set. Tuned BM25 uses k1=4.46, b=0.82.\n  quote: \"(1b) Original text (doc) 0.277 0.936 -\" / \"TCT-ColBERT 0.332 - -\" / \"(3a) TCT-ColBERT + original text 0.370 - -\"\n  where: p6, Table 2\n- claim: With default BM25 parameters, per-document indexing looks much better than per-passage indexing. Once both are tuned, they are comparable.\n  number: tuned 0.277 per-document vs 0.275 per-passage\n  setup: MS MARCO document dev set\n  quote: \"(1d) Original text (passage) 0.275 0.931 0.246\"\n  where: p6, Table 2\n- claim: Hybrid search is weighted interpolation of the sparse and dense scores, taken from the TCT-ColBERT implementation.\n  number: none\n  setup: HybridSearcher\n  quote: \"performs weighted interpolation on the individual results to arrive at a final ranking. This is a standard approach and Pyserini adopts the specific implementation in TCT-ColBERT [17]\"\n  where: p3, section 3.1\n- claim: Reproducibility has a technical side (an internal end-to-end regression framework) and a social side (using their own tools and shared norms). Every Table 1 row from (1) to (3) is reproducible with the toolkit.\n  number: none\n  setup: none\n  quote: \"all results in rows (1) through (3) are reproducible with our toolkit\"\n  where: p4\n\nLIMITS:\n- The paper gives no latency or throughput numbers. HNSW is only described as \"low latency\".\n- The interpolation weight for the hybrid is never stated, and reciprocal rank fusion (RRF) is not tested.\n- Training dense encoders is out of scope (\"representational learning lies outside the scope of our toolkit\").\n- Support for dense retrieval over custom collections and access to dense internals are \"less mature\".\n- Test-set numbers are missing for most dense and hybrid rows because the leaderboard limits submissions. Recall at 1k is reported on dev only.\n- The authors concede the ANCE comparison on document ranking \"isn't quite fair\".\n- Detailed treatment of reproducibility and future work is pushed to an arXiv extended version. The SIGIR paper gives only the short description in section 2, plus the conclusions.\n- The pre-built MS MARCO indexes leave out positional data and document vectors.\n- Dated: the paper uses v0.12.0. Its API names (SimpleSearcher, pyserini.dsearch, pyserini.hsearch) come from 2021, and later releases renamed them.\n- Everything is evaluated on MS MARCO, with only the leaderboard models.\n\nBUILDS ON: Anserini, Yang, Fang & Lin 2017 and 2018 [38, 39]; Lucene; Faiss, Johnson et al. 2017 [12]; HNSW, Malkov & Yashunin 2020 [23]; TCT-ColBERT, Lin et al. 2020 [17], distilled from ColBERT, Khattab & Zaharia 2020 [14]; DPR, Karpukhin et al. 2020 [13]; doc2query, Nogueira et al. 2019 [28]; docTTTTTquery, Nogueira & Lin 2019 [26]; the IR reproducibility challenge, Lin et al. 2016 [15]; MS MARCO, Bajaj et al. 2018 [6].\n\nCODE (verbatim):\n- p3, Figure 1:\n  `searcher = SimpleSearcher.from_prebuilt_index('msmarco-passage')`\n  `hits = searcher.search('what is a lobster roll?', 10)`\n- p3, Figure 3: `hsearcher = HybridSearcher(dsearcher, ssearcher)`\n- p4, section 3.3:\n  `$ python -m pyserini.search --topics msmarco-passage-dev-subset --index msmarco-passage --output run.msmarco-passage.txt --bm25 --output-format msmarco`\n  `$ python -m pyserini.eval.msmarco_passage_eval msmarco-passage-dev-subset run.msmarco-passage.txt`\n- p4, Figure 4: `qrels = get_qrels('msmarco-passage-dev-subset')`\n\nFIGURES:\n- Figures 1 to 3 (p3) show sparse, dense and hybrid search, each in a few lines. Side by side, they show that hybrid is just two searchers composed.\n- Figure 4 (p3) loads topics and qrels, which is useful for \"Evaluating a retriever\".\n- Figure 5 (p4) gives IndexReader access to df/cf, postings and BM25 term weights, which suits the \"library version\" of BM25.\n- Table 1 (p5) puts BM25, dense and hybrid side by side under one setup, which makes the comparison quickly.\n\nPROBLEMS:\n- Table 1's hybrid rows are both labelled \"(3a)\" in the extraction, while the prose calls the second one \"(3b)\".\n- Table cell text is flattened in the extraction, but the values parse unambiguously.\n- In the code listings, \"␣\" stands for a space. I rendered it as a plain space above.\n- The PDF contains no embedded instructions."
+ "type": "system",
+ "question": "Can one pip-installable Python toolkit provide reproducible first-stage retrieval (sparse, dense and hybrid) for research on multi-stage neural ranking?",
+ "hypothesis": null,
+ "contributions": [
+  "Pyserini: Python interface to Anserini/Lucene with Faiss dense and hybrid retrieval",
+  "Bundled queries, qrels, pre-built indexes and evaluation scripts for ~three dozen test collections",
+  "Access to postings, document vectors and term statistics",
+  "Reproducible baselines on MS MARCO passage and document ranking"
+ ],
+ "method": {
+  "summary": "Toolkit paper. Sparse BM25 via Lucene/Anserini, dense via Faiss (brute-force or HNSW) with existing encoders (TCT-ColBERT, DPR, ANCE, DistilBERT KD), hybrid via weighted interpolation of sparse and dense scores. Baselines reported on MS MARCO passage and document leaderboards.",
+  "task": "first-stage retrieval (MS MARCO passage and document ranking)",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "MS MARCO passage",
+    "role": "eval",
+    "size": "8.8M passages; dev subset 6980 queries",
+    "split": "dev (full metrics) and leaderboard test (MRR@10 only)",
+    "source": "Bajaj et al. 2018",
+    "preprocessing": "original text, or doc2query-T5 expanded"
+   },
+   {
+    "name": "MS MARCO document",
+    "role": "eval",
+    "size": null,
+    "split": "dev and leaderboard test",
+    "source": "Bajaj et al. 2018",
+    "preprocessing": "per-document vs per-passage indexing; per-passage ranks documents by max passage score"
+   }
+  ],
+  "models": [
+   {
+    "name": "BM25 (Lucene via Anserini)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "bag-of-words",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "default": "k1=0.9, b=0.4"
+    }
+   },
+   {
+    "name": "TCT-ColBERT",
+    "role": "retriever",
+    "params": null,
+    "architecture": "dense bi-encoder distilled from ColBERT",
+    "init_from": "ColBERT via knowledge distillation (Lin et al. 2020)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "document_task": "used zero-shot, trained on MS MARCO passage only"
+    }
+   },
+   {
+    "name": "doc2query-T5",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "T5 document expansion",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "ANCE",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "DistilBERT-dot",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "monoBERT / Expando-Mono-DuoT5",
+    "role": "baseline",
+    "params": null,
+    "architecture": "rerankers over Pyserini first stage",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single deterministic run per configuration; no seeds",
+   "prompting": null,
+   "retrieval": "BM25 via Lucene; dense via Faiss brute-force or HNSW; hybrid by weighted interpolation (TCT-ColBERT implementation), brute-force dense in both hybrid rows",
+   "parameters": {
+    "bm25_default": "k1=0.9, b=0.4",
+    "passage_tuned_original": "k1=0.82, b=0.68 (grid search on dev-query subset, maximise recall@1000)",
+    "passage_tuned_doc2query": "k1=2.18, b=0.86",
+    "doc_tuned_doc": "k1=4.46, b=0.82 (tuned for recall@100)",
+    "interpolation_weight": null,
+    "hnsw_params": null
+   },
+   "other": {
+    "version": "pyserini==0.12.0"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "MRR@10",
+     "definition": "official MS MARCO passage metric",
+     "unit": "score",
+     "higher_is_better": true
+    },
+    {
+     "name": "MRR@100",
+     "definition": "official MS MARCO document metric",
+     "unit": "score",
+     "higher_is_better": true
+    },
+    {
+     "name": "R@1k",
+     "definition": "recall at rank 1000, upper bound for reranking; dev only",
+     "unit": "score",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Microsoft BM25 baseline",
+    "ANCE",
+    "DistilBERT-dot",
+    "monoBERT",
+    "Expando-Mono-DuoT5"
+   ],
+   "protocol": "Single runs; test numbers only via leaderboard, so some conditions have no test result; no significance testing."
+  },
+  "availability": {
+   "code": "pip install pyserini==0.12.0; pyserini.io",
+   "weights": null,
+   "data": "pre-built indexes downloadable from project servers"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Hybrid TCT-ColBERT + BM25 over original text beats dense alone on passage dev MRR@10",
+   "kind": "measured",
+   "source": null,
+   "metric": "MRR@10",
+   "value": "0.353",
+   "unit": "score",
+   "baseline_value": "0.335",
+   "n": null,
+   "setup": "MS MARCO passage dev (6980 queries), Pyserini v0.12.0, 8.8M passages. weighted interpolation, brute-force dense",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row (3a) TCT-ColBERT + original text, column Dev MRR@10"
+  },
+  {
+   "claim": "Hybrid with doc2query-T5 expansion is the best Pyserini first-stage on passage dev",
+   "kind": "measured",
+   "source": null,
+   "metric": "MRR@10",
+   "value": "0.365",
+   "unit": "score",
+   "baseline_value": "0.353",
+   "n": null,
+   "setup": "MS MARCO passage dev (6980 queries), Pyserini v0.12.0, 8.8M passages. TCT-ColBERT + doc2query-T5 BM25, brute-force",
+   "note": "Row label '(3a)' is printed twice in Table 1; text calls the second (3b).",
+   "where": "Table 1",
+   "table": "Table 1, row (3b) TCT-ColBERT + doc2query-T5, column Dev MRR@10"
+  },
+  {
+   "claim": "Dense TCT-ColBERT (HNSW) is far above default BM25 on passage dev",
+   "kind": "measured",
+   "source": null,
+   "metric": "MRR@10",
+   "value": "0.335",
+   "unit": "score",
+   "baseline_value": "0.184",
+   "n": null,
+   "setup": "MS MARCO passage dev (6980 queries), Pyserini v0.12.0, 8.8M passages. HNSW index",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row (2b) TCT-ColBERT (HNSW), column Dev MRR@10"
+  },
+  {
+   "claim": "Default BM25 passage dev MRR@10 (k1=0.9,b=0.4)",
+   "kind": "measured",
+   "source": null,
+   "metric": "MRR@10",
+   "value": "0.184",
+   "unit": "score",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MS MARCO passage dev (6980 queries), Pyserini v0.12.0, 8.8M passages. original text, default BM25",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row (1a), column Dev MRR@10"
+  },
+  {
+   "claim": "Default BM25 passage dev recall@1000",
+   "kind": "measured",
+   "source": null,
+   "metric": "R@1k",
+   "value": "0.853",
+   "unit": "score",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MS MARCO passage dev (6980 queries), Pyserini v0.12.0, 8.8M passages. original text, default BM25",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row (1a), column R@1k"
+  },
+  {
+   "claim": "Tuned BM25 gains little on passage dev",
+   "kind": "measured",
+   "source": null,
+   "metric": "MRR@10",
+   "value": "0.187",
+   "unit": "score",
+   "baseline_value": "0.184",
+   "n": null,
+   "setup": "MS MARCO passage dev (6980 queries), Pyserini v0.12.0, 8.8M passages. k1=0.82,b=0.68, grid search on a subset of dev queries maximising recall@1000",
+   "note": "Tuned on a subset of the dev queries it is evaluated on.",
+   "where": "Table 1",
+   "table": "Table 1, row (1b), column Dev MRR@10"
+  },
+  {
+   "claim": "doc2query-T5 expansion with default BM25 gives a large jump while staying bag-of-words",
+   "kind": "measured",
+   "source": null,
+   "metric": "MRR@10",
+   "value": "0.272",
+   "unit": "score",
+   "baseline_value": "0.184",
+   "n": null,
+   "setup": "MS MARCO passage dev (6980 queries), Pyserini v0.12.0, 8.8M passages. default k1=0.9,b=0.4",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row (1c), column Dev MRR@10"
+  },
+  {
+   "claim": "doc2query-T5 with tuned BM25",
+   "kind": "measured",
+   "source": null,
+   "metric": "MRR@10",
+   "value": "0.282",
+   "unit": "score",
+   "baseline_value": "0.272",
+   "n": null,
+   "setup": "MS MARCO passage dev (6980 queries), Pyserini v0.12.0, 8.8M passages. k1=2.18,b=0.86",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row (1d), column Dev MRR@10"
+  },
+  {
+   "claim": "HNSW loses little recall vs exact brute-force scan",
+   "kind": "measured",
+   "source": null,
+   "metric": "R@1k",
+   "value": "0.962",
+   "unit": "score",
+   "baseline_value": "0.964",
+   "n": null,
+   "setup": "MS MARCO passage dev (6980 queries), Pyserini v0.12.0, 8.8M passages. TCT-ColBERT HNSW; brute-force is 0.964",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row (2b), column R@1k"
+  },
+  {
+   "claim": "Brute-force TCT-ColBERT recall@1000",
+   "kind": "measured",
+   "source": null,
+   "metric": "R@1k",
+   "value": "0.964",
+   "unit": "score",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MS MARCO passage dev (6980 queries), Pyserini v0.12.0, 8.8M passages. exact search in Faiss",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row (2a), column R@1k"
+  },
+  {
+   "claim": "Hybrid recall@1000 with original text",
+   "kind": "measured",
+   "source": null,
+   "metric": "R@1k",
+   "value": "0.970",
+   "unit": "score",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MS MARCO passage dev (6980 queries), Pyserini v0.12.0, 8.8M passages. brute-force",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row (3a), column R@1k"
+  },
+  {
+   "claim": "One command reproduces the Anserini BM25 baseline",
+   "kind": "measured",
+   "source": null,
+   "metric": "MRR@10",
+   "value": "0.1874",
+   "unit": "score",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MS MARCO passage dev (6980 queries), Pyserini v0.12.0, 8.8M passages. BM25 default on pre-built index",
+   "note": null,
+   "where": "Sec 3.3",
+   "quote": "The expected MRR@10 score is 0.1874 over 6980 queries."
+  },
+  {
+   "claim": "Pre-built sparse index size (includes text copy)",
+   "kind": "measured",
+   "source": null,
+   "metric": "index size",
+   "value": "2.6GB",
+   "unit": "GB",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MS MARCO passage pre-built BM25 index",
+   "note": null,
+   "where": "Sec 3.1",
+   "quote": "the complete index, which includes a copy of all the texts, is a modest 2.6GB"
+  },
+  {
+   "claim": "Pre-built dense index size",
+   "kind": "measured",
+   "source": null,
+   "metric": "index size",
+   "value": "25GB",
+   "unit": "GB",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MS MARCO passage pre-built TCT-ColBERT HNSW index",
+   "note": null,
+   "where": "Sec 3.1",
+   "quote": "the pre-built dense index is 25GB, which is substantially larger than the sparse index"
+  },
+  {
+   "claim": "Document task: hybrid TCT-ColBERT + doc2query-T5 passage-level reaches dev MRR@100 0.378, above zero-shot dense 0.332",
+   "kind": "measured",
+   "source": null,
+   "metric": "MRR@100",
+   "value": "0.378",
+   "unit": "score",
+   "baseline_value": "0.332",
+   "n": null,
+   "setup": "MS MARCO document dev, per-passage indexing, max passage score, TCT-ColBERT zero-shot",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row (3b) TCT-ColBERT + doc2query-T5, column Dev MRR@100"
+  },
+  {
+   "claim": "Document task: tuning closes the per-document vs per-passage BM25 gap",
+   "kind": "measured",
+   "source": null,
+   "metric": "MRR@100",
+   "value": "0.277",
+   "unit": "score",
+   "baseline_value": "0.230",
+   "n": null,
+   "setup": "MS MARCO document dev; per-document tuned k1=4.46,b=0.82 (per-passage tuned 0.275; defaults 0.230 vs 0.268)",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row (1b), column Dev MRR@100"
+  },
+  {
+   "claim": "Pyserini BM25 beats the leaderboard organisers' BM25 on passage test",
+   "kind": "measured",
+   "source": null,
+   "metric": "MRR@10",
+   "value": "0.186",
+   "unit": "score",
+   "baseline_value": "0.165",
+   "n": null,
+   "setup": "MS MARCO passage test leaderboard, default BM25; Microsoft baseline 0.165",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row (1a), column Test MRR@10"
+  },
+  {
+   "claim": "Pyserini covers about three dozen test collections",
+   "kind": "measured",
+   "source": null,
+   "metric": "count",
+   "value": "three dozen",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "v0.12.0",
+   "note": null,
+   "where": "Sec 4",
+   "quote": "Currently, Pyserini provides support for approximately three dozen test collections"
+  }
+ ],
+ "limits": [
+  "Interpolation weight and HNSW settings are not given; no latency is reported.",
+  "BM25 parameters tuned on a subset of dev queries that are also used for reporting dev scores.",
+  "Evaluated on MS MARCO only; document-task dense retrieval is zero-shot.",
+  "Dense support less mature than sparse; no representation learning in scope.",
+  "Reproducibility discussion and future plans deferred to an arXiv extended version.",
+  "Hardware and query throughput not reported."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "sparse retrieval",
+   "definition": "bag-of-words ranking with BM25; the authors note this naming is not common parlance",
+   "where": "Sec 3.1"
+  },
+  {
+   "term": "per-passage indexing",
+   "definition": "each document segmented into passages indexed separately; document score is max of passage scores",
+   "where": "Sec 4"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Anserini",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Pyserini is the Python interface to Anserini",
+   "quote": null
+  },
+  {
+   "work": "Distilling Dense Representations for Ranking using Tightly-Coupled Teachers (TCT-ColBERT)",
+   "year": 2020,
+   "arxiv": "2010.11386",
+   "relation": "uses-method",
+   "note": "dense model and hybrid interpolation implementation",
+   "quote": null
+  },
+  {
+   "work": "Faiss, Billion-scale similarity search with GPUs",
+   "year": 2017,
+   "arxiv": "1702.08734",
+   "relation": "uses-method",
+   "note": "dense search",
+   "quote": null
+  },
+  {
+   "work": "HNSW, Malkov and Yashunin",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "approximate NN",
+   "quote": null
+  },
+  {
+   "work": "Document Expansion by Query Prediction (doc2query)",
+   "year": 2019,
+   "arxiv": "1904.08375",
+   "relation": "uses-method",
+   "note": "expansion baseline",
+   "quote": null
+  },
+  {
+   "work": "Dense Passage Retrieval",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "related",
+   "note": "supported encoder",
+   "quote": null
+  },
+  {
+   "work": "ANCE",
+   "year": 2020,
+   "arxiv": "2007.00808",
+   "relation": "baseline",
+   "note": "dense comparison",
+   "quote": null
+  },
+  {
+   "work": "MS MARCO",
+   "year": 2018,
+   "arxiv": "1611.09268",
+   "relation": "uses-data",
+   "note": "evaluation data",
+   "quote": null
+  },
+  {
+   "work": "Expando-Mono-Duo",
+   "year": 2021,
+   "arxiv": "2101.05667",
+   "relation": "related",
+   "note": "reranker over Pyserini",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Table 1",
+   "caption": "Results on the MS MARCO passage ranking task.",
+   "page": 5,
+   "why": "Sparse vs expansion vs dense vs hybrid in one table"
+  },
+  {
+   "figure": "Table 2",
+   "caption": "Results on the MARCO document ranking task.",
+   "page": 6,
+   "why": "per-document vs per-passage indexing and zero-shot dense"
+  }
+ ],
+ "code": [
+  {
+   "where": "Fig 3",
+   "snippet": "hsearcher = HybridSearcher(dsearcher, ssearcher)\nhits = hsearcher.search('what is a lobster roll', 10)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Table 1 prints row label (3a) twice; text calls the second (3b).",
+  "Reference [11] duplicates [10] (same arXiv id).",
+  "Own arXiv id (2102.10073) not printed in the PDF."
+ ]
 }

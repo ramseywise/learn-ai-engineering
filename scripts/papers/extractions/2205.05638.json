@@ -1,0 +1,493 @@
+{
+ "schema": 1,
+ "key": "2205.05638",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/liu-2022-few-shot-parameter-efficient-fine.pdf",
+ "bib": {
+  "title": "Few-Shot Parameter-Efficient Fine-Tuning is Better and Cheaper than In-Context Learning",
+  "authors": [
+   "Haokun Liu",
+   "Derek Tam",
+   "Mohammed Muqeeth",
+   "Jay Mohta",
+   "Tenghao Huang",
+   "Mohit Bansal",
+   "Colin Raffel"
+  ],
+  "first_author": "Liu",
+  "year": 2022,
+  "venue": "preprint",
+  "arxiv": "2205.05638",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 77788,
+  "chars_total": 77788,
+  "engine": "pymupdf",
+  "skipped": "reference list skimmed"
+ },
+ "type": "empirical",
+ "question": "Can parameter-efficient fine-tuning on a few labeled examples beat few-shot in-context learning in accuracy and compute cost?",
+ "hypothesis": "Adding unlikelihood loss will improve rank classification because the model is trained to assign lower probability to incorrect choices.",
+ "contributions": [
+  "Rigorous comparison of few-shot ICL and PEFT showing PEFT is more accurate and far cheaper",
+  "(IA)3, a PEFT method that rescales keys, values and FFN inner activations with learned vectors",
+  "T-Few, a fixed recipe (T0 + (IA)3 + pre-training + LUL + LLN) needing no per-task tuning, with super-human accuracy on RAFT"
+ ],
+ "method": {
+  "summary": "Design T-Few on T0-3B with 5 few-shot subsamples of 9 held-out T0 datasets: add unlikelihood and length-normalized losses, compare 12 PEFT settings, introduce (IA)3 and pre-train it on T0's mixture. Apply the fixed recipe to T0 11B and compare with ICL baselines and on RAFT, with FLOP-based cost estimates.",
+  "task": "few-shot classification and multiple choice (rank classification)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Held-out T0 tasks (COPA, H-SWAG, Story Cloze, ANLI R1-R3, CB, RTE, WSC, Winogrande, WiC)",
+    "role": "both",
+    "size": "20 to 70 few-shot training examples per dataset (same counts as Brown et al.); median 41 shots",
+    "split": "five few-shot subsets from different seeds; test set, or validation set when test labels not public",
+    "source": "licences stated per dataset in 3.1",
+    "preprocessing": "P3 prompt templates, random template per example per step"
+   },
+   {
+    "name": "RAFT",
+    "role": "eval",
+    "size": "11 tasks, 50 training examples each, no validation set, hidden test labels",
+    "split": "public train 50; hidden test",
+    "source": "Alex et al. 2021",
+    "preprocessing": "standard prompts released with dataset; Banking 77: unlikelihood off, labels in input, '.' replaced by ','"
+   },
+   {
+    "name": "T0 multitask mixture (P3)",
+    "role": "pretrain",
+    "size": null,
+    "split": null,
+    "source": "Sanh et al. 2021",
+    "preprocessing": "used to pre-train (IA)3 parameters"
+   }
+  ],
+  "models": [
+   {
+    "name": "T0-3B",
+    "role": "base",
+    "params": "3B",
+    "architecture": "encoder-decoder transformer (T5-based)",
+    "init_from": "T5 fine-tuned on multitask prompted mixture",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "design experiments"
+    }
+   },
+   {
+    "name": "T0 (11B)",
+    "role": "proposed",
+    "params": "11B",
+    "architecture": "encoder-decoder transformer (T5-based)",
+    "init_from": "T5 fine-tuned on multitask prompted mixture",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "T-Few final; 41.5 GB checkpoint"
+    }
+   },
+   {
+    "name": "T5+LM (T5.1.1.xxl LM-adapted)",
+    "role": "baseline",
+    "params": "11B",
+    "architecture": "encoder-decoder",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "ensemble ICL, one-shot per training example, predictions averaged; EleutherAI eval harness"
+    }
+   },
+   {
+    "name": "GPT-3 6.7B/13B/175B",
+    "role": "baseline",
+    "params": "6.7B, 13B, 175B",
+    "architecture": "decoder-only",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "numbers copied from Brown et al."
+    }
+   }
+  ],
+  "training": {
+   "objective": "sum of L_LM + L_UL (unlikelihood on incorrect choices) + L_LN (softmax CE over length-normalized log-probs), unweighted",
+   "optimizer": "Adafactor",
+   "lr": "3e-3 (T-Few)",
+   "lr_schedule": "linear decay",
+   "warmup": "60 steps (warmup ratio 0.06)",
+   "batch_size": "8 (T-Few fine-tuning); 16 (IA)3 pre-training",
+   "steps": "1,000 fine-tuning; 100,000 (IA)3 pre-training",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "median 103 tokens (input plus all targets)",
+   "precision": "IA3 parameters stored single-precision (4.2 MB)",
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "T0-3B: 48GB A6000; T0 11B: 80GB A100 (DataCrunch); (IA)3 pre-training 1 day on 4 A6000 / 4 A100",
+   "compute": "2.7e16 training FLOPs per task",
+   "wall_clock": "about half an hour per task on one A100 (~$2 on Azure)",
+   "seeds": "5 few-shot subsets by seed; training-seed count not stated",
+   "other": {
+    "design_runs_other_peft": "FT/BitFit/LayerNorm 300 steps lr 3e-4; Adapter 500 steps 3e-3, reduction 32; Compacter(++) 500 steps 3e-3, n=4; prompt tuning 1000 steps lr 3e-1, 10 or 100 prompts; prefix tuning 1000 steps 3e-3, MLP hidden 512; FishMask 1500 steps 3e-4, 0.2% or 0.02%; Intrinsic SAID 3000 steps 3e-2; LoRA rank 4, init scale 0.01, 1000 steps 3e-3",
+    "ia3_params": "L(dk+dv+dff) encoder, L(2dk+2dv+dff) decoder; init to ones; 540K on T0-3B"
+   }
+  },
+  "inference": {
+   "decoding": "rank classification (highest log-prob choice)",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "median accuracy over all P3 prompt templates and 5 few-shot subsets",
+   "prompting": "P3 templates",
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Accuracy",
+     "definition": "rank classification correct if highest-ranked choice is correct; median across templates and few-shot subsets; mean across datasets in headline numbers",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "FLOPs per example",
+     "definition": "Kaplan estimates: decoder 2N/6N per token inference/training, enc-dec N/3N; 41 shots x 98 tokens + 103",
+     "unit": "FLOPs",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "T0 zero-shot",
+    "T5+LM ensemble ICL",
+    "GPT-3 6.7B/13B/175B ICL",
+    "full fine-tuning",
+    "BitFit, LayerNorm, Adapter, Compacter, Compacter++, prompt tuning, prefix tuning, FISH Mask, Intrinsic SAID, LoRA",
+    "RAFT: Human baseline, PET, SetFit, GPT-3"
+   ],
+   "protocol": "median and IQR over 5 few-shot subsets; no per-dataset tuning in T-Few; GPT-3 numbers not rerun"
+  },
+  "availability": {
+   "code": "https://github.com/r-three/t-few",
+   "weights": null,
+   "data": "public datasets"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "T-Few (T0 11B) beats few-shot ICL with GPT-3 175B on held-out T0 tasks",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 72.4,
+   "unit": "%",
+   "baseline_value": 66.6,
+   "n": null,
+   "setup": "Nine held-out T0 datasets, T0 11B, 5 few-shot subsets, median",
+   "quote": null,
+   "table": "Table 1, row T-Few, column Acc.",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "T-Few matches higher accuracy at about 1,000x fewer inference FLOPs than GPT-3 175B ICL",
+   "kind": "measured",
+   "source": null,
+   "metric": "inference FLOPs",
+   "value": "1.1e12",
+   "unit": "FLOPs per example",
+   "baseline_value": "1.4e15",
+   "n": null,
+   "setup": "41 shots x 98 tokens + 103; Kaplan FLOP estimates",
+   "quote": "T-Few requires 11e9×103 = 1.1e12 FLOPs, whereas few-shot ICL with GPT-3 175B requires 2×175e9× (41 × 98 + 103) = 1.4e15 FLOPs",
+   "table": null,
+   "note": null,
+   "where": "4.2"
+  },
+  {
+   "claim": "Training T-Few costs about 20x the FLOPs of one GPT-3 175B ICL example (2.7e16 FLOPs)",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 20,
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "T0 11B, 1000 steps, batch 8, length 103",
+   "quote": "this is only about 20 times larger than the FLOPs",
+   "table": null,
+   "note": null,
+   "where": "4.2"
+  },
+  {
+   "claim": "T-Few reaches state of the art on RAFT and beats the human baseline",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 75.8,
+   "unit": "%",
+   "baseline_value": 73.5,
+   "n": null,
+   "setup": "RAFT 11 tasks, 50 train examples each, hidden test, T-Few unchanged",
+   "quote": null,
+   "table": "Table 2, row T-Few, column Acc.",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "(IA)3 is the only PEFT method that beats full-model fine-tuning on T0-3B",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "T0-3B with LUL+LN, 9 held-out datasets",
+   "quote": "(IA)3 is the only method that attains higher accuracy than the full-model-ﬁne-tuning baseline",
+   "table": null,
+   "note": null,
+   "where": "3.3, Fig 2"
+  },
+  {
+   "claim": "(IA)3 adds 540K parameters on T0-3B vs LoRA 9.1M",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "540K",
+   "unit": "parameters",
+   "baseline_value": null,
+   "n": null,
+   "setup": "T0-3B",
+   "quote": null,
+   "table": "Table 4 (appendix D), row (IA)3, column # of Param",
+   "note": null,
+   "where": "App D"
+  },
+  {
+   "claim": "Adding L_LN raises full fine-tuning accuracy 60.7 to 62.71; adding L_UL too gives 63.3",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 63.3,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "T0-3B full fine-tuning, nine datasets",
+   "quote": "adding LLN improves the accuracy from 60.7% to 62.71% and including both LUL and LLN provides a further improvement to 63.3%",
+   "table": null,
+   "note": "62.71 printed with two decimals, others one",
+   "where": "3.2"
+  },
+  {
+   "claim": "Pre-training (IA)3 raises accuracy from 64.6 to 65.8",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 65.8,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "T0-3B, 100k steps batch 16 on T0 mixture",
+   "quote": "pre-training improves ﬁne-tuned accuracy from 64.6 to 65.8",
+   "table": null,
+   "note": null,
+   "where": "3.4"
+  },
+  {
+   "claim": "Ablation on T0 11B: no pre-training 70.8; no LUL/LLN 68.3; neither 69.7",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 70.8,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "T0 11B, nine datasets",
+   "quote": null,
+   "table": "Table 10, row - PT, column Acc.",
+   "note": "text says removing LUL+LLN decreases 4.1% and both 2.5%; table gives 72.4 vs 68.3 vs 69.7",
+   "where": "Table 10"
+  },
+  {
+   "claim": "Gap vs GPT-3 6.7B and 13B on held-out tasks",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 57.2,
+   "unit": "%",
+   "baseline_value": 60.3,
+   "n": null,
+   "setup": "GPT-3 6.7B ICL",
+   "quote": null,
+   "table": "Table 1, row GPT-3 6.7B, column Acc.",
+   "note": "13B is 60.3",
+   "where": "Table 1"
+  },
+  {
+   "claim": "T0 zero-shot reaches 66.9% and T5+LM ICL 49.6%",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 66.9,
+   "unit": "%",
+   "baseline_value": 49.6,
+   "n": null,
+   "setup": "T0 11B zero-shot",
+   "quote": null,
+   "table": "Table 1, row T0, column Acc.",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Fine-tuned (IA)3 vectors take 4.2 MB on disk vs 16 kB for ICL examples",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "4.2",
+   "unit": "MB",
+   "baseline_value": null,
+   "n": null,
+   "setup": "single-precision floats",
+   "quote": "take up 4.2 MB of space on disk",
+   "table": null,
+   "note": null,
+   "where": "4.2"
+  }
+ ],
+ "limits": [
+  "All experiments are classification or multiple choice scored by rank classification; generative tasks left to future work",
+  "GPT-3 numbers are copied from Brown et al., not rerun, and their few-shot subsets are undisclosed",
+  "FLOPs are a hardware-independent proxy, not latency",
+  "Prompt tuning and Compacter results disagree with prior work; authors tried hyperparameters but could not match",
+  "Design choices were tuned on T0-3B with the same nine datasets later used for evaluation on T0 11B",
+  "Reported as preprint, under review"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "(IA)3",
+   "definition": "Infused Adapter by Inhibiting and Amplifying Inner Activations",
+   "where": "3.3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "T0 (Sanh et al.)",
+   "year": 2021,
+   "arxiv": "2110.08207",
+   "relation": "extends",
+   "note": "backbone",
+   "quote": null
+  },
+  {
+   "work": "RAFT",
+   "year": 2021,
+   "arxiv": "2109.14076",
+   "relation": "uses-data",
+   "note": "real-world few-shot benchmark",
+   "quote": null
+  },
+  {
+   "work": "GPT-3 (Brown et al.)",
+   "year": 2020,
+   "arxiv": "2005.14165",
+   "relation": "baseline",
+   "note": "ICL baseline",
+   "quote": null
+  },
+  {
+   "work": "LoRA",
+   "year": 2021,
+   "arxiv": "2106.09685",
+   "relation": "baseline",
+   "note": "PEFT baseline",
+   "quote": null
+  },
+  {
+   "work": "Prompt tuning (Lester et al.)",
+   "year": 2021,
+   "arxiv": "2104.08691",
+   "relation": "baseline",
+   "note": "could not match prior reported results",
+   "quote": null
+  },
+  {
+   "work": "Compacter",
+   "year": 2021,
+   "arxiv": "2106.04647",
+   "relation": "contradicts",
+   "note": "does not outperform full fine-tuning here",
+   "quote": null
+  },
+  {
+   "work": "SPoT",
+   "year": 2021,
+   "arxiv": "2110.07904",
+   "relation": "uses-method",
+   "note": "pre-training new parameters",
+   "quote": null
+  },
+  {
+   "work": "Unlikelihood training (Welleck et al.)",
+   "year": 2019,
+   "arxiv": "1908.04319",
+   "relation": "uses-method",
+   "note": "L_UL",
+   "quote": null
+  },
+  {
+   "work": "Kaplan scaling laws",
+   "year": 2020,
+   "arxiv": "2001.08361",
+   "relation": "uses-method",
+   "note": "FLOPs per token",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "Accuracy of PEFT methods with LUL and LLN when applied to T0-3B",
+   "page": 7,
+   "why": "accuracy vs % parameters updated"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Accuracy of different few-shot learning methods vs inference FLOPs",
+   "page": 7,
+   "why": "cost-accuracy frontier"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "No embedded instructions found",
+  "Table 8 PT column text: 64.6/65.8 only for Acc."
+ ]
+}

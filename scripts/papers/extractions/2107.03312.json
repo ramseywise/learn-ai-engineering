@@ -1,0 +1,581 @@
+{
+ "schema": 1,
+ "key": "2107.03312",
+ "pdf": "ai-engineering/08-multimodal-engineering/sources/zeghidour-2021-soundstream.pdf",
+ "bib": {
+  "title": "SoundStream: An End-to-End Neural Audio Codec",
+  "authors": [
+   "Neil Zeghidour",
+   "Alejandro Luebs",
+   "Ahmed Omran",
+   "Jan Skoglund",
+   "Marco Tagliasacchi"
+  ],
+  "first_author": "Zeghidour",
+  "year": 2021,
+  "venue": "preprint (arXiv:2107.03312v1 [cs.SD])",
+  "arxiv": "2107.03312",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 63907,
+  "chars_total": 63907,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "system",
+ "question": "Can one end-to-end trained neural codec compress speech, music and general audio at low bitrates better than Opus and EVS, at variable bitrate and low latency?",
+ "hypothesis": "A learned encoder, residual vector quantizer and adversarially trained decoder beat traditional codecs at low-to-medium bitrates.",
+ "contributions": [
+  "End-to-end trained encoder, decoder, quantizer with reconstruction and adversarial losses",
+  "Residual vector quantizer and quantizer dropout for bitrate scalability",
+  "Learned encoder beats mel-spectrogram features",
+  "Outperforms Opus and EVS across bitrates by subjective tests",
+  "Streamable low-latency inference, real time on a smartphone CPU",
+  "Joint compression and enhancement with no extra latency"
+ ],
+ "method": {
+  "summary": "Fully convolutional causal SEANet-style encoder, residual vector quantizer (Nq layers, codebook 1024) and decoder, trained jointly with an STFT discriminator and a 3-scale waveform discriminator using hinge adversarial, feature-matching and multi-scale mel reconstruction losses. Quantizer dropout samples nq uniformly in [1,Nq] per example. FiLM conditioning switches denoising on or off.",
+  "task": "neural audio compression (codec)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "LibriTTS",
+    "role": "train",
+    "size": null,
+    "split": "disjoint test splits for evaluation",
+    "source": "Zen et al. 2019",
+    "preprocessing": "24 kHz clean speech"
+   },
+   {
+    "name": "LibriTTS + Freesound noise",
+    "role": "train",
+    "size": null,
+    "split": null,
+    "source": "synthesised mix",
+    "preprocessing": "peak normalisation on random 3 s crops; noise gain uniform in [-30 dB, 0 dB]"
+   },
+   {
+    "name": "MagnaTagATune",
+    "role": "train",
+    "size": null,
+    "split": "disjoint test split",
+    "source": "Law et al. 2009",
+    "preprocessing": "24 kHz music"
+   },
+   {
+    "name": "Real-world near/far-field speech set",
+    "role": "eval",
+    "size": "50 clips",
+    "split": null,
+    "source": "collected by the authors, not released per text",
+    "preprocessing": null
+   },
+   {
+    "name": "Evaluation set",
+    "role": "eval",
+    "size": "200 clips of 2-4 s, 50 from each of 4 datasets",
+    "split": null,
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "VCTK",
+    "role": "eval",
+    "size": "1000 samples per SNR, 2 s clips",
+    "split": "not used for training",
+    "source": "Yamagishi et al. 2019",
+    "preprocessing": "cropped to reduce silence, resampled to 24 kHz, input SNR 0/5/10/15 dB"
+   }
+  ],
+  "models": [
+   {
+    "name": "SoundStream",
+    "role": "proposed",
+    "params": "8.4 M (Cenc=Cdec=32, default)",
+    "architecture": "causal convolutional encoder/decoder + RVQ",
+    "init_from": null,
+    "tokenizer": "RVQ codes",
+    "vocab": "codebook N=1024 per quantizer",
+    "layers": "Benc=Bdec=4 blocks (example given), 3 residual units each, dilation rates 1, 3, and 9",
+    "hidden": "embedding dim D not stated",
+    "heads": null,
+    "context": null,
+    "other": {
+     "strides": "(2,4,5,8), M=320 samples, 75 Hz embeddings at 24 kHz, 13.3 ms",
+     "Nq_max": "Nq=8 at 6 kbps; 18 kbps max for scalable",
+     "activation": "ELU, no normalisation",
+     "bitrates": "3 to 18 kbps"
+    }
+   },
+   {
+    "name": "Opus",
+    "role": "baseline",
+    "params": null,
+    "architecture": "traditional codec",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "EVS",
+    "role": "baseline",
+    "params": null,
+    "architecture": "traditional codec",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Lyra",
+    "role": "baseline",
+    "params": null,
+    "architecture": "WaveGRU generative codec on mel features, 3 kbps",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "LG = 1*adv(hinge) + 100*feature loss + 1*multi-scale mel reconstruction loss (lambda_adv=1, lambda_feat=100, lambda_rec=1)",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": "quantizer dropout: nq sampled uniformly in [1,Nq]",
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "codebook": "EMA updates, k-means init on first batch, dead vectors (EMA decay 0.99, threshold 2) replaced by random batch frames",
+    "stft_disc": "W=1024, H=256, 6 residual blocks",
+    "wave_disc": "3 scales (1x,2x,4x), K=3",
+    "mel_loss": "scales s=2^6..2^11, 64-bin mel, hop s/4, alpha_s=sqrt(s/2)",
+    "denoise_data": "tuples (inputs, targets, denoise)"
+   }
+  },
+  "inference": {
+   "decoding": "deterministic encode/decode; nq chosen from desired bitrate",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {
+    "rtf": "measured on single CPU thread of Pixel4"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "MUSHRA-inspired score",
+     "definition": "crowd-sourced, hidden reference, no anchor, 20 ratings per clip; native English speakers with headphones; screened out raters scoring reference <90 over 20% or non-reference >90 over 50%",
+     "unit": "0-100",
+     "higher_is_better": true
+    },
+    {
+     "name": "ViSQOL",
+     "definition": "open-source objective quality metric used for model selection and ablations",
+     "unit": "score (about 1-5)",
+     "higher_is_better": true
+    },
+    {
+     "name": "RTF",
+     "definition": "ratio of input audio length to time needed to encode/decode",
+     "unit": "x",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Opus",
+    "EVS",
+    "Lyra (3 kbps)",
+    "mel-filterbank encoder variant",
+    "SEANet denoiser pipelines"
+   ],
+   "protocol": "95% confidence intervals; no seeds stated"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "audio examples on a public webpage (google-research.github.io/seanet/soundstream/examples/)"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.objective",
+    "quote": "In all our experiments we set λadv = 1, λfeat = 100 and",
+    "where": "III-E"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "SoundStream at 3 kbps is matched only by EVS at 9.6 kbps and Opus at 12 kbps (3.2x to 4x more bits).",
+   "kind": "measured",
+   "source": null,
+   "metric": "bitrate multiple to match quality",
+   "value": "3.2x to 4x",
+   "unit": "x bits",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MUSHRA-inspired crowdsourced test, 200 clips, 20 ratings each, 24 kHz",
+   "quote": "To match the quality of SoundStream, EVS needs to use at least 9.6 kbps and Opus at least 12 kbps, i.e., 3.2× to 4× more bits than SoundStream.",
+   "table": null,
+   "note": null,
+   "where": "V-A"
+  },
+  {
+   "claim": "At 6 kbps, EVS and Opus need 2.2x to 2.6x more bits to match SoundStream.",
+   "kind": "measured",
+   "source": null,
+   "metric": "bitrate multiple",
+   "value": "2.2x to 2.6x",
+   "unit": "x bits",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Same MUSHRA setup, medium bitrate",
+   "quote": "At medium bitrates, EVS and Opus require, respectively, 2.2× to 2.6× more bits to match the same quality.",
+   "table": null,
+   "note": null,
+   "where": "V-A"
+  },
+  {
+   "claim": "At 12 kbps, 1.3x to 1.6x more bits are needed by the baselines.",
+   "kind": "measured",
+   "source": null,
+   "metric": "bitrate multiple",
+   "value": "1.3x to 1.6x",
+   "unit": "x bits",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Same MUSHRA setup, high bitrate",
+   "quote": "At high bitrates, 1.3× to 1.6× more bits.",
+   "table": null,
+   "note": null,
+   "where": "V-A"
+  },
+  {
+   "claim": "ViSQOL stays above 3.7 across 3 to 18 kbps.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ViSQOL",
+   "value": 3.7,
+   "unit": "ViSQOL (lower bound)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Test data, all four content types, SoundStream at constant bitrate",
+   "quote": "it remains above 3.7 even at the lowest bitrate",
+   "table": null,
+   "note": null,
+   "where": "V-B"
+  },
+  {
+   "claim": "Entropy coding could save 7% to 20% of bitrate.",
+   "kind": "measured",
+   "source": null,
+   "metric": "potential rate saving",
+   "value": "7% to 20%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Empirical entropy of RVQ symbols, memoryless source assumption",
+   "quote": "Figure 7a indicates a potential rate saving between 7% and 20%.",
+   "table": null,
+   "note": null,
+   "where": "V-B"
+  },
+  {
+   "claim": "Replacing the learned encoder with a fixed mel filterbank drops ViSQOL from 3.96 to 3.33 at 6 kbps.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ViSQOL",
+   "value": 3.33,
+   "unit": "ViSQOL",
+   "baseline_value": 3.96,
+   "n": null,
+   "setup": "6 kbps, quantizer and decoder still learned",
+   "quote": "with ViSQOL going from 3.96 to 3.33",
+   "table": null,
+   "note": null,
+   "where": "V-D"
+  },
+  {
+   "claim": "Learned encoder at 3 kbps (half the bitrate) still beats the mel-encoder model at 6 kbps.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ViSQOL",
+   "value": 3.76,
+   "unit": "ViSQOL",
+   "baseline_value": 3.33,
+   "n": null,
+   "setup": "3 kbps learned encoder",
+   "quote": "ViSQOL equal to 3.76 at 3 kbps",
+   "table": null,
+   "note": null,
+   "where": "V-D"
+  },
+  {
+   "claim": "Quantizer dropout closes the quality gap of one model across bitrates; scalable model marginally beats bitrate-specific models at 9 and 12 kbps.",
+   "kind": "measured",
+   "source": null,
+   "metric": "qualitative",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "ViSQOL, model trained at 18 kbps with dropout vs without vs bitrate-specific, Fig 7c",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "V-C"
+  },
+  {
+   "claim": "Default model (Cenc=Cdec=32, 8.4M params) runs in real time on one Pixel4 CPU thread.",
+   "kind": "measured",
+   "source": null,
+   "metric": "RTF (enc)",
+   "value": "2.4x",
+   "unit": "x real time",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Pixel4 single CPU thread, 6 kbps, ViSQOL 4.01",
+   "quote": null,
+   "table": "Table I, row 32 32, column RTF (enc)",
+   "note": null,
+   "where": "Table I"
+  },
+  {
+   "claim": "Smaller encoder (Cenc=8, Cdec=32) gives encoder RTF 18.6x with ViSQOL 3.99.",
+   "kind": "measured",
+   "source": null,
+   "metric": "RTF (enc)",
+   "value": "18.6x",
+   "unit": "x real time",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Pixel4 single CPU thread, 6 kbps",
+   "quote": null,
+   "table": "Table I, row 8 32, column RTF (enc)",
+   "note": null,
+   "where": "Table I"
+  },
+  {
+   "claim": "Smaller decoder (Cdec=8) costs more quality: ViSQOL 3.90.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ViSQOL",
+   "value": 3.9,
+   "unit": "ViSQOL",
+   "baseline_value": null,
+   "n": null,
+   "setup": "6 kbps, Cenc=32, Cdec=8, 4.4M params",
+   "quote": null,
+   "table": "Table I, row 32 8, column ViSQOL",
+   "note": null,
+   "where": "Table I"
+  },
+  {
+   "claim": "80 one-bit quantizers at 6 kbps give ViSQOL 3.92 vs 4.01 for 8 x 1024.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ViSQOL",
+   "value": 3.92,
+   "unit": "ViSQOL",
+   "baseline_value": 4.01,
+   "n": null,
+   "setup": "6 kbps, Nq=80, N=2",
+   "quote": null,
+   "table": "Table II, column 80 / 2, row ViSQOL",
+   "note": null,
+   "where": "Table II"
+  },
+  {
+   "claim": "Architectural latency of 7.5/13/26 ms gives equal ViSQOL 4.01 at 6 kbps but higher RTF with more latency.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ViSQOL",
+   "value": 4.01,
+   "unit": "ViSQOL",
+   "baseline_value": null,
+   "n": null,
+   "setup": "6 kbps, Nq 4/8/16",
+   "quote": null,
+   "table": "Table III, row (2, 4, 5, 8), column ViSQOL",
+   "note": null,
+   "where": "Table III"
+  },
+  {
+   "claim": "One joint compression and enhancement model is near the disjoint SEANet+SoundStream pipelines on VCTK, at half the compute.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ViSQOL",
+   "value": 2.93,
+   "unit": "ViSQOL",
+   "baseline_value": 3.05,
+   "n": null,
+   "setup": "VCTK 2 s noisy clips, input SNR 0 dB, 1000 samples per SNR; SoundStream joint",
+   "quote": null,
+   "table": "Table IV, row 0 dB, column SoundStream",
+   "note": null,
+   "where": "Table IV"
+  }
+ ],
+ "limits": [
+  "Optimizer, learning rate, batch size, steps, hardware and dataset sizes are not stated, so training cannot be rerun from the paper.",
+  "Constant bitrate only; entropy coding savings are an estimate (lower bound), not implemented.",
+  "Evaluation clips are 2 to 4 seconds long; ViSQOL is the objective metric, MUSHRA only for main comparison.",
+  "Real-world evaluation set was collected by the authors and no release is stated."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "RVQ",
+   "definition": "Residual (multi-stage) vector quantizer cascading Nq VQ layers over successive residuals",
+   "where": "III-C"
+  },
+  {
+   "term": "Quantizer dropout",
+   "definition": "sample nq uniformly in [1;Nq] per example and only use quantizers Qi for i = 1 . . . nq",
+   "where": "III-C"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "VQ-VAE",
+   "year": 2017,
+   "arxiv": "1711.00937",
+   "relation": "extends",
+   "note": "learnable vector quantizer extended to residual",
+   "quote": null
+  },
+  {
+   "work": "VQ-VAE-2",
+   "year": 2019,
+   "arxiv": "1906.00446",
+   "relation": "uses-method",
+   "note": "EMA codebook updates",
+   "quote": null
+  },
+  {
+   "work": "SEANet",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "encoder follows streaming SEANet",
+   "quote": null
+  },
+  {
+   "work": "MelGAN",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "multi-scale waveform discriminator and feature loss",
+   "quote": null
+  },
+  {
+   "work": "HiFi-GAN",
+   "year": 2020,
+   "arxiv": "2010.05646",
+   "relation": "related",
+   "note": "GAN vocoder basis for decoder and losses",
+   "quote": null
+  },
+  {
+   "work": "Lyra",
+   "year": 2021,
+   "arxiv": "2102.09660",
+   "relation": "baseline",
+   "note": "3 kbps generative codec",
+   "quote": null
+  },
+  {
+   "work": "Opus",
+   "year": 2012,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "IETF RFC 6716",
+   "quote": null
+  },
+  {
+   "work": "EVS",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "3GPP codec",
+   "quote": null
+  },
+  {
+   "work": "LibriTTS",
+   "year": 2019,
+   "arxiv": "1904.02882",
+   "relation": "uses-data",
+   "note": "clean speech",
+   "quote": null
+  },
+  {
+   "work": "Jukebox",
+   "year": 2020,
+   "arxiv": "2005.00341",
+   "relation": "uses-method",
+   "note": "dead codebook vector replacement",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "SoundStream @3 kbps vs. state-of-the-art codecs.",
+   "page": 1,
+   "why": "MUSHRA vs bitrate headline"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "SoundStream model architecture.",
+   "page": 2,
+   "why": "encoder, RVQ, decoder, discriminator at a glance"
+  },
+  {
+   "figure": "Fig 7c",
+   "caption": "ViSQOL vs bitrate for scalable, non-scalable and bitrate-specific models",
+   "page": 9,
+   "why": "quantizer dropout effect"
+  }
+ ],
+ "code": [
+  {
+   "where": "Algorithm 1",
+   "snippet": "ŷ ← 0.0; residual ← y; for i = 1 to Nq: ŷ += Qi(residual); residual −= Qi(residual); return ŷ",
+   "verbatim": false
+  }
+ ],
+ "problems": []
+}

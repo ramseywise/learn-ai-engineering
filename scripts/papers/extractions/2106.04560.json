@@ -1,0 +1,669 @@
+{
+ "schema": 1,
+ "key": "2106.04560",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/zhai-2022-scaling-vision-transformers.pdf",
+ "bib": {
+  "title": "Scaling Vision Transformers",
+  "authors": [
+   "Xiaohua Zhai",
+   "Alexander Kolesnikov",
+   "Neil Houlsby",
+   "Lucas Beyer"
+  ],
+  "first_author": "Zhai",
+  "year": 2022,
+  "venue": "preprint (arXiv v2, 20 Jun 2022)",
+  "arxiv": "2106.04560",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 77533,
+  "chars_total": 77533,
+  "engine": "pymupdf",
+  "skipped": "reference list skimmed only"
+ },
+ "type": "empirical",
+ "question": "How do Vision Transformers scale with model size, data size and compute, and how can their training be made efficient enough to reach two billion parameters?",
+ "hypothesis": "Scaling laws found for Transformer language models also hold for ViT transfer performance, with model, data and compute needing to grow together.",
+ "contributions": [
+  "Characterisation of the performance-compute frontier for ViT on two datasets (JFT-3B, ImageNet-21k)",
+  "Improved large-scale training recipe: decoupled head weight decay, GAP/MAP head instead of [class] token, memory-efficient optimizers, infinite learning-rate schedules",
+  "ViT-G/14 (~2B parameters) reaching 90.45% ImageNet top-1 and 84.86% 10-shot"
+ ],
+ "method": {
+  "summary": "Train ViTs from 5M to ~2B parameters on ImageNet-21k and JFT subsets up to 3B images for many step counts, and fit a saturating power law E=aC^-b+c (with shift d) of error against TPUv3 core-days. Along the way refine the recipe (head weight decay, MAP pooling, half-precision Adam/Adafactor, rsqrt schedule with cooldown) and train ViT-g/14 and ViT-G/14.",
+  "task": "supervised image-classification pre-training, evaluated by few-shot linear transfer and full fine-tuning",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "JFT-3B",
+    "role": "pretrain",
+    "size": "nearly 3 billion images, ~30k labels (29,593 classes in config); 927k near-duplicates removed",
+    "split": "subsets of 30M, 300M, 1B, 3B images used for scaling",
+    "source": "proprietary Google dataset, semi-automatic labels",
+    "preprocessing": "multi-label sigmoid cross-entropy; inception_crop(224), flip_lr; value_range(-1,1); duplicates of eval train/test images removed"
+   },
+   {
+    "name": "JFT-300M",
+    "role": "pretrain",
+    "size": "300M images",
+    "split": null,
+    "source": "earlier proprietary dataset",
+    "preprocessing": "used for ablation (Fig 5, 6)"
+   },
+   {
+    "name": "ImageNet-21k",
+    "role": "pretrain",
+    "size": "1.3M, 2.6M, 5.1M, 10.2M, 13M image subsets",
+    "split": null,
+    "source": "public",
+    "preprocessing": null
+   },
+   {
+    "name": "ImageNet (ILSVRC-2012), ImageNet-v2, ReaL, ObjectNet",
+    "role": "eval",
+    "size": null,
+    "split": "fine-tune on ImageNet; held-out 2% of train split used to pick fine-tune LR",
+    "source": "public",
+    "preprocessing": "eval: resize_small(256), central_crop(224) in pre-training config"
+   },
+   {
+    "name": "VTAB-1k (19 tasks), Oxford-IIIT Pets, CIFAR-100, Caltech-UCSD Birds",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "public",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "ViT-G/14",
+    "role": "proposed",
+    "params": "1843M (Table 2); 'nearly two billion'",
+    "architecture": "ViT encoder, MAP head, no [class] token, no final non-linear projection",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": 48,
+    "hidden": 1664,
+    "heads": 16,
+    "context": "patch 14, 224px (256 tokens)",
+    "other": {
+     "mlp": 8192,
+     "gflops_224": 965.3,
+     "gflops_384": 2859.9
+    }
+   },
+   {
+    "name": "ViT-g/14",
+    "role": "proposed",
+    "params": "1011M",
+    "architecture": "as ViT-G",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": 40,
+    "hidden": 1408,
+    "heads": 16,
+    "context": "patch 14",
+    "other": {
+     "mlp": 6144,
+     "gflops_224": 533.1,
+     "gflops_384": 1596.4
+    }
+   },
+   {
+    "name": "L/16",
+    "role": "proposed",
+    "params": "303M",
+    "architecture": "ViT",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": 24,
+    "hidden": 1024,
+    "heads": 16,
+    "context": "patch 16",
+    "other": {
+     "mlp": 4096
+    }
+   },
+   {
+    "name": "B/16, B/28, B/32",
+    "role": "proposed",
+    "params": "86M, 87M, 87M",
+    "architecture": "ViT",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": 12,
+    "hidden": 768,
+    "heads": 12,
+    "context": "patch 16/28/32",
+    "other": {
+     "mlp": 3072
+    }
+   },
+   {
+    "name": "S/16, S/32",
+    "role": "proposed",
+    "params": "22M",
+    "architecture": "ViT",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": 12,
+    "hidden": 384,
+    "heads": 6,
+    "context": null,
+    "other": {
+     "mlp": 1536
+    }
+   },
+   {
+    "name": "Ti/16",
+    "role": "proposed",
+    "params": "5.5M",
+    "architecture": "ViT",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": 12,
+    "hidden": 192,
+    "heads": 3,
+    "context": null,
+    "other": {
+     "mlp": 768
+    }
+   },
+   {
+    "name": "s/16, s/28",
+    "role": "proposed",
+    "params": "5.0M, 5.4M",
+    "architecture": "ViT",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": 6,
+    "hidden": 256,
+    "heads": 8,
+    "context": null,
+    "other": {
+     "mlp": 1024
+    }
+   }
+  ],
+  "training": {
+   "objective": "multi-label sigmoid cross-entropy on JFT labels (hierarchy ignored)",
+   "optimizer": "Adafactor modified: half-precision (bfloat16) first momentum, no relative-lr scaling, second momentum clipped at 0.999; beta1=0.9; grad clip norm 1.0",
+   "lr": "8e-4 (ViT-g/14 config, Listing 1)",
+   "lr_schedule": "reciprocal square-root (timescale 10000) with linear cooldown to zero (cooldown_steps 50000 in ViT-g config; 10K/50K in Tables 14-22)",
+   "warmup": "10k steps linear",
+   "batch_size": "4096 for models smaller than ViT-g; up to 32768 for ViT-g and ViT-G",
+   "steps": "ViT-g config total_steps 1,000,000; tables report 20K to 6.3M steps (ViT-g/14) and 5M for ViT-G/14 (normalised to batch 4096)",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "inferred: 256 patch tokens at 224px, patch 14",
+   "precision": "bfloat16 first momentum; second momentum in half precision degraded performance",
+   "weight_decay": "head 3.0, body 0.03 (config: wd=0.03*8e-4, head kernel mult 100)",
+   "dropout": null,
+   "regularisation": "very strong L2 on final linear layer only; inception crop, horizontal flip",
+   "hardware": "TPUv3; ViT-g/ViT-G distributed over 2048 TPUv3 chips",
+   "compute": "scaling study spans <1 to >10000 TPUv3 core-days (Fig 2 axis)",
+   "wall_clock": null,
+   "seeds": "Table 1 reports +-; number of runs not stated",
+   "other": {
+    "data_parallelism_only": "whole ViT-G fits on a single TPUv3 core",
+    "fits_32_images_per_core_ViT_g": true,
+    "init_head_bias": -10.0,
+    "shuffle_buffer": 250000
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {
+    "few_shot": "closed-form l2-regularised linear regression on frozen 224px embeddings",
+    "finetune": "SGD with momentum, batch 512, grad clip global norm 1, no weight decay, 384px (models below ViT-g) or 518px (ViT-g, ViT-G), cosine schedule 20k steps (flat LR with Polyak averaging for ViT-G only), 500 warmup steps, LR swept {0.03, 0.01} on held-out 2% train split; VTAB: fixed LR 0.01, cosine, 2500 steps"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "ImageNet top-1 (fine-tuned)",
+     "definition": "top-1 accuracy after full fine-tuning",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "n-shot ImageNet accuracy",
+     "definition": "linear classifier on frozen features with n examples per class",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "error rate vs compute",
+     "definition": "100 - accuracy, compute in TPUv3 core-days",
+     "unit": "%",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "NS (EfficientNet-L2)",
+    "MPL (EfficientNet-L2)",
+    "CLIP ViT-L/14",
+    "ALIGN (EfficientNet-L2)",
+    "BiT-L",
+    "ViT-H/14",
+    "SimCLR v2, BYOL, DINO (few-shot)"
+   ],
+   "protocol": "Pareto frontier over many (model, data, steps) runs; saturating power law fit; Table 1 shows mean +- value"
+  },
+  "availability": {
+   "code": "config follows big_vision codebase conventions (ref [5]); listing 1 given",
+   "weights": null,
+   "data": "JFT-3B proprietary"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.weight_decay",
+    "quote": "We set weight decay to 3.0 for the “head” and 0.03 for the “body”.",
+    "where": "Appendix B"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "ViT-G/14 sets new ImageNet top-1 state of the art after fine-tuning",
+   "kind": "measured",
+   "source": null,
+   "metric": "ImageNet top-1",
+   "value": 90.45,
+   "unit": "%",
+   "baseline_value": 90.2,
+   "n": null,
+   "setup": "pre-trained on JFT-3B (nearly 3B images, ~30k labels), 224x224; fine-tuned on ImageNet at 518x518 for ViT-G",
+   "note": "baseline is MPL (Eff.-L2) 90.2; Table 1 prints 90.45±0.03",
+   "where": "Sec 2.5, Table 1",
+   "quote": "ViT-G/14 achieves 90.45% top-1 accuracy on ImageNet, set-\nting the new state-of-the art."
+  },
+  {
+   "claim": "ViT-G/14 10-shot linear ImageNet accuracy",
+   "kind": "measured",
+   "source": null,
+   "metric": "ImageNet 10-shot top-1",
+   "value": 84.86,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "frozen ViT-G/14 features, linear regression, 224px",
+   "note": null,
+   "where": "Sec 2.5, Fig 1",
+   "quote": "attaining\n84.86% accuracy with 10 examples per class"
+  },
+  {
+   "claim": "ViT-G/14 1-shot ImageNet accuracy",
+   "kind": "measured",
+   "source": null,
+   "metric": "ImageNet 1-shot top-1",
+   "value": 69.52,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "single example per class, linear on frozen features",
+   "note": null,
+   "where": "Sec 1",
+   "quote": "our best model\nachieves 69.52% accuracy"
+  },
+  {
+   "claim": "ViT-G/14 ImageNet-v2 accuracy",
+   "kind": "measured",
+   "source": null,
+   "metric": "ImageNet-V2",
+   "value": 83.33,
+   "unit": "%",
+   "baseline_value": 80.2,
+   "n": null,
+   "setup": "pre-trained on JFT-3B (nearly 3B images, ~30k labels), 224x224; fine-tuned on ImageNet at 518x518 for ViT-G",
+   "note": "baseline NS (Eff.-L2) 80.2; text says improves 3%",
+   "where": "Table 1",
+   "table": "Table 1, row Our ViT-G/14, column INet V2"
+  },
+  {
+   "claim": "ViT-G/14 ObjectNet accuracy, about 2% below CLIP which does not fine-tune on ImageNet",
+   "kind": "measured",
+   "source": null,
+   "metric": "ObjectNet",
+   "value": 70.53,
+   "unit": "%",
+   "baseline_value": 72.3,
+   "n": null,
+   "setup": "pre-trained on JFT-3B (nearly 3B images, ~30k labels), 224x224; fine-tuned on ImageNet at 518x518 for ViT-G",
+   "note": "baseline CLIP ViT-L/14 72.3",
+   "where": "Table 1",
+   "table": "Table 1, row Our ViT-G/14, column ObjectNet"
+  },
+  {
+   "claim": "ViT-G/14 VTAB (light) with one hyperparameter for all tasks",
+   "kind": "measured",
+   "source": null,
+   "metric": "VTAB-1k (19 tasks)",
+   "value": 78.29,
+   "unit": "%",
+   "baseline_value": 77.63,
+   "n": null,
+   "setup": "single hyperparameter, 2500 steps, LR 0.01; no per-task sweep",
+   "note": "baseline ViT-H/14 77.63; per-task-sweep SOTA 79.99 [21]",
+   "where": "Table 1",
+   "table": "Table 1, row Our ViT-G/14, column VTAB (light)"
+  },
+  {
+   "claim": "Fine-tune error vs compute follows saturating power law on JFT-3B",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "ViT 5M-2B, JFT subsets 30M-3B, Fig 2 left: E=0.09+0.26(C+0.01)^0.35 (read from Fig 2)",
+   "note": null,
+   "where": "Fig 2"
+  },
+  {
+   "claim": "10-shot error vs compute fit",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "same runs, Fig 2 center: E=0.12+0.63(C+0.52)^0.32 (read from Fig 2)",
+   "note": null,
+   "where": "Fig 2"
+  },
+  {
+   "claim": "Double-saturating power law also holds on ImageNet-21k (10-shot fit exponent 0.61)",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Ti/16, S/16, B/32, B/16 on 1.3M-13M images; Fig 4: E=0.24+0.96(C+1.57)^0.61 (read from Fig 4)",
+   "note": null,
+   "where": "Fig 4"
+  },
+  {
+   "claim": "Bigger models are more sample efficient: Ti/16 needs ~100x more images than L/16 for 10-shot parity, ~20x when fine-tuning",
+   "kind": "measured",
+   "source": null,
+   "metric": "images-seen ratio",
+   "value": 100,
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Ti/16 vs L/16 pre-trained on JFT-3B, ImageNet 10-shot",
+   "note": null,
+   "where": "Sec 2.3",
+   "quote": "For 10-shot, the Ti/16 model needs to see nearly 100\ntimes more images to match the representation quality of\nthe L/16 model."
+  },
+  {
+   "claim": "Conclusion drawn on training: with enough data, train a larger model for fewer steps",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "JFT-3B, Fig 3",
+   "note": null,
+   "where": "Sec 2.3",
+   "quote": "Our results suggest that with sufﬁcient\ndata, training a larger model for fewer steps is preferable."
+  },
+  {
+   "claim": "L/16 on 30M images does not improve past 27% error, vs 19% on larger datasets",
+   "kind": "measured",
+   "source": null,
+   "metric": "ImageNet fine-tune error",
+   "value": 27,
+   "unit": "%",
+   "baseline_value": 19,
+   "n": null,
+   "setup": "L/16, 30M vs larger JFT subsets",
+   "note": null,
+   "where": "Sec 2.1",
+   "quote": "the error rate of L/16 model\non the the 30M dataset does not improve past 27%. On\nthe larger datasets, this model attains 19%."
+  },
+  {
+   "claim": "Switching JFT-300M to JFT-3B improves ImageNet transfer by about 1% for small and large models",
+   "kind": "measured",
+   "source": null,
+   "metric": "ImageNet fine-tune accuracy gain",
+   "value": 1,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "B/32 and L/16, no further scaling",
+   "note": null,
+   "where": "Sec 3.3, Fig 6",
+   "quote": "the change in dataset\nimproves transfer to ImageNet by about 1% for both small\nand large models"
+  },
+  {
+   "claim": "Number of near-duplicates removed from JFT-3B",
+   "kind": "measured",
+   "source": null,
+   "metric": "duplicates removed",
+   "value": 927000,
+   "unit": "images",
+   "baseline_value": null,
+   "n": null,
+   "setup": "JFT-3B vs train and test sets of eval datasets",
+   "note": null,
+   "where": "Sec 3.3",
+   "quote": "Overall we identiﬁed\nand removed 927k duplicate images from JFT-3B."
+  },
+  {
+   "claim": "Padding of token dimension to multiple of 128 can add up to 50% memory overhead, motivating GAP/MAP over [class] token",
+   "kind": "measured",
+   "source": null,
+   "metric": "memory overhead",
+   "value": 50,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "TPU hardware, 257 tokens for ViT-H/14 at 224px",
+   "note": null,
+   "where": "Sec 3.2",
+   "quote": "which may result in up\nto a 50% memory overhead"
+  },
+  {
+   "claim": "Adam with bfloat16 first momentum has no effect on outcome; modified Adafactor leaves only 50% overhead over parameters",
+   "kind": "measured",
+   "source": null,
+   "metric": "optimizer memory overhead",
+   "value": 50,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ViT-G ~2B params = 8 GiB; Adam adds 16 GiB",
+   "note": null,
+   "where": "Sec 3.4",
+   "quote": "The resulting optimizer introduces only a 50% memory over-\nhead on top the space needed to store model’s parameters."
+  },
+  {
+   "claim": "Decoupled head weight decay improves few-shot transfer while lowering upstream accuracy",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "ViT-B/32 on JFT-300M, 5-shot ImageNet, Fig 5 grid of head/body wd; best off-diagonal (read from Fig 5)",
+   "note": null,
+   "where": "Sec 3.1, Fig 5"
+  },
+  {
+   "claim": "Raising resolution with proportionally larger patch (same token count) changes 10-shot little",
+   "kind": "measured",
+   "source": null,
+   "metric": "ImageNet 10-shot (B/32 at 224)",
+   "value": 64.43,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ImageNet-21k, Table 3: B/32@224 64.43, B/48@336 64.65, B/64@448 64.67; S/16@224 63.42",
+   "note": null,
+   "where": "Appendix E, Table 3",
+   "table": "Table 3, row INet10, column B/32"
+  },
+  {
+   "claim": "ViT-G/14 at 5M steps (batch-4096 normalised) 10-shot ImageNet",
+   "kind": "measured",
+   "source": null,
+   "metric": "INet10",
+   "value": 84.9,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "JFT-3B, Table 4 (rounded; text says 84.86)",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row ViT-G/14 3B 5M, column INet10"
+  }
+ ],
+ "limits": [
+  "Pre-training data JFT-3B is proprietary; authors check laws on public ImageNet-21k (Limitations)",
+  "Conclusions 'may not necessarily generalize beyond the scale we have studied and they may not generalize beyond the ViT family'",
+  "Only ImageNet-style supervised classification pre-training; smaller models saturate at the lower end of compute so power law needs shift term",
+  "VTAB uses one hyperparameter; heavy per-task sweep (SOTA 79.99) left to future work",
+  "Pets few-shot fits do not match perfectly (Fig 9 caption)",
+  "Some rows missing in appendix Tables (authors say they do not affect trend)",
+  "Number of seeds behind +- in Table 1 not stated; no hyperparameter detail for ViT-G beyond ViT-g config listing"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "double-saturating power law",
+   "definition": "E = a(C+d)^-b + c: c is irreducible error at high compute, d shifts the x-axis because zero-compute models still get non-zero accuracy",
+   "where": "Sec 2.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Scaling laws for neural language models (Kaplan et al.)",
+   "year": 2020,
+   "arxiv": "2001.08361",
+   "relation": "extends",
+   "note": "transfers LM scaling-law study to ViT",
+   "quote": "Optimal scaling of Transformers in NLP was carefully studied\nin [22]"
+  },
+  {
+   "work": "An Image is Worth 16x16 Words (ViT, Dosovitskiy et al.)",
+   "year": 2020,
+   "arxiv": "2010.11929",
+   "relation": "extends",
+   "note": "architecture being scaled; ViT-H/14 baseline",
+   "quote": null
+  },
+  {
+   "work": "Scaling laws for autoregressive generative modeling (Henighan et al.)",
+   "year": 2020,
+   "arxiv": "2010.14701",
+   "relation": "related",
+   "note": "irreducible-entropy idea; images generative",
+   "quote": null
+  },
+  {
+   "work": "Big Transfer (BiT)",
+   "year": 2019,
+   "arxiv": "1912.11370",
+   "relation": "baseline",
+   "note": "BiT-L, JFT-300M",
+   "quote": null
+  },
+  {
+   "work": "Adafactor (Shazeer and Stern)",
+   "year": 2018,
+   "arxiv": "1804.04235",
+   "relation": "uses-method",
+   "note": "modified for memory efficiency",
+   "quote": null
+  },
+  {
+   "work": "Noisy Student; Meta Pseudo Labels; CLIP; ALIGN",
+   "year": null,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Table 1 comparisons",
+   "quote": null
+  },
+  {
+   "work": "JFT-300M / JFT-3B",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "proprietary",
+   "quote": null
+  },
+  {
+   "work": "big_vision codebase",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "config conventions",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "Representation quality as function of total training compute; saturating power law approximates Pareto frontier",
+   "page": 2,
+   "why": "shows the central scaling result"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Error rate on ImageNet w.r.t. images seen",
+   "page": 3,
+   "why": "sample efficiency of big models"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Head/body weight decay heatmaps and head type",
+   "page": 5,
+   "why": "decoupled head weight decay"
+  },
+  {
+   "figure": "Table 2",
+   "caption": "Model architecture details",
+   "page": 7,
+   "why": "all model shapes"
+  }
+ ],
+ "code": [
+  {
+   "where": "Appendix C, Listing 1",
+   "snippet": "config.lr = 8e-4; config.wd = 0.03 * 8e-4; wd_mults [('.*head/kernel', 100.0), ('.*/kernel', 1.0)]; schedule decay_type='rsqrt', timescale=10_000, warmup_steps=10_000, cooldown_steps=50_000; total_steps = 1_000_000",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text extraction of figures is numbers only; fit equations read from figure labels",
+  "Fig 2 text lists left fit E=0.09+0.26(C+0.01)^0.35 and Fig 2 center 10-shot E=0.12+0.63(C+0.52)^0.32"
+ ]
+}

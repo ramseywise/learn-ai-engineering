@@ -1,0 +1,574 @@
+{
+ "schema": 1,
+ "key": "2201.08239",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/thoppilan-2022-lamda.pdf",
+ "bib": {
+  "title": "LaMDA: Language Models for Dialog Applications",
+  "authors": [
+   "Romal Thoppilan",
+   "Daniel De Freitas",
+   "Jamie Hall",
+   "Noam Shazeer",
+   "et al. (59 authors, Google)"
+  ],
+  "first_author": "Thoppilan",
+  "year": 2022,
+  "venue": "preprint",
+  "arxiv": "2201.08239",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 154617,
+  "chars_total": 154617,
+  "engine": "pymupdf",
+  "skipped": "Reference list and appendix A.2-C example dialog tables skimmed only"
+ },
+ "type": "empirical",
+ "question": "How much do scale, crowdworker-annotated fine-tuning and consulting external tools improve dialog quality, safety and groundedness?",
+ "hypothesis": "Scaling alone helps quality but little for safety and groundedness; fine-tuning with annotated data and tool use closes much of the gap.",
+ "contributions": [
+  "LaMDA family up to 137B pre-trained on 1.56T words of dialog and web text",
+  "Safety and quality discriminator fine-tuning and filtering",
+  "Groundedness via a toolset with cited URLs",
+  "Domain grounding case studies and carbon footprint estimate"
+ ],
+ "method": {
+  "summary": "Decoder-only Transformer dialog models (2B, 8B, 137B) pre-trained on 1.56T words of dialog and web text, then fine-tuned on crowdworker-annotated data as a combined generator and discriminator for quality (SSI) and safety, and fine-tuned to call a toolset (retrieval, calculator, translator) so responses are grounded and cited. Evaluated with crowdworker ratings.",
+  "task": "open-domain dialog: quality, safety, groundedness",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Infiniset pre-training corpus",
+    "role": "pretrain",
+    "size": "2.97B documents, 1.12B dialogs, 13.39B utterances, 1.56T words, 2.81T BPE tokens",
+    "split": null,
+    "source": "50% public forum dialogs, 12.5% C4, 12.5% code sites, 12.5% English Wikipedia, 6.25% English web, 6.25% non-English web",
+    "preprocessing": "SentencePiece BPE, 32K vocab"
+   },
+   {
+    "name": "Quality (SSI) fine-tuning dialogs",
+    "role": "train",
+    "size": "6400 dialogs, 121K turns (Sec 5); Table 1 prints 6.4K dialogs (61k turns)",
+    "split": null,
+    "source": "crowdworkers chat with a LaMDA instance, 14-30 turns, 5 raters per response, yes if >=3 of 5",
+    "preprocessing": null
+   },
+   {
+    "name": "Safety fine-tuning dialogs",
+    "role": "train",
+    "size": "8K dialogs, 48K turns",
+    "split": null,
+    "source": "crowdworkers, 5-10 turns, natural, sensitive and adversarial; 3 raters, score 1 if >=2 of 3 say no to each objective",
+    "preprocessing": null
+   },
+   {
+    "name": "Groundedness fine-tuning data",
+    "role": "train",
+    "size": "4K dialogs, 40K turns (40K annotated generative turns) plus 9K turns labeled correct/incorrect for ranking",
+    "split": null,
+    "source": "crowdworkers write search queries and edit responses with toolset results",
+    "preprocessing": null
+   },
+   {
+    "name": "Filtered dialog data for generative fine-tuning",
+    "role": "train",
+    "size": "2.5M pre-training turns scored, 800K kept",
+    "split": null,
+    "source": "pre-training dialogs filtered by LaMDA SSI and safety discriminators",
+    "preprocessing": null
+   },
+   {
+    "name": "Mini-Turing Benchmark",
+    "role": "eval",
+    "size": "1477 dialogs (315 single-turn, 500 2-turn, 662 3-turn)",
+    "split": null,
+    "source": "Adiwardana et al. 2020",
+    "preprocessing": null
+   },
+   {
+    "name": "Safety eval",
+    "role": "eval",
+    "size": "1166 dialogs, 1458 turns",
+    "split": "holdout of adversarially collected data",
+    "source": "crowdworker-collected",
+    "preprocessing": null
+   },
+   {
+    "name": "Groundedness eval",
+    "role": "eval",
+    "size": "784 turns",
+    "split": null,
+    "source": "dialogs from Dinan et al. [96]",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "LaMDA 137B",
+    "role": "proposed",
+    "params": "137B non-embedding",
+    "architecture": "decoder-only Transformer, relative attention as in T5, gated-GELU",
+    "init_from": null,
+    "tokenizer": "SentencePiece BPE",
+    "vocab": "32K",
+    "layers": "64",
+    "hidden": "d_model 8192, d_ff 65536",
+    "heads": "128",
+    "context": null,
+    "other": {
+     "d_k=d_v": "128"
+    }
+   },
+   {
+    "name": "LaMDA 8B",
+    "role": "proposed",
+    "params": "8B",
+    "architecture": "same family",
+    "init_from": null,
+    "tokenizer": "SentencePiece BPE",
+    "vocab": "32K",
+    "layers": "16",
+    "hidden": "4096",
+    "heads": "64",
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "LaMDA 2B",
+    "role": "proposed",
+    "params": "2B",
+    "architecture": "same family",
+    "init_from": null,
+    "tokenizer": "SentencePiece BPE",
+    "vocab": "32K",
+    "layers": "10",
+    "hidden": "2560",
+    "heads": "40",
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "PT (pre-trained only)",
+    "role": "baseline",
+    "params": "2B, 8B, 137B",
+    "architecture": "same",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Meena",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "compared on size only (40B words, ~50x fewer parameters)"
+    }
+   }
+  ],
+  "training": {
+   "objective": "next-token prediction for pre-training; fine-tuning as token sequences '<context> <sentinel> <response>' (loss on response only) and '<context> <sentinel> <response> <attribute> <rating>' (loss on rating only); groundedness tasks emit 'TS, query' or 'User, response'",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "256K tokens per batch",
+   "steps": "pre-train steps 501k (2B), 521k (8B), 3M (137B)",
+   "epochs": null,
+   "tokens": "inferred: 2.81T BPE tokens in the corpus; tokens seen not stated",
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "1024 TPU-v3 chips for 137B pre-training (64 chips for 2B and 8B); fine-tuning on 16 chips (2B, 8B) and 64 chips (137B)",
+   "compute": "3.55E+23 FLOPs, 123 TFLOPS/s, 56.5% utilization, 451 MWh, ~26 tCO2e total",
+   "wall_clock": "pre-train 1.5 d (2B), 23 d (8B), 57.7 d (137B); fine-tune 3 h, 6 h, 36 h",
+   "seeds": null,
+   "other": {
+    "framework": "Lingvo, GSPMD 2D sharding"
+   }
+  },
+  "inference": {
+   "decoding": "sample-and-rank: 16 candidates by top-k sampling, k=40, no temperature; final = highest score by log-likelihood and length (PT). LaMDA: filter by safety discriminator threshold, rank by 3*P(sensible)+P(specific)+P(interesting)",
+   "temperature": "none",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "16 candidates per context",
+   "prompting": "Domain grounding: precondition on a few role-specific turns (Everest: single greeting 'Hi, I'm Mount Everest. What would you like to know about me?')",
+   "retrieval": "toolset (calculator, translator, information retrieval) queried in a loop until the model addresses the user; max research iterations is a serving parameter, set to four in the example",
+   "parameters": {
+    "safety_threshold": null,
+    "quality_weights": "3:1:1 sensible:specific:interesting",
+    "max_research_loops": "4 (example)"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Sensibleness / Specificity / Interestingness (SSI)",
+     "definition": "0/1 crowd labels, yes if >=3 of 5 raters; SSI is their average",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Safety",
+     "definition": "1 if >=2 of 3 raters mark no violation for every safety objective",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Groundedness",
+     "definition": "share of responses with external-world claims that are supported by authoritative sources, among those with such claims",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Informativeness",
+     "definition": "share of all responses carrying source-supported external information",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Citation accuracy",
+     "definition": "share of responses citing source URLs among responses with explicit non-trivial external claims",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Helpfulness / Role consistency",
+     "definition": "3 crowd labels per response in role-specific dialogs",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "PT (pre-trained only) at 2B, 8B, 137B",
+    "FT quality-safety (137B)",
+    "crowdworkers with and without information retrieval"
+   ],
+   "protocol": "Human crowdworker ratings only; no seeds, no confidence intervals reported; all data English"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": null
+  },
+  "prompts": [
+   {
+    "purpose": "Mount Everest role precondition",
+    "text": "Hi, I'm Mount Everest. What would you like to know about me?",
+    "where": "Sec 8"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "models.layers",
+    "quote": "The Transformer has\n64 layers, dmodel = 8192, dff = 65536, h = 128",
+    "where": "Sec 3"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Fine-tuned LaMDA 137B reaches 73.2% groundedness and 65% citation accuracy.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Groundedness",
+   "value": "73.2",
+   "unit": "%",
+   "baseline_value": "57.9 (PT 137B)",
+   "n": null,
+   "setup": "LaMDA 137B after quality-safety and groundedness fine-tuning with toolset access; 784 eval turns from Dinan et al.; 3 crowdworkers majority vote",
+   "note": null,
+   "where": "Sec 7",
+   "quote": "achieves 73.2% Groundedness and 65% Citation Accuracy"
+  },
+  {
+   "claim": "Pre-trained 137B groundedness for comparison.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Groundedness",
+   "value": "57.9",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "PT 137B, same eval",
+   "note": null,
+   "where": "Table 28",
+   "table": "Table 28 (Appendix F), row PT (137B), column Groundedness"
+  },
+  {
+   "claim": "Safety barely improves with scale without fine-tuning: PT 2B 84.8 vs PT 137B 88.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Safety",
+   "value": "88",
+   "unit": "%",
+   "baseline_value": "84.8 (PT 2B)",
+   "n": null,
+   "setup": "PT models, safety eval: 1458 turns of adversarially collected holdout, score 1 if 2 of 3 raters say no violation",
+   "note": null,
+   "where": "Table 28",
+   "table": "Table 28 (Appendix F), row PT (137B), column Safety"
+  },
+  {
+   "claim": "LaMDA 137B safety after fine-tuning.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Safety",
+   "value": "95.2",
+   "unit": "%",
+   "baseline_value": "88 (PT 137B)",
+   "n": null,
+   "setup": "LaMDA 137B, same safety eval",
+   "note": null,
+   "where": "Table 28",
+   "table": "Table 28 (Appendix F), row LaMDA (137B), column Safety"
+  },
+  {
+   "claim": "LaMDA 137B sensibleness after fine-tuning.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Sensibleness",
+   "value": "92.3",
+   "unit": "%",
+   "baseline_value": "80.2 (PT 137B)",
+   "n": null,
+   "setup": "Mini-Turing Benchmark 1477 dialogs, majority of 5 raters",
+   "note": null,
+   "where": "Sec 7",
+   "quote": "92.3% sensibleness achieved by LaMDA"
+  },
+  {
+   "claim": "LaMDA 137B specificity vs PT.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Specificity",
+   "value": "79",
+   "unit": "%",
+   "baseline_value": "49.8 (PT 137B)",
+   "n": null,
+   "setup": "MTB, LaMDA 137B",
+   "note": null,
+   "where": "Table 28",
+   "table": "Table 28 (Appendix F), row LaMDA (137B), column Specificity"
+  },
+  {
+   "claim": "LaMDA 137B interestingness vs PT.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Interestingness",
+   "value": "25.7",
+   "unit": "%",
+   "baseline_value": "15.8 (PT 137B)",
+   "n": null,
+   "setup": "MTB, LaMDA 137B",
+   "note": null,
+   "where": "Table 28",
+   "table": "Table 28 (Appendix F), row LaMDA (137B), column Interestingness"
+  },
+  {
+   "claim": "LaMDA 137B informativeness vs PT.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Informativeness",
+   "value": "62.3",
+   "unit": "%",
+   "baseline_value": "41.3 (PT 137B)",
+   "n": null,
+   "setup": "784-turn groundedness eval",
+   "note": null,
+   "where": "Table 28",
+   "table": "Table 28 (Appendix F), row LaMDA (137B), column Informativeness"
+  },
+  {
+   "claim": "Fine-tuning data is under 0.001% of pre-training data.",
+   "kind": "measured",
+   "source": null,
+   "metric": "fine-tuning data share",
+   "value": "0.001",
+   "unit": "% of pre-training data (upper bound)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "annotated fine-tuning data",
+   "note": null,
+   "where": "Sec 9",
+   "quote": "modest amounts of human-annotated ﬁne-tuning data (less than 0.001% of pre-training data)"
+  },
+  {
+   "claim": "Domain grounding: LaMDA Everest helpfulness vs PT Everest.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Helpful",
+   "value": "65",
+   "unit": "%",
+   "baseline_value": "18 (PT Everest)",
+   "n": null,
+   "setup": "600 dialog turns across 4 agents, 3 labels each, preconditioned on a greeting",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row LaMDA Everest, column Helpful %"
+  },
+  {
+   "claim": "LaMDA Music helpfulness vs PT Music.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Helpful",
+   "value": "57",
+   "unit": "%",
+   "baseline_value": "31 (PT Music)",
+   "n": null,
+   "setup": "same",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row LaMDA Music, column Helpful %"
+  },
+  {
+   "claim": "LaMDA Everest provides unattributable facts in about 30% of responses.",
+   "kind": "measured",
+   "source": null,
+   "metric": "unattributable share",
+   "value": "30",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LaMDA Everest, crowdworkers check with a retrieval system",
+   "note": null,
+   "where": "Sec 8",
+   "quote": "provides facts\nthat could not be attributed to known sources in about 30% of responses"
+  },
+  {
+   "claim": "Largest model pre-training cost: 57.7 days on 1024 TPU-v3, 3.55E+23 FLOPs, 451 MWh, about 26 tCO2e total.",
+   "kind": "measured",
+   "source": null,
+   "metric": "pre-training FLOPs",
+   "value": "3.55E+23",
+   "unit": "FLOPs",
+   "baseline_value": null,
+   "n": null,
+   "setup": "137B pre-training",
+   "note": null,
+   "where": "Sec 10",
+   "quote": "= 3.55E+23"
+  }
+ ],
+ "limits": [
+  "Safety is one aggregated coarse metric over objectives built for a US context",
+  "Groundedness progress limited to simple facts; Human with retrieval still far ahead",
+  "Crowdworkers skew 25-34 and rating quality was not checked against experts; disagreement not analysed",
+  "Adversarial data finds common but not rare failures",
+  "Group-level scores only: no seeds or confidence intervals",
+  "Authors say this is a recipe, not a final production model",
+  "Optimizer, learning rate and safety threshold not stated"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Groundedness",
+   "definition": "percentage of responses containing claims about the external world that can be supported by authoritative external sources, as a share of all those containing claims about the external world",
+   "where": "Sec 4.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Towards a human-like open-domain chatbot (Meena)",
+   "year": 2020,
+   "arxiv": "2001.09977",
+   "relation": "extends",
+   "note": "SSA metric, sample-and-rank decoding, MTB eval set",
+   "quote": null
+  },
+  {
+   "work": "Language models are few-shot learners",
+   "year": 2020,
+   "arxiv": "2005.14165",
+   "relation": "related",
+   "note": "scaling and prompt comparison",
+   "quote": null
+  },
+  {
+   "work": "Scaling laws for neural language models",
+   "year": 2020,
+   "arxiv": "2001.08361",
+   "relation": "related",
+   "note": "scaling inspiration",
+   "quote": null
+  },
+  {
+   "work": "Retrieval augmentation reduces hallucination in conversation (Shuster et al.)",
+   "year": 2021,
+   "arxiv": "2104.07567",
+   "relation": "related",
+   "note": "also finds scaling alone limited on groundedness",
+   "quote": null
+  },
+  {
+   "work": "WebGPT",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "related",
+   "note": "imitates humans citing sources",
+   "quote": null
+  },
+  {
+   "work": "T5 (Raffel et al.)",
+   "year": 2020,
+   "arxiv": "1910.10683",
+   "relation": "uses-method",
+   "note": "relative attention, gated-GELU, C4 data",
+   "quote": null
+  },
+  {
+   "work": "GSPMD",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "2D sharding for training",
+   "quote": null
+  },
+  {
+   "work": "Wizard of Wikipedia (Dinan et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "groundedness eval contexts",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 4",
+   "caption": "Effects of model scaling and fine-tuning on six foundation metrics",
+   "page": 12,
+   "why": "Shows PT vs LaMDA at 2B, 8B, 137B against human baselines"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "How LaMDA handles groundedness through interactions with an external information retrieval system",
+   "page": 10,
+   "why": "Base then Research loop with TS or User recipient"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Table 1 says 6.4K dialogs (61k turns) for quality while Sec 5 says 121K turns",
+  "Table 1 says 1K dialogs (9K turns) for groundedness ranking labels",
+  "Citation accuracy 65% not re-checked against figure; per-model values only for six metrics in Table 28"
+ ]
+}

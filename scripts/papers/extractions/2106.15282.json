@@ -1,0 +1,630 @@
+{
+ "schema": 1,
+ "key": "2106.15282",
+ "pdf": "ai-engineering/08-multimodal-engineering/sources/ho-2021-cascaded-diffusion-models-high-fidelity.pdf",
+ "bib": {
+  "title": "Cascaded Diffusion Models for High Fidelity Image Generation",
+  "authors": [
+   "Jonathan Ho",
+   "Chitwan Saharia",
+   "William Chan",
+   "David J. Fleet",
+   "Mohammad Norouzi",
+   "Tim Salimans"
+  ],
+  "first_author": "Ho",
+  "year": 2021,
+  "venue": "preprint (arXiv v3, 17 Dec 2021)",
+  "arxiv": "2106.15282",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 58755,
+  "chars_total": 58755,
+  "engine": "pymupdf",
+  "skipped": "references skimmed only"
+ },
+ "type": "empirical",
+ "question": "Can a pipeline of diffusion models at increasing resolution, with no classifier guidance, reach state-of-the-art class-conditional ImageNet sample quality?",
+ "hypothesis": "Augmenting the low-resolution conditioning input of super-resolution models alleviates compounding error from train-test mismatch and makes cascading beat non-cascaded models.",
+ "contributions": [
+  "CDM yields samples superior to BigGAN-deep and VQ-VAE-2 in FID and CAS without any classifier",
+  "Conditioning augmentation (Gaussian noise for low-res upsampling, Gaussian blur for high-res) is critical; amortized training over augmentation strength enables post-training search"
+ ],
+ "method": {
+  "summary": "Class-conditional pipeline of a 32x32 base diffusion model, a 32->64 super-resolution model, then 64->128 or 64->256 super-resolution models, each a separately trained U-Net. Super-resolution models are trained with conditioning augmentation (noise level s as extra embedding, or blur).",
+  "task": "class-conditional ImageNet image generation (also unconditional LSUN)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "ImageNet",
+    "role": "both",
+    "size": null,
+    "split": "FID against train and validation statistics",
+    "source": "Russakovsky et al., 2015",
+    "preprocessing": "cropped and resized the same way as BigGAN; 32x32 base uses random left-right flips"
+   },
+   {
+    "name": "LSUN Bedroom",
+    "role": "both",
+    "size": null,
+    "split": "validation set 300 examples",
+    "source": "Yu et al., 2015",
+    "preprocessing": null
+   },
+   {
+    "name": "LSUN Church",
+    "role": "both",
+    "size": null,
+    "split": "validation set 300 examples",
+    "source": "Yu et al., 2015",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "ImageNet 32x32 base",
+    "role": "proposed",
+    "params": null,
+    "architecture": "U-Net, class-conditional",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "base_channels": 256,
+     "channel_multipliers": "1,2,3,4",
+     "res_blocks_per_res": 6,
+     "attention_res": "8,16",
+     "heads": 4
+    }
+   },
+   {
+    "name": "ImageNet 32->64 SR",
+    "role": "proposed",
+    "params": null,
+    "architecture": "U-Net, class-conditional SR, amortized over s",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "base_channels": 256,
+     "channel_multipliers": "1,2,3,4",
+     "res_blocks_per_res": 5,
+     "attention_res": "8,16",
+     "heads": 4
+    }
+   },
+   {
+    "name": "ImageNet 64->128 SR",
+    "role": "proposed",
+    "params": null,
+    "architecture": "SR3-style U-Net",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "base_channels": 128,
+     "channel_multipliers": "1,2,4,8,8",
+     "res_blocks_per_res": 3,
+     "attention_res": "16",
+     "heads": 1
+    }
+   },
+   {
+    "name": "ImageNet 64->256 SR",
+    "role": "proposed",
+    "params": null,
+    "architecture": "SR3-style U-Net",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "base_channels": 128,
+     "channel_multipliers": "1,2,4,4,8,8",
+     "res_blocks_per_res": 3,
+     "attention_res": "16",
+     "heads": 1
+    }
+   },
+   {
+    "name": "LSUN 64x64 base",
+    "role": "proposed",
+    "params": null,
+    "architecture": "U-Net",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "base_channels": 128,
+     "channel_multipliers": "1,2,3,4",
+     "res_blocks_per_res": 3,
+     "attention_res": "8,16,32",
+     "head_dim": 64
+    }
+   },
+   {
+    "name": "LSUN 64->128 SR",
+    "role": "proposed",
+    "params": null,
+    "architecture": "U-Net",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "base_channels": 64,
+     "channel_multipliers": "1,2,4,6,8",
+     "res_blocks_per_res": 3,
+     "attention_res": "8,16,32",
+     "head_dim": 64
+    }
+   }
+  ],
+  "training": {
+   "objective": "simple loss ||eps - eps_theta||^2 or hybrid loss Lsimple + lambda*Lvb (learned variances, 32 and 64 models); SR models trained with s~U({1..T}) conditioning noise level",
+   "optimizer": "Adam",
+   "lr": "1e-4 (ImageNet); 3e-4 LSUN base; 2e-4 LSUN SR",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "2048 (ImageNet 32 and 32->64); 1024 (64->128, 64->256); LSUN 2048 base, 1024 SR",
+   "steps": "ImageNet: 700000 (32x32), 400000 (32->64), 500000 (64->128), 500000 (64->256); LSUN: 100000 base, 220000 SR",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": "0.1 (32x32, 32->64, LSUN); 0.0 (64->128, 64->256)",
+   "regularisation": "EMA 0.9999 all models",
+   "hardware": "256 TPU-v3 cores (32x32, 32->64); 128 TPU-v3 cores (64->128, 64->256); 64 TPU-v3 cores (LSUN)",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "timesteps": "4000 cosine hybrid loss learned variances (32, 32->64); 2000 linear simple loss continuous noise conditioning (64->128, 64->256); LSUN simple loss continuous noise conditioning, cosine",
+    "conditioning_aug": "Gaussian blur filter k=(3,3), sigma sampled from fixed range, applied to 50% of training examples, none at inference; best sigma~U(0.4,0.6)",
+    "batch_256_to_1024": "increasing SR batch size from 256 to 1024 improved FID",
+    "early_stopping": "model selection and early stopping on FID over 10k samples",
+    "non_cascaded_baseline": "reimplemented Improved DDPM 4000-step 64x64 with dropout, trained longer, plus restart from noise to 2000 timestep point"
+   }
+  },
+  "inference": {
+   "decoding": "ancestral sampling; 4000 steps for 32 and 64 models; 100 steps for 128 and 256 SR (noise schedule tuned post-training); LSUN 256 steps",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "50k samples for reported FID and IS (IS mean and std over 10 splits); 10k samples for model selection",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "truncation_time_s": "best ~501-751 truncated, ~751-1251 non-truncated for 32->64; Table 3a",
+    "blur_sigma": "U(0.4,0.6) best at 256",
+    "inference_steps_256": "100 used; FID marginally worse at 4 steps, no gain 100->1000 (Fig 10)"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "FID",
+     "definition": "Frechet Inception Distance on 50k samples vs train set stats (and validation stats)",
+     "unit": "score",
+     "higher_is_better": false
+    },
+    {
+     "name": "IS",
+     "definition": "Inception score, 50k samples, mean and std over 10 splits",
+     "unit": "score",
+     "higher_is_better": true
+    },
+    {
+     "name": "CAS",
+     "definition": "Classification Accuracy Score (Ravuri and Vinyals 2019): classifier trained on generated samples, tested on real validation images",
+     "unit": "% top-1/top-5",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "BigGAN-deep",
+    "VQ-VAE-2",
+    "LOGAN",
+    "HAM",
+    "Improved DDPM",
+    "SR3",
+    "ADM",
+    "ADM+upsampling"
+   ],
+   "protocol": "single run per config; no seeds or significance tests stated"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "project page https://cascaded-diffusion.github.io/ (figures and supplementary only)"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "CDM reaches FID 4.88 at 256x256 ImageNet, beating BigGAN-deep 6.9 and ADM+upsampling 7.49 (no classifier guidance)",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID vs train",
+   "value": 4.88,
+   "unit": "FID",
+   "baseline_value": 6.9,
+   "n": null,
+   "setup": "ImageNet 256x256 class-conditional, 50k samples, 32->64->256 cascade",
+   "note": null,
+   "where": "Table 1a",
+   "table": "Table 1a, row CDM (ours) 256x256, column FID vs train"
+  },
+  {
+   "claim": "CDM FID 1.48 at 64x64",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID vs train",
+   "value": 1.48,
+   "unit": "FID",
+   "baseline_value": 2.07,
+   "n": null,
+   "setup": "ImageNet 64x64, 50k samples",
+   "note": "baseline is ADM 2.07; BigGAN-deep 4.06",
+   "where": "Table 1a",
+   "table": "Table 1a, row CDM (ours) 64x64, column FID vs train"
+  },
+  {
+   "claim": "CDM FID 3.52 at 128x128",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID vs train",
+   "value": 3.52,
+   "unit": "FID",
+   "baseline_value": 5.7,
+   "n": null,
+   "setup": "ImageNet 128x128",
+   "note": "baseline BigGAN-deep 5.7; LOGAN 3.36 has lower FID than CDM 3.52 in Table 1a",
+   "where": "Table 1a",
+   "table": "Table 1a, row CDM (ours) 128x128"
+  },
+  {
+   "claim": "CDM 256x256 CAS top-1 63.02%, top-5 84.06%, above VQ-VAE-2 54.83%",
+   "kind": "measured",
+   "source": null,
+   "metric": "CAS top-1",
+   "value": 63.02,
+   "unit": "%",
+   "baseline_value": 54.83,
+   "n": null,
+   "setup": "ImageNet 256x256, classifier trained on CDM samples",
+   "note": "real data 73.09% top-1; BigGAN-deep 42.65%",
+   "where": "Abstract, Table 1b",
+   "quote": "classification accuracy scores of 63.02% (top-1) and 84.06% (top-5) at 256×256, outperforming VQ-VAE-2"
+  },
+  {
+   "claim": "CDM 128x128 CAS top-1 59.84% vs BigGAN-deep 40.64%",
+   "kind": "measured",
+   "source": null,
+   "metric": "CAS top-1",
+   "value": 59.84,
+   "unit": "%",
+   "baseline_value": 40.64,
+   "n": null,
+   "setup": "ImageNet 128x128",
+   "note": null,
+   "where": "Table 1b",
+   "table": "Table 1b, row CDM (ours) 128x128, column Top-1 Accuracy"
+  },
+  {
+   "claim": "Without conditioning augmentation the 16->64 cascade is worse than the non-cascaded 64x64 baseline (FID 6.02 vs 2.35)",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID vs train",
+   "value": 6.02,
+   "unit": "FID",
+   "baseline_value": 2.35,
+   "n": null,
+   "setup": "small-scale ablation, 16x16 base -> 64x64 SR, s=0 (no augmentation), ImageNet",
+   "note": null,
+   "where": "Sec 4.3, Table 2b",
+   "quote": "the FID score, for example, degrades from 2.35 to 6.02"
+  },
+  {
+   "claim": "With non-truncated conditioning augmentation s=1001 the 16->64 cascade reaches FID 2.13, beating the baseline",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID vs train",
+   "value": 2.13,
+   "unit": "FID",
+   "baseline_value": 2.35,
+   "n": null,
+   "setup": "16->64 cascade, non-truncated s=1001",
+   "note": "s=101 gives 3.41",
+   "where": "Sec 4.3, Table 2b",
+   "quote": "The second model achieves a FID score of 2.13, outperforming the non-cascaded baseline."
+  },
+  {
+   "claim": "32->64 pipeline: no augmentation FID 1.71, best conditioning augmentation 1.48",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID vs train",
+   "value": 1.48,
+   "unit": "FID",
+   "baseline_value": 1.71,
+   "n": null,
+   "setup": "32x32->64x64, amortized over s; truncated s=501/751, non-truncated s=751/1251",
+   "note": "baseline s=0 row: 1.71",
+   "where": "Table 3a",
+   "table": "Table 3a, row Truncated s=501, column FID vs train"
+  },
+  {
+   "claim": "Truncated and non-truncated augmentation are approximately equally effective",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID vs train",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "32->64 ImageNet, Table 3a",
+   "note": null,
+   "where": "Sec 4.3",
+   "quote": "Table 3a additionally shows that truncated and non-truncated conditioning augmentation are approximately equally effective"
+  },
+  {
+   "claim": "With ground-truth conditioning, FID degrades monotonically as s rises (0.76 at s=0 to 1.11 at s=1501), unlike generated conditioning",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID vs train",
+   "value": 1.11,
+   "unit": "FID",
+   "baseline_value": 0.76,
+   "n": null,
+   "setup": "32->64, conditioned on ground truth training data",
+   "note": null,
+   "where": "Table 3b",
+   "table": "Table 3b, Ground truth training data, row s = 1501"
+  },
+  {
+   "claim": "Blur sigma~U(0.4,0.6) lowers 256x256 FID from 7.26 to 6.18",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID vs train",
+   "value": 6.18,
+   "unit": "FID",
+   "baseline_value": 7.26,
+   "n": null,
+   "setup": "64->256 SR, blur applied to 50% of training examples",
+   "note": null,
+   "where": "Table 4a",
+   "table": "Table 4a, row sigma ~ U(0.4, 0.6)"
+  },
+  {
+   "claim": "Class conditioning, large batch (256->1024) and flip LR improve 256 SR FID from 6.18 to 4.88",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID vs train",
+   "value": 4.88,
+   "unit": "FID",
+   "baseline_value": 6.18,
+   "n": null,
+   "setup": "64->256 SR ablation",
+   "note": "+class cond 5.75, +large batch 5.00",
+   "where": "Table 4b",
+   "table": "Table 4b, row + Flip LR"
+  },
+  {
+   "claim": "Reimplemented non-cascaded 64x64 baseline FID 2.44 vs Improved DDPM 2.92; 2.35 with more sampling steps",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID vs train",
+   "value": 2.35,
+   "unit": "FID",
+   "baseline_value": 2.92,
+   "n": null,
+   "setup": "non-cascaded 64x64 with dropout, longer training",
+   "note": null,
+   "where": "Table 2a",
+   "table": "Table 2a, row + more sampling steps"
+  },
+  {
+   "claim": "32x32 base: 1.11 FID with random flips at 700k steps vs 1.25 at 300k without",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": 1.11,
+   "unit": "FID",
+   "baseline_value": 1.25,
+   "n": null,
+   "setup": "32x32 base model",
+   "note": null,
+   "where": "Sec 4.3",
+   "quote": "while training with random ﬂips it is 1.11 at 700k training steps"
+  },
+  {
+   "claim": "LSUN Bedroom FID 2.30 at s=0 improves to 2.06 at s=251",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID vs train",
+   "value": 2.06,
+   "unit": "FID",
+   "baseline_value": 2.3,
+   "n": null,
+   "setup": "LSUN Bedroom 64->128, non-truncated augmentation",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, LSUN Bedroom, row s = 251"
+  },
+  {
+   "claim": "Reducing inference steps to 4 only marginally degrades 256x256 FID; 100 to 1000 gives no improvement",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "64->256 SR, continuous noise conditioning",
+   "note": null,
+   "where": "Sec 4.4, Fig 10",
+   "quote": "The FID score deteriorates marginally even when using just 4 inference steps."
+  }
+ ],
+ "limits": [
+  "ADM with classifier guidance outperforms CDM in FID and IS (authors concede)",
+  "Avoiding classifier guidance requires thousands of timesteps in low-res models (4000 vs ADM hundreds)",
+  "GANs beat CDM on Inception score when truncation is tuned for IS (BigGAN-deep max IS 253/317)",
+  "LOGAN 3.36 beats CDM 3.52 FID at 128x128 per Table 1a",
+  "Single runs, no seeds; training set FID used for selection (validation FID also reported)",
+  "Gaussian noise augmentation gave negative results at 128 and 256 upsampling, so blur is used there",
+  "Authors note possible malicious uses of image generation"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "conditioning augmentation",
+   "definition": "data augmentation applied to the low resolution conditioning input of each super-resolution model",
+   "where": "Sec 3"
+  },
+  {
+   "term": "truncated conditioning augmentation",
+   "definition": "truncating the low resolution reverse process to stop at timestep s > 0 and conditioning on z_s",
+   "where": "Sec 3.2"
+  },
+  {
+   "term": "non-truncated conditioning augmentation",
+   "definition": "sample z0 with the full reverse process, then corrupt with the forward process to z'_s",
+   "where": "Sec 3.3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Denoising Diffusion Probabilistic Models (Ho et al., 2020)",
+   "year": 2020,
+   "arxiv": "2006.11239",
+   "relation": "extends",
+   "note": "base architecture",
+   "quote": null
+  },
+  {
+   "work": "Improved DDPM (Nichol and Dhariwal, 2021)",
+   "year": 2021,
+   "arxiv": "2102.09672",
+   "relation": "extends",
+   "note": "cosine schedule, hybrid loss, baseline",
+   "quote": null
+  },
+  {
+   "work": "SR3 (Saharia et al., 2021)",
+   "year": 2021,
+   "arxiv": "2104.07636",
+   "relation": "extends",
+   "note": "super-resolution architecture",
+   "quote": null
+  },
+  {
+   "work": "ADM / Diffusion Models Beat GANs (Dhariwal and Nichol, 2021)",
+   "year": 2021,
+   "arxiv": "2105.05233",
+   "relation": "baseline",
+   "note": "concurrent; classifier guidance",
+   "quote": null
+  },
+  {
+   "work": "BigGAN (Brock et al., 2019)",
+   "year": 2019,
+   "arxiv": "1809.11096",
+   "relation": "baseline",
+   "note": "main comparison",
+   "quote": null
+  },
+  {
+   "work": "VQ-VAE-2 (Razavi et al., 2019)",
+   "year": 2019,
+   "arxiv": "1906.00446",
+   "relation": "baseline",
+   "note": "CAS and FID comparison",
+   "quote": null
+  },
+  {
+   "work": "Classification Accuracy Score (Ravuri and Vinyals, 2019)",
+   "year": 2019,
+   "arxiv": "1905.10887",
+   "relation": "uses-method",
+   "note": "CAS metric",
+   "quote": null
+  },
+  {
+   "work": "Scheduled sampling (Bengio et al., 2015)",
+   "year": 2015,
+   "arxiv": "1506.03099",
+   "relation": "related",
+   "note": "analogy for exposure bias",
+   "quote": null
+  },
+  {
+   "work": "ImageNet (Russakovsky et al., 2015)",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "LSUN (Yu et al., 2015)",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "A cascaded diffusion model comprising a base model and two super-resolution models.",
+   "page": 1,
+   "why": "shows the 32->64->256 pipeline"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "The U-Net architecture used in each model of a CDM pipeline.",
+   "page": 6,
+   "why": "how low-res image is concatenated"
+  },
+  {
+   "figure": "Table 3",
+   "caption": "64x64 ImageNet sample quality: truncated vs non-truncated augmentation",
+   "page": 19,
+   "why": "non-monotone FID in s vs monotone with ground truth"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "no embedded instructions found"
+ ]
+}

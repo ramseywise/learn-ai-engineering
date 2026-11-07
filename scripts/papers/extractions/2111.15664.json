@@ -1,0 +1,132 @@
+{
+ "schema": 1,
+ "key": "2111.15664",
+ "pdf": "ai-engineering/08-multimodal-engineering/sources/kim-2022-ocr-free-document-understanding-transformer.pdf",
+ "bib": {"title": "OCR-free Document Understanding Transformer", "authors": ["Geewook Kim","Teakgyu Hong","Moonbin Yim","Jeongyeon Nam","Jinyoung Park","Jinyeong Yim","Wonseok Hwang","Sangdoo Yun","Dongyoon Han","Seunghyun Park"], "first_author": "Kim", "year": 2022, "venue": "preprint (arXiv v5, 6 Oct 2022)", "arxiv": "2111.15664", "doi": null},
+ "read": {"by": "source-reader", "at": "2026-11-07", "chars_read": 78378, "chars_total": 78378, "engine": "pymupdf", "skipped": "reference list skimmed only"},
+ "type": "empirical",
+ "question": "Can a single end-to-end Transformer map a document image directly to structured output without an OCR engine, and match OCR-based document understanding models in accuracy and speed?",
+ "hypothesis": "A simple encoder-decoder pre-trained to read text (pseudo-OCR next-token prediction) avoids OCR cost, inflexibility and error propagation while matching or beating OCR-dependent VDU models.",
+ "contributions": ["A novel OCR-free VDU approach, first OCR-free Transformer trained end to end.", "A simple pre-training scheme that uses synthetic data (SynthDoG), extendable to multiple languages.", "Experiments on public benchmarks and private industrial datasets showing state-of-the-art results and cost advantages.", "Code, pre-trained model and synthetic data released."],
+ "method": {
+  "summary": "Donut pairs a Swin-B visual encoder with the first four layers of a multilingual BART decoder. It is pre-trained to read all text in a page image (next-token cross-entropy) on IIT-CDIP with CLOVA-OCR pseudo labels plus SynthDoG synthetic pages, then fine-tuned so each downstream task (classification, information extraction, DocVQA) is a JSON token sequence generated from a task prompt.",
+  "task": "visual document understanding: document classification, information extraction (parsing to JSON), document VQA",
+  "trains": true,
+  "datasets": [
+   {"name": "IIT-CDIP", "role": "pretrain", "size": "11M scanned English document images", "split": null, "source": "Lewis et al. IIT-CDIP; pseudo text labels from commercial CLOVA OCR API", "preprocessing": "text labels from CLOVA OCR API"},
+   {"name": "SynthDoG synthetic pages", "role": "pretrain", "size": "0.5M samples per language (Chinese, Japanese, Korean, English); 2M total", "split": null, "source": "Generated from Wikipedia text, ImageNet backgrounds, collected paper textures, Noto fonts", "preprocessing": "random layout grids, blur, elastic distortion, perspective, shadow, JPEG compression"},
+   {"name": "RVL-CDIP", "role": "both", "size": "400K images, 16 classes, 25K per class", "split": "320K train, 40K validation, 40K test", "source": "Harley et al. 2015", "preprocessing": null},
+   {"name": "CORD", "role": "both", "size": "0.8K train, 0.1K valid, 0.1K test receipt images; 30 unique fields", "split": "as given", "source": "public receipts benchmark (Park et al.)", "preprocessing": null},
+   {"name": "Ticket (Chinese train tickets)", "role": "both", "size": "1.5K train, 0.4K test; 8 fields", "split": "10% of train held out as validation", "source": "public, Guo et al. 2019 (EATEN)", "preprocessing": null},
+   {"name": "Business Card (in-service)", "role": "both", "size": "20K train, 0.3K valid, 0.3K test Japanese business cards; 11 fields", "split": "as given", "source": "NAVER production data, private", "preprocessing": null},
+   {"name": "Receipt (in-service)", "role": "both", "size": "40K train, 1K valid, 1K test Korean receipts; 81 unique fields", "split": "as given", "source": "NAVER production data, private", "preprocessing": null},
+   {"name": "DocVQA", "role": "both", "size": "50K questions on more than 12K documents", "split": "40K train, 5K valid, 5K test questions; test scored via evaluation site", "source": "DocVQA competition (Mathew et al.)", "preprocessing": null}
+  ],
+  "models": [
+   {"name": "Donut", "role": "proposed", "params": "143M (Tables 1,2); 176M on DocVQA (English token embeddings counted)", "architecture": "Swin-B encoder + BART decoder (first 4 layers)", "init_from": "decoder from multilingual BART (asian-bart-ecjk); encoder from ImageNet-pretrained Swin-B in the backbone study", "tokenizer": "BART subword tokens plus added special tokens per task ([START *], [END *], class tokens)", "vocab": null, "layers": "Swin layer numbers {2, 2, 14, 2}; decoder 4 BART layers", "hidden": null, "heads": null, "context": "decoder max length 1536 tokens", "other": {"swin_window_size": "10", "input_resolution_pretrain": "2560x1920", "input_resolution_960x1280": "Train Tickets and Business Card fine-tuning", "pretrain_note": "ImageNet init of encoder is stated for the backbone comparison (Fig 7b), not explicitly for the main model"}},
+   {"name": "BERT / RoBERTa / LayoutLM / LayoutLMv2 / BROS / SPADE / WYVERN with OCR", "role": "baseline", "params": "86M-200M + OCR (Tables 1-3)", "architecture": "OCR then Transformer encoder (BIO tagging or span prediction); WYVERN encoder-decoder; SPADE graph-based", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"ocr_engines": "CLOVA OCR for most IE data, PaddleOCR for Ticket, MS OCR for LayoutLM-family timing on classification and VQA"}}
+  ],
+  "training": {
+   "objective": "pre-training: cross-entropy of next-token prediction conditioned on image and previous text (read all text in reading order); fine-tuning: cross-entropy on JSON token sequence, teacher forcing",
+   "optimizer": "Adam",
+   "lr": "pre-training initial 1e-4; fine-tuning selected from 1e-5 to 1e-4",
+   "lr_schedule": "learning rate decreased as training progresses (form not given)",
+   "warmup": null,
+   "batch_size": "196 (mini-batch, pre-training)",
+   "steps": "200K (pre-training)",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "decoder max length 1536",
+   "precision": "half precision (fp16)",
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "gradient clipping, max norm selected from 0.05 to 1.0",
+   "hardware": "64 A100 GPUs for pre-training; baselines on P40, V100 or A100",
+   "compute": "pre-training about 2-3 GPU days (as printed); 1280x960 fine-tune on CORD or Ticket about 0.5 hours on one A100; DocVQA about one GPU day and RVL-CDIP about two GPU days with 64 A100 at 2560x1920",
+   "wall_clock": null,
+   "seeds": null,
+   "other": {"fine_tune_selection": "monitor edit distance over token sequences", "fine_tune_init": "all fine-tuning starts from the pre-trained multilingual model", "libraries": "Huggingface transformers and TIMM", "DonutProto": "smaller preliminary run: SynthDoG 1.2M, 8 V100 for 5 days, input 2048x1536; RVL-CDIP 94.5, CORD 85.4"}
+  },
+  "inference": {
+   "decoding": "autoregressive generation from a task prompt token; malformed output treated as field lost (e.g. [START name] without [END name])",
+   "temperature": null, "top_p": null, "max_tokens": "decoder max length 1536",
+   "samples": null,
+   "prompting": "special prompt tokens per task, e.g. <classification>, <parsing>, <vqa><question>...</question><answer>",
+   "retrieval": null,
+   "parameters": {},
+   "other": {"speed_hardware": "speed measured on a P40 GPU", "output_conversion": "regular expressions turn token sequence into JSON"}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "Accuracy", "definition": "classification accuracy on the RVL-CDIP test set", "unit": "%", "higher_is_better": true},
+    {"name": "Field-level F1", "definition": "extracted field counts as correct only if exact match with ground truth; ignores partial overlap and structure", "unit": "F1 (x100)", "higher_is_better": true},
+    {"name": "TED-based accuracy", "definition": "max(0, 1 - TED(pr, gt)/TED(empty, gt)) on trees", "unit": "%", "higher_is_better": true},
+    {"name": "ANLS", "definition": "Average Normalized Levenshtein Similarity, edit-distance-based, DocVQA test via evaluation site", "unit": "score", "higher_is_better": true},
+    {"name": "Time", "definition": "inference time per image, Donut on P40; OCR-based baselines include OCR", "unit": "ms or s", "higher_is_better": false}
+   ],
+   "baselines": ["BERT", "RoBERTa", "LayoutLM", "LayoutLM (w/ image)", "LayoutLMv2", "LayoutLMv2-Large-QG", "BROS", "SPADE", "WYVERN"],
+   "protocol": "Single reported number per cell; no seeds, variances or significance tests stated. LayoutLM-family VQA and classification scores copied from the LayoutLMv2 paper."
+  },
+  "availability": {"code": "https://github.com/clovaai/donut", "weights": "pre-trained model released at the same GitHub", "data": "SynthDoG synthetic data released; CORD and Ticket public; Business Card and Receipt private"},
+  "prompts": [],
+  "evidence": [
+   {"field": "training.compute", "quote": "which takes about 2-3 GPU days", "where": "Appendix A.5"}
+  ]
+ },
+ "results": [
+  {"claim": "Donut reaches 95.30 accuracy on RVL-CDIP at 752 ms, versus LayoutLMv2 95.25 at 1489 ms plus OCR.", "kind": "measured", "source": null, "metric": "accuracy", "value": 95.30, "unit": "%", "baseline_value": 95.25, "n": null, "setup": "RVL-CDIP test, 40K images, Donut 143M, input 2560x1920, speed on P40; LayoutLMv2 number from its own paper, time includes MS OCR", "table": "Table 1, row Donut (Proposed), column Accuracy (%)", "note": null, "where": "Table 1"},
+  {"claim": "On CORD Donut scores 84.1 F1 and 90.9 TED accuracy in 1.2 s per image, versus LayoutLMv2 78.9 F1, 82.4 accuracy in 1.7 s.", "kind": "measured", "source": null, "metric": "field-level F1", "value": 84.1, "unit": "F1", "baseline_value": 78.9, "n": null, "setup": "CORD test, 0.1K images, CLOVA OCR for baselines, Donut at 2560x1920", "table": "Table 2, row Donut, column CORD F1; baseline row LayoutLMv2", "note": "TED accuracy 90.9 for Donut and 82.4 for LayoutLMv2", "where": "Table 2"},
+  {"claim": "On the Chinese Ticket dataset Donut scores 94.1 F1 and 98.7 TED accuracy at 0.6 s per image, versus LayoutLMv2 87.2 F1.", "kind": "measured", "source": null, "metric": "field-level F1", "value": 94.1, "unit": "F1", "baseline_value": 87.2, "n": null, "setup": "Ticket test 0.4K images, Donut at 960x1280, PaddleOCR for baselines", "table": "Table 2, row Donut, column Ticket F1", "note": null, "where": "Table 2"},
+  {"claim": "On in-service Business Card data Donut scores 57.8 F1, 84.4 accuracy (1.4 s); on Receipt 78.6 F1, 88.6 accuracy (1.9 s).", "kind": "measured", "source": null, "metric": "field-level F1 (Business Card)", "value": 57.8, "unit": "F1", "baseline_value": 52.2, "n": null, "setup": "private Japanese business cards (0.3K test) and Korean receipts (1K test); baseline is LayoutLMv2 52.2 F1 / 83.0 acc and 72.9 F1 / 78.0 acc", "table": "Table 2, row Donut, columns Business Card F1 and Receipt F1", "note": null, "where": "Table 2"},
+  {"claim": "On DocVQA test Donut gets ANLS 67.5, below LayoutLMv2 at 78.1 and LayoutLMv2-Large-QG at 86.7, but 72.1 on handwritten versus 67.3 for LayoutLMv2-Large-QG, at 782 ms.", "kind": "measured", "source": null, "metric": "ANLS", "value": 67.5, "unit": "ANLS", "baseline_value": 78.1, "n": null, "setup": "DocVQA test via evaluation site, fine-tuned on train set only, Donut 176M; Large-QG is trained on train+dev+QG", "table": "Table 3, row Donut, column ANLS test set", "note": "Text calls this competitive with OCR-dependent baselines, not better; handwritten ANLS 72.1 vs 67.3", "where": "Table 3"},
+  {"claim": "Pre-training on text reading beats captioning and classification; synthetic images suffice for IE but real IIT-CDIP images matter for DocVQA.", "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "CORD accuracy and DocVQA ANLS, Fig 7(a); values only in the figure", "quote": null, "note": "Qualitative, read from text", "where": "Section 3.4, Fig 7a"},
+  {"claim": "At 1280x960 Donut on CORD takes 0.7 s per image with 91.1 accuracy; larger resolution helps low-data robustness.", "kind": "measured", "source": null, "metric": "TED accuracy", "value": 91.1, "unit": "%", "baseline_value": null, "n": null, "setup": "CORD, 1280x960 input", "quote": "the performance on the CORD with 1280×960 was 0.7 sec./image and 91.1 accuracy", "note": "At 2560x1920 Table 2 gives 90.9 accuracy and 1.2 s; the 1280x960 run is slightly higher in accuracy", "where": "Section 3.3"},
+  {"claim": "Donut beats LayoutLMv2 on CORD with only 10 percent of the training set, 80 samples.", "kind": "measured", "source": null, "metric": null, "value": 80, "unit": "samples", "baseline_value": null, "n": 80, "setup": "CORD training set limited, Fig 9 right", "quote": "Donut outperformed the LayoutLMv2 accuracy only with 10% of the data, which is only 80 samples", "note": null, "where": "Section 3.4"},
+  {"claim": "Accuracy and speed of OCR-based baselines vary strongly with the OCR engine used.", "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "CORD, EasyOCR, PaddleOCR, MS Azure, CLOVA OCR, Fig 9 left and center", "quote": null, "note": "Values only in figure", "where": "Section 3.4"},
+  {"claim": "Preliminary smaller-resource DonutProto (SynthDoG 1.2M, 8 V100 for 5 days, 2048x1536) reached 94.5 on RVL-CDIP and 85.4 on CORD.", "kind": "measured", "source": null, "metric": "accuracy", "value": 94.5, "unit": "%", "baseline_value": null, "n": null, "setup": "RVL-CDIP; CORD 85.4", "quote": "The accuracy on RVL-CDIP was 94.5 and CORD was 85.4", "note": null, "where": "Appendix A.6"}
+ ],
+ "limits": [
+  "Higher input resolution gives more robust accuracy but costs more; the authors use the original Transformer and note efficient attention may avoid this.",
+  "Donut misses tiny text in large images due to input resolution (Fig 6, right example).",
+  "On DocVQA Donut trails LayoutLMv2 (67.5 vs 78.1 ANLS) and the QG-trained large model (86.7).",
+  "Real IIT-CDIP images mattered for DocVQA, probably due to distribution similarity.",
+  "Single-run numbers with no seeds or variance reported; Business Card and Receipt data are private.",
+  "Speed comparisons mix Donut on a P40 with API OCR timings; OCR-based baselines' parameter counts exclude the OCR (+alpha).",
+  "Authors name enhancing the pre-training objective as future work."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "OCR-free VDU", "definition": "modeling a direct mapping from a raw input image to the desired output without OCR", "where": "Section 1"},
+  {"term": "TED-based accuracy", "definition": "max(0, 1-TED(pr, gt)/TED(empty, gt)) over trees", "where": "Section 3.1"}
+ ],
+ "lineage": [
+  {"work": "Swin Transformer", "year": 2021, "arxiv": null, "relation": "uses-method", "note": "visual encoder", "quote": null},
+  {"work": "BART / multilingual asian-bart-ecjk", "year": 2019, "arxiv": null, "relation": "uses-method", "note": "decoder architecture and initialisation", "quote": null},
+  {"work": "LayoutLM (Xu et al.)", "year": 2020, "arxiv": null, "relation": "baseline", "note": "OCR-dependent backbone", "quote": null},
+  {"work": "LayoutLMv2 (Xu et al.)", "year": 2021, "arxiv": null, "relation": "baseline", "note": "main OCR-dependent baseline", "quote": null},
+  {"work": "BROS (Hong et al.)", "year": 2022, "arxiv": null, "relation": "baseline", "note": "IE baseline", "quote": null},
+  {"work": "SPADE (Hwang et al.)", "year": 2021, "arxiv": null, "relation": "baseline", "note": "graph-based IE", "quote": null},
+  {"work": "WYVERN (Hwang et al.)", "year": 2021, "arxiv": null, "relation": "baseline", "note": "encoder-decoder IE on OCR output", "quote": null},
+  {"work": "BERT (Devlin et al.)", "year": 2019, "arxiv": null, "relation": "baseline", "note": "text-only baseline", "quote": null},
+  {"work": "SynthTIGER (Yim et al.)", "year": 2021, "arxiv": null, "relation": "extends", "note": "SynthDoG rendering pipeline follows it", "quote": null},
+  {"work": "IIT-CDIP", "year": 2006, "arxiv": null, "relation": "uses-data", "note": "pre-training corpus", "quote": null},
+  {"work": "CORD", "year": 2019, "arxiv": null, "relation": "uses-data", "note": "receipt parsing benchmark", "quote": null},
+  {"work": "DocVQA", "year": 2021, "arxiv": null, "relation": "uses-data", "note": "VQA benchmark", "quote": null},
+  {"work": "RVL-CDIP", "year": 2015, "arxiv": null, "relation": "uses-data", "note": "classification benchmark", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 2", "caption": "The pipeline overview and benchmarks. The proposed end-to-end model, Donut, outperforms the recent OCR-dependent VDU models in memory, time cost and accuracy.", "page": 2, "why": "shows OCR pipeline versus single model and the speed/memory/accuracy gap at a glance"},
+  {"figure": "Fig 3", "caption": "The pipeline of Donut. The encoder maps a given document image into embeddings. With the encoded embeddings, the decoder generates a sequence of tokens that can be converted into a target type of information in a structured form", "page": 4, "why": "prompt tokens and JSON output per task"},
+  {"figure": "Fig 7", "caption": "Analysis on (a) pre-training strategies, (b) image backbones, and (c) input resolutions. Performances on CORD and DocVQA are shown", "page": 12, "why": "ablations behind design choices"},
+  {"figure": "Fig 9", "caption": "Comparison of BERT, LayoutLMv2 and Donut on CORD. The performances (i.e., speed and accuracy) of the OCR-based models extremely varies depending on what OCR engine is used", "page": 13, "why": "OCR engine sensitivity and low-data curve"}
+ ],
+ "code": [
+  {"where": "Section 3.1", "snippet": "max(0, 1−TED(pr, gt)/TED(ϕ, gt))", "verbatim": true}
+ ],
+ "problems": [
+  "Compute is stated inconsistently: pre-training 'about 2-3 GPU days' on 64 A100 for 200K steps, while DocVQA fine-tuning is 'one GPU day' and RVL-CDIP 'two GPU days' with 64 A100 (units unclear).",
+  "Whether the Swin-B encoder is ImageNet-initialised for the main model is stated only for the backbone comparison.",
+  "Reference 21 (WYVERN) in the reference list appears mis-matched in the PDF text; reference list not otherwise used.",
+  "Figure values (Fig 7, Fig 9) are not in the text."
+ ]
+}

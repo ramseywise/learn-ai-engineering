@@ -1,19 +1,547 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2102.06171",
  "pdf": "ai-engineering/08-multimodal-engineering/sources/brock-2021-high-performance-large-scale-image.pdf",
  "bib": {
   "title": "High-Performance Large-Scale Image Recognition Without Normalization",
+  "authors": [
+   "Andrew Brock",
+   "Soham De",
+   "Samuel L. Smith",
+   "Karen Simonyan"
+  ],
   "first_author": "Brock",
   "year": 2021,
-  "venue": "ICML 2021",
+  "venue": "preprint (arXiv:2102.06171v1; PDF carries no venue header)",
   "arxiv": "2102.06171",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-04",
-  "session": "97b4134b-decf-4866-ae85-c6872cbbba19"
+  "at": "2026-11-07",
+  "chars_read": 91658,
+  "chars_total": 91658,
+  "engine": "pymupdf",
+  "skipped": "References skimmed only"
  },
- "legacy_report": "SOURCE: Brock, De, Smith, Simonyan (DeepMind), \"High-Performance Large-Scale Image Recognition Without Normalization\". The PDF is arXiv:2102.06171v1 (11 Feb 2021) and carries no ICML header, so the ICML 2021 venue comes from your brief, not from this file.\nCOVERAGE: Read all ~91,756 chars, pages 1–22, including Appendices A–E and Tables 1–6. I only skimmed the references.\n\nCLAIMS\n- claim: Batch norm has three main costs: compute and memory, a train/inference mismatch, and coupling between examples in a batch. Further costs follow from the coupling: it is hard to reproduce on other hardware, it causes bugs in distributed training, it leaks information in contrastive learning, it degrades when batch statistics vary a lot, and small batches hurt it.\n  number: none\n  setup: argued from prior work. Appendix B (p17) adds a Keras bug where BN statistics keep updating in test mode, DCGAN/SAGAN running BN in train mode at test time, and EfficientNet's cross-replica BN.\n  quote: \"batch normalization has three significant practical disadvantages... Third, and most importantly, batch normalization breaks the independence between training examples in the minibatch.\" / \"batch normalized networks perform poorly when the batch size is too small (Hoffer et al., 2017; Ioffe, 2017; Wu & He, 2018)\"\n  where: p1–2\n- claim: AGC clips each unit, meaning each row of a layer's gradient (fan-in for conv filters). It clips whenever the ratio of gradient norm to weight norm goes above λ. Smaller λ is needed at larger batch sizes, and the default is λ=0.01 for batch sizes 1024–4096.\n  number: λ ∈ [0.01…0.16]; ε=10^-3; λ=0.01\n  setup: NF-ResNet-50/200, ImageNet, SGD with Nesterov momentum, 90 epochs, LR 0.1×B/256. AGC is applied to every layer except the final linear layer.\n  quote: \"G𝓁i→ λ‖W𝓁i‖⋆F/‖G𝓁i‖F G𝓁i if ‖G𝓁i‖F/‖W𝓁i‖⋆F >λ\" ; \"Empirically, we find λ should be smaller for larger batches.\" ; \"For batch size 1024 to 4096, set λ = 0.01\"\n  where: p4, p6\n- claim: With AGC, NF-ResNets match or beat BN ResNets up to batch size 4096. Without AGC they fall behind BN at batch size 4096 and above. The text gives no exact accuracies for this ablation; they appear only in the Fig 2(a) plot.\n  number: batch size 4096\n  setup: NF-ResNet-50/200, batch sizes 256–4096. Each point is the mean of the best 4 of 5 runs, at the best λ for that batch size.\n  quote: \"they perform worse than batch normalized networks for large batch sizes (4096 or higher)\" ; \"AGC helps scale NF-ResNets to large batch sizes while maintaining performance comparable or better than batch-normalized networks on both ResNet50 and ResNet200. As anticipated, the benefits of using AGC are smaller when the batch size is small.\"\n  where: p3, p4; p21\n- claim: NFNet-F1 matches EfficientNet-B7's top-1 at 8.7× less training time per step. F5 reaches 86.0%, and F6+SAM reaches 86.5%.\n  number: 84.7% top-1 each; latency 158.5ms vs 1397.0ms; 86.0%; 86.5%\n  setup: ImageNet without extra data, single crop. Batch 4096, 360 epochs, averaged over 3 seeds. Latency is the median wall-clock time of one training step over 5000 steps, measured on 32 TPUv3 devices at batch 32 per device (bf16), with data loading excluded. These numbers measure training speed, not inference.\n  quote: \"NFNet-F1 model matches the 84.7% of EfficientNet-B7 with RA (Cubuk et al., 2020), while being 8.7 times faster to train\"\n  where: p8; Table 3 p7; A.2 p13–14\n- claim: Swapping the NF setup for batch norm in the same architectures gives similar or slightly lower accuracy and makes training 20–40% slower. F4 and F5 would not train stably with BN.\n  number: F0 83.6% at 73.3ms (NF) vs 83.4% at 111.7ms (BN)\n  setup: Table 6, TPUv3. The authors blame bfloat16 numerics interacting with BN statistics.\n  quote: \"between 20% and 40% slower to train, even when using highly optimized batch normalization implementations without cross-replica syncing\"\n  where: p7–8, p19\n- claim: After pre-training on JFT-300M and fine-tuning on ImageNet, NF-ResNets beat BN-ResNets by about 1% top-1, and NFNet-F4+ reaches 89.2%.\n  number: ~1% (e.g. ResNet-50 at 384px: 81.1 vs 79.9); 89.2%\n  setup: Pre-trained 10 epochs (ResNets) or 20 epochs (F4+). Fine-tuned 15k steps at batch 2048. Single seed. JFT is a private dataset.\n  quote: \"Normalizer-Free networks outperform their Batch-Normalized counterparts in every single case, typically by a margin of around 1% absolute top-1\" ; \"NFNet-F4+ attains an ImageNet top-1 accuracy of 89.2%\"\n  where: p8, Table 4–5 p8/p14, A.5 p15\n\nLIMITS:\n- The paper never shows exact accuracies with and without AGC; they exist only in Fig 2(a).\n- The authors concede the best λ \"may depend on the choice of optimizer, learning rate and batch size\".\n- NFNets need heavy explicit regularisation, otherwise they \"dramatically overfit\".\n- They are not competitive on accuracy per parameter (F0 has 71.5M params vs 5.3M for EffNet-B0).\n- They are tuned for training speed on TPU/GPU, and the paper reports no inference latency.\n- Transfer results use one seed and a private dataset. 89.2% is beaten by Meta Pseudo Labels (90.2%).\n- Image classification only, with no attention variants. Large batches do not beat small ones on accuracy at a fixed epoch budget.\n- For your note: the paper does not cite Wu & Johnson. Its small-batch citation is Wu & He 2018 (Group Normalization).\n\nBUILDS ON: Brock, De & Smith (ICLR 2021), the original NF-ResNets; De & Smith (NeurIPS 2020), SkipInit; Qiao et al. (2019 arXiv), Weight Standardization; Pascanu et al. (ICML 2013), gradient clipping; You et al. (2017 arXiv), LARS; Ioffe & Szegedy (ICML 2015), batch norm; Tan & Le (ICML 2019), EfficientNet; Foret et al. (ICLR 2021), SAM; Goyal et al. (2017 arXiv), linear LR scaling.\n\nFIGURES: Fig 2, p4: \"(a) AGC efficiently scales NF-ResNets to larger batch sizes. (b) The performance across different clipping thresholds λ.\" Panel (a) shows BN against NF with and without AGC across batch sizes in one view. Panel (b) shows the link between λ and batch size directly.\n\nPROBLEMS: Equation layout was slightly garbled in extraction, but the formulas can be rebuilt. Plot values cannot be read as text. I found no instructions embedded in the text."
+ "type": "empirical",
+ "question": "Can deep ResNets without normalization layers match or beat batch-normalized networks and EfficientNets on ImageNet, at large batch size and with strong augmentation?",
+ "hypothesis": "Gradient clipping should help scale NF-ResNets efficiently to the large-batch setting; unnormalized networks should also suit transfer after large-scale pre-training better than batch-normalized ones.",
+ "contributions": [
+  "Adaptive Gradient Clipping (AGC), clipping by the unit-wise ratio of gradient norm to parameter norm, enabling larger batch sizes and stronger augmentation for Normalizer-Free networks",
+  "NFNet family of Normalizer-Free ResNets setting new ImageNet state of the art across training latencies (F1 matches EffNet-B7 at 8.7x faster training; largest 86.5% without extra data)",
+  "NFNets beat batch-normalized networks when fine-tuning on ImageNet after pre-training on 300M labelled images (best 89.2%)"
+ ],
+ "method": {
+  "summary": "Take the NF-ResNet recipe (variance-downscaled residual branches, Scaled Weight Standardization, SkipInit) on an SE-ResNeXt-D, add unit-wise Adaptive Gradient Clipping, a new width/depth pattern and a second 3x3 grouped conv, and train with strong augmentation (MixUp, RandAugment, CutMix) and dropout. Evaluate on ImageNet and after JFT-300M pre-training.",
+  "task": "ImageNet image classification (ILSVRC2012), plus transfer from JFT-300M pre-training",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "ImageNet ILSVRC2012",
+    "role": "both",
+    "size": "1281167 images, 1000 classes (training split)",
+    "split": "standard training split; top-1/top-5 reported on the validation set",
+    "source": "Russakovsky et al., 2015",
+    "preprocessing": "distorted bounding-box crops and random horizontal flips (Szegedy et al. 2016b), plus MixUp, RandAugment, CutMix; eval: bicubic resize to 32 px larger than target then crop, no TTA"
+   },
+   {
+    "name": "JFT-300M",
+    "role": "pretrain",
+    "size": "300 million labelled images, roughly 18,000 classes",
+    "split": null,
+    "source": "Sun et al., 2017 (private)",
+    "preprocessing": "baseline random crops and flips only, no other augmentation; pre-train at 224 px"
+   }
+  ],
+  "models": [
+   {
+    "name": "NFNet-F0..F6",
+    "role": "proposed",
+    "params": "71.5M (F0), 132.6M (F1), 193.8M (F2), 254.9M (F3), 316.1M (F4), 377.2M (F5), 438.4M (F6)",
+    "architecture": "Normalizer-Free SE-ResNeXt-D with GELU, WS-convs, group width 128, bottleneck ratio 0.5, extra 3x3 grouped conv",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "depth_F0": "[1,2,6,3] blocks per stage, multiplied by N for deeper variants (F1 [2,4,12,6] ... F6 [7,14,42,21])",
+     "widths": "[256,512,1536,1536]",
+     "dropout": "F0 0.2, F1 0.3, F2 0.4, F3 0.4, F4 0.5, F5 0.5, F6 0.5",
+     "train_res": "F0 192, F1 224, F2 256, F3 320, F4 384, F5 416, F6 448 px",
+     "test_res": "F0 256, F1 320, F2 352, F3 416, F4 512, F5 544, F6 576 px",
+     "stem": "3x3 s2 16ch, 3x3 32ch, 3x3 64ch, 3x3 s2 128ch; nonlinearity between but not after last",
+     "alpha": "0.2",
+     "classifier_init_std": "0.01",
+     "final": "1x1 expansion conv doubling channels, global avg pool, FC 1000-way"
+    }
+   },
+   {
+    "name": "NFNet-F4+",
+    "role": "proposed",
+    "params": "527M",
+    "architecture": "F4 with channel pattern [384,768,2048,2048]",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "NF-ResNet-50/101/152/200",
+    "role": "proposed",
+    "params": null,
+    "architecture": "pre-activation Normalizer-Free ResNets",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "BN-ResNet-50/101/152/200 and BN-NFNet variants",
+    "role": "baseline",
+    "params": null,
+    "architecture": "batch-normalized counterparts",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "EfficientNet, LambdaNet, BoTNet, SENet, DeIT, ViT, BiT, Noisy Student, Meta Pseudo Labels",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "categorical softmax cross-entropy with label smoothing 0.1",
+   "optimizer": "SGD with Nesterov momentum 0.9; AGC lambda=0.01, epsilon=1e-3 on every parameter except the final linear classifier weight; EMA of parameters decay 0.99999 with warmup min(0.99999,(1+t)/(10+t))",
+   "lr": "0.1 x B/256 (1.6 at batch 4096)",
+   "lr_schedule": "linear warmup from 0 over 5 epochs, then cosine decay to zero",
+   "warmup": "5 epochs (ImageNet); 5000 steps (JFT pre-train/fine-tune)",
+   "batch_size": "4096 (ImageNet default, NFNet pre-train); 1024 for ResNet pre-train; 2048 for fine-tune",
+   "steps": "roughly 112,000 (batch 4096, 360 epochs); fine-tune 15,000 steps",
+   "epochs": "360 (ImageNet, all reported results, no early stopping); JFT pre-train: 10 epochs ResNets, 40 epochs NFNet-F4, 20 epochs NFNet-F4+",
+   "tokens": null,
+   "seq_len": null,
+   "precision": "bfloat16 activations and gradients on TPU; params and momentum in float32; logits cast to float32; gradients cast to float32 before cross-device sum",
+   "weight_decay": "2e-5 for NFNets on ImageNet (standard not decoupled; not applied to affine gains, biases, SkipInit gains); pre-train 1e-5 for BN and NF-ResNets, 1e-6 for NFNets; fine-tune ResNets none, NFNets 1e-5",
+   "dropout": "per variant 0.2-0.5 (Table 1); fine-tune NFNet 0.25, ResNet none",
+   "regularisation": "Stochastic Depth 0.25 on ImageNet (0.1 NFNet fine-tune); MixUp alpha 0.2 on half of each batch, CutMix on the other half; RandAugment 4 layers, magnitudes [5,10,10,15,15,15,15] for F0-F6, applied after MixUp/CutMix; SAM rho=0.05 for fine-tune and for F5/F6 ImageNet",
+   "hardware": "TPUv3 (bfloat16); latency measured on 32 TPUv3 devices at 32 per device, and single V100 GPU",
+   "compute": "NFNet-F4+ pre-train 1.86k TPUv3-core-days; F4 3.7k (Table 5)",
+   "wall_clock": null,
+   "seeds": "ImageNet results averaged over 3 seeds except SAM results; AGC ablations 5 runs, mean of best 4; transfer experiment single seed per model",
+   "other": {
+    "lr_pretrain_resnet": "0.4 (batch 1024)",
+    "lr_finetune": "0.1, no batch-size scaling, cosine",
+    "finetune_ema": "0.9999 with decay warmup",
+    "finetune_resolutions": "224, 320, 384 px",
+    "sam_fast": "ascent step computed on 20% of the batch, training time +20-40% instead of +100%; ascent must use same batch (subset); ascent gradients not synced across replicas",
+    "agc_ablation": "NF-ResNet-50/200, SGD Nesterov, 90 epochs, batch 256-4096, base LR 0.1 per 256 scaled linearly, lambda in [0.01,0.02,0.04,0.08,0.16]",
+    "code": "JAX, Haiku, DeepMind JAX Ecosystem, numpy"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single-crop, single model, no TTA, multi-crop or ensembling",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {
+    "test_resolution": "about 33% larger than train, no fine-tuning at it"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "ImageNet top-1 / top-5",
+     "definition": "validation accuracy, single crop",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "training latency",
+     "definition": "median wall-clock time of one full training step over 5000 steps, dataloading excluded; TPUv3 on 32 devices batch 32/device with gradient sync; V100 GPU single device with float16",
+     "unit": "ms/step",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "EfficientNet B0-B8 (+MaxUp)",
+    "SENet",
+    "LambdaNet",
+    "BoTNet",
+    "DeIT",
+    "ResNet-50",
+    "BN-ResNets",
+    "BN-NFNets",
+    "ViT",
+    "BiT",
+    "Meta Pseudo Labels",
+    "Noisy Student+SAM",
+    "ResNeXt IG-940M"
+   ],
+   "protocol": "ImageNet validation set; 3 seeds averaged except SAM; latency numbers own measurements except SENet, BoTNet, DeIT borrowed from Srinivas et al. (2021); no significance tests"
+  },
+  "availability": {
+   "code": "https://github.com/deepmind/deepmind-research/tree/master/nfnets",
+   "weights": null,
+   "data": "ImageNet public; JFT-300M private"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.epochs",
+    "quote": "By default, we train with a batch size of 4096 for 360 epochs",
+    "where": "A.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "NFNet-F1 matches EfficientNet-B7 top-1 while about 8.7x faster to train",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1",
+   "value": 84.7,
+   "unit": "% top-1",
+   "baseline_value": 84.7,
+   "n": null,
+   "setup": "ImageNet val, single crop, TPUv3 training step latency at 32/device: F1 158.5ms vs EffNet-B7 1397.0ms",
+   "quote": "our NFNet-F1 model matches the 84.7% of EfficientNet-B7 with RA (Cubuk et al., 2020), while being 8.7 times faster to train",
+   "table": null,
+   "note": null,
+   "where": "Sec 6.1"
+  },
+  {
+   "claim": "NFNet-F6+SAM sets ImageNet state of the art without extra data",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1",
+   "value": 86.5,
+   "unit": "% top-1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ImageNet val, single model single crop, SAM with 20% ascent batch, 360 epochs",
+   "quote": "an NFNet-F6 that attains 86.5% top-1, substantially improving over the existing state of the art on ImageNet without extra data",
+   "table": null,
+   "note": null,
+   "where": "Sec 6.1, Table 3"
+  },
+  {
+   "claim": "NFNet-F5 without SAM reaches 86.0% top-1",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1",
+   "value": 86.0,
+   "unit": "% top-1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ImageNet val; TPUv3 1398.5ms, similar latency to EffNet-B7",
+   "quote": "Our NFNet-F5 model attains a top-1 validation accuracy of 86.0%",
+   "table": null,
+   "note": null,
+   "where": "Sec 6.1"
+  },
+  {
+   "claim": "NFNet-F4+ pre-trained on JFT-300M 20 epochs and fine-tuned reaches 89.2% ImageNet top-1",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1",
+   "value": 89.2,
+   "unit": "% top-1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "pre-train JFT-300M at 224px, fine-tune ImageNet 15,000 steps batch 2048, SAM; 1.86k TPUv3-core-days",
+   "quote": "with 20 epochs of pre-training our NFNet-F4+ attains an ImageNet top-1 accuracy of 89.2%",
+   "table": null,
+   "note": "EffNet-L2 + Meta Pseudo Labels reaches 90.2 (Table 5)",
+   "where": "Sec 6.2, Table 5"
+  },
+  {
+   "claim": "NF-ResNets beat BN counterparts in every transfer case, typically by about 1% top-1",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "JFT-300M pre-train 10 epochs, ImageNet fine-tune at 224/320/384px, single seed",
+   "quote": "Normalizer-Free networks outperform their Batch-Normalized counterparts in every single case, typically by a margin of around 1% absolute top-1",
+   "table": null,
+   "note": null,
+   "where": "Sec 6.2, Table 4"
+  },
+  {
+   "claim": "NF-ResNet-50 vs BN-ResNet-50 transfer top-1 at 384px",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 81.1,
+   "unit": "% top-1",
+   "baseline_value": 79.9,
+   "n": null,
+   "setup": "as above, 384px",
+   "quote": null,
+   "table": "Table 4, row NF-ResNet-50, column 384px",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "Smaller (stronger) AGC clipping thresholds are needed for stability at larger batch; lambda=0.01 for batch 1024 to 4096",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 0.01,
+   "unit": "lambda",
+   "baseline_value": null,
+   "n": null,
+   "setup": "NF-ResNet-50/200, 90 epochs, SGD Nesterov, batch 256-4096",
+   "quote": "For batch size 1024 to 4096, set λ = 0.01",
+   "table": null,
+   "note": "Fig 2a accuracies appear only in the plot, not in text",
+   "where": "Sec 5.1"
+  },
+  {
+   "claim": "Batch-normalized variants of the NFNet architectures were 20-40% slower to train with slightly lower accuracy; F4 and F5 unstable with BN",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "TPUv3, Table 6 row '-NF, +BN'",
+   "quote": "These models achieve slightly lower test accuracies than their NF counterparts and they are between 20% and 40% slower to train",
+   "table": null,
+   "note": "Table 6 BN row: 83.4/84.4/85.1/85.5 vs 'Default Width + Augs' 83.1/84.5/85.0/85.5, so BN is not lower than the default-width NF row; the comparison is to the full modified-width model (83.6/84.7/85.1/85.7).",
+   "where": "Sec 6.1, Table 6"
+  },
+  {
+   "claim": "Architectural changes and augmentation raise NFNet-F0 top-1 from 80.4 to 83.6",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 83.6,
+   "unit": "% top-1",
+   "baseline_value": 80.4,
+   "n": null,
+   "setup": "ImageNet, 360 epochs batch 4096, mean of 3 seeds",
+   "quote": null,
+   "table": "Table 2, row + CutMix, column F0",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Full-recipe NFNets without SAM fall behind: without AGC NF-ResNets underperform BN at batch 4096 and above",
+   "kind": "reported",
+   "source": "Brock et al. 2021 (Characterizing signal propagation)",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "NF-ResNets without AGC, from the prior NF-ResNet work and Fig 2a",
+   "quote": "but they perform worse than batch normalized networks for large batch sizes (4096 or higher)",
+   "table": null,
+   "note": null,
+   "where": "Sec 3"
+  },
+  {
+   "claim": "SAM with ascent computed on 20% of the batch costs 20-40% extra latency instead of 100%",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "NFNet-F5/F6 on TPU",
+   "quote": "which we found to result in equivalent performance while only increasing the training latency by 20%-40% instead of by 100%",
+   "table": null,
+   "note": null,
+   "where": "A.4"
+  },
+  {
+   "claim": "Large weight decay is harmful for large-scale pre-training; Adam worse than SGD",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "JFT-300M pre-train, ResNets; contradicts Dosovitskiy et al. 2021",
+   "quote": "We ﬁnd, contrary to (Dosovitskiy et al., 2021), that a large weight decay is harmful during pre-training",
+   "table": null,
+   "note": "No ablation numbers given in the text",
+   "where": "A.5"
+  }
+ ],
+ "limits": [
+  "AGC ablation accuracies (Fig 2, Fig 7) are plot-only; no exact numbers in text",
+  "Optimal lambda may depend on optimizer, learning rate and batch size (Sec 4)",
+  "Latency is optimized for TPUv3/V100 dense compute; NFNets are competitive with EfficientNets in FLOPs but not in parameters vs accuracy",
+  "Transfer experiment uses a single seed per model; JFT-300M is private so not reproducible",
+  "F4 and F5 were unstable with batch norm, attributed (not tested) to bfloat16",
+  "Did not try attention variants",
+  "Train recipe fine details like gains for nonlinearities are only in source code"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Adaptive Gradient Clipping (AGC)",
+   "definition": "clips each unit's gradient (row of the layer gradient) when its norm exceeds lambda times the unit's weight norm: G_i -> lambda*max(||W_i||,eps)/||G_i|| * G_i if ||G_i||/max(||W_i||,eps) > lambda",
+   "where": "Sec 4, Eq 3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Characterizing signal propagation to close the performance gap in unnormalized resnets (NF-ResNets)",
+   "year": 2021,
+   "arxiv": "2101.08692",
+   "relation": "extends",
+   "note": "base architecture; this paper adds AGC and NFNet design",
+   "quote": null
+  },
+  {
+   "work": "Batch normalization biases residual blocks towards the identity (SkipInit)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "zero-init scalar gain",
+   "quote": null
+  },
+  {
+   "work": "Weight Standardization (Qiao et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Scaled WS convs",
+   "quote": null
+  },
+  {
+   "work": "EfficientNet (Tan & Le)",
+   "year": 2019,
+   "arxiv": "1905.11946",
+   "relation": "baseline",
+   "note": "prior state of the art",
+   "quote": null
+  },
+  {
+   "work": "Sharpness-Aware Minimization (Foret et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "used for F5/F6 and fine-tune",
+   "quote": null
+  },
+  {
+   "work": "LARS (You et al.)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "related",
+   "note": "AGC viewed as relaxation of normalized optimizers",
+   "quote": null
+  },
+  {
+   "work": "ViT (Dosovitskiy et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "contradicts",
+   "note": "large weight decay and Adam findings in pre-training",
+   "quote": null
+  },
+  {
+   "work": "Squeeze-and-Excitation (Hu et al.)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "S&E in blocks",
+   "quote": null
+  },
+  {
+   "work": "GELU (Hendrycks & Gimpel)",
+   "year": 2016,
+   "arxiv": "1606.08415",
+   "relation": "uses-method",
+   "note": "default activation",
+   "quote": null
+  },
+  {
+   "work": "ImageNet (Russakovsky et al.)",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "JFT-300M (Sun et al.)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "pre-training",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "ImageNet Validation Accuracy vs Training Latency.",
+   "page": 1,
+   "why": "shows the NFNet Pareto front vs EfficientNet and others"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "(a) AGC efficiently scales NF-ResNets to larger batch sizes. (b) The performance across different clipping thresholds lambda.",
+   "page": 4,
+   "why": "only place the AGC batch-size ablation numbers appear"
+  },
+  {
+   "figure": "Table 6",
+   "caption": "Detailed Model ablation table.",
+   "page": 15,
+   "why": "accuracy and latency for every ablation step and BN variant"
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 4, Eq 3",
+   "snippet": "G_i -> lambda * ||W_i||*_F / ||G_i||_F * G_i  if ||G_i||_F / ||W_i||*_F > lambda, else G_i; ||W_i||*_F = max(||W_i||_F, eps), eps=1e-3",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "PDF carries no venue header; ICML 2021 not confirmed by the file",
+  "Figure data (Fig 2, 7) not in text"
+ ]
 }

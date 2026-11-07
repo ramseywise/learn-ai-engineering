@@ -1,19 +1,623 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "1907.09190",
  "pdf": "generative-ai/02-rag-retrieval/sources/fan-2019-eli5.pdf",
  "bib": {
   "title": "ELI5: Long Form Question Answering",
+  "authors": [
+   "Angela Fan",
+   "Yacine Jernite",
+   "Ethan Perez",
+   "David Grangier",
+   "Jason Weston",
+   "Michael Auli"
+  ],
   "first_author": "Fan",
   "year": 2019,
-  "venue": "ACL (1) 2019",
+  "venue": "Proceedings of the 57th Annual Meeting of the Association for Computational Linguistics, pages 3558-3567",
   "arxiv": "1907.09190",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-04",
-  "session": "b1513713-815e-49d2-b7fd-869d099bfec9"
+  "at": "2026-11-07",
+  "chars_read": 39352,
+  "chars_total": 39352,
+  "engine": "pymupdf",
+  "skipped": "Appendices A, E, F are referenced but not in the PDF. Figures 4, 5, 7, 8 are images."
  },
- "legacy_report": "SOURCE: \"ELI5: Long Form Question Answering\", Angela Fan, Yacine Jernite, Ethan Perez, David Grangier, Jason Weston, Michael Auli. ACL 2019 (Proceedings pp. 3558–3567), arXiv 1907.09190.\n\nCOVERAGE: 39,545 of 39,545 chars read, all 10 pages (pp. 1–9 body, 9–10 references). This PDF is the main paper only. Appendices A (multi-task details), E (rater stability) and F (examples) are referenced but not included. Figures 4, 5, 7 and 8 are images, so their bar values can't be read. I quote only numbers that appear in the running text. Table 3 came out with merged columns, so I split them by position (see PROBLEMS).\n\nCLAIMS (ranked)\n- claim: People preferred the human reference answer over every model in at least 85.5% of pairwise comparisons.\n  number: 86% (abstract); at least 85.5% (body)\n  setup: crowdworkers saw a question and two answers and judged readability and accuracy. 1000 evaluations, 3 raters each, questions at least 5 words. Two-tailed binomial test, all judgments significant at p=0.05.\n  quote: \"raters prefer gold re-sponses in over 86% of cases\" (p1); \"The reference answer is preferred over the output of all of our trained models in at least 85.5% of cases\" (p7)\n  where: p1 abstract, p7 §6.1\n- claim: How the support document is built. The authors pull the top 100 Common Crawl pages per question (Reddit excluded) from a Lucene index, which totals a few hundred thousand words. They then keep the sentences with the highest TF-IDF similarity to the question, add one sentence of context on each side, take 15 passages and concatenate them into a single document.\n  number: 100 web sources; 15 passages; ±1 sentence of context\n  setup: July 2018 Common Crawl, English only (FastText language ID), Spacy tokenisation, Apache Lucene index.\n  quote: \"gather the 100 most relevant web sources for each question, excluding Reddit\" ... \"We find that extracting 15 passages with a context of one sentence before and after the initial selection provides the best trade-off between support document length and likelihood of containing relevant information\"\n  where: p3 §3.1\n- claim: Support documents average 858 words. Answers average 6.6 sentences (130 words), and questions average 42.2 words.\n  number: 858 words / 22–60 sentences; 130 words / 6.6 sentences\n  setup: whole dataset (Table 1 gives Document 857.6, Answer 130.6, Question 42.2).\n  quote: \"Support documents contain 22-60 sentences or on average 858 words ... ELI5 contains long-form answers with an average length of 6.6 sentences, or 130 words.\"\n  where: p4 §3.2\n- claim: The TF-IDF support document contains the answer only 65% of the time, although 92% contain relevant information. Gold answers fully address the question 94.5% of the time.\n  number: 65.0 / 92.0 / 94.5\n  setup: 500 random training pairs, annotated by the authors (Table 2).\n  quote: \"65% of the support docu-ments we construct provide the answer to the ques-tion, and 92% of support documents provide infor-mation relevant to the question.\"\n  where: p4\n- claim: Retrieval caps performance. An extractive oracle on the support document reaches 27.4 ROUGE-1, while the same oracle on all 100 web sources reaches 54.8. Fewer than 9% of oracle sentences come from the top-20 TF-IDF passages, so a model would need inputs tens of thousands of words long.\n  number: 27.4 vs 54.8 ROUGE-1; <9%\n  setup: beam-search oracle choosing up to 10 sentences (beam 10), re-ranked by ROUGE. The rank analysis re-ran selection on 1000 examples with 500 passages.\n  quote: \"the oracle provides an approximate upper bound of 27.4 ROUGE-1 ... an oracle computed on the full web sources achieves 54.8.\" (p6); \"less than 9% come from the first 20, and most oracles have at least one sentence from the last 100. For a model to perform best, it would have to handle inputs tens of thousands of words long.\" (p8)\n  where: p6 §6.1, p8\n- claim: Table 3 test ROUGE-1/2/L, split by column position: Support Document 16.8/2.3/10.2. Nearest Neighbor 16.7/2.3/12.5. Extractive TFIDF 20.6/2.9/17.0. BidAF 23.5/3.1/17.5. LM Q+A 27.8/4.7/23.1 (PPL 42.2). LM Q+D+A 26.4/4.0/20.5 (PPL 33.9). Seq2Seq Q→A 28.3/5.1/22.7 (PPL 52.9). Seq2Seq Q+D→A 28.3/5.1/22.8 (PPL 55.1). Multi-task 28.9/5.4/23.1 (PPL 32.7). Abstractive models score higher on ROUGE, and the Seq2Seq variants barely differ from each other.\n  number: see above\n  setup: Transformer \"big\" architecture in fairseq-py, BPE with 40K codes, beam 5, repeated trigrams blocked, min/max length tuned on the validation set.\n  quote: \"The BidAF model is the strongest ( 23.5)\" and \"the various Seq2Seq settings do not show large ROUGE differences\" (p6). Raw row: \"Seq2Seq Multi-task 32.72 8 .95 .42 3 .1\"\n  where: p6 Table 3, §6.1\n- claim: When accuracy was checked against the support document, only 19% of multi-task answers were fully accurate, against 40% of extractive answers. The multi-task answers were more relevant, 84% against 68%.\n  number: 19% / 40%; 84% / 68%\n  setup: the authors themselves rated 100 answers. Crowdworkers in the accuracy study had no support document.\n  quote: \"we find 40% of extractive answers to be accurate. We find only 19% of multi-task model answers are fully accurate; even if the model output answers the question, it can generate a sentence with an incorrect statement ... (84% relevancy compared to 68% for extractive)\"\n  where: p7\n- claim: Multi-task Seq2Seq and extractive answers are close in human preference (multi-task preferred 57% of the time). The language model loses to every other system at least 91% of the time.\n  quote: \"multi-task is only preferred in 57% of comparisons ... the language model, considered worse than any other setting in at least 91% of cases.\"\n  where: p7\n- claim: The paper's view of metrics. Perplexity and FILL-1 are poor indicators of full-task quality. Full-answer ROUGE ranks models of similar architecture but \"cannot rate an abstractive system against an extractive one\". ROUGE-20% (completing the last 20% of an answer) correlates with human judgment. Multi-task scores 37.2 ROUGE-1 on ROUGE-20%, against 26.5 for the LM Q+A.\n  quote: \"Full answer ROUGE discriminates reasonably well between models with the same general architecture, but cannot rate an abstractive system against an extractive one.\" (p8); \"The lat-ter achieves strong performance of 37.2 ROUGE-1.\" (p7)\n  where: p7–8\n- claim: The abstractive model holds up better than the extractive one when the support document overlaps less with the answer (Fig. 7 left, no numbers in the text).\n  quote: \"the abstrac-tive setting is much better at compensating for when the support document has lower relevance.\"\n  where: p8\n- claim: The dedup and split method, which Krishna et al. 2021 later attacked. Validation and test questions were sampled from questions with no close TF-IDF neighbour. Splits are 237K train, 10K valid and 25K test, from 272K questions kept because the question and at least one answer each scored 2 or more upvotes. 63% of questions have other valid answers.\n  quote: \"sample the validation and test set from the subset which has no close neighbor by TFIDF score. The final dataset contains 237K train examples, 10K for valid, and 25K for test.\"\n  where: p4\n- claim: Multi-task training combines LM on Q+D+A, several source/target variants, and masked-word prediction with 15% masking. A task marker is prepended to each sequence.\n  quote: \"We add a masked word prediction task (Devlin et al. , 2018) where 15% of tokens in the input are masked\"\n  where: p6 §5.2\n\nLIMITS\n- The paper says the best model is \"far from human performance\", partly because it can't use the full web text, and that the support-document selection \"severely limits access to relevant information\" (p8).\n- The paper concedes ROUGE can't compare extractive and abstractive systems. It never tests whether ROUGE tracks human preference on full answers.\n- The 2019 models are pre-trained-free Transformers. No pretrained LM or BART is used, so the scores are dated.\n- Only one reference answer per question is used, even though more than half have several.\n- TF-IDF dedup is presented as preventing memorisation. Krishna et al. 2021 later showed it fails, but this paper offers no evidence either way.\n- Accuracy with the support document visible covers only 100 author-rated examples. No inter-rater agreement is reported for the accuracy or preference studies, only for fluency (in the appendix, not included).\n- Faithfulness or citation to the support document is never measured.\n\nBUILDS ON: BidAF (Seo et al., 2017), the Transformer (Vaswani et al., 2017), masked-word prediction from BERT (Devlin et al., 2018), ROUGE (Lin, 2004), query-biased multi-document summarisation (Tombros and Sanderson, 1998), WikiSum (Liu et al., 2018), FastText (Bojanowski et al., 2017), FAISS NN search (Johnson et al., 2017), BPE (Sennrich et al., 2016), trigram blocking (Paulus et al., 2017; Fan et al., 2018), large-batch training (Ott et al., 2018), and fairseq (Gehring et al., 2017).\n\nCODE: none in the paper. It points to a support-document script at https://github.com/facebookresearch/ELI5 (p1 footnote).\n\nFIGURES\n- Best candidate: Figure 8, p8, \"(left) TFIDF rank of source passage for oracle sentences. (right) Highest rank used per question.\" It shows in one view that useful evidence sits deep in the ranking, which supports the claim that retrieval caps the reader.\n- Alternative: Figure 1, p1, \"ELI5 example. Models must write multi-sentence answers given questions and supporting web documents.\" It shows the task shape: a 60-word question, a 327-word answer and a 1070-word support document.\n\nFIT TO NOTES\n- 06-generation-for-rag.md fits best. The paper doesn't belong under \"Order and size of the context\" (around line 202). It belongs next to the FiD paragraph at line 220 as the long-form counterpart. That paragraph says FiD's result holds \"on short factoid answers\". ELI5 supplies the long-form case: 15 TF-IDF passages (about 858 words), a 27.4 vs 54.8 oracle gap, and fewer than 9% of oracle sentences in the top 20. A second option is \"Hallucinations and citations\" (line 300), using the 19% fully accurate abstractive vs 40% extractive result and the 84% vs 68% relevance result. Note 06 already mentions ELI5 only through ALCE (Gao et al. 2023). This paper is consistent with ALCE but doesn't repeat it, so citing it here sharpens the note.\n- 12-failure-modes.md, \"Contamination\" (line 201): this paper is the primary source for \"ELI5's authors removed near-duplicate questions ... using TF-IDF similarity\". It confirms the method (p4), so add it as the citation for that clause. \"Measuring the wrong thing\" (line 228): the paper partly anticipates Krishna et al. 2021 by conceding that full ROUGE can't compare extractive and abstractive systems. Its own Table 3 also shows nearest-neighbour retrieval at 12.5 ROUGE-L, not far from the extractive models. Nothing in either note contradicts the paper. One tension worth keeping in mind: the paper calls corpus-level ROUGE \"useful to rank different related models\" (p4), while Krishna shows ROUGE-L can't separate trivial outputs from good ones.\n\nPROBLEMS\n- Table 3's columns merged during extraction (for example \"32.72 8 .95 .42 3 .1\"). I split them by position into PPL / R1 / R2 / RL, and the split agrees with the values quoted in the text (23.5, 27.4, 54.8). Verify against the PDF before quoting R2 or RL values.\n- There's an internal inconsistency. §3.1 says 15 passages, but p8 says \"extract 500 passages instead of 20\".\n- Values in Figures 4, 5 and 7 aren't in the text, so the per-system preference matrix and fluency scores aren't available.\n- Appendices aren't in this PDF.\n- pypdf printed harmless warnings (\"Ignoring invalid /FirstChar\"). The PDF contains no embedded instructions.\n\nFiles: /Users/ramsey-wise/workspace/learn-ai-engineering/generative-ai/02-rag-retrieval/sources/fan-2019-eli5.pdf, /Users/ramsey-wise/workspace/learn-ai-engineering/generative-ai/02-rag-retrieval/notes/06-generation-for-rag.md, /Users/ramsey-wise/workspace/learn-ai-engineering/generative-ai/08-eval/notes/12-failure-modes.md"
+ "type": "benchmark",
+ "question": "Can models write multi-sentence, paragraph-length explanations to open-ended questions given long web evidence, and how should that be evaluated?",
+ "hypothesis": "A Seq2Seq model trained with a multi-task objective (LM, masked word prediction, answer generation) will beat plain Seq2Seq, language models and an extractive baseline.",
+ "contributions": [
+  "ELI5, a large-scale long-form QA dataset of 270K Reddit threads with web support documents",
+  "Evaluation with ROUGE, intermediary fill-in metrics (FILL-1, ROUGE-20%) and human studies",
+  "A multi-task Seq2Seq abstractive baseline compared with extractive, retrieval and LM baselines"
+ ],
+ "method": {
+  "summary": "Builds ELI5 from the Reddit subreddit, retrieving 100 Common Crawl pages per question via Lucene and compressing them to a TF-IDF-selected support document. Benchmarks retrieval, extractive (TF-IDF, BidAF), LM and Seq2Seq (Transformer big) models with ROUGE and crowdworker evaluations.",
+  "task": "long-form question answering (query-based multi-document generation)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "ELI5",
+    "role": "both",
+    "size": "272K questions (237K train, 10K valid, 25K test)",
+    "split": "237K train / 10K valid / 25K test; valid and test sampled from questions with no close TF-IDF neighbour in the data",
+    "source": "Reddit r/explainlikeimfive up to July 2018; questions score >=2 and at least one answer score >=2; highest-voted answer is reference; 63% have other valid answers",
+    "preprocessing": "Support doc: top 100 Common Crawl (July 2018) pages per question from Lucene index, Reddit excluded; sentences ranked by TF-IDF vs question; 15 passages with 1 sentence of context each side, concatenated with special tokens for non-contiguous passages and document shifts. Spacy tokenisation, FastText language ID. BPE 40K codes."
+   },
+   {
+    "name": "Common Crawl July 2018",
+    "role": "pretrain",
+    "size": null,
+    "split": null,
+    "source": "commoncrawl.org, English via FastText",
+    "preprocessing": "Each page one document, indexed with Apache Lucene"
+   }
+  ],
+  "models": [
+   {
+    "name": "Seq2Seq Multi-task",
+    "role": "proposed",
+    "params": null,
+    "architecture": "Transformer big (Vaswani 2017) seq2seq, fairseq-py",
+    "init_from": null,
+    "tokenizer": "BPE, 40K codes",
+    "vocab": "52,863 tokens for answer generation",
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "tasks": "LM of Q+D+A by the decoder, source/target variations (Appendix A, not in PDF), masked word prediction with 15% of input tokens masked and recovered in correct order; task marker at sequence start"
+    }
+   },
+   {
+    "name": "Seq2Seq Q to A / Q+D to A",
+    "role": "baseline",
+    "params": null,
+    "architecture": "Transformer big seq2seq",
+    "init_from": null,
+    "tokenizer": "BPE",
+    "vocab": "52,863",
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "LM Q+A / Q+D+A",
+    "role": "baseline",
+    "params": null,
+    "architecture": "Transformer language model",
+    "init_from": null,
+    "tokenizer": "BPE",
+    "vocab": "52,863",
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Extractive BidAF",
+    "role": "baseline",
+    "params": null,
+    "architecture": "BidAF (Seo 2017) scoring sentences",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "training_data": "span of up to 5 contiguous sentences with highest ROUGE vs reference; other sentences sub-sampled so training doc <400 words",
+     "test": "return 5 highest scoring sentences (better than 3 or 7)"
+    }
+   },
+   {
+    "name": "Extractive TF-IDF",
+    "role": "baseline",
+    "params": null,
+    "architecture": "7 support-doc sentences most TF-IDF similar to question",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Nearest Neighbor",
+    "role": "baseline",
+    "params": null,
+    "architecture": "answer of closest training question by FAISS search over averaged FastText word embeddings",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Oracle support doc / web sources",
+    "role": "baseline",
+    "params": null,
+    "architecture": "beam search (beam 10, up to 10 sentences) adding sentences maximising TF-IDF w.r.t. answer, final beam re-ranked by ROUGE vs reference",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "Seq2Seq answer likelihood; LM over Q,D,A tokens; multi-task adds LM of Q+D+A and masked word prediction",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "large batch via delayed gradient updates (Ott 2018), size not stated",
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "architecture_details": "'big architecture following the details in (Vaswani et al., 2017)'"
+   }
+  },
+  "inference": {
+   "decoding": "beam search, beam 5, repeated trigrams disallowed",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": "min and max generation length tuned on valid set, values not stated",
+   "samples": "single output per question; crowd ratings 3 raters per item",
+   "prompting": "Q, D, A separated by special tokens",
+   "retrieval": "Lucene top 100 Common Crawl pages per question, then TF-IDF sentence selection: 15 passages, +-1 sentence context",
+   "parameters": {
+    "fill_1_subset": "first 2K test examples",
+    "rouge_20_length": "tokens equal to 20% of average valid answer length"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "ROUGE-1/2/L F1",
+     "definition": "overlap with the gold answer, corpus-level",
+     "unit": "F1",
+     "higher_is_better": true
+    },
+    {
+     "name": "Perplexity",
+     "definition": "next-word prediction of answer given context",
+     "unit": "PPL",
+     "higher_is_better": false
+    },
+    {
+     "name": "FILL-1",
+     "definition": "accuracy generating nouns, verbs, adjectives given correct preceding tokens, first 2K test examples",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "ROUGE-20%",
+     "definition": "ROUGE between generated tokens (20% of avg answer length) and last 20% of reference, given first 80% of reference, question and support doc",
+     "unit": "ROUGE F1",
+     "higher_is_better": true
+    },
+    {
+     "name": "Human fluency",
+     "definition": "5-point Likert, 500 evaluations",
+     "unit": "1-5",
+     "higher_is_better": true
+    },
+    {
+     "name": "Human accuracy",
+     "definition": "is answer correct, 500 evaluations, plus 100 by authors with support docs",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Pairwise preference",
+     "definition": "two answers compared on readability and accuracy, 1000 evaluations",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Support document",
+    "Nearest Neighbor",
+    "Extractive TF-IDF",
+    "Extractive BidAF",
+    "Oracle support doc",
+    "Oracle web sources",
+    "LM Q+A",
+    "LM Q+D+A",
+    "Seq2Seq Q to A",
+    "Seq2Seq Q+D to A"
+   ],
+   "protocol": "Crowdworkers, 3 evaluators each, questions at least 5 words, same questions for all models; two-tailed binomial test on pairwise judgments, p=0.05; three fluency trials on separate days showed low variation (Appendix E)."
+  },
+  "availability": {
+   "code": "https://github.com/facebookresearch/ELI5",
+   "weights": "pretrained models stated available at facebookresearch.github.io/ELI5",
+   "data": "ELI5 data; Common Crawl IDs for 100 sources per question and a script to build support docs"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "datasets.size",
+    "quote": "The final dataset contains 237K train examples, 10K for valid, and 25K for test.",
+    "where": "3.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Raters prefer the gold answer over every trained model in at least 85.5% of pairwise comparisons.",
+   "kind": "measured",
+   "source": null,
+   "metric": "pairwise preference for reference",
+   "value": 85.5,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "1000 pairwise crowd evaluations, 3 raters each, readability and accuracy; five systems",
+   "quote": "The reference answer is preferred over the output of all of our trained models in at least 85.5% of cases",
+   "table": "",
+   "note": "Abstract says over 86%; body says at least 85.5%",
+   "where": "6.1"
+  },
+  {
+   "claim": "Extractive oracle on full web sources reaches ROUGE-1 54.8 vs 27.4 on the support document, so the support document limits access to relevant information.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ROUGE-1",
+   "value": 54.8,
+   "unit": "F1",
+   "baseline_value": 27.4,
+   "n": null,
+   "setup": "Oracle computed on full web sources for valid/test questions, Table 3",
+   "quote": "an oracle computed on the full web sources achieves 54.8",
+   "table": null,
+   "note": null,
+   "where": "6.1"
+  },
+  {
+   "claim": "Multi-task Seq2Seq attains ROUGE-1 28.9 on full answers, the best of all trained models.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ROUGE-1",
+   "value": 28.9,
+   "unit": "F1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Full answers, test, Table 3",
+   "quote": null,
+   "table": "Table 3, row Seq2Seq Multi-task, column ROUGE 1",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "BidAF extractive model is the strongest extractive baseline at ROUGE-1 23.5.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ROUGE-1",
+   "value": 23.5,
+   "unit": "F1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Returns 5 sentences from the support document",
+   "quote": "The BidAF model is the strongest (23.5)",
+   "table": null,
+   "note": null,
+   "where": "6.1"
+  },
+  {
+   "claim": "Multi-task Seq2Seq reaches ROUGE-20% ROUGE-1 of 37.2 versus 32.7 for Q+D to A and 33.6 for Q to A.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ROUGE-20% ROUGE-1",
+   "value": 37.2,
+   "unit": "F1",
+   "baseline_value": 32.7,
+   "n": null,
+   "setup": "Complete last 20% given first 80%, question and support doc",
+   "quote": "The latter achieves strong performance of 37.2 ROUGE-1",
+   "table": null,
+   "note": null,
+   "where": "6.1"
+  },
+  {
+   "claim": "Multi-task Seq2Seq reaches perplexity 32.7, same level as the language model, versus 55.1 for Q+D to A.",
+   "kind": "measured",
+   "source": null,
+   "metric": "PPL",
+   "value": 32.7,
+   "unit": "PPL",
+   "baseline_value": 55.1,
+   "n": null,
+   "setup": "Table 3",
+   "quote": null,
+   "table": "Table 3, row Seq2Seq Multi-task, column PPL",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Multi-task model is preferred over the extractive model in only 57% of comparisons.",
+   "kind": "measured",
+   "source": null,
+   "metric": "preference",
+   "value": 57,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Pairwise crowd evaluation",
+   "quote": "multi-task is only preferred in 57% of comparisons",
+   "table": null,
+   "note": null,
+   "where": "6.1"
+  },
+  {
+   "claim": "Authors found only 19% of multi-task answers fully accurate against 40% of extractive answers when seeing the support document.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 19,
+   "unit": "%",
+   "baseline_value": 40,
+   "n": null,
+   "setup": "100 evaluations by the authors with support documents",
+   "quote": "We find only 19% of multi-task model answers are fully accurate",
+   "table": null,
+   "note": null,
+   "where": "6.1"
+  },
+  {
+   "claim": "Multi-task answers are more often relevant (84%) than extractive (68%).",
+   "kind": "measured",
+   "source": null,
+   "metric": "relevancy",
+   "value": 84,
+   "unit": "%",
+   "baseline_value": 68,
+   "n": null,
+   "setup": "Authors' evaluation with support documents",
+   "quote": "84% relevancy compared to 68% for extractive",
+   "table": null,
+   "note": null,
+   "where": "6.1"
+  },
+  {
+   "claim": "The language model is judged worse than any other setting in at least 91% of pairwise cases.",
+   "kind": "measured",
+   "source": null,
+   "metric": "preference against LM",
+   "value": 91,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Pairwise crowd evaluation",
+   "quote": "considered worse than any other setting in at least 91% of cases",
+   "table": null,
+   "note": null,
+   "where": "6.1"
+  },
+  {
+   "claim": "Only 65% of constructed support documents contain the answer and 92% contain relevant information.",
+   "kind": "measured",
+   "source": null,
+   "metric": "support doc answerability",
+   "value": 65.0,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "500 random training pairs annotated; Table 2",
+   "quote": null,
+   "table": "Table 2, row % Support Document contains Answer",
+   "note": null,
+   "where": "3.2"
+  },
+  {
+   "claim": "94.5% of gold answers fully address the question based on the support document.",
+   "kind": "measured",
+   "source": null,
+   "metric": "gold answer correct",
+   "value": 94.5,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "500 random training question-answer pairs",
+   "quote": "find that 94.5% of gold answers fully address the question",
+   "table": null,
+   "note": "Table 2 also lists 90.2% correct human answers with explanation",
+   "where": "3.2"
+  },
+  {
+   "claim": "Fewer than 9% of oracle sentences come from the first 20 TF-IDF-ranked passages when 500 passages are extracted.",
+   "kind": "measured",
+   "source": null,
+   "metric": "share of oracle sentences from top passages",
+   "value": 9,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "1000 examples re-run with 500 passages",
+   "quote": "less than 9% come from the first 20",
+   "table": null,
+   "note": "Text says 'instead of 20' passages while Section 3.1 says 15 passages were used",
+   "where": "6.2"
+  },
+  {
+   "claim": "ELI5 has 272K questions, average answer 130.6 words and support document 857.6 words.",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg answer length",
+   "value": 130.6,
+   "unit": "words",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Whole dataset, Table 1",
+   "quote": null,
+   "table": "Table 1, row ELI5, column Answer",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Perplexity and FILL-1 are poor indicators of overall appropriateness; authors recommend reporting full ROUGE and ROUGE-20%.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Discussion of metrics",
+   "quote": "Perplexity and FILL-1 focus on local prediction and are poor indicators of overall appropriateness for the full task.",
+   "table": null,
+   "note": null,
+   "where": "6.2"
+  }
+ ],
+ "limits": [
+  "Support document built by simple TF-IDF heuristic; oracle on full web sources shows large loss (54.8 vs 27.4 ROUGE-1)",
+  "ROUGE cannot rank abstractive against extractive systems (authors)",
+  "Multi-task model hallucination: only 19% fully accurate",
+  "Training hyperparameters (optimizer, lr, steps, parameters, hardware, seeds) not stated; appendices A, E, F not in the PDF",
+  "Passage count inconsistent: 15 passages in 3.1, 'instead of 20' in 6.2",
+  "Evaluation of accuracy by crowdworkers is done without the support document",
+  "Pre-LLM era models; dated baselines"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "FILL-1",
+   "definition": "accuracy at which models generate different Nouns, Verbs, and Adjectives given the correct preceding tokens",
+   "where": "4"
+  },
+  {
+   "term": "ROUGE-20%",
+   "definition": "model's ability to complete an answer given the first 80% of the reference answer, the question, and the support document",
+   "where": "4"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Attention is all you need (Transformer big)",
+   "year": 2017,
+   "arxiv": "1706.03762",
+   "relation": "uses-method",
+   "note": "model architecture",
+   "quote": null
+  },
+  {
+   "work": "Bidirectional attention flow",
+   "year": 2017,
+   "arxiv": "1611.01603",
+   "relation": "baseline",
+   "note": "extractive baseline generalised to multi-sentence",
+   "quote": null
+  },
+  {
+   "work": "BERT",
+   "year": 2018,
+   "arxiv": "1810.04805",
+   "relation": "uses-method",
+   "note": "masked word prediction auxiliary task",
+   "quote": null
+  },
+  {
+   "work": "TriviaQA",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "related",
+   "note": "multi-document web input but short answers",
+   "quote": null
+  },
+  {
+   "work": "MS MARCO",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "related",
+   "note": "short ~1 sentence answers",
+   "quote": null
+  },
+  {
+   "work": "WikiSum (Liu et al.)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "related",
+   "note": "multi-document summarization",
+   "quote": null
+  },
+  {
+   "work": "Reading Wikipedia to answer open-domain questions",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Wikipedia as evidence for factoid QA",
+   "quote": null
+  },
+  {
+   "work": "Scaling neural machine translation",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "large batch via delayed gradient updates",
+   "quote": null
+  },
+  {
+   "work": "Common Crawl",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "July 2018 archive",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Table 3",
+   "caption": "Comparison of oracles, baselines, retrieval, extractive, and abstractive models on the full proposed answers.",
+   "page": 6,
+   "why": "ROUGE and PPL for all systems in one place"
+  },
+  {
+   "figure": "Table 4",
+   "caption": "Intermediary fill-in tasks for sequential generation.",
+   "page": 6,
+   "why": "FILL-1 and ROUGE-20% separating LM from Seq2Seq"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Human preferences for pairwise comparisons.",
+   "page": 7,
+   "why": "Ranking of systems by raters"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Table 3 and 4 columns merged in text; split by position",
+  "Figures 4,5,7,8 are images; bar values not read",
+  "Appendices not included in PDF"
+ ]
 }

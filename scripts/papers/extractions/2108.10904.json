@@ -1,9 +1,17 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2108.10904",
  "pdf": "ai-engineering/08-multimodal-engineering/sources/wang-2021-simvlm.pdf",
  "bib": {
   "title": "SimVLM: Simple Visual Language Model Pretraining with Weak Supervision",
+  "authors": [
+   "Zirui Wang",
+   "Jiahui Yu",
+   "Adams Wei Yu",
+   "Zihang Dai",
+   "Yulia Tsvetkov",
+   "Yuan Cao"
+  ],
   "first_author": "Wang",
   "year": 2021,
   "venue": "ICLR 2022",
@@ -12,8 +20,712 @@
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-04",
-  "session": "97b4134b-decf-4866-ae85-c6872cbbba19"
+  "at": "2026-11-07",
+  "chars_read": 60254,
+  "chars_total": 60254,
+  "engine": "pymupdf",
+  "skipped": null
  },
- "legacy_report": "SOURCE: \"SimVLM: Simple Visual Language Model Pretraining with Weak Supervision\", Zirui Wang, Jiahui Yu, Adams Wei Yu, Zihang Dai, Yulia Tsvetkov, Yuan Cao (CMU, Google Research Brain Team, U. Washington). ICLR 2022 (arXiv 2108.10904v3, 15 May 2022). File: /Users/ramsey-wise/workspace/learn-ai-engineering/ai-engineering/08-multimodal-engineering/sources/wang-2021-simvlm.pdf\n\nCOVERAGE: I read all 60,260 of 60,260 characters (offsets 0–40000, then 40000–60260). That covers pp. 1–17: the body, Tables 1–7, Appendices A–D (including the Erratum) and both figure captions. I skimmed the references for origins only.\n\nCLAIMS (ranked)\n- claim: The model trains end-to-end from scratch on one prefix-LM objective, using raw image patches and weakly aligned web data. It has no object detector and no auxiliary losses.\n  number: none\n  setup: whole method\n  quote: \"SimVLM reduces the training complexity by exploiting large-scale weak supervision, and is trained end-to-end with a single preﬁx language modeling objective.\" Also: \"Not only is SimVLM simpler, requiring neither object detection pretraining nor auxiliary losses, but it also obtains better performance than previous work.\"\n  where: p.1 abstract; p.2\n- claim: The authors set it against the detector-based pipeline: a detector trained on detection data, ROI features, an MLM fusion model and task-specific auxiliary losses.\n  number: none\n  setup: framing of prior VLP (LXMERT, ViLBERT, UNITER, OSCAR, VinVL and others)\n  quote: \"Firstly, object detection datasets are used to train a supervised object detector (OD) which allows further extracting region-of-interest (ROI) features from images. Next, datasets with aligned image-text pairs are used for MLM pretraining of a fusion model ... various task-speciﬁc auxiliary losses have been introduced\"\n  where: pp.1–2\n- claim: How the objective works: the image is the prefix with bidirectional attention, and loss is computed on the text only.\n  number: none\n  setup: Sec 3.2\n  quote: \"we prepend image feature sequence of length Ti to the text sequence, and enforce the model to sample a preﬁx of length Tp≥ Ti to calculate LM loss on text data only\"\n  where: p.4\n- claim: Pretraining data is ALIGN's roughly 1.8B noisy image-text pairs, unfiltered, plus about 800GB of C4 text. Runs last about 1M steps on 512 TPU v3 chips.\n  number: 1.8B pairs; 800GB; 1M steps; batch 4,096 pairs + 512 docs; 512 TPU v3\n  setup: all model sizes, from scratch\n  quote: \"the training set of ALIGN (Jia et al., 2021), which contains about 1.8B noisy image-text pairs. Notice that we do not use any extra data preprocessing or ﬁltering, except simple random resized cropping.\" And: \"The dataset contains about 800GB of web crawled documents.\" And: \"each batch, which contains 4,096 image-text pairs and 512 text-only documents, sharded across 512 TPU v3 chips\"\n  where: p.16 (App B.1); p.5\n- claim: SOTA on six VL benchmarks. On VQA the Huge model scores 80.03/80.34 against VinVL's 76.56/76.60, the first single model above 80%.\n  number: VQA test-dev/test-std: base 77.87/78.14, large 79.32/79.56, huge 80.03/80.34\n  setup: fine-tuned, single model, Table 1. The abstract's \"+3.74%\" is huge test-std minus VinVL test-std (80.34 − 76.60).\n  quote: \"SimVLMhuge 80.03 80.34 84.53 85.15 86.21 86.32 40.6 33.7 143.3 25.4 110.3 14.5 47.6\" and \"pushing the single model performance above 80% on VQA for the ﬁrst time\"\n  where: p.5–6\n- claim: The other headline gains are NLVR2 +1.17, SNLI-VE +1.37 and captioning +10.1 average CIDEr.\n  number: NLVR2 huge 84.53/85.15 vs VinVL 82.67/83.98; CoCo CIDEr 143.3 vs 140.9; NoCaps CIDEr 110.3 vs 92.5; Multi30k BLEU@4 47.6\n  setup: Table 1. SimVLM uses plain cross-entropy, while OSCAR and VinVL use CIDEr optimisation.\n  quote: \"VQA (+3.74% vqa-score), NLVR2 (+1.17% accuracy), SNLI-VE (+1.37% accuracy) and image captioning tasks (+10.1% average CIDEr score)\"\n  where: p.1\n- claim: The Base model already beats all larger prior models on the discriminative tasks.\n  number: base VQA 77.87 vs VinVL (large) 76.56\n  setup: Table 1\n  quote: \"the SimVLM base already outperforms all prior methods while using less capacity\"\n  where: p.6\n- claim: Zero-shot captioning on CoCo is weak, but on NoCaps it beats fine-tuned models. Few-shot (1% of the data, 5 epochs) gets close to the supervised baselines.\n  number: zero-shot huge CoCo CIDEr 32.2; NoCaps overall 101.4; few-shot huge CoCo CIDEr 131.3; NoCaps 110.4; VinVL NoCaps 94.3\n  setup: Table 2, prompt \"A picture of\", CoCo Karpathy test, NoCaps val. These are the corrected numbers per the Erratum.\n  quote: \"SimVLMhuge 11.2 14.7 32.2 8.5 101.2 100.4 102.3 101.4\" and \"ﬁnetune on 1% training data for 5 epochs for the few-shot setting\"\n  where: p.6\n- claim: Zero-shot cross-modality transfer: fine-tuning on text-only NLI and then testing with images reaches about UNITER level on SNLI-VE. A hypothesis-only check sits near chance.\n  number: huge 73.56/73.08 from SNLI-VE(T); UNITER 78.59/78.28; hypothesis-only 34.31/34.62\n  setup: Table 3\n  quote: \"SimVLMhuge 73.56 / 73.08 74.24 / 73.86 67.45 / 66.97 18.2 32.6\" and \"(average scores of 34.31 / 34.62)\"\n  where: p.7\n- claim: Generative VQA beats discriminative VQA on out-of-domain answers.\n  number: Karpathy-test out-domain huge 30.3 generative vs 17.5 discriminative. Partial Train out-domain 28.8 vs 11.1.\n  setup: Table 4. Out-of-domain means the best answer is not among the 3,129 candidates. Partial Train holds 2,085 seen answers.\n  quote: \"the generative SimVLM signiﬁcantly improves on the out-of-domain split by over 17 points\"\n  where: p.8\n- claim: Ablation, architecture. Encoder-decoder beats decoder-only, and removing the conv stage hurts. Three ResNet blocks work best.\n  number: SimVLMsmall 67.43; decoder-only 65.23; w/o conv stage 63.11; 2 blks 65.57; 4 blks 66.55\n  setup: Table 6, small model (\"embedding dimension of 512 and 8 layers\"), VQA score\n  quote: \"SimVLMsmall 67.43 ... w/o conv stage 63.11 ... w/ 2 conv blks 65.57 w/ 4 conv blks 66.55\"\n  where: p.9\n- claim: Ablation, objective. Prefix-LM beats plain LM and T5 span corruption.\n  number: PrefixLM 67.43; w/ LM 64.48; w/ span corruption 66.23\n  setup: Table 6\n  quote: \"the PreﬁxLM objective outperforms both span corruption (Raffel et al., 2019) and naive LM\"\n  where: p.9\n- claim: Ablation, data. Image-text data is essential and text-only data helps. Scale matters: 10% of ALIGN or CC-3M both score lower.\n  number: no pretraining 49.70; w/o Image2Text 49.23; w/o Text2Text 65.25; 10% ALIGN 66.71; CC-3M 63.32\n  setup: Table 6\n  quote: \"w/ 10% ALIGN 66.71 w/ CC-3M 63.32\" and \"conﬁrms the importance of data scaling\"\n  where: p.9\n- claim: Single-modality results: ImageNet linear probe reaches 83.6 (below CLIP's 85.4 and ALIGN's 85.5). GLUE results are above other VLP models and near BERT.\n  number: 80.6/82.3/83.6; GLUE CoLA 46.7 vs BERT 54.6\n  setup: Tables 5 and 7, average-pooled encoder outputs\n  quote: \"CLIP (Radford et al., 2021) 85.4 ALIGN (Jia et al., 2021) 85.5 SimVLMbase 80.6 SimVLMlarge 82.3 SimVLMhuge 83.6\"\n  where: p.8; p.16\n- claim: Model sizes follow ViT Base/Large/Huge, with a ResNet-101 or ResNet-152 conv stage, 224px pretraining (14×14 patches) and 480px for VQA fine-tuning. The paper gives no parameter counts.\n  number: patch 16×16; vocab 32,000; seq 256\n  setup: App B.1–B.2\n  quote: \"we use the ﬁrst three blocks (excluding the Conv stem) of ResNet-101 and ResNet-152 (He et al., 2016) for our Base and Large models respectively, and a larger variant of ResNet-152 with more channels for the Huge model\"\n  where: p.16\n\nLIMITS\n- ALIGN is a private Google dataset. The paper never says it is private, but the result cannot be reproduced without it.\n- Compute is 512 TPU v3 chips for about 1M steps. No wall-clock time and no FLOPs are given.\n- There are no seeds, no variance and no error bars. Every number comes from a single run. Fine-tuning learning rates were picked on dev from {1e-5, 2e-5, 5e-5}.\n- No parameter counts are given; sizes are only \"same setting as its corresponding ViT variant\".\n- The ablations use only the small model (512-dim, 8 layers) and only VQA.\n- The authors concede that true zero-shot VQA fails: \"the model falls short in generating meaningful answers to the real questions\". They blame short, noisy alt-text and needed 50k more steps on WIT before it worked. That evidence is qualitative only (Fig 2e).\n- Zero-shot CoCo numbers were wrong in v1 and corrected in v3 (Erratum, App D). The corrected zero-shot CoCo CIDEr is low (24–32).\n- Exact-match scoring of generated VQA answers undercounts synonyms, which the authors acknowledge.\n- Dated: the model is a fully trained encoder-decoder built from scratch. It does not bolt onto a frozen LLM.\n\nBUILDS ON\n- ALIGN (Jia et al., 2021): the data.\n- ViT (Dosovitskiy et al., 2021) and CoAtNet (Dai et al., 2021): the backbone and conv stage.\n- \"Early convolutions help transformers see better\" (Xiao et al., 2021).\n- T5/C4 (Raffel et al., 2019).\n- BERT (Devlin et al., 2018) and GPT-2/GPT-3 (Radford et al., 2019; Brown et al., 2020).\n- CLIP (Radford et al., 2021) and DALL-E (Ramesh et al., 2021).\n- Frozen (Tsimpoukelli et al., 2021), cited as motivation for zero-shot learning.\n- Detector-free predecessors: ViLT (Kim et al., 2021), E2E-VLP (Xu et al., 2021), SOHO (Huang et al., 2021).\n- Detector-based baselines: LXMERT (Tan & Bansal, 2019), ViLBERT (Lu et al., 2019), UNITER (Chen et al., 2020b), OSCAR (Li et al., 2020), VinVL (Zhang et al., 2021), all relying on Faster R-CNN (Ren et al., 2015) trained on Visual Genome (Krishna et al., 2016).\n- The paper does not cite ALBEF or BLIP. BLIP comes later.\n\nCODE: none in the source. The one load-bearing equation is Eq. 3 (p.4), extraction-garbled: \"LPreﬁxLM(θ) =−Ex∼D [ logPθ(x≥Tp|x<Tp ) ] =−Ex∼D [ T∑ t=Tp logPθ(xt|x[Tp,t], x<Tp ) ]\"\n\nFIGURES\n- Fig 1, p.3: \"Illustration of the SimVLM model. This shows an example of training with PreﬁxLM of an image-text pair. For text-only corpora, it is straightforward to remove the image patches and utilize textual tokens only.\" It shows the image-as-prefix, loss-on-suffix design in a single picture.\n- Fig 2, p.15: generated examples of zero-shot captioning, German cross-modal transfer, generative VQA, visual text completion and zero-shot open-ended VQA. They are qualitative only and less useful.\n\nPROBLEMS\n- The math extracts garbled (Eq. 3, and the inline Ti = HW/P²), and the NoCaps header in Table 2 is merged with \"B@4\".\n- Table rows are recoverable, but bold and underline markings are lost.\n- No embedded instructions found.\n\nFor the note: the fusion-lineage paragraph is the better fit. SimVLM defines itself against detector ROI features plus multiple objectives, and Table 6 isolates objective, data scale and conv stage. Its link to the Frozen/Flamingo/BLIP-2 line goes only as far as a Frozen citation in the motivation."
+ "type": "empirical",
+ "question": "Can a single prefix language modeling objective on raw image patches and weakly aligned web data replace detector-based, multi-loss vision-language pretraining?",
+ "hypothesis": "Generative pretraining on large noisy image-text data, with no object detector or auxiliary losses, matches or beats MLM-based VLP and gives zero-shot transfer.",
+ "contributions": [
+  "A minimalist VLP framework trained end-to-end with one PrefixLM objective",
+  "New SOTA on 6 VL benchmarks without extra data or task-specific customization",
+  "Zero-shot captioning, open-ended VQA and cross-modality transfer"
+ ],
+ "method": {
+  "summary": "Encoder-decoder Transformer (ViT sizes) taking image patches via a 3-block ResNet conv stage as a bidirectional prefix, trained from scratch with prefix LM loss on text only, on ALIGN image-text pairs mixed with C4 text. Fine-tuned per task and also evaluated zero-shot.",
+  "task": "vision-language pretraining with prefix language modeling",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "ALIGN",
+    "role": "pretrain",
+    "size": "about 1.8B noisy image-text pairs",
+    "split": "training set",
+    "source": "Jia et al., 2021 (web alt-text)",
+    "preprocessing": "no filtering, simple random resized cropping only"
+   },
+   {
+    "name": "C4",
+    "role": "pretrain",
+    "size": "about 800GB web documents",
+    "split": null,
+    "source": "Raffel et al., 2019",
+    "preprocessing": "followed Raffel et al. steps"
+   },
+   {
+    "name": "WIT",
+    "role": "pretrain",
+    "size": null,
+    "split": null,
+    "source": "Srinivasan et al., 2021",
+    "preprocessing": "50k extra pretraining steps for zero-shot open-ended VQA demo"
+   },
+   {
+    "name": "VQA v2",
+    "role": "both",
+    "size": null,
+    "split": "dev for selection, test-dev/test-std report",
+    "source": "Goyal et al., 2017",
+    "preprocessing": "classification over 3,129 most frequent answers; also generative variant"
+   },
+   {
+    "name": "SNLI-VE",
+    "role": "both",
+    "size": null,
+    "split": "dev/test",
+    "source": "Xie et al., 2019",
+    "preprocessing": null
+   },
+   {
+    "name": "NLVR2",
+    "role": "both",
+    "size": null,
+    "split": "dev/test-P",
+    "source": "Suhr et al., 2018",
+    "preprocessing": null
+   },
+   {
+    "name": "CoCo captions",
+    "role": "both",
+    "size": null,
+    "split": "Karpathy test (5k)",
+    "source": "Chen et al., 2015",
+    "preprocessing": null
+   },
+   {
+    "name": "NoCaps",
+    "role": "eval",
+    "size": null,
+    "split": "validation",
+    "source": "Agrawal et al., 2019",
+    "preprocessing": "fine-tuned on CoCo train"
+   },
+   {
+    "name": "Multi30k",
+    "role": "both",
+    "size": null,
+    "split": null,
+    "source": "Elliott et al., 2016",
+    "preprocessing": null
+   },
+   {
+    "name": "CC-3M",
+    "role": "pretrain",
+    "size": null,
+    "split": null,
+    "source": "Sharma et al., 2018",
+    "preprocessing": "ablation only"
+   }
+  ],
+  "models": [
+   {
+    "name": "SimVLM base",
+    "role": "proposed",
+    "params": null,
+    "architecture": "encoder-decoder Transformer, ViT-Base setting, ResNet-101 conv stage",
+    "init_from": "scratch",
+    "tokenizer": "SentencePiece",
+    "vocab": "32,000",
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "256 max text tokens",
+    "other": {}
+   },
+   {
+    "name": "SimVLM large",
+    "role": "proposed",
+    "params": null,
+    "architecture": "ViT-Large setting, ResNet-152 conv stage",
+    "init_from": "scratch",
+    "tokenizer": "SentencePiece",
+    "vocab": "32,000",
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "256 max text tokens",
+    "other": {}
+   },
+   {
+    "name": "SimVLM huge",
+    "role": "proposed",
+    "params": null,
+    "architecture": "ViT-Huge setting, larger ResNet-152 with more channels",
+    "init_from": "scratch",
+    "tokenizer": "SentencePiece",
+    "vocab": "32,000",
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "256 max text tokens",
+    "other": {}
+   },
+   {
+    "name": "SimVLM small",
+    "role": "proposed",
+    "params": null,
+    "architecture": "ablation model",
+    "init_from": "scratch",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "8",
+    "hidden": "512",
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "VinVL, OSCAR, UNITER, Villa, UNIMO, SOHO, LXMERT, VL-T5",
+    "role": "baseline",
+    "params": null,
+    "architecture": "detector-based MLM VLP",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "single PrefixLM loss (Eq 3), loss on text tokens after prefix; prefix length Tp >= image length Ti",
+   "optimizer": "AdamW, beta1=0.9, beta2=0.999",
+   "lr": "5e-4 peak pretraining; fine-tuning tuned in {1e-5, 2e-5, 5e-5}",
+   "lr_schedule": "linear decay after warmup",
+   "warmup": "first 2% of updates",
+   "batch_size": "4,096 image-text pairs + 512 text-only documents per batch",
+   "steps": "about 1M",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "256 text tokens; 14x14 image patches at 224x224 (patch 16x16)",
+   "precision": null,
+   "weight_decay": "0.01",
+   "dropout": "none in pretraining; 0.1 in fine-tuning",
+   "regularisation": "stochastic depth 0.1 (conv stage and encoder) in fine-tuning",
+   "hardware": "512 TPU v3 chips",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "finetune_image_resolution": "480x480 for VQA, positional params linearly interpolated",
+    "embedding_tying": "embedding shared with decoder softmax output",
+    "shared_params": "all shared across modalities except conv stage and positional embeddings",
+    "framework": "Lingvo",
+    "zero_shot_prefix_prompt": "A picture of",
+    "few_shot": "fine-tune on 1% training data for 5 epochs",
+    "wit_continue": "50k steps"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "not stated; single run per number",
+   "prompting": "prefix prompt 'A picture of' for zero-shot captioning",
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "vqa-score",
+     "definition": "standard VQA accuracy; exact match of generated answers for generative VQA",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "CIDEr, BLEU@4, METEOR, SPICE",
+     "definition": "standard captioning metrics",
+     "unit": "points",
+     "higher_is_better": true
+    },
+    {
+     "name": "accuracy",
+     "definition": "NLVR2, SNLI-VE",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Acc@1",
+     "definition": "ImageNet linear evaluation on average-pooled encoder outputs",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "LXMERT",
+    "VL-T5",
+    "UNITER",
+    "OSCAR",
+    "Villa",
+    "SOHO",
+    "UNIMO",
+    "VinVL",
+    "CLIP",
+    "ALIGN",
+    "SimCLRv2",
+    "DINO",
+    "BERT"
+   ],
+   "protocol": "Pick best setting on dev, report test; no seeds or variance reported."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "ALIGN not stated as released; C4 public"
+  },
+  "prompts": [
+   {
+    "purpose": "zero-shot captioning prefix",
+    "text": "A picture of",
+    "where": "Sec 4.3.1"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "models.params",
+    "quote": "each variant follows the same setting as its corresponding ViT variant",
+    "where": "Sec 4.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "SimVLM huge reaches 80.34 VQA test-std, above 80% for the first time, against VinVL 76.60.",
+   "kind": "measured",
+   "source": null,
+   "metric": "VQA test-std",
+   "value": "80.34",
+   "unit": "vqa-score",
+   "baseline_value": "76.60",
+   "n": null,
+   "setup": "Fine-tuned single model, VQA v2, Table 1, ALIGN+C4 pretraining",
+   "note": null,
+   "where": "Table 1; p.6",
+   "table": "Table 1, row SimVLMhuge, column VQA test-std"
+  },
+  {
+   "claim": "Abstract gain on VQA over prior SOTA.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "+3.74",
+   "unit": "% vqa-score",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Abstract; equals 80.34 minus VinVL 76.60",
+   "note": null,
+   "where": "Abstract",
+   "quote": "VQA (+3.74% vqa-score), NLVR2 (+1.17% accuracy), SNLI-VE (+1.37% accuracy) and image captioning tasks (+10.1% average CIDEr score)"
+  },
+  {
+   "claim": "SimVLM base already beats prior large-sized models on VQA test-dev.",
+   "kind": "measured",
+   "source": null,
+   "metric": "VQA test-dev",
+   "value": "77.87",
+   "unit": "vqa-score",
+   "baseline_value": "76.56",
+   "n": null,
+   "setup": "Table 1, Base vs VinVL large 76.56",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row SimVLMbase, column VQA test-dev"
+  },
+  {
+   "claim": "SimVLM huge CoCo captioning CIDEr with plain cross-entropy fine-tuning (no CIDEr optimisation).",
+   "kind": "measured",
+   "source": null,
+   "metric": "CIDEr",
+   "value": "143.3",
+   "unit": "CIDEr",
+   "baseline_value": "140.9",
+   "n": null,
+   "setup": "CoCo Karpathy test, fine-tuned; VinVL 140.9 uses CIDEr optimisation",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row SimVLMhuge pretrain-finetune, column CoCo C"
+  },
+  {
+   "claim": "SimVLM huge NoCaps overall CIDEr after COCO fine-tuning.",
+   "kind": "measured",
+   "source": null,
+   "metric": "CIDEr",
+   "value": "112.2",
+   "unit": "CIDEr",
+   "baseline_value": "94.3",
+   "n": null,
+   "setup": "NoCaps val, fine-tuned on CoCo train",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row SimVLMhuge pretrain-finetune, column NoCaps Overall"
+  },
+  {
+   "claim": "Zero-shot NoCaps overall CIDEr (huge) with prefix prompt 'A picture of'.",
+   "kind": "measured",
+   "source": null,
+   "metric": "CIDEr",
+   "value": "101.4",
+   "unit": "CIDEr",
+   "baseline_value": "94.3",
+   "n": null,
+   "setup": "NoCaps val, no fine-tuning; values corrected in v3 erratum",
+   "note": "VinVL fine-tuned baseline 94.3; M2 Transformer supervised 75.0",
+   "where": "Table 2",
+   "table": "Table 2, row SimVLMhuge zero-shot, column NoCaps Overall"
+  },
+  {
+   "claim": "Zero-shot CoCo CIDEr is weak (huge).",
+   "kind": "measured",
+   "source": null,
+   "metric": "CIDEr",
+   "value": "32.2",
+   "unit": "CIDEr",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CoCo Karpathy test, zero-shot",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row SimVLMhuge zero-shot, column CoCo C"
+  },
+  {
+   "claim": "Few-shot (1% train, 5 epochs) CoCo CIDEr, huge.",
+   "kind": "measured",
+   "source": null,
+   "metric": "CIDEr",
+   "value": "131.3",
+   "unit": "CIDEr",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CoCo Karpathy test, few-shot",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row SimVLMhuge few-shot, column CoCo C"
+  },
+  {
+   "claim": "Zero-shot cross-modality transfer on SNLI-VE: fine-tuned on text-only SNLI-VE, tested with images (huge, dev/test).",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "73.56 / 73.08",
+   "unit": "accuracy %",
+   "baseline_value": "78.59 / 78.28",
+   "n": null,
+   "setup": "Table 3; UNITER fully supervised 78.59 / 78.28",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row SimVLMhuge, column SNLI-VE (T)"
+  },
+  {
+   "claim": "Hypothesis-only sanity check with image masked is near chance.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "34.31 / 34.62",
+   "unit": "accuracy %",
+   "baseline_value": null,
+   "n": null,
+   "setup": "SNLI-VE, average scores over models",
+   "note": null,
+   "where": "Sec 4.3.2",
+   "quote": "(average scores of 34.31 / 34.62)"
+  },
+  {
+   "claim": "Zero-shot Multi30k En-De BLEU@4 via text-only fine-tuning (huge).",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU@4",
+   "value": "18.2",
+   "unit": "BLEU@4",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fine-tuned on text-only translation, decoded with image-only encoder input",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row SimVLMhuge, column Multi30k (T) B@4"
+  },
+  {
+   "claim": "Generative VQA improves out-of-domain accuracy over discriminative by over 17 points.",
+   "kind": "measured",
+   "source": null,
+   "metric": "vqa-score",
+   "value": "30.3",
+   "unit": "vqa-score",
+   "baseline_value": "17.5",
+   "n": null,
+   "setup": "Karpathy-test out-domain, huge generative vs discriminative 17.5; out-domain = best answer not in 3,129 candidates",
+   "note": "Row reads Dev 75.5, Karpathy-test 79.9/30.3/77.0, Partial Train 79.1/28.8/73.0; discriminative huge out-domain 17.5",
+   "where": "Table 4; Sec 4.3.3",
+   "table": "Table 4, row Generative SimVLMhuge, column Karpathy-test Out-domain"
+  },
+  {
+   "claim": "Ablation: PrefixLM beats naive LM on VQA (small model).",
+   "kind": "measured",
+   "source": null,
+   "metric": "VQA score",
+   "value": "67.43",
+   "unit": "VQA score",
+   "baseline_value": "64.48",
+   "n": null,
+   "setup": "SimVLM small, embedding 512, 8 layers; single run",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row SimVLMsmall"
+  },
+  {
+   "claim": "Ablation: span corruption objective scores lower than PrefixLM.",
+   "kind": "measured",
+   "source": null,
+   "metric": "VQA score",
+   "value": "66.23",
+   "unit": "VQA score",
+   "baseline_value": "67.43",
+   "n": null,
+   "setup": "Table 6, w/ span corruption",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row w/ span corruption"
+  },
+  {
+   "claim": "Ablation: decoder-only model scores lower than encoder-decoder.",
+   "kind": "measured",
+   "source": null,
+   "metric": "VQA score",
+   "value": "65.23",
+   "unit": "VQA score",
+   "baseline_value": "67.43",
+   "n": null,
+   "setup": "Table 6",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row Decoder-only"
+  },
+  {
+   "claim": "Ablation: CC-3M pretraining instead of ALIGN scores lower.",
+   "kind": "measured",
+   "source": null,
+   "metric": "VQA score",
+   "value": "63.32",
+   "unit": "VQA score",
+   "baseline_value": "67.43",
+   "n": null,
+   "setup": "Table 6",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row w/ CC-3M"
+  },
+  {
+   "claim": "Ablation: 10% of ALIGN scores lower.",
+   "kind": "measured",
+   "source": null,
+   "metric": "VQA score",
+   "value": "66.71",
+   "unit": "VQA score",
+   "baseline_value": "67.43",
+   "n": null,
+   "setup": "Table 6",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row w/ 10% ALIGN"
+  },
+  {
+   "claim": "Ablation: removing the conv stage hurts.",
+   "kind": "measured",
+   "source": null,
+   "metric": "VQA score",
+   "value": "63.11",
+   "unit": "VQA score",
+   "baseline_value": "67.43",
+   "n": null,
+   "setup": "Table 6",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row w/o conv stage"
+  },
+  {
+   "claim": "Ablation: removing image-text data collapses to no-pretraining level.",
+   "kind": "measured",
+   "source": null,
+   "metric": "VQA score",
+   "value": "49.23",
+   "unit": "VQA score",
+   "baseline_value": "49.70",
+   "n": null,
+   "setup": "Table 6; no pretraining 49.70",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row w/o Image2Text"
+  },
+  {
+   "claim": "Ablation: removing text-only data costs about 2 points.",
+   "kind": "measured",
+   "source": null,
+   "metric": "VQA score",
+   "value": "65.25",
+   "unit": "VQA score",
+   "baseline_value": "67.43",
+   "n": null,
+   "setup": "Table 6",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row w/o Text2Text"
+  },
+  {
+   "claim": "ImageNet linear-probe accuracy (huge), below CLIP and ALIGN.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Acc@1",
+   "value": "83.6",
+   "unit": "Acc@1 %",
+   "baseline_value": "85.5",
+   "n": null,
+   "setup": "Table 5, average-pooled encoder outputs",
+   "note": "CLIP 85.4, ALIGN 85.5",
+   "where": "Table 5",
+   "table": "Table 5, row SimVLMhuge"
+  },
+  {
+   "claim": "Open-ended zero-shot VQA fell short until continued pretraining on WIT for 50k steps; evidence is qualitative.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 2 (d),(e)",
+   "note": null,
+   "where": "Sec 4.3.3"
+  }
+ ],
+ "limits": [
+  "No parameter counts, seeds, variance, wall-clock or FLOPs reported",
+  "Ablations use only a small 8-layer, 512-dim model and only VQA",
+  "Zero-shot VQA failed to give meaningful answers to real questions before 50k extra steps on WIT; evidence is qualitative",
+  "Zero-shot CoCo numbers were wrong in v1 and corrected in v3 (Appendix D erratum)",
+  "Exact-match scoring undercounts valid synonymous generated answers",
+  "ALIGN pretraining data release is not stated"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "PrefixLM",
+   "definition": "enables bi-directional attention on the prefix sequence and only conducts autoregressive factorization on the remaining tokens",
+   "where": "Sec 3.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "ALIGN (Jia et al.)",
+   "year": 2021,
+   "arxiv": "2102.05918",
+   "relation": "uses-data",
+   "note": "noisy image-text pretraining data",
+   "quote": null
+  },
+  {
+   "work": "ViT (Dosovitskiy et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "backbone sizes and patching",
+   "quote": null
+  },
+  {
+   "work": "CoAtNet (Dai et al.)",
+   "year": 2021,
+   "arxiv": "2106.04803",
+   "relation": "uses-method",
+   "note": "conv stage and 2D relative attention",
+   "quote": null
+  },
+  {
+   "work": "T5 / C4 (Raffel et al.)",
+   "year": 2019,
+   "arxiv": "1910.10683",
+   "relation": "uses-data",
+   "note": "text corpus and preprocessing; span corruption ablation",
+   "quote": null
+  },
+  {
+   "work": "Early convolutions help transformers see better (Xiao et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "related",
+   "note": "conv stage beats linear projection",
+   "quote": null
+  },
+  {
+   "work": "VinVL (Zhang et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "main detector-based baseline",
+   "quote": null
+  },
+  {
+   "work": "OSCAR",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "UNITER",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "CLIP (Radford et al.)",
+   "year": 2021,
+   "arxiv": "2103.00020",
+   "relation": "related",
+   "note": "zero-shot, prompt, linear eval comparison",
+   "quote": null
+  },
+  {
+   "work": "WIT (Srinivasan et al.)",
+   "year": 2021,
+   "arxiv": "2103.01913",
+   "relation": "uses-data",
+   "note": "continued pretraining for open-ended VQA",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Illustration of the SimVLM model, training with PrefixLM of an image-text pair.",
+   "page": 3,
+   "why": "Shows image patches as bidirectional prefix and text as the autoregressive suffix"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Generated examples of SimVLM of various applications",
+   "page": 15,
+   "why": "Qualitative zero-shot captioning, VQA and transfer"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 3, p.4",
+   "snippet": "L_PrefixLM(theta) = -E_{x~D}[ sum_{t=Tp}^{T} log P(x_t | x_[Tp,t], x_<Tp) ]",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Table 4 was flattened by extraction; columns assigned from the row order (Dev, Karpathy-test in/out/overall, Partial Train in/out/overall).",
+  "Table 6 and others read from flattened cell order."
+ ]
 }

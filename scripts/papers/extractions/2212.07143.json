@@ -1,19 +1,666 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2212.07143",
  "pdf": "ai-engineering/08-multimodal-engineering/sources/cherti-2023-reproducible-scaling-laws-contrastive-language.pdf",
  "bib": {
-  "title": "Reproducible Scaling Laws for Contrastive Language-Image Learning",
+  "title": "Reproducible scaling laws for contrastive language-image learning",
+  "authors": [
+   "Mehdi Cherti",
+   "Romain Beaumont",
+   "Ross Wightman",
+   "Mitchell Wortsman",
+   "Gabriel Ilharco",
+   "Cade Gordon",
+   "Christoph Schuhmann",
+   "Ludwig Schmidt",
+   "Jenia Jitsev"
+  ],
   "first_author": "Cherti",
-  "year": 2023,
-  "venue": "CVPR 2023",
+  "year": 2024,
+  "venue": "preprint",
   "arxiv": "2212.07143",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-04",
-  "session": "97b4134b-decf-4866-ae85-c6872cbbba19"
+  "at": "2026-11-07",
+  "chars_read": 108081,
+  "chars_total": 108081,
+  "engine": "pymupdf",
+  "skipped": "reference list skimmed from [34] onward"
  },
- "legacy_report": "SOURCE: \"Reproducible scaling laws for contrastive language-image learning\". Authors: Mehdi Cherti, Romain Beaumont, Ross Wightman, Mitchell Wortsman, Gabriel Ilharco, Cade Gordon, Christoph Schuhmann, Ludwig Schmidt, Jenia Jitsev (LAION, UC Berkeley, HuggingFace, U. Washington, Juelich Supercomputing Center). Venue: the PDF does not name a conference. It is stamped \"arXiv:2212.07143v2 [cs.LG] 13 Jul 2024\", so cite it as a preprint (arXiv v2, 2024; v1 Dec 2022). The filename says 2023. If you want a conference venue, it has to come from somewhere other than this PDF.\n\nCOVERAGE: Read all 107,916 of 107,916 chars (pp. 1–40). That covers the main text, the limitations, Appendix A (distributed training), and Appendix B with Tables 2–26, broader impact and author contributions. I skimmed the references only for origins.\n\nCLAIMS\n- claim: Zero-shot classification scales better with OpenAI's WIT-400M data than with LAION. Fit form is E = βC^α, where E is error and C is total compute in GMAC per sample × samples seen. The fit is on the Pareto frontier.\n  number: ImageNet α_openCLIP −0.11 vs α_CLIP −0.16; robustness α −0.13 vs −0.24\n  setup: Zero-shot top-1. OpenCLIP ViT-B/32 to g/14 on LAION-80M/400M/2B, 3B/13B/34B samples seen. OpenAI CLIP B/32, B/16, L/14 on WIT-400M. Compute axis is binned and the best model in each bin is kept. Robustness is the average over ImageNet-V2, R, Sketch, ObjectNet and A.\n  quote: \"we measure scaling coefficients αopenCLIP = −0.11 and αCLIP = −0.16 for zero-shot top-1 ImageNet and αopenCLIP = −0.13 and αCLIP = −0.24 for ImageNet robustness datasets performance\"\n  where: p.7\n- claim: Zero-shot retrieval reverses this: LAION scales better than WIT.\n  number: MS-COCO α_openCLIP −0.08 vs α_CLIP −0.05; Flickr30K −0.19 vs −0.10\n  setup: Image retrieval, error = 100 − Recall@5. Karpathy test splits. Cosine similarity ranking.\n  quote: \"We measure scaling coefficientsαopenCLIP = −0.08 and αCLIP = −0.05 for zero-shot retrieval on MS-COCO andαopenCLIP = −0.19 and αCLIP = −0.10 for Flickr30K. In contrast to zero-shot accuracy, retrieval performance shows a scaling advantage for OpenCLIP pre-trained on LAION-400M/2B\"\n  where: p.7\n- claim: The authors' hypothesis for the reversal is that LAION was filtered by CLIP ViT-B/32 image-text similarity, which may suit retrieval, while WIT's curation may lean toward ImageNet. They did not test this.\n  number: none\n  setup: The authors propose testing it by filtering with a stronger L/14 model.\n  quote: \"LAION-400M/2B was filtered by a pre-trained OpenAI ViT-B/32 model relying on its similarity measurements for image-text pairs, which may have rendered the dataset more suitable for retrieval based tasks\"\n  where: p.11\n- claim: In the headline comparison, LAION-2B matches WIT on ImageNet at L/14 and is far ahead on COCO retrieval.\n  number: CLIP WIT-400M L/14: 75.5 IN / 55.8 VTAB+ / 61.1 COCO; LAION-2B L/14: 75.2 / 54.6 / 71.1; LAION-2B H/14: 78.0 / 56.4 / 73.4\n  setup: Zero-shot at 224 px. VTAB+ is the average of 35 datasets. COCO is image retrieval R@5.\n  quote: \"CLIP [55] WIT-400M L/14 75.5 55.8 61.1 Ours LAION-2B L/14 75.2 54.6 71.1 Ours LAION-2B H/14 78.0 56.4 73.4\"\n  where: p.2, Table 1\n- claim: The best measured zero-shot ImageNet result is 78%, from ViT-H/14 on LAION-2B.\n  number: 78% (77.97 in Table 19)\n  setup: ViT-H/14, LAION-2B, 34B samples seen, the largest compute in the study.\n  quote: \"The strongest ImageNet accuracy (78%) is obtained with the largest total pre-training compute, using ViT-H/14 pre-trained on LAION-2B data scale and 34B samples seen.\"\n  where: p.7\n- claim: Best measured retrieval scores, all from H/14 on LAION-2B at 34B samples seen.\n  number: COCO image R@5 73.43; COCO text R@5 86.04; Flickr image R@5 94.10; Flickr text R@5 99.30\n  setup: Zero-shot.\n  quote: \"ViT-H/14 34B - - 73.43\" (Table 21); \"ViT-H/14 34B - - 86.04\" (Table 22); \"ViT-H/14 34B - - 94.10\" (Table 23); \"ViT-H/14 34B - - 99.30\" (Table 24)\n  where: pp.38–39\n- claim: Bottlenecks. Small models see no gain from moving 400M to 2B data unless samples seen is large. L/14 on 400M stops improving from 13B to 34B samples seen.\n  number: ImageNet zero-shot, B/32: 400M 64.06 vs 2B 66.47 at 34B seen; 63.23 vs 62.53 at 13B seen\n  setup: Table 19.\n  quote: \"OpenCLIP ViT-B/32 and ViT-B/16 models show no change or deterioration of performance when increasing data scale from 400M to 2B when using a smaller samples seen scale (3B or 13B)\"; Table 19 \"ViT-B/32 ... 13B 56.46 63.23 62.53 34B 56.43 64.06 66.47\"\n  where: p.7; p.37\n- claim: Extrapolated predictions. These are predicted, not measured.\n  number: g/14 at 2B data and 34B seen: 79.1%. At 68B seen: H/14 79.7%, g/14 80.7%, G/14 81.9% ImageNet. G/14 at 68B: 76.99 COCO R@5.\n  setup: Pareto-frontier power-law fit. In Table 4 only rows marked * are measured.\n  quote: \"assuming 68B samples seen we estimate top-1 accuracies of 79.7%, 80.7%, and 81.9% for ViT-H/14, ViT-g/14 and ViT-G/14\"; \"G/14 (68B samples seen), we predict 81.92% zero-shot top-1 accuracy on ImageNet and 76.99% image retrieval Recall@5 on MS-COCO\"\n  where: p.7; p.23\n- claim: Linear probes also follow power laws on ImageNet, CIFAR-100 (10-shot, 25-shot and full) and VTAB. CLIP-WIT keeps an edge on ImageNet probes at matched scale.\n  number: Full ImageNet probe: L/14 13B CLIP-WIT 84.39; L/14 13B LAION-400M 81.77; H/14 34B LAION-2B 84.85\n  setup: Features cached, no augmentation. Softmax regression with Adam, batch 256, sweep over lr and epochs. Fig. 2 fit: E = 7.68·C^−0.13 (OpenCLIP) vs 34.38·C^−0.20 (CLIP). The extraction drops the minus sign.\n  quote: \"ViT-L/14 13B CLIP-WIT 73.77 73.51 77.67 84.39\"; \"ViT-H/14 34B LAION-2B 75.96 75.79 79.07 84.85\"\n  where: pp.8–9, p.28 Table 5\n- claim: ImageNet fine-tuning of OpenCLIP encoders reaches 82.6–88.5% top-1.\n  number: 82.6–88.5%; best is H/14 at 336 px, IN-12k intermediate, 88.50\n  setup: timm. Encoders from the 2B-data, 34B-seen runs. Either direct fine-tuning or ImageNet-12k first.\n  quote: \"The OpenCLIP models range from 82.6 to 88.5% top-1 on ImageNet\"\n  where: p.9; Table 9 p.29\n- claim: Compute. Up to 1520 A100s. The whole study used about 1.06M GPU-hours and 370 MWh. H/14 alone took 229,665 GPU-h.\n  number: Total 1058318 GPU-h / 370.41 MWh\n  setup: JUWELS Booster plus Stability AI. Global batch 86–88K.\n  quote: \"H/14 LAION-2B 96(79104) 5e-4 2K 34B 824 279 229665/80.38\"; \"Total 1058318/370.41\"\n  where: p.36 Table 18\n- claim: Control experiments show the trends are not artefacts. Batch size moves results by 0.2–0.5%. Trial-to-trial variance is about 0.1%. A 400M subset of LAION-2B matches LAION-400M (63.56 vs 63.37).\n  number: 0.2–0.5%; ~0.1%\n  setup: B/32 (and B/16 and L/14 for the batch control), LAION-400M, 13B samples seen.\n  quote: \"observe a difference of0.2 − 0.5% across different settings\"; \"The result suggests a small variance of around 0.1%\"\n  where: p.5; p.31\n- claim: Test-set duplicates in LAION are around 1%, higher for ImageNet-R and Sketch. Removing them barely changes accuracy.\n  number: ImageNet-R 3.80%, Sketch 5.15%; ImageNet-R accuracy 89.32 to 89.21\n  setup: pHash DCT against LAION-400M, H/14.\n  quote: \"Overall, the ratio of detected duplicates is around 1%, except on ImageNet-R (3.80%) and ImageNet-Sketch (5.15%)\"\n  where: p.21\n- claim: Large models hit loss spikes under fp16. Switching to bfloat16 fixed it.\n  number: none\n  setup: L/14, H/14, g/14.\n  quote: \"We fixed the issue by switching from mixed precision with float16 to mixed precision with bfloat16.\"\n  where: p.6\n- claim: The class-vs-retrieval pattern also holds for OpenAI's ResNet CLIPs.\n  number: CLIP ResNet ImageNet fit C^−0.13, COCO C^−0.05\n  setup: Fig. 12.\n  quote: \"both OpenAI's ResNets and ViT trained on WIT demonstrate stronger scaling on zero-shot classification but worse scaling on retrieval than openCLIP trained on LAION datasets\"\n  where: p.32\n\nLIMITS: The authors concede that the scale space is sampled sparsely, that there was no full hyperparameter tuning at large scale, and that there are only 3 OpenAI CLIP points (B/32, B/16, L/14) because WIT is private. The duplicate check is simple. H/14 and g/14 each have only one configuration. The data explanation for the WIT/LAION difference is a hypothesis; it is not isolated experimentally. The study does not give compute-optimal (Chinchilla-style) allocation and does not separate vision and text encoder scaling; both are listed as future work. Extrapolations are predictions, and the authors warn of saturation. The predicted 79.1% sits below the private-data systems BASIC 85.7, LiT 85.2 and CoCa 86.1. The study covers contrastive dual encoders only, and zero-shot results are at 224 px. What has dated: LAION-5B was later withdrawn by LAION for content-safety review, a fact not in this PDF that should be checked. Newer data-curation work (DataComp, MetaCLIP, SigLIP) postdates the paper. Code and models are described as \"will be available\".\n\nBUILDS ON: CLIP (Radford et al. [55], 2021); ALIGN (Jia et al. [33], 2021); Kaplan et al. scaling laws [35] (2020); Hoffmann et al. compute-optimal [28] (2022); Zhai et al. Scaling ViTs [82] (2022); Hestness et al. [26] (2017); LAION-400M [65] (2021) and LAION-5B [64] (NeurIPS 2022 D&B); OpenCLIP (Ilharco et al. [32], 2021); InfoNCE (Oord et al. [52], 2018); WiSE-FT patching (Ilharco et al. [31], 2022); BASIC [54], LiT [84], CoCa [80].\n\nCODE: There is no code listing. One method detail matters for the notes on sharded contrastive loss. Before sharding, the full N×N similarity matrix \"totalling to 4 GB of VRAM in FP32\"; after sharding, with local batch 256, it takes \"64 MB\". Gradients need \"torch.distributed.nn.functional.all_gather\" because \"PyTorch's standardtorch.distributed.all_gather can not be differentiated through\" (pp.19–20).\n\nFIGURES:\n- Fig. 1 (p.3). Compute vs zero-shot ImageNet and robustness error (1a), and COCO and Flickr retrieval error (1b), with the OpenCLIP and CLIP fit lines. The opposite slopes for classification and retrieval are visible at a glance. This is the best figure for both target notes.\n- Fig. 8 (p.23). Extrapolation to H/14, g/14 and G/14 at 68B samples seen, for ImageNet and COCO. Shows what a prediction from a scaling law looks like.\n- Fig. 2 (p.8). Linear probe scaling on ImageNet and CIFAR-100, few-shot and full.\n- Fig. 12 (p.33). The ResNet CLIP control, showing the effect is not tied to the architecture.\n- Fig. 6 (p.20). DDP scaling efficiency, 84.35% at 1024 GPUs. Optional.\n\nPROBLEMS: The text extraction drops minus signs and superscripts in the fit labels inside figures, so \"E = 5.86 * C 0.11\" really means C^−0.11. The body text on p.7 gives the signed values, so quote from there. Some words run together (e.g. \"pretrainedonLAION-400M/2B\"). The PDF contains no embedded instructions. No venue is printed."
+ "type": "empirical",
+ "question": "How do zero-shot, retrieval, linear-probe and fine-tuning performance of CLIP models scale with model size, data size and samples seen when trained on public LAION data with OpenCLIP?",
+ "hypothesis": "The pre-training dataset, not the architecture or recipe, explains why OpenCLIP (LAION) and OpenAI CLIP (WIT-400M) show different scaling by task.",
+ "contributions": [
+  "Power-law scaling laws for CLIP across zero-shot classification, retrieval, linear probing and fine-tuning",
+  "Evidence that scaling differs between LAION and WIT-400M despite matched architectures and similar recipes",
+  "Open release of evaluation workflow and all models including the largest public CLIP models"
+ ],
+ "method": {
+  "summary": "CLIP models (ViT-B/32 to g/14) trained with OpenCLIP from scratch on LAION-80M/400M/2B subsets at 3B/13B/34B samples seen, evaluated downstream. Power laws E = beta*C^alpha are fit on the Pareto frontier of binned total compute (GMAC per sample x samples seen) and compared with OpenAI CLIP models on WIT-400M.",
+  "task": "contrastive language-image pre-training and scaling-law fitting",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "LAION-2B (English subset of LAION-5B)",
+    "role": "pretrain",
+    "size": "2.32B image-text pairs (Table 2 lists 2.3B)",
+    "split": "full, plus a random 400M subset for a control",
+    "source": "Common Crawl, filtered with OpenAI ViT-B/32 similarity",
+    "preprocessing": null
+   },
+   {
+    "name": "LAION-400M",
+    "role": "pretrain",
+    "size": "407M English pairs (Table 2); text also says 414M",
+    "split": "full",
+    "source": "Common Crawl, filtered with OpenAI ViT-B/32; not a subset of LAION-2B",
+    "preprocessing": null
+   },
+   {
+    "name": "LAION-80M",
+    "role": "pretrain",
+    "size": "80M",
+    "split": "subset of LAION-400M",
+    "source": "LAION-400M",
+    "preprocessing": null
+   },
+   {
+    "name": "ImageNet-1k and robustness sets (V2, R, Sketch, ObjectNet, A)",
+    "role": "eval",
+    "size": "ImageNet test 50,000; V2 10,000; R 30,000; Sketch 50,889; ObjectNet 18,574; A 7,500 (Table 26)",
+    "split": "test",
+    "source": "public",
+    "preprocessing": null
+   },
+   {
+    "name": "VTAB+",
+    "role": "eval",
+    "size": "35 tasks",
+    "split": "test",
+    "source": "public",
+    "preprocessing": null
+   },
+   {
+    "name": "MS-COCO and Flickr30K",
+    "role": "eval",
+    "size": "MS-COCO 5,000 test; Flickr30K 1,000 test (Table 26)",
+    "split": "test splits from Karpathy and Fei-Fei [36]",
+    "source": "public",
+    "preprocessing": null
+   },
+   {
+    "name": "ImageNet-12k",
+    "role": "train",
+    "size": "12M train, 470K val, 12K classes",
+    "split": "subset of ImageNet-22k (14M) for intermediate fine-tuning",
+    "source": "ImageNet-22k",
+    "preprocessing": "classes with few examples filtered out"
+   }
+  ],
+  "models": [
+   {
+    "name": "OpenCLIP ViT-B/32",
+    "role": "proposed",
+    "params": "151M",
+    "architecture": "CLIP, ViT image tower 768 width, text 512",
+    "init_from": "scratch",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "12 / 12",
+    "hidden": "768 / 512",
+    "heads": null,
+    "context": null,
+    "other": {
+     "embedding": "512",
+     "GMAC": "7.40"
+    }
+   },
+   {
+    "name": "OpenCLIP ViT-B/16",
+    "role": "proposed",
+    "params": "150M",
+    "architecture": "CLIP",
+    "init_from": "scratch",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "12 / 12",
+    "hidden": "768 / 512",
+    "heads": null,
+    "context": null,
+    "other": {
+     "GMAC": "20.57"
+    }
+   },
+   {
+    "name": "OpenCLIP ViT-L/14",
+    "role": "proposed",
+    "params": "428M",
+    "architecture": "CLIP",
+    "init_from": "scratch",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "24 / 12",
+    "hidden": "1024 / 768",
+    "heads": null,
+    "context": null,
+    "other": {
+     "GMAC": "87.73"
+    }
+   },
+   {
+    "name": "OpenCLIP ViT-H/14",
+    "role": "proposed",
+    "params": "986M",
+    "architecture": "CLIP",
+    "init_from": "scratch",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "32 / 24",
+    "hidden": "1280 / 1024",
+    "heads": null,
+    "context": null,
+    "other": {
+     "GMAC": "190.97"
+    }
+   },
+   {
+    "name": "OpenCLIP ViT-g/14",
+    "role": "proposed",
+    "params": "1.37B",
+    "architecture": "CLIP",
+    "init_from": "scratch",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "40 / 24",
+    "hidden": "1408 / 1024",
+    "heads": null,
+    "context": null,
+    "other": {
+     "GMAC": "290.74"
+    }
+   },
+   {
+    "name": "ViT-G/14 (Table 25 only; extrapolated, not trained)",
+    "role": "evaluated",
+    "params": "2.54B",
+    "architecture": "CLIP",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "48 / 32",
+    "hidden": "1664 / 1280",
+    "heads": null,
+    "context": null,
+    "other": {
+     "GMAC": "532.92"
+    }
+   },
+   {
+    "name": "OpenAI CLIP ViT-B/32, B/16, L/14 (WIT-400M)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "CLIP",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "released OpenAI models; ResNets added in Fig 12"
+    }
+   }
+  ],
+  "training": {
+   "objective": "InfoNCE",
+   "optimizer": "AdamW, beta1 0.9, beta2 0.98",
+   "lr": "1e-3 (global batch ~86-88K), 5e-4 (batch 32K and for H/14, g/14); per run in Table 18",
+   "lr_schedule": "cosine annealing, separate run per samples-seen scale",
+   "warmup": "2K or 10K steps per Table 18",
+   "batch_size": "global 32,768 to 90,112 (Table 18); 86-88K for most large runs",
+   "steps": null,
+   "epochs": "inferred: 13B samples on 400M data is 32 epochs (Table 12 caption)",
+   "tokens": "3B, 13B, 34B samples seen",
+   "seq_len": null,
+   "precision": "mixed precision; bfloat16 for L/14, H/14, g/14 after float16 loss spikes",
+   "weight_decay": "0.2",
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "up to 1520 A100 GPUs; JUWELS Booster (A100 40GB) and Stability AI AWS cluster",
+   "compute": "Total 1,058,318 GPU-hours, 370.41 MWh (Table 18)",
+   "wall_clock": "per-run hours in Table 18, e.g. H/14 279 h on 824 GPUs",
+   "seeds": "one trial per config; two trials of B/32 13B gave 63.28 and 63.67",
+   "other": {
+    "data parallel": "PyTorch DDP, sharded InfoNCE with differentiable all_gather",
+    "training sampling": "resampling a fixed number of samples per virtual step instead of epochs, 0.1-0.3% difference vs full shuffling",
+    "gradient fixes tried without success": "lower lr, other schedule, gradient clipping, extra norm layers, scaled cosine attention",
+    "linear probe": "Adam, batch 256, sweep lr {0.1,0.01,0.001} x epochs {10,20,40}",
+    "joint fine-tune on 8 tasks": "2000 iterations, batch 128, lr 1e-5, cosine, 200 warmup, AdamW, wd 0.1, vision encoder only, frozen zero-shot heads",
+    "ImageNet fine-tune": "timm; Tables 10 and 11 list per-size lr, batch, epochs 50/60, layer-wise lr decay, EMA, label smoothing 0.1, stoch depth"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single run per configuration",
+   "prompting": "pre-defined prompt templates per class from prior work [55, 84], class embeddings averaged and L2-normalised",
+   "retrieval": "cosine similarity between image and text embeddings, Recall@5",
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "zero-shot top-1 accuracy",
+     "definition": "argmax cosine similarity to averaged L2-normalised prompt embeddings",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Recall@5 (image and text retrieval)",
+     "definition": "top-5 ranked by cosine similarity on MS-COCO and Flickr30K test splits of [36]; scaling error = 100 - Recall@5",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "power-law exponent alpha",
+     "definition": "fit of E = beta*C^alpha on the Pareto frontier after binning total compute (GMAC per sample x samples seen) and taking the best model per bin",
+     "unit": "dimensionless",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "OpenAI CLIP B/32, B/16, L/14 on WIT-400M"
+   ],
+   "protocol": "Fits on few points (low sampling density); control experiments for batch size, 400M subset, trial variance, resampling; pHash duplication check"
+  },
+  "availability": {
+   "code": "https://github.com/LAION-AI/scaling-laws-openclip (stated as will be available)",
+   "weights": "all models to be released (stated)",
+   "data": "LAION-400M and LAION-5B public"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.batch_size",
+    "quote": "global batch sizes in the range of 86-88K samples",
+    "where": "Sec 3.2"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Zero-shot ImageNet error scales with a steeper exponent for OpenAI WIT-400M CLIP than OpenCLIP on LAION",
+   "kind": "measured",
+   "source": null,
+   "metric": "alpha OpenCLIP ImageNet",
+   "value": -0.11,
+   "unit": "exponent",
+   "baseline_value": -0.16,
+   "n": null,
+   "setup": "Zero-shot top-1 ImageNet error vs total compute (GMAC per sample x samples seen), power-law fit on Pareto frontier; OpenCLIP B/32-g/14 on LAION-80M/400M/2B vs OpenAI B/32, B/16, L/14",
+   "quote": "we measure scaling coefficients αopenCLIP = −0.11 and αCLIP = −0.16 for zero-shot top-1 ImageNet",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.1, p7"
+  },
+  {
+   "claim": "Same on the average of five ImageNet robustness sets",
+   "kind": "measured",
+   "source": null,
+   "metric": "alpha OpenCLIP robustness",
+   "value": -0.13,
+   "unit": "exponent",
+   "baseline_value": -0.24,
+   "n": null,
+   "setup": "Average error on ImageNet-V2, R, Sketch, ObjectNet, A; same fit",
+   "quote": "αopenCLIP = −0.13 and αCLIP = −0.24 for ImageNet robustness datasets performance",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.1, p7"
+  },
+  {
+   "claim": "Zero-shot MS-COCO image retrieval scales more steeply for OpenCLIP on LAION than for OpenAI CLIP",
+   "kind": "measured",
+   "source": null,
+   "metric": "alpha OpenCLIP COCO",
+   "value": -0.08,
+   "unit": "exponent",
+   "baseline_value": -0.05,
+   "n": null,
+   "setup": "Error = 100 - Recall@5, MS-COCO image retrieval, Pareto-frontier fit",
+   "quote": "αopenCLIP = −0.08 and αCLIP = −0.05 for zero-shot retrieval on MS-COCO",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2, p7"
+  },
+  {
+   "claim": "Flickr30K retrieval likewise favours LAION scaling",
+   "kind": "measured",
+   "source": null,
+   "metric": "alpha OpenCLIP Flickr30K",
+   "value": -0.19,
+   "unit": "exponent",
+   "baseline_value": -0.1,
+   "n": null,
+   "setup": "Error = 100 - Recall@5, Flickr30K, same fit",
+   "quote": "αopenCLIP = −0.19 and αCLIP = −0.10 for Flickr30K",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2, p7"
+  },
+  {
+   "claim": "Largest trained model reaches 78.0% zero-shot ImageNet, similar to OpenAI L/14 at 75.5 vs OpenCLIP L/14 75.2",
+   "kind": "measured",
+   "source": null,
+   "metric": "zero-shot ImageNet top-1",
+   "value": 78.0,
+   "unit": "%",
+   "baseline_value": 75.5,
+   "n": null,
+   "setup": "OpenCLIP ViT-H/14, LAION-2B, 34B samples seen, 224 px",
+   "quote": null,
+   "table": "Table 1, row Ours LAION-2B H/14, column ImageNet",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "OpenCLIP L/14 LAION-2B beats OpenAI L/14 on COCO image retrieval Recall@5 at similar ImageNet accuracy",
+   "kind": "measured",
+   "source": null,
+   "metric": "MS-COCO image retrieval R@5",
+   "value": 71.1,
+   "unit": "%",
+   "baseline_value": 61.1,
+   "n": null,
+   "setup": "ViT-L/14, LAION-2B (34B seen) vs WIT-400M, zero-shot, 224 px",
+   "quote": null,
+   "table": "Table 1, row Ours LAION-2B L/14, column COCO",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "L/14 on LAION-2B at 13B samples seen on COCO image retrieval R@5",
+   "kind": "measured",
+   "source": null,
+   "metric": "MS-COCO image retrieval R@5",
+   "value": 69.16,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ViT-L/14, LAION-2B, 13B samples seen",
+   "quote": null,
+   "table": "Table 21, row ViT-L/14 13B, column LAION-2B",
+   "note": null,
+   "where": "Table 21"
+  },
+  {
+   "claim": "Extrapolated zero-shot ImageNet accuracy of ViT-G/14 at 68B samples seen",
+   "kind": "measured",
+   "source": null,
+   "metric": "predicted ImageNet top-1",
+   "value": 81.9,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Power-law extrapolation, a prediction not a measurement",
+   "quote": "estimate 81.9% zero-shot top-1 accuracy on ImageNet for a ViT-G/14",
+   "table": null,
+   "note": "Table 4 prints 81.92",
+   "where": "Conclusion"
+  },
+  {
+   "claim": "Predicted ImageNet accuracy of ViT-g/14 at 34B samples seen",
+   "kind": "measured",
+   "source": null,
+   "metric": "predicted ImageNet top-1",
+   "value": 79.1,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Extrapolation from fit, LAION-2B, 34B seen",
+   "quote": "estimate of 20.9% (79.1% top-1 accuracy) on ImageNet",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.1"
+  },
+  {
+   "claim": "Bottleneck: B/32 and B/16 gain nothing from 2B over 400M at 13B samples seen but gain at 34B",
+   "kind": "measured",
+   "source": null,
+   "metric": "ImageNet zero-shot B/32 LAION-2B 34B",
+   "value": 66.47,
+   "unit": "%",
+   "baseline_value": 64.06,
+   "n": null,
+   "setup": "ViT-B/32 zero-shot; at 13B: LAION-400M 63.23 vs LAION-2B 62.53",
+   "quote": null,
+   "table": "Table 19, row ViT-B/32 34B, column LAION-2B",
+   "note": null,
+   "where": "Table 19"
+  },
+  {
+   "claim": "Total pre-training cost of the study",
+   "kind": "measured",
+   "source": null,
+   "metric": "GPU-hours",
+   "value": 1058318,
+   "unit": "GPU-h",
+   "baseline_value": null,
+   "n": null,
+   "setup": "All runs in Table 18, with 370.41 MWh",
+   "quote": null,
+   "table": "Table 18, row Total",
+   "note": null,
+   "where": "Table 18"
+  },
+  {
+   "claim": "Batch size 32K to 86-88K changes zero-shot ImageNet by 0.2-0.5%",
+   "kind": "measured",
+   "source": null,
+   "metric": "batch-size effect",
+   "value": 0.5,
+   "unit": "points (upper bound)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "B/32, B/16, L/14 on LAION-400M, 13B samples seen",
+   "quote": "observe a difference of 0.2−0.5% across different settings",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.2"
+  },
+  {
+   "claim": "Trial-to-trial variance of reference B/32",
+   "kind": "measured",
+   "source": null,
+   "metric": "two trials",
+   "value": 0.39,
+   "unit": "points difference",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ViT-B/32 LAION-400M 13B, trials 63.28 and 63.67",
+   "quote": null,
+   "table": "Table 14, rows 1 and 2",
+   "note": "text says around 0.1%; the printed trials differ by 0.39",
+   "where": "Table 14"
+  },
+  {
+   "claim": "Linear-probe scaling holds on ImageNet, CIFAR-100 and VTAB with log-log linear trends",
+   "kind": "measured",
+   "source": null,
+   "metric": "ImageNet full linear probe, ViT-H/14 LAION-2B 34B",
+   "value": 84.85,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Full dataset linear probe, ViT-H/14, 34B seen",
+   "quote": null,
+   "table": "Table 5, row ViT-H/14 34B, column ImageNet Full",
+   "note": null,
+   "where": "Table 5"
+  },
+  {
+   "claim": "Fine-tuned OpenCLIP models reach up to 88.5% ImageNet top-1",
+   "kind": "measured",
+   "source": null,
+   "metric": "ImageNet top-1 after fine-tuning",
+   "value": 88.5,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Range 82.6 to 88.5; best is ViT-H/14 336 px with IN-12k intermediate fine-tune",
+   "quote": "The OpenCLIP models range from 82.6 to 88.5% top-1 on ImageNet",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.4"
+  },
+  {
+   "claim": "Duplication: ImageNet-Sketch overlap with LAION-400M by pHash",
+   "kind": "measured",
+   "source": null,
+   "metric": "overlap",
+   "value": 5.15,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "pHash DCT; removing duplicates changes ViT-H/14 ImageNet-Sketch zero-shot from 66.57 to 66.59",
+   "quote": null,
+   "table": "Table 3, row ImageNet Sketch",
+   "note": null,
+   "where": "Table 3"
+  }
+ ],
+ "limits": [
+  "Sampling density across scales is low, and only 3 OpenAI CLIP models (plus ResNets in Fig 12) are available for comparison since WIT-400M is private",
+  "No full hyper-parameter tuning at large scale; control experiments rely on few settings at early stages",
+  "Duplication check is a simple pHash test and may miss duplicates",
+  "The dataset-composition explanation for the retrieval/classification reversal is a hypothesis that was not tested",
+  "Fits give extrapolations only near measured scales; saturation is possible",
+  "H/14 and g/14 only measured at one point each (34B and 13B on LAION-2B)",
+  "Batch size differs from OpenAI's original recipe (86-88K vs 32K)"
+ ],
+ "practices": [],
+ "terms": [],
+ "lineage": [
+  {
+   "work": "Learning transferable visual models from natural language supervision (CLIP)",
+   "year": 2021,
+   "arxiv": "2103.00020",
+   "relation": "extends",
+   "note": "Training recipe, eval setup and OpenAI baseline models",
+   "quote": null
+  },
+  {
+   "work": "OpenCLIP (Ilharco et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Training code used",
+   "quote": null
+  },
+  {
+   "work": "LAION-5B",
+   "year": 2022,
+   "arxiv": "2210.08402",
+   "relation": "uses-data",
+   "note": "Pre-training data and VTAB+ eval set",
+   "quote": null
+  },
+  {
+   "work": "LAION-400M",
+   "year": 2021,
+   "arxiv": "2111.02114",
+   "relation": "uses-data",
+   "note": "Pre-training data",
+   "quote": null
+  },
+  {
+   "work": "Scaling laws for neural language models (Kaplan et al.)",
+   "year": 2020,
+   "arxiv": "2001.08361",
+   "relation": "uses-method",
+   "note": "Power-law form",
+   "quote": null
+  },
+  {
+   "work": "Training compute-optimal LLMs (Hoffmann et al.)",
+   "year": 2022,
+   "arxiv": "2203.15556",
+   "relation": "uses-method",
+   "note": "Per-duration cosine schedule, compute-optimal framing",
+   "quote": null
+  },
+  {
+   "work": "Scaling vision transformers (Zhai et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "vision scaling laws",
+   "quote": null
+  },
+  {
+   "work": "Patching open-vocabulary models by interpolating weights (Ilharco et al.)",
+   "year": 2022,
+   "arxiv": "2208.05592",
+   "relation": "uses-method",
+   "note": "Joint fine-tune and patching",
+   "quote": null
+  },
+  {
+   "work": "BEiT (Bao et al.)",
+   "year": 2021,
+   "arxiv": "2106.08254",
+   "relation": "uses-method",
+   "note": "Layer-wise lr decay and two-stage ImageNet fine-tune",
+   "quote": null
+  },
+  {
+   "work": "ALIGN (Jia et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "related",
+   "note": "private-data scaling",
+   "quote": null
+  },
+  {
+   "work": "LiT, BASIC, CoCa, LiMoE, PaLI, Flamingo",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "larger private multimodal models contrasted with this open study",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Relationship between total training compute and performance in zero-shot classification (1a) and retrieval (1b)",
+   "page": 3,
+   "why": "Shows the crossing of OpenCLIP and OpenAI CLIP slopes by task"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Zero-shot ImageNet, VTAB+ and COCO retrieval at 224 px",
+   "page": 2,
+   "why": "Headline numbers for L/14 and H/14 against OpenAI L/14"
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 4.1",
+   "snippet": "E = beta * C^alpha, fit on Pareto frontier after binning compute",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "LAION-400M size printed as 414M in text and 407M in Table 2",
+  "Text says trial variance about 0.1% but Table 14 trials are 63.28 and 63.67",
+  "Appendix says LAION-5B has over 5.8B pairs while Sec 3.1 says 5 billion",
+  "No conference named in PDF; stamped arXiv v2 13 Jul 2024"
+ ]
 }

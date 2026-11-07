@@ -1,0 +1,280 @@
+{
+ "schema": 1,
+ "key": "1905.12616",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/zellers-2019-defending-against-neural-fake-news.pdf",
+ "bib": {
+  "title": "Defending Against Neural Fake News",
+  "authors": ["Rowan Zellers", "Ari Holtzman", "Hannah Rashkin", "Yonatan Bisk", "Ali Farhadi", "Franziska Roesner", "Yejin Choi"],
+  "first_author": "Zellers",
+  "year": 2019,
+  "venue": "33rd Conference on Neural Information Processing Systems (NeurIPS 2019)",
+  "arxiv": "1905.12616",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 95310,
+  "chars_total": 95310,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "How realistic can controllable neural fake news be, and how can it be detected, given an adversary and a verifier with few examples of that adversary's output?",
+ "hypothesis": "The best generators of neural disinformation are also the best discriminators of it, because a left-to-right discriminator shares the generator's inductive bias and can find sampling artifacts.",
+ "contributions": [
+  "Grover, a controllable multi-field news generator (domain, date, authors, headline, body)",
+  "RealNews, a 120GB news corpus from Common Crawl",
+  "Human study showing Grover-rewritten propaganda is rated more trustworthy than human-written propaganda",
+  "Discriminator study in a semi-supervised setting: Grover is the best detector of Grover text",
+  "Analysis of exposure bias and nucleus-sampling artifacts, with a release strategy"
+ ],
+ "method": {
+  "summary": "Grover is a GPT2-architecture LM trained on RealNews with randomly partitioned metadata fields so any field can be generated from the others. Generations from Grover-Mega at several nucleus p values are used to train discriminators (Grover, GPT2, BERT, FastText) to separate human from machine news, in paired and unpaired settings. Humans rate Grover output on MTurk.",
+  "task": "controllable news article generation and machine-text detection",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "RealNews",
+    "role": "pretrain",
+    "size": "120 gigabytes without compression after deduplication; 5000 news domains",
+    "split": "Common Crawl Dec 2016 to Mar 2019 for training; April 2019 articles for evaluation",
+    "source": "Common Crawl dumps, limited to the 5000 news domains indexed by Google News",
+    "preprocessing": "Newspaper Python library extracts body and metadata; deduplicated"
+   },
+   {
+    "name": "Discrimination set (April 2019)",
+    "role": "both",
+    "size": "10k machine-generated bodies plus 10k human articles",
+    "split": "10k train (5k per label), 2k validation, 8k test; generations and human articles cut to 1024 BPE tokens",
+    "source": "April 2019 articles from RealNews",
+    "preprocessing": "machine articles generated from the metadata of 10k April 2019 articles"
+   }
+  ],
+  "models": [
+   {"name": "Grover-Base", "role": "proposed", "params": "124M", "architecture": "GPT2 decoder-only transformer", "init_from": null, "tokenizer": "BPE, same vocabulary as GPT2", "vocab": null, "layers": 12, "hidden": null, "heads": null, "context": "1024 tokens", "other": {}},
+   {"name": "Grover-Large", "role": "proposed", "params": "355M", "architecture": "GPT2 decoder-only transformer", "init_from": null, "tokenizer": "BPE, same vocabulary as GPT2", "vocab": null, "layers": 24, "hidden": null, "heads": null, "context": "1024 tokens", "other": {}},
+   {"name": "Grover-Mega", "role": "proposed", "params": "1.5B", "architecture": "GPT2 decoder-only transformer", "init_from": null, "tokenizer": "BPE, same vocabulary as GPT2", "vocab": null, "layers": 48, "hidden": null, "heads": null, "context": "1024 tokens", "other": {"generator_checkpoint": "iteration 800k", "discriminator_init": "iteration 700k checkpoint, [CLS] token at end of article, linear layer for Human/Machine"}},
+   {"name": "GPT2 (124M, 355M)", "role": "baseline", "params": "124M or 355M", "architecture": "pretrained transformer LM, newly added [CLS] token", "init_from": "OpenAI pretrained", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"used_as": "discriminator and as LM baseline in Fig 3"}},
+   {"name": "BERT-Base / BERT-Large (cased)", "role": "baseline", "params": "110M / 340M", "architecture": "bidirectional transformer encoder", "init_from": "pretrained BERT, domain-adapted on RealNews", "tokenizer": "WordPiece", "vocab": null, "layers": null, "hidden": null, "heads": null, "context": "512 extended to 1024 by new position embeddings 513-1024", "other": {}},
+   {"name": "FastText", "role": "baseline", "params": "11M", "architecture": "bag-of-ngram classifier", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}}
+  ],
+  "training": {
+   "objective": "cross-entropy of predicting tokens of field set F1 then F2 (random disjoint partition of fields); each field dropped with prob 10%, all but body dropped with prob 35%. Discriminators: cross-entropy on Human/Machine label",
+   "optimizer": "Adafactor (generator); beta1 = 0.999, update clipping to RMS at most 1. Discriminators: Adam for BERT, Adafactor for GPT2 and Grover",
+   "lr": "1e-4 max (generator); 2e-5 for all discriminators",
+   "lr_schedule": "linear warm-up then decay over remaining iterations (generator)",
+   "warmup": "10,000 iterations (generator); first 20% of iterations (discriminators)",
+   "batch_size": "512 (generator); 64 (discriminators); 256 for BERT domain adaptation",
+   "steps": "800k iterations (Grover-Mega); BERT domain adaptation 50k iterations",
+   "epochs": "roughly 20 epochs through the news dataset (generator); 5 (BERT discriminator); 10 (GPT2 and Grover discriminators)",
+   "tokens": null,
+   "seq_len": "1024",
+   "precision": null,
+   "weight_decay": "0.01",
+   "dropout": null,
+   "regularisation": "auxiliary language modelling loss with coefficient 0.5 for GPT2 and Grover discriminators",
+   "hardware": "256 TPU v3 cores",
+   "compute": "about $25k for Grover-Mega at $0.30 per TPU v3 core-hour and two weeks; data collection $10k in AWS credits",
+   "wall_clock": "two weeks",
+   "seeds": null,
+   "other": {"grid_search": "discriminator hyperparameters chosen after an initial grid search (grid not given)"}
+  },
+  "inference": {
+   "decoding": "Nucleus (top-p) sampling; sample until the field-specific end token",
+   "temperature": null,
+   "top_p": "0.96 for human study; search over {0.9, 0.92, 0.94, 0.96, 0.98, 1.0} for discriminator pairs; 0.95 for appendix examples; uniform in [0.9, 1.0] per article for weak-supervision generations",
+   "max_tokens": "1024 BPE tokens",
+   "samples": "one generation per metadata item; 10k generated for discrimination; 100 articles per category in the human study",
+   "prompting": "context fields in the order domain, date, authors, headline, body, then the start token of the target field",
+   "retrieval": null,
+   "parameters": {"top_p_grid": "0.9, 0.92, 0.94, 0.96, 0.98, 1.0", "top_p_selection": "the pair's reported test accuracy uses the p with the lowest validation accuracy"},
+   "other": {"top_k": "stated in a footnote that nucleus sampling produced better and less-detectable generations than top-k in early experiments; k not given"}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "Perplexity", "definition": "over the article body only, unconditional or conditioned on all metadata, on April 2019 articles", "unit": "perplexity", "higher_is_better": false},
+    {"name": "Unpaired accuracy", "definition": "classify single articles independently as Human or Machine", "unit": "%", "higher_is_better": true},
+    {"name": "Paired accuracy", "definition": "given a real and a machine article with the same metadata, the machine one must get the higher Machine probability", "unit": "%", "higher_is_better": true},
+    {"name": "Human rating", "definition": "style, content and overall trustworthiness on a 1-3 Likert scale by three annotators per article", "unit": "score out of 3", "higher_is_better": true}
+   ],
+   "baselines": ["GPT2 124M and 355M", "BERT-Base and BERT-Large (domain-adapted)", "FastText", "human-written news and propaganda"],
+   "protocol": "single run per cell; no seeds or confidence intervals reported for accuracy; human-rating difference tested (p = 0.01); human raters are qualified Amazon Mechanical Turk workers"
+  },
+  "availability": {
+   "code": "https://rowanzellers.com/grover",
+   "weights": "released to researchers (Zellers, 2019)",
+   "data": null
+  },
+  "prompts": [
+   {"purpose": "human rating: style", "text": "Is the style of this article consistent? 3. Yes, this sounds like an article I would find at an online news source. 2. Sort of, but there are certain sentences that are awkward or strange. 1. No, it reads like it's written by a madman.", "where": "Appendix E.1"},
+   {"purpose": "human rating: content", "text": "Does the content of this article make sense? 3. Yes, this article reads coherently. 2. Sort of, but I don't understand what the author means in certain places. 1. No, I have no (or almost no) idea what the author is trying to say.", "where": "Appendix E.1"},
+   {"purpose": "human rating: overall", "text": "Does the article read like it comes from a trustworthy source? 3. Yes, I feel that this article could come from a news source I would trust. 2. Sort of, but something seems a bit fishy. 1. No, this seems like it comes from an unreliable source.", "where": "Appendix E.1"}
+  ],
+  "evidence": [
+   {"field": "inference.top_p", "quote": "we search over p P t.9, .92, .94, .96, .98, 1.0u.", "where": "footnote 11"}
+  ]
+ },
+ "results": [
+  {
+   "claim": "Grover used as a discriminator detects Grover-Mega text with about 92% accuracy with 5000 machine examples, versus 73% for the best other pretrained discriminators as stated in the text.",
+   "kind": "measured",
+   "source": null,
+   "metric": "unpaired accuracy",
+   "value": 92,
+   "unit": "%",
+   "baseline_value": 73,
+   "n": "5000 machine generations for training",
+   "setup": "Grover-Mega generator at its most adversarial top-p; April 2019 articles; discriminator trained on 5k generations plus unlimited real news",
+   "quote": "Grover, when used in a discriminative setting, performs even better at 92% accuracy",
+   "table": null,
+   "note": "Table 1 gives 91.6 for Grover-Mega vs Grover-Mega unpaired; the 73% does not appear as an unpaired cell for Grover-Mega generations (best other unpaired cell is GPT2 355M at 70.1, BERT-Large 68.0), so it may be the paired or another setting; the text does not say.",
+   "where": "Section 1, Abstract"
+  },
+  {
+   "claim": "Grover-Mega discriminating Grover-Mega generations reaches 91.6% unpaired accuracy.",
+   "kind": "measured",
+   "source": null,
+   "metric": "unpaired accuracy",
+   "value": 91.6,
+   "unit": "%",
+   "baseline_value": 50.0,
+   "n": "8k test articles",
+   "setup": "Table 1, discriminator Grover-Mega 1.5B, generator 1.5B, most adversarial p by validation",
+   "quote": null,
+   "table": "Table 1, row Grover-Mega, column Unpaired generator 1.5B",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Rewritten by Grover-Mega, propaganda's overall trustworthiness rises from 2.19 to 2.42 out of 3.",
+   "kind": "measured",
+   "source": null,
+   "metric": "overall trustworthiness",
+   "value": 2.42,
+   "unit": "score out of 3",
+   "baseline_value": 2.19,
+   "n": "100 articles per category, 3 annotators each",
+   "setup": "Grover-Mega, p=0.96; 5 propaganda sites; MTurk",
+   "quote": "The overall trustworthiness score of propaganda increases from 2.19 to 2.42 (out of 3) when rewritten by Grover.",
+   "table": null,
+   "note": "Statistically significant at p = 0.01 per footnote 9. Machine-written propaganda is consistent with the headline at 2.64 of 3 vs 2.85 for human.",
+   "where": "Section 4, Fig 4"
+  },
+  {
+   "claim": "Discrimination is hardest for nucleus p roughly between 0.94 and 0.98, depending on the discriminator.",
+   "kind": "measured",
+   "source": null,
+   "metric": "unpaired validation accuracy vs p",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Grover-Mega generations; discriminators Grover-Mega, Grover-Large, BERT-Large; Fig 7",
+   "quote": "The results indeed show a sweet spot, roughly between p“0.94 and p“0.98 depending on the discriminator, wherein discrimination is hardest.",
+   "table": null,
+   "note": null,
+   "where": "Section 6, Fig 7"
+  },
+  {
+   "claim": "Grover-Mega's conditional perplexity on April 2019 article bodies is 8.7, and conditioning on metadata lowers perplexity by 0.6 to 0.9 points.",
+   "kind": "measured",
+   "source": null,
+   "metric": "perplexity",
+   "value": 8.7,
+   "unit": "perplexity",
+   "baseline_value": null,
+   "n": null,
+   "setup": "April 2019 RealNews body field, conditional setting (all metadata)",
+   "quote": "with Grover-Mega obtaining 8.7 perplexity in the conditional setting",
+   "table": null,
+   "note": "GPT2 models of the same size are over 5 perplexity points worse than Grover-Base and Grover-Large.",
+   "where": "Section 3.1, Fig 3"
+  },
+  {
+   "claim": "A larger generator drops Grover discriminator accuracy below 81%; a larger discriminator exceeds 98%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "unpaired accuracy",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 1, Grover discriminators vs Grover generators of three sizes",
+   "quote": "If a larger generator is used, accuracy slips below 81%; conversely, if the discriminator is larger, accuracy is above 98%.",
+   "table": null,
+   "note": null,
+   "where": "Section 5.2"
+  },
+  {
+   "claim": "With weak supervision from Grover-Large, 16 to 256 Grover-Mega examples give about 78% accuracy versus about 50% without it; accuracy converges to about 92% with more Grover-Mega examples.",
+   "kind": "measured",
+   "source": null,
+   "metric": "unpaired accuracy",
+   "value": 78,
+   "unit": "%",
+   "baseline_value": 50,
+   "n": "5000 total training generations, x from Grover-Mega",
+   "setup": "Grover-Mega discriminator; missing 5000-x generations from a weaker Grover with p uniform in [0.9, 1.0]",
+   "quote": "weak supervision with between 16 and 256 examples from Grover-Large yields around 78% accuracy, while accuracy remains around 50% without weak supervision",
+   "table": null,
+   "note": null,
+   "where": "Section 5.3, Fig 5"
+  },
+  {
+   "claim": "Training Grover-Mega cost about $25k.",
+   "kind": "measured",
+   "source": null,
+   "metric": "training cost",
+   "value": 25,
+   "unit": "$k",
+   "baseline_value": null,
+   "n": null,
+   "setup": "$0.30 per TPU v3 core-hour, 256 cores, two weeks",
+   "quote": "at a cost of $0.30 per TPU v3 core-hour and two weeks of training, the total cost is $25k",
+   "table": null,
+   "note": null,
+   "where": "Section 7"
+  }
+ ],
+ "limits": [
+  "Only the threat model of a whole article generated from minimal context is studied; comments, edits to real articles, images and video are not.",
+  "Discriminators use distributional features, not evidence; no fact checking.",
+  "The result that Grover detects Grover depends on the verifier seeing generations from the same generator family; a model trained on its own predictions or generating in any order may evade it.",
+  "Adversarial Filtering did not work well for 1024-token sequences.",
+  "Discrimination was limited to 1024 BPE tokens; longer length made discrimination easier.",
+  "Single runs; no seeds or intervals for accuracy.",
+  "Human raters judge style and plausibility, not truth; false positives on real news and social biases mean humans must stay in the loop."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "Neural fake news", "definition": "targeted propaganda that closely mimics the style of real news, generated by a neural language model", "where": "Abstract"},
+  {"term": "Exposure bias", "definition": "models maximizing Equation 1 are trained only conditioned on human-written text, never on their own generations", "where": "Section 6"},
+  {"term": "Unpaired / paired setting", "definition": "unpaired classifies single articles; paired gives a real and a machine article with the same metadata and requires a higher Machine probability for the machine one", "where": "Section 5.1"}
+ ],
+ "lineage": [
+  {"work": "Language models are unsupervised multitask learners (GPT2)", "year": 2019, "arxiv": null, "relation": "extends", "note": "Grover uses the GPT2 architecture and BPE vocabulary", "quote": "building Grover using the same architecture as for GPT2"},
+  {"work": "The curious case of neural text degeneration", "year": 2019, "arxiv": "1904.09751", "relation": "uses-method", "note": "Nucleus (top-p) sampling is the main decoding method", "quote": null},
+  {"work": "BERT", "year": 2018, "arxiv": "1810.04805", "relation": "baseline", "note": "domain-adapted discriminator baseline", "quote": null},
+  {"work": "Adafactor", "year": 2018, "arxiv": null, "relation": "uses-method", "note": "optimizer for Grover-Mega", "quote": null},
+  {"work": "Attention is all you need", "year": 2017, "arxiv": "1706.03762", "relation": "uses-method", "note": "transformer", "quote": null},
+  {"work": "Bag of tricks for efficient text classification (FastText)", "year": 2017, "arxiv": null, "relation": "baseline", "note": "bag-of-ngram baseline", "quote": null},
+  {"work": "HellaSwag", "year": 2019, "arxiv": "1905.07830", "relation": "related", "note": "GPT discriminator outperforms BERT-Base at picking out human text; Adversarial Filtering", "quote": null},
+  {"work": "Common Crawl / Newspaper library", "year": null, "arxiv": null, "relation": "uses-data", "note": "source of RealNews", "quote": null},
+  {"work": "Release strategies and the social impacts of language models (Solaiman et al.)", "year": 2019, "arxiv": "1908.09203", "relation": "related", "note": "release-policy discussion", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 3", "caption": "Language Modeling results on the body field of April 2019 articles, unconditional and conditional", "page": 5, "why": "shows size and metadata effects on perplexity"},
+  {"figure": "Fig 4", "caption": "Human evaluation of style, content and overall trustworthiness; 100 articles per category", "page": 5, "why": "shows machine propaganda rated above human propaganda"},
+  {"figure": "Table 1", "caption": "Results of discriminators versus generators, paired and unpaired, across sizes", "page": 7, "why": "full generator-by-discriminator accuracy grid"},
+  {"figure": "Fig 6", "caption": "Perplexities of Grover-Mega by position at p=1, p=.96 and human text", "page": 8, "why": "exposure bias: random sampling drifts away from human perplexity with length"},
+  {"figure": "Fig 7", "caption": "Unpaired validation accuracy at different nucleus p thresholds", "page": 8, "why": "the sweet spot where detection is hardest"}
+ ],
+ "code": [
+  {"where": "Section 6", "snippet": "The probability of observing a human-written article where all tokens are drawn from the top-p% of the distribution is p^n, where n is the document's length.", "verbatim": false}
+ ],
+ "problems": [
+  "Table 1 text is flattened by the extractor; cell positions inferred from row order (unpaired three generator sizes, then paired three).",
+  "Equations in the cached text have mangled glyphs."
+ ]
+}

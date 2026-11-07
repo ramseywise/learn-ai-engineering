@@ -1,0 +1,551 @@
+{
+ "schema": 1,
+ "key": "2303.08128",
+ "pdf": "ai-engineering/08-multimodal-engineering/sources/suris-2023-vipergpt.pdf",
+ "bib": {
+  "title": "ViperGPT: Visual Inference via Python Execution for Reasoning",
+  "authors": [
+   "Dídac Surís",
+   "Sachit Menon",
+   "Carl Vondrick"
+  ],
+  "first_author": "Surís",
+  "year": 2023,
+  "venue": "preprint",
+  "arxiv": "2303.08128",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 78381,
+  "chars_total": 78381,
+  "engine": "pymupdf",
+  "skipped": "Reference list skimmed only"
+ },
+ "type": "system",
+ "question": "Can a code-generating LLM compose pretrained vision and language modules into per-query Python programs that answer visual queries without any task-specific training?",
+ "hypothesis": "Explicit programmatic composition with an interpreter gives interpretable, logical, training-free visual reasoning that matches or beats end-to-end zero-shot models.",
+ "contributions": [
+  "A framework integrating code-generation models into vision with an API and the Python interpreter",
+  "State-of-the-art zero-shot results on visual grounding, image QA and video QA",
+  "A Python library for program synthesis on visual tasks, to be open-sourced"
+ ],
+ "method": {
+  "summary": "Codex (code-davinci-002) receives an API specification (signatures, docstrings, query-code examples) plus the query and emits a Python function execute_command, which is run by the Python interpreter. Functions call pretrained models (GLIP, X-VLM, MiDaS, BLIP-2, GPT-3). No training or fine-tuning.",
+  "task": "zero-shot visual grounding, compositional image QA, outside-knowledge QA, video causal/temporal QA",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "RefCOCO",
+    "role": "eval",
+    "size": null,
+    "split": "testA (REC)",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "RefCOCO+",
+    "role": "eval",
+    "size": null,
+    "split": "testA (REC)",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "GQA",
+    "role": "eval",
+    "size": null,
+    "split": "test-dev",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "OK-VQA",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "NExT-QA",
+    "role": "eval",
+    "size": null,
+    "split": "multiple-choice version; hard split T/C and full set",
+    "source": null,
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Codex code-davinci-002",
+    "role": "proposed",
+    "params": null,
+    "architecture": "GPT-3 code model, program generator",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GLIP-L",
+    "role": "proposed",
+    "params": null,
+    "architecture": "find, exists",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "MiDaS DPT_Large",
+    "role": "proposed",
+    "params": null,
+    "architecture": "compute_depth",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "BLIP-2 Flan-T5 XXL",
+    "role": "proposed",
+    "params": null,
+    "architecture": "simple_query",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "X-VLM (finetuned for retrieval on MSCOCO)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "verify_property, best_image_match, best_text_match",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-3 text-davinci-003",
+    "role": "proposed",
+    "params": null,
+    "architecture": "llm_query, select_answer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": "API specification (class/method signatures, docstrings, query-code example pairs) followed by the query; per-benchmark subset of the API and benchmark-specific examples (Listings 1-5); optional context given as a comment before generation (Sec 5.3)",
+   "retrieval": null,
+   "parameters": {
+    "modules per benchmark": "RefCOCO: ImagePatch methods except best_text_match and simple_query, plus distance; GQA: Listing 1 up to llm_query, not used; OK-VQA: only simple_query and llm_query; NeXT-QA: VideoSegment, find, exists, best_text_match, simple_query, best_image_match, select_answer"
+   },
+   "other": {
+    "execution": "each program in a generated batch run simultaneously with multiprocessing; producer-consumer design for GPU batching",
+    "video input": "video provided as ordered list of images; frame count and sampling not stated"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "accuracy / IoU",
+     "definition": "Table 1 header reads IoU (%) but caption says accuracy on REC; other tables accuracy",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "OWL-ViT",
+    "GLIP",
+    "ReCLIP",
+    "BLIP-2",
+    "PNP-VQA",
+    "PICa",
+    "Flamingo",
+    "MDETR",
+    "OFA",
+    "LGCN",
+    "LXMERT",
+    "NSM",
+    "CRF",
+    "TRiG",
+    "KAT",
+    "RA-VQA",
+    "REVIVE",
+    "PromptCap",
+    "ATP",
+    "VGT",
+    "HiTeA"
+   ],
+   "protocol": "Single run per benchmark as far as stated; no seeds, sample counts or significance tests reported"
+  },
+  "availability": {
+   "code": "viper.cs.columbia.edu (stated as 'made available')",
+   "weights": null,
+   "data": null
+  },
+  "prompts": [
+   {
+    "purpose": "RefCOCO usage example in API",
+    "text": "# chair at the front\ndef execute_command(image) -> ImagePatch:\n    # Return the chair\n    image_patch = ImagePatch(image)\n    chair_patches = image_patch.find(\"chair\")\n    chair_patches.sort(key=lambda chair: chair.compute_depth())\n    chair_patch = chair_patches[0]\n    # Remember: return the chair\n    return chair_patch",
+    "where": "Appendix B Listing 2"
+   },
+   {
+    "purpose": "Full API specification given to Codex (ImagePatch, VideoSegment, helpers with docstrings and examples)",
+    "text": "See Appendix B, Listing 1 (about 400 lines); not reproduced",
+    "where": "Appendix B Listing 1"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "models",
+    "quote": "The GPT-3 model we use for code generation is the code-davinci-002 one.",
+    "where": "Appendix A"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "ViperGPT beats all zero-shot methods on RefCOCO REC (testA)",
+   "kind": "measured",
+   "source": null,
+   "metric": "IoU",
+   "value": 72.0,
+   "unit": "%",
+   "baseline_value": "58.6 (ReCLIP, best zero-shot)",
+   "n": null,
+   "setup": "zero-shot ViperGPT: code-davinci-002 writes Python from API spec + in-context query-code examples, run with Python interpreter over pretrained modules; RefCOCO REC testA; compared to ReCLIP 58.6, GLIP 55.0, OWL-ViT 30.3",
+   "note": "Table header says IoU (%) while caption says accuracy; supervised OFA is 94.0 and MDETR 90.4",
+   "where": "Table 1",
+   "table": "Table 1, row ViperGPT (ours), column RefCOCO"
+  },
+  {
+   "claim": "ViperGPT on RefCOCO+ (no spatial relations)",
+   "kind": "measured",
+   "source": null,
+   "metric": "IoU",
+   "value": 67.0,
+   "unit": "%",
+   "baseline_value": "60.5 (ReCLIP)",
+   "n": null,
+   "setup": "zero-shot ViperGPT: code-davinci-002 writes Python from API spec + in-context query-code examples, run with Python interpreter over pretrained modules; RefCOCO+ testA",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row ViperGPT (ours), column RefCOCO+"
+  },
+  {
+   "claim": "ViperGPT is best zero-shot on GQA test-dev, 3.4 points over BLIP-2",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 48.1,
+   "unit": "%",
+   "baseline_value": "44.7 (BLIP-2 zero-shot)",
+   "n": null,
+   "setup": "zero-shot ViperGPT: code-davinci-002 writes Python from API spec + in-context query-code examples, run with Python interpreter over pretrained modules; GQA test-dev; modules add simple_query (BLIP-2 Flan-T5 XXL) and best_text_match",
+   "note": "Text says 'best accuracy on GQA among zero-shot models (Table 4)' but GQA is Table 2. Supervised CRF 72.1, NSM 63.0.",
+   "where": "Table 2; Sec 4.2",
+   "table": "Table 2, row ViperGPT (ours), column Accuracy"
+  },
+  {
+   "claim": "ViperGPT on OK-VQA beats all zero-shot methods",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 51.9,
+   "unit": "%",
+   "baseline_value": "50.6 (Flamingo)",
+   "n": null,
+   "setup": "zero-shot ViperGPT: code-davinci-002 writes Python from API spec + in-context query-code examples, run with Python interpreter over pretrained modules; OK-VQA; llm_query = text-davinci-003",
+   "note": "Supervised: PromptCap 58.8, REVIVE 58.0",
+   "where": "Table 3",
+   "table": "Table 3, row ViperGPT (ours), column Accuracy"
+  },
+  {
+   "claim": "On OK-VQA ViperGPT surpasses best previous model using publicly available resources by 6%",
+   "kind": "measured",
+   "source": null,
+   "metric": "gain",
+   "value": 6,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "OK-VQA, comparison with models using publicly available resources",
+   "note": "Which model is the comparator is not named; 51.9 vs Flamingo 50.6 is only 1.3 points, so the 6% claim refers to an unnamed set",
+   "where": "Sec 4.3",
+   "quote": "when compared to models using publicly available resources, it surpasses the best previous model by 6%"
+  },
+  {
+   "claim": "ViperGPT on NeXT-QA hard split temporal, above supervised HiTeA",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 49.8,
+   "unit": "%",
+   "baseline_value": "48.6 (HiTeA, supervised)",
+   "n": null,
+   "setup": "zero-shot ViperGPT: code-davinci-002 writes Python from API spec + in-context query-code examples, run with Python interpreter over pretrained modules; NeXT-QA multiple choice, hard split temporal; select_answer = GPT-3; no video data seen",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row ViperGPT (ours), column Hard Split - T"
+  },
+  {
+   "claim": "ViperGPT on NeXT-QA hard split causal, above supervised HiTeA",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 56.4,
+   "unit": "%",
+   "baseline_value": "47.8 (HiTeA)",
+   "n": null,
+   "setup": "as above, hard split causal",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row ViperGPT (ours), column Hard Split - C"
+  },
+  {
+   "claim": "ViperGPT on NeXT-QA full set, below HiTeA supervised (63.1)",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 60.0,
+   "unit": "%",
+   "baseline_value": "63.1 (HiTeA)",
+   "n": null,
+   "setup": "as above, full set",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row ViperGPT (ours), column Full Set"
+  },
+  {
+   "claim": "Intervention analysis: replacing modules with uninformative defaults shows perception modules and Python operations matter similarly on RefCOCO",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "RefCOCO, relative mIoU decrease when find, exists, verify_property, best_image_match, compute_depth, distance, sort, comparisons, arithmetic are made nonfunctional (bar chart; no numbers in text, axis spans -70 to 0)",
+   "note": null,
+   "where": "Sec 5.2, Fig 7",
+   "quote": "we observe a similar level of importance for perception modules and Python operations"
+  }
+ ],
+ "limits": [
+  "No temperature, sampling, max tokens, number of programs per query or example counts in the prompt are stated, so the run cannot be reproduced exactly from the text",
+  "Dataset sizes and exact splits not given (only RefCOCO/RefCOCO+ testA, GQA test-dev named)",
+  "Appendix A promised experimental setup details but only lists model versions",
+  "Zero-shot still well below supervised on RefCOCO (72.0 vs OFA 94.0) and GQA (48.1 vs CRF 72.1)",
+  "Relies on code-davinci-002 and text-davinci-003, since deprecated",
+  "Prompt examples are benchmark-specific, so 'zero-shot' means no training but tailored API examples",
+  "Paper shows cosmetically cleaned programs (comments and error handling removed)",
+  "In-the-wild results (Fig 1) are qualitative with no quantitative evaluation"
+ ],
+ "practices": [],
+ "terms": [],
+ "lineage": [
+  {
+   "work": "Neural Module Networks (Andreas et al.)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "inspiration; modular compositional vision",
+   "quote": null
+  },
+  {
+   "work": "Johnson et al., Inferring and executing programs",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "program generator/execution engine notation",
+   "quote": null
+  },
+  {
+   "work": "Visual Programming (Gupta and Kembhavi)",
+   "year": 2022,
+   "arxiv": "2211.11559",
+   "relation": "related",
+   "note": "concurrent; pseudocode instructions, custom interpreter",
+   "quote": null
+  },
+  {
+   "work": "Codex (Chen et al.)",
+   "year": 2021,
+   "arxiv": "2107.03374",
+   "relation": "uses-method",
+   "note": "program generator",
+   "quote": null
+  },
+  {
+   "work": "GPT-3 (Brown et al.)",
+   "year": 2020,
+   "arxiv": "2005.14165",
+   "relation": "uses-method",
+   "note": "llm_query, select_answer",
+   "quote": null
+  },
+  {
+   "work": "BLIP-2",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "also used as simple_query module",
+   "quote": null
+  },
+  {
+   "work": "GLIP",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "object detection module",
+   "quote": null
+  },
+  {
+   "work": "X-VLM",
+   "year": 2021,
+   "arxiv": "2111.08276",
+   "relation": "uses-method",
+   "note": "text-image similarity",
+   "quote": null
+  },
+  {
+   "work": "MiDaS",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "depth estimation",
+   "quote": null
+  },
+  {
+   "work": "Flamingo",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "OK-VQA zero-shot baseline",
+   "quote": null
+  },
+  {
+   "work": "Socratic Models (Zeng et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "hand-specified composition of models",
+   "quote": null
+  },
+  {
+   "work": "PAL (Gao et al.)",
+   "year": 2022,
+   "arxiv": "2211.10435",
+   "relation": "related",
+   "note": "Codex for structured reasoning",
+   "quote": null
+  },
+  {
+   "work": "Program of Thoughts (Chen et al.)",
+   "year": 2022,
+   "arxiv": "2211.12588",
+   "relation": "related",
+   "note": "Codex for numerical reasoning",
+   "quote": null
+  },
+  {
+   "work": "RefCOCO / RefCOCO+",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "eval",
+   "quote": null
+  },
+  {
+   "work": "GQA",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "eval",
+   "quote": null
+  },
+  {
+   "work": "OK-VQA",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "eval",
+   "quote": null
+  },
+  {
+   "work": "NExT-QA",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "eval",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "Method. ViperGPT is a framework for solving complex visual queries programmatically.",
+   "page": 2,
+   "why": "shows API spec + query into Codex, then interpreter"
+  },
+  {
+   "figure": "Fig 7",
+   "caption": "Intervention. Importance of vision modules and Python functions measured by drop in mIoU when made nonfunctional.",
+   "page": 6,
+   "why": "module-level diagnosis"
+  },
+  {
+   "figure": "Fig 1",
+   "caption": "In-the-wild results.",
+   "page": 2,
+   "why": "generated code with intermediate values"
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 3.2 / Fig 1",
+   "snippet": "def execute_command(image):\n    image_patch = ImagePatch(image)\n    muffin_patches = image_patch.find(\"muffin\")\n    kid_patches = image_patch.find(\"kid\")\n    return str(len(muffin_patches) // len(kid_patches))",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Text extraction of figures is partly scrambled; pages for figures approximate",
+  "No prompt-injection instructions found"
+ ]
+}

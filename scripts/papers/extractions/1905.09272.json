@@ -1,0 +1,595 @@
+{
+ "schema": 1,
+ "key": "1905.09272",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/henaff-2019-data-efficient-image-recognition-contrastive.pdf",
+ "bib": {
+  "title": "Data-Efficient Image Recognition with Contrastive Predictive Coding",
+  "authors": [
+   "Olivier J. Hénaff",
+   "Aravind Srinivas",
+   "Jeffrey De Fauw",
+   "Ali Razavi",
+   "Carl Doersch",
+   "S. M. Ali Eslami",
+   "Aaron van den Oord"
+  ],
+  "first_author": "Hénaff",
+  "year": 2020,
+  "venue": "ICML 2020 (PMLR 119); arXiv v3 1 Jul 2020",
+  "arxiv": "1905.09272",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 57720,
+  "chars_total": 57720,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can representations learned with an improved Contrastive Predictive Coding objective make image recognition data-efficient, i.e. accurate with few labels?",
+ "hypothesis": "Spatially predictable representations may allow artificial systems to benefit from human-like data-efficiency.",
+ "contributions": [
+  "CPC v2: revisited architecture and training, linear ImageNet Top-1 from 48.7% to 71.5%",
+  "Deep classifiers on CPC features with few labels (78% Top-5 at 1% labels), beating other semi-supervised methods and matching supervised with 2-5x fewer labels",
+  "CPC features beat supervised ResNets with all labels (+3.2% Top-1)",
+  "Transfer to PASCAL VOC 2007 detection: 76.6% mAP, above supervised pre-training"
+ ],
+ "method": {
+  "summary": "CPC v2 pre-trains a patched ResNet-161 encoder on unlabeled ImageNet by predicting patch features in four spatial directions with an InfoNCE loss, with layer norm and heavy per-patch augmentation. The encoder is then frozen or fine-tuned under a linear probe, an 11-block ResNet classifier on 1-100% of labels, or Faster-RCNN on VOC 2007.",
+  "task": "self-supervised image representation learning; linear classification, low-label classification, object detection transfer",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "ImageNet ILSVRC 2012 train (unlabeled)",
+    "role": "pretrain",
+    "size": "full training set",
+    "split": "100% images, 0% labels",
+    "source": "Russakovsky et al. 2015",
+    "preprocessing": "resize 300x300, random 260x260 crop, 6x6 grid of 80x80 patches (stride 36), per-patch augmentation (2 AutoAugment transforms; elastic deformation/shear p=0.2; colour histogram p=0.2; Szegedy colour aug p=0.8; greyscale p=0.25)"
+   },
+   {
+    "name": "ImageNet (labeled subsets)",
+    "role": "train",
+    "size": "1%, 2%, 5%, 10%, 20%, 50%, 100% random subsets",
+    "split": "hyperparameters chosen on separate ~10k held-out train images; test = ILSVRC-2012 validation set",
+    "source": "Russakovsky et al. 2015",
+    "preprocessing": "same augmentation as pre-training; none at test; single crop"
+   },
+   {
+    "name": "PASCAL VOC 2007",
+    "role": "both",
+    "size": "5011 labeled images",
+    "split": "fine-tune on VOC 2007 train, mAP reported",
+    "source": "Everingham et al. 2007",
+    "preprocessing": "colour-dropping and scale augmentation (Doersch 2015)"
+   }
+  ],
+  "models": [
+   {
+    "name": "CPC v2 ResNet-161 encoder (patched) + PixelCNN context",
+    "role": "proposed",
+    "params": "305M (Table 1); combined model with ResNet-33 classifier over 500 million",
+    "architecture": "ResNet-101 third stack widened to 46 blocks, 4096-d feature maps, 512-d bottleneck, layer norm; masked conv context network; linear predictors",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "ResNet-161",
+    "hidden": "4096",
+    "heads": null,
+    "context": null,
+    "other": {
+     "patch": "80x80, stride 36, 6x6 grid from 260x260",
+     "latents": "[6,6,4096] pretrain; 14x14 grid on full 224 image for classification"
+    }
+   },
+   {
+    "name": "CPC v2 ResNet-50",
+    "role": "proposed",
+    "params": "24M",
+    "architecture": "ResNet-50 trained with CPC v2 objective",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "ResNet-50",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "ResNet-33 classifier on CPC features",
+    "role": "proposed",
+    "params": null,
+    "architecture": "11-block ResNet, 4096-d hiddens, 1024-d bottleneck, dropout before final linear",
+    "init_from": "CPC encoder features",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "ResNet-33",
+    "hidden": "4096",
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "ResNet-200 v2 supervised",
+    "role": "baseline",
+    "params": "approximately 60 million",
+    "architecture": "ResNet v2 with dropout",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "200",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "searched": "ResNet-50, -101, -152, -200"
+    }
+   },
+   {
+    "name": "BigBiGAN, AMDIM",
+    "role": "baseline",
+    "params": null,
+    "architecture": "representations evaluated by the authors with a ResNet-33 on top",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "InfoNCE over spatial predictions (4 directions, linear predictors), negatives from other locations and other images in the minibatch; cross-entropy for classification; Faster-RCNN loss for detection",
+   "optimizer": "CPC pre-training: Adam beta1=0.8, beta2=0.999, eps=1e-8; linear probe: Adam; supervised/classifier: SGD; encoder fine-tuning: Adam",
+   "lr": "CPC 0.0004; linear classification 0.0005; supervised SGD searched in {0.05, 0.1, 0.2}",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "512 (32 workers) for CPC; 512 over 16 workers for linear; supervised per-worker batch in {16, 32}",
+   "steps": null,
+   "epochs": "200 (CPC pre-training); fine-tuning 'a small number of epochs (chosen by cross-validation)'",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": "supervised: searched log-uniformly 1e-5 to 1e-2",
+   "dropout": "supervised: searched linearly 0 to 1",
+   "regularisation": "Polyak averaging decay 0.9999; gradient clip max norm 0.01; layer norm; smaller lr and early stopping when fine-tuning the encoder",
+   "hardware": "32 workers (accelerator type not stated)",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "pixelCNN": "5 residual blocks with 256 channels (appendix A code)",
+    "CPC code defaults": "target_dim=64, emb_scale=0.1, steps_to_ignore=2, steps_to_predict=3"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single crop at test; single run per setting, no seeds stated",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Top-1 / Top-5 accuracy",
+     "definition": "ImageNet ILSVRC-2012 validation set, single crop",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "mAP",
+     "definition": "mean average precision on PASCAL VOC 2007",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "gain in data-efficiency",
+     "definition": "factor fewer labels at which CPC classifier matches the supervised pixel baseline",
+     "unit": "x",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "ResNet-200 on pixels",
+    "Instance Discr.",
+    "Local Aggr.",
+    "MoCo",
+    "PIRL",
+    "CPC v1",
+    "BigBiGAN",
+    "AMDIM",
+    "CMC",
+    "Rotation (Zhai 2019)",
+    "pseudo-labeling, VAT, UDA label-propagation methods",
+    "supervised ResNet-152 Faster-RCNN"
+   ],
+   "protocol": "Linear probe, efficient classification (frozen then fine-tuned) and VOC transfer; hyperparameters picked on ~10k held-out train images; no seeds or error bars; Fig 3 ablations use a custom validation set."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "ImageNet, PASCAL VOC 2007"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.lr",
+    "quote": "using a learning rate of 0.0004",
+    "where": "Appendix A"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "CPC v2 reaches 71.5% linear Top-1 vs 48.7% for CPC v1",
+   "kind": "measured",
+   "source": null,
+   "metric": "Top-1",
+   "value": 71.5,
+   "unit": "% Top-1",
+   "baseline_value": 48.7,
+   "n": null,
+   "setup": "ResNet-161, ImageNet linear probe, frozen features",
+   "quote": "setting a new state-of-the-art in linear classification of 71.5% Top-1 accuracy (compared to 48.7% for the original, see table 1)",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.1"
+  },
+  {
+   "claim": "CPC v2 ResNet-50 linear Top-1 beats same-architecture methods",
+   "kind": "measured",
+   "source": null,
+   "metric": "Top-1",
+   "value": 63.8,
+   "unit": "% Top-1",
+   "baseline_value": 63.6,
+   "n": null,
+   "setup": "ResNet-50, linear probe",
+   "quote": "arriving at 63.8% linear classification accuracy",
+   "table": null,
+   "note": "baseline_value is PIRL (Table 1)",
+   "where": "Sec 4.1"
+  },
+  {
+   "claim": "With 1% of labels CPC v2 gets 78.3% Top-5 vs 44.1% for supervised pixels",
+   "kind": "measured",
+   "source": null,
+   "metric": "Top-5",
+   "value": 78.3,
+   "unit": "% Top-5",
+   "baseline_value": 44.1,
+   "n": null,
+   "setup": "ImageNet 1% labels, fine-tuned ResNet-33 on CPC v2 vs ResNet-200",
+   "quote": "yielding 78.3% Top-5 accuracy with only 1% of the labels",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2"
+  },
+  {
+   "claim": "With 100% labels CPC v2 classifier reaches 83.4% Top-1 vs 80.2% supervised",
+   "kind": "measured",
+   "source": null,
+   "metric": "Top-1",
+   "value": 83.4,
+   "unit": "% Top-1",
+   "baseline_value": 80.2,
+   "n": null,
+   "setup": "ImageNet 100% labels, fine-tuned",
+   "quote": "this classifier reaches 83.4%/96.5% Top1/Top5 ac-\ncuracy",
+   "table": null,
+   "note": "quote line break in source; 80.2 from Table 2",
+   "where": "Sec 4.2"
+  },
+  {
+   "claim": "5x data-efficiency at low data: 1% labels CPC beats supervised with 5% labels",
+   "kind": "measured",
+   "source": null,
+   "metric": "gain in data efficiency",
+   "value": 5,
+   "unit": "x fewer labels",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ImageNet, Top-1/Top-5 Table 2",
+   "quote": "a 5× gain in\ndata-efficiency",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2, Table 2"
+  },
+  {
+   "claim": "Top-1 at 1% labels: CPC 52.7 vs pixels 23.1",
+   "kind": "measured",
+   "source": null,
+   "metric": "Top-1",
+   "value": 52.7,
+   "unit": "% Top-1",
+   "baseline_value": 23.1,
+   "n": null,
+   "setup": "Table 2",
+   "quote": null,
+   "table": "Table 2, row ResNet-33 trained on CPC features, column 1% Top-1 accuracy",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Supervised ResNet-161+ResNet-33 stack matches ResNet-200, so capacity does not explain the gain",
+   "kind": "measured",
+   "source": null,
+   "metric": "Top-1",
+   "value": 80.3,
+   "unit": "% Top-1",
+   "baseline_value": 80.2,
+   "n": null,
+   "setup": "purely supervised, batch norm throughout, 100% labels",
+   "quote": "(80.3%/95.2% Top-1/Top-5 accuracy)",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2"
+  },
+  {
+   "claim": "Top-5 at 1% labels vs other representation learners: AMDIM fixed 67.4, rotation 57.5, BigBiGAN fixed 55.2, CPC v2 fixed 77.1",
+   "kind": "measured",
+   "source": null,
+   "metric": "Top-5",
+   "value": 77.1,
+   "unit": "% Top-5",
+   "baseline_value": 67.4,
+   "n": null,
+   "setup": "1% labels, frozen representation, ResNet-33 head",
+   "quote": null,
+   "table": "Table 3, row CPC V2 (FIXED), column 1%",
+   "note": "baseline_value is AMDIM (fixed); 77.1 vs 78.3 fine-tuned also in text",
+   "where": "Table 3"
+  },
+  {
+   "claim": "Fine-tuning gives only marginal gains over frozen CPC features (77.1 vs 78.3 Top-5 at 1% labels)",
+   "kind": "measured",
+   "source": null,
+   "metric": "Top-5",
+   "value": 78.3,
+   "unit": "% Top-5",
+   "baseline_value": 77.1,
+   "n": null,
+   "setup": "1% labels",
+   "quote": "77.1% vs 78.3% Top-5 accuracy given\n1% of the labels",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2"
+  },
+  {
+   "claim": "Top-5 at 10% labels: CPC v2 fine-tuned 91.2 equals the best label-propagation result (rot.+VAT+ent.min. 91.2)",
+   "kind": "measured",
+   "source": null,
+   "metric": "Top-5",
+   "value": 91.2,
+   "unit": "% Top-5",
+   "baseline_value": 91.2,
+   "n": null,
+   "setup": "10% labels",
+   "quote": null,
+   "table": "Table 3, row CPC V2 (FINE-TUNED), column 10%",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "PASCAL VOC 2007 detection with CPC v2 encoder in Faster-RCNN: 76.6 mAP vs 74.7 supervised",
+   "kind": "measured",
+   "source": null,
+   "metric": "mAP",
+   "value": 76.6,
+   "unit": "mAP",
+   "baseline_value": 74.7,
+   "n": null,
+   "setup": "Faster-RCNN, ResNet-161 CPC encoder vs ResNet-152 supervised, fine-tuned on VOC 2007 train",
+   "quote": "we obtain 76.6% mAP",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.3"
+  },
+  {
+   "claim": "MoCo concurrently reaches 74.9 mAP in the same setting",
+   "kind": "reported",
+   "source": null,
+   "metric": "mAP",
+   "value": 74.9,
+   "unit": "mAP",
+   "baseline_value": null,
+   "n": null,
+   "setup": "VOC 2007 Faster-RCNN R50",
+   "quote": "He et al. (2019) achieve 74.9% in the same setting",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.3"
+  },
+  {
+   "claim": "Model capacity change (ResNet-101 to ResNet-161) adds about 5% Top-1 in the ablation",
+   "kind": "measured",
+   "source": null,
+   "metric": "Top-1 delta",
+   "value": 5,
+   "unit": "% Top-1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 3, custom validation set",
+   "quote": "+5% Top-1 accuracy",
+   "table": null,
+   "note": "read as approximate ablation deltas; Fig 3 uses a custom validation set",
+   "where": "Sec 4.1, Fig 3"
+  },
+  {
+   "claim": "Layer normalization recovers about +2% accuracy; batch norm hurts large CPC models",
+   "kind": "measured",
+   "source": null,
+   "metric": "delta",
+   "value": 2,
+   "unit": "% accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 3 ablation",
+   "quote": "(+2% accuracy, Ba et al. (2016))",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.1"
+  },
+  {
+   "claim": "Patch-based augmentation adds +4.5% accuracy in total",
+   "kind": "measured",
+   "source": null,
+   "metric": "delta",
+   "value": 4.5,
+   "unit": "% accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 3 ablation",
+   "quote": "4.5%",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.1"
+  }
+ ],
+ "limits": [
+  "Comparison is between model classes; CPC stack has over 500M parameters vs about 60M for ResNet-200 (authors verified a supervised ResNet-161+33 matches ResNet-200)",
+  "Label-propagation comparison is imperfect: those methods use different architectures and assume all unlabeled images belong to one category",
+  "Ablation accuracies are on a custom validation set, not comparable to official results",
+  "No seeds, error bars, compute or wall-clock reported; BigBiGAN and AMDIM evaluated frozen only",
+  "Architectures across Table 1 differ, so apples-to-apples comparison is hard"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "InfoNCE",
+   "definition": "Loss inspired by Noise-Contrastive Estimation that has been shown to maximize the mutual information between c_{i,j} and z_{i+k,j}",
+   "where": "Sec 2.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Representation learning with contrastive predictive coding",
+   "year": 2018,
+   "arxiv": "1807.03748",
+   "relation": "extends",
+   "note": "CPC v1 revisited and improved",
+   "quote": null
+  },
+  {
+   "work": "AMDIM",
+   "year": 2019,
+   "arxiv": "1906.00910",
+   "relation": "baseline",
+   "note": "evaluated by authors in the same protocol",
+   "quote": null
+  },
+  {
+   "work": "BigBiGAN",
+   "year": 2019,
+   "arxiv": "1907.02544",
+   "relation": "baseline",
+   "note": "evaluated in the same protocol",
+   "quote": null
+  },
+  {
+   "work": "S4L",
+   "year": 2019,
+   "arxiv": "1905.03670",
+   "relation": "baseline",
+   "note": "rotation / label-propagation results reported",
+   "quote": null
+  },
+  {
+   "work": "Momentum Contrast",
+   "year": 2019,
+   "arxiv": "1911.05722",
+   "relation": "baseline",
+   "note": "linear and VOC comparison",
+   "quote": null
+  },
+  {
+   "work": "Contrastive Multiview Coding",
+   "year": 2019,
+   "arxiv": "1906.05849",
+   "relation": "baseline",
+   "note": "Table 1",
+   "quote": null
+  },
+  {
+   "work": "PIRL",
+   "year": 2019,
+   "arxiv": "1912.01991",
+   "relation": "baseline",
+   "note": "Tables 1, 3, 4",
+   "quote": null
+  },
+  {
+   "work": "AutoAugment",
+   "year": 2018,
+   "arxiv": "1805.09501",
+   "relation": "uses-method",
+   "note": "augmentation primitives",
+   "quote": null
+  },
+  {
+   "work": "Unsupervised visual representation learning by context prediction",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "color dropping, scale augmentation",
+   "quote": null
+  },
+  {
+   "work": "ImageNet",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "ILSVRC 2012",
+   "quote": null
+  },
+  {
+   "work": "PASCAL VOC 2007",
+   "year": 2007,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "detection transfer",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Data-efficient image recognition with Contrastive Predictive Coding.",
+   "page": 1,
+   "why": "accuracy vs label fraction, 2x and 5x gain arrows"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Overview of the framework for semi-supervised learning with Contrastive Predictive Coding.",
+   "page": 3,
+   "why": "shows pre-training and the three evaluation heads"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Linear classification performance of new variants of CPC, incrementally adding modifications.",
+   "page": 4,
+   "why": "ablation path from CPC v1 to v2"
+  }
+ ],
+ "code": [
+  {
+   "where": "Appendix A",
+   "snippet": "def CPC(latents, target_dim=64, emb_scale=0.1, steps_to_ignore=2, steps_to_predict=3)",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Text extraction garbles some table layouts; Table 1/2/3 values read from column order",
+  "Quotes in results with line breaks were copied with the PDF's line breaks"
+ ]
+}

@@ -1,0 +1,427 @@
+{
+ "schema": 1,
+ "key": "2009.10297",
+ "pdf": "generative-ai/08-eval/sources/ren-2020-codebleu.pdf",
+ "bib": {
+  "title": "CodeBLEU: a Method for Automatic Evaluation of Code Synthesis",
+  "authors": [
+   "Shuo Ren",
+   "Daya Guo",
+   "Shuai Lu",
+   "Long Zhou",
+   "Shujie Liu",
+   "Duyu Tang",
+   "Neel Sundaresan",
+   "Ming Zhou",
+   "Ambrosio Blanco",
+   "Shuai Ma"
+  ],
+  "first_author": "Ren",
+  "year": 2020,
+  "venue": "preprint (arXiv v2; AAAI copyright line 2021)",
+  "arxiv": "2009.10297",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 38298,
+  "chars_total": 38298,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can a BLEU variant that adds keyword weighting, AST matching and data-flow matching track programmer judgements of code quality better than BLEU or exact-match accuracy?",
+ "hypothesis": "Injecting syntax (AST) and semantics (data-flow) into n-gram matching correlates better with human scores than BLEU or perfect accuracy.",
+ "contributions": [
+  "CodeBLEU: weighted combination of BLEU, keyword-weighted n-gram match, AST sub-tree match and data-flow match",
+  "Correlation study with programmer scores on text-to-code, code translation and code refinement",
+  "Ablation of components and sweep of the four weights"
+ ],
+ "method": {
+  "summary": "Defines CodeBLEU = alpha*BLEU + beta*BLEUweight + gamma*Matchast + delta*Matchdf. Evaluates by Pearson correlation between metric scores and programmer ratings of 3-4 existing systems per task.",
+  "task": "automatic evaluation metric for code synthesis",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "Text-to-code (Iyer et al. 2018)",
+    "role": "eval",
+    "size": "100k train, 2k val, 2k test",
+    "split": "500 random test samples scored; 50 of them human-rated",
+    "source": "Iyer et al. 2018",
+    "preprocessing": null
+   },
+   {
+    "name": "Code translation Java to C# (Lucene, POI, JGit, Antlr)",
+    "role": "eval",
+    "size": "11.8k method pairs after dedup",
+    "split": "0.5k dev, 1k test; 500 random test samples scored, 50 human-rated",
+    "source": "crawled by the authors, paired by file and method name; to be released",
+    "preprocessing": "removed duplicates"
+   },
+   {
+    "name": "Code refinement (Tufano et al. 2019)",
+    "role": "eval",
+    "size": "small: 46,680/5,835/5,835 train/dev/test; medium: 52,364/6,545/6,545",
+    "split": "500 random test samples scored, 50 human-rated",
+    "source": "Tufano et al. 2019",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Text-to-code: Seq2Seq, Seq2Action+MAML, GPT2, CodeGPT",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "various",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Code translation: PBSMT, Transformer, Transformer+CodeBERT, Human",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "various",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Code refinement: LSTM, Transformer, Transformer+CodeBERT",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "various",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "500 random test samples per task; 50 human-rated; 20 blocks of 25 for variance",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "alpha,beta,gamma,delta (main)": "0.25,0.25,0.25,0.25",
+    "recommended": "0.1,0.1,0.4,0.4 (combination [7])",
+    "keyword weight": "5x other tokens in text; Example 1 says 4x (inconsistent)",
+    "weighted n-gram order": "keywords considered only in unigrams, N=1, wn=1",
+    "AST": "tree-sitter sub-trees, leaf nodes dropped",
+    "data-flow": "variables renamed var_i, positions ignored"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Pearson correlation with human score",
+     "definition": "correlation between metric and mean programmer rating over the systems of a task",
+     "unit": "r",
+     "higher_is_better": true
+    },
+    {
+     "name": "Human score",
+     "definition": "programmer rating of each output",
+     "unit": "1 (very bad) to 5 (very good)",
+     "higher_is_better": true
+    },
+    {
+     "name": "Acc",
+     "definition": "exact match with reference",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "BLEU",
+    "perfect accuracy (exact match)"
+   ],
+   "protocol": "10 judges familiar with Java and C#; 50 samples x 4 outputs = 200 pairs, random order, same order for all; paired t-statistic on 20 blocks of 25 sentences"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "code translation dataset promised with scripts"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "CodeBLEU correlates with programmer scores more than BLEU on text-to-code",
+   "kind": "measured",
+   "source": null,
+   "metric": "Pearson",
+   "value": 0.977,
+   "unit": null,
+   "baseline_value": 0.967,
+   "n": null,
+   "setup": "Text-to-code (Iyer 2018 Java), 4 systems (Seq2Seq, Seq2Action+MAML, GPT2, CodeGPT); 50 test samples x 4 outputs rated by 10 judges, 1-5; Pearson over system means",
+   "quote": null,
+   "table": "Table 4, row CodeBLEU & human, column Text-to-code",
+   "note": null,
+   "where": null
+  },
+  {
+   "claim": "CodeBLEU correlates more than BLEU on code translation",
+   "kind": "measured",
+   "source": null,
+   "metric": "Pearson",
+   "value": 0.97,
+   "unit": null,
+   "baseline_value": 0.94,
+   "n": null,
+   "setup": "Java to C#, 4 systems, 50 human-rated samples",
+   "quote": null,
+   "table": "Table 4, row CodeBLEU & human, column Code trans",
+   "note": null,
+   "where": null
+  },
+  {
+   "claim": "On code refinement CodeBLEU beats BLEU (0.923) but exact-match accuracy correlates better",
+   "kind": "measured",
+   "source": null,
+   "metric": "Pearson",
+   "value": 0.979,
+   "unit": null,
+   "baseline_value": 0.923,
+   "n": null,
+   "setup": "Java bug fixing, 3 systems, 50 human-rated samples",
+   "quote": null,
+   "table": "Table 4, row CodeBLEU & human, column Code ref",
+   "note": "Acc & human is 0.999 on this task (Table 4)",
+   "where": null
+  },
+  {
+   "claim": "Accuracy correlation with humans on code refinement",
+   "kind": "measured",
+   "source": null,
+   "metric": "Pearson",
+   "value": 0.999,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Code refinement, 3 systems",
+   "quote": null,
+   "table": "Table 4, row Acc & human, column Code ref",
+   "note": "authors: output is usually unique so Acc correlates more",
+   "where": null
+  },
+  {
+   "claim": "BLEU is 90.35-92.80 while accuracy is 3.00-17.6 and human scores 1.378-2.022 on refinement",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": 90.35,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Code refinement Sys1 to Sys3, 500 test samples",
+   "quote": null,
+   "table": "Table 2, Code refinement, row Sys1, column BLEU",
+   "note": null,
+   "where": null
+  },
+  {
+   "claim": "Recommended weights 0.1,0.1,0.4,0.4 reach correlations of 0.981, 0.975, 0.980",
+   "kind": "measured",
+   "source": null,
+   "metric": "Pearson",
+   "value": 0.981,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "text-to-code (first value); translation 0.975, refinement 0.980",
+   "quote": "achieves the best result among all the combinations in Fig-\nure 6 (0.981, 0.975, 0.980 for the three tasks respectively)",
+   "table": null,
+   "note": null,
+   "where": null
+  },
+  {
+   "claim": "Ablation: AST match alone correlates 0.985 on text-to-code, higher than full CodeBLEU 0.977",
+   "kind": "measured",
+   "source": null,
+   "metric": "Pearson",
+   "value": 0.985,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Component-only scores vs humans",
+   "quote": null,
+   "table": "Table 5, row Matchast, column Text-to-code",
+   "note": null,
+   "where": null
+  },
+  {
+   "claim": "Ablation: weighted n-gram alone gives 0.985 on code refinement",
+   "kind": "measured",
+   "source": null,
+   "metric": "Pearson",
+   "value": 0.985,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Component-only vs humans",
+   "quote": null,
+   "table": "Table 5, row BLEUweight, column Code ref",
+   "note": null,
+   "where": null
+  },
+  {
+   "claim": "Paired t-statistics between neighbouring systems are large (e.g. 38 for translation Sys3 vs Sys2) so system differences are significant",
+   "kind": "measured",
+   "source": null,
+   "metric": "paired t",
+   "value": 38,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "20 blocks of 25 sentences",
+   "quote": null,
+   "table": "Table 3, Code translation, row Sys3, column t",
+   "note": null,
+   "where": null
+  },
+  {
+   "claim": "Example 2: variable rename only; BLEU 75.71 vs CodeBLEU 88.04",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "CodeBLEU",
+   "value": 88.04,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "toy example, alpha..delta=0.25",
+   "quote": "the ﬁnal CodeBLEU score being 88.04",
+   "table": null,
+   "note": "Fig 4 caption prints BLEU 68.14, CodeBLEU 83.97; text prints 75.71 and 88.04",
+   "where": null
+  },
+  {
+   "claim": "Example 1: BLEU 75.43, CodeBLEU 69.73",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "CodeBLEU",
+   "value": 69.73,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "toy example with 4 differences",
+   "quote": "the ﬁnal CodeBLEU score is 69.73",
+   "table": null,
+   "note": "text says keywords weighted 4x; Sec 3.1 says 5x",
+   "where": null
+  }
+ ],
+ "limits": [
+  "Each correlation is over only 3 or 4 systems and 50 rated samples, so r values are system-level and coarse",
+  "No significance test on the correlations themselves",
+  "Nothing is executed, so semantic correctness is approximated by data-flow",
+  "Accuracy beats CodeBLEU on code refinement (0.999 vs 0.979)",
+  "Weights tuned on the same human scores, no held-out check; keyword lists predefined per language and weight 5x vs 4x is inconsistent",
+  "Java and C# only; the paper never compares with execution-based metrics beyond describing them"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "CodeBLEU",
+   "definition": "weighted combination of BLEU, weighted n-gram match, syntactic AST match and semantic data-flow match",
+   "where": "Eq. 1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "BLEU (Papineni et al. 2002)",
+   "year": 2002,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "base metric",
+   "quote": null
+  },
+  {
+   "work": "GraphCodeBERT",
+   "year": 2020,
+   "arxiv": "2009.08366",
+   "relation": "uses-method",
+   "note": "data-flow representation",
+   "quote": null
+  },
+  {
+   "work": "CodeBERT",
+   "year": 2020,
+   "arxiv": "2002.08155",
+   "relation": "evaluates",
+   "note": "baseline system",
+   "quote": null
+  },
+  {
+   "work": "Lachaux et al. 2020, Unsupervised Translation of Programming Languages",
+   "year": 2020,
+   "arxiv": "2006.03511",
+   "relation": "related",
+   "note": "computational accuracy",
+   "quote": null
+  },
+  {
+   "work": "CodeSearchNet",
+   "year": 2019,
+   "arxiv": "1909.09436",
+   "relation": "uses-data",
+   "note": "CodeGPT pretraining data",
+   "quote": null
+  },
+  {
+   "work": "Iyer et al. 2018; Tufano et al. 2019",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "text-to-code and refinement datasets",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "The proposed CodeBLEU, a weighted syntactic and semantic BLEU for code synthesis evaluation",
+   "page": 2,
+   "why": "shows the four components"
+  },
+  {
+   "figure": "Table 4",
+   "caption": "Comparison of the Pearson correlation coefficients",
+   "page": 4,
+   "why": "core result"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq. 1",
+   "snippet": "CodeBLEU = alpha*BLEU + beta*BLEUweight + gamma*Matchast + delta*Matchdf",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Figure 2 and 4 captions give different BLEU/CodeBLEU numbers from the text (Example 2)",
+  "Cached text has ligature characters"
+ ]
+}

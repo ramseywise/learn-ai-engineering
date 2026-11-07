@@ -2,12 +2,17 @@
 name: readings
 description: "Work the readings backlog: show what is in the scripts/papers/inbox/ inbox and the ledger (queued, downloaded, integrated by home), route triaged PDFs to their home's sources/, triage anything new, and recommend the next /chapter or /papers run. Usage: /readings, /readings route, /readings triage, /readings discover <home>, /readings sweep <programming|interview>. Run from the learn-ai-engineering repo."
 ---
+<!-- Generated from .claude/skills/_shared/readings.md in the librarian repo (uv run python -m librarian.tools.skillsync sync). Edit the template, not this file. -->
 
 You are keeping the reading backlog moving. `scripts/papers/README.md` describes
 the system. In short, every reading (DAIR AI Papers of the Week and every PDF dropped into
 the repo) is one row in `scripts/papers/ledger.jsonl`. Triage gives each row a
 home, a note and a relevance score. Route moves its PDF to the home's `sources/`. Then
 `/papers` (single papers) or `/chapter` (book chapters) fold it into the notes.
+
+## Where commands run
+
+Run from the repo root: the ledger, the inbox and the PDFs are all here.
 
 Nothing leaves the repo. A reading with no home stays in the ledger as `parked` (worth
 knowing: interest 2–3) or `skipped` (not for this course). If `status --list parked` shows a

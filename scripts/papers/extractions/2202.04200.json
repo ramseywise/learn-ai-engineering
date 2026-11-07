@@ -1,0 +1,544 @@
+{
+ "schema": 1,
+ "key": "2202.04200",
+ "pdf": "ai-engineering/08-multimodal-engineering/sources/chang-2022-maskgit.pdf",
+ "bib": {
+  "title": "MaskGIT: Masked Generative Image Transformer",
+  "authors": [
+   "Huiwen Chang",
+   "Han Zhang",
+   "Lu Jiang",
+   "Ce Liu",
+   "William T. Freeman"
+  ],
+  "first_author": "Chang",
+  "year": 2022,
+  "venue": "preprint",
+  "arxiv": "2202.04200",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 56218,
+  "chars_total": 56218,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can a bidirectional transformer trained with masked visual token modeling generate images in a few parallel decoding steps with quality beating raster-scan autoregressive transformers?",
+ "hypothesis": "Treating an image as a raster sequence is neither optimal nor efficient; bidirectional masked modeling with iterative parallel decoding and a concave (cosine) mask schedule will be faster and better.",
+ "contributions": [
+  "MaskGIT: bidirectional transformer for image synthesis trained with Masked Visual Token Modeling",
+  "Iterative non-autoregressive decoding in a constant, small number of steps (8 at 256x256)",
+  "Mask scheduling function study; cosine works best",
+  "Up to 64x faster than autoregressive decoding, SOTA CAS and 512x512 FID",
+  "Extension to inpainting, outpainting and class-conditional editing without architecture change"
+ ],
+ "method": {
+  "summary": "Stage 1 reuses the VQGAN tokenizer (16x downsampling, 1024-code codebook). Stage 2 is a 24-layer bidirectional transformer trained to predict randomly masked visual tokens with a sampled mask ratio from a schedule gamma(r). Inference starts from all-[MASK] and over T steps predicts all tokens, samples them, keeps the most confident, and re-masks the rest by gamma(t/T).",
+  "task": "class-conditional image generation (ImageNet 256 and 512); inpainting/outpainting (Places2)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "ImageNet",
+    "role": "both",
+    "size": null,
+    "split": "train for training; validation set for CAS",
+    "source": "Deng et al. 2009",
+    "preprocessing": "cropped 256x256 images for the tokenizer; RandomResizeAndCrop augmentation"
+   },
+   {
+    "name": "Places2",
+    "role": "both",
+    "size": null,
+    "split": "512x512 center-cropped images; validation set for evaluation",
+    "source": "Zhou et al. [58]",
+    "preprocessing": "512x512 center crop"
+   }
+  ],
+  "models": [
+   {
+    "name": "MaskGIT bidirectional transformer",
+    "role": "proposed",
+    "params": "227M",
+    "architecture": "bidirectional transformer, learnable positional embedding, LayerNorm",
+    "init_from": "inferred: truncated normal initialization (stddev=0.02), from scratch",
+    "tokenizer": "VQGAN tokenizer, same setup as Esser et al. 2021",
+    "vocab": "1024 codebook tokens (plus [MASK])",
+    "layers": 24,
+    "hidden": "768 embedding, 3072 hidden (MLP)",
+    "heads": 8,
+    "context": "inferred: 256 tokens at 256x256, 1024 tokens at 512x512 (16x compression)",
+    "other": {
+     "tokenizer_compression": "fixed factor 16",
+     "tokenizer_trained_per_dataset": "single autoencoder, decoder and codebook per dataset on cropped 256x256 images; reused for 512x512"
+    }
+   },
+   {
+    "name": "VQGAN* (own baseline)",
+    "role": "baseline",
+    "params": "227M",
+    "architecture": "unidirectional transformer, same tokenizer and hyperparameters",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": 24,
+    "hidden": null,
+    "heads": 8,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "negative log-likelihood (cross-entropy) of masked tokens, Eq 1; mask ratio sampled from schedule gamma(r), cosine default",
+   "optimizer": "Adam, beta1=0.9, beta2=0.96",
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": 256,
+   "steps": null,
+   "epochs": "300 (ImageNet), 200 (Places2)",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": 0.1,
+   "regularisation": "label smoothing=0.1; RandomResizeAndCrop augmentation",
+   "hardware": "4x4 TPU devices",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "init": "truncated normal stddev=0.02"
+   }
+  },
+  "inference": {
+   "decoding": "iterative parallel decoding: predict, sample, keep most confident, re-mask by gamma(t/T); masking tokens randomly sampled with temperature annealing",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": "class-conditional (class label); inpainting/outpainting via initial mask constraint",
+   "retrieval": null,
+   "parameters": {
+    "T": "8 (256x256), 12 (512x512)",
+    "gamma": "cosine",
+    "rejection_sampling": "pre-trained ResNet, acceptance rate 0.05 (App B only)",
+    "inpaint_blend": "linear blending with input at mask boundary"
+   },
+   "other": {
+    "temperature_annealing_details": "not given; the paper says its effect is discussed in 4.4 but 4.4 contains no temperature study"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "FID",
+     "definition": "Frechet Inception Distance",
+     "unit": "FID",
+     "higher_is_better": false
+    },
+    {
+     "name": "IS",
+     "definition": "Inception Score",
+     "unit": "IS",
+     "higher_is_better": true
+    },
+    {
+     "name": "Precision/Recall",
+     "definition": "Kynkaanniemi et al. [30]; VGG features in Table 1, Inception features in Table 5",
+     "unit": "ratio",
+     "higher_is_better": true
+    },
+    {
+     "name": "CAS",
+     "definition": "ResNet-50 trained only on generated samples, top-1/top-5 accuracy on ImageNet val",
+     "unit": "% x100",
+     "higher_is_better": true
+    },
+    {
+     "name": "# steps",
+     "definition": "neural network runs per sample",
+     "unit": "count",
+     "higher_is_better": false
+    },
+    {
+     "name": "PSNR/LPIPS",
+     "definition": "reconstruction quality vs mask ratio",
+     "unit": "dB / LPIPS",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "BigGAN-deep",
+    "VQGAN",
+    "VQVAE-2",
+    "ADM",
+    "Improved DDPM",
+    "DCTransformer",
+    "DeepFill",
+    "HiFill",
+    "CoModGAN",
+    "Boundless",
+    "In&Out",
+    "InfinityGAN",
+    "ICT"
+   ],
+   "protocol": "Number of generated samples, seeds and sample counts for FID not stated."
+  },
+  "availability": {
+   "code": "promised ('We will release the code and model')",
+   "weights": "promised",
+   "data": "ImageNet, Places2"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.batch_size",
+    "quote": "All models are trained on 4x4 TPU devices with a batch size of\n256.",
+    "where": "Sec 4.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "MaskGIT beats VQGAN on FID at 256x256 without special sampling",
+   "kind": "measured",
+   "metric": "FID",
+   "value": 6.18,
+   "unit": "FID",
+   "baseline_value": 15.78,
+   "setup": "ImageNet 256x256 class-conditional, 227M params, T=8, no top-k/nucleus/classifier guidance; baseline VQGAN 1.4B value taken from prior publication",
+   "quote": "(6.18 vs 15.78)",
+   "where": "Sec 4.2",
+   "note": "Retrained same-size VQGAN baseline gets FID 18.65 (Table 1).",
+   "source": null
+  },
+  {
+   "claim": "MaskGIT Inception Score vs VQGAN at 256x256",
+   "kind": "measured",
+   "metric": "IS",
+   "value": 182.1,
+   "unit": "IS",
+   "baseline_value": 78.3,
+   "setup": "ImageNet 256x256, same as above",
+   "quote": "(182.1 vs 78.3)",
+   "where": "Sec 4.2",
+   "source": null,
+   "note": null
+  },
+  {
+   "claim": "New state-of-the-art FID on ImageNet 512x512, beating BigGAN-deep (8.43)",
+   "kind": "measured",
+   "metric": "FID",
+   "value": 7.32,
+   "unit": "FID",
+   "baseline_value": 8.43,
+   "setup": "ImageNet 512x512, 12 steps, 227M params",
+   "quote": "achieving a new state-of-the-art on\n512ˆ512 with an FID of 7.32",
+   "table": "Table 1, row MaskGIT 512, column FID; BigGAN-deep 8.43",
+   "where": "Sec 4.2, Table 1",
+   "source": null,
+   "note": null
+  },
+  {
+   "claim": "Decoding speedup over VQGAN in wall-clock on a single GPU",
+   "kind": "measured",
+   "metric": "speedup",
+   "value": "30-64x",
+   "unit": "x",
+   "setup": "Transformer decoding only, single GPU, speedup grows with token length; value read from text, Fig 4",
+   "quote": "MaskGIT signiﬁcantly accelerates VQGAN by 30-64x",
+   "where": "Sec 4.2, Fig 4",
+   "source": null,
+   "note": null
+  },
+  {
+   "claim": "Step count: 8 steps at 256x256 and 12 steps at 512x512 vs 256 and 1024 for VQGAN",
+   "kind": "measured",
+   "metric": "# steps (forward passes)",
+   "value": 8,
+   "unit": "steps",
+   "baseline_value": 256,
+   "setup": "ImageNet 256x256; 512x512 MaskGIT uses 12 vs VQGAN 1024",
+   "table": "Table 1, row MaskGIT (Ours), column # steps: 8 (256), 12 (512)",
+   "where": "Table 1",
+   "source": null,
+   "note": null
+  },
+  {
+   "claim": "Autoregressive 32x32-token generation takes about 30 s on a GPU",
+   "kind": "claim",
+   "metric": "latency",
+   "value": 30,
+   "unit": "seconds",
+   "setup": "Intro statement for autoregressive decoding with 32x32 tokens; no hardware given",
+   "quote": "it takes a considerable 30 seconds to generate a single\nimage on a GPU autoregressively with 32x32 tokens",
+   "where": "Sec 1",
+   "source": null,
+   "note": null
+  },
+  {
+   "claim": "CAS top-1 of classifier trained on MaskGIT samples (256x256, with RandAugment)",
+   "kind": "measured",
+   "metric": "CAS top-1 x100",
+   "value": 63.14,
+   "unit": "%",
+   "baseline_value": 53.1,
+   "setup": "ImageNet 256x256, ResNet-50 trained only on generated samples, tested on ImageNet val; real-data reference 76.6; baseline is own VQGAN",
+   "table": "Table 1, row MaskGIT (Ours) 256, column CAS Top-1; baseline row VQGAN* 53.10",
+   "where": "Table 1",
+   "source": null,
+   "note": null
+  },
+  {
+   "claim": "Recall of MaskGIT vs BigGAN-deep at 256x256 (VGG features)",
+   "kind": "measured",
+   "metric": "Recall",
+   "value": 0.51,
+   "unit": "ratio",
+   "baseline_value": 0.28,
+   "setup": "ImageNet 256x256, Table 1 Prec/Rec from VGG features",
+   "table": "Table 1, row MaskGIT (Ours), column Rec; BigGAN-deep 0.28",
+   "where": "Table 1",
+   "source": null,
+   "note": null
+  },
+  {
+   "claim": "With classifier-based rejection sampling (0.05 acceptance rate) MaskGIT reaches IS 355.6 and FID 4.02 at 256x256",
+   "kind": "measured",
+   "metric": "IS",
+   "value": 355.6,
+   "unit": "IS",
+   "baseline_value": 304.8,
+   "setup": "ImageNet 256x256, pre-trained ResNet scoring, acceptance rate 0.05; baseline VQGAN same procedure",
+   "table": "Table 4, row MaskGIT, columns IS 355.6, FID 4.02; VQGAN 304.8/5.88; ADM 1.0 guidance 4.59/186.70",
+   "where": "App B, Table 4",
+   "source": null,
+   "note": null
+  },
+  {
+   "claim": "Rejection-sampled 512x512 MaskGIT IS and FID",
+   "kind": "measured",
+   "metric": "IS",
+   "value": 342.0,
+   "unit": "IS",
+   "setup": "ImageNet 512x512, acceptance rate 0.05",
+   "table": "Table 4, row MaskGIT 512, IS 342.0, FID 4.46; ADM 7.72/172.71",
+   "where": "Table 4",
+   "source": null,
+   "note": null
+  },
+  {
+   "claim": "Inpainting on Places2 (central 50%x50%): MaskGIT FID close to CoModGAN",
+   "kind": "measured",
+   "metric": "FID",
+   "value": 7.92,
+   "unit": "FID",
+   "baseline_value": 7.13,
+   "setup": "Places2 val, 512x512 evaluation, no task-specific training, same hyperparameters as ImageNet",
+   "table": "Table 2, row MaskGIT (Ours) 512 Inpainting, column FID; CoModGAN 7.13",
+   "where": "Table 2",
+   "source": null,
+   "note": null
+  },
+  {
+   "claim": "Outpainting right 50% on Places2: MaskGIT best FID",
+   "kind": "measured",
+   "metric": "FID",
+   "value": 6.78,
+   "unit": "FID",
+   "baseline_value": 7.8,
+   "setup": "Places2, 512x512 for MaskGIT; others 256x256; baseline Boundless TF 7.80",
+   "table": "Table 2, row MaskGIT (Ours) 512 Outpainting, column FID; IS 11.69",
+   "where": "Table 2",
+   "source": null,
+   "note": null
+  },
+  {
+   "claim": "Cosine mask schedule is best: FID 6.06 at T=10",
+   "kind": "measured",
+   "metric": "FID",
+   "value": 6.06,
+   "unit": "FID",
+   "baseline_value": 6.35,
+   "setup": "ImageNet 256x256 ablation; best FID per schedule at its best T; baseline square schedule",
+   "table": "Table 3, row Cosine, column FID (T=10, IS 181.5, NLL 4.22); Square 6.35; Linear 7.51 (T=16); Logarithmic 29.17 (T=60)",
+   "where": "Table 3",
+   "source": null,
+   "note": null
+  },
+  {
+   "claim": "Cosine schedule's best iteration count is about 8 to 12; more iterations are not always better",
+   "kind": "measured",
+   "metric": "T sweet spot",
+   "value": null,
+   "unit": null,
+   "setup": "ImageNet 256x256, read from Fig 8",
+   "quote": "the earliest\nsweet spot at a total of 8 to 12 iterations",
+   "where": "Sec 4.4, Fig 8",
+   "source": null,
+   "note": null
+  },
+  {
+   "claim": "Visual tokens are highly redundant: about 10% of tokens suffice for holistic reconstruction; inflection near 90% mask ratio",
+   "kind": "measured",
+   "metric": "mask ratio inflection",
+   "value": "90%",
+   "unit": "%",
+   "setup": "Reconstruction with random input masks, PSNR and LPIPS vs mask ratio (Fig 10)",
+   "quote": "there seems to exist an inﬂection point around 90%",
+   "where": "App A",
+   "source": null,
+   "note": null
+  }
+ ],
+ "limits": [
+  "Learning rate, schedule, warmup, steps, precision, seeds and FID sample counts are not stated.",
+  "Authors concede limited attention size causes semantic/color drift in long outpainting, ignored boundary objects, and oversmoothing or artifacts on faces, text and symmetric objects (App F).",
+  "Tokenizer is the unchanged VQGAN; improvements left to future work.",
+  "Without guidance MaskGIT's FID at 256 (6.18) is only marginally better than BigGAN-deep (6.95); recall 0.51 is below ADM 0.63 and Improved DDPM 0.62.",
+  "The 30-64x speedup is transformer-only wall-clock on an unspecified single GPU.",
+  "Text says temperature annealing effect is discussed in 4.4, but no such experiment appears."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "MVTM",
+   "definition": "Masked Visual Token Modeling: learning to predict visual tokens masked at random with a bidirectional transformer",
+   "where": "Sec 3"
+  },
+  {
+   "term": "Mask scheduling function",
+   "definition": "gamma(r) in (0,1], continuous, decreasing, gamma(0)->1 and gamma(1)->0, giving the fraction of tokens masked",
+   "where": "Sec 3.1, 3.3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Taming transformers for high-resolution image synthesis (VQGAN)",
+   "year": 2021,
+   "arxiv": "2012.09841",
+   "relation": "extends",
+   "note": "uses its tokenizer and is the main baseline",
+   "quote": null
+  },
+  {
+   "work": "BERT",
+   "year": 2019,
+   "arxiv": "1810.04805",
+   "relation": "uses-method",
+   "note": "masked prediction proxy task",
+   "quote": null
+  },
+  {
+   "work": "Mask-predict (Ghazvininejad et al.)",
+   "year": 2019,
+   "arxiv": "1904.09324",
+   "relation": "uses-method",
+   "note": "parallel decoding inspiration from non-autoregressive MT",
+   "quote": null
+  },
+  {
+   "work": "Non-autoregressive neural machine translation (Gu et al.)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "related",
+   "note": "bi-directional MT inspiration",
+   "quote": null
+  },
+  {
+   "work": "BigGAN",
+   "year": 2019,
+   "arxiv": "1809.11096",
+   "relation": "baseline",
+   "note": "leading GAN",
+   "quote": null
+  },
+  {
+   "work": "ADM (Dhariwal and Nichol)",
+   "year": 2021,
+   "arxiv": "2105.05233",
+   "relation": "baseline",
+   "note": "diffusion baseline",
+   "quote": null
+  },
+  {
+   "work": "VQVAE-2",
+   "year": 2019,
+   "arxiv": "1906.00446",
+   "relation": "baseline",
+   "note": "CAS comparison",
+   "quote": null
+  },
+  {
+   "work": "DALL-E",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "related",
+   "note": "transformer second stage",
+   "quote": null
+  },
+  {
+   "work": "Masked autoencoders (He et al.)",
+   "year": 2021,
+   "arxiv": "2111.06377",
+   "relation": "related",
+   "note": "concurrent, spatial redundancy",
+   "quote": null
+  },
+  {
+   "work": "ImageNet",
+   "year": 2009,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "Places2",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "inpainting/outpainting",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "Comparison between sequential decoding and MaskGIT's scheduled parallel decoding",
+   "page": 2,
+   "why": "shows 8 vs 256 iterations"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Pipeline Overview",
+   "page": 3,
+   "why": "two-stage design"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Transformer wall-clock runtime comparison between VQGAN and ours",
+   "page": 5,
+   "why": "basis of 30-64x"
+  },
+  {
+   "figure": "Fig 8",
+   "caption": "Choices of Mask Scheduling Functions and number of iterations T",
+   "page": 8,
+   "why": "schedule shapes and FID vs T"
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 3.2",
+   "snippet": "n = ceil(gamma(t/T) * N); m_i^(t+1) = 1 if c_i < sorted_j(c_j)[n], else 0",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Ligatures and math symbols garbled in text cache; Table 1 reads as one value per line."
+ ]
+}

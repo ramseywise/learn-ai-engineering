@@ -1,0 +1,759 @@
+{
+ "schema": 1,
+ "key": "2203.13474",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/nijkamp-2022-codegen.pdf",
+ "bib": {
+  "title": "CODEGEN: AN OPEN LARGE LANGUAGE MODEL FOR CODE WITH MULTI-TURN PROGRAM SYNTHESIS",
+  "authors": [
+   "Erik Nijkamp",
+   "Bo Pang",
+   "Hiroaki Hayashi",
+   "Lifu Tu",
+   "Huan Wang",
+   "Yingbo Zhou",
+   "Silvio Savarese",
+   "Caiming Xiong"
+  ],
+  "first_author": "Nijkamp",
+  "year": 2023,
+  "venue": "ICLR 2023",
+  "arxiv": "2203.13474",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 77829,
+  "chars_total": 77829,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can open large autoregressive language models trained on natural language and code do program synthesis, and does specifying intent over multiple turns improve it over a single prompt?",
+ "hypothesis": "Factorizing a specification into multiple turns eases the model's understanding of intent (lower prompt perplexity) and improves program synthesis; multi-turn ability emerges with model and data scale.",
+ "contributions": [
+  "We study multi-turn program synthesis emerging in autoregressive models under scaling laws.",
+  "We leverage this capacity to introduce a multi-turn program synthesis paradigm.",
+  "We investigate its properties quantitatively with a novel multi-turn programming benchmark.",
+  "We will open source model checkpoints and the custom training library: JAXFORMER."
+ ],
+ "method": {
+  "summary": "Train CODEGEN-NL, -MULTI, -MONO (350M to 16.1B) sequentially on THEPILE, BIGQUERY and BIGPYTHON with next-token prediction on TPU-v4 with a custom JAX library. Evaluate on HumanEval, MBPP and a new 115-problem Multi-Turn Programming Benchmark (MTPB), comparing multi-turn with concatenated single-turn prompts.",
+  "task": "next-token pretraining for code; program synthesis evaluated by functional correctness",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "THEPILE",
+    "role": "pretrain",
+    "size": "825.18 GiB raw, 1159.04 GiB final, 354.7B NL tokens plus 95.16 GiB code, 31.6B tokens",
+    "split": null,
+    "source": "Gao et al. 2020, MIT license",
+    "preprocessing": "see Gao et al. (2020)"
+   },
+   {
+    "name": "BIGQUERY",
+    "role": "pretrain",
+    "size": "C 19.7B, C++ 25.5B, Go 9.6B, Java 35.4B, JavaScript 9.7B, Python 19.3B tokens (Table 5)",
+    "split": null,
+    "source": "subset of Google BigQuery GitHub data, open-source licences",
+    "preprocessing": "filter by file extension, drop files with avg line length <100 chars, max line length 1,000, >90% decimal/hex characters; exact dedup by SHA-256; GPT-2 BPE plus whitespace tokens; language-name prefix; shuffle each year; concatenate to 2,048 tokens with separator"
+   },
+   {
+    "name": "BIGPYTHON",
+    "role": "pretrain",
+    "size": "5558.1 GiB raw, 217.3 GiB final, 71.7B tokens",
+    "split": null,
+    "source": "permissively licensed Python from GitHub, compiled October 2021",
+    "preprocessing": "same as BIGQUERY"
+   },
+   {
+    "name": "HumanEval",
+    "role": "eval",
+    "size": "164 problems",
+    "split": null,
+    "source": "Chen et al. 2021, MIT",
+    "preprocessing": null
+   },
+   {
+    "name": "MTPB",
+    "role": "eval",
+    "size": "115 problems, 3 or more turns each, 5 test cases each",
+    "split": null,
+    "source": "written by 4 authors, closed-book",
+    "preprocessing": null
+   },
+   {
+    "name": "MBPP (sanitized)",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Austin et al. 2021",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "CODEGEN-NL 350M",
+    "role": "proposed",
+    "params": "350M",
+    "architecture": "decoder-only transformer, rotary position embedding, parallel attention and MLP",
+    "init_from": "random initialisation",
+    "tokenizer": "GPT-2 BPE extended with special tokens for repeated tabs and white spaces",
+    "vocab": null,
+    "layers": 20,
+    "hidden": null,
+    "heads": 16,
+    "context": "2,048 tokens",
+    "other": {
+     "dims_per_head": 64
+    }
+   },
+   {
+    "name": "CODEGEN-NL 2.7B",
+    "role": "proposed",
+    "params": "2.7B",
+    "architecture": "decoder-only transformer, rotary position embedding, parallel attention and MLP",
+    "init_from": "random initialisation",
+    "tokenizer": "GPT-2 BPE extended with special tokens for repeated tabs and white spaces",
+    "vocab": null,
+    "layers": 32,
+    "hidden": null,
+    "heads": 32,
+    "context": "2,048 tokens",
+    "other": {
+     "dims_per_head": 80
+    }
+   },
+   {
+    "name": "CODEGEN-NL 6.1B",
+    "role": "proposed",
+    "params": "6.1B",
+    "architecture": "decoder-only transformer, rotary position embedding, parallel attention and MLP",
+    "init_from": "random initialisation",
+    "tokenizer": "GPT-2 BPE extended with special tokens for repeated tabs and white spaces",
+    "vocab": null,
+    "layers": 33,
+    "hidden": null,
+    "heads": 16,
+    "context": "2,048 tokens",
+    "other": {
+     "dims_per_head": 256
+    }
+   },
+   {
+    "name": "CODEGEN-NL 16.1B",
+    "role": "proposed",
+    "params": "16.1B",
+    "architecture": "decoder-only transformer, rotary position embedding, parallel attention and MLP",
+    "init_from": "random initialisation",
+    "tokenizer": "GPT-2 BPE extended with special tokens for repeated tabs and white spaces",
+    "vocab": null,
+    "layers": 34,
+    "hidden": null,
+    "heads": 24,
+    "context": "2,048 tokens",
+    "other": {
+     "dims_per_head": 256
+    }
+   },
+   {
+    "name": "CODEGEN-MULTI 350M",
+    "role": "proposed",
+    "params": "350M",
+    "architecture": "decoder-only transformer, rotary position embedding, parallel attention and MLP",
+    "init_from": "CODEGEN-NL",
+    "tokenizer": "GPT-2 BPE extended with special tokens for repeated tabs and white spaces",
+    "vocab": null,
+    "layers": 20,
+    "hidden": null,
+    "heads": 16,
+    "context": "2,048 tokens",
+    "other": {
+     "dims_per_head": 64
+    }
+   },
+   {
+    "name": "CODEGEN-MULTI 2.7B",
+    "role": "proposed",
+    "params": "2.7B",
+    "architecture": "decoder-only transformer, rotary position embedding, parallel attention and MLP",
+    "init_from": "CODEGEN-NL",
+    "tokenizer": "GPT-2 BPE extended with special tokens for repeated tabs and white spaces",
+    "vocab": null,
+    "layers": 32,
+    "hidden": null,
+    "heads": 32,
+    "context": "2,048 tokens",
+    "other": {
+     "dims_per_head": 80
+    }
+   },
+   {
+    "name": "CODEGEN-MULTI 6.1B",
+    "role": "proposed",
+    "params": "6.1B",
+    "architecture": "decoder-only transformer, rotary position embedding, parallel attention and MLP",
+    "init_from": "CODEGEN-NL",
+    "tokenizer": "GPT-2 BPE extended with special tokens for repeated tabs and white spaces",
+    "vocab": null,
+    "layers": 33,
+    "hidden": null,
+    "heads": 16,
+    "context": "2,048 tokens",
+    "other": {
+     "dims_per_head": 256
+    }
+   },
+   {
+    "name": "CODEGEN-MULTI 16.1B",
+    "role": "proposed",
+    "params": "16.1B",
+    "architecture": "decoder-only transformer, rotary position embedding, parallel attention and MLP",
+    "init_from": "CODEGEN-NL",
+    "tokenizer": "GPT-2 BPE extended with special tokens for repeated tabs and white spaces",
+    "vocab": null,
+    "layers": 34,
+    "hidden": null,
+    "heads": 24,
+    "context": "2,048 tokens",
+    "other": {
+     "dims_per_head": 256
+    }
+   },
+   {
+    "name": "CODEGEN-MONO 350M",
+    "role": "proposed",
+    "params": "350M",
+    "architecture": "decoder-only transformer, rotary position embedding, parallel attention and MLP",
+    "init_from": "CODEGEN-MULTI",
+    "tokenizer": "GPT-2 BPE extended with special tokens for repeated tabs and white spaces",
+    "vocab": null,
+    "layers": 20,
+    "hidden": null,
+    "heads": 16,
+    "context": "2,048 tokens",
+    "other": {
+     "dims_per_head": 64
+    }
+   },
+   {
+    "name": "CODEGEN-MONO 2.7B",
+    "role": "proposed",
+    "params": "2.7B",
+    "architecture": "decoder-only transformer, rotary position embedding, parallel attention and MLP",
+    "init_from": "CODEGEN-MULTI",
+    "tokenizer": "GPT-2 BPE extended with special tokens for repeated tabs and white spaces",
+    "vocab": null,
+    "layers": 32,
+    "hidden": null,
+    "heads": 32,
+    "context": "2,048 tokens",
+    "other": {
+     "dims_per_head": 80
+    }
+   },
+   {
+    "name": "CODEGEN-MONO 6.1B",
+    "role": "proposed",
+    "params": "6.1B",
+    "architecture": "decoder-only transformer, rotary position embedding, parallel attention and MLP",
+    "init_from": "CODEGEN-MULTI",
+    "tokenizer": "GPT-2 BPE extended with special tokens for repeated tabs and white spaces",
+    "vocab": null,
+    "layers": 33,
+    "hidden": null,
+    "heads": 16,
+    "context": "2,048 tokens",
+    "other": {
+     "dims_per_head": 256
+    }
+   },
+   {
+    "name": "CODEGEN-MONO 16.1B",
+    "role": "proposed",
+    "params": "16.1B",
+    "architecture": "decoder-only transformer, rotary position embedding, parallel attention and MLP",
+    "init_from": "CODEGEN-MULTI",
+    "tokenizer": "GPT-2 BPE extended with special tokens for repeated tabs and white spaces",
+    "vocab": null,
+    "layers": 34,
+    "hidden": null,
+    "heads": 24,
+    "context": "2,048 tokens",
+    "other": {
+     "dims_per_head": 256
+    }
+   },
+   {
+    "name": "GPT-NEO",
+    "role": "baseline",
+    "params": "350M, 2.7B",
+    "architecture": "decoder-only transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-J",
+    "role": "baseline",
+    "params": "6B",
+    "architecture": "decoder-only transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "CODEX (Chen et al. 2021)",
+    "role": "baseline",
+    "params": "300M, 2.5B, 12B",
+    "architecture": "decoder-only transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "code-cushman-001/code-davinci-001/002 (numbers from Chen et al. 2022)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "decoder-only transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "INCODER 6B",
+    "role": "baseline",
+    "params": "6B",
+    "architecture": "decoder-only transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "next-token prediction (autoregressive language modeling)",
+   "optimizer": "Adam (beta1, beta2, eps) = (0.9, 0.999, 1e-08), global gradient norm clipping 1.0",
+   "lr": "NL 3.0e-4/1.6e-4/1.2e-4/0.9e-4 (350M/2.7B/6.1B/16.1B); MULTI and MONO 1.8e-4/0.8e-4/0.4e-4/0.5e-4",
+   "lr_schedule": "follows GPT-3: warm-up then cosine annealing",
+   "warmup": "3k steps",
+   "batch_size": "500k / 1M / 2M / 2M tokens (350M/2.7B/6.1B/16.1B)",
+   "steps": "NL 350k; MULTI 150k; MONO 150k",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "2,048",
+   "precision": null,
+   "weight_decay": "0.1",
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "Google TPU-v4 (e.g. TPU-v4-512 slice); JAXFORMER with pjit, intra-TPU-VM sharding for <=6B, inter-TPU-VM for >6B",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "batch_size_unit": "Table 6 prints 500k, 1M, 2M with no unit; tokens inferred from context length and size",
+    "table6_label": "the NL row labelled 'Warm-up / Total steps' reads 350k, read as total steps",
+    "no_hyperparameter_tuning": "We did not have the compute capacity to optimize these hyper-parameters further."
+   }
+  },
+  "inference": {
+   "decoding": "nucleus sampling",
+   "temperature": "t in {0.2, 0.6, 0.8} on HumanEval, best pass@k reported; 0.8 on MBPP",
+   "top_p": "0.95",
+   "max_tokens": null,
+   "samples": "HumanEval n=200, k<=100; MBPP n=100; MTPB 5 test cases x 40 samples per test case",
+   "prompting": "HumanEval standard prompt; MTPB: past prompts and generated responses concatenated, sampling prefixed with '# Import libraries.\\n import numpy as np'",
+   "retrieval": null,
+   "parameters": {},
+   "other": {
+    "mtpb_last_turn": "last prompt always asks to print the result; print() overloaded, AST mutated to inject print if missing",
+    "equivalence": "type-relaxed check, floats compared with eps=1e-6"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "pass@k",
+     "definition": "unbiased estimator of Chen et al. 2021, 1 - C(n-c,k)/C(n,k) averaged over problems",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "MTPB pass rate",
+     "definition": "average over problems of fraction of samples whose executed output equals the gold output, 5 test cases x 40 samples",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "prompt perplexity",
+     "definition": "exp of negative mean log-probability of the prompt tokens given earlier turns and generated code (multi-turn) or whole concatenation (single-turn)",
+     "unit": "PPL",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "GPT-NEO",
+    "GPT-J",
+    "CODEX",
+    "code-cushman-001",
+    "code-davinci-001",
+    "code-davinci-002",
+    "INCODER 6B"
+   ],
+   "protocol": "Pass and non-pass problems by 200 samples; difficulty: hard <30% avg pass rate, easy >70%; no significance tests; single run per model"
+  },
+  "availability": {
+   "code": "https://github.com/salesforce/jaxformer",
+   "weights": "https://github.com/salesforce/CodeGen",
+   "data": "MTPB at https://github.com/salesforce/CodeGen/tree/main/benchmark"
+  },
+  "prompts": [
+   {
+    "purpose": "prefix to guide MTPB sampling",
+    "text": "# Import libraries.\\n import numpy as np",
+    "where": "footnote 6, p.6"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "CODEGEN-MONO 16.1B reaches HumanEval pass@1 29.28, level with CODEX 12B (28.81).",
+   "kind": "measured",
+   "source": null,
+   "metric": "HumanEval pass@1",
+   "value": 29.28,
+   "unit": "%",
+   "baseline_value": 28.81,
+   "n": null,
+   "setup": "HumanEval 164 problems, best of t in {0.2,0.6,0.8}, top-p 0.95, n=200",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row CODEGEN-MONO 16.1B, column k = 1"
+  },
+  {
+   "claim": "HumanEval pass@1 across the three stages at 16.1B: NL 14.24, MULTI 18.32, MONO 29.28.",
+   "kind": "measured",
+   "source": null,
+   "metric": "HumanEval pass@1 (NL)",
+   "value": 14.24,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "16.1B, best of three temperatures",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row CODEGEN-NL 16.1B, column k = 1"
+  },
+  {
+   "claim": "CODEGEN-MULTI 16.1B pass@1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "HumanEval pass@1 (MULTI)",
+   "value": 18.32,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "16.1B, best of three temperatures",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row CODEGEN-MULTI 16.1B, column k = 1"
+  },
+  {
+   "claim": "CODEGEN-MONO 16.1B pass@100.",
+   "kind": "measured",
+   "source": null,
+   "metric": "HumanEval pass@100",
+   "value": 75.0,
+   "unit": "%",
+   "baseline_value": 72.31,
+   "n": null,
+   "setup": "16.1B, best of three temperatures",
+   "note": "baseline is CODEX 12B pass@100",
+   "where": "Table 1",
+   "table": "Table 1, row CODEGEN-MONO 16.1B, column k = 100"
+  },
+  {
+   "claim": "CODEGEN-MONO 2.7B beats CODEX 2.5B at pass@1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "HumanEval pass@1",
+   "value": 23.7,
+   "unit": "%",
+   "baseline_value": 21.36,
+   "n": null,
+   "setup": "2.7B, best of three temperatures",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row CODEGEN-MONO 2.7B, column k = 1"
+  },
+  {
+   "claim": "MTPB pass rate for CODEGEN-MONO 16.1B.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MTPB pass rate",
+   "value": 47.34,
+   "unit": "%",
+   "baseline_value": 30.33,
+   "n": null,
+   "setup": "115 problems, 5 test cases, 40 samples per test case, multi-turn",
+   "note": "baseline is CODEGEN-NL 16.1B (30.33); code-davinci-002 scores 59.86",
+   "where": "Table 3",
+   "table": "Table 3, row CODEGEN-MONO, column 16.1B"
+  },
+  {
+   "claim": "MTPB pass rate for CODEGEN-MULTI 16.1B, barely above its 6.1B (25.51) and 2.7B sibling.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MTPB pass rate",
+   "value": 26.27,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "multi-turn, 16.1B",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row CODEGEN-MULTI, column 16.1B"
+  },
+  {
+   "claim": "Multi-turn prompts beat concatenated single-turn at 16.1B on MTPB pass rate.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MTPB pass rate multi-turn",
+   "value": 47.34,
+   "unit": "%",
+   "baseline_value": 38.74,
+   "n": null,
+   "setup": "CODEGEN-MONO 16.1B",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row Multi-Turn, column Pass Rate 16.1B"
+  },
+  {
+   "claim": "Multi-turn prompts beat single-turn at 350M.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MTPB pass rate multi-turn",
+   "value": 16.98,
+   "unit": "%",
+   "baseline_value": 5.75,
+   "n": null,
+   "setup": "CODEGEN-MONO 350M",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row Multi-Turn, column Pass Rate 350M"
+  },
+  {
+   "claim": "Multi-turn prompt perplexity is lower than concatenated single-turn at 16.1B.",
+   "kind": "measured",
+   "source": null,
+   "metric": "prompt PPL multi-turn",
+   "value": 8.05,
+   "unit": "PPL",
+   "baseline_value": 10.25,
+   "n": null,
+   "setup": "CODEGEN-MONO 16.1B, mean over MTPB",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row Multi-Turn, column PPL 16.1B"
+  },
+  {
+   "claim": "For easy problems the multi-turn gain is near zero for the 6.1B and 16.1B models.",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass-rate difference (easy)",
+   "value": -0.25,
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CODEGEN-MONO 16.1B, easy = avg pass rate >70%",
+   "note": "other bar is 0.19 at 6.1B",
+   "where": "Sec 4.4, Fig 2",
+   "quote": "(see the two short bars, 0.19% and −0.25%, in Figure 2)"
+  },
+  {
+   "claim": "Pass problems have lower prompt perplexity than non-pass ones at every size (16.1B: 3.12 vs 3.40).",
+   "kind": "measured",
+   "source": null,
+   "metric": "prompt PPL, pass",
+   "value": 3.12,
+   "unit": "PPL",
+   "baseline_value": 3.4,
+   "n": null,
+   "setup": "CODEGEN-MONO 16.1B, HumanEval, pass = at least 1 of 200 samples passes",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Pass, column 16.1B"
+  },
+  {
+   "claim": "CODEGEN-MONO 16.1B on MBPP pass@1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MBPP pass@1",
+   "value": 35.28,
+   "unit": "%",
+   "baseline_value": 45.9,
+   "n": null,
+   "setup": "sanitized MBPP, n=100, temperature 0.8",
+   "note": "baseline is code-cushman-001 (45.90)",
+   "where": "Table 11",
+   "table": "Table 11, row CODEGEN-MONO 16.1B, column pass@1"
+  }
+ ],
+ "limits": [
+  "Pretraining only: no instruction tuning or SFT stage; the 'multi-turn' is prompt concatenation, not trained dialogue.",
+  "MTPB written by 4 authors, 115 problems; no significance tests or seeds reported.",
+  "HumanEval pass@k takes the best of three temperatures per k.",
+  "Generated programs may include vulnerabilities and safety concerns, not remedied; The Pile has profane language and bias.",
+  "Hyperparameters not tuned for lack of compute; compute and wall-clock not stated.",
+  "Larger model can be too literal on some prompts (Figs 3-4).",
+  "Perplexity as proxy for intent understanding is an assumption."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "pass problem",
+   "definition": "a problem for which at least one sample from 200 samples passes all test cases",
+   "where": "Sec 3.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Evaluating large language models trained on code (Codex)",
+   "year": 2021,
+   "arxiv": "2107.03374",
+   "relation": "baseline",
+   "note": "HumanEval, pass@k estimator and Codex baselines",
+   "quote": null
+  },
+  {
+   "work": "The Pile",
+   "year": 2020,
+   "arxiv": "2101.00027",
+   "relation": "uses-data",
+   "note": "CODEGEN-NL training data",
+   "quote": null
+  },
+  {
+   "work": "GPT-J-6B",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "parallel attention/MLP; baseline",
+   "quote": null
+  },
+  {
+   "work": "GPT-Neo",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "350M, 2.7B baselines",
+   "quote": null
+  },
+  {
+   "work": "RoFormer",
+   "year": 2021,
+   "arxiv": "2104.09864",
+   "relation": "uses-method",
+   "note": "rotary position embedding",
+   "quote": null
+  },
+  {
+   "work": "Language models are few-shot learners",
+   "year": 2020,
+   "arxiv": "2005.14165",
+   "relation": "uses-method",
+   "note": "learning-rate schedule and reference configurations",
+   "quote": null
+  },
+  {
+   "work": "Megatron-LM",
+   "year": 2019,
+   "arxiv": "1909.08053",
+   "relation": "uses-method",
+   "note": "intra-board parameter sharding",
+   "quote": null
+  },
+  {
+   "work": "ZeRO",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "inter-board sharding",
+   "quote": null
+  },
+  {
+   "work": "Program synthesis with large language models (MBPP)",
+   "year": 2021,
+   "arxiv": "2108.07732",
+   "relation": "uses-data",
+   "note": "MBPP evaluation",
+   "quote": null
+  },
+  {
+   "work": "CodeT (Chen et al.)",
+   "year": 2022,
+   "arxiv": "2207.10397",
+   "relation": "related",
+   "note": "source of code-cushman/davinci numbers",
+   "quote": null
+  },
+  {
+   "work": "InCoder (Fried et al.)",
+   "year": 2022,
+   "arxiv": "2204.05999",
+   "relation": "baseline",
+   "note": "MBPP comparison",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Figure 1",
+   "caption": "An illustrative example for the Multi-Turn Programming Benchmark, performing the task of extracting the user name of an email address.",
+   "page": 6,
+   "why": "shows prompt/response concatenation and execution"
+  },
+  {
+   "figure": "Figure 2",
+   "caption": "Difference in average pass-rate of problems in single-turn and multi-turn formulation over levels of problem difficulty.",
+   "page": 8,
+   "why": "multi-turn gain vanishes on easy problems at 6.1B and 16.1B"
+  }
+ ],
+ "code": [
+  {
+   "where": "Appendix A.2",
+   "snippet": "x_{t+1} = x_t + attn(ln(x_t)) + mlp(ln(x_t))",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Table 6 row label 'Warm-up / Total steps' for CODEGEN-NL looks like a typo.",
+  "Figures 7-9 captions are identical ('Maximum Length of Completion versus Pass Rate') with no data in text."
+ ]
+}

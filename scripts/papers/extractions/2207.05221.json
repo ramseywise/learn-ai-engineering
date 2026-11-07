@@ -1,19 +1,692 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2207.05221",
  "pdf": "generative-ai/08-eval/sources/kadavath-2022-language-models-mostly-know-what.pdf",
  "bib": {
   "title": "Language Models (Mostly) Know What They Know",
+  "authors": [
+   "Saurav Kadavath",
+   "Tom Conerly",
+   "Amanda Askell",
+   "Tom Henighan",
+   "Dawn Drain",
+   "Ethan Perez",
+   "Nicholas Schiefer",
+   "Zac Hatfield-Dodds",
+   "Nova DasSarma",
+   "Eli Tran-Johnson",
+   "Scott Johnston",
+   "Sheer El-Showk",
+   "Andy Jones",
+   "Nelson Elhage",
+   "Tristan Hume",
+   "Anna Chen",
+   "Yuntao Bai",
+   "Sam Bowman",
+   "Stanislav Fort",
+   "Deep Ganguli",
+   "Danny Hernandez",
+   "Josh Jacobson",
+   "Jackson Kernion",
+   "Shauna Kravec",
+   "Liane Lovitt",
+   "Kamal Ndousse",
+   "Catherine Olsson",
+   "Sam Ringer",
+   "Dario Amodei",
+   "Tom Brown",
+   "Jack Clark",
+   "Nicholas Joseph",
+   "Ben Mann",
+   "Sam McCandlish",
+   "Chris Olah",
+   "Jared Kaplan"
+  ],
   "first_author": "Kadavath",
   "year": 2022,
-  "venue": null,
+  "venue": "preprint",
   "arxiv": "2207.05221",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-03",
-  "session": "9d482f42-66b5-42d0-8570-406871585b30"
+  "at": "2026-11-07",
+  "chars_read": 115116,
+  "chars_total": 115116,
+  "engine": "pymupdf",
+  "skipped": "Reference list skimmed only; plot-axis number lines not analysed."
  },
- "legacy_report": "SOURCE: \"Language Models (Mostly) Know What They Know\", Saurav Kadavath, Tom Conerly, Amanda Askell, ... Jared Kaplan (Anthropic). Preprint: the text reads \"arXiv:2207.05221v4 [cs.CL] 21 Nov 2022\". The PDF names no venue. v1 is 2022.\n\nCOVERAGE: I read all 114,288 of 114,288 chars (43 pages), covering the body, Sections 1–7, Appendices A–D, the Table 4 dataset list and the reference list. I filtered out lines that were only plot-axis numbers. The references I skimmed. pypdf hit a form-XObject limit warning, but all text seems to be there (see PROBLEMS). Only Table 1 (P(IK)) and Tables 2–3 contain exact numbers. Every multiple-choice and P(True) calibration result appears only as a plot, so the text gives no exact ECE values.\n\nCLAIMS\n- claim: Pretrained models only. Sizes 800M, 3B, 12B and 52B, pretrained on 850B tokens with about 10% code. RLHF policies appear only in Section 3.3.\n  number: 800M/3B/12B/52B; 850B tokens\n  setup: architecture as Bai et al. 2022\n  quote: \"We study a series of language models with 800M, 3B, 12B, 52B parameters. ... pretrained for 850B tokens, rather than the 400B tokens used in that work. ... In section 3.3 we brieﬂy study helpful and harmless RLHF policies ... but otherwise we only study pure language models.\"\n  where: p.6, char ~17722\n- claim: (a) Large models are well calibrated on multiple choice when the options are visible and labelled with letters. Calibration improves with size and from 0-shot to few-shot. The good calibration already holds 0-shot. The BIG Bench default format (rewriting the full answer) is calibrated less well.\n  number: 5-shot vs 0-shot (Fig 4/5). The text gives no ECE values.\n  setup: all BIG Bench MC tasks, MMLU, TruthfulQA, QuALITY, LogiQA\n  quote: \"We typically ﬁnd good calibration 0-shot, without any other prompt, though calibration improves as we pass from 0-shot to few-shot. We ﬁnd that in almost all cases, calibration improves with model size and capability.\" / \"It is crucial that the model gets to see the answer choices explicitly before choosing amongst them\" / \"We ﬁnd that calibration is poorer in this format, compared to a format with lettered choices\" (App A.4)\n  where: p.8, char ~25193; p.25\n- claim: Replacing the last option with \"none of the above\" hurts both accuracy and calibration significantly. Even the 52B model avoids that option, and 20-shot does not help.\n  number: 5-shot, 20-shot\n  setup: MMLU / BIG Bench\n  quote: \"even the 52B model is biased against using the “none of the above” option ... This is particularly surprising for 5-shot evaluations; we also tried evaluating 20-shot and this also did not improve performance.\"\n  where: p.10, char ~30067\n- claim: In a True/False reformulation of the MC tasks with human-written options, the 52B model is well calibrated, except that it is overconfident near the tails.\n  number: 52B, 5-shot\n  quote: \"The 52B model is very well-calibrated except near the tails, where it is overconﬁdent.\"\n  where: p.10, char ~29426\n- claim: (c) Taken at face value, RLHF policies look very miscalibrated. A single temperature of T = 2.5 largely fixes this on three evaluations. The authors call it a \"quick experiment\" and note that heavier RL might not be fixable this way.\n  number: T = 2.5\n  setup: 52B HH RLHF policy, 5-shot, on MMLU, MMLU True/False and TruthfulQA (Fig 9)\n  quote: \"these policies naively appear very miscalibrated ... a simple temperature adjustment (with the same temperature T = 2 .5 for all evaluations) largely ﬁxes calibration issues with several independent evaluation tasks\" / \"Of course more intensive RL training might distort calibration in ways that cannot be remedied in this way\"\n  where: p.11, char ~32055–32704\n- claim: (b) P(True) self-evaluation of the model's own T=1 samples is poorly calibrated zero-shot and sits near 50%. The cause given is that own samples lie near the decision boundary or the model is overconfident in them.\n  number: 50%\n  setup: TriviaQA, Lambada, Arithmetic, GSM8k, Codex HumanEval\n  quote: \"These samples may lie close to the model’s own decision boundary for validity (or the model may simply be overconﬁdent about its own samples) ... Zero-shot, P(True) is poorly calibrated, and typically it lies close to 50% for typical samples (see Figure 38 in the appendix for illustrations).\"\n  where: p.12, char ~36947\n- claim: AUDIT CAVEAT. \"Zero-shot\" in this paper still includes a fixed human-written prompt with six examples (App A.5). In the zero-shot runs the 52B separates correct from incorrect samples well, but the probability is not calibrated. On arithmetic, almost all samples get P(True) > 0.5, which does not fit a blanket \"close to 50%\".\n  number: six examples; > 0.5\n  quote: \"P(True) provides very noticeable separation between correct and incorrect samples with the 52B model, but the probability itself is not calibrated. In particular, almost all samples from arithmetic questions have P(True)> 0.5. These evaluations are all zero-shot, but they include a human-written prompt with six examples.\"\n  where: p.40 (Fig 38), char ~101387\n- claim: Few-shot (20-shot) P(True) is well calibrated. A larger k mainly improves calibration, not AUROC. Zero-shot calibration improves with size but stays poor.\n  number: 20-shot\n  quote: \"Self-evaluations are well-calibrated few-shot, though models aren’t as well-calibrated zero-shot. In particular, larger k for k-shot self-evaluation seems to primarily help by improving calibration, rather than by improving the AUROC\" / Fig 34: \"the P(True) judgment is poorly calibrated, though in most cases it seems to be improving as models become larger and more capable.\"\n  where: p.4, char ~11432; p.38\n- claim: Caveat on the 20-shot calibration plots. Small models look calibrated on GSM8k, Codex and Arithmetic only because they get almost everything wrong.\n  number: none\n  quote: \"smaller models get almost every question wrong, which means that in these cases the small models are only well-calibrated because they are making trivial predictions.\"\n  where: p.36 (Fig 32)\n- claim: Showing five T=1 samples (\"brainstormed ideas\") improves self-evaluation significantly on short-form tasks and less on long-form ones (Codex, GSM8k). By Brier score, 20-shot with comparison samples is best in every case. By conditional accuracy, the fixed prompt beats 20-shot on Codex and GSM8k.\n  number: 5 samples; 20-shot\n  quote: \"performance improves signiﬁcantly on all of the short-form answer tasks ... models beneﬁt less from this approach on tasks requiring long-form answers (Codex and GMS8k)\" / \"20-shot evaluation with comparison samples performs best in every case\" / \"it appears that the prompt actually performs better than few-shot for codex and GSM8k, possibly because these have long-form answers.\"\n  where: p.12–13, char ~40342; p.33, char ~92103\n- claim: For the 52B, answers with P(True) > 0.5 are far more often correct than the base rate, and the gap grows with size (\"verification is often easier than generation\"). The text gives no exact accuracies.\n  number: P(True) > 50%\n  quote: \"for our 52B models answers labeled with P(True) > 50% are far more likely to be correct as compared to generic responses\"\n  where: p.11, char ~33819\n- claim: (d) A P(IK) value head fine-tuned only on TriviaQA generalises partially out of distribution. Calibration on the new tasks is poor, mostly underconfident, and on Lambada it is \"terrible\". Training on all four tasks closes much of the gap.\n  number: Table 1, 52B, AUROC / Brier (TriviaQA-only → all except GSM8K): TriviaQA 0.864/0.151 → 0.873/0.145; Mixed-Arithmetic 0.928/0.194 → 0.987/0.042; LAMBADA 0.606/0.431 → 0.853/0.108; Python Func Synth 0.687/0.164 → 0.881/0.109; GSM8K 0.624/0.200 → 0.752/0.121\n  setup: 30 samples at T=1 per question give a soft label. The whole model is fine-tuned with the head.\n  quote: \"TriviaQA 0.864 / 0.151 0.873 / 0.145 / Mixed-Arithmetic 0.928 / 0.194 0.987 / 0.042 / LAMBADA 0.606 / 0.431 0.853 / 0.108 / Python Func Synth. 0.687 / 0.164 0.881 / 0.109 / GSM8K 0.624 / 0.200 0.752 / 0.121\" / \"OOD calibration of P(IK) is often quite poor, and for the most part models are underconﬁdent.\" / \"when testing on Lambada, calibration was terrible, because the model produces uniformly low P(IK) scores\"\n  where: p.18, char ~52148; p.15, char ~46986, ~48093\n- claim: P(IK) rises when relevant source material is in the context. Example: 18% becomes 78% when a Wikipedia article is added. The rise is larger for shorter articles. P(IK) also rises with GSM8k hints, more for good hints than bad ones, and falls for irrelevant hints.\n  number: 18% → 78%\n  quote: \"P(IK) appropriately predicts a low value, speciﬁcally 18% for a 52B model\" / \"then the P(IK) score rises to 78%\"\n  where: p.18–19, char ~53517, ~55085\n- claim: P(IK) carries only a weak model-specific signal. Two 12B models with different pretraining data differ by about 6%.\n  number: 0.463 vs 0.408; ~6%\n  quote: \"the difference in P(IK) is only around 6%, so there is room for improvement from future work.\"\n  where: p.21, char ~61192\n- claim: Entropy of the answer distribution, H(A|Q), is not a robust \"knows it\" signal. Its AUROC on HumanEval falls with model size because larger models give diverse correct answers.\n  number: N = 200 samples\n  quote: \"we believe that H(A|Q) is not a robust measure of whether or not a model knows the answer to a question, especially as models increase in size.\"\n  where: App B.2, p.29\n\nLIMITS: The authors' own text says: \"models that have been ﬁnetuned for a speciﬁc purpose, such as RLHF policies [Bai et al., 2022], will not be so well-calibrated, and some of the methods we discussed may not work as well\" (p.23, char ~67290). They also say they \"only studied ﬁve sampling-based datasets\", that the findings are \"limited in power and scope\", that they do not separate \"the truth\" from \"what humans say\", and that they do not address deception. They report that the natural-language P(IK) variant showed no major gains. Dated aspects: the work uses 2022 Anthropic base models up to 52B and only one RLHF temperature experiment. A model also cannot tell its own tokens from tokens it was given (footnote 1).\n\nAudit notes:\n(1) Note 05 is accurate on 50% / 20-shot / long-form. It should add that \"zero-shot\" here means a 6-example fixed prompt, and that arithmetic is an exception where P(True) > 0.5 for nearly all samples.\n(2) The line in the 01 note (\"P(True) ... well calibrated for large models in the right format\") merges two results. \"Right format\" is the paper's claim about multiple choice and True/False on human-written options. For P(True) on the model's own samples, good calibration needs few-shot.\n(3) The note 05 sentence \"RLHF-tuned models are less well calibrated\" is supported, but the paper also shows that T = 2.5 largely fixes it.\n\nBUILDS ON: Guo et al., 2017 (token calibration); Srivastava et al., 2022 (BIG Bench, calibration improves with size); Rae et al., 2021 (Gopher MMLU calibration, which inspired the lettered format); Bai et al., 2022 (models/RLHF); Lin et al., 2022 (verbalised uncertainty, a P(True) analogue); Mielke et al., 2020; Wang et al., 2022 (self-consistency); Desai and Durrett, 2020; Jiang et al., 2021; Askell et al., 2021 (honesty).\n\nCODE: The P(True) self-evaluation prompt (p.11, char ~36000):\n```\nQuestion: Who was the first president of the United States?\nProposed Answer: George Washington was the first president.\nIs the proposed answer:\n(A) True\n(B) False\nThe proposed answer is:\n```\nThe comparison-sample variant (p.12) inserts \"Here are some brainstormed ideas: <5 T=1 samples>\" and \"Possible Answer:\".\n\nFIGURES:\n- Fig 1, p.3: P(True) histograms for the 52B at 20-shot, plus the gain in accuracy from P(True) > 0.5. A one-glance summary.\n- Fig 4, p.7: ECE against size for lettered 0-shot/5-shot, True/False and the BB default format. Shows the format and shot effects together.\n- Fig 9, p.11: RLHF at T=1 against T=2.5. The temperature fix is visible immediately.\n- Fig 11, p.13: Brier score and conditional accuracy for Lambada against Codex. Shows short-form versus long-form.\n- Fig 38, p.40: Zero-shot P(True) histograms showing separation without calibration.\n- Fig 13/16, p.15/17: P(IK) calibration in-distribution against OOD.\n\nPROBLEMS: pypdf warned \"Exceeded 5000 form XObject invocations ... further form content is skipped\". This probably affects only plot graphics, since all captions and body text came through. The Fig 13 caption has no extracted plot labels. figures.py captions returned no output, so I mapped figure pages with pypdf. The model sizes are inconsistent: the text says 3B/52B, while the Fig 33 legend says \"2.7B\" and \"51B\". A footnote contains the leftover placeholder \"See section XYZ\". The text contains no embedded instructions. PDF: /Users/ramsey-wise/workspace/learn-ai-engineering/generative-ai/08-eval/sources/kadavath-2022-language-models-mostly-know-what.pdf"
+ "type": "empirical",
+ "question": "Can language models evaluate the validity of their own answers (P(True)) and be trained to predict whether they know the answer to a question (P(IK))?",
+ "hypothesis": "Models that are calibrated on multiple choice and True/False questions can be used to self-evaluate their own samples, and a trained P(IK) head can capture what the model knows and generalise across tasks.",
+ "contributions": [
+  "Large models are well calibrated on lettered multiple choice and on True/False; 'none of the above' hurts accuracy and calibration; RLHF miscalibration largely fixed by a single temperature.",
+  "Self-evaluation (P(True)) of model samples without finetuning, improved by showing five of the model's own T=1 samples.",
+  "P(IK) value-head finetuning: partial generalisation across tasks, poor OOD calibration, responds to source material and hints.",
+  "Comparison of two models with different pretraining data."
+ ],
+ "method": {
+  "summary": "Pretrained Anthropic LMs (800M to 52B) are evaluated for calibration on multiple choice (BIG Bench, MMLU, TruthfulQA, LogiQA, QuALITY) and True/False formats, prompted (not trained) to give P(True) for their own T=1 samples on five generative tasks, and finetuned with a value head to give P(IK). Calibration is measured with ECE, Brier, AUROC.",
+  "task": "calibration, self-evaluation of sampled answers, and prediction of whether a model can answer a question",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "BIG Bench multiple choice (all), MMLU, TruthfulQA, LogiQA, QuALITY",
+    "role": "eval",
+    "size": null,
+    "split": "few-shot examples drawn at random from the test evaluation itself; BIG Bench within subtask, MMLU across whole eval",
+    "source": "Srivastava 2022; Hendrycks 2021; Lin 2021; Liu 2020; Pang 2021",
+    "preprocessing": "Lettered options, answer by label; or one correct plus one random incorrect answer as True/False (twice as many problems); or last option replaced with 'none of the above'"
+   },
+   {
+    "name": "TriviaQA",
+    "role": "both",
+    "size": null,
+    "split": "train for P(IK) finetuning; held-out test questions for evaluation",
+    "source": "Joshi 2017",
+    "preprocessing": "10-shot prompt of random TriviaQA items; 30 answers sampled at T=1; correctness by string comparison"
+   },
+   {
+    "name": "Lambada",
+    "role": "both",
+    "size": null,
+    "split": null,
+    "source": "Paperno 2016",
+    "preprocessing": "10-shot fill-in-the-blank"
+   },
+   {
+    "name": "Mixed-Arithmetic",
+    "role": "both",
+    "size": null,
+    "split": null,
+    "source": "programmatically generated (Table 4)",
+    "preprocessing": "10-shot"
+   },
+   {
+    "name": "Python function synthesis (GitHub-scraped)",
+    "role": "both",
+    "size": "8000 functions with tests",
+    "split": "6000/2000 train/test",
+    "source": "scraped Python repos with a 'test' file; functions with at least half the lines covered by passing tests",
+    "preprocessing": "0-shot; partial file with function def and docstring at the end"
+   },
+   {
+    "name": "GSM8k",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Cobbe 2021",
+    "preprocessing": "10-shot with reasoning; scored by number after ####; only 52B evaluated; ground truth P(IK) binarised at 0.25 in histograms (0.5 in Table 1)"
+   },
+   {
+    "name": "Codex HumanEval",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Chen 2021",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Anthropic pretrained LMs",
+    "role": "evaluated",
+    "params": "800M, 3B, 12B, 52B",
+    "architecture": "inferred: decoder-only transformer, as Bai et al. 2022 (paper says identical architecture and training setup to that work)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "pretraining_tokens": "850B (Bai et al. used 400B)",
+     "code_share": "about 10% of pretraining distribution; not finetuned on Python"
+    }
+   },
+   {
+    "name": "HH RLHF policies",
+    "role": "evaluated",
+    "params": "52B shown",
+    "architecture": "finetuned from the base LMs as in Bai et al. 2022",
+    "init_from": "base LMs",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Models A and B (12B)",
+    "role": "evaluated",
+    "params": "12B",
+    "architecture": "identical architecture",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "pretraining": "A: four repetitions of a high quality dataset; B: one copy of it mixed with one copy of a larger lower-quality web distribution"
+    }
+   }
+  ],
+  "training": {
+   "objective": "cross-entropy on P(IK) value-head logit; 30 T=1 samples per question each give a hard IK/IDK label (e.g. 20 correct and 10 incorrect gives 20 IK copies and 10 IDK copies); loss backpropagated only at last input token",
+   "optimizer": null,
+   "lr": "1/3 of the original pretraining learning rate",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "7680",
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "scope": "entire model finetuned along with value head",
+    "note": "P(True) is prompted only, no training; pretraining of base LMs not described here"
+   }
+  },
+  "inference": {
+   "decoding": "T=1 sampling for answers evaluated; T=0 sample used in Appendix B",
+   "temperature": "1 (RLHF calibration fixed with T=2.5)",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "30 T=1 samples per question for P(IK) ground truth; 5 T=1 samples total shown in the comparison P(True) format; N=200 samples for entropy; 30 stuffed samples for mean token loss",
+   "prompting": "Letter-labelled options; True/False format '(A) True (B) False'; P(True) prompt with six examples (Appendix A.5) or 20-shot; few-shot examples drawn from the test set itself",
+   "retrieval": null,
+   "parameters": {
+    "P(True) threshold": "0.5",
+    "ground-truth P(IK)": "fraction of T=1 samples correct, binarised at 0.5 (0.25 for some GSM8k plots)",
+    "ECE bins": "10 equal-count bins, top prediction only",
+    "Wikipedia article truncation": "7000 tokens"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "ECE",
+     "definition": "mean absolute difference between prediction and frequency over 10 equal-count bins, top predictions only",
+     "unit": "probability",
+     "higher_is_better": false
+    },
+    {
+     "name": "RMS calibration error",
+     "definition": "root mean square of the same",
+     "unit": "probability",
+     "higher_is_better": false
+    },
+    {
+     "name": "AUROC",
+     "definition": "discriminating known from unknown questions, or correct from incorrect samples; chance 0.5",
+     "unit": "area",
+     "higher_is_better": true
+    },
+    {
+     "name": "Brier score",
+     "definition": "mean (p-c)^2, p = P(True), c = correctness; chance 0.25 on binary tasks",
+     "unit": "score",
+     "higher_is_better": false
+    },
+    {
+     "name": "Conditional accuracy",
+     "definition": "accuracy among samples with P(True) > 0.5",
+     "unit": "fraction",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "BIG Bench default format",
+    "none-of-the-above variant",
+    "zero-shot vs few-shot",
+    "one-example prompt vs comparison-example prompt vs 20-shot",
+    "loss of T=0 sample, entropy of answer distribution, stuffed-sample loss (Appendix B)"
+   ],
+   "protocol": "Single reported runs; no seeds, error bars or significance tests stated. Most results appear only as plots."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": null
+  },
+  "prompts": [
+   {
+    "purpose": "True/False check of a proposed answer (section 3.2)",
+    "text": "Question: Who was the first president of the United States?\nProposed Answer: George Washington\nIs the proposed answer:\n(A) True\n(B) False\nThe proposed answer is:",
+    "where": "Section 3.2"
+   },
+   {
+    "purpose": "P(True) with brainstormed samples (section 4.2)",
+    "text": "Question: Who was the third president of the United States?\nHere are some brainstormed ideas: James Monroe\nThomas Jefferson\nJohn Adams\nThomas Jefferson\nGeorge Washington\nPossible Answer: James Monroe\nIs the possible answer:\n(A) True\n(B) False\nThe possible answer is:",
+    "where": "Section 4.2; six-example full prompt in Appendix A.5"
+   },
+   {
+    "purpose": "P(IK) with background material (section 5.3)",
+    "text": "Here is some background information material: <BACKGROUND_MATERIAL>\nNow, answer the following question.\nQuestion: ...\nAnswer:",
+    "where": "Section 5.3"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "inference.prompting",
+    "quote": "This was simply the ﬁrst prompt we tried, and it was not otherwise optimized.",
+    "where": "Appendix A.5"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Zero-shot P(True) on the model's own samples is poorly calibrated, sitting near 50%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "typical zero-shot P(True)",
+   "value": 50,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Pretrained models up to 52B, TriviaQA, Lambada, arithmetic, GSM8k, Codex; fixed prompt (not truly zero-example)",
+   "quote": "typically it lies close to 50% for typical samples",
+   "table": null,
+   "note": null,
+   "where": "Section 4.1"
+  },
+  {
+   "claim": "Cross-task AUROC of P(IK) trained only on TriviaQA is weak on LAMBADA but jumps when trained on all tasks.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AUROC",
+   "value": 0.606,
+   "unit": "area",
+   "baseline_value": 0.853,
+   "n": null,
+   "setup": "52B P(IK) classifiers, ground truth binarised at 0.5; Training on TriviaQA vs all tasks except GSM8K",
+   "quote": null,
+   "table": "Table 1, row LAMBADA, column Training on TriviaQA (AUROC / Brier)",
+   "note": "Trained-on-all value 0.853 / Brier 0.108 vs 0.606 / 0.431",
+   "where": "Table 1"
+  },
+  {
+   "claim": "P(IK) AUROC on TriviaQA in-distribution at 52B.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AUROC",
+   "value": 0.864,
+   "unit": "area",
+   "baseline_value": null,
+   "n": null,
+   "setup": "52B, trained on TriviaQA",
+   "quote": null,
+   "table": "Table 1, row TriviaQA, column Training on TriviaQA (AUROC / Brier)",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Mixed-Arithmetic AUROC trained on TriviaQA only versus all tasks.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AUROC",
+   "value": 0.928,
+   "unit": "area",
+   "baseline_value": 0.987,
+   "n": null,
+   "setup": "52B P(IK)",
+   "quote": null,
+   "table": "Table 1, row Mixed-Arithmetic, column Training on TriviaQA (AUROC / Brier)",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "GSM8K AUROC of P(IK) trained on TriviaQA only versus all other tasks.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AUROC",
+   "value": 0.624,
+   "unit": "area",
+   "baseline_value": 0.752,
+   "n": null,
+   "setup": "52B only; GSM8k binarised at 0.5 in this table",
+   "quote": null,
+   "table": "Table 1, row GSM8K, column Training on TriviaQA (AUROC / Brier)",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "A 52B RLHF policy that looks badly miscalibrated is largely fixed by one temperature.",
+   "kind": "measured",
+   "source": null,
+   "metric": "temperature",
+   "value": 2.5,
+   "unit": "T",
+   "baseline_value": null,
+   "n": null,
+   "setup": "52B HH RLHF policy, MMLU, MMLU True/False, TruthfulQA, 5-shot",
+   "quote": "with the same temperature T = 2.5 for all evaluations",
+   "table": null,
+   "note": null,
+   "where": "Section 3.3"
+  },
+  {
+   "claim": "P(IK) of an obscure trivia question rises when relevant Wikipedia text is in context, without training for it.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "P(IK) after adding article (was 18%)",
+   "value": 78,
+   "unit": "%",
+   "baseline_value": 18,
+   "n": null,
+   "setup": "52B P(IK), single worked example (Idaho Rodeo Hall of Fame)",
+   "quote": "then the P(IK) score rises to 78%.",
+   "table": null,
+   "note": null,
+   "where": "Section 5.3"
+  },
+  {
+   "claim": "Models A and B have slightly higher P(IK) on the questions only they answer correctly (about 6 points).",
+   "kind": "measured",
+   "source": null,
+   "metric": "average P(IK)",
+   "value": 0.463,
+   "unit": "probability",
+   "baseline_value": 0.409,
+   "n": null,
+   "setup": "Two 12B models, TriviaQA test; A average on questions only A gets right",
+   "quote": null,
+   "table": "Table 2, row A's average P(IK), column Questions that only A gets right",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Starting P(IK) finetuning from the matching model helps only for model B.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AUROC",
+   "value": 0.8717,
+   "unit": "area",
+   "baseline_value": 0.846,
+   "n": null,
+   "setup": "12B models A,B; AUROC / Brier; B-ground-truth test",
+   "quote": null,
+   "table": "Table 3, row Starting from Model B, column Test on Ground-Truth from Model B",
+   "note": "Test on A: 0.8633 vs 0.8631, no difference.",
+   "where": "Table 3"
+  },
+  {
+   "claim": "Questions where exactly one of A or B is correct.",
+   "kind": "measured",
+   "source": null,
+   "metric": "questions only A correct (B: 826)",
+   "value": 650,
+   "unit": "questions",
+   "baseline_value": null,
+   "n": null,
+   "setup": "12B A and B, TriviaQA test",
+   "quote": "650 and 826 such questions, respectively",
+   "table": null,
+   "note": null,
+   "where": "Section 5.5"
+  },
+  {
+   "claim": "P(IK) finetuning uses a large batch (7680) and learning rate one third of pretraining because soft labels are noisy.",
+   "kind": "measured",
+   "source": null,
+   "metric": "batch size",
+   "value": 7680,
+   "unit": "sequences",
+   "baseline_value": null,
+   "n": null,
+   "setup": "P(IK) finetuning",
+   "quote": "we used a batch size of 7680",
+   "table": null,
+   "note": null,
+   "where": "Appendix A.6"
+  },
+  {
+   "claim": "Pretraining token count for the studied models.",
+   "kind": "measured",
+   "source": null,
+   "metric": "pretraining tokens",
+   "value": 850,
+   "unit": "B tokens",
+   "baseline_value": null,
+   "n": null,
+   "setup": "800M to 52B",
+   "quote": "pretrained for 850B tokens, rather than the 400B tokens used in that work",
+   "table": null,
+   "note": null,
+   "where": "Section 1.2"
+  },
+  {
+   "claim": "Python function synthesis dataset size.",
+   "kind": "measured",
+   "source": null,
+   "metric": "functions",
+   "value": 8000,
+   "unit": "functions",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GitHub-scraped",
+   "quote": "8000 Python functions and their corresponding",
+   "table": null,
+   "note": null,
+   "where": "Appendix D"
+  },
+  {
+   "claim": "P(True) ratings above 0.5 are far more often correct than generic samples at 52B, with 20-shot plus five comparison samples; gap grows with model size.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Five tasks; only plots, no exact numbers",
+   "quote": "answers labeled with P(True) > 50% are far more likely to be correct as compared to generic responses",
+   "table": null,
+   "note": null,
+   "where": "Section 4"
+  },
+  {
+   "claim": "Showing five of the model's own samples improves self-evaluation on short-answer tasks.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "All short-form tasks; plot only",
+   "quote": "performance improves signiﬁcantly on all of the short-form answer tasks",
+   "table": null,
+   "note": null,
+   "where": "Section 4.2"
+  },
+  {
+   "claim": "Self-evaluation improves with model size, read as verification being easier than generation.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Pretrained LMs only",
+   "quote": "verification has an advantage over generation",
+   "table": null,
+   "note": null,
+   "where": "Section 6"
+  },
+  {
+   "claim": "None-of-the-above replacement reduces accuracy and calibration; 20-shot does not fix it.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "MMLU, BIG Bench, 52B",
+   "quote": "we also tried evaluating 20-shot and this also did not improve performance",
+   "table": null,
+   "note": null,
+   "where": "Section 3.1"
+  }
+ ],
+ "limits": [
+  "Only pretrained models; the authors say RLHF models will not be so well calibrated and methods may not work as well.",
+  "Pretraining is human imitation; the analysis does not separate truth from what humans say.",
+  "Deception is not addressed.",
+  "Only five sampling-based datasets; capability-trend and generalisation observations limited in power and scope.",
+  "Almost all calibration and P(True) results are plots; no seeds, error bars or significance tests.",
+  "Small models look well calibrated on hard tasks only by predicting P(True) near 0.",
+  "P(IK) may track question difficulty rather than self-knowledge; the 12B A/B test shows only about a 6% difference.",
+  "Few-shot examples for P(True) are drawn from the test set itself.",
+  "Natural-language P(IK) approach abandoned after early experiments.",
+  "Models cannot tell their own tokens from tokens given by a third party (footnote 4).",
+  "Text contains a placeholder 'section XYZ' (footnote 6)."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "P(True)",
+   "definition": "The probability a model assigns to the proposition that a speciﬁc sample is the correct answer to a question.",
+   "where": "Section 1.1 glossary"
+  },
+  {
+   "term": "P(IK)",
+   "definition": "The probability a model assigns to \"I know\", i.e. the proposition that it will answer a given question correctly when samples are generated at unit temperature.",
+   "where": "Section 1.1 glossary"
+  },
+  {
+   "term": "Ground Truth P(IK)",
+   "definition": "The fraction of unit temperature samples to a question that are correct.",
+   "where": "Section 1.1 glossary"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Training a Helpful and Harmless Assistant with RLHF (Bai et al.)",
+   "year": 2022,
+   "arxiv": "2204.05862",
+   "relation": "extends",
+   "note": "Same architecture and training setup; RLHF policies from there",
+   "quote": null
+  },
+  {
+   "work": "BIG Bench (Srivastava et al.)",
+   "year": 2022,
+   "arxiv": "2206.04615",
+   "relation": "uses-data",
+   "note": "All multiple-choice tasks",
+   "quote": null
+  },
+  {
+   "work": "MMLU (Hendrycks et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Calibration eval",
+   "quote": null
+  },
+  {
+   "work": "TruthfulQA (Lin et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Calibration eval",
+   "quote": null
+  },
+  {
+   "work": "TriviaQA, Lambada, GSM8k, Codex HumanEval",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Joshi 2017; Paperno 2016; Cobbe 2021; Chen 2021",
+   "quote": null
+  },
+  {
+   "work": "Teaching models to express their uncertainty in words (Lin, Hilton, Evans)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Very similar; trains verbalised calibration on arithmetic, studies a P(True)-like signal",
+   "quote": null
+  },
+  {
+   "work": "Mielke et al.",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Metacognition/self-evaluation for calibration",
+   "quote": null
+  },
+  {
+   "work": "Self-consistency (Wang et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Showing own T=1 samples is reminiscent of self-consistency",
+   "quote": null
+  },
+  {
+   "work": "Guo et al. On calibration of modern neural networks",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Calibration background",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "52B self-evaluation on five sampling tasks and accuracy improvement conditioning on P(True) > 0.5",
+   "page": 3,
+   "why": "Shows the headline: P(True) separates correct from incorrect samples."
+  },
+  {
+   "figure": "Fig 11",
+   "caption": "Brier scores and conditional accuracy for Lambada and Codex across three self-evaluation methods",
+   "page": 13,
+   "why": "Shows 20-shot with comparison samples is best on Brier."
+  },
+  {
+   "figure": "Fig 9",
+   "caption": "Calibration of RLHF policies at T=1 and T=2.5",
+   "page": 11,
+   "why": "Shows the temperature fix."
+  },
+  {
+   "figure": "Table 1",
+   "caption": "AUROC and Brier of P(IK), TriviaQA-only vs all tasks",
+   "page": 18,
+   "why": "Quantifies the generalisation gap."
+  }
+ ],
+ "code": [
+  {
+   "where": "Appendix A.3 (A.3)",
+   "snippet": "B = 1/N sum_i (p_i - c_i)^2",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text mentions 'section XYZ' in footnote 6 (placeholder).",
+  "Figure 27 caption is truncated with '....' in the paper.",
+  "Figure 38 caption says samples come with five comparison examples yet calls the evaluation zero-shot with a human-written prompt; ambiguous.",
+  "Ligatures (fi) are present as single glyphs in the cached text."
+ ]
 }

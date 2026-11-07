@@ -1,0 +1,667 @@
+{
+ "schema": 1,
+ "key": "2004.09456",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/nadeem-2021-stereoset.pdf",
+ "bib": {
+  "title": "StereoSet: Measuring stereotypical bias in pretrained language models",
+  "authors": [
+   "Moin Nadeem",
+   "Anna Bethke",
+   "Siva Reddy"
+  ],
+  "first_author": "Nadeem",
+  "year": 2021,
+  "venue": "Proceedings of the 59th Annual Meeting of the ACL and the 11th IJCNLP",
+  "arxiv": "2004.09456",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 59909,
+  "chars_total": 59909,
+  "engine": "pymupdf",
+  "skipped": "target-term list tables in appendix skimmed"
+ },
+ "type": "benchmark",
+ "question": "How strongly do pretrained language models exhibit stereotypical bias on natural text, measured together with their language-modeling ability?",
+ "hypothesis": "Pretrained LMs trained on real-world data capture stereotypical biases; a bias measure must be paired with language-modeling ability to avoid misleading trust.",
+ "contributions": [
+  "StereoSet, a large-scale natural English dataset of 16,995 CATs across gender, profession, race, religion",
+  "Intrasentence and intersentence Context Association Tests",
+  "lms, ss and icat metrics",
+  "Evaluation of BERT, RoBERTa, XLNet, GPT2 showing strong stereotypical bias that correlates with language-modeling ability"
+ ],
+ "method": {
+  "summary": "Builds StereoSet, a crowdsourced benchmark of 16,995 Context Association Test triplets (stereotype, anti-stereotype, meaningless) in intrasentence and intersentence form over gender, profession, race, religion. Evaluates BERT, RoBERTa, XLNet, GPT2 (several sizes) and an ensemble with lms, ss and icat; the only training is a Next Sentence Prediction head for intersentence scoring.",
+  "task": "measuring stereotypical bias and language-modelling ability of pretrained LMs by ranking associations",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "StereoSet",
+    "role": "eval",
+    "size": "16,995 triplets (8,498 intrasentence, 8,497 intersentence); 321 target terms; 4 domains",
+    "split": "25% of target terms (and instances) dev, 75% test, disjoint terms; no train set",
+    "source": "Amazon Mechanical Turk, US workers, HIT acceptance >97%, $15/h; each example written by 1 worker, validated by 4 others; 475 intrasentence and 803 intersentence annotators; target terms from Wikidata (P106, P172, P140) and Nosek et al. 2002 for gender",
+    "preprocessing": "kept CATs where >=3 of 5 validators agree (83% retained); manual filter of infrequent/fine-grained terms"
+   },
+   {
+    "name": "Wikipedia NSP corpus",
+    "role": "train",
+    "size": "9.5 million training examples; test set 3.5 million examples",
+    "split": "train/test",
+    "source": "built from Wikipedia: sentence i, sentence i+1, random negative from another article",
+    "preprocessing": "max sequence length 256 tokens"
+   },
+   {
+    "name": "Large Movie Review dataset (Maas et al. 2011)",
+    "role": "train",
+    "size": null,
+    "split": "92% test accuracy reported",
+    "source": "Maas et al. 2011",
+    "preprocessing": "used to fine-tune BERT sentiment classifier for dataset analysis and SentimentLM"
+   }
+  ],
+  "models": [
+   {
+    "name": "BERT-base",
+    "role": "evaluated",
+    "params": "110M",
+    "architecture": "masked LM",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "BERT-large",
+    "role": "evaluated",
+    "params": "340M",
+    "architecture": "masked LM",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "RoBERTa-base",
+    "role": "evaluated",
+    "params": "125M",
+    "architecture": "masked LM",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "RoBERTa-large",
+    "role": "evaluated",
+    "params": "355M",
+    "architecture": "masked LM",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "XLNet-base",
+    "role": "evaluated",
+    "params": "110M",
+    "architecture": "permutation LM",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "XLNet-large",
+    "role": "evaluated",
+    "params": "340M",
+    "architecture": "permutation LM",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT2 (small)",
+    "role": "evaluated",
+    "params": "117M",
+    "architecture": "autoregressive",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT2-medium",
+    "role": "evaluated",
+    "params": "345M",
+    "architecture": "autoregressive",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT2-large",
+    "role": "evaluated",
+    "params": "774M",
+    "architecture": "autoregressive",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "ENSEMBLE",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "linear weighted combination of BERT-large, GPT2-medium, GPT2-large",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "weights": "not stated"
+    }
+   },
+   {
+    "name": "BERT sentiment classifier",
+    "role": "baseline",
+    "params": null,
+    "architecture": "BERT fine-tuned for sentiment",
+    "init_from": "BERT (size not stated)",
+    "tokenizer": "WordPiece",
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "256 WordPieces max",
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "NSP head: binary classification, cross entropy (is sentence B the continuation of A); sentiment: movie review classification",
+   "optimizer": "BertAdam for NSP head (BERT); Adam for sentiment classifier",
+   "lr": "1e-5 (NSP head, BERT); 1e-4 (sentiment, Adam)",
+   "lr_schedule": "linear warmup from 50 steps to 500 steps (NSP, BERT)",
+   "warmup": "50 to 500 steps",
+   "batch_size": "80 sequences (20,480 tokens) for NSP; 32 for sentiment",
+   "steps": null,
+   "epochs": "10 epochs over the NSP corpus; 7 epochs for sentiment",
+   "tokens": null,
+   "seq_len": "256 tokens (NSP); 256 WordPieces (sentiment)",
+   "precision": "mixed precision (Apex) for GPT2-large",
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "2x RTX 2080 Ti for NSP heads; 2x Tesla V100 32GB for GPT2-large",
+   "compute": "each model bias evaluation within 5 minutes",
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "gradient_accumulation": "step size of 10 for GPT2-large",
+    "gpt2_nsp": "mean-pooled representations over sequence fed to classification head",
+    "nsp_accuracy": "RoBERTa-base 94.6, RoBERTa-large 97.1, XLNet-base 93.4, XLNet-large 94.1, GPT2 92.5, GPT2-medium 94.2, GPT2-large 96.1; 93-98% overall",
+    "note": "other models use same details as BERT; 'until convergence' and 10 epochs both stated"
+   }
+  },
+  "inference": {
+   "decoding": "scoring only: rank candidate associations by likelihood",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single evaluation per model; no seeds or runs stated",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "intrasentence_MLM_ll": "log prob of attribute term filling the blank; multi-subword terms unmasked left to right, average per-subword probability",
+    "intersentence_ll": "log likelihood from trained NSP head that attribute sentence follows context",
+    "pseudo_likelihood_intrasentence": "attribute never masked; mask each context term one at a time",
+    "pseudo_likelihood_intersentence": "pseudo-likelihood of context sentence conditioned on attribute sentence",
+    "gpt2_intrasentence": "probability of the full sentence with blank instantiated",
+    "gpt2_pll_intersentence": "ratio of joint probability of attribute sentence with and without the context"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "lms (language modeling score)",
+     "definition": "percentage of instances where the model prefers the meaningful over the meaningless association; averaged over target terms",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "ss (stereotype score)",
+     "definition": "percentage of examples where the model prefers stereotypical over anti-stereotypical association; averaged over target terms; ideal 50",
+     "unit": "%",
+     "higher_is_better": false
+    },
+    {
+     "name": "icat",
+     "definition": "lms * min(ss, 100-ss) / 50",
+     "unit": "points (0-100)",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "IDEALLM (lms 100, ss 50)",
+    "STEREOTYPEDLM (ss 100)",
+    "RANDOMLM (lms 50, ss 50)",
+    "SENTIMENTLM (picks most negative association)"
+   ],
+   "protocol": "Dev/test split by target term; results on test set; no seeds, no confidence intervals or significance tests for ss/lms; Spearman correlation between lms and ss across models."
+  },
+  "availability": {
+   "code": "https://stereoset.mit.edu",
+   "weights": "will release pretrained (NSP-head) models",
+   "data": "https://stereoset.mit.edu"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "eval.metrics.icat",
+    "quote": "icat = lms ∗min(ss, 100 −ss)\n50",
+    "where": "Appendix A.6"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "lms and ss correlate across models (Spearman rho 0.87): stronger language models are more stereotypical",
+   "kind": "measured",
+   "source": null,
+   "metric": "Spearman rho(lms, ss)",
+   "value": "0.87",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "StereoSet test set, likelihood-based scoring for masked LMs (NSP head for intersentence), pretrained models without StereoSet training",
+   "note": null,
+   "where": "Sec 7",
+   "quote": "(Spearman rank correlation ρ of 0.87)"
+  },
+  {
+   "claim": "GPT2-large is the best language model by lms",
+   "kind": "measured",
+   "source": null,
+   "metric": "lms",
+   "value": "88.3",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "StereoSet test set, likelihood-based scoring for masked LMs (NSP head for intersentence), pretrained models without StereoSet training",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row GPT2-large, column lms"
+  },
+  {
+   "claim": "GPT2-large stereotype score on the test set",
+   "kind": "measured",
+   "source": null,
+   "metric": "ss",
+   "value": "60.0",
+   "unit": "%",
+   "baseline_value": "50.0",
+   "n": null,
+   "setup": "StereoSet test set, likelihood-based scoring for masked LMs (NSP head for intersentence), pretrained models without StereoSet training",
+   "note": "Table 4 prints 60.0; the text says 60.1 ('most stereotypical model of all pretrained models (60.1)')",
+   "where": "Table 4",
+   "table": "Table 4, row GPT2-large, column ss"
+  },
+  {
+   "claim": "ENSEMBLE (BERT-large, GPT2-medium, GPT2-large) has highest lms and ss",
+   "kind": "measured",
+   "source": null,
+   "metric": "ss",
+   "value": "62.3",
+   "unit": "%",
+   "baseline_value": "50.0",
+   "n": null,
+   "setup": "StereoSet test set, likelihood-based scoring for masked LMs (NSP head for intersentence), pretrained models without StereoSet training",
+   "note": "Table 4 prints 62.3 (lms 90.2, icat 68.0); the text says ss = 62.5",
+   "where": "Table 4",
+   "table": "Table 4, row ENSEMBLE, column ss"
+  },
+  {
+   "claim": "GPT2 (small) has the highest icat score among models",
+   "kind": "measured",
+   "source": null,
+   "metric": "icat",
+   "value": "73.0",
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "StereoSet test set, likelihood-based scoring for masked LMs (NSP head for intersentence), pretrained models without StereoSet training",
+   "note": null,
+   "where": "Sec 7",
+   "quote": "icat score of 73.0"
+  },
+  {
+   "claim": "RoBERTa-base is the least stereotypical model by ss but has low lms",
+   "kind": "measured",
+   "source": null,
+   "metric": "ss",
+   "value": "50.5",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "StereoSet test set, likelihood-based scoring for masked LMs (NSP head for intersentence), pretrained models without StereoSet training",
+   "note": "lms 68.2, icat 67.5",
+   "where": "Table 4",
+   "table": "Table 4, row ROBERTA-base, column ss"
+  },
+  {
+   "claim": "SentimentLM (pick most negative association) reaches ss above all pretrained models",
+   "kind": "measured",
+   "source": null,
+   "metric": "ss",
+   "value": "60.8",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "StereoSet test set, likelihood-based scoring for masked LMs (NSP head for intersentence), pretrained models without StereoSet training",
+   "note": "lms 65.1, icat 51.1. The text claims it has the highest ss of all pretrained models, but ENSEMBLE (62.3) and GPT2-large under pseudo-likelihood exceed it; GPT2-large 60.0 is below it",
+   "where": "Table 4",
+   "table": "Table 4, row SENTIMENTLM, column ss"
+  },
+  {
+   "claim": "Pseudo-likelihood scoring GPT2-large ss",
+   "kind": "measured",
+   "source": null,
+   "metric": "ss",
+   "value": "62.7",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "StereoSet test set, pseudo-likelihood scoring (masked LMs)",
+   "note": "lms 89.6, icat 66.8",
+   "where": "Table 5",
+   "table": "Table 5, row GPT2-large, column ss"
+  },
+  {
+   "claim": "Average lms is similar for likelihood and pseudo-likelihood scoring overall",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg lms",
+   "value": "79.88 vs 79.68",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "all models, test set",
+   "note": null,
+   "where": "Sec 7",
+   "quote": "avg lmsll = 79.88, avg lmspll = 79.68"
+  },
+  {
+   "claim": "Pseudo-likelihood scoring is worse on intersentence CATs",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg lms",
+   "value": "78.82 vs 75.98",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "intersentence, all models",
+   "note": null,
+   "where": "Sec 7",
+   "quote": "78.82, avg lmspll = 75.98"
+  },
+  {
+   "claim": "Pseudo-likelihood scoring is better on intrasentence CATs",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg lms",
+   "value": "75.7 vs 79.4",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "intrasentence, all models",
+   "note": null,
+   "where": "Sec 7",
+   "quote": "avg lmsll = 75.7, avg lmspll = 79.4"
+  },
+  {
+   "claim": "Intrasentence ss for GPT2-large is higher than intersentence",
+   "kind": "measured",
+   "source": null,
+   "metric": "ss",
+   "value": "63.9",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "StereoSet test set, likelihood-based scoring for masked LMs (NSP head for intersentence), pretrained models without StereoSet training",
+   "note": "Intersentence GPT2-large ss 56.1",
+   "where": "Table 6",
+   "table": "Table 6, row GPT2-large, Intrasentence ss"
+  },
+  {
+   "claim": "Domain-wise: ENSEMBLE is least biased on race (ss 61.8)",
+   "kind": "measured",
+   "source": null,
+   "metric": "ss",
+   "value": "61.8",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ENSEMBLE, test set, likelihood scoring",
+   "note": "Gender 63.9, Profession 62.6, Religion 63.8",
+   "where": "Table 8",
+   "table": "Table 8, row RACE, column ss"
+  },
+  {
+   "claim": "Human validation retained 83% of CATs (>=3 of 5 validators agree)",
+   "kind": "measured",
+   "source": null,
+   "metric": "share of CATs retained",
+   "value": "83",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "crowdsourced data, validation step",
+   "note": null,
+   "where": "Sec 4.3",
+   "quote": "results in se-\nlecting 83% of the CATs"
+  },
+  {
+   "claim": "Stereotypes carry more negative sentiment than anti-stereotypes",
+   "kind": "measured",
+   "source": null,
+   "metric": "share negative sentiment",
+   "value": "41% vs 33%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BERT sentiment classifier fine-tuned on movie reviews, 92% test acc",
+   "note": null,
+   "where": "Sec 4.4, Table 2",
+   "quote": "(41% vs. 33%)"
+  }
+ ],
+ "limits": [
+  "Authors concede ideal StereoSet performance does not guarantee an unbiased model since bias manifests in many ways",
+  "Pretraining corpus size could not be tested by training the same model on more data (lack of compute)",
+  "icat assumes equal importance of lms and ss and is not intended as sole selection criterion",
+  "Dataset is US English and US stereotypes only; workers US-based",
+  "lms is not a full language-modeling evaluation",
+  "Muslim outlier unexplained",
+  "No variance across runs or seeds reported"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "stereotype",
+   "definition": "an over-generalized belief about a particular group of people",
+   "where": "Sec 2.1"
+  },
+  {
+   "term": "Context Association Test (CAT)",
+   "definition": "a test that measures the language modeling ability as well as the stereotypical bias of pretrained language models",
+   "where": "Sec 2.2"
+  },
+  {
+   "term": "icat",
+   "definition": "lms * min(ss, 100-ss)/50; ideal model 100, stereotyped model 0",
+   "where": "Sec 5.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Caliskan et al. 2017 (WEAT)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "CAT inspired by WEAT",
+   "quote": "Our inspiration for CAT comes from WEAT."
+  },
+  {
+   "work": "Kurita et al. 2019",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "intrasentence CAT similar but with natural context",
+   "quote": null
+  },
+  {
+   "work": "May et al. 2019 (SEAT)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "related",
+   "note": "artificial-context sentence encoder test",
+   "quote": null
+  },
+  {
+   "work": "Nangia et al. 2020 (CrowS-Pairs)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "related",
+   "note": "concurrent; pseudo-likelihood scoring adopted",
+   "quote": null
+  },
+  {
+   "work": "Devlin et al. 2019 (BERT)",
+   "year": 2019,
+   "arxiv": "1810.04805",
+   "relation": "evaluates",
+   "note": "also NSP inspiration",
+   "quote": null
+  },
+  {
+   "work": "Liu et al. 2019 (RoBERTa)",
+   "year": 2019,
+   "arxiv": "1907.11692",
+   "relation": "evaluates",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "Yang et al. 2019 (XLNet)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "Radford et al. 2019 (GPT2)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "Bolukbasi et al. 2016",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "related",
+   "note": "gender bias in embeddings",
+   "quote": null
+  },
+  {
+   "work": "Maas et al. 2011 (Large Movie Review)",
+   "year": 2011,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "sentiment classifier training",
+   "quote": null
+  },
+  {
+   "work": "Salazar et al. 2020 (Masked LM scoring)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "pseudo-likelihood",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Context Association Tests (CATs) measure both bias and language modeling ability of language models.",
+   "page": 1,
+   "why": "shows intra- and intersentence triplets"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "The idealized CAT score (icat) highlights the possible trade-offs between lms and ss.",
+   "page": 9,
+   "why": "surface of icat over lms and ss"
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 5.2 / App A.6",
+   "snippet": "icat = lms * min(ss, 100 - ss) / 50",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text/table mismatches: GPT2-large ss 60.1 in text vs 60.0 in Table 4; ENSEMBLE ss 62.5 in text vs 62.3 in Table 4",
+  "Text claims SentimentLM has highest ss of all pretrained models but ENSEMBLE (62.3) and GPT2-large... exceed it in Table 4 (ENSEMBLE, 62.3 > 60.8)",
+  "Table 7 intrasentence ENSEMBLE lms 91.9 vs Table 6 91.7 (different scoring); Table 4 icat for ENSEMBLE 68.0 fine",
+  "Table 6 and 7 GPT2 rows identical intrasentence (same autoregressive scoring)",
+  "NSP training described as both 'until convergence' and 10 epochs"
+ ]
+}

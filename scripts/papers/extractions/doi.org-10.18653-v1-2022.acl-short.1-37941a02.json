@@ -1,0 +1,437 @@
+{
+ "schema": 1,
+ "key": "https://doi.org/10.18653/v1/2022.acl-short.1",
+ "pdf": "generative-ai/05-RL/sources/zaken-2022-bitfit.pdf",
+ "bib": {
+  "title": "BitFit: Simple Parameter-efficient Fine-tuning for Transformer-based Masked Language-models",
+  "authors": [
+   "Elad Ben-Zaken",
+   "Shauli Ravfogel",
+   "Yoav Goldberg"
+  ],
+  "first_author": "Ben-Zaken",
+  "year": 2022,
+  "venue": "ACL 2022 (Volume 2: Short Papers), pages 1-9",
+  "arxiv": null,
+  "doi": "10.18653/v1/2022.acl-short.1"
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 31730,
+  "chars_total": 31730,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can fine-tuning only the bias terms of a pre-trained masked LM match full fine-tuning?",
+ "hypothesis": "Fine-tuning is mainly about exposing knowledge induced by language-modeling training rather than learning new task-specific knowledge, so few parameters should suffice.",
+ "contributions": [
+  "BitFit: train only bias terms and the task classifier",
+  "Competitive with full FT on small-to-medium data, with Diff-Pruning and Adapters on GLUE",
+  "Only query and intermediate-MLP biases (0.04%) retain most performance"
+ ],
+ "method": {
+  "summary": "Freeze all weight matrices and layer-norm gains of BERT/RoBERTa; train only bias vectors plus a linear classifier on [CLS]. Evaluated on GLUE, PTB POS and SQuAD v1.0.",
+  "task": "GLUE classification/regression, POS tagging, SQuAD",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "GLUE (8 tasks, no WNLI)",
+    "role": "both",
+    "size": "QNLI 105k, SST-2 67k, MNLI 393k, CoLA 8.5k, MRPC 3.7k, STS-B 7k, RTE 2.5k, QQP 364k train",
+    "split": "common GLUE train:dev:test",
+    "source": "Wang et al. 2018",
+    "preprocessing": "standard BERT procedures"
+   },
+   {
+    "name": "PTB POS tagging",
+    "role": "both",
+    "size": null,
+    "split": null,
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "SQuAD v1.0",
+    "role": "both",
+    "size": null,
+    "split": "increasing-size training subsets; validation set",
+    "source": "Rajpurkar et al. 2016",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "BERT-Base",
+    "role": "base",
+    "params": null,
+    "architecture": "transformer encoder",
+    "init_from": "public pretrained (Devlin 2018), HuggingFace",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": "768 (inferred: text says MLP 768 to 3072)",
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "BERT-Large",
+    "role": "base",
+    "params": null,
+    "architecture": "transformer encoder",
+    "init_from": "public pretrained",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "RoBERTa-Base",
+    "role": "base",
+    "params": null,
+    "architecture": "transformer encoder",
+    "init_from": "public pretrained (Liu 2019)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "task loss with linear head on [CLS]",
+   "optimizer": "AdamW",
+   "lr": "bias-only: search {1e-4, 4e-4, 7e-4, 1e-3}; full FT: {1e-5, 2e-5, 3e-5, 5e-5}; RoBERTa: 1e-4 bias-only, 1e-5 full FT",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "16",
+   "steps": null,
+   "epochs": "bias-only converged in 8 or fewer epochs for most tasks, up to 20 on others",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": "5 models with 5 random seeds, mean and std reported",
+   "other": {
+    "best_lr_table": "Table 6 lists per-task best LR for BERT-Base and BERT-Large",
+    "trainable_fraction": "0.08-0.09% of params"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "5 seeds per cell",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "GLUE per-task",
+     "definition": "QNLI/SST-2/RTE acc; MNLI matched/mismatched acc; CoLA Matthews corr; MRPC and QQP F1; STS-B Spearman",
+     "unit": "points",
+     "higher_is_better": true
+    },
+    {
+     "name": "SQuAD EM and F1",
+     "definition": "exact match and F1 on validation",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Full fine-tuning",
+    "Diff-Pruning (Guo 2020)",
+    "Adapters (Houlsby 2019)",
+    "random parameter subsets",
+    "frozen encoder"
+   ],
+   "protocol": "mean of 5 seeds; dev and test (Table 1); Diff-Pruning/Adapters numbers copied from original papers"
+  },
+  "availability": {
+   "code": "www.github.com/benzakenelad/BitFit",
+   "weights": null,
+   "data": "public benchmarks"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.lr",
+    "quote": "we used initial learning rates in {1e-5, 2e-5, 3e-5, 5e-5}, and for the bias-only experiments we used initial learning rates in {1e-4, 4e-4, 7e-4, 1e-",
+    "where": "A.2"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "BitFit on BERT-Large reaches the GLUE dev average of full fine-tuning (84.2 vs 84.1) with 0.08% of parameters",
+   "kind": "measured",
+   "source": null,
+   "metric": "GLUE dev average",
+   "value": "84.2",
+   "unit": "avg GLUE score",
+   "baseline_value": "84.1",
+   "n": null,
+   "setup": "BERT-Large, GLUE dev, 9 tasks, mean of 5 seeds",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row (V) BitFit, column Avg."
+  },
+  {
+   "claim": "Bias terms make up 0.09% (BERT-Base) and 0.08% (BERT-Large) of parameters",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "0.08%",
+   "unit": "% of params",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BERT-Large bias parameters",
+   "note": null,
+   "where": "Sec 3",
+   "quote": "in BERTBASE and BERTLARGE bias parameters make up 0.09% and 0.08% of the total number of parameters in each model, respectively"
+  },
+  {
+   "claim": "Tuning only query and intermediate-MLP biases uses 0.04% of parameters and scores 81.1 vs 82.4 for all biases",
+   "kind": "measured",
+   "source": null,
+   "metric": "GLUE dev average",
+   "value": "81.1",
+   "unit": "avg GLUE score",
+   "baseline_value": "82.4",
+   "n": null,
+   "setup": "BERT-Base, GLUE dev, 5 seeds",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row bm2, bq, column Avg."
+  },
+  {
+   "claim": "Random subset of the same size (0.09%) is much worse than bias terms: 78.5 uniform, 79.5 row/col vs 82.4",
+   "kind": "measured",
+   "source": null,
+   "metric": "GLUE dev average",
+   "value": "78.5",
+   "unit": "avg GLUE score",
+   "baseline_value": "82.4",
+   "n": null,
+   "setup": "BERT-Base, GLUE dev, 5 seeds",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row rand uniform, column Avg."
+  },
+  {
+   "claim": "A fully frozen BERT-Base scores 62.1 average",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "62.1",
+   "unit": "avg GLUE score",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BERT-Base, only classifier trained, GLUE dev",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row Frozen, column Avg."
+  },
+  {
+   "claim": "BitFit trails full fine-tuning on the largest task QQP (85.4 vs 87.5 F1)",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "85.4",
+   "unit": "F1",
+   "baseline_value": "87.5",
+   "n": null,
+   "setup": "BERT-Large, GLUE dev, QQP 364k train",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row (V) BitFit, column QQP"
+  },
+  {
+   "claim": "On GLUE test BERT-Large BitFit averages 80.9 vs 81.8 (Full-FT, Guo et al.) and 81.1 Adapters",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "80.9",
+   "unit": "avg GLUE score",
+   "baseline_value": "81.8",
+   "n": null,
+   "setup": "BERT-Large, GLUE test; baselines copied from Guo 2020 and Houlsby 2019",
+   "note": "Adapters row 3.6% params, Full-FT test numbers are reported from other papers; QNLI not directly comparable (test set updated).",
+   "where": "Table 1",
+   "table": "Table 1, row (T) BitFit, column Avg."
+  },
+  {
+   "claim": "BERT-Base BitFit matches full FT on average (82.4 vs 82.3); RoBERTa-Base 84.6 vs 85.3",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "82.4",
+   "unit": "avg GLUE score",
+   "baseline_value": "82.3",
+   "n": null,
+   "setup": "GLUE dev, 5 seeds",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row BB BitFit, column Avg."
+  },
+  {
+   "claim": "PTB POS-tagging: BitFit 97.2, 97.4, 97.1 vs Full-FT 97.2, 97.4, 97.2 for BERT-Base, BERT-Large, RoBERTa-Base",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "97.4",
+   "unit": "accuracy (inferred)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "PTB POS tagging, BERT-Large",
+   "note": "metric not named in text",
+   "where": "Sec 4",
+   "quote": "Full-FT results for BERTBASE, BERTLARGE and RoBERTaBASE are 97.2, 97.4, 97.2, while BitFit results are 97.2, 97.4, 97.1."
+  },
+  {
+   "claim": "BitFit beats Full-FT on SQuAD v1.0 with small training subsets, trend reverses with more data",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "BERT-Base, SQuAD v1.0 validation, increasing subsets; values only in Fig 2/6 (not in text)",
+   "note": null,
+   "where": "Fig 2, Fig 6"
+  },
+  {
+   "claim": "BitFit has about 6x fewer trainable parameters than Diff-Pruning and 45x fewer than Adapters",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "45x",
+   "unit": "ratio",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BERT-Large vs Houlsby adapters (3.6%)",
+   "note": null,
+   "where": "Sec 4",
+   "quote": "while using 45x fewer trainable parameters"
+  }
+ ],
+ "limits": [
+  "Only BERT-family masked LMs; no decoder/large LLMs",
+  "BitFit loses to full FT on large datasets (QQP, MNLI, and SQuAD with more data)",
+  "Diff-Pruning and Adapter baselines copied from other papers",
+  "Learning-rate search only over 4 values",
+  "Hardware, schedule, warmup, sequence length not stated",
+  "QNLI test not comparable to earlier numbers",
+  "Why bias terms work is left open"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "BitFit",
+   "definition": "BIas-Term FIne-Tuning: freeze most transformer-encoder parameters, train only bias terms and the task classification layer",
+   "where": "Sec 3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Parameter-efficient transfer learning for NLP (Houlsby et al.)",
+   "year": 2019,
+   "arxiv": "1902.00751",
+   "relation": "baseline",
+   "note": "Adapters",
+   "quote": null
+  },
+  {
+   "work": "Parameter-efficient transfer learning with diff pruning (Guo et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Diff-Pruning",
+   "quote": null
+  },
+  {
+   "work": "BERT (Devlin et al.)",
+   "year": 2018,
+   "arxiv": "1810.04805",
+   "relation": "evaluates",
+   "note": "base model",
+   "quote": null
+  },
+  {
+   "work": "RoBERTa (Liu et al.)",
+   "year": 2019,
+   "arxiv": "1907.11692",
+   "relation": "evaluates",
+   "note": "base model",
+   "quote": null
+  },
+  {
+   "work": "GLUE (Wang et al.)",
+   "year": 2018,
+   "arxiv": "1804.07461",
+   "relation": "uses-data",
+   "note": "benchmark",
+   "quote": null
+  },
+  {
+   "work": "SQuAD (Rajpurkar et al.)",
+   "year": 2016,
+   "arxiv": "1606.05250",
+   "relation": "uses-data",
+   "note": "small-data trend",
+   "quote": null
+  },
+  {
+   "work": "Tiny transfer learning (Cai et al.)",
+   "year": 2020,
+   "arxiv": "2007.11622",
+   "relation": "related",
+   "note": "closest: bias-only tuning for vision",
+   "quote": null
+  },
+  {
+   "work": "Mosbach et al.",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "related",
+   "note": "fine-tuning instability",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Change in bias components (RTE task)",
+   "page": 3,
+   "why": "shows bq and bm2 change most, bk zero"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Comparison of BitFit and Full-FT with BERT-Base exact match score on SQuAD validation set",
+   "page": 4,
+   "why": "small-data crossover"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Text cache has NUL bytes; read fine. arXiv id not printed in the PDF, left null."
+ ]
+}

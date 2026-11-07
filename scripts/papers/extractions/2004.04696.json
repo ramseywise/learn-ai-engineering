@@ -1,0 +1,463 @@
+{
+ "schema": 1,
+ "key": "2004.04696",
+ "pdf": "generative-ai/08-eval/sources/sellam-2020-bleurt.pdf",
+ "bib": {
+  "title": "BLEURT: Learning Robust Metrics for Text Generation",
+  "authors": [
+   "Thibault Sellam",
+   "Dipanjan Das",
+   "Ankur P. Parikh"
+  ],
+  "first_author": "Sellam",
+  "year": 2020,
+  "venue": "Proceedings of the 58th Annual Meeting of the Association for Computational Linguistics (ACL)",
+  "arxiv": "2004.04696",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 49654,
+  "chars_total": 49654,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can a learned, BERT-based reference-based metric for text generation be made both accurate on human ratings and robust to domain and quality drift?",
+ "hypothesis": "Pre-training BERT on millions of synthetic sentence pairs with lexical and semantic supervision signals, before fine-tuning on human ratings, makes the metric generalize when training data is scarce, skewed or out-of-domain.",
+ "contributions": [
+  "BLEURT, a BERT-based learned metric fine-tuned on a few thousand human ratings",
+  "A pre-training scheme using about 6.5 million synthetic perturbations of 1.8 million Wikipedia segments with 9 supervision tasks",
+  "State-of-the-art results on WMT Metrics 2017-2019 (to-English) and WebNLG 2017, plus robustness tests under quality drift"
+ ],
+ "method": {
+  "summary": "BERT (Large or Base, uncased) is further pre-trained on synthetic (reference, perturbed) pairs with a multi-task regression/classification loss over 9 signals (BLEU, ROUGE P/R/F, BERTscore P/R/F, 4 backtranslation likelihoods, MNLI entailment, backtranslation flag), then fine-tuned with an L2 regression head on the [CLS] vector to predict human ratings. Evaluated by agreement with human ratings on WMT17-19, a skewed WMT17 drift benchmark and WebNLG.",
+  "task": "learned reference-based sentence-level evaluation metric for NLG (translation, data-to-text)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Synthetic Wikipedia perturbations",
+    "role": "pretrain",
+    "size": "1.8 million Wikipedia segments, about 6.5 million perturbations",
+    "split": null,
+    "source": "Wikipedia; perturbed by BERT mask-filling (up to 15 masks, beam 8), backtranslation (en-de Transformer), word dropping (about 30% of data)",
+    "preprocessing": "regression labels normalized"
+   },
+   {
+    "name": "WMT Metrics Shared Task 2017-2019 (to-English)",
+    "role": "both",
+    "size": "training sets of 5,360, 9,492 and 147,691 records for 2017, 2018, 2019",
+    "split": "For each year, test sets of previous years used for training and validation; 10% validation for 2017 and 2018, 5% for 2019, no source leakage",
+    "source": "WMT news-domain human ratings (Pearson on standardized ratings 2017; DARR 2018, 2019)",
+    "preprocessing": null
+   },
+   {
+    "name": "WMT17 skewed subsets",
+    "role": "both",
+    "size": "11.9% of the original 5,344 training records at alpha 3.0 (50.7%, 30.3%, 20.4% for 0.5, 1.0, 1.5)",
+    "split": "10 equal bins; train sampled with prob 1/B^alpha, test with 1/(11-B)^alpha",
+    "source": "WMT17",
+    "preprocessing": null
+   },
+   {
+    "name": "WebNLG 2017 human assessments",
+    "role": "both",
+    "size": "9 systems, 223 inputs, 4,677 sentence pairs",
+    "split": "0% to about 50% to training, split by system or by RDF input",
+    "source": "WebNLG Challenge 2017 (Shimorina et al. 2019); ratings for semantics, grammar, fluency",
+    "preprocessing": "null values removed; highest score over multiple references"
+   }
+  ],
+  "models": [
+   {
+    "name": "BLEURT",
+    "role": "proposed",
+    "params": null,
+    "architecture": "BERT-Large uncased + linear head",
+    "init_from": "public BERT checkpoint",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "24",
+    "hidden": "1024",
+    "heads": "16",
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "BLEURTbase",
+    "role": "proposed",
+    "params": null,
+    "architecture": "BERT-Base uncased + linear head",
+    "init_from": "public BERT checkpoint",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "12",
+    "hidden": "768",
+    "heads": "12",
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "BLEURT -pre / BLEURTbase -pre",
+    "role": "baseline",
+    "params": null,
+    "architecture": "BERT fine-tuned directly on ratings, no synthetic pre-training",
+    "init_from": "public BERT checkpoint",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "sentBLEU, BERTscore (BERT-large, roBERTa), MoverScore, chrF++, BEER, Meteor++, RUSE, YiSi1, ESIM, TER",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "pre-training: weighted sum of per-task L2 (regression) and cross-entropy (classification) losses; fine-tuning: L2 regression on human rating",
+   "optimizer": "Adam",
+   "lr": "1e-5",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "32",
+   "steps": "800,000 pre-training, 40,000 fine-tuning",
+   "epochs": "inferred: about 2 epochs over synthetic data in 400,000 steps (Appendix B.4)",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "checkpoint with best Kendall Tau on held-out validation chosen, evaluated every 1,500 steps",
+   "hardware": "Google Cloud TPUs v2 for learning; Nvidia Tesla V100 for evaluation and test",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "task_weights": "gamma_k set by grid search on WMT17 validation, grouped (BLEU, ROUGE, BERTscore), (4 backtranslation likelihoods), (entail, backtrans flag); values not given",
+    "software": "Tensorflow 1.15 and Python 2.7",
+    "three_step": "BERT pre-training, synthetic pre-training, fine-tuning; WebNLG BLEURT -wmt was fine-tuned on synthetic then WebNLG; BLEURT on synthetic, WMT 16-18, then WebNLG"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single run per configuration; no seeds or variance reported",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Kendall Tau",
+     "definition": "agreement of metric with human ratings, no filter",
+     "unit": "correlation /100",
+     "higher_is_better": true
+    },
+    {
+     "name": "Pearson r (WMT17 official)",
+     "definition": "on standardized human judgments across segments",
+     "unit": "correlation /100",
+     "higher_is_better": true
+    },
+    {
+     "name": "DARR / DA (WMT18-19 official)",
+     "definition": "(Concordant - Discordant)/(Concordant + Discordant) over translation pairs of one reference, discarding pairs less than 25 points apart on a 100-point scale",
+     "unit": "/100",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "sentBLEU (Moses)",
+    "BERTscore (BERT-large, roBERTa)",
+    "MoverScore",
+    "chrF++",
+    "BEER",
+    "Meteor++",
+    "RUSE",
+    "YiSi1",
+    "YiSi1 SRL",
+    "ESIM",
+    "BLEU",
+    "TER",
+    "Meteor"
+   ],
+   "protocol": "Own implementation of the WMT benchmark (small differences from official results marked with * in 2018); no significance tests or seeds."
+  },
+  "availability": {
+   "code": "http://github.com/google-research/bleurt",
+   "weights": "pre-trained models available online",
+   "data": "WMT and WebNLG public"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.steps",
+    "quote": "We use batch size 32, learning rate 1e-5, and 800,000 steps for pre-training and 40,000 steps for ﬁne-tuning.",
+    "where": "Section 5"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "BLEURT (BERT-large) has the highest average Kendall Tau on WMT17 to-English, ahead of BERTscore and sentBLEU",
+   "kind": "measured",
+   "source": null,
+   "metric": "Kendall Tau (avg over 7 pairs)",
+   "value": "62.5",
+   "unit": "tau x100",
+   "baseline_value": "BERTscore w/ BERT 53.3; w/ roBERTa 58.0; sentBLEU 32.4",
+   "n": null,
+   "setup": "WMT17 to-English, BLEURT fine-tuned on WMT15-16 ratings",
+   "quote": null,
+   "table": "Table 2, row BLEURT, column avg tau",
+   "note": "Row BLEURT -pre is 59.8; BLEURTbase 61.0",
+   "where": "Table 2"
+  },
+  {
+   "claim": "Pre-training adds up to 7.4 Kendall Tau points on WMT17 for BLEURTbase (zh-en)",
+   "kind": "measured",
+   "source": null,
+   "metric": "Kendall Tau gain",
+   "value": "7.4",
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "WMT17 zh-en, BLEURTbase with vs without pre-training",
+   "quote": "it adds up to 7.4 Kendall Tau points for BLEURTbase (zh-en)",
+   "table": null,
+   "note": null,
+   "where": "Section 5.1"
+  },
+  {
+   "claim": "On WMT18 and WMT19 the pre-training effect is milder, up to 2.1 points",
+   "kind": "measured",
+   "source": null,
+   "metric": "Kendall Tau gain",
+   "value": "2.1",
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "WMT18 tr-en",
+   "quote": "up to 2.1 points (tr-en, 2018)",
+   "table": null,
+   "note": null,
+   "where": "Section 5.1"
+  },
+  {
+   "claim": "BLEURT average Kendall Tau on WMT18 and WMT19",
+   "kind": "measured",
+   "source": null,
+   "metric": "Kendall Tau avg",
+   "value": "35.6",
+   "unit": "tau x100",
+   "baseline_value": "BERTscore w/ roBERTa 32.9",
+   "n": null,
+   "setup": "WMT18 to-English",
+   "quote": null,
+   "table": "Table 3, row BLEURT, column avg tau",
+   "note": "WMT19 avg tau is 33.8 vs 32.0 for BERTscore w/ roBERTa (Table 4)",
+   "where": "Table 3"
+  },
+  {
+   "claim": "Without pre-training, BLEURT falls below BERTscore at skew 1.0 and below sentBLEU at skew >= 1.5; pre-trained BLEURT falls below baselines only at skew 3.0",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "WMT17 resampled with skew factor alpha, BERT-large, vs sentBLEU and BERTscore; values read from Fig 2 only",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Section 5.2, Fig 2"
+  },
+  {
+   "claim": "At the most extreme skew only 11.9% of the 5,344 WMT17 training records remain",
+   "kind": "measured",
+   "source": null,
+   "metric": "training share",
+   "value": "11.9%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "alpha = 3.0",
+   "quote": "we use only 11.9% of the original 5,344 training records",
+   "table": null,
+   "note": null,
+   "where": "Section 5.2"
+  },
+  {
+   "claim": "On WebNLG, BLEURT -wmt is competitive with BERTscore with as little as 836 training records, and full BLEURT is comparable with zero WebNLG fine-tuning; vanilla BERT needs about a third of the data",
+   "kind": "measured",
+   "source": null,
+   "metric": "training records",
+   "value": "836",
+   "unit": "records",
+   "baseline_value": null,
+   "n": null,
+   "setup": "WebNLG 2017, 3 rating tasks, BERT-large; split by input",
+   "quote": "BLEURT -wmt is competitive with as little as 836 records",
+   "table": null,
+   "note": null,
+   "where": "Section 5.3"
+  },
+  {
+   "claim": "Ablation: pre-training on BERTscore, entailment and backtranslation signals helps; BLEU and ROUGE signals hurt",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "WMT17, relative Kendall Tau change, single-task and leave-one-out, read from Fig 4",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Section 5.4"
+  },
+  {
+   "claim": "Most pre-training gains arrive in the first 400,000 steps, about 2 epochs over the synthetic data",
+   "kind": "measured",
+   "source": null,
+   "metric": "pre-training steps",
+   "value": "400,000",
+   "unit": "steps",
+   "baseline_value": "0 steps gives 0.555 (base), 0.580 (large)",
+   "n": null,
+   "setup": "WMT17, fine-tuned after varying pre-training steps",
+   "quote": "Most gains are obtained during the ﬁrst 400,000 steps",
+   "table": null,
+   "note": null,
+   "where": "Appendix B.4, Fig 5"
+  }
+ ],
+ "limits": [
+  "English only; sentence-level, reference-based metric",
+  "Authors leave open whether to drop BLEU and ROUGE signals, since they hurt on WMT17 but may help on other tasks",
+  "WMT18 and 19 test sets are noisy; own re-implementation of benchmark differs slightly from official results",
+  "No seeds, variance or significance tests reported; task weights not listed",
+  "Drift results are on a synthetic skew of WMT17, not real drift",
+  "Future work named: multilingual evaluation and hybrid human-classifier methods"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "skew factor alpha",
+   "definition": "measures how much the training data is left-skewed and the test data is right-skewed",
+   "where": "Section 5.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "BERT",
+   "year": 2019,
+   "arxiv": "1810.04805",
+   "relation": "extends",
+   "note": "base model",
+   "quote": null
+  },
+  {
+   "work": "BERTscore",
+   "year": 2020,
+   "arxiv": "1904.09675",
+   "relation": "baseline",
+   "note": "also used as pre-training signal",
+   "quote": null
+  },
+  {
+   "work": "MoverScore",
+   "year": 2019,
+   "arxiv": "1909.02622",
+   "relation": "baseline",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "BLEU",
+   "year": 2002,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Papineni et al.; also pre-training signal",
+   "quote": null
+  },
+  {
+   "work": "ROUGE",
+   "year": 2004,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Lin; also pre-training signal",
+   "quote": null
+  },
+  {
+   "work": "WMT Metrics Shared Task 2017-2019",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Bojar 2017, Ma 2018, 2019",
+   "quote": null
+  },
+  {
+   "work": "WebNLG Challenge 2017",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Gardent et al. 2017",
+   "quote": null
+  },
+  {
+   "work": "MNLI",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Williams et al. 2018, entailment signal",
+   "quote": null
+  },
+  {
+   "work": "Sum-QE",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Xenouleas et al.; fine-tunes BERT for quality estimation",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "Agreement between BLEURT and human ratings for different skew factors in train and test.",
+   "page": 7,
+   "why": "Shows pre-training protects against quality drift"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Improvement in Kendall Tau on WMT 17 varying the pre-training tasks.",
+   "page": 8,
+   "why": "Per-signal ablation"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Appendix B.1 prints '800,00 training steps', a typo for 800,000"
+ ]
+}

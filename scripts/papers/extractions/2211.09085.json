@@ -1,0 +1,932 @@
+{
+ "schema": 1,
+ "key": "2211.09085",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/taylor-2022-galactica.pdf",
+ "bib": {
+  "title": "Galactica: A Large Language Model for Science",
+  "authors": [
+   "Ross Taylor",
+   "Marcin Kardas",
+   "Guillem Cucurull",
+   "Thomas Scialom",
+   "Anthony Hartshorn",
+   "Elvis Saravia",
+   "Andrew Poulton",
+   "Viktor Kerkez",
+   "Robert Stojnic"
+  ],
+  "first_author": "Taylor",
+  "year": 2022,
+  "venue": "preprint",
+  "arxiv": "2211.09085",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 171147,
+  "chars_total": 171147,
+  "engine": "pymupdf",
+  "skipped": "Reference list skimmed; Tables 29 and 37 (per-task BIG-bench and rest-of-MMLU cells) and long generated-text examples in A.8 skimmed"
+ },
+ "type": "empirical",
+ "question": "Can a language model trained on a small, curated scientific corpus store, combine and reason about scientific knowledge better than general models?",
+ "hypothesis": "A high-quality curated corpus (with prompts and special tokens for modalities) lets a smaller model beat much larger general models on scientific tasks and tolerate repeated epochs.",
+ "contributions": [
+  "Galactica models from 125M to 120B trained on a curated 106B-token scientific corpus",
+  "Working-memory <work> token and citation tokens",
+  "Prompt pre-training mixed with the corpus",
+  "Evidence that repeated tokens (about 4 epochs) do not hurt",
+  "Results on knowledge probes, reasoning, QA, citation prediction, chemistry, protein tasks, bias and toxicity",
+  "Open-sourced models"
+ ],
+ "method": {
+  "summary": "Galactica trains decoder-only transformers (125M to 120B) from scratch on a curated 106B-token scientific corpus (papers, textbooks, knowledge bases, code, SMILES, protein and DNA sequences, filtered CommonCrawl) plus 358M tokens of task prompts, for 450B tokens (about 4.25 epochs). Special tokens wrap citations, step-by-step reasoning (<work>) and each sequence modality. It is evaluated zero-shot on knowledge probes, QA, MATH/MMLU, citation prediction, BIG-bench, chemistry, protein tasks and bias/toxicity.",
+  "task": "causal language-model pretraining on a scientific corpus with prompts mixed in",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Galactica corpus",
+    "role": "pretrain",
+    "size": "106 billion tokens",
+    "split": "validation sets held out (per-source); compound validation set 17,052; protein holdouts CASPSimSeq, PaenSeq, UniProtSeq (5,456 seqs)",
+    "source": "Papers 48M docs 88B tokens (arXiv, PMC, Semantic Scholar, abstracts etc., up to July 2022); Code 2M docs 7B; Reference material 8M docs 7B; Knowledge bases 2M docs 2B; Filtered CommonCrawl 0.9M docs 1B; Prompts 1.3M docs 0.4B; Other 0.02M docs 0.2B",
+    "preprocessing": "Markdown format; citations tokenised as [START_REF]title, first author[END_REF]; exact dedup of spans of 100+ bytes (Lee et al. 2022); S2 filtered by journal keywords and approximate impact factor < 1; 2M of 110M PubChem compounds and 0.5M of 227M Swiss-Prot proteins used"
+   },
+   {
+    "name": "Prompt datasets (Naturebook)",
+    "role": "pretrain",
+    "size": "358 million tokens",
+    "split": null,
+    "source": "QA, extractive QA, summarisation, entity extraction, dialog, chemical-property prompts built from public train splits (e.g. MedMCQA, PubMedQA, BioASQ, MoleculeNet train sets) plus new sets",
+    "preprocessing": null
+   },
+   {
+    "name": "Reasoning (<work>) datasets",
+    "role": "pretrain",
+    "size": "21,543 prompts, 9 million tokens",
+    "split": null,
+    "source": "GSM8k train 7,473; OneSmallStep 9,314 (50 templates); Khan Problems (AMPS) 3,835; Workout 921 hand-written",
+    "preprocessing": null
+   },
+   {
+    "name": "LaTeX equations probe",
+    "role": "eval",
+    "size": "434 equations",
+    "split": null,
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "MMLU, MATH, ARC, MedMCQA, PubMedQA, BioASQ, MedQA-USMLE",
+    "role": "eval",
+    "size": "see tables",
+    "split": null,
+    "source": "Public benchmarks; in-domain where train set was in pre-training",
+    "preprocessing": null
+   },
+   {
+    "name": "PWC Citations / Extended Citations / Contextual Citations",
+    "role": "eval",
+    "size": "644 / 110 / 1,869 pairs",
+    "split": null,
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "BIG-bench subset",
+    "role": "eval",
+    "size": "57 tasks",
+    "split": null,
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "MoleculeNet (BACE, BBBP, ClinTox, HIV, SIDER, Tox21)",
+    "role": "both",
+    "size": "train sets in pre-training, each example seen just over 4 times",
+    "split": null,
+    "source": "DeepChem recommended splits",
+    "preprocessing": null
+   },
+   {
+    "name": "CrowS-Pairs, StereoSet, RealToxicityPrompts, TruthfulQA",
+    "role": "eval",
+    "size": "1,508 pairs; ~2,100+2,100 dev examples; 5000 prompts; 817 questions",
+    "split": null,
+    "source": null,
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "GAL 125M",
+    "role": "proposed",
+    "params": "125M",
+    "architecture": "decoder-only transformer, GeLU, no biases, learned positional embeddings",
+    "init_from": null,
+    "tokenizer": "BPE, specialised tokens per modality",
+    "vocab": "50k",
+    "layers": 12,
+    "hidden": 768,
+    "heads": 12,
+    "context": "2048 tokens",
+    "other": {
+     "d_head": 64,
+     "batch_size": "0.5M (as printed, tokens per batch not stated)",
+     "max_lr": "6e-4",
+     "warmup": "375M"
+    }
+   },
+   {
+    "name": "GAL 1.3B",
+    "role": "proposed",
+    "params": "1.3B",
+    "architecture": "decoder-only transformer, GeLU, no biases, learned positional embeddings",
+    "init_from": null,
+    "tokenizer": "BPE, specialised tokens per modality",
+    "vocab": "50k",
+    "layers": 24,
+    "hidden": "2,048",
+    "heads": 32,
+    "context": "2048 tokens",
+    "other": {
+     "d_head": 64,
+     "batch_size": "1.0M (as printed, tokens per batch not stated)",
+     "max_lr": "2e-4",
+     "warmup": "375M"
+    }
+   },
+   {
+    "name": "GAL 6.7B",
+    "role": "proposed",
+    "params": "6.7B",
+    "architecture": "decoder-only transformer, GeLU, no biases, learned positional embeddings",
+    "init_from": null,
+    "tokenizer": "BPE, specialised tokens per modality",
+    "vocab": "50k",
+    "layers": 32,
+    "hidden": "4,096",
+    "heads": 32,
+    "context": "2048 tokens",
+    "other": {
+     "d_head": 128,
+     "batch_size": "2.0M (as printed, tokens per batch not stated)",
+     "max_lr": "1.2e-4",
+     "warmup": "375M"
+    }
+   },
+   {
+    "name": "GAL 30B",
+    "role": "proposed",
+    "params": "30.0B",
+    "architecture": "decoder-only transformer, GeLU, no biases, learned positional embeddings",
+    "init_from": null,
+    "tokenizer": "BPE, specialised tokens per modality",
+    "vocab": "50k",
+    "layers": 48,
+    "hidden": "7,168",
+    "heads": 56,
+    "context": "2048 tokens",
+    "other": {
+     "d_head": 128,
+     "batch_size": "2.0M (as printed, tokens per batch not stated)",
+     "max_lr": "1e-4",
+     "warmup": "375M"
+    }
+   },
+   {
+    "name": "GAL 120B",
+    "role": "proposed",
+    "params": "120.0B",
+    "architecture": "decoder-only transformer, GeLU, no biases, learned positional embeddings",
+    "init_from": null,
+    "tokenizer": "BPE, specialised tokens per modality",
+    "vocab": "50k",
+    "layers": 96,
+    "hidden": "10,240",
+    "heads": 80,
+    "context": "2048 tokens",
+    "other": {
+     "d_head": 128,
+     "batch_size": "2.0M (as printed, tokens per batch not stated)",
+     "max_lr": "0.7e-5",
+     "warmup": "1.125B"
+    }
+   },
+   {
+    "name": "OPT 175B / 30B",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "BLOOM 176B",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-3 text-davinci-002",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Chinchilla 70B",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Gopher 280B",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "PaLM 540B",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Minerva 540B",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Uni-Mol",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "next-token prediction (left-to-right LM) on corpus plus prompts",
+   "optimizer": "AdamW, beta1=0.9, beta2=0.95, gradient global-norm clip 1.0",
+   "lr": "max LR per size 6e-4 (125M), 2e-4 (1.3B), 1.2e-4 (6.7B), 1e-4 (30B), 0.7e-5 (120B)",
+   "lr_schedule": "linear decay down to 10% of its value",
+   "warmup": "375M tokens for 125M to 30B; 1.125B for 120B (units as printed in Table 5, no unit stated)",
+   "batch_size": "0.5M (125M), 1.0M (1.3B), 2.0M (6.7B, 30B, 120B) (Table 5, unit not stated)",
+   "steps": null,
+   "epochs": "about 4.25 (450B tokens / 106B); 120B early-stopped at start of fifth epoch",
+   "tokens": "450 billion tokens",
+   "seq_len": "2048 tokens",
+   "precision": null,
+   "weight_decay": "0.1",
+   "dropout": "0.1 dropout and attention dropout; no embedding dropout",
+   "regularisation": "gradient clipping 1.0",
+   "hardware": "128 NVIDIA A100 80GB nodes for the 120B model; inference of 120B on a single A100 node",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "library": "metaseq",
+    "note": "longer warmup was important for the 120B model; authors unsure it generalises"
+   }
+  },
+  "inference": {
+   "decoding": "zero-shot generation unless stated; RTP: nucleus sampling",
+   "temperature": null,
+   "top_p": "0.9 (RealToxicityPrompts only)",
+   "max_tokens": "20 tokens (RealToxicityPrompts continuations)",
+   "samples": "RTP: 25 generations per prompt for 5000 prompts; other evals single",
+   "prompting": "Galactica zero-shot; other LLMs 5-shot on Table 10 and BIG-bench; MATH uses <work> prompt or Minerva 5-shot mCoT",
+   "retrieval": "none for Galactica; sparse (ElasticSearch) and dense (Contriever, FAISS) baselines for citations",
+   "parameters": {},
+   "other": {
+    "python_offloading": "not turned on in experiments"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "accuracy",
+     "definition": "exact/choice accuracy per benchmark (LaTeX probe manually graded)",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "ROC-AUC",
+     "definition": "MoleculeNet classification",
+     "unit": "AUC",
+     "higher_is_better": true
+    },
+    {
+     "name": "perplexity",
+     "definition": "protein sequence validation",
+     "unit": "ppl",
+     "higher_is_better": false
+    },
+    {
+     "name": "CrowS-Pairs score",
+     "definition": "fraction preferring more stereotyping sentence by log-likelihood; ideal 50%",
+     "unit": "%",
+     "higher_is_better": false
+    },
+    {
+     "name": "Kolmogorov-Smirnov distance",
+     "definition": "between citation-count distributions of ground-truth and predicted references",
+     "unit": "distance",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "OPT 175B",
+    "BLOOM 176B",
+    "GPT-3 text-davinci-002",
+    "Chinchilla 70B",
+    "Gopher 280B",
+    "PaLM 540B",
+    "Minerva 540B",
+    "Uni-Mol",
+    "sparse and dense (Contriever) retrieval"
+   ],
+   "protocol": "Single run per size; no seeds or significance tests reported; in-domain vs out-of-domain marked per dataset"
+  },
+  "availability": {
+   "code": "metaseq library (github.com/facebookresearch/metaseq)",
+   "weights": "open sourced (galactica.org)",
+   "data": null
+  },
+  "prompts": [
+   {
+    "purpose": "citation prediction",
+    "text": "In this paper we use ResNet method [START_REF]",
+    "where": "Sec 5.4.1"
+   },
+   {
+    "purpose": "LaTeX equation probe",
+    "text": "The formula for Bessel’s differential equation is:",
+    "where": "Fig 9"
+   },
+   {
+    "purpose": "BBBP in pre-training",
+    "text": "Here is a SMILES formula:\n[START_I_SMILES]...[END_I_SMILES]\nQuestion: Will the chemical compound penetrate the blood-brain barrier?\nAnswer: No",
+    "where": "Fig 14"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training.tokens",
+    "quote": "We train the models for 450 billion tokens, or approximately 4.25 epochs.",
+    "where": "Sec 5.1"
+   },
+   {
+    "field": "training.hardware",
+    "quote": "For training the largest 120B model, we use 128 NVIDIA A100 80GB nodes.",
+    "where": "Sec 4.3"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Galactica 120B beats Chinchilla on mathematical MMLU with the <work> token",
+   "kind": "measured",
+   "source": null,
+   "metric": "MMLU math average",
+   "value": "41.3",
+   "unit": "%",
+   "baseline_value": "35.7",
+   "n": null,
+   "setup": "MMLU math test, 120B with <work>, zero-shot; Chinchilla 5-shot",
+   "note": null,
+   "where": "Sec 1.1, Table 8",
+   "quote": "With our reasoning token approach, we outperform Chinchilla on mathematical MMLU with an average score of 41.3% versus 35.7%"
+  },
+  {
+   "claim": "Galactica 120B scores 20.4% on MATH with 5-shot mCoT, versus PaLM 540B 8.8%",
+   "kind": "measured",
+   "source": null,
+   "metric": "MATH average",
+   "value": "20.4",
+   "unit": "%",
+   "baseline_value": "8.8",
+   "n": null,
+   "setup": "MATH, GAL 120B 5-shot Minerva mCoT prompt; PaLM 540B 5-shot mCoT",
+   "note": "Intro attributes this to the 120B model without naming the prompt; Table 9 shows 20.4 is with 5-shot mCoT, 16.6 with <work>",
+   "where": "Sec 1.1, Table 9",
+   "quote": "Our 120B model achieves a score of 20.4% versus PaLM 540B’s 8.8% on MATH"
+  },
+  {
+   "claim": "LaTeX equation knowledge probe: GAL 120B vs GPT-3 text-davinci-002",
+   "kind": "measured",
+   "source": null,
+   "metric": "LaTeX equations overall accuracy",
+   "value": "68.2",
+   "unit": "%",
+   "baseline_value": "49.0",
+   "n": null,
+   "setup": "434 equations, zero-shot, manual evaluation",
+   "note": null,
+   "where": "Sec 5.2.1, Table 6",
+   "quote": "on LaTeX equations, it achieves a score of 68.2% versus the latest GPT-3’s 49.0%"
+  },
+  {
+   "claim": "Corpus size and composition: 106B tokens, 83% papers",
+   "kind": "measured",
+   "source": null,
+   "metric": "corpus tokens",
+   "value": "106",
+   "unit": "billion tokens",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Galactica corpus, Table 2",
+   "note": null,
+   "where": "Sec 3, Table 2",
+   "quote": "Our corpus consists of 106 billion tokens from papers, reference material, encyclopedias and other scientiﬁc sources."
+  },
+  {
+   "claim": "Papers are 88B tokens, 83.0% of the corpus",
+   "kind": "measured",
+   "source": null,
+   "metric": "token share",
+   "value": "83.0",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "token share of papers (48M documents, 88B tokens)",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Papers, column Token %"
+  },
+  {
+   "claim": "Training ran 450B tokens, about 4.25 epochs, with validation loss still falling",
+   "kind": "measured",
+   "source": null,
+   "metric": "training tokens",
+   "value": "450",
+   "unit": "billion tokens",
+   "baseline_value": null,
+   "n": null,
+   "setup": "all model sizes; 120B early-stopped at start of fifth epoch",
+   "note": null,
+   "where": "Sec 5.1",
+   "quote": "We train the models for 450 billion tokens, or approximately 4.25 epochs."
+  },
+  {
+   "claim": "120B model only begins to overfit at the start of the fifth epoch",
+   "kind": "measured",
+   "source": null,
+   "metric": "epoch of first overfit",
+   "value": "5",
+   "unit": "epoch",
+   "baseline_value": null,
+   "n": null,
+   "setup": "validation loss, 120B",
+   "note": null,
+   "where": "Sec 5.1, Fig 6",
+   "quote": "The largest 120B model only begins to overﬁt at the start of the ﬁfth epoch."
+  },
+  {
+   "claim": "Galactica 120B beats OPT 175B and BLOOM 176B on 57 BIG-bench tasks (weighted)",
+   "kind": "measured",
+   "source": null,
+   "metric": "BIG-bench 57 weighted accuracy",
+   "value": "48.7",
+   "unit": "%",
+   "baseline_value": "43.4",
+   "n": null,
+   "setup": "57 BIG-bench tasks, 5-shot, default BIG-bench prompt style not in pre-training; weighted accuracy",
+   "note": "baseline is OPT 175B; BLOOM 176B 42.6",
+   "where": "Sec 5.5",
+   "quote": "Table 12",
+   "table": "Table 12, row GAL 120B, column Accuracy weighted"
+  },
+  {
+   "claim": "PubMedQA state of the art",
+   "kind": "measured",
+   "source": null,
+   "metric": "PubMedQA accuracy",
+   "value": "77.6",
+   "unit": "%",
+   "baseline_value": "72.2",
+   "n": null,
+   "setup": "GAL 120B, zero-shot, PubMedQA train set included in pre-training (in-domain); prior SOTA 72.2% (Yasunaga et al. 2022)",
+   "note": null,
+   "where": "Sec 5.3, Table 10",
+   "quote": "On PubMedQA, we achieve a score of 77.6% which outperforms the state-of-the-art of 72.2%"
+  },
+  {
+   "claim": "MedMCQA dev state of the art",
+   "kind": "measured",
+   "source": null,
+   "metric": "MedMCQA dev accuracy",
+   "value": "52.9",
+   "unit": "%",
+   "baseline_value": "41.0",
+   "n": null,
+   "setup": "GAL 120B, in-domain (MedMCQA train in pre-training); prior SOTA 41.0%",
+   "note": null,
+   "where": "Sec 5.3",
+   "quote": "On MedMCQA dev we achieve score of 52.9% versus the state-of-the-art of 41.0%"
+  },
+  {
+   "claim": "Citation prediction on PWC Citations, GAL 120B vs sparse retriever",
+   "kind": "measured",
+   "source": null,
+   "metric": "citation accuracy",
+   "value": "51.9",
+   "unit": "%",
+   "baseline_value": "30.9",
+   "n": null,
+   "setup": "644 ML concept/paper pairs; prompt ends with [START_REF]",
+   "note": "baseline is Sparse Retriever; fine-tuned dense 27.6",
+   "where": "Sec 5.4.1",
+   "quote": "Table 11",
+   "table": "Table 11, row GAL 120B, column PWC Citations"
+  },
+  {
+   "claim": "Citation prediction on Contextual Citations, GAL 120B",
+   "kind": "measured",
+   "source": null,
+   "metric": "citation accuracy",
+   "value": "36.6",
+   "unit": "%",
+   "baseline_value": "8.2",
+   "n": null,
+   "setup": "1,869 context/reference pairs from arXiv validation set",
+   "note": "baseline is fine-tuned dense retriever; sparse 5.3",
+   "where": "Sec 5.4.1",
+   "quote": "Table 11",
+   "table": "Table 11, row GAL 120B, column Contextual Citations"
+  },
+  {
+   "claim": "Title-based citation identifiers are more accurate than IDs but hallucinate more (6.7B, k=1 methods)",
+   "kind": "measured",
+   "source": null,
+   "metric": "citation correct",
+   "value": "13.8",
+   "unit": "% correct",
+   "baseline_value": "1.8",
+   "n": null,
+   "setup": "6.7B models, PWC Methods (1,705 methods), bucket k=1 mention",
+   "note": "IDs correct 1.8%; titles hallucinated 54.5% vs IDs 3.5%",
+   "where": "A.3",
+   "quote": "Table 26",
+   "table": "Table 26, row k = 1, column (a) Titles Correct"
+  },
+  {
+   "claim": "MATH: GAL 30B with <work> vs PaLM 540B 5-shot mCoT",
+   "kind": "measured",
+   "source": null,
+   "metric": "MATH average",
+   "value": "11.4",
+   "unit": "%",
+   "baseline_value": "8.8",
+   "n": null,
+   "setup": "MATH average, GAL 30B <work> prompt",
+   "note": null,
+   "where": "Sec 5.2.3",
+   "quote": "Table 9",
+   "table": "Table 9, row GAL 30B <work>, column Average"
+  },
+  {
+   "claim": "MMLU dev (261 examples): <work> vs PaLM 540B CoT",
+   "kind": "measured",
+   "source": null,
+   "metric": "MMLU dev accuracy",
+   "value": "42.4",
+   "unit": "%",
+   "baseline_value": "19.1",
+   "n": null,
+   "setup": "GAL 120B <work>, MMLU dev subset of 261 examples",
+   "note": "PaLM 540B CoT 5-shot, results from Chung et al. 2022",
+   "where": "A.5",
+   "quote": "Table 28",
+   "table": "Table 28, row Overall, column GAL 120B <work>"
+  },
+  {
+   "claim": "IUPAC name prediction accuracy rises with scale",
+   "kind": "measured",
+   "source": null,
+   "metric": "IUPAC accuracy",
+   "value": "39.2",
+   "unit": "%",
+   "baseline_value": "15.4",
+   "n": null,
+   "setup": "17,052 validation compounds, SMILES to IUPAC name, OPSIN canonical-SMILES match, GAL 120B",
+   "note": "baseline is GAL 30B",
+   "where": "Sec 5.6.1",
+   "quote": "Table 13",
+   "table": "Table 13, row GAL 120B, column Accuracy"
+  },
+  {
+   "claim": "MoleculeNet average ROC-AUC for GAL 120B vs Uni-Mol",
+   "kind": "measured",
+   "source": null,
+   "metric": "ROC-AUC average",
+   "value": "0.690",
+   "unit": "ROC-AUC",
+   "baseline_value": "0.770",
+   "n": null,
+   "setup": "6 classification sets, training sets in pre-training with prompt randomisation (weak supervision), DeepChem splits",
+   "note": "baseline is Uni-Mol (3D, 20M molecules)",
+   "where": "Sec 5.6.2",
+   "quote": "Table 15",
+   "table": "Table 15, row GAL 120B, column Av."
+  },
+  {
+   "claim": "CrowS-Pairs overall stereotype score lower than OPT 175B and GPT-3",
+   "kind": "measured",
+   "source": null,
+   "metric": "CrowS-Pairs overall",
+   "value": "60.5",
+   "unit": "%",
+   "baseline_value": "69.5",
+   "n": null,
+   "setup": "Galactica 120B; ideal is 50%",
+   "note": "OPT 175B 69.5, text-davinci-002 67.2",
+   "where": "Sec 6.1.1, Table 19",
+   "quote": "Galactica attains a better overall score of 60.5%"
+  },
+  {
+   "claim": "TruthfulQA MC1 accuracy remains low",
+   "kind": "measured",
+   "source": null,
+   "metric": "MC1 accuracy",
+   "value": "26",
+   "unit": "%",
+   "baseline_value": "21",
+   "n": null,
+   "setup": "GAL 120B, 817 questions",
+   "note": "baseline OPT 175B",
+   "where": "Sec 6.2",
+   "quote": "Table 21",
+   "table": "Table 21, row GAL 120B, column MC1 (Acc)"
+  },
+  {
+   "claim": "Checkmate-in-one accuracy of GAL 120B",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "3.03",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BIG-bench task; 19,426 chess games in pre-training",
+   "note": null,
+   "where": "A.8.8",
+   "quote": "Table 38",
+   "table": "Table 38, row GAL 120B, column Accuracy"
+  },
+  {
+   "claim": "Prompt pre-training set is 358M tokens (about 0.3% of corpus)",
+   "kind": "measured",
+   "source": null,
+   "metric": "prompt tokens",
+   "value": "358",
+   "unit": "million tokens",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 4 prompts, zero-shot prompts in pre-training",
+   "note": "Table 4 total prompts printed as 783,599 although rows sum differently; Table 2 lists 1.3 million prompt documents",
+   "where": "Sec 3.2",
+   "quote": "Table 4",
+   "table": "Table 4, row Total, column Tokens"
+  },
+  {
+   "claim": "Without a prompt-free ablation, corpus effect cannot be separated from prompt effect",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "authors concede in Limitations",
+   "note": null,
+   "where": "Sec 7.1",
+   "quote": "we do not speciﬁcally disentangle the eﬀects of the prompts we included in pre-training"
+  }
+ ],
+ "limits": [
+  "No ablation separating corpus effects from prompt effects (Sec 7.1)",
+  "No comparison of prompt pre-training vs instruction tuning",
+  "Repeated-token result has no matched uncurated-corpus run; cause left open (quality vs modality)",
+  "Open-access sources only; molecule and protein data deliberately subsampled",
+  "Single run per size, no seeds or significance tests; compute not stated in GPU-hours",
+  "Context 2048 tokens; no images or 3D geometry",
+  "Some bias toward popular papers persists at 120B in citation prediction",
+  "Overfitting on out-of-domain protein set (CASPSeq) from epoch 4",
+  "Comparisons mix 0-shot Galactica with 5-shot baselines; some benchmarks are in-domain (train sets in pre-training)",
+  "Model was withdrawn from public demo shortly after release (not stated in paper)"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "<work>",
+   "definition": "working memory token wrapping step-by-step reasoning",
+   "where": "Sec 3.1.1"
+  },
+  {
+   "term": "prompt pre-training",
+   "definition": "including task prompts in the pre-training corpus alongside general data rather than instruction-tuning afterwards",
+   "where": "Sec 3.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "OPT (Zhang et al.)",
+   "year": 2022,
+   "arxiv": "2205.01068",
+   "relation": "baseline",
+   "note": "metaseq training foundation and baseline",
+   "quote": null
+  },
+  {
+   "work": "Chinchilla (Hoffmann et al.)",
+   "year": 2022,
+   "arxiv": "2203.15556",
+   "relation": "baseline",
+   "note": "scaling-law baseline; Galactica argues tokens-to-infinity needs data quality",
+   "quote": null
+  },
+  {
+   "work": "PaLM (Chowdhery et al.)",
+   "year": 2022,
+   "arxiv": "2204.02311",
+   "relation": "baseline",
+   "note": "MATH baseline; no-bias design copied",
+   "quote": null
+  },
+  {
+   "work": "Minerva (Lewkowycz et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "mCoT prompt and fine-tuned LaTeX model comparison",
+   "quote": null
+  },
+  {
+   "work": "BLOOM",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "open baseline",
+   "quote": null
+  },
+  {
+   "work": "Scaling laws and interpretability of learning from repeated data (Hernandez et al.)",
+   "year": 2022,
+   "arxiv": "2205.10487",
+   "relation": "contradicts",
+   "note": "repeated tokens found harmful there; not here",
+   "quote": null
+  },
+  {
+   "work": "ExT5 (Aribandi et al.)",
+   "year": 2021,
+   "arxiv": "2111.10952",
+   "relation": "extends",
+   "note": "closest analog to prompt pre-training",
+   "quote": null
+  },
+  {
+   "work": "FLAN / T0 / UnifiedQA",
+   "year": 2021,
+   "arxiv": "2005.00700",
+   "relation": "related",
+   "note": "motivation for prompts in training",
+   "quote": null
+  },
+  {
+   "work": "Chain-of-thought (Wei et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "<work> is an alternative to CoT",
+   "quote": null
+  },
+  {
+   "work": "LAMA (Petroni et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "knowledge probes",
+   "quote": null
+  },
+  {
+   "work": "Scaling laws (Kaplan et al.)",
+   "year": 2020,
+   "arxiv": "2001.08361",
+   "relation": "related",
+   "note": "scaling background",
+   "quote": null
+  },
+  {
+   "work": "Deduplication (Lee et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "exact span dedup tool",
+   "quote": null
+  },
+  {
+   "work": "MMLU, MATH, BIG-bench, TruthfulQA, CrowS-Pairs, StereoSet, RealToxicityPrompts, MoleculeNet",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "evaluation sets",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 6",
+   "caption": "Repeated Tokens and Validation Loss. With four epochs of training, we continue to see validation loss fall for all model sizes.",
+   "page": 11,
+   "why": "Shows loss falling across four epochs with 120B overfitting at the fifth"
+  },
+  {
+   "figure": "Table 5",
+   "caption": "Details of the models trained",
+   "page": 10,
+   "why": "All architecture and optimisation hyperparameters per size"
+  },
+  {
+   "figure": "Table 2",
+   "caption": "The Galactica Corpus",
+   "page": 3,
+   "why": "Corpus composition by tokens"
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 3.1",
+   "snippet": "737612.62 -> 7,3,7,6,1,2,.,6,2",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Table 4 prints Total prompts as 783,599 while rows sum to a different figure; Table 2 lists 1.3 million prompt documents",
+  "Text says data leakage analysis is in the Appendix but none was found in the text",
+  "Batch size and warmup units are not stated in Table 5"
+ ]
+}

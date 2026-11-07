@@ -1,19 +1,646 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2001.09977",
  "pdf": "generative-ai/07-agentic-applications/sources/adiwardana-2020-towards-human-like-open-domain.pdf",
  "bib": {
   "title": "Towards a Human-like Open-Domain Chatbot",
+  "authors": [
+   "Daniel Adiwardana",
+   "Minh-Thang Luong",
+   "David R. So",
+   "Jamie Hall",
+   "Noah Fiedel",
+   "Romal Thoppilan",
+   "Zi Yang",
+   "Apoorv Kulshreshtha",
+   "Gaurav Nemade",
+   "Yifeng Lu",
+   "Quoc V. Le"
+  ],
   "first_author": "Adiwardana",
   "year": 2020,
-  "venue": null,
+  "venue": "preprint",
   "arxiv": "2001.09977",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-04",
-  "session": "0cc86b74-e81e-4405-a519-2f1165f541d1"
+  "at": "2026-11-07",
+  "chars_read": 122545,
+  "chars_total": 122545,
+  "engine": "pymupdf",
+  "skipped": "Appendix A/B sample conversations (Table 7 and random transcripts) only skimmed; they hold no numbers beyond conversation counts"
  },
- "legacy_report": "SOURCE: \"Towards a Human-like Open-Domain Chatbot\", Daniel Adiwardana, Minh-Thang Luong, David R. So, Jamie Hall, Noah Fiedel, Romal Thoppilan, Zi Yang, Apoorv Kulshreshtha, Gaurav Nemade, Yifeng Lu, Quoc V. Le (Google Research, Brain Team). Preprint, arXiv:2001.09977v3, 27 Feb 2020.\n\nCOVERAGE: I extracted all 38 pages (122,547 chars). I read pages 1–18 in full: abstract, Sections 1–7, references, and the start of Appendix A. Appendix A (pages 18–29) and Appendix B / Table 7 (pages 30–35) hold sample conversations and responses. I skimmed those by searching for numbers, tables and figures, and found no extra results in them. I read pages 36–38 in full: Table 8 (GenericBot) and Figures 7–10.\n\nCLAIMS\n- claim: The full Meena reaches 79% interactive SSA, base Meena 72%, and humans 86%. Full Meena is 23 points above the other bots tested.\n  number: 79% / 72% / 86%; +23 points absolute\n  setup: Interactive evaluation. Full Meena = base plus tuned decoding and a cross-turn repetition filter.\n  quote: \"the best perplexity end-to-end trained Meena scores high on SSA (72% on multi-turn evaluation) suggests that a human-level SSA of 86% is potentially within reach ... the full version of Meena (with a filtering mechanism and tuned decoding) scores 79% SSA, 23% higher in absolute SSA than the existing chatbots we evaluated.\"\n  where: p1, abstract\n\n- claim: SSA definition. Crowd workers first judge whether each response is sensible in context. If it is, they judge whether it is specific. A response that is not sensible counts as not specific. SSA is the plain average of the two percentages.\n  number: none\n  setup: Labels per response; each static eval used 5 crowd workers per (context, response) pair.\n  quote: \"If anything seems off — confusing, illogical, out of context, or factually wrong — then it should be labeled as, 'does not make sense'.\" ... \"Responses labeled not sensible are considered not specific.\" ... \"we take a simple average of the two, which we call SSA (sensibleness and specificity average).\"\n  where: p3, Section 2.1\n\n- claim: Sensibleness alone rewards bland bots. A trivial \"I don't know\" / \"ok\" bot beats DialoGPT on sensibleness, and specificity is what fixes the ranking.\n  number: GenericBot 70% sensible vs DialoGPT 62%; GenericBot SSA 35% vs DialoGPT 51%\n  setup: Static evaluation. GenericBot answers questions with \"I don't know\" and statements with \"ok\".\n  quote: \"70% of GenericBot's responses are labeled sensible, surpassing even DialoGPT (62%)\" ... \"GenericBot's SSA is 35% and DialoGPT's SSA is 51%, providing a much more fair separation and ranking than sensibleness alone.\"\n  where: p3\n\n- claim: Test perplexity predicts human SSA across Meena variants.\n  number: interactive R² = 0.93; static sensibleness R² = 0.93; static specificity R² = 0.94; static SSA R² = 0.94\n  setup: Meena variants that differ in layers, attention heads, training steps, ET vs vanilla Transformer, and hard vs distilled labels. Decoding is fixed (sample-and-rank, N=20, T=0.88). Perplexities range from about 10 to 18.\n  quote: \"A regression line is plotted, for which the coefficient of determination (R2) is 0.93, an indication of strong correlation between perplexity and the human evaluation metric (SSA).\" / \"The correlation was R2 = 0.93 for static sensibleness vs perplexity and R2 = 0.94 for static specificity vs perplexity ... Static SSA vs perplexity has R2 = 0.94.\"\n  where: p1 Figure 1 caption; p10 Section 4.1\n\n- claim: The authors note that the trend may not continue to lower perplexity.\n  number: none\n  setup: Same as the claim above.\n  quote: \"The correlation is close to linear, but it is unclear whether the trend will continue for even lower values of perplexity.\"\n  where: p10\n\n- claim: Humans score high on sensibleness but noticeably lower on specificity.\n  number: sensibleness 94% static / 97% interactive; specificity 69% / 75%; SSA 82% / 86%\n  setup: Static = crowd workers answering MTB contexts. Interactive = 100 human-human conversations among internal volunteers.\n  quote: \"Human sensibleness was estimated at 94% static and 97% interactive ... The human specificity scores are 69% static and 75% interactive. The resulting SSAs are 82% static and 86% interactive.\"\n  where: p10, Section 4.2\n\n- claim: Interactive scores for the other chatbots, all below Meena.\n  number: XiaoIce 31% SSA (45% sensible / 17% specific); Mitsuku 56% (72/40); DialoGPT 48%±3% (57±2/39±4); Cleverbot 56% interactive, 44% static\n  setup: Mitsuku and XiaoIce were tested only interactively by volunteers using the public web apps. DialoGPT is the 762M model with the authors' own top-K=10 decoder. Cleverbot was called through its API.\n  quote: \"XiaoIce scores 31% interactive SSA which is comprised of 45% sensibleness and 17% specificity.\" / \"Mitsuku scores 56% interactive SSA with 72% sensibleness and 40% specificity over 899 chatbot turns.\" / \"48%± 3% interactive SSA with 57%± 2% sensibleness and 39%± 4% specificity.\" / \"It scores interactive SSA 56% and static SSA 44%.\"\n  where: p10–12, Section 4.3\n\n- claim: Interactive sensibleness and specificity, read from the figure legends.\n  number: Meena 87%/70%, Meena (base) 80%/64%, Human 97%/75%\n  setup: Interactive evaluation.\n  quote: \"Human (97%) Meena (87%) Meena (base) (80%) ... Figure 3: Interactive sensibleness vs perplexity.\" / \"Human (75%) Meena (70%) Meena (base) (64%) ... Figure 4\"\n  where: p9\n\n- claim: Model size and data. Meena is a 2.6B-parameter Evolved Transformer seq2seq model trained on 40B words of filtered social-media conversation.\n  number: 2.6B params; 1 encoder block + 13 decoder blocks; test perplexity 10.2; 8K BPE vocabulary; 867M pairs; 341GB / 40B words / 61B tokens; up to 7 context turns\n  setup: Trained 30 days on a TPU-v3 Pod with 2,048 cores. The training set was traversed 164 times, about 10T tokens seen.\n  quote: \"Our best model has 2.6B parameters and achieves a test perplexity of 10.2 based on a vocabulary of 8K BPE subwords\" / \"The final Meena dataset contains 341GB of text (40B words).\" / \"We trained our best model for 30 days on a TPU-v3 Pod (2,048 TPU cores)\" / \"the model had traversed the full training set 164 times (or epochs) and observed a total of about 10T tokens\"\n  where: p2; p6–8\n\n- claim: The Evolved Transformer beat the vanilla Transformer at the same number of steps.\n  number: 10.2 vs 10.7 perplexity at 738k steps\n  setup: The largest model of each kind that fit in memory.\n  quote: \"Our largest (i.e., maximum memory usage) Evolved Transformer scored 10.2 perplexity and our largest vanilla Transformer scored perplexity 10.7 for the same number of training steps (738k).\"\n  where: p7\n\n- claim: Sample-and-rank decoding works like this. Draw N independent samples at temperature T, then keep the one with the highest probability. It gives more diverse and content-rich responses than beam search, which repeats itself.\n  number: N=20, T=0.88 for the Section 4 results\n  setup: Requires a low-perplexity model.\n  quote: \"First, we sample N independent candidate responses using plain random sampling with temperature T. Second, we select the candidate response with the highest probability to use as the final output.\" / \"For all the results in Section 4, we use sample-and-rank with N = 20 and T = 0.88.\"\n  where: p8, Section 3.4\n\n- claim: Tuning the decoder adds 2 points. N=20 beats N=1 by about 10 points. N=400 is worse on sensibleness.\n  number: 72% to 74%; about 10%\n  setup: top-k (k=40), T=1.0, N=20. The same result holds for static and interactive evaluation.\n  quote: \"With this setting and maintaining N = 20, we note an SSA increase from 72% to 74% relative to sampling from the whole vocabulary with T = 0.88.\" / \"N = 20 provides a significant improvement over N = 1, with an absolute improvement in SSA of ∼10% (Figure 6). However, N = 400 demonstrates worse performance for sensibleness\"\n  where: p12–13, Section 5.1\n\n- claim: About a third of base-Meena conversations repeat earlier turns near the end. A rule that drops candidates sharing long common subsequences with earlier turns lifts SSA to 79%.\n  number: about one third; 74% to 79% ±1%\n  setup: Interactive evaluation.\n  quote: \"about one third of the conversations with Meena (base) contain cross-turn repetitions toward the end.\" / \"We, therefore, further improve on the above interactive SSA of74%±%1 to 79%± 1%.\"\n  where: p13, Section 5.2\n\n- claim: SSA tracks direct human-likeness judgments.\n  number: R² 0.96 (SSA), 0.99 (sensibleness), 0.89 (specificity)\n  setup: Static evaluation; each point is a different chatbot, plus one human point.\n  quote: \"A regression line is plotted, for which the coefficient of determination ( R2) is 0.96.\"\n  where: p4 Figure 2; p37–38 Figures 9–10\n\n- claim: Crowd workers agree only moderately, and the scores are stable across repeated runs.\n  number: sensibleness agreement 76±3%, α 0.42±0.03; specificity 66±2%, α 0.30±0.05; SSA std 2% static, 1% interactive over 7 runs\n  setup: Static evaluations of Meena models, 1,477 pairs each, 5 workers per pair.\n  quote: \"Sensibleness 76 ± 3 0.42 ± 0.03 / Specificity 66 ± 2 0.30 ± 0.05\" / \"the standard deviation is 2% for static SSA and is 1% for interactive SSA\"\n  where: p3 Table 1; p10\n\n- claim: Evaluation setups. The static Mini-Turing Benchmark has 1,477 contexts of 1–3 turns. Interactive conversations run 14–28 turns, with 100 conversations per model.\n  number: 315 single-turn, 500 two-turn, 662 three-turn contexts\n  setup: Seeds came from Vinyals and Le (2015) and Loebner Prize transcripts (2014–2018).\n  quote: \"In total, there were 315 single-turn contexts, which we then extended to include 500 two-turn and 662 three-turn contexts.\" / \"A conversation is required to last at least 14 turns (7 from chatbot) and at most 28 turns. We collected 100 such conversations for each model\"\n  where: p4\n\nLIMITS\n- The static MTB covers only 1–3-turn contexts and is \"biased by the sources of the first turn\". It is mostly Turing-test and social chit-chat, with no deeper QA, math, or Winograd-style tests (p14–15).\n- Interactive conversations \"may be too short (14 to 28 turns)\", overweight openings and goodbyes, and do not exercise long-term memory (p15).\n- SSA does not cover empathy, humor, deep reasoning or knowledge. The authors concede \"A limitation of our work is that it does not cover aspects such as empathy\" (p14).\n- The comparisons with other bots are confounded. XiaoIce's state was not reset, a Weibo account was shared, a limited version may have been served, and XiaoIce optimises for engagement (\"Meena is arguably at an advantage\", p6). The Mitsuku web version is not the Loebner version. DialoGPT ran with the authors' own decoder and without MMI reranking.\n- Human interactive baselines came from volunteers who knew they were talking to a human.\n- The reported results include a serving-time safety classifier (p13–14). The perplexity–SSA trend may not hold below the perplexities tested.\n- The sample conversations in Section 3.5 are cherry-picked. Appendix A samples are random apart from removed sensitive conversations.\n- Dated: this is pre-RLHF and pre-instruction-tuning, with a 2.6B seq2seq model and 128-token encoder/decoder limits. Its \"biggest end-to-end model\" claim is long superseded. Its approach to open-domain chat is not task-oriented dialogue.\n\nBUILDS ON: seq2seq (Sutskever et al., 2014; Bahdanau et al., 2015); Evolved Transformer (So et al., 2019) on top of the Transformer (Vaswani et al., 2017); BPE (Sennrich et al., 2016); neural conversational model (Vinyals and Le, 2015); generic-response problem and MMI (Li et al., 2016a); top-k sampling (Fan et al., 2018; Radford et al., 2019; Holtzman et al., 2019); BLEU's poor fit for dialogue (Liu et al., 2016; Lowe et al., 2017); Adafactor (Shazeer and Stern, 2018); distillation and temperature (Hinton et al., 2015); engagingness vs humanness (See et al., 2019); baselines DialoGPT (Zhang et al., 2019) and XiaoIce (Zhou et al., 2018).\n\nCODE: none. The only formula is the temperature softmax (p8, Eq. 1), \"pi = exp(zi/T) / ∑j exp(zj/T)\".\n\nFIGURES:\n- Recommended: Figure 1, p1. \"Interactive SSA vs Perplexity. Each point is a different version of the Meena model. A regression line is plotted, for which the coefficient of determination (R2) is 0.93 ...\" This one plot shows the perplexity–quality trend and puts Human 86%, Meena 79%, base 72%, Mitsuku/Cleverbot 56%, DialoGPT 48% and XiaoIce 31% on the same axes.\n- Alternatives: Figure 5, p11, \"Static evaluation results\", three panels with SSA, sensibleness and specificity separately. Tables 2 and 3, p7, sample-and-rank vs beam search on \"Why do you like the ocean?\", show the decoding contrast with no explanation needed. Table 5, p13, shows the cross-turn repetition failure.\n\nPROBLEMS: none of substance, and no embedded instructions. The extracted text has ligature characters (ﬁ, ﬂ) and one typo copied verbatim from the source (\"74%±%1\"). The Figure 6–8 curves are images, so their values cannot be read from the text. I did not read the appendix sample conversations word for word."
+ "type": "empirical",
+ "question": "Can a large end-to-end trained neural chatbot with low perplexity be sensible and specific enough to approach human conversation, and does perplexity predict human judgement?",
+ "hypothesis": "Lower test perplexity yields higher human-judged sensibleness and specificity, so a human-level chatbot may be reachable by optimising perplexity.",
+ "contributions": [
+  "A simple human evaluation metric (SSA) for multi-turn open-domain chatbots",
+  "Evidence that perplexity correlates with human judgement (SSA)",
+  "Showing an end-to-end model with low enough perplexity surpasses existing handcrafted-framework chatbots on SSA"
+ ],
+ "method": {
+  "summary": "Meena is a 2.6B Evolved Transformer seq2seq model trained on 867M (context, response) pairs from public social media, with up to 7 context turns, minimising next-token cross entropy. It is evaluated by crowd-labelled sensibleness and specificity in static (MTB) and interactive modes against Cleverbot, DialoGPT, Mitsuku, XiaoIce and humans.",
+  "task": "open-domain multi-turn dialogue generation and its human evaluation",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Meena social media conversations",
+    "role": "train",
+    "size": "867M (context, response) pairs; 341GB text; 40B words; 61B BPE tokens",
+    "split": "test perplexity reported on a held-out test set; split sizes not stated",
+    "source": "mined and filtered public domain social media message trees",
+    "preprocessing": "Drop message if subwords <2 or >128, alphabetic chars <70%, contains URL, username contains 'bot', repeated >100 times, high n-gram overlap with parent, unsafe per commercial classifier; remove quoted parent text; drop subtrees; 8K BPE with sentencepiece"
+   },
+   {
+    "name": "Mini-Turing Benchmark (MTB)",
+    "role": "eval",
+    "size": "1,477 contexts: 315 single-turn, 500 two-turn, 662 three-turn",
+    "split": "all used for static eval",
+    "source": "Vinyals and Le (2015) questions and Loebner Prize 2014-2018 transcripts, extended",
+    "preprocessing": null
+   },
+   {
+    "name": "Interactive conversations",
+    "role": "eval",
+    "size": "100 conversations per model, 14-28 turns (>=700 labelled turns); DialoGPT 300; Cleverbot 195; XiaoIce 119; Mitsuku 100; human-human 100",
+    "split": null,
+    "source": "crowd workers or internal volunteers chatting freely, starting with 'Hi!'",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Meena",
+    "role": "proposed",
+    "params": "2.6B",
+    "architecture": "seq2seq Evolved Transformer, 1 encoder block and 13 decoder blocks, shared embeddings across encoder, decoder and softmax",
+    "init_from": null,
+    "tokenizer": "BPE (sentencepiece)",
+    "vocab": "8K",
+    "layers": "1 ET encoder + 13 ET decoder blocks",
+    "hidden": "2,560",
+    "heads": "32",
+    "context": "128 tokens encoder, 128 decoder (256 combined); up to 7 context turns",
+    "other": {
+     "best test perplexity": "10.2",
+     "largest vanilla Transformer": "32 decoder layers, perplexity 10.7 at same 738k steps"
+    }
+   },
+   {
+    "name": "DialoGPT",
+    "role": "baseline",
+    "params": "762M",
+    "architecture": "decoder-only",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "decoding": "top-K K=10 (own implementation after Wolf et al. 2019), no MMI reranking",
+     "other sizes": "345M tried and dropped"
+    }
+   },
+   {
+    "name": "Cleverbot",
+    "role": "baseline",
+    "params": null,
+    "architecture": "API",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Mitsuku",
+    "role": "baseline",
+    "params": null,
+    "architecture": "free web app",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "XiaoIce",
+    "role": "baseline",
+    "params": null,
+    "architecture": "Weibo web app, Mandarin",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "minimise perplexity of next token (cross-entropy)",
+   "optimizer": "Adafactor",
+   "lr": "0.01 initial",
+   "lr_schedule": "constant for first 10k steps, then inverse square root of step number",
+   "warmup": null,
+   "batch_size": "8 training examples per TPU core",
+   "steps": "738k (stated for the ET/Transformer comparison at same steps)",
+   "epochs": "164",
+   "tokens": "about 10T tokens seen including repeats",
+   "seq_len": "128 encoder + 128 decoder tokens",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": "0.1 attention and feed-forward layer dropout",
+   "regularisation": "dropout only; model can overfit the 61B-token set",
+   "hardware": "TPU-v3 Pod, 2,048 cores, 16GB HBM per core",
+   "compute": "30 days on the pod",
+   "wall_clock": "30 days; about 1 second per step",
+   "seeds": null,
+   "other": {
+    "global batch": "inferred: 8 x 2,048 cores = 16384 examples",
+    "framework": "Tensor2Tensor",
+    "hyperparameter search": "manual coordinate descent",
+    "throughput": "over 4M tokens per training second",
+    "ablations": "layers, heads, steps, ET vs Transformer, hard vs soft labels (distillation)"
+   }
+  },
+  "inference": {
+   "decoding": "sample-and-rank: sample N independent candidates, return the highest-probability one",
+   "temperature": "0.88 (base, full vocabulary); 1.0 with top-k 40 (full)",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "N=20 candidates per response; 7 repeat evaluations of best model",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "N": "20 (swept 1, 20, 400)",
+    "top_k": "40 for Meena full",
+    "cross-turn repetition rule": "remove candidates sharing long common sub-sequences with any earlier turn; threshold not given",
+    "safety layer": "extra classifier filtering at serving time for full Meena"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Sensibleness",
+     "definition": "% of responses crowd workers label as making sense in context",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Specificity",
+     "definition": "% of responses labelled specific to context; non-sensible counts as not specific",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "SSA",
+     "definition": "simple average of sensibleness and specificity",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Perplexity",
+     "definition": "test-set next-token perplexity, lower better, minimum 1",
+     "unit": "perplexity",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "Cleverbot",
+    "DialoGPT 762M",
+    "Mitsuku",
+    "XiaoIce",
+    "humans",
+    "GenericBot"
+   ],
+   "protocol": "5 crowd workers per item with majority vote; static (MTB) and interactive; regression R2 of SSA on perplexity; agreement and Krippendorff alpha reported; 7 repeats for SD"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "conversations with Meena and other bots on github.com/google-research/google-research/tree/master/meena/"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Meena (full, with tuned decoding and cross-turn repetition filter) scores 79% interactive SSA.",
+   "kind": "measured",
+   "source": null,
+   "metric": "interactive SSA",
+   "value": "79",
+   "unit": "% SSA",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Interactive eval, 100 conversations of 14-28 turns, 5-worker majority vote; sample-and-rank N=20, top-k 40, T=1.0 plus repetition rule; safety classifier layer at serving time",
+   "quote": "We, therefore, further improve on the above interactive SSA of 74%±%1 to 79% ± 1%.",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.2"
+  },
+  {
+   "claim": "Best end-to-end Meena (base, 2.6B, perplexity 10.2) scores 72% interactive SSA.",
+   "kind": "measured",
+   "source": null,
+   "metric": "interactive SSA",
+   "value": "72",
+   "unit": "% SSA",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Interactive eval, sample-and-rank N=20, T=0.88",
+   "quote": "In this section we take the interactive SSA from 72% ± 1%, for Meena (base)",
+   "table": null,
+   "note": null,
+   "where": "Sec 5"
+  },
+  {
+   "claim": "Humans score 86% interactive SSA (97% sensible, 75% specific) and 82% static SSA.",
+   "kind": "measured",
+   "source": null,
+   "metric": "interactive SSA",
+   "value": "86",
+   "unit": "% SSA",
+   "baseline_value": null,
+   "n": null,
+   "setup": "100 human-human conversations from internal volunteers, labelled by 5 crowd workers per turn; participants knew they were talking to a human",
+   "quote": "The resulting SSAs are 82% static and 86% inter-active.",
+   "table": null,
+   "note": "Text line-breaks 'inter-active'; also 'Human sensibleness was estimated at 94% static and 97% interactive' and specificity 69% static, 75% interactive.",
+   "where": "Sec 4.2"
+  },
+  {
+   "claim": "Full Meena is 23 points absolute above the other chatbots evaluated.",
+   "kind": "measured",
+   "source": null,
+   "metric": "SSA gap",
+   "value": "23",
+   "unit": "% absolute SSA",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Interactive SSA vs best other bots (Mitsuku, Cleverbot 56%)",
+   "quote": "scores 79% SSA, 23% higher",
+   "table": null,
+   "note": null,
+   "where": "Abstract"
+  },
+  {
+   "claim": "Test perplexity correlates with interactive SSA across Meena variants, R2 = 0.93.",
+   "kind": "measured",
+   "source": null,
+   "metric": "R2 interactive SSA vs perplexity",
+   "value": "0.93",
+   "unit": "R2",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Different Meena versions varying layers, heads, steps, ET vs Transformer, hard vs soft labels; linear regression",
+   "quote": "is 0.93, an indication of strong",
+   "table": null,
+   "note": "Text: static sensibleness R2 0.93, static specificity R2 0.94, static SSA R2 0.94.",
+   "where": "Fig 1"
+  },
+  {
+   "claim": "Static SSA vs perplexity R2 = 0.94.",
+   "kind": "measured",
+   "source": null,
+   "metric": "R2 static SSA vs perplexity",
+   "value": "0.94",
+   "unit": "R2",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Static eval on 1,477 MTB contexts",
+   "quote": "Static SSA vs perplexity has",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.1"
+  },
+  {
+   "claim": "A trivial GenericBot (I don't know / ok) is rated 70% sensible, above DialoGPT's 62%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "sensibleness",
+   "value": "70",
+   "unit": "% sensible",
+   "baseline_value": "62",
+   "n": null,
+   "setup": "Static eval, MTB fixed prompts",
+   "quote": "70% of GenericBot's responses are la-",
+   "table": null,
+   "note": null,
+   "where": "Sec 2.1"
+  },
+  {
+   "claim": "GenericBot SSA is 35% versus DialoGPT 51%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "SSA",
+   "value": "35",
+   "unit": "% SSA",
+   "baseline_value": "51",
+   "n": null,
+   "setup": "Static eval; GenericBot has 0% specific, DialoGPT 39% specific",
+   "quote": "GenericBot’s SSA is 35% and DialoGPT’s",
+   "table": null,
+   "note": null,
+   "where": "Sec 2.1"
+  },
+  {
+   "claim": "Sample-and-rank with N=20 improves static SSA by about 10 points absolute over N=1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "SSA gain N=20 vs N=1",
+   "value": "10",
+   "unit": "% absolute SSA",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Static eval, N in {1,20,400}; N=400 worse on sensibleness and diminishing on specificity",
+   "quote": "absolute improvement in SSA of ∼10% (Figure 6)",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.1"
+  },
+  {
+   "claim": "Top-k 40 with T=1.0 raises SSA from 72% to 74% versus full-vocabulary sampling at T=0.88.",
+   "kind": "measured",
+   "source": null,
+   "metric": "SSA",
+   "value": "74",
+   "unit": "% SSA",
+   "baseline_value": "72",
+   "n": null,
+   "setup": "N=20; same in interactive and static",
+   "quote": "we note an SSA increase from 72% to",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.1"
+  },
+  {
+   "claim": "DialoGPT (762M) scores 48% interactive SSA (57% sensible, 39% specific).",
+   "kind": "measured",
+   "source": null,
+   "metric": "interactive SSA",
+   "value": "48",
+   "unit": "% SSA",
+   "baseline_value": null,
+   "n": null,
+   "setup": "300 interactive conversations, 2,660 labelled turns; own top-k=10 decoder, no MMI reranking",
+   "quote": "48% ± 3% interactive SSA with 57% ± 2% sen-",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.3"
+  },
+  {
+   "claim": "Cleverbot scores 56% interactive SSA and 44% static SSA.",
+   "kind": "measured",
+   "source": null,
+   "metric": "interactive SSA",
+   "value": "56",
+   "unit": "% SSA",
+   "baseline_value": null,
+   "n": null,
+   "setup": "195 interactive conversations (1,751 turns) via API",
+   "quote": "It scores interactive SSA 56%",
+   "table": null,
+   "note": "Mitsuku also 56% (72% sensible, 40% specific; 899 turns); they tie before rounding.",
+   "where": "Sec 4.3"
+  },
+  {
+   "claim": "XiaoIce scores 31% interactive SSA (45% sensible, 17% specific).",
+   "kind": "measured",
+   "source": null,
+   "metric": "interactive SSA",
+   "value": "31",
+   "unit": "% SSA",
+   "baseline_value": null,
+   "n": null,
+   "setup": "1,173 turns, 119 conversations by Mandarin-speaking volunteers; state not reset, shared Weibo account, smallest-index version",
+   "quote": "XiaoIce scores 31% interactive SSA which",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.3"
+  },
+  {
+   "claim": "Run-to-run SD for the lowest-perplexity model over 7 evaluations is 2% static SSA and 1% interactive SSA.",
+   "kind": "measured",
+   "source": null,
+   "metric": "SD",
+   "value": "2",
+   "unit": "% SD static SSA",
+   "baseline_value": null,
+   "n": null,
+   "setup": "7 static and 7 interactive evaluations with fresh samples",
+   "quote": "standard deviation is 2% for static SSA",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.1"
+  },
+  {
+   "claim": "About one third of Meena (base) interactive conversations contain cross-turn repetitions toward the end.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "one third",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Interactive eval, Meena (base)",
+   "quote": "about one third of the",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.2"
+  },
+  {
+   "claim": "Crowd-worker agreement is 76% (alpha 0.42) for sensibleness and 66% (alpha 0.30) for specificity.",
+   "kind": "measured",
+   "source": null,
+   "metric": "agreement",
+   "value": "76",
+   "unit": "% agreement",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Static evals of Meena models, 1,477 pairs each, 5 workers",
+   "quote": null,
+   "table": "Table 1, row Sensibleness, column Agreement (%)",
+   "note": null,
+   "where": "Table 1"
+  }
+ ],
+ "limits": [
+  "Static set has 1-3 turn contexts, mostly Turing-test and social chat; no deep QA, maths or commonsense-challenge contexts",
+  "Interactive conversations are 14-28 turns, weighted to greetings and endings, too short for memory or deep topics",
+  "Unclear whether the linear perplexity-SSA trend continues at lower perplexity",
+  "XiaoIce and Mitsuku evaluated via web apps with volunteers, XiaoIce state not reset, shared account; XiaoIce optimises engagement so Meena is at an advantage",
+  "DialoGPT used own decoder; Mitsuku web version differs from Loebner-winning one",
+  "Humans in the human baseline knew they were talking to a human",
+  "Full Meena evaluated with an extra safety classifier; training data and model not released",
+  "No empathy, humor or reasoning measured"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "SSA",
+   "definition": "Sensibleness and Specificity Average: simple average of the percentage of responses labelled sensible and the percentage labelled specific",
+   "where": "Sec 2.1"
+  },
+  {
+   "term": "sample-and-rank",
+   "definition": "Sample N independent candidates with temperature T, then select the one with highest probability",
+   "where": "Sec 3.4"
+  },
+  {
+   "term": "MTB",
+   "definition": "Mini-Turing Benchmark: 1,477 conversational contexts of 1 to 3 turns",
+   "where": "Sec 2.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "The Evolved Transformer",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "main architecture",
+   "quote": null
+  },
+  {
+   "work": "Attention is all you need",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Transformer baseline",
+   "quote": null
+  },
+  {
+   "work": "Adafactor",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "optimizer",
+   "quote": null
+  },
+  {
+   "work": "Sequence to sequence learning with neural networks",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "seq2seq framing",
+   "quote": null
+  },
+  {
+   "work": "DialoGPT",
+   "year": 2019,
+   "arxiv": "1911.00536",
+   "relation": "baseline",
+   "note": "762M model compared",
+   "quote": null
+  },
+  {
+   "work": "Cleverbot",
+   "year": null,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "API",
+   "quote": null
+  },
+  {
+   "work": "Mitsuku (Worswick 2018)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "web app",
+   "quote": null
+  },
+  {
+   "work": "XiaoIce (Zhou et al. 2018)",
+   "year": 2018,
+   "arxiv": "1812.08989",
+   "relation": "baseline",
+   "note": "web app",
+   "quote": null
+  },
+  {
+   "work": "The curious case of neural text degeneration",
+   "year": 2019,
+   "arxiv": "1904.09751",
+   "relation": "uses-method",
+   "note": "top-k tail truncation",
+   "quote": null
+  },
+  {
+   "work": "Hierarchical Neural Story Generation",
+   "year": 2018,
+   "arxiv": "1805.04833",
+   "relation": "uses-method",
+   "note": "top-k sampling",
+   "quote": null
+  },
+  {
+   "work": "Distilling the knowledge in a neural network",
+   "year": 2015,
+   "arxiv": "1503.02531",
+   "relation": "uses-method",
+   "note": "temperature softmax and soft labels",
+   "quote": null
+  },
+  {
+   "work": "Li et al. 2016a diversity-promoting objective",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "related",
+   "note": "generic 'I don't know' problem",
+   "quote": null
+  },
+  {
+   "work": "Vinyals and Le 2015",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "MTB seed contexts",
+   "quote": null
+  },
+  {
+   "work": "Liu et al. 2016; Lowe et al. 2017",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "contradicts",
+   "note": "found poor BLEU-human correlation; this paper finds perplexity correlates",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Interactive SSA vs Perplexity.",
+   "page": 1,
+   "why": "Shows R2 0.93 linking perplexity to SSA and places all bots on one axis"
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "Static SSA over number of sampled responses for top-k and sampling with temperature.",
+   "page": 13,
+   "why": "Shows effect of N in sample-and-rank"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 1, Sec 3.4",
+   "snippet": "p_i = exp(z_i/T) / sum_j exp(z_j/T)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Pdf text is two-column PyMuPDF output; figure values read from labels in text"
+ ]
 }

@@ -1,0 +1,687 @@
+{
+ "schema": 1,
+ "key": "2205.14135",
+ "pdf": "ai-engineering/07-inference-engineering/sources/dao-2022-flashattention.pdf",
+ "bib": {
+  "title": "FlashAttention: Fast and Memory-Efficient Exact Attention with IO-Awareness",
+  "authors": [
+   "Tri Dao",
+   "Daniel Y. Fu",
+   "Stefano Ermon",
+   "Atri Rudra",
+   "Christopher Ré"
+  ],
+  "first_author": "Dao",
+  "year": 2022,
+  "venue": "preprint",
+  "arxiv": "2205.14135",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 108846,
+  "chars_total": 108846,
+  "engine": "pymupdf",
+  "skipped": "Appendix B.3-C proofs and Tables 10-20 skimmed only (proof algebra and per-config timing grids)"
+ },
+ "type": "system",
+ "question": "Can exact attention be made faster and more memory-efficient on GPUs by accounting for reads and writes between HBM and on-chip SRAM?",
+ "hypothesis": "Attention runtime is dominated by HBM accesses rather than FLOPs, so an IO-aware tiled algorithm with recomputation will be faster even with more FLOPs.",
+ "contributions": [
+  "FlashAttention: IO-aware exact attention using tiling and recomputation in one fused CUDA kernel, with O(N) extra memory",
+  "IO complexity analysis: Theta(N^2 d^2 M^-1) HBM accesses vs Theta(Nd+N^2) standard, plus a lower bound",
+  "Block-sparse FlashAttention with IO complexity improved by the sparsity fraction",
+  "Faster training (BERT, GPT-2, LRA), longer context quality gains, first better-than-chance Path-X and Path-256"
+ ],
+ "method": {
+  "summary": "A single fused CUDA kernel computes softmax(QK^T)V block by block in SRAM with running max and normaliser statistics, never writing the N x N matrix to HBM; the backward pass recomputes S and P from stored O and (m, l). Block-sparse variant skips zero blocks of a butterfly mask.",
+  "task": "Attention kernel; end-to-end training of BERT-large, GPT-2, LRA models, long-document classification",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Wikipedia (MLPerf 1.1 BERT data)",
+    "role": "train",
+    "size": null,
+    "split": "MLPerf 1.1 reference split; 10000 validation examples",
+    "source": "MLPerf 1.1 reference",
+    "preprocessing": null
+   },
+   {
+    "name": "OpenWebText",
+    "role": "train",
+    "size": null,
+    "split": "0.5% random validation, rest train, selected once",
+    "source": "Gokaslan et al. 2019",
+    "preprocessing": "GPT-2 BPE tokenizer"
+   },
+   {
+    "name": "Long Range Arena (ListOps, Text, Retrieval, Image, Pathfinder, Path-X, Path-256)",
+    "role": "both",
+    "size": null,
+    "split": null,
+    "source": "Tay et al. 2020",
+    "preprocessing": "Path-X/256 pretrain on Path-64 then spatially interpolate positional embeddings"
+   },
+   {
+    "name": "MIMIC-III",
+    "role": "both",
+    "size": "avg 2,395 tokens per doc, longest 14,562",
+    "split": null,
+    "source": "Johnson et al. 2016",
+    "preprocessing": null
+   },
+   {
+    "name": "ECtHR",
+    "role": "both",
+    "size": "avg 2,197 tokens per doc, longest 49,392",
+    "split": null,
+    "source": "Chalkidis et al. 2019, 2021",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "FlashAttention / block-sparse FlashAttention",
+    "role": "proposed",
+    "params": null,
+    "architecture": "attention kernel (CUDA), built from Apex FMHA code",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "up to 64K",
+    "other": {
+     "block sizes": "Bc = ceil(M/4d), Br = min(ceil(M/4d), d)",
+     "head dims supported": "16, 32, 64, 128",
+     "GPUs supported": "all Turing and Ampere"
+    }
+   },
+   {
+    "name": "BERT-large",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "encoder",
+    "init_from": "MLPerf benchmark initialization",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "512",
+    "other": {}
+   },
+   {
+    "name": "GPT-2 small / medium",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "decoder-only",
+    "init_from": null,
+    "tokenizer": "GPT-2 BPE",
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "1K (4K, 2K in Table 4)",
+    "other": {}
+   },
+   {
+    "name": "RoBERTa",
+    "role": "base",
+    "params": null,
+    "architecture": "encoder",
+    "init_from": "pretrained; positional embeddings repeated to longer lengths as in Beltagy et al.",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "512 extended to 16384",
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "BERT: masked language modelling to 72.0% target accuracy; GPT-2: next-token (inferred from GPT-2 recipe)",
+   "optimizer": "BERT: LAMB; GPT-2: AdamW",
+   "lr": "BERT 3.75e-3; GPT-2 small 6e-4, medium 1.5e-4",
+   "lr_schedule": "Path-X: one epoch linear warmup then cosine decay; others follow cited recipes",
+   "warmup": "Path-X: 1 epoch",
+   "batch_size": "BERT 448; GPT-2 effective 512 via gradient accumulation",
+   "steps": "BERT at most 7100; GPT-2 400K",
+   "epochs": "Path-64 pretrain 200 epochs; Path-X/256 finetune 200 epochs (+200 more for Path-X best checkpoint)",
+   "tokens": null,
+   "seq_len": "BERT 512; GPT-2 1K/2K/4K; LRA 1K-4K; Path-X 16K; Path-256 64K",
+   "precision": "BERT FP16 Apex AMP O2; GPT-2 PyTorch AMP; LRA mixed precision except Performer and Local Attention",
+   "weight_decay": "GPT-2 0.1",
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "BERT 8xA100-80GB; GPT-2 8xA100-40GB",
+   "compute": "GPT-2 small 2.7-9.5 days, medium 6.9-21.0 days (8xA100)",
+   "wall_clock": "BERT 17.4 min (FlashAttention)",
+   "seeds": "BERT averaged over 10 runs; others not stated",
+   "other": {
+    "long-doc hyperparameters": "follow Dai et al. 2022, values not given"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "Benchmark runtime: mean of 100 measurements; memory measured once",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {
+    "benchmark setup": "8 heads, dim 64, batch 16, one A100 40GB, FP16 (Local Attention FP32), random Q K V, dropout 0.1, padding mask with lengths in [N-20, N]; approximate/sparse baselines use compression ratio 1/8 or compressed length 256"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Training time to target",
+     "definition": "wall-clock minutes until BERT MLM accuracy reaches 72.0%",
+     "unit": "minutes",
+     "higher_is_better": false
+    },
+    {
+     "name": "GPT-2 training time and perplexity",
+     "definition": "wall-clock days for 400K steps; validation perplexity on OpenWebText",
+     "unit": "days; ppl",
+     "higher_is_better": false
+    },
+    {
+     "name": "LRA accuracy and speedup",
+     "definition": "task accuracy; overall speedup is geometric mean of per-task wall-clock speedups",
+     "unit": "% ; x",
+     "higher_is_better": true
+    },
+    {
+     "name": "Long-doc micro F1",
+     "definition": "micro F1 at different sequence lengths",
+     "unit": "micro F1",
+     "higher_is_better": true
+    },
+    {
+     "name": "Attention runtime/memory",
+     "definition": "ms for fwd, bwd, fwd+bwd; MB footprint",
+     "unit": "ms; MB",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "Nvidia MLPerf 1.1 BERT",
+    "HuggingFace GPT-2",
+    "Megatron-LM GPT-2",
+    "PyTorch attention",
+    "Megatron attention",
+    "Reformer",
+    "Local Attention",
+    "Linformer",
+    "Smyrf",
+    "LSformer",
+    "OpenAI Block Sparse",
+    "Longformer",
+    "BigBird",
+    "Performer",
+    "Linear Attention",
+    "Apex FMHA"
+   ],
+   "protocol": "BERT 10 runs, 8xA100; GPT-2 same hyperparameters across implementations; benchmarks on random inputs; LRA baselines take better of own run or Tay/Xiong reported numbers"
+  },
+  "availability": {
+   "code": "https://github.com/HazyResearch/flash-attention",
+   "weights": null,
+   "data": "public datasets"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "results Table 2 GPT-2 speedup",
+    "quote": "Table 2 shows up to 3× end-\nto-end speedup compared to Huggingface and 1.7× speedup compared to Megatron-LM.",
+    "where": "Sec 4.1; Table 2 prints 3.5x and 2.0x for small and 3.0x and 1.8x for medium"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "FlashAttention does more FLOPs than standard attention but far fewer HBM bytes, giving a lower runtime (fwd+bwd, GPT-2 medium)",
+   "kind": "measured",
+   "source": null,
+   "metric": "HBM R/W",
+   "value": 4.4,
+   "unit": "GB",
+   "baseline_value": 40.3,
+   "n": null,
+   "setup": "GPT-2 medium, seq 1024, head dim 64, 16 heads, batch 64, A100, forward+backward",
+   "quote": "HBM R/W (GB)\n40.3\n4.4",
+   "table": null,
+   "note": "Values are from the text of the figure; intro says up to 9x fewer HBM accesses",
+   "where": "Fig 2 left, p6"
+  },
+  {
+   "claim": "Attention runtime fwd+bwd drops from 41.7 to 7.3 ms",
+   "kind": "measured",
+   "source": null,
+   "metric": "runtime",
+   "value": 7.3,
+   "unit": "ms",
+   "baseline_value": 41.7,
+   "n": null,
+   "setup": "Same as above",
+   "quote": "Runtime (ms)\n41.7\n7.3",
+   "table": null,
+   "note": null,
+   "where": "Fig 2 left"
+  },
+  {
+   "claim": "Attention computation 7.6x faster on GPT-2",
+   "kind": "measured",
+   "source": null,
+   "metric": "speedup",
+   "value": 7.6,
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-2 attention vs PyTorch",
+   "quote": "resulting in an 7.6×\nspeedup on the attention computation",
+   "table": null,
+   "note": null,
+   "where": "Fig 1 right"
+  },
+  {
+   "claim": "BERT-large reaches 72.0% MLM faster than the MLPerf 1.1 record",
+   "kind": "measured",
+   "source": null,
+   "metric": "training time",
+   "value": 17.4,
+   "unit": "minutes",
+   "baseline_value": 20.0,
+   "n": null,
+   "setup": "8xA100-80GB, 10 runs, same init, LAMB lr 3.75e-3, batch 448",
+   "quote": "FlashAttention (ours)\n17.4 ± 1.4",
+   "table": "Table 1, row FlashAttention (ours)",
+   "note": null,
+   "where": null
+  },
+  {
+   "claim": "GPT-2 small trains 3.5x faster than HuggingFace",
+   "kind": "measured",
+   "source": null,
+   "metric": "speedup",
+   "value": 3.5,
+   "unit": "x",
+   "baseline_value": 1.0,
+   "n": null,
+   "setup": "OpenWebText, 8xA100-40GB, 400K steps, ppl 18.2 for all",
+   "quote": "",
+   "table": "Table 2, row GPT-2 small - FlashAttention, column Training time (speedup): 2.7 days (3.5×) vs HuggingFace 9.5 days (1.0×)",
+   "note": "Text says up to 3x vs HuggingFace and 1.7x vs Megatron; intro says 1.8x vs Megatron; Table 2 prints 3.5x/3.0x and 2.0x/1.8x. Abstract says 3x.",
+   "where": ""
+  },
+  {
+   "claim": "GPT-2 medium trains 3.0x faster than HuggingFace and 1.8x vs Megatron",
+   "kind": "measured",
+   "source": null,
+   "metric": "speedup",
+   "value": 3.0,
+   "unit": "x",
+   "baseline_value": 1.0,
+   "n": null,
+   "setup": "OpenWebText, 8xA100-40GB, ppl 14.3 vs 14.2",
+   "quote": "",
+   "table": "Table 2, row GPT-2 medium - FlashAttention: 6.9 days (3.0×); Megatron-LM 11.5 days (1.8×); HuggingFace 21.0 days (1.0×)",
+   "note": null,
+   "where": ""
+  },
+  {
+   "claim": "GPT-2 small with 4K context is still faster than Megatron with 1K and 0.7 ppl better",
+   "kind": "measured",
+   "source": null,
+   "metric": "perplexity",
+   "value": 17.5,
+   "unit": "ppl",
+   "baseline_value": 18.2,
+   "n": null,
+   "setup": "GPT-2 small, OpenWebText, 8xA100",
+   "quote": "",
+   "table": "Table 4, row GPT-2 small - FlashAttention, column 4k: ppl 17.5, 3.6 days (1.3×); Megatron-LM 1k 18.2, 4.7 days",
+   "note": null,
+   "where": ""
+  },
+  {
+   "claim": "FlashAttention is 2.4x faster than standard attention on LRA with equal accuracy",
+   "kind": "measured",
+   "source": null,
+   "metric": "speedup",
+   "value": 2.4,
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Vanilla Transformer, five LRA tasks, seq 1K-4K; avg accuracy 59.8 vs 59.3",
+   "quote": "",
+   "table": "Table 3, row FlashAttention, column Speedup (Avg 59.8; Transformer Avg 59.3)",
+   "note": null,
+   "where": ""
+  },
+  {
+   "claim": "Block-sparse FlashAttention is 2.8x faster than standard on LRA, avg accuracy 59.6",
+   "kind": "measured",
+   "source": null,
+   "metric": "speedup",
+   "value": 2.8,
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LRA, butterfly sparsity pattern",
+   "quote": "",
+   "table": "Table 3, row Block-sparse FlashAttention, column Speedup",
+   "note": null,
+   "where": ""
+  },
+  {
+   "claim": "Long context lifts MIMIC-III micro F1 from 512 to 16K",
+   "kind": "measured",
+   "source": null,
+   "metric": "micro F1",
+   "value": 57.1,
+   "unit": "micro F1",
+   "baseline_value": 52.8,
+   "n": null,
+   "setup": "Pretrained RoBERTa with repeated positional embeddings",
+   "quote": "",
+   "table": "Table 5, row MIMIC-III, columns 512 and 16384",
+   "note": null,
+   "where": ""
+  },
+  {
+   "claim": "Long context lifts ECtHR micro F1 from 512 to 8K (16K gives 79.2)",
+   "kind": "measured",
+   "source": null,
+   "metric": "micro F1",
+   "value": 80.7,
+   "unit": "micro F1",
+   "baseline_value": 72.2,
+   "n": null,
+   "setup": "Pretrained RoBERTa",
+   "quote": "",
+   "table": "Table 5, row ECtHR, columns 512 and 8192",
+   "note": null,
+   "where": ""
+  },
+  {
+   "claim": "First Transformer above chance on Path-X",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 61.4,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Path-X, seq 16K, pretrained on Path-64 then transferred",
+   "quote": "FlashAttention achieves 61.4 accuracy on Path-X",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2"
+  },
+  {
+   "claim": "Block-sparse FlashAttention reaches above chance on Path-256",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 63.1,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Path-256, seq 64K",
+   "quote": "achieving 63.1 accuracy4 on\nPath-256",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2"
+  },
+  {
+   "claim": "FlashAttention is up to 20x more memory efficient than exact attention baselines",
+   "kind": "measured",
+   "source": null,
+   "metric": "memory ratio",
+   "value": 20,
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "One A100 40GB, dropout and padding mask, random inputs",
+   "quote": "FlashAttention is up to 20× more memory eﬃcient than exact attention baselines",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.3"
+  },
+  {
+   "claim": "FlashAttention is up to 3x faster than PyTorch attention for seq lengths up to 2K",
+   "kind": "measured",
+   "source": null,
+   "metric": "speedup",
+   "value": 3,
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "A100 40GB fwd+bwd, dropout and mask",
+   "quote": "up to 3× faster than the PyTorch\nimplementation",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.3"
+  },
+  {
+   "claim": "Memory at seq 4096 (MB), no dropout/mask, fwd+bwd",
+   "kind": "measured",
+   "source": null,
+   "metric": "memory",
+   "value": 836,
+   "unit": "MB",
+   "baseline_value": 17024,
+   "n": null,
+   "setup": "A100, 8 heads dim 64, batch 16",
+   "quote": "",
+   "table": "Table 21, row FlashAttention, column 4096 (836) vs PyTorch Attention (17024)",
+   "note": null,
+   "where": ""
+  },
+  {
+   "claim": "FlashAttention vs Apex FMHA at seq 512 total fwd+bwd",
+   "kind": "measured",
+   "source": null,
+   "metric": "runtime",
+   "value": 2.81,
+   "unit": "ms",
+   "baseline_value": 2.95,
+   "n": null,
+   "setup": "A100-SXM4-40GB, batch 64, 16 heads, dim 64, masking and dropout",
+   "quote": "",
+   "table": "Table 7, row FlashAttention forward + backward, column 512",
+   "note": "Text: about 4% slower at 128, 8% faster at 256, 5% faster at 512",
+   "where": ""
+  },
+  {
+   "claim": "Runtime forward at 4096 (ms), dropout and mask",
+   "kind": "measured",
+   "source": null,
+   "metric": "runtime",
+   "value": 10.41,
+   "unit": "ms",
+   "baseline_value": 36.33,
+   "n": null,
+   "setup": "A100, 8 heads dim 64, batch 16",
+   "quote": "",
+   "table": "Table 9, row FlashAttention, column 4096 (PyTorch 36.33)",
+   "note": null,
+   "where": ""
+  }
+ ],
+ "limits": [
+  "Needs a new hand-written CUDA kernel per attention variant, not transferable across GPU architectures",
+  "Speedup smaller on T4 (smaller SRAM) and with head dim 128 than on A100 head dim 64",
+  "Optimal only up to constants on a single GPU; multi-GPU IO analysis left open",
+  "Exact attention is slower than some approximate methods (e.g. Linformer) beyond 1K sequence length",
+  "FlashAttention backward is slightly slower than Apex FMHA at short lengths because of recomputation",
+  "Numerical equivalence argued by matching GPT-2 validation curves, no isolated numerical error analysis",
+  "Baselines Block Sparse, Longformer and BigBird measured without masking due to external bugs"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "IO-aware",
+   "definition": "carefully accounting for reads and writes to different levels of fast and slow memory",
+   "where": "Sec 1"
+  },
+  {
+   "term": "arithmetic intensity",
+   "definition": "the number of arithmetic operations per byte of memory access",
+   "where": "Sec 2.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Apex FMHA",
+   "year": null,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "implementation starting point; limited to length <=512, head dim 64",
+   "quote": null
+  },
+  {
+   "work": "Online normalizer calculation for softmax (Milakov and Gimelshein)",
+   "year": 2018,
+   "arxiv": "1805.02867",
+   "relation": "uses-method",
+   "note": "softmax decomposition",
+   "quote": null
+  },
+  {
+   "work": "Self-attention does not need O(n^2) memory (Rabe and Staats)",
+   "year": 2021,
+   "arxiv": "2112.05682",
+   "relation": "extends",
+   "note": "linear memory attention, still quadratic HBM accesses",
+   "quote": null
+  },
+  {
+   "work": "Training deep nets with sublinear memory cost (Chen et al.)",
+   "year": 2016,
+   "arxiv": "1604.06174",
+   "relation": "uses-method",
+   "note": "gradient checkpointing, recomputation as selective checkpointing",
+   "quote": null
+  },
+  {
+   "work": "Input/output complexity of sorting (Aggarwal and Vitter)",
+   "year": 1988,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "IO complexity analysis",
+   "quote": null
+  },
+  {
+   "work": "Megatron-LM",
+   "year": 2019,
+   "arxiv": "1909.08053",
+   "relation": "baseline",
+   "note": "GPT-2 and attention baseline",
+   "quote": null
+  },
+  {
+   "work": "Long Range Arena",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "LRA benchmark",
+   "quote": null
+  },
+  {
+   "work": "Pixelated butterfly (Dao et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "butterfly sparsity pattern",
+   "quote": null
+  },
+  {
+   "work": "Linformer",
+   "year": 2020,
+   "arxiv": "2006.04768",
+   "relation": "baseline",
+   "note": "approximate attention",
+   "quote": null
+  },
+  {
+   "work": "Reformer",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "approximate attention",
+   "quote": null
+  },
+  {
+   "work": "Longformer",
+   "year": 2020,
+   "arxiv": "2004.05150",
+   "relation": "baseline",
+   "note": "sparse attention",
+   "quote": null
+  },
+  {
+   "work": "Performer",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "LRA",
+   "quote": null
+  },
+  {
+   "work": "MLPerf Training benchmark",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "BERT speed record",
+   "quote": null
+  },
+  {
+   "work": "RoBERTa",
+   "year": 2019,
+   "arxiv": "1907.11692",
+   "relation": "evaluates",
+   "note": "long-doc classification",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Left: FlashAttention uses tiling to prevent materialization of the large N x N attention matrix on slow GPU HBM... Right: Speedup over the PyTorch implementation of attention on GPT-2.",
+   "page": 2,
+   "why": "Shows the memory hierarchy and tiling loops at a glance"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Left: Forward + backward runtime of standard attention and FlashAttention for GPT-2 medium... HBM access is the primary factor affecting runtime.",
+   "page": 6,
+   "why": "Shows FLOPs up, HBM down, runtime down"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Left: runtime of forward pass + backward pass. Right: attention memory usage.",
+   "page": 9,
+   "why": "Crossover points and linear memory"
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 3.1",
+   "snippet": "m(x) = max(m(x1), m(x2)); l(x) = e^{m(x1)-m(x)} l(x1) + e^{m(x2)-m(x)} l(x2)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Figure data are extracted as loose text; Fig 2 numbers read from the text of the figure",
+  "Several quotes in Table-cell results use table references"
+ ]
+}

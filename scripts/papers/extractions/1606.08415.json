@@ -1,0 +1,480 @@
+{
+ "schema": 1,
+ "key": "1606.08415",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/hendrycks-2016-bridging-nonlinearities-stochastic-regularizers-gaussian.pdf",
+ "bib": {
+  "title": "GAUSSIAN ERROR LINEAR UNITS (GELUS)",
+  "authors": [
+   "Dan Hendrycks",
+   "Kevin Gimpel"
+  ],
+  "first_author": "Hendrycks",
+  "year": 2016,
+  "venue": "preprint",
+  "arxiv": "1606.08415",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 25597,
+  "chars_total": 25597,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can an activation that weights inputs by their value, xPhi(x), the expectation of an input-dependent stochastic mask, beat ReLU and ELU across vision, NLP and speech tasks?",
+ "hypothesis": "A nonlinearity that is the expectation of a stochastic regularizer (input-dependent Bernoulli(Phi(x)) mask) will match or exceed ReLU and ELU.",
+ "contributions": [
+  "Introduce the GELU, xPhi(x), as the expectation of a modified Adaptive Dropout mask",
+  "Empirical comparison against ReLU and ELU on MNIST, TIMIT, Twitter POS and CIFAR-10/100",
+  "Coin the SiLU, x*sigma(x), and give tanh and sigmoid approximations of the GELU"
+ ],
+ "method": {
+  "summary": "Replace the activation in existing architectures with GELU (mu=0, sigma=1, tanh approximation) and compare with ReLU and ELU(alpha=1) on six tasks, tuning only the learning rate over {1e-3,1e-4,1e-5} and reporting medians over 3-5 runs.",
+  "task": "activation function comparison (classification, autoencoding, tagging, frame recognition)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "MNIST",
+    "role": "both",
+    "size": "60k train, 10k test",
+    "split": "5k validation examples held out from train for learning-rate tuning",
+    "source": "MNIST",
+    "preprocessing": null
+   },
+   {
+    "name": "Tweet POS (Gimpel 2011; Owoputi 2013)",
+    "role": "both",
+    "size": "1000 train, 327 val, 500 test tweets; 25 tags",
+    "split": "as given",
+    "source": "Gimpel et al. 2011",
+    "preprocessing": "pretrained word vectors from 56 million tweets; input is concatenation of target word and left/right neighbour vectors"
+   },
+   {
+    "name": "TIMIT",
+    "role": "both",
+    "size": "3696 train, 1152 val, 192 test sentences; 680 speakers",
+    "split": "as given",
+    "source": "TIMIT",
+    "preprocessing": "11 frames input, 26 MFCC, energy and derivative features per frame; 39 phone labels"
+   },
+   {
+    "name": "CIFAR-10",
+    "role": "both",
+    "size": "50k train, 10k test",
+    "split": "5k validation for lr tuning, then retrain on whole train set",
+    "source": "Krizhevsky 2009",
+    "preprocessing": "ZCA whitening, Gaussian noise sigma=0.15, no data augmentation"
+   },
+   {
+    "name": "CIFAR-100",
+    "role": "both",
+    "size": "50k train, 10k test",
+    "split": null,
+    "source": "Krizhevsky 2009",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "GELU / ReLU / ELU MLP (MNIST classification)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "fully connected, 8 layers, 128 neurons wide",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": 8,
+    "hidden": 128,
+    "heads": null,
+    "context": null,
+    "other": {
+     "init": "unit norm rows",
+     "dropout": "none, or keep rate 0.5"
+    }
+   },
+   {
+    "name": "MNIST autoencoder",
+    "role": "proposed",
+    "params": null,
+    "architecture": "layer widths 1000, 500, 250, 30, 250, 500, 1000",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Tweet tagger",
+    "role": "proposed",
+    "params": null,
+    "architecture": "two-layer network, 256 neurons per layer, dropout keep probability 0.8",
+    "init_from": "pretrained word vectors",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": 2,
+    "hidden": 256,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "TIMIT classifier",
+    "role": "proposed",
+    "params": null,
+    "architecture": "five-layer, 2048 neurons wide, dropout rate 0.5 (Mohamed et al. 2012)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": 5,
+    "hidden": 2048,
+    "heads": null,
+    "context": "11 frames",
+    "other": {}
+   },
+   {
+    "name": "CIFAR-10 CNN",
+    "role": "proposed",
+    "params": null,
+    "architecture": "9-layer conv net from Salimans & Kingma 2016 with batch norm (Table 1: 3x3 convs 96/192 channels, 1x1 convs, dropout p=0.5, global avg pool)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": 9,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "WideResNet 40-4 (CIFAR-100)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "wide residual network, 40 layers, widening factor 4, Conv-Act-Conv-Act-BatchNorm block",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": 40,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "dropout keep": 0.7
+    }
+   }
+  ],
+  "training": {
+   "objective": "log loss for classification; mean squared error for autoencoder",
+   "optimizer": "Adam (MNIST, autoencoder, Twitter, TIMIT, CIFAR-10); Nesterov momentum with SGDR schedule (CIFAR-100)",
+   "lr": "tuned over {1e-3,1e-4,1e-5} on validation; autoencoder 1e-3 and 1e-4 (0.01 tried: ELU diverged)",
+   "lr_schedule": "CIFAR-10: linear decay to zero from epoch 100 of 200; CIFAR-100: SGDR T0=50, eta=0.1",
+   "warmup": null,
+   "batch_size": "128 (MNIST classification); 64 (autoencoder); others null",
+   "steps": null,
+   "epochs": "50 (MNIST), 250 shown in Fig 4 (autoencoder, read from Fig 4), 200 (CIFAR-10), 50 (CIFAR-100), 30 shown (TIMIT, read from Fig 5)",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": "MNIST none and 0.5 keep; Twitter keep 0.8; TIMIT 0.5; CIFAR-10 p=0.5; CIFAR-100 keep 0.7",
+   "regularisation": "dropout; Gaussian input noise 0.15 on CIFAR-10",
+   "hardware": "NVIDIA TITAN X GPUs (acknowledgment)",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": "median of 5 runs (MNIST, Twitter, TIMIT), 3 (autoencoder, CIFAR-10, CIFAR-100)",
+   "other": {
+    "GELU": "mu=0, sigma=1, no new hyperparameters; tanh approximation used in every experiment"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "median of 3 or 5 runs per setting",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "test error",
+     "definition": "classification error rate (median over runs, chosen at lowest validation error for TIMIT)",
+     "unit": "%",
+     "higher_is_better": false
+    },
+    {
+     "name": "log loss / reconstruction error",
+     "definition": "training and validation curves",
+     "unit": "nats / MSE",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "ReLU",
+    "ELU (alpha=1)",
+    "SiLU x*sigma(x) (discussion only)"
+   ],
+   "protocol": "Median over 3 or 5 runs; no significance tests; learning rate tuned per nonlinearity on validation data."
+  },
+  "availability": {
+   "code": "github.com/hendrycks/GELUs",
+   "weights": null,
+   "data": null
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.optimizer",
+    "quote": "we use the Adam optimizer (Kingma & Ba, 2015) rather than stochastic gradient descent without momentum",
+    "where": "3.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "GELU gets lower CIFAR-10 median error than ReLU and ELU.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test error",
+   "value": 7.89,
+   "unit": "% error",
+   "baseline_value": 8.16,
+   "n": 3,
+   "setup": "9-layer CNN, CIFAR-10, no augmentation, Adam 200 epochs, median of 3 runs",
+   "quote": "Ultimately, the GELU obtains a median error rate of 7.89%, the ReLU obtains 8.16%, and the ELU obtains 8.41%.",
+   "table": null,
+   "note": null,
+   "where": "3.5"
+  },
+  {
+   "claim": "GELU on CIFAR-100 WideResNet 40-4 beats ReLU and ELU.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test error",
+   "value": 20.74,
+   "unit": "% error",
+   "baseline_value": 21.77,
+   "n": 3,
+   "setup": "WRN 40-4, 50 epochs, SGDR, Nesterov, keep 0.7, median of 3 runs",
+   "quote": "the GELU achieves a median error of 20.74%, the ReLU obtains 21.77%",
+   "table": null,
+   "note": null,
+   "where": "3.5"
+  },
+  {
+   "claim": "Original 40-4 WideResNet with ReLU obtains 22.89% (reported from Zagoruyko & Komodakis).",
+   "kind": "reported",
+   "source": null,
+   "metric": "test error",
+   "value": 22.89,
+   "unit": "% error",
+   "baseline_value": null,
+   "n": null,
+   "setup": "WRN 40-4 CIFAR-100 original recipe",
+   "quote": "the original 40-4 WideResNet with a ReLU obtains 22.89% (Zagoruyko & Komodakis, 2016)",
+   "table": null,
+   "note": null,
+   "where": "3.5"
+  },
+  {
+   "claim": "ELU on CIFAR-100 WRN median error.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test error",
+   "value": 22.98,
+   "unit": "% error",
+   "baseline_value": 21.77,
+   "n": 3,
+   "setup": "as above",
+   "quote": "and the ELU obtains 22.98%",
+   "table": null,
+   "note": null,
+   "where": "3.5"
+  },
+  {
+   "claim": "GELU Twitter POS median test error is lowest.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test error",
+   "value": 12.57,
+   "unit": "% error",
+   "baseline_value": 12.67,
+   "n": 5,
+   "setup": "two-layer net, 256 units, 5 runs per learning rate, median",
+   "quote": "the median test set error is 12.57% for the GELU, 12.67% for the ReLU, and 12.91% for the ELU",
+   "table": null,
+   "note": null,
+   "where": "3.3"
+  },
+  {
+   "claim": "GELU TIMIT frame classification median test error is lowest.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test error",
+   "value": 29.3,
+   "unit": "% error",
+   "baseline_value": 29.5,
+   "n": 5,
+   "setup": "5-layer 2048 net, 5 runs, test error at lowest validation error",
+   "quote": "median test error chosen at the lowest validation error is 29.3% for the GELU, 29.5% for the ReLU, and 29.6% for the ELU",
+   "table": null,
+   "note": null,
+   "where": "3.4"
+  },
+  {
+   "claim": "SiLU performs worse than GELU but usually better than ReLU and ELU.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "authors' informal statement, no numbers",
+   "quote": "we found that a Sigmoid Linear Unit (SiLU) x\u03c3(x) performs worse than GELUs but usually better than ReLUs and ELUs",
+   "table": null,
+   "note": null,
+   "where": "4"
+  },
+  {
+   "claim": "GELU approximation used in all experiments.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "all experiments",
+   "quote": "we used the former in every experiment in this paper",
+   "table": null,
+   "note": null,
+   "where": "4"
+  }
+ ],
+ "limits": [
+  "Medians over only 3-5 runs, no variance or significance tests; gaps are 0.1-1 point.",
+  "Only small models and datasets (MNIST, TIMIT, tweets, CIFAR); no transformer or language-model experiments.",
+  "Only ReLU and ELU compared; SiLU claim has no numbers; learning rate is the only tuned hyperparameter.",
+  "Autoencoder, MNIST and robustness results are shown only as figures.",
+  "Appendix B gives the authors' account of priority disputes over SiLU/swish; it is their own account."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "GELU",
+   "definition": "xP(X<=x)=xPhi(x)=x*1/2[1+erf(x/sqrt2)]",
+   "where": "2"
+  },
+  {
+   "term": "SiLU",
+   "definition": "x*sigma(x), from the logistic CDF",
+   "where": "2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Adaptive Dropout (Ba & Frey)",
+   "year": 2013,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "GELU is the expectation of a modification of adaptive dropout, with a Gaussian not logistic CDF",
+   "quote": null
+  },
+  {
+   "work": "Zoneout (Krueger et al.)",
+   "year": 2016,
+   "arxiv": "1606.01305",
+   "relation": "related",
+   "note": "motivation for stochastic identity mask",
+   "quote": null
+  },
+  {
+   "work": "ELUs (Clevert et al.)",
+   "year": 2016,
+   "arxiv": "1511.07289",
+   "relation": "baseline",
+   "note": "MNIST experiment replicated from this paper",
+   "quote": null
+  },
+  {
+   "work": "ReLU (Nair & Hinton)",
+   "year": 2010,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "Dropout (Srivastava et al.)",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "related",
+   "note": "stochastic regularizer",
+   "quote": null
+  },
+  {
+   "work": "Weight normalization (Salimans & Kingma)",
+   "year": 2016,
+   "arxiv": "1602.07868",
+   "relation": "uses-method",
+   "note": "CIFAR-10 architecture",
+   "quote": null
+  },
+  {
+   "work": "Wide residual networks (Zagoruyko & Komodakis)",
+   "year": 2016,
+   "arxiv": "1605.07146",
+   "relation": "uses-method",
+   "note": "CIFAR-100 model",
+   "quote": null
+  },
+  {
+   "work": "SGDR (Loshchilov & Hutter)",
+   "year": 2016,
+   "arxiv": "1608.03983",
+   "relation": "uses-method",
+   "note": "lr schedule",
+   "quote": null
+  },
+  {
+   "work": "Adam (Kingma & Ba)",
+   "year": 2015,
+   "arxiv": "1412.6980",
+   "relation": "uses-method",
+   "note": "optimizer",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "The GELU (mu = 0, sigma = 1), ReLU, and ELU (alpha = 1).",
+   "page": 2,
+   "why": "shows GELU as a smooth non-monotonic ReLU"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Neural network architecture for CIFAR-10.",
+   "page": 9,
+   "why": "full CNN layer list"
+  }
+ ],
+ "code": [
+  {
+   "where": "Section 2",
+   "snippet": "GELU(x) = x Phi(x) = x * 1/2 [1 + erf(x/sqrt(2))]; approx 0.5x(1 + tanh[sqrt(2/pi)(x + 0.044715x^3)]) or x sigma(1.702x)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text-layer equations are garbled by extraction; no embedded instructions found."
+ ]
+}

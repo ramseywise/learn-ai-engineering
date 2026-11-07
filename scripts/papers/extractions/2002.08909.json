@@ -1,19 +1,663 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2002.08909",
  "pdf": "generative-ai/02-rag-retrieval/sources/guu-2020-realm.pdf",
  "bib": {
   "title": "REALM: Retrieval-Augmented Language Model Pre-Training",
+  "authors": [
+   "Kelvin Guu",
+   "Kenton Lee",
+   "Zora Tung",
+   "Panupong Pasupat",
+   "Ming-Wei Chang"
+  ],
   "first_author": "Guu",
   "year": 2020,
-  "venue": "ICML 2020",
+  "venue": "preprint",
   "arxiv": "2002.08909",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-04",
-  "session": "5f2f0582-f958-4d9c-8469-02f3d5079657"
+  "at": "2026-11-07",
+  "chars_read": 50206,
+  "chars_total": 50206,
+  "engine": "pymupdf",
+  "skipped": null
  },
- "legacy_report": "SOURCE: \"REALM: Retrieval-Augmented Language Model Pre-Training\", Kelvin Guu*, Kenton Lee*, Zora Tung, Panupong Pasupat, Ming-Wei Chang (Google Research). The extraction is arXiv 2002.08909v1, dated 10 Feb 2020. That copy has no ICML header, so \"ICML 2020\" is not confirmed by the PDF itself.\n\nCOVERAGE: I read all 50,583 of 50,583 extracted characters across 12 pages, including the body, Tables 1–4, Appendices A–D (gradient derivation, link to supervised learning, adapting to new knowledge, retrieval utility) and Figure 4. I skimmed the references (pp. 9–10) for origins. Nothing was skipped.\n\nCLAIMS\n- claim: REALM beats every earlier Open-QA system on all three benchmarks while reading only 5 documents.\n  number: NQ 39.2 / WQ 40.2 / CT 46.8 (X=Wikipedia); NQ 40.4 / WQ 40.7 / CT 42.9 (X=CC-News); both 330m params\n  setup: test-set exact match. NQ has 79k/4k train/test, WQ 3k/2k, CT 1k/1k. The knowledge corpus Z is English Wikipedia, 20 Dec 2018 snapshot, split into chunks of up to 288 wordpieces, which gives just over 13M candidates. Fine-tuning retrieves the top 5. The encoder starts from BERT-base uncased.\n  quote: \"Ours (X = Wikipedia, Z = Wikipedia) Dense Retr. +Transformer REALM 39.2 40.2 46.8 330m\" / \"Ours (X = CC-News, Z = Wikipedia) Dense Retr. +Transformer REALM 40.4 40.7 42.9 330m\"\n  where: p7, Table 1\n- claim: Abstract margin over previous methods.\n  number: 4-16% absolute\n  setup: same three benchmarks\n  quote: \"we outperform all previous methods by a significant margin (4-16% absolute accuracy)\"\n  where: p1, abstract\n- claim: A 330m-parameter REALM beats T5-11B, which stores knowledge only in its parameters and is about 30x larger. Growing T5 50x adds only about 5 points.\n  number: T5-11B NQ 34.5 / WQ 37.4 at 11318m params; T5-base 27.0 / 29.1 at 223m\n  setup: Table 1. T5 was not evaluated on CuratedTrec because its answers are regexes. T5 also saw SQuAD during pre-training.\n  quote: \"from Base to 11B, the model is 50 times larger, and gains roughly 5 points in accuracy). In contrast, REALM outperforms the largest T5-11B model while being 30 times smaller.\"\n  where: p7, Sec 4.4\n- claim: Compared with ORQA, the fine-tuning setup is identical, so the whole gain comes from REALM pre-training.\n  number: ORQA NQ 33.3 / WQ 36.4 / CT 30.1, also 330m\n  quote: \"The improvement of REALM over ORQA is purely due to better pre-training methods.\"\n  where: p7, Table 1 and Sec 4.4\n- claim: A 30x staler index during pre-training collapses performance to below the ORQA baseline. Index freshness matters for joint training.\n  number: NQ dev EM 38.2 → 28.7; zero-shot Recall@5 38.5 → 15.1. Baseline ORQA is 31.3 / 13.9.\n  setup: NQ dev set. The normal setup refreshes about once every 500 steps. The paper does not state the 30x interval as a step count, but it implies about 15k steps.\n  quote: \"30× stale MIPS 28.7 15.1\" and \"This results in one index refresh per approximately 500 training steps.\"\n  where: p7 Table 2; p8 Sec 4.5\n- claim: The index goes stale after every retriever update. REALM rebuilds it asynchronously every few hundred steps and re-scores the top k with fresh parameters.\n  number: \"every several hundred training steps\"\n  quote: \"the search index goes “stale” after every gradient update on θ. Our solution is to “refresh” the index by asynchronously re-embedding and re-indexing all documents every several hundred training steps.\"\n  where: p4, Sec 3.3\n- claim: Refresh runs as two parallel jobs, a trainer and an index builder. The document-embedding step uses 16 TPUs.\n  number: 16 TPUs (index); 64 TPUs (trainer)\n  setup: 200k steps, batch 512, lr 3e-5, 8 candidate documents per example including the null document\n  quote: \"We pre-train for 200k steps on 64 Google Cloud TPUs, with a batch size of 512 and a learning rate of 3e-5 ... The document embedding step for the MIPS index is parallelized over 16 TPUs. For each example, we retrieve and marginalize over 8 candidate documents, including the null document ∅.\"\n  where: p7, Sec 4.3\n- claim: Fine-tuning never refreshes the document index. Only the query encoder is updated, and the whole model fits on one 12GB GPU.\n  number: 12GB\n  quote: \"For fine-tuning, we just build the MIPS index once (using the pre-trained θ) for simplicity and do not update Embeddoc. Note that we still fine-tune Embedinput\" ; \"entire model can be run on a single machine with a 12GB GPU.\"\n  where: p5 Sec 3.3; p7\n- claim: Salient span masking, which masks named entities and dates, is crucial. Random token masks and SpanBERT-style random span masks do clearly worse.\n  number: EM / Recall@5 = 38.2/38.5 (salient) vs 32.3/24.2 (random uniform) vs 35.3/26.1 (random span)\n  setup: NQ dev. Entities come from a BERT tagger trained on CoNLL-2003; dates come from a regex.\n  quote: \"REALM with random uniform masks 32.3 24.2\" / \"REALM with random span masks 35.3 26.1\"; \"it is crucial for REALM\"\n  where: p7 Table 2; p5 Sec 3.4; p8\n- claim: Both components gain from joint pre-training, and the best result needs both. The retriever carries most of the gain.\n  number: REALM retriever + baseline encoder 37.4; baseline retriever + REALM encoder 35.3; full 38.2; ORQA 31.3\n  quote: \"REALM retriever+Baseline encoder 37.4 38.5\" / \"Baseline retriever+REALM encoder 35.3 13.9\"; \"the best result requires both components acting in unison.\"\n  where: p7 Table 2; p8\n- claim: The retriever gradient rewards a document exactly when it predicts y better than the average retrieved document.\n  number: none\n  quote: \"document z receives a positive update whenever it performs better than expected.\"\n  where: p5, Sec 3.3; full derivation in App A, p11\n- claim: The marginal over the corpus is approximated by the top-k documents from MIPS.\n  number: none\n  quote: \"We approximate this by instead summing over the top k documents with highest probability under p(z | x)—this is reasonable if most documents have near zero probability.\"\n  where: p4\n- claim: Other retrieval-based systems read 20–80 documents, while REALM reads 5.\n  number: 20 to 80 vs 5\n  quote: \"which often retrieve from 20 to 80 documents, our system gets the overall best performance while only retrieving 5 documents.\"\n  where: p7\n- claim: Without the cold-start fixes training collapses. The retriever is warm-started with ICT, a null document acts as a sink, and trivial self-retrieval is excluded.\n  number: none\n  quote: \"This causes the knowledge augmented encoder to learn to ignore the retrieved documents. Once this occurs, the knowledge retriever does not receive a meaningful gradient and cannot improve, creating a vicious cycle.\"\n  where: p5, Sec 3.4\n- claim: Swapping in a newer corpus can update answers without retraining, but only partly.\n  number: none; this is a single qualitative example (Table 4, 2018 vs 2020 Wikipedia)\n  quote: \"the knowledge-augmented encoder will still end up remembering some world knowledge, making the prediction of some input sentences not updated with the new corpus.\"\n  where: p11, App C\n\nLIMITS\n- No refresh-interval sweep. The paper tests only about 500 steps against \"30x stale\", with one run on the NQ dev set and no variance reported. It does not measure the cost of a refresh, such as wall-clock time, TPU-hours or rebuild time. 16 TPUs for embedding is the only cost figure.\n- Fine-tuning freezes the document index, which is itself a concession to cost. Footnote 3: \"it is possible that refreshing the index would further improve performance.\"\n- It is extractive QA only. Answers must be spans, and there is no generative reader.\n- T5 had SQuAD data and REALM did not. CuratedTrec has no generative baselines.\n- Ablations cover NQ dev only. The corpus-update evidence is anecdotal (App C).\n- It is dated. The models are BERT-base scale with 288-wordpiece chunks, and the authors call this a \"minimal instantiation\" (p9). Later end-to-end retrieve-and-generate work superseded the extractive setup.\n\nBUILDS ON\n- ORQA (Lee et al., 2019): same latent-variable formulation, ICT warm start, and identical fine-tuning hyperparameters.\n- BERT (Devlin et al., 2018) for the encoders and the MLM objective. SpanBERT (Joshi et al., 2019) is the masking comparator.\n- MIPS: Ram & Gray, 2012; Shrivastava & Li, 2014; Shen et al., 2015.\n- Retrieve-then-read Open-QA: Chen et al., 2017 (DrQA); Brill et al., 2002.\n- kNN-LM (Khandelwal et al., 2019) for contrast.\n- Retrieve-and-edit: Guu et al., 2018; Hashimoto et al., 2018.\n- Memory networks / product-key memory: Weston et al., 2014; Lample et al., 2019.\n- T5 closed-book baseline: Roberts et al., 2020.\n\nCODE: none. The paper has no code listings. The core equation, verbatim from the extraction on p3, is \"p(y | x) = ∑ z∈Z p(y | z, x) p(z | x). (1)\".\n\nFIGURES\n- Figure 3, p5: \"REALM pre-training with asynchronous MIPS refreshes.\" This is the best candidate for \"The two components\" and the stale-index section. It shows the trainer sending a parameter snapshot θ′ to the index builder, which returns a new index while training continues. That loop is faster to grasp as a picture than in prose.\n- Figure 2, p4 (alternative): \"The overall framework of REALM. Left: Unsupervised pre-training ... Right: Supervised fine-tuning.\" It shows retriever θ and encoder φ trained jointly, then fine-tuned.\n- Figure 4, p12: retrieval utility over pre-training steps for the three masking schemes. Use it if the note covers salient span masking.\n\nPROBLEMS\n- pypdf printed fontTools warnings on stderr. The text itself is clean, apart from small spacing faults such as \"Approache s\" and \"langua ge\", and ligatures (fi→ﬁ) that may need normalising in quotes.\n- The math in equations is flattened, but it is still readable.\n- The PDF contains no embedded instructions.\n- The ICML venue is not visible in this arXiv v1 copy."
+ "type": "empirical",
+ "question": "Can a knowledge retriever be pre-trained without supervision, using masked language modelling as the signal, so that a language model retrieves and attends over a large corpus?",
+ "hypothesis": "A retrieval that improves the language model's perplexity should be rewarded, so MLM pre-training can teach the retriever useful retrieval and improve Open-QA over implicit-knowledge and heuristic-retrieval systems.",
+ "contributions": [
+  "First unsupervised pre-training of a knowledge retriever with MLM, backpropagating through a retrieval step over millions of documents",
+  "Asynchronous MIPS index refresh to make this tractable",
+  "New state of the art on three Open-QA benchmarks by 4-16% absolute accuracy, with interpretability and modularity"
+ ],
+ "method": {
+  "summary": "A latent-variable model p(y|x)=sum_z p(y|z,x)p(z|x): a BERT-style dense retriever (inner product, MIPS top-k) feeds a BERT knowledge-augmented encoder. Pre-trained with salient-span MLM on Wikipedia or CC-News while the MIPS index is refreshed asynchronously, then fine-tuned on Open-QA with the document index fixed.",
+  "task": "retrieval-augmented MLM pre-training; open-domain QA fine-tuning",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Wikipedia (20 Dec 2018 snapshot) as knowledge corpus Z and pre-training corpus X",
+    "role": "pretrain",
+    "size": "just over 13 million retrieval candidates",
+    "split": null,
+    "source": "English Wikipedia",
+    "preprocessing": "greedily split into chunks of up to 288 BERT wordpieces"
+   },
+   {
+    "name": "CC-News (pre-training corpus X option 2)",
+    "role": "pretrain",
+    "size": null,
+    "split": null,
+    "source": "authors' reproduction of the corpus of Liu et al. (2019)",
+    "preprocessing": null
+   },
+   {
+    "name": "NaturalQuestions-Open",
+    "role": "both",
+    "size": "79k train / 4k test",
+    "split": "train/test as in Lee et al. 2019; dev used for ablations",
+    "source": "Kwiatkowski et al. 2019",
+    "preprocessing": "only questions with short answer type of at most five tokens; suggested Wikipedia document not given to model"
+   },
+   {
+    "name": "WebQuestions",
+    "role": "both",
+    "size": "3k train / 2k test",
+    "split": "setting of Chen et al. 2017",
+    "source": "Berant et al. 2013",
+    "preprocessing": null
+   },
+   {
+    "name": "CuratedTrec",
+    "role": "both",
+    "size": "1k train / 1k test",
+    "split": null,
+    "source": "MSNSearch and AskJeeves user queries",
+    "preprocessing": "answers are regular expressions"
+   }
+  ],
+  "models": [
+   {
+    "name": "REALM",
+    "role": "proposed",
+    "params": "330m",
+    "architecture": "BERT-style dense retriever (Embed_input, Embed_doc with linear projections) plus BERT knowledge-augmented encoder",
+    "init_from": "retriever warm-started with Inverse Cloze Task (Lee et al. 2019); encoder from uncased BERT-base",
+    "tokenizer": "BERT wordpiece",
+    "vocab": null,
+    "layers": "12 (BERT-base encoder)",
+    "hidden": "768",
+    "heads": "12",
+    "context": "documents up to 288 wordpieces",
+    "other": {
+     "projection_dim_d": null,
+     "null_document": "empty document added to top-k",
+     "retriever_layers_hidden_heads": "inferred: BERT-base style, not stated for the retriever"
+    }
+   },
+   {
+    "name": "ORQA",
+    "role": "baseline",
+    "params": "330m",
+    "architecture": "Dense Retr.+Transformer",
+    "init_from": "ICT+BERT",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "T5 base/large/11b",
+    "role": "baseline",
+    "params": "223m / 738m / 11318m",
+    "architecture": "Transformer seq2seq",
+    "init_from": "T5 multitask",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "source": "Roberts et al. 2020"
+    }
+   }
+  ],
+  "training": {
+   "objective": "maximise log p(y|x) with top-k approximated marginalisation; MLM loss at pre-training, span-match likelihood at fine-tuning",
+   "optimizer": "BERT's default optimizer",
+   "lr": "3e-5",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "512",
+   "steps": "200k",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "64 Google Cloud TPUs for pre-training; MIPS document embedding parallelised over 16 TPUs",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "candidates_per_example": "8 documents including the null document",
+    "index_refresh": "asynchronous, about every 500 training steps",
+    "salient_span_masking": "BERT tagger on CoNLL-2003 for named entities plus regex for dates; one span masked per sentence",
+    "trivial_retrieval": "exclude the document the masked sentence came from when X=Z",
+    "finetune_hparams": "reused from Lee et al. (2019); index built once and Embed_doc not updated, Embed_input still fine-tuned",
+    "finetune_hardware": "entire model can run on a single machine with a 12GB GPU"
+   }
+  },
+  "inference": {
+   "decoding": "answer span extraction from retrieved documents",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": null,
+   "retrieval": "MIPS over about 13M chunks; top-5 candidates at fine-tuning inference; 8 (with null) during pre-training",
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Exact match",
+     "definition": "predicted answer string matches any reference answer (regex for CuratedTrec)",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Zero-shot retrieval Recall@5",
+     "definition": "how often the gold answer appears in top-5 retrievals before fine-tuning",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Retrieval utility (RU)",
+     "definition": "log p(y|z,x) - log p(y|null,x)",
+     "unit": "log-likelihood",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "BERT-Baseline (Lee et al. 2019)",
+    "T5 base/large/11b (Roberts et al. 2020)",
+    "DrQA",
+    "HardEM",
+    "GraphRetriever",
+    "PathRetriever",
+    "ORQA"
+   ],
+   "protocol": "test-set exact match for main results; NQ dev for ablations; single numbers, no seeds or significance tests stated"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": null
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.lr",
+    "quote": "a batch size of 512 and a learning rate\nof 3e-5, using BERT’s default optimizer",
+    "where": "Sec 4.3"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "REALM (X=Wikipedia) beats all prior Open-QA systems on NQ test.",
+   "kind": "measured",
+   "source": null,
+   "metric": "exact match",
+   "value": 39.2,
+   "unit": "%",
+   "baseline_value": "33.3 (ORQA)",
+   "n": null,
+   "setup": "NaturalQuestions-Open test (79k/4k), exact match, REALM 330m params, retrieving top-5 at fine-tuning, X=Wikipedia, Z=Wikipedia",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Ours (X = Wikipedia, Z = Wikipedia), column NQ"
+  },
+  {
+   "claim": "REALM (X=CC-News) on NQ test.",
+   "kind": "measured",
+   "source": null,
+   "metric": "exact match",
+   "value": 40.4,
+   "unit": "%",
+   "baseline_value": "33.3 (ORQA)",
+   "n": null,
+   "setup": "NaturalQuestions-Open test (79k/4k), exact match, REALM 330m params, retrieving top-5 at fine-tuning, X=CC-News, Z=Wikipedia",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Ours (X = CC-News, Z = Wikipedia), column NQ"
+  },
+  {
+   "claim": "REALM (X=Wikipedia) on WebQuestions test.",
+   "kind": "measured",
+   "source": null,
+   "metric": "exact match",
+   "value": 40.2,
+   "unit": "%",
+   "baseline_value": "36.4 (ORQA)",
+   "n": null,
+   "setup": "WebQuestions test (3k/2k), X=Wikipedia",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Ours (X = Wikipedia), column WQ"
+  },
+  {
+   "claim": "REALM (X=Wikipedia) on CuratedTrec test.",
+   "kind": "measured",
+   "source": null,
+   "metric": "exact match",
+   "value": 46.8,
+   "unit": "%",
+   "baseline_value": "30.1 (ORQA)",
+   "n": null,
+   "setup": "CuratedTrec test (1k/1k), X=Wikipedia",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Ours (X = Wikipedia), column CT"
+  },
+  {
+   "claim": "REALM (X=CC-News) on WQ and CT: 40.7 and 42.9.",
+   "kind": "measured",
+   "source": null,
+   "metric": "exact match",
+   "value": 42.9,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CuratedTrec test, X=CC-News",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Ours (X = CC-News), column CT; WQ is 40.7"
+  },
+  {
+   "claim": "Abstract: margin over all previous methods.",
+   "kind": "measured",
+   "source": null,
+   "metric": "absolute accuracy gain",
+   "value": "4-16",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "three Open-QA benchmarks",
+   "note": null,
+   "where": "Abstract",
+   "quote": "we outperform all previous methods by a signiﬁcant margin (4-16% absolute accuracy)"
+  },
+  {
+   "claim": "T5-11B closed-book on NQ, which REALM beats at 30x fewer parameters.",
+   "kind": "reported",
+   "source": "Roberts et al., 2020",
+   "metric": "exact match",
+   "value": 34.5,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "NQ test, T5 (11b) from Roberts et al. 2020 (concurrent work, improved fine-tuning), 11318m params; T5 also saw 100,000+ SQuAD examples in pre-training",
+   "note": null,
+   "where": "Table 1, Sec 4.4",
+   "table": "Table 1, row T5 (11b), column NQ"
+  },
+  {
+   "claim": "Scaling T5 from Base to 11B (50x) gains about 5 points; REALM beats T5-11B at 30x smaller.",
+   "kind": "measured",
+   "source": null,
+   "metric": "size ratio",
+   "value": 30,
+   "unit": "x smaller",
+   "baseline_value": null,
+   "n": null,
+   "setup": "NQ/WQ test, Table 1",
+   "note": null,
+   "where": "Sec 4.4",
+   "quote": "REALM outperforms the largest T5-11B model while being 30 times smaller."
+  },
+  {
+   "claim": "Improvement over ORQA is attributed purely to pre-training (same fine-tuning setup, hyperparameters, data).",
+   "kind": "measured",
+   "source": null,
+   "metric": "exact match ORQA NQ",
+   "value": 33.3,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "NQ test, ORQA Dense Retr.+Transformer ICT+BERT 330m",
+   "note": null,
+   "where": "Sec 4.4",
+   "quote": "The improvement of REALM over ORQA is purely due to better pre-training methods.",
+   "table": "Table 1, row ORQA, column NQ"
+  },
+  {
+   "claim": "REALM retrieves only 5 documents while other retrieval systems retrieve 20 to 80.",
+   "kind": "measured",
+   "source": null,
+   "metric": "documents retrieved",
+   "value": 5,
+   "unit": "documents",
+   "baseline_value": null,
+   "n": null,
+   "setup": "fine-tuning inference",
+   "note": null,
+   "where": "Sec 4.4",
+   "quote": "while only retrieving 5 documents"
+  },
+  {
+   "claim": "Ablation: full REALM on NQ dev.",
+   "kind": "measured",
+   "source": null,
+   "metric": "exact match",
+   "value": 38.2,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "NQ dev, Table 2; zero-shot retrieval recall@5 38.5",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row REALM, column Exact Match"
+  },
+  {
+   "claim": "Ablation: baseline retriever + REALM encoder.",
+   "kind": "measured",
+   "source": null,
+   "metric": "exact match",
+   "value": 35.3,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "NQ dev; zero-shot recall@5 13.9",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Baseline retriever+REALM encoder, column Exact Match"
+  },
+  {
+   "claim": "Ablation: REALM retriever + baseline encoder.",
+   "kind": "measured",
+   "source": null,
+   "metric": "exact match",
+   "value": 37.4,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "NQ dev; zero-shot recall@5 38.5",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row REALM retriever+Baseline encoder, column Exact Match"
+  },
+  {
+   "claim": "Ablation: baseline (ORQA) on NQ dev.",
+   "kind": "measured",
+   "source": null,
+   "metric": "exact match",
+   "value": 31.3,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "NQ dev; zero-shot recall@5 13.9",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Baseline (ORQA), column Exact Match"
+  },
+  {
+   "claim": "Ablation: random uniform masking instead of salient spans.",
+   "kind": "measured",
+   "source": null,
+   "metric": "exact match",
+   "value": 32.3,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "NQ dev; zero-shot recall@5 24.2",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row REALM with random uniform masks, column Exact Match"
+  },
+  {
+   "claim": "Ablation: random span masking instead of salient spans.",
+   "kind": "measured",
+   "source": null,
+   "metric": "exact match",
+   "value": 35.3,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "NQ dev; zero-shot recall@5 26.1",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row REALM with random span masks, column Exact Match"
+  },
+  {
+   "claim": "Ablation: 30x staler MIPS index drops NQ dev EM below the ORQA baseline.",
+   "kind": "measured",
+   "source": null,
+   "metric": "exact match",
+   "value": 28.7,
+   "unit": "%",
+   "baseline_value": "31.3 (ORQA)",
+   "n": null,
+   "setup": "NQ dev; zero-shot recall@5 15.1; default refresh is about every 500 steps",
+   "note": null,
+   "where": "Table 2, Sec 4.5",
+   "table": "Table 2, row 30x stale MIPS, column Exact Match"
+  },
+  {
+   "claim": "Zero-shot retrieval recall@5 of the REALM retriever vs baseline.",
+   "kind": "measured",
+   "source": null,
+   "metric": "recall@5",
+   "value": 38.5,
+   "unit": "%",
+   "baseline_value": "13.9",
+   "n": null,
+   "setup": "NQ dev before fine-tuning; baseline 13.9",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row REALM, column Zero-shot Retrieval Recall@5"
+  },
+  {
+   "claim": "Index refresh frequency during pre-training.",
+   "kind": "measured",
+   "source": null,
+   "metric": "steps per refresh",
+   "value": "approximately 500",
+   "unit": "steps",
+   "baseline_value": null,
+   "n": null,
+   "setup": "pre-training with asynchronous MIPS refresh",
+   "note": null,
+   "where": "Sec 4.5",
+   "quote": "This results in one index refresh per ap-\nproximately 500 training steps."
+  },
+  {
+   "claim": "Example: BERT without retrieval gives the correct word 'Fermat' near-zero probability; REALM marginal gives 0.129.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "p(y|x)",
+   "value": 0.129,
+   "unit": "probability",
+   "baseline_value": null,
+   "n": null,
+   "setup": "single masked example, marginalised over top 8 documents",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row (c) REALM marginal; BERT 1.1 x 10^-14"
+  }
+ ],
+ "limits": [
+  "Index refresh was used only in pre-training; fine-tuning builds the MIPS index once and does not update Embed_doc, and the authors say refreshing might further help (footnote 3).",
+  "T5 baselines come from concurrent work with an improved fine-tuning procedure; T5 saw SQuAD data in pre-training, REALM did not.",
+  "T5 not evaluated on CuratedTrec because answers are regexes.",
+  "Even with an explicit retriever the encoder still memorises some knowledge (Appendix C, 'Thatcher' example).",
+  "Called the minimal instantiation; structured, multilingual and multi-modal extensions left to future work.",
+  "No seeds, variance or compute cost in time stated."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Retrieval utility (RU)",
+   "definition": "the difference between the log-likelihood of the knowledge-augmented encoder when conditioning on z versus on the null document",
+   "where": "Appendix D"
+  },
+  {
+   "term": "Salient span masking",
+   "definition": "masking spans such as named entities and dates that require world knowledge",
+   "where": "Sec 3.4"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Latent Retrieval for Weakly Supervised Open Domain Question Answering (ORQA)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "same latent-variable setup and fine-tuning; REALM adds retrieval-augmented pre-training and backprop into the index",
+   "quote": null
+  },
+  {
+   "work": "BERT",
+   "year": 2018,
+   "arxiv": "1810.04805",
+   "relation": "uses-method",
+   "note": "encoder, MLM objective, optimizer",
+   "quote": null
+  },
+  {
+   "work": "How much knowledge can you pack into the parameters of a language model?",
+   "year": 2020,
+   "arxiv": "2002.08910",
+   "relation": "baseline",
+   "note": "T5 closed-book results",
+   "quote": null
+  },
+  {
+   "work": "Exploring the limits of transfer learning (T5)",
+   "year": 2019,
+   "arxiv": "1910.10683",
+   "relation": "baseline",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "Reading Wikipedia to answer open-domain questions (DrQA)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "HardEM",
+   "year": 2019,
+   "arxiv": "1909.04849",
+   "relation": "baseline",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "GraphRetriever",
+   "year": 2019,
+   "arxiv": "1911.03868",
+   "relation": "baseline",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "PathRetriever",
+   "year": 2019,
+   "arxiv": "1911.10470",
+   "relation": "baseline",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "kNN-LM",
+   "year": 2019,
+   "arxiv": "1911.00172",
+   "relation": "related",
+   "note": "retrieves LM examples; not fine-tuned downstream",
+   "quote": null
+  },
+  {
+   "work": "SpanBERT",
+   "year": 2019,
+   "arxiv": "1907.10529",
+   "relation": "baseline",
+   "note": "random span masking ablation",
+   "quote": null
+  },
+  {
+   "work": "RoBERTa",
+   "year": 2019,
+   "arxiv": "1907.11692",
+   "relation": "uses-data",
+   "note": "CC-News corpus reproduced",
+   "quote": null
+  },
+  {
+   "work": "Natural Questions",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "WebQuestions (Berant et al. 2013); CuratedTrec",
+   "year": 2013,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": null,
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "REALM augments language model pre-training with a neural knowledge retriever that retrieves knowledge from a textual knowledge corpus, Z.",
+   "page": 1,
+   "why": "shows retrieve-then-predict with gradient flowing through retrieval"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "REALM pre-training with asynchronous MIPS refreshes.",
+   "page": 4,
+   "why": "trainer job and index builder job"
+  },
+  {
+   "figure": "Table 2",
+   "caption": "Ablation experiments on NQ's development set.",
+   "page": 7,
+   "why": "isolates retriever, encoder, masking and index staleness"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 1",
+   "snippet": "p(y | x) = sum_{z in Z} p(y | z, x) p(z | x)",
+   "verbatim": false
+  },
+  {
+   "where": "Sec 3.3",
+   "snippet": "grad log p(y|x) = sum_z r(z) grad f(x,z), r(z) = (p(y|z,x)/p(y|x) - 1) p(z|x)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "The arXiv v1 PDF carries no ICML header; venue recorded as preprint.",
+  "No embedded instructions found."
+ ]
 }

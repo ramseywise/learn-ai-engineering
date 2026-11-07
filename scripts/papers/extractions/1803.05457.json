@@ -1,0 +1,565 @@
+{
+ "schema": 1,
+ "key": "1803.05457",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/clark-2018-think-you-have-solved-question.pdf",
+ "bib": {
+  "title": "Think you have Solved Question Answering? Try ARC, the AI2 Reasoning Challenge",
+  "authors": [
+   "Peter Clark",
+   "Isaac Cowhey",
+   "Oren Etzioni",
+   "Tushar Khot",
+   "Ashish Sabharwal",
+   "Carissa Schoenick",
+   "Oyvind Tafjord"
+  ],
+  "first_author": "Clark",
+  "year": 2018,
+  "venue": "preprint",
+  "arxiv": "1803.05457",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 44091,
+  "chars_total": 44091,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "benchmark",
+ "question": "Can a question set of natural grade-school science questions, filtered to defeat retrieval and co-occurrence methods, drive research on questions needing reasoning?",
+ "hypothesis": "Questions that simple retrieval and co-occurrence solvers fail will also defeat neural models from SQuAD and SNLI.",
+ "contributions": [
+  "ARC question set (7787 questions) with Challenge and Easy partitions",
+  "ARC Corpus of 14M science sentences",
+  "Baseline results and implementations of three neural baselines (DecompAttn, BiDAF, DGEM)"
+ ],
+ "method": {
+  "summary": "Collects 7787 non-diagram science multiple-choice questions, splits them by whether IR and PMI solvers both fail, releases a 14M-sentence corpus, and scores nine baselines on the test partitions.",
+  "task": "multiple-choice science question answering",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "ARC Challenge Set",
+    "role": "eval",
+    "size": "2590 questions (train 1119, dev 299, test 1172)",
+    "split": "test 1172 for Table 6",
+    "source": "US standardized science tests; Table 7 lists sources; Mercury partner data for non-commercial research",
+    "preprocessing": "Non-diagram, multiple choice only; Challenge = wrong by both IR and PMI solvers"
+   },
+   {
+    "name": "ARC Easy Set",
+    "role": "eval",
+    "size": "5197 questions (train 2251, dev 570, test 2376)",
+    "split": "test 2376 for Table 6",
+    "source": "same as above",
+    "preprocessing": null
+   },
+   {
+    "name": "ARC Corpus",
+    "role": "pretrain",
+    "size": "14M sentences, 1.4GB",
+    "split": null,
+    "source": "Web search from ~100 templates over 80 science topics, plus AristoMini",
+    "preprocessing": "De-duplicated, stripped to text, chunked into sentences"
+   },
+   {
+    "name": "SciTail (extended version)",
+    "role": "train",
+    "size": null,
+    "split": null,
+    "source": "Khot et al. 2018",
+    "preprocessing": "Used to train DecompAttn and DGEM"
+   },
+   {
+    "name": "SQuAD",
+    "role": "train",
+    "size": null,
+    "split": null,
+    "source": "Rajpurkar et al. 2016",
+    "preprocessing": "BiDAF trained on it then tuned on science questions"
+   },
+   {
+    "name": "Waterloo corpus",
+    "role": "eval",
+    "size": "5x10^10 tokens (280GB)",
+    "split": null,
+    "source": "Clark et al. 2016",
+    "preprocessing": "Used by IR and PMI solvers for the filter"
+   }
+  ],
+  "models": [
+   {
+    "name": "IR solver",
+    "role": "baseline",
+    "params": null,
+    "architecture": "Elasticsearch retrieval score of top sentence for q+option",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "search": "requires non-stopword overlap with q and with option"
+    }
+   },
+   {
+    "name": "PMI solver",
+    "role": "baseline",
+    "params": null,
+    "architecture": "n-gram PMI, 10 word window",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "ngrams": "unigrams, bigrams, trigrams, skip-bigrams"
+    }
+   },
+   {
+    "name": "Guess-all",
+    "role": "baseline",
+    "params": null,
+    "architecture": "selects all options",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "TableILP",
+    "role": "baseline",
+    "params": null,
+    "architecture": "ILP over semi-structured tables",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "TupleInference",
+    "role": "baseline",
+    "params": null,
+    "architecture": "Open IE tuple matching",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "DecompAttn",
+    "role": "baseline",
+    "params": null,
+    "architecture": "decomposable attention entailment",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "DGEM",
+    "role": "baseline",
+    "params": null,
+    "architecture": "decomposed graph entailment, proprietary parser + Open IE",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "DGEM-OpenIE",
+    "role": "baseline",
+    "params": null,
+    "architecture": "DGEM with Open IE only",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "BiDAF",
+    "role": "baseline",
+    "params": null,
+    "architecture": "bidirectional attention flow span selection",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "init": "trained on SQuAD, tuned on science questions"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "one run per baseline; no seeds stated",
+   "prompting": null,
+   "retrieval": "ElasticSearch over ARC Corpus; sentences must contain answer choice; drop sentences over 300 characters, with negation or noisy; top 8 sentences across answer choices",
+   "parameters": {
+    "PMI window": "10 words",
+    "entailment score": "max over premises per answer choice",
+    "BiDAF option choice": "option with highest percentage of lemmatized non-stopword tokens covered by the answer span"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "score",
+     "definition": "1 point if correct, 1/k for a k-way tie containing the answer; sum divided by number of questions",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "IR",
+    "PMI",
+    "Guess-all",
+    "IR (ARC Corpus)",
+    "TableILP",
+    "TupleInference",
+    "DecompAttn",
+    "DGEM",
+    "DGEM-OpenIE",
+    "BiDAF"
+   ],
+   "protocol": "Test partitions of Challenge and Easy; 95% CI of +-2.5% on Challenge; no human baseline reported"
+  },
+  "availability": {
+   "code": "https://github.com/allenai/arc-solvers",
+   "weights": null,
+   "data": "http://data.allenai.org/arc"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "ARC has 7787 science questions, split into a 2590-question Challenge Set and 5197-question Easy Set.",
+   "kind": "measured",
+   "source": null,
+   "metric": "questions",
+   "value": 7787,
+   "unit": "questions",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Whole dataset, non-diagram multiple choice, grades 3-9",
+   "note": null,
+   "where": "Intro",
+   "quote": "The ARC Dataset consists of a collection of 7787 nat-"
+  },
+  {
+   "claim": "The Challenge Set is questions answered incorrectly by both the IR and PMI solvers (Waterloo corpus).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Challenge Set size",
+   "value": 2590,
+   "unit": "questions",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Filter: both IR and PMI solvers wrong",
+   "note": null,
+   "where": "Intro",
+   "quote": "Challenge Set (2590 ques-"
+  },
+  {
+   "claim": "No baseline scores significantly above random on the Challenge test set; 95% confidence interval is +-2.5%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "95% CI half-width",
+   "value": 2.5,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ARC test partitions, baselines run by the authors, Challenge test (1172 questions)",
+   "note": "Quote ends before the value; text reads '±2.5%'.",
+   "where": "Results",
+   "quote": "random baseline on the Challenge set, where the 95% conﬁdence interval is"
+  },
+  {
+   "claim": "Best Challenge test score is DGEM at 27.11%, versus 25.02% for guess-all random.",
+   "kind": "measured",
+   "source": null,
+   "metric": "score",
+   "value": 27.11,
+   "unit": "%",
+   "baseline_value": 25.02,
+   "n": null,
+   "setup": "ARC test partitions, baselines run by the authors, Challenge test set, scoring 1 point or 1/k for a k-way tie",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row DGEM, column Challenge Set"
+  },
+  {
+   "claim": "BiDAF scores 26.54% on Challenge and 50.11% on Easy.",
+   "kind": "measured",
+   "source": null,
+   "metric": "score",
+   "value": 26.54,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ARC test partitions, baselines run by the authors, BiDAF trained on SQuAD then tuned on science questions",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row BiDAF, column Challenge Set"
+  },
+  {
+   "claim": "DecompAttn scores 24.34% on Challenge, below random.",
+   "kind": "measured",
+   "source": null,
+   "metric": "score",
+   "value": 24.34,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ARC test partitions, baselines run by the authors",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row DecompAttn, column Challenge Set"
+  },
+  {
+   "claim": "TableILP scores 26.97% on Challenge and 36.15% on Easy.",
+   "kind": "measured",
+   "source": null,
+   "metric": "score",
+   "value": 26.97,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ARC test partitions, baselines run by the authors",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row TableILP, column Challenge Set"
+  },
+  {
+   "claim": "IR with the ARC Corpus scores 20.26% on Challenge, below random, and 62.55% on Easy.",
+   "kind": "measured",
+   "source": null,
+   "metric": "score",
+   "value": 20.26,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ARC test partitions, baselines run by the authors, IR solver rerun on the ARC Corpus instead of Waterloo",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row IR (using ARC Corpus), column Challenge Set"
+  },
+  {
+   "claim": "IR (dataset definition) scores 1.02% on Challenge but 74.48% on Easy; PMI 2.03% and 77.82%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "score",
+   "value": 1.02,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "These solvers define the split, so their scores are biased by design",
+   "note": "Footnote marks these as used to define the dataset.",
+   "where": "Table 6",
+   "table": "Table 6, row IR (dataset defn), column Challenge Set"
+  },
+  {
+   "claim": "On the Easy Set, baselines other than IR/PMI generally score between 55% and 65%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "range",
+   "value": "55-65",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ARC test partitions, baselines run by the authors, Easy test (2376 questions)",
+   "note": "Table 6 shows BiDAF 50.11 and TableILP 36.15, outside this range; text says 'generally'.",
+   "where": "Results",
+   "quote": "Easy set is generally between 55% and 65%"
+  },
+  {
+   "claim": "The ARC Corpus has 14M sentences (1.4GB) and mentions knowledge relevant to about 95% of Challenge questions in a sampled analysis.",
+   "kind": "measured",
+   "source": null,
+   "metric": "coverage",
+   "value": 95,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Informal analysis of a random sample of questions; sample size not given",
+   "note": null,
+   "where": "ARC Corpus",
+   "quote": "approximately 95% of the ARC Challenge questions"
+  },
+  {
+   "claim": "99.8% of ARC question vocabulary appears in the ARC Corpus.",
+   "kind": "measured",
+   "source": null,
+   "metric": "vocab coverage",
+   "value": 99.8,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Vocabulary analysis",
+   "note": null,
+   "where": "ARC Corpus",
+   "quote": "99.8% of the ARC question"
+  },
+  {
+   "claim": "About 75% of 805 sampled collected documents were judged science relevant.",
+   "kind": "measured",
+   "source": null,
+   "metric": "relevance",
+   "value": 75,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Informal analysis of 805 random documents",
+   "note": null,
+   "where": "ARC Corpus",
+   "quote": "approximately 75% were judged as “science relevant”"
+  }
+ ],
+ "limits": [
+  "Challenge is defined operationally by two weak solvers and only approximates 'hard'.",
+  "Knowledge and reasoning type breakdowns come from a sample of 100 questions with subjective labels.",
+  "95% corpus coverage and 75% relevance are informal sampled analyses.",
+  "No human performance reported.",
+  "Baselines are from 2018 and the leaderboard is the source for up-to-date results."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Challenge Set",
+   "definition": "questions answered incorrectly by both a retrieval-based algorithm and a word co-occurrence algorithm",
+   "where": "Abstract"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Combining retrieval, statistics, and inference to answer elementary science questions",
+   "year": 2016,
+   "arxiv": "1604.04315",
+   "relation": "uses-method",
+   "note": "Source of IR and PMI solvers and Waterloo corpus",
+   "quote": null
+  },
+  {
+   "work": "SQuAD",
+   "year": 2016,
+   "arxiv": "1606.05250",
+   "relation": "related",
+   "note": "Contrast: surface-cue datasets",
+   "quote": null
+  },
+  {
+   "work": "Bidirectional Attention Flow",
+   "year": 2017,
+   "arxiv": "1611.01603",
+   "relation": "baseline",
+   "note": "Adapted to multiple choice",
+   "quote": null
+  },
+  {
+   "work": "A decomposable attention model for NLI",
+   "year": 2016,
+   "arxiv": "1606.01933",
+   "relation": "baseline",
+   "note": "Adapted via entailment",
+   "quote": null
+  },
+  {
+   "work": "SciTail",
+   "year": 2018,
+   "arxiv": "1804.06226",
+   "relation": "uses-data",
+   "note": "Training data for entailment models; DGEM source",
+   "quote": null
+  },
+  {
+   "work": "Moving beyond the Turing test with the Allen AI Science Challenge",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Kaggle 2016 challenge; ARC includes its releasable subset (43% of ARC)",
+   "quote": null
+  },
+  {
+   "work": "Khashabi et al. TableILP",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Baseline",
+   "quote": null
+  },
+  {
+   "work": "Khot et al. TupleInference",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Baseline",
+   "quote": null
+  },
+  {
+   "work": "Annotation artifacts in NLI data (Gururangan et al.)",
+   "year": 2018,
+   "arxiv": "1803.02324",
+   "relation": "related",
+   "note": "Progress concentrated on easy questions",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Table 6",
+   "caption": "Performance of the different baseline systems. Scores are reported as percentages on the test sets.",
+   "page": 7,
+   "why": "Shows every baseline near random on Challenge but 50-62% on Easy"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Number of questions in the ARC partitions.",
+   "page": 3,
+   "why": "Split sizes"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Table 6 cells are extracted one per line; values matched by reading order.",
+  "Text claims Easy scores are generally 55-65% though BiDAF (50.11) and TableILP (36.15) fall outside."
+ ]
+}

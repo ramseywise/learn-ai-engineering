@@ -1,0 +1,564 @@
+{
+ "schema": 1,
+ "key": "2209.07753",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/liang-2023-code-as-policies.pdf",
+ "bib": {
+  "title": "Code as Policies: Language Model Programs for Embodied Control",
+  "authors": [
+   "Jacky Liang",
+   "Wenlong Huang",
+   "Fei Xia",
+   "Peng Xu",
+   "Karol Hausman",
+   "Brian Ichter",
+   "Pete Florence",
+   "Andy Zeng"
+  ],
+  "first_author": "Liang",
+  "year": 2023,
+  "venue": "preprint (arXiv v4, May 2023, cs.RO)",
+  "arxiv": "2209.07753",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 86790,
+  "chars_total": 86790,
+  "engine": "pymupdf",
+  "skipped": "Reference list skimmed only."
+ },
+ "type": "system",
+ "question": "Can code-writing LLMs, prompted few-shot, write robot policy code that processes perception outputs and parameterizes control primitives, without any training?",
+ "hypothesis": "Code-writing LLMs can be re-purposed to write robot policy code from natural language commands via few-shot prompting, generalizing to new instructions.",
+ "contributions": [
+  "code as policies: a formulation of using LLMs to write robot code",
+  "a method for hierarchical code-gen that improves state-of-the-art on both robotics and standard code-gen problems with 39.8% P@1 on HumanEval",
+  "a new benchmark (RoboCodeGen) to evaluate future language models on robotics code-gen problems",
+  "ablations that analyze how CaP improves metrics of generalization and that it abides by scaling laws"
+ ],
+ "method": {
+  "summary": "Few-shot prompt a code-completion LLM with Hints (imports) and Examples (comment-to-code pairs) so it writes Python language model programs (LMPs) that call perception and control APIs. Undefined functions in generated code are found by AST parsing and filled by a function-generating LMP, depth-first. Code is checked (no imports, no __ names, no exec/eval) then run with exec.",
+  "task": "language-instructed robot policy code generation; code generation benchmarks",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "RoboCodeGen",
+    "role": "eval",
+    "size": "37 function generation problems",
+    "split": null,
+    "source": "introduced by this paper; human-written unit tests",
+    "preprocessing": null
+   },
+   {
+    "name": "HumanEval",
+    "role": "eval",
+    "size": "164 problems",
+    "split": null,
+    "source": "Chen et al. 2021",
+    "preprocessing": null
+   },
+   {
+    "name": "Reasoning with code vs language benchmark",
+    "role": "eval",
+    "size": "28 object-selection + 23 position-selection questions",
+    "split": null,
+    "source": "created by authors",
+    "preprocessing": null
+   },
+   {
+    "name": "Simulated tabletop manipulation",
+    "role": "eval",
+    "size": "8 inherited long-horizon tasks + 6 new spatial-geometric tasks; 10 colored blocks and 10 colored bowls; 50 trials per task",
+    "split": "seen/unseen instructions and attributes",
+    "source": "environment from Zeng et al. 2022 and Huang et al. 2022",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "OpenAI Codex code-davinci-002",
+    "role": "proposed",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "Codex sizes not public; used for all experiments unless stated"
+    }
+   },
+   {
+    "name": "code-cushman-001",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-3",
+    "role": "evaluated",
+    "params": "6.7B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "InstructGPT",
+    "role": "evaluated",
+    "params": "175B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "CLIPort",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "training": "imitation learning on 30k demonstrations, multi-task language-conditioned"
+    }
+   },
+   {
+    "name": "NL Planner",
+    "role": "baseline",
+    "params": null,
+    "architecture": "few-shot prompted LLM planner using natural language instead of code",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "MDETR",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "off-the-shelf open-vocab detector, tabletop and whiteboard"
+    }
+   },
+   {
+    "name": "ViLD",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "off-the-shelf open-vocab detector, mobile robot"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "greedy (temperature 0) for all LMP experiments; HumanEval also sampled",
+   "temperature": "0 (LMPs, HumanEval greedy); 0.8 (HumanEval P@N)",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "HumanEval P@1, P@10, P@100 from N samples at temperature 0.8; LMPs always one greedy output; number of repeated runs of RoboCodeGen not stated",
+   "prompting": "few-shot: Hints (import statements) plus Examples (comment instruction followed by code); HumanEval prompts contain only 2 examples; sim tabletop: one example rollout per task; session kept by appending instructions and responses",
+   "retrieval": null,
+   "parameters": {
+    "safety_check": "no import statements, no variables beginning with __, no exec or eval calls",
+    "hierarchical_gen": "parse AST, find undefined functions, call function-generating LMP, recurse depth-first",
+    "CLIPort_no_oracle": "run 10 actions then evaluate success",
+    "position_correct": "all coordinates within 1cm of ground truth"
+   },
+   "other": {
+    "seeds": null
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "pass rate",
+     "definition": "percentage of generated code passing human-written unit tests",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "P@N (HumanEval)",
+     "definition": "correctness across N samples decoded at temperature 0.8",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "task success rate",
+     "definition": "success over 50 trials per task with sampled attributes and scenes",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Flat code-gen (no prompt, flat prompt)",
+    "code-davinci-001 and PaLM Coder (from Chowdhery et al. 2022)",
+    "CLIPort",
+    "NL Planner",
+    "Vanilla and Chain-of-Thought natural-language reasoning"
+   ],
+   "protocol": "Sim tabletop: 50 trials per task, seen/unseen split of instructions and attributes; real-robot domains are qualitative demos with no quantitative evaluation."
+  },
+  "availability": {
+   "code": "https://code-as-policies.github.io (Colab notebooks and prompts)",
+   "weights": null,
+   "data": null
+  },
+  "prompts": [
+   {
+    "purpose": "parse_obj prompt (App. B.5)",
+    "text": "import numpy as np\nfrom utils import get_pos\nobjs = ['brown bowl', 'green block', 'brown block', 'green bowl']\n# the blocks.\nret_val = ['brown block', 'green block']\n# the sky colored block.\nret_val = 'blue block'\nobjs = ['orange block', 'cyan block', 'purple bowl', 'gray bowl']\n# the right most block.\nblock_names = ['orange block', 'cyan block']\nblock_positions = np.array([\nget_pos(block_name) for block_name in block_names])\nright_block_name = block_names[np.argmax(block_positions[:, 0])]\nret_val = right_block_name",
+    "where": "Appendix B.5"
+   },
+   {
+    "purpose": "First-party library prompt (App. B.2)",
+    "text": "from utils import get_pos, put_first_on_second\nobjs = ['gray block', 'gray bowl']\n# put the gray block on the gray bowl.\nput_first_on_second('gray block', 'gray bowl')\nobjs = ['purple block', 'purple bowl']\n# move the purple bowl toward the left.\ntarget_pos = get_pos('purple bowl') + [-0.3, 0]\nput_first_on_second('purple bowl', target_pos)",
+    "where": "Appendix B.2"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "inference.temperature",
+    "quote": "use OpenAI Codex code-davinci-002 with temperature 0 (i.e., deterministic greedy token decoding)",
+    "where": "Sec. III-B"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Writing Python beats natural-language reasoning (vanilla and CoT) on robot spatial-geometric questions.",
+   "kind": "measured",
+   "source": null,
+   "metric": "total accuracy (mean %)",
+   "value": "98",
+   "unit": "%",
+   "baseline_value": "Vanilla 35, CoT 58",
+   "n": "51",
+   "setup": "51 questions (28 object selection, 23 position selection), code-davinci-002, temperature 0; position correct if all coordinates within 1cm",
+   "note": null,
+   "where": "Table IV, App. C",
+   "table": "Table IV, row Total, column LMP (ours)"
+  },
+  {
+   "claim": "Hierarchical code-gen raises HumanEval P@1 over flat code-gen (no prompt).",
+   "kind": "measured",
+   "source": null,
+   "metric": "P@1",
+   "value": "39.8",
+   "unit": "%",
+   "baseline_value": "34.9 (Flat, no prompt); 36.6 (Flat prompt)",
+   "n": null,
+   "setup": "HumanEval, 164 problems, code-davinci-002, temperature 0.8",
+   "note": null,
+   "where": "Table II/V",
+   "quote": "Hier. CodeGen + Hier Prompts\n53.0\n39.8\n80.6\n95.7"
+  },
+  {
+   "claim": "Hierarchical code-gen raises HumanEval greedy pass rate.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Greedy pass rate",
+   "value": "53.0",
+   "unit": "%",
+   "baseline_value": "45.7 (Flat, no prompt); 50.6 (Flat prompt)",
+   "n": null,
+   "setup": "HumanEval, code-davinci-002, temperature 0",
+   "note": null,
+   "where": "Table V",
+   "table": "Table V, row Hier. CodeGen + Hier Prompts, column Greedy"
+  },
+  {
+   "claim": "Hierarchical code-gen on HumanEval P@100.",
+   "kind": "measured",
+   "source": null,
+   "metric": "P@100",
+   "value": "95.7",
+   "unit": "%",
+   "baseline_value": "90.9 (Flat no prompt)",
+   "n": null,
+   "setup": "HumanEval, code-davinci-002, temperature 0.8",
+   "note": null,
+   "where": "Table V",
+   "table": "Table V, row Hier. CodeGen + Hier Prompts, column P@100"
+  },
+  {
+   "claim": "Hierarchical code-gen on RoboCodeGen with code-davinci-002.",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass rate",
+   "value": "95",
+   "unit": "%",
+   "baseline_value": "Flat 81",
+   "n": "37",
+   "setup": "RoboCodeGen, 37 problems, human-written unit tests",
+   "note": null,
+   "where": "Table I",
+   "table": "Table I, row Hierarchical, column davinci"
+  },
+  {
+   "claim": "RoboCodeGen pass rate scales with model size (GPT-3 6.7B vs 175B InstructGPT, hierarchical).",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass rate",
+   "value": "84",
+   "unit": "%",
+   "baseline_value": "6.7B hierarchical: 5",
+   "n": "37",
+   "setup": "RoboCodeGen, 37 problems; 175B column, hierarchical",
+   "note": null,
+   "where": "Table I",
+   "table": "Table I, row Hierarchical, column 175B"
+  },
+  {
+   "claim": "On unseen attributes and unseen instructions, CaP long-horizon success exceeds NL planner and CLIPort.",
+   "kind": "measured",
+   "source": null,
+   "metric": "success rate",
+   "value": "80.00",
+   "unit": "%",
+   "baseline_value": "NL Planner 64.00; CLIPort 0.00",
+   "n": "50 trials per task",
+   "setup": "Simulated tabletop (10 blocks, 10 bowls), 50 trials per task, UA UI Long-Horizon; CLIPort trained on 30k demonstrations",
+   "note": null,
+   "where": "Table III",
+   "table": "Table III, row UA UI Long-Horizon, column CaP (ours)"
+  },
+  {
+   "claim": "On seen attributes/instructions, CLIPort beats CaP on spatial-geometric tasks.",
+   "kind": "measured",
+   "source": null,
+   "metric": "success rate",
+   "value": "89.30",
+   "unit": "%",
+   "baseline_value": "CLIPort 97.33",
+   "n": "50 trials per task",
+   "setup": "Simulated tabletop, SA SI Spatial-Geometric, 50 trials per task",
+   "note": null,
+   "where": "Table III",
+   "table": "Table III, row SA SI Spatial-Geometric, column CaP (ours)"
+  },
+  {
+   "claim": "CaP on seen-attribute long-horizon tasks.",
+   "kind": "measured",
+   "source": null,
+   "metric": "success rate",
+   "value": "97.20",
+   "unit": "%",
+   "baseline_value": "CLIPort 78.80; NL Planner 86.40",
+   "n": "50 trials per task",
+   "setup": "Simulated tabletop, SA SI Long-Horizon, 50 trials per task",
+   "note": null,
+   "where": "Table III",
+   "table": "Table III, row SA SI Long-Horizon, column CaP (ours)"
+  },
+  {
+   "claim": "CaP on unseen-attribute/unseen-instruction spatial-geometric tasks; CLIPort fails.",
+   "kind": "measured",
+   "source": null,
+   "metric": "success rate",
+   "value": "62.00",
+   "unit": "%",
+   "baseline_value": "CLIPort 0.01 (Table III) vs 1.3 (Table VI); NL Planner N/A",
+   "n": "50 trials per task",
+   "setup": "Simulated tabletop, UA UI Spatial-Geometric, 50 trials per task",
+   "note": "Table III prints CLIPort 0.01 for this row; Table VI prints Spatial-Geometric Total 1.3 for CLIPort (oracle termination).",
+   "where": "Table III/VI",
+   "table": "Table III, row UA UI Spatial-Geometric, column CaP (ours)"
+  },
+  {
+   "claim": "Only hierarchical-gain on HumanEval problems that triggered it: 6.5% of the 164 questions led to hierarchical generation.",
+   "kind": "measured",
+   "source": null,
+   "metric": "success on triggered problems",
+   "value": "56",
+   "unit": "%",
+   "baseline_value": "44",
+   "n": null,
+   "setup": "HumanEval, problems that led to hierarchical generation",
+   "note": null,
+   "where": "App. D",
+   "quote": "Out of the 164\nquestions in HumanEval, 6.5% led to hierarchical code generation,\nbut of which both Flat CodeGen variants got 44% success, while\nHier CodeGen code got 56%."
+  }
+ ],
+ "limits": [
+  "Restricted by what perception APIs can describe and which control primitives exist; only a handful of named primitive parameters can be adjusted without oversaturating prompts.",
+  "Struggles with significantly longer or more complex commands, or commands at a different abstraction level than the Examples (e.g. build a house with blocks).",
+  "Assumes all instructions are feasible; cannot tell whether a response will be correct a priori.",
+  "Quantitative evaluation limited to constrained simulated tasks; real-robot domains have no quantitative evaluation.",
+  "Cross-embodiment ability is brittle; reactive controllers are simple and no gain tuning from execution feedback.",
+  "Sampling many solutions (P@100) is impractical for LMPs, so only greedy output is used.",
+  "Codex model sizes not public; code-davinci-002 compared with code-davinci-001 in prior works."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "language model program (LMP)",
+   "definition": "any program generated by a language model and executed on a system",
+   "where": "Sec. III"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Evaluating large language models trained on code (Codex, HumanEval)",
+   "year": 2021,
+   "arxiv": "2107.03374",
+   "relation": "uses-method",
+   "note": "code-writing LLM and HumanEval benchmark",
+   "quote": null
+  },
+  {
+   "work": "SayCan",
+   "year": 2022,
+   "arxiv": "2204.01691",
+   "relation": "related",
+   "note": "LLM planning with skill affordances",
+   "quote": null
+  },
+  {
+   "work": "Inner Monologue",
+   "year": 2022,
+   "arxiv": "2207.05608",
+   "relation": "related",
+   "note": "LLM planning with feedback; source of sim environment",
+   "quote": null
+  },
+  {
+   "work": "Socratic Models",
+   "year": 2022,
+   "arxiv": "2204.00598",
+   "relation": "related",
+   "note": "VLM-substituted prompts; source of sim environment",
+   "quote": null
+  },
+  {
+   "work": "Language models as zero-shot planners",
+   "year": 2022,
+   "arxiv": "2201.07207",
+   "relation": "related",
+   "note": "NL planning baseline family",
+   "quote": null
+  },
+  {
+   "work": "CLIPort",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "supervised imitation-learning baseline",
+   "quote": null
+  },
+  {
+   "work": "Chain of thought prompting",
+   "year": 2022,
+   "arxiv": "2201.11903",
+   "relation": "baseline",
+   "note": "CoT baseline for reasoning in language; hierarchical code-gen seen as CoT via functional programming",
+   "quote": null
+  },
+  {
+   "work": "MDETR",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "object detector",
+   "quote": null
+  },
+  {
+   "work": "ViLD",
+   "year": 2021,
+   "arxiv": "2104.13921",
+   "relation": "uses-method",
+   "note": "object detector",
+   "quote": null
+  },
+  {
+   "work": "PaLM",
+   "year": 2022,
+   "arxiv": "2204.02311",
+   "relation": "baseline",
+   "note": "PaLM Coder HumanEval numbers",
+   "quote": null
+  },
+  {
+   "work": "Recursively summarizing books with human feedback",
+   "year": 2021,
+   "arxiv": "2109.10862",
+   "relation": "related",
+   "note": "inspiration for hierarchical code-gen",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Given examples (via few-shot prompting), robots can use code-writing LLMs to translate natural language commands into robot policy code which process perception outputs, parameterize control primitives, recursively generate code for undefined functions, and generalize to new tasks.",
+   "page": 1,
+   "why": "Shows the whole loop: command, LLM, policy code, perception and control APIs, recursive function generation."
+  },
+  {
+   "figure": "Table III",
+   "caption": "Success rates over task families with 50 trials per task.",
+   "page": 4,
+   "why": "Core comparison against CLIPort and NL planner across seen/unseen splits."
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec. III",
+   "snippet": "# define function stack_objs_in_order(obj_names).\ndef stack_objs_in_order(obj_names):\n    for i in range(len(obj_names) - 1):\n        put_first_on_second(obj_names[i + 1], obj_names[i])",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Table III CLIPort column is the oracle-termination variant per Table VI values (inferred from matching numbers); Table III prints 0.01 where Table VI prints 1.3 for UA UI Spatial-Geometric.",
+  "Prompt text is mostly hosted online, not in the PDF.",
+  "No embedded instructions found.",
+  "Remaining full prompts (UI, function generation, mobile, drawing) are only URLs under code-as-policies.github.io/prompts/ (Appendix H-K), not in the PDF."
+ ]
+}

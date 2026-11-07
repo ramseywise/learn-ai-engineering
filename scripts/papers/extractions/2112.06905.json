@@ -1,0 +1,655 @@
+{
+ "schema": 1,
+ "key": "2112.06905",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/du-2021-glam.pdf",
+ "bib": {
+  "title": "GLaM: Efficient Scaling of Language Models with Mixture-of-Experts",
+  "authors": [
+   "Nan Du",
+   "Yanping Huang",
+   "Andrew M. Dai",
+   "Simon Tong",
+   "Dmitry Lepikhin",
+   "Yuanzhong Xu",
+   "Maxim Krikun",
+   "Yanqi Zhou",
+   "Adams Wei Yu",
+   "Orhan Firat",
+   "Barret Zoph",
+   "Liam Fedus",
+   "Maarten Bosma",
+   "Zongwei Zhou",
+   "Tao Wang",
+   "Yu Emma Wang",
+   "Kellie Webster",
+   "Marie Pellat",
+   "Kevin Robinson",
+   "Kathleen Meier-Hellstern",
+   "Toju Duke",
+   "Lucas Dixon",
+   "Kun Zhang",
+   "Quoc V Le",
+   "Yonghui Wu",
+   "Zhifeng Chen",
+   "Claire Cui"
+  ],
+  "first_author": "Du",
+  "year": 2021,
+  "venue": "ICML 2022 (PMLR 162); arXiv v2 1 Aug 2022",
+  "arxiv": "2112.06905",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 96434,
+  "chars_total": 96434,
+  "engine": "pymupdf",
+  "skipped": "Reference list skimmed; Tables 13-14 (per-task one/few-shot, all sizes) only skimmed, Table 11 and 12 read"
+ },
+ "type": "empirical",
+ "question": "Can a sparsely activated decoder-only mixture-of-experts LM match or beat dense GPT-3 on zero/one/few-shot tasks at lower training and inference cost?",
+ "hypothesis": "Sparse MoE decoder-only models can outperform dense models of similar active FLOPs in few-shot in-context learning while saving energy.",
+ "contributions": [
+  "GLaM family of sparse decoder-only MoE LMs up to 1.2T parameters (96.6B active)",
+  "Better average than GPT-3 on 29 tasks with about half the inference FLOPs and a third of the training energy",
+  "Study of data quality, expert count scaling and data/compute efficiency",
+  "Bias, WinoGender and toxicity analysis"
+ ],
+ "method": {
+  "summary": "Decoder-only Transformer with every other feed-forward layer replaced by a 64-expert MoE layer with top-2 gating, trained on a 1.6T-token mixture, plus dense control models trained on the same data. Evaluated zero/one/few-shot on the 29 non-synthetic, non-translation GPT-3 tasks.",
+  "task": "next-token pretraining; in-context evaluation on 29 NLP tasks",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "GLaM pretraining mixture",
+    "role": "pretrain",
+    "size": "1.6 trillion tokens (Table 3: filtered webpages 143B, Wikipedia 3B, conversations 174B, forums 247B, books 390B, news 650B)",
+    "split": "mixture weights 0.42 filtered webpages, 0.06 Wikipedia, 0.28 conversations, 0.02 forums, 0.20 books, 0.02 news",
+    "source": "Webpages filtered by a feature-hash linear quality classifier (Pareto sampling by score); public-domain social media conversations from Adiwardana et al. 2020; books, Wikipedia, forums, news",
+    "preprocessing": "quality classifier trained to separate curated text (Wikipedia, books, selected websites) from other pages; weights set from small-model performance and to avoid oversampling small sources"
+   },
+   {
+    "name": "29 evaluation benchmarks",
+    "role": "eval",
+    "size": "8 NLG and 21 NLU tasks in 7 categories (App A)",
+    "split": "mostly development sets; zero-shot evaluates dev directly; one/few-shot demonstrations drawn randomly from task training set",
+    "source": "same suite as Brown et al. 2020 minus 7 synthetic tasks and 6 MT sets",
+    "preprocessing": null
+   },
+   {
+    "name": "WinoGender, RealToxicityPrompts",
+    "role": "eval",
+    "size": "RealToxicityPrompts: 10K randomly sampled prompts",
+    "split": null,
+    "source": "Rudinger et al. 2018; Gehman et al. 2020",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "GLaM 64B/64E",
+    "role": "proposed",
+    "params": "1.2T total, 96.6B active",
+    "architecture": "decoder-only MoE Transformer, 64 experts per MoE layer every other layer, top-2 gating",
+    "init_from": null,
+    "tokenizer": "SentencePiece",
+    "vocab": "256K",
+    "layers": "64",
+    "hidden": "M=8,192; H=32,768",
+    "heads": "128 (d_head 128)",
+    "context": "1024 tokens",
+    "other": {
+     "E": "64",
+     "layout": "GLaM (Base Dense Size/E)"
+    }
+   },
+   {
+    "name": "GLaM 8B/64E",
+    "role": "proposed",
+    "params": "143B total, 9.8B active",
+    "architecture": "MoE",
+    "init_from": null,
+    "tokenizer": "SentencePiece",
+    "vocab": "256K",
+    "layers": "64",
+    "hidden": "M=4,096; H=16,384",
+    "heads": "32 (d_head 128)",
+    "context": "1024 tokens",
+    "other": {
+     "E": "64"
+    }
+   },
+   {
+    "name": "GLaM 1.7B/32E,64E,128E,256E",
+    "role": "proposed",
+    "params": "20B, 27B, 53B, 105B total; ~1.88B active",
+    "architecture": "MoE",
+    "init_from": null,
+    "tokenizer": "SentencePiece",
+    "vocab": "256K",
+    "layers": "24 base (Table 4 lists 32, 64, 128, 256 in the E column)",
+    "hidden": "M=2,048; H=8,192",
+    "heads": "16 (d_head 128)",
+    "context": "1024 tokens",
+    "other": {}
+   },
+   {
+    "name": "GLaM 0.1B/64E",
+    "role": "proposed",
+    "params": "1.9B total, 145M active",
+    "architecture": "MoE",
+    "init_from": null,
+    "tokenizer": "SentencePiece",
+    "vocab": "256K",
+    "layers": "12",
+    "hidden": "M=768; H=3,072",
+    "heads": "12 (d_head 64)",
+    "context": "1024 tokens",
+    "other": {}
+   },
+   {
+    "name": "GLaM dense 0.1B, 1.7B, 8B, 137B",
+    "role": "baseline",
+    "params": "130M, 1.7B, 8.7B, 137B",
+    "architecture": "dense decoder-only",
+    "init_from": null,
+    "tokenizer": "SentencePiece",
+    "vocab": "256K",
+    "layers": "12, 24, 32, 64",
+    "hidden": "M 768/2,048/4,096/8,192; H 3,072/8,192/16,384/65,536",
+    "heads": "12/16/32/128",
+    "context": "1024 tokens",
+    "other": {}
+   },
+   {
+    "name": "GPT-3",
+    "role": "baseline",
+    "params": "175B",
+    "architecture": "dense decoder-only",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "numbers taken from Brown et al. 2020; Gopher 280B and Megatron-NLG 530B given for reference in Table 11"
+    }
+   }
+  ],
+  "training": {
+   "objective": "cross-entropy language modelling plus MoE auxiliary load-balancing loss from GShard, coefficient 0.01",
+   "optimizer": "Adafactor, beta1=0, beta2=0.99 with 1 - t^-0.8 decay schedule, update clipping 1.0, factored second moments",
+   "lr": "0.01 initial",
+   "lr_schedule": "constant 0.01 for first 10K steps, then inverse square root decay (lr ~ 1/sqrt(t))",
+   "warmup": null,
+   "batch_size": "up to 1 million tokens per batch (packed examples)",
+   "steps": null,
+   "epochs": null,
+   "tokens": "largest model: results at 280B and 600B tokens (full run 600B per Sec 6.4; dataset 1.6T)",
+   "seq_len": "1024 tokens (maximum)",
+   "precision": "float32 weights, bfloat16 activations",
+   "weight_decay": null,
+   "dropout": "0",
+   "regularisation": "MoE auxiliary balancing loss; skip updates on NaN/Inf gradients; restart from earlier healthy checkpoint on instabilities",
+   "hardware": "1,024 Cloud TPU-v4 chips for the 64B/64E model",
+   "compute": "456 MWh for 600B tokens; 213 MWh for 280B tokens; PUE 1.11; 326W per TPU-v4 chip",
+   "wall_clock": "574 hours for the 280B-token run",
+   "seeds": null,
+   "other": {
+    "same_hparams": "same learning hyperparameters for all GLaM models",
+    "sharding": "2D sharding via GSPMD (Xu et al. 2021); experts with same index across layers on same device",
+    "architecture_mods": "per-layer relative positional bias from Transformer-XL; Gated Linear Unit with GELU in non-MoE feed-forward layers"
+   }
+  },
+  "inference": {
+   "decoding": "NLG tasks: beam search width 4; NLU: argmax of option log-likelihood normalized by option token length (non-normalized on ReCoRD and COPA); bias co-occurrence and toxicity: top-k sampling k=40",
+   "temperature": "1 for co-occurrence and toxicity sampling",
+   "top_p": null,
+   "max_tokens": "100 tokens per continuation (toxicity)",
+   "samples": "co-occurrence: 800 outputs per prompt; toxicity: 25 continuations for each of 10K prompts; benchmark runs not stated as repeated",
+   "prompting": "zero-shot: evaluate dev example directly; one/few-shot: random examples from task train set concatenated with two newlines between demonstration and eval example",
+   "retrieval": null,
+   "parameters": {
+    "experts_selected": "2 per token",
+    "few_shot_k": "task-dependent, Table 11 gives shots per task (e.g. 64 for TriviaQA, 1 for one-shot)"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "accuracy / exact match / F1",
+     "definition": "EM and F1 for generative tasks, accuracy for multiple choice, F1a for MultiRC; scores normalized to 0-100",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "average score",
+     "definition": "mean of per-dataset scores over NLG (8) or NLU (21) tasks, or all 29",
+     "unit": "points",
+     "higher_is_better": true
+    },
+    {
+     "name": "FLOPs per token",
+     "definition": "per-token prediction FLOPs",
+     "unit": "GFLOPs",
+     "higher_is_better": false
+    },
+    {
+     "name": "training energy",
+     "definition": "measured system power x chips x time x PUE",
+     "unit": "MWh",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "GPT-3 175B (numbers from Brown et al.)",
+    "GLaM dense 0.1B, 1.7B, 8B, 137B trained on the same data",
+    "Gopher, Megatron-NLG for reference",
+    "KG-FiD and Switch-C on TriviaQA"
+   ],
+   "protocol": "Single reported value per setting; no seeds, no confidence intervals; contamination analysis in App D"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "not released; mixture is proprietary"
+  },
+  "prompts": [
+   {
+    "purpose": "co-occurrence bias prompts",
+    "text": "{term} was very...",
+    "where": "Table 7"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training.lr",
+    "quote": "We keep the initial learning rate of 0.01 for the ﬁrst\n10K training steps, and then decay it with inverse square\nroot schedule",
+    "where": "Sec 5.2"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "GLaM (64B/64E) beats GPT-3 175B on average zero-shot accuracy over 29 tasks.",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg score",
+   "value": "62.7",
+   "unit": "avg accuracy",
+   "baseline_value": "56.9",
+   "n": null,
+   "setup": "29 public NLP tasks (21 NLU, 8 NLG), zero-shot, GLaM 64B/64E (1.2T total, 96.6B active) vs GPT-3 175B",
+   "note": "Table 1 prints the relative change as +10.2%",
+   "where": "Table 1",
+   "table": "Table 1, row Zero-shot, columns GPT-3 / GLaM"
+  },
+  {
+   "claim": "One-shot average over 29 tasks.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "65.5",
+   "unit": "avg accuracy",
+   "baseline_value": "61.6",
+   "n": null,
+   "setup": "As above, one-shot",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row One-shot, columns GPT-3 / GLaM"
+  },
+  {
+   "claim": "Few-shot average over 29 tasks.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "68.1",
+   "unit": "avg accuracy",
+   "baseline_value": "65.2",
+   "n": null,
+   "setup": "As above, few-shot",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Few-shot, columns GPT-3 / GLaM"
+  },
+  {
+   "claim": "GLaM needs about half the inference FLOPs per token of GPT-3.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "180",
+   "unit": "GFLOPs/token",
+   "baseline_value": "350",
+   "n": null,
+   "setup": "FLOPs per token prediction; GLaM 64B/64E vs GPT-3 175B",
+   "note": "Table 1 relative cost -48.6%",
+   "where": "Table 1",
+   "table": "Table 1, row FLOPs / token (G)"
+  },
+  {
+   "claim": "Training energy for the full 600B-token GLaM run is about a third of GPT-3's.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "456",
+   "unit": "MWh",
+   "baseline_value": "1287",
+   "n": null,
+   "setup": "GLaM 64B/64E after 600B tokens, 1,024 TPU-v4; GPT-3 figure from Patterson et al. 2021",
+   "note": null,
+   "where": "Sec 6.4",
+   "quote": "the GLaM (64B/64E) training after 600B tokens consumes 456 MWh, about 1/3 of the energy cost of 1287 MWh used by GPT-3"
+  },
+  {
+   "claim": "A GLaM run stopped at 280B tokens already matches GPT-3 and uses about 1/6 of its energy.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "213",
+   "unit": "MWh",
+   "baseline_value": "1287",
+   "n": null,
+   "setup": "1,024 TPU-v4 chips for 574 hours, 280B tokens, PUE 1.11, 326W measured per chip",
+   "note": null,
+   "where": "Sec 6.4, App F",
+   "quote": "we train using 1,024 TPU-v4 chips for 574 hours (with 280B tokens). This consumes 213 MWh or 1/6 of the GPT-3 energy cost"
+  },
+  {
+   "claim": "Carbon: 280B-token run emits 18.7 net tCO2e vs 552 for GPT-3; full 600B run 40.2.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "18.7",
+   "unit": "net tCO2e",
+   "baseline_value": "552",
+   "n": null,
+   "setup": "Net tCO2e per MWh 0.088; GPT-3 figure from Patterson et al. 2021",
+   "note": null,
+   "where": "App F",
+   "quote": "training GLaM with\n280B tokens emits a total of 18.7 net tCO2e, compared\nto 552 net tCO2e for GPT-3"
+  },
+  {
+   "claim": "GLaM (64B/64E) with 280B tokens beats GPT-3 (300B tokens) on 4 of 6 settings and matches it on the other.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Zero/one/few-shot, NLG and NLU averages, learning curves in Fig 4",
+   "note": null,
+   "where": "Sec 6.4",
+   "quote": "outperforms GPT-3 trained with\n300B tokens by large margins on 4 out of the 6 learning set-\ntings"
+  },
+  {
+   "claim": "GLaM one-shot TriviaQA open-domain (dev) beats GPT-3 one-shot.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "75.8",
+   "unit": "% EM",
+   "baseline_value": "68.0",
+   "n": null,
+   "setup": "TriviaQA dev, open-domain, no retrieved context",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row GLaM One-shot (dev) vs GPT-3 One-shot (dev)"
+  },
+  {
+   "claim": "GLaM one-shot on TriviaQA test server beats the previous finetuned SOTA KG-FiD and few-shot GPT-3.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "75.0",
+   "unit": "% EM",
+   "baseline_value": "69.8 (KG-FiD finetuned); 71.2 (GPT-3 64-shot)",
+   "n": null,
+   "setup": "TriviaQA open-domain, test server",
+   "note": "Text says exceeds finetuned SOTA 'by 8.6%' and GPT-3 'by 5.3%'; these match relative differences (75.8/69.8, 75.0/71.2), not points",
+   "where": "Table 5",
+   "table": "Table 5, row GLaM One-shot (test)"
+  },
+  {
+   "claim": "GLaM (64B/64E) 1-shot WinoGender accuracy is a new SOTA, beating GPT-3.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "71.7",
+   "unit": "% accuracy",
+   "baseline_value": "64.2",
+   "n": null,
+   "setup": "WinoGender full dataset, one-shot",
+   "note": null,
+   "where": "Sec 7.2",
+   "quote": "GLaM (64B/64E) achieves a new\nstate-of-the-art of 71.7% on the full dataset (compared to\n64.2% for GPT-3"
+  },
+  {
+   "claim": "WinoGender accuracy is near-equal for stereotypical and anti-stereotypical examples.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "71.7",
+   "unit": "% accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "WinoGender, one-shot, GLaM 64B/64E; 'he' 70.8, 'she' 72.5",
+   "note": null,
+   "where": "Sec 7.2",
+   "quote": "stereotyp-\nical examples (where the intended distribution is assumed\nto be close to the US occupation statistics, (Rudinger et al.,\n2018)) and anti-stereotypical (or ‘gotcha’) examples (both\n71.7%)"
+  },
+  {
+   "claim": "Filtered web data improves GLaM 1.7B/64E over unfiltered across NLG and NLU, more on NLG.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "1.7B/64E trained on original dataset vs filtered webpages replaced by unfiltered (143B vs ~7T tokens); mixture weights fixed",
+   "note": "Gain read from Fig 3 only; no table",
+   "where": "Sec 6.2, Fig 3c,d",
+   "quote": "The ﬁltered webpages consist of 143B tokens whereas the\nunﬁltered webpages consist of around 7T tokens."
+  },
+  {
+   "claim": "MoE and dense GLaM models perform similarly at small scale and MoE pulls ahead at larger scale for similar FLOPs per token.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Averages over 8 NLG and 21 NLU tasks, 0.1B to 64B/64E vs 137B dense",
+   "note": null,
+   "where": "Sec 6.3, Fig 3",
+   "quote": "similarly at smaller scales but MoE models outperform at"
+  },
+  {
+   "claim": "GLaM (64B/64E) beats the GLaM dense 137B in zero-shot average NLG and NLU, and beats GPT-3.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "54.6",
+   "unit": "avg NLG",
+   "baseline_value": "45.8 (dense 137B); 47.6 (GPT-3)",
+   "n": null,
+   "setup": "Zero-shot averages, Table 12",
+   "note": "Avg NLU 66.2 vs 63.2 (137B) vs 60.8 (GPT-3)",
+   "where": "Table 12",
+   "table": "Table 12, row Avg NLG, columns 64B/64E, 137B, 175B"
+  },
+  {
+   "claim": "With a fixed per-token compute budget, more experts per layer generally gives better scores.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "1.7B/1E up to 1.7B/256E, near-identical active params",
+   "note": null,
+   "where": "App B, Fig 6",
+   "quote": "for a ﬁxed budget of compu-\ntation per prediction, adding more experts generally leads\nto better predictive performance"
+  },
+  {
+   "claim": "Serving a trillion-parameter MoE needs many devices and costs more at low traffic.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Authors' discussion",
+   "note": null,
+   "where": "Sec 8",
+   "quote": "the sparsely\nactivated models consist of a higher number of pa-\nrameters and thus require a larger number of devices. This\nlimits the resource accessibility and increases the serving\ncost especially when the serving trafﬁc is low."
+  },
+  {
+   "claim": "Contamination: dirty example share varies widely (e.g. QuAC 0.01% clean, StoryCloze 0.0% clean); authors say overlap roughly matches prior work.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "0.01",
+   "unit": "% clean (QuAC)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Overlap = any n-gram collision with pretraining corpus; Table 6 covers the 28 GPT-3 shared datasets",
+   "note": "No clean-subset re-evaluation is reported in this paper",
+   "where": "App D",
+   "table": "Table 6, row Quac, column % clean"
+  }
+ ],
+ "limits": [
+  "Authors concede MoE needs many more devices and raises serving cost at low traffic (Sec 8)",
+  "Training steps, warmup, weight decay, seeds not stated; code, weights and data not released",
+  "Single run per configuration, no variance reported",
+  "GPT-3 numbers come from Brown et al.; energy of GPT-3 from Patterson et al. 2021, so the 1/3 and 1/6 comparisons rest on estimates made by others",
+  "Fig 4 caption says 9 NLG tasks while text says 8",
+  "Toxicity: even for low-toxicity prompts some of 25 continuations are likely toxic; RealToxicityPrompts is Reddit-based",
+  "Hyperparameter tuning was minimal ('little room for hyperparameter tuning')"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "GLaM (Base Dense Size/E)",
+   "definition": "architecture of an approximate dense model of that size with every other layer replaced by an E-expert MoE layer",
+   "where": "Sec 5.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Outrageously Large Neural Networks: Sparsely-Gated MoE",
+   "year": 2017,
+   "arxiv": "1701.06538",
+   "relation": "extends",
+   "note": "sparse MoE layer basis",
+   "quote": null
+  },
+  {
+   "work": "GShard",
+   "year": 2021,
+   "arxiv": "2006.16668",
+   "relation": "extends",
+   "note": "MoE Transformer design and auxiliary loss",
+   "quote": null
+  },
+  {
+   "work": "Switch Transformers",
+   "year": 2021,
+   "arxiv": "2101.03961",
+   "relation": "related",
+   "note": "trillion-parameter MoE encoder-decoder, compared on TriviaQA",
+   "quote": null
+  },
+  {
+   "work": "GPT-3 (Language Models are Few-Shot Learners)",
+   "year": 2020,
+   "arxiv": "2005.14165",
+   "relation": "baseline",
+   "note": "main comparison and evaluation suite",
+   "quote": null
+  },
+  {
+   "work": "Gopher",
+   "year": 2021,
+   "arxiv": "2112.11446",
+   "relation": "baseline",
+   "note": "reference results; toxicity method",
+   "quote": null
+  },
+  {
+   "work": "Adafactor",
+   "year": 2018,
+   "arxiv": "1804.04235",
+   "relation": "uses-method",
+   "note": "optimizer",
+   "quote": null
+  },
+  {
+   "work": "GSPMD (Xu et al.)",
+   "year": 2021,
+   "arxiv": "2105.04663",
+   "relation": "uses-method",
+   "note": "2D sharding",
+   "quote": null
+  },
+  {
+   "work": "Transformer-XL",
+   "year": 2019,
+   "arxiv": "1901.02860",
+   "relation": "uses-method",
+   "note": "relative positional bias",
+   "quote": null
+  },
+  {
+   "work": "Meena (Adiwardana et al.)",
+   "year": 2020,
+   "arxiv": "2001.09977",
+   "relation": "uses-data",
+   "note": "public social media conversations",
+   "quote": null
+  },
+  {
+   "work": "Patterson et al. carbon footprint",
+   "year": 2021,
+   "arxiv": "2104.10350",
+   "relation": "related",
+   "note": "source of GPT-3 energy numbers",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Percentage change of GLaM (64B/64E) vs GPT-3 across 7 categories and cost",
+   "page": 2,
+   "why": "shows gains per category and cost together"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "GLaM model architecture",
+   "page": 3,
+   "why": "top-2 routing of a token among 64 experts"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Learning efficiency comparison vs tokens and TPU years",
+   "page": 7,
+   "why": "shows data and compute efficiency of MoE vs dense"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Table 4 text extraction scrambled the layers column for MoE rows; read as best as possible",
+  "Fig 4 caption says 9 NLG tasks, body says 8",
+  "Table 11 few-shot GLaM column and GPT-3 column are shot-counts in parentheses; first column Gopher/Megatron few-shot values mixed"
+ ]
+}

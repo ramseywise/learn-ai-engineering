@@ -1,19 +1,398 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "1705.04146",
  "pdf": "ai-engineering/01-prompt-engineering/sources/wang-2017-program-induction-rationale-generation.pdf",
  "bib": {
   "title": "Program Induction by Rationale Generation: Learning to Solve and Explain Algebraic Word Problems",
-  "first_author": "Wang",
+  "authors": [
+   "Wang Ling",
+   "Dani Yogatama",
+   "Chris Dyer",
+   "Phil Blunsom"
+  ],
+  "first_author": "Ling",
   "year": 2017,
-  "venue": "ACL (1) 2017",
+  "venue": "ACL 2017 (55th Annual Meeting, pages 158-167)",
   "arxiv": "1705.04146",
-  "doi": null
+  "doi": "10.18653/v1/P17-1015"
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-04",
-  "session": "5cfd23c4-1604-4533-96a3-ace4b4e9da63"
+  "at": "2026-11-07",
+  "chars_read": 40431,
+  "chars_total": 40431,
+  "engine": "pymupdf",
+  "skipped": "References skimmed only; no appendix exists"
  },
- "legacy_report": "SOURCE: \"Program Induction by Rationale Generation: Learning to Solve and Explain Algebraic Word Problems\", Wang Ling, Dani Yogatama, Chris Dyer, Phil Blunsom (DeepMind; Blunsom also Oxford). Proceedings of ACL 2017 (55th Annual Meeting), pages 158–167, doi 10.18653/v1/P17-1015. The first author is Wang Ling (given name Wang, surname Ling), so the cite should read \"Ling et al., 2017\". The filename `wang-2017-...` uses the given name by mistake. The paper never uses the name \"AQuA\" (it only says \"a new dataset\"). That name comes from the released dataset, not from this text.\n\nCOVERAGE: 40,338 of 40,338 chars read, which is all 10 pages: main text, Tables 1–3, Figures 1–4 and the references. There is no appendix. I skimmed the references.\n\nCLAIMS\n- claim: A sequence-to-sequence model that generates a natural-language rationale and then picks the answer reaches 36.4% accuracy. The plain and copy-augmented seq2seq baselines stay near chance (20%).\n  number: 36.4 vs 20.8 / 20.4 / 20.2\n  setup: 250-question test set, 5-option multiple-choice algebra word problems. Baselines are attention seq2seq (Bahdanau 2014), the same with input copy (Ling 2016), and the same with output copy (Merity 2016). All baselines also generate rationales. This is a 2-layer LSTM with hidden size 200, beam 200 and a 20k vocabulary.\n  quote: \"Seq2Seq 524.7 8.57 20.8 / +Copy Input 46.8 21.3 20.4 / +Copy Output 45.9 20.6 20.2 / Our Model 28.5 27.2 36.4\" (Table 3: Perplexity, BLEU, Accuracy); \"all baseline models obtain values close to chance (20%), indicating that they are completely unable to solve the problem\"\n  where: p.7 (Table 3), around chars 31,000–34,000\n- claim: Rationale quality: BLEU-4 is 27.2 for the program model vs 8.57 to 21.3 for the baselines, and perplexity is 28.5 vs 45.9 to 524.7.\n  number: BLEU 27.2; perplexity 28.5\n  setup: same test set; average sentence-level perplexity plus BLEU-4\n  quote: \"Our Model 28.5 27.2 36.4\"\n  where: p.7 Table 3\n- claim: There is NO with-vs-without-rationale accuracy ablation. The paper only states in prose that its learner fails without rationales, because the program search space is too unconstrained.\n  number: none\n  setup: the heuristic program search of §4\n  quote: \"In fact the learner we propose (which relies on a heuristic search;§4) fails to solve this task without modeling the rationales—the search space is too unconstrained.\"\n  where: p.1, Introduction\n- claim: The rationale is generated before the answer and acts as a latent variable that produces the answer. The authors contrast this with post-hoc explanations, which come after the decision and need not be accurate. This is the claim that ties the paper to chain-of-thought origins.\n  number: none\n  setup: conceptual\n  quote: \"In this work, the rationale is generated as a latent variable that gives rise to the answer—it is thus a more faithful representation of the steps used in computing the answer.\"; \"Hendricks et al. (2016) ... first generate an answer, and then, conditional on the answer, generate an explanation. This effectively creates a post-hoc justification\"\n  where: p.1 Introduction; p.9 Related Work\n- claim: Step-by-step rationales make each step cheap to generate. Producing the final answer with no rationale would require a long chain of latent instructions.\n  number: none\n  setup: conceptual motivation for the search\n  quote: \"we assume that the rationale solves the problem step by step... while generating the ﬁnal answer without the rationale requires a long sequence of latent instructions, generating each of the tokens of the rationale requires far less operations.\"\n  where: p.6, §4\n- claim: The dataset has about 100k multiple-choice algebra problems, each with question, options, a natural-language rationale and the correct option.\n  number: 104,519 collected (34,202 seed + 70,318 crowdsourced); 100,949 train / 250 dev / 250 test\n  setup: seed problems from GMAT/GRE-style web material; the rest were written by Mechanical Turk workers modelled on the seeds; held-out near-duplicates were removed by character Levenshtein distance\n  quote: \"In total, we collected 104,519 problems (34,202 seed problems and 70,318 crowdsourced problems). We removed 500 problems as heldout set (250 for development and 250 for testing)... After ﬁltering, 100,949 problems remained in the training set.\"\n  where: p.3, §2.2\n- claim: Rationales are longer than questions: about 105.7 vs 77.4 tokens on average. Most examples are 30 to 500 tokens, and some exceed 1000.\n  number: 105.7 / 77.4\n  setup: Table 1 (All Average Length, Question vs Rationale)\n  quote: \"All Average Length 77.4 105.7\"; \"most examples consist of 30 to 500 tokens, but there are also extremely long examples with more than 1000 tokens\"\n  where: p.3\n- claim: The output y is the rationale, then an end-of-rationale tag, then the option letter. The answer is decoded only after the rationale, and once ⟨EOR⟩ appears the decoder is constrained to A–E.\n  number: none\n  setup: model formulation\n  quote: \"We also append the correct option as the last word in y, which is interpreted as the chosen option.\"; \"once the “⟨EOR⟩” tag is generated, we only allow instructions that would generate one of the option “A” to “E”\"\n  where: p.3 §3.1; p.6 Decoding\n- claim: The model emits a program of 22 operations. 13 are math operations (Add, Divide, Choose, Log, ...), and Check maps a value to an option letter. Execution writes either to the output text or to a memory buffer.\n  number: 22 operations, 13 math\n  setup: model design\n  quote: \"In total we deﬁne 22 different operations, 13 of which are frequently used operations when solving math problems.\"\n  where: p.4\n- claim: Only simple one- or two-step problems are solved correctly.\n  number: none\n  setup: qualitative analysis of the test set\n  quote: \"In general, the problems we solve correctly correspond to simple problems that can be solved in one or two operations.\"\n  where: p.8\n- claim: The authors say their model doubles the baseline's accuracy.\n  number: \"doubles\" (36.4 vs about 20)\n  setup: same test set\n  quote: \"state-of-the-art sequence to sequence models are unable to perform above chance on this task, but that our model doubles the accuracy of the baseline\"\n  where: p.2\n\nLIMITS\n- There is no ablation of answer accuracy with vs without rationales. The \"fails without rationales\" claim is stated, not tabulated.\n- The test set is only 250 questions, with no variance or significance reported.\n- Accuracy of 36.4% is low in absolute terms. The authors concede: \"generating complex rationales as those shown in Figure 1 correctly is still an unsolved problem\".\n- The work uses supervised training on human-written rationales with small LSTMs. It involves no prompting, no few-shot exemplars and no large pretrained LM, so it is an ancestor of chain-of-thought, not CoT prompting itself. The 2017 seq2seq/LSTM setup is dated.\n- The program search allows only one level of indirection, i.e. one intermediate memory value per output token.\n- The perplexity comparison favours the baselines in one respect (unknown tokens are predicted for them), and the authors note this.\n- Dataset quality control was a manual check of a subset of crowd jobs. The authors note that some workers copied web problems, which they detected through nearest neighbours.\n\nBUILDS ON\n- Bahdanau et al., 2014 (attention seq2seq) and Sutskever et al., 2014 (seq2seq)\n- Ling et al., 2016 (latent predictor networks / input copy); Vinyals et al., 2015 (pointer networks); Merity et al., 2016 (output copy)\n- Word-problem solvers: Hosseini et al., 2014; Kushman et al., 2014; Roy and Roth, 2015; Roy et al., 2016\n- Program induction and semantic parsing: Liang et al., 2016; Neelakantan et al., 2016; Reed and de Freitas, 2016; Graves et al., 2016\n- Explanations and rationales: Hendricks et al., 2016 (post-hoc visual explanations); Harrison et al., 2017; Lei et al., 2016 (\"Rationalizing neural predictions\")\n- Metric: Papineni et al., 2002 (BLEU)\n\nCODE: none. The paper has only the formulas and an example output sequence: \"Let the ... = 3/2 .⟨EOR⟩ B⟨EOS⟩\" (p.3, §3.1). This shows the rationale-then-answer target format and could be quoted.\n\nFIGURES\n- Figure 1, p.2: \"Examples of solved math problems.\" It shows three question/options/rationale/correct-option examples. This is the best single figure for showing what a \"natural-language rationale before the answer\" looks like.\n- Figure 4, p.9: \"Illustration of the most likely latent program inferred by our algorithm to explain a held-out question-rationale pair.\" It shows a capsule-cost problem with its rationale text aligned to div/sub/check operations. It shows how rationale steps line up with computation.\n- Figure 3, p.5: the per-instruction generation network. This is architecture detail and is probably not needed for a prompting note.\n- Table 3, p.7: the results table, compact enough to reproduce.\n\nPROBLEMS\n- Extraction is clean apart from ligatures (ﬁ) and repeated header lines. No embedded instructions were found.\n- Author/filename mismatch: the first author is Wang Ling (surname Ling). The cite key should be Ling et al. 2017, and the filename `wang-2017-...` is misleading.\n- The text says statistics are shown \"in Figure 1\", but they are actually in Table 1. This is an error in the source.\n- The name \"AQuA\" does not appear in the paper.\n\nFile read: /Users/ramsey-wise/workspace/learn-ai-engineering/ai-engineering/01-prompt-engineering/sources/wang-2017-program-induction-rationale-generation.pdf"
+ "type": "empirical",
+ "question": "Can a model learn to solve algebraic word problems by generating a natural-language answer rationale together with the arithmetic program that produces it, when only question, rationale and answer are given?",
+ "hypothesis": "Indirect supervision of program learning via answer rationales makes program induction feasible, where inducing programs directly from question-answer pairs is not.",
+ "contributions": [
+  "A new dataset of more than 100,000 algebraic word problems with answers and natural-language rationales",
+  "A sequence-to-sequence model that generates instructions which, when executed, produce the rationale, and only then chooses the answer",
+  "A technique (heuristic search guided by the rationale) for inferring programs that generate a rationale and the answer"
+ ],
+ "method": {
+  "summary": "A 2-layer LSTM decoder emits a latent program of typed instructions (operation, destination, arguments) that is executed to write the rationale tokens and the final option letter. Programs are unobserved, so the model maximises the probability of sampled programs that reproduce the rationale, with rationale-guided heuristic filtering and staged back-propagation.",
+  "task": "multiple-choice algebra word problem solving with rationale generation",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Algebra word problem dataset (not named in the paper)",
+    "role": "both",
+    "size": "104,519 problems collected (34,202 seed + 70,318 crowdsourced); 100,949 train, 250 dev, 250 test",
+    "split": "100,949 / 250 / 250",
+    "source": "Seed problems from GMAT/GRE-style exam sites with rationales; further questions written by Mechanical Turk workers who rewrote one of 5 seed questions; licence not stated",
+    "preprocessing": "Replicas of the 500 heldout problems removed from training manually using character-level Levenshtein nearest neighbours; avg tokens question+options+rationale: question 77.4, rationale 105.7; vocab 38,858 / 39,779"
+   }
+  ],
+  "models": [
+   {
+    "name": "Program-generating seq2seq (Our Model)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "2-layer LSTM encoder-decoder, pointer-network copy from input and from output/memory via latent predictor network, 22 executable operations",
+    "init_from": null,
+    "tokenizer": "word-level",
+    "vocab": "20,000 most frequent word types, rest unknown",
+    "layers": "2",
+    "hidden": "200",
+    "heads": null,
+    "context": null,
+    "other": {
+     "word embedding size": "200",
+     "operations": "22, of which 13 frequent math ops (Id, Add, Subtract, Multiply, Divide, Power, Log, Sqrt, Sine, Cosine, Tangent, Factorial, Choose)",
+     "graph expansion depth D": "5"
+    }
+   },
+   {
+    "name": "Seq2Seq (Bahdanau et al. 2014), +Copy Input (Ling et al. 2016), +Copy Output (Merity et al. 2016)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "attention seq2seq with optional copy",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "baseline sizes not stated separately"
+    }
+   }
+  ],
+  "training": {
+   "objective": "maximise sum of p(z|x) over sampled programs z in Z^(y) that execute to the reference rationale y (approximate marginal likelihood)",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "staged back-propagation": "slices of K tokens of z (example K=100 for |z|=300); K value used in experiments not stated",
+    "program search": "heuristic filter keeps instructions with at most one level of indirection (one intermediate value in memory)"
+   }
+  },
+  "inference": {
+   "decoding": "beam search, beam 200; stack-based decoder; hypotheses that fail on execution (e.g. log(0)) removed; after <EOR> only option letters A-E allowed",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single run; number of seeds not stated",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {
+    "perplexity": "model force-decoded to the reference rationale, taking the most likely program"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Perplexity",
+     "definition": "average sentence-level perplexity of the rationale; unknown token predicted when a model cannot generate a token",
+     "unit": "perplexity",
+     "higher_is_better": false
+    },
+    {
+     "name": "BLEU",
+     "definition": "BLEU-4 between generated and reference rationale",
+     "unit": "BLEU-4",
+     "higher_is_better": true
+    },
+    {
+     "name": "Accuracy",
+     "definition": "percentage of questions where chosen option matches correct option",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Seq2Seq (Bahdanau 2014)",
+    "+Copy Input (Ling 2016)",
+    "+Copy Output (Merity 2016)"
+   ],
+   "protocol": "single evaluation on the 250-example test set; no seeds or significance test stated; chance is 20%"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "inferred: dataset is the paper's contribution, but no release URL is given in the text"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "models[0].hidden",
+    "quote": "We used a two-layer LSTM with a hidden size of H = 200, and word embeddings with size 200.",
+    "where": "6.2"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "The program-generating model reaches 36.4% accuracy while the three seq2seq baselines stay near the 20% chance level.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Accuracy",
+   "value": 36.4,
+   "unit": "%",
+   "baseline_value": "20.8 (Seq2Seq), 20.4 (+Copy Input), 20.2 (+Copy Output)",
+   "n": null,
+   "setup": "250-question test set, 5-option multiple-choice algebra word problems, 100,949 training problems; baselines also generate rationales",
+   "quote": null,
+   "table": "Table 3, row Our Model, column Accuracy",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Baselines are near chance.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Accuracy",
+   "value": 20.8,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "250-question test set, 5-option multiple-choice algebra word problems, 100,949 training problems, plain attention Seq2Seq",
+   "quote": "all baseline models obtain values close to chance (20%), indicating that they are completely unable to solve the problem",
+   "table": "Table 3, row Seq2Seq, column Accuracy",
+   "note": null,
+   "where": "6.4"
+  },
+  {
+   "claim": "The model has the lowest rationale perplexity.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Perplexity",
+   "value": 28.5,
+   "unit": "perplexity",
+   "baseline_value": "524.7 (Seq2Seq), 46.8 (+Copy Input), 45.9 (+Copy Output)",
+   "n": null,
+   "setup": "250-question test set, 5-option multiple-choice algebra word problems, 100,949 training problems",
+   "quote": null,
+   "table": "Table 3, row Our Model, column Perplexity",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "The model has the highest rationale BLEU-4.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": 27.2,
+   "unit": "BLEU-4",
+   "baseline_value": "8.57 (Seq2Seq), 21.3 (+Copy Input), 20.6 (+Copy Output)",
+   "n": null,
+   "setup": "250-question test set, 5-option multiple-choice algebra word problems, 100,949 training problems",
+   "quote": null,
+   "table": "Table 3, row Our Model, column BLEU",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Correct answers are mostly simple problems solvable in one or two operations; complex rationales remain unsolved.",
+   "kind": "claim",
+   "source": null,
+   "metric": "qualitative",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "250-question test set, 5-option multiple-choice algebra word problems, 100,949 training problems",
+   "quote": "In general, the problems we solve correctly correspond to simple problems that can be solved in one or two operations.",
+   "table": null,
+   "note": null,
+   "where": "6.4"
+  },
+  {
+   "claim": "The learner fails without rationales because the program search space is too unconstrained (asserted, no ablation reported).",
+   "kind": "claim",
+   "source": null,
+   "metric": "qualitative",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "heuristic search of section 4",
+   "quote": "the learner we propose (which relies on a heuristic search;§4) fails to solve this task without modeling the rationales—the search space is too unconstrained.",
+   "table": null,
+   "note": null,
+   "where": "1"
+  },
+  {
+   "claim": "The rationale is a latent variable giving rise to the answer, argued to be more faithful than post-hoc explanations.",
+   "kind": "claim",
+   "source": null,
+   "metric": "qualitative",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "design argument, no faithfulness measurement",
+   "quote": "the rationale is generated as a latent variable that gives rise to the answer—it is thus a more faithful representation of the steps used in computing the answer.",
+   "table": null,
+   "note": null,
+   "where": "1"
+  },
+  {
+   "claim": "Dataset size: 104,519 problems collected, 100,949 remain in training after filtering.",
+   "kind": "measured",
+   "source": null,
+   "metric": "problems",
+   "value": 104519,
+   "unit": "problems",
+   "baseline_value": null,
+   "n": null,
+   "setup": "dataset construction",
+   "quote": "In total, we collected 104,519 problems (34,202 seed problems and 70,318 crowdsourced problems).",
+   "table": null,
+   "note": null,
+   "where": "2.2"
+  }
+ ],
+ "limits": [
+  "Authors concede that generating complex multi-step rationales correctly is still unsolved.",
+  "No ablation of rationale vs no rationale accuracy; the claim is prose only.",
+  "Single run on a 250-question test set; no seeds, confidence intervals or significance test.",
+  "Optimizer, learning rate, batch size, epochs, K for staged backprop and hardware are not stated.",
+  "Dataset is not named in the text and no release link is given.",
+  "Small LSTMs trained from scratch with supervised rationales; not prompting of pretrained LMs."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "staged back-propagation",
+   "definition": "training on slices of K tokens of the program z to save memory, while the hidden state sequence h is still built for the whole sequence",
+   "where": "5"
+  },
+  {
+   "term": "replica problems",
+   "definition": "crowdsourced problems where the natural language of question and rationale is only minimally altered from the seed",
+   "where": "2.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Neural machine translation by jointly learning to align and translate (Bahdanau et al.)",
+   "year": 2014,
+   "arxiv": "1409.0473",
+   "relation": "baseline",
+   "note": "attention seq2seq baseline",
+   "quote": null
+  },
+  {
+   "work": "Latent predictor networks for code generation (Ling et al.)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "latent variable choosing softmax/copy; also the input-copy baseline",
+   "quote": null
+  },
+  {
+   "work": "Pointer sentinel mixture models (Merity et al.)",
+   "year": 2016,
+   "arxiv": "1609.07843",
+   "relation": "baseline",
+   "note": "output-copy baseline",
+   "quote": null
+  },
+  {
+   "work": "Pointer networks (Vinyals et al.)",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "copy mechanism",
+   "quote": null
+  },
+  {
+   "work": "Solving general arithmetic word problems (Roy and Roth)",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "related",
+   "note": "program/operation sequence approach to word problems",
+   "quote": null
+  },
+  {
+   "work": "Learning to automatically solve algebra word problems (Kushman et al.)",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "related",
+   "note": "template plus equation solver",
+   "quote": null
+  },
+  {
+   "work": "Generating visual explanations (Hendricks et al.)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "related",
+   "note": "post-hoc explanation after answer, contrasted",
+   "quote": null
+  },
+  {
+   "work": "Neural symbolic machines (Liang et al.)",
+   "year": 2016,
+   "arxiv": "1611.00020",
+   "relation": "related",
+   "note": "analogous search problem without supervision",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Examples of solved math problems.",
+   "page": 2,
+   "why": "shows question, options, rationale, correct option format"
+  },
+  {
+   "figure": "Table 2",
+   "caption": "Example of a program z that would generate the output y.",
+   "page": 4,
+   "why": "shows how Id, Str_to_Float, Choose instructions write to output or memory"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Illustration of the most likely latent program inferred by our algorithm to explain a held-out question-rationale pair.",
+   "page": 7,
+   "why": "worked program graph"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "The paper never names the dataset (later called AQuA); filename uses given name Wang instead of family name Ling.",
+  "Section 2.2 says statistics are in Figure 1; it is Table 1."
+ ]
 }

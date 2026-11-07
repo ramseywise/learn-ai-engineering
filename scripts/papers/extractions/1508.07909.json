@@ -1,0 +1,125 @@
+{
+ "schema": 1,
+ "key": "1508.07909",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/sennrich-2016-neural-machine-translation-rare-words.pdf",
+ "bib": {
+  "title": "Neural Machine Translation of Rare Words with Subword Units",
+  "authors": ["Rico Sennrich", "Barry Haddow", "Alexandra Birch"],
+  "first_author": "Sennrich",
+  "year": 2016,
+  "venue": "Proceedings of the 54th Annual Meeting of the Association for Computational Linguistics, pages 1715-1725",
+  "arxiv": "1508.07909",
+  "doi": null
+ },
+ "read": {"by": "source-reader", "at": "2026-11-07", "chars_read": 46672, "chars_total": 46672, "engine": "pymupdf", "skipped": null},
+ "type": "empirical",
+ "question": "Can an NMT model translate rare and unseen words without a back-off dictionary by representing them as subword units, and which segmentation works best?",
+ "hypothesis": "A segmentation of rare words into appropriate subword units is sufficient for the network to learn transparent translations and generalize to unseen words.",
+ "contributions": [
+  "Open-vocabulary NMT is possible by encoding (rare) words via subword units, simpler and more effective than large vocabularies and back-off dictionaries.",
+  "Adapts byte pair encoding (BPE) to word segmentation, giving an open vocabulary through a fixed-size vocabulary of variable-length character sequences."
+ ],
+ "method": {
+  "summary": "Attention-based GRU encoder-decoder NMT (Groundhog) trained on WMT15 En-De and En-Ru with different segmentations: word-level with or without back-off dictionary, character bigrams with shortlist, and BPE (separate or joint). BPE learns merges over the character-level word frequency dictionary, number of merges being the only hyperparameter.",
+  "task": "neural machine translation (English to German, English to Russian), open-vocabulary segmentation",
+  "trains": true,
+  "datasets": [
+   {"name": "WMT 2015 English-German", "role": "train", "size": "4.2 million sentence pairs, approximately 100 million tokens", "split": "dev newstest2013; test newstest2014 and newstest2015", "source": "WMT 2015 shared translation task; primarily parliamentary proceedings and web crawl", "preprocessing": "tokenized and truecased with Moses scripts"},
+   {"name": "WMT 2015 English-Russian", "role": "train", "size": "2.6 million sentence pairs, approximately 50 million tokens", "split": "dev newstest2013; test newstest2014 and newstest2015", "source": "WMT 2015 shared translation task", "preprocessing": "tokenized and truecased with Moses scripts; Russian transliterated to Latin with ISO-9 for joint BPE learning, merges transliterated back to Cyrillic"}
+  ],
+  "models": [
+   {"name": "Groundhog attention encoder-decoder (Bahdanau et al. 2015)", "role": "proposed", "params": null, "architecture": "bidirectional GRU encoder, GRU decoder with single-layer feedforward alignment model", "init_from": null, "tokenizer": "BPE (59 500 merges separate, 89 500 joint) or char-bigram", "vocab": "BPE-60k: 60 000 source/target; BPE-J90k: 90 000 source/target (100 000 target for En-Ru); C2-50k: 60 000", "layers": null, "hidden": "1000", "heads": null, "context": null, "other": {"embedding_size": "620", "shortlist_tau": "30000 words in memory", "fixed embedding layer fine-tune": "12 hours, as suggested by Jean et al. 2015"}},
+   {"name": "WDict", "role": "baseline", "params": null, "architecture": "word-level, 300 000 source / 500 000 target vocab, back-off dictionary from fast-align", "init_from": null, "tokenizer": "words", "vocab": "300 000 source, 500 000 target", "layers": null, "hidden": "1000", "heads": null, "context": null, "other": {}},
+   {"name": "WUnk", "role": "baseline", "params": null, "architecture": "word-level, no back-off dictionary, UNK for OOV", "init_from": null, "tokenizer": "words", "vocab": "300 000 source, 500 000 target", "layers": null, "hidden": "1000", "heads": null, "context": null, "other": {}},
+   {"name": "syntax-based SMT (Sennrich and Haddow 2015) / phrase-based (Haddow et al. 2015)", "role": "baseline", "params": null, "architecture": "non-neural MT", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}}
+  ],
+  "training": {
+   "objective": null,
+   "optimizer": "Adadelta (Zeiler, 2012)",
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "minibatch size of 80",
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": "none used",
+   "regularisation": "gradient clipping cut-off 5.0 and 1.0 (two independent runs)",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": "approximately 7 days, then last 4 saved models (saved every 12 hours) each trained 12 hours more with fixed embedding layer",
+   "seeds": "two independent runs per model (clipping 5.0 and 1.0), 4 checkpoints each = 8 models; seed values not stated",
+   "other": {"training set reshuffled between epochs": true, "objective": "inferred: maximum likelihood on parallel corpus with stochastic gradient descent, as in Bahdanau et al."}
+  },
+  "inference": {
+   "decoding": "beam search, beam size 12, probabilities normalized by sentence length",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single system = best of 8 on newstest2013; ensemble of all 8 models",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {"dictionary_softmax_filter": "K = 30000; K' = 10 (fast-align dictionary used for all experiments to speed up translation)", "bpe_merges": "59 500 (separate) and 89 500 (joint)"},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "BLEU", "definition": "mteval-v13a.pl", "unit": "BLEU", "higher_is_better": true},
+    {"name": "CHRF3", "definition": "character n-gram F3 score (Popovic 2015)", "unit": "CHRF3 score", "higher_is_better": true},
+    {"name": "unigram F1", "definition": "harmonic mean of clipped unigram precision and recall, reported for all, rare (not among top 50 000 in training) and OOV (not in training) words", "unit": "%", "higher_is_better": true}
+   ],
+   "baselines": ["WUnk", "WDict", "syntax-based SMT (En-De)", "phrase-based (En-Ru)", "C2-50k character bigrams with 50 000 shortlist"],
+   "protocol": "newstest2015 reported; single = best of 8 on dev, plus ensemble of 8; no significance test; authors note up to 1 BLEU variation between models on dev"
+  },
+  "availability": {"code": "https://github.com/rsennrich/subword-nmt", "weights": null, "data": "WMT 2015 public data"},
+  "prompts": [],
+  "evidence": [
+   {"field": "training.dropout", "quote": "also report strong improvements from applying dropout, which we did not use", "where": "Section 4.2"}
+  ]
+ },
+ "results": [
+  {"claim": "Abstract: subword models improve over a back-off dictionary baseline by up to 1.1 BLEU on En-De and 1.3 BLEU on En-Ru.", "kind": "measured", "source": null, "metric": "BLEU gain over WDict", "value": "up to 1.1 (En-De), up to 1.3 (En-Ru)", "unit": "BLEU", "baseline_value": null, "n": null, "setup": "WMT15 newstest2015, ensembles of 8; the 1.1 on En-De comes from the char-bigram system C2-50k (25.3 vs 24.2), not BPE", "quote": "by up to 1.1 and 1.3 BLEU, respectively", "table": null, "note": "Table 2: BPE-J90k ens-8 24.7 vs WDict 24.2 = 0.5 BLEU; BPE-60k 24.5 = 0.3. Table 3: BPE-J90k 24.1 vs 22.8 = 1.3.", "where": "Abstract; Tables 2-3"},
+  {"claim": "En-De BLEU ensembles: C2-50k 25.3 is best; BPE-J90k 24.7, BPE-60k 24.5, WDict 24.2, WUnk 22.8.", "kind": "measured", "source": null, "metric": "BLEU ens-8", "value": "24.7", "unit": "BLEU", "baseline_value": "24.2", "n": null, "setup": "En-De newstest2015, BPE-J90k ensemble of 8 vs WDict", "quote": null, "table": "Table 2, row BPE-J90k, column BLEU ens-8", "note": null, "where": "Table 2"},
+  {"claim": "En-Ru BPE-J90k gives 1.3 BLEU and 2.0 CHRF3 over WDict.", "kind": "measured", "source": null, "metric": "BLEU gain", "value": "1.3", "unit": "BLEU", "baseline_value": null, "n": null, "setup": "En-Ru newstest2015, ensemble of 8", "quote": "BPE-J90k yields an improvement of\n1.3 BLEU, and 2.0 CHRF3, over WDict", "table": null, "note": null, "where": "Section 4.2"},
+  {"claim": "Rare-word unigram F1 improves from 36.8% (WDict) to 41.8% (BPE-J90k) for En-De.", "kind": "measured", "source": null, "metric": "unigram F1 rare", "value": "41.8", "unit": "%", "baseline_value": "36.8", "n": 2900, "setup": "En-De newstest2015 ensembles", "quote": "36.8%→41.8% for EN→DE", "table": null, "note": null, "where": "Section 4.2"},
+  {"claim": "Rare-word unigram F1 improves from 26.5% to 29.7% for En-Ru.", "kind": "measured", "source": null, "metric": "unigram F1 rare", "value": "29.7", "unit": "%", "baseline_value": "26.5", "n": 5442, "setup": "En-Ru newstest2015 ensembles", "quote": "26.5%→29.7% for EN→RU", "table": null, "note": null, "where": "Section 4.2"},
+  {"claim": "German training corpus (about 100m tokens): BPE gives 112m tokens, 63 000 types, 0 UNK on newstest2013; unsegmented has 1 750 000 types.", "kind": "measured", "source": null, "metric": "types", "value": "63 000", "unit": "types", "baseline_value": "1 750 000", "n": null, "setup": "German side of En-De training data, 59 500 merges", "quote": null, "table": "Table 1, row BPE, column # types", "note": null, "where": "Table 1"},
+  {"claim": "Joint BPE (89 500 ops) gives 111m tokens, 82 000 types, 32 UNK.", "kind": "measured", "source": null, "metric": "types", "value": "82 000", "unit": "types", "baseline_value": null, "n": null, "setup": "German training data", "quote": null, "table": "Table 1, row BPE (joint), column # types", "note": null, "where": "Table 1"},
+  {"claim": "Characters give 550m tokens and 3000 types; character bigrams 306m tokens, 20 000 types.", "kind": "measured", "source": null, "metric": "tokens", "value": "550 m", "unit": "tokens", "baseline_value": "100 m", "n": null, "setup": "German training data", "quote": null, "table": "Table 1, row characters, column # tokens", "note": null, "where": "Table 1"},
+  {"claim": "In 100 rare German training tokens, 56 were compounds and 21 names.", "kind": "measured", "source": null, "metric": "count of 100", "value": "56 compounds, 21 names", "unit": "tokens", "baseline_value": null, "n": 100, "setup": "rare tokens not among the 50 000 most frequent types", "quote": "We find 56 compounds,\n21 names", "table": null, "note": "Text uses ligature 'find' in PDF", "where": "Section 3"},
+  {"claim": "Subword ensembles beat WDict by 0.3-1.3 BLEU and 0.6-2 CHRF3.", "kind": "measured", "source": null, "metric": "BLEU gain range", "value": "0.3-1.3", "unit": "BLEU", "baseline_value": null, "n": null, "setup": "both language pairs, ensembles", "quote": "outperform the WDict baseline by 0.3–1.3 BLEU and\n0.6–2 CHRF3", "table": null, "note": null, "where": "Section 4.2"},
+  {"claim": "Reducing vocabulary and representing more words via subwords can improve performance: C2-3/500k degrades between ranks 50 000 and 500 000 while C2-50k stays stable.", "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "En-De newstest2015 unigram F1 by training frequency rank (Fig 2)", "quote": null, "table": null, "note": null, "where": "Section 5.1"}
+ ],
+ "limits": [
+  "Vocabulary size choice is 'somewhat arbitrary, and mainly motivated by comparison to prior work'; optimal size left to future work.",
+  "Performance variability: up to 1 BLEU difference between models on dev; single-system numbers are best-of-8 on dev; no significance tests.",
+  "No dropout used; Luong et al. (2015a) report 25.9 BLEU on newstest2015 with an 8-model ensemble.",
+  "BLEU and CHRF3 disagree on best En-De system (C2-50k by BLEU, BPE-J90k by CHRF3).",
+  "Only two language pairs and one architecture (GRU attention RNN, pre-Transformer); BPE-60k suffers from inconsistent source/target segmentation.",
+  "Rare and OOV words are only 9-11% of the test sets, so BLEU may underestimate the effect."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "joint BPE", "definition": "learning the encoding on the union of the source and target vocabularies (in practice, concatenating both sides of the training set)", "where": "Section 3.2"},
+  {"term": "UNK vs OOV", "definition": "UNK for words outside the model vocabulary, OOV for those that do not occur in the training text", "where": "footnote 12"}
+ ],
+ "lineage": [
+  {"work": "Neural Machine Translation by Jointly Learning to Align and Translate", "year": 2015, "arxiv": "1409.0473", "relation": "extends", "note": "architecture followed", "quote": null},
+  {"work": "A New Algorithm for Data Compression (Gage)", "year": 1994, "arxiv": null, "relation": "uses-method", "note": "byte pair encoding adapted to word segmentation", "quote": null},
+  {"work": "On Using Very Large Target Vocabulary for NMT (Jean et al.)", "year": 2015, "arxiv": "1412.2007", "relation": "baseline", "note": "large-vocab with dictionary back-off; shortlist settings followed", "quote": null},
+  {"work": "Addressing the Rare Word Problem in NMT (Luong et al.)", "year": 2015, "arxiv": "1410.8206", "relation": "baseline", "note": "back-off dictionary", "quote": null},
+  {"work": "Character-based Neural Machine Translation (Ling et al.)", "year": 2015, "arxiv": "1511.04586", "relation": "related", "note": "parallel effort, no significant improvement over word-based", "quote": null},
+  {"work": "WMT 2015 shared task data", "year": 2015, "arxiv": null, "relation": "uses-data", "note": "En-De, En-Ru", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Table 2", "caption": "English-German translation performance (BLEU, CHRF3 and unigram F1) on newstest2015.", "page": 1720, "why": "shows C2-50k beats BPE on BLEU for En-De"},
+  {"figure": "Figure 2", "caption": "English-German unigram F1 on newstest2015 plotted by training set frequency rank for different NMT systems.", "page": 1722, "why": "shows subword advantage beyond rank 50 000"}
+ ],
+ "code": [
+  {"where": "Algorithm 1", "snippet": "for i in range(num_merges):\n    pairs = get_stats(vocab)\n    best = max(pairs, key=pairs.get)\n    vocab = merge_vocab(best, vocab)", "verbatim": true}
+ ],
+ "problems": []
+}

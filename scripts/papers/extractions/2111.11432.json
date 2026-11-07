@@ -1,19 +1,625 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2111.11432",
  "pdf": "ai-engineering/08-multimodal-engineering/sources/yuan-2021-florence.pdf",
  "bib": {
   "title": "Florence: A New Foundation Model for Computer Vision",
+  "authors": [
+   "Lu Yuan",
+   "Dongdong Chen",
+   "Yi-Ling Chen",
+   "Noel Codella",
+   "Xiyang Dai",
+   "Jianfeng Gao",
+   "Houdong Hu",
+   "Xuedong Huang",
+   "Boxin Li",
+   "Chunyuan Li",
+   "Ce Liu",
+   "Mengchen Liu",
+   "Zicheng Liu",
+   "Yumao Lu",
+   "Yu Shi",
+   "Lijuan Wang",
+   "Jianfeng Wang",
+   "Bin Xiao",
+   "Zhen Xiao",
+   "Jianwei Yang",
+   "Michael Zeng",
+   "Luowei Zhou",
+   "Pengchuan Zhang"
+  ],
   "first_author": "Yuan",
   "year": 2021,
-  "venue": null,
+  "venue": "preprint",
   "arxiv": "2111.11432",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-04",
-  "session": "97b4134b-decf-4866-ae85-c6872cbbba19"
+  "at": "2026-11-07",
+  "chars_read": 72252,
+  "chars_total": 72252,
+  "engine": "pymupdf",
+  "skipped": "References skimmed only; the paper has no appendix."
  },
- "legacy_report": "SOURCE: \"Florence: A New Foundation Model for Computer Vision\", Lu Yuan, Dongdong Chen, Yi-Ling Chen, Noel Codella, Xiyang Dai, Jianfeng Gao, Houdong Hu, Xuedong Huang, Boxin Li, Chunyuan Li, Ce Liu, Mengchen Liu, Zicheng Liu, Yumao Lu, Yu Shi, Lijuan Wang, Jianfeng Wang, Bin Xiao, Zhen Xiao, Jianwei Yang, Michael Zeng, Luowei Zhou, Pengchuan Zhang (Microsoft Cloud and AI / Microsoft Research). Preprint, arXiv:2111.11432v1, 22 Nov 2021.\n\nCOVERAGE: I read all 72,268 of 72,268 characters across 17 pages, covering sections 1 to 4, Tables 1 to 10, acknowledgments and references. The references were skimmed. The paper has no appendix and no limitations section. The PDF is /Users/ramsey-wise/workspace/learn-ai-engineering/ai-engineering/08-multimodal-engineering/sources/yuan-2021-florence.pdf.\n\nCHECK AGAINST THE NOTE: The 80.2% in 01-image-input.md matches Florence's VQAv2 **test-dev** score of 80.16, so it is correct. The abstract's \"80.36 on VQA\" is the **test-std** figure, so the two splits should not be mixed. Florence's own 80.16 comes from the METER adapter (CoSwin-H plus RoBERTa with co-attention), pretrained on 14M images and fine-tuned on VQA. It is not the contrastive model by itself.\n\nCLAIMS\n- claim: The core claim is that one image-text pretrained model, plus light adapters, reaches state of the art on most of 44 benchmarks along three axes: space (scene to object), time (image to video) and modality.\n  number: majority of 44 benchmarks\n  setup: CoSwin-H plus a 12-layer text transformer trained on FLD-900M, with Dynamic Head, METER and Video CoSwin adapters\n  quote: \"Florence achieves new state-of-the-art re- sults in majority of 44 representative benchmarks\"\n  where: p1, abstract\n- claim: Zero-shot ImageNet-1K top-1 is 83.74%, and Florence wins 9 of 12 zero-shot classification datasets.\n  number: 83.74 top-1 / 97.18 top-5\n  setup: CLIP prompt templates and ensembling; CoSwin-H at 384px; near-duplicate test images removed from training data; Birdsnap dropped because 20% of its URLs are dead. Table 1 compares against CLIP-ViT-L/14@336 (76.2) and FILIP-ViT-L/14 (78.3).\n  quote: \"the top-1 accu- racy of 83.74% (+5.6% over SOTA result), and the top-5 accuracy of 97.18%.\"\n  where: p7, sec 3.1; Table 1 p6\n- claim: The training data, FLD-900M, holds 900M image-text pairs filtered from about 3B web images.\n  number: 900M pairs; ~3B source images; 9.7M unique queries; 7.5B tokens\n  setup: The filtering follows ALIGN (hash near-dedup, small-image removal, image-text relevance). Sampling follows CLIP and DALL-E for balance. The dataset is not released.\n  quote: \"processes around 3 billion Internet images and their raw descriptions in parallel\" / \"900M images with 900M free-form texts (ranging from one word, phase to sentences), 9.7M unique queries, and 7.5B tokens in total.\"\n  where: p3, sec 2.1\n- claim: UniCL counts every image that shares an identical caption as a positive, instead of CLIP's one positive per image. This matters because 350M of the pairs share text with other images.\n  number: 350M pairs\n  setup: Triplets (x, t, y) are built with a text hash table, and the loss is a bidirectional supervised contrastive loss L = Li2t + Lt2i\n  quote: \"in FLD-900M, there are 350M image-text pairs where there are more than one im- ages corresponding to one identical text, and all images associated with the same text can be treated as positive pairs\"\n  where: p3, sec 2.2\n- claim: Model size and training compute.\n  number: 893M params (256M text, 637M CoSwin-H); 10 days on 512 A100-40GB\n  setup: Two-tower model. CoSwin is Swin with CvT convolutional embeddings and global average pooling.\n  quote: \"Our Florence pretrained model has in total 893M parameters, including the language transformer with 256M parameters and the CoSwin-H transformer with 637M parameters. The model takes 10 days to train on 512 NVIDIA-A100 GPUs with 40GB memory per GPU.\"\n  where: p4, sec 2.3\n- claim: Training schedule: first with augmented prompts, then without them, then at higher resolution.\n  number: 1M + 180K iterations; batch 24,576; 224px; then 80K iterations at 384px\n  setup: AdamW; text truncated to 76 tokens\n  quote: \"We trained 1M it- erations in the ﬁrst stage, and continuously trained 180K iterations in the second stage.\" / \"The batch size is 24, 576. We further trained 80K iterations at a higher resolution of 384× 384\"\n  where: p4, sec 2.2\n- claim: Zero-shot image-text retrieval matches or beats all prior zero-shot results (relevant to 03-multimodal-rag).\n  number: Flickr30K I→T 90.9 / T→I 76.7 R@1; MSCOCO 64.7 / 47.2 R@1\n  setup: Cosine similarity between the separate tower embeddings, ranked over the test set. Flickr30K uses the 1K test set and MSCOCO the 5K test set. CLIP zero-shot MSCOCO scores are 58.4/37.8.\n  quote: \"image retrieval zero-shot ( 90.9/76.7 R@1 on Flickr30K image-to-text / text-to-image, 64.7/47.2 R@1 on MSCOCO image-to-text / text-to-image)\"\n  where: p3; Table 5 p9\n- claim: Fine-tuned retrieval scores, reached with far fewer epochs than ALIGN.\n  number: Flickr30K 97.2/87.9; MSCOCO 81.8/63.2 R@1; ~6% and 8% of ALIGN's epochs\n  setup: Batch 3,072, 12 epochs, peak LR 2e-5\n  quote: \"our ﬁne tuning on retrieval is more efﬁcient, with only roughly 6% and 8% ﬁne-tuning epochs of ALIGN (Jia et al., 2021) on Flickr30k and MSCOCO respectively.\"\n  where: p9, sec 3.5\n- claim: VQAv2 sets a new state of the art, beating SimVLM while using less data.\n  number: 80.16 test-dev / 80.36 test-std (SimVLM 80.03/80.34)\n  setup: METER adapter with CoSwin-H and RoBERTa. VLP on 14M images / 20M captions (COCO, CC, CC12M, SBU, VG) for 43 epochs at 384px with ITM and MLM, then 10 epochs of VQA fine-tuning at LR 8e-6, scored as a 3,129-answer classifier\n  quote: \"Florence 80.16 80.36\" / \"Compared with SimVLM (Wang et al., 2021), which uses 1.8B image-text pairs, we only use900M data to pre-train the image encoder and 20M for VLP\"\n  where: p11, Table 8, sec 3.7\n- claim: Linear probing wins 9 of 11 datasets; the losses are on 32x32 CIFAR.\n  number: 9/11\n  setup: CLIP linear-eval protocol; the reimplementation was checked to within ±0.1 of CLIP's reported numbers\n  quote: \"linear probe in 11 classiﬁcation downstream tasks (win 9/11)\"\n  where: p3; Table 2 p7\n- claim: Fine-tuned ImageNet-1K comes slightly below CoAtNet-7, which is about 3x larger in both model and data.\n  number: 90.05 top-1 / 99.02 top-5\n  setup: Uses the pretraining loss with class names fed to the text encoder; 512px, batch 8,192, 10 epochs\n  quote: \"Florence-CoSwin-H 637M 900M 90.05 99.02\" / \"Our result is slightly worse than SOTA (Dai et al., 2021c), but their model and data scale are both 3× larger.\"\n  where: p8, Table 3\n- claim: Object detection with the Dynamic Head adapter, pretrained on FLOD-9M.\n  number: COCO test-dev 62.4 mAP; Object365 39.3; VG 16.2 AP50\n  setup: FLOD-9M has 8,967,286 images, 25,190 categories and 33.4M boxes (including ImageNet-22K pseudo-labels). Pretraining ran 12 epochs on 128 A100s for 7 days, using multi-scale training and testing.\n  quote: \"object detection (62.4 mAP on COCO, 39.3 mAP on Ob- ject365, 16.2 AP50 on Visual Genome)\" / \"takes 7 days on 128 NVIDIA-A100 GPUs.\"\n  where: p3, p5, Table 6 p10\n- claim: Zero-shot detection on 11 Roboflow datasets beats 5-shot fine-tuning on 7 of the 11, but stays well below full supervision on new domains.\n  number: 7/11; Packages 79.6 vs full fine-tune 52.0\n  setup: Frozen CoSwin. Dynamic Head is trained as a class-agnostic proposer and each box is then classified zero-shot.\n  quote: \"Florence outperforms in 7/11 tasks over 5-shot ﬁne tun- ing, and outperforms full-set ﬁne-tuning on the “Packages” dataset, consisting of only 26 images for training.\"\n  where: p10-11, Table 7\n- claim: Cross-domain few-shot scores edge out the CD-FSL 2020 winner using a single model and no transduction.\n  number: mean 74.8 vs 73.9\n  setup: 5-way classification at 5/20/50 shots over 600 episodes, linear head, 100 epochs per episode\n  quote: \"The average result comparison is 74.8 (Florence) vs. 73.9 (CW).\"\n  where: p8, Table 4\n- claim: Video results: zero-shot MSR-VTT retrieval and fine-tuned Kinetics.\n  number: MSR-VTT 1K-A R@1 37.6 (CLIP-ViT-B/16 26.0); K400 86.5, K600 87.8 top-1\n  setup: Video CoSwin inflates the 2D weights to 3D. Kinetics is fine-tuned at 384px for 30 epochs, evaluated with 4×3 views, 647M params.\n  quote: \"text-to-video retrieval zero-shot (37.6 R@1 on MSR-VTT), and video action recognition (top-1 accuracy 86.5/87.8 on Kinetics-400 / Kinetics-600).\"\n  where: p3; Tables 9-10 p12\n\nABLATIONS: The paper has no ablation tables, no ablation numbers and no comparison of UniCL against plain CLIP loss. Only two findings are stated qualitatively, and neither has numbers.\n- \"long language de- scriptions with rich content would be more beneﬁcial for image-text representation learning than short descriptions\" (p4)\n- \"Although including generated language prompt might not affect classiﬁcation accuracy, it hurts the performance in retrieval and vision- language tasks.\" This is the stated reason for the two-stage schedule (p4).\nFigure 5, on GPU memory with and without ZeRO, checkpointing, mixed precision and gradient cache, is a systems profile, not an accuracy ablation.\n\nLIMITS:\n- FLD-900M and FLOD-9M are in-house and unreleased. The curation is described only in outline (\"respecting legal and ethical constraints\").\n- There are no seeds, error bars or repeat runs; every number comes from a single run.\n- Compute is large (512 A100s for 10 days, plus 128 A100s for 7 days for detection), with no carbon or cost figure.\n- The authors concede the model \"is still below several other existing billion-scale models\" in size. They also concede zero-shot detection \"still has a long way to be applied to real-world tasks\", with a gap to supervision on new concepts (BCCD, Chess).\n- The VQA result depends on a separate 14M-image VLP stage, not the contrastive model alone.\n- The UniCL citation (Yang et al., 2022) is \"In Preparation\".\n- Depth, flow and tracking appear in Figure 1 but are not evaluated; they are listed as future work.\n- Dated: this is a v1 preprint from 2021. The state-of-the-art claims are against 2021 baselines.\n\nBUILDS ON (as printed): CLIP (Radford et al., 2021); ALIGN (Jia et al., 2021) for filtering; UniCL (Yang et al., 2022); Swin (Liu et al., 2021a) and CvT (Wu et al., 2021) for CoSwin; Dynamic Head (Dai et al., 2021a); METER (Dou et al., 2021); Video Swin (Liu et al., 2021b); ZeRO (Rajbhandari et al., 2019); Gradient Cache (Gao et al., 2021); sampling from Radford et al., 2021 and Ramesh et al., 2021; pseudo-boxes following Zoph et al., 2020; foundation-model term from Bommasani et al., 2021.\n\nCODE: None. The only formula is the UniCL loss (eq. 2, p4); the extraction mangles it. Li2t = −Σ_{i∈B} 1/|P(i)| Σ_{k∈P(i)} log [exp(τ u_i v_k) / Σ_{j∈B} exp(τ u_i v_j)], where P(i) = {k | k∈B, y_k = y_i}. Lt2i is the mirror form over Q(j).\n\nFIGURES:\n- Fig 2 (p2), \"Overview of building Florence\": a single diagram showing data curation, then UniCL two-tower pretraining, then three adapters. It shows the backbone-plus-adapters idea faster than prose.\n- Fig 1 (p1), the Space-Time-Modality task cube. It frames what \"foundation\" means here.\n- Fig 4 (p5), the METER co-attention adapter. It shows how the VQA number was produced, not by the contrastive towers alone.\n- Fig 5 (p6), GPU memory against batch size with and without the optimisations.\n- Fig 3 (p5) Dynamic Head and Fig 6 (p10) detection examples are lower value.\n\nPROBLEMS:\n- The text says \"+5.6% over SOTA\", but Table 1's best prior ImageNet score is FILIP at 78.3, which gives +5.4. The baseline behind 5.6 is unclear.\n- The text names the comparison \"FILIP\" while the tables label it \"FLIP\".\n- Table 1 lists ImageNet as 83.7 while the text gives 83.74.\n- Section 3.7 refers to \"Figure 8\" for VQA results; it means Table 8.\n- The equations extract with broken layout.\n- No embedded instructions were found. The text extraction was otherwise clean."
+ "type": "system",
+ "question": "What is a foundation model for computer vision, and can one image-text pretrained model with light adapters cover space (scene to object), time (image to video) and modality tasks?",
+ "hypothesis": "A pretrained model trained on web-scale image-text data with a unified contrastive objective, plus small adapters, transfers to many vision tasks with state-of-the-art results.",
+ "contributions": [
+  "FLD-900M, a 900M image-text pair dataset curated from about 3B web images",
+  "Unified image-text contrastive pretraining (UniCL) with a CoSwin-H image encoder, 893M parameters",
+  "Adapters for object level (Dynamic Head), fine-grained V+L (METER) and video (Video CoSwin)",
+  "Scalable training infrastructure (ZeRO, activation checkpointing, mixed precision, gradient cache)",
+  "State of the art on a majority of 44 benchmarks"
+ ],
+ "method": {
+  "summary": "Two-tower model (12-layer text transformer, CoSwin-H image encoder) pretrained on FLD-900M with the UniCL bidirectional supervised contrastive loss in two stages, then adapted by Dynamic Head for detection, METER for VQA, Video CoSwin for video, or continued training and linear heads for classification and retrieval.",
+  "task": "vision foundation model pretraining and transfer (classification, retrieval, detection, VQA, video retrieval, action recognition)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "FLD-900M",
+    "role": "pretrain",
+    "size": "900M image-text pairs from about 3B web images; 9.7M unique queries; 7.5B tokens; 350M pairs share an identical text with other images",
+    "split": null,
+    "source": "Internet images and raw descriptions; private, curated",
+    "preprocessing": "ALIGN-like filtering: hash-based near-duplicate removal, small image removal, image-text relevance; sampling as in CLIP and DALL-E; short texts expanded with templates such as 'A photo of the [WORD]'; near-duplicate test images removed for zero-shot tasks"
+   },
+   {
+    "name": "FLOD-9M",
+    "role": "pretrain",
+    "size": "8,967,286 images, 25,190 categories, 33,408,237 boxes",
+    "split": null,
+    "source": "COCO, LVIS, OpenImages, Object365 merged, plus pseudo boxes on ImageNet-22K (following Zoph et al., 2020)",
+    "preprocessing": null
+   },
+   {
+    "name": "VLP corpus (MSCOCO, Conceptual Captions, CC12M, SBU, Visual Genome)",
+    "role": "pretrain",
+    "size": "14M images, 20M captions",
+    "split": null,
+    "source": "public",
+    "preprocessing": null
+   },
+   {
+    "name": "VQAv2",
+    "role": "both",
+    "size": "82K train images, 41K val images",
+    "split": "1K val images held out, the rest merged into training; evaluated on test-dev and test-std via EvalAI server",
+    "source": "Goyal et al., 2017",
+    "preprocessing": "cast as classification over 3,129 answers"
+   },
+   {
+    "name": "ImageNet-1K, 11 Kornblith et al. classification sets, CD-FSL (CropDisease, EuroSAT, ISIC, ChestX), Flickr30K, MSCOCO, COCO/Object365/Visual Genome detection, 11 Roboflow detection sets, MSR-VTT 1K-A, Kinetics-400/600",
+    "role": "eval",
+    "size": null,
+    "source": "public benchmarks; Birdsnap dropped because 20% of image URLs are invalid",
+    "split": "Flickr30K 1K test, MSCOCO 5K test, MSR-VTT 1K-A test",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Florence pretrained (CoSwin-H + text transformer)",
+    "role": "proposed",
+    "params": "893M (language 256M, CoSwin-H 637M)",
+    "architecture": "two-tower: 12-layer transformer text encoder (like CLIP) and CoSwin-H (Swin with CvT convolutional embedding and patch merging), global average pooling, linear projections to a shared space",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "12 (text)",
+    "hidden": null,
+    "heads": null,
+    "context": "76 text tokens",
+    "other": {}
+   },
+   {
+    "name": "Florence V+L (METER adapter)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "CoSwin-H image encoder + pretrained RoBERTa text encoder, co-attention fusion with Mco layers each with self-attention, cross-attention, FFN",
+    "init_from": "CoSwin-H from Florence; RoBERTa",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "Mco": "value not given"
+    }
+   },
+   {
+    "name": "Florence Dynamic Head detector",
+    "role": "proposed",
+    "params": null,
+    "architecture": "CoSwin-H + Dynamic Head (level, spatial, channel attention) with ATSS",
+    "init_from": "Florence CoSwin-H",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Florence Video CoSwin",
+    "role": "proposed",
+    "params": "647M",
+    "architecture": "CoSwin with 3D conv tokenization and patch merging, 3D shifted windows, dynamic window size",
+    "init_from": "2D conv weights duplicated over time and divided by temporal kernel size; 2D relative position embedding duplicated along time",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "UniCL bidirectional supervised contrastive loss L = Li2t + Lt2i with learnable temperature; positives are all pairs with identical text (hash key); METER trained with ITM and MLM; VQA with binary cross-entropy",
+   "optimizer": "Adam with decoupled weight decay (pretraining)",
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "24,576 (pretraining)",
+   "steps": "1M iterations stage 1 (with augmented template texts), then 180K iterations stage 2 (augmented texts excluded), then 80K iterations at 384x384",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "max text length 76; image 224x224 then 384x384",
+   "precision": "mixed (float-32 for layer norm etc., float-16 elsewhere)",
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "512 NVIDIA A100 40GB (pretraining); 128 A100 (Dynamic Head pretraining)",
+   "compute": null,
+   "wall_clock": "10 days (pretraining on 512 A100); 7 days (Dynamic Head on 128 A100)",
+   "seeds": null,
+   "other": {
+    "infrastructure": "ZeRO, activation checkpointing, mixed precision, gradient cache",
+    "dynamic_head_pretrain": "12 epochs, batch size 128 on FLOD-9M",
+    "imagenet_finetune": "CoSwin-H at 512x512, batch 8,192, 10 epochs, cosine decay, 500 warmup steps, peak lr 0.00002",
+    "retrieval_finetune": "batch 3,072, 12 epochs, cosine decay, 200 warmup steps, peak lr 0.00002; about 6% (Flickr30k) and 8% (MSCOCO) of ALIGN's fine-tuning epochs",
+    "cdfsl": "5-way, 5/20/50-shot, 600 episodes per way and shot, 100 epochs per episode, SGD with momentum; text gives 'learning rate and momentum values of 0.9/0.0002' for CoSwin and '0.99/0.01' for the adapter head (order as printed, lr/momentum order is ambiguous); horizontal flip; dropout 0.5",
+    "detection_finetune": "COCO max side 2,500, multi-scale, 12 epochs; Object365 max side 1,333; Visual Genome max side 3,000, 24 epochs, 1x1 ROI pool for attributes",
+    "zero_shot_detection": "CoSwin frozen; Dynamic Head trained on FLOD-9M class-agnostic as proposals, each proposal classified with zero-shot classification",
+    "vlp": "43 epochs, image size 384, weight decay removed on text embedding and modality embedding",
+    "vqa_finetune": "10 epochs, lr 8e-6, MLP head over 3,129 answers",
+    "video_finetune": "Kinetics 384x384, 30 epochs, lr 0.0002, drop path 0.5, label smoothing, RandAugment"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single run per benchmark; CD-FSL averaged over 600 episodes per way and shot",
+   "prompting": "zero-shot classification follows CLIP prompt templates, engineering and ensembling; class names as text candidates, cosine similarity ranking",
+   "retrieval": null,
+   "parameters": {},
+   "other": {
+    "video_views": "4x3 temporal clips x spatial crops on Kinetics"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "top-1 / top-5 accuracy",
+     "definition": "zero-shot via cosine similarity of image and class-name text embeddings",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "R@1/R@5/R@10",
+     "definition": "recall for image-text and text-video retrieval",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "mAP / AP50",
+     "definition": "mAP averaged over IoU 0.5:0.05:0.95 for COCO, Object365 and zero-shot; AP50 for Visual Genome",
+     "unit": "AP",
+     "higher_is_better": true
+    },
+    {
+     "name": "VQA accuracy",
+     "definition": "test-dev and test-std from public EvalAI server",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "CLIP",
+    "ALIGN",
+    "FILIP",
+    "BiT",
+    "ViT-G/14",
+    "CoAtNet-7",
+    "CW",
+    "DyHead",
+    "Soft Teacher",
+    "VinVL",
+    "SimVLM",
+    "METER",
+    "ViViT",
+    "Video Swin",
+    "TokenLearner"
+   ],
+   "protocol": "Linear probe follows CLIP; reproduction of CLIP numbers matched within +-0.1. No seeds or significance tests."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": null
+  },
+  "prompts": [
+   {
+    "purpose": "data augmentation templates for short texts",
+    "text": "A photo of the [WORD]",
+    "where": "Sec 2.2"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training.other.cdfsl",
+    "quote": "with learning rate and momentum values of 0.9/0.0002, respectively, for CoSwin, and 0.99/0.01",
+    "where": "Sec 3.4"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Zero-shot ImageNet-1K top-1",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1",
+   "value": 83.74,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Florence CoSwin-H @384, CLIP templates and ensembling, near-duplicates removed; Table 1 compares CLIP-ViT-L/14@336 76.2 and FILIP 78.3",
+   "note": "Table 1 prints 83.7",
+   "where": "Sec 3.1",
+   "quote": "the top-1 accu- racy of 83.74% (+5.6% over SOTA result), and the top-5 accuracy of 97.18%."
+  },
+  {
+   "claim": "Zero-shot ImageNet-1K top-5",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-5",
+   "value": 97.18,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "as above",
+   "note": null,
+   "where": "Sec 3.1",
+   "quote": "the top-1 accu- racy of 83.74% (+5.6% over SOTA result), and the top-5 accuracy of 97.18%."
+  },
+  {
+   "claim": "Florence beats prior best on 9 of 12 zero-shot classification datasets",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 9,
+   "unit": "datasets of 12",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Zero-shot, 12 datasets (ImageNet plus 11 of Kornblith suite)",
+   "note": null,
+   "where": "Sec 3.1",
+   "quote": "Florence outperforms on 9/12 tasks compared with state-of- the-art methods"
+  },
+  {
+   "claim": "VQAv2 test-dev accuracy of the METER-based Florence V+L model",
+   "kind": "measured",
+   "source": null,
+   "metric": "VQA test-dev",
+   "value": 80.16,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CoSwin-H + RoBERTa co-attention, VLP on 14M images / 20M captions, then VQA fine-tune 10 epochs; not the two-tower model alone",
+   "note": "SimVLM 80.03 test-dev; abstract's 80.36 is test-std",
+   "where": "Table 8",
+   "table": "Table 8, row Florence, column test-dev"
+  },
+  {
+   "claim": "VQAv2 test-std accuracy",
+   "kind": "measured",
+   "source": null,
+   "metric": "VQA test-std",
+   "value": 80.36,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "same as above",
+   "note": null,
+   "where": "Table 8 / abstract",
+   "table": "Table 8, row Florence, column test-std"
+  },
+  {
+   "claim": "ImageNet-1K fine-tuned top-1",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1",
+   "value": 90.05,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CoSwin-H 637M, 900M images, 512x512, 10 epochs; CoAtNet-7 90.88 (2440M, 3000M data), ViT-G/14 90.45",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row Florence-CoSwin-H, column Top-1"
+  },
+  {
+   "claim": "COCO test-dev detection mAP",
+   "kind": "measured",
+   "source": null,
+   "metric": "mAP",
+   "value": 62.4,
+   "unit": "mAP",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Florence Dynamic Head fine-tune; Soft Teacher 61.3, DyHead 60.6",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, COCO test-Dev, row Florence"
+  },
+  {
+   "claim": "Object365 detection mAP",
+   "kind": "measured",
+   "source": null,
+   "metric": "mAP",
+   "value": 39.3,
+   "unit": "mAP",
+   "baseline_value": null,
+   "n": null,
+   "setup": "fine-tuned; Multi-dataset Detection 33.7",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, Object365, row Florence"
+  },
+  {
+   "claim": "Zero-shot Flickr30K image-to-text R@1",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 90.9,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "1K test; CLIP 88.0, ALIGN 88.6, FLIP 89.8",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, Zero-shot row Florence, Flickr30K Image->Text R@1"
+  },
+  {
+   "claim": "Fine-tuned MSCOCO 5K image-to-text R@1",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 81.8,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "fine-tuned 12 epochs batch 3,072; FLIP 78.9",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, Fine-tuned row Florence, MSCOCO Image->Text R@1"
+  },
+  {
+   "claim": "Zero-shot text-to-video retrieval R@1 on MSR-VTT 1K-A",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 37.6,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "image-pretrained only; CLIP-ViT-B/16 26.0",
+   "note": null,
+   "where": "Table 9",
+   "table": "Table 9, row Florence, column R@1"
+  },
+  {
+   "claim": "Kinetics-600 top-1",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 87.8,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Video CoSwin fine-tuned 30 epochs at 384, 4x3 views, 647M params; TokenLearner 86.3",
+   "note": null,
+   "where": "Table 10",
+   "table": "Table 10, row Florence, Kinetics-600 Top-1"
+  },
+  {
+   "claim": "Kinetics-400 top-1",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 86.5,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "as above; best baseline 85.4",
+   "note": null,
+   "where": "Table 10",
+   "table": "Table 10, row Florence, Kinetics-400 Top-1"
+  },
+  {
+   "claim": "Pretraining cost",
+   "kind": "measured",
+   "source": null,
+   "metric": "wall clock",
+   "value": 10,
+   "unit": "days on 512 A100 40GB",
+   "baseline_value": null,
+   "n": null,
+   "setup": "893M-parameter Florence pretraining",
+   "note": null,
+   "where": "Sec 2.3",
+   "quote": "The model takes 10 days to train on 512 NVIDIA-A100 GPUs"
+  },
+  {
+   "claim": "Zero-shot detection beats 5-shot fine-tuning on 7 of 11 Roboflow tasks",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 7,
+   "unit": "tasks of 11",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Florence zero-shot vs DyHead-Swin-L 5-shot",
+   "note": null,
+   "where": "Sec 3.6",
+   "quote": "Florence outperforms in 7/11 tasks over 5-shot fine tun- ing"
+  },
+  {
+   "claim": "CD-FSL mean accuracy over shots, Florence vs CW",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 74.8,
+   "unit": "%",
+   "baseline_value": 73.9,
+   "n": null,
+   "setup": "single model, no transduction; CW 73.9",
+   "note": null,
+   "where": "Table 4 caption",
+   "quote": "The average result comparison is 74.8 (Florence) vs. 73.9 (CW)."
+  }
+ ],
+ "limits": [
+  "Florence is below several other billion-scale models in size (authors' own statement); FLD-900M, weights and code are not released in the paper",
+  "Zero-shot detection still shows a noticeable gap to supervised learning, especially for novel domains such as BCCD and Chess Pieces",
+  "Linear probe weaker on CIFAR10/100 at 32x32 input resolution",
+  "On ImageNet fine-tuning it is slightly below CoAtNet-7 (90.88 vs 90.05), which is 3x larger in model and data",
+  "Many hyperparameters (pretraining lr, schedule, warmup, weight decay, Mco, seeds) are not stated; no ablations; single runs",
+  "The VQA 80.16 comes from the METER-based V+L adapter with extra VLP on 14M images, not the pretrained model alone; comparison with SimVLM (80.03) is within 0.13"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "foundation model for computer vision",
+   "definition": "a pre-trained model and its adapters for solving all vision tasks in this Space-Time-Modality space, with transferability such as zero-/few-shot learning and fully fine tuning",
+   "where": "Sec 1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "CLIP",
+   "year": 2021,
+   "arxiv": "2103.00020",
+   "relation": "extends",
+   "note": "two-tower contrastive pretraining, prompts, linear-probe protocol",
+   "quote": null
+  },
+  {
+   "work": "ALIGN",
+   "year": 2021,
+   "arxiv": "2102.05918",
+   "relation": "extends",
+   "note": "data filtering and baseline",
+   "quote": null
+  },
+  {
+   "work": "UniCL (Yang et al., 2022)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "unified image-label-description contrastive loss",
+   "quote": null
+  },
+  {
+   "work": "Swin Transformer",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "basis of CoSwin",
+   "quote": null
+  },
+  {
+   "work": "CvT",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "convolutional embedding",
+   "quote": null
+  },
+  {
+   "work": "Dynamic Head",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "object-level adapter",
+   "quote": null
+  },
+  {
+   "work": "METER (Dou et al.)",
+   "year": 2021,
+   "arxiv": "2111.02387",
+   "relation": "uses-method",
+   "note": "V+L adapter",
+   "quote": null
+  },
+  {
+   "work": "Video Swin Transformer",
+   "year": 2021,
+   "arxiv": "2106.13230",
+   "relation": "uses-method",
+   "note": "video adapter basis",
+   "quote": null
+  },
+  {
+   "work": "ZeRO, gradient cache",
+   "year": 2021,
+   "arxiv": "2101.06983",
+   "relation": "uses-method",
+   "note": "training infrastructure",
+   "quote": null
+  },
+  {
+   "work": "SimVLM",
+   "year": 2021,
+   "arxiv": "2108.10904",
+   "relation": "baseline",
+   "note": "VQA comparison",
+   "quote": null
+  },
+  {
+   "work": "FILIP",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "concurrent zero-shot comparison",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "Overview of building Florence: data curation, unified learning, Transformer architectures and adaption.",
+   "page": 2,
+   "why": "shows pretrained model plus adapters layout"
+  },
+  {
+   "figure": "Table 8",
+   "caption": "Compare our model with the existing state-of-the-art methods on VQA.",
+   "page": 9,
+   "why": "shows test-dev vs test-std numbers"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "No embedded instructions found",
+  "Table 4 caption mean (74.8 vs 73.9) is not the mean of the per-shot means",
+  "CD-FSL lr/momentum order in text '0.9/0.0002' looks swapped; recorded as printed"
+ ]
 }

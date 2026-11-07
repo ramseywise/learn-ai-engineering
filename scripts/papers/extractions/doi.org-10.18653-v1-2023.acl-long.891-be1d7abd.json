@@ -1,0 +1,655 @@
+{
+ "schema": 1,
+ "key": "https://doi.org/10.18653/v1/2023.acl-long.891",
+ "pdf": "generative-ai/05-RL/sources/muennighoff-2023-crosslingual-generalization-through-multitask-finetuning.pdf",
+ "bib": {
+  "title": "Crosslingual Generalization through Multitask Finetuning",
+  "authors": [
+   "Niklas Muennighoff",
+   "Thomas Wang",
+   "Lintang Sutawika",
+   "Adam Roberts",
+   "Stella Biderman",
+   "Teven Le Scao",
+   "M Saiful Bari",
+   "Sheng Shen",
+   "Zheng-Xin Yong",
+   "Hailey Schoelkopf",
+   "Xiangru Tang",
+   "Dragomir Radev",
+   "Alham Fikri Aji",
+   "Khalid Almubarak",
+   "Samuel Albanie",
+   "Zaid Alyafeai",
+   "Albert Webson",
+   "Edward Raff",
+   "Colin Raffel"
+  ],
+  "first_author": "Muennighoff",
+  "year": 2023,
+  "venue": "Proceedings of the 61st Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers), pages 15991-16111",
+  "arxiv": "2211.01786",
+  "doi": "10.18653/v1/2023.acl-long.891"
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 226014,
+  "chars_total": 226014,
+  "engine": "pymupdf",
+  "skipped": "Appendix M prompt listings and Tables 10/11 (per-dataset score grids, about 120k chars) were scanned for structure, not read cell by cell; headline numbers come from the body text, Figure 4 and Tables 1, 2, 5, 6, 8, 9."
+ },
+ "type": "empirical",
+ "question": "Does multitask prompted finetuning of multilingual models on English or multilingual data let them generalize zero-shot to new tasks and to non-English languages, including languages never intentionally seen?",
+ "hypothesis": "Finetuning on non-English (machine-translated) prompts should improve performance on non-English prompts (stated as 'Hypothesizing that better performance could be attained by training on non-English prompts').",
+ "contributions": [
+  "xP3: a composite of supervised datasets in 46 languages and code, with English prompts, plus xP3mt with machine-translated prompts",
+  "BLOOMZ and mT0 models (BLOOMZ-P3/mT0-P3, BLOOMZ/mT0, BLOOMZ-MT/mT0-MT) finetuned from BLOOM and mT5",
+  "Evidence of zero-shot generalization to tasks in languages not intentionally seen",
+  "Analysis of multilingual prompting, scaling, generation length and language proportion",
+  "Release of code, datasets and models"
+ ],
+ "method": {
+  "summary": "Finetune pretrained BLOOM (560M to 176B, decoder-only) and mT5 (300M to 13B, encoder-decoder) on the English P3 mix, on xP3 (46 languages plus code, English prompts) and on xP3mt (machine-translated prompts), with loss only on target tokens and length-normalised per-token loss. Evaluate zero-shot on held-out tasks (XNLI, XCOPA, XStoryCloze, XWinograd, HumanEval) using rank classification and 5 random PromptSource prompts.",
+  "task": "multitask prompted instruction finetuning, zero-shot crosslingual evaluation",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "P3",
+    "role": "train",
+    "size": null,
+    "split": "training clusters of P3",
+    "source": "Sanh et al. 2022 (T0 mixture), English data with English prompts",
+    "preprocessing": null
+   },
+   {
+    "name": "xP3",
+    "role": "train",
+    "size": null,
+    "split": "yellow datasets in Fig 1 trained on; green held out",
+    "source": "P3 plus 30 new multilingual datasets in 46 languages and 13 programming languages; 39% English; mirrors ROOTS language distribution; XWinograd Chinese extended from 16 to 504 samples using CLUE",
+    "preprocessing": "Some prompts invert the task; new clusters: translation, simplification, program synthesis, misc code"
+   },
+   {
+    "name": "xP3mt",
+    "role": "train",
+    "size": null,
+    "split": "as xP3",
+    "source": "xP3 with prompts of monolingual datasets machine-translated via Google Cloud API; crosslingual datasets keep English prompts",
+    "preprocessing": "prompt translation"
+   },
+   {
+    "name": "XNLI, XCOPA, XStoryCloze, XWinograd",
+    "role": "eval",
+    "size": "XNLI: 830 samples per label per language subset (Table 8)",
+    "split": "test for reported results; validation used for checkpoint selection",
+    "source": "held-out tasks: coreference, sentence completion, NLI",
+    "preprocessing": "5 PromptSource prompts picked at random per dataset, median reported"
+   },
+   {
+    "name": "HumanEval",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Chen et al. 2021",
+    "preprocessing": null
+   },
+   {
+    "name": "MultiEURLEX",
+    "role": "eval",
+    "size": "average target 1965 characters (~491 tokens)",
+    "split": null,
+    "source": "Chalkidis et al. 2021; used for translation BLEU in Appendix G",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "BLOOM",
+    "role": "base",
+    "params": "560M, 1.1B, 1.7B, 3B, 7.1B, 176B",
+    "architecture": "decoder-only transformer, similar to GPT-3",
+    "init_from": "pretrained on ROOTS (46 natural languages, 13 programming languages), around 350 billion tokens",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "pretraining_tokens_text": "around 350 billion (3.2); 366 billion (4.1)"
+    }
+   },
+   {
+    "name": "mT5",
+    "role": "base",
+    "params": "300M, 580M, 1.2B, 3.7B, 13B",
+    "architecture": "encoder-decoder, masked language modelling",
+    "init_from": "pretrained on mC4 sample, 101 languages, 1 trillion tokens",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "BLOOMZ / BLOOMZ-MT / BLOOMZ-P3, mT0 / mT0-MT / mT0-P3",
+    "role": "proposed",
+    "params": "as bases",
+    "architecture": "as bases",
+    "init_from": "BLOOM, mT5",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "XGLM-7.5B, mTk-Instruct-13B, T0-11B",
+    "role": "baseline",
+    "params": "7.5B, 13B, 11B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "next-token loss on target tokens only; each token's loss downscaled by length of its target so short and long targets weigh equally",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": "13 billion additional tokens (ablations); final released checkpoints early-stopped: BLOOMZ-560M 3.67B, 1.1B 0.502B, 1.7B 8.39B, 3B 8.39B, 7.1B 4.19B, BLOOMZ 2.09B; mT0-300M/560M/1.2B 4.62B, 3.7B 1.85B, 13B 1.29B",
+   "seq_len": "samples longer than 2048 tokens skipped; packing used",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "BLOOM: Jean Zay cluster at IDRIS with Megatron-DeepSpeed (acknowledgments, Table 3 caption); mT0: TPUs with T5X",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "checkpoint_selection": "final checkpoint chosen on validation performance (early stopping)",
+    "input_target_separator": "space for decoder-only models",
+    "not_reported": "The ACL checklist says hyperparameters are in Section 3, but Section 3 gives no learning rate, optimizer, batch size or steps"
+   }
+  },
+  "inference": {
+   "decoding": "rank classification (highest log-likelihood option) for choice tasks; generation for HumanEval and translation",
+   "temperature": "HumanEval: 0.2, 0.6, 0.8, best pass rate; qualitative fable samples 0.9",
+   "top_p": "0.95 (HumanEval)",
+   "max_tokens": null,
+   "samples": "HumanEval: 200 samples per problem; NLU: median over 5 prompts per language split; Fig 16: 16 outputs, top-k 40",
+   "prompting": "zero-shot; 5 PromptSource prompts per eval dataset chosen at random, not tuned on validation",
+   "retrieval": null,
+   "parameters": {
+    "minimum_generation_length": "768 tokens for MultiEURLEX (end-of-sequence probability masked until length reached)"
+   },
+   "other": {
+    "translation_scoring": "lm-evaluation-harness, BLEU"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "accuracy (rank classification)",
+     "definition": "log-likelihood of each completion, highest chosen; median over 5 prompts per language split",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "pass@k",
+     "definition": "HumanEval, 200 samples per problem, best of three temperatures",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "BLEU",
+     "definition": "lm-evaluation-harness",
+     "unit": "BLEU",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "BLOOM",
+    "XGLM-7.5B",
+    "mTk-Instruct-13B",
+    "T0-11B",
+    "BLOOMZ-P3 / mT0-P3",
+    "Codex, GPT-Neo, GPT-J, GPT-NeoX on HumanEval (from prior work)"
+   ],
+   "protocol": "zero-shot, held-out tasks; one finetuning run per model; no seeds, error bars or significance tests reported"
+  },
+  "availability": {
+   "code": "https://github.com/bigscience-workshop/xmtf",
+   "weights": "Hugging Face, bigscience/bloomz* and mt0* (Table 3); BLOOM(Z) RAIL license, mT0 Apache 2.0",
+   "data": "xP3, xP3all, xP3mt, xP3megds, xP3x on Hugging Face (Table 3)"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.tokens",
+    "quote": "We finetune the models for an additional 13 billion tokens with loss only being computed on target tokens.",
+    "where": "3.2"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "mT0-13B beats the 176B BLOOMZ on held-out multilingual coreference (XWinograd), averaged over languages, English prompts.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "74.6",
+   "unit": "%",
+   "baseline_value": "66.3",
+   "n": null,
+   "setup": "Zero-shot, English prompts, language-average, median of 5 PromptSource prompts; BLOOMZ 176B vs mT0-13B",
+   "note": null,
+   "where": "Fig 4, p5",
+   "table": "Figure 4, Coreference Resolution (XWinograd), values 66.3 (BLOOMZ) and 74.6 (mT0-13B)"
+  },
+  {
+   "claim": "BLOOMZ (xP3) lifts XNLI average accuracy from near chance (BLOOM 33.6) to 55.3; mT0-13B reaches 57.7.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "55.3",
+   "unit": "%",
+   "baseline_value": "33.6",
+   "n": null,
+   "setup": "Zero-shot XNLI, English prompts, language average, BLOOM/BLOOMZ 176B",
+   "note": null,
+   "where": "Fig 4, p5",
+   "table": "Figure 4, Natural Language Inference (XNLI), values 33.6 (BLOOM), 55.3 (BLOOMZ), 57.7 (mT0-13B)"
+  },
+  {
+   "claim": "On sentence completion (XCOPA and XStoryCloze) BLOOMZ-P3, finetuned on English-only P3, reaches 80.5 versus 52.9 for BLOOM.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "80.5",
+   "unit": "%",
+   "baseline_value": "52.9",
+   "n": null,
+   "setup": "Zero-shot, English prompts, language average, 176B models; languages seen in pretraining",
+   "note": null,
+   "where": "Fig 4, p5; text 4.2 says over 50% improvement",
+   "table": "Figure 4, Sentence Completion (XCOPA & XStoryCloze), values 52.9 (BLOOM), 80.5 (BLOOMZ-P3), 82.6 (BLOOMZ), 86.0 (mT0-13B)"
+  },
+  {
+   "claim": "English-only finetuning improves non-English sentence completion by over 50% relative to BLOOM.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "176B BLOOMZ-P3 vs BLOOM, languages seen in pretraining only",
+   "note": null,
+   "where": "4.2, p6",
+   "quote": "BLOOMZ-P3 improves by over 50% on multilingual sentence completion compared to BLOOM"
+  },
+  {
+   "claim": "mTk-Instruct-13B, also crosslingual multitask finetuned, scores far below same-size mT0 on XNLI.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "34.8",
+   "unit": "%",
+   "baseline_value": "57.7",
+   "n": null,
+   "setup": "Zero-shot XNLI average, English prompts; mTk-Instruct-13B vs mT0-13B (baseline_value)",
+   "note": null,
+   "where": "Fig 4; authors attribute to prompt style, 4.1",
+   "table": "Figure 4, Natural Language Inference (XNLI), values 34.8 (mTk-Instruct-13B), 57.7 (mT0-13B)"
+  },
+  {
+   "claim": "mT0-13B outperforms the English-only T0-11B on English tasks, attributed to the additional tasks and prompts in xP3.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "English held-out tasks (RTE, CB, ANLI, XNLI EN, Winogrande, XWinograd EN, COPA, StoryCloze), Appendix B Fig 9; no aggregate number printed",
+   "note": null,
+   "where": "4.1, p5",
+   "quote": "Even the fully English T0-11B model (Sanh et al., 2022) is outperformed by our mT0-13B model on entirely English tasks."
+  },
+  {
+   "claim": "Finetuning BLOOMZ on machine-translated prompts (xP3mt) raises XNLI accuracy on human-translated prompts from 41.13 to 45.55.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "45.55",
+   "unit": "%",
+   "baseline_value": "41.13",
+   "n": null,
+   "setup": "176B BLOOMZ vs BLOOMZ-MT, XNLI human-translated prompts, average",
+   "note": "Table 1 prints BLOOMZ HT 40.4 and BLOOMZ-MT HT 43.88, not 41.13 and 45.55; text and table disagree.",
+   "where": "4.3, p6",
+   "quote": "On XNLI, BLOOMZ-MT raises the average performance on human-translated prompts from 41.13 to 45.55."
+  },
+  {
+   "claim": "The same finetuning on xP3mt lowers XNLI accuracy on English prompts from 53.58 to 49.74.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "49.74",
+   "unit": "%",
+   "baseline_value": "53.58",
+   "n": null,
+   "setup": "176B BLOOMZ-MT vs BLOOMZ, XNLI English prompts",
+   "note": "Table 1 prints EN 52.99 (BLOOMZ) and 49.01 (BLOOMZ-MT).",
+   "where": "4.3, p6",
+   "quote": "This comes at the cost of a reduction in its performance on English prompts, from 53.58 to 49.74."
+  },
+  {
+   "claim": "BLOOMZ on XNLI, Table 1: English prompts 52.99, machine-translated prompts 37.56.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "52.99",
+   "unit": "%",
+   "baseline_value": "37.56",
+   "n": null,
+   "setup": "176B BLOOMZ finetuned on xP3, XNLI average, EN vs MT prompts",
+   "note": null,
+   "where": "Table 1, p6",
+   "table": "Table 1, row XNLI EN, column BLOOMZ (52.99); row XNLI MT, column BLOOMZ (37.56)"
+  },
+  {
+   "claim": "Models finetuned on xP3 generalize to XNLI in languages not intentionally seen, such as Thai, which made up 0.006% of the corpus.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "0.006",
+   "unit": "% of ROOTS (sentence proportion in 1% sample)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "cld3 language identification on a random 1% sample of ROOTS (51M documents)",
+   "note": null,
+   "where": "4.2, p6; Appendix D",
+   "quote": "such as Thai with 0.006%. If we extrapolate this proportion to the entire ROOTS corpus, the BLOOM models would have seen a mere 20 million tokens of Thai during pretraining."
+  },
+  {
+   "claim": "Edit-distance check: neutral XNLI pairs have the largest premise-hypothesis distance, but differences between labels are only a few edits, so shallow cues are unlikely to explain generalization.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Levenshtein distance, 830 samples per label per language (Thai, Turkish, Greek)",
+   "note": null,
+   "where": "Appendix H",
+   "quote": "Thai contradiction samples only have 2.5 edits more on average than entailment samples.",
+   "table": "Table 8, row Thai (th), columns Entailment 79.08, Neutral 82.64, Contradiction 81.52"
+  },
+  {
+   "claim": "Multitask finetuning gives no HumanEval gain for large models: BLOOMZ 12.06% pass@1 vs BLOOM 15.52%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass@1",
+   "value": "12.06",
+   "unit": "%",
+   "baseline_value": "15.52",
+   "n": null,
+   "setup": "HumanEval, 200 samples per problem, top_p 0.95, best of temperatures 0.2/0.6/0.8; 176B",
+   "note": null,
+   "where": "Table 2, p7",
+   "table": "Table 2, row BLOOMZ, column k=1; row BLOOM, column k=1"
+  },
+  {
+   "claim": "Finetuning with no code data (BLOOMZ-P3) cuts HumanEval pass@1 to 6.13%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass@1",
+   "value": "6.13",
+   "unit": "%",
+   "baseline_value": "12.06",
+   "n": null,
+   "setup": "HumanEval, 176B BLOOMZ-P3 vs BLOOMZ",
+   "note": null,
+   "where": "Table 2, p7",
+   "table": "Table 2, row BLOOMZ-P3, column k=1"
+  },
+  {
+   "claim": "BLOOMZ generations on HumanEval are about 70% shorter than BLOOM's.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "HumanEval; average 247 chars (BLOOM) vs 144 chars (BLOOMZ), Table 4",
+   "note": "Appendix E phrases the same fact as BLOOM generating 70% more characters than BLOOMZ (247 vs 144); both are rounded.",
+   "where": "4.5, p7; Table 4",
+   "quote": "BLOOMZ tries to solve problems with 70% fewer characters than BLOOM."
+  },
+  {
+   "claim": "Forcing a minimum generation length at inference lifts translation BLEU by about 9 points.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": "9.05",
+   "unit": "BLEU",
+   "baseline_value": "0.00",
+   "n": null,
+   "setup": "BLOOMZ-7.1B finetuned 13B tokens, MultiEURLEX English-French, median over 3 prompts per direction, min 768 tokens forced",
+   "note": null,
+   "where": "Appendix G",
+   "table": "Table 5, row Forcing 768 tokens at inference, column BLEU Score (9.05); row Default 0.00"
+  },
+  {
+   "claim": "Upweighting long tasks (removing loss normalization) worsens NLU validation accuracy by 10%, so it was not used in final models.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "7.1B BLOOMZ ablation",
+   "note": null,
+   "where": "Appendix G",
+   "quote": "We do not upweight longer tasks, as it worsens accuracy on our NLU validation tasks by 10%."
+  },
+  {
+   "claim": "Bias-only (BitFit) multitask finetuning is 15 absolute points worse on held-out tasks than full finetuning.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "BLOOMZ-7.1B, average of held-out tasks",
+   "note": null,
+   "where": "Appendix J",
+   "quote": "We found multitask finetuning of only biases to perform 15 absolute percentage points worse on the average of held-out tasks for BLOOMZ-7.1B."
+  },
+  {
+   "claim": "Final BLOOMZ-176B was finetuned for only 2.09 billion tokens (early stopped); mT0-13B for 1.29 billion; ablations ran 13 billion.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "2.09",
+   "unit": "billion tokens",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Early stopping on validation performance; BLOOMZ column of Table 6",
+   "note": "Section 3.2 says models are finetuned for an additional 13 billion tokens; Table 6 shows the released models stopped earlier (BLOOMZ-560M 3.67B, 1.1B 0.502B, 1.7B 8.39B, 3B 8.39B, 7.1B 4.19B).",
+   "where": "Table 6, Appendix G",
+   "table": "Table 6, row Tokens, column BLOOMZ (2.09); column mT0-13B (1.29)"
+  },
+  {
+   "claim": "Finetuned BLOOM models perform better on languages that make up more of pretraining (above 10% individually, such as English, Spanish, French).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 8, 176B BLOOM, BLOOMZ-P3, BLOOMZ, BLOOMZ-MT; XWinograd trend inconsistent",
+   "note": null,
+   "where": "4.6, p8",
+   "quote": "XCOPA and XNLI show significantly better performance on these high-resource languages, such as English, Spanish or French, which all make up more than 10% of pretraining individually."
+  }
+ ],
+ "limits": [
+  "Section 3 gives no optimizer, learning rate, batch size or step count; reproduction needs the released code.",
+  "Unnatural prompting: space separator between input and target; decoder-only model may continue the input before answering.",
+  "Only 46 languages in xP3 although mT5 saw 101; xP3x (277 languages) released but no models finetuned.",
+  "Did not study languages seen only during finetuning (mT0 scored 0.00 on HumanEval).",
+  "Finetuning on short targets biases generations short and hurts generative tasks; workaround is a forced minimum length at inference.",
+  "Unseen languages are not strictly unseen: ROOTS contains small contamination of them (Appendix D).",
+  "Base models are suboptimal (compute allocation, data, objective); no error bars or multiple seeds.",
+  "Held-out tasks use accuracy of untuned prompts; BLOOM scores near chance (0.50 or 0.33) zero-shot."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "xP3",
+   "definition": "composite of multilingual supervised datasets in 46 languages and code with English prompts",
+   "where": "3.1"
+  },
+  {
+   "term": "xP3mt",
+   "definition": "xP3 variant whose prompts for monolingual datasets are machine-translated into the dataset language",
+   "where": "3.1"
+  },
+  {
+   "term": "rank classification",
+   "definition": "compute the log-likelihood of each possible completion and select the highest scoring option",
+   "where": "3.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "T0 / Multitask prompted training enables zero-shot task generalization (Sanh et al.)",
+   "year": 2022,
+   "arxiv": "2110.08207",
+   "relation": "extends",
+   "note": "builds on its P3 mixture and recipe",
+   "quote": "Our work builds on T0 (Sanh et al., 2022)"
+  },
+  {
+   "work": "FLAN / Finetuned language models are zero-shot learners (Wei et al.)",
+   "year": 2021,
+   "arxiv": "2109.01652",
+   "relation": "related",
+   "note": "instruction tuning",
+   "quote": null
+  },
+  {
+   "work": "Super-NaturalInstructions / mTk-Instruct (Wang et al.)",
+   "year": 2022,
+   "arxiv": "2204.07705",
+   "relation": "baseline",
+   "note": "multilingual multitask baseline",
+   "quote": null
+  },
+  {
+   "work": "BLOOM (Scao et al.)",
+   "year": 2022,
+   "arxiv": "2211.05100",
+   "relation": "evaluates",
+   "note": "base decoder-only model",
+   "quote": null
+  },
+  {
+   "work": "mT5 (Xue et al.)",
+   "year": 2020,
+   "arxiv": "2010.11934",
+   "relation": "evaluates",
+   "note": "base encoder-decoder model",
+   "quote": null
+  },
+  {
+   "work": "XGLM (Lin et al.)",
+   "year": 2021,
+   "arxiv": "2112.10668",
+   "relation": "baseline",
+   "note": "multilingual pretrained baseline; English prompts better than translated",
+   "quote": null
+  },
+  {
+   "work": "PromptSource (Bach et al.)",
+   "year": 2022,
+   "arxiv": "2202.01279",
+   "relation": "uses-method",
+   "note": "prompt framework",
+   "quote": null
+  },
+  {
+   "work": "HumanEval / Codex (Chen et al.)",
+   "year": 2021,
+   "arxiv": "2107.03374",
+   "relation": "uses-data",
+   "note": "code evaluation",
+   "quote": null
+  },
+  {
+   "work": "ROOTS (Laurencon et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "BLOOM pretraining corpus",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 3",
+   "caption": "Comparison of dataset variants P3, xP3, and xP3mt on a sample from PAWS",
+   "page": 4,
+   "why": "Shows how the three prompt variants differ"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Zero-shot multilingual task generalization with English prompts",
+   "page": 6,
+   "why": "Headline comparison across models"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Zero-shot task and language generalization on languages not intentionally seen",
+   "page": 7,
+   "why": "Evidence of language generalization"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "EN vs MT vs HT prompts",
+   "page": 7,
+   "why": "Cost and benefit of translated prompts"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Text claims (XNLI HT 41.13 to 45.55, EN 53.58 to 49.74) do not match Table 1 (40.4 to 43.88, 52.99 to 49.01).",
+  "Figure values (Fig 4) are read from the extracted figure labels, which list values in model order XGLM, BLOOM, mTk, BLOOMZ-P3, BLOOMZ, mT0.",
+  "Tables 10 and 11 are garbled in the text layer; not usable cell by cell.",
+  "The prompt appendix (M) was not copied into the prompts field."
+ ]
+}

@@ -1,19 +1,359 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2305.04790",
  "pdf": "ai-engineering/08-multimodal-engineering/sources/gong-2023-multimodal-gpt.pdf",
  "bib": {
   "title": "MultiModal-GPT: A Vision and Language Model for Dialogue with Humans",
-  "first_author": "Tao Gong",
-  "year": "2023",
-  "venue": null,
+  "authors": [
+   "Tao Gong",
+   "Chengqi Lyu",
+   "Shilong Zhang",
+   "Yudong Wang",
+   "Miao Zheng",
+   "Qian Zhao",
+   "Kuikun Liu",
+   "Wenwei Zhang",
+   "Ping Luo",
+   "Kai Chen"
+  ],
+  "first_author": "Gong",
+  "year": 2023,
+  "venue": "preprint",
   "arxiv": "2305.04790",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-04",
-  "session": "97b4134b-decf-4866-ae85-c6872cbbba19"
+  "at": "2026-11-07",
+  "chars_read": 19201,
+  "chars_total": 19201,
+  "engine": "pymupdf",
+  "skipped": "nothing; pages 6-10 are demo screenshots (Figs 2-8), only captions extract"
  },
- "legacy_report": "SOURCE: \"MultiModal-GPT: A Vision and Language Model for Dialogue with Humans\", Tao Gong, Chengqi Lyu, Shilong Zhang, Yudong Wang, Miao Zheng, Qian Zhao, Kuikun Liu, Wenwei Zhang, Ping Luo, Kai Chen (Shanghai AI Laboratory / HKU / Tianjin University). Preprint, arXiv:2305.04790v3 [cs.CV], 13 Jun 2023 (\"Preprint. Under review.\").\n\nCOVERAGE: All 19,203 of 19,203 extracted characters read, pages 1-11, references included. Nothing was skipped. The paper has no appendix. Pages 6-10 hold only demo screenshots (Figs 2-8), and only their captions extract as text.\n\nCLAIMS\n- claim: Training on datasets whose answers are only one or two words (VQA-style) teaches the model to give one- or two-word replies to any instruction, so the authors dropped those datasets.\n  number: \"one or two words\"\n  setup: These were preliminary experiments that the paper does not report. It gives no metric, no ablation table and no example outputs. The evidence is a stated observation only.\n  quote: \"we observed that the quality of certain datasets, including VQA v2.0 [3], OKVQA [9], GQA [5], CLEVR [6], and NLVR [15], was suboptimal. This is primarily due to the fact that the {response} in these datasets is restricted to one or two words (e.g., yes/no). Consequently, when these datasets are incorporated into the training process, the model exhibits a tendency to generate answers comprising merely one or two words. This brevity is not conducive to user-friendliness. As a result, we have opted to exclude these datasets from the final version of our study.\"\n  where: Sec 4.2, p.5. The abstract repeats the claim: \"a limited dataset with short responses may cause the model to generate brief replies to any instruction.\"\n- claim: Training jointly on language-only instruction data, formatted with the same template as the vision-language data, improves dialogue a lot.\n  number: none (no measurement is given)\n  setup: Dolly 15k and Alpaca GPT4 mixed with the vision-language data. The paper backs this only with qualitative demos.\n  quote: \"Utilizing the same instruction template for both types of data results in a significant improvement in dialogue performance.\" Also: \"The joint training of language-only instructions and visual and language instructions effectively improves the performance of the model.\"\n  where: Abstract p.1; Introduction p.2\n- claim: The whole OpenFlamingo model is frozen. LoRA goes into the language decoder's self-attention, cross-attention and FFN.\n  number: none\n  setup: OpenFlamingo = CLIP vision encoder + perceiver resampler + LLaMA decoder with gated cross-attention. The paper never states the LLaMA size or the LoRA rank, alpha or target matrices. It gives **no trainable-parameter count**.\n  quote: \"We freeze the whole open-flamingo model and add LoRA [4] to the self-attention, cross-attention, and FFW part in the language decoder to finetune MultiModal-GPT.\"\n  where: Sec 3.2, p.4, and the Fig 1 caption. The abstract disagrees: it names only \"gated-cross-attention and self-attention components of the language model\" and leaves out the FFN.\n- claim: Loss is computed only on the response tokens and EOS. Instruction and image tokens are masked out.\n  number: none\n  setup: Next-token prediction, applied to both templates.\n  quote: \"only the {response} and <EOS> tokens in the input sequence are involved in the loss calculation.\"\n  where: Sec 3.2, p.4; also the captions of Tables 1-2\n- claim: Lower-quality VQA and caption sets were subsampled, while the high-quality sets were used in full.\n  number: 5000 A-OKVQA pairs; 512 COCO Caption pairs; 512 OCR VQA pairs; all of LLaVA, Mini-GPT4, Dolly 15k and Alpaca GPT4\n  setup: The authors judged quality themselves. They give no criterion.\n  quote: \"the quality of the A-OKVQA, COCO Caption, and OCR VQA datasets is considered inferior compared to LLaV A and Mini-GPT4. To account for this disparity while still benefiting from the additional data, we include a random sample of 5000 image-text pairs from the A-OKVQA dataset and 512 image-text pairs each from the COCO Caption and OCR VQA datasets in the training process.\"\n  where: Sec 4.1, p.5\n- claim: Training ran for one epoch on 8 A100s with an aggregate batch of 256, learning rate 1e-5 and a cosine schedule.\n  number: 8 A100; 1 epoch; per-GPU batch 1; update every 16 iterations; aggregate batch 256; LR 1e-5\n  setup: Each iteration pairs one vision-language sample with one language-only sample.\n  quote: \"we utilize 8 A100 GPUs and complete the training process within a single epoch. The batch size per GPU for both vision and language instruction following data and language-only instruction following data is set to 1. We use gradient accumulation, and update the parameters of the LoRA every 16 iterations. Each iteration encompasses one vision-language pair and one language-only instruction data. Consequently, the aggregate batch size amounts to 256. We employ a learning rate of 1e-5, using a cosine learning rate scheduler\"\n  where: Sec 4.1, p.5. The figures as printed give 8×1×16 = 128 per data type, or 256 if both data types are counted. The paper does not spell out this arithmetic.\n- claim: COCO captions have no instructions, so GPT-4 was used to write caption instructions (Table 3 lists 10 of them).\n  number: 10 listed instructions\n  setup: These instructions apply to COCO Caption only.\n  quote: \"we employ the GPT-4 [11] model to generate pertinent instructions for the COCO Caption dataset.\"\n  where: Sec 2.2, p.3\n- claim: The motivation is that MiniGPT-4 and LLaVA feed visual tokens into the LLM's self-attention, which is costly when there are many image tokens, and both rely on Vicuna. Flamingo's perceiver resampler with gated cross-attention avoids that cost.\n  number: none\n  quote: \"incorporating such models with detailed or spatiotemporal visual information can be computationally intensive due to the potentially large number of image tokens.\"\n  where: Introduction p.1. The paper argues this but does not measure it.\n\nDATA AND TEMPLATES (verbatim, Tables 1-2, pp.2-3)\n- Language-only data: Dolly 15k and Alpaca GPT4 [12]. Vision-language data: LLaVA, Mini-GPT4, A-OKVQA, COCO Caption, OCR VQA. Excluded: VQA v2.0, OKVQA, GQA, CLEVR, NLVR. MultiInstruct is \"left it as future work\".\n- Table 1 (language):\n  \"<BOS> Below is an instruction that describes a task. Write a response that appropriately completes the request\n  ### Instruction: {instruction}\n  ### Input: {input}\n  ### Response: {response} <EOS>\"\n- Table 2 (vision-language, multi-round when the dataset has rounds):\n  \"<BOS> Below is an instruction that describes a task. Write a response that appropriately completes the request\n  ### Image: <image_token>\n  ### Instruction: {question}\n  ### Response: {response}<EOS>\n  ### Instruction: {question}\n  ### Response: {response} <EOS>\"\n  The caption adds: \"Only the {response} part and <EOS> token will be calculated loss.\"\n\nLIMITS\n- **The paper reports no quantitative evaluation at all.** It has no benchmarks, no human evaluation, no baseline comparison, no seeds and no variance. The two central claims (short answers hurt dialogue; joint language-only training gives a \"significant improvement\") rest only on unreported preliminary runs and cherry-picked demos (Figs 2-8).\n- It does not report the trainable-parameter count, the LoRA rank or alpha, the LLaMA size, or the dataset sizes after mixing.\n- The abstract and Sec 3.2 disagree on whether LoRA goes in the FFN.\n- The \"quality\" of A-OKVQA, COCO and OCR VQA is asserted, not defined. The subsample sizes (5000, 512) are not justified.\n- The paper concedes no limitations or failure modes. Its demos include recognising a real person (Elon Musk, Fig 3) with no discussion of that.\n- What has dated: it uses LLaMA-1 era OpenFlamingo and Vicuna-era comparisons from 2023.\n- The paper does not mention LLaMA-Adapter V2 anywhere. MiniGPT-4 appears only as a prior work and as a source dataset, not as an experimental comparison.\n\nBUILDS ON: Flamingo, Alayrac et al. 2022 [1]; LoRA, Hu et al. 2021 [4]; CLIP, Radford et al. 2021 [13]; LLaMA, Touvron et al. 2023 [16]; LLaVA, Liu et al. 2023 [8]; MiniGPT-4, Zhu et al. 2023 [18]; Instruction tuning with GPT-4 (Alpaca GPT4), Peng et al. 2023 [12]; Vicuna, Chiang et al. 2023 [2]; MultiInstruct, Xu et al. 2022 [17]. The paper calls its base \"open-flamingo\" but cites only the original Flamingo paper [1]. The datasets it uses or rejects cite Goyal 2017, Marino 2019, Hudson & Manning 2019, Johnson 2017, Suhr 2017, Karpathy & Fei-Fei 2015, Mishra 2019 and Schwenk 2022. Dolly 15k has no citation.\n\nCODE: The paper has none beyond the templates quoted above. It links code at https://github.com/open-mmlab/Multimodal-GPT, which I have not read.\n\nFIGURES\n- Fig 1, p.4: \"The overall framework of MultiModal-GPT... We freeze the whole open-flamingo model and add LoRA to the self-attention part, the cross-attention part, and the FFN part in the language decoder\". This is the one useful figure: it shows at a glance which blocks are frozen and where LoRA goes.\n- Figs 2-8, pp.6-10, are qualitative demo screenshots (lasagna recipe, Elon Musk, counting 4 women, film studio, book OCR, travel, season reasoning). They illustrate behaviour only and carry no evidence value.\n\nPROBLEMS: The extraction is clean. \"LLaVA\" extracts as \"LLaV A\" and \"Volume\" as \"V olume\". Demo dialogue text inside the figure images was not extracted. There were no embedded instructions."
+ "type": "empirical",
+ "question": "Can OpenFlamingo be cheaply fine-tuned into a multi-round dialogue model that follows vision-and-language instructions?",
+ "hypothesis": "Joint training on language-only and vision-language instructions with one unified template, using high-quality long-response data, improves dialogue ability.",
+ "contributions": [
+  "MultiModal-GPT, OpenFlamingo fine-tuned with LoRA in self-attention, cross-attention and FFN of the language decoder",
+  "A unified instruction template for language-only and vision-language data",
+  "Observation that short-response datasets harm dialogue, and that joint language-only training helps"
+ ],
+ "method": {
+  "summary": "OpenFlamingo (CLIP vision encoder, perceiver resampler, LLaMA decoder with gated cross-attention) is frozen and LoRA adapters are trained on a mix of language-only and vision-language instruction data in one template, with loss on the response and EOS only. Evaluation is qualitative demos only.",
+  "task": "multimodal instruction tuning for multi-turn dialogue",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Dolly 15k",
+    "role": "train",
+    "size": "entire corpus",
+    "split": null,
+    "source": "language-only instruction data (Peng et al. 2023 cited)",
+    "preprocessing": "Table 1 template"
+   },
+   {
+    "name": "Alpaca GPT4",
+    "role": "train",
+    "size": "entire corpus",
+    "split": null,
+    "source": "language-only instruction data (Peng et al. 2023)",
+    "preprocessing": "Table 1 template"
+   },
+   {
+    "name": "LLaVA",
+    "role": "train",
+    "size": "all image-text pairs",
+    "split": null,
+    "source": null,
+    "preprocessing": "Table 2 template"
+   },
+   {
+    "name": "Mini-GPT4",
+    "role": "train",
+    "size": "all image-text pairs",
+    "split": null,
+    "source": null,
+    "preprocessing": "Table 2 template"
+   },
+   {
+    "name": "A-OKVQA",
+    "role": "train",
+    "size": "5000 image-text pairs",
+    "split": "random sample",
+    "source": null,
+    "preprocessing": "Table 2 template"
+   },
+   {
+    "name": "COCO Caption",
+    "role": "train",
+    "size": "512 image-text pairs",
+    "split": "random sample",
+    "source": null,
+    "preprocessing": "GPT-4 generated instructions (list of 10 in Table 3, e.g. 'Can you describe the image?')"
+   },
+   {
+    "name": "OCR VQA",
+    "role": "train",
+    "size": "512 image-text pairs",
+    "split": "random sample",
+    "source": null,
+    "preprocessing": "Table 2 template"
+   },
+   {
+    "name": "VQA v2.0, OKVQA, GQA, CLEVR, NLVR",
+    "role": "train",
+    "size": null,
+    "split": null,
+    "source": null,
+    "preprocessing": "tried in preliminary experiments and excluded from the final version"
+   }
+  ],
+  "models": [
+   {
+    "name": "MultiModal-GPT",
+    "role": "proposed",
+    "params": null,
+    "architecture": "OpenFlamingo: CLIP vision encoder + perceiver resampler + LLaMA decoder with gated cross-attention; LoRA on self-attention, cross-attention and FFN",
+    "init_from": "OpenFlamingo (frozen)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "LoRA rank/alpha/dropout": "not stated",
+     "OpenFlamingo size": "not stated"
+    }
+   }
+  ],
+  "training": {
+   "objective": "next-token prediction; loss only on {response} and <EOS>",
+   "optimizer": null,
+   "lr": "1e-5",
+   "lr_schedule": "cosine",
+   "warmup": null,
+   "batch_size": "256 aggregate (1 per GPU, 8 GPUs, update every 16 iterations)",
+   "steps": null,
+   "epochs": "1",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "8 A100 GPUs",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "iteration": "each iteration holds one vision-language pair and one language-only sample",
+    "gradient accumulation": "LoRA parameters updated every 16 iterations",
+    "note": "inferred: 1 per GPU x 8 GPUs x 16 steps x 2 samples = 256, matching the stated aggregate"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": "Table 1/2 templates",
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [],
+   "baselines": [],
+   "protocol": "No quantitative evaluation; qualitative demos in Figs 2-8."
+  },
+  "availability": {
+   "code": "https://github.com/open-mmlab/Multimodal-GPT",
+   "weights": null,
+   "data": "same URL (stated as 'code, dataset, and demo')"
+  },
+  "prompts": [
+   {
+    "purpose": "language-only training template (Table 1)",
+    "text": "<BOS> Below is an instruction that describes a task. Write a response that appropriately completes the request\n### Instruction: {instruction}\n### Input: {input}\n### Response: {response} <EOS>",
+    "where": "Table 1, p.2"
+   },
+   {
+    "purpose": "vision-language training template (Table 2)",
+    "text": "<BOS> Below is an instruction that describes a task. Write a response that appropriately completes the request\n### Image: <image_token>\n### Instruction: {question}\n### Response: {response}<EOS>\n### Instruction: {question}\n### Response: {response} <EOS>",
+    "where": "Table 2, p.3"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training.batch_size",
+    "quote": "Each iteration encompasses one vision-language pair and one language-only instruction data. Consequently, the aggregate batch size amounts to 256.",
+    "where": "Sec 4.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Datasets with one- or two-word answers (VQA v2.0, OKVQA, GQA, CLEVR, NLVR) made the model answer any instruction in one or two words, so they were dropped; no metric or ablation is reported.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Preliminary, unreported experiments.",
+   "quote": "we observed that the quality of certain datasets, including VQA v2.0 [3], OKVQA [9], GQA [5], CLEVR [6], and NLVR [15], was suboptimal.",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2, p.5"
+  },
+  {
+   "claim": "Joint training with language-only instruction data under the same template is said to improve dialogue, shown only by demos.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Dolly 15k and Alpaca GPT4 mixed with vision-language data.",
+   "quote": "Utilizing the same instruction template for both types of data results in a significant improvement in dialogue performance.",
+   "table": null,
+   "note": null,
+   "where": "Abstract"
+  },
+  {
+   "claim": "Aggregate batch size is 256.",
+   "kind": "measured",
+   "source": null,
+   "metric": "batch size",
+   "value": 256,
+   "unit": "samples",
+   "baseline_value": null,
+   "n": null,
+   "setup": "8 A100 GPUs, per-GPU batch 1, accumulation over 16 iterations, 1 epoch.",
+   "quote": "Consequently, the aggregate batch size amounts to 256.",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.1"
+  },
+  {
+   "claim": "Training sample from A-OKVQA is 5000 pairs; 512 each for COCO Caption and OCR VQA.",
+   "kind": "measured",
+   "source": null,
+   "metric": "sampled pairs",
+   "value": 5000,
+   "unit": "image-text pairs",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Random samples; LLaVA and Mini-GPT4 used in full.",
+   "quote": "we include a random sample of 5000 image-text pairs from the A-OKVQA dataset and 512 image-text pairs each from the COCO Caption and OCR VQA datasets",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.1"
+  }
+ ],
+ "limits": [
+  "No quantitative evaluation or ablation; all evidence is qualitative demos.",
+  "Dataset-quality finding comes from unreported preliminary runs.",
+  "LoRA rank, optimizer, warmup, sequence length, precision, seeds and model size are not stated.",
+  "MultiInstruct left as future work."
+ ],
+ "practices": [],
+ "terms": [],
+ "lineage": [
+  {
+   "work": "OpenFlamingo / Flamingo (Alayrac et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "base model, frozen",
+   "quote": null
+  },
+  {
+   "work": "LoRA (Hu et al.)",
+   "year": 2021,
+   "arxiv": "2106.09685",
+   "relation": "uses-method",
+   "note": "adapters",
+   "quote": null
+  },
+  {
+   "work": "LLaVA (Liu et al.)",
+   "year": 2023,
+   "arxiv": "2304.08485",
+   "relation": "uses-data",
+   "note": "also compared conceptually",
+   "quote": null
+  },
+  {
+   "work": "MiniGPT-4 (Zhu et al.)",
+   "year": 2023,
+   "arxiv": "2304.10592",
+   "relation": "uses-data",
+   "note": "also compared conceptually",
+   "quote": null
+  },
+  {
+   "work": "Instruction tuning with GPT-4 (Peng et al.)",
+   "year": 2023,
+   "arxiv": "2304.03277",
+   "relation": "uses-data",
+   "note": "Dolly 15k and Alpaca GPT4",
+   "quote": null
+  },
+  {
+   "work": "LLaMA (Touvron et al.)",
+   "year": 2023,
+   "arxiv": "2302.13971",
+   "relation": "uses-method",
+   "note": "language decoder",
+   "quote": null
+  },
+  {
+   "work": "CLIP (Radford et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "vision encoder",
+   "quote": null
+  },
+  {
+   "work": "MultiInstruct (Xu et al.)",
+   "year": 2022,
+   "arxiv": "2212.10773",
+   "relation": "related",
+   "note": "future work dataset",
+   "quote": null
+  },
+  {
+   "work": "A-OKVQA, COCO Caption, OCR VQA",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "sampled",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "The overall framework of MultiModal-GPT.",
+   "page": 4,
+   "why": "Shows which parts are frozen and where LoRA sits."
+  },
+  {
+   "figure": "Table 2",
+   "caption": "The input sequence of vision and language data used to train the model.",
+   "page": 3,
+   "why": "Shows the template and response-only loss."
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Figure content (Figs 2-8) are screenshots; only captions extracted.",
+  "No embedded instructions found."
+ ]
 }

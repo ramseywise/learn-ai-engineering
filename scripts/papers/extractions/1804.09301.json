@@ -1,0 +1,428 @@
+{
+ "schema": 1,
+ "key": "1804.09301",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/rudinger-2018-gender-bias-coreference-resolution.pdf",
+ "bib": {
+  "title": "Gender Bias in Coreference Resolution",
+  "authors": [
+   "Rachel Rudinger",
+   "Jason Naradowsky",
+   "Brian Leonard",
+   "Benjamin Van Durme"
+  ],
+  "first_author": "Rudinger",
+  "year": 2018,
+  "venue": "Proceedings of NAACL-HLT 2018, pages 8-14",
+  "arxiv": "1804.09301",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 26607,
+  "chars_total": 26607,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "benchmark",
+ "question": "Do off-the-shelf coreference resolution systems exhibit gender bias with respect to occupations, and does it track real-world and textual gender statistics?",
+ "hypothesis": "Coreference systems resolve pronouns differently by gender even when the correct answer does not depend on gender, in ways correlated with occupational gender statistics.",
+ "contributions": [
+  "Winogender schemas: 120 hand-written Winograd-style templates, 720 sentences, released publicly",
+  "Evidence of systematic gender bias in three coreference systems",
+  "Correlation of that bias with BLS employment statistics and Bergsma & Lin text statistics"
+ ],
+ "method": {
+  "summary": "The authors wrote 120 sentence templates (60 occupations x 2) instantiated with female, male and neutral pronouns and two participant types, validated them on Mechanical Turk, and ran three existing coreference systems on them. Bias is measured as differing resolution across pronoun genders and correlated with BLS and B&L gender percentages.",
+  "task": "pronoun coreference resolution bias diagnostic",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "Winogender schemas",
+    "role": "eval",
+    "size": "720 sentences (60 occupations x 2 templates x 2 participants x 3 pronoun genders); 120 templates",
+    "split": "none; all used for evaluation",
+    "source": "hand-written by authors; occupations from Caliskan et al. (2017) plus 7 by personal communication and 3 added (doctor, firefighter, secretary); gender percentages from US BLS; released at github.com/rudinger/winogender-schemas",
+    "preprocessing": null
+   },
+   {
+    "name": "Bergsma and Lin (2006) noun gender/number counts",
+    "role": "eval",
+    "size": "counts over 85GB of web news",
+    "split": null,
+    "source": "distributed with CoNLL 2011/2012 shared tasks",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "RULE: Stanford multi-pass sieve (Lee et al. 2011)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "deterministic rule-based sieve",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "STAT: Durrett and Klein (2013)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "feature-template statistical model",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "NEURAL: Clark and Manning (2016a) deep reinforcement mention-ranking",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "neural mention-ranking",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "inferred: each of 720 sentences run once per system; deterministic systems, no repeated runs stated",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {
+    "versions_or_settings_of_systems": null
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "% minimal pairs resolved differently",
+     "definition": "share of male-female minimal pair sentences whose resolution differs",
+     "unit": "%",
+     "higher_is_better": false
+    },
+    {
+     "name": "Gendered pronoun resolution by occupation (%Female - %Male)",
+     "definition": "per occupation, % of female pronouns resolved to the occupation minus % for male pronouns; 0 means no differential",
+     "unit": "points (-100 to 100)",
+     "higher_is_better": null
+    },
+    {
+     "name": "Pearson r",
+     "definition": "correlation of the per-occupation differential with %female from BLS or B&L",
+     "unit": "r",
+     "higher_is_better": null
+    },
+    {
+     "name": "Accuracy by gender and gotcha",
+     "definition": "system accuracy bucketed by pronoun gender and whether the sentence goes against the occupation's majority BLS gender",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "human annotators (MTurk, 10-way redundancy) as validation of the intended answers"
+   ],
+   "protocol": "Human validation: 7200 binary-choice annotations, majority vote per sentence. System outputs compared across pronoun genders. No significance tests or seeds stated."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "https://github.com/rudinger/winogender-schemas"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "datasets.size",
+    "quote": "the evaluation set contains 720 sentences: 60 occupations × 2 sentence templates per occupation × 2 participants × 3 pronoun genders",
+    "where": "Sec 3"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Male and female minimal pairs are resolved differently by the rule-based system.",
+   "kind": "measured",
+   "source": null,
+   "metric": "minimal pairs resolved differently",
+   "value": 68,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Winogender schemas (720 sentences), off-the-shelf RULE (Lee et al. 2011), STAT (Durrett & Klein 2013), NEURAL (Clark & Manning 2016a) coreference systems",
+   "note": null,
+   "where": "Sec 4",
+   "quote": "68% of male-female minimal pair test sentences are resolved differently by the RULE system"
+  },
+  {
+   "claim": "Same for the statistical system.",
+   "kind": "measured",
+   "source": null,
+   "metric": "minimal pairs resolved differently",
+   "value": 28,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Winogender schemas (720 sentences), off-the-shelf RULE (Lee et al. 2011), STAT (Durrett & Klein 2013), NEURAL (Clark & Manning 2016a) coreference systems",
+   "note": null,
+   "where": "Sec 4",
+   "quote": "28% for STAT"
+  },
+  {
+   "claim": "Same for the neural system.",
+   "kind": "measured",
+   "source": null,
+   "metric": "minimal pairs resolved differently",
+   "value": 13,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Winogender schemas (720 sentences), off-the-shelf RULE (Lee et al. 2011), STAT (Durrett & Klein 2013), NEURAL (Clark & Manning 2016a) coreference systems",
+   "note": null,
+   "where": "Sec 4",
+   "quote": "13% for NEURAL"
+  },
+  {
+   "claim": "Male pronouns resolved as OCCUPATION more than female or neutral by RULE.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 72,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Winogender schemas (720 sentences), off-the-shelf RULE (Lee et al. 2011), STAT (Durrett & Klein 2013), NEURAL (Clark & Manning 2016a) coreference systems; male-pronoun rate shown",
+   "note": null,
+   "where": "Sec 4",
+   "quote": "for RULE, 72% male vs 29% female and 1% neutral"
+  },
+  {
+   "claim": "Human majority vote agrees with intended answer on 718 of 720 sentences.",
+   "kind": "measured",
+   "source": null,
+   "metric": "agreement",
+   "value": 99.7,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MTurk, 10-way redundancy on 720 sentences",
+   "note": null,
+   "where": "Sec 3",
+   "quote": "worker responses agree with our intended answers for 718 of 720 sentences (99.7%)"
+  },
+  {
+   "claim": "Raw worker agreement with intended answers.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 94.9,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "7200 binary-choice annotations",
+   "note": null,
+   "where": "Sec 3",
+   "quote": "94.9% of responses agree with our intended answers"
+  },
+  {
+   "claim": "Bias correlates with B&L text statistics most strongly for RULE.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 0.87,
+   "unit": "r",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Winogender schemas (720 sentences), off-the-shelf RULE (Lee et al. 2011), STAT (Durrett & Klein 2013), NEURAL (Clark & Manning 2016a) coreference systems; correlation against B&L %female",
+   "note": null,
+   "where": "Sec 4",
+   "table": "Table 1, row B&L, column RULE"
+  },
+  {
+   "claim": "RULE correlation with BLS.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 0.55,
+   "unit": "r",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Winogender schemas (720 sentences), off-the-shelf RULE (Lee et al. 2011), STAT (Durrett & Klein 2013), NEURAL (Clark & Manning 2016a) coreference systems",
+   "note": null,
+   "where": "Sec 4",
+   "table": "Table 1, row BLS, column RULE"
+  },
+  {
+   "claim": "B&L female percentages correlate with BLS but are systematically lower.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Pearson r",
+   "value": 0.67,
+   "unit": "r",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Bergsma & Lin vs BLS 2015, 60 occupations",
+   "note": "Value printed in Figure 3 caption",
+   "where": "Fig 3",
+   "quote": "Pearson r = 0.67"
+  },
+  {
+   "claim": "Manager: 38.5% female in BLS, 5.18% in B&L text, and no managers predicted female.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 5.18,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "B&L resource vs BLS",
+   "note": "Quote spans a line break in the cached text; the BLS figure is 38.5%",
+   "where": "Sec 4",
+   "quote": "the occupation “manager” is 38.5% female in the U.S. ac-\ncording to real-world statistics (BLS); mentions of “manager” in text are only 5.18% female"
+  },
+  {
+   "claim": "RULE accuracy on female-pronoun gotcha sentences is 10.0% vs 38.3% non-gotcha.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 10.0,
+   "unit": "%",
+   "baseline_value": 38.3,
+   "n": null,
+   "setup": "Winogender schemas (720 sentences), off-the-shelf RULE (Lee et al. 2011), STAT (Durrett & Klein 2013), NEURAL (Clark & Manning 2016a) coreference systems",
+   "note": null,
+   "where": "Sec 4",
+   "table": "Table 2, row RULE yes, column Female"
+  },
+  {
+   "claim": "All systems do worse on gotchas (e.g. NEURAL female 36.7 vs 50.8).",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 36.7,
+   "unit": "%",
+   "baseline_value": 50.8,
+   "n": null,
+   "setup": "Winogender schemas (720 sentences), off-the-shelf RULE (Lee et al. 2011), STAT (Durrett & Klein 2013), NEURAL (Clark & Manning 2016a) coreference systems",
+   "note": "STAT male gotcha 40.0 vs 61.7 non-gotcha; but NEURAL male non-gotcha 49.2 vs gotcha 46.7",
+   "where": "Sec 4",
+   "table": "Table 2, row NEURAL yes, column Female"
+  }
+ ],
+ "limits": [
+  "Authors: schemas have high positive predictive value and low negative predictive value: they may show bias but not prove its absence",
+  "Occupational gender bias only; gender represented as two or three categories because of data limits",
+  "Human judgements carry implicit biases and are a lower bound for equitability, not the objective",
+  "Only three 2011-2016 systems tested; no modern LLMs",
+  "No significance tests, seeds or system version details given"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "gotcha sentence",
+   "definition": "a sentence where pronoun gender does not match the occupation's majority gender (BLS) when OCCUPATION is the correct answer",
+   "where": "Sec 4, Table 2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "The Winograd Schema Challenge",
+   "year": 2011,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "schema style",
+   "quote": null
+  },
+  {
+   "work": "Stanford multi-pass sieve (Lee et al.)",
+   "year": 2011,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "RULE",
+   "quote": null
+  },
+  {
+   "work": "Easy victories and uphill battles in coreference resolution (Durrett & Klein)",
+   "year": 2013,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "STAT",
+   "quote": null
+  },
+  {
+   "work": "Deep reinforcement learning for mention-ranking coreference models (Clark & Manning)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "NEURAL",
+   "quote": null
+  },
+  {
+   "work": "Bootstrapping path-based pronoun resolution (Bergsma & Lin)",
+   "year": 2006,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "noun gender counts",
+   "quote": null
+  },
+  {
+   "work": "Semantics derived automatically from language corpora contain human-like biases (Caliskan et al.)",
+   "year": 2017,
+   "arxiv": "1608.07187",
+   "relation": "uses-data",
+   "note": "occupation list",
+   "quote": null
+  },
+  {
+   "work": "Gender Bias in Coreference Resolution: Evaluation and Debiasing Methods (Zhao et al., WinoBias)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "related",
+   "note": "concurrent independent work; authors encourage using both datasets",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Figure 1",
+   "caption": "Stanford CoreNLP rule-based coreference system resolves a male and neutral pronoun as coreferent with “The surgeon,” but does not for the corresponding female pronoun.",
+   "page": 1,
+   "why": "shows the bias on one example"
+  },
+  {
+   "figure": "Figure 2",
+   "caption": "A “Winogender” schema for the occupation paramedic.",
+   "page": 2,
+   "why": "shows the 2x2 template structure"
+  },
+  {
+   "figure": "Figure 4",
+   "caption": "Gender bias in coreference systems vs BLS and B&L statistics, per occupation.",
+   "page": 4,
+   "why": "shows the correlation per system"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Table 1 and Table 2 cells were read from the flattened text layout; only the values recorded are confirmed by structure (Table 1: B&L 0.87/0.46/0.35, BLS 0.55/0.31/0.31)"
+ ]
+}

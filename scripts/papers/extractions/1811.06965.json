@@ -1,0 +1,536 @@
+{
+ "schema": 1,
+ "key": "1811.06965",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/huang-2018-gpipe.pdf",
+ "bib": {
+  "title": "GPipe: Easy Scaling with Micro-Batch Pipeline Parallelism",
+  "authors": [
+   "Yanping Huang",
+   "Youlong Cheng",
+   "Ankur Bapna",
+   "Orhan Firat",
+   "Mia Xu Chen",
+   "Dehao Chen",
+   "HyoukJoong Lee",
+   "Jiquan Ngiam",
+   "Quoc V. Le",
+   "Yonghui Wu",
+   "Zhifeng Chen"
+  ],
+  "first_author": "Huang",
+  "year": 2019,
+  "venue": "preprint",
+  "arxiv": "1811.06965",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 40805,
+  "chars_total": 40805,
+  "engine": "pymupdf",
+  "skipped": "Supplementary material (training configs, code examples) is referenced but not in the PDF."
+ },
+ "type": "system",
+ "question": "Can a task-independent pipeline-parallelism library let any network expressible as a sequence of layers scale past one accelerator's memory with near-linear speedup?",
+ "hypothesis": "Splitting mini-batches into micro-batches and pipelining them with re-materialization and synchronous gradient accumulation gives efficient, consistent model parallelism; larger models give better quality.",
+ "contributions": [
+  "GPipe library with a batch-splitting pipeline-parallelism algorithm and synchronous gradient updates",
+  "Scaling a 557M AmoebaNet to 84.4% top-1 ImageNet",
+  "A single 6B-parameter 128-layer multilingual Transformer beating bilingual baselines on 100 language pairs"
+ ],
+ "method": {
+  "summary": "Layers are partitioned into K cells on K accelerators; each mini-batch of N is split into M micro-batches pipelined through the cells, gradients accumulated and applied synchronously, with re-materialization at partition boundaries. Evaluated on throughput/max model size (AmoebaNet, Transformer), ImageNet/transfer image classification, and 103-language NMT.",
+  "task": "pipeline model parallelism; image classification; multilingual NMT",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "ImageNet-2012",
+    "role": "train",
+    "size": "1,281,167 train / 50,000 test, 1000 classes",
+    "split": "validation 50,000, single-crop",
+    "source": null,
+    "preprocessing": "480x480 input"
+   },
+   {
+    "name": "CIFAR-10, CIFAR-100, Stanford Cars, Oxford Pets, Food-101, FGVC Aircraft, Birdsnap",
+    "role": "eval",
+    "size": "see Table 4 (train/test counts)",
+    "split": "fine-tune on train, test accuracy averaged over 5 runs",
+    "source": null,
+    "preprocessing": "resized to 480x480, random horizontal flip, cutout"
+   },
+   {
+    "name": "In-house multilingual parallel corpus (102 languages to English)",
+    "role": "train",
+    "size": "25 billion training examples, 10^4 to 10^9 per language",
+    "split": null,
+    "source": "Arivazhagan et al. 2019",
+    "preprocessing": "temperature-based sampling as in multilingual BERT; vocab 64k"
+   }
+  ],
+  "models": [
+   {
+    "name": "AmoebaNet-B(18,512)",
+    "role": "proposed",
+    "params": "557M",
+    "architecture": "convolutional, evolved",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "18 normal cell layers",
+    "hidden": "filter size 512",
+    "heads": null,
+    "context": null,
+    "other": {
+     "partitions": "4",
+     "input": "480x480"
+    }
+   },
+   {
+    "name": "Multilingual Transformer T(64,16384,32)",
+    "role": "proposed",
+    "params": "6B",
+    "architecture": "encoder-decoder Transformer, 64 encoder + 64 decoder layers",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": "64k",
+    "layers": "128",
+    "hidden": "model dim 1024; feed-forward 16384",
+    "heads": "32",
+    "context": null,
+    "other": {
+     "partitions": "16 accelerators",
+     "other_sizes": "T(6,8192,16) 400M; T(24,8192,16) 1.3B; T(12,16384,32) 1.3B; T(32,16384,32) 3B"
+    }
+   },
+   {
+    "name": "Transformer Big bilingual",
+    "role": "baseline",
+    "params": "350M",
+    "architecture": "Transformer Big",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": null,
+   "optimizer": "RMSProp (stated for memory accounting, 12 bytes per parameter)",
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "NMT: 260K, 1M, 4M tokens in batch-size study; Table 1 AmoebaNet mini-batch 128, Transformer 32",
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "1024 (Table 1 Transformer experiments)",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "Image: cutout, random flip. NMT stability: feed-forward init scaled down by number of layers (Zhang et al.), logit clipping above a threshold (value not given)",
+   "hardware": "Cloud TPUv2 (8GB), Cloud TPUv3 (16GB), NVIDIA P100 GPUs without NVLink",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": "5 fine-tuning runs averaged for transfer results",
+   "other": {
+    "hyperparameters": "ImageNet: same as Real et al. [12]; the rest is in supplementary material, not in the PDF"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single-crop test accuracy",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "K": "number of partitions",
+    "M": "number of micro-batches; bubble overhead O((K-1)/(M+K-1)), negligible for M >= 4K",
+    "partitioning": "heuristic minimising variance of estimated cell costs"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Normalized training throughput",
+     "definition": "throughput relative to a reference configuration (K=2, M=1 in Table 2, K=2 in Table 3)",
+     "unit": "x",
+     "higher_is_better": true
+    },
+    {
+     "name": "Top-1 accuracy",
+     "definition": "single-crop validation/test accuracy",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "BLEU / NLL",
+     "definition": "validation BLEU and negative log-likelihood",
+     "unit": "BLEU, nats",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Naive-1 (no GPipe)",
+    "Real et al. AmoebaNet-B 83.9%",
+    "Cubuk et al. AutoAugment",
+    "bilingual Transformer Big per language pair"
+   ],
+   "protocol": "Transfer: average of 5 fine-tuning runs. Throughput tables are single measurements; no variance reported."
+  },
+  "availability": {
+   "code": "open-source library under Lingvo",
+   "weights": null,
+   "data": "NMT corpus in-house; image sets public except as noted"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "eval.metrics[0]",
+    "quote": "Normalized training throughput of AmoebaNet-D (18, 256) and Transformer-48",
+    "where": "Section 3, Table 2"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "AmoebaNet-B(18,512), 557M parameters, reaches 84.4% top-1 on ImageNet-2012.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1",
+   "value": "84.4",
+   "unit": "%",
+   "baseline_value": "83.9",
+   "n": null,
+   "setup": "AmoebaNet-B(18,512), 4 partitions, 480x480, hyper-parameters of Real et al., single crop, validation",
+   "quote": "This single model achieves 84.4% top-1 and 97% top-5 validation accuracy with single-crop.",
+   "table": null,
+   "note": null,
+   "where": "Section 4"
+  },
+  {
+   "claim": "Max Transformer size scales to 83.9B parameters on 128 TPUv3 partitions.",
+   "kind": "measured",
+   "source": null,
+   "metric": "max parameters",
+   "value": "83.9B",
+   "unit": "params",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Transformer layers 2048 model dim, 8192 FF, 32 heads, vocab 32k, seq 1024, batch 32, TPUv3 16GB, with re-materialization",
+   "quote": "With 128 partitions, GPipe allows scaling Transformer up to 83.9B parameters, a 298× increase than what is possible on a single accelerator.",
+   "table": null,
+   "note": null,
+   "where": "Section 3"
+  },
+  {
+   "claim": "AmoebaNet scales to 1.8B parameters on 8 accelerators.",
+   "kind": "measured",
+   "source": null,
+   "metric": "max parameters",
+   "value": "1.8B",
+   "unit": "params",
+   "baseline_value": null,
+   "n": null,
+   "setup": "TPUv2 8GB, 224x224 input, mini-batch 128",
+   "quote": "we were able to scale AmoebaNet to 1.8 billion parameters on 8 accelerators",
+   "table": null,
+   "note": null,
+   "where": "Section 3"
+  },
+  {
+   "claim": "Transformer-48 at K=8, M=32 has 6.3x normalized throughput.",
+   "kind": "measured",
+   "source": null,
+   "metric": "normalized throughput",
+   "value": "6.3",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Transformer-48 on TPUs, normalized to K=2, M=1; batch size adjusted to fit memory if necessary",
+   "quote": null,
+   "table": "Table 2, row M = 32, column Transformer K = 8",
+   "note": "Same row: K=2 1.8, K=4 3.4. M=1 K=8: 1.3.",
+   "where": "Table 2"
+  },
+  {
+   "claim": "At M=1 throughput barely rises with K (1.3x at K=8).",
+   "kind": "measured",
+   "source": null,
+   "metric": "normalized throughput",
+   "value": "1.3",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Transformer-48, TPU, M=1, K=8",
+   "quote": null,
+   "table": "Table 2, row M = 1, column Transformer K = 8",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Bubble overhead is negligible when M >= 4K.",
+   "kind": "measured",
+   "source": null,
+   "metric": "M threshold",
+   "value": "4",
+   "unit": "x K",
+   "baseline_value": null,
+   "n": null,
+   "setup": "experiments on AmoebaNet-D(18,256) and Transformer-48",
+   "quote": "we found the bubble overhead to be negligible when M ≥4 × K",
+   "table": null,
+   "note": null,
+   "where": "Section 2.3"
+  },
+  {
+   "claim": "Without NVLink (P100 GPUs, PCI-E), 24-layer Transformer speeds up 3.3x from K=2 to K=8.",
+   "kind": "measured",
+   "source": null,
+   "metric": "speedup",
+   "value": "3.3",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "P100 GPUs on a single host, M fixed at 32, 24-layer Transformer",
+   "quote": "For the 24-layer Transformer,",
+   "table": "Table 3, row M = 32, column Transformer K = 8",
+   "note": "AmoebaNet-D(18,128): 2.7x over the same range.",
+   "where": "Section 3, Table 3"
+  },
+  {
+   "claim": "Re-materialization alone allows 2.7x larger Transformer on one accelerator.",
+   "kind": "measured",
+   "source": null,
+   "metric": "model-size gain",
+   "value": "2.7",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "TPUv3 16GB",
+   "quote": "Re-materialization allows training a 2.7× larger model on a single accelerator.",
+   "table": null,
+   "note": null,
+   "where": "Section 3"
+  },
+  {
+   "claim": "Peak activation memory drops from 6.26GB to 3.46GB for AmoebaNet, enabling 318M params on one accelerator.",
+   "kind": "measured",
+   "source": null,
+   "metric": "peak activation memory",
+   "value": "3.46",
+   "unit": "GB",
+   "baseline_value": "6.26",
+   "n": null,
+   "setup": "AmoebaNet TPUv2 8GB, 224x224, mini-batch 128",
+   "quote": "GPipe reduces the intermediate activation memory requirements from 6.26GB to 3.46GB",
+   "table": null,
+   "note": null,
+   "where": "Section 3"
+  },
+  {
+   "claim": "Fine-tuned AmoebaNet-B reaches 99.0% on CIFAR-10 and 91.3% on CIFAR-100.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "99.0",
+   "unit": "%",
+   "baseline_value": "98.5",
+   "n": null,
+   "setup": "Pretrained on ImageNet, fine-tuned, 480x480, average of 5 runs",
+   "quote": null,
+   "table": "Table 4, row CIFAR-10, column Accuracy (%)",
+   "note": "CIFAR-100: 91.3 vs 89.3",
+   "where": "Table 4"
+  },
+  {
+   "claim": "Stanford Cars and FGVC Aircraft fine-tuned results are slightly below previous best.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "94.6",
+   "unit": "%",
+   "baseline_value": "94.8",
+   "n": null,
+   "setup": "Stanford Cars, fine-tuned AmoebaNet-B(18,512)",
+   "quote": null,
+   "table": "Table 4, row Stanford Cars, column Accuracy (%)",
+   "note": "FGVC Aircraft 92.7 vs 92.9",
+   "where": "Table 4"
+  },
+  {
+   "claim": "Increasing NMT batch from 260K to 4M tokens raises BLEU from 30.92 to 32.71.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": "32.71",
+   "unit": "BLEU",
+   "baseline_value": "30.92",
+   "n": null,
+   "setup": "Transformer Big, German-English validation, same optimisation parameters",
+   "quote": null,
+   "table": "Table 5, row BLEU, column 4M",
+   "note": "NLL 2.58 -> 2.46; 1M tokens: BLEU 31.86, NLL 2.51",
+   "where": "Table 5"
+  },
+  {
+   "claim": "Deeper 1.3B model beats wide 1.3B model mainly on low-resource languages.",
+   "kind": "measured",
+   "source": null,
+   "metric": "qualitative",
+   "value": "none",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "T(24,8192,16) vs T(12,16384,32), multilingual NMT, read from Fig 3",
+   "quote": "the deeper model outperforms by huge margins on low-resource languages",
+   "table": null,
+   "note": null,
+   "where": "Section 5, Fig 3"
+  },
+  {
+   "claim": "Single 6B 128-layer Transformer on 103 languages beats individually trained 350M bilingual Transformer Big on 100 language pairs.",
+   "kind": "measured",
+   "source": null,
+   "metric": "language pairs better",
+   "value": "100",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "multilingual corpus 25B examples; per-language BLEU only shown in Fig 3, no table",
+   "quote": "outperforming the individually trained 350-million-parameter bilingual Transformer Big [15] models on 100 language pairs",
+   "table": null,
+   "note": null,
+   "where": "Section 1"
+  }
+ ],
+ "limits": [
+  "GPipe assumes a single layer fits in one accelerator's memory (footnote 3 offers splitting a matmul across layers).",
+  "Imperfect partitioning gives load imbalance; AmoebaNet scaled sub-linearly (1.8B on 8 accelerators, 25x not 8x-linear) and its throughput speedup is sub-linear.",
+  "BatchNorm needs special handling (micro-batch statistics in training, mini-batch moving average in evaluation).",
+  "Deep NMT models had trainability issues (peaky predictions, non-finite gradients); fixed with scaled init and logit clipping, threshold value not given.",
+  "Throughput numbers are single measurements without variance; NMT results are shown in a figure with no table; NMT corpus is in-house; training steps, learning rates and compute are in supplementary material, not in this PDF.",
+  "Table 2 normalization baseline is not spelled out in the text.",
+  "Table 1 max-size results depend on 12 bytes/parameter with RMSProp."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "bubble overhead",
+   "definition": "idle time per accelerator introduced by partitioning, O((K-1)/(M+K-1)) amortized over M micro-steps",
+   "where": "Section 2.3"
+  },
+  {
+   "term": "cell",
+   "definition": "K composite layers formed by partitioning the L layers into consecutive groups",
+   "where": "Section 2.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Regularized evolution for image classifier architecture search (AmoebaNet)",
+   "year": 2018,
+   "arxiv": "1802.01548",
+   "relation": "uses-method",
+   "note": "model scaled, hyper-parameters reused",
+   "quote": null
+  },
+  {
+   "work": "Training deep nets with sublinear memory cost",
+   "year": 2016,
+   "arxiv": "1604.06174",
+   "relation": "uses-method",
+   "note": "re-materialization",
+   "quote": null
+  },
+  {
+   "work": "Attention is all you need",
+   "year": 2017,
+   "arxiv": "1706.03762",
+   "relation": "uses-method",
+   "note": "Transformer",
+   "quote": null
+  },
+  {
+   "work": "Mesh-TensorFlow",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "SPMD alternative discussed",
+   "quote": null
+  },
+  {
+   "work": "PipeDream",
+   "year": 2018,
+   "arxiv": "1806.03377",
+   "relation": "baseline",
+   "note": "asynchronous pipeline with weight staleness and versioned weights",
+   "quote": null
+  },
+  {
+   "work": "Massively multilingual NMT in the wild",
+   "year": 2019,
+   "arxiv": "1907.05019",
+   "relation": "uses-data",
+   "note": "NMT corpus",
+   "quote": null
+  },
+  {
+   "work": "Fixup initialization",
+   "year": 2019,
+   "arxiv": "1901.09321",
+   "relation": "uses-method",
+   "note": "scale down FF init by layers",
+   "quote": null
+  },
+  {
+   "work": "Lingvo",
+   "year": 2019,
+   "arxiv": "1902.08295",
+   "relation": "uses-method",
+   "note": "framework GPipe is implemented in",
+   "quote": null
+  },
+  {
+   "work": "Do better ImageNet models transfer better?",
+   "year": 2018,
+   "arxiv": "1805.08974",
+   "relation": "related",
+   "note": "findings corroborated",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "(a) network partitioned across four accelerators; (b) naive model parallelism under-utilization; (c) pipeline parallelism with micro-batches, gradients applied synchronously",
+   "page": 3,
+   "why": "Shows the bubble and why micro-batching fills it"
+  },
+  {
+   "figure": "Table 2",
+   "caption": "Normalized training throughput with different K and M on TPUs",
+   "page": 5,
+   "why": "Shows bubble vs M"
+  }
+ ],
+ "code": [
+  {
+   "where": "Section 2.3",
+   "snippet": "peak activation memory O(N + L/K × N/M) with re-materialization versus O(N × L) without",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Supplementary material not included in PDF; hyperparameters absent.",
+  "Text-extracted Table 2 columns are flattened; row/column mapping inferred from order."
+ ]
+}

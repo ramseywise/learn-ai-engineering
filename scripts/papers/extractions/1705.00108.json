@@ -1,0 +1,330 @@
+{
+ "schema": 1,
+ "key": "1705.00108",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/peters-2017-semi-supervised-sequence-tagging-bidirectional.pdf",
+ "bib": {
+  "title": "Semi-supervised sequence tagging with bidirectional language models",
+  "authors": ["Matthew E. Peters", "Waleed Ammar", "Chandra Bhagavatula", "Russell Power"],
+  "first_author": "Peters",
+  "year": 2017,
+  "venue": "Proceedings of the 55th Annual Meeting of the Association for Computational Linguistics (ACL), pages 1756-1765",
+  "arxiv": "1705.00108",
+  "doi": "10.18653/v1/P17-1161"
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 45887,
+  "chars_total": 45887,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can context embeddings from a pre-trained bidirectional language model, added to a supervised sequence tagger, improve NER and chunking without extra labeled data?",
+ "hypothesis": "Language model embeddings encode semantic and syntactic roles of words in context, so they should help a tagger whose RNN is trained on little labeled data.",
+ "contributions": [
+  "Show that the context sensitive representation from LM embeddings is useful in supervised sequence tagging (CoNLL 2003 NER 90.87 to 91.93 F1; new state of the art 96.37 F1 on CoNLL 2000 chunking).",
+  "Show that using both forward and backward LM embeddings boosts performance over a forward-only LM.",
+  "Show domain specific pre-training is not necessary by applying a news-domain LM to scientific papers."
+ ],
+ "method": {
+  "summary": "TagLM: a hierarchical tagger (char CNN/RNN + pre-trained Senna word embeddings, two stacked bidirectional RNNs, CRF) whose first-layer output is concatenated with the frozen top-layer states of separately pre-trained forward and backward LSTM language models. Evaluated on CoNLL 2003 NER and CoNLL 2000 chunking, with ablations on NER.",
+  "task": "sequence tagging (named entity recognition, chunking) with LM-embedding feature augmentation",
+  "trains": true,
+  "datasets": [
+   {"name": "CoNLL 2003 NER", "role": "both", "size": null, "split": "standard train/dev/test; final models trained on train plus dev after tuning hyperparameters on dev", "source": "Reuters RCV1 newswire, four entity types (PER, LOC, ORG, MISC)", "preprocessing": "lowercase all tokens, replace all digits with 0; BIOES tags"},
+   {"name": "CoNLL 2000 chunking", "role": "both", "size": "1000 sentences held out as dev", "split": "WSJ sections 15-18 train, section 20 test; 1000 sentences randomly sampled from train as dev", "source": "Wall Street Journal corpus, 11 chunk types plus other", "preprocessing": "lowercase, digits to 0; BIOES tags"},
+   {"name": "1B Word Benchmark (Chelba et al., 2014)", "role": "pretrain", "size": "approximately 800 million tokens in training split (about 4000X the CoNLL training tokens)", "split": "standard", "source": "public language modeling benchmark of news text", "preprocessing": null},
+   {"name": "SemEval 2017 Task 10 ScienceIE", "role": "both", "size": null, "split": "development set reported", "source": "scientific publications from computer science, material sciences, physics; entity types Task, Material, Process", "preprocessing": null}
+  ],
+  "models": [
+   {"name": "TagLM tagger (baseline, NER)", "role": "baseline", "params": null, "architecture": "char encoder with two bidirectional GRUs of 80 hidden units and 25-dim char embeddings; sequence layer of two bidirectional GRUs with 300 hidden units; dense layer; CRF", "init_from": "Senna word embeddings (Collobert et al., 2011), fine tuned", "tokenizer": "word level", "vocab": null, "layers": 2, "hidden": "300 per direction (sequence GRUs)", "heads": null, "context": null, "other": {"char_encoder": "bidirectional GRU, 80 units, 25-dim char embeddings"}},
+   {"name": "TagLM tagger (baseline, chunking)", "role": "baseline", "params": null, "architecture": "char CNN (30-dim char embeddings, 30 filters of width 3, tanh); sequence layer of two bidirectional LSTMs with 200 hidden units; dense layer; CRF", "init_from": "Senna word embeddings, fine tuned", "tokenizer": "word level", "vocab": null, "layers": 2, "hidden": "200", "heads": null, "context": null, "other": {}},
+   {"name": "CNN-BIG-LSTM (forward LM)", "role": "base", "params": null, "architecture": "char CNN with 4096 filters input, two stacked LSTMs each 8192 hidden units with 1024-dim projection", "init_from": "released by Jozefowicz et al. (2016); weights frozen", "tokenizer": "character CNN", "vocab": null, "layers": 2, "hidden": "8192 with 1024 projection", "heads": null, "context": null, "other": {"test_perplexity": "30.0 on 1B Word Benchmark", "train_cost": "three weeks on 32 GPUs (Jozefowicz et al.)"}},
+   {"name": "LSTM-2048-512 (forward and backward LMs)", "role": "base", "params": null, "architecture": "token embeddings into single layer LSTM with 2048 units and 512-dim projection", "init_from": "trained by the authors on 1B Word Benchmark; weights frozen", "tokenizer": "word tokens", "vocab": null, "layers": 1, "hidden": "2048 with 512 projection", "heads": null, "context": null, "other": {"test_perplexity": "47.7 forward, 47.3 backward", "epochs": "10", "updates": "synchronous across four GPUs"}},
+   {"name": "LSTM-512-256 (small LMs on CoNLL 2003 only)", "role": "evaluated", "params": null, "architecture": "512 hidden units with 256-dim projection, forward and backward", "init_from": "trained on CoNLL 2003 train+dev, normalized as tagger input", "tokenizer": null, "vocab": null, "layers": 1, "hidden": "512 with 256 projection", "heads": null, "context": null, "other": {"test_perplexity": "106.9 forward, 104.2 backward on CoNLL 2003 test"}}
+  ],
+  "training": {
+   "objective": "sentence CRF loss (forward-backward) for the tagger; Viterbi decoding at test; LMs trained as forward/backward next-token prediction with softmax (removed afterwards)",
+   "optimizer": "Adam, gradient norms clipped at 5.0",
+   "lr": "0.001 constant, then divided by ten twice",
+   "lr_schedule": "constant 0.001 until the epoch with best dev performance, then divide by 10 and train five epochs, divide by 10 again, train five more epochs and stop",
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": "early stopping on dev, then 5 + 5 annealing epochs; LSTM-2048-512 LMs trained 10 epochs",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": "NER: 25% on input to each GRU, not recurrent connections. Chunking: 50% on char embeddings, input to each LSTM layer, and output of final LSTM layer",
+   "regularisation": "dropout and early stopping; pre-trained LM weights fixed, Senna embeddings fine tuned",
+   "hardware": "LSTM-2048-512 LMs: four GPUs, synchronous updates (GPU type not stated)",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": "each final configuration trained ten times with different random seeds; mean and standard deviation of F1 reported",
+   "other": {"lm_insertion": "LM embeddings concatenated with the output of the first bidirectional RNN layer, h_{k,1} = [fwd h; bwd h; h_LM]", "lm_embedding": "concatenation of forward and backward top-layer LSTM states, forward and backward LMs independent with no shared parameters", "num_rnn_layers": "L = 2 in all experiments"}
+  },
+  "inference": {
+   "decoding": "Viterbi for most likely tag sequence",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "ten runs with different random seeds, mean and std F1",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "F1", "definition": "official CoNLL micro-averaged F1", "unit": "%", "higher_is_better": true}
+   ],
+   "baselines": ["Chiu and Nichols (2016)", "Lample et al. (2016)", "Ma and Hovy (2016)", "Yang et al. (2017)", "Hashimoto et al. (2016)", "Sogaard and Goldberg (2016)", "Collobert et al. (2011)", "Luo et al. (2015)", "own baseline without LM"],
+   "protocol": "Mean and std over ten seeds; significance by two-sided Welch t-test at 95% (p = 0.021 for NER vs 91.62 of Chiu and Nichols); for chunking p < 0.001 assuming standard deviation of 0.1 for the prior result."
+  },
+  "availability": {
+   "code": null,
+   "weights": "CNN-BIG-LSTM released at github.com/tensorflow/models/tree/master/lm_1b (Jozefowicz et al.)",
+   "data": "CoNLL 2003, CoNLL 2000, 1B Word Benchmark are public"
+  },
+  "prompts": [],
+  "evidence": [
+   {"field": "training.lr_schedule", "quote": "decrease α an order of magnitude (i.e., divide by ten), train for ﬁve epochs, decrease α an order of magnitude again, train for ﬁve more epochs and stop.", "where": "Section 3, Training"}
+  ]
+ },
+ "results": [
+  {
+   "claim": "Adding LM embeddings raises CoNLL 2003 NER test F1 over the same tagger without an LM.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1 mean over 10 seeds",
+   "value": 91.93,
+   "unit": "%",
+   "baseline_value": 90.87,
+   "n": 10,
+   "setup": "CoNLL 2003 NER test, TagLM with forward CNN-BIG-LSTM and backward LSTM-2048-512, LM embeddings at output of first RNN layer, trained on train+dev, no gazetteers or extra labeled data",
+   "quote": "overall performance increases from 90.87% to 91.93% F1 for the CoNLL 2003 NER task",
+   "table": null,
+   "note": "Table 1 prints 91.93 ± 0.19 vs baseline 90.87 ± 0.13.",
+   "where": "Introduction; Table 1"
+  },
+  {
+   "claim": "TagLM sets a new state of the art on CoNLL 2000 chunking.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1 mean over 10 seeds",
+   "value": 96.37,
+   "unit": "%",
+   "baseline_value": 95.00,
+   "n": 10,
+   "setup": "CoNLL 2000 chunking test, two-layer bi-LSTM tagger with char CNN, same LMs, no additional labeled data",
+   "quote": "We also establish a new state of the art result (96.37% F1) for the CoNLL 2000 Chunking task.",
+   "table": "Table 2, row TagLM, column F1 ± std (96.37 ± 0.05; baseline 95.00 ± 0.08)",
+   "note": null,
+   "where": "Introduction; Table 2"
+  },
+  {
+   "claim": "The NER gain is statistically significant over the previous best result that used gazetteers.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Welch t-test p-value",
+   "value": 0.021,
+   "unit": "p",
+   "baseline_value": null,
+   "n": 10,
+   "setup": "TagLM 91.93 vs Chiu and Nichols (2016) 91.62 ± 0.33 with gazetteers, CoNLL 2003 test",
+   "quote": "(at 95%, two-sided Welch t-test, p = 0.021)",
+   "table": null,
+   "note": null,
+   "where": "Section 3.1"
+  },
+  {
+   "claim": "Average absolute gain from LM embeddings on the chunking task is larger than for NER.",
+   "kind": "measured",
+   "source": null,
+   "metric": "absolute F1 gain",
+   "value": 1.37,
+   "unit": "F1 points",
+   "baseline_value": null,
+   "n": 10,
+   "setup": "CoNLL 2000 chunking, no-LM baseline 95.00 vs TagLM 96.37",
+   "quote": "the LM embeddings amounts to an average absolute improvement of 1.06 and 1.37 F1 in the NER and Chunking tasks, respectively",
+   "table": "Table 4, row Ours, column Delta",
+   "note": null,
+   "where": "Section 3.1; Table 4"
+  },
+  {
+   "claim": "LM embedding gains exceed gains from gazetteers or transfer learning in prior work (e.g. +0.71 for gazetteers, +0.06 for transfer).",
+   "kind": "reported",
+   "source": "Chiu and Nichols (2016); Yang et al. (2017)",
+   "metric": "F1 gain",
+   "value": 0.71,
+   "unit": "F1 points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CoNLL 2003 NER, Chiu and Nichols adding gazetteers; Yang et al. +0.06 from CoNLL 2000/PTB-POS transfer",
+   "quote": "Chiu and Nichols (2016) reported an increase of 0.71 F1 when adding gazetteers to their base-",
+   "table": "Table 3",
+   "note": null,
+   "where": "Section 3.1; Table 3"
+  },
+  {
+   "claim": "Inserting LM embeddings at the output of the first RNN layer works best.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 91.93,
+   "unit": "%",
+   "baseline_value": 91.55,
+   "n": 10,
+   "setup": "CoNLL 2003 NER; alternatives: input to first RNN 91.55 ± 0.21, output of second RNN 91.72 ± 0.13",
+   "quote": null,
+   "table": "Table 5, row output of the first RNN layer, column F1 ± std",
+   "note": null,
+   "where": "Table 5"
+  },
+  {
+   "claim": "Adding a backward LM beats forward-only, with the two-LM system best.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 91.62,
+   "unit": "%",
+   "baseline_value": 91.40,
+   "n": 10,
+   "setup": "CoNLL 2003 NER, forward LSTM-2048-512 alone 91.40 vs forward+backward LSTM-2048-512 91.62",
+   "quote": "adding backward LM embeddings consistently outperforms forward-only LM em-",
+   "table": "Table 6, row LSTM-2048-512 / LSTM-2048-512, column F1 ± std",
+   "note": "Text states improvements between 0.22 and 0.27%.",
+   "where": "Section 3.2; Table 6"
+  },
+  {
+   "claim": "Larger forward LM (CNN-BIG-LSTM, perplexity 30.0) improves F1 about as much as adding a backward LM.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 91.66,
+   "unit": "%",
+   "baseline_value": 91.40,
+   "n": 10,
+   "setup": "CoNLL 2003 NER, forward-only CNN-BIG-LSTM vs forward-only LSTM-2048-512 (91.40)",
+   "quote": "improves F1 by 0.26 - 0.31%, about as much as adding backward LM",
+   "table": "Table 6, row CNN-BIG-LSTM / none",
+   "note": null,
+   "where": "Section 3.2; Table 6"
+  },
+  {
+   "claim": "An LM trained only on the small CoNLL 2003 data slightly hurts relative to no LM.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 90.79,
+   "unit": "%",
+   "baseline_value": 90.87,
+   "n": 10,
+   "setup": "CoNLL 2003 NER; LSTM-512-256 forward and backward LMs trained on CoNLL 2003 train+dev, perplexities 106.9 and 104.2",
+   "quote": "decreased performance slightly",
+   "table": "Table 6, row LSTM-512-256*, column F1 ± std",
+   "note": null,
+   "where": "Section 3.2; Table 6"
+  },
+  {
+   "claim": "Removing the task-specific sequence RNN and using only LM embeddings plus dense layer and CRF is far worse than the baseline.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 88.17,
+   "unit": "%",
+   "baseline_value": 90.87,
+   "n": null,
+   "setup": "CoNLL 2003 NER, LM weights fixed",
+   "quote": "performance was very low, 88.17 F1, well below our baseline",
+   "table": null,
+   "note": null,
+   "where": "Section 3.2"
+  },
+  {
+   "claim": "With 1% of the CoNLL 2003 training set, the LM gain is larger.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 71.01,
+   "unit": "%",
+   "baseline_value": 67.66,
+   "n": null,
+   "setup": "CoNLL 2003 NER, 1% of training set sampled following Yang et al. (2017)",
+   "quote": "test F1 increased 3.35% (from 67.66 to 71.01%)",
+   "table": null,
+   "note": "Compared with +1.06 on full training data.",
+   "where": "Section 3.2, Dataset size"
+  },
+  {
+   "claim": "Giving the no-LM baseline as many parameters as TagLM does not help; shrinking TagLM's second layer to baseline size slightly raises F1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 92.00,
+   "unit": "%",
+   "baseline_value": 91.93,
+   "n": 10,
+   "setup": "CoNLL 2003 NER; no-LM with matched parameters was 0.15% F1 below baseline; chunking showed no such improvement",
+   "quote": "test F1 increased slightly to 92.00 ± 0.11",
+   "table": null,
+   "note": null,
+   "where": "Section 3.2, Number of parameters"
+  },
+  {
+   "claim": "A news-domain LM improves entity extraction on scientific text (ScienceIE).",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1 (dev set, entity extraction)",
+   "value": 54.05,
+   "unit": "%",
+   "baseline_value": 49.93,
+   "n": null,
+   "setup": "SemEval 2017 Task 10 ScienceIE development set, LM trained on 1B Word news text",
+   "quote": "TagLM increased F1 on the development set by 4.12% (from 49.93 to to 54.05%)",
+   "table": null,
+   "note": "Text prints 'to to' as a typo.",
+   "where": "Section 3.2, domain transfer"
+  }
+ ],
+ "limits": [
+  "Authors hypothesize but did not test that a backward LM as large as CNN-BIG-LSTM would improve performance further.",
+  "Alternative ways to combine LM embeddings (non-linear mapping, attention) were not explored.",
+  "News-domain LM and news-domain labeled data in the main evaluation; domain transfer tested only on ScienceIE dev set.",
+  "Parameter-matching conclusion is task dependent: a similar experiment for chunking did not improve F1.",
+  "Batch size, steps and hardware type for the tagger are not given; no code link for TagLM.",
+  "Dated: LSTM-based frozen feature extraction, superseded by fine-tuned transformers."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "LM embedding", "definition": "an encoding of the context at each position in the sequence computed by a pre-trained neural language model, used in the supervised tagging model", "where": "Section 1"},
+  {"term": "TagLM", "definition": "language-model-augmented sequence tagger", "where": "Section 2"}
+ ],
+ "lineage": [
+  {"work": "Exploring the limits of language modeling (Jozefowicz et al.)", "year": 2016, "arxiv": "1602.02410", "relation": "uses-method", "note": "supplies CNN-BIG-LSTM and training recipe for the LSTM-2048-512 LMs", "quote": null},
+  {"work": "One billion word benchmark (Chelba et al.)", "year": 2014, "arxiv": "1312.3005", "relation": "uses-data", "note": "LM pre-training corpus", "quote": null},
+  {"work": "Transfer learning for sequence tagging with hierarchical recurrent networks (Yang et al.)", "year": 2017, "arxiv": null, "relation": "baseline", "note": "hyperparameters similar; 1% training-set protocol", "quote": null},
+  {"work": "Named entity recognition with bidirectional LSTM-CNNs (Chiu and Nichols)", "year": 2016, "arxiv": null, "relation": "baseline", "note": "previous NER best with gazetteers (91.62); ten-seed protocol", "quote": null},
+  {"work": "End-to-end sequence labeling via bi-directional LSTM-CNNs-CRF (Ma and Hovy)", "year": 2016, "arxiv": null, "relation": "baseline", "note": "baseline architecture and dropout recipe", "quote": null},
+  {"work": "Natural language processing (almost) from scratch (Collobert et al.)", "year": 2011, "arxiv": null, "relation": "uses-data", "note": "Senna word embeddings, CRF layer", "quote": null},
+  {"work": "A joint many-task model (Hashimoto et al.)", "year": 2016, "arxiv": "1611.01587", "relation": "baseline", "note": "chunking comparison, 95.77 with PTB-POS", "quote": null},
+  {"work": "Deep multi-task learning with low level tasks supervised at lower layers (Sogaard and Goldberg)", "year": 2016, "arxiv": null, "relation": "baseline", "note": "chunking comparison", "quote": null},
+  {"work": "Semi-supervised sequence learning (Dai and Le)", "year": 2015, "arxiv": null, "relation": "related", "note": "pre-trains LSTM encoders for whole sequences, unlike token-in-context embeddings", "quote": null},
+  {"work": "context2vec (Melamud et al.)", "year": 2016, "arxiv": null, "relation": "related", "note": "bidirectional-LM-like context encoder on closely related tasks", "quote": null},
+  {"work": "Semi-supervised sequence modeling with syntactic topic models (Li and McCallum)", "year": 2005, "arxiv": null, "relation": "related", "note": "most closely related method", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 2", "caption": "Overview of TagLM, our language model augmented sequence tagging architecture. The top level embeddings from a pre-trained bidirectional LM are inserted in a stacked bidirectional RNN sequence tagging model.", "page": 3, "why": "Shows where the frozen LM states join the tagger."},
+  {"figure": "Table 6", "caption": "Comparison of CoNLL-2003 test set F1 for different language model combinations.", "page": 6, "why": "Shows LM size, direction and training corpus effects in one table."}
+ ],
+ "code": [
+  {"where": "Eq. 3, Section 2.4", "snippet": "h_{k,1} = [forward h_{k,1}; backward h_{k,1}; h_k^LM]", "verbatim": false}
+ ],
+ "problems": [
+  "Text layer contains a large block of duplicated, garbled LaTeX about the backward LM (Figure 1 residue) in the extraction; ignored.",
+  "No instructions embedded in the PDF."
+ ]
+}

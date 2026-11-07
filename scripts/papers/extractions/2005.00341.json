@@ -1,0 +1,380 @@
+{
+ "schema": 1,
+ "key": "2005.00341",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/dhariwal-2020-jukebox.pdf",
+ "bib": {
+  "title": "Jukebox: A Generative Model for Music",
+  "authors": [
+   "Prafulla Dhariwal",
+   "Heewoo Jun",
+   "Christine Payne",
+   "Jong Wook Kim",
+   "Alec Radford",
+   "Ilya Sutskever"
+  ],
+  "first_author": "Dhariwal",
+  "year": 2020,
+  "venue": "preprint",
+  "arxiv": "2005.00341",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 82698,
+  "chars_total": 82698,
+  "engine": "pymupdf",
+  "skipped": "reference list and t-SNE artist-name lists skimmed"
+ },
+ "type": "system",
+ "question": "Can a single model generate diverse, high-fidelity music with singing in the raw audio domain with coherence over minutes?",
+ "hypothesis": "Compressing raw audio with a multi-scale VQ-VAE and modelling the discrete codes with autoregressive Transformers at scale makes long raw-audio music generation feasible.",
+ "contributions": [
+  "Multi-scale VQ-VAE with random restarts, separate autoencoders and a spectral loss",
+  "Scalable Transformer priors and upsamplers over discrete codes",
+  "Conditioning on artist, genre, timing and unaligned lyrics",
+  "Release of weights, code and samples"
+ ],
+ "method": {
+  "summary": "Three separate VQ-VAEs compress 44.1 kHz audio by 8x, 32x and 128x. A 5B top-level prior and two 1B upsamplers model the codes autoregressively with sparse (axis-aligned) Transformers, conditioned on artist, genre, timing and lyrics. Sampling is ancestral top to bottom, with windowed and primed variants.",
+  "task": "raw-audio music generation (VQ-VAE codes + autoregressive priors)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "scraped song dataset (LyricWiki lyrics/metadata)",
+    "role": "train",
+    "size": "1.2 million songs (600k in English)",
+    "split": null,
+    "source": "scraped; lyrics and metadata from LyricWiki",
+    "preprocessing": "32 bit 44.1 kHz audio; random downmix of left/right to mono as augmentation; later restricted to primarily-English songs; 24 sec chunks with lyric windows aligned via Spleeter + NUS AutoLyricsAlign"
+   },
+   {
+    "name": "MAESTRO",
+    "role": "train",
+    "size": null,
+    "split": null,
+    "source": "first model only, 22 kHz VQ-VAE codes",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Music VQ-VAE (3 levels)",
+    "role": "proposed",
+    "params": "2 million",
+    "architecture": "non-causal dilated 1-D conv residual encoder/decoder, EMA codebook",
+    "init_from": null,
+    "tokenizer": "VQ codes",
+    "vocab": "2048 per level",
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "hop_lengths": "8, 32, 128",
+     "embedding_width": 64,
+     "commit_beta": 0.02,
+     "codebook_ema_gamma": 0.99
+    }
+   },
+   {
+    "name": "Upsamplers (middle, bottom)",
+    "role": "proposed",
+    "params": "1B each",
+    "architecture": "Scalable (sparse) Transformer with WaveNet conditioner",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": "2048",
+    "layers": "72",
+    "hidden": "1920",
+    "heads": "1",
+    "context": "8192 tokens",
+    "other": {
+     "factorized_attention_shape": "(128, 64)"
+    }
+   },
+   {
+    "name": "Top-level prior",
+    "role": "proposed",
+    "params": "5B",
+    "architecture": "Scalable Transformer; lyrics encoder + 7 encoder-decoder attention layers",
+    "init_from": "lyrics model reuses pretrained unconditional top-level prior as decoder, new layers zero-init",
+    "tokenizer": null,
+    "vocab": "2048",
+    "layers": "72 self-attention",
+    "hidden": "4800",
+    "heads": "8",
+    "context": "8192 tokens (about 24 s)",
+    "other": {
+     "lyrics_encoder": "18 layers, width 1280, 4 heads, 512 tokens"
+    }
+   }
+  ],
+  "training": {
+   "objective": "VQ-VAE: L_recons + L_codebook + beta*L_commit + multi-STFT spectral loss; priors/upsamplers: next-token maximum likelihood",
+   "optimizer": "Adam",
+   "lr": "0.00015 for 5B prior (Table 6); 0.0003 for VQ-VAE and upsamplers",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "VQ-VAE 256; upsamplers 192, 184; 5B prior 512",
+   "steps": "VQ-VAE 384618; upsamplers 265000 and 279000; prior 310500",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "8192 codes",
+   "precision": "fully half precision (weights, gradients, Adam state) with dynamic scaling",
+   "weight_decay": "0.002 (prior); 0.01 (upsamplers)",
+   "dropout": null,
+   "regularisation": "Adam beta2 0.95 (upsamplers), 0.925 (prior)",
+   "hardware": "V100 GPUs (VQ-VAE 256; upsamplers 128; top prior 512; lyrics 512)",
+   "compute": "VQ-VAE 3 days on 256 V100; upsamplers 2 weeks on 128 V100; 5B prior 4 weeks on 512 V100; lyrics model 2 weeks on 512 V100",
+   "wall_clock": "as compute",
+   "seeds": null,
+   "other": {
+    "gpipe": "GPipe used for larger models",
+    "VQ-VAE_train_clips": "9-second audio clips",
+    "ablation_training": "batch size 32, 3-second clips at 44 kHz"
+   }
+  },
+  "inference": {
+   "decoding": "ancestral sampling top to bottom; windowed sampling advances by half the context; primed sampling from 12 s of real audio",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "full tree: 4 independent samples per one-minute extension, 16 completions at 3 min; no further counts",
+   "prompting": "artist, genre, timing and lyrics conditioning",
+   "retrieval": null,
+   "parameters": {},
+   "other": {
+    "speed": "about an hour to generate 1 minute of top level tokens; about 8 hours to upsample one minute"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "spectral convergence",
+     "definition": "spectral error relative to signal for VQ-VAE reconstruction",
+     "unit": "dB",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "Opus codec at comparable bitrate (qualitative, Fig 4)",
+    "hierarchical VQ-VAE (Razavi 2019)"
+   ],
+   "protocol": "VQ-VAE: 5000 held-out 3-second segments, average in dB. Generation: manual listening for coherence, musicality, diversity, novelty; no MOS or FID."
+  },
+  "availability": {
+   "code": "https://github.com/openai/jukebox",
+   "weights": "released",
+   "data": null
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "The 5B top-level prior takes about an hour to generate one minute of top-level tokens.",
+   "kind": "measured",
+   "source": null,
+   "metric": "generation time",
+   "value": "1",
+   "unit": "hour per minute of top-level tokens",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Jukebox 5B top-level prior, ancestral sampling",
+   "quote": "The current model takes around an hour to generate 1 minute",
+   "table": null,
+   "note": null,
+   "where": "Sec 7"
+  },
+  {
+   "claim": "Upsampling one minute of top-level tokens takes about 8 hours because it is sequential.",
+   "kind": "measured",
+   "source": null,
+   "metric": "upsampling time",
+   "value": "8",
+   "unit": "hours per minute",
+   "baseline_value": null,
+   "n": null,
+   "setup": "1B middle and bottom upsamplers",
+   "quote": "it takes around 8 hours to upsample one minute of top level tokens",
+   "table": null,
+   "note": null,
+   "where": "Sec 7"
+  },
+  {
+   "claim": "The authors state the asymmetry: fast parallel likelihood evaluation, slow autoregressive sampling.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Jukebox",
+   "quote": "Our models have fast parallel evaluation of likelihood but slow autoregressive sampling.",
+   "table": null,
+   "note": null,
+   "where": "Sec 7"
+  },
+  {
+   "claim": "Reconstruction error rises with hop length; bottom level with restarts reaches -23.0 dB, top level -8.3 dB.",
+   "kind": "measured",
+   "source": null,
+   "metric": "spectral convergence",
+   "value": "-23.0 dB (bottom), -12.4 (middle), -8.3 (top)",
+   "unit": "dB",
+   "baseline_value": "-21.1 bottom without restart",
+   "n": 5000,
+   "setup": "VQ-VAE, 5000 held-out 3 s segments, batch 32",
+   "quote": null,
+   "table": "Table 1, rows Bottom/Middle/Top, column With restart",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Reducing codebook size from 2048 to 256 worsens bottom-level reconstruction from -23.0 to -15.9 dB.",
+   "kind": "measured",
+   "source": null,
+   "metric": "spectral convergence",
+   "value": "-15.9",
+   "unit": "dB",
+   "baseline_value": "-23.0",
+   "n": 5000,
+   "setup": "bottom-level VQ-VAE, hop 8",
+   "quote": null,
+   "table": "Table 2, row 256, column Spectral convergence",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Top-level reconstruction degrades without spectral loss (-6.3 dB) and with a single hierarchical autoencoder (2.9 dB), versus -8.3 dB.",
+   "kind": "measured",
+   "source": null,
+   "metric": "spectral convergence",
+   "value": "-6.3 / 2.9",
+   "unit": "dB",
+   "baseline_value": "-8.3",
+   "n": 5000,
+   "setup": "top-level VQ-VAE, hop 128",
+   "quote": null,
+   "table": "Table 3, rows Without spectral loss, With single autoencoder",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Context of 8192 tokens spans about 24, 6 and 1.5 seconds of audio at top, middle and bottom level.",
+   "kind": "measured",
+   "source": null,
+   "metric": "audio context",
+   "value": "24 s",
+   "unit": "seconds",
+   "baseline_value": null,
+   "n": null,
+   "setup": "hop lengths 128, 32, 8 at 44.1 kHz",
+   "quote": "which corresponds to approximately 24, 6, and 1.5 seconds",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.2"
+  },
+  {
+   "claim": "Samples stay coherent through the top-level context (about 24 s) but lack long-term structure such as repeated choruses.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "manual listening, no quantitative evaluation",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Sec 5.3"
+  }
+ ],
+ "limits": [
+  "Evaluation is manual listening; authors say MOS or FID-like metrics are not meaningful",
+  "No repeated choruses or long-term structure; noise or scratchiness at small scale",
+  "Trained only on primarily English songs",
+  "Very slow sampling (hours per minute)",
+  "Rap/hip-hop lyric alignment is weaker with linear windowing",
+  "Temperature, top-p and sampling hyperparameters not stated"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "windowed sampling",
+   "definition": "move ahead our sampling window by half our context and continue sampling conditioned on this half context",
+   "where": "Sec 4.4"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Generating Diverse High-Fidelity Images with VQ-VAE-2",
+   "year": 2019,
+   "arxiv": "1906.00446",
+   "relation": "extends",
+   "note": "hierarchical VQ-VAE with EMA codebook",
+   "quote": null
+  },
+  {
+   "work": "Neural Discrete Representation Learning (VQ-VAE)",
+   "year": 2017,
+   "arxiv": "1711.00937",
+   "relation": "uses-method",
+   "note": "base compression",
+   "quote": null
+  },
+  {
+   "work": "Generating Long Sequences with Sparse Transformers",
+   "year": 2019,
+   "arxiv": "1904.10509",
+   "relation": "extends",
+   "note": "Scalable Transformer simplification",
+   "quote": null
+  },
+  {
+   "work": "WaveNet",
+   "year": 2016,
+   "arxiv": "1609.03499",
+   "relation": "related",
+   "note": "raw-audio autoregression",
+   "quote": null
+  },
+  {
+   "work": "Parallel WaveNet",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "related",
+   "note": "distillation suggested for faster sampling",
+   "quote": null
+  },
+  {
+   "work": "Dieleman et al. 2018 (challenge of realistic music generation)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "related",
+   "note": "hierarchy collapse",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "Sampling methods for generating music",
+   "page": 3,
+   "why": "Shows ancestral, windowed and primed sampling."
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Comparison of reconstructions from different VQ-VAEs",
+   "page": 6,
+   "why": "Shows loss of high frequencies at higher compression and the ablations."
+  }
+ ],
+ "code": [],
+ "problems": [
+  "No prompts or embedded instructions found."
+ ]
+}

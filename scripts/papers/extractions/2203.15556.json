@@ -1,0 +1,692 @@
+{
+ "schema": 1,
+ "key": "2203.15556",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/hoffmann-2022-training-compute-optimal-large-language.pdf",
+ "bib": {
+  "title": "Training Compute-Optimal Large Language Models",
+  "authors": [
+   "Jordan Hoﬀmann",
+   "Sebastian Borgeaud",
+   "Arthur Mensch",
+   "Elena Buchatskaya",
+   "Trevor Cai",
+   "Eliza Rutherford",
+   "Diego de Las Casas",
+   "Lisa Anne Hendricks",
+   "Johannes Welbl",
+   "Aidan Clark",
+   "Tom Hennigan",
+   "Eric Noland",
+   "Katie Millican",
+   "George van den Driessche",
+   "Bogdan Damoc",
+   "Aurelia Guy",
+   "Simon Osindero",
+   "Karen Simonyan",
+   "Erich Elsen",
+   "Jack W. Rae",
+   "Oriol Vinyals",
+   "Laurent Sifre"
+  ],
+  "first_author": "Hoffmann",
+  "year": 2022,
+  "venue": "preprint (arXiv v1, cs.CL; footer '© 2023 DeepMind')",
+  "arxiv": "2203.15556",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 96723,
+  "chars_total": 96723,
+  "engine": "pymupdf",
+  "skipped": "Reference list skimmed; Table A9 only partly legible (numeric columns lost headers)"
+ },
+ "type": "empirical",
+ "question": "Given a fixed FLOP budget, how should model size and number of training tokens be traded off for a transformer language model?",
+ "hypothesis": "Model size and training tokens should be scaled in equal proportion, so current large LMs are over-sized and under-trained.",
+ "contributions": [
+  "Three independent estimation approaches (training-curve envelope, IsoFLOP profiles, parametric loss fit) that agree on near-equal scaling of parameters and tokens",
+  "Chinchilla: 70B parameters, 1.4T tokens, same compute as Gopher, outperforming Gopher, GPT-3, Jurassic-1 and MT-NLG 530B",
+  "Evidence that dataset scale and quality need more focus"
+ ],
+ "method": {
+  "summary": "Trained over 400 transformers (70M to 16B+ params, 5B to 500B tokens) on MassiveText with several cosine cycle lengths, fit power laws for optimal N and D versus FLOPs three ways, then trained Chinchilla (70B, 1.4T tokens) at Gopher's compute (5.76e23 FLOPs) and evaluated it on language modelling, MMLU, BIG-bench, reading comprehension, QA, common sense, bias and toxicity.",
+  "task": "next-token pretraining and scaling-law estimation",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "MassiveText",
+    "role": "pretrain",
+    "size": "1.4T tokens for Chinchilla; subsets disk size MassiveWeb 1.9TB, Books 2.1TB, C4 0.75TB, News 2.7TB, GitHub 3.1TB, Wikipedia 0.001TB",
+    "split": "Sampling proportions MassiveWeb 45%, Books 30%, C4 10%, News 10%, GitHub 4%, Wikipedia 1% (Gopher: 48/27/10/10/3/2); epochs in 1.4T tokens 1.24/0.75/0.77/0.21/0.13/3.40",
+    "source": "Same as Gopher (Rae et al., 2021)",
+    "preprocessing": "SentencePiece tokenizer, no NFKC normalisation"
+   },
+   {
+    "name": "C4 and GitHub (MassiveText subsets)",
+    "role": "pretrain",
+    "size": null,
+    "split": "4 IsoFLOP profiles each (1e19-1e21 FLOPs)",
+    "source": "Raffel et al. 2020; Rae et al. 2021",
+    "preprocessing": null
+   },
+   {
+    "name": "MMLU, BIG-bench, The Pile, LAMBADA, RACE, NQ, TriviaQA, HellaSwag, PIQA, Winogrande, SIQA, BoolQ, TruthfulQA, Winogender, WikiText103",
+    "role": "eval",
+    "size": "57 MMLU tasks, 62 BIG-bench tasks",
+    "split": null,
+    "source": "same eval details as Rae et al. 2021",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Chinchilla",
+    "role": "proposed",
+    "params": "70B",
+    "architecture": "decoder-only transformer, same as Gopher",
+    "init_from": null,
+    "tokenizer": "SentencePiece, no NFKC",
+    "vocab": "32,000",
+    "layers": 80,
+    "hidden": 8192,
+    "heads": 64,
+    "context": null,
+    "other": {
+     "key_value_size": 128,
+     "ffw_size": "4 x d_model"
+    }
+   },
+   {
+    "name": "Gopher",
+    "role": "baseline",
+    "params": "280B",
+    "architecture": "decoder-only transformer",
+    "init_from": null,
+    "tokenizer": "SentencePiece with NFKC",
+    "vocab": null,
+    "layers": 80,
+    "hidden": 16384,
+    "heads": 128,
+    "context": null,
+    "other": {
+     "max_lr": "4e-5",
+     "batch": "3M -> 6M tokens",
+     "tokens": "300B"
+    }
+   },
+   {
+    "name": "Scaling-run models",
+    "role": "proposed",
+    "params": "70M to over 16B",
+    "architecture": "transformers, ffw 4x d_model per Table A9 range",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "Many trained multiple times at different token counts; Table A4 sample 73M: 10 layers d_model 640; 6.8B: 40 layers d_model 3584"
+    }
+   },
+   {
+    "name": "GPT-3, Jurassic-1, MT-NLG 530B, LaMDA",
+    "role": "evaluated",
+    "params": "175B/178B/530B/137B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "next-token cross-entropy; scaling runs fit smoothed training loss",
+   "optimizer": "AdamW for Chinchilla (Adam for Gopher)",
+   "lr": "Chinchilla max 1e-4; scaling Approach 1: 2e-4 for smallest to 1.25e-4 for largest; D.4 comparison 1.5e-4",
+   "lr_schedule": "cosine, decay 10x, cycle length matched to training tokens",
+   "warmup": null,
+   "batch_size": "Chinchilla 1.5M -> 3M tokens (doubled midway); D.4: 0.5M tokens",
+   "steps": null,
+   "epochs": "less than 1 epoch overall (MassiveWeb 1.24, Wikipedia 3.40 in subset)",
+   "tokens": "1.4T (Chinchilla)",
+   "seq_len": null,
+   "precision": "bfloat16 forward/backward; float32 copy of weights in distributed optimiser state",
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "TPUv3/TPUv4, JAX and Haiku",
+   "compute": "5.76e23 FLOPs (6.3e23 by exact count) for Chinchilla, same as Gopher",
+   "wall_clock": null,
+   "seeds": "not trained multiple times at large scale",
+   "other": {
+    "scaling_runs": "4 cosine lengths per size, horizon spanning 16x; Approach 2: 9 FLOP budgs 6e18-3e21; Gaussian smoothing window 10 steps; 1500 log-spaced FLOP values; Approach 3 Huber delta 1e-3, L-BFGS, grid init; FLOPs ≈ 6ND"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "25,000 unprompted samples each for Chinchilla and Gopher toxicity",
+   "prompting": "MMLU 5-shot; NQ/TriviaQA 0/5/64-shot; TruthfulQA 0/5/10-shot; details follow Rae et al. 2021",
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Accuracy",
+     "definition": "task accuracy / exact match",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Bits-per-byte",
+     "definition": "Pile subsets",
+     "unit": "bpb",
+     "higher_is_better": false
+    },
+    {
+     "name": "Perplexity",
+     "definition": "WikiText103",
+     "unit": "ppl",
+     "higher_is_better": false
+    },
+    {
+     "name": "Toxicity",
+     "definition": "PerspectiveAPI score on unprompted samples",
+     "unit": "score",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "Gopher 280B",
+    "GPT-3 175B",
+    "Jurassic-1 178B",
+    "MT-NLG 530B",
+    "Kaplan et al. 2020 predictions"
+   ],
+   "protocol": "Single Chinchilla run; no repeats; bootstrap (80% sampled 100 times) for exponent percentiles in Table 2"
+  },
+  "availability": {
+   "code": null,
+   "weights": "not released ('We will not make this model available publicly')",
+   "data": "MassiveText not released in this paper"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.lr",
+    "quote": "Chinchilla 70B 80 64 128 8,192 1 × 10−4 1.5M →3M",
+    "where": "Table 4"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Approach 1 fits optimal model-size exponent a",
+   "kind": "measured",
+   "source": null,
+   "metric": "a in N_opt ∝ C^a",
+   "value": "0.50",
+   "unit": "exponent",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Approach 1, minimum over training curves, 70M-10B models, MassiveText",
+   "note": null,
+   "where": "Sec 3.1",
+   "quote": "We ﬁnd that 𝑎= 0.50 and 𝑏= 0.50—as summarized in Table 2."
+  },
+  {
+   "claim": "Approach 2 (IsoFLOP) exponents",
+   "kind": "measured",
+   "source": null,
+   "metric": "a in N_opt ∝ C^a",
+   "value": "0.49",
+   "unit": "exponent",
+   "baseline_value": null,
+   "n": null,
+   "setup": "9 FLOP budgets 6e18-3e21, models up to 16B",
+   "note": null,
+   "where": "Sec 3.2",
+   "quote": "𝑎= 0.49 and 𝑏= 0.51—as summarized in Table 2."
+  },
+  {
+   "claim": "Approach 3 (parametric fit) exponents",
+   "kind": "measured",
+   "source": null,
+   "metric": "a in N_opt ∝ C^a",
+   "value": "0.46",
+   "unit": "exponent",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Huber fit of L(N,D)=E+A/N^alpha+B/D^beta",
+   "note": "Later shown mis-fit by Besiroglu et al. 2024 (not in this paper)",
+   "where": "Sec 3.3",
+   "quote": "From this approach, we ﬁnd that 𝑎= 0.46 and 𝑏= 0.54—as summarized in Table 2."
+  },
+  {
+   "claim": "Kaplan et al. exponents quoted for comparison",
+   "kind": "reported",
+   "source": "Kaplan et al. (2020)",
+   "metric": "a",
+   "value": "0.73",
+   "unit": "exponent",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Kaplan et al. (2020) N_opt ∝ C^0.73, D_opt ∝ C^0.27",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Kaplan et al. (2020), column a"
+  },
+  {
+   "claim": "Under Kaplan's rule a 10x compute increase gives 5.5x model, 1.8x tokens; Hoffmann scale equally",
+   "kind": "reported",
+   "source": "Kaplan et al. (2020)",
+   "metric": null,
+   "value": "5.5x model / 1.8x tokens",
+   "unit": "ratio",
+   "baseline_value": null,
+   "n": null,
+   "setup": "10x compute budget, Kaplan et al. recommendation",
+   "note": null,
+   "where": "Sec 1",
+   "quote": "given a 10× increase computational budget, they suggests that the size of the model should increase 5.5× while"
+  },
+  {
+   "claim": "Fitted parametric loss constants",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "E=1.69, A=406.4, B=410.7",
+   "unit": "fit",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Approach 3 fit, alpha=0.34, beta=0.28",
+   "note": null,
+   "where": "App D.2",
+   "quote": "with 𝐸= 1.69, 𝐴= 406.4, 𝐵= 410.7"
+  },
+  {
+   "claim": "Compute-optimal tokens for 1B-parameter model (Approach 1)",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "20.2 Billion",
+   "unit": "tokens",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Approach 1, FLOPs 1.21e+20",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row 1 Billion, column Tokens (20.2 Billion; FLOPs 1.21e+20)"
+  },
+  {
+   "claim": "Compute-optimal tokens for 10B model (Approach 1)",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "205.1 Billion",
+   "unit": "tokens",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Approach 1, FLOPs 1.23e+22",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row 10 Billion, column Tokens (205.1 Billion)"
+  },
+  {
+   "claim": "Compute-optimal tokens for 67B model at Gopher budget",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "1.5 Trillion",
+   "unit": "tokens",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Approach 1, FLOPs 5.76e+23",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row 67 Billion, column Tokens (1.5 Trillion)"
+  },
+  {
+   "claim": "A 175B model should use 4.41e24 FLOPs and over 4.2T tokens",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "4.2 trillion",
+   "unit": "tokens",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Stated projection",
+   "note": "Table 3 Approach 1 prints 3.85e+24 FLOPs and 3.7 Trillion tokens for 175B; Table A3 Approach 2 prints 4.54e+24 and 4.3 Trillion",
+   "where": "Sec 3.4",
+   "quote": "a 175 billion parameter model should be trained with a compute budget of 4.41 × 1024 FLOPs and on over 4.2 trillion tokens"
+  },
+  {
+   "claim": "Chinchilla (70B, 1.4T tokens) average MMLU 5-shot accuracy",
+   "kind": "measured",
+   "source": null,
+   "metric": "MMLU 5-shot accuracy",
+   "value": "67.6%",
+   "unit": "%",
+   "baseline_value": "60.0%",
+   "n": null,
+   "setup": "57 tasks, 5-shot; Gopher 60.0%",
+   "note": "Abstract prints 67.5%; Table 6 and Sec 4.2.2 print 67.6%",
+   "where": "Sec 4.2.2",
+   "quote": "with an average accuracy of 67.6% (improving upon Gopher by 7.6%)"
+  },
+  {
+   "claim": "Chinchilla BIG-bench average accuracy",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "65.1%",
+   "unit": "%",
+   "baseline_value": "54.4%",
+   "n": null,
+   "setup": "62 tasks, vs Gopher",
+   "note": null,
+   "where": "Sec 4.2.4",
+   "quote": "reaching an accuracy of 65.1% versus 54.4% for Gopher"
+  },
+  {
+   "claim": "Chinchilla WikiText103 perplexity",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "7.16",
+   "unit": "perplexity",
+   "baseline_value": "7.75",
+   "n": null,
+   "setup": "vs Gopher 7.75; possible train/test leakage",
+   "note": null,
+   "where": "Sec 4.2.1",
+   "quote": "Chinchilla achieves a perplexity of 7.16 compared to 7.75 for Gopher"
+  },
+  {
+   "claim": "Chinchilla LAMBADA zero-shot accuracy",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "77.4%",
+   "unit": "%",
+   "baseline_value": "74.5%",
+   "n": null,
+   "setup": "vs Gopher 74.5%, MT-NLG 76.6%",
+   "note": null,
+   "where": "Sec 4.2.3",
+   "quote": "Chinchilla achieves 77.4% accuracy, compared to 74.5% accuracy from Gopher and 76.6% from MT-NLG 530B"
+  },
+  {
+   "claim": "Chinchilla Natural Questions closed-book 5-shot",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "31.5%",
+   "unit": "%",
+   "baseline_value": "24.5%",
+   "n": null,
+   "setup": "vs Gopher 24.5% in Table 9; text says Gopher 21%/28%",
+   "note": "Text says Gopher 21% and 28%; Table 9 prints 24.5% and 28.2%",
+   "where": "Sec 4.2.6",
+   "quote": "Chinchilla achieves new closed-book SOTA accuracies: 31.5% 5-shot and 35.5% 64-shot"
+  },
+  {
+   "claim": "Chinchilla TruthfulQA 0-shot accuracy",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "43.6%",
+   "unit": "%",
+   "baseline_value": "29.5%",
+   "n": null,
+   "setup": "vs Gopher 29.5% 0-shot",
+   "note": null,
+   "where": "Sec 4.2.5",
+   "quote": "Chinchilla reaches 43.6%, 58.5%, and 66.7% accuracy with"
+  },
+  {
+   "claim": "Chinchilla HellaSwag zero-shot",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "80.8%",
+   "unit": "%",
+   "baseline_value": "79.2%",
+   "n": null,
+   "setup": "vs Gopher 79.2%, MT-NLG 80.2%",
+   "note": null,
+   "where": "Table 8",
+   "table": "Table 8, row HellaSWAG, column Chinchilla (80.8%)"
+  },
+  {
+   "claim": "Chinchilla Winogender overall accuracy",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "78.3%",
+   "unit": "%",
+   "baseline_value": "71.4%",
+   "n": null,
+   "setup": "vs Gopher 71.4%; female gotcha +10 points",
+   "note": null,
+   "where": "Table 10",
+   "table": "Table 10, row All, column Chinchilla (78.3%; Gopher 71.4%)"
+  },
+  {
+   "claim": "Toxicity of unprompted samples is nearly unchanged vs Gopher",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "0.087",
+   "unit": "mean PerspectiveAPI score",
+   "baseline_value": "0.081",
+   "n": null,
+   "setup": "25,000 unprompted samples each; Gopher mean 0.081",
+   "note": null,
+   "where": "Sec 4.2.7",
+   "quote": "0.087 (0.066) for Chinchilla"
+  },
+  {
+   "claim": "Head-to-head at 1e21 FLOPs: 2.80B (Approach 1) beat 4.74B (Kaplan prediction)",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "2.80B vs 4.74B",
+   "unit": "params",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Batch 0.5M tokens, max LR 1.5e-4 decaying 10x, same depth-to-width",
+   "note": "Outcome shown only in Fig A4; no loss value printed",
+   "where": "App D.4",
+   "quote": "We train a 4.74 billion parameter and a 2.80 billion parameter transformer to test this hypothesis"
+  },
+  {
+   "claim": "Cosine cycle overshoot beyond 25% of the step count degrades performance",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "25%",
+   "unit": "overshoot",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig A1 grid 1.0x-5.0x cycle lengths",
+   "note": null,
+   "where": "Fig A1",
+   "quote": "overestimating the number of training steps beyond 25% leads to clear drops in performance"
+  },
+  {
+   "claim": "AdamW beats Adam independent of schedule; AdamW passes Adam about 80% through cosine cycle",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "80%",
+   "unit": "fraction of cycle",
+   "baseline_value": null,
+   "n": null,
+   "setup": "417M and 1.4B models, Fig A7",
+   "note": "Quote truncated at line break; sentence continues '80% of the way through the cosine cycle'",
+   "where": "Footnote 8",
+   "quote": "a model trained with AdamW only passes the training performance of a model trained with Adam around"
+  },
+  {
+   "claim": "Scaling holds on C4 and GitHub IsoFLOP: C4 a=0.50, GitHub a=0.53",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "0.53",
+   "unit": "exponent",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GitHub IsoFLOP, Table A2 (C4 0.50)",
+   "note": null,
+   "where": "Table A2",
+   "table": "Table A2, row GitHub, column a (0.53; b 0.47)"
+  },
+  {
+   "claim": "Hoffmann's FLOP count for Gopher 6.3e23 vs 5.76e23 in Rae et al.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "6.3 × 1023",
+   "unit": "FLOPs",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Exact FLOP accounting incl. embeddings",
+   "note": null,
+   "where": "App F",
+   "quote": "giving a slightly diﬀerent value (6.3 × 1023 compared to 5.76 × 1023)"
+  }
+ ],
+ "limits": [
+  "Only two large-scale runs (Chinchilla and Gopher), no intermediate scales",
+  "Assumes a power-law frontier; observed concavity in log N_opt at high compute suggests optimal models may be even smaller",
+  "All runs under one epoch; multi-epoch regime untested",
+  "Overlap between larger training data and test sets may inflate language modelling results",
+  "Only autoregressive text models; other hyperparameters rely on heuristics",
+  "Approach 3 uncertainty interval implausibly narrow (later shown by Besiroglu et al. 2024, outside this source)"
+ ],
+ "practices": [],
+ "terms": [],
+ "lineage": [
+  {
+   "work": "Scaling Laws for Neural Language Models (Kaplan et al.)",
+   "year": 2020,
+   "arxiv": "2001.08361",
+   "relation": "contradicts",
+   "note": "Hoffmann finds equal scaling vs Kaplan's N ∝ C^0.73",
+   "quote": null
+  },
+  {
+   "work": "Scaling Language Models: Gopher (Rae et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Same compute, same dataset and architecture, 280B",
+   "quote": null
+  },
+  {
+   "work": "GPT-3 (Brown et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "evaluated against",
+   "quote": null
+  },
+  {
+   "work": "Jurassic-1 (Lieber et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "Megatron-Turing NLG (Smith et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "Unified scaling laws for routed language models (Clark et al.)",
+   "year": 2022,
+   "arxiv": "2202.01169",
+   "relation": "related",
+   "note": "power-law assumption and MoE scaling",
+   "quote": null
+  },
+  {
+   "work": "MassiveText / Gopher dataset",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "MMLU (Hendrycks et al.)",
+   "year": 2020,
+   "arxiv": "2009.03300",
+   "relation": "evaluates",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "AdamW (Loshchilov and Hutter)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": null,
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Overlaid predictions from the three approaches and Kaplan et al.",
+   "page": 2,
+   "why": "Shows all methods put Gopher/GPT-3/MT-NLG above the optimal size"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "IsoFLOP curves",
+   "page": 6,
+   "why": "Clear loss valleys per FLOP budget"
+  },
+  {
+   "figure": "Table 3",
+   "caption": "Estimated optimal training FLOPs and tokens per model size",
+   "page": 8,
+   "why": "Concrete tokens-per-parameter targets"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 2 / Eq 10",
+   "snippet": "L(N,D) = E + A/N^alpha + B/D^beta; fitted: E=1.69, A=406.4, B=410.7, alpha=0.34, beta=0.28",
+   "verbatim": false
+  },
+  {
+   "where": "Eq 4",
+   "snippet": "N_opt(C)=G (C/6)^a, D_opt(C)=G^-1 (C/6)^b, G=(alpha A/beta B)^(1/(alpha+beta)), a=beta/(alpha+beta), b=alpha/(alpha+beta)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Table A9 columns lost headers in text extraction",
+  "Ligature characters in quotes copied as printed"
+ ]
+}

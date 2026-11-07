@@ -1,19 +1,879 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2305.14627",
  "pdf": "generative-ai/02-rag-retrieval/sources/gao-2023-enabling-large-language-models-generate.pdf",
  "bib": {
   "title": "Enabling Large Language Models to Generate Text with Citations",
+  "authors": [
+   "Tianyu Gao",
+   "Howard Yen",
+   "Jiatong Yu",
+   "Danqi Chen"
+  ],
   "first_author": "Gao",
   "year": 2023,
-  "venue": "EMNLP 2023",
+  "venue": "Proceedings of the 2023 Conference on Empirical Methods in Natural Language Processing (EMNLP), pages 6465-6488",
   "arxiv": "2305.14627",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-04",
-  "session": "5f2f0582-f958-4d9c-8469-02f3d5079657"
+  "at": "2026-11-07",
+  "chars_read": 97121,
+  "chars_total": 97121,
+  "engine": "pymupdf",
+  "skipped": "Reference list skimmed only; Tables 30-31 (ELI5 examples) skimmed."
  },
- "legacy_report": "SOURCE: \"Enabling Large Language Models to Generate Text with Citations\" (ALCE). Tianyu Gao, Howard Yen, Jiatong Yu, Danqi Chen (Princeton). EMNLP 2023 main conference, pages 6465–6488. The venue is printed in the PDF header. arXiv 2305.14627.\n\nCOVERAGE: All 97,164 characters, 24 pages. I read the main text, the limitations and appendices A–I closely, including the full results Tables 19–21, the prompts and the examples. I only skimmed the reference list (pp. 10–13), for origins. The text extracted cleanly.\n\nCLAIMS (most important first)\n- claim: Even the best systems leave about half of ELI5 answers without full citation support.\n  number: ~50%\n  setup: ELI5 with the Sphere corpus and BM25, ChatGPT and GPT-4 VANILLA baselines, 2023 models.\n  quote: \"on the ELI5 dataset, around 50% generations of our ChatGPT and GPT-4 baselines are not fully supported by the cited passages\"\n  where: p.2. The abstract says \"even the best models lack complete citation support 50% of the time\".\n- claim: Citation recall for a statement is 1 only if it has at least one citation and the cited passages, joined together, entail it according to an NLI model. A citation counts as \"irrelevant\" if it cannot support the statement alone and the other citations still support it without it. A citation can score precision 1 only when its statement has recall 1.\n  number: none\n  setup: TRUE, a T5-11B model fine-tuned on SNLI, MNLI, Fever, SciTail, PAWS and VitaminC. Statements are split at sentence boundaries, with at most 3 citations each. Passages are 100 words long.\n  quote: \"its citation recall is 1 if and only if there is at least one citation ( Ci ̸= ∅) and ϕ(concat(Ci), si) = 1\" / \"ci,j has a precision of 1 if si has recall =1 and ci,j is not irrelevant\"\n  where: p.4–5\n- claim: The automatic citation metrics agree with human judges, more strongly for recall than for precision.\n  number: kappa 0.698 (recall) and 0.525 (precision). Accuracy 85.1% and 77.6% against human labels.\n  setup: Surge AI annotators, 100 sampled examples each from ASQA and ELI5, outputs from ChatGPT VANILLA, ChatGPT RERANK and Vicuna-13B.\n  quote: \"substantial agreement for citation recall (0.698) and moderate agreement for citation precision (0.525)\" / \"(85.1% for citation recall and 77.6% for citation precision)\"\n  where: p.9, App. G.5 p.17\n- claim: The NLI metric over-flags irrelevant citations because it cannot recognise partial support.\n  number: 75.6% recall and 66.1% precision at detecting irrelevant citations\n  setup: Same human-evaluation sample.\n  quote: \"regarding detecting “irrelevant” citations, ALCE has a recall of 75.6% and a precision of 66.1%... it has a relatively high false positive rate\"\n  where: App. G.5 p.17\n- claim: RERANK samples 4 answers and keeps the one with the best automatic citation recall. It raises citation quality, and human evaluation confirms the gain.\n  number: ASQA recall 73.6→84.8, precision 72.5→81.6. ELI5 recall 51.1→69.3. Human ASQA recall 74.7→79.3.\n  setup: ChatGPT gpt-3.5-turbo-0301, top-5 GTR (ASQA) or BM25 (ELI5) passages. RERANK was run on one seed only.\n  quote: \"w/ RERANK 77.0 40.2 84.8 81.6\" (Table 4); \"ChatGPT VANILLA 74.7 76.6 75.3 74.4 / w/ RERANK 79.3 81.9 83.9 80.8\" (Table 8)\n  where: p.6, p.9\n- claim: Answering closed-book and adding citations afterwards (POST CITE) gives good correctness but poor citation quality.\n  number: ASQA citation recall 26.7 against 73.6\n  setup: ChatGPT. POST CITE matches each statement to its best passage among the top 100 using GTR.\n  quote: \"citation recall of CLOSED BOOK+POST CITE is lower than VANILLA by 47% on ASQA\"\n  where: p.7\n- claim: The simple VANILLA prompt, which puts the top-k passages in context, is close to the best strategy. Interactive search during generation (INLINE SEARCH) does worse. Summaries and snippets raise correctness but lower citation quality on ASQA and ELI5.\n  number: ASQA INLINE SEARCH 32.4 EM recall and 58.3 citation recall, against VANILLA 40.4 and 73.6\n  setup: ChatGPT with a 4K context window, 2 demonstrations, 3 seeds.\n  quote: \"VANILLA (putting retrieved passages in context) achieves close-to-the-best performance among all prompting strategies.\"\n  where: p.6\n- claim: More passages in context do not help ChatGPT, but they do help GPT-4.\n  number: GPT-4 ASQA EM recall 41.3 (5 passages) → 44.4 (20). ChatGPT-16K 36.1 → 36.1.\n  setup: ASQA, GTR retriever, VANILLA prompt.\n  quote: \"correctness plateaus at top-1 passage and citation quality plateaus at top-3\" / \"GPT-4 is better at synthesizing information from its long context than ChatGPT\"\n  where: p.7–8, Table 7\n- claim: Models' correctness falls short of what retrieval makes available, even when they are given gold passages.\n  number: ASQA GTR recall@5 is 56.8. ChatGPT reaches 40.4 with the top 5 and 48.9 with 5 oracle passages.\n  setup: The oracle passages are a greedy set of 5 chosen to match recall@100.\n  quote: \"top-5 retrieved passages can only cover 56.8% percent of the answers in ASQA\" / \"despite the presence of accurate answers in context, LLMs struggle to utilize them\"\n  where: p.5, p.8\n- claim: The best open model, LLaMA-2-70B-Chat, matches ChatGPT on correctness but trails it on citation quality.\n  number: ASQA 41.5 EM recall and 62.9/61.3 citation recall/precision\n  setup: VANILLA prompt with 5 passages.\n  quote: \"Chat-70B (5-psg) 88.3 41.5 62.9 61.3\"\n  where: Table 4 p.6\n- claim: ELI5 correctness is scored by \"claim recall\": text-davinci-003 writes 3 sub-claims from the gold answer, and TRUE checks which ones the output entails. The authors choose this over ROUGE-L.\n  number: 93.33% of sub-claims judged faithful. The NLI step is 80.0% accurate.\n  setup: 40 answers, 120 sub-claims, checked by the authors.\n  quote: \"112 out of the 120 (93.33%) sub-claims received a score of 1\" / \"the NLI model achieved an accuracy of 80.0%\"\n  where: App. A p.14\n- claim: Each metric covers a shortcut the others would miss. Returning the top-1 passage scores near-perfect citations but low fluency. Returning its first 2 sentences scores near-perfect citations but low correctness.\n  number: citation recall 99.4 and 98.7, MAUVE 20.8, EM recall 18.9\n  setup: ASQA\n  quote: \"Top-1 passage 20.8 35.1 99.4 99.4 / First 2 sents 67.2 18.9 98.7 98.7\"\n  where: Table 11 p.15\n- claim: A fine-tuned FiD (T5-base) model with POST CITE trails prompted ChatGPT on ASQA and does worse again on ELI5.\n  number: ASQA EM recall 28.4 against 40.4\n  quote: \"FiD + POST CITE 75.8 28.4 58.1 58.0\"\n  where: Table 17 p.17\n\nBenchmark setup: 1,000 dev-set examples each from ASQA (2018-12-20 Wikipedia, 21M passages), QAMPARI (same corpus, scored by recall-5) and ELI5 (Sphere, 899M passages). The benchmark has no training data. Retrieval uses GTR or DPR on Wikipedia and BM25 on Sphere, top 100. Decoding uses temperature 0.5 for OpenAI models and top_p 0.95 for open models.\n\nLIMITS: The authors concede four things. (1) MAUVE depends on output length and is unstable. (2) ELI5 sub-claims may miss valid answers. (3) Citation quality is only as accurate as the NLI model, and because it cannot see \"partial support\" the automatic precision comes out lower than human precision. (4) The datasets leave out multi-hop, math and code questions. All methods are prompting only, with no training. They also show that the automatic scores are biased in RERANK's favour, since RERANK optimises the same metric.\n\nThe results date from 2023: ChatGPT-0301, GPT-4-0613, LLaMA-1/2, Vicuna and 2K–4K context windows. The context-length findings will not transfer to current long-context models. Statements are split at sentence level and nearly every sentence is assumed to need a citation. QAMPARI scores are all low (citation recall ≤27.4).\n\nBUILDS ON: AIS framework (Rashkin et al., 2023); TRUE NLI (Honovich et al., 2022); attributed QA (Bohnet et al., 2022); WebGPT (Nakano et al., 2021) and GopherCite (Menick et al., 2022), described as the closest prior work; human evaluation of generative search engines (Liu et al., 2023); MAUVE (Pillutla et al., 2021); ASQA (Stelmakh et al., 2022), QAMPARI (Rubin et al., 2022), ELI5 (Fan et al., 2019), Sphere (Piktus et al., 2021); GTR (Ni et al., 2022) and DPR (Karpukhin et al., 2020); ReAct (Yao et al., 2023); FiD (Izacard and Grave, 2021); distraction by irrelevant context (Shi et al., 2023).\n\nCODE: The VANILLA instruction is worth keeping. Table 23, p.21: \"Write an accurate, engaging, and concise answer for the given question using only the provided search results (some of which might be irrelevant) and cite them properly. Use an unbiased and journalistic tone. Always cite for any factual claim. When citing several search results, use [1][2][3]. Cite at least one document and at most three documents in each sentence. If multiple documents support the sentence, only cite a minimum sufficient subset of the documents.\" Code repository: github.com/princeton-nlp/ALCE.\n\nFIGURES: Figure 3, p.4, \"Evaluation of citation quality... We use an NLI model to verify whether a statement is supported by its citations.\" This is the best candidate. One worked example shows recall 2/3 and precision 4/6, the leave-one-out test for an irrelevant citation, and the rule that recall 0 forces precision 0. That is much faster to grasp than the formal definition. Figure 4, p.8, is a second option: retrieval recall@k next to model correctness, which shows the ceiling retrieval sets.\n\nAUDIT of citing passages\n1. generative-ai/08-eval/notes/07-evaluating-rag-and-grounding.md:172 has three faults.\n   - The note misdefines citation recall as \"is every claim that needs a citation cited?\". In ALCE, recall asks whether the statement is fully entailed by the cited passages taken together, and it requires at least one citation. That is a support test, not a coverage test.\n   - Precision is roughly right but drops two conditions: a citation is penalised only if it fails alone AND is redundant given the others, and precision is gated on recall = 1.\n   - \"with a judge\" is imprecise: ALCE uses an NLI model (TRUE, T5-11B), not an LLM judge.\n   - \"shows models citing irrelevant passages often\" is a partial misattribution. The paper's headline is missing support (~50% on ELI5). It also warns that its irrelevance detector has a high false-positive rate (66.1% precision).\n   - Suggested fix: carry the human agreement figures (kappa 0.698/0.525) and say the precision metric undercounts partial support.\n   - Line 296, \"Only citation precision and recall need a judge\", is fine if \"judge\" covers an NLI model.\n2. generative-ai/08-eval/notes/13-case-study-support-agent.md:182, \"ALCE shows that even strong systems lack complete citation support\". This is accurate but has no number or setup. It should read: about 50% of ChatGPT and GPT-4 answers on ELI5 (2023 models, BM25 over Sphere). On ASQA, citation recall was about 74% for ChatGPT. The bibliography entry at line 307 (EMNLP 2023) is correct.\n3. generative-ai/02-rag-retrieval/notes/06-generation-for-rag.md:306, \"Scores citation quality, correctness and fluency | For evaluating systems, not runtime\". The first half is accurate. The second half is contradicted by the paper itself: RERANK uses ALCE's citation-recall NLI scorer at generation time (best of 4 samples), and humans confirmed it raised citation quality on ASQA and ELI5. The defensible limit is cost (4 generations plus a T5-11B NLI pass), not \"not runtime\".\n   - Sharpens available: ALCE's finding that closed-book answers with post-hoc citations cut ASQA citation recall by 47 points directly supports the note's line 319, \"Citation is not attribution\". The plateau of ChatGPT at 1–3 passages could sharpen the FiD passage-count paragraph at line 217, which says it \"says nothing about how a prompted LLM handles 100 chunks\". ALCE tested up to 20 passages.\n4. References rows. generative-ai/02-rag-retrieval/references.md:64 and generative-ai/08-eval/references.md:80 have no setup or claim, no EMNLP venue, and no PDF/✓ link, although the PDF exists at generative-ai/02-rag-retrieval/sources/gao-2023-enabling-large-language-models-generate.pdf. In 08-eval the row says \"citation precision/recall\", which is fine as a label.\n\nI found no fabricated numbers in any citing passage. The problems are a wrong definition (recall), a claim the paper does not make (\"not runtime\"), and numbers given without their setup.\n\nPROBLEMS:\n- Text inside the figures extracts as fragments (Figures 2 and 3).\n- The paper's own tables are inconsistent in places. Table 11 lists ChatGPT ASQA citation precision as 63.0 against 72.5 elsewhere. The INLINE SEARCH row of Table 19 has shifted columns (ROUGE-L 58.2). Table 21 contains the typo \"(2.w)\".\n- SUMM/CLOSED BOOK ELI5 numbers differ slightly between the main and full tables (40.3/40.2, 15.5/15.4).\n- The PDF contains no embedded instructions.\n- I wrote a temporary text dump to /tmp/alce.txt for reading. I edited no repo files."
+ "type": "benchmark",
+ "question": "How well can LLMs, given retrieved passages, answer questions with citations, and can this be evaluated automatically and reproducibly?",
+ "hypothesis": null,
+ "contributions": [
+  "ALCE, the first reproducible benchmark for automatically evaluating LLM generations with citations (ASQA, QAMPARI, ELI5)",
+  "Automatic metrics for fluency, correctness and citation quality, with human-correlation evidence",
+  "Prompting strategies (VANILLA, SUMM, SNIPPET, INTERACT, INLINESEARCH, CLOSEDBOOK, RERANK, POSTCITE) and analyses of retrieval, context length and synthesis"
+ ],
+ "method": {
+  "summary": "ALCE gives a question and a retrieval corpus of 100-word passages and requires a system to retrieve, answer and cite. Systems are prompted LLMs (no weight updates) with off-the-shelf retrievers; evaluation uses MAUVE for fluency, dataset-specific correctness, and a T5-11B NLI model (TRUE) for citation recall and precision, validated by human annotation.",
+  "task": "long-form question answering with citations (retrieval-augmented generation)",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "ASQA",
+    "role": "eval",
+    "size": "1,000 random dev examples",
+    "split": "development set",
+    "source": "Stelmakh et al. 2022; corpus Wikipedia 2018-12-20 snapshot (21M passages)",
+    "preprocessing": "corpus split into 100-word passages; human answers average 65 words"
+   },
+   {
+    "name": "QAMPARI",
+    "role": "eval",
+    "size": "1,000 random dev examples",
+    "split": "development set",
+    "source": "Rubin et al. 2022; Wikipedia 2018-12-20 (21M passages)",
+    "preprocessing": "each entity in generated list treated as a statement; average 13 answers per question"
+   },
+   {
+    "name": "ELI5",
+    "role": "eval",
+    "size": "1,000 random dev examples",
+    "split": "development set",
+    "source": "Fan et al. 2019; corpus Sphere (899M passages, filtered Common Crawl, Reddit removed)",
+    "preprocessing": "human answers average 131 words; 3 sub-claims per question generated by text-davinci-003 from gold answers"
+   }
+  ],
+  "models": [
+   {
+    "name": "ChatGPT gpt-3.5-turbo-0301",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "4K",
+    "other": {}
+   },
+   {
+    "name": "ChatGPT-16K gpt-3.5-turbo-16k-0613",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "16K",
+    "other": {}
+   },
+   {
+    "name": "GPT-4 gpt-4-0613",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "8K",
+    "other": {}
+   },
+   {
+    "name": "LLaMA, Alpaca, Vicuna, Oasst (7B/13B/33B)",
+    "role": "evaluated",
+    "params": "7B, 13B, 33B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "2K",
+    "other": {}
+   },
+   {
+    "name": "LLaMA-2-Chat",
+    "role": "evaluated",
+    "params": "7B, 13B, 70B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "4K",
+    "other": {}
+   },
+   {
+    "name": "TRUE (google/t5_xxl_true_nli_mixture)",
+    "role": "judge",
+    "params": "11B",
+    "architecture": "T5, fine-tuned on SNLI, MNLI, Fever, SciTail, PAWS, VitaminC",
+    "init_from": "T5-11B",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "text-davinci-003",
+    "role": "judge",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "ELI5 sub-claim generation, 3 manual demonstrations"
+    }
+   },
+   {
+    "name": "GTR",
+    "role": "retriever",
+    "params": null,
+    "architecture": "dense",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "Wikipedia, INLINESEARCH, POSTCITE"
+    }
+   },
+   {
+    "name": "DPR",
+    "role": "retriever",
+    "params": null,
+    "architecture": "dense",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "Wikipedia ablation"
+    }
+   },
+   {
+    "name": "BM25",
+    "role": "retriever",
+    "params": null,
+    "architecture": "sparse",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "Sphere (ELI5)"
+    }
+   },
+   {
+    "name": "FiD T5-base",
+    "role": "baseline",
+    "params": null,
+    "architecture": "Fusion-in-Decoder",
+    "init_from": "T5-base",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "G.4 only"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "ChatGPT and GPT-4: sampling; open-source models: nucleus sampling",
+   "temperature": "0.5 (ChatGPT, GPT-4); not stated for open-source",
+   "top_p": "0.95 (open-source models)",
+   "max_tokens": null,
+   "samples": "3 runs with different seeds, each sampling 2 demonstrations from a pool of 4; ChatGPT RERANK, ChatGPT-16K and GPT-4 single run; RERANK samples n_sample=4 responses per question",
+   "prompting": "Instruction plus 2 in-context demonstrations (full instruction Table 23; short instruction Table 24 for 2K-context LLaMA-family models). At most 3 citations per statement; output truncated at new lines before evaluation.",
+   "retrieval": "top-100 passages retrieved (GTR/DPR for Wikipedia, BM25 for Sphere); top-k in context: k=5 for 4K, k=3 for 2K, 10 for SUMM/SNIPPET, up to 20 for 16K and GPT-4; 100-word passages",
+   "parameters": {
+    "INTERACT": "model forced to output after each check; max 3 passages checked at a time; full text removed after one action",
+    "INLINESEARCH": "search among top-100 by GTR; best passage shown and removed after one action",
+    "RERANK": "n_sample=4, pick by automatic citation recall",
+    "SUMM": "summaries within 50 words; SUMM/SNIPPET cut ASQA passage length 6x on average",
+    "MAUVE": "question concatenated with output, both truncated to 100 words"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "MAUVE",
+     "definition": "fluency of output vs human text (ASQA, ELI5 only)",
+     "unit": "score",
+     "higher_is_better": true
+    },
+    {
+     "name": "EM recall (ASQA)",
+     "definition": "share of gold short answers that are exact substrings of the output, with aliases",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Recall-5 and precision (QAMPARI)",
+     "definition": "exact match to gold list; recall set to 100% if at least 5 correct answers",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Claim recall (ELI5)",
+     "definition": "share of 3 generated sub-claims entailed by the output per TRUE NLI",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Citation recall",
+     "definition": "per statement 1 iff at least one citation and concatenated cited passages entail it (NLI); averaged over statements",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Citation precision",
+     "definition": "per citation 1 iff statement recall=1 and the citation is not 'irrelevant' (alone does not support AND removing it leaves the rest still supporting)",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "CLOSEDBOOK with POSTCITE",
+    "ORACLE (5 gold passages)",
+    "FiD + POSTCITE",
+    "top-1 passage / first 2 sentences shortcuts"
+   ],
+   "protocol": "Mean over 3 seeds (std in Tables 19-21). Human evaluation: Surge AI workers, 100 examples each from ASQA and ELI5, outputs of ChatGPT VANILLA, ChatGPT RERANK, Vicuna-13B VANILLA; utility 1-5, citation recall, citation precision; pay 20 USD per hour."
+  },
+  "availability": {
+   "code": "https://github.com/princeton-nlp/ALCE",
+   "weights": null,
+   "data": "https://github.com/princeton-nlp/ALCE"
+  },
+  "prompts": [
+   {
+    "purpose": "VANILLA full instruction",
+    "text": "Write an accurate, engaging, and concise answer for the given question using only the provided search results (some of which might be irrelevant) and cite them properly. Use an unbiased and journalistic tone. Always cite for any factual claim. When citing several search results, use [1][2][3]. Cite at least one document and at most three documents in each sentence. If multiple documents support the sentence, only cite a minimum sufficient subset of the documents.",
+    "where": "Table 23"
+   },
+   {
+    "purpose": "VANILLA short instruction",
+    "text": "Write a high-quality answer for the given question using only the provided search results and cite them properly using [1][2][3].",
+    "where": "Table 24"
+   },
+   {
+    "purpose": "SUMM",
+    "text": "Summarize the following document within 50 words with the question of interest \"{QUESTION}\" Return \"irrelevant\" if the document is irrelevant to the question. Try to keep all the important dates, numbers, and names. Title: {TITLE} Text: {TEXT} Summary:",
+    "where": "Table 25"
+   },
+   {
+    "purpose": "SNIPPET",
+    "text": "Given the follow passage and the question \"{QUESTION}\", extract a useful span from the passage that can answer the question. Resolve all the coreference issues to make the extracted span understandable standalone. If the passage is not helpful for answering the question, return \"irrelevant\". Title: {TITLE} Text: {TEXT} Extracted span:",
+    "where": "Table 26"
+   },
+   {
+    "purpose": "CLOSEDBOOK",
+    "text": "Write an accurate, engaging, and concise answer for the given question. Use an unbiased and journalistic tone.",
+    "where": "Table 29"
+   },
+   {
+    "purpose": "ELI5 sub-claim generation (text-davinci-003)",
+    "text": "Read the original question and passage, and generate 3 additional claims that are supported by the passage and answer the question. (plus 3 hand-written demonstrations from ELI5 train)",
+    "where": "Table 22"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "inference.temperature",
+    "quote": "For ChatGPT and GPT-4, we use sampling with temperature 0.5",
+    "where": "App C"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Around half of ChatGPT and GPT-4 ELI5 generations are not fully supported by the cited passages.",
+   "kind": "measured",
+   "source": null,
+   "metric": "fraction not fully cited-supported",
+   "value": "50",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ELI5, Sphere corpus with BM25, ChatGPT and GPT-4 baselines",
+   "note": null,
+   "where": "p.2 Intro",
+   "quote": "around 50% generations of our ChatGPT and GPT-4 baselines are not fully supported by the cited passages"
+  },
+  {
+   "claim": "Closed-book ChatGPT with POSTCITE has far lower citation recall than VANILLA on ASQA.",
+   "kind": "measured",
+   "source": null,
+   "metric": "citation recall",
+   "value": "26.7",
+   "unit": "%",
+   "baseline_value": "73.6",
+   "n": null,
+   "setup": "ASQA, ChatGPT gpt-3.5-turbo-0301 (4K), GTR top-5 passages, VANILLA prompting with 2 demonstrations, mean of 3 seeds; closed-book with POSTCITE (GTR best-match passage)",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row CLOSEDBOOK, column Citation Rec."
+  },
+  {
+   "claim": "ChatGPT VANILLA ASQA baseline citation recall.",
+   "kind": "measured",
+   "source": null,
+   "metric": "citation recall",
+   "value": "73.6",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ASQA, ChatGPT gpt-3.5-turbo-0301 (4K), GTR top-5 passages, VANILLA prompting with 2 demonstrations, mean of 3 seeds",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row VANILLA (5-psg), column Citation Rec."
+  },
+  {
+   "claim": "ChatGPT VANILLA ASQA baseline EM recall.",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM recall",
+   "value": "40.4",
+   "unit": "%",
+   "baseline_value": "38.3",
+   "n": null,
+   "setup": "ASQA, ChatGPT gpt-3.5-turbo-0301 (4K), GTR top-5 passages, VANILLA prompting with 2 demonstrations, mean of 3 seeds",
+   "note": "CLOSEDBOOK EM recall is 38.3 in Table 4 and 38.2 in Table 19.",
+   "where": "Table 4",
+   "table": "Table 4, row VANILLA (5-psg), column Correct. (EM Rec.)"
+  },
+  {
+   "claim": "RERANK (best of 4 samples by automatic citation recall) raises ChatGPT ASQA citation recall.",
+   "kind": "measured",
+   "source": null,
+   "metric": "citation recall",
+   "value": "84.8",
+   "unit": "%",
+   "baseline_value": "73.6",
+   "n": null,
+   "setup": "ASQA, ChatGPT VANILLA 5-psg, n_sample=4, single seeded run",
+   "note": "Selected with the same scorer that measures it; human recall rose only 74.7 to 79.3.",
+   "where": "Table 4",
+   "table": "Table 4, row w/ RERANK, column Citation Rec."
+  },
+  {
+   "claim": "Human-judged citation recall for ChatGPT VANILLA vs RERANK shows a smaller gain than ALCE.",
+   "kind": "measured",
+   "source": null,
+   "metric": "human citation recall",
+   "value": "79.3",
+   "unit": "%",
+   "baseline_value": "74.7",
+   "n": null,
+   "setup": "ASQA, 100 sampled examples, Surge AI annotators, ChatGPT RERANK",
+   "note": null,
+   "where": "Table 8",
+   "table": "Table 8, row w/ RERANK, column Human scores Rec."
+  },
+  {
+   "claim": "Cohen's kappa between human and ALCE citation recall.",
+   "kind": "measured",
+   "source": null,
+   "metric": "kappa",
+   "value": "0.698",
+   "unit": "kappa",
+   "baseline_value": null,
+   "n": null,
+   "setup": "100 ASQA and 100 ELI5 examples; ChatGPT VANILLA, ChatGPT RERANK, Vicuna-13B VANILLA",
+   "note": null,
+   "where": "p.8 Sec 6",
+   "quote": "substantial agreement for citation recall (0.698) and moderate agreement for citation precision (0.525)"
+  },
+  {
+   "claim": "Cohen's kappa between human and ALCE citation precision.",
+   "kind": "measured",
+   "source": null,
+   "metric": "kappa",
+   "value": "0.525",
+   "unit": "kappa",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Same as above",
+   "note": null,
+   "where": "p.8 Sec 6",
+   "quote": "moderate agreement for citation precision (0.525)"
+  },
+  {
+   "claim": "ALCE accuracy against human labels for citation recall.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "85.1",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Human annotations as gold labels",
+   "note": null,
+   "where": "Sec 6, G.5",
+   "quote": "85.1% for citation recall and 77.6% for citation precision"
+  },
+  {
+   "claim": "ALCE accuracy against human labels for citation precision.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "77.6",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Human annotations as gold labels",
+   "note": null,
+   "where": "Sec 6, G.5",
+   "quote": "77.6% for citation precision"
+  },
+  {
+   "claim": "ALCE detection of irrelevant citations has recall 75.6 and precision 66.1 (high false-positive rate, since NLI cannot see partial support).",
+   "kind": "measured",
+   "source": null,
+   "metric": "precision of irrelevant-citation detection",
+   "value": "66.1",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Human annotations as gold labels",
+   "note": "Text is hyphenated across a line break in the PDF; quote above reflects that. Recall of detection is 75.6%.",
+   "where": "G.5",
+   "quote": "ALCE has a recall of 75.6% and a pre-cision of 66.1%"
+  },
+  {
+   "claim": "Shortcut: first 2 sentences of top-1 passage gets near-perfect citation recall but low correctness.",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM recall",
+   "value": "18.9",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ASQA, response = first 2 sentences of top-1 GTR passage, citing itself",
+   "note": "Citation Rec. 98.7, MAUVE 67.2. Table 11 prints ChatGPT citation precision as 63.0 while Table 4 prints 72.5 for the same system.",
+   "where": "Table 11",
+   "table": "Table 11, row First 2 sents, column Correct. (EM Rec.)"
+  },
+  {
+   "claim": "Top-5 retrieved passages (GTR) cover only 56.8% of ASQA answers.",
+   "kind": "measured",
+   "source": null,
+   "metric": "recall@5",
+   "value": "56.8",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ASQA, GTR, EM recall",
+   "note": null,
+   "where": "Sec 4.2, Fig 4, Table 12",
+   "table": "Table 12, row GTR, column R@5"
+  },
+  {
+   "claim": "SUMM (10 passages) raises ASQA EM recall but lowers citation quality for ChatGPT.",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM recall",
+   "value": "43.3",
+   "unit": "%",
+   "baseline_value": "40.4",
+   "n": null,
+   "setup": "ASQA, ChatGPT, SUMM 10-psg",
+   "note": "Citation recall 68.9 in Table 4 vs 68.8 in Table 19; precision 61.8 vs VANILLA 72.5.",
+   "where": "Table 4",
+   "table": "Table 4, row SUMM (10-psg), column Correct. (EM Rec.)"
+  },
+  {
+   "claim": "INLINESEARCH is worse than VANILLA on ASQA.",
+   "kind": "measured",
+   "source": null,
+   "metric": "citation recall",
+   "value": "58.3",
+   "unit": "%",
+   "baseline_value": "73.6",
+   "n": null,
+   "setup": "ASQA, ChatGPT, GTR search over top-100 passages",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row INLINESEARCH, column Citation Rec."
+  },
+  {
+   "claim": "ChatGPT-16K does not gain from more passages; citation recall with 5, 10, 20 passages.",
+   "kind": "measured",
+   "source": null,
+   "metric": "citation recall",
+   "value": "73.7",
+   "unit": "%",
+   "baseline_value": "76.2",
+   "n": null,
+   "setup": "ASQA, ChatGPT-16K, 20-psg",
+   "note": "5-psg value 76.2, 10-psg 75.3.",
+   "where": "Table 7",
+   "table": "Table 7, row ChatGPT (20-psg), column Citation Rec."
+  },
+  {
+   "claim": "GPT-4 improves with more passages (5 to 20) in ASQA EM recall.",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM recall",
+   "value": "44.4",
+   "unit": "%",
+   "baseline_value": "41.3",
+   "n": null,
+   "setup": "ASQA, GPT-4 (8K), 20-psg",
+   "note": null,
+   "where": "Table 7",
+   "table": "Table 7, row GPT-4 (20-psg), column Correct. (EM Rec.)"
+  },
+  {
+   "claim": "LLaMA-2-70B-Chat reaches comparable ASQA correctness to OpenAI models but lower citation quality.",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM recall",
+   "value": "41.5",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ASQA, LLaMA-2-70B-Chat, VANILLA 5-psg",
+   "note": "Citation recall 62.9, precision 61.3.",
+   "where": "Table 7",
+   "table": "Table 7, row Chat-70B (5-psg), column Correct. (EM Rec.)"
+  },
+  {
+   "claim": "Original LLaMA-13B barely cites on ASQA.",
+   "kind": "measured",
+   "source": null,
+   "metric": "citation recall",
+   "value": "10.6",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ASQA, LLaMA-13B VANILLA 3-psg, short instruction",
+   "note": null,
+   "where": "Table 7",
+   "table": "Table 7, row LLaMA-13B (3-psg), column Citation Rec."
+  },
+  {
+   "claim": "Fine-tuned FiD (T5-base) plus POSTCITE lags ChatGPT on ASQA.",
+   "kind": "measured",
+   "source": null,
+   "metric": "citation recall",
+   "value": "58.1",
+   "unit": "%",
+   "baseline_value": "73.6",
+   "n": null,
+   "setup": "ASQA, FiD T5-base trained 5 epochs, batch 64, lr 1e-4 on ASQA train, top-5 GTR",
+   "note": null,
+   "where": "Table 17",
+   "table": "Table 17, row FiD + POSTCITE, column Citation Rec."
+  },
+  {
+   "claim": "Zero demonstrations lowers ChatGPT citation recall on ASQA.",
+   "kind": "measured",
+   "source": null,
+   "metric": "citation recall",
+   "value": "69.3",
+   "unit": "%",
+   "baseline_value": "74.6",
+   "n": null,
+   "setup": "ASQA, ChatGPT VANILLA, #demo=0",
+   "note": "#demo=1 gives 74.6, #demo=2 gives 73.6.",
+   "where": "Table 16",
+   "table": "Table 16, row #demo = 0, column Citation Rec."
+  },
+  {
+   "claim": "ELI5 claim recall for ChatGPT VANILLA is low; closed-book is higher.",
+   "kind": "measured",
+   "source": null,
+   "metric": "claim recall",
+   "value": "12.0",
+   "unit": "%",
+   "baseline_value": "18.6",
+   "n": null,
+   "setup": "ELI5, Sphere BM25, ChatGPT VANILLA 5-psg",
+   "note": "18.6 is CLOSEDBOOK.",
+   "where": "Table 6",
+   "table": "Table 6, row VANILLA (5-psg), column Correct. (Claim)"
+  },
+  {
+   "claim": "ELI5 ChatGPT VANILLA citation recall.",
+   "kind": "measured",
+   "source": null,
+   "metric": "citation recall",
+   "value": "51.1",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ELI5, ChatGPT VANILLA 5-psg",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row VANILLA (5-psg), column Citation Rec."
+  },
+  {
+   "claim": "RERANK on ELI5 raises citation recall.",
+   "kind": "measured",
+   "source": null,
+   "metric": "citation recall",
+   "value": "69.3",
+   "unit": "%",
+   "baseline_value": "51.1",
+   "n": null,
+   "setup": "ELI5, ChatGPT RERANK, one seed",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row w/ RERANK, column Citation Rec."
+  },
+  {
+   "claim": "QAMPARI ChatGPT VANILLA citation recall is low.",
+   "kind": "measured",
+   "source": null,
+   "metric": "citation recall",
+   "value": "20.5",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "QAMPARI, ChatGPT VANILLA 5-psg",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row VANILLA (5-psg), column Citation Rec."
+  },
+  {
+   "claim": "Sub-claim generation quality check: 112 of 120 sub-claims judged relevant and faithful.",
+   "kind": "measured",
+   "source": null,
+   "metric": "fraction faithful",
+   "value": "93.33",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "40 ELI5 answers, text-davinci-003 sub-claims, manual inspection",
+   "note": null,
+   "where": "App A",
+   "quote": "112 out of the 120 (93.33%) sub-claims received a score of 1"
+  },
+  {
+   "claim": "NLI model accuracy on sub-claim entailment vs human labels.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "80.0",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "40 outputs x 3 sub-claims = 120 pairs",
+   "note": null,
+   "where": "App A",
+   "quote": "the NLI model achieved an accuracy of 80.0%"
+  },
+  {
+   "claim": "ROUGE-L is gameable: top-1 passage gets ROUGE-L 19.1 but claim recall 3.0 on ELI5.",
+   "kind": "measured",
+   "source": null,
+   "metric": "claim recall",
+   "value": "3.0",
+   "unit": "%",
+   "baseline_value": "12.0",
+   "n": null,
+   "setup": "ELI5, top-1 BM25 passage as answer",
+   "note": "ROUGE-L 19.1 vs ChatGPT VANILLA 20.6.",
+   "where": "Table 10",
+   "table": "Table 10, row Top-1 passage, column Claim recall"
+  }
+ ],
+ "limits": [
+  "MAUVE is sensitive to output length and may be unstable",
+  "ELI5 claims may not cover all valid answers",
+  "Citation quality is limited by NLI accuracy; cannot detect partial support, so citation precision is lower than human judgement",
+  "RERANK uses the same automatic recall score that evaluates it, so its gain is inflated relative to human scores",
+  "Datasets do not cover multi-hop reasoning, math or code",
+  "Prompting only; training for citations left to future work (no supervised data)",
+  "Models (2023 ChatGPT, GPT-4, LLaMA era) have dated; only one seed for RERANK, ChatGPT-16K and GPT-4"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Citation recall",
+   "definition": "1 iff there is at least one citation and the concatenated cited passages entail the statement",
+   "where": "Sec 3.3"
+  },
+  {
+   "term": "Citation precision",
+   "definition": "a citation is irrelevant if it cannot support the statement alone and removing it does not affect the others supporting it",
+   "where": "Sec 3.3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Liu et al. 2023, Evaluating verifiability in generative search engines",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "concurrent human evaluation of citations; source of the human precision scheme",
+   "quote": null
+  },
+  {
+   "work": "Nakano et al. 2021 (WebGPT); Menick et al. 2022 (GopherCite)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "related",
+   "note": "closest setting, closed models and commercial search",
+   "quote": null
+  },
+  {
+   "work": "Honovich et al. 2022 (TRUE)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "NLI model for citation and claim checks",
+   "quote": null
+  },
+  {
+   "work": "Pillutla et al. 2021 (MAUVE)",
+   "year": 2021,
+   "arxiv": "2102.01454",
+   "relation": "uses-method",
+   "note": "fluency",
+   "quote": null
+  },
+  {
+   "work": "Rashkin et al. 2023 (AIS)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "attributable to identified sources framework",
+   "quote": null
+  },
+  {
+   "work": "ASQA (Stelmakh et al. 2022)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "QAMPARI (Rubin et al. 2022)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "ELI5 (Fan et al. 2019)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "Sphere (Piktus et al. 2021)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "ELI5 corpus",
+   "quote": null
+  },
+  {
+   "work": "ReAct (Yao et al. 2023); Toolformer (Schick et al. 2023)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "basis for INLINESEARCH/INTERACT",
+   "quote": null
+  },
+  {
+   "work": "Fusion-in-Decoder (Izacard and Grave 2021)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "fine-tuned baseline",
+   "quote": null
+  },
+  {
+   "work": "GTR (Ni et al. 2022); DPR (Karpukhin et al. 2020)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "retrievers",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Figure 1",
+   "caption": "The task setup of ALCE.",
+   "page": 1,
+   "why": "shows question, retrieve, cited answer"
+  },
+  {
+   "figure": "Figure 3",
+   "caption": "Evaluation of citation quality.",
+   "page": 4,
+   "why": "worked recall/precision example"
+  },
+  {
+   "figure": "Figure 4",
+   "caption": "Retrieval recall@k on ASQA, QAMPARI, ELI5.",
+   "page": 7,
+   "why": "retrieval recall as upper bound vs model correctness"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Text extracts cleanly; some table columns are flattened. Table 11 prints ChatGPT citation precision 63.0 while Table 4 prints 72.5 for the same system. Table 19 values differ slightly from Table 4 in places (SUMM recall 68.8 vs 68.9; MAUVE 66.8 vs 66.6)."
+ ]
 }

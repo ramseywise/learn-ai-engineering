@@ -1,0 +1,92 @@
+{
+ "schema": 1,
+ "key": "https://doi.org/10.18653/v1/n19-1421",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/talmor-2019-commonsenseqa.pdf",
+ "bib": {"title": "COMMONSENSEQA: A Question Answering Challenge Targeting Commonsense Knowledge", "authors": ["Alon Talmor", "Jonathan Herzig", "Nicholas Lourie", "Jonathan Berant"], "first_author": "Talmor", "year": 2019, "venue": "Proceedings of NAACL-HLT 2019, pages 4149-4158", "arxiv": null, "doi": "10.18653/v1/n19-1421"},
+ "read": {"by": "source-reader", "at": "2026-11-07", "chars_read": 41392, "chars_total": 41392, "engine": "pymupdf", "skipped": null},
+ "type": "benchmark",
+ "question": "Can a large multiple-choice commonsense QA dataset be built at scale from ConceptNet so that it is easy for humans but hard for current NLU models?",
+ "hypothesis": "Asking crowd-workers to write questions that separate three ConceptNet targets sharing one relation to a source concept yields questions needing prior knowledge, which current models cannot answer.",
+ "contributions": ["A new QA dataset centered around common sense, containing 12,247 examples.", "A new method for generating commonsense questions at scale from CONCEPTNET.", "An empirical evaluation of state-of-the-art NLU models on COMMONSENSEQA, showing that humans substantially outperform current models."],
+ "method": {
+  "summary": "Subgraphs of one source concept and three target concepts sharing a ConceptNet relation are shown to Amazon Mechanical Turk workers, who write one question per target and add two distractors; a separate worker group verifies questions. Baselines (embedding, LM, NLI, RC, GPT, BERT) are scored on 5-way accuracy.",
+  "task": "5-way multiple-choice commonsense question answering",
+  "trains": true,
+  "datasets": [
+   {"name": "COMMONSENSEQA", "role": "both", "size": "12,247 questions (16,242 formulated)", "split": "80/10/10 train/dev/test; random split (primary) and question-concept split (disjoint question concepts)", "source": "ConceptNet (32 million triplets; 236,208 triplets after filtering; about 130,000 triplets / 43,000 question sets) plus Amazon Mechanical Turk; licence not stated", "preprocessing": "Filtered 22 relations (dropping general ones like RelatedTo and well-explored ones like IsA), concepts over four words or not English, and low edit distance pairs. Workers kept only if at least 75% of their questions pass verification. Each question verified by 2 workers; kept if at least one answered correctly (filters 15%). Web snippets: first 100 Google results for each of 5 question+answer queries (500 per question)."}
+  ],
+  "models": [
+   {"name": "BERT-LARGE (uncased)", "role": "baseline", "params": null, "architecture": "pre-trained masked LM, fine-tuned; [CLS] question [SEP] answer [SEP], softmax over [CLS] states", "init_from": "Google released uncased BERT-large", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "GPT", "role": "baseline", "params": null, "architecture": "pre-trained LM; [start] question [sep] answer [end], linear+softmax over [end] states", "init_from": "Radford et al. 2018 pretrained LM", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "ESIM (+GloVe/Numberbatch/ELMo)", "role": "baseline", "params": null, "architecture": "NLI model with output layer sized to candidate count", "init_from": "fixed 300d GloVe, 300d Numberbatch, or 1024d ELMo", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "BIDAF++", "role": "baseline", "params": null, "architecture": "BiDAF plus self-attention and ELMo, reads 500 web snippets", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "QABILINEAR, QACOMPARE", "role": "baseline", "params": null, "architecture": "scores over averaged word embeddings; bilinear q W a, or relu([q;a;q*a;q-a]W1+b1) W2+b2", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "VECSIM, LM1B-CONCAT, LM1B-REP", "role": "baseline", "params": null, "architecture": "untrained: cosine of averaged embeddings; or LM1B (Jozefowicz 2016) probability of question+answer, REP rephrases 5 frequent prefixes covering 35% of dev", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}}
+  ],
+  "training": {
+   "objective": "cross-entropy over the 5 candidate answers (softmax)",
+   "optimizer": null, "lr": null, "lr_schedule": null, "warmup": null,
+   "batch_size": "GPT: 10; other models not stated",
+   "steps": null, "epochs": null, "tokens": null, "seq_len": null, "precision": null, "weight_decay": null, "dropout": null, "regularisation": null, "hardware": null, "compute": null, "wall_clock": null,
+   "seeds": "learning curves: each data point is the best of 3 runs; main table runs not stated",
+   "other": {"hyperparameters": "GPT: same as Radford et al. 2018 on ROC Stories except batch size 10. BERT: same as Devlin et al. 2018 for SWAG. Others tuned on dev; values not given.", "learning_curve": "epochs varied to keep number of mini-batches constant"}
+  },
+  "inference": {"decoding": "argmax over 5 candidates", "temperature": null, "top_p": null, "max_tokens": null, "samples": "single prediction per item", "prompting": null, "retrieval": "BIDAF++ only: 100 Google snippets per answer candidate", "parameters": {}, "other": {}},
+  "eval": {
+   "metrics": [{"name": "accuracy", "definition": "proportion of test examples for which the prediction is correct", "unit": "%", "higher_is_better": true}],
+   "baselines": ["random (20%)", "human (5 workers, majority vote, 100 random questions)", "SANITY mode: hard distractors replaced by random ConceptNet distractors"],
+   "protocol": "Test-set accuracy; hyperparameters tuned on dev. Human test: 100 questions, 5 non-generator workers each, no qualification test, no master workers."
+  },
+  "availability": {"code": "github.com/jonathanherzig/commonsenseqa", "weights": null, "data": "www.tau-nlp.org/commonsenseqa"},
+  "prompts": [],
+  "evidence": [
+   {"field": "datasets.size", "quote": "Overall, we generated 12,247 final examples, from a total of 16,242 that were formulated. The total cost per question is $0.33.", "where": "Section 3"}
+  ]
+ },
+ "results": [
+  {"claim": "BERT-LARGE is the best baseline on the random split.", "kind": "measured", "source": null, "metric": "accuracy", "value": 55.9, "unit": "%", "baseline_value": 88.9, "n": null, "setup": "COMMONSENSEQA test, random split, fine-tuned BERT-LARGE; baseline_value is human accuracy", "quote": "The best baselines are BERT-LARGE and GPT with an accuracy of 55.9% and 45.5%, respectively, on the random split", "table": null, "note": "Abstract rounds to 56%.", "where": "Section 6 Results"},
+  {"claim": "Humans reach 88.9% by majority vote of five workers.", "kind": "measured", "source": null, "metric": "accuracy", "value": 88.9, "unit": "%", "baseline_value": null, "n": 100, "setup": "100 random questions, 5 workers each not involved in generation, majority vote, no qualification test", "quote": "Humans obtain 88.9% accuracy, taking a majority vote for each question.", "table": null, "note": null, "where": "Section 6 Human Evaluation"},
+  {"claim": "GPT accuracy on the random split.", "kind": "measured", "source": null, "metric": "accuracy", "value": 45.5, "unit": "%", "baseline_value": null, "n": null, "setup": "random split test, fine-tuned GPT, batch size 10", "quote": "The best baselines are BERT-LARGE and GPT with an accuracy of 55.9% and 45.5%, respectively, on the random split", "table": null, "note": null, "where": "Section 6 Results"},
+  {"claim": "BERT-LARGE scores 63.6% on the question-concept split, easier than the random split.", "kind": "measured", "source": null, "metric": "accuracy", "value": 63.6, "unit": "%", "baseline_value": null, "n": null, "setup": "question concept split test", "quote": "(63.6% and 55.5%, respectively, on the question concept split)", "table": null, "note": "55.5 is GPT.", "where": "Section 6 Results"},
+  {"claim": "With random ConceptNet distractors (SANITY mode) BERT-LARGE reaches 92.3%, so difficult distractors matter.", "kind": "measured", "source": null, "metric": "accuracy", "value": 92.3, "unit": "%", "baseline_value": 55.9, "n": null, "setup": "random split test, both hard distractors (same-relation ConceptNet one and worker-written one) replaced by random ConceptNet distractors", "quote": null, "table": "Table 5, row BERT-LARGE, column SANITY (random split)", "note": "Text says 92% for BERT-LARGE.", "where": "Table 5"},
+  {"claim": "Random split is about five points harder than question concept split across trained models.", "kind": "measured", "source": null, "metric": "accuracy gap", "value": 5, "unit": "points", "baseline_value": null, "n": null, "setup": "average across all trained models", "quote": "Performance on the random split is five points lower than the question concept split on average across all trained models.", "table": null, "note": "Authors' explanation (memorising question concept to answer) is a hypothesis, untested.", "where": "Section 6 Results"},
+  {"claim": "BIDAF++ with web snippets does poorly, so snippets add little.", "kind": "measured", "source": null, "metric": "accuracy", "value": 32.0, "unit": "%", "baseline_value": null, "n": null, "setup": "random split test, 500 snippets per question", "quote": null, "table": "Table 5, row BIDAF++, column Accuracy (random split)", "note": null, "where": "Table 5"},
+  {"claim": "BERT-LARGE accuracy by error category on 100 dev examples: high on surface clues, low on conjunction.", "kind": "measured", "source": null, "metric": "accuracy", "value": 23.8, "unit": "%", "baseline_value": 77.7, "n": 100, "setup": "100 dev examples, manually labelled, categories overlap; 23.8 is conjunction, 77.7 surface clues", "quote": "in cases where the correct answer needs to meet a conjunction of conditions, and the distractor meets only one of them (23.8%).", "table": null, "note": "Other categories: negation/antonym 42.8, factoid 38.4, bad granularity 35.4.", "where": "Section 6 Baseline analysis"},
+  {"claim": "Extrapolated BERT-LARGE accuracy with 100k training examples is roughly 75%, below humans.", "kind": "measured", "source": null, "metric": "accuracy (extrapolated)", "value": 75, "unit": "%", "baseline_value": null, "n": null, "setup": "dev set, varying training size, best of 3 runs per point; extrapolation read from Fig 5", "quote": "the accuracy of BERT-LARGE is expected to be roughly 75% assuming 100k examples", "table": null, "note": null, "where": "Section 6 Learning Curves"},
+  {"claim": "Cost per final question.", "kind": "measured", "source": null, "metric": "cost", "value": 0.33, "unit": "$", "baseline_value": null, "n": null, "setup": "AMT generation and verification", "quote": "The total cost per question is $0.33.", "table": null, "note": null, "where": "Section 3"},
+  {"claim": "Verification filters 15% of formulated questions.", "kind": "measured", "source": null, "metric": "filtered fraction", "value": 15, "unit": "%", "baseline_value": null, "n": null, "setup": "2 verifiers per question, keep if at least one answered correctly", "quote": "This processes filters out 15% of the questions.", "table": null, "note": null, "where": "Section 3"},
+  {"claim": "Ten of 122 workers wrote over 85% of the questions.", "kind": "measured", "source": null, "metric": "share of questions", "value": 85, "unit": "%", "baseline_value": null, "n": 122, "setup": "question formulators", "quote": "10 workers formulated more than 85% of the questions.", "table": null, "note": null, "where": "Section 4"},
+  {"claim": "AtLocation produces 47.3% of questions.", "kind": "measured", "source": null, "metric": "share", "value": 47.3, "unit": "%", "baseline_value": null, "n": null, "setup": "ConceptNet relation of source subgraph", "quote": null, "table": "Table 2, row AtLocation, column %", "note": null, "where": "Table 2"}
+ ],
+ "limits": [
+  "Human accuracy comes from only 100 questions with no qualification test.",
+  "BERT hyperparameters are copied from SWAG; no per-model values (lr, epochs) are reported for the other baselines.",
+  "Skills and error analyses use 100 dev examples.",
+  "Ten workers wrote over 85% of questions, so style may be narrow.",
+  "Random-split difficulty explanation is a stated hypothesis.",
+  "The 2019 baselines are dated; later models far exceed 56%."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "question concept / answer concept", "definition": "the first and second concepts of a ConceptNet triplet (q, r, a)", "where": "Section 3"},
+  {"term": "SANITY mode", "definition": "replace the hard distractors with random ConceptNet distractors", "where": "Section 6"},
+  {"term": "question concept split", "definition": "train/dev/test sets with disjoint question concepts", "where": "Section 6"}
+ ],
+ "lineage": [
+  {"work": "ConceptNet 5.5", "year": 2017, "arxiv": null, "relation": "uses-data", "note": "knowledge base the questions are built from (Speer et al.)", "quote": null},
+  {"work": "BERT", "year": 2018, "arxiv": "1810.04805", "relation": "baseline", "note": "best model, BERT-LARGE", "quote": null},
+  {"work": "GPT (Radford et al.)", "year": 2018, "arxiv": null, "relation": "baseline", "note": "fine-tuned LM baseline", "quote": null},
+  {"work": "SWAG", "year": 2018, "arxiv": "1808.05326", "relation": "related", "note": "commonsense dataset BERT already solves; BERT hyperparameters taken from it", "quote": null},
+  {"work": "ESIM (Chen et al.)", "year": 2016, "arxiv": "1609.06038", "relation": "baseline", "note": "NLI model", "quote": null},
+  {"work": "BiDAF (Seo et al.)", "year": 2016, "arxiv": null, "relation": "baseline", "note": "base of BIDAF++", "quote": null},
+  {"work": "Trinh and Le", "year": 2018, "arxiv": "1806.02847", "relation": "uses-method", "note": "inspiration for LM1B baseline", "quote": null},
+  {"work": "Winograd Schema Challenge / COPA", "year": 2011, "arxiv": null, "relation": "related", "note": "small commonsense benchmarks (150 examples; 500 dev + 500 test)", "quote": null},
+  {"work": "LoBue and Yates", "year": 2011, "arxiv": null, "relation": "uses-method", "note": "commonsense skill taxonomy adapted for Table 3", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Figure 1", "caption": "(a) A source concept and three target concepts are sampled from ConceptNet (b) Crowd-workers generate three questions...", "page": 1, "why": "shows the generation trick in one example"},
+  {"figure": "Table 5", "caption": "Test set accuracy for all models.", "page": 7, "why": "all baselines on both splits and SANITY"}
+ ],
+ "code": [],
+ "problems": ["Table 4 check marks (Training/Context columns) did not survive text extraction.", "Figure 5 learning curve values are not in text."]
+}

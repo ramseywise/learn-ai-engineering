@@ -1,19 +1,741 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2205.14100",
  "pdf": "ai-engineering/08-multimodal-engineering/sources/wang-2022-git.pdf",
  "bib": {
   "title": "GIT: A Generative Image-to-text Transformer for Vision and Language",
+  "authors": [
+   "Jianfeng Wang",
+   "Zhengyuan Yang",
+   "Xiaowei Hu",
+   "Linjie Li",
+   "Kevin Lin",
+   "Zhe Gan",
+   "Zicheng Liu",
+   "Ce Liu",
+   "Lijuan Wang"
+  ],
   "first_author": "Wang",
   "year": 2022,
-  "venue": "Trans. Mach. Learn. Res. 2022",
+  "venue": "preprint (arXiv v5; legacy extraction listed TMLR 2022)",
   "arxiv": "2205.14100",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-04",
-  "session": "97b4134b-decf-4866-ae85-c6872cbbba19"
+  "at": "2026-11-07",
+  "chars_read": 132644,
+  "chars_total": 132644,
+  "engine": "pymupdf",
+  "skipped": "References skimmed; figure-only pages (qualitative examples) read as captions only."
  },
- "legacy_report": "SOURCE: GIT: A Generative Image-to-text Transformer for Vision and Language. Jianfeng Wang, Zhengyuan Yang, Xiaowei Hu, Linjie Li, Kevin Lin, Zhe Gan, Zicheng Liu, Ce Liu, Lijuan Wang (Microsoft). arXiv 2205.14100v5, dated 15 Dec 2022. The extracted text names no venue, so I am treating it as a preprint.\n\nCOVERAGE: I read all 135,884 of 135,884 chars (49 pages): main text, appendices A–G (setting, data loader, captioning, VQA, video, classification, scene text recognition, scaling, cross-attention ablation, decoder and encoder initialisation, intermediate fine-tuning, bias, scene text in pre-training data) and every results table. I skimmed the references. The figure pages are qualitative examples only.\n\nARCHITECTURE (p3–5, Fig. 2–3):\n- One image encoder plus one text decoder. The only objective is the language-modelling (LM) loss.\n- Encoder: contrastively pre-trained Florence/CoSwin. Its 2D feature map is flattened, then passed through a linear layer and a layernorm to D=768.\n- The image tokens are concatenated with the text embeddings and fed to a 6-block transformer decoder that is randomly initialised. They are not fused by cross-attention.\n- Attention mask is seq2seq: image tokens attend to each other, and each text token attends to all image tokens plus the text tokens before it.\n- VQA: the question is the caption prefix, and the loss covers only the answer and [EOS].\n- Video: 6 frames, each encoded independently, plus a learnable temporal embedding initialised to zero, then concatenated.\n- No object detector, no tags, no OCR engine, no pointer network.\n\nCLAIMS\n- claim: GIT beats the human score on TextCaps. The \"human\" number is the human row reported by Sidorov et al. (2020), scored on the test server with automatic metrics. GIT did not take part in any human evaluation.\n  number: 138.2 vs 125.5 CIDEr\n  setup: GIT (0.7B params, 0.8B pairs), TextCaps test set, server-evaluated, no SCST\n  quote: \"our model surpasses the human performance for the ﬁrst time on TextCaps (138.2 vs. 125.5 in CIDEr)\"; Table 15 caption: \"Human: Sidorov et al. (2020)\"; test row \"Human - - - - - 24.4 26.1 47.0 18.8 125.5\" vs \"GIT ... 33.1 26.2 52.2 19.6 138.2\"\n  where: abstract p1; Table 15 p22\n- claim: GIT beats the previous TextCaps SOTA (TAP, which uses an OCR engine) by a wide margin. GIT2 goes further.\n  number: +28.5 CIDEr; GIT2 145.0\n  setup: TextCaps test; TAP# was the CVPR 2021 challenge winner at 109.7\n  quote: \"our solution outperforms the previous SOTA (TAP Yang et al. (2021c)) by a breakthrough margin (28.5 points in CIDEr)\"; \"GIT2 38.4 28.3 54.6 21.9 148.6 33.8 27.0 53.0 20.2 145.0\"\n  where: p6; Table 15 p22\n- claim: The model learns to read scene text from the LM loss alone, with no OCR engine. The authors credit the pre-training captions, which often transcribe the text in the image.\n  number: 15% of CC12M, 31% of web images\n  setup: estimated by running the Azure OCR API over all of CC12M and over 500K web images. A pair counts as a match only if its caption contains an OCR string longer than 5 characters.\n  quote: \"our approach depends on no OCR engine, and thus no dynamic pointer network. Empirically, we ﬁnd the model gradually learns how to read the scene text with large-scale pre-training\"; \"It is estimated that 15% of CC12M and 31% of the downloaded images contain scene text descriptions.\"\n  where: p5–6; p11\n- claim: Scene text recognition works as captioning. The TextCaps captioner scores 89.9 without any OCR training. Fine-tuned on synthetic OCR data it scores 92.9, which is below MaskOCR's 93.8.\n  number: 89.9 / 92.9 / prior 91.9\n  setup: average over IC13, SVT, IIIT, IC15, SVTP and CUTE80. For the TextCaps model, a prediction counts if the caption contains the word. For the MJ+ST model it must be an exact match.\n  quote: \"Our TextCaps-ﬁne-tuned captioning model achieves an 89.9 accuracy ... After ﬁne-tuning the model on the standard MJ+ST datasets, GIT achieves 92.9 that surpasses the prior arts (Fang et al., 2021a; He et al., 2022b) of 91.9.\"\n  where: p10; Table 8 and Table 24 p36 (GIT2 MJ+ST 94.5; GIT \"CUTE ... 96.2\")\n- claim: Text-heavy VQA reaches SOTA or ties it with no OCR input.\n  number: ST-VQA 69.6 ANLS (ties LaTr); OCR-VQA 68.1; TextVQA 59.75; VizWiz-QA 67.5\n  setup: preceded by intermediate fine-tuning on a mix of VQA datasets, with test and validation images de-duplicated out of that mix\n  quote: \"we achieve new SOTA on VizWiz-VQA and OCR-VQA, and same performance with prior SOTA of LaTr (Biten et al., 2022) on ST-VQA. Compared with ... Flamingo ... we achieve higher accuracy (+5.4) on TextVQA and lower (-3.29) on VQAv2. Note that Flamingo’s model size is 80B, which is 114 times of ours (0.7B).\"\n  where: p7; Table 4\n- claim: Scaling the image encoder helps, but scaling the text decoder does not. A 6-layer decoder matches or beats 12- and 24-layer ones.\n  number: COCO CIDEr 136.4 / 136.0 / 134.6 for 6 / 12 / 24 layers\n  setup: pre-trained on a 0.4B-pair subset, no beam search, no SCST\n  quote: \"Empirically, we ﬁnd it is diﬃcult to eﬀectively scale up the text decoder. Preliminary results are shown in Table 10, which shows a larger decoder shows no improvement.\"; \"6 38.9 30.7 136.4 ... 24 39.1 30.2 134.6\"\n  where: p11, Table 10\n- claim: The authors contrast their decoder-scaling result with Flamingo, whose decoder is pre-trained and frozen.\n  number: none\n  setup: architectural comparison\n  quote: \"Flamingo (Alayrac et al., 2022) shows a larger decoder improves the performance. However, their decoder is pre-trained and frozen during the VL pre-training, which avoids the problem of how to eﬀectively train the decoder.\"; \"their decoder is pre-trained and frozen to preserve the generalization capability of the large language model. In our GIT, all parameters are updated\"\n  where: p5, p11\n- claim: Initialising the decoder from BERT gives no gain and sometimes hurts.\n  number: Base, random vs BERT-B: COCO 127.5 vs 126.9; TextCaps 61.7 vs 59.7\n  setup: GIT_B setup, 10M pairs, learnable weights. The authors say this may not apply to frozen decoders.\n  quote: \"the text corpus pretrained checkpoint shows no or even worse improvement than the random initialization in both Base and Large sizes\"; \"may not be applicable to the case with frozen parameters, where the initial weight is important\"\n  where: Table 26, p37\n- claim: Concatenation with self-attention beats a cross-attention decoder at scale, and loses at small scale.\n  number: 0.8B pairs, TextCaps: 143.7 without cross-attention vs 139.3 with; 10M pairs, nocaps: 75.4 vs 86.2\n  setup: no SCST, no intermediate fine-tuning\n  quote: \"With smaller dataset, the latter with cross-attention outperforms, while with large-scale data, the former wins.\"\n  where: Table 25, p36\n- claim: Contrastive (CLIP) encoder initialisation clearly beats supervised, MAE and random initialisation.\n  number: TextCaps 64.9 / 47.0 / 44.9 / 36.5\n  setup: GIT_B, ViT-B, 10M pairs. The encoders were pre-trained on different datasets, which confounds the comparison.\n  quote: \"CLIP 131.4 64.9 61.2 / Supervised 122.1 47.0 58.3 / self-supervised 123.4 44.9 51.6 / Random 89.0 36.5 38.1\"\n  where: Table 27, p38\n- claim: More data and larger encoders help on TextCaps and VizWiz-QA. On COCO and VQAv2 the 0.8B noisy web data helps little or even hurts.\n  number: none quotable; the scaling results are only plotted (Fig. 4, Fig. 21)\n  setup: Base = CLIP ViT-B/16, Large = ViT-L/14, Huge = CoSwin, each at 4M, 14M and 0.8B images\n  quote: \"On COCO, the base model beneﬁts from 4M to 14M, but the performance drops with 0.8B data.\"; \"On TextCaps and VizWiz-QA, all model variants beneﬁt signiﬁcantly from more pre-training data. Also, a larger backbone improves more especially with 0.8B data.\"\n  where: p10\n- claim: Model and data sizes. GIT2 is 5.1B params, of which 4.8B is the encoder, trained on 10.5B images.\n  number: see table\n  quote: \"GITB 4M 10M CLIP/ViT-B/16 ... 30 129M 224 / GITL 14M 20M CLIP/ViT-L/14 ... 30 347M 224 / GIT 0.8B 0.8B Florence/CoSwin ... 2 681M 384 / GIT2 10.5B 12.9B DaViT ... (4.8B) 2 5.1B 384\"; \"The text decoder is enlarged to 0.3B\"\n  where: Table 11, p13\n- claim: Pre-training settings.\n  number: lr 1e-5 (encoder) and 5e-5 (decoder); batch 4096; 2 epochs; label smoothing 0.1; beam 4\n  quote: \"The learning rates of the image encoder and the decoder are1e−5 and 5e−5 ... The total number of epochs is2. During inference, the beam size is4\"; \"The batch size is 4096\"\n  where: p6, p12\n- claim: GIT reaches COCO SOTA on the test server but not on Karpathy test, where OFA scores higher.\n  number: COCO test c40 148.8; Karpathy 144.8 vs OFA 145.3; nocaps 123.4 vs CoCa 120.6 (0.7B vs 2.1B)\n  quote: \"our model achieves the new SOTA performance on all these metrics except on COCO Karpathy test\"\n  where: p6, Table 2\n- claim: Generative VQA and classification trail discriminative models that use the same encoder.\n  number: VQAv2 78.81 (1.5 points below Florence); ImageNet 88.79 top-1 (about 1.2 points below Florence)\n  quote: \"our model performs worse in 1.5 points than the discriminative model of Florence\"; \"each correct answer requires at least two correct predictions (answer and[EOS]; 2.2 on average)\"\n  where: p7–8\n- claim: Video works by concatenating frames. Example: VATEX private test.\n  number: 93.8 vs Flamingo 84.2\n  quote: \"This is also better than Flamingo (Alayrac et al., 2022) (84.2) with 80B parameters.\"\n  where: p8\n\nLIMITS:\n- No seeds, no variance and no error bars anywhere. Every figure is a single run.\n- Of the 0.8B training pairs, 0.6B are a non-public crawl: \"an extra 0.6B data following a similar collection procedure in Hu et al. (2021a)\". The Florence encoder and the GIT2 data (10.5B images) are also in-house.\n- Compute is not quantified. The only statement is A100s on Azure, plus \"the number of epoch is only 2 due to computational resource limitation\".\n- What the authors concede:\n  - \"it is unclear on how to control the generated caption and how to perform in-context learning without parameter update\".\n  - Toxic language in the pre-training data \"may poison the output\".\n  - Below discriminative models on VQAv2 and ImageNet.\n  - Below Flamingo on MSRVTT-QA (43.2 vs 47.4) and below prior SOTA on TVC.\n  - They could not make a larger decoder pay off.\n- The \"human performance\" claim compares CIDEr against human captions scored on the same metric, using a human row taken from Sidorov et al. 2020 (nocaps human row from Agrawal et al. 2019). It is not a human preference study.\n- The scene-text prevalence figure is an OCR-API estimate on a subset.\n- The bias study (gender and skin NPD of 0.7–5.3%) covers only COCO Karpathy test images annotated by Zhao et al. 2021.\n- My own comment, not the authors': the decoder-scaling and random-initialisation findings predate the frozen-LLM-plus-projector lineage (BLIP-2, LLaVA). The authors fence them off explicitly as \"not applicable to the case with frozen parameters\".\n\nBUILDS ON:\n- Florence (Yuan et al., 2021) as encoder and contrastive pre-training; CLIP (Radford et al., 2021); ALIGN (Jia et al., 2021).\n- ViT (Dosovitskiy et al., 2021); DaViT (Ding et al., 2022) and UniCL (Yang et al., 2022a) for GIT2.\n- Data collection procedure from LEMON (Hu et al., 2021a).\n- Random decoder initialisation motivated by MiniVLM (Wang et al., 2020).\n- Unified generative VL predecessors: VL-T5 (Cho et al., 2021), SimVLM (Wang et al., 2021b), OFA (Wang et al., 2022b).\n- Concurrent work contrasted: CoCa (Yu et al., 2022) and Flamingo (Alayrac et al., 2022).\n- OCR-pipeline baselines: M4C (Hu et al., 2020), TAP (Yang et al., 2021c).\n- Others: SCST (Rennie et al., 2017); preprocessing from UFO (Wang et al., 2021a); trie-constrained decoding from Wang et al. (2022b); code built on VirTex (Desai & Johnson, 2021).\n\nCODE:\n- p8 footnote 3, the exact-match rule for classification: `pred.replace(‘ ’, ‘’) == gt.replace(‘ ’, ‘’)`\n- Eq. 1, p5, as extracted (garbled): \"l = 1N + 1 N +1∑ i=1 CE(yi,p (yi|I,{yj,j = 0,··· ,i− 1)}), (1) where CE is the cross-entropy loss with label smoothing of 0.1\". This is the mean cross-entropy over the N+1 tokens, each conditioned on the image and the tokens before it.\n\nFIGURES:\n- Fig. 2 (p4), \"Network architecture of our GIT, composed of one image encoder and one text decoder\": captioning, VQA-as-prefix and video frames on one page. This is the clearest picture of fusion by concatenation.\n- Fig. 3 (p5), \"seq2seq attention mask\": a 0/1 grid showing image tokens attending each other while text is causal. It explains the mask faster than prose.\n- Fig. 4 (p11), \"Performance with different pre-training data scales and different model sizes\": the encoder-scale-by-data curves on COCO, TextCaps and VizWiz-QA, including the Base-model drop on COCO.\n- Fig. 22 (p40): scene text recognition output from the TextCaps captioner set against the MJ+ST model. Useful for the document-understanding note's point about OCR without an OCR engine.\n- Fig. 23 (p41): pre-training captions that transcribe scene text. This is the claimed source of the reading ability.\n\nPROBLEMS:\n- Equation 1 and the ligatures (\"ﬁ\", \"ﬀ\") extract garbled.\n- Some table rows merge across columns, e.g. \"Open Flamingo (80B, 2.3B) 82.1GIT (0.7B, 0.8B) 78.81\" and \"GIT TextCaps 89.9MJ+ST 92.9\".\n- Scaling figures are plots only, so no per-point numbers can be quoted.\n- The PDF contains no embedded instructions.\n- PDF: /Users/ramsey-wise/workspace/learn-ai-engineering/ai-engineering/08-multimodal-engineering/sources/wang-2022-git.pdf"
+ "type": "empirical",
+ "question": "Can one image encoder plus one text decoder trained with a single language-modelling loss, scaled in data and model size, unify image/video captioning, QA, classification and scene text recognition?",
+ "hypothesis": "A simple architecture with scaling can reach SOTA without object detectors, tags or OCR.",
+ "contributions": [
+  "GIT: one image encoder and one text decoder pre-trained on 0.8 billion image-text pairs with the language modeling task",
+  "New SOTA on many image/video captioning and QA benchmarks without detectors, tags or OCR; surpasses human on TextCaps",
+  "SOTA even on video tasks without video-dedicated encoders",
+  "Generation-based image classification (88.79% top-1 on ImageNet-1K)"
+ ],
+ "method": {
+  "summary": "Contrastively pre-trained Florence/CoSwin image encoder feeds flattened features (linear+layernorm to D=768) concatenated with text embeddings into a 6-block randomly initialised transformer decoder with a seq2seq attention mask; trained on 0.8B pairs with LM loss, then fine-tuned per task. VQA, classification and scene text are cast as caption generation; video uses 6 frames with learnable temporal embeddings.",
+  "task": "image-to-text generation (captioning, VQA, video, classification, scene text)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Pre-training mix: COCO, CC3M, SBU, Visual Genome, CC12M, ALT200M plus extra 0.6B crawled pairs",
+    "role": "pretrain",
+    "size": "0.8B image-text pairs",
+    "split": null,
+    "source": "extra 0.6B collected following Hu et al. 2021a; not released",
+    "preprocessing": "shorter side <=384, longer side <=640, re-saved JPEG quality 90 (39 TB), following Wang et al. 2021a"
+   },
+   {
+    "name": "GITB pre-train set (COCO+SBU+CC3M+VG)",
+    "role": "pretrain",
+    "size": "4M images / 10M pairs",
+    "split": null,
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "GITL pre-train set (+CC12M)",
+    "role": "pretrain",
+    "size": "14M images / 20M pairs",
+    "split": null,
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "GIT2 pre-train set",
+    "role": "pretrain",
+    "size": "10.5B images / 12.9B pairs",
+    "split": null,
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "COCO, Flickr30K, nocaps, TextCaps, VizWiz-Captions, VQAv2, TextVQA, ST-VQA, OCR-VQA, VizWiz-VQA, MSVD, MSRVTT, YouCook2, VATEX, TVC, MSVD-QA, MSRVTT-QA, TGIF-Frame, ImageNet-1K, MJSynth+SynthText, six scene-text test sets",
+    "role": "both",
+    "size": null,
+    "split": "Karpathy split for COCO/Flickr30K; server evaluation for test sets",
+    "source": null,
+    "preprocessing": "duplicates of test/val images removed from intermediate VQA fine-tuning mix"
+   }
+  ],
+  "models": [
+   {
+    "name": "GIT",
+    "role": "proposed",
+    "params": "0.7B (681M per Table 11)",
+    "architecture": "image encoder + 6-block transformer decoder, self-attention over concatenated image and text tokens",
+    "init_from": "image encoder: Florence/CoSwin contrastive; decoder random",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "decoder 6",
+    "hidden": "768",
+    "heads": "12",
+    "context": null,
+    "other": {
+     "image_size": "384"
+    }
+   },
+   {
+    "name": "GIT_B",
+    "role": "proposed",
+    "params": "129M",
+    "architecture": "CLIP ViT-B/16 encoder + 6-layer decoder",
+    "init_from": "CLIP",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "6",
+    "hidden": "768",
+    "heads": "12",
+    "context": null,
+    "other": {
+     "image_size": "224",
+     "epochs": "30"
+    }
+   },
+   {
+    "name": "GIT_L",
+    "role": "proposed",
+    "params": "347M",
+    "architecture": "CLIP ViT-L/14 encoder + 6-layer decoder",
+    "init_from": "CLIP",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "6",
+    "hidden": "768",
+    "heads": "12",
+    "context": null,
+    "other": {
+     "image_size": "224",
+     "epochs": "30"
+    }
+   },
+   {
+    "name": "GIT2",
+    "role": "proposed",
+    "params": "5.1B",
+    "architecture": "DaViT 4.8B encoder (UniCL pre-trained) + 0.3B decoder following BERT-Large",
+    "init_from": "DaViT/UniCL",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "image_size": "384",
+     "epochs": "2"
+    }
+   }
+  ],
+  "training": {
+   "objective": "language modeling cross-entropy on text tokens given image, label smoothing 0.1; for VQA loss only on answer and [EOS]",
+   "optimizer": "AdamW beta1=0.9 beta2=0.999",
+   "lr": "1e-5 image encoder, 5e-5 decoder (x5)",
+   "lr_schedule": "cosine decay to 0",
+   "warmup": "first 500 iterations",
+   "batch_size": "4096",
+   "steps": null,
+   "epochs": "2 (0.8B data); 30 (10M/20M pair sets)",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "label smoothing 0.1",
+   "hardware": "A100 on Azure Machine Learning; GPU count not stated",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "finetune_captioning": "10 epochs, batch 512, lr 2.5e-6; SCST same hyperparameters if used",
+    "finetune_VQA": "20 epochs lr 1e-5 (VizWiz-QA 40 epochs, 2e-5); input 384 for intermediate FT, 576 final",
+    "finetune_ImageNet": "10 epochs, lr 1e-5, batch 4096 full / 16 few-shot, no beam search",
+    "finetune_video": "Table 21: epochs 10/20/20/10/20/40/20/20 and lr 1e-6/2.5e-6/1e-5/2.5e-6/5e-6/1e-5/1e-5/1e-5 for MSVD/MSRVTT/YouCook2/VATEX/TVC/MSVD-QA/MSRVTT-QA/TGIF-Frame",
+    "video_frames": "6 frames, equal interval, same random crop in training; uniform sampling center crop at inference",
+    "software": "PyTorch, DeepSpeed, Transformers"
+   }
+  },
+  "inference": {
+   "decoding": "beam search, beam size 4, length penalty 0.6 (default)",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single run; no seeds or variance reported",
+   "prompting": "VQA: question is the text prefix and the answer is generated; classification: class name is the caption",
+   "retrieval": null,
+   "parameters": {},
+   "other": {
+    "imagenet_voc_prior": "trie constrains tokens to the vocabulary"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "CIDEr",
+     "definition": "Vedantam et al. 2015",
+     "unit": "points",
+     "higher_is_better": true
+    },
+    {
+     "name": "VQA accuracy / ANLS (ST-VQA)",
+     "definition": "standard benchmark metrics",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "ImageNet top-1 exact match",
+     "definition": "pred.replace(' ','') == gt.replace(' ','')",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "scene text accuracy",
+     "definition": "exact match (MJ+ST) or caption contains the word (TextCaps FT)",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Flamingo",
+    "CoCa",
+    "SimVLM",
+    "OFA",
+    "VinVL",
+    "TAP",
+    "LEMON",
+    "Florence",
+    "LaTr",
+    "CLIP4Caption++"
+   ],
+   "protocol": "Karpathy splits and public servers; single run; no significance tests"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "extra 0.6B crawled pairs not released"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.epochs",
+    "quote": "The total number of epochs is 2.",
+    "where": "Sec 4.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "GIT scores above the human row on the TextCaps test set (human number is from Sidorov et al. 2020, not a GIT human study).",
+   "kind": "measured",
+   "source": null,
+   "metric": "CIDEr",
+   "value": "138.2",
+   "unit": null,
+   "baseline_value": "125.5",
+   "n": null,
+   "setup": "GIT 0.7B, 0.8B pairs, TextCaps test (server), no SCST",
+   "note": null,
+   "where": "Abstract; Table 15",
+   "quote": "our model surpasses the human performance for the ﬁrst time on TextCaps (138.2 vs. 125.5 in CIDEr)"
+  },
+  {
+   "claim": "GIT beats the previous TextCaps SOTA (TAP, uses OCR) by 28.5 CIDEr.",
+   "kind": "measured",
+   "source": null,
+   "metric": "CIDEr",
+   "value": "28.5",
+   "unit": "points",
+   "baseline_value": "109.7",
+   "n": null,
+   "setup": "TextCaps test; TAP# challenge winner 109.7",
+   "note": null,
+   "where": "Sec 4.2",
+   "quote": "our solution outperforms the previous SOTA (TAP Yang et al. (2021c)) by a breakthrough margin (28.5 points in CIDEr)"
+  },
+  {
+   "claim": "GIT2 (5.1B) reaches 145.0 on TextCaps test.",
+   "kind": "measured",
+   "source": null,
+   "metric": "CIDEr",
+   "value": "145.0",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "GIT2, 10.5B images, 12.9B pairs; TextCaps test",
+   "note": null,
+   "where": "Table 15; Table 1",
+   "table": "Table 15, row GIT2, test column C: 145.0"
+  },
+  {
+   "claim": "On nocaps, GIT (0.7B) beats CoCa (2.1B); text says 123.0 vs 120.6.",
+   "kind": "measured",
+   "source": null,
+   "metric": "CIDEr",
+   "value": "123.0",
+   "unit": null,
+   "baseline_value": "120.6",
+   "n": null,
+   "setup": "nocaps test overall",
+   "note": "Text prints 123.0; Table 2(d) and Table 14 print 123.4.",
+   "where": "Sec 4.2",
+   "quote": "achieves higher performance (123.0 vs 120.6 in CIDEr)"
+  },
+  {
+   "claim": "COCO Karpathy test CIDEr (cross-entropy) is 144.8, below OFA 145.3, so GIT is not SOTA there.",
+   "kind": "measured",
+   "source": null,
+   "metric": "CIDEr",
+   "value": "144.8",
+   "unit": null,
+   "baseline_value": "145.3",
+   "n": null,
+   "setup": "COCO Karpathy test, GIT 0.7B",
+   "note": null,
+   "where": "Table 2a",
+   "table": "Table 2(a), row GIT, column CE: 144.8; Table 12 row GIT: 144.8"
+  },
+  {
+   "claim": "COCO test server CIDEr c40 148.8 vs VinVL 138.7.",
+   "kind": "measured",
+   "source": null,
+   "metric": "CIDEr c40",
+   "value": "148.8",
+   "unit": null,
+   "baseline_value": "138.7",
+   "n": null,
+   "setup": "COCO online test",
+   "note": null,
+   "where": "Table 2b",
+   "table": "Table 2(b): GIT 148.8, VinVL 138.7"
+  },
+  {
+   "claim": "Flickr30K few-shot: GIT 32-shot 80.5 beats Flamingo 75.4; zero-shot 49.6 is below Flamingo 67.2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "CIDEr",
+   "value": "80.5",
+   "unit": null,
+   "baseline_value": "75.4",
+   "n": null,
+   "setup": "Flickr30K Karpathy, CIDEr",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row GIT, column 32: 80.5; Flamingo 75.4; 0-shot GIT 49.6, Flamingo 67.2"
+  },
+  {
+   "claim": "VQAv2 test-std 78.81 with open (generated) vocabulary, below discriminative Florence 80.36 and Flamingo 82.1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "78.81",
+   "unit": "%",
+   "baseline_value": "80.36",
+   "n": null,
+   "setup": "VQAv2 test-std, GIT 0.7B, 0.8B pairs",
+   "note": null,
+   "where": "Table 4a",
+   "table": "Table 4(a), row GIT (0.7B, 0.8B): 78.81"
+  },
+  {
+   "claim": "TextVQA test 59.75 vs Flamingo 54.1 (text says +5.4).",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "59.75",
+   "unit": "%",
+   "baseline_value": "54.1",
+   "n": null,
+   "setup": "TextVQA test",
+   "note": "Mia (T5-3B, 73.67) scores higher and is listed in the table.",
+   "where": "Table 4b",
+   "quote": "we achieve higher accuracy (+5.4) on TextVQA and lower (-3.29) on VQAv2",
+   "table": "Table 4(b), row GIT: 59.75; Flamingo 54.1"
+  },
+  {
+   "claim": "VizWiz-VQA test 67.5 vs Flamingo 65.4.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "67.5",
+   "unit": "%",
+   "baseline_value": "65.4",
+   "n": null,
+   "setup": "VizWiz-QA test",
+   "note": null,
+   "where": "Table 4c",
+   "table": "Table 4(c), row GIT: 67.5; Flamingo 65.4"
+  },
+  {
+   "claim": "MSVD captioning CIDEr 180.2 vs SwinBERT 120.6.",
+   "kind": "measured",
+   "source": null,
+   "metric": "CIDEr",
+   "value": "180.2",
+   "unit": null,
+   "baseline_value": "120.6",
+   "n": null,
+   "setup": "MSVD test",
+   "note": null,
+   "where": "Table 5a",
+   "table": "Table 5(a), row GIT: 180.2; SwinBERT 120.6"
+  },
+  {
+   "claim": "VATEX private test CIDEr 93.8 vs CLIP4Caption++ 86.5 and Flamingo 84.2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "CIDEr",
+   "value": "93.8",
+   "unit": null,
+   "baseline_value": "86.5",
+   "n": null,
+   "setup": "VATEX private test, 6 frames, SCST",
+   "note": null,
+   "where": "Sec 4.3",
+   "quote": "our results are even better (93.8 vs 86.5) than CLIP4Caption++"
+  },
+  {
+   "claim": "GIT is below prior SOTA on MSRVTT-QA (43.2 vs Flamingo 47.4).",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "43.2",
+   "unit": "%",
+   "baseline_value": "47.4",
+   "n": null,
+   "setup": "MSRVTT-QA",
+   "note": null,
+   "where": "Table 6b",
+   "table": "Table 6(b), row GIT: 43.2; Flamingo 47.4"
+  },
+  {
+   "claim": "Generation-based ImageNet-1k fine-tuning gives 88.79% top-1 with no predefined vocabulary, 1.2 points under Florence (90.05).",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1",
+   "value": "88.79",
+   "unit": "%",
+   "baseline_value": "90.05",
+   "n": null,
+   "setup": "ImageNet-1k, full fine-tune, exact match after removing whitespace",
+   "note": null,
+   "where": "Table 7",
+   "quote": "achieving decent performance on standard benchmarks",
+   "table": "Table 7, row GIT: 88.79; Florence 90.05"
+  },
+  {
+   "claim": "Zero-shot ImageNet: exact-match accuracy 1.93%, contains-match 40.88%, vocabulary-constrained 33.48%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1 exact",
+   "value": "1.93",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Pretrained GIT, no fine-tuning",
+   "note": "voc-prior 33.48 is lower than the relaxed 'in' score.",
+   "where": "Sec 4.4; Table 9",
+   "quote": "the exactly-match accuracy is only 1.93% (in the column of equal). However, if we relax the requirement and take it correct if the prediction contains the ground-truth, the accuracy is 40.88%"
+  },
+  {
+   "claim": "ImageNet 5-shot per class: equal 79.79, in 80.15, voc-prior 80.95; Flamingo 5-shot voc-prior 77.3.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1 voc-prior",
+   "value": "80.95",
+   "unit": "%",
+   "baseline_value": "77.3",
+   "n": null,
+   "setup": "5-shot fine-tune",
+   "note": null,
+   "where": "Table 9",
+   "table": "Table 9, row GIT, 5-shot columns: 79.79, 80.15, 80.95"
+  },
+  {
+   "claim": "Scene text recognition: TextCaps-fine-tuned captioner averages 89.9 over six benchmarks (correct if caption contains the word); MJ+ST fine-tuned gives 92.9 vs 91.9 prior.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "89.9",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "IC13, IC15, IIIT, SVT, SVTP, CUTE; average accuracy",
+   "note": null,
+   "where": "Sec 4.5; Table 8",
+   "quote": "Our TextCaps-ﬁne-tuned captioning model achieves an 89.9 accuracy"
+  },
+  {
+   "claim": "After MJ+ST fine-tuning GIT averages 92.9.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "92.9",
+   "unit": "%",
+   "baseline_value": "91.9",
+   "n": null,
+   "setup": "same six benchmarks, exact match",
+   "note": null,
+   "where": "Sec 4.5",
+   "quote": "GIT achieves 92.9 that surpasses the prior arts (Fang et al., 2021a; He et al., 2022b) of 91.9"
+  },
+  {
+   "claim": "Larger text decoders do not help: 6/12/24 decoder layers give COCO CIDEr 136.4/136.0/134.6.",
+   "kind": "measured",
+   "source": null,
+   "metric": "CIDEr",
+   "value": "136.4",
+   "unit": null,
+   "baseline_value": "134.6",
+   "n": null,
+   "setup": "Pre-trained on 0.4B-pair subset; no beam search, no SCST",
+   "note": null,
+   "where": "Table 10",
+   "quote": "a larger decoder shows no improvement",
+   "table": "Table 10, column COCO C: 136.4, 136.0, 134.6"
+  },
+  {
+   "claim": "Pure self-attention (concatenation) decoder wins all 7 benchmarks at 0.8B pairs (TextCaps 143.7 vs cross-attention 139.3).",
+   "kind": "measured",
+   "source": null,
+   "metric": "CIDEr",
+   "value": "143.7",
+   "unit": null,
+   "baseline_value": "139.3",
+   "n": null,
+   "setup": "0.8B pairs, no SCST, no intermediate FT",
+   "note": null,
+   "where": "Table 25",
+   "table": "Table 25, 0.8B rows w/o vs w/ Cross-Att., TextCaps: 143.7 vs 139.3"
+  },
+  {
+   "claim": "At 10M pairs cross-attention wins on nocaps (86.2 vs 75.4), TextCaps, ST-VQA, TextVQA and VizWiz-QA; concatenation wins COCO and VizWiz-Captions.",
+   "kind": "measured",
+   "source": null,
+   "metric": "CIDEr",
+   "value": "86.2",
+   "unit": null,
+   "baseline_value": "75.4",
+   "n": null,
+   "setup": "10M pairs",
+   "note": "Model size for this table not stated in the text read.",
+   "where": "Table 25",
+   "table": "Table 25, 10M rows, column nocaps: w/o 75.4, w/ 86.2"
+  },
+  {
+   "claim": "BERT-initialised decoder is no better than random: TextCaps 59.7 vs 61.7 (Base).",
+   "kind": "measured",
+   "source": null,
+   "metric": "CIDEr",
+   "value": "61.7",
+   "unit": null,
+   "baseline_value": "59.7",
+   "n": null,
+   "setup": "GITB setting, 10M pairs",
+   "note": null,
+   "where": "Table 26",
+   "table": "Table 26, Base: Random 61.7 TextCaps, BERT_B 59.7"
+  },
+  {
+   "claim": "Image encoder initialisation matters: CLIP COCO 131.4 vs supervised 122.1, self-supervised 123.4, random 89.0.",
+   "kind": "measured",
+   "source": null,
+   "metric": "CIDEr",
+   "value": "131.4",
+   "unit": null,
+   "baseline_value": "89.0",
+   "n": null,
+   "setup": "GITB, 10M pairs",
+   "note": null,
+   "where": "Table 27",
+   "table": "Table 27, row CLIP column COCO: 131.4; Random 89.0"
+  },
+  {
+   "claim": "Intermediate VQA fine-tuning helps most for small target sets: ST-VQA +2.2, VizWiz-QA +1.4.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy gain",
+   "value": "2.2",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Intermediate FT on VQAv2, TextVQA, ST-VQA, OCR-VQA, VizWiz-VQA, VG-QA, GQA, OK-VQA",
+   "note": null,
+   "where": "Table 28",
+   "table": "Table 28, column ST-VQA: 66.9 to 69.1 (+2.2)"
+  },
+  {
+   "claim": "An estimated 15% of CC12M and 31% of downloaded web images carry scene text matched in the caption.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "15% CC12M, 31% crawl",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Azure OCR on all CC12M and 500K crawled images; match requires OCR text longer than 5 characters in caption",
+   "note": null,
+   "where": "Sec 4.6",
+   "quote": "It is estimated that 15% of CC12M and 31% of the downloaded images contain scene text descriptions."
+  },
+  {
+   "claim": "Gender/skin bias NPD ranges 0.7% to 5.3% over metrics.",
+   "kind": "measured",
+   "source": null,
+   "metric": "NPD",
+   "value": "0.7% to 5.3%",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "COCO Karpathy test subset with Zhao et al. 2021 annotations",
+   "note": null,
+   "where": "G.6",
+   "quote": "the bias ranges only from 0.7% to 5.3% across all metrics"
+  },
+  {
+   "claim": "Model sizes and data: GIT 681M encoder, 0.7B total; GIT2 5.1B (4.8B DaViT encoder), 10.5B images, 12.9B pairs.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "5.1B",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 11",
+   "note": null,
+   "where": "A.3",
+   "quote": "As the performance exhibits no signs of plateau, we further scale up the model size to 5.1B and the number of pretraining images to 10.5B (12.9B image-text pairs)."
+  }
+ ],
+ "limits": [
+  "Authors: unclear how to control generated captions or do in-context learning without parameter updates.",
+  "Larger decoders did not help; result may not transfer to pretrained frozen decoders (authors, G.3).",
+  "Generative VQA/ImageNet is harder: about 1.2-1.5 points below discriminative Florence with the same encoder.",
+  "No seeds or variance; 0.6B of 0.8B pairs are non-public; GPU count and compute not stated.",
+  "Pre-training data not guaranteed free of toxic language."
+ ],
+ "practices": [],
+ "terms": [],
+ "lineage": [
+  {
+   "work": "Florence: A New Foundation Model for Computer Vision",
+   "year": 2021,
+   "arxiv": "2111.11432",
+   "relation": "uses-method",
+   "note": "contrastive image encoder initialisation",
+   "quote": null
+  },
+  {
+   "work": "Flamingo",
+   "year": 2022,
+   "arxiv": "2204.14198",
+   "relation": "baseline",
+   "note": "concurrent; frozen 80B decoder",
+   "quote": null
+  },
+  {
+   "work": "CoCa",
+   "year": 2022,
+   "arxiv": "2205.01917",
+   "relation": "baseline",
+   "note": "contrastive+generative; compared on nocaps/VQAv2/ImageNet",
+   "quote": null
+  },
+  {
+   "work": "SimVLM",
+   "year": 2021,
+   "arxiv": "2108.10904",
+   "relation": "baseline",
+   "note": "generative VL pre-training",
+   "quote": null
+  },
+  {
+   "work": "LEMON",
+   "year": 2021,
+   "arxiv": "2111.12233",
+   "relation": "uses-data",
+   "note": "ALT200M and data collection procedure",
+   "quote": null
+  },
+  {
+   "work": "TAP (Yang et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "TextCaps prior SOTA using OCR",
+   "quote": null
+  },
+  {
+   "work": "Wang et al. 2020 MiniVLM",
+   "year": 2020,
+   "arxiv": "2012.06946",
+   "relation": "uses-method",
+   "note": "random decoder init motivated by it",
+   "quote": null
+  },
+  {
+   "work": "COCO / CC3M / CC12M / SBU / Visual Genome",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "pre-training data",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "Network architecture of GIT: one image encoder and one text decoder; question as text prefix for VQA; multiple frames with temporal embeddings for video.",
+   "page": 4,
+   "why": "Shows the whole architecture in one view."
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "seq2seq attention mask",
+   "page": 5,
+   "why": "Image tokens bidirectional, text causal."
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Performance with different pre-training data scales and different model sizes.",
+   "page": 11,
+   "why": "Scaling trends."
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 3.2 Eq 1",
+   "snippet": "l = 1/(N+1) * sum_{i=1}^{N+1} CE(y_i, p(y_i | I, {y_j, j=0..i-1}))",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text prints nocaps 123.0 while Table 2 and 14 print 123.4.",
+  "Text extraction of tables is column-flattened; table values matched by reading order."
+ ]
 }

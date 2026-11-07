@@ -1,0 +1,829 @@
+{
+ "schema": 1,
+ "key": "2205.01068",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/zhang-2022-opt.pdf",
+ "bib": {
+  "title": "OPT: Open Pre-trained Transformer Language Models",
+  "authors": [
+   "Susan Zhang",
+   "Stephen Roller",
+   "Naman Goyal",
+   "Mikel Artetxe",
+   "Moya Chen",
+   "Shuohui Chen",
+   "Christopher Dewan",
+   "Mona Diab",
+   "Xian Li",
+   "Xi Victoria Lin",
+   "Todor Mihaylov",
+   "Myle Ott",
+   "Sam Shleifer",
+   "Kurt Shuster",
+   "Daniel Simig",
+   "Punit Singh Koura",
+   "Anjali Sridhar",
+   "Tianlu Wang",
+   "Luke Zettlemoyer"
+  ],
+  "first_author": "Zhang",
+  "year": 2022,
+  "venue": "preprint",
+  "arxiv": "2205.01068",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 92015,
+  "chars_total": 92015,
+  "engine": "pymupdf",
+  "skipped": "Reference list skimmed; figure-only content (Fig 6/7 per-task curves, Fig 8-13 sample outputs) is not in the text."
+ },
+ "type": "empirical",
+ "question": "Can a GPT-3-class suite of decoder-only language models (125M to 175B) be trained, matched to GPT-3 in quality, with less carbon, and shared openly with the research community?",
+ "hypothesis": "OPT models trained with GPT-3 hyperparameters and current efficiency practice will roughly match GPT-3 on standard NLP tasks.",
+ "contributions": [
+  "A suite of eight decoder-only transformers from 125M to 175B parameters",
+  "Release of models 125M-66B and access to OPT-175B on request",
+  "Release of the training logbook and the metaseq codebase",
+  "Evaluation on 16 NLP tasks, dialogue and responsible-AI benchmarks",
+  "Carbon estimate of about 1/7th of GPT-3"
+ ],
+ "method": {
+  "summary": "Eight GPT-3-style decoder-only transformers are pre-trained on a roughly 180B-token English corpus (RoBERTa data, a Pile subset, PushShift Reddit) with AdamW, FP16 weights and FSDP plus Megatron tensor parallelism. OPT-175B ran on 992 A100-80GB GPUs with many manual restarts and learning-rate cuts. The models are evaluated with GPT-3 prompts on NLP tasks, plus dialogue and bias/toxicity benchmarks.",
+  "task": "next-token pretraining of decoder-only language models",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Pre-training corpus (RoBERTa subsets + Pile subset + PushShift.io Reddit)",
+    "role": "pretrain",
+    "size": "roughly 180B tokens, 800 GB",
+    "split": "random validation set of approximately 200MB held out, sampled proportionally to each dataset's size",
+    "source": "BookCorpus, CC-Stories, CCNewsV2 (crawled to 28 Sep 2021), Pile subset (CommonCrawl, DM Mathematics, Gutenberg, HackerNews, OpenSubtitles, OpenWebText2, USPTO, Wikipedia), PushShift.io Reddit",
+    "preprocessing": "MinhashLSH dedup at Jaccard >= .95; ad-hoc whitespace normalisation on Pile subsets; Reddit reduced to longest comment chain per thread (~66% smaller); GPT-2 byte-level BPE tokenizer; other Pile subsets dropped for causing gradient-norm spikes at 1.3B"
+   },
+   {
+    "name": "16 NLP tasks (HellaSwag, StoryCloze, PIQA, ARC E/C, OpenBookQA, WinoGrad, WinoGrande, SuperGLUE)",
+    "role": "eval",
+    "size": null,
+    "split": "GPT-3 setup; CB 56, BoolQ 277, WSC 104 validation examples",
+    "source": "public",
+    "preprocessing": "WSC formulated as multiple choice following Brown et al. 2020"
+   },
+   {
+    "name": "Dialogue: ConvAI2, Wizard of Wikipedia, Empathetic Dialogues, Blended Skill Talk, Wizard of Internet; MSC subset",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "public",
+    "preprocessing": null
+   },
+   {
+    "name": "ETHOS, CrowS-Pairs, StereoSet, RealToxicityPrompts, SaferDialogues, Safety Bench Unit Tests",
+    "role": "eval",
+    "size": "RTP: 10,000 randomly sampled prompts",
+    "split": null,
+    "source": "public",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "OPT-125M",
+    "role": "proposed",
+    "params": "125M",
+    "architecture": "decoder-only transformer, ReLU",
+    "init_from": null,
+    "tokenizer": "GPT-2 byte-level BPE",
+    "vocab": null,
+    "layers": 12,
+    "hidden": 768,
+    "heads": 12,
+    "context": "2048",
+    "other": {
+     "peak_lr": "6.0e-4",
+     "batch": "0.5M tokens"
+    }
+   },
+   {
+    "name": "OPT-350M",
+    "role": "proposed",
+    "params": "350M",
+    "architecture": "decoder-only transformer, ReLU",
+    "init_from": null,
+    "tokenizer": "GPT-2 byte-level BPE",
+    "vocab": null,
+    "layers": 24,
+    "hidden": 1024,
+    "heads": 16,
+    "context": "2048",
+    "other": {
+     "peak_lr": "3.0e-4",
+     "batch": "0.5M tokens"
+    }
+   },
+   {
+    "name": "OPT-1.3B",
+    "role": "proposed",
+    "params": "1.3B",
+    "architecture": "decoder-only transformer, ReLU",
+    "init_from": null,
+    "tokenizer": "GPT-2 byte-level BPE",
+    "vocab": null,
+    "layers": 24,
+    "hidden": 2048,
+    "heads": 32,
+    "context": "2048",
+    "other": {
+     "peak_lr": "2.0e-4",
+     "batch": "1M tokens"
+    }
+   },
+   {
+    "name": "OPT-2.7B",
+    "role": "proposed",
+    "params": "2.7B",
+    "architecture": "decoder-only transformer, ReLU",
+    "init_from": null,
+    "tokenizer": "GPT-2 byte-level BPE",
+    "vocab": null,
+    "layers": 32,
+    "hidden": 2560,
+    "heads": 32,
+    "context": "2048",
+    "other": {
+     "peak_lr": "1.6e-4",
+     "batch": "1M tokens"
+    }
+   },
+   {
+    "name": "OPT-6.7B",
+    "role": "proposed",
+    "params": "6.7B",
+    "architecture": "decoder-only transformer, ReLU",
+    "init_from": null,
+    "tokenizer": "GPT-2 byte-level BPE",
+    "vocab": null,
+    "layers": 32,
+    "hidden": 4096,
+    "heads": 32,
+    "context": "2048",
+    "other": {
+     "peak_lr": "1.2e-4",
+     "batch": "2M tokens"
+    }
+   },
+   {
+    "name": "OPT-13B",
+    "role": "proposed",
+    "params": "13B",
+    "architecture": "decoder-only transformer, ReLU",
+    "init_from": null,
+    "tokenizer": "GPT-2 byte-level BPE",
+    "vocab": null,
+    "layers": 40,
+    "hidden": 5120,
+    "heads": 40,
+    "context": "2048",
+    "other": {
+     "peak_lr": "1.0e-4",
+     "batch": "4M tokens"
+    }
+   },
+   {
+    "name": "OPT-30B",
+    "role": "proposed",
+    "params": "30B",
+    "architecture": "decoder-only transformer, ReLU",
+    "init_from": null,
+    "tokenizer": "GPT-2 byte-level BPE",
+    "vocab": null,
+    "layers": 48,
+    "hidden": 7168,
+    "heads": 56,
+    "context": "2048",
+    "other": {
+     "peak_lr": "1.0e-4",
+     "batch": "4M tokens"
+    }
+   },
+   {
+    "name": "OPT-66B",
+    "role": "proposed",
+    "params": "66B",
+    "architecture": "decoder-only transformer, ReLU",
+    "init_from": null,
+    "tokenizer": "GPT-2 byte-level BPE",
+    "vocab": null,
+    "layers": 64,
+    "hidden": 9216,
+    "heads": 72,
+    "context": "2048",
+    "other": {
+     "peak_lr": "0.8e-4",
+     "batch": "2M tokens"
+    }
+   },
+   {
+    "name": "OPT-175B",
+    "role": "proposed",
+    "params": "175B",
+    "architecture": "decoder-only transformer, ReLU",
+    "init_from": null,
+    "tokenizer": "GPT-2 byte-level BPE",
+    "vocab": null,
+    "layers": 96,
+    "hidden": 12288,
+    "heads": 96,
+    "context": "2048",
+    "other": {
+     "peak_lr": "1.2e-4",
+     "batch": "2M tokens"
+    }
+   },
+   {
+    "name": "GPT-3 / Davinci",
+    "role": "baseline",
+    "params": "175B",
+    "architecture": "decoder-only transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "NLP comparison uses numbers reported by Brown et al.; hate speech, CrowS, StereoSet, RTP use the Davinci API"
+    }
+   },
+   {
+    "name": "BlenderBot 1, R2C2 BlenderBot, Reddit 2.7B",
+    "role": "baseline",
+    "params": "2.7B (Reddit 2.7B, R2C2); BlenderBot 1 size not stated",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "inferred: next-token (causal language modelling) loss; the paper does not name the loss",
+   "optimizer": "AdamW (beta1, beta2) = (0.9, 0.95)",
+   "lr": "peak LR by size 6.0e-4 (125M) to 1.2e-4 (175B), see Table 1",
+   "lr_schedule": "linear warmup then linear decay to 10% of max LR over 300B tokens; OPT-175B required many mid-flight LR reductions (Fig 1)",
+   "warmup": "2000 steps in OPT-175B, 375M tokens in smaller baselines",
+   "batch_size": "0.5M to 4M tokens depending on size (Table 1), constant through training",
+   "steps": "inferred: about 140k iterations for OPT-175B from the x-axis of Fig 1 and Fig 2",
+   "epochs": null,
+   "tokens": "decay horizon 300B tokens; corpus is roughly 180B tokens; total tokens actually trained not stated",
+   "seq_len": "2048",
+   "precision": "model weights FP16, Adam state FP32, dynamic loss scaling",
+   "weight_decay": "0.1",
+   "dropout": "0.1 throughout, none on embeddings",
+   "regularisation": "gradient clipping at 1.0, lowered to 0.3 mid-flight; gradient predivide factor (two divisions by sqrt(N))",
+   "hardware": "992 80GB A100 GPUs, FSDP with Megatron-LM tensor parallelism, up to 147 TFLOP/s per GPU",
+   "compute": "estimated 75 tons CO2eq for OPT-175B; GPU-hours not stated",
+   "wall_clock": "about 2 months for OPT-175B including hardware failures",
+   "seeds": null,
+   "other": {
+    "init": "normal, mean 0, std 0.006; output-layer std scaled by 1.0/sqrt(2L); biases 0",
+    "hardware_failures": "at least 35 manual restarts, over 100 hosts cycled, 70+ estimated automatic restarts",
+    "loss_divergence_recovery": "lower LR and restart from earlier checkpoint with healthy loss scale (>=1.0) and downward-trending activation norms",
+    "other_midflight": "tried vanilla SGD (plateaued, reverted to AdamW); reset dynamic loss scalar; switched to newer Megatron",
+    "carbon_note": "with ablations, baselines and downtime, authors' own total cost estimate is roughly 2x higher (footnote 10)"
+   }
+  },
+  "inference": {
+   "decoding": "dialogue: greedy decoding up to 32 tokens; RealToxicityPrompts: nucleus sampling",
+   "temperature": null,
+   "top_p": "0.9 (RTP)",
+   "max_tokens": "32 (dialogue); 20 tokens per RTP generation",
+   "samples": "RTP: 25 generations per prompt for 10,000 prompts",
+   "prompting": "NLP tasks: GPT-3 prompts and setup, 0/1/32 shots; dialogue: alternating 'Person 1:' and 'Person 2:' lines, no other prompt; ETHOS yes/no (binary) or yes/no/neither (multiclass)",
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Accuracy",
+     "definition": "NLP task accuracy; F1 omitted for MultiRC and ReCoRD",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Perplexity",
+     "definition": "normalised to GPT-2 tokenizer space",
+     "unit": "ppl",
+     "higher_is_better": false
+    },
+    {
+     "name": "Unigram F1",
+     "definition": "ConvAI2 unigram overlap",
+     "unit": "F1",
+     "higher_is_better": true
+    },
+    {
+     "name": "CrowS-Pairs score",
+     "definition": "preference for stereotypical sentence",
+     "unit": "%",
+     "higher_is_better": false
+    },
+    {
+     "name": "StereoSet LMS / SS / ICAT",
+     "definition": "language modelling score, stereotype score, combined; normalised by token count not character count",
+     "unit": "points",
+     "higher_is_better": true
+    },
+    {
+     "name": "Toxicity probability of continuation",
+     "definition": "mean toxicity probability of continuations bucketed by prompt toxicity",
+     "unit": "probability",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "GPT-3 / Davinci",
+    "PaLM",
+    "Chinchilla",
+    "Gopher",
+    "Eleuther (GPT-NeoX-20B)",
+    "Jurassic",
+    "BlenderBot 1",
+    "R2C2 BlenderBot",
+    "Reddit 2.7B"
+   ],
+   "protocol": "Single run per model; averages exclude MultiRC and WIC; no seeds or significance tests reported."
+  },
+  "availability": {
+   "code": "metaseq (github.com/facebookresearch/metaseq) and training logbook",
+   "weights": "125M-66B released; OPT-175B on request under non-commercial licence",
+   "data": "not distributed (datasheet only); component corpora are public"
+  },
+  "prompts": [
+   {
+    "purpose": "dialogue evaluation",
+    "text": "alternating “Person 1:” and “Person 2:” lines of dialogue",
+    "where": "Section 3.2"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training.warmup",
+    "quote": "warming up from 0 to the maximum learning rate over the ﬁrst 2000 steps in OPT-175B, or over 375M tokens in our smaller baselines",
+    "where": "2.2"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "OPT-175B development used about 1/7th of GPT-3's carbon footprint.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "OPT-175B vs GPT-3, as estimated in the paper",
+   "where": "Abstract",
+   "note": null,
+   "quote": "We show that OPT-175B is com-\nparable to GPT-3,1 while requiring only 1/7th\nthe carbon footprint to develop."
+  },
+  {
+   "claim": "Estimated CO2eq footprint of OPT-175B.",
+   "kind": "measured",
+   "source": null,
+   "metric": "carbon",
+   "value": "75",
+   "unit": "tons CO2eq",
+   "baseline_value": null,
+   "n": null,
+   "setup": "final OPT-175B run, accounting not standardised",
+   "where": "Sec 6",
+   "note": null,
+   "quote": "OPT-175B was developed with an estimated\ncarbon emissions footprint (CO2eq) of 75 tons"
+  },
+  {
+   "claim": "GPT-3 estimated carbon, from Patterson et al. 2021.",
+   "kind": "reported",
+   "source": null,
+   "metric": null,
+   "value": "500",
+   "unit": "tons CO2eq",
+   "baseline_value": null,
+   "n": null,
+   "setup": "comparison figure quoted from other work",
+   "where": "Sec 6",
+   "note": null,
+   "quote": "GPT-3 was estimated to use 500 tons (Patterson\net al., 2021)"
+  },
+  {
+   "claim": "Gopher carbon estimate.",
+   "kind": "reported",
+   "source": null,
+   "metric": null,
+   "value": "380",
+   "unit": "tons CO2eq",
+   "baseline_value": null,
+   "n": null,
+   "setup": "comparison figure quoted from other work",
+   "where": "Sec 6",
+   "note": null,
+   "quote": "while Gopher required 380 tons (Rae\net al., 2021)"
+  },
+  {
+   "claim": "Including ablations, baselines and downtime the authors' total cost estimate is about double.",
+   "kind": "measured",
+   "source": null,
+   "metric": "total cost multiple",
+   "value": "2",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "footnote 10; says 'total cost', attached to the 75-ton carbon figure",
+   "where": "Sec 6 fn 10",
+   "note": null,
+   "quote": "With ablations, baselines and downtime, our own esti-\nmates of total cost is roughly 2× higher."
+  },
+  {
+   "claim": "OPT-175B trained on 992 A100-80GB GPUs.",
+   "kind": "measured",
+   "source": null,
+   "metric": "utilisation",
+   "value": "147",
+   "unit": "TFLOP/s per GPU",
+   "baseline_value": null,
+   "n": null,
+   "setup": "992 80GB A100 GPUs, FSDP + Megatron TP, OPT-175B",
+   "where": "Sec 1, 2.4",
+   "note": null,
+   "quote": "reaching 147 TFLOP/s\nutilization per GPU"
+  },
+  {
+   "claim": "Hardware failures forced at least 35 manual restarts over about 2 months.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "35",
+   "unit": "manual restarts",
+   "baseline_value": null,
+   "n": null,
+   "setup": "OPT-175B run",
+   "where": "Sec 2.5",
+   "note": null,
+   "quote": "hardware fail-\nures contributed to at least 35 manual restarts and\nthe cycling of over 100 hosts over the course of 2\nmonths"
+  },
+  {
+   "claim": "Estimated automatic restarts due to hardware failure.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "70+",
+   "unit": "automatic restarts",
+   "baseline_value": null,
+   "n": null,
+   "setup": "OPT-175B run",
+   "where": "Sec 2.5",
+   "note": null,
+   "quote": "we estimate 70+\nautomatic restarts due to hardware failures"
+  },
+  {
+   "claim": "Loss divergence was recovered by lowering LR and restarting from earlier checkpoints.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "OPT-175B run",
+   "where": "Sec 2.5",
+   "note": null,
+   "quote": "When the loss diverged,\nwe found that lowering the learning rate and restart-\ning from an earlier checkpoint allowed for the job\nto recover and continue training."
+  },
+  {
+   "claim": "Gradient clipping lowered from 1.0 to 0.3 early in training helped stability.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "0.3",
+   "unit": "clip norm",
+   "baseline_value": null,
+   "n": null,
+   "setup": "OPT-175B run",
+   "where": "Sec 2.5",
+   "note": null,
+   "quote": "Early\nin training, we also noticed that lowering gradient\nclipping from 1.0 to 0.3 helped with stability"
+  },
+  {
+   "claim": "Final corpus size.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "180B",
+   "unit": "tokens",
+   "baseline_value": null,
+   "n": null,
+   "setup": "pre-training corpus",
+   "where": "Sec 2.3",
+   "note": null,
+   "quote": "Our ﬁnal corpus\ncontains roughly 180B tokens."
+  },
+  {
+   "claim": "OPT average zero-shot accuracy follows GPT-3's trend across 14 tasks.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "14 NLP tasks, MultiRC and WIC excluded; GPT-3 prompts",
+   "where": "Sec 3.1 Fig 3",
+   "note": null,
+   "quote": "Overall, we see our average performance follows\nthe trend of GPT-3."
+  },
+  {
+   "claim": "OPT matches GPT-3 on 10 tasks and underperforms on ARC Challenge and MultiRC.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "zero-shot",
+   "where": "Sec 3.1",
+   "note": "Says 3 tasks but names two; the text is as printed.",
+   "quote": "Our performance roughly matched GPT-3 for 10\ntasks, and underperformed in 3 tasks (ARC Chal-\nlenge and MultiRC)."
+  },
+  {
+   "claim": "OPT one- and few-shot lags behind GPT-3 in Fig 4 caption, but the text says similar on average.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 4 caption",
+   "where": "Fig 4",
+   "note": "Main text says 'OPT models perform similarly to GPT-3 models' on average.",
+   "quote": "OPT perfor-\nmance for one- and few-shot lags behind GPT-3 mod-\nels"
+  },
+  {
+   "claim": "OPT-175B unsupervised dialogue ConvAI2 perplexity vs supervised BlenderBot 1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "perplexity",
+   "value": "10.8",
+   "unit": "ppl",
+   "baseline_value": "10.2",
+   "n": null,
+   "setup": "ConvAI2 perplexity",
+   "where": "Table 2",
+   "note": null,
+   "table": "Table 2, row OPT-175B, column C2 perplexity (10.8); BlenderBot 1 10.2"
+  },
+  {
+   "claim": "OPT-175B ConvAI2 hidden test set result matches validation.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "10.7",
+   "unit": "ppl",
+   "baseline_value": null,
+   "n": null,
+   "setup": "leakage check, greedy decoding",
+   "where": "Sec 3.2",
+   "note": null,
+   "quote": "achieved 10.7 ppl and .185 UF1, matching the\nperformance of the validation set"
+  },
+  {
+   "claim": "OPT-175B hate speech detection few-shot multiclass F1 vs Davinci.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": ".812",
+   "unit": "F1",
+   "baseline_value": ".672",
+   "n": null,
+   "setup": "ETHOS, few-shot multiclass",
+   "where": "Table 3",
+   "note": null,
+   "table": "Table 3, row Few-shot (multiclass), column OPT-175B (.812); Davinci .672"
+  },
+  {
+   "claim": "OPT-175B CrowS-Pairs overall score is worse than GPT-3.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "69.5",
+   "unit": "score",
+   "baseline_value": "67.2",
+   "n": null,
+   "setup": "CrowS-Pairs, lower is better",
+   "where": "Table 4",
+   "note": null,
+   "table": "Table 4, row Overall, column OPT-175B (69.5); GPT-3 67.2"
+  },
+  {
+   "claim": "StereoSet overall ICAT is close between Davinci and OPT-175B.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "60.0",
+   "unit": "ICAT",
+   "baseline_value": "60.8",
+   "n": null,
+   "setup": "StereoSet",
+   "where": "Table 5",
+   "note": null,
+   "table": "Table 5, row Overall ICAT, column OPT-175B (60.0); Davinci 60.8"
+  },
+  {
+   "claim": "OPT-175B has higher toxicity rate than PaLM or Davinci.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "RealToxicityPrompts, 25 generations of 20 tokens, nucleus p=0.9, 10,000 prompts",
+   "where": "Sec 4.4 Fig 5",
+   "note": null,
+   "quote": "that OPT-175B has a higher toxicity rate than ei-\nther PaLM or Davinci."
+  },
+  {
+   "claim": "OPT-175B does not follow declarative instructions and is repetitive.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "qualitative observation",
+   "where": "Sec 5",
+   "note": null,
+   "quote": "we found OPT-175B does not work\nwell with declarative instructions or point-blank\ninterrogatives."
+  },
+  {
+   "claim": "Possible under-training of the model suite.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "citing Hoffmann et al. 2022",
+   "where": "Sec 6",
+   "note": null,
+   "quote": "many of these LLMs may have been under-trained\nas a function of the amount of training data used"
+  }
+ ],
+ "limits": [
+  "No mitigations for toxicity or bias applied; authors call the technology premature for commercial deployment.",
+  "Evaluation setups may differ from Brown et al. (cannot replicate GPT-3 MultiRC via Davinci API); prompt and shot differences can change results.",
+  "Tiny validation sets (CB 56, BoolQ 277, WSC 104) make scale trends erratic.",
+  "Mid-flight changes could not be ablated; the carbon figure covers the final run, ablations/baselines/downtime roughly double total cost.",
+  "Carbon accounting is not standardised across the compared models.",
+  "Training-token count for OPT-175B is not stated directly: LR decays over 300B tokens against a ~180B-token corpus.",
+  "Models are English-dominant, older than Chinchilla-style data scaling; likely under-trained."
+ ],
+ "practices": [],
+ "terms": [],
+ "lineage": [
+  {
+   "work": "Language Models are Few-Shot Learners (GPT-3)",
+   "year": 2020,
+   "arxiv": "2005.14165",
+   "relation": "replicates",
+   "note": "hyperparameters and eval prompts follow GPT-3",
+   "quote": "our models and\nhyperparameters largely follow Brown et al. (2020)"
+  },
+  {
+   "work": "Megatron-LM",
+   "year": 2019,
+   "arxiv": "1909.08053",
+   "relation": "uses-method",
+   "note": "tensor parallelism and initialisation settings",
+   "quote": null
+  },
+  {
+   "work": "Efficient large scale language modeling with mixtures of experts (FSDP)",
+   "year": 2021,
+   "arxiv": "2112.10684",
+   "relation": "uses-method",
+   "note": "Fully Sharded Data Parallel",
+   "quote": null
+  },
+  {
+   "work": "AdamW",
+   "year": 2017,
+   "arxiv": "1711.05101",
+   "relation": "uses-method",
+   "note": "optimizer",
+   "quote": null
+  },
+  {
+   "work": "Mixed precision training",
+   "year": 2017,
+   "arxiv": "1710.03740",
+   "relation": "uses-method",
+   "note": "dynamic loss scaling",
+   "quote": null
+  },
+  {
+   "work": "Training Compute-Optimal Large Language Models (Chinchilla)",
+   "year": 2022,
+   "arxiv": "2203.15556",
+   "relation": "related",
+   "note": "cited for under-training argument and as comparison",
+   "quote": null
+  },
+  {
+   "work": "The Pile",
+   "year": 2021,
+   "arxiv": "2101.00027",
+   "relation": "uses-data",
+   "note": "subset in corpus",
+   "quote": null
+  },
+  {
+   "work": "RoBERTa",
+   "year": 2019,
+   "arxiv": "1907.11692",
+   "relation": "uses-data",
+   "note": "BookCorpus, Stories, CCNews",
+   "quote": null
+  },
+  {
+   "work": "PushShift.io Reddit",
+   "year": 2020,
+   "arxiv": "2001.08435",
+   "relation": "uses-data",
+   "note": "Reddit subset",
+   "quote": null
+  },
+  {
+   "work": "Patterson et al. carbon emissions",
+   "year": 2021,
+   "arxiv": "2104.10350",
+   "relation": "related",
+   "note": "source of GPT-3 500 tons",
+   "quote": null
+  },
+  {
+   "work": "PaLM",
+   "year": 2022,
+   "arxiv": "2204.02311",
+   "relation": "baseline",
+   "note": "compared in NLP and RTP",
+   "quote": null
+  },
+  {
+   "work": "Gopher",
+   "year": 2021,
+   "arxiv": "2112.11446",
+   "relation": "baseline",
+   "note": "compared, 380 tons",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Table 1",
+   "caption": "Model architecture details. We report the number of layers (#L), number of attention heads (#H), and the embedding size (dmodel). We also report the peak Learning Rate (LR) and global batch size in number of tokens (Batch).",
+   "page": 2,
+   "why": "All eight sizes with LR and batch in one table."
+  },
+  {
+   "figure": "Fig 1",
+   "caption": "Empirical LR schedule. We found that lowering learning rate was helpful for avoiding instabilities.",
+   "page": 4,
+   "why": "Shows how the realised LR departed from the planned linear schedule."
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Validation Perplexity. Our mid-flight LR changes had clear effects on validation perplexity.",
+   "page": 4,
+   "why": "Ties LR changes to validation perplexity over about 140k iterations."
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Text extraction of figure data (Fig 3-7) is axis ticks only; no per-task numbers are available in the text.",
+  "Table 1 columns read in order from the text dump; OPT-175B row: 96 layers, 96 heads, 12288, 1.2e-4, 2M."
+ ]
+}

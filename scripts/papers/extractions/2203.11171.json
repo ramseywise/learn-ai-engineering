@@ -1,0 +1,610 @@
+{
+ "schema": 1,
+ "key": "2203.11171",
+ "pdf": "generative-ai/05-RL/sources/wang-2022-self-consistency-improves-chain-thought.pdf",
+ "bib": {
+  "title": "Self-Consistency Improves Chain of Thought Reasoning in Language Models",
+  "authors": [
+   "Xuezhi Wang",
+   "Jason Wei",
+   "Dale Schuurmans",
+   "Quoc Le",
+   "Ed H. Chi",
+   "Sharan Narang",
+   "Aakanksha Chowdhery",
+   "Denny Zhou"
+  ],
+  "first_author": "Wang",
+  "year": 2023,
+  "venue": "ICLR 2023 (arXiv v4, 7 Mar 2023)",
+  "arxiv": "2203.11171",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 90777,
+  "chars_total": 90777,
+  "engine": "pymupdf",
+  "skipped": "Reference list (chars 42059-62824) skimmed only; few-shot exemplar tables 15,16,18-21 skimmed (not needed beyond pointer)."
+ },
+ "type": "empirical",
+ "question": "Can sampling diverse chain-of-thought reasoning paths and taking the most frequent final answer beat greedy decoding for reasoning in pretrained LMs?",
+ "hypothesis": "Correct reasoning processes, even if diverse, tend to have greater agreement in their final answer than incorrect processes.",
+ "contributions": [
+  "Self-consistency: a sample-and-marginalize decoding strategy replacing greedy decode in CoT prompting",
+  "Gains over CoT on arithmetic, commonsense and symbolic tasks across four LMs",
+  "Comparisons with sample-and-rank, beam search, prompt and model ensembles; robustness to sampling, prompts, zero-shot CoT"
+ ],
+ "method": {
+  "summary": "Prompt an off-the-shelf LM with few-shot CoT exemplars, sample m reasoning paths with temperature/top-k sampling, parse each final answer, and return the majority answer. No training or fine-tuning.",
+  "task": "Arithmetic, commonsense, symbolic reasoning; CoT-hurt NLP tasks",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "AddSub, MultiArith, ASDiv, AQUA-RAT, GSM8K, SVAMP",
+    "role": "eval",
+    "size": null,
+    "split": "test split",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "CommonsenseQA",
+    "role": "eval",
+    "size": null,
+    "split": "dev split",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "StrategyQA",
+    "role": "eval",
+    "size": null,
+    "split": "question-only set from BIG-bench",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "ARC easy/challenge",
+    "role": "eval",
+    "size": null,
+    "split": "test split (default)",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "Last letter concatenation (4 words), Coinflip (4 flips)",
+    "role": "eval",
+    "size": null,
+    "split": "OOD: prompts show 2-letter/2-flip, tested on 4",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "BoolQ, HotpotQA (closed-book), e-SNLI, ANLI R1-R3, RTE",
+    "role": "eval",
+    "size": null,
+    "split": "test split by default; not otherwise specified",
+    "source": null,
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "UL2-20B",
+    "role": "evaluated",
+    "params": "20B",
+    "architecture": "encoder-decoder, mixture of denoisers",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-3 code-davinci-001 / code-davinci-002",
+    "role": "evaluated",
+    "params": "175B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "LaMDA-137B",
+    "role": "evaluated",
+    "params": "137B",
+    "architecture": "dense left-to-right decoder-only",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "PaLM-540B",
+    "role": "evaluated",
+    "params": "540B",
+    "architecture": "dense left-to-right decoder-only",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "pretraining": "780 billion tokens"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "temperature sampling with top-k; majority vote over parsed final answers; baseline greedy CoT",
+   "temperature": "UL2-20B and LaMDA-137B T=0.5; PaLM-540B T=0.7; GPT-3 T=0.7",
+   "top_p": null,
+   "max_tokens": "128 for GPT-3 models; others null",
+   "samples": "40 outputs sampled independently per run, averaged over 10 runs; path counts 1,5,10,20,40 in plots",
+   "prompting": "Few-shot CoT as in Wei et al. 2022: 8 manual exemplars for all arithmetic tasks; 4-7 randomly chosen training exemplars with manual CoT for commonsense tasks. Outputs cut at next 'Q:'; parser takes text after 'The answer is '.",
+   "retrieval": null,
+   "parameters": {
+    "top_k": "40 for UL2, LaMDA, PaLM; none for GPT-3",
+    "aggregation": "unweighted majority vote (also tested probability-weighted, length-normalised via Eq 1)",
+    "GPT-3 penalties": "no frequency or presence penalty",
+    "ablations": "T in {0.3,0.5,0.7}, k in {20,40,none}, p in {0.9,0.95}"
+   },
+   "other": {
+    "hardware": "UL2 TPU v3 4 chips; LaMDA TPU v3 64 chips; PaLM TPU v4 192 chips; GPT-3 via API",
+    "time": "1-4 h per ~1,000 examples on UL2/LaMDA, 2-12 h on PaLM, no task over 2 days",
+    "std": "SC std <=0.5 on all tasks"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "accuracy",
+     "definition": "fraction of test items whose aggregated final answer matches the label (HotpotQA also EM/F1)",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "CoT prompting with greedy decoding (Wei et al. 2022)",
+    "standard prompting",
+    "sample-and-rank",
+    "beam search",
+    "prompt-order and multi-prompt ensembles",
+    "multi-model ensembles",
+    "previous SoTA"
+   ],
+   "protocol": "Mean over 10 runs of 40 samples; std reported in some tables and figures; no significance test"
+  },
+  "availability": {
+   "code": null,
+   "weights": "UL2 public; GPT-3 code-davinci via API; LaMDA and PaLM not public",
+   "data": "public benchmarks; exact prompts in Appendix A.3"
+  },
+  "prompts": [
+   {
+    "purpose": "Few-shot CoT exemplar for arithmetic tasks (first exemplar of Table 17, from Wei et al. 2022)",
+    "text": "Q: There are 15 trees in the grove. Grove workers will plant trees in the grove today. After they are done, there will be 21 trees. How many trees did the grove workers plant today?\nA: We start with 15 trees. Later we have 21 trees. The difference must be the number of trees they planted. So, they must have planted 21 - 15 = 6 trees. The answer is 6.",
+    "where": "Appendix A.3, Table 17"
+   },
+   {
+    "purpose": "Full exemplar sets for AQUA-RAT, ARC, HotpotQA, ANLI, e-SNLI, RTE, BoolQ",
+    "text": "See Tables 14-16 and 18-21 in the appendix (not reproduced here).",
+    "where": "Appendix A.3"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Self-consistency lifts PaLM-540B GSM8K accuracy from 56.5 (greedy CoT) to 74.4.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "74.4",
+   "unit": "%",
+   "baseline_value": "56.5",
+   "n": null,
+   "setup": "PaLM-540B, GSM8K test, 8-shot CoT, 40 sampled paths, T=0.7 k=40, mean of 10 runs",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row PaLM-540B Self-consistency, column GSM8K (74.4 (+17.9))"
+  },
+  {
+   "claim": "Gain on GSM8K with GPT-3 code-davinci-002 is +17.9 points (60.1 to 78.0).",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "78.0",
+   "unit": "%",
+   "baseline_value": "60.1",
+   "n": null,
+   "setup": "code-davinci-002, 40 paths, T=0.7, no top-k",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Code-davinci-002 Self-consistency, column GSM8K (78.0 (+17.9))"
+  },
+  {
+   "claim": "AQuA gain with code-davinci-002 is +12.2 points.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "52.0",
+   "unit": "%",
+   "baseline_value": "39.8",
+   "n": null,
+   "setup": "code-davinci-002, AQuA, 40 paths",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Code-davinci-002 Self-consistency, column AQuA (52.0 (+12.2))"
+  },
+  {
+   "claim": "SVAMP gain with code-davinci-002 is +11.0 points.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "86.8",
+   "unit": "%",
+   "baseline_value": "75.8",
+   "n": null,
+   "setup": "code-davinci-002, SVAMP, 40 paths",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Code-davinci-002 Self-consistency, column SVAMP (86.8 (+11.0))"
+  },
+  {
+   "claim": "StrategyQA gain of +6.4 (code-davinci-002) and ARC-challenge +3.9.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "79.8",
+   "unit": "%",
+   "baseline_value": "73.4",
+   "n": null,
+   "setup": "code-davinci-002, 40 paths",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row Code-davinci-002 Self-consistency, column StrategyQA (79.8 (+6.4))"
+  },
+  {
+   "claim": "On UL2-20B GSM8K goes from 4.1 to 7.3 (gain small at small scale).",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "7.3",
+   "unit": "%",
+   "baseline_value": "4.1",
+   "n": null,
+   "setup": "UL2-20B, T=0.5 k=40, 40 paths",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row UL2-20B Self-consistency, column GSM8K (7.3 (+3.2))"
+  },
+  {
+   "claim": "On LaMDA-137B GSM8K goes from 17.1 to 27.7.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "27.7",
+   "unit": "%",
+   "baseline_value": "17.1",
+   "n": null,
+   "setup": "LaMDA-137B, T=0.5 k=40, 40 paths",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row LaMDA-137B Self-consistency, column GSM8K (27.7 (+10.6))"
+  },
+  {
+   "claim": "Unweighted majority vote matches length-normalised probability-weighted sum; unnormalised weighting is worse; weighted average much worse.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "74.4",
+   "unit": "%",
+   "baseline_value": "56.5",
+   "n": null,
+   "setup": "PaLM-540B GSM8K; majority vote 74.4, normalised weighted sum 74.1, unnormalised 59.9, weighted avg normalised 22.1",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Unweighted sum (majority vote), column GSM8K"
+  },
+  {
+   "claim": "Sample-and-rank gains much less than self-consistency at the same number of samples.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-3 code-davinci-001, GSM8K/MultiArith/ARC-c, up to 40 samples; values read from Fig 3 only",
+   "note": null,
+   "where": "Fig 3, Sec 3.4"
+  },
+  {
+   "claim": "Beam search degrades AQuA accuracy as beams grow (23.6 at 1 to 10.2 at 40) while sampling self-consistency reaches 26.9.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "26.9",
+   "unit": "%",
+   "baseline_value": "10.2",
+   "n": null,
+   "setup": "UL2-20B, AQuA, equal beams and paths",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row AQuA Self-consistency using sampling, column 40"
+  },
+  {
+   "claim": "Self-consistency (40 paths) beats prompt-permutation ensemble (40) and multi-prompt ensemble (3 sets) on GSM8K.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "27.7",
+   "unit": "%",
+   "baseline_value": "19.2",
+   "n": null,
+   "setup": "LaMDA-137B GSM8K: SC 27.7, 40 permutations 19.2, 3 prompt sets 18.6, CoT 17.1",
+   "note": null,
+   "where": "Table 7",
+   "table": "Table 7, row Self-Consistency (40 sampled paths), column GSM8K"
+  },
+  {
+   "claim": "Multi-model majority-vote ensembles are far worse than single-model self-consistency on GSM8K.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "36.9",
+   "unit": "%",
+   "baseline_value": "74.4",
+   "n": null,
+   "setup": "Best ensemble LaMDA-137B+PaLM-540B 36.9 vs PaLM-540B SC 74.4",
+   "note": null,
+   "where": "Table 10",
+   "table": "Table 10, row LaMDA-137B + PaLM-540B, column GSM8K accuracy"
+  },
+  {
+   "claim": "Self-consistency repairs CoT harm on NLP tasks: e-SNLI 81.0 (CoT) to 88.4, RTE 79.1 to 86.3, ANLI-R1 68.8 to 78.5.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "88.4",
+   "unit": "%",
+   "baseline_value": "81.0",
+   "n": null,
+   "setup": "PaLM-540B, Table 5",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row Self-consistency, column e-SNLI"
+  },
+  {
+   "claim": "Zero-shot CoT with self-consistency (40 paths) on GSM8K reaches 69.2 vs 43.0.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "69.2",
+   "unit": "%",
+   "baseline_value": "43.0",
+   "n": null,
+   "setup": "PaLM-540B GSM8K",
+   "note": null,
+   "where": "Table 8",
+   "table": "Table 8, row PaLM-540B + Self-consistency (40 paths)"
+  },
+  {
+   "claim": "Imperfect-prompt CoT drops LaMDA-137B GSM8K to 14.9; self-consistency recovers to 23.4.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "23.4",
+   "unit": "%",
+   "baseline_value": "14.9",
+   "n": null,
+   "setup": "LaMDA-137B GSM8K, numbers in rationales randomised",
+   "note": null,
+   "where": "Table 8",
+   "table": "Table 8, row Prompt with imperfect chain-of-thought + Self-consistency (40 paths)"
+  },
+  {
+   "claim": "Robust to prompt set: GSM8K PaLM-540B gains +17.9, +17.5, +16.4 across three prompt sets.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "70.4",
+   "unit": "%",
+   "baseline_value": "54.0",
+   "n": null,
+   "setup": "PaLM-540B GSM8K, 3 manually written prompt sets",
+   "note": null,
+   "where": "Table 9",
+   "table": "Table 9, row Self-consistency, column Prompt set 3"
+  },
+  {
+   "claim": "Combining SC with 40 prompt sets gives 75.4, with permutations 73.8; ensembling adds little over SC alone.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "75.4",
+   "unit": "%",
+   "baseline_value": "74.4",
+   "n": null,
+   "setup": "PaLM-540B GSM8K, x40",
+   "note": null,
+   "where": "Table 11",
+   "table": "Table 11, row Self-consistency + different sets of prompts (x40)"
+  },
+  {
+   "claim": "Authors advise 5 or 10 paths as a starting point since performance saturates quickly.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 2 trend, LaMDA-137B",
+   "note": null,
+   "where": "Sec 5"
+  },
+  {
+   "claim": "Consistency (% decodes agreeing with the aggregate) correlates with accuracy, usable as an uncertainty estimate.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "GSM8K, Fig 5 (no number printed)",
+   "note": null,
+   "where": "Sec 3.5, Fig 5"
+  }
+ ],
+ "limits": [
+  "More computation cost: 40 samples per question (authors suggest 5-10 paths as a start)",
+  "Only applies where final answers come from a fixed set that can be compared",
+  "Models can still produce incorrect or nonsensical reasoning paths even when the answer is right",
+  "Gains small on small models (UL2-20B) where ability has not emerged",
+  "LaMDA-137B and PaLM-540B not public; only prompts released",
+  "Results on 2022-era models and code-davinci engines, which are no longer served"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "self-consistency",
+   "definition": "sample a diverse set of reasoning paths, then select the most consistent answer by marginalizing out the sampled reasoning paths",
+   "where": "Abstract, Sec 2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Chain-of-thought prompting (Wei et al.)",
+   "year": 2022,
+   "arxiv": "2201.11903",
+   "relation": "extends",
+   "note": "replaces greedy decoding in CoT; same prompts",
+   "quote": null
+  },
+  {
+   "work": "Training verifiers to solve math word problems (Cobbe et al.)",
+   "year": 2021,
+   "arxiv": "2110.14168",
+   "relation": "baseline",
+   "note": "GSM8K data and fine-tuned verifier SoTA; SC needs no training",
+   "quote": null
+  },
+  {
+   "work": "LaMDA (Thoppilan et al.)",
+   "year": 2022,
+   "arxiv": "2201.08239",
+   "relation": "evaluates",
+   "note": "model and re-ranker contrast",
+   "quote": null
+  },
+  {
+   "work": "PaLM (Chowdhery et al.)",
+   "year": 2022,
+   "arxiv": "2204.02311",
+   "relation": "evaluates",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "UL2 (Tay et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "GPT-3 (Brown et al.)",
+   "year": 2020,
+   "arxiv": "2005.14165",
+   "relation": "evaluates",
+   "note": "code-davinci-001/002 via Codex (Chen et al. 2021)",
+   "quote": null
+  },
+  {
+   "work": "Zero-shot reasoners (Kojima et al.)",
+   "year": 2022,
+   "arxiv": "2205.11916",
+   "relation": "related",
+   "note": "SC combined with zero-shot CoT",
+   "quote": null
+  },
+  {
+   "work": "Ye & Durrett 2022",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "CoT can hurt vs standard prompting",
+   "quote": null
+  },
+  {
+   "work": "Holtzman et al. nucleus sampling",
+   "year": 2020,
+   "arxiv": "1904.09751",
+   "relation": "uses-method",
+   "note": "sampling settings",
+   "quote": null
+  },
+  {
+   "work": "Adiwardana et al. Meena",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "sample-and-rank",
+   "quote": null
+  },
+  {
+   "work": "GSM8K, SVAMP, AQuA, StrategyQA, ARC, CSQA",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "benchmarks",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "The self-consistency method contains three steps: prompt with CoT; sample diverse reasoning paths; marginalize out paths and choose the most consistent answer",
+   "page": 2,
+   "why": "Shows whole method in one picture"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Self-consistency significantly improves accuracy over CoT greedy across tasks, LaMDA-137B",
+   "page": 5,
+   "why": "Accuracy vs number of sampled paths"
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 2",
+   "snippet": "arg max_a sum_{i=1}^m 1(a_i = a)",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Reference list not read in detail",
+  "Table cells flattened by extraction; row values paired by position",
+  "Gains for StrategyQA/ARC-c stated in abstract (+6.4,+3.9) correspond to code-davinci-002 rows; PaLM rows give +6.3/+3.5"
+ ]
+}

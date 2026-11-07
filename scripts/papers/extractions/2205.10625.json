@@ -1,19 +1,681 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2205.10625",
  "pdf": "ai-engineering/01-prompt-engineering/sources/zhou-2022-least-most-prompting-enables-complex.pdf",
  "bib": {
   "title": "Least-to-Most Prompting Enables Complex Reasoning in Large Language Models",
+  "authors": [
+   "Denny Zhou",
+   "Nathanael Schärli",
+   "Le Hou",
+   "Jason Wei",
+   "Nathan Scales",
+   "Xuezhi Wang",
+   "Dale Schuurmans",
+   "Claire Cui",
+   "Olivier Bousquet",
+   "Quoc Le",
+   "Ed Chi"
+  ],
   "first_author": "Zhou",
   "year": 2022,
-  "venue": "ICLR 2023",
+  "venue": "ICLR 2023 (arXiv v3, 16 Apr 2023)",
   "arxiv": "2205.10625",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-04",
-  "session": "5cfd23c4-1604-4533-96a3-ace4b4e9da63"
+  "at": "2026-11-07",
+  "chars_read": 202792,
+  "chars_total": 202792,
+  "engine": "pymupdf",
+  "skipped": null
  },
- "legacy_report": "SOURCE: \"Least-to-Most Prompting Enables Complex Reasoning in Large Language Models\", Denny Zhou, Nathanael Schärli, Le Hou, Jason Wei, Nathan Scales, Xuezhi Wang, Dale Schuurmans, Claire Cui, Olivier Bousquet, Quoc Le, Ed Chi (Google Research, Brain Team). ICLR 2023 conference paper, arXiv 2205.10625v3 (16 Apr 2023).\n\nCOVERAGE: I read all 202,907 characters, 61 pages. The main text (pp.1-9), every results table, every error analysis, the prompt contexts and the GSM8K appendix (pp.56-61) were read line by line. I skimmed the long worked-example outputs: SCAN success and failure transcripts (pp.33-45) and the DROP football prompt bodies and cases 2-3 (pp.49-53). I checked them for prose or numbers and found only the transcripts and the one-line \"Analysis\" notes. The figures script found one caption (Fig. 1, p.2).\n\nCLAIMS (ranked)\n- claim: On SCAN length split, least-to-most (L2M) with code-davinci-002 reaches 99.7%. Chain-of-thought (CoT) gets 16.2% and standard prompting 16.7%.\n  number: 99.7 vs 16.2 vs 16.7\n  setup: GPT-3 code-davinci-002. The decomposition prompt has 8 exemplars and the mapping prompt 14. Python-expression intermediate output is expanded by a script. CoT uses the same 14-exemplar mapping prompt without decomposition.\n  quote: \"code-davinci-002 16.7 16.2 99.7\" (Table 8); \"Using code-davinci-002, least-to-most prompting achieves an accuracy of 99.7% under length split.\"\n  where: p.6, Table 8\n- claim: The SCAN result holds on every split and on the full dataset. Specialised neural-symbolic models train on more than 15,000 examples for comparison.\n  number: >=99%, 14 exemplars, >15,000\n  setup: code-davinci-002\n  quote: \"it can solve the compositional generalization benchmark SCAN in any split (including length split) with an accuracy of at least 99% using just 14 exemplars, compared to only 16% accuracy with chain-of-thought prompting\"; \"trained on the entire training set containing over 15,000 examples\"\n  where: p.1 abstract; p.6 \"We find that its solving rate remains the same\"\n- claim: SCAN results by model. text-davinci-002 gets 76.0 with L2M and 0.0 with CoT. code-davinci-001 gets 60.7 with L2M and 0.0 with CoT.\n  number: 76.0 / 0.0; 60.7 / 0.0\n  setup: text-davinci-002 was scored on a random 100 commands\n  quote: \"text-davinci-002 6.0 0.0 76.0\"; \"code-davinci-001 0.4 0.0 60.7\"; \"The results of text-davinci-002 are based on a random subset of 100 commands.\"\n  where: p.6 Table 8\n- claim: On last-letter concatenation, L2M degrades far more slowly with list length than CoT. Both use 2 exemplars of lists of length 2-3. Standard prompting scores 0.\n  number: L=4/6/8/10/12. CoT 84.2/69.2/50.2/39.8/31.8. L2M 94.0/88.4/83.0/76.4/74.0.\n  setup: code-davinci-002. 500 lists per length, words sampled from a Wiktionary top-10k list.\n  quote: \"Chain-of-Thought 84.2 69.2 50.2 39.8 31.8 / Least-to-Most 94.0 88.4 83.0 76.4 74.0\"\n  where: p.4 Table 4\n- claim: Adding exemplars to CoT does not close the gap. 8-shot CoT (573 tokens) still trails 2-shot L2M (123 tokens) at L=12.\n  number: 38.4% vs 74.0%; 37.4% with 4-shot CoT; 76.6% with 4-shot L2M\n  setup: code-davinci-002\n  quote: \"even if we compare 2-shot least-to-most (prompt size 123 GPT3 tokens) to 8-shot chain-of-thought (prompt size 573 GPT3 tokens) ... for L = 12, we have least-to-most at 74.0% vs. chain-of-thought at 38.4%\"; \"4 code-002 96.0 92.0 84.6 80.2 76.6\"\n  where: p.16-17, Table 13\n- claim: Model generation matters a great deal. code-davinci-001 nearly fails with either method.\n  number: L2M at L=4 is 19.6% on code-davinci-001 vs 96% on code-davinci-002. text-davinci-002 L2M gets 66.0 at L=12.\n  quote: \"Even for the shortest list size (L = 4), the accuracy for least-to-most prompting is only 19.6% compared to 96% for code-davinci-002.\"\n  where: p.17\n- claim: On GSM8K, L2M barely beats CoT overall. Its gain sits in problems needing 5 or more steps, and it is slightly worse on 2-step problems. Both prompts use one 2-step exemplar, and L2M's decomposition and solving are merged into a single pass.\n  number: overall 62.39 vs 60.87. 2 steps 74.53 vs 76.68. >=5 steps 45.23 vs 39.07 (+15.77% relative).\n  setup: code-davinci-002, 1-shot\n  quote: \"Overall, least-to-most prompting only slightly improves chain-of-thought prompting: from 60.97% to 62.39%. However, least-to-most prompting essentially improves chain-of-thought prompting in solving problems which need at least 5 steps to be solved: from 39.07% to 45.23%\"; Table 12 \"Least-to-Most 62.39 74.53 68.91 59.73 45.23 / Chain-of-Thought 60.87 76.68 67.29 59.39 39.07\"\n  where: p.7-8 Tables 11-12; Table 18 p.56\n- claim: Where it does not help: with engineered multi-exemplar GSM8K prompts, L2M is no better than CoT, and in fact slightly lower.\n  number: CoT (best, 4 ex) 68.61 vs L2M (best, 7 decomposition + 4 solving ex) 68.01. Original 8-shot CoT 61.18.\n  quote: \"We do not observe improvement in overall accuracy from least-to-most prompting compared to chain-of-thought prompting in this setting, where most of the test questions do not require more steps more steps to solve than the demonstration examples.\"; \"Chain-of-Thought (best) 68.613 / Least-to-Most (best) 68.01\"\n  where: p.57 Table 19\n- claim: On DROP numerical subsets, L2M beats CoT by a wide margin. The authors attribute this to trivial decomposability.\n  number: code-davinci-002 non-football 82.45 vs 74.77; football 73.42 vs 59.56\n  setup: 5-exemplar (non-football) or 6-exemplar (football) decomposition prompt plus a 3-exemplar solving prompt; CoT uses 3 exemplars\n  quote: \"Least-to-Most 82.45 73.42 62.39\"; \"That is probably because most problems in DROP can be trivially decomposed.\"\n  where: p.7 Table 11\n- claim: The DROP gain replicates on other models.\n  number: text-davinci-002 74.20/63.40 vs CoT 60.80/57.40 (500 cases each). LM-540B 79.24/69.98 vs CoT 63.84/67.35 (3988/1862 cases).\n  quote: \"Least-to-Most 74.20 63.40\"; \"Least-to-Most 79.24 69.98\"\n  where: p.46-47 Tables 16-17\n- claim: Most GSM8K failures are decomposition failures. Given a hand-written decomposition, almost every failed problem gets solved (qualitative, no count given).\n  number: none\n  quote: \"almost every problem in GSM8K that least-to-most prompting fails to solve can be eventually solved by using a manually crafted decomposition\"\n  where: p.7\n- claim: DROP L2M error breakdown from 20 random failures.\n  number: 4 decomposition, 13 subproblem-solving, 3 wrong labels\n  quote: \"4 are due to wrong problem decomposition\"; \"13 are due to wrong problem solving\"; \"3 are due to wrong “ground truth”\"\n  where: p.54-55\n- claim: The remaining errors are execution slips, not decomposition errors. SCAN has 13 total failures: 6 on twice/thrice after \"around\", 7 reading \"after\" as \"and\". Last-letter failures are mostly concatenation errors.\n  number: 13 SCAN failures; e.g. 13 and 19 concatenation errors among 20 sampled failures (2-shot, L=4 and L=12)\n  quote: \"there are 13 failures in total from least-to-most prompting: 6 of them incorrectly interpret “twice” and “thrice” following “around”, and the rest incorrectly interpret “after” as “and”\"\n  where: p.6; Table 14 p.17; Table 15 p.32\n- claim: The decomposition step alone is easy for list tasks.\n  number: 100% up to length 12\n  setup: text-davinci-002, 2 exemplars\n  quote: \"The following prompt context achieves 100% accuracy on this task when using the text-davinci-002 model.\"\n  where: p.14\n- claim: The Python-expression expansion can itself be done by prompting.\n  number: 99.7% on 1000 expressions; 6 exemplars\n  quote: \"we present a prompt that achieves 99.7% accuracy on a random sample of 1000 Python expressions\"\n  where: p.45\n\nTWO-STAGE FORMAT (p.2-3): \"1. Decomposition. The prompt in this stage contains constant examples that demonstrate the decomposition, followed by the specific question to be decomposed. 2. Subproblem solving. The prompt in this stage consists of three parts: (1) constant examples demonstrating how subproblems are solved; (2) a potentially empty list of previously answered subquestions and generated solutions, and (3) the question to be answered next.\" The original problem is appended as the final subproblem, and each answer is appended to the prompt before the next subquestion. The paper adds: \"Least-to-most prompting can be combined with other prompting techniques like chain-of-thought ... and self-consistency ... but does not need to be. Also, for some tasks, the two stages ... can be merged to form a single-pass prompt.\" The key contrast with CoT is that L2M exemplars \"illustrate a base case and a recursive step\" and build on earlier answers, whereas CoT exemplars \"are independent of each other\" (Tables 2-3, p.3-4).\n\nLIMITS:\n- Authors concede (Sec 5, p.9): \"Decomposition prompts typically don't generalize well across different domains\". A math decomposition prompt does not work on StrategyQA-style questions (\"Did Aristotle use a laptop?\").\n- Authors also concede: \"Generalizing decomposition can even be difficult within the same domain\". They say the strong results come \"because decomposition in these tasks is relatively straightforward.\"\n- Gains over CoT are small or absent when test problems are no harder than the exemplars (GSM8K engineered prompts, 2-step problems).\n- SCAN relies on Python-notation intermediates plus a postprocessing script, which is partly backed by the 99.7% prompted expansion.\n- No variance or seeds are reported. text-davinci-002 results use 100-example subsets.\n- Dated: every model is a deprecated GPT-3 or Codex variant (code-davinci-001/002, text-davinci-002), plus an unnamed \"LM-540B\". Prompts were sized for a 2048-token limit. Some multi-call cost is unreported, beyond the token counts for the last-letter task.\n- Sec 6 frames prompting as \"unidirectional\" and argues for bidirectional interaction.\n\nBUILDS ON: chain-of-thought (Wei et al., 2022; Chowdhery et al., 2022); natural language rationales (Ling et al., 2017; Cobbe et al., 2021); few-shot prompting (Brown et al., 2020); self-consistency (Wang et al., 2022b). The name comes from educational psychology (Libby et al., 2008). Benchmarks: SCAN (Lake & Baroni, 2018), last-letter concatenation (Wei et al., 2022), GSM8K (Cobbe et al., 2021), DROP (Dua et al., 2019). Related decomposition and chaining work: Perez et al. (2020) on independent single-hop subquestions; Wang et al. (2022a) on iterative prompting; Yang et al. (2022) SeqZero; Wu et al. (2022) AI Chains. The paper says it \"chains the processes of problem decomposition and subproblem solving.\" It contrasts its dependent, ordered subquestions with Perez's independent ones.\n\nCODE (prompts, verbatim):\n- Last-letter L2M solving exemplars, Table 2 p.3: Q: “think, machine” A: The last letter of “think” is “k”. The last letter of “machine” is “e”. Concatenating “k”, “e” leads to “ke”. So, “think, machine” outputs “ke”. / Q: “think, machine, learning” A: “think, machine” outputs “ke”. The last letter of “learning” is “g”. Concatenating “ke”, “g” leads to “keg”. So, “think, machine, learning” outputs “keg”.\n- GSM8K single-pass L2M exemplar, Table 9 p.7: A: Let’s break down this problem: 1. How many apples does Anna have? 2. How many apples do they have together? / 1. Anna has 2 more apples than Elsa. So Anna has 2 + 5 = 7 apples. / 2. Elsa and Anna have 5 + 7 = 12 apples together. / The answer is: 12.\n- Decomposition template, p.59: A: To answer the question “How old is Kody?”, we need to know: “How old is Mohamed?”, “How old was Mohamed four years ago?”, “How old was Kody four years ago?”.\n- Mechanics of the 1-shot L2M on p.58: the prompt ends \"Let’s break down this problem:\". The model's reply is appended, followed by \"The answer is:\", as a second request.\n\nFIGURES:\n- Fig. 1, p.2: \"Least-to-most prompting solving a math word problem in two stages: (1) query the language model to decompose the problem into subproblems; (2) query the language model to sequentially solve the subproblems.\" It shows the two-call pipeline and the answer being fed forward in a single picture, which suits a chaining or decomposition note.\n- Table 4 (p.4) or Table 13 (p.17) is not a figure but would plot well as accuracy against list length for CoT vs L2M. Table 12 (p.8) does the same by GSM8K step count.\n\nPROBLEMS:\n- The GSM8K CoT number is inconsistent within the paper: the text says \"60.97%\", Table 11 and Table 12 say 60.87, and Table 19 says 60.88 (p.7, 8, 57). Cite the table value (60.87).\n- Appendix 8.2 prose calls \"text-davinci-002\" the \"best model\" and mentions \"text-davinci-001\". Table 15's columns are code-002 / code-001 / text-002, so the prose appears to mix up model names (p.32).\n- There are broken cross-references (\"Table ??\", p.14, 16, 46).\n- Appendix 10.1 points to post-processing \"described in Section 3.3 for DROP\", which Section 3.3 does not describe.\n- Earlier preprint versions had prompt errors. The corrected Standard and CoT (best) GSM8K figures differ from those versions (footnote 3, p.57: earlier 18.65 and 62.77).\n- Table 18's \"Accuracy change\" row is a relative change, (aL/aC)−1, not percentage points.\n- No embedded instructions in the text. Extraction quality was good, apart from ligatures and spaced small-caps headings.\n- Temporary extraction file: /tmp/l2m.txt. Source PDF: /Users/ramsey-wise/workspace/learn-ai-engineering/ai-engineering/01-prompt-engineering/sources/zhou-2022-least-most-prompting-enables-complex.pdf"
+ "type": "empirical",
+ "question": "Can a two-stage prompt (decompose a problem into easier subproblems, then solve them in sequence) let language models solve problems harder than the exemplars in the prompt, where chain-of-thought prompting fails?",
+ "hypothesis": "Decomposing into subproblems and feeding earlier answers into later ones gives easy-to-hard generalization that chain-of-thought lacks.",
+ "contributions": [
+  "Least-to-most prompting: few-shot decomposition stage then sequential subproblem solving, no training or finetuning",
+  "Results on last-letter concatenation, SCAN (any split, incl. length) and GSM8K/DROP",
+  "Prompts for all tasks in the Appendix"
+ ],
+ "method": {
+  "summary": "Few-shot prompting of GPT-3 code-davinci-002 (also text-davinci-002, code-davinci-001, a 540B LM) in two stages: a decomposition prompt lists subproblems, then a solving prompt answers them in order, each prompt appending earlier sub-answers. Compared against standard few-shot and chain-of-thought prompts built from the same exemplars. No training.",
+  "task": "easy-to-hard generalization: symbolic manipulation, compositional generalization (SCAN), math/numerical reasoning (GSM8K, DROP)",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "Last-letter concatenation (own construction)",
+    "role": "eval",
+    "size": "500 lists per length, lengths 4,6,8,10,12 (also 2 generated); 9694-word vocabulary",
+    "split": "test only",
+    "source": "Wiktionary 10k most common Gutenberg words minus profane words; dataset release promised on publication",
+    "preprocessing": "lowercase; random word sequences; text-davinci-002 evaluated on 100 random examples"
+   },
+   {
+    "name": "SCAN",
+    "role": "eval",
+    "size": "train split about 80% of full set with over 20,000 examples (length split); 13 failures reported on length-split test",
+    "split": "length split primary; other splits and the full dataset also tested",
+    "source": "Lake & Baroni 2018",
+    "preprocessing": "prompts use Python expressions (e.g. \"LOOK\" * 2) expanded by a postprocessing script; text-davinci-002 on random 100 commands"
+   },
+   {
+    "name": "GSM8K",
+    "role": "eval",
+    "size": null,
+    "split": "test; breakdown by 2,3,4,>=5 solution steps; train set used only to pick in-domain examples for the 'best' prompts",
+    "source": "Cobbe et al. 2021",
+    "preprocessing": "same postprocessing as DROP for answer extraction"
+   },
+   {
+    "name": "DROP (numerical subset)",
+    "role": "eval",
+    "size": "code-davinci-002 sizes not stated; text-davinci-002: 500 non-football + 500 football random; LM-540B: 3988 non-football + 1862 football",
+    "split": "non-football and football subsets",
+    "source": "Dua et al. 2019",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "code-davinci-002 (GPT-3)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "inferred: input limit usually up to 2048 tokens (text: language models usually up to 2048 tokens)",
+    "other": {}
+   },
+   {
+    "name": "text-davinci-002",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "code-davinci-001",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "LM-540B",
+    "role": "evaluated",
+    "params": "540B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single run per setting; no seeds, repeats or confidence intervals stated",
+   "prompting": "Last-letter: 2 exemplars (LtM decomposition 1 exemplar; solution 2 base+recursive exemplars; also 4- and 8-shot variants). SCAN: decomposition prompt 8 exemplars, mapping prompt 14 exemplars. GSM8K: 1-shot merged prompt (Table 9) or best: decomposition 7 + solving 4 examples. DROP: non-football decomposition 5 + solving 3; football decomposition 6 + solving 3; CoT and standard 3 examples; zero-shot format 'Q: {question} A: The answer is'.",
+   "retrieval": null,
+   "parameters": {
+    "stages": "2 (decomposition, then sequential solving); stages can be merged for GSM8K",
+    "GSM8K 1-shot": "prompt ends 'Let's break down this problem:', then a second request appends 'The answer is:'",
+    "last-letter prompt size": "123 GPT3 tokens (2-shot LtM) vs 573 (8-shot CoT)"
+   },
+   "other": {
+    "hardware": null,
+    "compute_cost": null,
+    "full_prompts": "Full prompt contexts: SCAN App 8.1 (pp.29-31), DROP App 9 (pp.46-51), GSM8K App 10.3-10.4 (pp.57-61)"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "accuracy",
+     "definition": "exact-match of final answer (SCAN action sequence after expanding Python expressions; last-letter string; numeric answer for GSM8K/DROP after postprocessing)",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "standard few-shot prompting",
+    "chain-of-thought prompting (same exemplars minus decomposition)",
+    "zero-shot (GSM8K, DROP)",
+    "CoT original 8-shot of Wei et al. 2022 (GSM8K)"
+   ],
+   "protocol": "Single evaluation per cell; no significance tests; answer extraction by postprocessing; error analyses on 20 random failures per setting."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "last-letter dataset 'will release ... upon publication'; all prompts in Appendix; models are OpenAI API / Google internal"
+  },
+  "prompts": [
+   {
+    "purpose": "Last-letter decomposition (Table 1)",
+    "text": "Q: “think, machine, learning”\nA: “think”, “think, machine”, “think, machine, learning”",
+    "where": "Table 1"
+   },
+   {
+    "purpose": "Last-letter solution, base case + recursive step (Table 2)",
+    "text": "Q: “think, machine”\nA: The last letter of “think” is “k”. The last letter of “machine” is “e”. Concatenating “k”, “e” leads to “ke”. So, “think, machine” outputs “ke”.\nQ: “think, machine, learning”\nA: “think, machine” outputs “ke”. The last letter of “learning” is “g”. Concatenating “ke”, “g” leads to “keg”. So, “think, machine, learning” outputs “keg”.",
+    "where": "Table 2"
+   },
+   {
+    "purpose": "GSM8K least-to-most single-pass prompt (Table 9)",
+    "text": "Q: Elsa has 5 apples. Anna has 2 more apples than Elsa. How many apples do they have together?\nA: Let’s break down this problem: 1. How many apples does Anna have? 2. How many apples do they have together?\n1. Anna has 2 more apples than Elsa. So Anna has 2 + 5 = 7 apples.\n2. Elsa and Anna have 5 + 7 = 12 apples together.\nThe answer is: 12.",
+    "where": "Table 9; App 10.3.2 has a slightly different wording"
+   },
+   {
+    "purpose": "SCAN decomposition exemplar (Table 6)",
+    "text": "Q: “look opposite right thrice after walk”\nA: “look opposite right thrice” can be solved by: “look opposite right”, “look opposite right thrice”. “walk” can be solved by “walk”. So, “look opposite right thrice after walk” can be solved by: “look opposite right”, “look opposite right thrice”, “walk”.",
+    "where": "Table 6; full 8-exemplar prompt App 8.1.2"
+   },
+   {
+    "purpose": "Zero-shot format for GSM8K and DROP",
+    "text": "Q: {question}\nA: The answer is",
+    "where": "App 9.2.1, 10.4.1"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "On SCAN length split, least-to-most with code-davinci-002 reaches 99.7%, against 16.2% for chain-of-thought and 16.7% for standard prompting.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "99.7",
+   "unit": "%",
+   "baseline_value": "16.2 (CoT)",
+   "n": null,
+   "setup": "GPT-3 code-davinci-002, SCAN length split test set, decomposition prompt 8 exemplars + mapping prompt 14 exemplars, Python-expression intermediate output expanded by script; CoT uses the 14-exemplar mapping prompt with no decomposition.",
+   "note": null,
+   "where": "Sec 3.2, Table 8",
+   "quote": "Using code-davinci-002, least-to-most prompting achieves an accuracy of 99.7% under length split."
+  },
+  {
+   "claim": "Standard prompting scores 16.7 on the same SCAN length split.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "16.7",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "code-davinci-002, SCAN length split.",
+   "note": null,
+   "where": "Table 8",
+   "table": "Table 8, row code-davinci-002, column Standard prompting"
+  },
+  {
+   "claim": "The SCAN solving rate stays the same on every other split and on the full dataset.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "code-davinci-002, least-to-most; per-split numbers not printed.",
+   "note": null,
+   "where": "Sec 3.2"
+  },
+  {
+   "claim": "On last-letter concatenation with lists of 12 words, least-to-most reaches 74.0% against 31.8% for chain-of-thought.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "74.0",
+   "unit": "%",
+   "baseline_value": "31.8 (CoT)",
+   "n": null,
+   "setup": "code-davinci-002, 2-exemplar prompts, 500 lists per length drawn from 9694 Wiktionary words, list length L=12; CoT prompt is the Table 3 version with dependent-list exemplars.",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row Least-to-Most, column L = 12"
+  },
+  {
+   "claim": "At L=4, least-to-most scores 94.0 and CoT 84.2; at L=8, 83.0 and 50.2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "94.0",
+   "unit": "%",
+   "baseline_value": "84.2 (CoT)",
+   "n": null,
+   "setup": "code-davinci-002, 2-shot, 500 lists per length.",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row Least-to-Most, column L = 4"
+  },
+  {
+   "claim": "Standard few-shot prompting gets 0.0 at every list length 4 to 12.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "0.0",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "code-davinci-002, 2-shot and also 4-/8-shot.",
+   "note": null,
+   "where": "Table 4, Table 13",
+   "table": "Table 4, row Standard prompting, columns L = 4 to 12"
+  },
+  {
+   "claim": "2-shot least-to-most (123 GPT3 tokens) beats 8-shot CoT (573 GPT3 tokens) at L=12: 74.0% vs 38.4%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "74.0",
+   "unit": "%",
+   "baseline_value": "38.4 (8-shot CoT)",
+   "n": null,
+   "setup": "code-davinci-002, L=12; 8-shot CoT uses independent exemplars.",
+   "note": null,
+   "where": "App 7.3",
+   "quote": "for L = 12, we have least-to-most at 74.0% vs. chain-of-thought at 38.4%"
+  },
+  {
+   "claim": "4-shot CoT reaches 37.4% at L=12; 4-shot least-to-most 76.6%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "76.6",
+   "unit": "%",
+   "baseline_value": "37.4 (4-shot CoT)",
+   "n": null,
+   "setup": "code-davinci-002, L=12, 4 exemplars each.",
+   "note": null,
+   "where": "Table 13",
+   "table": "Table 13, row Least-to-Most 4 code-002, column L = 12"
+  },
+  {
+   "claim": "Two independent CoT exemplars do better than the dependent ones: 33.6 vs 31.8 at L=12.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "33.6",
+   "unit": "%",
+   "baseline_value": "31.8",
+   "n": null,
+   "setup": "code-davinci-002, 2-shot CoT, independent exemplars.",
+   "note": null,
+   "where": "Table 13",
+   "table": "Table 13, row Chain-of-Thought 2 code-002, column L = 12"
+  },
+  {
+   "claim": "On GSM8K overall, 1-shot least-to-most gets 62.39% against 60.87% for 1-shot CoT.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "62.39",
+   "unit": "%",
+   "baseline_value": "60.87 (CoT)",
+   "n": null,
+   "setup": "code-davinci-002, single 2-step demonstration, decomposition and solving merged in one pass (plus one follow-up request for the final answer).",
+   "note": "Main text Sec 3.3 prints the CoT figure as 60.97%; Table 11 and Table 12 print 60.87; Table 19 prints 60.88; App 10.2 text says 60.87%.",
+   "where": "Table 11, Table 12",
+   "table": "Table 11, row Least-to-Most, column GSM8K"
+  },
+  {
+   "claim": "On GSM8K problems needing at least 5 steps, least-to-most gets 45.23% against 39.07% for CoT.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "45.23",
+   "unit": "%",
+   "baseline_value": "39.07 (CoT)",
+   "n": null,
+   "setup": "code-davinci-002, 1-shot prompts with a 2-step exemplar, GSM8K problems with >=5 solution steps.",
+   "note": null,
+   "where": "Table 12",
+   "table": "Table 12, row Least-to-Most, column >=5 steps"
+  },
+  {
+   "claim": "On 2-step GSM8K problems least-to-most is worse than CoT: 74.53 vs 76.68.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "74.53",
+   "unit": "%",
+   "baseline_value": "76.68 (CoT)",
+   "n": null,
+   "setup": "code-davinci-002, 1-shot prompts.",
+   "note": null,
+   "where": "Table 12",
+   "table": "Table 12, row Least-to-Most, column 2 Steps"
+  },
+  {
+   "claim": "With engineered multi-example prompts on GSM8K, least-to-most (best) is not better than CoT (best): 68.01 vs 68.613.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "68.01",
+   "unit": "%",
+   "baseline_value": "68.613 (CoT best)",
+   "n": null,
+   "setup": "code-davinci-002; LtM decomposition prompt 7 examples + solving prompt 4 examples; CoT uses the same 4 examples; examples from the GSM8K train set.",
+   "note": "Footnote 3: earlier preprint prompts had an error; earlier versions gave Standard 18.65 and CoT (best) 62.77.",
+   "where": "Table 19, App 10.2",
+   "table": "Table 19, row Least-to-Most (best), column Accuracy"
+  },
+  {
+   "claim": "On DROP non-football numerical problems, least-to-most gets 82.45 vs CoT 74.77.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "82.45",
+   "unit": "%",
+   "baseline_value": "74.77 (CoT)",
+   "n": null,
+   "setup": "code-davinci-002, numerical-reasoning subset of DROP; LtM decomposition 5 examples + solving 3 examples; CoT 3 examples. Test-set size for this model not stated.",
+   "note": null,
+   "where": "Table 11",
+   "table": "Table 11, row Least-to-Most, column Non-football (DROP)"
+  },
+  {
+   "claim": "On DROP football problems, least-to-most gets 73.42 vs CoT 59.56.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "73.42",
+   "unit": "%",
+   "baseline_value": "59.56 (CoT)",
+   "n": null,
+   "setup": "code-davinci-002, DROP football subset; LtM decomposition 6 examples + solving 3.",
+   "note": null,
+   "where": "Table 11",
+   "table": "Table 11, row Least-to-Most, column Football (DROP)"
+  },
+  {
+   "claim": "SCAN length split with text-davinci-002: least-to-most 76.0, CoT 0.0, standard 6.0.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "76.0",
+   "unit": "%",
+   "baseline_value": "0.0 (CoT)",
+   "n": null,
+   "setup": "text-davinci-002, random subset of 100 commands.",
+   "note": null,
+   "where": "Table 8",
+   "table": "Table 8, row text-davinci-002, column Least-to-Most"
+  },
+  {
+   "claim": "SCAN length split with code-davinci-001: least-to-most 60.7, CoT 0.0, standard 0.4.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "60.7",
+   "unit": "%",
+   "baseline_value": "0.0 (CoT)",
+   "n": null,
+   "setup": "code-davinci-001, full length-split test set.",
+   "note": null,
+   "where": "Table 8",
+   "table": "Table 8, row code-davinci-001, column Least-to-Most"
+  },
+  {
+   "claim": "All 13 code-davinci-002 failures on SCAN length split: 6 misread twice/thrice after 'around', 7 read 'after' as 'and'.",
+   "kind": "measured",
+   "source": null,
+   "metric": "failure count",
+   "value": "13",
+   "unit": "failures",
+   "baseline_value": null,
+   "n": null,
+   "setup": "code-davinci-002 least-to-most, SCAN length split.",
+   "note": null,
+   "where": "Sec 3.2, Table 15",
+   "quote": "there are 13 failures in total from least-to-most prompting"
+  },
+  {
+   "claim": "The model can expand the Python expressions itself with 99.7% accuracy using a 6-example prompt.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "99.7",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "code-davinci-002, random sample of 1000 Python expressions from its own SCAN outputs.",
+   "note": null,
+   "where": "App 8.4",
+   "quote": "achieves 99.7% accuracy on a random sample of 1000 Python expressions"
+  },
+  {
+   "claim": "Last-letter decomposition prompt is 100% accurate on lists up to 12 words with one exemplar each for sizes 2 and 3.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "100",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "text-davinci-002, decomposition stage only.",
+   "note": null,
+   "where": "App 7.1",
+   "quote": "The following prompt context achieves 100% accuracy on this task when using the text-davinci-002 model."
+  },
+  {
+   "claim": "Of 20 random least-to-most failures on DROP, 4 were wrong decomposition, 13 wrong solving and 3 wrong labels.",
+   "kind": "measured",
+   "source": null,
+   "metric": "failure count",
+   "value": "13",
+   "unit": "of 20",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Least-to-most on DROP, 20 random failures (model not stated in the section).",
+   "note": null,
+   "where": "App 9.5",
+   "quote": "13 are due to wrong problem solving"
+  },
+  {
+   "claim": "Hand-crafted correct decompositions let almost every GSM8K problem be solved; decomposition is the bottleneck.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "GSM8K, code-davinci-002; no number given.",
+   "note": null,
+   "where": "Sec 3.3 and Sec 5"
+  },
+  {
+   "claim": "code-davinci-001 is far worse than code-002 on last-letter at L=4: 19.6% vs 96% for least-to-most (4-shot).",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "19.6",
+   "unit": "%",
+   "baseline_value": "96.0 (code-002)",
+   "n": null,
+   "setup": "4-shot least-to-most, L=4.",
+   "note": null,
+   "where": "Table 13",
+   "table": "Table 13, row Least-to-Most 4 code-001, column L = 4"
+  },
+  {
+   "claim": "text-davinci-002 DROP (500 cases each): least-to-most 74.20 non-football and 63.40 football vs CoT 60.80 and 57.40.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "74.20",
+   "unit": "%",
+   "baseline_value": "60.80 (CoT)",
+   "n": null,
+   "setup": "text-davinci-002, 500 random examples per subset.",
+   "note": null,
+   "where": "Table 16",
+   "table": "Table 16, row Least-to-Most, column Non-football (500 cases)"
+  },
+  {
+   "claim": "LM-540B DROP: least-to-most 79.24 non-football (3988 cases) and 69.98 football (1862 cases) vs CoT 63.84 and 67.35.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "79.24",
+   "unit": "%",
+   "baseline_value": "63.84 (CoT)",
+   "n": null,
+   "setup": "LM-540B (540B-parameter pretrained model), full numerical subset.",
+   "note": null,
+   "where": "Table 17",
+   "table": "Table 17, row Least-to-Most, column Non-football (3988 cases)"
+  }
+ ],
+ "limits": [
+  "Decomposition prompts do not generalize across domains: a math decomposition prompt (Table 9) is not effective for commonsense questions such as 'Did Aristotle use a laptop?' (Sec 5).",
+  "Generalizing decomposition is hard even within a domain: nearly all GSM8K problems are solved given the correct decomposition (Sec 5).",
+  "Strong results on last-letter and SCAN are attributed to decomposition being straightforward there (Sec 5).",
+  "On GSM8K the overall gain is small (60.87 to 62.39) and nil with engineered prompts (68.01 vs 68.613); the gain is concentrated in problems with at least 5 steps.",
+  "Model-dependent: code-davinci-002 beats text-davinci-002, code-davinci-001 is far worse; no open models, no decoding settings or seeds stated; single run, no intervals.",
+  "Model sizes of the GPT-3 variants not stated; DROP test size for code-davinci-002 not stated.",
+  "Authors note prompting may not be the best way to teach reasoning (Sec 6)."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "least-to-most prompting",
+   "definition": "two stages: decompose a complex problem into a list of easier subproblems, then sequentially solve them, each facilitated by answers to previously solved subproblems",
+   "where": "Sec 1-2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Chain of thought prompting elicits reasoning in large language models",
+   "year": 2022,
+   "arxiv": "2201.11903",
+   "relation": "extends",
+   "note": "baseline and prompt format; also source of last-letter task and the original 8-shot GSM8K prompt",
+   "quote": null
+  },
+  {
+   "work": "Self-consistency improves chain of thought reasoning in language models",
+   "year": 2022,
+   "arxiv": "2203.11171",
+   "relation": "related",
+   "note": "can be combined with LtM",
+   "quote": null
+  },
+  {
+   "work": "Language models are few-shot learners",
+   "year": 2020,
+   "arxiv": "2005.14165",
+   "relation": "uses-method",
+   "note": "few-shot prompting",
+   "quote": null
+  },
+  {
+   "work": "Generalization without systematicity (SCAN)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "SCAN benchmark",
+   "quote": null
+  },
+  {
+   "work": "Training verifiers to solve math word problems (GSM8K)",
+   "year": 2021,
+   "arxiv": "2110.14168",
+   "relation": "uses-data",
+   "note": "GSM8K",
+   "quote": null
+  },
+  {
+   "work": "DROP",
+   "year": 2019,
+   "arxiv": "1903.00161",
+   "relation": "uses-data",
+   "note": "numerical subset",
+   "quote": null
+  },
+  {
+   "work": "PaLM",
+   "year": 2022,
+   "arxiv": "2204.02311",
+   "relation": "related",
+   "note": "cited with chain-of-thought",
+   "quote": null
+  },
+  {
+   "work": "Libby et al. least-to-most prompting in educational psychology",
+   "year": 2008,
+   "arxiv": null,
+   "relation": "related",
+   "note": "term borrowed",
+   "quote": null
+  },
+  {
+   "work": "Perez et al. unsupervised question decomposition",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "related",
+   "note": "trained decomposition, independent subquestions",
+   "quote": null
+  },
+  {
+   "work": "Neural-symbolic stack machines; Nye 2020; Shaw 2021; Kim 2021; Liu 2020",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "SCAN specialist models trained on over 15,000 examples; comparison is by citation not rerun",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Least-to-most prompting solving a math word problem in two stages: (1) query the language model to decompose the problem into subproblems; (2) query the language model to sequentially solve the subproblems.",
+   "page": 2,
+   "why": "Shows how the second prompt appends the first sub-answer before asking the original question."
+  },
+  {
+   "figure": "Table 4",
+   "caption": "Accuracies of different prompting methods on the last-letter-concatenation task, L=4 to 12",
+   "page": 4,
+   "why": "Shows CoT decay with length vs flatter LtM curve."
+  }
+ ],
+ "code": [],
+ "problems": [
+  "GSM8K CoT overall accuracy printed as 60.97 in Sec 3.3 text, 60.87 in Tables 11/12 and App 10.2 text, 60.88 in Table 19.",
+  "Several 'Table ??' broken references in the appendix text (7.2, 7.3, 9.1).",
+  "Table 19 prints 17.063 and 68.613 where the trailing digit is a footnote marker 3 (so 17.06 and 68.61).",
+  "Table 15 'Other' row under twice/thrice has missing cells in the text extraction; Sec 9.5 does not name the model.",
+  "Appendix contained long exemplar transcripts (App 7.5, 8.3, 9.4) skimmed for numbers only.",
+  "No embedded instructions found."
+ ]
 }

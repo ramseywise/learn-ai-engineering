@@ -1,5 +1,5 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2107.07651",
  "pdf": "ai-engineering/08-multimodal-engineering/sources/li-2021-align-before-fuse.pdf",
  "bib": {
@@ -12,8 +12,585 @@
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-04",
-  "session": "97b4134b-decf-4866-ae85-c6872cbbba19"
+  "at": "2026-11-07",
+  "chars_read": 55044,
+  "chars_total": 55044,
+  "engine": "pymupdf",
+  "skipped": "reference list skimmed only"
  },
- "legacy_report": "SOURCE: Align before Fuse: Vision and Language Representation Learning with Momentum Distillation. Junnan Li, Ramprasaath R. Selvaraju, Akhilesh D. Gotmare, Shafiq Joty, Caiming Xiong, Steven C.H. Hoi (Salesforce Research). NeurIPS 2021 (arXiv:2107.07651v2).\n\nCOVERAGE: I read all 54,878 of 54,878 chars, which covers pp.1–16: the body, all 8 tables, and appendices A–E. I only skimmed the reference list.\n\nCLAIMS\n- claim: Detectors are the cost the paper removes. They need box annotations to train and high-resolution input at inference, and ALBEF instead uses a detector-free ViT-B/16 on 256² crops in pretraining and 384² in fine-tuning.\n  number: 600×1000\n  setup: This is the motivation for dropping detectors. The paper never runs a detector-based ALBEF, so the size of the cost is not measured.\n  quote: \"The object detector is both annotation-expensive and compute-expensive, because it requires bounding box annotations during pre-training, and high-resolution (e.g. 600×1000) images during inference\"\n  where: p.1\n- claim: Adding ITC (a contrastive loss on the separate image and text encoders, applied before cross-attention fusion) to MLM+ITM gives the largest single gain in the ablation. Contrastive hard negatives and MoD each add smaller gains.\n  number: Flickr TR 93.96→96.55; NLVR2 77.51→79.88; VQA 71.40→73.29. The full model reaches VQA 74.54.\n  setup: Table 1, 4M images. TR and IR are the mean of R@1, R@5 and R@10. NLVR2 is test-P, VQA is test-dev.\n  quote: \"MLM + ITM 93.96 88.55 77.06 77.51 71.40 / ITC + MLM + ITM 96.55 91.69 79.15 79.88 73.29\"\n  where: p.7, Table 1\n- claim: Momentum distillation trains the model against soft targets from an EMA copy of itself, so web captions that are wrong or incomplete are not punished as hard errors. It adds only small gains.\n  number: α=0.4 and momentum 0.995. VQA rises 73.81→74.06 with ITC-MoD and to 74.42 with MLM-MoD as well.\n  setup: Table 1, 4M images. The queue holds 65,536 entries. α values of 0.3, 0.4 and 0.5 perform about the same.\n  quote: \"With MoD, the model is not penalized for producing other reasonable outputs that are different from the web annotation.\"\n  where: p.2 (quote); p.5 (hyperparameters); p.7 (numbers)\n- claim: Pretraining data is 4M images (5.1M pairs from CC, SBU, COCO and VG, following UNITER) or 14.1M once the noisier CC12M is added. Going to 14M lifts every task.\n  number: 4.0M / 14.1M\n  setup: Some dataset URLs no longer resolved. Training ran 30 epochs at batch 512 on 8 A100s.\n  quote: \"The total number of unique images is 4.0M, and the number of image-text pairs is 5.1M ... increasing the total number of images to 14.1M\"\n  where: p.5\n- claim: Headline comparison with VILLA. The abstract's +2.37 (VQA) and +3.84 (NLVR2) come from the 14M model. With the same 4M data the margins are smaller.\n  number: VQA test-std 76.04 (14M) and 74.70 (4M) vs VILLA 73.67. NLVR2 test-P 83.14 and 80.50 vs 79.30. UNITER scores 72.91 and 77.85.\n  setup: Table 4. VQA is posed as answer generation with a 6-layer decoder limited to 3,192 candidate answers.\n  quote: \"Compared to VILLA [8], ALBEF achieves absolute improvements of 2.37% on VQA test-std, 3.84% on NLVR2 test-P, and 1.88% on SNLI-VE test.\"\n  where: p.8\n- claim: In retrieval, the 4M model beats UNITER, and the 14M model matches or beats ALIGN, which was trained on 1.2B images. Inference first ranks all pairs by cheap ITC similarity, then rescores only the top-k with ITM. Results barely change with k, and the paper says it is >10× faster than VILLA on NLVR2.\n  number: Flickr fine-tuned TR R@1 94.3 (4M) and 95.9 (14M) vs UNITER 87.3 and ALIGN 95.3. Zero-shot TR R@1 94.1 (14M) vs CLIP 88.0 (400M). Mean TR for k=16/128/256 is 98.60/98.57/98.57.\n  setup: Tables 2, 3 and 6. Zero-shot Flickr uses the model fine-tuned on COCO.\n  quote: \"it also enjoys much faster inference speed compared to most existing methods (>10 times faster than VILLA on NLVR2)\"\n  where: p.8; Table 6 on p.9\n\nLIMITS\n- No speed numbers are given. There is no timing table, hardware, or batch setting behind the \">10×\" claim.\n- No detector-based ALBEF exists to separate the effect of dropping the detector from the effect of ITC.\n- \"Zero-shot\" Flickr retrieval means fine-tuned on COCO, not truly zero-shot.\n- The headline gains depend on 14M images vs VILLA's 4M.\n- The authors concede that SNLI-VE \"should be interpreted with caution because its test data has been reported to be noisy\". RefCOCO+ val/test images were seen during pretraining, and decontamination is \"left as future work\" (p.13).\n- The mutual-information section is an interpretation, not a proof of gains.\n- The social-impacts section notes private or harmful content in web data.\n- Dated details: the encoder is ViT-B/16 + BERT-base at about 210M parameters, there is no generative LM, and the comparisons stop at 2021 (ViLT, VinVL era).\n\nBUILDS ON: UNITER (Chen et al., ECCV 2020), VILLA (Gan et al., NeurIPS 2020), OSCAR (Li et al., ECCV 2020), LXMERT (Tan & Bansal, EMNLP 2019), CLIP (Radford et al., arXiv 2021), ALIGN (Jia et al., arXiv 2021), ViLT (Kim et al., arXiv 2021; detector-free but weaker), MoCo queues (He et al., CVPR 2020), ViT (Dosovitskiy et al., ICLR 2021) with DeiT weights (Touvron et al., 2020), BERT (Devlin et al., NAACL 2019), Mean Teacher (Tarvainen & Valpola, NIPS 2017), distillation (Hinton et al., 2015), CC12M (Changpinyo et al., CVPR 2021).\n\nCODE: none in the PDF (repo: https://github.com/salesforce/ALBEF).\n\nFIGURES: Fig. 1, p.3: \"Illustration of ALBEF. It consists of an image encoder, a text encoder, and a multimodal encoder...\" In one diagram it shows ITC acting on the encoders' [CLS] outputs before 6 cross-attention layers, ITM/MLM after fusion, hard negatives, and the momentum model. That is the \"align, then fuse\" lineage point in a single picture.\n\nPROBLEMS: Extraction was clean. Table text was flattened but readable. No embedded instructions."
+ "type": "empirical",
+ "question": "Can aligning image and text representations with a contrastive loss before cross-modal fusion, plus momentum-distillation pseudo-targets, give a detector-free VLP model that does better on retrieval and reasoning tasks?",
+ "hypothesis": "Aligning unimodal features before fusion makes cross-modal learning easier, and momentum-distilled pseudo-targets help learning from noisy web text.",
+ "contributions": [
+  "ALBEF: image-text contrastive loss before fusion, no detector or box annotations",
+  "Momentum distillation for noisy supervision",
+  "Mutual information maximization analysis",
+  "SOTA on retrieval, VQA, NLVR2, SNLI-VE, weakly-supervised grounding"
+ ],
+ "method": {
+  "summary": "ViT-B/16 image encoder, 6-layer BERT text encoder and 6-layer cross-attention multimodal encoder pretrained with ITC + MLM + ITM (hard negatives from contrastive similarity) and momentum distillation (alpha 0.4), then fine-tuned on five downstream tasks.",
+  "task": "vision-language pretraining; image-text retrieval, VQA, NLVR2, SNLI-VE, weakly-supervised grounding",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Pretrain 4M set (CC3M, SBU, COCO, VG)",
+    "role": "pretrain",
+    "size": "4.0M unique images, 5.1M image-text pairs",
+    "split": null,
+    "source": "web captions + in-domain (following UNITER)",
+    "preprocessing": "random crops 256x256, RandAugment without color changes"
+   },
+   {
+    "name": "Conceptual 12M",
+    "role": "pretrain",
+    "size": "10.06M images/texts (Table 8); total 14.1M images with the 4M set",
+    "split": null,
+    "source": "web",
+    "preprocessing": "some URLs invalid"
+   },
+   {
+    "name": "COCO (Karpathy)",
+    "role": "both",
+    "size": "113K train (Table 8: 567K texts)/5k val/5k test",
+    "split": "Karpathy",
+    "source": "COCO",
+    "preprocessing": "384x384 at fine-tune"
+   },
+   {
+    "name": "Flickr30K",
+    "role": "both",
+    "size": "29k/1k/1k images",
+    "split": "Karpathy",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "SNLI-VE",
+    "role": "both",
+    "size": "29.8k train images, 1k eval, 1k test",
+    "split": "original",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "VQA2.0",
+    "role": "both",
+    "size": "83k train, 41k val, 81k test images (train+val plus Visual Genome QA used for training)",
+    "split": "test-dev/test-std",
+    "source": null,
+    "preprocessing": "loss weighted by answer frequency"
+   },
+   {
+    "name": "NLVR2",
+    "role": "both",
+    "size": null,
+    "split": "original",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "RefCOCO+",
+    "role": "eval",
+    "size": "141,564 expressions, 19,992 images",
+    "split": "Val/TestA/TestB",
+    "source": null,
+    "preprocessing": "val/test images seen in pretraining (not decontaminated)"
+   }
+  ],
+  "models": [
+   {
+    "name": "ALBEF",
+    "role": "proposed",
+    "params": "BERTbase 123.7M + ViT-B/16 85.8M",
+    "architecture": "ViT-B/16 (12 layers) image encoder; 6-layer text encoder; 6-layer multimodal encoder with cross-attention",
+    "init_from": "ViT from DeiT ImageNet-1k weights; text encoder first 6 layers of BERTbase, multimodal encoder last 6 layers",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "12 (image) + 6 + 6",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "contrastive_dim": "256-d",
+     "queue_size": "65,536",
+     "momentum": 0.995
+    }
+   }
+  ],
+  "training": {
+   "objective": "L = L_itc + L_mlm + L_itm, with MoD versions (alpha 0.4, ramped 0 to 0.4 in the first epoch); MLM mask 15%",
+   "optimizer": "AdamW",
+   "lr": "warm up to 1e-4 over first 1000 iterations, decay to 1e-5",
+   "lr_schedule": "cosine",
+   "warmup": "1000 iterations",
+   "batch_size": "512",
+   "steps": null,
+   "epochs": "30",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": "0.02",
+   "dropout": null,
+   "regularisation": "RandAugment",
+   "hardware": "8x NVIDIA A100",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "finetune_retrieval": "10 epochs, batch 256, lr 1e-5",
+    "finetune_SNLI-VE": "5 epochs, batch 256, lr 2e-5",
+    "finetune_VQA": "8 epochs, batch 256, lr 2e-5",
+    "finetune_NLVR2": "10 epochs, batch 128, lr 2e-5; TA pretraining 1 epoch, batch 256, lr 2e-5, 256x256",
+    "finetune_grounding": "5 epochs, no random crop",
+    "finetune_resolution": "384x384"
+   }
+  },
+  "inference": {
+   "decoding": "VQA: autoregressive 6-layer decoder restricted to 3,192 candidate answers; retrieval: s_itc top-k then s_itm rerank",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single run; no seeds reported",
+   "prompting": null,
+   "retrieval": "top-k by s_itc, k=128 in main ablation column (k=16/128/256 tested)",
+   "parameters": {
+    "k": "16/128/256"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Recall@K",
+     "definition": "TR/IR R@1, R@5, R@10; Table 1 reports mean of the three",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "VQA acc",
+     "definition": "test-dev/test-std",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "NLVR2/SNLI-VE acc",
+     "definition": "classification accuracy",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Grounding acc",
+     "definition": "Grad-CAM ranks detected proposals on RefCOCO+",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "UNITER",
+    "VILLA",
+    "OSCAR",
+    "LXMERT",
+    "ViLT",
+    "CLIP",
+    "ALIGN",
+    "VisualBERT",
+    "VL-BERT",
+    "12-in-1",
+    "VL-BART/T5",
+    "ARN",
+    "CCL"
+   ],
+   "protocol": "single reported numbers, no variance or seeds"
+  },
+  "availability": {
+   "code": "https://github.com/salesforce/ALBEF",
+   "weights": "models available at the same repo",
+   "data": "public datasets"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Adding ITC to MLM+ITM raises VQA test-dev on 4M images",
+   "kind": "measured",
+   "source": null,
+   "metric": "VQA test-dev",
+   "value": "73.29",
+   "unit": "% acc",
+   "baseline_value": "71.40",
+   "n": null,
+   "setup": "Table 1, 4M pre-train images; TR/IR = mean of R@1,R@5,R@10 on Flickr30K test; NLVR2 test-P; VQA test-dev",
+   "note": null,
+   "where": "p.7",
+   "table": "Table 1, row ITC + MLM + ITM, column VQA (test-dev)"
+  },
+  {
+   "claim": "Adding ITC raises Flickr TR mean recall",
+   "kind": "measured",
+   "source": null,
+   "metric": "TR",
+   "value": "96.55",
+   "unit": "avg R@1/5/10",
+   "baseline_value": "93.96",
+   "n": null,
+   "setup": "Table 1, 4M pre-train images; TR/IR = mean of R@1,R@5,R@10 on Flickr30K test; NLVR2 test-P; VQA test-dev",
+   "note": null,
+   "where": "p.7",
+   "table": "Table 1, row ITC + MLM + ITM, column TR"
+  },
+  {
+   "claim": "Adding ITC raises NLVR2 test-P",
+   "kind": "measured",
+   "source": null,
+   "metric": "NLVR2 test-P",
+   "value": "79.88",
+   "unit": "% acc",
+   "baseline_value": "77.51",
+   "n": null,
+   "setup": "Table 1, 4M pre-train images; TR/IR = mean of R@1,R@5,R@10 on Flickr30K test; NLVR2 test-P; VQA test-dev",
+   "note": null,
+   "where": "p.7",
+   "table": "Table 1, row ITC + MLM + ITM, column NLVR2"
+  },
+  {
+   "claim": "Full ALBEF with downstream MoD, 4M images, VQA test-dev",
+   "kind": "measured",
+   "source": null,
+   "metric": "VQA test-dev",
+   "value": "74.54",
+   "unit": "% acc",
+   "baseline_value": "74.42",
+   "n": null,
+   "setup": "Table 1, 4M pre-train images; TR/IR = mean of R@1,R@5,R@10 on Flickr30K test; NLVR2 test-P; VQA test-dev",
+   "note": null,
+   "where": "p.7",
+   "table": "Table 1, row ALBEF (Full + MoDDownstream), column VQA"
+  },
+  {
+   "claim": "ALBEF 14M VQA test-std vs VILLA (abstract: +2.37 absolute)",
+   "kind": "measured",
+   "source": null,
+   "metric": "VQA test-std",
+   "value": "76.04",
+   "unit": "% acc",
+   "baseline_value": "73.67",
+   "n": null,
+   "setup": "Table 4, 14M pre-train images, VQA posed as answer generation constrained to 3,192 candidate answers",
+   "note": "Abstract/text give +2.37% over VILLA; 76.04-73.67=2.37",
+   "where": "p.8",
+   "table": "Table 4, row ALBEF (14M), column test-std"
+  },
+  {
+   "claim": "ALBEF 4M VQA test-std already beats VILLA",
+   "kind": "measured",
+   "source": null,
+   "metric": "VQA test-std",
+   "value": "74.70",
+   "unit": "% acc",
+   "baseline_value": "73.67",
+   "n": null,
+   "setup": "Table 4, 4M pre-train images",
+   "note": null,
+   "where": "p.8",
+   "table": "Table 4, row ALBEF (4M), column test-std"
+  },
+  {
+   "claim": "ALBEF 14M NLVR2 test-P vs VILLA (+3.84 absolute)",
+   "kind": "measured",
+   "source": null,
+   "metric": "NLVR2 test-P",
+   "value": "83.14",
+   "unit": "% acc",
+   "baseline_value": "79.30",
+   "n": null,
+   "setup": "Table 4, 14M pre-train images",
+   "note": null,
+   "where": "p.8",
+   "table": "Table 4, row ALBEF (14M), column test-P"
+  },
+  {
+   "claim": "ALBEF 4M NLVR2 test-P",
+   "kind": "measured",
+   "source": null,
+   "metric": "NLVR2 test-P",
+   "value": "80.50",
+   "unit": "% acc",
+   "baseline_value": "79.30",
+   "n": null,
+   "setup": "Table 4, 4M pre-train images",
+   "note": null,
+   "where": "p.8",
+   "table": "Table 4, row ALBEF (4M), column test-P"
+  },
+  {
+   "claim": "ALBEF 14M SNLI-VE test",
+   "kind": "measured",
+   "source": null,
+   "metric": "SNLI-VE test",
+   "value": "80.91",
+   "unit": "% acc",
+   "baseline_value": "79.03",
+   "n": null,
+   "setup": "Table 4, 14M",
+   "note": "Text says +1.88 over VILLA",
+   "where": "p.8",
+   "table": "Table 4, row ALBEF (14M), column test"
+  },
+  {
+   "claim": "ALBEF 14M zero-shot Flickr30K TR R@1 (CLIP 88.0, ALIGN 88.6)",
+   "kind": "measured",
+   "source": null,
+   "metric": "TR R@1",
+   "value": "94.1",
+   "unit": "R@1",
+   "baseline_value": "88.6",
+   "n": null,
+   "setup": "Table 3, model fine-tuned on COCO, evaluated zero-shot on Flickr30K 1K test",
+   "note": null,
+   "where": "p.8",
+   "table": "Table 3, row ALBEF 14M, column TR R@1"
+  },
+  {
+   "claim": "ALBEF 14M zero-shot Flickr30K IR R@1",
+   "kind": "measured",
+   "source": null,
+   "metric": "IR R@1",
+   "value": "82.8",
+   "unit": "R@1",
+   "baseline_value": "75.7",
+   "n": null,
+   "setup": "Table 3, zero-shot",
+   "note": null,
+   "where": "p.8",
+   "table": "Table 3, row ALBEF 14M, column IR R@1"
+  },
+  {
+   "claim": "ALBEF 14M fine-tuned Flickr30K TR R@1 vs ALIGN 1.2B",
+   "kind": "measured",
+   "source": null,
+   "metric": "TR R@1",
+   "value": "95.9",
+   "unit": "R@1",
+   "baseline_value": "95.3",
+   "n": null,
+   "setup": "Table 2, Flickr30K 1K test",
+   "note": null,
+   "where": "p.8",
+   "table": "Table 2, row ALBEF 14M, Flickr30K TR R@1"
+  },
+  {
+   "claim": "ALBEF 14M fine-tuned COCO 5K TR R@1 vs ALIGN 1.2B",
+   "kind": "measured",
+   "source": null,
+   "metric": "TR R@1",
+   "value": "77.6",
+   "unit": "R@1",
+   "baseline_value": "77.0",
+   "n": null,
+   "setup": "Table 2, MSCOCO 5K test",
+   "note": null,
+   "where": "p.8",
+   "table": "Table 2, row ALBEF 14M, MSCOCO TR R@1"
+  },
+  {
+   "claim": "Retrieval reranking is insensitive to k; s_itc alone gives lower Flickr TR mean recall than reranking with s_itm",
+   "kind": "measured",
+   "source": null,
+   "metric": "TR avg recall",
+   "value": "97.30",
+   "unit": "avg recall",
+   "baseline_value": "98.60",
+   "n": null,
+   "setup": "Table 6, fine-tuned Flickr30K, s_itc only (k=16 98.60, k=128 98.57, k=256 98.57)",
+   "note": null,
+   "where": "p.9",
+   "table": "Table 6, row TR, column s_itc"
+  },
+  {
+   "claim": "Without hard negatives (k=128) Flickr TR drops",
+   "kind": "measured",
+   "source": null,
+   "metric": "TR avg recall",
+   "value": "98.22",
+   "unit": "avg recall",
+   "baseline_value": "98.57",
+   "n": null,
+   "setup": "Table 6, k=128, w/o hard negs",
+   "note": "Printed as 98.22 (-0.35)",
+   "where": "p.9",
+   "table": "Table 6, row TR, column w/o hard negs"
+  },
+  {
+   "claim": "Weakly-supervised RefCOCO+ grounding with Grad-CAM on ITM cross-attention layer 3",
+   "kind": "measured",
+   "source": null,
+   "metric": "RefCOCO+ Val acc",
+   "value": "58.46",
+   "unit": "% acc, Val",
+   "baseline_value": "34.29",
+   "n": null,
+   "setup": "Table 5; no box annotations",
+   "note": null,
+   "where": "p.9",
+   "table": "Table 5, row ALBEFitm, column Val"
+  },
+  {
+   "claim": "NLVR2 text-assignment pre-training with shared cross-attention gives best test-P",
+   "kind": "measured",
+   "source": null,
+   "metric": "NLVR2 test-P",
+   "value": "83.14",
+   "unit": "% acc",
+   "baseline_value": "81.29",
+   "n": null,
+   "setup": "Table 7; TA = text-assignment pretraining, share CA",
+   "note": "baseline = w/o TA, share all",
+   "where": "p.9",
+   "table": "Table 7, row test-P, column w/ TA share CA"
+  },
+  {
+   "claim": "Grad-CAM vs human attention rank correlation on VQA",
+   "kind": "measured",
+   "source": null,
+   "metric": "rank corr",
+   "value": "0.205",
+   "unit": "rank correlation",
+   "baseline_value": null,
+   "n": null,
+   "setup": "3rd cross-attention layer, 1374 validation question-image pairs",
+   "note": null,
+   "where": "p.15 App C",
+   "quote": "to have a high correlation of 0.205"
+  },
+  {
+   "claim": "Detector cost motivation: detector-based methods need high-resolution inputs at inference",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "600×1000",
+   "unit": "pixels",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Motivation only; detector-based ALBEF not measured",
+   "note": null,
+   "where": "p.1",
+   "quote": "high-resolution (e.g. 600×1000) images during inference"
+  },
+  {
+   "claim": "ALBEF inference is much faster than VILLA on NLVR2",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "10x",
+   "unit": "speedup",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Stated in text, no timing table",
+   "note": null,
+   "where": "p.8",
+   "quote": ">10 times faster than VILLA on NLVR2"
+  }
+ ],
+ "limits": [
+  "No seeds or variance reported.",
+  "RefCOCO+ val/test images appear in pretraining; authors did not decontaminate.",
+  "SNLI-VE test data reported to be noisy.",
+  "Ablation (Table 1) is on 4M images only; 14M row is a single comparison with changed data.",
+  "Authors note web data may contain private or harmful content and need analysis before deployment."
+ ],
+ "practices": [],
+ "terms": [],
+ "lineage": [
+  {
+   "work": "UNITER",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "pretraining data recipe and VE formulation followed",
+   "quote": "Following UNITER [2], we construct our pre-training data"
+  },
+  {
+   "work": "VILLA",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "previous SOTA for VQA/NLVR2",
+   "quote": null
+  },
+  {
+   "work": "CLIP",
+   "year": 2021,
+   "arxiv": "2103.00020",
+   "relation": "baseline",
+   "note": "retrieval comparison",
+   "quote": null
+  },
+  {
+   "work": "ALIGN",
+   "year": 2021,
+   "arxiv": "2102.05918",
+   "relation": "baseline",
+   "note": "retrieval comparison",
+   "quote": null
+  },
+  {
+   "work": "ViLT",
+   "year": 2021,
+   "arxiv": "2102.03334",
+   "relation": "baseline",
+   "note": "detector-free competitor",
+   "quote": null
+  },
+  {
+   "work": "MoCo",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "momentum encoders and queues for ITC",
+   "quote": "Inspired by MoCo [24]"
+  },
+  {
+   "work": "DeiT",
+   "year": 2020,
+   "arxiv": "2012.12877",
+   "relation": "uses-method",
+   "note": "ViT init weights",
+   "quote": null
+  },
+  {
+   "work": "BERT",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "text/multimodal encoder init",
+   "quote": null
+  },
+  {
+   "work": "Mean Teacher",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "related",
+   "note": "EMA teacher idea",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Illustration of ALBEF.",
+   "page": 3,
+   "why": "Shows encoders, ITC before fusion, momentum model."
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Evaluation of the proposed methods on four downstream V+L tasks.",
+   "page": 7,
+   "why": "Ablation of each component."
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Text cache is pymupdf; table cells flattened one per line, columns inferred by order."
+ ]
 }

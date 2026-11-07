@@ -1,0 +1,524 @@
+{
+ "schema": 1,
+ "key": "2006.16236",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/katharopoulos-2020-transformers-rnns.pdf",
+ "bib": {
+  "title": "Transformers are RNNs: Fast Autoregressive Transformers with Linear Attention",
+  "authors": [
+   "Angelos Katharopoulos",
+   "Apoorv Vyas",
+   "Nikolaos Pappas",
+   "François Fleuret"
+  ],
+  "first_author": "Katharopoulos",
+  "year": 2020,
+  "venue": "Proceedings of the 37th International Conference on Machine Learning (ICML), PMLR 119, 2020",
+  "arxiv": "2006.16236",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 52967,
+  "chars_total": 52967,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can self-attention be computed in time and memory linear in sequence length, and make autoregressive transformer inference fast, without losing quality?",
+ "hypothesis": "Replacing softmax with a kernel feature-map dot product and using associativity gives linear complexity and an RNN form with similar quality to softmax attention.",
+ "contributions": [
+  "Linear transformer: kernel feature-map formulation of attention with O(N) time and memory",
+  "Causal masking with linear complexity and constant memory, with gradients as cumulative sums",
+  "Showing any causal transformer layer can be written as an RNN, giving much faster autoregressive inference"
+ ],
+ "method": {
+  "summary": "Attention is rewritten as phi(Q)(phi(K)^T V) with phi(x)=elu(x)+1. With causal masking the layer becomes a recurrence with state S_i and normaliser Z_i. Compared with softmax and Reformer on a synthetic copy task, MNIST and CIFAR-10 image generation, and WSJ speech recognition.",
+  "task": "efficient attention; copy task, autoregressive image generation, CTC speech recognition",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Synthetic copy task",
+    "role": "both",
+    "size": "sequences of max length 128, 10 symbols plus separator",
+    "split": null,
+    "source": "after Kitaev et al. 2020",
+    "preprocessing": null
+   },
+   {
+    "name": "MNIST",
+    "role": "both",
+    "size": "784 pixels per image",
+    "split": null,
+    "source": "LeCun et al. 2010",
+    "preprocessing": null
+   },
+   {
+    "name": "CIFAR-10",
+    "role": "both",
+    "size": "sequence length almost 4x MNIST",
+    "split": null,
+    "source": "Krizhevsky et al. 2009",
+    "preprocessing": null
+   },
+   {
+    "name": "WSJ",
+    "role": "both",
+    "size": "80 hours; 800 frames average, 2,400 max",
+    "split": null,
+    "source": "Paul & Baker 1992",
+    "preprocessing": "40-dimensional mel-scale filterbanks without temporal differences"
+   }
+  ],
+  "models": [
+   {
+    "name": "Linear transformer (phi=elu+1)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "transformer with causal linear attention",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "4 (copy), 8 (MNIST), 16 (CIFAR-10), 9 (WSJ)",
+    "hidden": "embedding 256, 32 per head, FFN 4x embedding (image tasks)",
+    "heads": "8 (copy, images), 6 (WSJ)",
+    "context": null,
+    "other": {
+     "output": "mixture of 10 logistics for images (Salimans et al. 2017)",
+     "cuda": "constant-memory gradient in approx. 200 lines of CUDA"
+    }
+   },
+   {
+    "name": "Softmax transformer",
+    "role": "baseline",
+    "params": null,
+    "architecture": "default PyTorch implementation",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Reformer (lsh-1, lsh-4, lsh-8)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "PyTorch reimplementation of published code, no reversible layers",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "buckets": "64; MNIST 27 chunks of 29 elements; CIFAR-10 83 chunks of 37 elements"
+    }
+   },
+   {
+    "name": "Stateful-softmax",
+    "role": "baseline",
+    "params": null,
+    "architecture": "softmax transformer caching keys and values (Appendix C.1)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Bi-LSTM",
+    "role": "baseline",
+    "params": null,
+    "architecture": "bidirectional LSTM, 3 layers, hidden 320 (WSJ only)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "3",
+    "hidden": "320",
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "cross-entropy (copy); mixture of 10 logistics likelihood, bits/dim (images); CTC loss (WSJ)",
+   "optimizer": "RAdam (transformers; Adam for Bi-LSTM)",
+   "lr": "copy 1e-3 then 1e-4 after 3000 updates; MNIST 1e-4; WSJ transformers 1e-4 initial, Bi-LSTM 1e-3",
+   "lr_schedule": "WSJ: divided by 2 (transformers) or reduced (LSTM) when validation error stops decreasing",
+   "warmup": null,
+   "batch_size": "copy 64; MNIST 10; CIFAR-10 1 (softmax), 4 (linear, reformer)",
+   "steps": "copy: figure shows 10000 gradient steps",
+   "epochs": "MNIST 250; CIFAR-10 fixed 7 days; WSJ to convergence",
+   "tokens": null,
+   "seq_len": "copy 128; MNIST 784 pixels; CIFAR-10 almost 4x MNIST (inferred: not stated numerically)",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "CIFAR-10: NVidia P40 24GB; benchmark: GTX 1080 Ti 11GB",
+   "compute": "CIFAR-10: 7 days per model on a single GPU",
+   "wall_clock": "7 days per CIFAR-10 model",
+   "seeds": null,
+   "other": {
+    "CIFAR-10 sequence length": "inferred: 'almost 4 times larger' than 784; not stated numerically"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "feature_map": "phi(x)=elu(x)+1"
+   },
+   "other": {
+    "benchmark": "N in 2^9..2^16, batch size scaled inversely with length, peak GPU memory and time per sample; softmax max length 4,096, lsh-4/8 16,384 on 11GB"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "bits/dim",
+     "definition": "test negative log-likelihood per pixel dimension",
+     "unit": "bits/dim",
+     "higher_is_better": false
+    },
+    {
+     "name": "images/sec",
+     "definition": "image generation throughput",
+     "unit": "images/sec",
+     "higher_is_better": true
+    },
+    {
+     "name": "PER",
+     "definition": "validation phoneme error rate",
+     "unit": "%",
+     "higher_is_better": false
+    },
+    {
+     "name": "time/epoch",
+     "definition": "training time per epoch",
+     "unit": "s",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "softmax",
+    "Reformer lsh-1/4/8",
+    "stateful-softmax",
+    "Bi-LSTM"
+   ],
+   "protocol": "single runs; no seeds or significance tests stated"
+  },
+  "availability": {
+   "code": "https://linear-transformers.com/",
+   "weights": null,
+   "data": "public datasets"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.batch_size",
+    "quote": "the full transformer can only be used with a batch size of 1 in the largest GPU that is available to us",
+    "where": "4.2.2"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Linear transformer generates CIFAR-10 images 4,462x faster than softmax (recompute baseline).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Images/sec",
+   "value": 17.85,
+   "unit": "images/sec",
+   "baseline_value": 0.004,
+   "n": null,
+   "setup": "CIFAR-10 autoregressive, 16 layers, 7 days single GPU, batch 1 for softmax",
+   "quote": "our method can generate 4,460 images",
+   "table": "Table 2, row Linear (ours), column Images/sec",
+   "note": "Table prints 4,462x, text prints 4,460 and 'more than 4,000x'; abstract says up to 4000x",
+   "where": "Table 2 (Linear (ours) row)"
+  },
+  {
+   "claim": "Linear reaches 3.40 bits/dim vs softmax 3.47 on CIFAR-10 under equal 7-day budget.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Bits/dim",
+   "value": 3.4,
+   "unit": "bits/dim",
+   "baseline_value": 3.47,
+   "n": null,
+   "setup": "CIFAR-10, 7 days each",
+   "quote": null,
+   "table": "Table 2, rows Linear (ours) and Softmax, column Bits/dim",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Against stateful-softmax (cached keys/values), linear is more than 50x faster on CIFAR-10.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Images/sec",
+   "value": 17.85,
+   "unit": "images/sec",
+   "baseline_value": 0.32,
+   "n": null,
+   "setup": "CIFAR-10, Appendix C.1, throughput",
+   "quote": "our forumlation is more than 50× faster for CIFAR-10",
+   "table": null,
+   "note": "Table 4b: 17.85 vs 0.32 is 55.8x; text says more than 50x",
+   "where": "Appendix C.1, Table 4b"
+  },
+  {
+   "claim": "MNIST: linear 0.644 bits/dim vs softmax 0.621 at 142.8 vs 0.45 images/sec.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Images/sec",
+   "value": 142.8,
+   "unit": "images/sec",
+   "baseline_value": 0.45,
+   "n": null,
+   "setup": "MNIST, 8 layers, 250 epochs, batch 10",
+   "quote": "more than 300 times higher throughput in image generation",
+   "table": "Table 1, row Linear (ours), column Images/sec",
+   "note": "Table says 317x",
+   "where": "Table 1"
+  },
+  {
+   "claim": "MNIST bits/dim linear vs softmax.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Bits/dim",
+   "value": 0.644,
+   "unit": "bits/dim",
+   "baseline_value": 0.621,
+   "n": null,
+   "setup": "MNIST, 250 epochs",
+   "quote": null,
+   "table": "Table 1, row Linear (ours), column Bits/dim",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "WSJ speech: softmax best PER, linear 8.08 beats Bi-LSTM 10.94 and LSH-4 9.33.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Validation PER",
+   "value": 8.08,
+   "unit": "PER",
+   "baseline_value": 5.12,
+   "n": null,
+   "setup": "WSJ 80h, 9 layers, 6 heads, CTC",
+   "quote": "Note that the softmax transformer, achieves\nlower phone error rate in comparison to all baselines",
+   "table": "Table 3, row Linear (ours), column Validation PER",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Linear is more than 3x faster per epoch than softmax on WSJ.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Time/epoch",
+   "value": 824,
+   "unit": "s",
+   "baseline_value": 2711,
+   "n": null,
+   "setup": "WSJ, time per epoch",
+   "quote": "linear transformer\nis more than 3× faster per epoch",
+   "table": "Table 3, row Linear (ours), column Time/epoch (s)",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "On the copy task linear reaches the same loss as softmax and lower than lsh-4.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "4 layers, 8 heads, batch 64, RAdam, seq length 128",
+   "quote": "In particular, it reaches the same loss as softmax.",
+   "table": null,
+   "note": null,
+   "where": "4.1.1"
+  },
+  {
+   "claim": "Softmax max sequence length is 4,096 on an 11GB GTX 1080 Ti; lsh-4/8 reach 16,384.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 4096,
+   "unit": "elements",
+   "baseline_value": null,
+   "n": null,
+   "setup": "memory/time benchmark, N from 2^9 to 2^16",
+   "quote": "This\nresults in a maximum sequence length of 4,096 elements\nfor softmax and 16,384 for lsh-4 and lsh-8.",
+   "table": null,
+   "note": null,
+   "where": "4.1.2"
+  },
+  {
+   "claim": "Single-image latency at batch 1 on GPU, CIFAR-10: linear 61.3 s vs softmax 300.1 s.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Seconds (GPU)",
+   "value": 61.3,
+   "unit": "s",
+   "baseline_value": 300.1,
+   "n": null,
+   "setup": "CIFAR-10, batch size 1, GPU",
+   "quote": null,
+   "table": "Table 5b, row Linear (ours), column Seconds (GPU)",
+   "note": "Text says almost 6.6x faster than softmax for CIFAR-10 image latency, table shows 4.9x on GPU (300.1 vs 61.3) and 191.8x on CPU",
+   "where": "Table 5b"
+  }
+ ],
+ "limits": [
+  "Softmax transformer remains better on WSJ speech recognition (PER 5.12 vs 8.08)",
+  "Experiments are small (MNIST, CIFAR-10, WSJ, copy task); no language modelling or pretrained models",
+  "Feature map elu+1 only; authors suggest random Fourier features to reuse softmax-pretrained models as future work",
+  "Speedups are measured against a softmax baseline without key/value caching; stateful-softmax closes much of the gap (Appendix C)",
+  "Single runs, no seeds or variance reported",
+  "At batch 1 the speedup is much smaller (about 4.9x on GPU) because the sequence loop dominates"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Linear transformer",
+   "definition": "transformer whose attention uses a feature-map dot product phi(Q)phi(K)^T, computed with associativity in O(N)",
+   "where": "3.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Attention is all you need (Vaswani et al.)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "softmax transformer being linearised",
+   "quote": null
+  },
+  {
+   "work": "Reformer (Kitaev et al.)",
+   "year": 2020,
+   "arxiv": "2001.04451",
+   "relation": "baseline",
+   "note": "LSH attention, O(N log N); also copy task source",
+   "quote": null
+  },
+  {
+   "work": "Generating long sequences with sparse transformers (Child et al.)",
+   "year": 2019,
+   "arxiv": "1904.10509",
+   "relation": "related",
+   "note": "sparse factorisation O(N sqrt N)",
+   "quote": null
+  },
+  {
+   "work": "Transformer dissection (Tsai et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "kernel view of attention",
+   "quote": null
+  },
+  {
+   "work": "Long short-term memory (Hochreiter & Schmidhuber)",
+   "year": 1997,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Bi-LSTM baseline on WSJ",
+   "quote": null
+  },
+  {
+   "work": "Transformer-XL (Dai et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "related",
+   "note": "longer context",
+   "quote": null
+  },
+  {
+   "work": "Adaptive sampled softmax with kernel based sampling (Blanc & Rendle)",
+   "year": 2017,
+   "arxiv": "1712.00527",
+   "relation": "extends",
+   "note": "inspiration for linearised softmax",
+   "quote": null
+  },
+  {
+   "work": "RAdam (Liu et al.)",
+   "year": 2019,
+   "arxiv": "1908.03265",
+   "relation": "uses-method",
+   "note": "optimizer",
+   "quote": null
+  },
+  {
+   "work": "PixelCNN++ (Salimans et al.)",
+   "year": 2017,
+   "arxiv": "1701.05517",
+   "relation": "uses-method",
+   "note": "mixture of logistics output",
+   "quote": null
+  },
+  {
+   "work": "WSJ corpus (Paul & Baker)",
+   "year": 1992,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "speech",
+   "quote": null
+  },
+  {
+   "work": "CIFAR-10 / MNIST",
+   "year": 2009,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "image generation",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Figure 1",
+   "caption": "Comparison of the computational requirements for a forward/backward pass for Reformer (lsh-X), softmax attention and linear attention.",
+   "page": 4,
+   "why": "Shows quadratic vs linear scaling of time and memory with length"
+  },
+  {
+   "figure": "Table 2",
+   "caption": "We train autoregressive transformers for 1 week on a single GPU to generate CIFAR-10 images.",
+   "page": 5,
+   "why": "Headline throughput and bits/dim comparison"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 18-20",
+   "snippet": "s_i = s_{i-1} + phi(x_i W_K)(x_i W_V)^T; z_i = z_{i-1} + phi(x_i W_K); y_i = f_l(phi(x_i W_Q)^T s_i / phi(x_i W_Q)^T z_i + x_i)",
+   "verbatim": false
+  },
+  {
+   "where": "Eq 7",
+   "snippet": "phi(x) = elu(x) + 1",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Cached text file reports NUL bytes in first 8KB (display only); text readable. No embedded instructions found."
+ ]
+}

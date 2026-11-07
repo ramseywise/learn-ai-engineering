@@ -1,0 +1,631 @@
+{
+ "schema": 1,
+ "key": "2006.16668",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/lepikhin-2020-gshard.pdf",
+ "bib": {
+  "title": "GShard: Scaling Giant Models with Conditional Computation and Automatic Sharding",
+  "authors": [
+   "Dmitry Lepikhin",
+   "HyoukJoong Lee",
+   "Yuanzhong Xu",
+   "Dehao Chen",
+   "Orhan Firat",
+   "Yanping Huang",
+   "Maxim Krikun",
+   "Noam Shazeer",
+   "Zhifeng Chen"
+  ],
+  "first_author": "Lepikhin",
+  "year": 2020,
+  "venue": "preprint",
+  "arxiv": "2006.16668",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 122249,
+  "chars_total": 122249,
+  "engine": "pymupdf",
+  "skipped": "References skimmed only; appendix A.4 tail (convolution halo details) read lightly"
+ },
+ "type": "system",
+ "question": "How can a giant sparsely-gated MoE Transformer be trained efficiently on thousands of accelerators with minimal model-code changes, and does it improve massively multilingual translation?",
+ "hypothesis": "Conditional computation (sparsely-gated MoE) scales quality with sublinear compute cost, beating dense scaling on training efficiency and quality.",
+ "contributions": [
+  "GShard: lightweight sharding annotation APIs (replicate, split, shard) plus an XLA SPMD partitioner with near-constant compilation time",
+  "Top-2 gated MoE Transformer with expert capacity, local group dispatching, auxiliary loss and random routing",
+  "600B-parameter multilingual NMT model trained in 4 days on 2048 TPU v3 cores",
+  "Analysis of depth vs experts, capacity bottleneck, positive transfer and training efficiency"
+ ],
+ "method": {
+  "summary": "Replaces every other Transformer feed-forward layer with a top-2 gated Position-wise MoE layer, one expert per device, and partitions it via GShard annotations and an XLA SPMD partitioner. Six MoE models (128/512/2048 experts, 12/36 layers) are trained on 100-to-English translation and compared with 100 bilingual baselines and a dense 96-layer GPipe Transformer.",
+  "task": "multilingual neural machine translation, 100 languages to English",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "In-house web-mined parallel corpus, 100 languages to and from English",
+    "role": "both",
+    "size": "25 billion training examples total; approximately 13 billion for the 100-to-English direction",
+    "split": "held-out test set (size not stated)",
+    "source": "mined from the web [47]; in-house, power-law language imbalance from billions to tens of thousands of examples",
+    "preprocessing": "SentencePiece; Kazakh and Latin to English excluded from evaluation"
+   }
+  ],
+  "models": [
+   {
+    "name": "MoE(2048E,36L)",
+    "role": "proposed",
+    "params": "600B",
+    "architecture": "encoder-decoder Transformer, MoE in every other FFN, top-2 gating",
+    "init_from": null,
+    "tokenizer": "SentencePiece",
+    "vocab": "64000 source (102 languages), 32000 English target",
+    "layers": "36 (enc+dec)",
+    "hidden": "1024 model dim, 8192 FFN/MoE hidden",
+    "heads": "16",
+    "context": null,
+    "other": {
+     "experts_per_layer": 2048,
+     "cores": 2048
+    }
+   },
+   {
+    "name": "MoE(2048E,12L)",
+    "role": "proposed",
+    "params": "200B",
+    "architecture": "as above",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "12",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "experts_per_layer": 2048,
+     "cores": 2048
+    }
+   },
+   {
+    "name": "MoE(512E,36L)",
+    "role": "proposed",
+    "params": "150B",
+    "architecture": "as above",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "36",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "experts_per_layer": 512,
+     "cores": 512
+    }
+   },
+   {
+    "name": "MoE(512E,12L)",
+    "role": "proposed",
+    "params": "50B",
+    "architecture": "as above",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "12",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "experts_per_layer": 512,
+     "cores": 512
+    }
+   },
+   {
+    "name": "MoE(128E,36L)",
+    "role": "proposed",
+    "params": "37B",
+    "architecture": "as above",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "36",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "experts_per_layer": 128,
+     "cores": 128
+    }
+   },
+   {
+    "name": "MoE(128E,12L)",
+    "role": "proposed",
+    "params": "12.5B",
+    "architecture": "as above",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "12",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "experts_per_layer": 128,
+     "cores": 128
+    }
+   },
+   {
+    "name": "MoE(2048E,60L)",
+    "role": "proposed",
+    "params": "1T",
+    "architecture": "as above, bfloat16 activations",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "60",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "numerical stability issues; results not reported"
+    }
+   },
+   {
+    "name": "T(96L)",
+    "role": "baseline",
+    "params": "2.3B",
+    "architecture": "dense Transformer encoder-decoder trained with GPipe",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "96",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "cores": 2048,
+     "time": "over 6 weeks"
+    }
+   },
+   {
+    "name": "Bilingual baselines",
+    "role": "baseline",
+    "params": "100x0.4B",
+    "architecture": "Transformer-Big or Transformer-Base per language pair, batch size and dropout tuned",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "negative log-likelihood plus k * auxiliary load-balancing loss (L = l_nll + k*l_aux); k value not stated",
+   "optimizer": "Adafactor, factored second moment, beta1 = 0.0, beta2 = 0.99 with 1 - t^-0.8 schedule, update clipping 1.0",
+   "lr": "1.0",
+   "lr_schedule": "square root decay after 10k training steps",
+   "warmup": null,
+   "batch_size": "4M tokens for 2048-core models, 1M tokens for 128/512-core models (Table 3)",
+   "steps": "250k training steps for the 600B model; 0.72 steps/s",
+   "epochs": null,
+   "tokens": "1 trillion tokens per model (checkpoint used for evaluation)",
+   "seq_len": null,
+   "precision": "float32 weights and activations (bfloat16 tried for 1T, unstable)",
+   "weight_decay": null,
+   "dropout": "0.1 input, residual and attention dropout",
+   "regularisation": "expert capacity limit, random routing of 2nd expert, auxiliary loss",
+   "hardware": "TPU v3; cores equal experts per layer (128, 512, 2048)",
+   "compute": "600B: 22.4 TPU v3 core-years",
+   "wall_clock": "600B: 4.0 days on 2048 cores",
+   "seeds": null,
+   "other": {
+    "attention_kv_dim": 128,
+    "gating_groups": "G=O(D), expert capacity per group 2N/(G*E)"
+   }
+  },
+  "inference": {
+   "decoding": "beam search with length normalization, flat beam (beams flattened into one sequence)",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "beam_size": null
+   },
+   "other": {
+    "inference_cluster": "same number of devices as training"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "BLEU",
+     "definition": "BLEU per language pair on held-out test set; averaged over 100 languages",
+     "unit": "BLEU points",
+     "higher_is_better": true
+    },
+    {
+     "name": "Delta BLEU",
+     "definition": "gain of the multilingual model over the bilingual baseline for that language",
+     "unit": "BLEU points",
+     "higher_is_better": true
+    },
+    {
+     "name": "TPU v3 core-years",
+     "definition": "number of cores times wall-clock time in years",
+     "unit": "core-years",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "100 bilingual Transformer models",
+    "T(96L) dense GPipe model"
+   ],
+   "protocol": "Single run per configuration, no seeds or significance tests stated; trendlines smoothed with window of 10"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "in-house, not released"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.batch_size",
+    "quote": null,
+    "where": "Table 3 column Batch sz. (Tokens)"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Largest MoE (600B, 2048 experts, 36L) reaches the best average BLEU, versus bilingual baselines",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU avg",
+   "value": "44.3",
+   "unit": "BLEU",
+   "baseline_value": "30.8",
+   "n": null,
+   "setup": "Multilingual MT, 100 languages to English, web-scale in-house corpus, BLEU on held-out test set, models trained to 1 trillion tokens, float32",
+   "note": null,
+   "where": "Table 3, Fig 6",
+   "table": "Table 3, row MoE(2048E, 36L), column BLEU avg.; baselines 30.8 from Figure 6 table, row Baselines"
+  },
+  {
+   "claim": "Best average Delta BLEU of the 600B model over bilingual baselines",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg Delta BLEU",
+   "value": "13.5",
+   "unit": "BLEU",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Multilingual MT, 100 languages to English, web-scale in-house corpus, BLEU on held-out test set, models trained to 1 trillion tokens, float32",
+   "note": null,
+   "where": "Fig 6",
+   "table": "Figure 6 table, row (1) MoE(2048E, 36L), column avg. Delta BLEU"
+  },
+  {
+   "claim": "The 600B model was trained on 2048 TPU v3 cores in 4 days at a cost of 22 core-years",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "22",
+   "unit": "TPU v3 core-years",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Multilingual MT, 100 languages to English, web-scale in-house corpus, BLEU on held-out test set, models trained to 1 trillion tokens, float32",
+   "note": "Table 3 prints 22.4 core-years and 4.0 days",
+   "where": "Fig 1 caption",
+   "quote": "The 600B parameters model that achieved the best translation quality was trained with 2048 TPU v3 cores for 4 days, a total cost of 22 TPU v3 core-years."
+  },
+  {
+   "claim": "Dense 96-layer GPipe T(96L), 2.3B params, trails the 600B MoE at roughly ten times the cost",
+   "kind": "measured",
+   "source": null,
+   "metric": "cost",
+   "value": "235.5",
+   "unit": "TPU v3 core-years",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Multilingual MT, 100 languages to English, web-scale in-house corpus, BLEU on held-out test set, models trained to 1 trillion tokens, float32",
+   "note": "T(96L) BLEU avg 36.9 (Table 3); over 6 weeks on 2048 cores",
+   "where": "Fig 1 caption",
+   "quote": "total of 235.5 TPU v3 core-years"
+  },
+  {
+   "claim": "Training all 100 bilingual baselines would need 29 core-years, more than the 600B MoE",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "29",
+   "unit": "TPU v3 core-years",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Multilingual MT, 100 languages to English, web-scale in-house corpus, BLEU on held-out test set, models trained to 1 trillion tokens, float32",
+   "note": null,
+   "where": "Fig 1 caption",
+   "quote": "training all 100 bilingual baseline models would have required 29 TPU v3"
+  },
+  {
+   "claim": "Going 37.5B to 600B (16x) raises compute cost only 3.6x",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "3.6",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Multilingual MT, 100 languages to English, web-scale in-house corpus, BLEU on held-out test set, models trained to 1 trillion tokens, float32",
+   "note": null,
+   "where": "Fig 1 caption",
+   "quote": "Increasing the model size from 37.5B to 600B (16x), results in computation cost increase from 6 to 22 years (3.6x)."
+  },
+  {
+   "claim": "Quadrupling experts per layer 128 to 512 (12L) gives a large BLEU jump",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "3.3",
+   "unit": "BLEU avg",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Multilingual MT, 100 languages to English, web-scale in-house corpus, BLEU on held-out test set, models trained to 1 trillion tokens, float32; 12 layers",
+   "note": null,
+   "where": "Sec 4.4",
+   "quote": "we notice a large jump in model quality, +3.3 average BLEU score"
+  },
+  {
+   "claim": "Quadrupling again 512 to 2048 experts (12L) gives smaller gain, diminishing returns",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "1.3",
+   "unit": "BLEU avg",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Multilingual MT, 100 languages to English, web-scale in-house corpus, BLEU on held-out test set, models trained to 1 trillion tokens, float32; 12 layers",
+   "note": null,
+   "where": "Sec 4.4",
+   "quote": "yields only +1.3 average BLEU scores"
+  },
+  {
+   "claim": "Tripling depth 12L to 36L adds a roughly constant gain for fixed experts per layer",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "2-to-3",
+   "unit": "BLEU points avg",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Multilingual MT, 100 languages to English, web-scale in-house corpus, BLEU on held-out test set, models trained to 1 trillion tokens, float32",
+   "note": null,
+   "where": "Sec 4.4, Table 3",
+   "quote": "2-to-3 BLEU points on average"
+  },
+  {
+   "claim": "Step time grows 1.7x when the model is scaled 16x from 128 to 2048 devices",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "1.7",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Per-device execution time of MoE layer plus adjacent Transformer layer, TPU v3, 128 to 2048 experts",
+   "note": null,
+   "where": "Sec 5.2",
+   "quote": "The device time increases by 1.7x when we scale the model to 16x larger"
+  },
+  {
+   "claim": "MoE dispatch and combine (AllToAll) time grows about 3.75x from 128 to 2048 experts",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "3.75",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Same as above, share of MoE+Transformer layer time rises from 16% to 36%",
+   "note": null,
+   "where": "Sec 5.2",
+   "quote": "the execution time increases by about 3.75x"
+  },
+  {
+   "claim": "AllToAll cost over 16 to 2048 partitions grows only about 9x while partitions grow 128x",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "9",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "TPU 2D network, 8MB and 32MB per partition",
+   "note": null,
+   "where": "Sec 5.3",
+   "quote": "increases by 9 times"
+  },
+  {
+   "claim": "Three times deeper MoE needs about 3x fewer tokens to reach 0.7 training cross-entropy (128 experts)",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "3",
+   "unit": "x fewer tokens",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Multilingual MT, 100 languages to English, web-scale in-house corpus, BLEU on held-out test set, models trained to 1 trillion tokens, float32; training loss, excludes auxiliary loss",
+   "note": null,
+   "where": "Sec 4.5, Table 2",
+   "quote": "MoE(128E, 12L) takes 3 times the number of tokens to reach 0.7 training cross-entropy compared to",
+   "table": "Table 2, rows MoE(128E,12L) 995 and MoE(128E,36L) 321 billion tokens"
+  },
+  {
+   "claim": "Rematerialization overhead for 36L and 60L models",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "28% and 34%",
+   "unit": "% of cycles",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Per-device, MoE(2048E) models",
+   "note": null,
+   "where": "Sec 5.1",
+   "quote": "only 28% and 34% of the total cycles are spent on recomputation for 36L and 60L models respectively"
+  },
+  {
+   "claim": "Attempt at a 1T-parameter 60-layer model hit numerical instability and was left out",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "none",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "MoE(2048E,60L), bfloat16 activations",
+   "note": null,
+   "where": "Sec 4.3",
+   "quote": "we encountered several trainability issues with numerical stability"
+  },
+  {
+   "claim": "Per-device memory is roughly constant as experts increase, linear in layers",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 7 per-device memory",
+   "note": null,
+   "where": "Sec 5.1"
+  }
+ ],
+ "limits": [
+  "Single in-house web-scale dataset and one task (X-to-English MT); not released, so not reproducible",
+  "One run per configuration, no seeds or significance tests",
+  "Dense baseline T(96L) is a different, deeper architecture with different cost; comparison confounds depth and sparsity",
+  "1T-parameter model results omitted due to instability",
+  "Authors concede deep-dense models transfer better to low-resource languages than shallow MoE",
+  "Sharding assignment uses iterative dataflow heuristics; better assignment left as future work",
+  "Capacity per expert must be at least 1, so the O(1/D) capacity scheme cannot scale indefinitely",
+  "Hyperparameters k (aux loss), warmup, beam size, sequence length not stated"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Expert capacity",
+   "definition": "a uniform threshold on the number of tokens processed by one expert, O(N/E); overflowed tokens pass through residual connections",
+   "where": "Sec 2.2"
+  },
+  {
+   "term": "SPMD partitioning",
+   "definition": "a compiler transformation that generates a single program to run on all devices, keeping compilation time constant",
+   "where": "Sec 1.2, 3.3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Outrageously large neural networks: sparsely-gated mixture-of-experts layer (Shazeer et al.)",
+   "year": 2017,
+   "arxiv": "1701.06538",
+   "relation": "extends",
+   "note": "MoE layer basis; GShard changes gating function and auxiliary loss, moves to Transformer",
+   "quote": null
+  },
+  {
+   "work": "GPipe",
+   "year": 2019,
+   "arxiv": "1811.06965",
+   "relation": "baseline",
+   "note": "dense T(96L) trained with GPipe",
+   "quote": null
+  },
+  {
+   "work": "Massively multilingual NMT in the wild (Arivazhagan et al.)",
+   "year": 2019,
+   "arxiv": "1907.05019",
+   "relation": "uses-data",
+   "note": "same dataset and setup",
+   "quote": null
+  },
+  {
+   "work": "Attention is all you need",
+   "year": 2017,
+   "arxiv": "1706.03762",
+   "relation": "extends",
+   "note": "Transformer base",
+   "quote": null
+  },
+  {
+   "work": "Mesh-TensorFlow",
+   "year": 2018,
+   "arxiv": "1811.02084",
+   "relation": "related",
+   "note": "alternative operator-level partitioning requiring model rewrite",
+   "quote": null
+  },
+  {
+   "work": "Adafactor",
+   "year": 2018,
+   "arxiv": "1804.04235",
+   "relation": "uses-method",
+   "note": "optimizer",
+   "quote": null
+  },
+  {
+   "work": "ZeRO",
+   "year": 2019,
+   "arxiv": "1910.02054",
+   "relation": "related",
+   "note": "scales to 170B; GShard to over 1T",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Multilingual translation quality improves with MoE size up to 600B while cost grows sublinearly",
+   "page": 2,
+   "why": "shows quality vs cost trade-off at a glance"
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "Translation quality comparison of multilingual MoE Transformer models and monolingual baselines",
+   "page": 16,
+   "why": "Delta BLEU across languages by resource level"
+  },
+  {
+   "figure": "Table 3",
+   "caption": "Performance of MoE models with different number of experts and layers",
+   "page": 19,
+   "why": "cores, steps/s, batch, core-years, days and BLEU"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "MPMD vs SPMD partition of a Dot operator",
+   "page": 4,
+   "why": "why compilation time is constant"
+  }
+ ],
+ "code": [
+  {
+   "where": "Algorithm 2",
+   "snippet": "gates = softmax(einsum(\"GSM ,ME ->GSE\", inputs , wg))",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Text extraction has ligature characters and split table cells; figure values (Fig 6 table) read from text dump",
+  "Table 1 per-layer-total expert counts such as 36684 look like a typo in the paper (2048x18=36864)",
+  "Related-work text mentions Brown et al. with no title, 1T tokens in 250k steps at under 4 days stated in text; Sec 4.4 mentions MoE(36E,128L) which seems to be a typo for MoE(128E,36L)"
+ ]
+}

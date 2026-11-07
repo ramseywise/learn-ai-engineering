@@ -1,0 +1,577 @@
+{
+ "schema": 1,
+ "key": "2004.04228",
+ "pdf": "generative-ai/08-eval/sources/wang-2020-asking-answering-questions-evaluate-factual.pdf",
+ "bib": {
+  "title": "Asking and Answering Questions to Evaluate the Factual Consistency of Summaries",
+  "authors": [
+   "Alex Wang",
+   "Kyunghyun Cho",
+   "Mike Lewis"
+  ],
+  "first_author": "Wang",
+  "year": 2020,
+  "venue": "Proceedings of the 58th Annual Meeting of the Association for Computational Linguistics, pages 5008-5020",
+  "arxiv": "2004.04228",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 50496,
+  "chars_total": 50496,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can asking questions about a summary and answering them from both summary and source give an automatic metric that tracks human judgments of factual consistency better than n-gram metrics?",
+ "hypothesis": "If a summary is factually consistent with its source, questions asked about the summary receive similar answers from the summary and the source.",
+ "contributions": [
+  "QAGS, an automatic model-based metric for factual consistency of generated text",
+  "New human judgments of factual consistency of model summaries for CNN/DM and XSUM",
+  "Ablations showing robustness to model quality, domain mismatch and number of questions",
+  "Analysis of generated questions and answers showing which summary parts are inconsistent",
+  "Release of models and code"
+ ],
+ "method": {
+  "summary": "QAGS generates K=20 questions from a summary with an answer-conditional BART QG model fine-tuned on NewsQA, answers each with a BERT-large extractive QA model fine-tuned on SQuAD2.0 from both source and summary, and averages token-level F1 between the two answers. It is validated by Pearson correlation with MTurk sentence-level consistency judgments.",
+  "task": "factual consistency evaluation of abstractive summarization",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "CNN/DM summaries (Gehrmann et al. 2018 outputs)",
+    "role": "eval",
+    "size": "235 test outputs",
+    "split": "test",
+    "source": "Hermann et al. 2015; Nallapati et al. 2016",
+    "preprocessing": null
+   },
+   {
+    "name": "XSUM BART outputs",
+    "role": "eval",
+    "size": "239 test outputs",
+    "split": "test",
+    "source": "Narayan et al. 2018; BART fine-tuned on XSUM (Lewis et al. 2019)",
+    "preprocessing": "summary prepended back to the article for humans and QAGS, because summaries contain facts (e.g. first names) absent from the article"
+   },
+   {
+    "name": "NewsQA",
+    "role": "train",
+    "size": null,
+    "split": null,
+    "source": "Trischler et al. 2017; CNN articles with crowdsourced questions",
+    "preprocessing": "answer concatenated to article with marker token, then marker token and question"
+   },
+   {
+    "name": "SQuAD2.0",
+    "role": "train",
+    "size": null,
+    "split": "dev set used for model selection and F1",
+    "source": "Rajpurkar et al. 2018",
+    "preprocessing": null
+   },
+   {
+    "name": "Falke et al. (2019) sentence ranking",
+    "role": "eval",
+    "size": "373 triplets",
+    "split": null,
+    "source": "Falke et al. 2019; summary sentences from Chen and Bansal (2018) model",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "BART (answer-conditional QG)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "seq2seq transformer",
+    "init_from": "pretrained BART (Lewis et al. 2019)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "implementation": "fairseq"
+    }
+   },
+   {
+    "name": "BERT-large-uncased (extractive QA)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "BERT extractive QA",
+    "init_from": "pretrained BERT large-uncased",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "library": "transformers",
+     "ablations": "bert-base, bert-large-wwm"
+    }
+   },
+   {
+    "name": "BERTScore (BERT large-uncased)",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "QG: label-smoothed cross entropy, smoothing 0.1; QA: extractive span with unanswerable (SQuAD2.0)",
+   "optimizer": "QA: AdamW; QG: not stated",
+   "lr": "QG peak 2e-5; QA initial 5e-5",
+   "lr_schedule": null,
+   "warmup": "QG 5k steps; QA ratio 0.1",
+   "batch_size": null,
+   "steps": "QG 100k steps",
+   "epochs": "QA 3",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "label smoothing 0.1 (QG)",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "checkpoint": "QG best dev perplexity; QA best dev performance",
+    "note": "QG uses the same hyperparameters as the original BART work"
+   }
+  },
+  "inference": {
+   "decoding": "QG: beam search width 10, length penalty 1.0, trigram repetition blocking, min length 8, max length 60",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": "QG max length 60",
+   "samples": "10 answer candidates x 10 beams = 100 question candidates per summary; K=20 kept; no repeated runs or seeds stated",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "K": "20 questions",
+    "answer_candidates": "10 named entities and noun phrases per summary from spaCy en-web-sm; randomly sample 10 if more, duplicate if fewer",
+    "question_filters": "drop text after first question mark, exact duplicates, questions under 3 tokens, questions the QA model deems unanswerable or answers differently than expected; top 20 by probability, random sample of filtered if too few",
+    "answer_similarity": "token-level F1 (exact match ablated)"
+   },
+   "other": {
+    "sampling": "top-k and top-p tried, questions diverse but noisy and nongrammatical"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Pearson correlation with human consistency",
+     "definition": "summary-level; human score = mean over summary sentences of majority vote of 3 binary annotations",
+     "unit": "Pearson r x100",
+     "higher_is_better": true
+    },
+    {
+     "name": "Sentence ranking accuracy",
+     "definition": "fraction of triplets where the consistent sentence is ranked above the inconsistent one",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Krippendorff alpha",
+     "definition": "inter-annotator agreement",
+     "unit": "alpha",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "ROUGE-1/2/L",
+    "METEOR",
+    "BLEU-1..4",
+    "BERTScore",
+    "BERT NLI",
+    "ESIM",
+    "FactCC"
+   ],
+   "protocol": "MTurk (via ParlAI), US workers with >=1000 approved HITs and >=98% acceptance; 3 annotations per summary, sentence-by-sentence binary; checks: time under 30s fails, attention checks, explanation per sentence; $0.15 base + $0.85 bonus ($1.00 per summary). Significance of correlations p<.01 (CNN/DM), p<.05 (XSUM)."
+  },
+  "availability": {
+   "code": "https://github.com/W4ngatang/qags (stated will be available)",
+   "weights": "will release models",
+   "data": null
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "inference.parameters.K",
+    "quote": "After ﬁltering, we use the K = 20 most probable questions.",
+    "where": "5.2"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "QAGS correlates far better with human factual-consistency judgments than ROUGE-2 on CNN/DM",
+   "kind": "measured",
+   "source": null,
+   "metric": "Pearson",
+   "value": 54.53,
+   "unit": "r x100",
+   "baseline_value": 17.72,
+   "n": null,
+   "setup": "CNN/DM, 235 test outputs from Gehrmann et al. (2018), 3 MTurk annotations per summary, summary-level Pearson",
+   "note": "Intro prints 54.52 for QAGS; Table 1 prints 54.53",
+   "where": "Table 1",
+   "table": "Table 1, row QAGS, column CNN/DM"
+  },
+  {
+   "claim": "QAGS beats best other metric on XSUM, where all metrics correlate poorly",
+   "kind": "measured",
+   "source": null,
+   "metric": "Pearson",
+   "value": 17.49,
+   "unit": "r x100",
+   "baseline_value": 13.22,
+   "n": null,
+   "setup": "XSUM, 239 BART outputs, summary prepended to article, summary-level Pearson",
+   "note": "baseline is ROUGE-1, best baseline",
+   "where": "Table 1",
+   "table": "Table 1, row QAGS, column XSUM"
+  },
+  {
+   "claim": "BERTScore on CNN/DM",
+   "kind": "measured",
+   "source": null,
+   "metric": "Pearson",
+   "value": 27.63,
+   "unit": "r x100",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CNN/DM, 235 test outputs from Gehrmann et al. (2018), 3 MTurk annotations per summary, summary-level Pearson",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row BERTScore, column CNN/DM"
+  },
+  {
+   "claim": "BERTScore is worst on XSUM",
+   "kind": "measured",
+   "source": null,
+   "metric": "Pearson",
+   "value": 2.51,
+   "unit": "r x100",
+   "baseline_value": null,
+   "n": null,
+   "setup": "XSUM, 239 BART outputs, summary prepended to article, summary-level Pearson",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row BERTScore, column XSUM"
+  },
+  {
+   "claim": "BLEU-1 is next best on CNN/DM",
+   "kind": "measured",
+   "source": null,
+   "metric": "Pearson",
+   "value": 29.68,
+   "unit": "r x100",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CNN/DM, 235 test outputs from Gehrmann et al. (2018), 3 MTurk annotations per summary, summary-level Pearson",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row BLEU-1, column CNN/DM"
+  },
+  {
+   "claim": "QAGS ranks the consistent sentence higher more often than FactCC, ESIM and BERT NLI",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 72.1,
+   "unit": "%",
+   "baseline_value": 70.0,
+   "n": null,
+   "setup": "373 triplets from Falke et al. 2019, CNN/DM, Chen and Bansal model; random 50.0%",
+   "note": "FactCC 70.0, ESIM 67.6, BERT NLI 64.1; their numbers are copied from Falke et al. and Kryscinski et al.",
+   "where": "Table 5",
+   "table": "Table 5, row QAGS, column % Correct"
+  },
+  {
+   "claim": "Using bert-base QA gives slightly higher correlation than bert-large on CNN/DM",
+   "kind": "measured",
+   "source": null,
+   "metric": "Pearson",
+   "value": 55.2,
+   "unit": "r x100",
+   "baseline_value": 54.53,
+   "n": null,
+   "setup": "CNN/DM, 235 test outputs from Gehrmann et al. (2018), 3 MTurk annotations per summary, summary-level Pearson; QA model bert-base (SQuAD F1 75.95)",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row bert-base, column CNN/DM"
+  },
+  {
+   "claim": "bert-large-wwm, the best QA model (SQuAD F1 84.36), gives lower correlation on CNN/DM",
+   "kind": "measured",
+   "source": null,
+   "metric": "Pearson",
+   "value": 51.36,
+   "unit": "r x100",
+   "baseline_value": 54.53,
+   "n": null,
+   "setup": "CNN/DM, 235 test outputs from Gehrmann et al. (2018), 3 MTurk annotations per summary, summary-level Pearson",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row bert-large-wwm, column CNN/DM"
+  },
+  {
+   "claim": "Weakest QG model (NewsQA perplexity 18.56) lowers CNN/DM correlation",
+   "kind": "measured",
+   "source": null,
+   "metric": "Pearson",
+   "value": 47.92,
+   "unit": "r x100",
+   "baseline_value": 54.53,
+   "n": null,
+   "setup": "CNN/DM, 235 test outputs from Gehrmann et al. (2018), 3 MTurk annotations per summary, summary-level Pearson",
+   "note": "QG perplexity 5.48 gives 54.53",
+   "where": "Table 3",
+   "table": "Table 3, third row, column CNN/DM"
+  },
+  {
+   "claim": "QG fine-tuned on SQuAD (domain shift) lowers CNN/DM correlation",
+   "kind": "measured",
+   "source": null,
+   "metric": "Pearson",
+   "value": 51.53,
+   "unit": "r x100",
+   "baseline_value": 54.53,
+   "n": null,
+   "setup": "CNN/DM, 235 test outputs from Gehrmann et al. (2018), 3 MTurk annotations per summary, summary-level Pearson",
+   "note": "XSUM 15.28 vs 17.49",
+   "where": "5.4 Domain Effects",
+   "quote": "we get cor-\nrelations of 51.53 and 15.28 with human judg-\nments on CNN/DM and XSUM respectively"
+  },
+  {
+   "claim": "With 5 questions CNN/DM correlation drops",
+   "kind": "measured",
+   "source": null,
+   "metric": "Pearson",
+   "value": 41.61,
+   "unit": "r x100",
+   "baseline_value": 54.53,
+   "n": null,
+   "setup": "CNN/DM, 235 test outputs from Gehrmann et al. (2018), 3 MTurk annotations per summary, summary-level Pearson",
+   "note": "10 questions 41.17; 20 questions 54.53; 50 questions 57.94",
+   "where": "Table 4",
+   "table": "Table 4, row 5, column CNN/DM"
+  },
+  {
+   "claim": "50 questions give the highest CNN/DM correlation",
+   "kind": "measured",
+   "source": null,
+   "metric": "Pearson",
+   "value": 57.94,
+   "unit": "r x100",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CNN/DM, 235 test outputs from Gehrmann et al. (2018), 3 MTurk annotations per summary, summary-level Pearson",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row 50, column CNN/DM"
+  },
+  {
+   "claim": "Exact match as answer similarity lowers CNN/DM correlation versus F1",
+   "kind": "measured",
+   "source": null,
+   "metric": "Pearson",
+   "value": 45.97,
+   "unit": "r x100",
+   "baseline_value": 54.53,
+   "n": null,
+   "setup": "CNN/DM, 235 test outputs from Gehrmann et al. (2018), 3 MTurk annotations per summary, summary-level Pearson",
+   "note": "XSUM EM 18.10 is above F1 17.49",
+   "where": "5.4 Answer Similarity",
+   "quote": "we obtain Pear-\nson correlations with human judgments of 45.97\nand 18.10 on CNN/DM and XSUM"
+  },
+  {
+   "claim": "Inter-annotator agreement on CNN/DM is moderate",
+   "kind": "measured",
+   "source": null,
+   "metric": "Krippendorff alpha",
+   "value": 0.51,
+   "unit": "alpha",
+   "baseline_value": null,
+   "n": null,
+   "setup": "3 annotators per summary",
+   "note": "XSUM 0.34",
+   "where": "5.1",
+   "quote": "α is 0.51 and 0.34 for CNN/DM and"
+  },
+  {
+   "claim": "Share of generated questions that are nonsensical (XSUM error analysis)",
+   "kind": "measured",
+   "source": null,
+   "metric": "share",
+   "value": 8.75,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "400 manually annotated triplets on XSUM summaries",
+   "note": null,
+   "where": "7",
+   "quote": "Among the generated questions, 8.75% are non-\nsensical"
+  },
+  {
+   "claim": "Questions answered incorrectly from the article, showing QA transfer is a bottleneck",
+   "kind": "measured",
+   "source": null,
+   "metric": "share",
+   "value": 32.5,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "400 annotated XSUM triplets; vs 1.75% wrong from summary",
+   "note": null,
+   "where": "7",
+   "quote": "This percentage in-\ncreases to 32.50% for the article"
+  },
+  {
+   "claim": "Questions answered correctly from both texts but with high lexical variation so F1 misses it",
+   "kind": "measured",
+   "source": null,
+   "metric": "share",
+   "value": 8.0,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "400 annotated XSUM triplets",
+   "note": null,
+   "where": "7",
+   "quote": "for 8.00% of the examples, the ques-\ntion is answered correctly using both the article\nand summary"
+  }
+ ],
+ "limits": [
+  "Measures only factual inconsistency against the source, not fluency, readability or factual recall; authors recommend using it with complementary metrics",
+  "QG and QA choices are specific to abstractive summarization and may need adaptation elsewhere",
+  "Authors expect extractive summarizers to obtain nearly perfect QAGS scores (stated as expectation, not measured)",
+  "Answer candidates are named entities and noun phrases, so mostly entity errors are caught",
+  "Extractive QA cannot match paraphrases; F1 fails on lexical variation",
+  "Only 235 and 239 summaries, one model per dataset; inter-annotator alpha 0.51 and 0.34",
+  "Ablation uses BERT QA, a strong baseline; weaker QA might drop more",
+  "No seeds, repeated runs or confidence intervals reported; QG batch size, hardware, compute not given",
+  "XSUM correlations are low for all metrics (QAGS 17.49) and XSUM ablations show no clear trend"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "QAGS",
+   "definition": "Question Answering and Generation for Summarization, a metric for factual consistency of abstractive summaries",
+   "where": "Section 1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "BART",
+   "year": 2019,
+   "arxiv": "1910.13461",
+   "relation": "uses-method",
+   "note": "QG model and XSUM summaries",
+   "quote": null
+  },
+  {
+   "work": "BERT",
+   "year": 2019,
+   "arxiv": "1810.04805",
+   "relation": "uses-method",
+   "note": "extractive QA model",
+   "quote": null
+  },
+  {
+   "work": "NewsQA",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "QG training data",
+   "quote": null
+  },
+  {
+   "work": "SQuAD2.0",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "QA training data",
+   "quote": null
+  },
+  {
+   "work": "Falke et al. ranking by correctness",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "NLI models BERT NLI and ESIM, sentence ranking task",
+   "quote": null
+  },
+  {
+   "work": "FactCC (Kryscinski et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "NLI-based fact checker",
+   "quote": null
+  },
+  {
+   "work": "Eyal et al. 2019; Scialom et al. 2019",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "QA-based summary evaluation; they use cloze questions from source or reference, QAGS generates questions from the generated summary",
+   "quote": null
+  },
+  {
+   "work": "ROUGE, BLEU, METEOR, BERTScore",
+   "year": null,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "n-gram and embedding metrics",
+   "quote": null
+  },
+  {
+   "work": "Mani et al.",
+   "year": 1999,
+   "arxiv": null,
+   "relation": "related",
+   "note": "early question-based summary evaluation",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Overview of QAGS. A set of questions is generated based on the summary. The questions are then answered using both the source article and the summary. Corresponding answers are compared using a similarity function and averaged across questions to produce the final QAGS score.",
+   "page": 3,
+   "why": "Shows the pipeline with a Joel Moon vs Kevin Sinfield mismatch."
+  },
+  {
+   "figure": "Table 6",
+   "caption": "Example questions and answers generated when computing QAGS.",
+   "page": 7,
+   "why": "Shows a detection case and failure modes."
+  }
+ ],
+ "code": [
+  {
+   "where": "Section 3, Eq 1",
+   "snippet": "E_{Q~p(Q|Y)} [ D( p(A|Q,X), p(A|Q,Y) ) ]",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text extraction had no embedded instructions",
+  "Appendix Figures 2 and 3 are annotation interface screenshots; not readable as text"
+ ]
+}

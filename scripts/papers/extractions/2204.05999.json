@@ -1,0 +1,643 @@
+{
+ "schema": 1,
+ "key": "2204.05999",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/fried-2022-incoder.pdf",
+ "bib": {
+  "title": "INCODER: A GENERATIVE MODEL FOR CODE INFILLING AND SYNTHESIS",
+  "authors": [
+   "Daniel Fried",
+   "Armen Aghajanyan",
+   "Jessy Lin",
+   "Sida Wang",
+   "Eric Wallace",
+   "Freda Shi",
+   "Ruiqi Zhong",
+   "Wen-tau Yih",
+   "Luke Zettlemoyer",
+   "Mike Lewis"
+  ],
+  "first_author": "Fried",
+  "year": 2023,
+  "venue": "ICLR 2023 (arXiv v3, Apr 2023)",
+  "arxiv": "2204.05999",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 87243,
+  "chars_total": 87243,
+  "engine": "pymupdf",
+  "skipped": "Appendix D qualitative example figures are garbled token soup and were only skimmed; references skimmed."
+ },
+ "type": "empirical",
+ "question": "Can one generative code model trained with a causal masking objective do both left-to-right program synthesis and zero-shot infilling of arbitrary code spans using bidirectional context?",
+ "hypothesis": "Conditioning on right context via causal-masked infilling improves zero-shot editing tasks without hurting left-to-right synthesis.",
+ "contributions": [
+  "INCODER, the first large generative code model able to infill arbitrary regions of code",
+  "Zero-shot infilling benchmarks (HumanEval single/multi-line, type hints, variable names, docstrings)",
+  "Ablations showing causal masking does not hurt left-to-right synthesis and StackOverflow data helps",
+  "Public release of models and code"
+ ],
+ "method": {
+  "summary": "A 6.7B decoder-only Transformer trained for one epoch on 159 GB code (28 languages) plus 57 GB StackOverflow with a causal masking objective: spans are replaced by sentinels and moved to the end of the document. At inference the same model does left-to-right generation or infilling, compared with left-to-right single and left-to-right reranking baselines on the same weights.",
+  "task": "causal-masked language modelling of code; zero-shot code infilling and synthesis",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "GitHub/GitLab permissive code",
+    "role": "pretrain",
+    "size": "159 GB of code (52 GB Python); about 670,000 repos; 28 languages",
+    "split": "one epoch, each document used once",
+    "source": "public non-fork repos with MIT, Apache 2.0, BSD-2 or BSD-3 licence, collected through Dec 9 2021, plus Python/Jupyter from GitHub archive on BigQuery",
+    "preprocessing": "Exact-match dedup on alphanumeric token sequence (removed ~75% by size, 1 TB to 250 GB); emails replaced by removed@example.com; filtered files with line >3000 tokens, mean line >100 tokens, <40% alphanumeric/underscore, or auto-generated; decontamination vs CodeSearchNet val/test and JuICe eval repos; decontamination plus filtering remove ~10% of Python files; metadata (filename, extension, source, binned stars) inserted at start with p=50% else at end; Jupyter cells in XML-style tags"
+   },
+   {
+    "name": "StackOverflow",
+    "role": "pretrain",
+    "size": "57 GB",
+    "split": null,
+    "source": "questions with at least one answer, up to ten non-negative-score answers per question, up to five comments per question/answer",
+    "preprocessing": "tags and binned votes as metadata"
+   },
+   {
+    "name": "HumanEval infilling (single and multi-line)",
+    "role": "eval",
+    "size": "single-line: one example per non-blank line; multi-line: N(N+1)/2 per function of N lines",
+    "split": "HumanEval",
+    "source": "built from Chen et al. 2021",
+    "preprocessing": null
+   },
+   {
+    "name": "CodeXGLUE docstring (CodeSearchNet)",
+    "role": "eval",
+    "size": "fine-tuned baselines use ~250K train examples",
+    "split": "test",
+    "source": "Lu et al. 2021",
+    "preprocessing": null
+   },
+   {
+    "name": "CodeXGLUE return type hints",
+    "role": "eval",
+    "size": "232 dev, 469 test functions",
+    "split": "test",
+    "source": "constructed from CodeXGLUE",
+    "preprocessing": "AST filter to non-None return hints; other hints stripped"
+   },
+   {
+    "name": "TypeWriter OSS",
+    "role": "eval",
+    "size": "2,092 examples (about 12% of eval set)",
+    "split": null,
+    "source": "Pradel et al. 2020",
+    "preprocessing": "only files not in training data"
+   },
+   {
+    "name": "HumanEval and MBPP synthesis",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Chen 2021; Austin 2021",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "INCODER-6.7B",
+    "role": "proposed",
+    "params": "6.7B",
+    "architecture": "decoder-only Transformer, dense 6.7B config of Artetxe et al. 2021",
+    "init_from": null,
+    "tokenizer": "byte-level BPE trained on corpus; tokens may span whitespace (not newlines); 45% fewer tokens than GPT-2 BPE",
+    "vocab": null,
+    "layers": "32",
+    "hidden": "4096",
+    "heads": "32",
+    "context": "2048 tokens",
+    "other": {
+     "ffn": "16384",
+     "pre-layernorm": true,
+     "shared in/out embeddings": true,
+     "learned pos": false
+    }
+   },
+   {
+    "name": "INCODER-1.3B",
+    "role": "proposed",
+    "params": "1.3B",
+    "architecture": "decoder-only Transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "24",
+    "hidden": "2048",
+    "heads": "32",
+    "context": "2048 tokens",
+    "other": {
+     "ffn": "8192",
+     "note": "ablation models; 2.3B LM also trained, config not given"
+    }
+   },
+   {
+    "name": "PLBART-Large",
+    "role": "baseline",
+    "params": null,
+    "architecture": "encoder-decoder",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "code-cushman-001, code-davinci-001, code-davinci-002",
+    "role": "baseline",
+    "params": null,
+    "architecture": "OpenAI Codex API",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "TypeWriter (supervised), CodeBERT, CodeT5, RoBERTa",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "causal masking: sample span count from Poisson mean 1 truncated to [1,256] (single span ~50% of the time); span endpoints uniform, resample on overlap; maximise log P([Left; <Mask:0>; Right; <Mask:0>; Span; <EOM>]); cross-entropy on all tokens except mask sentinels",
+   "optimizer": "Adam, beta1=0.9, beta2=0.98, gradient norm clip 1.0",
+   "lr": null,
+   "lr_schedule": "Fairseq polynomial decay",
+   "warmup": "1500 updates",
+   "batch_size": "8 per GPU (248 GPUs)",
+   "steps": null,
+   "epochs": "1 (each document used once)",
+   "tokens": "52B (Table 5, row 1)",
+   "seq_len": "2048 tokens",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "gradient clipping 1.0",
+   "hardware": "248 V100 GPUs",
+   "compute": "3.0 zettaflops (Table 5, 6.7B)",
+   "wall_clock": "24 days",
+   "seeds": null,
+   "other": {
+    "framework": "Fairseq, PyTorch, FairScale fully sharded model states",
+    "1.3B ablation compute": "0.6 Z",
+    "2.3B LM": "1.1 Z"
+   }
+  },
+  "inference": {
+   "decoding": "top-p nucleus sampling p=0.95 with task-tuned temperature (greedy for some tasks)",
+   "temperature": "HumanEval infill: 0.2 for L-R single and CM, 0.8 for reranking; docstring: greedy for CM and L-R single, 0.8 for reranking; type hints: 0.2 L-R single, 0.8 reranking, greedy CM; HumanEval synthesis: 0.2 for pass@1, 0.8 for pass@10/100",
+   "top_p": "0.95",
+   "max_tokens": "task-specific stop criteria (<EOM>, newline, ':' for types); window 2048",
+   "samples": "Reranking: K=10 candidates (25 for variable names). HumanEval synthesis: 200 samples per problem, unbiased estimator. MBPP pass@1: single candidate.",
+   "prompting": "zero-shot; prompts prefixed with metadata marking Python; infill inserts <Mask:0> and appends an extra <Mask:1> sentinel to avoid infill length bias; Codex templated prompt",
+   "retrieval": null,
+   "parameters": {
+    "rerank scoring": "total or mean log prob chosen per task on dev set",
+    "variable names": "only names with 4 or more characters; most common prediction across masks"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "pass rate",
+     "definition": "completed function passes all input-output pairs (pass@1 analogue)",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "exact match",
+     "definition": "completed lines equal masked lines",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "BLEU",
+     "definition": "smoothed 4-gram BLEU on CodeXGLUE docstrings",
+     "unit": "BLEU",
+     "higher_is_better": true
+    },
+    {
+     "name": "type accuracy",
+     "definition": "exact match on normalised (AST parse/unparse) type hint",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "pass@k",
+     "definition": "Chen et al. unbiased estimator",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "L-R single",
+    "L-R reranking",
+    "PLBART",
+    "code-cushman-001",
+    "code-davinci-001/002",
+    "CodeBERT",
+    "CodeT5",
+    "TypeWriter",
+    "CodeGen",
+    "Codex",
+    "PolyCoder"
+   ],
+   "protocol": "Temperatures tuned on dev data per task and method; 95% CIs by bootstrap in Fig 2; no seeds reported."
+  },
+  "availability": {
+   "code": "https://sites.google.com/view/incoder-code-models/",
+   "weights": "released (same site)",
+   "data": "training corpus not released; evaluation benchmarks built from public datasets"
+  },
+  "prompts": [
+   {
+    "purpose": "Codex templated infill baseline",
+    "text": "[code before the infill mask] <INFILL> [code after the infill mask]\n# Complete the above code by replacing the <INFILL> tag.\n[code before the infill mask]",
+    "where": "Appendix C.1"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training.batch_size",
+    "quote": "Our per-GPU batch size was 8, with a maximum token sequence length of 2048.",
+    "where": "B.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "CM infilling beats L-R single and reranking on single-line HumanEval infilling (pass rate).",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass rate",
+   "value": 69.0,
+   "unit": "%",
+   "baseline_value": 48.2,
+   "n": null,
+   "setup": "HumanEval single-line infill, INCODER-6.7B, zero-shot",
+   "quote": null,
+   "table": "Table 1a, row CM infilling, column Pass Rate",
+   "note": null,
+   "where": "Table 1a"
+  },
+  {
+   "claim": "Multi-line HumanEval infill pass rate.",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass rate",
+   "value": 38.6,
+   "unit": "%",
+   "baseline_value": 24.9,
+   "n": null,
+   "setup": "INCODER-6.7B CM infilling vs L-R single 24.9",
+   "quote": null,
+   "table": "Table 1b, row CM infilling, column Pass Rate",
+   "note": null,
+   "where": "Table 1b"
+  },
+  {
+   "claim": "Zero-shot docstring BLEU approaches fine-tuned models.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": 18.27,
+   "unit": "BLEU",
+   "baseline_value": 16.05,
+   "n": null,
+   "setup": "CodeXGLUE Python docstring, zero-shot, greedy",
+   "quote": null,
+   "table": "Table 2, row Causal-masked infilling",
+   "note": "CodeT5 fine-tuned gets 20.36",
+   "where": "Table 2"
+  },
+  {
+   "claim": "Return type accuracy on CodeXGLUE-derived benchmark.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 58.1,
+   "unit": "%",
+   "baseline_value": 12.0,
+   "n": null,
+   "setup": "469 test functions, INCODER-6.7B",
+   "quote": null,
+   "table": "Table 3a, row Causal-masked infilling",
+   "note": null,
+   "where": "Table 3a"
+  },
+  {
+   "claim": "Zero-shot infill beats supervised TypeWriter F1 on non-None types.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 59.2,
+   "unit": "%",
+   "baseline_value": 48.3,
+   "n": null,
+   "setup": "TypeWriter OSS subset of 2,092 examples, non-None hints",
+   "quote": null,
+   "table": "Table 3b, row Ours: Causal-masked infilling, column F1",
+   "note": null,
+   "where": "Table 3b"
+  },
+  {
+   "claim": "With return checks the infill model is near but below TypeWriter when None included.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 76.7,
+   "unit": "%",
+   "baseline_value": 74.1,
+   "n": null,
+   "setup": "TypeWriter OSS incl. None, Infill + Return checks",
+   "quote": null,
+   "table": "Table 10, row Ours: Infill + Return checks",
+   "note": "Baseline value 74.1 is TypeWriter F1; its precision 78.8 is higher than 76.7",
+   "where": "Table 10"
+  },
+  {
+   "claim": "Variable name prediction accuracy.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 30.6,
+   "unit": "%",
+   "baseline_value": 18.4,
+   "n": null,
+   "setup": "CodeXGLUE test, names of 4+ characters",
+   "quote": null,
+   "table": "Table 4, row Causal-masked infilling",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "CM objective at 1.3B slightly beats LM objective on HumanEval pass@1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "HumanEval pass@1",
+   "value": 10.9,
+   "unit": "%",
+   "baseline_value": 8.9,
+   "n": null,
+   "setup": "1.3B, multi lang + SO, 52B tokens",
+   "quote": null,
+   "table": "Table 5, row 2 vs row 3",
+   "note": "MBPP 8 vs 6",
+   "where": "Table 5"
+  },
+  {
+   "claim": "INCODER-6.7B HumanEval pass@1 (synthesis).",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass@1",
+   "value": 15.2,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "200 samples, T=0.2, top-p 0.95",
+   "quote": null,
+   "table": "Table 11, row INCODER-6.7B, column HE @1",
+   "note": "Table 5 prints 15 for the same quantity; MBPP pass@1 19.4 (Table 11). CodeGen-Multi 6.1B gets 18.2, Codex-12B 28.8",
+   "where": "Table 11"
+  },
+  {
+   "claim": "StackOverflow data helps substantially (1.3B LM, Python+SO vs Python only).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 9,
+   "unit": "HumanEval pass@1",
+   "baseline_value": 5,
+   "n": null,
+   "setup": "rows 4 and 5, Table 5",
+   "quote": null,
+   "table": "Table 5, row 4 vs row 5, column HumanEval Pass@1",
+   "note": null,
+   "where": "Table 5"
+  },
+  {
+   "claim": "Training cost of INCODER-6.7B.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 24,
+   "unit": "days",
+   "baseline_value": null,
+   "n": null,
+   "setup": "248 V100 GPUs, one epoch",
+   "quote": "INCODER-6.7B was trained on 248 V100 GPUs for 24 days.",
+   "table": null,
+   "note": null,
+   "where": "B.1"
+  },
+  {
+   "claim": "Corpus size.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 159,
+   "unit": "GB code",
+   "baseline_value": null,
+   "n": null,
+   "setup": "52 GB Python, plus 57 GB StackOverflow",
+   "quote": "Our ﬁnal pre-training corpus contains a total of 159 GB of code, 52 GB of it in Python, and a total of 57 GB of content from StackOverﬂow.",
+   "table": null,
+   "note": "Table 5 lists 204 GB for multi lang + SO and dedup text says 250 GB before filtering; 159+57=216",
+   "where": "Sec 3"
+  },
+  {
+   "claim": "code-davinci-002 beats INCODER on single-line infill.",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass rate",
+   "value": 87.4,
+   "unit": "%",
+   "baseline_value": 69.0,
+   "n": null,
+   "setup": "HumanEval single-line infill pass rate, infilling mode",
+   "quote": null,
+   "table": "Table 9, row code-davinci-002 Inﬁlling",
+   "note": null,
+   "where": "Table 9"
+  },
+  {
+   "claim": "Dedup removed ~75% of corpus by size.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 75,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "exact match on alphanumeric token sequence, 1 TB to 250 GB",
+   "quote": "This removed approximately 75% of the corpus by ﬁle size",
+   "table": null,
+   "note": null,
+   "where": "A.1"
+  },
+  {
+   "claim": "Tokenizer saves 45% of tokens vs GPT-2 BPE.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 45,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "corpus token count",
+   "quote": "reducing the total number of tokens required to encode our training corpus by 45% relative to the",
+   "table": null,
+   "note": null,
+   "where": "A.4"
+  }
+ ],
+ "limits": [
+  "Validation perplexity still falling after one epoch (Fig 4); model undertrained.",
+  "Cross-paper comparisons in Table 11 are not rigorous (architecture, data, procedure differ).",
+  "Left-to-right Codex and CodeGen-Mono beat INCODER on HumanEval.",
+  "code-davinci-002 infills far better (87.4 vs 69.0) and its training is undisclosed.",
+  "CM-vs-LM ablation only to 1.3B scale.",
+  "Type hint exact match is noisy; TypeWriter eval is a filtered subset.",
+  "No learning rate, weight decay, or precision stated.",
+  "Cloze task: Codex may have seen CodeSearchNet."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "causal masking",
+   "definition": "sample spans, replace each with <Mask:k>, move them to the end of the document, train left-to-right on the permuted sequence",
+   "where": "Sec 2.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "CM3 (Aghajanyan et al.)",
+   "year": 2022,
+   "arxiv": "2201.07520",
+   "relation": "extends",
+   "note": "causal masking objective",
+   "quote": null
+  },
+  {
+   "work": "Bavarian et al. fill-in-the-middle",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "concurrent FIM objective",
+   "quote": null
+  },
+  {
+   "work": "Artetxe et al. dense 6.7B",
+   "year": 2021,
+   "arxiv": "2112.10684",
+   "relation": "uses-method",
+   "note": "architecture",
+   "quote": null
+  },
+  {
+   "work": "HumanEval (Codex)",
+   "year": 2021,
+   "arxiv": "2107.03374",
+   "relation": "uses-data",
+   "note": "infilling benchmark base",
+   "quote": null
+  },
+  {
+   "work": "MBPP (Austin et al.)",
+   "year": 2021,
+   "arxiv": "2108.07732",
+   "relation": "uses-data",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "CodeXGLUE (Lu et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "TypeWriter (Pradel et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "PLBART",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "CodeGen (Nijkamp et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "comparison Table 11",
+   "quote": null
+  },
+  {
+   "work": "PolyCoder (Xu et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "causal masking training (top) and zero-shot inference tasks (bottom)",
+   "page": 2,
+   "why": "shows span relocation and infilling at inference"
+  },
+  {
+   "figure": "Table 5",
+   "caption": "Ablation by size, objective, data, compute",
+   "page": 9,
+   "why": "compute and data scale per model"
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 2.1, Eq 1",
+   "snippet": "log P([Left; <Mask:0>; Right; <Mask:0>; Span; <EOM>])",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Figure 1 text extracted as token soup; appendix D examples garbled.",
+  "Table 5 prints HumanEval 15 vs Table 11 15.2; Table 5 data size 204 GB vs 216 GB from Sec 3."
+ ]
+}

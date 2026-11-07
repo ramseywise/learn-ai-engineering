@@ -1,0 +1,590 @@
+{
+ "schema": 1,
+ "key": "2106.08254",
+ "pdf": "ai-engineering/08-multimodal-engineering/sources/bao-2021-beit.pdf",
+ "bib": {
+  "title": "BEIT: BERT Pre-Training of Image Transformers",
+  "authors": [
+   "Hangbo Bao",
+   "Li Dong",
+   "Songhao Piao",
+   "Furu Wei"
+  ],
+  "first_author": "Bao",
+  "year": 2021,
+  "venue": "preprint",
+  "arxiv": "2106.08254",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 55772,
+  "chars_total": 55772,
+  "engine": "pymupdf",
+  "skipped": "reference list skimmed only"
+ },
+ "type": "empirical",
+ "question": "Can BERT-style masked prediction be made to pretrain vision Transformers by predicting discrete visual tokens of masked patches?",
+ "hypothesis": "Predicting discrete visual tokens (not raw pixels) of masked patches avoids wasting capacity on short-range, high-frequency detail and gives better pretraining.",
+ "contributions": [
+  "A masked image modeling task to pretrain vision Transformers self-supervised, with a variational autoencoder explanation",
+  "Pretraining and fine-tuning on image classification and semantic segmentation",
+  "Self-attention of BEIT separates semantic regions and object boundaries without annotation"
+ ],
+ "method": {
+  "summary": "A ViT is pretrained by masking about 40% of 16x16 patches (blockwise) and predicting the dVAE (DALL-E) visual token of each masked patch with a softmax over 8192 codes. The pretrained encoder is then fine-tuned end to end for classification and ADE20K segmentation.",
+  "task": "self-supervised masked image modeling pretraining; ImageNet classification and ADE20K segmentation fine-tuning",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "ImageNet-1K",
+    "role": "pretrain",
+    "size": "about 1.2M images (text elsewhere says 1.3M); no labels used",
+    "split": "training set",
+    "source": "Russakovsky 2015",
+    "preprocessing": "random resized cropping, horizontal flipping, color jittering 0.4; 224x224"
+   },
+   {
+    "name": "ImageNet-1K",
+    "role": "eval",
+    "size": "1k classes, 1.3M images",
+    "split": "ILSVRC-2012 validation (inferred)",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "ADE20K",
+    "role": "eval",
+    "size": "25K images, 150 categories",
+    "split": null,
+    "source": "Zhou 2019",
+    "preprocessing": null
+   },
+   {
+    "name": "CIFAR-100",
+    "role": "eval",
+    "size": "100 classes, 60k images",
+    "split": null,
+    "source": "Krizhevsky 2009",
+    "preprocessing": null
+   },
+   {
+    "name": "ImageNet-22K",
+    "role": "pretrain",
+    "size": "14M",
+    "split": "150 epochs self-supervised then 90 epochs intermediate fine-tuning (Appendix B)",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "In-house labeled dataset",
+    "role": "pretrain",
+    "size": "about 70M labeled images",
+    "split": "drop-in replacement for ImageNet-22K",
+    "source": "in-house",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "BEIT-B",
+    "role": "proposed",
+    "params": "86M",
+    "architecture": "ViT-Base, learnable 1D position embeddings, [S] token, FFN 3072",
+    "init_from": "random in [-0.02,0.02], output matrices of layer l rescaled by 1/sqrt(2l)",
+    "tokenizer": "DALL-E dVAE image tokenizer",
+    "vocab": "8192 visual tokens",
+    "layers": 12,
+    "hidden": 768,
+    "heads": 12,
+    "context": "inferred: 14x14 patch grid plus [S] token at 224",
+    "other": {}
+   },
+   {
+    "name": "BEIT-L",
+    "role": "proposed",
+    "params": "307M",
+    "architecture": "ViT-Large",
+    "init_from": null,
+    "tokenizer": "DALL-E dVAE",
+    "vocab": "8192",
+    "layers": 24,
+    "hidden": 1024,
+    "heads": 16,
+    "context": "inferred: 14x14 patch grid plus [S] token at 224",
+    "other": {
+     "ffn": 4096
+    }
+   },
+   {
+    "name": "BEIT+",
+    "role": "proposed",
+    "params": null,
+    "architecture": "BEIT with LayerScale and relative position bias (Appendix A)",
+    "init_from": null,
+    "tokenizer": "DALL-E dVAE",
+    "vocab": "8192",
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "DALL-E dVAE tokenizer",
+    "role": "base",
+    "params": null,
+    "architecture": "discrete VAE, 14x14 grid, Gumbel-softmax training",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": "8192",
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "maximize log-likelihood of correct visual tokens at masked positions (Eq. 1); about 40% (at most 75 patches) patches masked by blockwise masking, min block 16 patches",
+   "optimizer": "Adam, beta1 0.9, beta2 0.999, eps 1e-8 (cited as Loshchilov and Hutter, decoupled weight decay)",
+   "lr": "1.5e-3 peak, 1e-5 minimum",
+   "lr_schedule": "cosine",
+   "warmup": "10 epochs",
+   "batch_size": "2k (2048)",
+   "steps": "about 500k",
+   "epochs": "800 (ablations 300)",
+   "tokens": null,
+   "seq_len": "inferred: 14x14 patch grid plus [S] token",
+   "precision": null,
+   "weight_decay": "0.05",
+   "dropout": "disabled",
+   "regularisation": "stochastic depth 0.1; gradient clipping 3.0 base, 1.0 large",
+   "hardware": "16 Nvidia Tesla V100 32GB",
+   "compute": null,
+   "wall_clock": "about five days for 500k steps",
+   "seeds": null,
+   "other": {
+    "finetune_imagenet": "Table 13: peak lr {2e-3,3e-3,4e-3,5e-3}, 100 epochs base/50 large, batch 1024, warmup 20/5, layer-wise lr decay 0.65 base/0.75 large, weight decay 0.05, label smoothing 0.1, stoch depth 0.1, RandAug 9/0.5, mixup 0.8, cutmix 1.0, erasing 0.25, min lr 1e-6, cosine; 384 res: 10 more epochs",
+    "finetune_cifar100": "150 epochs, batch 512, warmup 20, layer decay 0.65, weight decay 0.3",
+    "finetune_ade20k": "Table 14: lr 1e-3, 160K steps, batch 16, layer decay 0.65, linear schedule, warmup 1500 steps, 512x512, stoch depth 0.1, wd 0.05, SETR-PUP task layer",
+    "linear_probe": "AdamW 50 epochs lr 4e-3 cosine, batch 1024, wd 1e-4"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single run per number; no seeds stated",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "top-1 accuracy",
+     "definition": "ImageNet-1K / CIFAR-100 classification accuracy after fine-tuning (avg-pooled patch features, linear softmax)",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "mIoU",
+     "definition": "mean intersection over union averaged over 150 ADE20K categories, single-scale unless noted",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "reconstruction error",
+     "definition": "mean absolute error of normalized RGB values",
+     "unit": "absolute",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "ViT, DeiT from scratch",
+    "ViT-22K supervised",
+    "iGPT",
+    "ViT-JFT300M masked patch",
+    "MoCo v3",
+    "DINO",
+    "Swin"
+   ],
+   "protocol": "single runs; no seeds or error bars reported"
+  },
+  "availability": {
+   "code": "https://aka.ms/beit",
+   "weights": null,
+   "data": "ImageNet, ADE20K, CIFAR-100 public; in-house 70M not public"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.steps",
+    "quote": "The pre-training runs for about 500k steps (i.e., 800 epochs) with 2k batch size.",
+    "where": "Sec 2.5"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "BEIT-B fine-tuned at 224 reaches 83.2 top-1 on ImageNet-1K, level with MoCo v3-B (83.2) and above DINO-B (82.8) and DeiT-B scratch (81.8).",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1",
+   "value": "83.2",
+   "unit": "%",
+   "baseline_value": "81.8",
+   "n": null,
+   "setup": "ViT-B, pretrained 800 epochs on ImageNet-1K without labels, fine-tuned 224x224",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row BEIT-B (ours), column ImageNet"
+  },
+  {
+   "claim": "BEIT384-L reaches 86.3 top-1 on ImageNet-1K.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1",
+   "value": "86.3",
+   "unit": "%",
+   "baseline_value": "85.2",
+   "n": null,
+   "setup": "ViT-L, ImageNet-1K self-supervised pretraining, 384x384",
+   "note": "baseline is supervised ViT384-L pretrained on ImageNet-22K",
+   "where": "Table 1",
+   "table": "Table 1, row BEIT384-L (ours), column ImageNet"
+  },
+  {
+   "claim": "BEIT384-B (ImageNet-1K pretraining) beats supervised ViT384-B pretrained on ImageNet-22K.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1",
+   "value": "84.6",
+   "unit": "%",
+   "baseline_value": "84.0",
+   "n": null,
+   "setup": "base size, 384x384",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row BEIT384-B (ours), column ImageNet"
+  },
+  {
+   "claim": "Replacing visual-token prediction with raw-pixel regression drops ImageNet from 82.86 to 81.04, below DeiT-B from scratch.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1",
+   "value": "81.04",
+   "unit": "%",
+   "baseline_value": "82.86",
+   "n": null,
+   "setup": "300-epoch ablation, ViT-B, blockwise masking kept",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row -Visual tokens (i.e., recover masked pixels), column ImageNet"
+  },
+  {
+   "claim": "Pixel-regression ablation on ADE20K.",
+   "kind": "measured",
+   "source": null,
+   "metric": "mIoU",
+   "value": "41.38",
+   "unit": "mIoU",
+   "baseline_value": "44.65",
+   "n": null,
+   "setup": "300-epoch ablation, ViT-B; task layer for Table 4 not stated (Table 3 uses SETR-PUP)",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row -Visual tokens (i.e., recover masked pixels), column ADE20K"
+  },
+  {
+   "claim": "Removing blockwise masking and visual tokens together gives 80.50 ImageNet and 37.09 ADE20K.",
+   "kind": "measured",
+   "source": null,
+   "metric": "mIoU",
+   "value": "37.09",
+   "unit": "mIoU",
+   "baseline_value": "44.65",
+   "n": null,
+   "setup": "300-epoch ablation",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row -Visual tokens -Blockwise masking, column ADE20K"
+  },
+  {
+   "claim": "Recovering 100% of visual tokens (no masking loss restriction) lowers results versus masked-only.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1",
+   "value": "82.59",
+   "unit": "%",
+   "baseline_value": "82.86",
+   "n": null,
+   "setup": "300-epoch ablation, ImageNet",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row + Recover 100% visual tokens, column ImageNet"
+  },
+  {
+   "claim": "Pretraining 800 instead of 300 epochs improves ImageNet to 83.19 and ADE20K to 45.58.",
+   "kind": "measured",
+   "source": null,
+   "metric": "mIoU",
+   "value": "45.58",
+   "unit": "mIoU",
+   "baseline_value": "44.65",
+   "n": null,
+   "setup": "ViT-B ablation setup",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row Pretrain longer (800 epochs), column ADE20K"
+  },
+  {
+   "claim": "Linear probe of BEIT-B is weak: 56.7 vs DINO-B 78.2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "linear-probe top-1",
+   "value": "56.7",
+   "unit": "%",
+   "baseline_value": "78.2",
+   "n": null,
+   "setup": "ImageNet linear probe, avg-pooled features at 9th layer for BEIT-B, AdamW 50 epochs",
+   "note": null,
+   "where": "Table 9, Appendix D",
+   "table": "Table 9, row BEIT-B (ours), column Accuracy"
+  },
+  {
+   "claim": "BEIT-L linear probe reaches 73.5.",
+   "kind": "measured",
+   "source": null,
+   "metric": "linear-probe top-1",
+   "value": "73.5",
+   "unit": "%",
+   "baseline_value": "77.6",
+   "n": null,
+   "setup": "14th-layer features",
+   "note": "baseline MoCo v3-L",
+   "where": "Table 9",
+   "table": "Table 9, row BEIT-L (ours), column Accuracy"
+  },
+  {
+   "claim": "On ADE20K (SETR-PUP, single scale) BEIT gets 45.6 mIoU vs supervised pretraining 45.3; intermediate fine-tuning gives 47.7.",
+   "kind": "measured",
+   "source": null,
+   "metric": "mIoU",
+   "value": "45.6",
+   "unit": "mIoU",
+   "baseline_value": "45.3",
+   "n": null,
+   "setup": "ViT-B, ADE20K 150 classes, 160K steps",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row BEIT (ours), column ADE20K"
+  },
+  {
+   "claim": "BEIT-L+ with in-house 70M intermediate fine-tuning reaches 89.5 top-1 at 512.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1",
+   "value": "89.5",
+   "unit": "%",
+   "baseline_value": "88.55",
+   "n": null,
+   "setup": "BEIT-L+ (LayerScale, relative position bias), 512x512",
+   "note": "best prior listed: ViT-H JFT-300M 88.55 at 512",
+   "where": "Table 6",
+   "table": "Table 6, row BEIT-L+ (ours) In-House-70M, column 512"
+  },
+  {
+   "claim": "BEIT-L+ with in-house 70M data reaches 58.4 multi-scale mIoU on ADE20K.",
+   "kind": "measured",
+   "source": null,
+   "metric": "mIoU",
+   "value": "58.4",
+   "unit": "mIoU",
+   "baseline_value": "53.5",
+   "n": null,
+   "setup": "UperNet, 640x640, multi-scale",
+   "note": "baseline Swin-L",
+   "where": "Table 7",
+   "table": "Table 7, row BEIT-L+ In-House-70M, column Multi-Scale mIoU"
+  },
+  {
+   "claim": "BEIT on CIFAR-100 reaches 90.1 vs ViT from scratch 48.5.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1",
+   "value": "90.1",
+   "unit": "%",
+   "baseline_value": "48.5",
+   "n": null,
+   "setup": "base, 224x224, ImageNet-1K pretraining",
+   "note": "DINO 91.7 and DeiT 90.8 score higher",
+   "where": "Table 11",
+   "table": "Table 11, row BEIT (ours), column CIFAR-100"
+  },
+  {
+   "claim": "BEIT pretraining is 4.2x faster in throughput than BEIT+DINO multi-task.",
+   "kind": "measured",
+   "source": null,
+   "metric": "relative throughput",
+   "value": "4.2x",
+   "unit": null,
+   "baseline_value": "1.0x",
+   "n": null,
+   "setup": "300 epochs, same batch size",
+   "note": null,
+   "where": "Table 10",
+   "table": "Table 10, row BEIT (300 Epochs), column Pre-Training Throughput"
+  },
+  {
+   "claim": "Re-implemented tokenizer matches the DALL-E tokenizer.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1",
+   "value": "82.70",
+   "unit": "%",
+   "baseline_value": "82.86",
+   "n": null,
+   "setup": "300-epoch ablation, tokenizer trained on ImageNet-1K",
+   "note": null,
+   "where": "Table 8",
+   "table": "Table 8, row Our reimplementation, column ImageNet"
+  }
+ ],
+ "limits": [
+  "Ablations use 300 epochs only and single runs; no seeds or error bars",
+  "Linear-probe quality is weak for base size (56.7) versus discriminative methods",
+  "Depends on a pretrained external DALL-E tokenizer",
+  "Only classification and segmentation tested; scaling to 1B-10B models is suggested, not shown",
+  "Large results use an unreleased in-house 70M labeled set",
+  "Table 4 ADE20K task layer unstated; Table 4 BEIT 300ep ADE20K 44.65 vs Table 5 ViT row 44.86 (UperNet)"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "masked image modeling (MIM)",
+   "definition": "randomly mask some percentage of image patches, then predict the visual tokens that correspond to the masked patches",
+   "where": "Sec 2.3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "BERT",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "masked language modeling analogue",
+   "quote": null
+  },
+  {
+   "work": "ViT (Dosovitskiy et al.)",
+   "year": 2020,
+   "arxiv": "2010.11929",
+   "relation": "uses-method",
+   "note": "backbone",
+   "quote": null
+  },
+  {
+   "work": "DALL-E zero-shot text-to-image generation",
+   "year": 2021,
+   "arxiv": "2102.12092",
+   "relation": "uses-method",
+   "note": "dVAE image tokenizer used directly",
+   "quote": null
+  },
+  {
+   "work": "DeiT",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "fine-tuning hyperparameters followed; from-scratch baseline",
+   "quote": null
+  },
+  {
+   "work": "DINO",
+   "year": 2021,
+   "arxiv": "2104.14294",
+   "relation": "baseline",
+   "note": "self-supervised comparison",
+   "quote": null
+  },
+  {
+   "work": "MoCo v3",
+   "year": 2021,
+   "arxiv": "2104.02057",
+   "relation": "baseline",
+   "note": "self-supervised comparison",
+   "quote": null
+  },
+  {
+   "work": "iGPT",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "pixel-cluster token pretraining",
+   "quote": null
+  },
+  {
+   "work": "SETR-PUP",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "segmentation task layer",
+   "quote": null
+  },
+  {
+   "work": "Swin Transformer",
+   "year": 2021,
+   "arxiv": "2103.14030",
+   "relation": "baseline",
+   "note": "ADE20K comparison, UperNet",
+   "quote": null
+  },
+  {
+   "work": "ImageNet",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "pretraining and eval",
+   "quote": null
+  },
+  {
+   "work": "ADE20K",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "segmentation eval",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Overview of BEIT pre-training.",
+   "page": 2,
+   "why": "shows patches in, visual tokens out, with blockwise masking"
+  },
+  {
+   "figure": "Table 4",
+   "caption": "Ablation studies for BEIT pre-training on image classification and semantic segmentation.",
+   "page": 8,
+   "why": "isolates the value of visual tokens and blockwise masking"
+  }
+ ],
+ "code": [
+  {
+   "where": "Algorithm 1",
+   "snippet": "Blockwise masking: repeat s<-Rand(16, 0.4N-|M|); r<-Rand(0.3,1/0.3); a<-sqrt(s*r); b<-sqrt(s/r); t<-Rand(0,h-a); l<-Rand(0,w-b); M<-M U {(i,j): i in [t,t+a), j in [l,l+b)} until |M|>0.4N",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Layout-extracted tables; no embedded instructions found",
+  "ImageNet-1K size printed as 1.2M and 1.3M",
+  "Linear probe text says large is 304M while table says 307M"
+ ]
+}

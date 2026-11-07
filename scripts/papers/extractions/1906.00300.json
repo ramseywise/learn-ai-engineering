@@ -1,19 +1,556 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "1906.00300",
  "pdf": "generative-ai/02-rag-retrieval/sources/lee-2019-latent-retrieval-weakly-supervised-open.pdf",
  "bib": {
   "title": "Latent Retrieval for Weakly Supervised Open Domain Question Answering",
+  "authors": [
+   "Kenton Lee",
+   "Ming-Wei Chang",
+   "Kristina Toutanova"
+  ],
   "first_author": "Lee",
   "year": 2019,
-  "venue": "ACL (1) 2019",
+  "venue": "Proceedings of the 57th Annual Meeting of the Association for Computational Linguistics (ACL 2019), pages 6086-6096",
   "arxiv": "1906.00300",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-04",
-  "session": "5f2f0582-f958-4d9c-8469-02f3d5079657"
+  "at": "2026-11-07",
+  "chars_read": 43690,
+  "chars_total": 43690,
+  "engine": "pymupdf",
+  "skipped": null
  },
- "legacy_report": "SOURCE: \"Latent Retrieval for Weakly Supervised Open Domain Question Answering\", Kenton Lee, Ming-Wei Chang, Kristina Toutanova (Google Research). ACL 2019, Proceedings pages 6086–6096. The file is the ACL proceedings version, not the arXiv 1906.00300 preprint layout.\n\nCOVERAGE: I read all 43,726 of 43,726 chars: the body, Tables 1–7, all three figure captions and the references. The paper has no appendix. Page numbers below are PDF pages. p1 is proceedings page 6086, so PDF page = proceedings page − 6085.\n\nCLAIMS\n- claim: ORQA trains a retriever and reader together using only question-answer string pairs, with no IR system. The authors say they are the first to do this. Retrieval over all of Wikipedia is treated as a latent variable.\n  number: none\n  setup: English Wikipedia (Dec 20, 2018 snapshot), over 13M blocks; BERT-base encoders\n  quote: \"We show for the ﬁrst time that it is possible to jointly learn the retriever and reader from question-answer string pairs and without any IR system. In this setting, evidence retrieval from all of Wikipedia is treated as a latent variable.\"\n  where: p1, abstract\n- claim: On datasets where the person writing the question did not know the answer, learned retrieval beats BM25 by 6 to 19 EM points.\n  number: Test EM, ORQA vs BM25+BERT: Natural Questions 33.3 vs 26.5; WebQuestions 36.4 vs 17.7; CuratedTrec 30.1 vs 21.3. Dev: NQ 31.3 vs 24.8; WQ 38.5 vs 20.8; CT 36.8 vs 27.1.\n  setup: Table 5, end-to-end exact match. Both systems use the same BERT reader and only QA pairs. BM25 retrieval is static during fine-tuning, and its final score is a learned weighted sum of BM25 and reader scores. ORQA retrieves top k=5.\n  quote: \"our ICT pre-trained retriever outperforms BM25 by a large marge—6 to 19 points in exact match depending on the dataset.\" (the typo \"marge\" is in the source)\n  where: p8 (Table 5 on p7)\n- claim: On datasets where the question writer already knew the answer (SQuAD, TriviaQA), BM25 matches or beats ORQA. The authors' explanation is that a compressed 128-dimensional vector cannot represent every word the way BM25 does.\n  number: Test EM: TriviaQA BM25 47.1 vs ORQA 45.0; SQuAD 33.2 vs 20.2. Dev: TriviaQA 47.2 vs 45.1; SQuAD 28.1 vs 26.5.\n  setup: Table 5, same conditions as above\n  quote: \"in datasets where the question askers already know the answer, i.e. SQuAD and TriviaQA, the retrieval problem resembles traditional IR. In this setting, a highly compressed 128-dimensional vector cannot match BM25's ability to precisely represent every word in the evidence.\"\n  where: p8\n- claim: The question-writing bias argument. Questions written by someone who already knows the answer are not driven by a need for information, so they contain hints. SQuAD writers also saw the evidence passage, which creates artificial word overlap between question and evidence. The information-seeking datasets (NQ, WQ, CuratedTrec) have a different, \"moderate\" bias: annotators find answers with tools.\n  number: none\n  setup: Section 7.2 and Table 4, a qualitative breakdown of the five datasets\n  quote: \"Question writing is not motivated by an information need. This often results in many hints in the question that would not be present in naturally occurring questions ... This is particularly problematic for SQuAD, where the question askers are also prompted with a speciﬁc piece of evidence for the answer, leading to artiﬁcially large lexical overlap between the question and evidence.\"\n  where: p6\n- claim: The large drop from dev to test on SQuAD comes from the dataset itself, because its questions come from very few documents. The authors advise against using SQuAD to train or evaluate learned open-domain retrieval.\n  number: 100k questions from 536 documents\n  setup: open SQuAD, Table 5 (ORQA dev 26.5 vs test 20.2)\n  quote: \"its 100k questions are derived from only 536 documents. Therefore, good retrieval targets are highly correlated between training examples, violating the IID assumption, and making it unsuitable for learned retrieval.\"\n  where: p8\n- claim: The Inverse Cloze Task (ICT) pretrains the retriever. A random sentence acts as a pseudo-question and the text around it acts as pseudo-evidence. The model must pick the true context from the other blocks in the batch, which serve as negatives (softmax over in-batch candidates).\n  number: none\n  setup: Section 4; Wikipedia blocks\n  quote: \"In ICT, a sentence is treated as a pseudo-question, and its context is treated as pseudo-evidence. Given a pseudo-question, ICT requires selecting the corresponding pseudo-evidence out of the candidates in a batch.\"\n  where: p2\n- claim: The sentence is removed from its context only 90% of the time. Masking 100% of the time costs almost 10 EM points because the model never learns to use word overlap. Masking 0% of the time costs about 6 points and performs about the same as BM25.\n  number: 90% masking rate; about −10 EM (always mask), −6 EM (never mask)\n  setup: Fig. 3, Natural Questions open dev set\n  quote: \"If we always mask the pseudo-query, the retriever never learns that n-gram overlap is a powerful retrieval signal, losing almost 10 points in end-to-end performance. If we never mask the pseudo-query ... The latter loses 6 points in end-to-end performance, which—perhaps not surprisingly—produces near-identical results to BM25.\"\n  where: p8\n- claim: Because of ICT, the block encoder can stay frozen after pretraining. All blocks are encoded once into an index for maximum inner product search, and only the question encoder and reader are fine-tuned.\n  number: none\n  setup: Sections 4–6\n  quote: \"We can expect the block encoder BERT B(b) to work well without further training. Only the question encoder needs to be ﬁne-tuned on downstream data.\"\n  where: p5\n- claim: Without ICT almost no training example would have the answer in its retrieved blocks. With ICT, fewer than 10% of examples are discarded.\n  number: <10% discarded\n  setup: fine-tuning with full-loss top-k=5 and early-update c=5000\n  quote: \"While we would expect almost all examples to be discarded with random initialization, we discard less than 10% of examples in practice due to ICT pre-training.\"\n  where: p5\n- claim: Unsupervised language-model embeddings do very poorly as retrievers. This shows that being pretrained as a language model is not the same as being trained for retrieval.\n  number: NQ test EM: NNLM 4.0, ELMo 4.7 (vs BM25 26.5, ORQA 33.3)\n  setup: Table 5. The LM encoders are 128-dimensional and pre-encode the blocks; the question encoder is fine-tuned.\n  quote: \"Natural Questions 26.5 4.0 4.7 33.3\" (Table 5 test row; columns BM25+BERT, NNLM+BERT, ELMo+BERT, ORQA)\n  where: p7\n- claim: The BM25 baseline is strong. In the strongly supervised DrQA setting with 5 blocks, it beats 5-document BERTserini and comes close to 29-paragraph BERTserini.\n  number: SQuAD EM 34.7 (BM25+BERT, 5 blocks) vs BERTserini 19.1 (5 docs), 36.6 (29 paragraphs), 38.6 (100 paragraphs); DrQA 27.1–29.8\n  setup: Table 6. Reader pretrained on SQuAD gold derivations; Dec 12, 2016 Wikipedia snapshot.\n  quote: \"our BM25 baseline, which retrieves 5 evidence blocks, greatly outperforms 5-document BERTserini and is close to 29-paragraph BERTserini.\"\n  where: p8\n- claim: Implementation scale: about 13M blocks of at most 288 wordpieces; BERT-base uncased; 128-dimensional retrieval vectors so the system fits on one machine; ICT run for 100k steps at batch size 4096 on TPUs; fine-tuning at batch size 1 on a 12GB GPU.\n  number: 288 wordpieces; 13M blocks; 128-dim; batch 4096; 100k steps\n  quote: \"When pre-training the retriever with ICT, we use a learning rate of10−4 and a batch size of 4096 on Google Cloud TPUs for 100k steps.\"\n  where: p6–7\n\nLIMITS\n- The 128-dimensional dense vectors represent very specific concepts poorly. Sparse methods separate these cleanly. The authors point to hybrid dense-plus-sparse retrieval as future work: \"ORQA has trouble precisely representing extremely speciﬁc concepts that sparse representations can cleanly separate. These errors indicate that a hybrid approach would be promising future work.\" (p9)\n- ORQA does not beat BM25 on TriviaQA or SQuAD.\n- The paper reports no retrieval-only metrics such as recall@k. Every number is end-to-end exact match, so retriever and reader effects cannot be separated.\n- There are no confidence intervals or seeds; each result is a single number. The masking ablation is reported on NQ dev only.\n- The authors concede that every dataset has some bias, and say this is a property of the data rather than a criticism of how it was collected: \"it is unclear how one could collect a truly unbiased dataset without impractical costs.\" (p6)\n- Dated: the reader is extractive (spans of at most 10 tokens), not generative. Later work superseded this, and the paper itself does not report that.\n- The corpus is a Dec 2018 snapshot, not DrQA's 2016 corpus, so Table 5 cannot be compared directly with earlier work. Table 6 uses the 2016 snapshot for that reason.\n\nBUILDS ON\n- BERT (Devlin et al., 2018): all encoders.\n- Cloze task (Taylor, 1953): ICT is its inverse.\n- ICT described as \"a generalization of the skip-gram objective (Mikolov et al., 2013)\" with \"in-batch negative sampling from Logeswaran and Lee (2018)\".\n- DrQA (Chen et al., 2017): open-QA setup, TF-IDF pipeline, evaluation script.\n- Weak supervision from TriviaQA (Joshi et al., 2017), SearchQA (Dunn et al., 2017), Quasar (Dhingra et al., 2017).\n- BM25 (Robertson et al., 2009) and BERTserini (Yang et al., 2019) as baselines. Lin (2019) is cited on the difficulty of beating weak IR baselines.\n- Span representation from Lee et al. (2016).\n- \"QA is fundamentally different from IR (Singh, 2012)\".\n- Weakly supervised semantic parsing (Clarke et al., 2010; Liang et al., 2013; Berant et al., 2013).\n\nCODE: none. The paper has only equations. The ones worth keeping, as written: retrieval score \"Sretr(b, q) = h⊤q hb\" (p3); ICT objective \"PICT (b|q) = exp(Sretr(b, q))∑ b′∈BATCH exp(Sretr(b′, q))\" (p4); final loss \"L(q, a) = Learly(q, a) + Lfull(q, a)\" (p5).\n\nFIGURES\n- Figure 2, p4: \"Example of the Inverse Cloze Task (ICT), used for retrieval pre-training. A random sentence (pseudo-query) and its context (pseudo evidence text) are derived from the text snippet ... The objective is to select the true context among candidates in the batch.\" This is the best candidate. The zebra example shows a pseudo-query that never mentions \"zebra\" being matched to its context, which explains in-batch-negative self-supervision faster than prose can.\n- Figure 1, p3: an overview of ORQA that shows the retriever and reader working as two stages. It fits the \"two components\" section of note 02.\n- Figure 3, p8: a plot of NQ dev EM against ICT masking rate, with a horizontal BM25 line. It is a good illustration of the trade-off between word overlap and semantic matching.\n\nPROBLEMS\n- Table 4 lost its checkmarks in extraction. The text shows dataset names under the column headers but no marks, so I cannot read from the table which bias applies to which dataset. Section 7.2's prose gives the mapping: NQ, WQ and CuratedTrec have tool-assisted answers; TriviaQA and SQuAD writers know the answer; SQuAD writers also know the evidence.\n- Some table text is run together, e.g. the Table 6 header \"Evidence SQuADRetrieved\" and \"34.7(gold deriv.)\".\n- The \"6 to 19\" range is the authors' rounding. The exact test gaps are 6.8, 18.7 and 8.8; the dev gaps are 6.5, 17.7 and 9.7.\n- The PDF contains no embedded instructions.\n- File: /Users/ramsey-wise/workspace/learn-ai-engineering/generative-ai/02-rag-retrieval/sources/lee-2019-latent-retrieval-weakly-supervised-open.pdf"
+ "type": "empirical",
+ "question": "Can a retriever and reader be learned jointly from question-answer string pairs alone, without a blackbox IR system or gold evidence?",
+ "hypothesis": "Pre-training the retriever with an unsupervised Inverse Cloze Task gives a strong enough initialization for end-to-end latent retrieval learning, and learned retrieval beats BM25 when questions reflect a genuine information need.",
+ "contributions": [
+  "ORQA, the first open-retrieval QA system with retriever and reader jointly learned from question-answer pairs without any IR system",
+  "Inverse Cloze Task for unsupervised retriever pre-training",
+  "Evaluation on five open QA datasets showing learned retrieval matters when question writers do not know the answer"
+ ],
+ "method": {
+  "summary": "ORQA scores answer derivations (block, span) as dense inner-product retrieval score plus a BERT span-reader score. The retriever (two BERT-base encoders projected to 128 dims) is pre-trained with ICT, block encodings are pre-computed, and only the question encoder and reader are fine-tuned on QA pairs by marginal log-likelihood over top-k retrieved blocks.",
+  "task": "open-domain QA (open retrieval, weak supervision)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "English Wikipedia 2018-12-20",
+    "role": "pretrain",
+    "size": "just over 13 million evidence blocks of at most 288 wordpieces",
+    "split": "see size",
+    "source": "archive.org enwiki-20181220",
+    "preprocessing": "greedily split at sentence boundaries; document title included in block encoder"
+   },
+   {
+    "name": "Natural Questions (open)",
+    "role": "both",
+    "size": "train 79168, dev 8757, test 3610",
+    "split": "see size",
+    "source": "Kwiatkowski et al. 2019",
+    "preprocessing": "only questions with short answers kept, evidence discarded, answers over 5 tokens dropped"
+   },
+   {
+    "name": "WebQuestions",
+    "role": "both",
+    "size": "train 3417, dev 361, test 2032",
+    "split": "see size",
+    "source": "Berant et al. 2013",
+    "preprocessing": "Freebase entity string only"
+   },
+   {
+    "name": "CuratedTrec",
+    "role": "both",
+    "size": "train 1353, dev 133, test 694",
+    "split": "see size",
+    "source": "Baudis and Sedivý 2015",
+    "preprocessing": null
+   },
+   {
+    "name": "TriviaQA (unfiltered)",
+    "role": "both",
+    "size": "train 78785, dev 8837, test 11313",
+    "split": "see size",
+    "source": "Joshi et al. 2017",
+    "preprocessing": "distantly supervised evidence discarded"
+   },
+   {
+    "name": "SQuAD (open)",
+    "role": "both",
+    "size": "train 78713, dev 8886, test 10570",
+    "split": "see size",
+    "source": "Rajpurkar et al. 2016",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "ORQA",
+    "role": "proposed",
+    "params": null,
+    "architecture": "two BERT-base bi-encoders (question, block) with 128-dim projections plus BERT-base span reader with MLP over concatenated endpoints",
+    "init_from": "uncased BERT-base",
+    "tokenizer": "BERT wordpiece",
+    "vocab": null,
+    "layers": "12",
+    "hidden": "768",
+    "heads": null,
+    "context": "blocks of at most 288 wordpieces",
+    "other": {
+     "retrieval_dim": "128",
+     "answer_span_max": "10 tokens"
+    }
+   },
+   {
+    "name": "BM25 + BERT",
+    "role": "baseline",
+    "params": null,
+    "architecture": "Lucene BM25 retrieval (title included) with same BERT reader; final score learned weighted sum of BM25 and reader score",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "NNLM + BERT",
+    "role": "baseline",
+    "params": null,
+    "architecture": "128-dim context-independent feed-forward LM embeddings, question encoding fine-tuned",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "ELMO (small) + BERT",
+    "role": "baseline",
+    "params": null,
+    "architecture": "128-dim bidirectional LSTM embeddings, question encoding fine-tuned",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "ICT pre-training: softmax over in-batch blocks with pseudo-question sentence; fine-tuning: L = L_early (c=5000 blocks, retrieval score only) + L_full (marginal log-likelihood over top k=5 blocks and matching spans)",
+   "optimizer": "default optimizer from BERT",
+   "lr": "ICT 1e-4 (10^-4); fine-tuning 1e-5 (10^-5)",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "ICT 4096; fine-tuning 1",
+   "steps": "ICT 100k steps",
+   "epochs": "fine-tuning 2 epochs (NQ, TriviaQA, SQuAD), 20 epochs (WebQuestions, CuratedTrec)",
+   "tokens": null,
+   "seq_len": "blocks of at most 288 wordpieces",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "sentence removed from its context in 90% of ICT examples",
+   "hardware": "ICT on Google Cloud TPUs; fine-tuning on a single machine with a 12GB GPU",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "frozen": "all parameters fine-tuned except the evidence block encoder",
+    "discarded_examples": "examples with no matching answer in beam discarded (<10%)",
+    "dev_split": "10% of train held out for dev when no dev set; when test hidden, original dev used as test",
+    "tpu_count": "not stated"
+   }
+  },
+  "inference": {
+   "decoding": "argmax over (block, span) of S_retr + S_read",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single run per dataset; no seeds or variance reported",
+   "prompting": null,
+   "retrieval": "top-k=5 blocks by maximum inner product over pre-computed block encodings (Locality Sensitive Hashing mentioned as an example tool); answer spans limited to 10 tokens",
+   "parameters": {
+    "k": "5",
+    "c": "5000",
+    "ict_mask_rate": "0.9"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Exact match",
+     "definition": "exact match with any reference answer string after minor normalization such as lowercasing, following DrQA scripts",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "BM25 + BERT",
+    "NNLM + BERT",
+    "ELMO + BERT",
+    "DrQA",
+    "BERTserini (strongly supervised comparison, Table 6)"
+   ],
+   "protocol": "Dev and test EM per dataset; single reported numbers, no significance test"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "Wikipedia snapshot URL given; no code or weights link stated"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.lr",
+    "quote": "we use a learning rate of 10−4 and a batch size of 4096",
+    "where": "Sec 7.3"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "ORQA beats BM25+BERT on Natural Questions test",
+   "kind": "measured",
+   "source": null,
+   "metric": "Exact match",
+   "value": "33.3",
+   "unit": "EM",
+   "baseline_value": "26.5",
+   "n": null,
+   "setup": "Table 5, end-to-end exact match from question-answer pairs only; same BERT-base reader; ORQA retrieves top k=5; BM25 static during fine-tuning with learned weighted sum of BM25 and reader score; English Wikipedia 2018-12-20, 13M blocks",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, Test, row Natural Questions, columns ORQA vs BM25+BERT"
+  },
+  {
+   "claim": "ORQA beats BM25+BERT on WebQuestions test",
+   "kind": "measured",
+   "source": null,
+   "metric": "Exact match",
+   "value": "36.4",
+   "unit": "EM",
+   "baseline_value": "17.7",
+   "n": null,
+   "setup": "Table 5, end-to-end exact match from question-answer pairs only; same BERT-base reader; ORQA retrieves top k=5; BM25 static during fine-tuning with learned weighted sum of BM25 and reader score; English Wikipedia 2018-12-20, 13M blocks",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, Test, row WebQuestions, columns ORQA vs BM25+BERT"
+  },
+  {
+   "claim": "ORQA beats BM25+BERT on CuratedTrec test",
+   "kind": "measured",
+   "source": null,
+   "metric": "Exact match",
+   "value": "30.1",
+   "unit": "EM",
+   "baseline_value": "21.3",
+   "n": null,
+   "setup": "Table 5, end-to-end exact match from question-answer pairs only; same BERT-base reader; ORQA retrieves top k=5; BM25 static during fine-tuning with learned weighted sum of BM25 and reader score; English Wikipedia 2018-12-20, 13M blocks",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, Test, row CuratedTrec, columns ORQA vs BM25+BERT"
+  },
+  {
+   "claim": "Learned ICT retriever outperforms BM25 by 6 to 19 EM on datasets where askers do not know the answer",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM gain",
+   "value": "6 to 19",
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 5, end-to-end exact match from question-answer pairs only; same BERT-base reader; ORQA retrieves top k=5; BM25 static during fine-tuning with learned weighted sum of BM25 and reader score; English Wikipedia 2018-12-20, 13M blocks",
+   "note": "Abstract says 'up to 19 points'; 'marge' typo in source",
+   "where": "Sec 8.2",
+   "quote": "outperforms BM25 by a large marge—6 to 19 points in exact match depending on the dataset."
+  },
+  {
+   "claim": "BM25 beats ORQA on TriviaQA test",
+   "kind": "measured",
+   "source": null,
+   "metric": "Exact match",
+   "value": "47.1",
+   "unit": "EM",
+   "baseline_value": "45.0",
+   "n": null,
+   "setup": "Table 5, end-to-end exact match from question-answer pairs only; same BERT-base reader; ORQA retrieves top k=5; BM25 static during fine-tuning with learned weighted sum of BM25 and reader score; English Wikipedia 2018-12-20, 13M blocks",
+   "note": "BM25 47.1, ORQA 45.0",
+   "where": "Table 5",
+   "table": "Table 5, Test, row TriviaQA, columns BM25+BERT vs ORQA"
+  },
+  {
+   "claim": "BM25 beats ORQA on SQuAD test",
+   "kind": "measured",
+   "source": null,
+   "metric": "Exact match",
+   "value": "33.2",
+   "unit": "EM",
+   "baseline_value": "20.2",
+   "n": null,
+   "setup": "Table 5, end-to-end exact match from question-answer pairs only; same BERT-base reader; ORQA retrieves top k=5; BM25 static during fine-tuning with learned weighted sum of BM25 and reader score; English Wikipedia 2018-12-20, 13M blocks",
+   "note": "BM25 33.2, ORQA 20.2",
+   "where": "Table 5",
+   "table": "Table 5, Test, row SQuAD, columns BM25+BERT vs ORQA"
+  },
+  {
+   "claim": "Authors attribute BM25's win where the asker knows the answer to 128-dim compression losing exact word information",
+   "kind": "claim",
+   "source": null,
+   "metric": "none",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Sec 8.2 explanation, not tested by ablation of dimension",
+   "note": null,
+   "where": "Sec 8.2",
+   "quote": "a highly compressed 128- dimensional vector cannot match BM25’s ability to precisely represent every word in the evidence."
+  },
+  {
+   "claim": "NNLM and ELMO unsupervised 128-dim embeddings are far worse than BM25 on Natural Questions test",
+   "kind": "measured",
+   "source": null,
+   "metric": "Exact match",
+   "value": "4.0 and 4.7",
+   "unit": "EM",
+   "baseline_value": "26.5",
+   "n": null,
+   "setup": "Table 5, end-to-end exact match from question-answer pairs only; same BERT-base reader; ORQA retrieves top k=5; BM25 static during fine-tuning with learned weighted sum of BM25 and reader score; English Wikipedia 2018-12-20, 13M blocks; NNLM+BERT, ELMO+BERT",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, Test, row Natural Questions, columns NNLM+BERT, ELMO+BERT"
+  },
+  {
+   "claim": "Never masking the pseudo-query in ICT loses 6 EM points and gives near-identical results to BM25",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM loss",
+   "value": "6",
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ICT masking-rate ablation on open NQ dev, Fig 3",
+   "note": null,
+   "where": "Sec 9.2, Fig 3",
+   "quote": "The latter loses 6 points in end-to-end performance"
+  },
+  {
+   "claim": "Always masking the pseudo-query loses almost 10 EM points",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM loss",
+   "value": "almost 10",
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ICT masking-rate ablation on open NQ dev, Fig 3",
+   "note": null,
+   "where": "Sec 9.2, Fig 3",
+   "quote": "losing almost 10 points in end-to-end performance."
+  },
+  {
+   "claim": "Strongly supervised check: BM25+BERT with 5 blocks reaches 34.7 on SQuAD with gold derivations, vs BERTserini 36.6 (29 paragraphs) and 38.6 (100 paragraphs)",
+   "kind": "measured",
+   "source": null,
+   "metric": "Exact match",
+   "value": "34.7",
+   "unit": "EM",
+   "baseline_value": "19.1",
+   "n": null,
+   "setup": "Table 6, reader pre-trained on SQuAD, DrQA Dec 12 2016 Wikipedia snapshot (12.1M blocks)",
+   "note": "baseline_value is 5-document BERTserini 19.1; DrQA 27.1",
+   "where": "Table 6",
+   "table": "Table 6, row BM25 + BERT (gold deriv.), column SQuAD"
+  },
+  {
+   "claim": "Fewer than 10% of examples are discarded for lack of a matching answer in the beam, thanks to ICT pre-training",
+   "kind": "measured",
+   "source": null,
+   "metric": "Discard rate",
+   "value": "<10",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fine-tuning loss on weak supervision",
+   "note": null,
+   "where": "Sec 6",
+   "quote": "we discard less than 10% of examples in practice due to ICT pre-training."
+  },
+  {
+   "claim": "SQuAD dev-to-test drop is attributed to 100k questions coming from only 536 documents",
+   "kind": "measured",
+   "source": null,
+   "metric": "Documents",
+   "value": "536",
+   "unit": "documents",
+   "baseline_value": null,
+   "n": null,
+   "setup": "SQuAD",
+   "note": null,
+   "where": "Sec 8.2",
+   "quote": "its 100k questions are derived from only 536 documents."
+  }
+ ],
+ "limits": [
+  "128-dim dense vectors cannot match BM25 on exact word detail; authors say a hybrid approach would be promising future work (Sec 9.3)",
+  "SQuAD is unsuitable for learned retrieval: 100k questions from 536 documents violate IID; authors urge not to use it for end-to-end open QA",
+  "Single run, no seeds or variance; no code or weights stated",
+  "Fine-tuning keeps the block encoder fixed, so retrieval expressivity comes only from the question encoder",
+  "Uses 2018 BERT-base; later dense retrievers (DPR etc.) are not compared"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Inverse Cloze Task (ICT)",
+   "definition": "given a sentence, predict its context; a sentence is a pseudo-question and its context pseudo-evidence, selected from in-batch candidates",
+   "where": "Sec 4"
+  },
+  {
+   "term": "Open-Retrieval QA",
+   "definition": "evidence is learned and retrieved from the open corpus, supervised only by question-answer strings",
+   "where": "Table 1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Reading Wikipedia to Answer Open-Domain Questions (DrQA)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "pipelined TF-IDF retrieval, dataset conversion and eval scripts followed",
+   "quote": null
+  },
+  {
+   "work": "BERT",
+   "year": 2018,
+   "arxiv": "1810.04805",
+   "relation": "uses-method",
+   "note": "all encoders and reader initialised from uncased base",
+   "quote": null
+  },
+  {
+   "work": "BERTserini",
+   "year": 2019,
+   "arxiv": "1902.01718",
+   "relation": "baseline",
+   "note": "BM25 + BERT reader; inspiration for weighted-sum BM25 score",
+   "quote": null
+  },
+  {
+   "work": "Anserini / Lucene BM25",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "BM25 implementation basis",
+   "quote": null
+  },
+  {
+   "work": "Logeswaran and Lee, efficient framework for sentence representations",
+   "year": 2018,
+   "arxiv": "1803.02893",
+   "relation": "uses-method",
+   "note": "in-batch negative sampling for ICT",
+   "quote": null
+  },
+  {
+   "work": "Natural Questions",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "TriviaQA",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "SQuAD",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "WebQuestions (Berant et al.)",
+   "year": 2013,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "CuratedTrec (Baudis and Sedivý)",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "ELMo",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "unsupervised LM embedding baseline",
+   "quote": null
+  },
+  {
+   "work": "Bengio et al. NNLM",
+   "year": 2003,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "unsupervised LM embedding baseline",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Overview of ORQA.",
+   "page": 3,
+   "why": "shows bi-encoder retrieval score plus cross-encoded reader score"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Example of the Inverse Cloze Task (ICT), used for retrieval pre-training.",
+   "page": 5,
+   "why": "pseudo-query removed from its context"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Performance on open Natural Questions dev with various masking rates for ICT pre-training.",
+   "page": 8,
+   "why": "shows both extremes of masking hurt"
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 3",
+   "snippet": "hq = WqBERTQ(q)[CLS]; hb = WbBERTB(b)[CLS]; Sretr(b, q) = hq^T hb",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "ACL proceedings layout, not the arXiv preprint",
+  "No appendix; no embedded instructions found",
+  "Table 5 and 7 flattened by text extraction; values aligned by column order and checked against the earlier report"
+ ]
 }

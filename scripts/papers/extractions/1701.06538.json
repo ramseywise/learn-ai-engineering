@@ -1,0 +1,589 @@
+{
+ "schema": 1,
+ "key": "1701.06538",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/shazeer-2017-outrageously-large-neural-networks.pdf",
+ "bib": {
+  "title": "Outrageously Large Neural Networks: The Sparsely-Gated Mixture-of-Experts Layer",
+  "authors": [
+   "Noam Shazeer",
+   "Azalia Mirhoseini",
+   "Krzysztof Maziarz",
+   "Andy Davis",
+   "Quoc Le",
+   "Geoffrey Hinton",
+   "Jeff Dean"
+  ],
+  "first_author": "Shazeer",
+  "year": 2017,
+  "venue": "Under review as a conference paper at ICLR 2017",
+  "arxiv": "1701.06538",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 63952,
+  "chars_total": 63952,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can conditional computation, via a sparsely-gated mixture-of-experts layer, raise model capacity by orders of magnitude with little loss in computational efficiency and improve language modeling and translation?",
+ "hypothesis": "For larger training sets, even higher capacities would produce significant quality improvements.",
+ "contributions": [
+  "A Sparsely-Gated Mixture-of-Experts layer with noisy top-k gating, trained jointly by back-propagation",
+  "Techniques for the shrinking batch problem and network bandwidth (mixed data and model parallelism, convolutional application)",
+  "Soft importance and load-balancing losses",
+  "Over 1000x capacity gains (up to 137B MoE parameters) with state-of-the-art results on 1B-word LM, WMT'14 En-Fr/En-De and multilingual MT"
+ ],
+ "method": {
+  "summary": "A MoE layer (feed-forward experts plus a noisy top-k softmax gate) is inserted convolutionally between stacked LSTM layers (and in a modified GNMT). Trained with synchronous data plus model parallelism on 16-128 K40 GPUs, with importance and load losses for balance.",
+  "task": "language modeling and machine translation",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "1 Billion Word LM Benchmark (Chelba et al., 2013)",
+    "role": "both",
+    "size": "approximately 829 million words, vocabulary 793,471",
+    "split": "standard holdout set used for test perplexity",
+    "source": "shuffled unique news sentences",
+    "preprocessing": null
+   },
+   {
+    "name": "Google News 100B-word corpus",
+    "role": "both",
+    "size": "roughly 100 billion words (original 130B; neural models trained on max 100B)",
+    "split": "holdout dataset",
+    "source": "Google internal news corpus, shuffled unique sentences",
+    "preprocessing": null
+   },
+   {
+    "name": "WMT'14 En-Fr",
+    "role": "both",
+    "size": "36M sentence pairs",
+    "split": "newstest2014 test; newstest2012+2013 dev",
+    "source": "WMT'14",
+    "preprocessing": "32K shared wordpiece vocabulary"
+   },
+   {
+    "name": "WMT'14 En-De",
+    "role": "both",
+    "size": "5M sentence pairs",
+    "split": "newstest2014 test; newstest2012+2013 dev",
+    "source": "WMT'14",
+    "preprocessing": "32K shared wordpiece vocabulary"
+   },
+   {
+    "name": "Google Production En-Fr",
+    "role": "both",
+    "size": null,
+    "split": null,
+    "source": "Google production data",
+    "preprocessing": null
+   },
+   {
+    "name": "Multilingual 12 language pairs (Johnson et al., 2016)",
+    "role": "both",
+    "size": "about 3 billion sentence pairs processed",
+    "split": null,
+    "source": "same dataset as Johnson et al. 2016",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "MoE-4 ... MoE-4096-h (8M ops/timestep LM)",
+    "role": "proposed",
+    "params": "MoE layer 4M to 4303M; total 0.8-5.1B incl. embed/softmax",
+    "architecture": "embedding, LSTM, MoE, LSTM, softmax; residual connections; dropout on layer outputs",
+    "init_from": null,
+    "tokenizer": "words",
+    "vocab": "793,471",
+    "layers": "5 (embedding, LSTM, MoE, LSTM, softmax)",
+    "hidden": "512",
+    "heads": null,
+    "context": null,
+    "other": {
+     "expert": "1 ReLU hidden layer of 1024, output 512, about 1M params",
+     "gating": "noisy top-k, k=4 flat, k=2 per level hierarchical",
+     "hier_first_level_branching": 16,
+     "moe_output": "sigmoid before dropout"
+    }
+   },
+   {
+    "name": "MoE-34M / MoE-143M",
+    "role": "proposed",
+    "params": "4B in MoE layer (4313.9M / 4371.1M excl embed+softmax)",
+    "architecture": "as above with width 1024",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": "1024",
+    "heads": null,
+    "context": null,
+    "other": {
+     "MoE-34M": "LSTM 1024 units, hierarchical MoE 1024 experts, hidden 2048",
+     "MoE-143M": "LSTM 4096 units with projection 1024, hierarchical MoE 256 experts, hidden 8192"
+    }
+   },
+   {
+    "name": "MoE-32 to MoE-131072-h (100B-word)",
+    "role": "proposed",
+    "params": "up to 137B MoE params (137577.6M)",
+    "architecture": "same structure as 8M ops models",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": "512",
+    "heads": null,
+    "context": null,
+    "other": {
+     "hier_first_level_branching": "32,32,64,128,256,256 for 256..131072 experts",
+     "gpus": "32 K40, 64 and 128 for last two"
+    }
+   },
+   {
+    "name": "MoE-GNMT (single pair)",
+    "role": "proposed",
+    "params": "8.7B total, 85M ops/timestep",
+    "architecture": "GNMT with 3 encoder and 2 decoder LSTM layers (from 9 and 8), MoE after enc layer 2 and dec layer 1, attention",
+    "init_from": null,
+    "tokenizer": "wordpieces",
+    "vocab": "32K shared",
+    "layers": "3 enc, 2 dec LSTM",
+    "hidden": "512 in/out; LSTM 2048 hidden with 512 projection",
+    "heads": null,
+    "context": null,
+    "other": {
+     "experts": "up to 2048, each 512-2048-512, about 2M params",
+     "k": "4 flat, 2 per level hierarchical",
+     "gating": "strictly balanced gating (Appendix F)",
+     "attention": "variant A=sum V_d tanh(xU)_d tanh(yW)_d"
+    }
+   },
+   {
+    "name": "MoE-Multi",
+    "role": "proposed",
+    "params": "8.7B, 102M ops/timestep",
+    "architecture": "as single-pair, non-hierarchical MoE n=512, k=2, expert hidden 8192, noisy-top-k gating",
+    "init_from": null,
+    "tokenizer": "wordpieces",
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "LSTM-2048-512, 4xLSTM-512, MoE-1-Wide, MoE-1-Deep, 2xLSTM-8192-1024",
+    "role": "baseline",
+    "params": "8.4M-151M ops/timestep",
+    "architecture": "computationally matched dense baselines",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "2xLSTM-8192-1024": "from Jozefowicz et al. 2016"
+    }
+   },
+   {
+    "name": "GNMT, GNMT+RL, GNMT-Mono, GNMT-Multi",
+    "role": "baseline",
+    "params": "278M",
+    "architecture": "Wu et al. 2016",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "language modeling / translation cross-entropy plus L_importance and L_load (w * CV^2); softmax layer trained by importance sampling for LM",
+   "optimizer": "Adam; 100B-word expert params use beta1=0 and factored second-moment estimate",
+   "lr": null,
+   "lr_schedule": "LM 1B: linear increase for first 1000 steps then proportional to inverse sqrt of step. MT: linear for first 2000 steps, constant for 8000 more, then inverse sqrt",
+   "warmup": "1000 steps (LM), 2000 steps (MT)",
+   "batch_size": "LM 1B: about 300,000 words; 100B-word: about 2.5 million words; MT: roughly 16000 words per GPU",
+   "steps": "27,000 (10 epochs, 1B-word LM)",
+   "epochs": "10 (1B-word LM); once-through on about 100B words (Google News)",
+   "tokens": "about 100 billion words (Google News); about 3 billion sentence pairs (multilingual)",
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": "hyperparameter-searched DropProb in 0.1 increments for LM (0.1-0.4 in Table 7); 0.4 for single-pair MT",
+   "regularisation": "w_importance=w_load=0.1 (1B LM), 0.01 (MT); Wg, Wnoise initialised to zeros",
+   "hardware": "16 K40 GPUs (1B LM), 32-128 K40 (100B LM), up to 64 K40 (MT), TensorFlow, synchronous",
+   "compute": "observed 0.30-1.56 TFLOPS/GPU; theoretical max 4.29 TFLOPS/GPU",
+   "wall_clock": "1B LM 12-16 h (MoE-4 18 h); En-Fr 3 days/64 K40 (6 days longer); En-De 1 day/64 K40; multilingual 12 days/64 K40",
+   "seeds": null,
+   "other": {
+    "memory_opts": "expert hidden activations recomputed on backward pass; up to 1B params per GPU",
+    "learning_rate_value": "not stated"
+   }
+  },
+  "inference": {
+   "decoding": "beam search as in Wu et al. 2016 (MT)",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "strictly_balanced_gating_inference": "per-expert learned thresholds T replace batchwise mask"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Test perplexity",
+     "definition": "sum over all words incl. end-of-sentence symbol on holdout set",
+     "unit": "perplexity",
+     "higher_is_better": false
+    },
+    {
+     "name": "BLEU",
+     "definition": "tokenized BLEU via multi-bleu.pl from Moses",
+     "unit": "BLEU",
+     "higher_is_better": true
+    },
+    {
+     "name": "TFLOPS/GPU",
+     "definition": "FLOPs per training batch (incl. backward, softmax sampling, multiply-add counted as 2) divided by step time and GPU count",
+     "unit": "TFLOPS/GPU",
+     "higher_is_better": true
+    },
+    {
+     "name": "ops/timestep",
+     "definition": "multiply-adds per training example per timestep, forward pass, excluding softmax",
+     "unit": "ops",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "Jozefowicz et al. 2016 LSTMs",
+    "computationally matched LSTM/MoE-1 baselines",
+    "Kneser-Ney 5-gram",
+    "GNMT, GNMT+RL (Wu et al. 2016)",
+    "PBMT, Luong LSTM, DeepAtt",
+    "GNMT-Mono and GNMT-Multi (Johnson et al. 2016)"
+   ],
+   "protocol": "single runs, no seeds or significance tests reported; test perplexity after 10 epochs for fair comparison with prior work"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "1B-word benchmark and WMT'14 public; Google News and Production data internal"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.steps",
+    "quote": "we limited training to 10 epochs, (27,000 steps)",
+    "where": "Appendix C.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "65536-expert MoE (68B params) reaches 39% lower perplexity than the compute-matched baseline after 100B words.",
+   "kind": "measured",
+   "source": null,
+   "metric": "relative test perplexity reduction",
+   "value": 39,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Google News 100B words, about 8M ops/timestep, MoE-65536-h vs 4xLSTM-512, 32-128 K40",
+   "quote": "Perplexity after 100 billion training words is 39% lower for the 68-billion-parameter MoE",
+   "note": null,
+   "where": "Appendix D"
+  },
+  {
+   "claim": "At 131072 experts perplexity degrades vs 65536.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test perplexity after 100B words",
+   "value": 39.8,
+   "unit": "perplexity",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Google News 100B, MoE-131072-h; MoE-65536-h gets 38.2",
+   "table": "Table 8, row MoE-131072-h, column Test Perplexity .1 epochs",
+   "note": "Table 8 columns are .1 epoch and 1 epoch; 1 epoch (100B words) values are 29.2 for 131072 vs 28.9 for 65536. Text says it 'degrades at 131072 experts, possibly a result of too much sparsity'",
+   "where": "Table 8, Sec 5.2"
+  },
+  {
+   "claim": "MoE-4096-h with 4 active experts gets 24% lower perplexity than compute-matched baselines on 1B-word LM.",
+   "kind": "measured",
+   "source": null,
+   "metric": "relative test perplexity reduction",
+   "value": 24,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "1B-word benchmark, 10 epochs, about 8M ops/timestep",
+   "quote": "the largest of the models (4096 experts) achieved an impressive 24% lower perplexity on the test set",
+   "note": null,
+   "where": "Sec 5.1"
+  },
+  {
+   "claim": "MoE-143M gets test perplexity 28.0 at 10 epochs versus 34.7 for best published LSTM.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test perplexity",
+   "value": 28.0,
+   "unit": "perplexity",
+   "baseline_value": 34.7,
+   "n": null,
+   "setup": "1B-word, 10 epochs, 142.7M ops/timestep, 47 h on 32 K40",
+   "table": "Table 1, row High-Budget MoE Model, column Test Perplexity 10 epochs",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Low-budget MoE beats best published result while using 6% of computation.",
+   "kind": "measured",
+   "source": null,
+   "metric": "computation relative to best published",
+   "value": 6,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "1B-word, 10 epochs, MoE-4096-h 34.1 vs 34.7",
+   "quote": "despite requiring only 6% of the computation",
+   "note": null,
+   "where": "Sec 5.1"
+  },
+  {
+   "claim": "MoE reaches 40.56 BLEU on WMT'14 En-Fr, +1.34 over GNMT+RL baseline.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": 40.56,
+   "unit": "BLEU",
+   "baseline_value": 39.22,
+   "n": null,
+   "setup": "WMT'14 En-Fr newstest2014, 2048 experts, 6 days/64 K40, 85M ops/timestep",
+   "quote": "Our approach achieved BLEU scores of 40.56 and 26.03 on the WMT\u201914 En\u2192Fr and En\u2192De benchmarks",
+   "note": "Baseline GNMT 39.22; GNMT+RL 39.92",
+   "where": "Sec 5.3 / Table 2"
+  },
+  {
+   "claim": "MoE reaches 26.03 BLEU on WMT'14 En-De, +1.12 over GNMT.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": 26.03,
+   "unit": "BLEU",
+   "baseline_value": 24.91,
+   "n": null,
+   "setup": "WMT'14 En-De newstest2014, 2048 experts, 1 day/64 K40",
+   "table": "Table 3, row MoE with 2048 Experts, column Test BLEU",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Multilingual MoE has 19% lower dev perplexity than multilingual GNMT.",
+   "kind": "measured",
+   "source": null,
+   "metric": "dev perplexity change",
+   "value": -19,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "12 language pairs, 8.7B params, 12 days/64 K40 vs GNMT-Multi 21 days/96 K20",
+   "table": "Table 5, row Perplexity (dev), column MoE-Multi vs. GNMT-Multi",
+   "note": "Text: 'The MoE model achieves 19% lower perplexity'",
+   "where": "Table 5"
+  },
+  {
+   "claim": "Without balancing losses perplexity is 39.8 vs about 35.6 with them.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test perplexity",
+   "value": 39.8,
+   "unit": "perplexity",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MoE-256, 10 epochs, w_importance=w_load=0",
+   "table": "Table 6, row 0.0/0.0, column Test Perplexity",
+   "note": null,
+   "where": "Table 6"
+  },
+  {
+   "claim": "Computational efficiency stays at 0.72 TFLOPS/GPU at 65536 experts (99.994% layer sparsity).",
+   "kind": "measured",
+   "source": null,
+   "metric": "TFLOPS/GPU",
+   "value": 0.72,
+   "unit": "TFLOPS/GPU",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Google News, MoE-65536-h",
+   "quote": "stays at a\nrespectable 0.72 TFLOPS/GPU",
+   "note": "Dense baselines ran at 1.07-1.29 TFLOPS/GPU; theoretical max 4.29",
+   "where": "Sec 5.2"
+  },
+  {
+   "claim": "Abstract claims greater than 1000x improvement in model capacity with only minor losses in computational efficiency.",
+   "kind": "claim",
+   "source": null,
+   "metric": "capacity improvement",
+   "value": 1000,
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "abstract headline claim; MoE layer up to 137B params vs dense LSTM baselines, GPU clusters",
+   "quote": "achieving greater than 1000x improvements in model capacity",
+   "note": null,
+   "where": "Abstract"
+  }
+ ],
+ "limits": [
+  "Largest model (131072 experts) is inefficient at 0.30 TFLOPS/GPU because batch size was not scaled with GPU count",
+  "Quality degrades at 131072 experts, cause is conjectured ('possibly too much sparsity')",
+  "Diminishing returns beyond 1B MoE parameters on the 1B-word corpus",
+  "English-Korean MT worsens, attributed to oversampling of rare pairs",
+  "Trillion-parameter model on trillion-word corpus is a goal, not reached",
+  "Recurrent MoE not addressed",
+  "Learning rate value, seeds and variance not reported; comparisons are single runs",
+  "MT experiments used strictly balanced gating from Appendix F due to infrastructure peculiarities since fixed",
+  "K40-era hardware and LSTM backbone; no transformer"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "importance",
+   "definition": "the batchwise sum of the gate values for that expert",
+   "where": "Sec 4"
+  },
+  {
+   "term": "shrinking batch problem",
+   "definition": "each expert receives a batch of approximately kb/n << b examples",
+   "where": "Sec 3.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Jozefowicz et al. 2016, Exploring the limits of language modeling",
+   "year": 2016,
+   "arxiv": "1602.02410",
+   "relation": "baseline",
+   "note": "best previously published LM results",
+   "quote": null
+  },
+  {
+   "work": "Wu et al. 2016, GNMT",
+   "year": 2016,
+   "arxiv": "1609.08144",
+   "relation": "extends",
+   "note": "MT model modified with MoE; main baseline",
+   "quote": null
+  },
+  {
+   "work": "Eigen, Ranzato, Sutskever 2013, deep mixture of experts",
+   "year": 2013,
+   "arxiv": "1312.4314",
+   "relation": "extends",
+   "note": "MoE as a component in deep model",
+   "quote": "Our work builds on this use of MoEs as a general purpose neural network component."
+  },
+  {
+   "work": "Jacobs et al. 1991; Jordan & Jacobs 1994",
+   "year": 1991,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "original mixture of experts",
+   "quote": null
+  },
+  {
+   "work": "Bengio et al. 2015, conditional computation",
+   "year": 2015,
+   "arxiv": "1511.06297",
+   "relation": "related",
+   "note": "uses boolean gates with REINFORCE; this work backprops",
+   "quote": null
+  },
+  {
+   "work": "Johnson et al. 2016, multilingual GNMT",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "replicates",
+   "note": "multilingual experiment repeated with MoE",
+   "quote": null
+  },
+  {
+   "work": "Chelba et al. 2013, One billion word benchmark",
+   "year": 2013,
+   "arxiv": "1312.3005",
+   "relation": "uses-data",
+   "note": "LM benchmark",
+   "quote": null
+  },
+  {
+   "work": "Kingma & Ba 2015, Adam",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "optimizer",
+   "quote": null
+  },
+  {
+   "work": "Hochreiter & Schmidhuber 1997, LSTM",
+   "year": 1997,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "backbone",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "A Mixture of Experts (MoE) layer embedded within a recurrent language model.",
+   "page": 2,
+   "why": "shows gate selecting two experts between LSTM layers"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Model comparison on 1-Billion-Word Language-Modeling Benchmark.",
+   "page": 6,
+   "why": "perplexity vs capacity at fixed compute and vs compute"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Language modeling on a 100 billion word corpus.",
+   "page": 7,
+   "why": "capacity scaling to 137B with the turn-over at 131072 experts"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 3-5",
+   "snippet": "G(x) = Softmax(KeepTopK(H(x), k)); H(x)_i = (x . Wg)_i + StandardNormal() * Softplus((x . Wnoise)_i)",
+   "verbatim": false
+  },
+  {
+   "where": "Eq 6-7",
+   "snippet": "L_importance(X) = w_importance * CV(Importance(X))^2",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Figure axes and some table columns are flattened in text; Table 1 and 7 values were matched manually",
+  "Paper text states MoE-4096-h 24% from Fig 2, table entries consistent with 34.1 vs ~45"
+ ]
+}

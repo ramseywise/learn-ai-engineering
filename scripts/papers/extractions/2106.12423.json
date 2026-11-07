@@ -1,0 +1,655 @@
+{
+ "schema": 1,
+ "key": "2106.12423",
+ "pdf": "ai-engineering/08-multimodal-engineering/sources/karras-2021-alias-free-generative-adversarial-networks.pdf",
+ "bib": {
+  "title": "Alias-Free Generative Adversarial Networks",
+  "authors": [
+   "Tero Karras",
+   "Miika Aittala",
+   "Samuli Laine",
+   "Erik Härkönen",
+   "Janne Hellsten",
+   "Jaakko Lehtinen",
+   "Timo Aila"
+  ],
+  "first_author": "Karras",
+  "year": 2021,
+  "venue": "35th Conference on Neural Information Processing Systems (NeurIPS 2021)",
+  "arxiv": "2106.12423",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 107503,
+  "chars_total": 107503,
+  "engine": "pymupdf",
+  "skipped": "Reference list skimmed only."
+ },
+ "type": "empirical",
+ "question": "Why do GAN generators let fine detail stick to pixel coordinates, and can small architectural changes based on a continuous signal view remove it?",
+ "hypothesis": "Aliasing from non-ideal upsampling filters and pointwise nonlinearities leaks absolute position into the hierarchy; suppressing it forces natural hierarchical synthesis with translation (and rotation) equivariance.",
+ "contributions": [
+  "Identification of aliasing (non-ideal upsampling filters, pointwise nonlinearities) as root cause of texture sticking",
+  "Continuous-signal interpretation of layers and filtered nonlinearities",
+  "StyleGAN3-T and StyleGAN3-R generators matching StyleGAN2 FID with translation / rotation equivariance",
+  "EQ-T and EQ-R equivariance metrics (PSNR in dB)",
+  "Custom CUDA kernel for fused upsample-nonlinearity-downsample",
+  "New datasets: FFHQ-U, MetFaces-U, AFHQv2, Beaches"
+ ],
+ "method": {
+  "summary": "The StyleGAN2 generator is rebuilt step by step (configs A to R): Fourier-feature input, no noise inputs, simplified mapping/normalisation, 10-pixel margins, Kaiser windowed-sinc 2x filters (n=6), leaky ReLU wrapped between 2x up and down sampling, non-critical sampling, per-layer flexible filter specs (N=14), and for StyleGAN3-R 1x1 convs plus radially symmetric jinc downsampling filters. The discriminator is unchanged. Evaluated with FID and new EQ-T/EQ-R PSNR metrics.",
+  "task": "unconditional image generation (GAN), equivariant synthesis",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "FFHQ / FFHQ-U",
+    "role": "train",
+    "size": "70000 img, 1024^2 (256^2 in ablations)",
+    "split": "all images used for training; FID vs all training images",
+    "source": "FFHQ CC BY-NC-SA 4.0; FFHQ-U rebuilt unaligned (axis-aligned crop, random offset normal with std 20% of crop size)",
+    "preprocessing": "x-flip augmentation; no ADA"
+   },
+   {
+    "name": "MetFaces / MetFaces-U",
+    "role": "train",
+    "size": "1336 img, 1024^2",
+    "split": "transfer from FFHQ(-U) snapshot with lowest FID, 5M images",
+    "source": "CC BY-NC 2.0 (images CC0)",
+    "preprocessing": "x-flip; ADA default"
+   },
+   {
+    "name": "AFHQv2",
+    "role": "train",
+    "size": "15803 img, 512^2",
+    "split": "all three classes as one dataset, from scratch",
+    "source": "AFHQ (CC BY-NC 4.0) rebuilt with PIL Lanczos resampling; ~2% images dropped",
+    "preprocessing": "x-flip; ADA default"
+   },
+   {
+    "name": "Beaches",
+    "role": "train",
+    "size": "20155 img, 512^2",
+    "split": "from scratch",
+    "source": "Getty Images, proprietary, not redistributable",
+    "preprocessing": "x-flip; ADA default"
+   }
+  ],
+  "models": [
+   {
+    "name": "StyleGAN2 (config B, with Fourier features)",
+    "role": "baseline",
+    "params": "30.0M (FFHQ 1024)",
+    "architecture": "StyleGAN2 generator and discriminator",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "15/17 (datasets), 13 (ablations)",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "StyleGAN3-T (config T)",
+    "role": "proposed",
+    "params": "22.3M (FFHQ 1024); 23.3M (FFHQ-U 256 ablation)",
+    "architecture": "alias-free translation-equivariant generator",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "14",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "Cbase": "2^15",
+     "Cmax": 512
+    }
+   },
+   {
+    "name": "StyleGAN3-R (config R)",
+    "role": "proposed",
+    "params": "15.8M",
+    "architecture": "alias-free rotation+translation-equivariant, 1x1 convs, jinc downsampling",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "14",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "Cbase": "2^16",
+     "Cmax": 1024
+    }
+   }
+  ],
+  "training": {
+   "objective": "non-saturating logistic loss with R1 regularization (lazy)",
+   "optimizer": "Adam beta1=0, beta2=0.99, eps=1e-8",
+   "lr": "G 0.0025 (T,R); D 0.0020 (datasets) / 0.0025 (ablations); config B G 0.0020",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "32 (datasets), 64 (256x256 ablations)",
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": "mixed FP16/FP32",
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "R1 gamma per dataset (e.g. FFHQ 1024 T/R 32.8; FFHQ-U 256 gamma=1); ADA for small datasets; no path length or mixing reg in T/R; D blur sigma=10 px ramped to 0 over first 200k images in config R",
+   "hardware": "NVIDIA DGX-1, 8 Tesla V100 GPUs, PyTorch 1.7.1, CUDA 11.0, cuDNN 8.0.5",
+   "compute": "92 GPU years (V100), 225 MWh whole project; Table 17 total 1876 runs",
+   "wall_clock": "FFHQ 1024: 1106 / 1576 / 2248 GPU hours (SG2 / T / R)",
+   "seeds": null,
+   "other": {
+    "images_seen": "25M real images from scratch, 5M with transfer",
+    "ema_generator_halflife": "10k images (datasets), 20k (ablations)",
+    "mapping_depth": "8 (B), 2 (T,R)",
+    "minibatch_stddev_group": "4 (T,R)",
+    "fourier_feature_fc": "2",
+    "margin": "10 pixels",
+    "filter_taps_n": 6,
+    "nonlinearity_upsampling_m": 2,
+    "ft0": "2^2.1",
+    "ftN": "fcN*2^0.3",
+    "Ncrit": 2,
+    "normalisation_ema_decay": "50% per 20k images",
+    "color_range": "-4..+4 internally from config D",
+    "x_flip": "yes"
+   }
+  },
+  "inference": {
+   "decoding": "no truncation trick for samples",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "FID: 50k generated images; EQ metrics: 50000 random (w,x) samples",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "FID",
+     "definition": "between 50k generated images and all training images, official Inception network",
+     "unit": "FID",
+     "higher_is_better": false
+    },
+    {
+     "name": "EQ-T",
+     "definition": "PSNR between generator output translated by integer offset x and output from translated input Fourier features; offsets U[-sN/8, sN/8]; Imax=2",
+     "unit": "dB",
+     "higher_is_better": true
+    },
+    {
+     "name": "EQ-R",
+     "definition": "PSNR between rotated reference output and output from rotated input features, angle U(0,360 deg), with pseudo-rotation bandlimiting",
+     "unit": "dB",
+     "higher_is_better": true
+    },
+    {
+     "name": "EQ-Tfrac",
+     "definition": "as EQ-T with fractional offsets and Lanczos (a=3) resampling",
+     "unit": "dB",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "StyleGAN2 (config B)",
+    "p4 G-CNN on StyleGAN3-T",
+    "SWAGAN and CIPS (spectra only)"
+   ],
+   "protocol": "Single training run per configuration reported (no seeds or variance stated); best-FID snapshot; R1 gamma grid-searched per dataset."
+  },
+  "availability": {
+   "code": "https://github.com/NVlabs/stylegan3",
+   "weights": "pre-trained models released (except Beaches)",
+   "data": "FFHQ-U, MetFaces-U, AFHQv2 build code released; Beaches proprietary"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.compute",
+    "quote": "This entire project consumed 92 GPU years and 225 MWh of electricity",
+    "where": "Sec 5"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "StyleGAN3-R (config R) reaches FID 4.50 on FFHQ-U 256x256, matching/beating StyleGAN2 baseline with Fourier features (config B, 4.79)",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": "4.50",
+   "unit": "FID",
+   "baseline_value": "4.79",
+   "n": null,
+   "setup": "FFHQ-U 256x256 ablation, 25M images, FID vs all training images, 50k generated",
+   "note": null,
+   "where": "Fig 3",
+   "table": "Figure 3 left, row R + Rotation equiv. (StyleGAN3-R), column FID"
+  },
+  {
+   "claim": "Translation equivariance of config R vs StyleGAN2-with-Fourier-features baseline",
+   "kind": "measured",
+   "source": null,
+   "metric": "EQ-T",
+   "value": "66.65",
+   "unit": "dB EQ-T",
+   "baseline_value": "16.23",
+   "n": null,
+   "setup": "FFHQ-U 256x256",
+   "note": null,
+   "where": "Fig 3",
+   "table": "Figure 3 left, row R, column EQ-T"
+  },
+  {
+   "claim": "Rotation equivariance of StyleGAN3-R",
+   "kind": "measured",
+   "source": null,
+   "metric": "EQ-R",
+   "value": "40.48",
+   "unit": "dB EQ-R",
+   "baseline_value": "10.81",
+   "n": null,
+   "setup": "FFHQ-U 256x256",
+   "note": null,
+   "where": "Fig 3",
+   "table": "Figure 3 left, row R, column EQ-R"
+  },
+  {
+   "claim": "StyleGAN3-T FID on FFHQ 1024x1024",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": "2.79",
+   "unit": "FID",
+   "baseline_value": "2.70",
+   "n": null,
+   "setup": "FFHQ 70000 img 1024^2 from scratch",
+   "note": "StyleGAN3-T 2.79 and -R 3.07 are slightly worse than the StyleGAN2 (config B) 2.70 on aligned FFHQ",
+   "where": "Fig 5",
+   "table": "Figure 5 left, FFHQ, row StyleGAN3-T, column FID"
+  },
+  {
+   "claim": "StyleGAN3-R FID on FFHQ-U 1024x1024",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": "3.66",
+   "unit": "FID",
+   "baseline_value": "3.79",
+   "n": null,
+   "setup": "FFHQ-U 70000 img 1024^2 from scratch",
+   "note": null,
+   "where": "Fig 5",
+   "table": "Figure 5 left, FFHQ-U, row StyleGAN3-R, column FID"
+  },
+  {
+   "claim": "StyleGAN3-T FID on AFHQv2 512x512",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": "4.04",
+   "unit": "FID",
+   "baseline_value": "4.62",
+   "n": null,
+   "setup": "AFHQv2 15803 img, ADA from scratch",
+   "note": null,
+   "where": "Fig 5",
+   "table": "Figure 5 left, AFHQV2, row StyleGAN3-T, column FID"
+  },
+  {
+   "claim": "Parameter counts of the three generators on FFHQ 1024x1024",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "30.0M, 22.3M, 15.8M",
+   "unit": "parameters",
+   "baseline_value": null,
+   "n": null,
+   "setup": "StyleGAN2, StyleGAN3-T, StyleGAN3-R",
+   "note": null,
+   "where": "Sec 4",
+   "quote": "the three generators had\n30.0M, 22.3M and 15.8M parameters"
+  },
+  {
+   "claim": "Training time on FFHQ 1024x1024 for StyleGAN2, -T, -R",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "1106, 1576 (+42%), 2248 (+103%)",
+   "unit": "GPU hours",
+   "baseline_value": null,
+   "n": null,
+   "setup": "FFHQ 1024x1024",
+   "note": "text: 1106, 1576 (+42%) and 2248 (+103%) GPU hours",
+   "where": "Sec 4",
+   "quote": "1106, 1576 (+42%) and 2248\n8\n\nDataset"
+  },
+  {
+   "claim": "Removing noise inputs is needed for equivariance: re-enabling them drops EQ-T",
+   "kind": "measured",
+   "source": null,
+   "metric": "EQ-T",
+   "value": "24.46",
+   "unit": "dB EQ-T",
+   "baseline_value": "63.01",
+   "n": null,
+   "setup": "FFHQ-U 256x256, translation-equivariant config T with noise inputs (FID 4.96)",
+   "note": null,
+   "where": "Fig 5",
+   "table": "Figure 5 right, row With noise inputs, column EQ-T (Translation eq.)"
+  },
+  {
+   "claim": "Without flexible layers EQ-T falls",
+   "kind": "measured",
+   "source": null,
+   "metric": "EQ-T",
+   "value": "45.20",
+   "unit": "dB EQ-T",
+   "baseline_value": "63.01",
+   "n": null,
+   "setup": "FFHQ-U 256x256, config T ablation",
+   "note": null,
+   "where": "Fig 5",
+   "table": "Figure 5 right, row Without flexible layers, column EQ-T (Translation eq.)"
+  },
+  {
+   "claim": "Adding path length regularization worsens FID",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": "5.00",
+   "unit": "FID",
+   "baseline_value": "4.62",
+   "n": null,
+   "setup": "FFHQ-U 256x256, config T; weight 0.5",
+   "note": null,
+   "where": "Fig 5",
+   "table": "Figure 5 right, row With path length reg., column FID (Translation eq.)"
+  },
+  {
+   "claim": "Halving generator capacity hurts FID",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": "7.43",
+   "unit": "FID",
+   "baseline_value": "4.62",
+   "n": null,
+   "setup": "FFHQ-U 256x256, config T",
+   "note": null,
+   "where": "Fig 5",
+   "table": "Figure 5 right, row 0.5x capacity, column FID (Translation eq.)"
+  },
+  {
+   "claim": "Doubling capacity improves FID, at almost 4x training time",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": "3.80",
+   "unit": "FID",
+   "baseline_value": "4.62",
+   "n": null,
+   "setup": "FFHQ-U 256x256, config T",
+   "note": "text: 'at the cost of almost 4x training time'",
+   "where": "Fig 5",
+   "table": "Figure 5 right, row 2.0x capacity, column FID (Translation eq.)"
+  },
+  {
+   "claim": "Boundaries and upsampling change (config E) compromises FID",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "16",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "FFHQ-U 256x256, config E vs D",
+   "note": null,
+   "where": "Sec 3.2",
+   "quote": "FID is compromised by 16%"
+  },
+  {
+   "claim": "Filtered nonlinearities with m=1 vs m=2: EQ-T",
+   "kind": "measured",
+   "source": null,
+   "metric": "EQ-T",
+   "value": "39.96",
+   "unit": "dB EQ-T",
+   "baseline_value": "66.65",
+   "n": null,
+   "setup": "config R FFHQ-U 256x256, upsampling m=1",
+   "note": null,
+   "where": "Fig 3",
+   "table": "Figure 3 right, row Upsampling m = 1, column EQ-T"
+  },
+  {
+   "claim": "Custom CUDA kernel speeds training about 10x",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "10",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "upsample-LReLU-downsample fused kernel vs PyTorch primitives",
+   "note": null,
+   "where": "Sec 3.2",
+   "quote": "leading to 10× faster training"
+  },
+  {
+   "claim": "Kernel benchmark: PyTorch vs custom for 2x up/2x down, separable both",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "7.88 vs 0.42",
+   "unit": "ms",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Titan V, input 512x512x32, n=6",
+   "note": "speedup 19x",
+   "where": "App D",
+   "table": "Figure 14, column upsample 2x downsample 2x, Sep. up yes Sep. down yes"
+  },
+  {
+   "claim": "Whole project cost",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "92 GPU years, 225 MWh",
+   "unit": "GPU years",
+   "baseline_value": null,
+   "n": null,
+   "setup": "in-house cluster NVIDIA V100",
+   "note": null,
+   "where": "Sec 5",
+   "quote": "This entire project consumed 92 GPU years and 225 MWh of electricity"
+  },
+  {
+   "claim": "Training a single StyleGAN3-R at 1024x1024 uses 0.9 MWh vs 0.7 MWh for StyleGAN2",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "0.9",
+   "unit": "MWh",
+   "baseline_value": null,
+   "n": null,
+   "setup": "1024x1024",
+   "note": null,
+   "where": "App G",
+   "quote": "only slightly more expensive (0.9MWh) than training StyleGAN2 (0.7MWh)"
+  },
+  {
+   "claim": "p4 G-CNN rotation alternative gives only modest EQ-R and is slower",
+   "kind": "measured",
+   "source": null,
+   "metric": "EQ-R",
+   "value": "17.07",
+   "unit": "dB EQ-R",
+   "baseline_value": "13.12",
+   "n": null,
+   "setup": "FFHQ-U 256x256, StyleGAN3-T + p4 symmetry, 21.8M params, 2.48x time",
+   "note": null,
+   "where": "Fig 5",
+   "table": "Figure 5 right, G-CNN comparison, row + p4 symmetry, column EQ-R"
+  },
+  {
+   "claim": "EQ-T above about 50 dB indicates high-quality results, EQ-R about 40 dB looks good",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "50",
+   "unit": "dB",
+   "baseline_value": null,
+   "n": null,
+   "setup": "authors' visual judgement from videos",
+   "note": "~40 dB for EQ-R",
+   "where": "App A",
+   "quote": "EQ-T numbers over ∼50 dB indicate high-quality\nresults, and for EQ-R ∼40 dB look good"
+  }
+ ],
+ "limits": [
+  "Only the generator is made equivariant; the authors suspect the non-equivariant discriminator causes e.g. teeth not moving correctly",
+  "Assumes training data is not aliased; jagged, point-sampled, letterboxed or JPEG-heavy data conflicts with the design",
+  "Noise inputs removed; Beaches shows a reduced set of scene layouts, possibly from this",
+  "Path length regularization conflicts with equivariance",
+  "Operates in sRGB after tone mapping, not linear",
+  "Attention/tokenizing transformer GANs (VQGAN) not handled; open question",
+  "Equivariance beyond about 40-50 dB not measurable because subpixel resampling is ambiguous",
+  "FID slightly worse than StyleGAN2 on aligned FFHQ (2.79/3.07 vs 2.70); no seeds/variance reported",
+  "Video claims rest on hand-picked seeds in accompanying videos",
+  "Dated: GANs superseded by diffusion for text-to-image"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "texture sticking",
+   "definition": "fine detail appears fixed in pixel coordinates instead of moving with the depicted surface during latent interpolation",
+   "where": "Sec 1, Fig 1"
+  },
+  {
+   "term": "EQ-T / EQ-R",
+   "definition": "equivariance metrics: PSNR in dB between translated/rotated outputs and outputs from translated/rotated input",
+   "where": "Sec 3, App E"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Analyzing and Improving the Image Quality of StyleGAN (StyleGAN2)",
+   "year": 2020,
+   "arxiv": "1912.04958",
+   "relation": "extends",
+   "note": "generator is the converted base",
+   "quote": null
+  },
+  {
+   "work": "A Style-Based Generator Architecture for GANs (StyleGAN)",
+   "year": 2019,
+   "arxiv": "1812.04948",
+   "relation": "extends",
+   "note": "style modulation, FFHQ",
+   "quote": null
+  },
+  {
+   "work": "Training GANs with Limited Data (ADA, MetFaces)",
+   "year": 2020,
+   "arxiv": "2006.06676",
+   "relation": "uses-method",
+   "note": "ADA, FID protocol, StyleGAN2-ADA PyTorch code",
+   "quote": null
+  },
+  {
+   "work": "Why do deep convolutional networks generalize so poorly to small image transformations? (Azulay and Weiss)",
+   "year": 2019,
+   "arxiv": "1805.12177",
+   "relation": "related",
+   "note": "aliasing in CNNs",
+   "quote": null
+  },
+  {
+   "work": "Making convolutional networks shift-invariant again (Zhang)",
+   "year": 2019,
+   "arxiv": "1904.11486",
+   "relation": "related",
+   "note": "antialiasing; EQ-T inspired by its metric",
+   "quote": null
+  },
+  {
+   "work": "Group equivariant convolutional networks (Cohen and Welling)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "p4 G-CNN comparison",
+   "quote": null
+  },
+  {
+   "work": "Progressive growing of GANs",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Karras et al. [31]",
+   "quote": null
+  },
+  {
+   "work": "FFHQ, MetFaces, AFHQ",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "datasets",
+   "quote": null
+  },
+  {
+   "work": "SWAGAN; CIPS",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "related",
+   "note": "spectra comparison, App A",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Examples of texture sticking",
+   "page": 2,
+   "why": "Shows the failure visually: averaged neighbourhood images and stacked pixel strips"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Results for FFHQ-U at 256^2: training configurations and parameter ablations",
+   "page": 5,
+   "why": "Whole config A-R ladder of FID, EQ-T, EQ-R in one table"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Filter design concepts; alias-free generator architecture; flexible layers",
+   "page": 7,
+   "why": "Architecture and per-layer filter schedule"
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "Example internal representations in StyleGAN2 and our generators",
+   "page": 10,
+   "why": "Shows emergent phase/coordinate feature maps"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 1",
+   "snippet": "f(z) = φs′ ∗ F(Xs ⊙ z),  F(Z) = Xs′ ⊙ f(φs ∗ Z)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "No embedded instructions found. Extraction from text only; figures not inspected. Some derived values (unit_hint) none."
+ ]
+}

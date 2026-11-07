@@ -1,0 +1,349 @@
+{
+ "schema": 1,
+ "key": "2207.12598",
+ "pdf": "ai-engineering/08-multimodal-engineering/sources/ho-2022-classifier-free-diffusion-guidance.pdf",
+ "bib": {
+  "title": "Classifier-Free Diffusion Guidance",
+  "authors": [
+   "Jonathan Ho",
+   "Tim Salimans"
+  ],
+  "first_author": "Ho",
+  "year": 2022,
+  "venue": "preprint",
+  "arxiv": "2207.12598",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 34904,
+  "chars_total": 34904,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can diffusion guidance trade off sample fidelity and diversity without a separately trained classifier?",
+ "hypothesis": "Mixing conditional and jointly trained unconditional score estimates gives an FID/IS tradeoff similar to classifier guidance.",
+ "contributions": [
+  "Classifier-free guidance: jointly train a conditional and an unconditional diffusion model in one network and combine their scores at sampling time.",
+  "Empirical FID/IS tradeoff on 64x64 and 128x128 ImageNet, with ablations over p_uncond and sampling steps T."
+ ],
+ "method": {
+  "summary": "A single class-conditional diffusion network is trained with the class label replaced by a null token with probability p_uncond. At sampling the guided score (1+w)*eps(z,c) - w*eps(z) is used. Evaluated on area-downsampled class-conditional ImageNet at 64x64 and 128x128.",
+  "task": "class-conditional image generation (ImageNet 64x64, 128x128)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "ImageNet (area-downsampled, class-conditional)",
+    "role": "both",
+    "size": null,
+    "split": null,
+    "source": "Russakovsky et al., 2015",
+    "preprocessing": "area downsampling to 64x64 and 128x128"
+   }
+  ],
+  "models": [
+   {
+    "name": "Classifier-free guided diffusion model (64x64)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "same architecture and hyperparameters as ADM-G (Dhariwal & Nichol 2021), continuous time training, eps-prediction",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "v": "0.3",
+     "lambda_min": "-20",
+     "lambda_max": "20"
+    }
+   },
+   {
+    "name": "Classifier-free guided diffusion model (128x128)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "same architecture as ADM-G",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "v": "0.2",
+     "lambda_min": "-20",
+     "lambda_max": "20"
+    }
+   }
+  ],
+  "training": {
+   "objective": "E[||eps_theta(z_lambda, c) - eps||^2] with c replaced by null token with probability p_uncond; lambda ~ p(lambda) hyperbolic-secant-like, lambda = -2 log tan(a u + b)",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": "64x64: 400 thousand steps; 128x128: 2.7 million steps",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "p_uncond": "{0.1, 0.2, 0.5} at 64x64; value for 128x128 not stated",
+    "hyperparameters": "same as Dhariwal & Nichol (2021) guided diffusion, not listed"
+   }
+  },
+  "inference": {
+   "decoding": "ancestral sampler with log-SNR-interpolated variance, v constant; DDIM mentioned as replaceable",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "50000 samples per guidance value for FID/IS",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "w": "swept over {0, 0.1, ..., 4}",
+    "T": "128/256/1024 on 128x128 (Fig 5 legend says 512 instead of 1024); 64x64 T not stated",
+    "v": "0.3 (64x64), 0.2 (128x128)",
+    "guided_score": "(1+w)*eps(z,c) - w*eps(z); two forward passes per step"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "FID",
+     "definition": "Frechet Inception Distance following Heusel et al. 2017, 50000 samples",
+     "unit": "score",
+     "higher_is_better": false
+    },
+    {
+     "name": "IS",
+     "definition": "Inception Score following Salimans et al. 2016, 50000 samples",
+     "unit": "score",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "ADM / ADM-G (Dhariwal & Nichol 2021)",
+    "CDM (Ho et al. 2021)",
+    "BigGAN-deep (Brock et al. 2019)",
+    "LOGAN (Wu et al. 2019)"
+   ],
+   "protocol": "Sweep w; one model per setting; no seeds or confidence intervals reported."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": null
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.steps",
+    "quote": "The 64 × 64 models used sampler noise interpolation coefficient v = 0.3 and were trained for 400 thousand steps; the 128 × 128 models used v = 0.2 and were trained for 2.7 million steps.",
+    "where": "4.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Best FID on 64x64 comes at almost no guidance (p_uncond=0.1, w=0.1).",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": "1.55",
+   "unit": "FID",
+   "baseline_value": "1.48 (CDM), 2.07 (ADM)",
+   "n": "50000 samples",
+   "setup": "ImageNet 64x64, p_uncond=0.1, 400k steps",
+   "quote": null,
+   "table": "Table 1, row w = 0.1, column FID, p_uncond=0.1",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "At w=4.0 on 64x64 FID degrades to 26.22 while IS reaches 260.2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": "26.22",
+   "unit": "FID",
+   "baseline_value": null,
+   "n": "50000 samples",
+   "setup": "ImageNet 64x64, p_uncond=0.1, w=4.0",
+   "quote": null,
+   "table": "Table 1, row w = 4.0, columns FID/IS, p_uncond=0.1 (26.22, 260.2)",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "p_uncond=0.5 is consistently worse than 0.1 and 0.2, which are about equal.",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": "2.21",
+   "unit": "FID",
+   "baseline_value": "1.8 (p_uncond=0.1)",
+   "n": "50000 samples",
+   "setup": "ImageNet 64x64, w=0.0, 400k steps",
+   "quote": null,
+   "table": "Table 1, row w = 0.0, column FID, p_uncond=0.5 (2.21)",
+   "note": null,
+   "where": "Table 1, Sec 4.2"
+  },
+  {
+   "claim": "On 128x128 FID 2.43 at w=0.3, beating ADM-G (2.97).",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": "2.43",
+   "unit": "FID",
+   "baseline_value": "2.97 (ADM-G)",
+   "n": "50000 samples",
+   "setup": "ImageNet 128x128, T=256, 2.7M steps",
+   "quote": null,
+   "table": "Table 2, row w = 0.3, column FID, T=256 (2.43)",
+   "note": "Table 2 lists ADM-G FID 2.97.",
+   "where": "Table 2"
+  },
+  {
+   "claim": "At w=4.0 on 128x128 the model beats BigGAN-deep at max-IS truncation on both FID and IS.",
+   "kind": "measured",
+   "source": null,
+   "metric": "IS",
+   "value": "421.03",
+   "unit": "IS",
+   "baseline_value": "253 (BigGAN-deep max IS)",
+   "n": "50000 samples",
+   "setup": "ImageNet 128x128, T=256, w=4.0",
+   "quote": null,
+   "table": "Table 2, row w = 4.0, columns FID/IS, T=256 (21.53, 421.03)",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "T=256 gives a good quality/speed balance; each step needs two model evaluations, so the compute-fair setting is T=128, which underperforms ADM-G on FID.",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": "3.04",
+   "unit": "FID",
+   "baseline_value": "2.97 (ADM-G)",
+   "n": "50000 samples",
+   "setup": "ImageNet 128x128, T=128, w=0.3",
+   "quote": null,
+   "table": "Table 2, row w = 0.3, column FID, T=128 (3.04)",
+   "note": "At T=128, w=0.4 gives 3.02, also above 2.97.",
+   "where": "Table 2, Sec 4.3"
+  }
+ ],
+ "limits": [
+  "Proof of concept only; hyperparameters were tuned for classifier guidance and may be suboptimal.",
+  "Two forward passes per sampling step make it slower than classifier guidance.",
+  "Reduced diversity may be unacceptable where underrepresented data matter.",
+  "Only class-conditional ImageNet; no text conditioning tested.",
+  "No optimizer, learning rate, batch size, parameter count or hardware stated; no seeds or error bars."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "classifier-free guidance",
+   "definition": "jointly train a conditional and an unconditional diffusion model and combine their score estimates",
+   "where": "Abstract"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Diffusion models beat GANs on image synthesis (classifier guidance, ADM-G)",
+   "year": 2021,
+   "arxiv": "2105.05233",
+   "relation": "extends",
+   "note": "Classifier guidance replaced; architecture and hyperparameters reused",
+   "quote": null
+  },
+  {
+   "work": "Cascaded diffusion models for high fidelity image generation",
+   "year": 2021,
+   "arxiv": "2106.15282",
+   "relation": "baseline",
+   "note": "CDM baseline",
+   "quote": null
+  },
+  {
+   "work": "Large scale GAN training (BigGAN)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "truncation baseline",
+   "quote": null
+  },
+  {
+   "work": "Variational diffusion models",
+   "year": 2021,
+   "arxiv": "2107.00630",
+   "relation": "uses-method",
+   "note": "continuous time training",
+   "quote": null
+  },
+  {
+   "work": "Improved DDPM",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "variance interpolation, cosine schedule",
+   "quote": null
+  },
+  {
+   "work": "ImageNet",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Russakovsky et al.",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "The effect of guidance on a mixture of three Gaussians",
+   "page": 2,
+   "why": "shows density concentration with guidance strength"
+  },
+  {
+   "figure": "Algorithm 1 and 2",
+   "caption": "Joint training and conditional sampling with classifier-free guidance",
+   "page": 4,
+   "why": "whole method in a few lines"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "IS/FID curves over guidance strengths for ImageNet 64x64 models",
+   "page": 7,
+   "why": "tradeoff frontier by p_uncond"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 6",
+   "snippet": "~eps(z, c) = (1 + w) eps(z, c) - w eps(z)",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Fig 5 legend lists T=512 while text and Table 2 use T=1024.",
+  "Sampler step count T for 64x64 not stated."
+ ]
+}

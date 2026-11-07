@@ -1,0 +1,528 @@
+{
+ "schema": 1,
+ "key": "2103.17249",
+ "pdf": "ai-engineering/08-multimodal-engineering/sources/patashnik-2021-styleclip.pdf",
+ "bib": {
+  "title": "StyleCLIP: Text-Driven Manipulation of StyleGAN Imagery",
+  "authors": [
+   "Or Patashnik",
+   "Zongze Wu",
+   "Eli Shechtman",
+   "Daniel Cohen-Or",
+   "Dani Lischinski"
+  ],
+  "first_author": "Patashnik",
+  "year": 2021,
+  "venue": "preprint",
+  "arxiv": "2103.17249",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 54709,
+  "chars_total": 54709,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can a pretrained CLIP model drive text-based semantic manipulation of StyleGAN images without per-attribute manual effort or annotated data?",
+ "hypothesis": "CLIP's joint embedding supplies enough supervision to find StyleGAN latent edits from text alone; directions in CLIP space that match the same semantic change are roughly collinear.",
+ "contributions": [
+  "Text-guided latent optimization using a CLIP loss",
+  "A latent residual mapper trained per text prompt",
+  "A method mapping a text prompt to an input-agnostic global direction in StyleGAN style space S, with control of strength and disentanglement"
+ ],
+ "method": {
+  "summary": "Three ways to combine a frozen StyleGAN2 generator with a frozen CLIP: per-image latent optimisation in W+ with a CLIP+L2+ID loss; a per-prompt three-part mapper that outputs a residual in W+; and a global direction in style space S derived from CLIP text embedding differences and per-channel relevance. Real images are inverted with e4e.",
+  "task": "text-driven image manipulation with StyleGAN",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "CelebA-HQ (test set)",
+    "role": "eval",
+    "size": null,
+    "split": "test set inverted with e4e",
+    "source": "Liu et al. 2015; Karras et al. 2017",
+    "preprocessing": "inverted to W+ with e4e"
+   },
+   {
+    "name": "FFHQ (StyleGAN2 pretrained)",
+    "role": "pretrain",
+    "size": null,
+    "split": null,
+    "source": "pretrained generator",
+    "preprocessing": null
+   },
+   {
+    "name": "LSUN cars, LSUN church, AFHQ dogs/cats/wild",
+    "role": "pretrain",
+    "size": null,
+    "split": null,
+    "source": "pretrained StyleGAN2 / StyleGAN2-ada generators",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "StyleGAN2",
+    "role": "base",
+    "params": null,
+    "architecture": "style-based GAN generator, frozen",
+    "init_from": "pretrained (FFHQ, LSUN cars, LSUN church); StyleGAN2-ada for AFHQ",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "CLIP",
+    "role": "base",
+    "params": null,
+    "architecture": "image and text encoders, frozen; pretrained on 400 million image-text pairs",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "variant": null
+    }
+   },
+   {
+    "name": "Latent mapper (Mc, Mm, Mf)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "three fully-connected networks, each like the StyleGAN mapping network but with 4 layers rather than 8; one per coarse/medium/fine group of W+",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "4 per sub-mapper",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "e4e encoder",
+    "role": "base",
+    "params": null,
+    "architecture": "StyleGAN inversion encoder (Tov et al. 2021)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "ArcFace",
+    "role": "base",
+    "params": null,
+    "architecture": "pretrained face-recognition network R used for identity loss",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "Mapper: L(w) = L_CLIP(w) + lambda_L2 ||M_t(w)||_2 + lambda_ID L_ID(w), with L_CLIP = cosine distance in CLIP space between G(w+M_t(w)) and the text t; L_ID = 1 - <R(G(ws)), R(G(w))>. Optimizer method: minimise D_CLIP(G(w),t) + lambda_L2 ||w-ws||_2 + lambda_ID L_ID(w) by gradient descent.",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "single NVIDIA GTX 1080Ti GPU (times in Table 1)",
+   "compute": "mapper training 10-12h per text prompt; global direction preprocessing 4h",
+   "wall_clock": "mapper 10 - 12h; global direction 4h",
+   "seeds": null,
+   "other": {
+    "mapper_lambda_L2": "0.8",
+    "mapper_lambda_ID": "0.1",
+    "mapper_Trump_exception": "lambda_L2 = 2, lambda_ID = 0",
+    "optimizer_iterations": "200-300 iterations (Fig 3)",
+    "optimizer_lambdas": "per-edit (lambda_L2, lambda_ID) given in Fig 3, e.g. (0.008, 0.005), (0.004, 0), (0.0025, 0)",
+    "global_direction_pairs": "100 image pairs to estimate mean relevance",
+    "global_alpha_for_relevance": "5 (perturbation = channel std)",
+    "hairstyle_mappers": "trained without Mf (Fig 15)",
+    "note": "no optimizer, learning rate, batch size or step count for the mapper is stated"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "qualitative examples; no sample counts for evaluation except 100 pairs for channel relevance",
+   "prompting": "Global direction: target attribute text plus neutral class (e.g. 'a sports car' vs 'a car'), averaged over CLIP's 80-template ImageNet prompt bank; normalised difference = delta t",
+   "retrieval": null,
+   "parameters": {
+    "alpha_manipulation_strength": "G(s + alpha*delta_s); Fig 6 uses alpha -6..6, Fig 20 uses -2..2",
+    "beta_threshold": "channels with |delta_ic . delta_i| < beta zeroed; Fig 6 beta 0.16, 0.14, 0.11; Fig 20 beta 0.40, 0.30, 0.20",
+    "video_defaults": "real faces alpha=3 with beta chosen so k=20 channels active; real cars alpha=3, k=100; generated cats alpha=7, k=100"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "mean and std of pairwise cosine similarity of mapper manipulation directions",
+     "definition": "invert CelebA-HQ test set with e4e, feed through trained mappers, cosine similarity between all pairs of resulting manipulation directions",
+     "unit": "cosine similarity",
+     "higher_is_better": null
+    }
+   ],
+   "baselines": [
+    "TediGAN",
+    "GANSpace",
+    "InterFaceGAN",
+    "StyleSpace",
+    "StyleFlow (supplementary)"
+   ],
+   "protocol": "Mainly qualitative visual comparison; the only quantitative result is Table 2. Comparison with GANSpace/InterFaceGAN/StyleSpace matches step strength to the same change in classifier logit (classifiers pretrained on CelebA). No user study."
+  },
+  "availability": {
+   "code": "https://github.com/orpatashnik/StyleCLIP",
+   "weights": null,
+   "data": null
+  },
+  "prompts": [
+   {
+    "purpose": "example CLIP prompt templates for prompt engineering (from Radford et al.)",
+    "text": "a bad photo of a {}; a cropped photo of the {}; a black and white photo of a {}; a painting of a {}",
+    "where": "Section 6"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training.other.mapper_lambda_L2",
+    "quote": "The parameter values we use for the examples in this paper are λL2 = 0.8, λID = 0.1",
+    "where": "Section 5 Losses"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Time and input-dependence of the three methods on one GTX 1080Ti: optimizer 98 sec inference, mapper 10-12h training and 75 ms inference, global direction 4h preprocessing and 72 ms inference.",
+   "kind": "measured",
+   "source": null,
+   "metric": "inference time",
+   "value": "98 sec / 75 ms / 72 ms",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 1, single NVIDIA GTX 1080Ti",
+   "quote": null,
+   "table": "Table 1, rows optimizer/mapper/global dir., columns train time and infer. time",
+   "note": "optimizer row has no training; global direction needs 4h one-time preprocessing",
+   "where": "Table 1"
+  },
+  {
+   "claim": "Mapper manipulation directions for a given prompt are highly similar across inputs (mean pairwise cosine similarity 0.73-0.84).",
+   "kind": "measured",
+   "source": null,
+   "metric": "mean cosine similarity",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "CelebA-HQ test set inverted with e4e, mappers for Mohawk, Afro, Bob-cut, Curly, Beyonce, Taylor Swift, Surprised, Purple hair",
+   "quote": null,
+   "table": "Table 2, row Mean, columns Mohawk..Purple hair (0.82 0.84 0.82 0.84 0.83 0.77 0.79 0.73)",
+   "note": "Std for Surprised is printed 0.893 (others 0.081-0.145), likely a typo for 0.093",
+   "where": "Table 2"
+  },
+  {
+   "claim": "Using prompt engineering over 80 templates improves CLIP zero-shot ImageNet accuracy by 3.5% over a single prompt.",
+   "kind": "reported",
+   "source": "Radford et al. 2021 (CLIP)",
+   "metric": null,
+   "value": "3.5",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CLIP ImageNet zero-shot",
+   "quote": "This process improves zero-shot classiﬁcation accuracy by an additional 3.5% over using a single text prompt.",
+   "table": null,
+   "note": null,
+   "where": "Section 6"
+  },
+  {
+   "claim": "Channel relevance is estimated from 100 image pairs with perturbation alpha = 5.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "100",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "global direction method, style space S",
+   "quote": "In practice, we use 100 image pairs to estimate the mean.",
+   "table": null,
+   "note": null,
+   "where": "Section 6"
+  },
+  {
+   "claim": "Mapper beats global direction for complex, identity-specific edits (Trump); global direction wins for simple common attributes (without wrinkles) with more disentanglement; TediGAN fails on all three.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 9 qualitative, FFHQ StyleGAN2, e4e inversions, three attributes",
+   "quote": "We conclude that for complex and speciﬁc attributes (especially those that involve identity), the mapper is able to produce better manipulations.",
+   "table": null,
+   "note": null,
+   "where": "Section 7"
+  },
+  {
+   "claim": "Global direction gives edits visually similar to StyleSpace and less entangled than GANSpace and InterFaceGAN on gender, grey hair, lipstick.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 10, equal classifier-logit change, qualitative",
+   "quote": "Our manipulation is very similar to StyleSpace [50], which only changes the target attribute",
+   "table": null,
+   "note": null,
+   "where": "Section 7"
+  },
+  {
+   "claim": "Three separate mapping networks work better than a single one for multi-level edits such as Donald Trump; dropping Mf gives slightly better hairstyle edits.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "ablation, Fig 11 and 12, qualitative",
+   "quote": "we ﬁnd that with driving text that requires such changes, e.g. “Donald Trump”, a single mapping network does not yield results that are as effective as those produced with three.",
+   "table": null,
+   "note": null,
+   "where": "Appendix A.1"
+  },
+  {
+   "claim": "Without the identity loss the mapper fails to preserve identity, even with lambda_L2 raised to 1.6.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "ablation Fig 14, qualitative",
+   "quote": "we observe that the mapper fails to preserve the identity, and introduces large changes.",
+   "table": null,
+   "note": null,
+   "where": "Appendix A.2"
+  },
+  {
+   "claim": "Method is deployable on a single commodity GPU, unlike DALL-E (12B parameters, over 24GB at 16-bit).",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "comparison to DALL-E stated in related work",
+   "quote": "a 12-billion parameter ver-",
+   "table": null,
+   "note": "quote: 'a 12-billion parameter ver-' split by hyphenation in text; DALL-E described as 12-billion parameter version of GPT-3",
+   "where": "Section 2.1"
+  }
+ ],
+ "limits": [
+  "Relies on pretrained StyleGAN and CLIP: cannot edit outside the generator's domain or in poorly covered regions.",
+  "Text prompts mapping to sparsely populated CLIP regions do not yield faithful edits.",
+  "Drastic edits in diverse datasets are hard (tiger to wolf fails; tiger to lion works), Fig 24.",
+  "Optimizer is sensitive to hyperparameters and slow, so it is excluded from comparisons.",
+  "Evaluation is almost entirely qualitative; no user study or metric comparing against baselines.",
+  "Mapper and optimizer training hyperparameters (optimizer, lr, batch size, steps) are not given in the paper.",
+  "Mapper needs a separate 10-12h training run per prompt."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "W+",
+   "definition": "extended latent space of StyleGAN used by the optimizer and mapper",
+   "where": "Section 2.2"
+  },
+  {
+   "term": "StyleSpace S",
+   "definition": "style space of channel-wise style parameters, better disentangled than W and W+ (Wu et al.)",
+   "where": "Section 2.2, 6"
+  },
+  {
+   "term": "global direction",
+   "definition": "input-agnostic manipulation direction delta_s in S derived from a text prompt",
+   "where": "Section 6"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "CLIP (Radford et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "frozen CLIP provides the loss and the text direction",
+   "quote": null
+  },
+  {
+   "work": "StyleGAN2 (Karras et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "frozen generator in all experiments",
+   "quote": "We use StyleGAN2 [19] in all our experiments."
+  },
+  {
+   "work": "StyleSpace analysis (Wu et al.)",
+   "year": 2020,
+   "arxiv": "2011.12799",
+   "relation": "extends",
+   "note": "global directions are in style space S; also a baseline",
+   "quote": null
+  },
+  {
+   "work": "Designing an encoder for StyleGAN image manipulation (e4e, Tov et al.)",
+   "year": 2021,
+   "arxiv": "2102.02766",
+   "relation": "uses-method",
+   "note": "real image inversion",
+   "quote": null
+  },
+  {
+   "work": "Perceptual losses (Johnson et al.)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "CLIP used as loss network",
+   "quote": null
+  },
+  {
+   "work": "TediGAN",
+   "year": 2020,
+   "arxiv": "2012.03308",
+   "relation": "baseline",
+   "note": "concurrent text-guided StyleGAN manipulation",
+   "quote": null
+  },
+  {
+   "work": "GANSpace",
+   "year": 2020,
+   "arxiv": "2004.02546",
+   "relation": "baseline",
+   "note": "unsupervised directions",
+   "quote": null
+  },
+  {
+   "work": "InterFaceGAN",
+   "year": 2020,
+   "arxiv": "2005.09635",
+   "relation": "baseline",
+   "note": "supervised directions",
+   "quote": null
+  },
+  {
+   "work": "StyleFlow",
+   "year": 2020,
+   "arxiv": "2008.02401",
+   "relation": "baseline",
+   "note": "supplementary comparison",
+   "quote": null
+  },
+  {
+   "work": "DALL-E (Ramesh et al.)",
+   "year": 2021,
+   "arxiv": "2102.12092",
+   "relation": "related",
+   "note": "contrasted on compute",
+   "quote": null
+  },
+  {
+   "work": "ArcFace",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "identity loss",
+   "quote": null
+  },
+  {
+   "work": "CelebA-HQ",
+   "year": 2017,
+   "arxiv": "1710.10196",
+   "relation": "uses-data",
+   "note": "test set inverted for Table 2",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "The architecture of our text-guided mapper",
+   "page": 4,
+   "why": "shows three mappers Mc, Mm, Mf producing residuals added to w, then StyleGAN and CLIP+ID losses"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Our three methods for combining StyleGAN and CLIP.",
+   "page": 3,
+   "why": "compares preprocessing, train, inference time, latent space for the three methods"
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "Image manipulation driven by the prompt grey hair for different manipulation strengths and disentanglement thresholds.",
+   "page": 6,
+   "why": "shows what alpha and beta do"
+  },
+  {
+   "figure": "Fig 9",
+   "caption": "We compare three methods that utilize StyleGAN and CLIP using three different kinds of attributes.",
+   "page": 8,
+   "why": "mapper vs global vs TediGAN"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 1",
+   "snippet": "argmin_{w in W+} D_CLIP(G(w), t) + λL2 ||w - ws||_2 + λID L_ID(w)",
+   "verbatim": false
+  },
+  {
+   "where": "Eq 6-7",
+   "snippet": "Rc(Δi) = E_s{Δic · Δi}; Δs = Δic·Δi if |Δic·Δi| >= β else 0",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text extraction of figure/table cells is scrambled; Table 2 std for Surprised reads 0.893, apparently a typo.",
+  "No embedded instructions found."
+ ]
+}

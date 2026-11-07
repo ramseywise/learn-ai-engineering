@@ -1,0 +1,403 @@
+{
+ "schema": 1,
+ "key": "2208.01618",
+ "pdf": "ai-engineering/08-multimodal-engineering/sources/gal-2022-image-worth-one-word.pdf",
+ "bib": {
+  "title": "An Image is Worth One Word: Personalizing Text-to-Image Generation using Textual Inversion",
+  "authors": [
+   "Rinon Gal",
+   "Yuval Alaluf",
+   "Yuval Atzmon",
+   "Or Patashnik",
+   "Amit H. Bermano",
+   "Gal Chechik",
+   "Daniel Cohen-Or"
+  ],
+  "first_author": "Gal",
+  "year": 2022,
+  "venue": "preprint",
+  "arxiv": "2208.01618",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 69655,
+  "chars_total": 69655,
+  "engine": "pymupdf",
+  "skipped": "References skimmed only"
+ },
+ "type": "empirical",
+ "question": "How can a frozen text-to-image model be made to generate a user-provided concept (object or style) in new scenes, using only 3-5 example images?",
+ "hypothesis": "A single new word embedding, optimised with a visual reconstruction objective in the frozen text encoder's embedding space, can capture a unique concept while keeping it editable by natural language.",
+ "contributions": [
+  "Introduce the task of personalized text-to-image generation",
+  "Present Textual Inversion: learn pseudo-words in the text-encoder embedding space that capture high-level semantics and fine visual details",
+  "Analyze the embedding space with GAN-inversion-inspired techniques and show a distortion-editability tradeoff",
+  "Evaluate against human-caption baselines, showing higher visual fidelity and more robust editing"
+ ],
+ "method": {
+  "summary": "Optimise one new token embedding v* (placeholder S*) with the LDM denoising loss on 3-5 images of a concept, with neutral CLIP ImageNet templates as prompts, while the autoencoder, text encoder and denoiser stay frozen. The learned word is then used inside ordinary prompts.",
+  "task": "personalized text-to-image generation via embedding inversion",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Concept image sets (user-provided)",
+    "role": "train",
+    "size": "3-5 images per concept (typically); 1 to 25 swept in Appendix B",
+    "split": null,
+    "source": "Authors' concepts; some artist images used with permission for non-commercial use",
+    "preprocessing": null
+   },
+   {
+    "name": "LAION-400M",
+    "role": "pretrain",
+    "size": "400M image-text pairs (inferred from name)",
+    "split": null,
+    "source": "Schuhmann et al., 2021; used to pretrain the LDM",
+    "preprocessing": null
+   },
+   {
+    "name": "Mechanical Turk captions",
+    "role": "eval",
+    "size": "10 captions per concept (5 short <=12 words, 5 long <=30 words)",
+    "split": null,
+    "source": "Annotators saw four images and described the concept so an artist could recreate it",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Latent Diffusion Model (Rombach et al., 2021)",
+    "role": "base",
+    "params": "1.4 billion",
+    "architecture": "latent diffusion with BERT text encoder",
+    "init_from": "public LAION-400M pretrained checkpoint",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "frozen": "text encoder c_theta and denoiser eps_theta fixed; only v* trained"
+    }
+   }
+  ],
+  "training": {
+   "objective": "LDM loss (Eq. 2): E ||eps - eps_theta(z_t, t, c_theta(y))||^2 minimised over v* only",
+   "optimizer": null,
+   "lr": "base 0.005, scaled by GPUs and batch size to effective 0.04",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "4",
+   "steps": "5,000 optimization steps",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "2x V100 GPUs",
+   "compute": null,
+   "wall_clock": "roughly two hours per concept",
+   "seeds": null,
+   "other": {
+    "init": "embedding of a single-word coarse descriptor (e.g. 'sculpture', 'cat')",
+    "other_hparams": "original LDM hyperparameters retained unless noted",
+    "templates": "27 neutral templates in Appendix D; style concepts use 'A painting in the style of S*'",
+    "High-LR": "2e-2",
+    "Low-LR": "1e-4",
+    "caveat": "for some concepts fewer steps or higher lr work better"
+   }
+  },
+  "inference": {
+   "decoding": "LDM sampling; 50 DDIM steps in the evaluation",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "64 images per concept per prompt for CLIP metrics; 16 candidates (6 for DALLE-2) per prompt, best manually chosen for qualitative figures",
+   "prompting": "Prompts containing S*, e.g. 'A photo of S* on the moon'",
+   "retrieval": null,
+   "parameters": {
+    "guidance_scale": "LDM typical 5-10 mentioned; Fig 11 uses s=1,2,5"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Reconstruction",
+     "definition": "Average pairwise CLIP-space cosine similarity between 64 images generated with 'A photo of S*' and the concept training images",
+     "unit": "cosine similarity",
+     "higher_is_better": true
+    },
+    {
+     "name": "Editability",
+     "definition": "Cosine similarity between mean CLIP embedding of 64 samples and CLIP embedding of the prompt with S* removed",
+     "unit": "cosine similarity",
+     "higher_is_better": true
+    },
+    {
+     "name": "User study ranking",
+     "definition": "Users rank outputs of five models by similarity to training images or to the text",
+     "unit": "rank",
+     "higher_is_better": null
+    }
+   ],
+   "baselines": [
+    "Human captions (short and long) with LDM",
+    "DALLE-2 with image input and captions",
+    "PALAVRA with VQGAN-CLIP and Guided Diffusion",
+    "VQGAN-CLIP with text+image loss",
+    "CLIP Guided Diffusion with init image",
+    "2-word, 3-word, progressive, regularised, per-image-token variants",
+    "Image Only and Prompt Only reference setups"
+   ],
+   "protocol": "Single-concept CLIP scores per setup (Fig 10a, values only in figure); user study 600 responses per questionnaire, 1,200 total, 95% CI error bars."
+  },
+  "availability": {
+   "code": "https://textual-inversion.github.io (stated as will be available)",
+   "weights": "new words will be available (same site)",
+   "data": "data will be available (same site)"
+  },
+  "prompts": [
+   {
+    "purpose": "Training templates (first and last of list)",
+    "text": "a photo of a S\u2217.",
+    "where": "Appendix D (27 templates)"
+   },
+   {
+    "purpose": "Style training prompt",
+    "text": "A painting in the style of S\u2217",
+    "where": "Sec 4.3"
+   },
+   {
+    "purpose": "Per-image token variant",
+    "text": "A photo of S\u2217with Si",
+    "where": "Sec 5.2"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training.lr",
+    "quote": "The base learning rate was set to 0.005.",
+    "where": "Sec 3"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Learning one concept takes about two hours with the stated setup.",
+   "kind": "measured",
+   "source": null,
+   "metric": "optimization time",
+   "value": "roughly two hours",
+   "unit": "time",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Textual Inversion, 2x V100, 5,000 steps",
+   "quote": "learning a single concept requires roughly two hours",
+   "table": null,
+   "note": null,
+   "where": "Sec 6"
+  },
+  {
+   "claim": "Training uses 5,000 steps at effective lr 0.04.",
+   "kind": "measured",
+   "source": null,
+   "metric": "steps",
+   "value": 5000,
+   "unit": "steps",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LDM 1.4B, 2xV100, batch 4",
+   "quote": "All results were produced using 5, 000 optimization steps.",
+   "table": null,
+   "note": null,
+   "where": "Sec 3"
+  },
+  {
+   "claim": "User study collected 1,200 responses in total.",
+   "kind": "measured",
+   "source": null,
+   "metric": "responses",
+   "value": 1200,
+   "unit": "responses",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Two questionnaires, 600 responses each",
+   "quote": "collected a total of 600 responses to each questionnaire, for a total of 1, 200 responses",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.4"
+  },
+  {
+   "claim": "Best results with about 5 training images; more images move the embedding away from real-word embeddings and hurt editability.",
+   "kind": "measured",
+   "source": null,
+   "metric": "best training set size",
+   "value": "5",
+   "unit": "images",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Headless sculpture concept, 1 to 25 images",
+   "quote": "Our method operates best when provided with 5 images.",
+   "table": null,
+   "note": null,
+   "where": "App B, Fig 12"
+  },
+  {
+   "claim": "Single-word embedding gives reconstruction comparable to multi-word baselines and better editability.",
+   "kind": "measured",
+   "source": null,
+   "metric": "qualitative",
+   "value": "none",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "CLIP metrics, Fig 10(a); numbers only in figure",
+   "quote": "the single-word method achieves comparable recon- struction quality, and considerably improved editability over all multi-word baselines",
+   "table": null,
+   "note": "no numeric scores in text; text spans a line break so verify quote",
+   "where": "Sec 5.3"
+  },
+  {
+   "claim": "Human captions fail to capture likeness and reduce editability.",
+   "kind": "measured",
+   "source": null,
+   "metric": "qualitative",
+   "value": "none",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Short and long MTurk captions with LDM",
+   "quote": "the use of human descriptions for the concepts not only fails to capture their likeness, but also leads to diminished editability",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.3"
+  },
+  {
+   "claim": "Learning rate moves the single-word model along the distortion-editability curve.",
+   "kind": "measured",
+   "source": null,
+   "metric": "qualitative",
+   "value": "none",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "High-LR 2e-2, default, Low-LR 1e-4",
+   "quote": "our single-embedding model can be moved along this curve by simply changing the learning rate",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.3"
+  }
+ ],
+ "limits": [
+  "Struggles with precise shapes; captures semantic essence (Sec 6)",
+  "Lengthy optimisation, about two hours per concept (Sec 6)",
+  "Fails at relations between multiple learned concepts, e.g. side-by-side (Sec 4.4)",
+  "CLIP metrics are insensitive to shape preservation (Sec 5.3)",
+  "Qualitative results are partially curated (best of 16)",
+  "Only evaluated on LDM 1.4B; larger models are conjecture",
+  "Fig 10 scores are only in figures, no table of numbers",
+  "Numbers: no seeds or variance reported; optimizer not named"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "pseudo-word",
+   "definition": "A new embedding vector v* with placeholder string S*, treated like any other word in prompts",
+   "where": "Sec 1"
+  },
+  {
+   "term": "Textual Inversion",
+   "definition": "Finding a pseudo-word embedding via optimization so that 'A photo of S*' reconstructs the concept images",
+   "where": "Sec 1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "High-Resolution Image Synthesis with Latent Diffusion Models (Rombach et al.)",
+   "year": 2021,
+   "arxiv": "2112.10752",
+   "relation": "extends",
+   "note": "Base frozen model",
+   "quote": null
+  },
+  {
+   "work": "PALAVRA (Cohen et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Discriminative pseudo-words in CLIP space",
+   "quote": null
+  },
+  {
+   "work": "DALL-E 2 (Ramesh et al.)",
+   "year": 2022,
+   "arxiv": "2204.06125",
+   "relation": "baseline",
+   "note": "Compared with image inputs and captions",
+   "quote": null
+  },
+  {
+   "work": "VQGAN-CLIP (Crowson et al.)",
+   "year": 2022,
+   "arxiv": "2204.08583",
+   "relation": "baseline",
+   "note": "CLIP-guided baseline",
+   "quote": null
+  },
+  {
+   "work": "Pivotal tuning (Roich et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Appendix A GAN inversion idea",
+   "quote": null
+  },
+  {
+   "work": "Designing an encoder for StyleGAN image manipulation (Tov et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Distortion-editability tradeoff, progressive extension",
+   "quote": null
+  },
+  {
+   "work": "LAION-400M (Schuhmann et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "LDM pretraining data",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "Outline of the text-embedding and inversion process.",
+   "page": 4,
+   "why": "Shows where v* is inserted after token lookup"
+  },
+  {
+   "figure": "Fig 10",
+   "caption": "(a) CLIP-based evaluations; (b) user study",
+   "page": 13,
+   "why": "Distortion-editability curve across setups"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 2",
+   "snippet": "v* = argmin_v E_{z~E(x), y, eps~N(0,1), t} [ || eps - eps_theta(z_t, t, c_theta(y)) ||_2^2 ]",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Fig 10 numeric scores not in text",
+  "Typo in text: 'generate a 64 of images'"
+ ]
+}

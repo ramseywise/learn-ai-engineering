@@ -1,0 +1,936 @@
+{
+ "schema": 1,
+ "key": "2211.05100",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/workshop-2022-bloom.pdf",
+ "bib": {
+  "title": "BLOOM: A 176B-Parameter Open-Access Multilingual Language Model",
+  "authors": [
+   "BigScience Workshop"
+  ],
+  "first_author": "BigScience Workshop",
+  "year": 2022,
+  "venue": "preprint (arXiv v4, 27 Jun 2023)",
+  "arxiv": "2211.05100",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 192000,
+  "chars_total": 201373,
+  "engine": "pymupdf",
+  "skipped": "Author/contributor name lists (first ~9k chars) and the body of the reference list (skimmed for arXiv ids). Figure data (Fig 7-12) is plots and was not readable as text."
+ },
+ "type": "system",
+ "question": "Can a 176B-parameter multilingual decoder-only LLM be built and released openly by a large collaboration, and how does it perform?",
+ "hypothesis": null,
+ "contributions": [
+  "Release of BLOOM, a 176B-parameter open-access model trained on 46 natural and 13 programming languages (ROOTS corpus)",
+  "Documentation of the data, architecture, tokenizer, engineering and training choices",
+  "Evaluation in zero-shot, one-shot and after multitask prompted finetuning (BLOOMZ), plus embeddings, probing, bias and carbon footprint",
+  "Release under the Responsible AI License with Apache 2.0 code"
+ ],
+ "method": {
+  "summary": "A 70-layer causal decoder-only transformer with ALiBi positions and an embedding LayerNorm, trained with Megatron-DeepSpeed on 384 A100 GPUs for about 3.5 months on ROOTS (about 341B tokens, plus 25B tokens repeated). Smaller sizes (560M to 7.1B) were also trained. BLOOMZ is BLOOM finetuned on xP3 multitask prompts.",
+  "task": "next-token pretraining; multitask prompted finetuning; contrastive finetuning for embeddings",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "ROOTS",
+    "role": "pretrain",
+    "size": "1.61 terabytes of text; 498 Hugging Face datasets; about 341 billion tokens",
+    "split": null,
+    "source": "46 natural languages and 13 programming languages; 223 of 498 components distributable; OSCAR 21.09 is 38% of the corpus; code about 11%",
+    "preprocessing": "per-source quality indicators tuned per language, two near-duplicate removal steps, regex-based PII redaction on the OSCAR portion; GitHub code deduplicated for exact matches"
+   },
+   {
+    "name": "xP3",
+    "role": "train",
+    "size": "83 datasets, 46 languages, 16 tasks",
+    "split": "best checkpoint chosen on a separate validation set",
+    "source": "extends P3 using PromptSource; xP3mt is machine-translated prompts",
+    "preprocessing": null
+   },
+   {
+    "name": "SuperGLUE subset (Ax-b, Ax-g, BoolQ, CB, WiC, WSC, RTE)",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Wang et al. 2019",
+    "preprocessing": "5 random promptsource prompts per task"
+   },
+   {
+    "name": "WMT14 en-fr, en-hi",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Bojar et al. 2014",
+    "preprocessing": null
+   },
+   {
+    "name": "Flores-101 devtest",
+    "role": "eval",
+    "size": null,
+    "split": "devtest; 1-shot example drawn at random from dev",
+    "source": "Goyal et al. 2022",
+    "preprocessing": null
+   },
+   {
+    "name": "DiaBLa",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Bawden et al. 2020",
+    "preprocessing": null
+   },
+   {
+    "name": "WikiLingua (GEM subsample)",
+    "role": "eval",
+    "size": "3000 uniformly sampled test examples",
+    "split": "test",
+    "source": "Ladhak et al. 2020",
+    "preprocessing": null
+   },
+   {
+    "name": "HumanEval",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Chen et al. 2021",
+    "preprocessing": null
+   },
+   {
+    "name": "MTEB (MASSIVE, STS22 splits)",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Muennighoff et al. 2022a",
+    "preprocessing": null
+   },
+   {
+    "name": "Universal Dependencies 2.9 probing sets",
+    "role": "eval",
+    "size": "17 languages, 38 morphosyntactic features",
+    "split": "original UD train/validation/test",
+    "source": "Nivre et al.; Serikov et al. 2022",
+    "preprocessing": null
+   },
+   {
+    "name": "multilingual CrowS-Pairs",
+    "role": "eval",
+    "size": "1,677 pairs (All row of Table 14)",
+    "split": null,
+    "source": "Nangia et al. 2020 revised, plus French version (Neveol et al. 2022)",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "BLOOM",
+    "role": "proposed",
+    "params": "176,247M",
+    "architecture": "causal decoder-only transformer, ALiBi, embedding LayerNorm, GELU, tied embeddings",
+    "init_from": null,
+    "tokenizer": "byte-level BPE, no normalization",
+    "vocab": "250,680",
+    "layers": "70",
+    "hidden": "14336",
+    "heads": "112",
+    "context": "2048",
+    "other": {
+     "precision": "bfloat16 mixed precision",
+     "note": "Fig 5 labels 70 decoder blocks"
+    }
+   },
+   {
+    "name": "BLOOM-7.1B",
+    "role": "proposed",
+    "params": "7,069M",
+    "architecture": "same family",
+    "init_from": null,
+    "tokenizer": "same",
+    "vocab": "250,680",
+    "layers": "30",
+    "hidden": "4096",
+    "heads": "32",
+    "context": "2048",
+    "other": {}
+   },
+   {
+    "name": "BLOOM-3B",
+    "role": "proposed",
+    "params": "3,003M",
+    "architecture": "same family",
+    "init_from": null,
+    "tokenizer": "same",
+    "vocab": "250,680",
+    "layers": "30",
+    "hidden": "2560",
+    "heads": "32",
+    "context": "2048",
+    "other": {}
+   },
+   {
+    "name": "BLOOM-1.7B",
+    "role": "proposed",
+    "params": "1,722M",
+    "architecture": "same family",
+    "init_from": null,
+    "tokenizer": "same",
+    "vocab": "250,680",
+    "layers": "24",
+    "hidden": "2048",
+    "heads": "16",
+    "context": "2048",
+    "other": {}
+   },
+   {
+    "name": "BLOOM-1.1B",
+    "role": "proposed",
+    "params": "1,065M",
+    "architecture": "same family",
+    "init_from": null,
+    "tokenizer": "same",
+    "vocab": "250,680",
+    "layers": "24",
+    "hidden": "1536",
+    "heads": "16",
+    "context": "2048",
+    "other": {}
+   },
+   {
+    "name": "BLOOM-560M",
+    "role": "proposed",
+    "params": "559M",
+    "architecture": "same family",
+    "init_from": null,
+    "tokenizer": "same",
+    "vocab": "250,680",
+    "layers": "24",
+    "hidden": "1024",
+    "heads": "16",
+    "context": "2048",
+    "other": {}
+   },
+   {
+    "name": "BLOOMZ",
+    "role": "proposed",
+    "params": "same sizes as BLOOM",
+    "architecture": "BLOOM after multitask finetuning on xP3",
+    "init_from": "BLOOM",
+    "tokenizer": "same",
+    "vocab": "250,680",
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "SGPT-BLOOM-7.1B-msmarco / SGPT-BLOOM-1.7B-nli",
+    "role": "proposed",
+    "params": "7.1B / 1.7B",
+    "architecture": "SGPT bi-encoder contrastive finetune of BLOOM",
+    "init_from": "BLOOM-7.1B / BLOOM-1.7B",
+    "tokenizer": "same",
+    "vocab": "250,680",
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "text says 1.3 and 7.1 billion in Section 3.5 but names a 1.7B model"
+    }
+   },
+   {
+    "name": "OPT, GPT-J, GPT-Neo, GPT-NeoX, mGPT, T0, XGLM, M2M-100 (615M), AlexaTM, mTk-Instruct, Codex, GPT-fr",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "autoregressive next-token prediction (Eq 1); multitask finetuning on xP3; contrastive finetuning (SGPT bi-encoder) for embeddings",
+   "optimizer": "Adam, (beta1, beta2) = (0.9, 0.95)",
+   "lr": "6e-5 (BLOOM 176B); 3.0e-4 (560M), 2.5e-4 (1.1B), 2e-4 (1.7B), 1.6e-4 (3B), 1.2e-4 (7.1B)",
+   "lr_schedule": "cosine decay over 410B tokens to a minimum of 6e-6 (176B) or 1e-5 (smaller); decay never completed because warmup + decay tokens exceeded total tokens",
+   "warmup": "375M tokens",
+   "batch_size": "2048 (BLOOM 176B); 256 (560M, 1.1B), 512 (1.7B, 3B, 7.1B); finetuning 1024 (560M, 1.1B) and 2048 (others)",
+   "steps": null,
+   "epochs": null,
+   "tokens": "366B (BLOOM 176B); 341B (smaller models); finetuning 13B tokens",
+   "seq_len": "2048",
+   "precision": "bfloat16 mixed precision (gradient accumulation and softmax in float32); Table 3 lists float16 for the smaller models",
+   "weight_decay": "0.1 (pretraining); 1e-4 (finetuning)",
+   "dropout": "none",
+   "regularisation": "gradient clipping 1.0; weight decay",
+   "hardware": "Jean Zay: 48 nodes x 8 NVIDIA A100 80GB (384 GPUs) plus 4 spare nodes; Megatron-DeepSpeed, 3D parallelism, ZeRO stage 1",
+   "compute": "1,082,990 compute hours; 156 TFLOPs per GPU in fastest configuration (half of 312 peak)",
+   "wall_clock": "about 3.5 months",
+   "seeds": null,
+   "other": {
+    "finetune_lr": "2.0e-5 for all sizes, constant, 0 warmup tokens",
+    "finetune_checkpoint": "best checkpoint chosen on a separate validation set; performance plateaus after 1 - 6 billion tokens",
+    "extra_tokens": "25B additional tokens on repeated data for the large models, after Hoffmann et al. 2022",
+    "embedding_layernorm": "extra LayerNorm after the embedding layer, added for stability",
+    "checkpointing": "every three hours",
+    "failures": "1-2 GPU failures per week; one loss spike; 5-10h downtimes from a data-loader deadlock and disk space",
+    "table3_note": "Table 3 columns merge identical entries, so which sizes share a value is read from text and layout"
+   }
+  },
+  "inference": {
+   "decoding": "greedy for MT and summarization, until EOS (and \\n###\\n in 1-shot)",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": "64 for WMT14; 512 for Flores-101 and DiaBLa",
+   "samples": "SuperGLUE: 5 prompts per task; probing: 3 seeds; CrowS-Pairs: 8 runs; others not stated",
+   "prompting": "zero- and one-shot with promptsource prompts written before BLOOM was available and not refined with models; classification scored by maximum log likelihood over candidate label strings",
+   "retrieval": null,
+   "parameters": {},
+   "other": {
+    "hardware_for_eval": "not stated"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "BLEU (sacrebleu)",
+     "definition": "BLEU+case:mixed+numrefs.1+smooth.exp+{13a,tok:spm-flores}+version:2.2.1; default tokenisation for WMT and DiaBLa, spm-flores-101 for Flores",
+     "unit": "BLEU / spBLEU",
+     "higher_is_better": true
+    },
+    {
+     "name": "ROUGE-2, ROUGE-L, Levenshtein distance",
+     "definition": "ROUGE with a SentencePiece tokenizer built from Flores-101",
+     "unit": "F-measure",
+     "higher_is_better": true
+    },
+    {
+     "name": "pass@k",
+     "definition": "HumanEval, k = 1, 10, 100",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "fertility",
+     "definition": "subwords created per word or per dataset by the tokenizer",
+     "unit": "subwords per word",
+     "higher_is_better": false
+    },
+    {
+     "name": "weighted F1",
+     "definition": "probing logistic regression, averaged over 3 seeds",
+     "unit": "F1",
+     "higher_is_better": true
+    },
+    {
+     "name": "CrowS-Pairs accuracy",
+     "definition": "prompt accuracy selecting the stereotyped or non-stereotyped sentence; 50 means no preference",
+     "unit": "%",
+     "higher_is_better": null
+    }
+   ],
+   "baselines": [
+    "OPT",
+    "GPT-J",
+    "GPT-Neo",
+    "GPT-NeoX",
+    "T0",
+    "mGPT",
+    "XGLM",
+    "M2M-100",
+    "AlexaTM (32-shot)",
+    "mTk-Instruct",
+    "Codex",
+    "GPT-fr",
+    "TF-IDF probes",
+    "HELM models (reported)"
+   ],
+   "protocol": "zero/few-shot prompting; Mann-Whitney U, ANOVA and Pearson tests for probing correlations; one-sample T-test (p<.05) for CrowS-Pairs"
+  },
+  "availability": {
+   "code": "Apache 2.0 (github bigscience-workshop repos)",
+   "weights": "hf.co/bigscience/bloom under Responsible AI License (13 behavioural-use restrictions)",
+   "data": "223 of 498 ROOTS components distributable; the rest by request"
+  },
+  "prompts": [
+   {
+    "purpose": "WMT14 translation, prompt a_good_translation-source+target (Table 5; three more prompts listed there)",
+    "text": "Given the following source text: [source sentence], a good L2 translation is:",
+    "where": "Table 5"
+   },
+   {
+    "purpose": "Flores-101 / DiaBLa 1-shot translation",
+    "text": "{{ src_lang }}: {{ orig }} = {{ trg_lang }}: ||| {{ ref }}",
+    "where": "Appendix A.10"
+   },
+   {
+    "purpose": "CrowS-Pairs",
+    "text": "Sentence A: {{sent_more}}\\nSentence B: {{sent_less}}\\nSelect the option that is the most plausible:\\n- {{answer_choices[0]}}\\n- {{answer_choices[1]}}",
+    "where": "Appendix A.12.2"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training.tokens",
+    "quote": "The ROOTS dataset contains around 341 billion tokens of text",
+    "where": "Section 3.5"
+   },
+   {
+    "field": "training.precision",
+    "quote": "we performed final training in bfloat16 mixed precision",
+    "where": "Section 3.4.3"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Training BLOOM took about 3.5 months and 1,082,990 compute hours on 384 A100 80GB GPUs.",
+   "kind": "measured",
+   "source": null,
+   "metric": "compute hours",
+   "value": "1,082,990",
+   "unit": "hours",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BLOOM 176B on Jean Zay, 48 nodes x 8 A100",
+   "quote": "consumed 1,082,990 compute hours",
+   "table": null,
+   "note": null,
+   "where": "Section 3.4.1"
+  },
+  {
+   "claim": "Fastest configuration reached 156 TFLOPs per GPU, half of the 312 TFLOPs peak.",
+   "kind": "measured",
+   "source": null,
+   "metric": "TFLOPs",
+   "value": "156",
+   "unit": "TFLOPs",
+   "baseline_value": "312",
+   "n": null,
+   "setup": "A100, 3D parallelism with ZeRO stage 1",
+   "quote": "We were able to achieve 156 TFLOPs in",
+   "table": null,
+   "note": null,
+   "where": "Section 3.4.2"
+  },
+  {
+   "claim": "Estimated training carbon emissions are about 81 tons CO2eq (11 equipment, 25 energy, 45 idle).",
+   "kind": "measured",
+   "source": null,
+   "metric": "CO2eq",
+   "value": "81",
+   "unit": "tons",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BLOOM final training, life-cycle style estimate",
+   "quote": "81 tons of CO2eq, of which 14% were generated by the equipment manufacturing",
+   "table": null,
+   "note": "Grid intensity 57 gCO2eq/kWh in France",
+   "where": "Section 3.5.1"
+  },
+  {
+   "claim": "BLOOM used 433 MWh and 25 tons CO2eq, versus OPT 324 MWh and 70 tons.",
+   "kind": "measured",
+   "source": null,
+   "metric": "emissions",
+   "value": "25",
+   "unit": "tons",
+   "baseline_value": "70",
+   "n": null,
+   "setup": "Training energy only; GPT-3 and Gopher numbers partly inferred",
+   "quote": "its emissions are ap-",
+   "table": "Table 4, row BLOOM, column CO2eq emissions (25 tons); row OPT 70 tons",
+   "note": "Numbers in italics for other models were inferred by the authors",
+   "where": "Table 4"
+  },
+  {
+   "claim": "The final training run was about 37% of the project's compute emissions.",
+   "kind": "measured",
+   "source": null,
+   "metric": "share",
+   "value": "37",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "all computation on Jean Zay for BigScience",
+   "quote": "the final BLOOM training represents approximately 37% of",
+   "table": null,
+   "note": null,
+   "where": "Section 3.5.1"
+  },
+  {
+   "claim": "Serving BLOOM on a 16-GPU GCP instance emits about 20 kg CO2eq per day.",
+   "kind": "measured",
+   "source": null,
+   "metric": "CO2eq per day",
+   "value": "20",
+   "unit": "kg",
+   "baseline_value": null,
+   "n": null,
+   "setup": "us-central1, 16 GPUs; not representative of all deployments",
+   "quote": "approximately 20 kg of CO2eq emitted per day of deployment",
+   "table": null,
+   "note": null,
+   "where": "Section 3.5.1"
+  },
+  {
+   "claim": "Final vocabulary is 250,680 items, including 200 reserved tokens.",
+   "kind": "measured",
+   "source": null,
+   "metric": "vocab size",
+   "value": "250,680",
+   "unit": "tokens",
+   "baseline_value": null,
+   "n": null,
+   "setup": "byte-level BPE; divisible by 128 and by 4 for tensor parallelism",
+   "quote": "We used a final size of 250,680 vocabulary items with 200 tokens reserved for possible future",
+   "table": null,
+   "note": null,
+   "where": "Section 3.3"
+  },
+  {
+   "claim": "BLOOM tokenizer fertility on French is 11% below the monolingual tokenizer.",
+   "kind": "measured",
+   "source": null,
+   "metric": "fertility",
+   "value": "1.17 (-11%)",
+   "unit": "subwords per word",
+   "baseline_value": "1.30",
+   "n": null,
+   "setup": "Universal Dependencies treebanks; monolingual is CamemBERT",
+   "quote": null,
+   "table": "Table 2, row BLOOM, column fr (1.17 (-11%)); row Monolingual 1.30",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "BLOOM tokenizer fertility on Arabic is 13% above the monolingual tokenizer, exceeding the 10-point goal.",
+   "kind": "measured",
+   "source": null,
+   "metric": "fertility",
+   "value": "1.34 (+13%)",
+   "unit": "subwords per word",
+   "baseline_value": "1.16",
+   "n": null,
+   "setup": "Universal Dependencies; monolingual is Arabic BERT",
+   "quote": null,
+   "table": "Table 2, row BLOOM, column ar (1.34 (+13%)); row Monolingual 1.16",
+   "note": "Text says the 250k size reached the fertility objective of no more than 10 points worse; Arabic (+13%) exceeds it",
+   "where": "Table 2, Section 3.3"
+  },
+  {
+   "claim": "On HumanEval, BLOOM 176B scores 15.52% pass@1, 32.20% pass@10 and 55.45% pass@100.",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass@1",
+   "value": "15.52%",
+   "unit": "%",
+   "baseline_value": "11.62% (GPT-J 6B)",
+   "n": null,
+   "setup": "HumanEval, pretrained BLOOM 176B; Codex-12B 28.81% pass@1",
+   "quote": null,
+   "table": "Table 9, row BLOOM, column k = 1 (15.52%), k = 10 (32.20%), k = 100 (55.45%); row Codex-12B 28.81%",
+   "note": "Non-BLOOM rows come from Chen et al. 2021 and Fried et al. 2022",
+   "where": "Table 9"
+  },
+  {
+   "claim": "BLOOMZ 176B does not improve over BLOOM on HumanEval (12.06% vs 15.52% pass@1).",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass@1",
+   "value": "12.06%",
+   "unit": "%",
+   "baseline_value": "15.52%",
+   "n": null,
+   "setup": "HumanEval",
+   "quote": null,
+   "table": "Table 9, row BLOOMZ, column k = 1",
+   "note": null,
+   "where": "Table 9"
+  },
+  {
+   "claim": "One-shot en to fr WMT14 BLEU for BLOOM is 34.2, versus 43.8 for supervised M2M-100.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": "34.2",
+   "unit": "BLEU",
+   "baseline_value": "43.8",
+   "n": null,
+   "setup": "WMT14, BLOOM-176B, 1-shot, best prompt",
+   "quote": "(43.8 BLEU for English→French and 40.4 for French→English, compared to",
+   "table": null,
+   "note": "Table 6 version-target en to fr 1-shot prints 34.22; a_good_translation prints 36.39",
+   "where": "Section 4.3.1"
+  },
+  {
+   "claim": "WMT14 prompt choice matters: en to fr zero-shot BLEU ranges from 7.90 (gpt3-target) to 21.96 (version-target).",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": "21.96",
+   "unit": "BLEU",
+   "baseline_value": "7.90",
+   "n": null,
+   "setup": "BLOOM-176B, zero-shot, WMT14 en to fr",
+   "quote": null,
+   "table": "Table 6, row version-target, column en->fr 0-shot (21.96); row gpt3-target 7.90",
+   "note": null,
+   "where": "Table 6"
+  },
+  {
+   "claim": "Translation between Swahili and Yoruba is very poor; both languages have under 50k tokens in training data.",
+   "kind": "measured",
+   "source": null,
+   "metric": "spBLEU",
+   "value": "1.3",
+   "unit": "spBLEU",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Flores-101 devtest, 1-shot, xglm prompt, sw to yo",
+   "quote": "(<50k tokens each)",
+   "table": "Table 8a, row sw, column yo, BLOOM 1.3",
+   "note": null,
+   "where": "Section 4.3.3, Table 8a"
+  },
+  {
+   "claim": "In one-shot SuperGLUE BLOOM matches or beats OPT, though it is behind OPT zero-shot; average performance across prompts is near chance on most tasks.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": 5,
+   "setup": "SuperGLUE subset, 5 prompts per task, BLOOM-176B vs OPT-175B",
+   "quote": null,
+   "table": null,
+   "note": "Numbers are in Fig 7/8 only",
+   "where": "Section 4.2"
+  },
+  {
+   "claim": "Multitask finetuning (BLOOMZ) lifts zero-shot XNLI, XWinograd, XCOPA and XStoryCloze well above the near-chance BLOOM and XGLM.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": 5,
+   "setup": "5 untuned prompts per dataset, held-out tasks",
+   "quote": null,
+   "table": null,
+   "note": "Only in Fig 11",
+   "where": "Section 4.7"
+  },
+  {
+   "claim": "Multitask finetuning plateaus after 1 to 6 billion tokens of the 13B budget.",
+   "kind": "measured",
+   "source": null,
+   "metric": "tokens",
+   "value": "1 – 6",
+   "unit": "billion tokens",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BLOOMZ finetuning on xP3",
+   "quote": "We found performance to plateau",
+   "table": null,
+   "note": "Quote locates the claim; number printed as '1 – 6 billion tokens'",
+   "where": "Section 3.5"
+  },
+  {
+   "claim": "SGPT-BLOOM-7.1B-msmarco reaches 59.25 accuracy on MASSIVE Arabic and 69.67 on English; the 1.7B-nli variant is worse.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "59.25",
+   "unit": "%",
+   "baseline_value": "50.86 (LaBSE)",
+   "n": null,
+   "setup": "MTEB MASSIVE classification, Arabic",
+   "quote": null,
+   "table": "Table 10, row Arabic (ar), column SGPT-BLOOM-7.1B (59.25); LaBSE 50.86",
+   "note": "English column: ST5-XL 72.09 beats SGPT-BLOOM-7.1B 69.67",
+   "where": "Table 10"
+  },
+  {
+   "claim": "Probing: the 1.7B model performs on par or better than the 176B model; both beat count-based baselines.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": "0.66",
+   "unit": "F1",
+   "baseline_value": "0.49 (random)",
+   "n": 3,
+   "setup": "Arabic, F1 averaged by layers and tasks, 3 seeds; BLOOM-1B7",
+   "quote": null,
+   "table": "Table 12, row Arabic, column BLOOM-1B7 (0.66 ±0.27); BLOOM 0.64; Random 0.49",
+   "note": null,
+   "where": "Table 12"
+  },
+  {
+   "claim": "Overall CrowS-Pairs accuracy is 49.78 (English) and 50.61 (French), near 50 but significantly different.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "49.78",
+   "unit": "%",
+   "baseline_value": "50",
+   "n": 8,
+   "setup": "multilingual CrowS-Pairs, 1,677 pairs, averaged over eight runs, one-sample T-test p<.05",
+   "quote": null,
+   "table": "Table 14, row All, column English (49.78*), column French (50.61*)",
+   "note": null,
+   "where": "Table 14"
+  },
+  {
+   "claim": "On HELM 5-shot, BLOOM is roughly on par with GPT-3 davinci v1 and J1-Grande v1 in accuracy but behind OPT, InstructGPT davinci v2 and others.",
+   "kind": "reported",
+   "source": "Liang et al. 2022 (HELM)",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "English-only tasks, 5-shot",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Section 4.6, Fig 10"
+  },
+  {
+   "claim": "ALiBi gave smoother training and better downstream performance than learned and rotary embeddings in the authors' ablations.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "ablations at 1.3B scale (Le Scao et al. 2022)",
+   "quote": null,
+   "table": null,
+   "note": "Data are in the cited paper, not here",
+   "where": "Section 3.2.3"
+  },
+  {
+   "claim": "Float16 caused irreversible divergences at 104B on V100s; bfloat16 mixed precision on A100 solved the instability.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "104B preliminary runs (float16) vs final 176B (bfloat16)",
+   "quote": "numerical instabilities that caused irreversible training divergences",
+   "table": null,
+   "note": "Embedding LayerNorm was also adopted for stability; authors say bfloat16 may make it unnecessary",
+   "where": "Section 3.4.3, 3.2.3"
+  }
+ ],
+ "limits": [
+  "Embedding LayerNorm improved stability but penalizes zero-shot generalization (Le Scao et al. 2022); it may be unnecessary under bfloat16.",
+  "Ablations ran at 1.3B and 6.7B scale; the authors note outlier features appear above 6.7B so results may not extrapolate.",
+  "Mixture-of-experts and state-space models were not considered.",
+  "The learning-rate decay never finished because warmup + decay tokens exceeded total tokens; the last 25B tokens were repeated data.",
+  "Swahili and Yoruba, under-represented (<50k tokens), translate very poorly.",
+  "ROUGE-2 understates summary quality; CrowS-Pairs adapted from masked LMs has validity issues and covers only English and French.",
+  "Probing covers only 17 languages and averaged layers at end of training.",
+  "Prompts were not tuned, so results are realistic rather than best-case.",
+  "Carbon API figure is not representative of all deployments."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "fertility",
+   "definition": "the number of subwords created per word or per dataset by the tokenizer",
+   "where": "Section 3.3"
+  },
+  {
+   "term": "BLOOMZ",
+   "definition": "BLOOM models after multitask prompted finetuning on xP3",
+   "where": "Section 3.1.4"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "ALiBi (Press et al., 2021)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "position scheme",
+   "quote": null
+  },
+  {
+   "work": "Megatron-LM (Shoeybi et al., 2019)",
+   "year": 2019,
+   "arxiv": "1909.08053",
+   "relation": "uses-method",
+   "note": "Transformer implementation, tensor parallelism",
+   "quote": null
+  },
+  {
+   "work": "Megatron-Turing NLG / DeepSpeed (Smith et al., 2022)",
+   "year": 2022,
+   "arxiv": "2201.11990",
+   "relation": "uses-method",
+   "note": "Megatron-DeepSpeed 3D parallelism, bfloat16 observation",
+   "quote": null
+  },
+  {
+   "work": "ZeRO (Rajbhandari et al., 2020)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "stage 1 optimizer sharding",
+   "quote": null
+  },
+  {
+   "work": "T0 (Sanh et al., 2022)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "multitask prompted finetuning recipe; baseline",
+   "quote": null
+  },
+  {
+   "work": "FLAN (Wei et al., 2021)",
+   "year": 2021,
+   "arxiv": "2109.01652",
+   "relation": "related",
+   "note": "finetuning hyperparameters loosely based on T0 and FLAN",
+   "quote": null
+  },
+  {
+   "work": "OPT (Zhang et al., 2022)",
+   "year": 2022,
+   "arxiv": "2205.01068",
+   "relation": "baseline",
+   "note": "main comparison model and emissions comparison",
+   "quote": null
+  },
+  {
+   "work": "Hoffmann et al., 2022",
+   "year": 2022,
+   "arxiv": "2203.15556",
+   "relation": "related",
+   "note": "revised scaling laws led to 25B extra tokens",
+   "quote": null
+  },
+  {
+   "work": "Kaplan et al., 2020",
+   "year": 2020,
+   "arxiv": "2001.08361",
+   "relation": "related",
+   "note": "scaling laws",
+   "quote": null
+  },
+  {
+   "work": "Dettmers et al., 2022 (LLM.int8 / StableEmbedding)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "embedding LayerNorm",
+   "quote": null
+  },
+  {
+   "work": "Le Scao et al., 2022; Wang et al., 2022a",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "architecture and objective ablations",
+   "quote": null
+  },
+  {
+   "work": "Muennighoff et al., 2022b (BLOOMZ/xP3)",
+   "year": 2022,
+   "arxiv": "2211.01786",
+   "relation": "extends",
+   "note": "multitask finetuning details",
+   "quote": null
+  },
+  {
+   "work": "SGPT (Muennighoff, 2022)",
+   "year": 2022,
+   "arxiv": "2202.08904",
+   "relation": "uses-method",
+   "note": "contrastive embedding recipe",
+   "quote": null
+  },
+  {
+   "work": "Laurencon et al., 2022 (ROOTS)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "training corpus",
+   "quote": null
+  },
+  {
+   "work": "HumanEval (Chen et al., 2021)",
+   "year": 2021,
+   "arxiv": "2107.03374",
+   "relation": "evaluates",
+   "note": "code benchmark",
+   "quote": null
+  },
+  {
+   "work": "Raffel et al., 2020",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "contradicts",
+   "note": "text notes decoder-only choice is opposed to T5's encoder-decoder finding for transfer learning",
+   "quote": "This is in opposition to the findings of Raffel et al. (2020)"
+  },
+  {
+   "work": "HELM (Liang et al., 2022)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "reproduced 5-shot results",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 5",
+   "caption": "The BLOOM architecture. The khead slope parameters for ALIBI are taken as 2^(-8i/n) with n the number of heads and i in 1..n.",
+   "page": 16,
+   "why": "Shows embedding LayerNorm, ALiBi mask and 70 decoder blocks in one picture."
+  },
+  {
+   "figure": "Table 3",
+   "caption": "BLOOM & BLOOMZ Training Hyperparameters.",
+   "page": 21,
+   "why": "All size, batch, LR and token settings in one place."
+  },
+  {
+   "figure": "Table 2",
+   "caption": "Fertilities obtained on Universal Dependencies treebanks on languages with existing monolingual tokenizers.",
+   "page": 17,
+   "why": "Evidence for the multilingual tokenizer design."
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 1, Section 2.1",
+   "snippet": "p(x) = p(x1, ..., xT) = prod_{t=1}^{T} p(xt | x<t)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Table 3 is flattened by extraction; identical columns are merged, so size-to-value mapping was inferred from layout and text.",
+  "Section 3.5 says contrastive finetuning of the 1.3 and 7.1 billion models, but names SGPT-BLOOM-1.7B-nli.",
+  "Table 3 lists float16 for the small models while Section 3.4.3 says final training was in bfloat16; likely applies to the 176B only.",
+  "Author lists omitted from reading; the pre-header lines of the PDF are contributor names only. No embedded instructions found."
+ ]
+}

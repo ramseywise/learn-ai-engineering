@@ -1,19 +1,579 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2302.00083",
  "pdf": "generative-ai/02-rag-retrieval/sources/ram-2023-context-retrieval-augmented-language-models.pdf",
  "bib": {
   "title": "In-Context Retrieval-Augmented Language Models",
+  "authors": [
+   "Ori Ram",
+   "Yoav Levine",
+   "Itay Dalmedigos",
+   "Dor Muhlgay",
+   "Amnon Shashua",
+   "Kevin Leyton-Brown",
+   "Yoav Shoham"
+  ],
   "first_author": "Ram",
   "year": 2023,
-  "venue": "Trans. Assoc. Comput. Linguistics 2023",
+  "venue": "preprint",
   "arxiv": "2302.00083",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-04",
-  "session": "5f2f0582-f958-4d9c-8469-02f3d5079657"
+  "at": "2026-11-07",
+  "chars_read": 54675,
+  "chars_total": 54675,
+  "engine": "pymupdf",
+  "skipped": null
  },
- "legacy_report": "SOURCE: \"In-Context Retrieval-Augmented Language Models\", Ori Ram*, Yoav Levine*, Itay Dalmedigos, Dor Muhlgay, Amnon Shashua, Kevin Leyton-Brown, Yoav Shoham (AI21 Labs). arXiv 2302.00083v3, dated 1 Aug 2023. The text thanks \"the reviewers and the Action Editor\", which points to a journal (TACL 2023), but the extraction never names the venue. Code: https://github.com/AI21Labs/in-context-ralm\n\nCOVERAGE: I read all 54,645 of 54,645 chars across 15 pages: body, the full reference list, and Appendices A (query-length ablations), B (GPT-Neo table) and C (ODQA prompts). I skimmed the references only for origins. Figure captions came from figures.py. The bar and line charts have no numbers in the text, only axis ticks, so I quote no values read off Figures 3, 5, 6, 7 or 8.\n\nCLAIMS\n- claim: The method is to prepend the retrieved document to the input prefix of a frozen, off-the-shelf LM. The architecture is unchanged and there is no further training.\n  number: none\n  setup: all experiments\n  quote: \"leaving the LM architecture unchanged and prepending grounding documents to the input, without any further training of the LM\" / \"we simply prepend the selected documents to the LM's input text (Figure 2)\"\n  where: p1 abstract; p2\n- claim: With an off-the-shelf retriever, the perplexity gain matches a 2–3x larger model on every corpus tested.\n  number: 2–3x\n  setup: GPT-2 S/M/L/XL. Corpora are WikiText-103, RealNews, and The Pile's ArXiv, Stack Exchange and FreeLaw. BM25, l=32, s=4, top-1 passage.\n  quote: \"In-Context RALM led to LM performance gains equivalent to increasing the LM's number of parameters by 2–3× across all of the text corpora we examined\"\n  where: p2\n- claim: A 345M model with retrieval beats a 762M model without it. With the trained reranker it beats a 1.5B model.\n  number: 345M > 762M (BM25); 345M > 1.5B (reranker)\n  setup: GPT-2, WikiText-103 test, word perplexity. Table 1: GPT-2 M with BM25 scores 21.5 against 22.0 for GPT-2 L with no retrieval. GPT-2 M with Predictive reranking scores 19.7 against 20.0 for GPT-2 XL.\n  quote: \"a 345M parameter GPT-2 enhanced by In-Context RALM outperforms a 762M parameter GPT-2 when employing an off-the-shelf BM25 retriever ... and outperforms a 1.5B parameter GPT-2 when employing our trained LM-oriented reranker\"\n  where: p2; Table 1 p6\n- claim: A retrieval-augmented OPT-6.7B matches OPT-66B without retrieval.\n  number: 6.7B ~ 66B\n  setup: OPT 125M–66B. WikiText-103 test (word ppl) and RealNews dev (token ppl). BM25, s=4, l=32.\n  quote: \"In-Context RALM with an off-the-shelf retriever improved the performance of a 6.7B parameter OPT model to match that of a 66B parameter OPT model.\"\n  where: p2, Fig 4 caption p7\n- claim: Table 1 perplexities for no retrieval, then BM25, then zero-shot rerank, then predictive rerank.\n  number: GPT-2 S WikiText 37.5 -> 29.6 -> 28.6 -> 26.8; GPT-2 XL WikiText 20.0 -> 16.6 -> 16.1 -> 15.4; GPT-2 XL FreeLaw 8.0 -> 6.4 -> 6.0\n  setup: test sets. Word ppl for WikiText, token ppl elsewhere. Predictive reranking was run on WikiText only.\n  quote: \"GPT-2 S – – 37.5 21.3 12.0 12.8 13.0 BM25 §5 – 29.6 16.1 10.9 11.3 9.6 BM25 Zero-shot §6.1 28.6 15.5 10.1 10.6 8.8 BM25 Predictive §6.2 26.8 – – – –\"\n  where: Table 1 p6\n- claim: The gain shrinks at larger scale. LLaMA-33B improves only from 6.3 to 6.1.\n  number: 7B 9.9->8.8; 13B 8.5->7.6; 33B 6.3->6.1\n  setup: LLaMA, WikiText-103 test, word ppl, BM25. The authors do not comment on the shrinking gain; this is my reading of their table.\n  quote: \"LLaMA-7B - 9.9BM25, §5 8.8 LLaMA-13B - 8.5BM25, §5 7.6 LLaMA-33B - 6.3BM25, §5 6.1\"\n  where: Table 2 p6\n- claim: Sparse BM25 beats three off-the-shelf dense retrievers (Contriever, Spider, mean-pooled frozen BERT as in RETRO) for language modelling, and it is cheaper to run.\n  number: none quotable (bar chart only)\n  setup: WikiText-103 dev, GPT-2, s=4, best l for each retriever\n  quote: \"the sparse (lexical) BM25 retriever ... outperformed three popular dense (neural) retrievers\" / \"applying a BM25 retriever is significantly cheaper than the neural alternatives\"\n  where: p6–7\n- claim: Retrieving more often lowers perplexity, so the stride is a trade-off between runtime and quality. The paper uses s=4. RETRO's s=64 degrades perplexity badly.\n  number: s=4 (used); RETRO s=64\n  setup: GPT-2, WikiText-103 dev, strides 1–64\n  quote: \"To balance performance and runtime, we used s = 4 in our experiments. For comparison, RETRO employed a retrieval frequency of s = 64 ... which leads to large degradation in perplexity.\"\n  where: p7\n- claim: Query length has a sweet spot. Too short a query loses context; too long a query dilutes the most recent tokens. Best is l=32 for BM25 and l=64 for dense retrievers. Setting the query length equal to the stride (s = l), as prior work did, hurts.\n  number: l=32 BM25; l=64 dense\n  setup: GPT-2, WikiText-103 dev\n  quote: \"a sweet spot around a query length of 32 tokens\" / \"found that ℓ = 32 was optimal for BM25 (Figure 6), and ℓ = 64 worked best for dense retrievers\" / \"we show that enforcing s = ℓ degrades LM performance\"\n  where: p7; p6; p4\n- claim: A small LM can rerank the BM25 top-16 for a larger LM at almost no loss, so the method works when the generator is only reachable through an API.\n  number: XL generator: 16.2 (110M reranker) vs 16.1 (self-rerank) on WikiText\n  setup: k=16, s'=16, GPT-2\n  quote: \"Using a GPT-2 110M (S) instead of a larger language model as a reranker leads to only a minor degradation.\"\n  where: Table 3 p9\n- claim: A trained predictive reranker improves on zero-shot reranking, but it does not reach the top-16 oracle.\n  number: GPT-2 S 29.6 -> 26.8; XL 16.6 -> 15.4\n  setup: RoBERTa-base. 300,000 examples from WikiText-103 train, labelled by GPT-2 S. 10,000 steps, lr 1e-5, batch 32. LM frozen.\n  quote: \"the perplexity of GPT-2 110M (S) improved from 29.6 to 26.8, and that of GPT-2 1.5B (XL) improved from 16.6 to 15.4\"\n  where: p10\n- claim: For zero-shot open-domain QA with a frozen LLaMA, prepending two DPR passages lifts exact match by a large margin. Most of the gain comes from one or two documents.\n  number: LLaMA-13B NQ 12.0 -> 31.0, TriviaQA 54.8 -> 60.1; 7B NQ 10.3 -> 28.0; 33B NQ 13.7 -> 32.3\n  setup: test sets, exact match, DPR retriever, top-2 documents, prompt from the LLaMA paper extended with the passages\n  quote: \"adding retrieved documents improved LLaMA-13B in the zero-shot setting by more than 18 points on NQ (from 12.0% to 31.0%) and more than 5 points on TriviaQA (from 54.8% to 60.1%)\"\n  where: p11; Table 4 p10\n- claim: The gains also hold for GPT-Neo and GPT-J.\n  number: GPT-J 6B WikiText 11.6 -> 10.0; RealNews 9.2 -> 7.7\n  setup: Appendix B, BM25\n  quote: \"GPT-J 6B - 11.6 9.2BM25, §5 10.0 7.7\"\n  where: Table 5 p15\n\nSetup details (pp4–5): GPT-2 (110M–1.5B), GPT-Neo/J (1.3B–6B), OPT (125M–66B), LLaMA (7B–33B). Max sequence length was 1,024 for all models; the authors observed \"similar improvements\" at 2,048 in preliminary runs. The WikiText-103 retrieval corpus is the Dec 2018 Wikipedia dump from DPR, with \"all 120 articles of the development and test set\" removed. Other corpora retrieve from their own training split. Passages are 100 words, truncated at 256 tokens. BM25 runs through Pyserini; dense retrieval uses exact FAISS search. GPT-2 was trained without Wikipedia, so WikiText is a \"zero-shot\" retrieval corpus for it. When the context overflows, tokens are dropped from the start of the prefix, not from the document.\n\nLIMITS:\n- The method is shown with a single prepended document only (\"We always use a single document\", p4). The authors concede that multiple documents are future work (p11), except in ODQA, which uses 2.\n- Retrieval runs at a fixed interval s. Adaptive retrieval (\"only when a specialized model predicts that retrieval is needed\") is left to future work (p11).\n- The main metric is perplexity, not generation quality or factuality. The factuality claim is outsourced to Muhlgay et al. (2023).\n- The ODQA results are zero-shot only, with no fine-tuned or RAG baselines compared.\n- Retrieving every 4 tokens re-encodes the prefix each time. The paper reports no runtime or latency figures.\n- The predictive reranker was trained and tested on WikiText-103 only.\n- Dense retrievers were off-the-shelf with no tuning, so \"BM25 wins\" holds for zero-shot retrievers in language modelling, not for retrieval in general.\n- The gain shrinks at 33B (6.3 -> 6.1).\n- Dated: the models are 2023 base LMs at 1,024 context, not instruction-tuned long-context chat models. Stride-4 retrieval is an LM-perplexity setup, not how production RAG prompts are built. Concurrent work, REPLUG (Shi et al. 2023), trains a dedicated retriever.\n\nBUILDS ON: In-Context Learning (Brown et al., 2020; Dong et al., 2023); RETRO (Borgeaud et al., 2022), which is the closest prior work and the source of the frozen-BERT retriever and the s=64 comparison; kNN-LM (Khandelwal et al., 2020); RAG (Lewis et al., 2020) and REALM (Guu et al., 2020) for the reranker loss; FiD (Izacard and Grave, 2021); DPR (Karpukhin et al., 2020) for the Wikipedia corpus and code; BM25 (Robertson and Zaragoza, 2009); Contriever (Izacard et al., 2022a); Spider (Ram et al., 2022); BEIR (Thakur et al., 2021), for BM25 being strong zero-shot; Sachan et al. (2022) for LM-based reranking; Levine et al. (2022a,b) on frozen LMs as readers; concurrent REPLUG (Shi et al., 2023).\n\nCODE:\n- Eq. (4) (p4): p(x1..xn) = prod_j prod_i p_theta(x_{s*j+i} | [R_C(q_j^{s,l}); x_{<(s*j+i)}]), where the query q is the last l prefix tokens.\n- Appendix C open-book prompt (p14–15): the retrieved passages (title, then text), followed by \"Based on these texts, answer these questions:\\nQ: Who got the first nobel prize in physics?\\nA:\". The closed-book version is \"Answer these questions:\\nQ: ...\\nA:\".\n\nFIGURES:\n- Figure 2 (p2) is my pick for the target note. Caption: \"An example of In-Context RALM: we simply prepend the retrieved document before the input prefix.\" It uses a World Cup 2022/2026 example: the retriever returns \"FIFA World Cup 2026 will expand to 48 teams.\", and the LM then completes \"...before the increase to 48 in the 2026 tournament.\" It shows the augmented prompt in one glance.\n- Alternatives:\n  - Figure 4 (p7): OPT 125M–66B bars with and without BM25. Shows the 6.7B ~ 66B result.\n  - Figure 5 (p8): perplexity against retrieval stride.\n  - Figure 8 (p10): exact match against number of documents (0–4).\n\nPROBLEMS:\n- Table cells extract run together. For example, \"LLaMA-7B - 9.9BM25, §5 8.8\" means 9.9 without retrieval and 8.8 with BM25. I matched columns using the table captions and the prose (29.6/26.8 and 16.6/15.4 agree with the prose).\n- The figure plots carry no numeric labels, so I quote no values read off them.\n- The first author's name extracts as \"Y oav\".\n- The PDF contains no embedded instructions.\n\nSource path: /Users/ramsey-wise/workspace/learn-ai-engineering/generative-ai/02-rag-retrieval/sources/ram-2023-context-retrieval-augmented-language-models.pdf"
+ "type": "empirical",
+ "question": "Can a frozen, off-the-shelf LM gain from retrieval by simply prepending retrieved documents to its input, and how should documents be selected for language modeling?",
+ "hypothesis": "Simple prepending with off-the-shelf retrievers gives large LM gains, and LM-specialised reranking adds more.",
+ "contributions": [
+  "In-Context RALM: prepend a retrieved document to the input of an unmodified LM",
+  "Study of off-the-shelf retrievers, retrieval stride and query length",
+  "Two reranking methods (zero-shot LM reranking, trained Predictive Reranking)",
+  "Application to open-domain QA with frozen LLaMA"
+ ],
+ "method": {
+  "summary": "A retrieved passage (single document) is prepended to the prefix of a frozen LM; retrieval is repeated every s tokens using the last l tokens as the query. BM25 top-16 can be reranked by an LM zero-shot or by a RoBERTa-base reranker trained with LM signal.",
+  "task": "language modeling perplexity; open-domain QA",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "WikiText-103",
+    "role": "eval",
+    "size": null,
+    "split": "test (dev for hyperparameters)",
+    "source": "Merity et al., 2016",
+    "preprocessing": "120 dev/test articles removed from the retrieval corpus"
+   },
+   {
+    "name": "WikiText-103 train",
+    "role": "train",
+    "size": "300,000 reranker examples created",
+    "split": "train",
+    "source": null,
+    "preprocessing": "prefix sampled, BM25 top-16, LM likelihood of next stride per document"
+   },
+   {
+    "name": "RealNews",
+    "role": "eval",
+    "size": null,
+    "split": "dev (Fig 4, Table 5) ; test (Table 1)",
+    "source": "Zellers et al., 2019",
+    "preprocessing": "training data used as retrieval corpus"
+   },
+   {
+    "name": "The Pile: ArXiv, Stack Exchange, FreeLaw",
+    "role": "eval",
+    "size": null,
+    "split": "test",
+    "source": "Gao et al., 2021",
+    "preprocessing": "training data used as retrieval corpus"
+   },
+   {
+    "name": "Natural Questions, TriviaQA",
+    "role": "eval",
+    "size": null,
+    "split": "dev for #docs; test for Table 4",
+    "source": "Kwiatkowski 2019; Joshi 2017",
+    "preprocessing": null
+   },
+   {
+    "name": "Wikipedia Dec 20 2018 (DPR version)",
+    "role": "pretrain",
+    "size": "non-overlapping passages of 100 words (<150 tokens mostly)",
+    "split": null,
+    "source": "Karpukhin et al. 2020",
+    "preprocessing": "retrieved passages truncated at 256 tokens"
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT-2 S/M/L/XL",
+    "role": "evaluated",
+    "params": "110M-1.5B",
+    "architecture": "decoder-only transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "1,024 used",
+    "other": {}
+   },
+   {
+    "name": "GPT-Neo/GPT-J",
+    "role": "evaluated",
+    "params": "1.3B-6B",
+    "architecture": "decoder-only",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "1,024 used (supports 2,048)",
+    "other": {}
+   },
+   {
+    "name": "OPT",
+    "role": "evaluated",
+    "params": "125M-66B (eight models)",
+    "architecture": "decoder-only",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "1,024 used (supports 2,048)",
+    "other": {}
+   },
+   {
+    "name": "LLaMA",
+    "role": "evaluated",
+    "params": "7B, 13B, 33B",
+    "architecture": "decoder-only",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "1,024 used (supports 2,048)",
+    "other": {}
+   },
+   {
+    "name": "Predictive reranker",
+    "role": "proposed",
+    "params": null,
+    "architecture": "RoBERTa-base bidirectional classifier",
+    "init_from": "RoBERTa-base",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "BM25 (Pyserini)",
+    "role": "retriever",
+    "params": null,
+    "architecture": "sparse",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "BERT-base mean pooling, Contriever, Spider, DPR",
+    "role": "retriever",
+    "params": null,
+    "architecture": "dense, exact search with FAISS",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "DPR used for ODQA only"
+    }
+   }
+  ],
+  "training": {
+   "objective": "-log sum_i p_rank(d_i|x) * p_theta(y|[d_i;x]) with the LM frozen; only the reranker trains",
+   "optimizer": null,
+   "lr": "peak 10^-5",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "32",
+   "steps": "10,000",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "training_examples": "300,000 from WikiText-103 train",
+    "data_from": "GPT-2 110M (S)",
+    "reranker_trained_once_applied_to_all_GPT2": true,
+    "note": "The LMs themselves are not trained; only the optional reranker is."
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": "Closed-book: 'Answer these questions: Q: ... A:' (Touvron et al. 2023). Open-book: retrieved passages (title + text) prepended, then 'Based on these texts, answer these questions: Q: ... A:'",
+   "retrieval": "single document for LM; top-2 DPR docs for ODQA; BM25 query = last l tokens, refreshed every s tokens; passages truncated at 256 tokens",
+   "parameters": {
+    "stride_s": "4 (1..64 ablated)",
+    "query_length_l": "32 for BM25, 64 for dense (16-256 ablated)",
+    "rerank_k": "16",
+    "zero_shot_rerank_s_prime": "16 (4, 8, 16, 32 tried)",
+    "max_sequence_length": "1,024"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "word-level perplexity",
+     "definition": "perplexity over words, WikiText-103",
+     "unit": "perplexity",
+     "higher_is_better": false
+    },
+    {
+     "name": "token-level perplexity",
+     "definition": "shared vocabulary so comparable across GPT-2 models; RealNews and Pile sets",
+     "unit": "perplexity",
+     "higher_is_better": false
+    },
+    {
+     "name": "exact match",
+     "definition": "ODQA answers",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "same LM without retrieval",
+    "BM25 top-1",
+    "BERT/Contriever/Spider retrievers",
+    "oracle best of BM25 top-16"
+   ],
+   "protocol": "Hyperparameters tuned on dev sets; single runs; no significance tests or seeds reported"
+  },
+  "availability": {
+   "code": "https://github.com/AI21Labs/in-context-ralm",
+   "weights": null,
+   "data": "public datasets"
+  },
+  "prompts": [
+   {
+    "purpose": "closed-book ODQA",
+    "text": "Answer these questions:\nQ: Who got the first nobel prize in physics?\nA:",
+    "where": "Appendix C"
+   },
+   {
+    "purpose": "open-book ODQA (retrieved passages precede this line)",
+    "text": "Based on these texts, answer these questions:\nQ: Who got the first nobel prize in physics?\nA:",
+    "where": "Appendix C"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "A 345M GPT-2 with BM25 In-Context RALM beats a 762M GPT-2 without retrieval.",
+   "kind": "measured",
+   "source": null,
+   "metric": "word ppl",
+   "value": "21.5",
+   "unit": "perplexity",
+   "baseline_value": "22.0",
+   "n": null,
+   "setup": "GPT-2 M vs GPT-2 L, WikiText-103 test, word perplexity, BM25 top-1 passage, l=32, s=4",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row GPT-2 M BM25 §5, column WikiText-103 word ppl (21.5) vs row GPT-2 L no retrieval (22.0)"
+  },
+  {
+   "claim": "With the trained Predictive reranker, GPT-2 M (345M) beats GPT-2 XL (1.5B) without retrieval.",
+   "kind": "measured",
+   "source": null,
+   "metric": "word ppl",
+   "value": "19.7",
+   "unit": "perplexity",
+   "baseline_value": "20.0",
+   "n": null,
+   "setup": "WikiText-103 test, word ppl, reranker trained on WikiText-103 with GPT-2 S data",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row GPT-2 M BM25 Predictive §6.2 (19.7) vs GPT-2 XL no retrieval (20.0)"
+  },
+  {
+   "claim": "In-Context RALM with an off-the-shelf retriever gives LM gains equal to a 2-3x larger model on all corpora.",
+   "kind": "measured",
+   "source": null,
+   "metric": "equivalent model size",
+   "value": "2-3x",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-2 S-XL; WikiText-103, RealNews, ArXiv, Stack Exchange, FreeLaw; BM25, l=32, s=4",
+   "note": null,
+   "where": "Intro",
+   "quote": "In-Context RALM led to LM performance gains equivalent to increasing the LM’s number of parameters by 2–3× across all of the text corpora we examined"
+  },
+  {
+   "claim": "BM25 In-Context RALM lifts OPT-6.7B to the level of OPT-66B.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "OPT 125M-66B; WikiText-103 test word ppl and RealNews dev token ppl; BM25 s=4 l=32",
+   "note": "Read from the figure; no numbers in text.",
+   "where": "Fig 4 caption",
+   "quote": "In-Context RALM with an off-the-shelf retriever improved the performance of a 6.7B parameter OPT model to match that of a 66B parameter OPT model."
+  },
+  {
+   "claim": "LLaMA-7B WikiText-103 perplexity improves with BM25.",
+   "kind": "measured",
+   "source": null,
+   "metric": "word ppl",
+   "value": "8.8",
+   "unit": "perplexity",
+   "baseline_value": "9.9",
+   "n": null,
+   "setup": "LLaMA-7B, WikiText-103 test, word ppl",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row LLaMA-7B BM25 (8.8) vs no retrieval (9.9)"
+  },
+  {
+   "claim": "The gain shrinks at LLaMA-33B.",
+   "kind": "measured",
+   "source": null,
+   "metric": "word ppl",
+   "value": "6.1",
+   "unit": "perplexity",
+   "baseline_value": "6.3",
+   "n": null,
+   "setup": "LLaMA-33B, WikiText-103 test word ppl",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row LLaMA-33B BM25 (6.1) vs no retrieval (6.3)"
+  },
+  {
+   "claim": "Zero-shot reranking by LM improves over taking BM25 top-1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "word ppl",
+   "value": "16.1",
+   "unit": "perplexity",
+   "baseline_value": "16.6",
+   "n": null,
+   "setup": "GPT-2 XL, WikiText-103 test, top-16 BM25, s'=16",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row GPT-2 XL BM25 Zero-shot §6.1 (16.1) vs BM25 §5 (16.6)"
+  },
+  {
+   "claim": "Predictive reranking improves GPT-2 S from 29.6 to 26.8.",
+   "kind": "measured",
+   "source": null,
+   "metric": "word ppl",
+   "value": "26.8",
+   "unit": "perplexity",
+   "baseline_value": "29.6",
+   "n": null,
+   "setup": "WikiText-103 test, word ppl; reranker trained on GPT-2 S data",
+   "note": null,
+   "where": "Sec 6.2",
+   "quote": "the perplexity of GPT-2 110M (S) improved from 29.6 to 26.8, and that of GPT-2 1.5B (XL) improved from 16.6 to 15.4"
+  },
+  {
+   "claim": "A small GPT-2 110M reranker is nearly as good as the generator LM itself.",
+   "kind": "measured",
+   "source": null,
+   "metric": "word ppl",
+   "value": "17.7",
+   "unit": "perplexity",
+   "baseline_value": "17.6",
+   "n": null,
+   "setup": "GPT-2 L generator, WikiText-103 test, top-16 BM25",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row GPT-2 762M (L) reranked by GPT-2 110M (S) (17.7) vs by itself (17.6)"
+  },
+  {
+   "claim": "Two DPR passages lift zero-shot LLaMA-13B on NQ from 12.0% to 31.0% EM.",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": "31.0",
+   "unit": "%",
+   "baseline_value": "12.0",
+   "n": null,
+   "setup": "LLaMA-13B, NQ test, zero-shot, top-2 DPR passages, exact match",
+   "note": null,
+   "where": "Sec 7",
+   "quote": "adding retrieved documents improved LLaMA-13B in the zero-shot setting by more than 18 points on NQ (from 12.0% to 31.0%)"
+  },
+  {
+   "claim": "Same for TriviaQA with LLaMA-13B.",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": "60.1",
+   "unit": "%",
+   "baseline_value": "54.8",
+   "n": null,
+   "setup": "LLaMA-13B, TriviaQA test, zero-shot, top-2 DPR",
+   "note": null,
+   "where": "Sec 7",
+   "quote": "more than 5 points on TriviaQA (from 54.8% to 60.1%)"
+  },
+  {
+   "claim": "BM25 outperformed BERT, Contriever and Spider retrievers for In-Context RALM; l=32 best for BM25, l=64 for dense.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "WikiText-103 dev, GPT-2 S and XL, s=4",
+   "note": "Figure 3 gives no numbers in text.",
+   "where": "Sec 5.1",
+   "quote": "found that ℓ= 32 was optimal for BM25 (Figure 6), and ℓ= 64 worked best for dense retrievers"
+  },
+  {
+   "claim": "Smaller retrieval stride (more frequent retrieval) improves perplexity; s=4 chosen as runtime tradeoff.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "WikiText-103 dev, GPT-2 S-XL, s from 1 to 64",
+   "note": null,
+   "where": "Sec 5.2, Fig 5",
+   "quote": "LM performance improved as the retrieval operation became more frequent"
+  }
+ ],
+ "limits": [
+  "Only a single document is prepended for language modeling; multi-document left to future work.",
+  "Retrieval every s tokens costs runtime; the paper does not time it and suggests adaptive retrieval as future work.",
+  "Main metric is perplexity; ODQA is a small controlled check.",
+  "Predictive reranker needs in-domain training data and was trained on WikiText-103 only; its gap to the top-16 oracle remains.",
+  "No seeds, variance or significance tests; models max sequence length fixed at 1,024.",
+  "Gains shrink at larger LLaMA sizes (33B: 6.3 to 6.1)."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "In-Context RALM",
+   "definition": "concatenating the retrieved documents within the Transformer’s input prior to the prefix, without altering the LM weights",
+   "where": "Sec 3.1"
+  },
+  {
+   "term": "retrieval stride",
+   "definition": "s, the number of tokens between consecutive retrieval operations",
+   "where": "Sec 3.2"
+  },
+  {
+   "term": "retrieval query length",
+   "definition": "l, the number of last prefix tokens used as retrieval query",
+   "where": "Sec 3.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Improving language models by retrieving from trillions of tokens (RETRO)",
+   "year": 2022,
+   "arxiv": "2112.04426",
+   "relation": "baseline",
+   "note": "closest prior work; needs architecture change and training; couples s and l",
+   "quote": null
+  },
+  {
+   "work": "Generalization through Memorization: kNN-LM",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Khandelwal et al.",
+   "quote": null
+  },
+  {
+   "work": "Language models are few-shot learners",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "in-context learning inspiration",
+   "quote": null
+  },
+  {
+   "work": "Shi et al. 2023 (concurrent)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "concurrent prepending work with trained retriever",
+   "quote": null
+  },
+  {
+   "work": "Dense Passage Retrieval",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Wikipedia corpus, DPR retriever for ODQA",
+   "quote": null
+  },
+  {
+   "work": "Sachan et al. 2022",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "reranking framework similar to zero-shot LM reranking",
+   "quote": null
+  },
+  {
+   "work": "LLaMA, OPT, GPT-2, GPT-Neo",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "frozen LMs",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "An example of In-Context RALM: we simply prepend the retrieved document before the input prefix.",
+   "page": 3,
+   "why": "Shows the whole method in one picture."
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Results of OPT models on WikiText-103 and RealNews.",
+   "page": 6,
+   "why": "Shows OPT-6.7B with retrieval matching OPT-66B."
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 4",
+   "snippet": "p(x1..xn) = prod_j prod_i p_theta(x_{s*j+i} | [R_C(q_j^{s,l}); x_{<(s*j+i)}])",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Figure data (3,5,6,7,8) has no numbers in text; not recorded.",
+  "Table 1 is described as test set for RealNews while Fig 4 / Table 5 use RealNews development set."
+ ]
 }

@@ -1,0 +1,819 @@
+{
+ "schema": 1,
+ "key": "2203.07814",
+ "pdf": "generative-ai/05-RL/sources/li-2022-competition-level-code-generation-alphacode.pdf",
+ "bib": {
+  "title": "Competition-Level Code Generation with AlphaCode",
+  "authors": [
+   "Yujia Li",
+   "David Choi",
+   "Junyoung Chung",
+   "Nate Kushman",
+   "Julian Schrittwieser",
+   "Rémi Leblond",
+   "Tom Eccles",
+   "James Keeling",
+   "Felix Gimeno",
+   "Agustin Dal Lago",
+   "Thomas Hubert",
+   "Peter Choy",
+   "Cyprien de Masson d'Autume",
+   "Igor Babuschkin",
+   "Xinyun Chen",
+   "Po-Sen Huang",
+   "Johannes Welbl",
+   "Sven Gowal",
+   "Alexey Cherepanov",
+   "James Molloy",
+   "Daniel J. Mankowitz",
+   "Esme Sutherland Robson",
+   "Pushmeet Kohli",
+   "Nando de Freitas",
+   "Koray Kavukcuoglu",
+   "Oriol Vinyals"
+  ],
+  "first_author": "Li",
+  "year": 2022,
+  "venue": "preprint (DeepMind, arXiv:2203.07814v1 [cs.PL], dated 8 Feb 2022 on the PDF)",
+  "arxiv": "2203.07814",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 202500,
+  "chars_total": 202500,
+  "engine": "pymupdf",
+  "skipped": "Appendix F (complete prompts, model samples, problem rewordings, roughly lines 4222-6536 of the cached text) was skimmed for the prompt format only; it is worked examples. References skimmed for lineage."
+ },
+ "type": "system",
+ "question": "Can a large transformer code model, with massive sampling and behaviour-based filtering, solve unseen competition-level programming problems at a level competitive with human participants?",
+ "hypothesis": "Pre-training on GitHub, fine-tuning on competitive programming data, then sampling very many programs and filtering/clustering them by execution behaviour lets a model solve novel problems that need algorithmic reasoning, not copying.",
+ "contributions": [
+  "AlphaCode, a system that pre-trains a transformer on GitHub, fine-tunes on CodeContests, samples up to millions of programs per problem, filters by example tests and clusters by behaviour to at most 10 submissions.",
+  "CodeContests, a released training and evaluation dataset with a strict temporal split and generated tests that cut the false positive rate from 62% (raw) to 4%.",
+  "Sampling-efficient architecture (asymmetric encoder-decoder with multi-query attention) and training enhancements (MLM, tempering, tags and ratings, value conditioning and prediction, GOLD).",
+  "Simulated Codeforces evaluation: average top 54.3% over 10 contests, estimated rating 1238.",
+  "Analysis of copying, sensitivity to descriptions and metadata, and validation loss as a poor proxy for solve rate."
+ ],
+ "method": {
+  "summary": "An encoder-decoder transformer (300M to 41B parameters) is pre-trained on 715.1 GB of GitHub code, then fine-tuned on CodeContests with next-token and masked-LM losses plus tempering, value conditioning/prediction and a GOLD offline-RL objective. At test time up to 1M samples per problem are drawn (half Python, half C++, random tags and ratings), filtered by the example tests (removes >99%), clustered by outputs on model-generated test inputs, and at most 10 are submitted.",
+  "task": "competitive programming code generation from natural-language problem statements (sequence-to-sequence), evaluated by hidden tests",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "GitHub pre-training snapshot",
+    "role": "pretrain",
+    "size": "715.1 GB, 86.31 million files (Table A1)",
+    "split": null,
+    "source": "selected public GitHub repositories, snapshot 2021/07/14; C++, C#, Go, Java, JavaScript, Lua, PHP, Python, Ruby, Rust, Scala, TypeScript; licence filtered per Sec 8.2",
+    "preprocessing": "dropped files larger than 1MB or with lines longer than 1000 characters; deduplicated files ignoring whitespace"
+   },
+   {
+    "name": "CodeContests",
+    "role": "both",
+    "size": "13328 train / 117 valid / 165 test problems (Table 1)",
+    "split": "strict temporal: train data public on or before 2021/07/14; valid 2021/07/15 to 2021/09/20; test after 2021/09/21",
+    "source": "new Codeforces scrape plus Description2Code (Caballero et al., 2016) and CodeNet (Puri et al., 2021); valid and test are Codeforces only",
+    "preprocessing": "Appendix B.2 cleaning (dedupe problems and submissions, C++ reformatting with clang-format, drop submissions passing no tests, tests with under 10% non-empty outputs, submissions passing under 10% of tests); mutation-generated tests verified by 30 correct solutions, max 10 CPU hours or 200 tests per problem; valid/test keep only problems with at least 5 hidden or generated tests giving at least 2 distinct outputs"
+   },
+   {
+    "name": "Codeforces contests Dec 2021",
+    "role": "eval",
+    "size": "10 contests with more than 5,000 participants each, 2021/12/01 to 2021/12/28",
+    "split": null,
+    "source": "live Codeforces platform, submissions made after the contests ended (simulated live)",
+    "preprocessing": "for problems permitting multiple outputs, example test outputs changed to the most canonical output"
+   },
+   {
+    "name": "APPS",
+    "role": "both",
+    "size": "10,000 problems, equally split train/test (Hendrycks et al., 2021)",
+    "split": "official train/test; CodeContests not used because its train set intersects APPS test",
+    "source": "Hendrycks et al. 2021",
+    "preprocessing": "example tests parsed from descriptions with the Figure A4 code; fails for under 2% of test problems"
+   },
+   {
+    "name": "HumanEval",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Chen et al. 2021",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "AlphaCode 300M",
+    "role": "proposed",
+    "params": "284M",
+    "architecture": "encoder-decoder transformer, multi-query attention",
+    "init_from": "GitHub pre-training",
+    "tokenizer": "SentencePiece",
+    "vocab": "8,000",
+    "layers": "4 encoder, 24 decoder",
+    "hidden": "768",
+    "heads": "6 query, 1 KV",
+    "context": "1536 tokens encoder, 768 tokens decoder",
+    "other": {
+     "batch": "256",
+     "steps": "600k",
+     "tokens": "354B"
+    }
+   },
+   {
+    "name": "AlphaCode 1B",
+    "role": "proposed",
+    "params": "1.1B",
+    "architecture": "encoder-decoder transformer, multi-query attention",
+    "init_from": "GitHub pre-training",
+    "tokenizer": "SentencePiece",
+    "vocab": "8,000",
+    "layers": "5 encoder, 30 decoder",
+    "hidden": "1408",
+    "heads": "11 query, 1 KV",
+    "context": "1536 tokens encoder, 768 tokens decoder",
+    "other": {
+     "batch": "256",
+     "steps": "1000k",
+     "tokens": "590B",
+     "note": "base model for ablations"
+    }
+   },
+   {
+    "name": "AlphaCode 3B",
+    "role": "proposed",
+    "params": "2.8B",
+    "architecture": "encoder-decoder transformer, multi-query attention",
+    "init_from": "GitHub pre-training",
+    "tokenizer": "SentencePiece",
+    "vocab": "8,000",
+    "layers": "6 encoder, 36 decoder",
+    "hidden": "2048",
+    "heads": "16 query, 1 KV",
+    "context": "1536 tokens encoder, 768 tokens decoder",
+    "other": {
+     "batch": "512",
+     "steps": "700k",
+     "tokens": "826B"
+    }
+   },
+   {
+    "name": "AlphaCode 9B",
+    "role": "proposed",
+    "params": "8.7B",
+    "architecture": "encoder-decoder transformer, multi-query attention",
+    "init_from": "GitHub pre-training",
+    "tokenizer": "SentencePiece",
+    "vocab": "8,000",
+    "layers": "8 encoder, 48 decoder",
+    "hidden": "3072",
+    "heads": "24 query, 4 KV",
+    "context": "1536 tokens encoder, 768 tokens decoder",
+    "other": {
+     "batch": "1024",
+     "steps": "530k",
+     "tokens": "1250B"
+    }
+   },
+   {
+    "name": "AlphaCode 41B",
+    "role": "proposed",
+    "params": "41.1B",
+    "architecture": "encoder-decoder transformer, multi-query attention",
+    "init_from": "GitHub pre-training (stopped early, undertrained)",
+    "tokenizer": "SentencePiece",
+    "vocab": "8,000",
+    "layers": "8 encoder, 56 decoder",
+    "hidden": "6144",
+    "heads": "48 query, 16 KV",
+    "context": "1536 tokens encoder, 768 tokens decoder",
+    "other": {
+     "batch": "2048",
+     "steps": "205k",
+     "tokens": "967B"
+    }
+   },
+   {
+    "name": "Test input generation model",
+    "role": "proposed",
+    "params": null,
+    "architecture": "same architecture as main models",
+    "init_from": "same GitHub pre-trained checkpoint",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "purpose": "predicts test inputs from problem descriptions, trained on example, hidden and generated test inputs; used only for clustering"
+    }
+   },
+   {
+    "name": "Codex 12B, GPT-Neo 2.7B",
+    "role": "baseline",
+    "params": "12B; 2.7B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "APPS numbers reported from Chen et al. 2021 and Hendrycks et al. 2021"
+    }
+   }
+  ],
+  "training": {
+   "objective": "Pre-training: next-token cross-entropy for decoder plus masked language modelling for encoder (files split at uniformly sampled pivot, before pivot to encoder, after to decoder). Fine-tuning: same two losses plus tempering (T=0.2), value conditioning and prediction, metadata conditioning, and a GOLD variant (delta-reward offline RL, importance weight max(P^alpha, beta), alpha=1/2, beta=0.05). A short tempering-only phase sits between pre-training and fine-tuning.",
+   "optimizer": "AdamW, beta1=0.9, beta2=0.999 for 300M/1B/3B and beta2=0.95 for 9B/41B; global gradient norm clipped to 1.0",
+   "lr": "pre-training initial 1e-4 cosine decayed to 1e-5; fine-tuning initial 1e-5 cosine decayed to 1e-6",
+   "lr_schedule": "cosine decay; linear warm-up",
+   "warmup": "linear from 1e-9 to 1e-4 over first 1,000 steps; same 1,000-step warm-up in fine-tuning",
+   "batch_size": "256 (300M, 1B), 512 (3B), 1024 (9B), 2048 (41B) (Table 3)",
+   "steps": "600k, 1000k, 700k, 530k, 205k for 300M, 1B, 3B, 9B, 41B (Table 3); fine-tuning steps not stated",
+   "epochs": null,
+   "tokens": "354B, 590B, 826B, 1250B, 967B for 300M..41B (Table 3)",
+   "seq_len": "1536 encoder tokens, 768 decoder tokens",
+   "precision": "bfloat16",
+   "weight_decay": "0.1",
+   "dropout": null,
+   "regularisation": "weight decay 0.1; tempering described as a regulariser against overfitting the fine-tuning set",
+   "hardware": "TPUv4 accelerators; JAX and Haiku; 9B and 41B with model parallelism",
+   "compute": "Sec 8.2: 'Both sampling and training from our model required hundreds of petaFLOPS days'; Fig 7 plots training TPU-days (axis only)",
+   "wall_clock": null,
+   "seeds": "Table 8 ablation: at least 3 fine-tuned models per setting from the same pre-trained checkpoint; clustering rows use 5 models; 9B/41B clustering uses single models; no other seed counts given",
+   "other": {
+    "base_1B_pretraining": "Sec 4.2 prints '106 steps' (text extraction of 10^6) with batch size 256, matching Table 3 1000k",
+    "tempering": "logits divided by T=0.2 at training; sampling logits divided by T' tuned on validation",
+    "value_prediction": "auxiliary small Transformer on last-layer token representations classifies correct/incorrect; not used at sampling",
+    "value_conditioning": "CORRECT SOLUTION / INCORRECT SOLUTION tag in the prompt; always CORRECT at sampling",
+    "fine_tuning_data_mix": "training split of CodeContests; includes correct and incorrect human submissions in C++, Python, Java"
+   }
+  },
+  "inference": {
+   "decoding": "plain sampling with temperature; top-k and nucleus sampling tried and not better (Fig A5)",
+   "temperature": "T'=0.25 for tempering+GOLD models, 0.12 for tempering only, tuned separately otherwise; a wide range works (Fig A5 sweeps 0.18 to 0.30)",
+   "top_p": "not used in main system; nucleus tested at 0.5 to 0.99, best near 1.0; APPS runs use nucleus sampling with temperature 0.25",
+   "max_tokens": "768 decoder tokens (Fig 11 caption: 'our samples contain a maximum of 768 tokens')",
+   "samples": "up to 1,000,000 per problem (Table 5 reaches 10@1M on validation, 10@100k on test); Codeforces: 3 evaluations (reshuffled samples, new clustering inputs and seeds); Table 8 means over at least 3 models with bootstrap CIs",
+   "prompting": "problem description as encoder input with metadata prefix (RATING, TAGS, LANGUAGE IS, CORRECT SOLUTION); at sampling time rating uniform in 800..3500 step 100, tags drawn at random from the 50 most popular tag combinations, language uniformly C++ or Python, always CORRECT SOLUTION",
+   "retrieval": null,
+   "parameters": {
+    "filtering": "keep samples passing the example tests (removes about 99%); at most 10 submissions",
+    "clustering": "50 generated test inputs, at most 8192 model samples clustered; submit one sample per cluster from largest to smallest cluster, then repeat skipping already-submitted",
+    "judging": "float tolerance 1e-5, case-insensitive string comparison, whitespace ignored; multi-output problems judged against the majority human output (about 1/4 of validation problems)",
+    "codeforces_submission_points": "Table A4: up to 10 samples clustered and submitted at three points per problem, by fraction of contest time left or by relative number of samples passing example tests; contests assumed 2 hours; 120 s added for clustering",
+    "sampling_compute_in_contest": "simulated 3750 TPUv4 and 3750 TPUv4i chips"
+   },
+   "other": {
+    "ensemble": "Codeforces system pooled equal numbers of samples from 41B and 9B before filtering and clustering"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "n@k",
+     "definition": "percentage of problems solved when k samples are drawn per problem and n of them submitted to hidden tests; solved if any submission passes all tests; computed as expectation by sub-sampling k from K>=k samples (Algorithm 1)",
+     "unit": "% of problems",
+     "higher_is_better": true
+    },
+    {
+     "name": "pass@k",
+     "definition": "k@k; every sample can be submitted; upper bound for k samples",
+     "unit": "% of problems",
+     "higher_is_better": true
+    },
+    {
+     "name": "Codeforces percentile ranking",
+     "definition": "share of contest participants who placed better than AlphaCode, with simulated submission time and incorrect-submission penalties",
+     "unit": "% (lower is better)",
+     "higher_is_better": false
+    },
+    {
+     "name": "estimated Codeforces rating",
+     "definition": "Elo-style rating from a reproduction of the Codeforces method over the 10 contests in order, averaged over three evaluations",
+     "unit": "rating points",
+     "higher_is_better": true
+    },
+    {
+     "name": "false positive rate",
+     "definition": "share of 50 solved problems (one solution each, manually examined) judged incorrect; 'FP or slow' adds correct but too slow solutions",
+     "unit": "%",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "Codex 12B (APPS, Chen et al. 2021)",
+    "GPT-Neo 2.7B (APPS, Hendrycks et al. 2021)",
+    "decoder-only variant and standard multi-head attention variant of the 1B model",
+    "no pre-training, GitHub Python-only, MassiveText pre-training",
+    "human Codeforces participants"
+   ],
+   "protocol": "CodeContests validation and test with n@k via bootstrapping; Table 8 means and 95% CIs over at least 3 fine-tuned models; Codeforces 10 contests x 3 evaluations (variance from sample ordering and clustering only, models not retrained or resampled); APPS averaged over 3 fine-tuning runs with 3 s time limit per test"
+  },
+  "availability": {
+   "code": "AlphaCode model code not released; the Figure A4 snippet and dataset tooling in the CodeContests repository",
+   "weights": null,
+   "data": "CodeContests at https://github.com/deepmind/code_contests"
+  },
+  "prompts": [
+   {
+    "purpose": "encoder input metadata prefix (Fig 5 and Appendix F example)",
+    "text": "RATING: 1200 TAGS: dp , implementation LANGUAGE IS python3 CORRECT SOLUTION (then the problem description); C++ form in Appendix F: // RATING: 1200 // TAGS: math // LANGUAGE IS cpp // CORRECT SOLUTION",
+    "where": "Figure 5, Appendix F"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training.steps",
+    "quote": "Our base 1B parameter model was trained for 106 steps with a batch size of 256.",
+    "where": "Sec 4.2 (extraction of 10^6; Table 3 lists 1000k)"
+   },
+   {
+    "field": "inference.temperature",
+    "quote": "T′ = 0.12 for models trained with tempering only; T′ = 0.25 for models trained with tempering and GOLD",
+    "where": "Sec 4.3"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Simulated on 10 Codeforces contests with over 5,000 participants, AlphaCode (41B+9B ensemble with clustering, 10 submissions per problem) ranked in the top 54.3% on average.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Codeforces percentile ranking (lower is better)",
+   "value": "54.3",
+   "unit": "%",
+   "baseline_value": null,
+   "n": "10 contests",
+   "setup": "41B+9B ensemble, filtering and clustering, at most 10 submissions per problem, Dec 2021 contests, simulated time and penalties, averaged over 3 evaluations in Table 4",
+   "quote": "AlphaCode ranked in the top 54.3% among contest participants averaged over 10 contests",
+   "table": null,
+   "note": "Table 4 gives Best 48.4% and Worst 77.2% bounds for the same runs",
+   "where": "Fig 1, Sec 5.1, Table 4"
+  },
+  {
+   "claim": "Estimated Codeforces rating of 1238, above 72% of users active in the last 6 months.",
+   "kind": "measured",
+   "source": null,
+   "metric": "estimated Codeforces rating",
+   "value": "1238",
+   "unit": "rating points",
+   "baseline_value": null,
+   "n": "10 contests",
+   "setup": "10 submissions per problem; rating reproduced from the Codeforces Elo method (within 15 points of the real method per Appendix D.3); compared with users who competed in the last 6 months, a self-selected subset",
+   "quote": "achieved an estimated average rating of 1238",
+   "table": null,
+   "note": "Text says top 28% of users; Fig 1 caption says greater than 72%",
+   "where": "Fig 1, Sec 5.1"
+  },
+  {
+   "claim": "With more than 10 submissions allowed (still with incorrect-submission penalties) the ranking improves to top 48.8% with 28.8 submissions per solved problem.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Codeforces percentile ranking, unlimited submissions",
+   "value": "48.8",
+   "unit": "%",
+   "baseline_value": "54.3",
+   "n": "second and third evaluation",
+   "setup": "same system, second and third of three evaluations",
+   "quote": "48.8%, with an actual average of 28.8 submissions for each problem solved",
+   "table": null,
+   "note": "Table A6 'Average all' lists 54.3%, 48.8%, 48.4%, 77.2% in its columns",
+   "where": "Sec 5.1, Table A6"
+  },
+  {
+   "claim": "41B with clustering solves 34.2% of CodeContests validation problems with 10 submissions from 1M samples.",
+   "kind": "measured",
+   "source": null,
+   "metric": "10@1M solve rate",
+   "value": "34.2",
+   "unit": "%",
+   "baseline_value": "31.8",
+   "n": "117 validation problems",
+   "setup": "41B model; baseline is 41B without clustering (31.8%); the 41B+9B ensemble with clustering reaches 35.5% (Table A2)",
+   "quote": "we can solve 34.2% of",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.2, Table 5"
+  },
+  {
+   "claim": "On the test set, 41B with clustering solves 29.6% with 10 submissions from 100k samples.",
+   "kind": "measured",
+   "source": null,
+   "metric": "10@100k solve rate",
+   "value": "29.6",
+   "unit": "%",
+   "baseline_value": "27.7",
+   "n": "165 test problems",
+   "setup": "41B + clustering vs 41B alone (27.7%); the test set has no 10@1M column",
+   "quote": "29.6% of problems in our test set",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.2, Table 5"
+  },
+  {
+   "claim": "Generated tests and filtering cut the CodeContests false positive rate from 62% to 4%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "false positive rate",
+   "value": "4",
+   "unit": "%",
+   "baseline_value": "62",
+   "n": "50 manually examined problems",
+   "setup": "validation split, 1B model solutions, 1,000,000 samples per problem for CodeContests; APPS has 60% and HumanEval 30%; FP-or-slow rate for CodeContests remains 46%",
+   "quote": "false positive rates from 62% to 4%",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.2.1, Table 2"
+  },
+  {
+   "claim": "Adding the five fine-tuning enhancements raises 10@100k from 15.2% to 24.1% (1B model).",
+   "kind": "measured",
+   "source": null,
+   "metric": "10@100k solve rate",
+   "value": "24.1",
+   "unit": "%",
+   "baseline_value": "15.2",
+   "n": "at least 3 models per setting",
+   "setup": "1B encoder-decoder, validation set; build-up of MLM, tempering, tags and ratings, value, GOLD, then clustering; 24.1% is the final row and includes clustering",
+   "quote": "increases the 10@100k solve rate from 15.2% to 24.1%",
+   "table": null,
+   "note": "Text says 'combining the 5 enhancements'; Table 8 row '+ GOLD' without clustering is 21.5% and '+ Clustering' is 24.1%",
+   "where": "Sec 5.3.4, Table 8"
+  },
+  {
+   "claim": "GOLD (offline RL importance-weighted likelihood) adds a measurable gain on top of value conditioning in the build-up ablation.",
+   "kind": "measured",
+   "source": null,
+   "metric": "10@100K solve rate",
+   "value": "21.5",
+   "unit": "%",
+   "baseline_value": "20.2",
+   "n": "at least 3 models per setting",
+   "setup": "1B model, validation set; row '+ GOLD' versus '+ Value'; 95% CIs 20.5-22.2 and 19.6-20.7 overlap slightly",
+   "quote": null,
+   "table": "Table 8, row + GOLD, column 10@100K (21.5% (20.5-22.2)); row + Value 20.2% (19.6-20.7)",
+   "note": "At 10@1K the gain is larger: 10.6% to 12.4%",
+   "where": "Table 8"
+  },
+  {
+   "claim": "Behaviour clustering lifts 10@100K from 21.5% to 24.1% and 10@1M from 24.2% to 28.4%, with little effect at 10@1K.",
+   "kind": "measured",
+   "source": null,
+   "metric": "10@100K solve rate",
+   "value": "24.1",
+   "unit": "%",
+   "baseline_value": "21.5",
+   "n": "5 models, 5 clustering subsamples each",
+   "setup": "1B model, validation set; clustering uses 50 generated test inputs and 8192 samples",
+   "quote": null,
+   "table": "Table 8, row + Clustering, column 10@100K (24.1% (23.2-25.0)); row + GOLD 21.5%; 10@1M 28.4% vs 24.2%",
+   "note": null,
+   "where": "Table 8, Appendix A.3, C.4"
+  },
+  {
+   "claim": "Example-test filtering removes over 99% of samples; less than 1% of samples pass them.",
+   "kind": "measured",
+   "source": null,
+   "metric": "fraction of samples passing example tests",
+   "value": "1",
+   "unit": "% (upper bound)",
+   "baseline_value": null,
+   "n": "1M samples per problem per model",
+   "setup": "validation set, models 300M to 41B; Table 9: 41B has at least one passing sample for 92.31% of problems, average p_pass 0.73% over all problems",
+   "quote": "Overall less than 1% of samples from our models pass example tests",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.3.5, Table 9"
+  },
+  {
+   "claim": "Solve rate scales approximately log-linearly with number of samples, with larger models having higher slopes.",
+   "kind": "measured",
+   "source": null,
+   "metric": "10@k vs k",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "validation set, 300M to 41B, k from 1 to 1M; 10@k curve bends down slightly at high budgets; read from Fig 6",
+   "quote": "approximately log-linearly with",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.3.1, Fig 6"
+  },
+  {
+   "claim": "Pre-training matters: 10@100K is 10.5% with no pre-training, 21.5% with the full multi-language GitHub dataset.",
+   "kind": "measured",
+   "source": null,
+   "metric": "10@100K solve rate",
+   "value": "21.5",
+   "unit": "%",
+   "baseline_value": "10.5",
+   "n": null,
+   "setup": "1B model, validation set; Python-only GitHub 15.5%, MassiveText 21.2%",
+   "quote": null,
+   "table": "Table 7, row GitHub (all languages), column 10@100K; row No pre-training 10.5%",
+   "note": null,
+   "where": "Sec 5.3.3, Table 7"
+  },
+  {
+   "claim": "Multi-query attention with an asymmetric encoder-decoder samples about 12x faster than standard multi-head attention at similar solve rate.",
+   "kind": "measured",
+   "source": null,
+   "metric": "samples per TPU second; 10@10K",
+   "value": "4.74",
+   "unit": "samples/TPU sec",
+   "baseline_value": "0.37",
+   "n": null,
+   "setup": "1B model; standard multi-head attention gets 0.37 samples/TPU sec and 17.0% 10@10K; AlphaCode model 17.3%; decoder-only 1.23 and 18.5%",
+   "quote": null,
+   "table": "Table 6, row AlphaCode model, column Samples / TPU sec (4.74); row Std MH attention 0.37",
+   "note": "12x is the ratio of the printed 4.74 to 0.37",
+   "where": "Sec 5.3.2, Table 6"
+  },
+  {
+   "claim": "On APPS, AlphaCode 1B with filtering from 50,000 samples and 5 submissions beats Codex 12B (1000 filtered, 5 attempts) on interview and competition levels but not introductory.",
+   "kind": "measured",
+   "source": null,
+   "metric": "n@k",
+   "value": "7.75",
+   "unit": "% (competition level)",
+   "baseline_value": "3.08",
+   "n": "3 fine-tuning runs",
+   "setup": "AlphaCode 1B, k=50000, n=5: introductory 20.36%, interview 9.66%, competition 7.75%; Codex 12B k=1000, n=5: 24.52%, 3.23%, 3.08%; APPS fine-tuning without CodeContests, clustering, tags, ratings or value",
+   "quote": null,
+   "table": "Table 10, rows AlphaCode 1B (50000, 5) and Codex 12B (1000, 5), column Competition n@k",
+   "note": null,
+   "where": "Sec 5.4, Table 10"
+  },
+  {
+   "claim": "A temporal split gives 0% solve rate for a pretrained 1B model with 13k samples per problem, versus 0.8% for a random split.",
+   "kind": "measured",
+   "source": null,
+   "metric": "solve rate on validation problems",
+   "value": "4.1",
+   "unit": "%",
+   "baseline_value": "0",
+   "n": null,
+   "setup": "baseline of submitting one training solution per training problem to the validation set: 4.1% random split, 0% temporal split",
+   "quote": "solve rate of 4.1% with a random",
+   "table": null,
+   "note": null,
+   "where": "Appendix B.3"
+  },
+  {
+   "claim": "Validation loss starts to rise after about 50k fine-tuning steps while solve rate keeps improving, so loss is a poor proxy.",
+   "kind": "measured",
+   "source": null,
+   "metric": "validation loss vs 10@1024",
+   "value": "50k",
+   "unit": "steps",
+   "baseline_value": null,
+   "n": null,
+   "setup": "early 1B fine-tuning run, Fig 13",
+   "quote": "starts increasing after around 50k steps for an early training run of the 1B model",
+   "table": null,
+   "note": null,
+   "where": "Sec 6.5, Fig 13"
+  },
+  {
+   "claim": "Randomising tags per sample gives the best 10@1024 solve rate (1B: 13.5%), better than true tags (13.3%) or random tags fixed per problem (11.9%).",
+   "kind": "measured",
+   "source": null,
+   "metric": "10@1024 solve rate",
+   "value": "13.5",
+   "unit": "%",
+   "baseline_value": "13.3",
+   "n": null,
+   "setup": "1B model, validation set; 300M 8.2/8.1/6.0, 3B 14.9/13.9/13.3 for the three schemes",
+   "quote": null,
+   "table": "Table 13, row Random per sample (default), column 1B",
+   "note": null,
+   "where": "Sec 6.4, Table 13"
+  },
+  {
+   "claim": "Ensembling 41B and 9B gives 32% (10 submissions) and 35.5% (with clustering) on validation at 1M samples but is not better than 41B alone on test.",
+   "kind": "measured",
+   "source": null,
+   "metric": "10@1M solve rate",
+   "value": "35.5",
+   "unit": "%",
+   "baseline_value": "34.2",
+   "n": null,
+   "setup": "validation set; test set 41B+9B+clustering 10@100k 29.7% vs 41B+clustering 29.6%, 10@1k 15.6% vs 16.4%",
+   "quote": "submissions, and 35.5% with clustering",
+   "table": null,
+   "note": null,
+   "where": "Appendix C.1, Table A2"
+  },
+  {
+   "claim": "Simplifying the problem description raises the share of correct samples sharply (Nim 0.95% to 85.38%), showing the model uses the statement.",
+   "kind": "measured",
+   "source": null,
+   "metric": "% correct samples out of 100k",
+   "value": "85.38",
+   "unit": "%",
+   "baseline_value": "0.95",
+   "n": "5 problems",
+   "setup": "1B model, three validation problems and two hand-written",
+   "quote": null,
+   "table": "Table A9, row Nim, column Simplified",
+   "note": null,
+   "where": "Appendix E.3.1, Table A9"
+  },
+  {
+   "claim": "Large-scale sampling of up to millions of programs per problem is a critical driver of performance.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "stated design principle of the system",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Sec 4.4"
+  }
+ ],
+ "limits": [
+  "Fixed cost of search: gains need exponentially more samples; 'improving solve rate requires exponentially increasing amounts of samples and the costs quickly become prohibitive' (Sec 5.3.1).",
+  "A large gap remains between filtering+clustering and the pass@k upper bound (Fig 8).",
+  "CodeContests still accepts slow solutions: FP-or-slow rate is 46% even though false positives are 4% (Table 2); high-difficulty buckets are inflated by this (Appendix E.2).",
+  "Judging is permissive and assumes a single correct output for multi-output problems (about 1/4 of validation problems) and does not handle interactive problems, so performance may be under- or over-estimated.",
+  "Only 3 evaluations on Codeforces with the same trained models and samples; variance from training and sampling not measured; Codeforces hacking phase not simulated; the 41B model was stopped early and undertrained.",
+  "Table 8 ablations are on a single 1B model; larger models mostly have a single run, and most results are from one seed.",
+  "Fine-tuning steps, fine-tuning batch size, wall-clock and exact compute are not stated; the training/sampling compute is only shown as axes in Fig 7 and as 'hundreds of petaFLOPS days'.",
+  "Codeforces self-selected user group; ranking is of users who have tried competitions.",
+  "Encoder-decoder models do worse than decoder-only on HumanEval (Appendix C.5).",
+  "Model weights not released; reproduction relies on the released CodeContests dataset only."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "n@k",
+   "definition": "percentage of problems solved using n submissions from k samples per problem",
+   "where": "Sec 2.2"
+  },
+  {
+   "term": "pass@k",
+   "definition": "solve rate with k samples, all of which can be submitted; pass@k = k@k",
+   "where": "Sec 2.2"
+  },
+  {
+   "term": "Tempering",
+   "definition": "dividing the output logits by a scalar temperature T before the softmax at training time; here T=0.2 to sharpen training and smooth inference distribution",
+   "where": "Sec 4.3"
+  },
+  {
+   "term": "Value conditioning and prediction",
+   "definition": "inserting a correct/incorrect tag into the prompt and adding an auxiliary classifier of solution correctness",
+   "where": "Sec 4.3"
+  },
+  {
+   "term": "GOLD",
+   "definition": "an offline RL algorithm that adds an off-policy importance weight to the maximum likelihood gradient so the model learns from tokens it already assigns high likelihood",
+   "where": "Sec 4.3, Appendix C.3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "GOLD (Pang and He, 2020)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "offline RL objective used in fine-tuning, in a delta-reward variant",
+   "quote": null
+  },
+  {
+   "work": "Softmax tempering (Dabre and Fujita, 2020)",
+   "year": 2020,
+   "arxiv": "2009.09372",
+   "relation": "uses-method",
+   "note": "tempering, but with T<1 rather than the suggested T>1",
+   "quote": null
+  },
+  {
+   "work": "Evaluating large language models trained on code (Chen et al., 2021)",
+   "year": 2021,
+   "arxiv": "2107.03374",
+   "relation": "baseline",
+   "note": "Codex; pass@k metric; HumanEval; APPS comparison",
+   "quote": null
+  },
+  {
+   "work": "Measuring coding challenge competence with APPS (Hendrycks et al., 2021)",
+   "year": 2021,
+   "arxiv": "2105.09938",
+   "relation": "uses-data",
+   "note": "APPS benchmark; GPT-Neo baselines; false positive rates criticised",
+   "quote": null
+  },
+  {
+   "work": "Description2Code (Caballero et al., 2016)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "part of CodeContests training data",
+   "quote": null
+  },
+  {
+   "work": "Project CodeNet (Puri et al., 2021)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "part of CodeContests training data",
+   "quote": null
+  },
+  {
+   "work": "Fast transformer decoding: multi-query attention (Shazeer, 2019)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "shared key and value heads for cheap sampling",
+   "quote": null
+  },
+  {
+   "work": "Training verifiers to solve math word problems (Cobbe et al., 2021)",
+   "year": 2021,
+   "arxiv": "2110.14168",
+   "relation": "related",
+   "note": "repeated sampling and selecting final answers by voting or verifiers",
+   "quote": null
+  },
+  {
+   "work": "Program synthesis with large language models (Austin et al., 2021)",
+   "year": 2021,
+   "arxiv": "2108.07732",
+   "relation": "related",
+   "note": "repeated sampling improves solve probability",
+   "quote": null
+  },
+  {
+   "work": "Scaling laws for neural language models (Kaplan et al., 2020)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "model sizes trained with more or less compute accordingly",
+   "quote": null
+  },
+  {
+   "work": "Rae et al., 2021 MassiveText",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "alternative pre-training dataset in Table 7",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 4",
+   "caption": "Overview of AlphaCode.",
+   "page": 9,
+   "why": "Shows the pipeline: pre-train, fine-tune, sample, filter, cluster, submit."
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "Solve rate scaling vs. number of samples. The solve rate scales approximately log-linearly with the number of samples...",
+   "page": 16,
+   "why": "Shows log-linear scaling of 10@k and pass@k with samples, by model size."
+  },
+  {
+   "figure": "Fig 8",
+   "caption": "Comparison of different sample selection methods.",
+   "page": 20,
+   "why": "Shows the gap between no filtering, filtering, clustering and perfect selection."
+  },
+  {
+   "figure": "Table 8",
+   "caption": "Build-up ablation for model enhancements.",
+   "page": 18,
+   "why": "Isolates each fine-tuning change, including GOLD, with 95% CIs."
+  },
+  {
+   "figure": "Fig 13",
+   "caption": "Validation loss and solve rate (10@1024) by finetuning steps.",
+   "page": 27,
+   "why": "Loss rises while solve rate rises."
+  }
+ ],
+ "code": [
+  {
+   "where": "Appendix C.3, Eq. 1",
+   "snippet": "∇L_GOLD(θ) = − Σ_{s ∈ Solution tokens} P_θ(s) ∇ log P_θ(s), with P_θ(s) in the importance weight replaced by max(P_θ(s)^α, β), α = 1/2, β = 0.05",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Sec 4.2 prints 'trained for 106 steps' where 10^6 was meant (superscript lost in extraction); Table 3 gives 1000k.",
+  "Extraction of Table 3, 4 and 10 columns is one cell per line; values were reassembled by order and checked against column counts.",
+  "Appendix Fig A8 text contains garbled bracketed fragments from colour-coded variables."
+ ]
+}

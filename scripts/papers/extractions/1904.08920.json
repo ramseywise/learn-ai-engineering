@@ -1,0 +1,117 @@
+{
+ "schema": 1,
+ "key": "1904.08920",
+ "pdf": "ai-engineering/08-multimodal-engineering/sources/singh-2019-towards-vqa-models-that-can.pdf",
+ "bib": {"title": "Towards VQA Models That Can Read", "authors": ["Amanpreet Singh","Vivek Natarajan","Meet Shah","Yu Jiang","Xinlei Chen","Dhruv Batra","Devi Parikh","Marcus Rohrbach"], "first_author": "Singh", "year": 2019, "venue": "preprint (arXiv v2, 13 May 2019)", "arxiv": "1904.08920", "doi": null},
+ "read": {"by": "source-reader", "at": "2026-11-07", "chars_read": 57579, "chars_total": 57579, "engine": "pymupdf", "skipped": null},
+ "type": "benchmark",
+ "question": "Can VQA models answer questions that require reading and reasoning about text in images, and what dataset and architecture are needed to study this?",
+ "hypothesis": "Baking in specialised components such as OCR, plus a mechanism to copy OCR tokens as answers, lets VQA models read text, which monolithic VQA networks cannot learn from VQA supervision alone.",
+ "contributions": ["A novel dataset (TextVQA) containing questions which require the model to read and reason about the text in the image to be answered.", "Look, Read, Reason & Answer (LoRRA): a novel model architecture which explicitly reasons over the outputs from an OCR system when answering questions.", "LoRRA outperforms existing state-of-the-art VQA models on TextVQA as well as VQA 2.0."],
+ "method": {
+  "summary": "TextVQA is a crowd-sourced dataset of questions on Open Images photos that require reading text. LoRRA adds a frozen Rosetta OCR module to a Pythia v0.3 VQA model: OCR tokens are attended over, and the answer space is extended by M dynamic slots so the model can copy one OCR token as its answer, trained with binary cross-entropy on logits.",
+  "task": "text-based visual question answering",
+  "trains": true,
+  "datasets": [
+   {"name": "TextVQA", "role": "both", "size": "45,336 questions on 28,408 images; 10 human answers per question", "split": "train 34,602 / val 5,000 / test 5,734 questions", "source": "Open Images v3 images from text-heavy categories weighted by Rosetta OCR box counts; train and val from Open Images train set, test from Open Images test set; crowd-sourced", "preprocessing": "3-stage pipeline: filter images without text; collect 1-2 questions per image; collect 10 answers. Questions removed when a majority of workers flagged no text, not a question, no reading required, or unanswerable. Hand-crafted known-answer questions used to filter bad annotators. Random train/val split with no image overlap."},
+   {"name": "VQA 2.0", "role": "both", "size": null, "split": "test-dev reported", "source": "Goyal et al. 2017", "preprocessing": "Question vocabulary: top ~77k question words in VQA 2.0 (GloVe custom vocabulary)"},
+   {"name": "VizWiz", "role": "eval", "size": null, "split": "test", "source": "Gurari et al. 2017", "preprocessing": null}
+  ],
+  "models": [
+   {"name": "LoRRA (Pythia v0.3 + LoRRA)", "role": "proposed", "params": null, "architecture": "Attention-based VQA (grid ResNet-152 res-5c 2048D avg-pooled plus Faster-RCNN fc6 region features, fc7 fine-tuned) + OCR attention branch + copy-augmented answer space; fcomb is element-wise product; fMLP is a two-layer feed-forward network over concatenated [fVQA; fOCR]", "init_from": "Pythia v0.1 design with revised hyperparameters; pre-trained GloVe, FastText, ResNet-152, Visual Genome Faster-RCNN", "tokenizer": null, "vocab": "SA: 3996 answers appearing at least twice in train; LA: 8000 most frequent answers", "layers": null, "hidden": null, "heads": null, "context": "max question length 14; max OCR tokens 50", "other": {"question_encoder": "GloVe + LSTM with self-attention", "ocr_embedding": "pretrained FastText (handles OOV)", "ocr_system": "Rosetta, not jointly trained", "ordering": "OCR attention weights concatenated to attended features to keep token order", "copy_limit": "can copy only a single OCR token; 8.9% of TextVQA questions need multiple OCR tokens"}},
+   {"name": "Pythia v0.3 / BAN with LoRRA", "role": "evaluated", "params": null, "architecture": "BAN + LoRRA ablation", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "Pythia (I+Q), BAN (I+Q), Question-only, Image-only, Pythia+O, Pythia+O+C", "role": "baseline", "params": null, "architecture": "ablations as defined in Experiments", "init_from": null, "tokenizer": null, "vocab": "LA (8000) for Q, I, I+Q, +O", "layers": null, "hidden": null, "heads": null, "context": null, "other": {}}
+  ],
+  "training": {
+   "objective": "binary cross-entropy on logits over N+M answer slots",
+   "optimizer": "AdaMax",
+   "lr": "5e-2 for all layers except fc7 (5e-3)",
+   "lr_schedule": "uniformly decreased to 5e-4 after 14k iterations",
+   "warmup": null,
+   "batch_size": "128",
+   "steps": "24000 iterations",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "max question length 14, max OCR tokens 50",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "8 GPUs (type not stated)",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": "validation accuracies averaged over 5 runs with different seeds",
+   "other": {"checkpointing": "val accuracy computed every 1000th iteration; best-validation model used for test accuracy", "framework": "PyTorch"}
+  },
+  "inference": {
+   "decoding": "argmax over N+M logits; index > N copies the corresponding OCR token",
+   "temperature": null, "top_p": null, "max_tokens": null,
+   "samples": "single prediction per question; val averaged over 5 seeds",
+   "prompting": null, "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [{"name": "VQA accuracy", "definition": "VQA accuracy metric of Goyal et al. (10 human answers per question)", "unit": "%", "higher_is_better": true}],
+   "baselines": ["Human", "OCR UB (up to 4-grams)", "LA UB", "LA+OCR UB", "Rand 100", "Wt. Rand 100", "Majority Ans", "Random OCR", "OCR Max", "Q only", "I only", "Pythia (I+Q)", "BAN (I+Q)", "Pythia+O", "Pythia+O+C"],
+   "protocol": "Val accuracy averaged over 5 seeds; test accuracy from best-val checkpoint. Test numbers reported only for some rows."
+  },
+  "availability": {"code": "https://github.com/facebookresearch/pythia", "weights": null, "data": "https://textvqa.org"},
+  "prompts": [],
+  "evidence": [
+   {"field": "training.lr", "quote": "We use a learning rate of 5e-2 for all layers except the fc7 layers used for ﬁne-tuning which are trained with 5e-3.", "where": "Sec 5 Experimental Setup"}
+  ]
+ },
+ "results": [
+  {"claim": "Human accuracy on TextVQA validation is far above the best model.", "kind": "measured", "source": null, "metric": "VQA accuracy", "value": "85.01", "unit": "%", "baseline_value": "26.56", "n": null, "setup": "TextVQA val, human answers", "quote": "we ﬁnd that human accuracy is 85.01%", "table": null, "note": "Test human 86.79 (Table 2)", "where": "Sec 5 Results"},
+  {"claim": "Best LoRRA (Pythia + LoRRA, small vocabulary SA) reaches 26.56% on TextVQA val.", "kind": "measured", "source": null, "metric": "VQA accuracy", "value": "26.56", "unit": "%", "baseline_value": "13.04", "n": null, "setup": "TextVQA val, Pythia+LoRRA with SA vocabulary (3996), mean of 5 seeds; baseline Pythia (I+Q) with LA", "quote": "While LoRRA can reach up to 26.56% accuracy on the TextVQA’s validation set", "table": null, "note": null, "where": "Sec 5 Results"},
+  {"claim": "Best LoRRA gets 27.63% on TextVQA test against 14.0 for Pythia (I+Q).", "kind": "measured", "source": null, "metric": "VQA accuracy", "value": "27.63", "unit": "%", "baseline_value": "14.0", "n": null, "setup": "TextVQA test, best-val checkpoint", "quote": null, "table": "Table 2 right, row +LoRRA SA, column Test (27.63); row Pythia (I+Q) LA, column Test (14.0)", "note": null, "where": "Table 2"},
+  {"claim": "State-of-the-art VQA models without OCR (Pythia v0.3, BAN) get only 13.04% and 12.3% on TextVQA val.", "kind": "measured", "source": null, "metric": "VQA accuracy", "value": "13.04", "unit": "%", "baseline_value": null, "n": null, "setup": "TextVQA val, I+Q models, LA vocabulary", "quote": "only achieve 13.04% and 12.3% validation accuracy on TextVQA, respectively", "table": null, "note": "Table 2 prints BAN as 12.30", "where": "Sec 5 Results"},
+  {"claim": "Feeding OCR tokens into Pythia (no copy) lifts val accuracy to 18.35%.", "kind": "measured", "source": null, "metric": "VQA accuracy", "value": "18.35", "unit": "%", "baseline_value": "13.04", "n": null, "setup": "TextVQA val, Pythia+O, LA", "quote": "A jump in accuracy to 18.35% is observed by feeding OCR tokens (Pythia+O)", "table": null, "note": null, "where": "Sec 5 Results"},
+  {"claim": "Copy-only from OCR tokens (Pythia+O+C) gets 20.06% val.", "kind": "measured", "source": null, "metric": "VQA accuracy", "value": "20.06", "unit": "%", "baseline_value": null, "n": null, "setup": "TextVQA val, predicting only from OCR tokens", "quote": "Validation ac-\ncuracy of 20.06 achieved by Pythia+O+C by only predict-\ning answers from OCR tokens", "table": null, "note": "Quote spans a line break in the cache", "where": "Sec 5 Results"},
+  {"claim": "Adding LoRRA to BAN improves val accuracy to 18.41%.", "kind": "measured", "source": null, "metric": "VQA accuracy", "value": "18.41", "unit": "%", "baseline_value": "12.30", "n": null, "setup": "TextVQA val, BAN + LoRRA, SA", "quote": "Validation accuracy for BAN [25] also improves\nto 18.41%", "table": null, "note": "Quote spans a line break in the cache", "where": "Sec 5 Results"},
+  {"claim": "The OCR upper bound on val is 37.12%, above the best model.", "kind": "measured", "source": null, "metric": "OCR UB accuracy", "value": "37.12", "unit": "%", "baseline_value": null, "n": null, "setup": "Rosetta OCR tokens, up to 4-grams, val", "quote": "the upper-bound on the validation set that one can\nachieve by correctly predicting the answer using these OCR\ntokens is 37.12%", "table": null, "note": null, "where": "Sec 5 Results"},
+  {"claim": "LA+OCR upper bound on val is 67.56%, leaving about 41 points of headroom.", "kind": "measured", "source": null, "metric": "LA+OCR UB", "value": "67.56", "unit": "%", "baseline_value": null, "n": null, "setup": "TextVQA val", "quote": "LA+OCR UB of 67.56%", "table": null, "note": "Test 68.24", "where": "Sec 5 Results"},
+  {"claim": "Adding LoRRA to Pythia raises VQA 2.0 test-dev from 68.71 to 69.21.", "kind": "measured", "source": null, "metric": "VQA 2.0 accuracy", "value": "69.21", "unit": "%", "baseline_value": "68.71", "n": null, "setup": "VQA 2.0 test-dev, single model", "quote": "it improves\naccuracy from 68.71 to 69.21 on VQA 2.0", "table": null, "note": "Quote spans a line break in the cache; small gain, 5-seed variance not reported for it", "where": "Sec 5, Table 1"},
+  {"claim": "Pythia v0.3 reaches 54.72% on VizWiz test versus 51.40 for BAN.", "kind": "measured", "source": null, "metric": "VizWiz accuracy", "value": "54.72", "unit": "%", "baseline_value": "51.40", "n": null, "setup": "VizWiz test, single model", "quote": null, "table": "Table 1, row Pythia v0.3 (Ours), column VizWiz test", "note": null, "where": "Table 1"},
+  {"claim": "Majority answer yes gets 4.48% on val.", "kind": "measured", "source": null, "metric": "accuracy", "value": "4.48", "unit": "%", "baseline_value": null, "n": null, "setup": "TextVQA", "quote": "Majority answer (“yes”) gets only 4.48% on test set.", "table": null, "note": "Text says test set, Table 2 lists 4.48 under Val and 2.63 under Test", "where": "Sec 5 Results, Table 2"},
+  {"claim": "Question-only and image-only baselines score 8.09% and 6.29% val, indicating little bias.", "kind": "measured", "source": null, "metric": "accuracy", "value": "8.09", "unit": "%", "baseline_value": "6.29", "n": null, "setup": "TextVQA val, LA", "quote": "Question only (Q) and\nImage only (I) baseline get 8.09% and 6.29% validation\naccuracies", "table": null, "note": null, "where": "Sec 5 Results"},
+  {"claim": "44.9% of LoRRA's val predictions are copied from OCR tokens.", "kind": "measured", "source": null, "metric": "share of predictions from OCR", "value": "44.9", "unit": "%", "baseline_value": null, "n": null, "setup": "TextVQA val, LoRRA", "quote": "44.9% of LoRRA’s predicted answers\nare from OCR tokens", "table": null, "note": null, "where": "Appendix A"},
+  {"claim": "When copying from OCR, the model gets the full answer right 27% of the time and partially right 11%.", "kind": "measured", "source": null, "metric": "accuracy of copied answers", "value": "27", "unit": "%", "baseline_value": null, "n": null, "setup": "TextVQA val", "quote": "the model gets the entire answer string correct 27%\nof the time", "table": null, "note": null, "where": "Appendix A"},
+  {"claim": "8.9% of TextVQA questions need multiple OCR tokens, which single-token copy cannot answer.", "kind": "measured", "source": null, "metric": "share of questions", "value": "8.9", "unit": "%", "baseline_value": null, "n": null, "setup": "TextVQA", "quote": "8.9% of the\nTextVQA questions can only be answered by combining\nmultiple OCR tokens", "table": null, "note": null, "where": "Sec 3.3"},
+  {"claim": "Up to 21% of VizWiz questions involve reading text.", "kind": "reported", "source": "Bigham et al. 2010 (VizWiz)", "metric": null, "value": "21", "unit": "%", "baseline_value": null, "n": null, "setup": "VizWiz study of visually impaired users' questions", "quote": "up to 21% of these questions involve reading and reasoning", "table": null, "note": null, "where": "Sec 1"},
+  {"claim": "TextVQA has far more unique majority answers than VQA 2.0.", "kind": "measured", "source": null, "metric": "unique majority answers", "value": "49.2", "unit": "%", "baseline_value": "3.4", "n": null, "setup": "TextVQA vs VQA 2.0 (3.4%) and VizWiz (22.8%)", "quote": "there are 26,263 (49.2%) unique majority an-\nswers in TextVQA", "table": null, "note": null, "where": "Sec 4.3"}
+ ],
+ "limits": [
+  "Copy mechanism can output only a single OCR token; 8.9% of questions need several, and multi-token answers are left as future work.",
+  "OCR (Rosetta) fails on rotated, unstructured or occluded text; performance depends on OCR quality (App. B).",
+  "Large gap remains: 26.56 val vs 85.01 human; the OCR upper bound alone is 37.12.",
+  "Test accuracy is reported for only some models in Table 2; hardware type and compute are not stated; no variance is given for the VQA 2.0 gain (+0.5).",
+  "Model shows biases such as answering city questions with new york (App. B).",
+  "Dated: later text-VQA models (M4C and successors) and end-to-end OCR-free models supersede LoRRA."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "LoRRA", "definition": "Look, Read, Reason & Answer: VQA model with OCR reading component and copy mechanism", "where": "Abstract, Sec 3"},
+  {"term": "LA / SA", "definition": "Large (8000 most frequent answers) and short (3996 answers appearing at least twice) answer vocabularies", "where": "Sec 5"}
+ ],
+ "lineage": [
+  {"work": "Pythia v0.1: the winning entry to the VQA Challenge 2018", "year": 2018, "arxiv": "1807.09956", "relation": "extends", "note": "VQA component is based on Pythia v0.1, revised to v0.3", "quote": null},
+  {"work": "Rosetta: Large scale system for text detection and recognition in images", "year": 2018, "arxiv": null, "relation": "uses-method", "note": "OCR module", "quote": null},
+  {"work": "Bottom-up and top-down attention (Anderson et al.)", "year": 2018, "arxiv": "1707.07998", "relation": "uses-method", "note": "region features and attention", "quote": null},
+  {"work": "Pointer generator / copy mechanisms (Gu 2016, See 2017, Merity 2017)", "year": 2017, "arxiv": null, "relation": "uses-method", "note": "copy mechanism basis", "quote": null},
+  {"work": "Bilinear attention networks (Kim et al.)", "year": 2018, "arxiv": null, "relation": "baseline", "note": "second VQA backbone with LoRRA", "quote": null},
+  {"work": "Open Images (Krasin et al.)", "year": 2016, "arxiv": null, "relation": "uses-data", "note": "image source", "quote": null},
+  {"work": "VQA 2.0 (Goyal et al.)", "year": 2017, "arxiv": "1612.00837", "relation": "uses-data", "note": "also evaluated", "quote": null},
+  {"work": "VizWiz Grand Challenge (Gurari et al.)", "year": 2017, "arxiv": null, "relation": "uses-data", "note": "also evaluated and motivation", "quote": null},
+  {"work": "FastText (Joulin et al.)", "year": 2017, "arxiv": null, "relation": "uses-method", "note": "OCR token embeddings", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 2", "caption": "Overview of our approach Look, Read, Reason & Answer (LoRRA).", "page": 2, "why": "Shows the two-branch architecture and the extended answer space with copy."},
+  {"figure": "Table 2", "caption": "Evaluation on TextVQA: heuristics and upper bounds (left), baselines and ablations (right).", "page": 5, "why": "All main accuracy numbers and headroom."}
+ ],
+ "code": [
+  {"where": "Eq 3", "snippet": "fLoRRA(v, s, q) = fMLP([fVQA(v, q); fOCR(s, q)])", "verbatim": true}
+ ],
+ "problems": ["Text cache has odd reading order around tables and figures. Minor internal inconsistencies: avg question length 7.18 (text) vs 7.16 (Fig 5a caption); avg answer length 1.58 (text) vs 1.7 (Fig 5b caption); text says Majority Ans gets 4.48% on test but Table 2 lists it under Val; Sec 3.1 reference for attention weights concatenation is actually Sec 3.2."]
+}

@@ -1,0 +1,388 @@
+{
+ "schema": 1,
+ "key": "1709.00103",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/zhong-2017-seq2sql.pdf",
+ "bib": {
+  "title": "Seq2SQL: Generating Structured Queries from Natural Language using Reinforcement Learning",
+  "authors": [
+   "Victor Zhong",
+   "Caiming Xiong",
+   "Richard Socher"
+  ],
+  "first_author": "Zhong",
+  "year": 2017,
+  "venue": "preprint",
+  "arxiv": "1709.00103",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 42776,
+  "chars_total": 42776,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can natural language questions be translated to SQL queries over unseen table schemas by exploiting SQL structure and execution-based RL rewards?",
+ "hypothesis": "WHERE conditions are unordered, so cross entropy wrongly penalises equivalent queries; optimising execution correctness with policy gradient should do better.",
+ "contributions": [
+  "Seq2SQL, a network that uses SQL structure to prune the output space and policy-based RL with in-the-loop execution for the WHERE clause",
+  "WikiSQL, 80654 hand-annotated question/SQL/table examples over 24241 tables, plus a query execution engine"
+ ],
+ "method": {
+  "summary": "Seq2SQL has an aggregation classifier, a SELECT column pointer and a WHERE pointer decoder. The first two use cross entropy; WHERE is first trained with teacher forcing, then with REINFORCE using a reward from executing the generated query. Compared with a Dong & Lapata seq2seq baseline and an augmented pointer network on WikiSQL.",
+  "task": "natural language to SQL (single-table semantic parsing)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "WikiSQL",
+    "role": "both",
+    "size": "80654 examples over 24241 tables",
+    "split": "random train/dev/test, each table in exactly one split; split sizes not stated",
+    "source": "Crowdsourced on Amazon Mechanical Turk from Wikipedia tables (Bhagavatula et al. 2013); licence not stated",
+    "preprocessing": "Stanford CoreNLP tokenisation; normalised tokens for training, reverted to original gloss before output so queries execute. Tables filtered: ragged rows, cells over 50 chars, empty header, under 5 rows or 5 columns, over 40% identical cells in a row; last row dropped. 6 random SQL queries per table, non-empty results only; paraphrase kept if at least one verifier approved and edit distance over 10."
+   }
+  ],
+  "models": [
+   {
+    "name": "Seq2SQL",
+    "role": "proposed",
+    "params": null,
+    "architecture": "2-layer bidirectional LSTM encoder, aggregation classifier, SELECT column pointer, 2-layer unidirectional LSTM pointer decoder for WHERE",
+    "init_from": "inferred: trained from scratch with fixed GloVe + character n-gram embeddings; RL stage continues from teacher-forced version",
+    "tokenizer": "Stanford CoreNLP",
+    "vocab": null,
+    "layers": "2 (encoder and decoder)",
+    "hidden": "200 units (all recurrent layers)",
+    "heads": null,
+    "context": null,
+    "other": {
+     "embeddings": "fixed GloVe plus character n-gram embeddings (Hashimoto et al. 2016)"
+    }
+   },
+   {
+    "name": "Seq2SQL (no RL)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "same as Seq2SQL, WHERE supervised by teacher forcing",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": "200",
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Aug Ptr Network",
+    "role": "baseline",
+    "params": null,
+    "architecture": "pointer network over columns + question + SQL vocabulary, 2-layer bi-LSTM encoder, 2-layer LSTM decoder",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "2",
+    "hidden": "200",
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Baseline (Dong & Lapata 2016)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "attentional seq2seq, OpenNMT variant with global attention and input feeding, same 2-layer bi-LSTM encoder",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "2",
+    "hidden": "200",
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "L = L_agg + L_sel + L_whe, equally weighted; CE for aggregation and SELECT, policy gradient (single Monte-Carlo sample) on reward -2 invalid SQL, -1 valid but wrong result, +1 correct result for WHERE",
+   "optimizer": "ADAM",
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": "maximum 300, early stopping on dev execution accuracy",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": "0.3 after all recurrent layers",
+   "regularisation": "dropout",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "framework": "PyTorch",
+    "rl_schedule": "first train with WHERE teacher-forced, then continue with RL; RL epochs not stated"
+   }
+  },
+  "inference": {
+   "decoding": "argmax over pointer scores (Seq2SQL); beam size 5 with unknown-word replacement by highest-attention input word for the Dong & Lapata baseline",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "during RL training the next token is sampled from the output distribution; one sample per example",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Execution accuracy (Acc_ex)",
+     "definition": "N_ex/N: share of queries that execute to the correct result",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Logical form accuracy (Acc_lf)",
+     "definition": "N_lf/N: share of queries with exact string match to the ground truth query",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Dong & Lapata (2016) attentional seq2seq",
+    "Augmented pointer network",
+    "Seq2SQL without RL"
+   ],
+   "protocol": "single reported number per model on dev and test; no seeds or significance tests"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "https://github.com/salesforce/WikiSQL"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Seq2SQL reaches 59.4% execution accuracy on WikiSQL test.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Test Acc_ex",
+   "value": 59.4,
+   "unit": "%",
+   "baseline_value": 35.9,
+   "n": null,
+   "setup": "WikiSQL test split, Seq2SQL (LSTM pointer model, mixed CE + policy-gradient RL), single run",
+   "note": null,
+   "where": "Abstract; Table 2",
+   "quote": "improving execution accuracy from 35.9% to 59.4% and logical form accuracy from 23.4% to 48.3%"
+  },
+  {
+   "claim": "Seq2SQL reaches 48.3% logical form accuracy on WikiSQL test.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Test Acc_lf",
+   "value": 48.3,
+   "unit": "%",
+   "baseline_value": 23.4,
+   "n": null,
+   "setup": "WikiSQL test split, Seq2SQL (LSTM pointer model, mixed CE + policy-gradient RL), single run",
+   "note": null,
+   "where": "Abstract; Table 2",
+   "quote": "logical form accuracy from 23.4% to 48.3%"
+  },
+  {
+   "claim": "The augmented pointer network gets 53.3% test execution accuracy.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Test Acc_ex",
+   "value": 53.3,
+   "unit": "%",
+   "baseline_value": 35.9,
+   "n": null,
+   "setup": "WikiSQL test, augmented pointer network",
+   "note": null,
+   "where": "Introduction; Table 2",
+   "quote": "an augmented pointer network baseline, which obtains 53.3% execution accuracy"
+  },
+  {
+   "claim": "Removing RL (teacher-forced WHERE) gives 57.1% test execution accuracy, so RL adds 2.3 points.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Test Acc_ex",
+   "value": 57.1,
+   "unit": "%",
+   "baseline_value": 59.4,
+   "n": null,
+   "setup": "WikiSQL test, Seq2SQL (no RL)",
+   "note": "Text reports gains as '17.4%', '3.8%', '2.3%', which are absolute point differences (53.3-35.9, 57.1-53.3, 59.4-57.1).",
+   "where": "Table 2; 4.1",
+   "table": "Table 2, row Seq2SQL (no RL), column Test Accex"
+  },
+  {
+   "claim": "Seq2SQL gets 60.8% dev execution accuracy and 49.5% dev logical form accuracy.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Dev Acc_ex",
+   "value": 60.8,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "WikiSQL dev, Seq2SQL",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Seq2SQL, column Dev Accex"
+  },
+  {
+   "claim": "Structure (no-RL Seq2SQL) cuts invalid queries from 7.9% to 4.8%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Invalid query rate",
+   "value": 4.8,
+   "unit": "%",
+   "baseline_value": 7.9,
+   "n": null,
+   "setup": "Seq2SQL without RL vs augmented pointer network; split not stated (dev inferred)",
+   "note": null,
+   "where": "4.2",
+   "quote": "reduces invalid SQL queries generated from 7.9% to 4.8%"
+  },
+  {
+   "claim": "The aggregation classifier raises COUNT F1 from 65.4 to 69.2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "COUNT F1",
+   "value": 69.2,
+   "unit": "%",
+   "baseline_value": 65.4,
+   "n": null,
+   "setup": "Seq2SQL vs Aug Ptr Network, COUNT operator prediction; split not stated",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row Seq2SQL, column F1"
+  },
+  {
+   "claim": "WikiSQL is 80654 examples over 24241 tables, an order of magnitude larger than comparable datasets.",
+   "kind": "measured",
+   "source": null,
+   "metric": "examples",
+   "value": 80654,
+   "unit": "examples",
+   "baseline_value": null,
+   "n": null,
+   "setup": "WikiSQL vs Geoquery 880, ATIS 5871, Overnight 26098, WikiTableQuestions 22033",
+   "note": null,
+   "where": "Abstract; Table 1",
+   "quote": "a dataset of 80654 hand-annotated examples of questions and SQL queries distributed across 24241 tables"
+  }
+ ],
+ "limits": [
+  "Execution accuracy can credit a query that does not match the question but returns the same result; logical form accuracy penalises correct queries with reordered conditions (3.1).",
+  "Only single-table queries with an aggregation, one SELECT column and AND-joined conditions; the generator uses only =, > and < (Appendix A).",
+  "One run per model, no seeds, variance or significance tests; learning rate, batch size and RL epochs not given.",
+  "Table content is not used by the model, only column names and the question.",
+  "Dataset questions are paraphrases of template-generated questions, so they may be less varied than natural user questions (inferred, not conceded)."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Execution accuracy",
+   "definition": "Acc_ex = N_ex/N, queries that execute to the correct result",
+   "where": "3.1"
+  },
+  {
+   "term": "Logical form accuracy",
+   "definition": "Acc_lf = N_lf/N, queries with exact string match to the ground truth query",
+   "where": "3.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Language to logical form with neural attention",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Dong & Lapata attentional seq2seq parser, reimplemented with OpenNMT",
+   "quote": null
+  },
+  {
+   "work": "Pointer networks",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Vinyals et al.; basis of the augmented pointer network",
+   "quote": null
+  },
+  {
+   "work": "Policy gradient methods for RL with function approximation",
+   "year": 2000,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Sutton et al.; policy gradient derivation, with Schulman et al. 2015",
+   "quote": null
+  },
+  {
+   "work": "Long short-term memory",
+   "year": 1997,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Hochreiter & Schmidhuber; encoder and decoder",
+   "quote": null
+  },
+  {
+   "work": "Compositional semantic parsing on semi-structured tables",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Pasupat & Liang; WikiTableQuestions, floating parser",
+   "quote": null
+  },
+  {
+   "work": "Coupling distributed and symbolic execution for natural language queries",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Mou et al.; execution rewards in RL, on synthetic single-schema questions",
+   "quote": null
+  },
+  {
+   "work": "Methods for exploring and mining tables on Wikipedia",
+   "year": 2013,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Bhagavatula et al.; source of Wikipedia tables",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Figure 3",
+   "caption": "The Seq2SQL model has three components, corresponding to the three parts of a SQL query.",
+   "page": 3,
+   "why": "shows aggregation classifier, SELECT pointer and WHERE decoder against one query"
+  },
+  {
+   "figure": "Table 2",
+   "caption": "Performance on WikiSQL, Acc_lf and Acc_ex on dev and test",
+   "page": 7,
+   "why": "all headline numbers and the ablation chain"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 7",
+   "snippet": "R(q(y), qg) = -2 if q(y) is not a valid SQL query; -1 if valid and executes to an incorrect result; +1 if valid and executes to the correct result",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Extra leading-text in Eq/Table layouts is garbled by the PDF extractor; split sizes and learning rate are not stated in the paper."
+ ]
+}

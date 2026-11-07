@@ -1,0 +1,520 @@
+{
+ "schema": 1,
+ "key": "2108.07732",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/austin-2021-program-synthesis-large-language-models.pdf",
+ "bib": {
+  "title": "Program Synthesis with Large Language Models",
+  "authors": [
+   "Jacob Austin",
+   "Augustus Odena",
+   "Maxwell Nye",
+   "Maarten Bosma",
+   "Henryk Michalewski",
+   "David Dohan",
+   "Ellen Jiang",
+   "Carrie Cai",
+   "Michael Terry",
+   "Quoc Le",
+   "Charles Sutton"
+  ],
+  "first_author": "Austin",
+  "year": 2021,
+  "venue": "preprint",
+  "arxiv": "2108.07732",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 125977,
+  "chars_total": 125977,
+  "engine": "pymupdf",
+  "skipped": "Reference list skimmed; appendix A.4 sample dialogues skimmed."
+ },
+ "type": "benchmark",
+ "question": "How well do general-purpose large language models (244M to 137B parameters) synthesize short Python programs from natural language, few-shot and fine-tuned, on two new benchmarks?",
+ "hypothesis": null,
+ "contributions": [
+  "Two datasets: MBPP (974 crowd-sourced problems, 426 hand-edited) and MathQA-Python (23914 problems)",
+  "Few-shot and fine-tuned scaling results from 244M to 137B, with sensitivity analyses",
+  "Human-model dialog experiment: natural-language feedback halves the error rate",
+  "Program execution experiments showing models cannot reliably predict program output",
+  "Analysis of test-case generalisation, pre-train/test overlap, BLEU and sampling strategy"
+ ],
+ "method": {
+  "summary": "Dense decoder-only Transformer LMs trained on web documents, dialog and Wikipedia (no dedicated code files) are evaluated on MBPP and MathQA-Python by sampling programs and executing them against tests, few-shot and after small fine-tuning. Further experiments cover human feedback dialogs, execution prediction and error analysis.",
+  "task": "natural-language-to-Python program synthesis; program execution prediction",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "MBPP (Mostly Basic Programming Problems)",
+    "role": "eval",
+    "size": "974 problems",
+    "split": "10 few-shot prompt, 500 test, 374 fine-tune, rest validation (90 per Section 6.2)",
+    "source": "crowd-sourced by an internal pool of crowdworkers; open-sourced at google-research/mbpp",
+    "preprocessing": "Reference code checked to pass all tests under Python 3.6; each problem has a one-sentence description and 3 assert tests"
+   },
+   {
+    "name": "MBPP edited subset",
+    "role": "eval",
+    "size": "426 hand-verified problems",
+    "split": "100 problems appearing in both original and edited sets used for comparison",
+    "source": "authors' manual editing and pruning of MBPP",
+    "preprocessing": "standard function signature, unambiguous text, accurate tests"
+   },
+   {
+    "name": "MathQA-Python",
+    "role": "both",
+    "size": "23914 problems",
+    "split": "19209 train, 2822 validation, 1883 test",
+    "source": "MathQA (Amini et al. 2019) with DSL programs translated to Python",
+    "preprocessing": "kept only problems whose code evaluates to the declared numerical answer, removing 45% of problems"
+   },
+   {
+    "name": "Pre-training corpus",
+    "role": "pretrain",
+    "size": "2.97B documents, 2.81T BPE tokens",
+    "split": null,
+    "source": "web documents, dialog data, Wikipedia; 13.8M documents with 18.7B BPE tokens were web sites with code and text",
+    "preprocessing": "source code files not specifically included"
+   }
+  ],
+  "models": [
+   {
+    "name": "Dense decoder-only Transformer LM",
+    "role": "evaluated",
+    "params": "244M, 422M, 1B, 4B, 8B, 68B, 137B (non-embedding)",
+    "architecture": "dense left-to-right decoder-only Transformer",
+    "init_from": null,
+    "tokenizer": "SentencePiece BPE",
+    "vocab": "32K",
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "512 token context window noted as binding on long prompts; 1024 also tried",
+    "other": {
+     "sizes_in_figs": "244m, 422m, 1b, 4b, 8b, 68b, 137b labels read from Fig 4"
+    }
+   }
+  ],
+  "training": {
+   "objective": "fine-tuning of the pretrained LM on MBPP train (374 problems), MathQA-Python train, or execution tasks; objective otherwise not stated",
+   "optimizer": null,
+   "lr": "3e-5 for the largest model on MBPP",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "8192 tokens per batch (execution fine-tuning only)",
+   "steps": "100 steps (MBPP and execution fine-tuning); MathQA fine-tuned 'for longer', number not stated",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": "pre-training energy 451MWh and 26 tCO2e; fine-tuning comparably very small",
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "execution_finetune_data": "14 x 374 = 5236 train and 14 x 90 = 1260 validation points"
+   }
+  },
+  "inference": {
+   "decoding": "temperature sampling for synthesis; greedy for execution",
+   "temperature": "0.5 for synthesis; 0.0 for execution",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "80 samples per problem on the 500 MBPP test problems; MathQA analogous",
+   "prompting": "few-shot: 3 asserts per problem in prompt; k=3 example synthesis tasks (Sec 6.3), 10 held out for few-shot; MathQA prompt has four examples",
+   "retrieval": null,
+   "parameters": {
+    "sampling_sweep": "temperatures 0.1, 0.5, 0.8, 1.0 and beam search compared (Fig 9)",
+    "prompt_seeds": "15 seeds (0-14) of prompt example choice, read from Fig 6"
+   },
+   "other": {
+    "run_to_run_variance": "small run-to-run variance in problems solved (59.0 vs 59.6)"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "% of problems solved",
+     "definition": "fraction of test problems for which any of the 80 samples passes all tests",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "% of samples solving task",
+     "definition": "fraction of all samples across all problems that pass their problem's tests",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "MathQA accuracy",
+     "definition": "percentage of test tasks solved by any sample; program output equals correct answer",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Execution accuracy",
+     "definition": "model's greedy output exactly matches the string from executing the code",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "few-shot vs fine-tuned of the same models",
+    "original vs edited MBPP"
+   ],
+   "protocol": "Functional correctness by executing samples; BLEU shown to correlate poorly; human-model dialog on 50 edited problems, each tackled by two people, max 4 hints"
+  },
+  "availability": {
+   "code": "MathQA DSL-to-Python conversion notebook in google/trax",
+   "weights": null,
+   "data": "MBPP open-sourced at https://github.com/google-research/google-research/tree/master/mbpp"
+  },
+  "prompts": [
+   {
+    "purpose": "MBPP few-shot prompt format",
+    "text": "Write a python function to check if a given number is one less than twice its reverse. Your code should satisfy these tests:\nassert check(70) == False\nassert check(23) == False\nassert check(73) == True",
+    "where": "Figure 1, p2"
+   },
+   {
+    "purpose": "Execution experiment, code only",
+    "text": "Consider the following Python function:\n\n{code}\n\nFill in the ??? below:\n\n{tests}",
+    "where": "Listing 1, A.3"
+   },
+   {
+    "purpose": "Execution experiment, NL+examples",
+    "text": "Consider a Python function called {function_name}.\n\nThis function solves the task: \"{description}\"\n\nThe function satisfies the following examples:\n\n{prompt_asserts}\n\nFill in the ??? below:\n\n{tests}",
+    "where": "Listing 1, A.3"
+   },
+   {
+    "purpose": "MathQA-Python prompt",
+    "text": "Please, solve the mathematical problem: ...",
+    "where": "Figure 2"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Largest model solves 59.6% of MBPP problems few-shot with 80 samples.",
+   "kind": "measured",
+   "source": null,
+   "metric": "% problems solved",
+   "value": 59.6,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MBPP 500 test problems, 137B, few-shot, 3 asserts in prompt, T=0.5, 80 samples",
+   "quote": "The largest models that we consider\ncan synthesize solutions to 59.6% of the problems from MBPP using few-shot learning.",
+   "table": null,
+   "note": null,
+   "where": "Sec 1"
+  },
+  {
+   "claim": "Fine-tuning on 374 problems adds about 10 points across most sizes.",
+   "kind": "measured",
+   "source": null,
+   "metric": "gain from fine-tuning",
+   "value": 10,
+   "unit": "percentage points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MBPP, most model sizes",
+   "quote": "For most model sizes,\nﬁne-tuning increases performance by about 10 percentage points.",
+   "table": null,
+   "note": null,
+   "where": "Sec 1"
+  },
+  {
+   "claim": "Fine-tuned 137B reaches 83.8% on MathQA-DSL.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 83.8,
+   "unit": "%",
+   "baseline_value": "16.7 few-shot",
+   "n": null,
+   "setup": "MathQA test, 1883 tasks, any sample solves",
+   "quote": null,
+   "table": "Table 6, row 137B, column MathQA-DSL Fine-tuned",
+   "note": null,
+   "where": "Table 6"
+  },
+  {
+   "claim": "Few-shot 137B reaches 33.4% on MathQA-Python.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 33.4,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MathQA-Python, 137B few-shot",
+   "quote": null,
+   "table": "Table 6, row 137B, column MathQA-Python Few-shot",
+   "note": null,
+   "where": "Table 6"
+  },
+  {
+   "claim": "Hand-editing raised 137B few-shot solve rate from 63% to 79% on 100 shared problems.",
+   "kind": "measured",
+   "source": null,
+   "metric": "% problems solved",
+   "value": 79,
+   "unit": "%",
+   "baseline_value": "63% original",
+   "n": null,
+   "setup": "100 problems in both original and edited MBPP, 137B few-shot",
+   "quote": null,
+   "table": "Table 2, row 137B edited, column % of Problems Solved",
+   "note": "Intro: few-shot model performance increases from 63% on the original dataset to 79% on the edited dataset.",
+   "where": "Table 2"
+  },
+  {
+   "claim": "Adversarial tests drop apparent solve rate from 66% to 58% on 50 sampled test problems, implying about 12% of counted solutions are wrong.",
+   "kind": "measured",
+   "source": null,
+   "metric": "solve rate with challenge tests",
+   "value": 58,
+   "unit": "%",
+   "baseline_value": "66",
+   "n": null,
+   "setup": "50 of 500 MBPP test programs with hand-written adversarial tests, best model",
+   "quote": "for solution rates of 66% and 58% respectively",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.4"
+  },
+  {
+   "claim": "Human feedback raises problems solved from 30% to over 65% with four turns.",
+   "kind": "measured",
+   "source": null,
+   "metric": "% solved",
+   "value": 65,
+   "unit": "%",
+   "baseline_value": "30",
+   "n": null,
+   "setup": "50 edited MBPP problems, single sample per turn, hints one sentence, max four",
+   "quote": "the fraction of problems solved is increased from 30% to over 65%",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.1"
+  },
+  {
+   "claim": "Few-shot execution accuracy never exceeds 29% for any prompt type.",
+   "kind": "measured",
+   "source": null,
+   "metric": "execution accuracy",
+   "value": 29,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "137B, greedy, one test case",
+   "quote": "with accuracy\nnever exceeding 29% for any prompt type",
+   "table": null,
+   "note": null,
+   "where": "Sec 6.1"
+  },
+  {
+   "claim": "Only 3.3% of MBPP problems had more than half their lines matched in the pre-training data.",
+   "kind": "measured",
+   "source": null,
+   "metric": "overlap",
+   "value": 3.3,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "32 of 974 problems; lines appearing more than twice in MBPP excluded",
+   "quote": "Only 32 of 974\nproblems (3.3%) had more than half of their lines matched somewhere in the pre-training data and 91.5% had only one\nor two lines of code that overlapped with the training set.",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.8"
+  },
+  {
+   "claim": "Prompt number of asserts matters little: 3 asserts solved only 3 extra problems over 1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "problems",
+   "value": 3,
+   "unit": "problems",
+   "baseline_value": null,
+   "n": null,
+   "setup": "137B few-shot",
+   "quote": "the model with 3 asserts in the prompt solved only 3 extra problems compared to the model\nwith 1 assert only",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2"
+  },
+  {
+   "claim": "Zero examples (function name only) solves 43.2% vs 58.4% with 3.",
+   "kind": "measured",
+   "source": null,
+   "metric": "% problems solved",
+   "value": 43.2,
+   "unit": "%",
+   "baseline_value": "58.4 with 3",
+   "n": null,
+   "setup": "137B few-shot, 0 prompt examples",
+   "quote": null,
+   "table": "Table 1, row 0, column % of Problems Solved",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Ensembling prompt seeds raises problems solved from 59.6% to 66.4%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "% solved",
+   "value": 66.4,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "137B few-shot, solved by any seed",
+   "quote": "boosts the percentage of problems solved from 59.6% to 66.4%",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.3"
+  },
+  {
+   "claim": "Low temperature is best with one try; higher temperature wins within a budget of 10 samples; beam search is worst because it loops.",
+   "kind": "measured",
+   "source": null,
+   "metric": "qualitative",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "137B, temps 0.1/0.5/0.8/1.0 and beam, Fig 9",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Sec 4.6"
+  },
+  {
+   "claim": "Fine-tuning on execution barely helps and 137B synthesis gains about 2.3% more samples per problem.",
+   "kind": "measured",
+   "source": null,
+   "metric": "gain",
+   "value": 2.3,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "137B fine-tuned on execution vs on synthesis",
+   "quote": "of about 2.3% more samples per problem solving",
+   "table": null,
+   "note": null,
+   "where": "Sec 6.3"
+  },
+  {
+   "claim": "Pre-training energy cost.",
+   "kind": "measured",
+   "source": null,
+   "metric": "energy",
+   "value": 451,
+   "unit": "MWh",
+   "baseline_value": null,
+   "n": null,
+   "setup": "pre-training of the models used",
+   "quote": "451MWh and 26\ntCO2e",
+   "table": null,
+   "note": null,
+   "where": "Sec 9"
+  }
+ ],
+ "limits": [
+  "Benchmark programs are short and simple, and the problems solved are the shortest and simplest.",
+  "Models often solve a task with only one or two of 80 samples; performance depends on drawing many samples and machine-checking.",
+  "Models cannot predict program output on simple inputs; execution fine-tuning data was small.",
+  "Results sensitive to the choice of few-shot examples (Fig 6).",
+  "Models are not safety-treated and are not released; weights and pre-training data unavailable.",
+  "Human-model experiment is small (50 problems) and preliminary; MathQA explanation results are anecdotal.",
+  "No fine-tuning optimizer, schedule, seeds or layer/width details stated."
+ ],
+ "practices": [],
+ "terms": [],
+ "lineage": [
+  {
+   "work": "Language Models are Few-Shot Learners",
+   "year": 2020,
+   "arxiv": "2005.14165",
+   "relation": "uses-method",
+   "note": "few-shot prompting regime",
+   "quote": "few-shot prompting as in Brown et al. [2020]"
+  },
+  {
+   "work": "Evaluating Large Language Models Trained on Code (Codex, HumanEval)",
+   "year": 2021,
+   "arxiv": "2107.03374",
+   "relation": "related",
+   "note": "concurrent independent work; MBPP has consistent 3 asserts, no code fine-tuning here",
+   "quote": null
+  },
+  {
+   "work": "Measuring Coding Challenge Competence With APPS",
+   "year": 2021,
+   "arxiv": "2105.09938",
+   "relation": "related",
+   "note": "competition-problem dataset; MBPP designed to be more literal",
+   "quote": null
+  },
+  {
+   "work": "MathQA",
+   "year": 2019,
+   "arxiv": "1905.13319",
+   "relation": "uses-data",
+   "note": "source of MathQA-Python",
+   "quote": null
+  },
+  {
+   "work": "Attention Is All You Need",
+   "year": 2017,
+   "arxiv": "1706.03762",
+   "relation": "uses-method",
+   "note": "Transformer architecture",
+   "quote": null
+  },
+  {
+   "work": "SentencePiece",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "tokenizer (Kudo and Richardson)",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Figure 3",
+   "caption": "Performance vs model size, measured in two ways.",
+   "page": 6,
+   "why": "shows log-linear scaling and constant fine-tune gain"
+  },
+  {
+   "figure": "Figure 9",
+   "caption": "Higher temperatures achieve better scaling with more samples, but perform worse with a smaller budget.",
+   "page": 10,
+   "why": "temperature vs sample budget tradeoff"
+  },
+  {
+   "figure": "Figure 13",
+   "caption": "Percent of problems solved as the number of human dialog interventions increases.",
+   "page": 14,
+   "why": "effect of human hints"
+  },
+  {
+   "figure": "Table 5",
+   "caption": "Execution results as information in the prompt is varied.",
+   "page": 17,
+   "why": "shows execution accuracy below 29%"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Table cells extracted as flat lists; Table 5 and Table 6 values mapped by column order.",
+  "Layer count, width and heads of the models are not given."
+ ]
+}

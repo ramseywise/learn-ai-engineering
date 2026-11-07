@@ -1,0 +1,723 @@
+{
+ "schema": 1,
+ "key": "2206.10789",
+ "pdf": "ai-engineering/08-multimodal-engineering/sources/yu-2022-scaling-autoregressive-models-content-rich.pdf",
+ "bib": {
+  "title": "Scaling Autoregressive Models for Content-Rich Text-to-Image Generation",
+  "authors": [
+   "Jiahui Yu",
+   "Yuanzhong Xu",
+   "Jing Yu Koh",
+   "Thang Luong",
+   "Gunjan Baid",
+   "Zirui Wang",
+   "Vijay Vasudevan",
+   "Alexander Ku",
+   "Yinfei Yang",
+   "Burcu Karagol Ayan",
+   "Ben Hutchinson",
+   "Wei Han",
+   "Zarana Parekh",
+   "Xin Li",
+   "Han Zhang",
+   "Jason Baldridge",
+   "Yonghui Wu"
+  ],
+  "first_author": "Yu",
+  "year": 2022,
+  "venue": "preprint",
+  "arxiv": "2206.10789",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 153825,
+  "chars_total": 153825,
+  "engine": "pymupdf",
+  "skipped": "reference list skimmed only; figure-only content (images, bar charts) not readable"
+ },
+ "type": "empirical",
+ "question": "Can a scaled two-stage autoregressive encoder-decoder Transformer over ViT-VQGAN image tokens match or beat diffusion models at open-domain text-to-image generation, and where does it fail?",
+ "hypothesis": "Scaling autoregressive text-to-image models (as with LLMs) gives consistent gains in image quality, text-image alignment and world knowledge.",
+ "contributions": [
+  "Autoregressive models reach state-of-the-art: 7.23 zero-shot and 3.22 finetuned FID on MS-COCO, 15.97 zero-shot and 8.39 finetuned FID on Localized Narratives",
+  "Scale matters: the 20B model is best at photo-realism and content-rich synthesis with complex composition and world knowledge",
+  "PartiPrompts (P2) benchmark of over 1600 prompts, the 'growing a cherry tree' concept, and a catalogued set of error types"
+ ],
+ "method": {
+  "summary": "Parti is a two-stage model: a ViT-VQGAN tokenizer turns a 256x256 image into 1024 discrete tokens (8192-entry codebook), and an encoder-decoder Transformer (350M to 20B) maps text tokens to image tokens with next-token prediction. At inference it uses classifier-free guidance, samples 16 images per prompt and reranks with a CoCa model.",
+  "task": "text-to-image generation (sequence-to-sequence over image tokens)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Training mix: LAION-400M, FIT400M (filtered subset of 1.8B ALIGN examples), JFT-4B",
+    "role": "train",
+    "size": null,
+    "split": null,
+    "source": "LAION-400M public; ALIGN-derived; JFT-4B with labels or SimVLM machine captions (random switch)",
+    "preprocessing": "DALL-E dVAE input processing (tokenizer) and DALL-E Transformer input processing (encoder-decoder), per Ramesh et al. App. A.2 / B.2"
+   },
+   {
+    "name": "C4",
+    "role": "pretrain",
+    "size": null,
+    "split": null,
+    "source": "Raffel et al. T5 corpus",
+    "preprocessing": "text-encoder pretraining with BERT objective"
+   },
+   {
+    "name": "MS-COCO (2014)",
+    "role": "eval",
+    "size": "82K train, 40K val",
+    "split": "30,000 val prompts for FID",
+    "source": "Lin et al. 2014",
+    "preprocessing": "DALL-E preprocessing, 256x256"
+   },
+   {
+    "name": "Localized Narratives (COCO subset, LN-COCO)",
+    "role": "eval",
+    "size": "134K train, 8K val; 42.1 avg words per caption",
+    "split": "val has 5,000 unique images, captions oversampled to 30,000",
+    "source": "Pont-Tuset et al. 2020",
+    "preprocessing": null
+   },
+   {
+    "name": "PartiPrompts (P2)",
+    "role": "eval",
+    "size": "over 1600 prompts, 12 categories, 11 challenge aspects",
+    "split": null,
+    "source": "authored by the paper; about 7% curated from earlier papers",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Parti-350M",
+    "role": "proposed",
+    "params": "350M",
+    "architecture": "encoder-decoder Transformer, conv-shaped masked sparse attention in decoder",
+    "init_from": null,
+    "tokenizer": "SentencePiece 16,000 text vocab; ViT-VQGAN image tokens",
+    "vocab": "16,000 text / 8192 image",
+    "layers": "12 enc / 12 dec",
+    "hidden": "1024 (MLP 4096)",
+    "heads": 16,
+    "context": "128 text tokens + 1024 image tokens",
+    "other": {}
+   },
+   {
+    "name": "Parti-750M",
+    "role": "proposed",
+    "params": "750M",
+    "architecture": "same",
+    "init_from": null,
+    "tokenizer": "same",
+    "vocab": "16,000 / 8192",
+    "layers": "12 enc / 36 dec",
+    "hidden": "1024 (MLP 4096)",
+    "heads": 16,
+    "context": "128 + 1024",
+    "other": {}
+   },
+   {
+    "name": "Parti-3B",
+    "role": "proposed",
+    "params": "3B",
+    "architecture": "same",
+    "init_from": null,
+    "tokenizer": "same",
+    "vocab": "16,000 / 8192",
+    "layers": "12 enc / 36 dec",
+    "hidden": "2048 (MLP 8192)",
+    "heads": 32,
+    "context": "128 + 1024",
+    "other": {}
+   },
+   {
+    "name": "Parti (20B)",
+    "role": "proposed",
+    "params": "20B",
+    "architecture": "same",
+    "init_from": "text encoder pretrained (C4 BERT objective + contrastive on image-text data) by default",
+    "tokenizer": "same",
+    "vocab": "16,000 / 8192",
+    "layers": "16 enc / 64 dec",
+    "hidden": "4096 (MLP 16384)",
+    "heads": 64,
+    "context": "128 + 1024",
+    "other": {}
+   },
+   {
+    "name": "ViT-VQGAN tokenizer",
+    "role": "base",
+    "params": "about 30M (Small encoder/codebook); decoder finetuned to about 600M",
+    "architecture": "ViT-VQGAN-Small: 8 blocks, 8 heads, dim 512, hidden 2048; larger decoder 32 blocks, 16 heads, dim 1280, hidden 5120",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": "8192 codebook",
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "256x256 in/out, 32x32=1024 latent codes",
+    "other": {
+     "sigmoid and logit-laplace loss removed; super-resolution module WDSR 12 residual blocks 128 channels, about 15M params (512x512) or about 30M (1024x1024)": ""
+    }
+   },
+   {
+    "name": "CoCa base-size reranker",
+    "role": "judge",
+    "params": null,
+    "architecture": "Contrastive Captioners, base size",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "trained on the same dataset as Parti": ""
+    }
+   },
+   {
+    "name": "Retrieval baseline (EfficientNet-L2 ALIGN-based, ScaNN)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "nearest training image by ALIGN text-image alignment",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "VL-T5 captioner",
+    "role": "judge",
+    "params": null,
+    "architecture": "pretrained captioner used for captioner evaluation",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "next-token prediction of rasterized image latent codes, softmax cross-entropy over 8192 image tokens, averaged over 1024 tokens",
+   "optimizer": "Adafactor, beta1=0.9, beta2=0.96, first moments quantized float32 to int8, vectorized version for 20B",
+   "lr": "4.5e-5",
+   "lr_schedule": "exponential decay starting at step 85,000, final ratio 0.025",
+   "warmup": "5,000 steps",
+   "batch_size": "8192 (global)",
+   "steps": "450,000",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "128 text tokens max + 1024 image tokens",
+   "precision": "bfloat16 for attention projection and feed-forward; layer norms and model output float32",
+   "weight_decay": "4.5e-2 (decoupled)",
+   "dropout": "0.1 (encoder and decoder, all models; deterministic dropout in 20B)",
+   "regularisation": "gradient norm clipped to 4.0; no EMA of weights; extra layer norm at encoder and decoder outputs",
+   "hardware": "CloudTPUv4; Lingvo + GSPMD; 350M/750M data parallel; 3B 4-way in-layer model parallel + 128-way data parallel; 20B 16-stage pipelines for encoder and decoder + 64-way data parallel with 4-round circular schedule in decoder",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "classifier-free guidance training": "conditional dropout probability not stated",
+    "450,000 steps": "stated in Sec. 3 for the schedule; whether every size trained that long is not stated"
+   }
+  },
+  "inference": {
+   "decoding": "autoregressive sampling of 1024 image tokens, decoded by ViT-VQGAN decoder; classifier-free guidance on logits; best of 16 by CoCa score",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": "128 text tokens, 1024 image tokens",
+   "samples": "16 images per prompt, reranked by CoCa; single run, no seeds stated; FID uses 30,000 generated images",
+   "prompting": "free text prompts; some P2 figures append 'dslr photograph. daytime lighting.'",
+   "retrieval": null,
+   "parameters": {
+    "cf_guidance_scale": "1.2 for all Table 5 results",
+    "cf_guidance_formula": "I = G(z) + lambda (G(z,c) - G(z))",
+    "reranker": "CoCa base, 16 samples (DALL-E used 512)",
+    "sampling top-k / top-p / temperature": "not stated"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "FID",
+     "definition": "Frechet distance between Gaussians fit to Inception v3 pool features of 30,000 generated and real images, 256x256, pytorch-fid",
+     "unit": "FID",
+     "higher_is_better": false
+    },
+    {
+     "name": "Captioner evaluation",
+     "definition": "generated image captioned by VL-T5; caption vs input prompt scored by BLEU, METEOR, CIDEr, SPICE",
+     "unit": "score",
+     "higher_is_better": true
+    },
+    {
+     "name": "Human side-by-side",
+     "definition": "each pair judged by 5 independent annotators for image realism and image-text match; majority vote = 3 or more of 5",
+     "unit": "% of prompts won by majority",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Retrieval baseline",
+    "XMC-GAN",
+    "TReCS",
+    "DALL-E",
+    "CogView",
+    "CogView2",
+    "GLIDE",
+    "Make-A-Scene",
+    "DALL-E 2",
+    "Imagen",
+    "DALL-E small, ruDALL-E-XL, minDALL-E, X-LXMERT (captioner eval)"
+   ],
+   "protocol": "Automatic FID on 30,000 COCO-2014 val prompts; captioner eval on MS-COCO 5K test; human eval: 1,000 randomly sampled COCO prompts (each rated by 5 evaluators; Sec. 5.4 says 1,000 independent evaluators), and P2 for 20B vs 3B vs retrieval; no significance tests or seeds reported."
+  },
+  "availability": {
+   "code": "not released",
+   "weights": "not released",
+   "data": "PartiPrompts released with the paper; training data not released"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.lr",
+    "quote": "We use a default learning rate of 4.5e-5 and exponential learning rate schedule with 5,000 warm-up steps.",
+    "where": "Sec. 3"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Parti 20B reaches zero-shot FID 7.23 on MS-COCO, comparable to Imagen 7.27.",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": 7.23,
+   "unit": "FID",
+   "baseline_value": 7.27,
+   "n": null,
+   "setup": "MS-COCO 2014 val, 30,000 samples, 16 samples/prompt CoCa-reranked, guidance scale 1.2, zero-shot",
+   "quote": "Parti achieves a comparable zero-shot FID score 7.23 compared with diffusion-based model Imagen [13].",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.3, Table 5"
+  },
+  {
+   "claim": "Finetuned Parti reaches FID 3.22 on MS-COCO, beating Make-A-Scene 7.55 and in-dataset retrieval 6.82.",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": 3.22,
+   "unit": "FID",
+   "baseline_value": 7.55,
+   "n": null,
+   "setup": "MS-COCO 2014 val, finetuned, same sampling and guidance",
+   "quote": "Parti achieves state-of-the-art FID score of 3.22, a dramatic improvement over previous best ﬁnetuned FID 7.55 from an autoregressive model, Make-a-Scene [10].",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.3"
+  },
+  {
+   "claim": "Zero-shot FID on MS-COCO falls with scale: 14.10 (350M), 10.71 (750M), 8.10 (3B), 7.23 (20B).",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": 8.1,
+   "unit": "FID",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Parti-3B zero-shot MS-COCO 2014; same data, tokenizer, CoCa reranker",
+   "quote": "3B\n8.10",
+   "table": null,
+   "note": "Values for the other sizes (14.10, 10.71, 7.23) are read from the Fig 9 left panel text.",
+   "where": "Fig 9"
+  },
+  {
+   "claim": "LN-COCO zero-shot FID 15.97, nearly matching finetuned XMC-GAN 14.12.",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": 15.97,
+   "unit": "FID",
+   "baseline_value": 14.12,
+   "n": null,
+   "setup": "LN-COCO val, 30,000 oversampled captions, zero-shot",
+   "quote": "Moreover, Parti achieves a zero-shot FID score of 15.97, which nearly matches XMC-GAN’s ﬁnetuned score",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.3"
+  },
+  {
+   "claim": "LN-COCO finetuned FID 8.39 (Table 5, abstract), against XMC-GAN 14.12 and retrieval 16.48.",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": 8.39,
+   "unit": "FID",
+   "baseline_value": 14.12,
+   "n": null,
+   "setup": "LN-COCO val, finetuned",
+   "quote": null,
+   "table": "Table 5, row Parti, column LN-COCO FID Finetuned",
+   "note": "Prose in Sec 5.3 prints 8.29 for the same number; intro contributions print 8.39.",
+   "where": "Table 5; Sec 5.3"
+  },
+  {
+   "claim": "Human raters prefer zero-shot Parti over finetuned XMC-GAN on MS-COCO: 91.7% image realism, 90.5% image-text match.",
+   "kind": "measured",
+   "source": null,
+   "metric": "majority-vote preference",
+   "value": 91.7,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "1,000 random MS-COCO 2014 val prompts, 5 raters each, zero-shot Parti 20B vs XMC-GAN",
+   "quote": "91.7% preference score for image realism and 90.5% for image-text match.",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.4, Fig 8"
+  },
+  {
+   "claim": "Against the retrieval baseline on MS-COCO, Parti is worse on realism (45.2% vs 54.8%) but better on image-text match (55.2% vs 44.8%).",
+   "kind": "measured",
+   "source": null,
+   "metric": "majority-vote preference (image-text match)",
+   "value": 55.2,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "1,000 MS-COCO prompts, Parti 20B zero-shot vs retrieval over ~4B training images",
+   "quote": "(45.2% compared to 54.8%) but evaluated as better on image-text match (55.2% compared to 44.8%).",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.4"
+  },
+  {
+   "claim": "On P2, 20B is preferred over retrieval: 63.2% realism, 75.9% image-text match.",
+   "kind": "measured",
+   "source": null,
+   "metric": "majority-vote preference",
+   "value": 75.9,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "PartiPrompts, Parti 20B vs retrieval",
+   "quote": "image realism (63.2%) and image-text match (75.9%).",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.5, Fig 11"
+  },
+  {
+   "claim": "On P2, 20B is preferred over 3B: 56.8% realism, 62.7% image-text match.",
+   "kind": "measured",
+   "source": null,
+   "metric": "majority-vote preference",
+   "value": 62.7,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "PartiPrompts, Parti 20B vs 3B",
+   "quote": "image realism (56.8%) and image-text match (62.7%).",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.5, Fig 11"
+  },
+  {
+   "claim": "Captioner evaluation on MS-COCO 5K: Parti BLEU 26.4, METEOR 23.9, CIDEr 83.9, SPICE 16.5, close to the retrieval baseline (84.1 CIDEr) and below ground truth (108.3).",
+   "kind": "measured",
+   "source": null,
+   "metric": "CIDEr",
+   "value": 83.9,
+   "unit": "CIDEr",
+   "baseline_value": 84.1,
+   "n": null,
+   "setup": "MS-COCO 5K test, VL-T5 captioner, 16 samples CoCa-reranked",
+   "quote": null,
+   "table": "Table 6, row Parti, column CIDEr",
+   "note": null,
+   "where": "Table 6"
+  },
+  {
+   "claim": "Retrieval baseline FID is worse than 30,000 random train images (2.47) because retrieval returns duplicates: only 17,782 unique images for 30,000 prompts.",
+   "kind": "measured",
+   "source": null,
+   "metric": "unique retrieved images",
+   "value": 17782,
+   "unit": "images",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MS-COCO val prompts, retrieval over MS-COCO train",
+   "quote": "there are only 17,782 unique retrieved MS-COCO train images for 30,000 validation text prompts",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.3"
+  },
+  {
+   "claim": "Counting is reliable up to seven objects of one type; the reranker helps (top six of 'five red apples' all had five).",
+   "kind": "measured",
+   "source": null,
+   "metric": "objects counted reliably",
+   "value": 7,
+   "unit": "objects",
+   "baseline_value": null,
+   "n": null,
+   "setup": "20B Parti, selected non-cherry-picked failures",
+   "quote": "Parti can reliably produce up to seven objects of the same type",
+   "table": null,
+   "note": null,
+   "where": "Sec 6.3"
+  },
+  {
+   "claim": "For 'ten red apples' the counts in the top-ranked eight images of one batch were 8, 10, 9, 9, 9, 8, 11, 6.",
+   "kind": "measured",
+   "source": null,
+   "metric": "apples in top 8",
+   "value": "8, 10, 9, 9, 9, 8, 11, 6",
+   "unit": "count",
+   "baseline_value": null,
+   "n": null,
+   "setup": "one batch, 20B",
+   "quote": "the counts for the top-ranked eight images for one batch were 8, 10, 9, 9, 9, 8, 11, 6.",
+   "table": null,
+   "note": null,
+   "where": "Sec 6.3"
+  },
+  {
+   "claim": "Text-encoder pretraining only marginally helps the 3B model's training loss; the encoder degrades on GLUE after encoder-decoder training (CoLA 55.2 to 20.4 with pretraining).",
+   "kind": "measured",
+   "source": null,
+   "metric": "CoLA",
+   "value": 20.4,
+   "unit": "score",
+   "baseline_value": 55.2,
+   "n": null,
+   "setup": "Table 9, 3B, encoder after encoder-decoder training with encoder pretraining",
+   "quote": null,
+   "table": "Table 9, row (w/ encoder pretraining), column CoLA",
+   "note": null,
+   "where": "Sec 2.3, App G"
+  },
+  {
+   "claim": "20B uses larger decoders: 64 decoder layers vs 16 encoder layers.",
+   "kind": "measured",
+   "source": null,
+   "metric": "decoder layers",
+   "value": 64,
+   "unit": "layers",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 1",
+   "quote": null,
+   "table": "Table 1, row Parti, column Decoder Layers",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "At 350M to 750M, encoder-decoder outperformed decoder-only variants in training loss and generation quality (early exploration, no numbers).",
+   "kind": "claim",
+   "source": null,
+   "metric": "",
+   "value": "",
+   "unit": "",
+   "baseline_value": null,
+   "n": null,
+   "setup": "early exploration at 350M to 750M",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Sec 2.2"
+  },
+  {
+   "claim": "20B beats 3B on every P2 challenge aspect except BASIC, where 3B suffices; scaling mostly helps image-text match rather than realism.",
+   "kind": "measured",
+   "source": null,
+   "metric": "",
+   "value": "",
+   "unit": "",
+   "baseline_value": null,
+   "n": null,
+   "setup": "P2 human eval breakdown, Figs 12 and 26",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "App F.1"
+  }
+ ],
+ "limits": [
+  "Models, code and data are not released, so nothing here is reproducible beyond the paper's description",
+  "Training compute, wall-clock, seeds, sampling temperature/top-k and the CF-guidance dropout probability are not stated",
+  "Human eval has no significance tests; Sec 5.4 says 1,000 independent evaluators for the same 1,000 prompts",
+  "FID is not a reliable ranking alone: Parti zero-shot looked far better than XMC-GAN by eye with similar FID",
+  "Failures: color bleeding, feature blending, counting beyond seven, spatial relations, negation, text rendering, strong visual and linguistic priors",
+  "Authors concede the training data are mostly uncurated web images with bias and NSFW issues; model not for generating people",
+  "Comparison with diffusion models is on FID only; no matched-compute comparison",
+  "2022 snapshot: later models (Imagen 2, Muse, SDXL) are not covered"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Growing a Cherry Tree",
+   "definition": "an interactive process in which a prompter tests a prompt idea, evaluates the outputs, modifies the prompt and repeats, so that selected images result from exploring the model's capabilities",
+   "where": "Sec 6.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Zero-shot text-to-image generation (DALL-E)",
+   "year": 2021,
+   "arxiv": "2102.12092",
+   "relation": "extends",
+   "note": "two-stage tokenizer + autoregressive recipe; contrastive reranking; input processing",
+   "quote": null
+  },
+  {
+   "work": "Vector-quantized image modeling with improved VQGAN (ViT-VQGAN)",
+   "year": 2021,
+   "arxiv": "2110.04627",
+   "relation": "uses-method",
+   "note": "image tokenizer, modified",
+   "quote": null
+  },
+  {
+   "work": "CoCa",
+   "year": 2022,
+   "arxiv": "2205.01917",
+   "relation": "uses-method",
+   "note": "reranker",
+   "quote": null
+  },
+  {
+   "work": "Make-A-Scene",
+   "year": 2022,
+   "arxiv": "2203.13131",
+   "relation": "baseline",
+   "note": "autoregressive baseline; CF-guidance for AR models",
+   "quote": null
+  },
+  {
+   "work": "Imagen",
+   "year": 2022,
+   "arxiv": "2205.11487",
+   "relation": "baseline",
+   "note": "diffusion baseline; DrawBench; CF-guidance findings",
+   "quote": null
+  },
+  {
+   "work": "DALL-E 2",
+   "year": 2022,
+   "arxiv": "2204.06125",
+   "relation": "baseline",
+   "note": "diffusion baseline",
+   "quote": null
+  },
+  {
+   "work": "GLIDE",
+   "year": 2021,
+   "arxiv": "2112.10741",
+   "relation": "baseline",
+   "note": "diffusion baseline",
+   "quote": null
+  },
+  {
+   "work": "CogView",
+   "year": 2021,
+   "arxiv": "2105.13290",
+   "relation": "baseline",
+   "note": "autoregressive baseline",
+   "quote": null
+  },
+  {
+   "work": "XMC-GAN",
+   "year": 2021,
+   "arxiv": "2101.04702",
+   "relation": "baseline",
+   "note": "best public FID; human-eval comparison",
+   "quote": null
+  },
+  {
+   "work": "GSPMD",
+   "year": 2021,
+   "arxiv": "2105.04663",
+   "relation": "uses-method",
+   "note": "parallelism and pipelining",
+   "quote": null
+  },
+  {
+   "work": "Localized Narratives",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "evaluation set",
+   "quote": null
+  },
+  {
+   "work": "MS-COCO",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "evaluation set",
+   "quote": null
+  },
+  {
+   "work": "LAION-400M",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "training data",
+   "quote": null
+  },
+  {
+   "work": "DALL-Eval",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "captioner evaluation",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 3",
+   "caption": "Overview of Parti sequence-to-sequence autoregressive model (left) for text-to-image generation with ViT-VQGAN as the image tokenizer [21] (right).",
+   "page": 5,
+   "why": "shows the two-stage pipeline in one picture"
+  },
+  {
+   "figure": "Fig 9",
+   "caption": "Effects of scaling Parti models of different sizes. We show zero-shot FID scores (left) on MS-COCO (2014) and the training loss curves of the corresponding models (right).",
+   "page": 15,
+   "why": "scaling evidence"
+  },
+  {
+   "figure": "Fig 15",
+   "caption": "Images from 20B Parti model showing errors and limitations.",
+   "page": 23,
+   "why": "failure catalogue"
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 2.4, Eq. 1",
+   "snippet": "I = G(z) + λ(G(z, c) −G(z))",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Figure-only content (bar charts) not machine-readable; Fig 8/11 percentages taken from text",
+  "Prose says LN-COCO finetuned FID 8.29, abstract/Table 5 say 8.39",
+  "Venue shown as preprint (arXiv v1); the note cites TMLR 2022"
+ ]
+}

@@ -1,0 +1,561 @@
+{
+ "schema": 1,
+ "key": "2106.01345",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/chen-2021-decision-transformer.pdf",
+ "bib": {
+  "title": "Decision Transformer: Reinforcement Learning via Sequence Modeling",
+  "authors": [
+   "Lili Chen",
+   "Kevin Lu",
+   "Aravind Rajeswaran",
+   "Kimin Lee",
+   "Aditya Grover",
+   "Michael Laskin",
+   "Pieter Abbeel",
+   "Aravind Srinivas",
+   "Igor Mordatch"
+  ],
+  "first_author": "Chen",
+  "year": 2021,
+  "venue": "preprint (arXiv v2, 24 Jun 2021)",
+  "arxiv": "2106.01345",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 63984,
+  "chars_total": 63984,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can generative trajectory modeling with a causally masked transformer, conditioned on desired return, replace TD-learning based offline RL?",
+ "hypothesis": "Sequence modeling of (return-to-go, state, action) can perform policy optimisation without dynamic programming, bootstrapping or value pessimism, and help long-term credit assignment.",
+ "contributions": [
+  "Decision Transformer: RL cast as return-conditioned sequence modeling with a GPT",
+  "Matches or exceeds model-free offline RL (CQL, BEAR, BRAC, AWR, REM, QR-DQN) on Atari, OpenAI Gym (D4RL) and Key-to-Door",
+  "Analyses: percentile BC, return conditioning, context length, credit assignment, sparse rewards"
+ ],
+ "method": {
+  "summary": "A GPT is trained on offline trajectories as interleaved (return-to-go, state, action) tokens, predicting actions (cross-entropy for discrete, MSE for continuous). At test time a target return is given and decremented by observed reward each step; the last K timesteps (3K tokens) are the context.",
+  "task": "offline reinforcement learning as conditional sequence modeling",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Atari DQN-replay (1%)",
+    "role": "train",
+    "size": "500 thousand of the 50 million transitions",
+    "split": "1% of DQN-replay per Agarwal et al.",
+    "source": "Agarwal et al. [13]",
+    "preprocessing": "scores normalised to gamer=100, random=0 (Hafner et al.)"
+   },
+   {
+    "name": "D4RL Gym locomotion (HalfCheetah, Hopper, Walker) medium / medium-replay / medium-expert",
+    "role": "train",
+    "size": "medium 1 million timesteps; medium-replay approx 25k-400k timesteps; medium-expert 1 million medium + 1 million expert timesteps",
+    "split": null,
+    "source": "D4RL, Fu et al. [23]",
+    "preprocessing": "scores normalised so 100 = expert"
+   },
+   {
+    "name": "Reacher (2D, own generation, not in D4RL)",
+    "role": "train",
+    "size": null,
+    "split": null,
+    "source": "datasets generated with a methodology similar to D4RL",
+    "preprocessing": null
+   },
+   {
+    "name": "Key-to-Door random trajectories",
+    "role": "train",
+    "size": "1K and 10K random trajectories",
+    "split": null,
+    "source": "variant of Mesnard et al. [12]",
+    "preprocessing": "full episode used as context"
+   },
+   {
+    "name": "Graph shortest path random walks",
+    "role": "train",
+    "size": "1,000 random-walk trajectories of T = 10 steps; random graph of 20 nodes, edge sparsity 0.1",
+    "split": null,
+    "source": "synthetic",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Decision Transformer (Atari)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "GPT (minGPT) with DQN conv encoder",
+    "init_from": "inferred: from scratch",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "6",
+    "hidden": "128",
+    "heads": "8",
+    "context": "K=30 (K=50 Pong)",
+    "other": {
+     "nonlinearity": "ReLU in encoder, GeLU otherwise",
+     "encoder": "channels 32,64,64; filters 8x8,4x4,3x3; strides 4,2,1",
+     "embedding norm": "Tanh instead of LayerNorm"
+    }
+   },
+   {
+    "name": "Decision Transformer (Gym)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "GPT (HuggingFace Transformers)",
+    "init_from": "inferred: from scratch",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "3",
+    "hidden": "128",
+    "heads": "1",
+    "context": "K=20 (K=5 Reacher)",
+    "other": {
+     "nonlinearity": "ReLU"
+    }
+   },
+   {
+    "name": "Behavior Cloning (Gym)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "MLP",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "3",
+    "hidden": "256",
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "CQL, BEAR, BRAC-v, AWR, REM, QR-DQN",
+    "role": "baseline",
+    "params": null,
+    "architecture": "TD / offline RL",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "source": "numbers reported from CQL, REM and D4RL papers; BC run by authors"
+    }
+   }
+  ],
+  "training": {
+   "objective": "cross-entropy on action (discrete) or MSE (continuous), averaged over timesteps; states and returns not predicted in main experiments",
+   "optimizer": "Atari: Adam betas (0.9, 0.95); Gym: AdamW with PyTorch defaults",
+   "lr": "Atari 6 ∗10−4; Gym 10−4",
+   "lr_schedule": "Atari: linear warmup and cosine decay; Gym: linear warmup for first 10^5 training steps",
+   "warmup": "Atari: 512*20 warmup tokens; Gym: 10^5 steps",
+   "batch_size": "Atari 512 (Pong), 128 (Breakout, Qbert, Seaquest); Gym 64",
+   "steps": "Gym DT 10^5 gradient steps; Gym BC 2.5x10^4 gradient steps",
+   "epochs": "Atari max 5",
+   "tokens": "Atari final tokens 2*500000*K",
+   "seq_len": "K timesteps (3K tokens)",
+   "precision": null,
+   "weight_decay": "Atari 0.1; Gym 1e-4",
+   "dropout": "0.1",
+   "regularisation": "grad norm clip 1.0 (Atari), 0.25 (Gym)",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": "3 seeds (Atari, D4RL)",
+   "other": {
+    "return_to_go_conditioning_atari": "90 Breakout, 2500 Qbert, 20 Pong, 1450 Seaquest (1x or 5x max dataset return)",
+    "return_to_go_conditioning_gym": "6000 HalfCheetah, 3600 Hopper, 5000 Walker, 50 Reacher (expert; 50% for HalfCheetah)",
+    "percentile BC": "same hyperparameters as BC (Gym) / DT (Atari)"
+   }
+  },
+  "inference": {
+   "decoding": "autoregressive action prediction; target return decremented by achieved reward",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "3 seeds; evaluation episodes per seed not stated",
+   "prompting": "target return-to-go as first token (desired performance prompt)",
+   "retrieval": null,
+   "parameters": {
+    "graph example prior": "P_prior(R=k) proportional to T+1-k"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "normalised episode return",
+     "definition": "Atari: 100 = professional gamer, 0 = random; D4RL: 100 = expert",
+     "unit": "normalised score",
+     "higher_is_better": true
+    },
+    {
+     "name": "success rate",
+     "definition": "Key-to-Door",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "CQL",
+    "BEAR",
+    "BRAC-v",
+    "AWR",
+    "REM",
+    "QR-DQN",
+    "BC",
+    "%BC"
+   ],
+   "protocol": "mean and variance (reported as +-) over 3 seeds; CQL/REM/QR-DQN numbers copied from their papers; BC run by authors"
+  },
+  "availability": {
+   "code": "https://sites.google.com/berkeley.edu/decision-transformer; supplementary material",
+   "weights": null,
+   "data": "public DQN-replay and D4RL; Reacher self-generated"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "DT beats CQL on D4RL average without Reacher",
+   "kind": "measured",
+   "source": null,
+   "metric": "normalised score",
+   "value": 74.7,
+   "unit": "normalised score",
+   "baseline_value": 63.9,
+   "n": null,
+   "setup": "9 D4RL settings (3 envs x medium, medium-replay, medium-expert), 3 seeds",
+   "quote": null,
+   "table": "Table 2, row Average (Without Reacher), columns DT 74.7 and CQL 63.9",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "DT beats CQL on D4RL average including Reacher",
+   "kind": "measured",
+   "source": null,
+   "metric": "normalised score",
+   "value": 69.2,
+   "unit": "normalised score",
+   "baseline_value": 54.2,
+   "n": null,
+   "setup": "12 settings including Reacher",
+   "quote": null,
+   "table": "Table 2, row Average (All Settings), columns DT 69.2, CQL 54.2, BC 47.7",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "DT on Atari Breakout vs CQL",
+   "kind": "measured",
+   "source": null,
+   "metric": "gamer-normalised score",
+   "value": 267.5,
+   "unit": "normalised score",
+   "baseline_value": 211.1,
+   "n": null,
+   "setup": "1% DQN-replay, K=30, 3 seeds",
+   "quote": null,
+   "table": "Table 1, row Breakout, column DT 267.5 +- 97.5",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "DT on Atari Qbert is far below CQL",
+   "kind": "measured",
+   "source": null,
+   "metric": "gamer-normalised score",
+   "value": 15.4,
+   "unit": "normalised score",
+   "baseline_value": 104.2,
+   "n": null,
+   "setup": "1% DQN-replay, 3 seeds",
+   "quote": null,
+   "table": "Table 1, row Qbert, column DT 15.4 +- 11.4",
+   "note": "Table 5 prints Qbert DT as 15.1 +- 11.4",
+   "where": "Table 1"
+  },
+  {
+   "claim": "Delayed-reward Hopper medium-replay: CQL collapses, DT barely moves",
+   "kind": "measured",
+   "source": null,
+   "metric": "normalised score",
+   "value": 78.5,
+   "unit": "normalised score",
+   "baseline_value": 2.0,
+   "n": null,
+   "setup": "D4RL Hopper medium-replay, reward given only at final timestep",
+   "quote": null,
+   "table": "Table 7, row Medium-Replay Hopper, column Delayed DT 78.5 +- 3.7; CQL 2.0; dense DT 82.7",
+   "note": null,
+   "where": "Table 7"
+  },
+  {
+   "claim": "Average of 10%BC vs DT over Medium and Medium-Replay datasets (4 envs incl. Reacher)",
+   "kind": "measured",
+   "source": null,
+   "metric": "normalised score",
+   "value": 56.7,
+   "unit": "normalised score",
+   "baseline_value": 56.1,
+   "n": null,
+   "setup": "Table 3, Medium and Medium-Replay x HalfCheetah, Hopper, Walker, Reacher (8 settings)",
+   "quote": null,
+   "table": "Table 3, row Average, column 10%BC 56.7; DT 56.1; CQL 43.5; 100%BC 39.5",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Key-to-Door 1K random trajectories: DT vs CQL success",
+   "kind": "measured",
+   "source": null,
+   "metric": "success rate",
+   "value": 71.8,
+   "unit": "%",
+   "baseline_value": 13.1,
+   "n": null,
+   "setup": "Key-to-Door, trained on random trajectories, full-episode context",
+   "quote": null,
+   "table": "Table 6, row 1K Random Trajectories, column DT 71.8%; CQL 13.1%; BC 1.4%; %BC 69.9%",
+   "note": null,
+   "where": "Table 6"
+  },
+  {
+   "claim": "Key-to-Door 10K random trajectories",
+   "kind": "measured",
+   "source": null,
+   "metric": "success rate",
+   "value": 94.6,
+   "unit": "%",
+   "baseline_value": 13.3,
+   "n": null,
+   "setup": "as above",
+   "quote": null,
+   "table": "Table 6, row 10K Random Trajectories, column DT 94.6%; CQL 13.3%; %BC 95.1%",
+   "note": null,
+   "where": "Table 6"
+  },
+  {
+   "claim": "Context length ablation: Pong with K=1 collapses",
+   "kind": "measured",
+   "source": null,
+   "metric": "gamer-normalised score",
+   "value": 2.5,
+   "unit": "normalised score",
+   "baseline_value": 106.1,
+   "n": null,
+   "setup": "Atari Pong, K=1 vs K=50",
+   "quote": null,
+   "table": "Table 5, row Pong, column K=1 2.5 +- 0.2; DT 106.1 +- 8.1",
+   "note": null,
+   "where": "Table 5"
+  },
+  {
+   "claim": "Atari 1% data: %BC is weak, e.g. Pong 10%BC",
+   "kind": "measured",
+   "source": null,
+   "metric": "gamer-normalised score",
+   "value": 2.5,
+   "unit": "normalised score",
+   "baseline_value": 106.1,
+   "n": null,
+   "setup": "Atari Pong, 10%BC vs DT 106.1",
+   "quote": null,
+   "table": "Table 4, row Pong, column 10%BC 2.5 +- 0.2",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "Graph shortest path: fraction of generated paths that are stitched, not in training data",
+   "kind": "measured",
+   "source": null,
+   "metric": "share",
+   "value": 15.8,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "1,000 random walks, 20-node graph",
+   "quote": "We ﬁnd this case accounts for 15.8% of generated paths in the experiment.",
+   "table": null,
+   "note": null,
+   "where": "Appendix A.3"
+  },
+  {
+   "claim": "Seaquest: DT can be prompted above dataset max return (extrapolation)",
+   "kind": "claim",
+   "source": null,
+   "metric": "claim",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Atari Seaquest, Fig 4",
+   "quote": "demonstrating that Decision Transformer is sometimes capable of extrapolation",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.2"
+  }
+ ],
+ "limits": [
+  "Offline only; online RL benefits are conjecture (Sec 5.8)",
+  "Atari uses only 1% of replay data and four games; D4RL only medium-level datasets",
+  "%BC optimal percentile needs environment rollouts, so it is an analysis device",
+  "Return targets chosen by hand per environment (expert level, 50% for HalfCheetah)",
+  "Deterministic returns only; stochastic settings left to future work",
+  "Compute, hardware and evaluation episode count not stated",
+  "Concedes errors/negative consequences of transformers in MDPs are underexplored"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "returns-to-go",
+   "definition": "sum of future rewards from a timestep, fed instead of rewards",
+   "where": "Sec 3"
+  },
+  {
+   "term": "Percentile Behavior Cloning (%BC)",
+   "definition": "behavior cloning on only the top X% of timesteps in the dataset, ordered by episode returns",
+   "where": "Sec 5.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Attention is all you need",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "transformer",
+   "quote": null
+  },
+  {
+   "work": "GPT (Radford et al.)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "causally masked architecture used",
+   "quote": null
+  },
+  {
+   "work": "Conservative Q-Learning (Kumar et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "primary comparison",
+   "quote": null
+  },
+  {
+   "work": "REM / offline RL optimistic perspective (Agarwal et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "1% DQN-replay Atari",
+   "quote": null
+  },
+  {
+   "work": "D4RL (Fu et al.)",
+   "year": 2020,
+   "arxiv": "2004.07219",
+   "relation": "uses-data",
+   "note": "Gym benchmark",
+   "quote": null
+  },
+  {
+   "work": "BEAR (Kumar et al.)",
+   "year": 2019,
+   "arxiv": "1906.00949",
+   "relation": "baseline",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "BRAC (Wu et al.)",
+   "year": 2019,
+   "arxiv": "1911.11361",
+   "relation": "baseline",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "AWR (Peng et al.)",
+   "year": 2019,
+   "arxiv": "1910.00177",
+   "relation": "baseline",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "Reward-conditioned policies (Kumar et al.)",
+   "year": 2019,
+   "arxiv": "1912.13465",
+   "relation": "extends",
+   "note": "UDRL-like; similar to DT with K=1",
+   "quote": null
+  },
+  {
+   "work": "Training agents using upside-down RL (Srivastava et al.)",
+   "year": 2019,
+   "arxiv": "1912.02877",
+   "relation": "related",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "Trajectory Transformer (Janner et al.)",
+   "year": 2021,
+   "arxiv": "2106.02039",
+   "relation": "related",
+   "note": "concurrent work",
+   "quote": null
+  },
+  {
+   "work": "Counterfactual credit assignment (Mesnard et al.)",
+   "year": 2020,
+   "arxiv": "2011.09464",
+   "relation": "uses-data",
+   "note": "Key-to-Door",
+   "quote": null
+  },
+  {
+   "work": "minGPT (Karpathy)",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Atari implementation base",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Decision Transformer architecture",
+   "page": 1,
+   "why": "shows token interleaving"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Sampled returns vs target returns",
+   "page": 9,
+   "why": "shows return conditioning works and sometimes extrapolates"
+  }
+ ],
+ "code": [
+  {
+   "where": "Algorithm 1",
+   "snippet": "R = R + [R[-1] - r]  # decrement returns-to-go with reward",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "PDF text contains no embedded instructions",
+  "Table 5 Qbert DT 15.1 vs Table 1 15.4",
+  "Tables 2-3 captions say 'variance' while values are std (+-)"
+ ]
+}

@@ -1,0 +1,526 @@
+{
+ "schema": 1,
+ "key": "2305.13245",
+ "pdf": "ai-engineering/07-inference-engineering/sources/ainslie-2023-gqa.pdf",
+ "bib": {
+  "title": "GQA: Training Generalized Multi-Query Transformer Models from Multi-Head Checkpoints",
+  "authors": [
+   "Joshua Ainslie",
+   "James Lee-Thorp",
+   "Michiel de Jong",
+   "Yury Zemlyanskiy",
+   "Federico Lebrón",
+   "Sumit Sanghai"
+  ],
+  "first_author": "Ainslie",
+  "year": 2023,
+  "venue": "Proceedings of the 2023 Conference on Empirical Methods in Natural Language Processing (EMNLP)",
+  "arxiv": "2305.13245",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 22659,
+  "chars_total": 22659,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can multi-head checkpoints be cheaply converted into multi-query or grouped-query models that decode fast without losing most of the multi-head quality?",
+ "hypothesis": "An intermediate number of key-value heads (GQA) gives quality close to MHA at speed close to MQA, especially for larger models.",
+ "contributions": [
+  "A recipe for uptraining existing multi-head checkpoints into MQA using 5% of original pre-training compute",
+  "Grouped-query attention (GQA), an interpolation between multi-head and multi-query attention with an intermediate number of key-value heads"
+ ],
+ "method": {
+  "summary": "Key and value projection matrices of a public T5.1.1 MHA checkpoint are mean-pooled into 1 (MQA) or G (GQA) heads, then the model is pre-trained further for a fraction alpha of the original steps on the original recipe. Models are fine-tuned per task and compared on quality and inference time.",
+  "task": "Encoder-decoder summarization, translation and QA; decoder-inference efficiency",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "T5 pre-training data (as Raffel et al. 2020)",
+    "role": "pretrain",
+    "size": null,
+    "split": null,
+    "source": "Raffel et al. 2020",
+    "preprocessing": null
+   },
+   {
+    "name": "CNN/Daily Mail",
+    "role": "both",
+    "size": null,
+    "split": "dev for reporting",
+    "source": "Nallapati et al. 2016",
+    "preprocessing": "input 512, output 256"
+   },
+   {
+    "name": "arXiv",
+    "role": "both",
+    "size": null,
+    "split": "dev",
+    "source": "Cohan et al. 2018",
+    "preprocessing": "input 2048, output 512"
+   },
+   {
+    "name": "PubMed",
+    "role": "both",
+    "size": null,
+    "split": "dev",
+    "source": "Cohan et al. 2018",
+    "preprocessing": "input 2048, output 512"
+   },
+   {
+    "name": "MediaSum",
+    "role": "both",
+    "size": null,
+    "split": "dev",
+    "source": "Zhu et al. 2021",
+    "preprocessing": "input 2048, output 512"
+   },
+   {
+    "name": "Multi-News",
+    "role": "both",
+    "size": null,
+    "split": "dev",
+    "source": "Fabbri et al. 2019",
+    "preprocessing": "input 2048, output 512"
+   },
+   {
+    "name": "WMT 2014 English-to-German",
+    "role": "both",
+    "size": null,
+    "split": "dev",
+    "source": null,
+    "preprocessing": "input 512, output 256"
+   },
+   {
+    "name": "TriviaQA",
+    "role": "both",
+    "size": null,
+    "split": "dev",
+    "source": "Joshi et al. 2017",
+    "preprocessing": "input 2048, output 32"
+   }
+  ],
+  "models": [
+   {
+    "name": "MHA-Large (T5 Large)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "T5.1.1 encoder-decoder, multi-head",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "MHA-XXL (T5 XXL)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "T5.1.1 encoder-decoder, multi-head",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "MQA-XXL",
+    "role": "proposed",
+    "params": null,
+    "architecture": "T5.1.1 XXL, MQA in decoder self-attention and cross-attention, not encoder self-attention",
+    "init_from": "public T5.1.1 XXL checkpoint, K/V heads mean-pooled to one",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "uptraining_proportion": "0.05"
+    }
+   },
+   {
+    "name": "GQA-8-XXL",
+    "role": "proposed",
+    "params": null,
+    "architecture": "T5.1.1 XXL, 8 groups in decoder self-attention and cross-attention, not encoder self-attention",
+    "init_from": "public T5.1.1 XXL checkpoint, K/V heads mean-pooled within each of 8 groups",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "uptraining_proportion": "0.05"
+    }
+   }
+  ],
+  "training": {
+   "objective": "inferred: T5 pre-training objective (original pre-training setup), then task fine-tuning",
+   "optimizer": "Adafactor, same hyperparameters as T5 (uptraining)",
+   "lr": "same as T5 for uptraining; 0.001 constant for fine-tuning",
+   "lr_schedule": "same as T5 for uptraining; constant for fine-tuning",
+   "warmup": null,
+   "batch_size": "128 (fine-tuning)",
+   "steps": "alpha proportion of original pre-training steps (alpha = 0.05 main; 0 to 0.1 in Fig 5)",
+   "epochs": "fine-tuning until convergence, best dev checkpoint",
+   "tokens": null,
+   "seq_len": "fine-tuning: CNN/DM and WMT 512 in / 256 out; other summarization 2048 / 512; TriviaQA 2048 / 32",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": "0.1 (fine-tuning, all tasks)",
+   "regularisation": null,
+   "hardware": "TPUv3 (uptraining)",
+   "compute": "approximately 600 TPUv3 chip-days for alpha = 0.05",
+   "wall_clock": null,
+   "seeds": "MQA models on unstable tasks: average over three fine-tuning runs; otherwise not stated",
+   "other": {
+    "implementation": "JAX, Flax, Flaxformer"
+   }
+  },
+  "inference": {
+   "decoding": "greedy",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": "output length 256 / 512 / 32 by task",
+   "samples": "one greedy output per item",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "timing": "8 TPUs, largest batch that fits up to 32 per TPU, parallelism optimized per model, xprof, time per sample per TPUv4 chip"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "ROUGE-1",
+     "definition": "summarization datasets",
+     "unit": "points",
+     "higher_is_better": true
+    },
+    {
+     "name": "BLEU",
+     "definition": "WMT en-de",
+     "unit": "points",
+     "higher_is_better": true
+    },
+    {
+     "name": "F1",
+     "definition": "TriviaQA",
+     "unit": "points",
+     "higher_is_better": true
+    },
+    {
+     "name": "Average",
+     "definition": "mean over the task columns of Table 1 (ROUGE-1, BLEU, F1 mixed)",
+     "unit": "points",
+     "higher_is_better": true
+    },
+    {
+     "name": "Tinfer",
+     "definition": "time per sample per TPUv4 chip, xprof",
+     "unit": "s",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "MHA-Large",
+    "MHA-XXL",
+    "MQA-XXL"
+   ],
+   "protocol": "Dev sets; ablations on CNN/Daily Mail, MultiNews and TriviaQA only; MQA on unstable tasks averaged over 3 fine-tuning runs; no significance tests stated"
+  },
+  "availability": {
+   "code": "Flaxformer (github.com/google/flaxformer) is the base library; no release of this work's code stated",
+   "weights": null,
+   "data": "public datasets"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.compute",
+    "quote": "For α = 0.05, training took approxi-\nmately 600 TPUv3 chip-days.",
+    "where": "3.1 Uptraining"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "GQA-8-XXL average is close to MHA-XXL",
+   "kind": "measured",
+   "source": null,
+   "metric": "Average",
+   "value": 47.1,
+   "unit": "points",
+   "baseline_value": 47.2,
+   "n": null,
+   "setup": "T5-XXL, 5% uptraining (alpha=0.05), average dev performance over CNN, arXiv, PubMed, MediaSum, MultiNews (ROUGE-1), WMT (BLEU), TriviaQA (F1); greedy decoding; Tinfer is time per sample per TPUv4 chip in seconds",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row GQA-8-XXL, column Average"
+  },
+  {
+   "claim": "MQA-XXL average is lower than MHA-XXL",
+   "kind": "measured",
+   "source": null,
+   "metric": "Average",
+   "value": 46.6,
+   "unit": "points",
+   "baseline_value": 47.2,
+   "n": null,
+   "setup": "T5-XXL, 5% uptraining (alpha=0.05), average dev performance over CNN, arXiv, PubMed, MediaSum, MultiNews (ROUGE-1), WMT (BLEU), TriviaQA (F1); greedy decoding; Tinfer is time per sample per TPUv4 chip in seconds",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row MQA-XXL, column Average"
+  },
+  {
+   "claim": "MHA-XXL inference time per sample",
+   "kind": "measured",
+   "source": null,
+   "metric": "Tinfer",
+   "value": 1.51,
+   "unit": "s",
+   "baseline_value": null,
+   "n": null,
+   "setup": "T5-XXL, 5% uptraining (alpha=0.05), average dev performance over CNN, arXiv, PubMed, MediaSum, MultiNews (ROUGE-1), WMT (BLEU), TriviaQA (F1); greedy decoding; Tinfer is time per sample per TPUv4 chip in seconds",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row MHA-XXL, column Tinfer"
+  },
+  {
+   "claim": "GQA-8-XXL inference time per sample, close to MQA",
+   "kind": "measured",
+   "source": null,
+   "metric": "Tinfer",
+   "value": 0.28,
+   "unit": "s",
+   "baseline_value": 1.51,
+   "n": null,
+   "setup": "T5-XXL, 5% uptraining (alpha=0.05), average dev performance over CNN, arXiv, PubMed, MediaSum, MultiNews (ROUGE-1), WMT (BLEU), TriviaQA (F1); greedy decoding; Tinfer is time per sample per TPUv4 chip in seconds",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row GQA-8-XXL, column Tinfer"
+  },
+  {
+   "claim": "MQA-XXL inference time per sample",
+   "kind": "measured",
+   "source": null,
+   "metric": "Tinfer",
+   "value": 0.24,
+   "unit": "s",
+   "baseline_value": 1.51,
+   "n": null,
+   "setup": "T5-XXL, 5% uptraining (alpha=0.05), average dev performance over CNN, arXiv, PubMed, MediaSum, MultiNews (ROUGE-1), WMT (BLEU), TriviaQA (F1); greedy decoding; Tinfer is time per sample per TPUv4 chip in seconds",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row MQA-XXL, column Tinfer"
+  },
+  {
+   "claim": "MHA-Large is slower and worse than uptrained MQA-XXL",
+   "kind": "measured",
+   "source": null,
+   "metric": "Average",
+   "value": 46.0,
+   "unit": "points",
+   "baseline_value": 46.6,
+   "n": null,
+   "setup": "T5 Large MHA, Tinfer 0.37 s",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row MHA-Large, column Average"
+  },
+  {
+   "claim": "Uptraining to alpha=0.05 costs about 600 TPUv3 chip-days",
+   "kind": "measured",
+   "source": null,
+   "metric": "compute",
+   "value": 600,
+   "unit": "TPUv3 chip-days",
+   "baseline_value": null,
+   "n": null,
+   "setup": "alpha = 0.05, T5 XXL",
+   "note": null,
+   "where": "3.1",
+   "quote": "For α = 0.05, training took approxi-\nmately 600 TPUv3 chip-days."
+  },
+  {
+   "claim": "GQA gives reasonable performance right after conversion while MQA needs uptraining; both gain from 5% uptraining with diminishing returns by 10%",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "T5 XXL, Fig 5 (values not given in text)",
+   "note": null,
+   "where": "3.3, Fig 5",
+   "quote": "GQA already achieves reasonable performance af-\nter conversion while MQA requires uptraining to\n4897"
+  },
+  {
+   "claim": "Mean pooling beats selecting the first head, which beats random init, for checkpoint conversion",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "T5-Large to MQA, alpha=0.05, Fig 4 (x-axis roughly 54.4 to 55.6; values not in text)",
+   "note": null,
+   "where": "3.3, Fig 4",
+   "quote": "Mean pooling appears to work best,\nfollowed by selecting a single head and then ran-\ndom initialization."
+  },
+  {
+   "claim": "Going MHA to MQA cuts KV cache size and loaded data by a factor of H",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Design argument",
+   "note": null,
+   "where": "2.2",
+   "quote": "reducing the size of the key-value cache and therefore amount of data that\nneeds to be loaded by a factor of H"
+  },
+  {
+   "claim": "MQA trained from scratch (T5-Large) had loss spikes and diverged when fine-tuned on long-input tasks; uptrained GQA appeared stable",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "T5-Large MQA from scratch, multiple runs; count not stated",
+   "note": null,
+   "where": "Appendix A",
+   "quote": "In each case, pre-training suffered from\nfrequent loss spikes and the ﬁnal models diverged\nimmediately when ﬁne-tuning on long-input tasks."
+  }
+ ],
+ "limits": [
+  "ROUGE is a flawed evaluation, so trade-offs may be misjudged (Limitations)",
+  "No GQA-XXL trained from scratch, so uptraining vs scratch is unknown (Limitations)",
+  "Only encoder-decoder models tested; decoder-only expected to favour GQA more (Limitations)",
+  "Ablation values for Figs 4-6 appear only in figures; ablations run on three tasks only",
+  "No variance reported for main results except 3-run average for unstable MQA tasks",
+  "Dataset sizes, model parameter counts, warmup, precision not stated"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "GQA-G",
+   "definition": "grouped-query attention with G groups; GQA-1 is equivalent to MQA, GQA-H equivalent to MHA",
+   "where": "2.2"
+  },
+  {
+   "term": "Uptraining",
+   "definition": "converting the checkpoint, then additional pre-training for a small proportion alpha of original steps so the model adapts to its new structure",
+   "where": "2.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Fast transformer decoding: One write-head is all you need (Shazeer 2019)",
+   "year": 2019,
+   "arxiv": "1911.02150",
+   "relation": "extends",
+   "note": "introduced MQA",
+   "quote": null
+  },
+  {
+   "work": "Efficiently scaling transformer inference (Pope et al. 2022)",
+   "year": 2022,
+   "arxiv": "2211.05102",
+   "relation": "related",
+   "note": "MQA helps long inputs; sharding replicates single KV head",
+   "quote": null
+  },
+  {
+   "work": "Sparse upcycling (Komatsuzaki et al. 2022)",
+   "year": 2022,
+   "arxiv": "2212.05055",
+   "relation": "uses-method",
+   "note": "inspires the uptraining procedure",
+   "quote": null
+  },
+  {
+   "work": "T5 (Raffel et al. 2020)",
+   "year": 2020,
+   "arxiv": "1910.10683",
+   "relation": "uses-method",
+   "note": "T5.1.1 architecture, Adafactor, pre-training recipe and checkpoints",
+   "quote": null
+  },
+  {
+   "work": "FiDO (de Jong et al. 2022)",
+   "year": 2022,
+   "arxiv": "2212.08153",
+   "relation": "related",
+   "note": "layer-sparse cross-attention",
+   "quote": null
+  },
+  {
+   "work": "Rabe 2023 memory-efficient attention",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "independently developed GQA",
+   "quote": null
+  },
+  {
+   "work": "FlashAttention (Dao et al. 2022)",
+   "year": 2022,
+   "arxiv": "2205.14135",
+   "relation": "related",
+   "note": "background",
+   "quote": null
+  },
+  {
+   "work": "Speculative decoding (Leviathan et al. 2022; Chen et al. 2023)",
+   "year": 2022,
+   "arxiv": "2211.17192",
+   "relation": "related",
+   "note": "background",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "Overview of grouped-query method.",
+   "page": 2,
+   "why": "Shows MHA, GQA, MQA as points on one axis of KV head count"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Uptrained MQA yields a favorable trade-off compared to MHA ...",
+   "page": 3,
+   "why": "Quality vs time frontier"
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "Time per sample for GQA-XXL as a function of the number of GQA groups",
+   "page": 4,
+   "why": "Why 8 groups was picked"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Eval metrics Average definition clumsy: Average is mean of the 7 task columns in Table 1 (CNN, arXiv, PubMed, MediaSum, MultiNews R1, WMT BLEU, TriviaQA F1); Tinfer unit given as s in header",
+  "Ablation figures carry no printed values in text"
+ ]
+}

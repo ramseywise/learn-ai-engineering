@@ -1,0 +1,532 @@
+{
+ "schema": 1,
+ "key": "2201.07207",
+ "pdf": "generative-ai/03-agentic-foundations/sources/huang-2022-language-models-as-zero-shot.pdf",
+ "bib": {
+  "title": "Language Models as Zero-Shot Planners: Extracting Actionable Knowledge for Embodied Agents",
+  "authors": [
+   "Wenlong Huang",
+   "Pieter Abbeel",
+   "Deepak Pathak",
+   "Igor Mordatch"
+  ],
+  "first_author": "Huang",
+  "year": 2022,
+  "venue": "preprint",
+  "arxiv": "2201.07207",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 96269,
+  "chars_total": 96269,
+  "engine": "pymupdf",
+  "skipped": "reference list skimmed; sample plans in A.5 skimmed"
+ },
+ "type": "empirical",
+ "question": "Can world knowledge in pre-trained LLMs be used, without further training, to produce executable action plans for high-level tasks in an embodied environment?",
+ "hypothesis": "Large enough LMs prompted appropriately can decompose high-level tasks into mid-level plans, and plans can be made executable by translating to admissible actions.",
+ "contributions": [
+  "Show that without training, LLMs can generate plausible goal-driven action plans, but frequently not executable",
+  "Propose tools to improve executability without invasive probing or modification of the model",
+  "Human evaluation of multiple techniques and models, reporting the executability/correctness trade-off"
+ ],
+ "method": {
+  "summary": "Frozen causal Planning LM is prompted with the most similar demonstration (by Sentence-RoBERTa embedding), generates k single-step samples at a time, each is mapped to the nearest admissible VirtualHome action by cosine similarity plus beta times mean log prob, and the admissible action is appended to the prompt. Evaluated by executability in VirtualHome and human-judged correctness.",
+  "task": "Grounding high-level task names to executable VirtualHome action programs",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "ActivityPrograms (VirtualHome, Puig et al.)",
+    "role": "eval",
+    "size": "2821 entries, 292 distinct high-level tasks",
+    "split": "88 random held-out tasks for evaluation; 204 tasks as demonstration set (also used to fine-tune the baseline)",
+    "source": "Puig et al. 2018, MTurk annotated",
+    "preprocessing": "Detailed instructions omitted (except Sec 5.4); programs converted to natural-language templates for 42 atomic actions"
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT-2",
+    "role": "evaluated",
+    "params": "0.1B (117M), 1.5B",
+    "architecture": "causal LM",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-Neo",
+    "role": "evaluated",
+    "params": "2.7B",
+    "architecture": "causal LM",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-3",
+    "role": "evaluated",
+    "params": "13B, 175B",
+    "architecture": "causal LM via OpenAI API",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Codex",
+    "role": "evaluated",
+    "params": "2.5B, 12B",
+    "architecture": "causal LM via OpenAI API",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Sentence-RoBERTa (large) Translation LM",
+    "role": "proposed",
+    "params": "355M (Table 3 lists 325M)",
+    "architecture": "BERT-style, Sentence-BERT objective, mean-pooled last layer",
+    "init_from": "RoBERTa, trained on STS benchmark",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "ablations": "Sentence BERT base 110M, large 340M, Sentence RoBERTa base 125M, avg GloVe"
+    }
+   },
+   {
+    "name": "Fine-tuned GPT-3 13B",
+    "role": "baseline",
+    "params": "13B",
+    "architecture": "causal LM",
+    "init_from": "GPT-3 13B",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "fine_tuning_details": null
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "temperature sampling plus nucleus sampling; Vanilla picks the sample with highest mean log prob among k; Translated picks best admissible action per step",
+   "temperature": "grid {0.1, 0.3, 0.6}; chosen value per method not stated",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "k in {1,10} samples per step; one plan evaluated per task; metrics averaged over 3 randomly chosen fixed prompt examples; executability over 88 tasks x 7 scenes; correctness over 10 annotators",
+   "prompting": "One example task+plan prepended (fixed for Vanilla, from 3 candidates; nearest-neighbour from 204 demonstrations for Translated)",
+   "retrieval": "nearest demonstration by cosine similarity of Translation LM embeddings of task names",
+   "parameters": {
+    "epsilon": "grid {0, 0.4, 0.8}",
+    "beta": "0.3",
+    "frequency_penalty": "grid {0.1,0.3,0.6,0.9} OpenAI only",
+    "presence_penalty": "grid {0.3,0.5,0.8} OpenAI only",
+    "repetition_penalty": "grid {1.0,1.2,1.5,1.8} HF only",
+    "action_bank": "47522 admissible action steps",
+    "early_stop": "> 50% of step samples 0-length or best score < epsilon",
+    "selection": "rank runs by sum of LCS and executability, each normalised by human-expert scores"
+   },
+   "other": {
+    "max_steps": "not stated"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Executability",
+     "definition": "plan parses and satisfies pre/post-conditions in VirtualHome; averaged over 88 tasks and 7 scenes",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Correctness",
+     "definition": "MTurk annotators answer Yes/No whether plan completes task; mean over 10 annotators, SEM across annotators",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "LCS",
+     "definition": "longest common subsequence with human program normalised by max length, max over references",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Vanilla LMs",
+    "Human-written plans",
+    "Fine-tuned GPT-3 13B",
+    "Supervised LSTM (Puig et al., reported)"
+   ],
+   "protocol": "Human evaluation on MTurk, shuffled and blind, 88 tasks, 10 annotators; no significance test; empirical max human-human LCS 0.489"
+  },
+  "availability": {
+   "code": "https://huangwl18.github.io/language-planner",
+   "weights": null,
+   "data": "VirtualHome ActivityPrograms"
+  },
+  "prompts": [
+   {
+    "purpose": "Fixed prompt example 1",
+    "text": "Task: Use computer\nStep 1: Walk to home office\nStep 2: Walk to chair\nStep 3: Find chair\nStep 4: Sit on chair\nStep 5: Find computer\nStep 6: Switch on computer\nStep 7: Turn to computer\nStep 8: Look at computer\nStep 9: Find keyboard\nStep 10: Type on keyboard",
+    "where": "A.1"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Translated Codex 12B reaches 78.57% executability vs 18.07% for Vanilla Codex 12B.",
+   "kind": "measured",
+   "source": null,
+   "metric": "executability",
+   "value": "78.57",
+   "unit": "%",
+   "baseline_value": "18.07",
+   "n": null,
+   "setup": "VirtualHome, 88 held-out tasks from ActivityPrograms, 7 scenes, one fixed prompt example (avg of 3), best hyperparameter run",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Translated Codex 12B, column Executability"
+  },
+  {
+   "claim": "Intro states executability improves from 18% to 79%.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "18% to 79%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Vanilla Codex 12B to Translated Codex 12B, VirtualHome",
+   "note": null,
+   "where": "Sec 1",
+   "quote": "we ﬁnd that we improve executability of action plans\nfrom 18% to 79%"
+  },
+  {
+   "claim": "Translated GPT-3 175B executability 73.05% vs Vanilla GPT-3 175B 7.79%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "executability",
+   "value": "73.05",
+   "unit": "%",
+   "baseline_value": "7.79",
+   "n": null,
+   "setup": "VirtualHome, 88 held-out tasks from ActivityPrograms, 7 scenes, one fixed prompt example (avg of 3), best hyperparameter run",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Translated GPT-3 175B, column Executability"
+  },
+  {
+   "claim": "Vanilla GPT-3 175B correctness (human-judged, 10 MTurk annotators) is 77.86%, above human-written plans at 70.05%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "correctness",
+   "value": "77.86",
+   "unit": "%",
+   "baseline_value": "70.05",
+   "n": null,
+   "setup": "VirtualHome, 88 held-out tasks from ActivityPrograms, 7 scenes, one fixed prompt example (avg of 3), best hyperparameter run; correctness = mean Yes rate across 10 annotators and 88 tasks",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Vanilla GPT-3 175B, column Correctness"
+  },
+  {
+   "claim": "Translated Codex 12B correctness drops to 54.88% from 64.87% for Vanilla Codex 12B.",
+   "kind": "measured",
+   "source": null,
+   "metric": "correctness",
+   "value": "54.88",
+   "unit": "%",
+   "baseline_value": "64.87",
+   "n": null,
+   "setup": "VirtualHome, 88 held-out tasks from ActivityPrograms, 7 scenes, one fixed prompt example (avg of 3), best hyperparameter run",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Translated Codex 12B, column Correctness"
+  },
+  {
+   "claim": "Translated GPT-3 175B correctness 66.13% vs Vanilla 77.86%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "correctness",
+   "value": "66.13",
+   "unit": "%",
+   "baseline_value": "77.86",
+   "n": null,
+   "setup": "VirtualHome, 88 held-out tasks from ActivityPrograms, 7 scenes, one fixed prompt example (avg of 3), best hyperparameter run",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Translated GPT-3 175B, column Correctness"
+  },
+  {
+   "claim": "Fine-tuned GPT-3 13B baseline: 66.07% executability, 34.08% LCS, 64.92% correctness.",
+   "kind": "measured",
+   "source": null,
+   "metric": "executability",
+   "value": "66.07",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "VirtualHome, 88 held-out tasks from ActivityPrograms, 7 scenes, one fixed prompt example (avg of 3), best hyperparameter run",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Fine-tuned GPT-3 13B, column Executability"
+  },
+  {
+   "claim": "Removing action translation cuts Translated Codex 12B executability to 31.49%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "executability",
+   "value": "31.49",
+   "unit": "%",
+   "baseline_value": "78.57",
+   "n": null,
+   "setup": "Ablation, Codex 12B planning LM",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Translated Codex 12B - w/o Action Translation, column Executability"
+  },
+  {
+   "claim": "Removing trajectory correction cuts Translated GPT-3 175B executability to 40.10%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "executability",
+   "value": "40.10",
+   "unit": "%",
+   "baseline_value": "73.05",
+   "n": null,
+   "setup": "Ablation, GPT-3 175B",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Translated GPT-3 175B - w/o Trajectory Correction, column Executability"
+  },
+  {
+   "claim": "Removing dynamic example selection cuts Translated Codex 12B executability to 50.86%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "executability",
+   "value": "50.86",
+   "unit": "%",
+   "baseline_value": "78.57",
+   "n": null,
+   "setup": "Ablation, Codex 12B",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Translated Codex 12B - w/o Dynamic Example, column Executability"
+  },
+  {
+   "claim": "Share of plans both executable and correct (>=70% annotators): Translated GPT-3 175B 35.23%, Translated Codex 12B 27.27%, Vanilla GPT-3 175B 6.82%; humans 65.91%.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "35.23",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 4 values as printed in text extraction; label order read from Fig 4 legend; correct = at least 70% of annotators say correct",
+   "note": "Figure 4 values 35.23/27.27/6.82 read from figure text; the legend says 'Vanilla GPT-3 12B' (likely typo for Codex 12B or 13B)",
+   "where": "Sec 5.2, Fig 4",
+   "quote": "Human-written plans are 100%\nexecutable, of which 65.91% are deemed correct."
+  },
+  {
+   "claim": "Sentence-RoBERTa/BERT translation LMs perform similarly; average GloVe embeddings drops Codex 12B executability to 46.92%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "executability",
+   "value": "46.92",
+   "unit": "%",
+   "baseline_value": "78.57",
+   "n": null,
+   "setup": "Codex 12B planning LM",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row Avg. GloVe embeddings (Codex 12B), column Executability"
+  },
+  {
+   "claim": "With step-by-step instructions in the prompt, Translated Codex 12B gets LCS 32.87% vs supervised LSTM 34.00% (reported from Puig et al.).",
+   "kind": "measured",
+   "source": null,
+   "metric": "LCS",
+   "value": "32.87",
+   "unit": "%",
+   "baseline_value": "34.00",
+   "n": null,
+   "setup": "VirtualHome, how-to descriptions in prompt; LSTM number from Puig et al., different split likely",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row Translated Codex 12B, column LCS"
+  },
+  {
+   "claim": "Average program length: Translated Codex 12B 7.13 steps vs Vanilla GPT-2 1.5B 4.24 and Human 9.66, so gains are not from short programs.",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg length",
+   "value": "7.13",
+   "unit": "steps",
+   "baseline_value": null,
+   "n": null,
+   "setup": "VirtualHome, 88 held-out tasks from ActivityPrograms, 7 scenes, one fixed prompt example (avg of 3), best hyperparameter run",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row Translated Codex 12B, column Average Length"
+  },
+  {
+   "claim": "Small models score high executability by repeating the prompt example: Vanilla GPT-2 1.5B 39.40% executable but 7.78% LCS.",
+   "kind": "measured",
+   "source": null,
+   "metric": "executability",
+   "value": "39.40",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "VirtualHome, 88 held-out tasks from ActivityPrograms, 7 scenes, one fixed prompt example (avg of 3), best hyperparameter run",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Vanilla GPT-2 1.5B, column Executability"
+  }
+ ],
+ "limits": [
+  "Correctness drops when executability rises (Codex 12B 64.87% to 54.88%)",
+  "Only mid-level grounding; assumes a low-level controller",
+  "No environment observation or feedback; one instance per object class",
+  "Single environment (household VirtualHome); correctness depends on its limited expressivity; human-written plans only 64-70% complete",
+  "Evaluation metric LCS is only a proxy; correctness judged by MTurk annotators; no significance tests",
+  "Small models score high executability by repeating the prompt example",
+  "Fine-tuning details of baseline not given; hyperparameter chosen per method by grid search on the same evaluation tasks"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Executability",
+   "definition": "whether an action plan can be correctly parsed and satisfies the common-sense constraints of the environment",
+   "where": "Sec 2.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "VirtualHome (Puig et al.)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "environment and ActivityPrograms",
+   "quote": null
+  },
+  {
+   "work": "Language models are few-shot learners (Brown et al.)",
+   "year": 2020,
+   "arxiv": "2005.14165",
+   "relation": "uses-method",
+   "note": "in-context learning; GPT-3 evaluated",
+   "quote": null
+  },
+  {
+   "work": "Evaluating large language models trained on code (Chen et al.)",
+   "year": 2021,
+   "arxiv": "2107.03374",
+   "relation": "uses-method",
+   "note": "Codex; multiple sampling",
+   "quote": null
+  },
+  {
+   "work": "Sentence-BERT (Reimers & Gurevych)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Translation LM",
+   "quote": null
+  },
+  {
+   "work": "RoBERTa (Liu et al.)",
+   "year": 2019,
+   "arxiv": "1907.11692",
+   "relation": "uses-method",
+   "note": "Translation LM base",
+   "quote": null
+  },
+  {
+   "work": "The curious case of neural text degeneration",
+   "year": 2019,
+   "arxiv": "1904.09751",
+   "relation": "uses-method",
+   "note": "nucleus sampling",
+   "quote": null
+  },
+  {
+   "work": "Pre-trained language models for interactive decision-making (Li et al.)",
+   "year": 2022,
+   "arxiv": "2202.01771",
+   "relation": "related",
+   "note": "concurrent work, fine-tunes GPT-2",
+   "quote": null
+  },
+  {
+   "work": "What makes good in-context examples for GPT-3? (Liu et al.)",
+   "year": 2021,
+   "arxiv": "2101.06804",
+   "relation": "related",
+   "note": "similar-example selection",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Executability v.s. semantic correctness of generated plans, sample plans by different models, and example environment execution",
+   "page": 1,
+   "why": "Shows the trade-off at a glance"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Zero-shot planning via causal LLM, translation to admissible action, step-by-step autoregressive generation",
+   "page": 4,
+   "why": "The method pipeline"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Human-evaluated correctness and evaluation results in VirtualHome",
+   "page": 9,
+   "why": "Main results"
+  }
+ ],
+ "code": [
+  {
+   "where": "Algorithm 1 / Eq 3",
+   "snippet": "argmax_{a_e} ( max_{a^} C(f(a^), f(a_e)) + beta * P_theta(a^) )",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Figure 4 legend reads 'Vanilla GPT-3 12B' (no such model in Table 1)",
+  "Translation LM size 355M in text vs 325M in Table 3",
+  "Table 5 prints Vanilla GPT-3 175B length as 9.716"
+ ]
+}

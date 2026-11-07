@@ -1,19 +1,711 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2004.13637",
  "pdf": "generative-ai/02-rag-retrieval/sources/roller-2021-recipes-building-open-domain-chatbot.pdf",
  "bib": {
   "title": "Recipes for Building an Open-Domain Chatbot",
+  "authors": [
+   "Stephen Roller",
+   "Emily Dinan",
+   "Naman Goyal",
+   "Da Ju",
+   "Mary Williamson",
+   "Yinhan Liu",
+   "Jing Xu",
+   "Myle Ott",
+   "Kurt Shuster",
+   "Eric M. Smith",
+   "Y-Lan Boureau",
+   "Jason Weston"
+  ],
   "first_author": "Roller",
   "year": 2021,
-  "venue": "EACL 2021",
+  "venue": "EACL 2021 (Proceedings of the 16th Conference of the European Chapter of the ACL, pages 300-325)",
   "arxiv": "2004.13637",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-04",
-  "session": "b1513713-815e-49d2-b7fd-869d099bfec9"
+  "at": "2026-11-07",
+  "chars_read": 96103,
+  "chars_total": 96103,
+  "engine": "pymupdf",
+  "skipped": "References skimmed only; conversation screenshots (Figs 1, 6, A.16-A.18, A.20, A.22) are images and did not extract"
  },
- "legacy_report": "SOURCE: Recipes for Building an Open-Domain Chatbot. Stephen Roller, Emily Dinan, Naman Goyal, Da Ju, Mary Williamson, Yinhan Liu, Jing Xu, Myle Ott, Kurt Shuster, Eric M. Smith, Y-Lan Boureau, Jason Weston (Facebook AI Research). EACL 2021, pages 300–325. arXiv 2004.13637. This is the BlenderBot paper.\n\nCOVERAGE: I read all 96,354 of 96,354 extracted characters across all 26 pages, including Appendices A–H, every results table and the failure-case figures. I skimmed the references only to trace where the methods come from. The text in conversation-screenshot figures (Figs 1, 6, A.16–A.18, A.20, A.22) is images and did not extract. Only the captions came through. The text of Figs A.15 and A.21 did extract.\n\nBOTTOM LINE ON RETRIEVAL: The paper has little to say about retrieval, and what it says is mostly negative. Retrieve-and-refine is a side experiment. Once generator decoding was tuned, neither the dialogue-retrieval version nor the Wikipedia-knowledge version beat the plain generator on human engagingness. The authors call their retrieval experiments \"inconclusive\". The parts most useful to the course are the hallucination examples, where Wiz Generative gets a fact right and the non-retrieval model invents one, the alpha-blending trick, and the decoding and length findings.\n\nCLAIMS\n- claim: With the best decoding settings, retrieve-and-refine (both the dialogue and the knowledge version) did not beat the plain generator on human ratings.\n  number: none (see Fig 2 rows below)\n  setup: BST fine-tuned models, human-bot ACUTE-Eval of engagingness, 100 crowdworker conversations of 14+ turns per model\n  quote: \"We ﬁnd RetNRef models (both dialogue version and using knowledge retrieval) do not improve over their gen-erative counterparts when using the best decoding schemes for the generative models\"\n  where: p5\n- claim: RetNRef's earlier advantage disappeared once decoding was tuned. The authors suspect it only came from producing longer outputs.\n  number: none\n  setup: footnote 8, against the self-chat result in Fig A.5\n  quote: \"after optimizing the generative model decoding parameters, decoding length and beam blocking, it then performs much better compared to RetNRef. The RetNRef model produces longer generations than the vanilla greedy-search generation algo-rithms, so the original improvement may be from this.\"\n  where: p5 fn 8\n- claim: Adding Wikipedia knowledge retrieval made human ratings slightly worse than a same-size model without it.\n  number: Wiz Generative 2.7B 47 vs human 53; BST Generative 2.7B 49 vs 51 (engagingness against human-human logs, neither significant)\n  setup: Fig 2. 2.7B models, TF-IDF over Wikipedia, then a poly-encoder that picks one sentence\n  quote: \"Unfortunately the read-ing of knowledge only had a negative impact in ACUTE-Evals compared to a similarly sized model without knowledge retrieval (Figure 2). This might reﬂect both (i) deeper knowledge rarely being re-quired in the current evaluation setup; and (ii) the model attempting to use knowledge when there is no need, or using it incorrectly.\"\n  where: p7\n- claim: Against Meena, Wiz Generative also scored below the plain BST generator.\n  number: engagingness 61 vs 75; humanness 59 vs 65\n  setup: Figs A.14 and 3, human-chat ACUTE-Eval against Meena's public logs\n  quote: \"Wiz Generative (2.7B) 61 ∗∗ 39 ∗∗\" / \"BST Generative (2.7B) 75 ∗∗ 25 ∗∗\"\n  where: p22 (Fig A.14), p6 (Fig 3)\n- claim: The authors give hallucination as the reason for knowledge retrieval, and their own probes show it working. The non-retrieval model invented biographies that Wiz Generative got right from Wikipedia.\n  number: none\n  setup: author-constructed probes, Fig A.20\n  quote: \"Wojciech Zaremba is an AI Researcher born in Poland, and Amon Tobin is a Brazilian elec-tronic musician, which the Wiz Generative model re-trieves from Wikipedia correctly (last two examples). The Generative BST 2.7B model which does not use retrieval instead hallucinates an Italian football player and an American singer.\"\n  where: p25\n- claim: Factual errors were rare in the crowdworker evaluation because the chats were too shallow to test knowledge.\n  number: none\n  setup: open-ended chats that start with \"Hi!\" and run 14 turns\n  quote: \"Perhaps surprisingly, factual errors appear relatively rarely in crowdworker con-versations with the bots. We believe this is due to the nature of the evaluation conducted\"\n  where: p7\n- claim: Alpha-blending stops the generator from ignoring the retrieved utterance: during training, the retrieved response is replaced by the gold one alpha% of the time. Knowledge retrieval did not need it.\n  number: alpha = 0.5 in the experiments\n  setup: Appendix B.3. Knowledge RetNRef trains on gold knowledge only\n  quote: \"a trained model often opts to sim-ply ignore the retrieval utterance, as was shown in Weston et al. (2018). To ensure it is used, one can replace the retrieved response instead with the gold responseα% of the time\"\n  where: p13–14\n- claim: In self-chat with untuned decoding, RetNRef beat the plain generator, but pure retrieval beat both.\n  number: RetNRef 60 vs Generative 40; Retrieval 67 vs Generative 33\n  setup: Fig A.5. 90M generator, 256M poly-encoder, beam 10, no minimum length, alpha = 0.5\n  quote: \"Retrieve and Reﬁne ( α = 0 .5) outperforms its Generative (90M, beam search decoding) but not its Retrieval (256M) counterpart\"\n  where: p19\n- claim: In human-bot chat with tuned decoding, both RetNRef and the generator beat pure retrieval. RetNRef against the generator was not significant.\n  number: RetNRef 56 vs Generative 44 (not significant); Generative 71 vs Retrieval 29\n  setup: Fig A.13. 90M generator with minimum beam length 20\n  quote: \"All results are signiﬁcant ( p < 0.01) except for RetNRef vs. Generative.\"\n  where: p21\n- claim: Setting a minimum beam length was the largest decoding win measured. 20 BPE tokens was best.\n  number: 83% vs 17%\n  setup: Fig A.6. 2.7B generator, self-chat engagingness, about 140 trials per pair\n  quote: \"Min. Length 20 83 ∗∗ 17 ∗∗\"\n  where: p20 (summary on p4)\n- claim: Response length tracks engagement. With the constraint, outputs averaged about 21 tokens, against 9.5 without it and 18.0 for humans.\n  number: 21.3 vs 9.5; Meena 10.4; human 18.0\n  setup: Fig 4, 8k BPE tokens\n  quote: \"Generative BST (2.7B) with the constraint (of 20) is around 21 tokens, vs. 9.5 to-kens without. Thus, the beam search often ends as soon as the constraint is fulﬁlled.\"\n  where: p6\n- claim: Beam size 10 was a sweet spot and roughly matched sampling. Nothing in this comparison was significant.\n  number: 48% to 52%\n  setup: Fig A.8. Top-k with k=40, sample-and-rank with 20 samples\n  quote: \"a value of 10 is superior to 1 or 30, which is then on par with sampling methods (48% to 52%), although none of these results is signiﬁ-cant\"\n  where: p4\n- claim: Lower perplexity did not mean better human ratings. The 9.4B model lost to the 2.7B model on engagingness.\n  number: 56% win for 2.7B; perplexity 8.6 vs 9.0 (Table 3)\n  setup: direct ACUTE-Eval of engagingness, 2.7B vs 9.4B\n  quote: \"which resulted in a 56% win for the smaller model\"\n  where: p5\n- claim: RetNRef had slightly worse perplexity than the plain generator.\n  number: 9.8 vs 9.0 (2.7B); 14.2 vs 13.8 (90M)\n  setup: Table 3, average over the BST validation sets\n  quote: \"2.7B 12.0 9.0 9.8\"\n  where: p5\n- claim: Even the best model overuses stock phrases. Unlikelihood training cut the repeats but did not help engagingness.\n  number: \"Do you have\" 110 (MLE) / 60 (UL) / 6 (human)\n  setup: Fig 5, 100 crowdworker conversations, 2.7B model\n  quote: \"Do you have 110 60 6\"\n  where: p7\n- claim: Headline result against Meena.\n  number: 75/25 engagingness, 65/35 humanness\n  setup: BST Generative 2.7B with tuned beam search against Meena's public logs\n  quote: \"75% to 25% in terms of engagingness, and by 65% to 35% in terms of humanness (both statistically signiﬁcant, two-tailed binomial test,p< 0.01)\"\n  where: p1\n\nLIMITS: Evaluation used 14-turn open chats that start with \"Hi!\", which the authors say rarely probe knowledge. So the paper does not show whether retrieval helps when a conversation needs facts. The context limit is 128 BPE tokens. Knowledge retrieval conditions on a single sentence picked from TF-IDF candidates. Hallucination is never measured systematically: the evidence is cherry-picked or author-built examples (Fig A.20). The authors concede the retrieval and unlikelihood experiments are \"inconclusive\". The evaluation is English chit-chat, not QA. Many self-chat differences were not significant. This is 2020-era technology: seq2seq models up to 9.4B parameters, no instruction tuning, no dense retrieval over passages.\n\nBUILDS ON: Weston et al., 2018 (Retrieve and Refine, alpha-blending); Dinan et al., 2019c (Wizard of Wikipedia knowledge retrieval); Humeau et al., 2019 (poly-encoder); Welleck et al., 2020 and Li et al., 2019a (unlikelihood); Li et al., 2019b (ACUTE-Eval); Smith et al., 2020 (Blended Skill Talk); Paulus et al., 2017 (n-gram blocking); Fan et al., 2018 (top-k); Adiwardana et al., 2020 (Meena, sample-and-rank); Holtzman et al., 2019 (degeneration); Massarelli et al., 2019 (hallucination in generation).\n\nCODE: None. The paper contains only equations: MLE, and unlikelihood L_ULE = L_MLE + αL_UL on p14.\n\nFIGURES:\n- First choice: Figure 2 (p6), the engagingness ACUTE-Eval table against human logs. In one table it shows BST RetNRef 2.7B (46/54) and Wiz Generative (47/53) landing next to the plain BST Generative 2.7B (49/51), and std-beam variants far below at 21/79. It makes the point that decoding mattered more than retrieval faster than prose would.\n- Second choice: Figure A.6 (p20), minimum beam length 5/10/20/40 against unconstrained (52, 68, 83, 82), for 06 § Sampling.\n- Fig A.20, the hallucinated biographies, is the most vivid, but it is a screenshot and its text did not extract.\n\nFIT WITH THE NOTES:\n- Best fit: 02-why-rag-and-the-augmented-prompt.md § \"What RAG buys you\", the \"Fewer hallucinations\" row (line 111). The paper supports the mechanism with the Fig A.20 examples. It adds an honest counterweight: knowledge retrieval lowered human ratings in shallow chat, possibly because the model used knowledge \"when there is no need, or using it incorrectly\". That fits as a sharpens citation, or a Pitfalls line: \"retrieval can hurt when the task doesn't need knowledge\". It does not contradict the Shuster et al. 68.2% to 8–21% figure. Different eval, and no hallucination rate is measured here.\n- Second fit: 06-generation-for-rag.md § Sampling. The notes have no beam search, minimum-length or n-gram-blocking rows. The paper supports the existing \"Greedy ... can loop and repeat\" and repetition-penalty rows; n-gram blocking is its counterpart. It adds a beam-versus-sampling finding: the paper says it runs \"contrary to previous work which reports that beam search is inferior to sampling\". The notes do not currently claim sampling beats beam, so there is no conflict.\n- Also relevant: the alpha-blending fact (generators ignore retrieved text unless training forces them to use it) relates to 06 § \"Context against the model's prior\", though it concerns training rather than prompting.\n\nPROBLEMS: The conversation-screenshot figures did not extract (text is in images). Some ligatures and hyphenation are broken in the quotes (e.g. \"ﬁ\", \"gen-erative\"), copied as extracted. figures.py captions returned only main-body figures 1–6, not the appendix figures. The PDF contained no embedded instructions.\n\nFile: /Users/ramsey-wise/workspace/learn-ai-engineering/generative-ai/02-rag-retrieval/sources/roller-2021-recipes-building-open-domain-chatbot.pdf"
+ "type": "empirical",
+ "question": "Which ingredients (scale, fine-tuning data, decoding) combine to give the best human-rated open-domain chatbot?",
+ "hypothesis": "Large models fine-tuned on skill-focused data (BST) with tuned decoding (minimum length, beam search) can beat prior chatbots on engagingness and humanness.",
+ "contributions": [
+  "Recipes for 90M, 2.7B and 9.4B parameter chatbots, with models and code released",
+  "Evidence that BST fine-tuning and minimum-length constrained beam search matter more than perplexity",
+  "Failure-case analysis, with inconclusive unlikelihood and retrieve-and-refine experiments"
+ ],
+ "method": {
+  "summary": "Pre-train Seq2Seq Transformers (90M, 2.7B, 9.4B) on filtered pushshift.io Reddit, fine-tune on ConvAI2, Empathetic Dialogues, Wizard of Wikipedia and Blended Skill Talk, and compare decoding settings with ACUTE-Eval. Also test poly-encoder retrieval, retrieve-and-refine (dialogue and Wikipedia knowledge) and unlikelihood training.",
+  "task": "open-domain dialogue generation",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "pushshift.io Reddit",
+    "role": "pretrain",
+    "size": "1.50B comments; 56.8B label BPE tokens; 88.8B context tokens",
+    "split": "4096 chunks stratified by thread ID; last two reserved for validation and test, each about 0.02% (~360k comments)",
+    "source": "Pushshift Reddit dump through July 2019 (Baumgartner et al. 2020)",
+    "preprocessing": "Remove comment and children if bot author, non-English subreddit, removed/deleted, >2048 chars without spaces, >128 BPE tokens, <5 characters, contains URL, starts non-ASCII, depth >7; context and response truncated to 128 BPE tokens"
+   },
+   {
+    "name": "ConvAI2",
+    "role": "train",
+    "size": "140k utterances",
+    "split": "BST fine-tune",
+    "source": "PersonaChat-based (Zhang et al. 2018)",
+    "preprocessing": null
+   },
+   {
+    "name": "Empathetic Dialogues",
+    "role": "train",
+    "size": "50k utterances",
+    "split": "BST fine-tune",
+    "source": "Rashkin et al. 2019",
+    "preprocessing": null
+   },
+   {
+    "name": "Wizard of Wikipedia",
+    "role": "train",
+    "size": "194k utterances over 1250 topics",
+    "split": "BST fine-tune",
+    "source": "Dinan et al. 2019c",
+    "preprocessing": null
+   },
+   {
+    "name": "Blended Skill Talk",
+    "role": "train",
+    "size": "76k utterances",
+    "split": "BST fine-tune",
+    "source": "Smith et al. 2020",
+    "preprocessing": null
+   },
+   {
+    "name": "Meena human-bot logs and human-human employee logs",
+    "role": "eval",
+    "size": "not stated",
+    "split": "public logs, some toxic conversations removed",
+    "source": "Adiwardana et al. 2020",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Generative 90M",
+    "role": "proposed",
+    "params": "87,508,992",
+    "architecture": "Seq2Seq Transformer",
+    "init_from": "Shuster et al. 2019 pre-trained model",
+    "tokenizer": "Byte-level BPE (HuggingFace Tokenizers)",
+    "vocab": "55K",
+    "layers": "8 enc / 8 dec",
+    "hidden": "512",
+    "heads": "16",
+    "context": "128 BPE tokens",
+    "other": {
+     "steps": "2.86M",
+     "valid_ppl": "25.6",
+     "note": "different dictionary, ppl not comparable"
+    }
+   },
+   {
+    "name": "Generative 2.7B",
+    "role": "proposed",
+    "params": "2,696,268,800",
+    "architecture": "Seq2Seq Transformer",
+    "init_from": null,
+    "tokenizer": "Byte-level BPE",
+    "vocab": "8K",
+    "layers": "2 enc / 24 dec",
+    "hidden": "2560",
+    "heads": "32",
+    "context": "128 BPE tokens",
+    "other": {
+     "steps": "200K",
+     "valid_ppl": "13.3"
+    }
+   },
+   {
+    "name": "Generative 9.4B",
+    "role": "proposed",
+    "params": "9,431,810,048",
+    "architecture": "Seq2Seq Transformer",
+    "init_from": null,
+    "tokenizer": "Byte-level BPE",
+    "vocab": "8K",
+    "layers": "4 enc / 32 dec",
+    "hidden": "4096",
+    "heads": "32",
+    "context": "128 BPE tokens",
+    "other": {
+     "steps": "200K",
+     "valid_ppl": "12.2"
+    }
+   },
+   {
+    "name": "Poly-encoder retriever 256M",
+    "role": "retriever",
+    "params": "256M",
+    "architecture": "poly-encoder, N=64 codes",
+    "init_from": "Humeau et al. 2019 / Smith et al. 2020",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Poly-encoder retriever 622M",
+    "role": "retriever",
+    "params": "622M",
+    "architecture": "poly-encoder, N=64 codes",
+    "init_from": "MLM pre-training on same data and dictionary as large generative models",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "DialoGPT",
+    "role": "baseline",
+    "params": "345M",
+    "architecture": "GPT-2 style",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Meena",
+    "role": "baseline",
+    "params": "2.6B",
+    "architecture": "Transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "logs only, model not released"
+    }
+   }
+  ],
+  "training": {
+   "objective": "MLE; poly-encoder cross-entropy ranking with in-batch negatives; optional unlikelihood (L_MLE + alpha L_UL, alpha 0.25); alpha-blending (replace retrieved reply with gold alpha% of time, alpha 0.5 for RetNRef)",
+   "optimizer": "Adam (Adafactor tried, converged worse)",
+   "lr": "2e-4 max (2.7B pre-train); 1.15e-4 max (9.4B pre-train); 1e-6 to 1e-5 max (fine-tune)",
+   "lr_schedule": "invsqrt (2.7B)",
+   "warmup": "3125 steps (2.7B); 2400 steps (9.4B)",
+   "batch_size": "about 500k label BPE tokens (2.7B and 9.4B); 512 elements for retriever",
+   "steps": "about 200k SGD updates (2.7B, not converged; 9.4B, not overfitting); fine-tuned to convergence",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "128 BPE tokens context and response",
+   "precision": "mixed precision, FP32 gradients and optimizer state, FP16 parameters, dynamic loss scaling",
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "parallelism": "Megatron-LM style model parallelism in pre-training; GPipe-style in fine-tuning",
+    "toolkits": "Fairseq pre-training; ParlAI fine-tuning",
+    "ranker_pretrain": "622M uses RoBERTa hyperparameters"
+   }
+  },
+  "inference": {
+   "decoding": "Chosen: beam search, beam size 10, minimum length 20 BPE tokens, 3-gram blocking over context and response. Compared: beam 1/30, top-k (k=40), sample-and-rank (20 samples), predictive length (4-class classifier).",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "100 human-bot conversations per model; about 140 self-chat trials per pair",
+   "prompting": "Persona (two sentences) in context; WoW topic name one third of the time; conversations start with 'Hi!'",
+   "retrieval": "Dialogue retrieval: poly-encoder reply appended to generator input with separator. Knowledge retrieval: TF-IDF inverted index over Wikipedia dump, transformer ranker picks one sentence; classifier decides whether to retrieve per turn",
+   "parameters": {
+    "alpha_blending": "0.5",
+    "unlikelihood_alpha": "0.25",
+    "ngram_block": "n=3"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "ACUTE-Eval engagingness",
+     "definition": "Pairwise judgement of complete dialogues, 'Who would you prefer to talk to for a long conversation?'",
+     "unit": "% win",
+     "higher_is_better": true
+    },
+    {
+     "name": "ACUTE-Eval humanness",
+     "definition": "'Which speaker sounds more human?'",
+     "unit": "% win",
+     "higher_is_better": true
+    },
+    {
+     "name": "Perplexity",
+     "definition": "validation perplexity",
+     "unit": "ppl",
+     "higher_is_better": false
+    },
+    {
+     "name": "Hits@1/K",
+     "definition": "recall@1 ranking the gold label among K-1 random candidates",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Meena",
+    "DialoGPT",
+    "human-human logs (employees; crowdworkers in BST paper)"
+   ],
+   "protocol": "Crowdworker human-bot chats (100 per model, min 14 turns); two-tailed binomial test, p<0.05 or p<0.01; self-chat ACUTE-Eval for hyperparameter selection"
+  },
+  "availability": {
+   "code": "released (ParlAI fine-tuning and evaluation code), URL not stated in text",
+   "weights": "released",
+   "data": "conversation logs with crowdworkers released with the code"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Best model (BST Generative 2.7B) beats Meena 75% to 25% on engagingness.",
+   "kind": "measured",
+   "source": null,
+   "metric": "win rate vs Meena, engagingness",
+   "value": "75",
+   "unit": "%",
+   "baseline_value": "25",
+   "n": null,
+   "setup": "Human-bot ACUTE-Eval vs publicly released Meena logs; two-tailed binomial test p<0.01",
+   "quote": "the latter in a pairwise comparison 75% to 25% in terms of engagingness, and by 65% to 35% in terms of humanness (both statistically signiﬁcant, two-tailed binomial test, p < 0.01)",
+   "table": null,
+   "note": null,
+   "where": "p1"
+  },
+  {
+   "claim": "Best model beats Meena 65% to 35% on humanness.",
+   "kind": "measured",
+   "source": null,
+   "metric": "win rate vs Meena, humanness",
+   "value": "65",
+   "unit": "%",
+   "baseline_value": "35",
+   "n": null,
+   "setup": "Same setup, humanness question",
+   "quote": "by 65% to 35% in terms of humanness",
+   "table": null,
+   "note": null,
+   "where": "p1"
+  },
+  {
+   "claim": "Plain BST Generative 2.7B scores 49% against human-human employee logs (not significant).",
+   "kind": "measured",
+   "source": null,
+   "metric": "engagingness win rate vs human logs",
+   "value": "49",
+   "unit": "%",
+   "baseline_value": "51",
+   "n": null,
+   "setup": "Human-bot ACUTE-Eval engagingness vs Adiwardana et al. employee logs; 100 conversations",
+   "quote": "e.g. 49% to 51% for our 2.7B generative model compared to human-human logs",
+   "table": null,
+   "note": "Fig 2 row BST Generative (2.7B): 49/51",
+   "where": "p6 sec 5.4"
+  },
+  {
+   "claim": "Adding Wikipedia knowledge retrieval (Wiz Generative 2.7B) gave 47% vs 49% for the same-size model without it; authors say reading knowledge only had a negative impact.",
+   "kind": "measured",
+   "source": null,
+   "metric": "engagingness win rate vs human logs",
+   "value": "47",
+   "unit": "%",
+   "baseline_value": "49",
+   "n": null,
+   "setup": "Human-bot ACUTE-Eval, engagingness question, 100 crowdworker conversations of at least 14 turns per model (starting 'Hi!'), compared against employee human-human logs from Adiwardana et al. 2020; win % of the model",
+   "quote": "Unfortunately the reading of knowledge only had a negative impact in ACUTE-Evals compared to a similarly sized model without knowledge retrieval (Figure 2).",
+   "table": null,
+   "note": null,
+   "where": "Fig 2, p6"
+  },
+  {
+   "claim": "RetNRef (dialogue retrieval, 622M/2.7B) scores 46% vs 49% for the plain generator; no improvement once generator decoding is tuned.",
+   "kind": "measured",
+   "source": null,
+   "metric": "engagingness win rate vs human logs",
+   "value": "46",
+   "unit": "%",
+   "baseline_value": "49",
+   "n": null,
+   "setup": "Human-bot ACUTE-Eval, engagingness question, 100 crowdworker conversations of at least 14 turns per model (starting 'Hi!'), compared against employee human-human logs from Adiwardana et al. 2020; win % of the model",
+   "quote": "We ﬁnd RetNRef models (both dialogue version and using knowledge retrieval) do not improve over their generative counterparts when using the best decoding schemes for the generative models",
+   "table": null,
+   "note": null,
+   "where": "Fig 2, p5"
+  },
+  {
+   "claim": "Without the 20-token minimum length (standard beam) the 2.7B model falls to 21% vs human logs (significant).",
+   "kind": "measured",
+   "source": null,
+   "metric": "engagingness win rate vs human logs",
+   "value": "21",
+   "unit": "%",
+   "baseline_value": "49",
+   "n": null,
+   "setup": "Human-bot ACUTE-Eval, engagingness question, 100 crowdworker conversations of at least 14 turns per model (starting 'Hi!'), compared against employee human-human logs from Adiwardana et al. 2020; win % of the model",
+   "quote": null,
+   "table": "Fig 2, row BST Generative (2.7B) std. beam, win column (21 **)",
+   "note": "Fig 2 is a figure whose text extracted; the 21 occurs in extracted text",
+   "where": "Fig 2"
+  },
+  {
+   "claim": "Minimum beam length 20 beats unconstrained beam 83% to 17% in self-chat; predictive length gives 81% to 19%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "self-chat win rate",
+   "value": "83",
+   "unit": "%",
+   "baseline_value": "17",
+   "n": null,
+   "setup": "Self-chat ACUTE-Eval engagingness, about 140 trials per pair, Generative 2.7B BST, min length 20 BPE tokens",
+   "quote": "show that both methods improve signiﬁcantly over not controlling the length (83% to 17%; 81% to 19%)",
+   "table": null,
+   "note": null,
+   "where": "p3 sec 5.2; Fig A.6"
+  },
+  {
+   "claim": "Average response length is about 21 tokens with the minimum-length constraint vs 9.5 without; Meena 10.4, humans 18.0.",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg response length",
+   "value": "21",
+   "unit": "BPE tokens",
+   "baseline_value": "9.5",
+   "n": null,
+   "setup": "BPE 8k tokens, human-bot logs",
+   "quote": "is around 21 tokens, vs. 9.5 to-kens without",
+   "table": null,
+   "note": "Fig 4 table prints 21.3 vs 9.5",
+   "where": "p5 Fig 4"
+  },
+  {
+   "claim": "Beam size 10 is a sweet spot; beam 30 is on par with sampling (48% to 52%), none significant.",
+   "kind": "measured",
+   "source": null,
+   "metric": "self-chat win rate",
+   "value": "48",
+   "unit": "%",
+   "baseline_value": "52",
+   "n": null,
+   "setup": "Self-chat ACUTE-Eval; top-k k=40, sample-and-rank 20 samples",
+   "quote": "which is then on par with sampling methods (48% to 52%), although none of these results is signiﬁcant",
+   "table": null,
+   "note": "Text hyphenation 'signiﬁ-cant' in PDF; quote normalized",
+   "where": "p3"
+  },
+  {
+   "claim": "Fine-tuning on BST tasks beats pre-training only 60% to 40% in self-chat.",
+   "kind": "measured",
+   "source": null,
+   "metric": "self-chat win rate",
+   "value": "60",
+   "unit": "%",
+   "baseline_value": "40",
+   "n": null,
+   "setup": "Self-chat engagingness, 2.7B",
+   "quote": "Fine-tuning on the smaller, more focused BST datasets leads to signiﬁcant improvements (60% to 40%)",
+   "table": null,
+   "note": null,
+   "where": "p3"
+  },
+  {
+   "claim": "The 9.4B model scores below the 2.7B in engagingness despite lower perplexity; head-to-head 56% win for the 2.7B.",
+   "kind": "measured",
+   "source": null,
+   "metric": "win rate of smaller model",
+   "value": "56",
+   "unit": "%",
+   "baseline_value": "44",
+   "n": null,
+   "setup": "ACUTE-Eval engagingness 2.7B vs 9.4B",
+   "quote": "which resulted in a 56% win for the smaller model",
+   "table": null,
+   "note": null,
+   "where": "p4"
+  },
+  {
+   "claim": "Perplexity on pushshift.io Reddit validation: 2.7B 13.3, 9.4B 12.2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "validation perplexity",
+   "value": "13.3",
+   "unit": "ppl",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Pre-trained generative models, 200K steps",
+   "quote": "",
+   "table": "Table 2, rows 2.7B and 9.4B, column PPL",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "BST fine-tuning cuts average BST-validation perplexity 2.7B from 12.0 to 9.0 (9.4B: 11.2 to 8.6); RetNRef 2.7B 9.8.",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg validation perplexity",
+   "value": "9.0",
+   "unit": "ppl",
+   "baseline_value": "12.0",
+   "n": null,
+   "setup": "Table 3 BST validation sets",
+   "quote": "",
+   "table": "Table 3, rows 2.7B and 9.4B, columns Pre-train only and BST Gen",
+   "note": "Table 5 prints 8.98 and 11.98 for the same averages",
+   "where": "Table 3"
+  },
+  {
+   "claim": "Hits@1/K of the 622M poly-encoder: ConvAI2 (K=20) 89.96, WoW 93.22, ED 70.15, BST 82.11; 256M: 88.55, 91.70, 62.67, 83.45.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Hits@1/K",
+   "value": "89.96",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fine-tuned poly-encoders, validation sets",
+   "quote": "",
+   "table": "Table 1, row 622M, column C2",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Safety: unsafe word-list rate on pushshift Reddit contexts: human 12.9%, Reddit Gen 4.4%, BST Gen 0.6% (90M).",
+   "kind": "measured",
+   "source": null,
+   "metric": "unsafe response rate (word list)",
+   "value": "0.6",
+   "unit": "%",
+   "baseline_value": "4.4",
+   "n": null,
+   "setup": "90M models",
+   "quote": "",
+   "table": "Table 4, row BST Gen, column pushshift.io Reddit Word List",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "Unlikelihood training (alpha 0.25) cut overused 3-grams but did not improve engagingness (48% vs human logs vs 49%); humanness vs Meena 70%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "engagingness win rate vs human logs",
+   "value": "48",
+   "unit": "%",
+   "baseline_value": "49",
+   "n": null,
+   "setup": "BST Unlikelihood 2.7B; Fig 2 and Fig 3",
+   "quote": "Unfortunately, this made a very small or negative impact in our ACUTE-Evals of engagingness (Figure 2 and A.14), although this did score highly in terms of humanness (Figure 3).",
+   "table": null,
+   "note": "Humanness vs Meena 70 (Fig 3)",
+   "where": "p6; Fig 2"
+  },
+  {
+   "claim": "Models hallucinate facts without retrieval: Wiz Generative retrieves Wojciech Zaremba (AI researcher born in Poland) and Amon Tobin (Brazilian electronic musician) correctly; the non-retrieval model hallucinates an Italian football player and an American singer.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Author-constructed probes, Fig A.20",
+   "quote": "Wojciech Zaremba is an AI Researcher born in Poland, and Amon Tobin is a Brazilian electronic musician, which the Wiz Generative model retrieves from Wikipedia correctly (last two examples).",
+   "table": null,
+   "note": "Two anecdotal examples; no count",
+   "where": "Fig A.20"
+  },
+  {
+   "claim": "Self-chat early result: RetNRef (alpha 0.5) beat generative 60% to 40% with untuned beam decoding (90M), but retrieval beat both; footnote 8 says the gain may come from longer outputs.",
+   "kind": "measured",
+   "source": null,
+   "metric": "self-chat win rate RetNRef vs Generative",
+   "value": "60",
+   "unit": "%",
+   "baseline_value": "40",
+   "n": null,
+   "setup": "Self-chat engagingness, 90M, beam 10, 3-gram blocking, no min length, BST tuned",
+   "quote": "The RetNRef model produces longer generations than the vanilla greedy-search generation algorithms, so the original improvement may be from this.",
+   "table": null,
+   "note": null,
+   "where": "Fig A.5, p5 fn 8"
+  }
+ ],
+ "limits": [
+  "Evaluation uses short 14-turn conversations that start with 'Hi!' and cover shallow topics; repetition, forgetfulness and factual errors are not exposed",
+  "Retrieve-and-refine and unlikelihood experiments are called inconclusive",
+  "Hard limit of 128 BPE tokens of dialogue history",
+  "9.4B model did not beat 2.7B in human evaluation despite lower perplexity; authors do not explain",
+  "Comparison to Meena uses partial public logs, some toxic conversations removed",
+  "Hardware, compute, seeds, weight decay and dropout not stated",
+  "Perplexity not comparable between 90M and larger models (different dictionary)"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "RetNRef",
+   "definition": "Retrieve and refine: a retrieval step before generation, whose output is appended to the generator input",
+   "where": "Sec 3.1"
+  },
+  {
+   "term": "Wiz Generative",
+   "definition": "Knowledge-retrieval generator conditioned on a retrieved Wikipedia sentence",
+   "where": "Sec 3.1, App A.2"
+  },
+  {
+   "term": "BST",
+   "definition": "Blended Skill Talk tasks: ConvAI2, Empathetic Dialogues, Wizard of Wikipedia and Blended Skill Talk trained together",
+   "where": "Sec 3.4"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Meena (Adiwardana et al.)",
+   "year": 2020,
+   "arxiv": "2001.09977",
+   "relation": "baseline",
+   "note": "compared via released logs",
+   "quote": null
+  },
+  {
+   "work": "DialoGPT (Zhang et al.)",
+   "year": 2019,
+   "arxiv": "1911.00536",
+   "relation": "baseline",
+   "note": "compared directly",
+   "quote": null
+  },
+  {
+   "work": "Retrieve and refine (Weston et al.)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "alpha-blending",
+   "quote": null
+  },
+  {
+   "work": "Poly-encoders (Humeau et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "retriever architecture",
+   "quote": null
+  },
+  {
+   "work": "Wizard of Wikipedia (Dinan et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "knowledge retrieval system and data",
+   "quote": null
+  },
+  {
+   "work": "Blended Skill Talk (Smith et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "fine-tuning setup",
+   "quote": null
+  },
+  {
+   "work": "Unlikelihood training (Welleck et al.; Li et al.)",
+   "year": 2020,
+   "arxiv": "1911.03860",
+   "relation": "uses-method",
+   "note": "Li et al. 2019a",
+   "quote": null
+  },
+  {
+   "work": "The curious case of neural text degeneration (Holtzman et al.)",
+   "year": 2019,
+   "arxiv": "1904.09751",
+   "relation": "contradicts",
+   "note": "finds tuned beam search can beat sampling",
+   "quote": "contrary to previous work which reports that beam search is inferior to sampling"
+  },
+  {
+   "work": "ACUTE-Eval (Li et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "evaluation protocol",
+   "quote": null
+  },
+  {
+   "work": "Megatron-LM",
+   "year": 2019,
+   "arxiv": "1909.08053",
+   "relation": "uses-method",
+   "note": "model parallelism",
+   "quote": null
+  },
+  {
+   "work": "Mixed precision training",
+   "year": 2017,
+   "arxiv": "1710.03740",
+   "relation": "uses-method",
+   "note": "",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "ACUTE-Eval of engagingness of models vs. humans by comparing human-bot logs to human-human logs.",
+   "page": 6,
+   "why": "One table ranks all variants, showing RetNRef and Wiz Generative at or below the plain generator"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Response length statistics for various models.",
+   "page": 7,
+   "why": "Links minimum length to engagement"
+  },
+  {
+   "figure": "Fig A.20",
+   "caption": "Examples of issues created by paper authors with our Generative BST 2.7B model",
+   "page": 24,
+   "why": "Hallucination vs retrieval examples"
+  }
+ ],
+ "code": [
+  {
+   "where": "App B.4 Eq 1",
+   "snippet": "L_ULE = L_MLE + alpha * L_UL",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Conversation screenshots are images and did not extract; figures A.15 and A.21 text did extract",
+  "No embedded instructions found"
+ ]
 }

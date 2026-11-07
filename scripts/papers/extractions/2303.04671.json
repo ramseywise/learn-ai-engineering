@@ -1,0 +1,251 @@
+{
+ "schema": 1,
+ "key": "2303.04671",
+ "pdf": "ai-engineering/08-multimodal-engineering/sources/wu-2023-visual-chatgpt.pdf",
+ "bib": {
+  "title": "Visual ChatGPT: Talking, Drawing and Editing with Visual Foundation Models",
+  "authors": [
+   "Chenfei Wu",
+   "Shengming Yin",
+   "Weizhen Qi",
+   "Xiaodong Wang",
+   "Zecheng Tang",
+   "Nan Duan"
+  ],
+  "first_author": "Wu",
+  "year": 2023,
+  "venue": "preprint",
+  "arxiv": "2303.04671",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 68101,
+  "chars_total": 68101,
+  "engine": "pymupdf",
+  "skipped": "Reference list skimmed; appendix tool prompts read in part (tool list and prompts)."
+ },
+ "type": "system",
+ "question": "Can ChatGPT be given image understanding, generation and editing by wiring in existing visual foundation models through prompts, without training a new multimodal model?",
+ "hypothesis": "A prompt manager that describes tools and converts visual signals to text lets ChatGPT orchestrate VFMs over multiple steps.",
+ "contributions": [
+  "We propose Visual ChatGPT, which opens the door of combining ChatGPT and Visual Foundation Models and enables ChatGPT to handle complex visual tasks;",
+  "We design a Prompt Manager, in which we involve 22 different VFMs and define the internal correlation among them for better interaction and combination;",
+  "Massive zero-shot experiments are conducted and abundant cases are shown to verify the understanding and generation ability of Visual ChatGPT."
+ ],
+ "method": {
+  "summary": "ChatGPT (text-davinci-003) driven through LangChain, with a Prompt Manager that injects system principles, tool descriptions (name, usage, inputs/outputs, optional example), unique and chained image filenames, and a forced 'Thought: Do I need to use a tool?' suffix. 22 off-the-shelf VFMs are tools. Nothing is trained; evidence is qualitative case studies.",
+  "task": "multimodal dialogue with tool-using LLM: VQA, image generation, image editing",
+  "trains": false,
+  "datasets": [],
+  "models": [
+   {
+    "name": "ChatGPT (OpenAI text-davinci-003)",
+    "role": "base",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "chat_history_max_length": "2,000 (excess tokens truncated)"
+    }
+   },
+   {
+    "name": "22 VFMs (BLIP, Stable Diffusion v1.5 and inpainting, InstructPix2Pix, MaskFormer, ControlNet variants, M-LSD, HED, Uniformer, MiDaS, OpenPose, Canny)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": "chat history capped at 2,000 (excess truncated)",
+   "samples": null,
+   "prompting": "Zero-shot ReAct-style tool prompt via LangChain; system principles, tool name/usage/IO/optional example, force-VFM-thinking suffix, chained filenames",
+   "retrieval": null,
+   "parameters": {
+    "models_deployed": "22 VFMs need 4 Nvidia V100 GPUs for full deployment"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [],
+   "baselines": [],
+   "protocol": "Qualitative case studies and ablations by removing parts of the prompt (Figs 4-7); no quantitative metric."
+  },
+  "availability": {
+   "code": "https://github.com/microsoft/visual-chatgpt",
+   "weights": null,
+   "data": null
+  },
+  "prompts": [
+   {
+    "purpose": "Force VFM thinking suffix appended to each user query",
+    "text": "Since Visual ChatGPT is a text language model, Visual ChatGPT must use tools to observe images rather than imagination. The thoughts and observations are only visible for Visual ChatGPT, Visual ChatGPT should remember to repeat important information in the final response for Human. Thought: Do I need to use a tool?",
+    "where": "Sec 3.3"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Full deployment of all VFMs needs four V100 GPUs.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GPUs",
+   "value": "4",
+   "unit": "Nvidia V100",
+   "baseline_value": null,
+   "n": null,
+   "setup": "All 22 VFMs deployed together alongside ChatGPT API",
+   "quote": "The fully deployment of all the 22 VFMs re-quires 4 Nvidia V100 GPUs",
+   "table": null,
+   "note": "Text has a hyphenation break 're-quires'",
+   "where": "Sec 4.1"
+  },
+  {
+   "claim": "The system integrates 22 VFMs.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 1",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Sec 1, Table 1"
+  },
+  {
+   "claim": "Evidence is a 16-round qualitative dialogue and prompt-ablation case studies only; no benchmark, baseline or metric is reported.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Figs 4-7",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2-4.3"
+  }
+ ],
+ "limits": [
+  "Depends heavily on ChatGPT and the VFMs.",
+  "Heavy prompt engineering needed.",
+  "Limited real-time capability: chains of VFMs are slow.",
+  "Token length limits how many tools fit; a pre-filter may be needed for thousands of tools.",
+  "Security and privacy concerns for plug-in remote models.",
+  "Some generations are unsatisfying because of VFM failure and prompt instability; self-correction module left to future work.",
+  "No quantitative evaluation; case studies only."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Prompt Manager",
+   "definition": "converts all the visual signals into language so that ChatGPT model can understand",
+   "where": "Sec 3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "InstructGPT / ChatGPT",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "LLM backbone (text-davinci-003)",
+   "quote": null
+  },
+  {
+   "work": "Stable Diffusion (Rombach)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "text-to-image and inpainting tool",
+   "quote": null
+  },
+  {
+   "work": "InstructPix2Pix (Brooks)",
+   "year": 2022,
+   "arxiv": "2211.09800",
+   "relation": "uses-method",
+   "note": "text-instructed editing tool",
+   "quote": null
+  },
+  {
+   "work": "ControlNet (Zhang)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "conditional generation tools",
+   "quote": null
+  },
+  {
+   "work": "BLIP",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "captioning and VQA tool",
+   "quote": null
+  },
+  {
+   "work": "Multimodal-CoT",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "CoT with vision limited to ScienceQA",
+   "quote": null
+  },
+  {
+   "work": "LangChain",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "tool orchestration",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "Overview of Visual ChatGPT.",
+   "page": 3,
+   "why": "Shows the iterative tool loop."
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Overview of Prompt Manager.",
+   "page": 4,
+   "why": "Shows the prompt components."
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Foundation models supported by Visual ChatGPT.",
+   "page": 4,
+   "why": "Lists 22 tools."
+  }
+ ],
+ "code": [],
+ "problems": []
+}

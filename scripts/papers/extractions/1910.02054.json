@@ -1,0 +1,597 @@
+{
+ "schema": 1,
+ "key": "1910.02054",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/rajbhandari-2020-zero.pdf",
+ "bib": {
+  "title": "ZeRO: Memory Optimizations Toward Training Trillion Parameter Models",
+  "authors": [
+   "Samyam Rajbhandari",
+   "Jeff Rasley",
+   "Olatunji Ruwase",
+   "Yuxiong He"
+  ],
+  "first_author": "Rajbhandari",
+  "year": 2020,
+  "venue": "preprint",
+  "arxiv": "1910.02054",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 67057,
+  "chars_total": 67057,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "system",
+ "question": "How can data-parallel training remove its memory redundancy so models of billions to trillions of parameters fit and train efficiently on current GPUs?",
+ "hypothesis": "Partitioning optimizer states, gradients and parameters across data-parallel ranks (instead of replicating them) gives MP-like memory efficiency with DP-like compute and communication efficiency.",
+ "contributions": [
+  "ZeRO-DP: staged partitioning of optimizer states, gradients and parameters (Pos, Pos+g, Pos+g+p)",
+  "ZeRO-R: partitioned activation checkpointing, constant-size buffers, memory defragmentation",
+  "Memory and communication analysis showing potential to train over 1T parameters",
+  "ZeRO-100B implementation (Pos+g + ZeRO-R) trained 100B+ models with super-linear scaling, and powered Turing-NLG 17B"
+ ],
+ "method": {
+  "summary": "System paper. Analyses where training memory goes (model states 16 bytes/param for mixed-precision Adam, plus residual states) and partitions them across data-parallel ranks. Implements Pos+g plus ZeRO-R as ZeRO-100B in PyTorch and measures throughput and max model size on 400 V100 GPUs against torch DDP and Megatron-LM.",
+  "task": "memory-efficient distributed training of GPT-2-like transformers",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "not stated (throughput runs); Turing-NLG validation reported on Webtext-103",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": null,
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT-2-like transformers, 1.16B to 170B",
+    "role": "evaluated",
+    "params": "1.16B-170B",
+    "architecture": "GPT-2-like decoder transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "24 to 212 (Table 4)",
+    "hidden": "1600 to 8192 (Table 4)",
+    "heads": "16 to 128 (Tables 5-10)",
+    "context": "inferred: 1024 from the Sec 6.1 activation example; throughput-run sequence length not stated",
+    "other": {
+     "configs": "Tables 4-10 give layers, hidden size, heads, per-GPU batch, total batch, MP degree per run"
+    }
+   },
+   {
+    "name": "Turing-NLG",
+    "role": "proposed",
+    "params": "17B",
+    "architecture": "language model trained with ZeRO-100B",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Megatron-LM 8.3B",
+    "role": "baseline",
+    "params": "8.3B",
+    "architecture": "transformer with tensor MP",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": null,
+   "optimizer": "Adam (mixed precision, K=12) in the memory analysis; optimizer for throughput runs not stated",
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "per Tables 5-10, e.g. total batch 1600 for 60B on 400 GPUs; 800 for 100B",
+   "steps": "300K iterations (Turing-NLG validation curve)",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "inferred: 1024 from Sec 6.1 example",
+   "precision": "mixed fp16/fp32",
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "400 V100 32GB GPUs (25 DGX-2 nodes), 800 Gbps internode; NVSwitch 300GB/s intra, Infiniband EDR 12.5GB/s per link inter",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "configs_C1_to_C5": "C1 Pos+CB+MD; C2 Pos+CB+MD+Pa; C3 Pos+g+CB+MD; C4 Pos+g+CB+MD+Pa; C5 Pos+g+CB+MD+Pa+cpu (Table 3)",
+    "software": "PyTorch; baseline Megatron-LM NVIDIA open-source Sept 2019; baseline without MP is torch DDP",
+    "baseline_gpu_count": "baseline uses lowest power-of-2 GPU count that fits (256 or 384 vs 400 for ZeRO)"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "not stated; no repeats, seeds or error bars reported",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "throughput per GPU",
+     "definition": "TFlops per GPU sustained",
+     "unit": "TFlops",
+     "higher_is_better": true
+    },
+    {
+     "name": "aggregate throughput",
+     "definition": "sum over GPUs",
+     "unit": "PetaFlops",
+     "higher_is_better": true
+    },
+    {
+     "name": "max trainable model size",
+     "definition": "largest parameter count that fits",
+     "unit": "parameters",
+     "higher_is_better": true
+    },
+    {
+     "name": "validation perplexity",
+     "definition": "Turing-NLG on Webtext-103",
+     "unit": "perplexity",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "torch DistributedDataParallel (no MP)",
+    "Megatron-LM MP (Sept 2019)"
+   ],
+   "protocol": "single run per configuration as far as stated; no variance reported"
+  },
+  "availability": {
+   "code": "DeepSpeed, https://github.com/microsoft/deepspeed; paper says stage 3 (Pos+g+p) not yet implemented and to be released",
+   "weights": null,
+   "data": null
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "models.params / Table 2 theoretical",
+    "quote": "Table 2: Maximum model size through memory analysis (left) and the measured model size",
+    "where": "Table 2"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "ZeRO-100B trains models up to 170B parameters on 400 V100 GPUs, over 8x larger than Megatron-LM alone.",
+   "kind": "measured",
+   "source": null,
+   "metric": "max efficiently trainable model size",
+   "value": "170B",
+   "unit": "parameters",
+   "baseline_value": null,
+   "n": null,
+   "setup": "400 V100 32GB GPUs (25 DGX-2), ZeRO-100B (Pos+g + ZeRO-R) with 16-way MP vs Megatron-LM, GPT-2-like models",
+   "note": null,
+   "where": "Sec 10.2",
+   "quote": "ZeRO-100B eﬃciently run models with up to 170B parameters on 400 GPUs, more than 8x bigger than Megatron-LM."
+  },
+  {
+   "claim": "Sustained aggregate throughput of 15 Petaflops on 400 GPUs for 8B-100B models.",
+   "kind": "measured",
+   "source": null,
+   "metric": "aggregate throughput",
+   "value": "15",
+   "unit": "PetaFlops",
+   "baseline_value": null,
+   "n": null,
+   "setup": "400 V100 GPUs, ZeRO-100B with MP, models 8B to 100B; over 30% of peak",
+   "note": null,
+   "where": "Sec 10.2",
+   "quote": "ZeRO-100B achieves a sustained throughput of 15 PetaFlops (over 30% of the peak) on average for models with 8B to 100B parameters."
+  },
+  {
+   "claim": "ZeRO-100B reaches over 38 TFlops per GPU on a 100B model on 400 GPUs.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "38",
+   "unit": "TFlops per GPU",
+   "baseline_value": null,
+   "n": null,
+   "setup": "100B model, 400 V100 GPUs, ZeRO-100B + 16-way MP",
+   "note": "Quote spans a footnote marker in extracted text; same figure at Sec 1 'over 38 TFlops per GPU'",
+   "where": "Sec 1",
+   "quote": "ZeRO runs 100B parameter models on a 400 Nvidia V100 GPU cluster with over\n1Prior work [8]"
+  },
+  {
+   "claim": "Up to 10x speedup over baseline Megatron-LM, largest on large models.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "10x",
+   "unit": "speedup",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 2, per-GPU throughput, ZeRO-100B+MP vs Megatron MP; baseline uses 256-384 GPUs vs 400 for ZeRO",
+   "note": "Baseline given fewer GPUs (lowest power of 2 that fits), which the authors say favours the baseline",
+   "where": "Sec 10.2",
+   "quote": "ZeRO-100B achieves up to 10x speedup over baseline, signiﬁcantly outperforming on\nlarge models."
+  },
+  {
+   "claim": "Super-linear scaling of a 60B model from 64 to 400 GPUs: throughput more than doubles when GPUs double.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "60B model, 64 to 400 GPUs, Pos+g, batch per GPU grows as DP degree rises (Table 6)",
+   "note": null,
+   "where": "Sec 1, Fig 3",
+   "quote": "We observe super linear speedup in the regime of 64-400 GPUs, where the perfor-\nmance more than doubles when we double the number of GPUs."
+  },
+  {
+   "claim": "ZeRO-100B trains up to 13B parameter models with no MP on 128 GPUs at over 40 TFlops per GPU; plain DP tops out at 1.4B under 20 TFlops.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "13B",
+   "unit": "parameters",
+   "baseline_value": null,
+   "n": null,
+   "setup": "128 V100 GPUs, DP only, ZeRO-100B vs torch DDP; throughput average",
+   "note": null,
+   "where": "Sec 10.4, Fig 4",
+   "quote": "shows that ZeRO-100B can train models with up to 13B parameters without MP on 128 GPUs,\nachieving throughput over 40 TFlops per GPU on average."
+  },
+  {
+   "claim": "Baseline DDP runs out of memory above 1.4B parameters on 32 GB V100s.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "1.4B",
+   "unit": "parameters",
+   "baseline_value": null,
+   "n": null,
+   "setup": "torch DDP, 32 GB V100",
+   "note": null,
+   "where": "Sec 10.4",
+   "quote": "the largest trainable model with DP alone has 1.4B parameters with throughput less than 20 TFlops\nper GPU."
+  },
+  {
+   "claim": "Mixed-precision Adam needs 16 bytes per parameter (2 fp16 weights + 2 fp16 grads + 12 fp32 optimizer states, K=12); a 1.5B GPT-2 needs at least 24 GB vs 3 GB for fp16 weights.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": "16",
+   "unit": "bytes per parameter",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Mixed-precision (fp16/32) Adam, model states only, no activations",
+   "note": null,
+   "where": "Sec 3.1",
+   "quote": "In total, this results in 2Ψ + 2Ψ + KΨ = 16Ψ bytes\nof memory requirement."
+  },
+  {
+   "claim": "Pos cuts model-state memory 4x, Pos+g 8x, Pos+g+p by Nd; e.g. 7.5B model at Nd=64 needs 120 GB (DP), 31.4 GB (Pos), 16.6 GB (Pos+g), 1.88 GB (Pos+g+p).",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": "1.88",
+   "unit": "GB per device",
+   "baseline_value": null,
+   "n": null,
+   "setup": "7.5B model, Nd=64, K=12, per-device model-state memory (analytic)",
+   "note": "Text in Sec 5.3 prints 1.9 GB for the same cell",
+   "where": "Table 1, Sec 5",
+   "table": "Table 1, row 64, column 7.5B Pos+g+p"
+  },
+  {
+   "claim": "Communication volume: Pos and Pos+g equal baseline DP (2Psi); Pos+g+p is 3Psi, 1.5x baseline.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": "1.5x",
+   "unit": "communication volume vs DP",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Analytic, per training step, per data-parallel process",
+   "note": null,
+   "where": "Sec 7.2.2",
+   "quote": "The total volume is therefore 3Ψ which is 1.5x compared to the\nbaseline."
+  },
+  {
+   "claim": "Partitioned activation checkpointing cuts checkpoint memory for a 100B model from about 33 GB to about 2 GB per GPU.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": "2",
+   "unit": "GB per GPU",
+   "baseline_value": null,
+   "n": null,
+   "setup": "100B model, batch 32, seq len 1024, MP 16, one checkpoint per transformer layer (analytic)",
+   "note": null,
+   "where": "Sec 6.1",
+   "quote": "it would require about 33 GB of memory per GPU\njust to store the activation checkpoints. But with Pa in ZeRO, it can be reduced to about 2 GB\nper GPU."
+  },
+  {
+   "claim": "Pa communication overhead is under 10% of Megatron MP communication volume.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": "10%",
+   "unit": "of MP communication",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Megatron-LM transformer block with activation checkpointing (analytic)",
+   "note": null,
+   "where": "Sec 8",
+   "quote": "the total communication overhead of Pa is less than 10% of the original communication volume for model\nparallelism."
+  },
+  {
+   "claim": "Max model size with ZeRO configs at MP 16, fixed batch: C1 40B, C2 60B, C4 140B, C5 150B.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "150B",
+   "unit": "parameters",
+   "baseline_value": null,
+   "n": null,
+   "setup": "128 GPUs, MP 16, fixed batch size, Config 5 = Pos+g + CB+MD+Pa+cpu (Table 3, Fig 6/Table 9)",
+   "note": "Text refers to this as Figure 6 but the figure list in text/captions labels differ (Fig 4 'Max model throughput' vs Fig 6 'Max model size'); Table 7 labels it Figure 4",
+   "where": "Sec 10.5",
+   "quote": "The increase to 150B using C5 is\nsolely due to further reduction in activation memory from oﬄoading the partitioned activation\ncheckpoints to the CPU memory."
+  },
+  {
+   "claim": "Turing-NLG (17B) trained with ZeRO-100B reached WikiText-103 perplexity 10.21, new SOTA, at 41.4 TFlops/GPU.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "10.21",
+   "unit": "perplexity",
+   "baseline_value": null,
+   "n": null,
+   "setup": "17B parameter Turing-NLG, validation perplexity over 300K iterations vs Megatron-LM 8.3B; text says Webtext-103",
+   "note": "Paper prints 'Webtext-103' (probably WikiText-103); throughput 41.4 TFlops/GPU in Sec 10.6",
+   "where": "Sec 10.6",
+   "quote": "It achieved the new SOTA for language models with Webtext-103 perplexity of 10.21."
+  },
+  {
+   "claim": "Megatron-LM 40B across two DGX-2 nodes reaches only about 5 TFlops per V100 (under 5% of peak).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "5",
+   "unit": "Tflops per GPU",
+   "baseline_value": null,
+   "n": null,
+   "setup": "40B Megatron-LM, two DGX-2 nodes",
+   "note": null,
+   "where": "Sec 1",
+   "quote": "We tested a 40B parameter model\nusing Megatron-LM across two DGX-2 nodes and observe about 5 Tflops per V100 GPU (less\nthan 5% of hardware peak)."
+  },
+  {
+   "claim": "A 1T-parameter model on 1024 GPUs holds 16 GB of model state per GPU with Pos+g+p (about 16 TB in total).",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": "16",
+   "unit": "GB per GPU",
+   "baseline_value": null,
+   "n": null,
+   "setup": "1T params, Adam 16-bit mixed precision, 1024 GPUs (analytic)",
+   "note": null,
+   "where": "Sec 1",
+   "quote": "16TB divided by 1024 is 16GB, which is well within a reasonable\nbound for a GPU (e.g., with 32GB of on-device memory)."
+  },
+  {
+   "claim": "Training a 1T model would take about 140 days on BERT-Large-equivalent hardware and efficiency, over a year in practice.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Back-of-envelope vs Bert-Large 67 min on 1024 GPU DGX-2H; assumes same samples and sequence length",
+   "note": null,
+   "where": "Sec 9",
+   "quote": "training a 1T model would take 140 days, assuming the same hardware and similar computational eﬃciency."
+  }
+ ],
+ "limits": [
+  "Only Pos+g and ZeRO-R implemented (ZeRO-100B); Pos+g+p (stage 3) and the trillion-parameter claims are analytic, not measured",
+  "1T training would take over a year on current hardware; compute gap acknowledged",
+  "Baseline given fewer GPUs than ZeRO (256/384 vs 400), which the authors say favours the baseline",
+  "No learning rate, optimizer settings, dataset, sequence length or seeds for throughput runs; single measurements without variance",
+  "Convergence at large batch is out of scope; authors assert batch size stays small enough",
+  "Peak figures are for V100 32GB with NVSwitch; hardware has dated"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "model states",
+   "definition": "optimizer states, gradients, and parameters",
+   "where": "Sec 1"
+  },
+  {
+   "term": "residual states",
+   "definition": "activation, temporary buﬀers and unusable fragmented memory",
+   "where": "Sec 1"
+  },
+  {
+   "term": "K",
+   "definition": "memory multiplier of optimizer states; mixed-precision Adam has K = 12",
+   "where": "Sec 3.1"
+  },
+  {
+   "term": "Pos / Pg / Pp",
+   "definition": "partitioning of optimizer states, gradients, parameters across data-parallel processes",
+   "where": "Sec 5"
+  },
+  {
+   "term": "ZeRO-100B",
+   "definition": "Pos+g of ZeRO-DP plus ZeRO-R",
+   "where": "Sec 1"
+  },
+  {
+   "term": "Pa / Pa+cpu",
+   "definition": "partitioned activation checkpointing, optionally offloaded to CPU",
+   "where": "Sec 6.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Megatron-LM",
+   "year": 2019,
+   "arxiv": "1909.08053",
+   "relation": "baseline",
+   "note": "MP baseline (Sept 2019 open-source version) and the model-parallel system ZeRO combines with",
+   "quote": null
+  },
+  {
+   "work": "Mesh-TensorFlow",
+   "year": 2018,
+   "arxiv": "1811.02084",
+   "relation": "related",
+   "note": "MP implementation behind T5",
+   "quote": null
+  },
+  {
+   "work": "T5",
+   "year": 2019,
+   "arxiv": "1910.10683",
+   "relation": "related",
+   "note": "11B model cited as largest published",
+   "quote": null
+  },
+  {
+   "work": "GPipe",
+   "year": 2018,
+   "arxiv": "1811.06965",
+   "relation": "related",
+   "note": "pipeline parallelism, needs large batch",
+   "quote": null
+  },
+  {
+   "work": "PipeDream",
+   "year": 2018,
+   "arxiv": "1806.03377",
+   "relation": "related",
+   "note": "pipeline parallelism with stale weights",
+   "quote": null
+  },
+  {
+   "work": "Mixed precision training",
+   "year": 2017,
+   "arxiv": "1710.03740",
+   "relation": "uses-method",
+   "note": "fp16/fp32 training whose K=12 optimizer memory ZeRO partitions",
+   "quote": null
+  },
+  {
+   "work": "Adam",
+   "year": 2015,
+   "arxiv": "1412.6980",
+   "relation": "uses-method",
+   "note": "optimizer used in memory accounting",
+   "quote": null
+  },
+  {
+   "work": "Training deep nets with sublinear memory cost",
+   "year": 2016,
+   "arxiv": "1604.06174",
+   "relation": "uses-method",
+   "note": "activation checkpointing that ZeRO-R builds on",
+   "quote": null
+  },
+  {
+   "work": "GPT-2",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "architecture of all evaluated models",
+   "quote": null
+  },
+  {
+   "work": "Training large neural networks with constant memory",
+   "year": 2020,
+   "arxiv": "2002.05645",
+   "relation": "related",
+   "note": "CPU offload",
+   "quote": null
+  },
+  {
+   "work": "Adafactor",
+   "year": 2018,
+   "arxiv": "1804.04235",
+   "relation": "related",
+   "note": "memory-efficient optimizer, orthogonal",
+   "quote": null
+  },
+  {
+   "work": "An empirical model of large-batch training",
+   "year": 2018,
+   "arxiv": "1812.06162",
+   "relation": "related",
+   "note": "critical batch size caveat",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Comparing the per-device memory consumption of model states, with three stages of ZeRO-DP optimizations.",
+   "page": 3,
+   "why": "Shows 120 GB to 1.9 GB for 7.5B at Nd=64 across stages"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Per-device memory consumption of different optimizations in ZeRO-DP as a function of DP degree.",
+   "page": 11,
+   "why": "Gives per-device GB for 7.5B, 128B, 1T models by DP degree"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "ZeRO training throughput and speedup w.r.t SOTA baseline for varying model sizes.",
+   "page": 4,
+   "why": "Headline throughput vs Megatron"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Superlinear scalability and per GPU training throughput of a 60B parameter model using ZeRO-100B.",
+   "page": 5,
+   "why": "Super-linear scaling evidence"
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 3.1",
+   "snippet": "2Ψ + 2Ψ + KΨ = 16Ψ bytes",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Paper says Turing-NLG perplexity on 'Webtext-103' (likely WikiText-103)",
+  "Figure numbering in Sec 10.5 text does not match the Table 7-9 appendix labels",
+  "Table 1 and Sec 5.3 print 1.88 GB vs 1.9 GB for the same cell",
+  "PDF is arXiv v3 (13 May 2020), not the SC 2020 camera-ready"
+ ]
+}

@@ -1,0 +1,478 @@
+{
+ "schema": 1,
+ "key": "2209.11515",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/kang-2023-large-language-models-few-shot.pdf",
+ "bib": {
+  "title": "Large Language Models are Few-shot Testers: Exploring LLM-based General Bug Reproduction",
+  "authors": [
+   "Sungmin Kang",
+   "Juyeon Yoon",
+   "Shin Yoo"
+  ],
+  "first_author": "Kang",
+  "year": 2023,
+  "venue": "preprint (arXiv v3, 25 Jul 2023)",
+  "arxiv": "2209.11515",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 71289,
+  "chars_total": 71289,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can an LLM prompted with a bug report generate bug reproducing tests for general (non-crash) bugs, and can post-processing tell when to trust them?",
+ "hypothesis": "Prompting Codex with a bug report, then executing, clustering and ranking its sampled tests, reproduces a substantial share of bugs and flags the reliable ones.",
+ "contributions": [
+  "An analysis of open source repositories to verify the importance of generating bug reproducing test cases from bug reports",
+  "A framework (LIBRO) to harness an LLM to reproduce bugs, and suggest generated tests to the developer only when the results are reliable",
+  "Extensive empirical analyses on two datasets (Defects4J and the new GHRB)"
+ ],
+ "method": {
+  "summary": "LIBRO builds a Markdown prompt from the bug report (optionally with example report-test pairs), samples tests from Codex at temperature 0.7, injects each into the lexically closest existing test class and resolves imports, runs them on the buggy program, clusters failing tests by failure output, and ranks them by report match, cluster size and test length. Selection shows results only if the largest failure cluster exceeds a threshold.",
+  "task": "bug report to bug-reproducing test generation (Java, JUnit)",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "Defects4J 2.0 (with bug reports)",
+    "role": "eval",
+    "size": "750 bugs (814 with a paired report; 58 incorrect pairings and 6 differing directory structures removed)",
+    "split": "all 750 evaluated; 60 bugs overlap JCrashPack for crash-tool comparison",
+    "source": "17 Java projects; Chart has only 8 reports",
+    "preprocessing": null
+   },
+   {
+    "name": "GHRB (GitHub Recent Bugs)",
+    "role": "eval",
+    "size": "31 bugs",
+    "split": "581 PRs after Codex cutoff -> 435 adding tests -> 84 merged, single-issue -> 31 where developer test fails pre-merge and passes post-merge",
+    "source": "17 GitHub JUnit repositories; PRs created after Codex training cutoff (July 2021)",
+    "preprocessing": null
+   },
+   {
+    "name": "Java-med (test-addition mining study)",
+    "role": "eval",
+    "size": "1000 top-starred Java projects; 970 cloned, 550 with JUnit, 300 with issue-referencing test-adding commit",
+    "split": "300 repositories analysed",
+    "source": "Alon et al. code2seq",
+    "preprocessing": "test-adding commit = diff adds @Test with body; issue link = 'fixes/resolves/closes #NUM' or PR mentioning an issue"
+   }
+  ],
+  "models": [
+   {
+    "name": "Codex code-davinci-002",
+    "role": "base",
+    "params": null,
+    "architecture": "GPT-3 fine-tuned on source code (per the paper)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "access": "OpenAI closed beta API",
+     "training_data_cutoff": "July 2021"
+    }
+   },
+   {
+    "name": "EvoCrash",
+    "role": "baseline",
+    "params": null,
+    "architecture": "search-based crash reproduction",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Copy&Paste",
+    "role": "baseline",
+    "params": null,
+    "architecture": "uses code snippets from the report (HTML pre tag or infoZilla) as the test",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "sampling; generation stops at first closing code fence",
+   "temperature": "0.7",
+   "top_p": null,
+   "max_tokens": "256",
+   "samples": "n=50 tests per bug in the default setting (two examples); n=10 settings for ablations; 1000 resamples for query-count simulation; random ranking baseline averaged over 100 runs",
+   "prompting": "Markdown document from report title and description, then 'Provide a self-contained example that reproduces this issue', an opening code fence and 'public void test'; default uses two handpicked report-test pairs (Time-24, Lang-1) for all projects; within-project variant uses oldest tests in project",
+   "retrieval": null,
+   "parameters": {
+    "agreement_threshold_Thr": "1 for main results (350 of 570 FIB bugs selected); 10 as aggressive value",
+    "test_class_matching": "sim = |Tt ∩ Tci| / |Tt| over token sets",
+    "ranking_order": "report-output match, then output cluster size, then token count; round-robin across clusters"
+   },
+   "other": {
+    "env": "Ubuntu 18.04.6, 32GB RAM, Intel i7-7700 3.60GHz, Python 3.9, javalang parser"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "reproduced bugs",
+     "definition": "bugs with at least one test that fails on the buggy version and passes on the fixed version (BRT)",
+     "unit": "count of bugs",
+     "higher_is_better": true
+    },
+    {
+     "name": "acc@n",
+     "definition": "number of bugs whose BRT is within top n ranked tests; precision = acc@n / selected bugs",
+     "unit": "count (fraction)",
+     "higher_is_better": true
+    },
+    {
+     "name": "wef@n",
+     "definition": "number of non-reproducing tests ranked above any BRT (total FIB count if none); wef@n over top n",
+     "unit": "tests",
+     "higher_is_better": false
+    },
+    {
+     "name": "FIB",
+     "definition": "tests that compile and fail in the buggy program",
+     "unit": "count",
+     "higher_is_better": null
+    }
+   ],
+   "baselines": [
+    "EvoCrash",
+    "Copy&Paste",
+    "random ranking of syntactic clusters"
+   ],
+   "protocol": "Defects4J uses PRE_FIX/POST_FIX revisions; GHRB uses pre/post-merge. EvoCrash judged under same BRT criterion. No significance test stated; single Codex run set per setting."
+  },
+  "availability": {
+   "code": "replication package at anonymous.4open.science (artifact)",
+   "weights": null,
+   "data": "artifact lists 17 GHRB repositories"
+  },
+  "prompts": [
+   {
+    "purpose": "instruction line of the LIBRO prompt; full template: Markdown title/description, '## Reproduction', this line as blockquote, an opening code fence, then 'public void test' (Listing 1)",
+    "text": "Provide a self-contained example that reproduces this issue.",
+    "where": "Listing 1"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "LIBRO reproduces 251 of 750 Defects4J bugs under the default two-example n=50 setting.",
+   "kind": "measured",
+   "source": null,
+   "metric": "bugs reproduced",
+   "value": "251",
+   "unit": "bugs of 750",
+   "baseline_value": null,
+   "n": 750,
+   "setup": "Defects4J 2.0, Codex code-davinci-002, temperature 0.7, 50 samples, two handpicked examples",
+   "quote": "we find that overall 251 bugs, or 33.5% of 750 studied Defects4J bugs, are reproduced by LIBRO",
+   "table": null,
+   "note": "Abstract says 33%, intro and text 33.5%",
+   "where": "Sec VI-A1"
+  },
+  {
+   "claim": "On the 31-bug post-cutoff GHRB set LIBRO reproduces 10 bugs.",
+   "kind": "measured",
+   "source": null,
+   "metric": "success rate",
+   "value": "32.2",
+   "unit": "%",
+   "baseline_value": null,
+   "n": 31,
+   "setup": "GHRB, same default setting, 50 trials",
+   "quote": "LIBRO can automatically generate bug reproducing tests for 10 bugs based on 50 trials, for a success rate of 32.2%",
+   "table": null,
+   "note": "10/31 is 32.26%; the paper prints 32.2%",
+   "where": "Sec VI-C1"
+  },
+  {
+   "claim": "Top-1 ranked test reproduces the bug for 149 bugs, versus 116 for random ranking.",
+   "kind": "measured",
+   "source": null,
+   "metric": "acc@1",
+   "value": "149",
+   "unit": "bugs",
+   "baseline_value": "116",
+   "n": 350,
+   "setup": "Defects4J, Thr=1, 350 selected bugs",
+   "quote": null,
+   "table": "Table VI, row n=1, column Defects4J acc@n LIBRO",
+   "note": null,
+   "where": "Table VI"
+  },
+  {
+   "claim": "Selection at Thr=1 picks 350 of 570 FIB bugs, 219 reproduced: precision 0.63, recall 0.87.",
+   "kind": "measured",
+   "source": null,
+   "metric": "precision",
+   "value": "0.63",
+   "unit": "fraction",
+   "baseline_value": null,
+   "n": 350,
+   "setup": "Defects4J, agreement threshold 1",
+   "quote": "Among the 570 bugs with a FIB, 350 bugs are selected.",
+   "table": null,
+   "note": null,
+   "where": "Sec VI-B3"
+  },
+  {
+   "claim": "Raising the threshold to 10 gives precision 0.84 at recall 0.42.",
+   "kind": "measured",
+   "source": null,
+   "metric": "precision",
+   "value": "0.84",
+   "unit": "fraction",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Defects4J, Thr=10",
+   "quote": "we can achieve a higher precision of 0.84 for a recall of 0.42",
+   "table": null,
+   "note": null,
+   "where": "Sec VI-B3"
+  },
+  {
+   "claim": "Two examples (n=50) reproduce 251 bugs; no-example n=10 reproduces 124 and two-example n=10 median 173.",
+   "kind": "measured",
+   "source": null,
+   "metric": "bugs reproduced",
+   "value": "124",
+   "unit": "bugs",
+   "baseline_value": "173",
+   "n": 750,
+   "setup": "Defects4J, n=10 samples per bug, no example",
+   "quote": null,
+   "table": "Table III, row No Example (n=10), column reproduced",
+   "note": "n=10 and n=50 rows differ in query count as well as examples",
+   "where": "Table III"
+  },
+  {
+   "claim": "A within-project example performs worse than a generic example because Codex copies it.",
+   "kind": "measured",
+   "source": null,
+   "metric": "bugs reproduced",
+   "value": "152",
+   "unit": "bugs",
+   "baseline_value": "166",
+   "n": 750,
+   "setup": "Defects4J, one example, n=10",
+   "quote": null,
+   "table": "Table III, row One Example from Source Project (n=10), column reproduced",
+   "note": "baseline is the One Example (n=10) row, 166",
+   "where": "Table III"
+  },
+  {
+   "claim": "Reproduced bugs grow logarithmically with the number of generated tests with no plateau.",
+   "kind": "measured",
+   "source": null,
+   "metric": "trend",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Defects4J, 1000 resamples from 50 tests per bug",
+   "quote": "The number of bugs reproduced increases logarithmically to the number of tests generated, with no sign of performance plateauing.",
+   "table": null,
+   "note": null,
+   "where": "RQ2-1, Fig 3"
+  },
+  {
+   "claim": "Stack traces help crash bugs, 84 versus 69 reproduced with one example.",
+   "kind": "measured",
+   "source": null,
+   "metric": "bugs reproduced",
+   "value": "84",
+   "unit": "bugs",
+   "baseline_value": "69",
+   "n": null,
+   "setup": "Defects4J crash bugs, one example, n=10",
+   "quote": null,
+   "table": "Table III, row One Example with Stack, Crash Bugs (n=10), column reproduced",
+   "note": null,
+   "where": "Table III"
+  },
+  {
+   "claim": "LIBRO reproduces 91 more unique bugs than EvoCrash (19 crash bugs).",
+   "kind": "measured",
+   "source": null,
+   "metric": "unique bugs",
+   "value": "91",
+   "unit": "bugs",
+   "baseline_value": null,
+   "n": null,
+   "setup": "JCrashPack and Defects4J overlap (60 bugs), BRT criterion",
+   "quote": "LIBRO reproduced 91 more unique bugs (19 being crash bugs) than EvoCrash",
+   "table": null,
+   "note": null,
+   "where": "RQ1-2"
+  },
+  {
+   "claim": "A 50-test run takes 444 s in total, 292 s of it API querying.",
+   "kind": "measured",
+   "source": null,
+   "metric": "time",
+   "value": "444",
+   "unit": "s",
+   "baseline_value": null,
+   "n": null,
+   "setup": "50 tests per bug on i7-7700 machine",
+   "quote": "LIBRO took an average of 444 seconds to generate 50 tests and process them",
+   "table": null,
+   "note": null,
+   "where": "RQ2-2, Table V"
+  },
+  {
+   "claim": "Median 28.4% ratio of tests added by issue-referencing commits to current suite size.",
+   "kind": "measured",
+   "source": null,
+   "metric": "median ratio",
+   "value": "28.4",
+   "unit": "%",
+   "baseline_value": null,
+   "n": 300,
+   "setup": "300 Java repositories from Java-med, Aug 2022 suite size",
+   "quote": "is 28.4%, suggesting that a significant number of tests are added due to bug reports",
+   "table": null,
+   "note": "Abstract says about 28%; paper says this is not the share of tests originating from reports",
+   "where": "Sec II"
+  },
+  {
+   "claim": "81% of tokens in generated tests overlap the report code snippets when snippets exist.",
+   "kind": "measured",
+   "source": null,
+   "metric": "token overlap",
+   "value": "81",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Defects4J reports with any code snippet",
+   "quote": "on average 81% of the tokens in the body of the LIBRO-generated test methods overlapped with the tokens in the code snippets",
+   "table": null,
+   "note": null,
+   "where": "Sec VII-B"
+  },
+  {
+   "claim": "Most common failure cause in 40 manually checked cases is missing helper definitions (13).",
+   "kind": "measured",
+   "source": null,
+   "metric": "failure cases",
+   "value": "13",
+   "unit": "of 40",
+   "baseline_value": null,
+   "n": 40,
+   "setup": "manual analysis of 40 Defects4J failures",
+   "quote": "happening in 13 cases, was a need of helper defini",
+   "table": null,
+   "note": null,
+   "where": "Sec VII-A"
+  }
+ ],
+ "limits": [
+  "Codex has likely seen the Defects4J projects; GHRB has only 31 bugs.",
+  "Authors concede results may not generalise to other languages or to projects unlike the model's training data.",
+  "Does not work for tests that need external files or unusual test infrastructure (Checkstyle 0/13, Closure 2/172).",
+  "Codex code-davinci-002 is a closed beta model that has since been retired.",
+  "No variance or significance test beyond resampling; ablations use n=10 versus default n=50."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "BRT",
+   "definition": "Bug Reproducing Test: a test that fails due to the bug specified in the report",
+   "where": "Sec III-D"
+  },
+  {
+   "term": "FIB",
+   "definition": "Fail In the Buggy program: a test that compiles and fails in the buggy program",
+   "where": "Sec III-D"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Language models are few-shot learners",
+   "year": 2020,
+   "arxiv": "2005.14165",
+   "relation": "uses-method",
+   "note": "few-shot examples in prompt, temperature 0.7",
+   "quote": null
+  },
+  {
+   "work": "Evaluating large language models trained on code (Codex)",
+   "year": 2021,
+   "arxiv": "2107.03374",
+   "relation": "evaluates",
+   "note": "the LLM used",
+   "quote": null
+  },
+  {
+   "work": "Defects4J",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "main benchmark",
+   "quote": null
+  },
+  {
+   "work": "EvoCrash (Soltani et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "crash reproduction baseline",
+   "quote": null
+  },
+  {
+   "work": "CodeT",
+   "year": 2022,
+   "arxiv": "2207.10397",
+   "relation": "related",
+   "note": "joint test and code generation",
+   "quote": null
+  },
+  {
+   "work": "AthenaTest (Tufano et al.)",
+   "year": 2020,
+   "arxiv": "2009.05617",
+   "relation": "related",
+   "note": "constructor context idea",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Overview of LIBRO",
+   "page": 2,
+   "why": "four-stage pipeline: prompt, query, postprocess, select and rank"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Generation attempts to performance. Left depicts bugs reproduced as attempts increase, right for FIB",
+   "page": 6,
+   "why": "shows log-linear gain with more samples"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Table cells are flattened by text extraction; Table III and VI values were matched by row order.",
+  "Text says GHRB issue #2685 in one place and Issue #2666 in the table caption (paper inconsistency)."
+ ]
+}

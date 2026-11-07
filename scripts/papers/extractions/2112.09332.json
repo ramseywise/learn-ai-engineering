@@ -1,0 +1,569 @@
+{
+ "schema": 1,
+ "key": "2112.09332",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/nakano-2021-webgpt.pdf",
+ "bib": {
+  "title": "WebGPT: Browser-assisted question-answering with human feedback",
+  "authors": [
+   "Reiichiro Nakano",
+   "Jacob Hilton",
+   "Suchir Balaji",
+   "Jeff Wu",
+   "Long Ouyang",
+   "Christina Kim",
+   "Christopher Hesse",
+   "Shantanu Jain",
+   "Vineet Kosaraju",
+   "William Saunders",
+   "Xu Jiang",
+   "Karl Cobbe",
+   "Tyna Eloundou",
+   "Gretchen Krueger",
+   "Kevin Button",
+   "Matthew Knight",
+   "Benjamin Chess",
+   "John Schulman"
+  ],
+  "first_author": "Nakano",
+  "year": 2021,
+  "venue": "preprint",
+  "arxiv": "2112.09332",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 93246,
+  "chars_total": 93246,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can a language model fine-tuned to use a text-based web browser, trained by imitation and human feedback, answer long-form questions with references at or above human quality?",
+ "hypothesis": "Optimising answer quality directly with human feedback on top of behavior cloning will exceed human demonstrators, which imitation alone would not.",
+ "contributions": [
+  "A text-based web-browsing environment a fine-tuned language model can interact with, allowing end-to-end improvement of retrieval and synthesis with imitation learning and RL",
+  "Answers with references collected while browsing, so labelers can judge factual accuracy without independent research"
+ ],
+ "method": {
+  "summary": "Fine-tune GPT-3 (760M, 13B, 175B) to browse the web via a text-only browser (Bing search, click, scroll, quote) and answer ELI5 questions with references. Pipeline: behavior cloning on ~6,000 human demonstrations, reward model on ~16,000 comparisons, then PPO RL and/or best-of-n rejection sampling against the RM. Evaluated by human preference on ELI5 and by TruthfulQA and TriviaQA.",
+  "task": "long-form question answering with browsing; behavior cloning, reward modeling, RL and rejection sampling from human feedback",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "ELI5 questions (demonstrations/comparisons)",
+    "role": "train",
+    "size": "5,711 demonstrations, 21,068 comparisons (ELI5 portion)",
+    "split": "disjoint question sets for BC, RM, RL; ~4% of demonstrations held out for BC validation; ELI5 test set for evaluation",
+    "source": "Fan et al. 2019 (Reddit r/explainlikeimfive)",
+    "preprocessing": "URLs kept in full; deleted/removed filtered; title and selftext joined by double newline; 'Explain: ' prepended to non-questions"
+   },
+   {
+    "name": "Other question sets (TriviaQA, ARC, hand-written, ELI5 fact-check)",
+    "role": "train",
+    "size": "Demonstrations: TriviaQA 143, ARC Challenge 43, ARC Easy 83, hand-written 162, ELI5 fact-check 67; comparisons: 134, 84, 77, 0, 185",
+    "split": "n/a",
+    "source": "Joshi et al. 2017; Bhakthavatsalam et al. 2021; own",
+    "preprocessing": "ARC converted to free-form with options listed"
+   },
+   {
+    "name": "Comparison dataset (total)",
+    "role": "train",
+    "size": "21,548 comparisons collected; final RMs trained on ~16,000, ~5,500 eval only; 19,578 released",
+    "split": "RM comparisons from ad-hoc models of various sizes (mostly 175B)",
+    "source": "Contractors: ~25% from 10 Upwork, ~75% from 46 Surge AI",
+    "preprocessing": "only final overall-usefulness rating used; 'much better' and 'better' collapsed; ties as soft 50% labels"
+   },
+   {
+    "name": "RL question mix",
+    "role": "train",
+    "size": "90% ELI5, 10% TriviaQA",
+    "split": "disjoint from BC and RM questions",
+    "source": "",
+    "preprocessing": "randomised max browsing actions uniform 20-100; 15 extra answering-only episodes per episode"
+   },
+   {
+    "name": "TruthfulQA",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Lin et al. 2021",
+    "preprocessing": "WebGPT answers truncated to 50 tokens, trailing partial sentence removed; 74 answers (~3%) became empty"
+   },
+   {
+    "name": "TriviaQA dev",
+    "role": "eval",
+    "size": null,
+    "split": "development splits from Lewis et al. 2020b",
+    "source": "Joshi et al. 2017",
+    "preprocessing": "GPT-3 175B fine-tuned on 256 questions (batch 32, lr 1.5e-6) to extract short answers from WebGPT output"
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT-3 760M/13B/175B BC policy",
+    "role": "base",
+    "params": "760M, 13B, 175B",
+    "architecture": "GPT-3 decoder-only",
+    "init_from": "GPT-3 model family",
+    "tokenizer": "GPT-2 tokenizer (stated for released dataset tokens)",
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Reward model",
+    "role": "reward",
+    "params": "760M, 13B, 175B",
+    "architecture": "BC model with final unembedding layer removed, scalar output",
+    "init_from": "BC model",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "validation RM": "175B RM trained on a separate dataset split, used for scaling experiments"
+    }
+   },
+   {
+    "name": "WebGPT 760M best-of-4 / 13B best-of-16 / 175B best-of-64",
+    "role": "proposed",
+    "params": "760M, 13B, 175B",
+    "architecture": "BC then rejection sampling against RM of same size",
+    "init_from": "GPT-3",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "UnitedQA-E / UnitedQA hybrid",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "BC: supervised on human browse commands; RM: cross-entropy on pairwise comparisons, reward as Elo logit, ties soft 50%; RL: PPO with RM score at episode end plus per-token KL penalty from BC model",
+   "optimizer": "Adam; step size = multiplier x GPT-3 pretraining step size (760M 2.5e-4, 13B 1.0e-4, 175B 0.6e-4)",
+   "lr": "Adam step multiplier: BC 0.1; RM 0.05 (1/60 for 175B RM); RL 0.004",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "BC minibatch 512 (256 for 760M); RM minibatch 64 (32 for 175B RM); RL 256 parallel envs x 256 timesteps per rollout, 128 minibatches per epoch",
+   "steps": "RL stop: 19 PPO iterations (760M), 30 (13B), 18 (175B)",
+   "epochs": "BC upper bound 12, stopped at 2 (760M), 5 (13B), 3 (175B); RM upper bound 6, stopped at 1; RL 1 epoch",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "KL reward coefficient 0.02; entropy coefficient 0; EMA of weights decay 0.99 for BC and RM (Polyak-Ruppert); early stopping",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": "PPO iterations last multiple hours",
+   "seeds": null,
+   "other": {
+    "PPO": "clip 0.2, GAE gamma 1, lambda 0.95, advantage normalization yes, reward normalization no, answer phases per browsing phase 16, max tokens per action 64",
+    "RL KL budget stop (per episode)": "10.5 nats (760M), 6.8 nats (13B), ~12 nats (175B)",
+    "separate policy and value networks": "yes, token-level value",
+    "bug": "EMA model not used for 760M and 13B RMs in RL",
+    "early stopping BC": "by RM score, not validation loss"
+   }
+  },
+  "inference": {
+   "decoding": "sampling; best-of-n rejection sampling with n in {4,16,64} from BC (or RL) model, pick top RM score",
+   "temperature": "0.8 (tuned by human evaluation)",
+   "top_p": null,
+   "max_tokens": "max 100 browsing actions; answers truncated to 50 tokens for TruthfulQA",
+   "samples": "best-of-4 (760M), 16 (13B), 64 (175B)",
+   "prompting": "environment state summary as text (Fig 1b); GPT-3 baselines on TruthfulQA use QA prompt and helpful prompt from Lin et al.",
+   "retrieval": "Microsoft Bing Web Search API; reddit.com and quora.com removed; pages simplified with Readability.js; pages with 10-gram overlap with question or reference answer censored",
+   "parameters": {
+    "actions": "Search, Clicked on link, Find in page, Quote, Scrolled up/down, Top, Back, End: Answer, End: Nonsense/Controversial"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Human preference",
+     "definition": "Share of comparisons where WebGPT answer preferred, ties as 50%, for overall usefulness, coherence, factual accuracy",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "TruthfulQA truthful / truthful and informative",
+     "definition": "Human evaluation for WebGPT; automated metric for GPT-3 baselines",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Validation RM score",
+     "definition": "Score of a 175B validation RM, Elo; 1 point = sigmoid(1) ~73% preference",
+     "unit": "Elo",
+     "higher_is_better": true
+    },
+    {
+     "name": "TriviaQA exact match",
+     "definition": "Exact match on dev splits",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "human demonstrations",
+    "ELI5 highest-voted reference answers",
+    "Krishna et al. 2021",
+    "GPT-3 (QA and helpful prompts)",
+    "BC model",
+    "RL model",
+    "UnitedQA"
+   ],
+   "protocol": "Human comparisons by contractors; error bars +/-1 standard error; detailed instructions for demonstration comparison, minimal instructions and new contractors for ELI5 reference comparison; no seeds reported"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "Comparison dataset of 19,578 items released at openaipublic.blob.core.windows.net/webgpt-answer-viewer/comparisons.jsonl"
+  },
+  "prompts": [
+   {
+    "purpose": "ELI5 fact-check question format",
+    "text": "Fact-check each of the claims in the following answer. <double new line>Question: <ELI5 question><double new line>Answer: <model answer>",
+    "where": "App B"
+   },
+   {
+    "purpose": "Minimal comparison instructions for ELI5 reference comparison",
+    "text": "Accuracy – which answer is more factually accurate?",
+    "where": "App F (minimal instructions; Coherence and Usefulness overall categories follow)"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training.lr",
+    "quote": null,
+    "where": "Table 6 and Table 7 (Adam step size multipliers)"
+   },
+   {
+    "field": "training.epochs",
+    "quote": null,
+    "where": "Table 8"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "175B best-of-64 WebGPT answers are preferred to human demonstrators' answers on ELI5",
+   "kind": "measured",
+   "source": null,
+   "metric": "WebGPT preferred (%)",
+   "value": "56",
+   "unit": "% preferred",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ELI5 test set, human comparisons with detailed criteria, ties as 50%, 175B BC + best-of-64 against 175B RM, temperature 0.8, max 100 browsing actions",
+   "note": null,
+   "where": "Sec 4.1",
+   "quote": "that are preferred to those written by our human demonstrators 56% of the time."
+  },
+  {
+   "claim": "Same model preferred to highest-voted ELI5 Reddit answer (references stripped, minimal instructions, new contractors)",
+   "kind": "measured",
+   "source": null,
+   "metric": "WebGPT preferred (%)",
+   "value": "69",
+   "unit": "% preferred",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ELI5 test set, 175B best-of-64, ties as 50%",
+   "note": null,
+   "where": "Sec 1, Sec 4.1",
+   "quote": "Our model’s answers are preferred 69% of the time."
+  },
+  {
+   "claim": "Krishna et al. 2021 best model is preferred to ELI5 reference answers only 23% of the time",
+   "kind": "reported",
+   "source": null,
+   "metric": null,
+   "value": "23",
+   "unit": "% preferred",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Prior work, same reference-answer comparison",
+   "note": null,
+   "where": "Sec 4.1",
+   "quote": "whose best model’s answers are preferred 23% of the time to the reference answers"
+  },
+  {
+   "claim": "Rejection sampling (best-of-64) of the BC model beats the BC model",
+   "kind": "measured",
+   "source": null,
+   "metric": "preferred over BC (%)",
+   "value": "68",
+   "unit": "% preferred",
+   "baseline_value": null,
+   "n": null,
+   "setup": "175B BC best-of-64 vs 175B BC, human preference",
+   "note": null,
+   "where": "Sec 5.1",
+   "quote": "BC model being preferred 68% of the time to the 175B BC model."
+  },
+  {
+   "claim": "RL (PPO) 175B model is preferred over the BC model, a smaller gain than rejection sampling",
+   "kind": "measured",
+   "source": null,
+   "metric": "preferred over BC (%)",
+   "value": "58",
+   "unit": "% preferred",
+   "baseline_value": null,
+   "n": null,
+   "setup": "175B RL vs 175B BC, human preference",
+   "note": null,
+   "where": "Sec 5.1",
+   "quote": "the 175B RL model being preferred 58% of the time to the 175B BC model."
+  },
+  {
+   "claim": "TruthfulQA: 175B best-of-64 answers are truthful 75% of the time",
+   "kind": "measured",
+   "source": null,
+   "metric": "% truthful",
+   "value": "75",
+   "unit": "% truthful",
+   "baseline_value": null,
+   "n": null,
+   "setup": "TruthfulQA, human evaluation, answers truncated to 50 tokens",
+   "note": "54% truthful and informative is in the same sentence; both read from Fig 3 in Sec 4.2, not tabulated",
+   "where": "Sec 1, Fig 3",
+   "quote": "answers are true 75% of the time, and are both true and informative 54% of the time, outperforming"
+  },
+  {
+   "claim": "Doubling demonstrations raises policy validation RM score by about 0.13",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "0.13",
+   "unit": "RM score (Elo units)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Validation 175B RM score, BC scaling across 760M/13B/175B",
+   "note": null,
+   "where": "Sec 5.2, Fig 6",
+   "quote": "doubling the number of demonstrations increased the policy’s reward model score by about 0.13,"
+  },
+  {
+   "claim": "Doubling comparisons raises RM accuracy by about 1.8%",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "1.8",
+   "unit": "% accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "RM scaling, validation split",
+   "note": null,
+   "where": "Sec 5.2, Fig 7",
+   "quote": "and doubling the number of comparisons increased the reward model’s accuracy by about 1.8%."
+  },
+  {
+   "claim": "Doubling policy parameters raises RM score by roughly 0.09 (noisy trend)",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "0.09",
+   "unit": "RM score (Elo units)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Validation 175B RM score",
+   "note": null,
+   "where": "Sec 5.2",
+   "quote": "increased its reward model score by roughly 0.09, and doubling the number of parameters in the"
+  },
+  {
+   "claim": "TriviaQA dev total exact match, GPT-3 175B fine-tuned on WebGPT 175B BC output",
+   "kind": "measured",
+   "source": null,
+   "metric": "exact match",
+   "value": "69.5",
+   "unit": "% exact match",
+   "baseline_value": "58.7 (GPT-3 175B alone); UnitedQA-E 68.9; UnitedQA hybrid 70.5",
+   "n": null,
+   "setup": "TriviaQA dev, 175B BC, no rejection sampling, temp 0.8; GPT-3 175B tuned on 256 questions to extract short answer",
+   "note": null,
+   "where": "App G",
+   "table": "Table 9, row GPT-3 175B + WebGPT 175B BC, column Total"
+  },
+  {
+   "claim": "Labeler agreement rates on comparisons",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "74",
+   "unit": "% agreement",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Researcher-labeler; labeler-labeler was 73%; neutral vs non-neutral counted as 50%",
+   "note": null,
+   "where": "App C",
+   "quote": "researcher-labeler agreement rate of 74%"
+  },
+  {
+   "claim": "Data collected: demonstrations and comparisons",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "6,209",
+   "unit": "examples (demonstrations)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Total over all question datasets; comparisons total 21,548; 5,711 ELI5 demos and 21,068 ELI5 comparisons",
+   "note": "Text says around 6,000 demonstrations and around 21,500 comparisons; final RMs used about 16,000 comparisons, 5,500 held for eval; released set is 19,578",
+   "where": "Sec 3.1, Table 4",
+   "table": "Table 4, row Total, column Demonstrations"
+  }
+ ],
+ "limits": [
+  "Out-of-distribution questions: WebGPT still quotes unreliable sources on TruthfulQA and can make more mistakes than humans there (Sec 6.1, 6.2)",
+  "Subtle hallucinations were hard for labelers to spot so non-imitative falsehoods were not tested directly",
+  "Reference-based evaluation incentivizes cherry-picking convincing references and accepting questions' implicit assumptions (Sec 6.4)",
+  "Question stance experiment is small (60 questions) and inconclusive (App H)",
+  "No compute, hardware or seeds reported; no code or weights released; RL used no EMA for 760M/13B RMs due to a bug",
+  "Rejection sampling vs RL comparison confounded by RL hyperparameter tuning and RM overoptimization; validation RM predictor expected to overestimate for large n"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Imitative falsehoods",
+   "definition": "False statements that are incentivized by the training objective (even in the limit of infinite data and compute), such as reproducing common misconceptions",
+   "where": "Sec 6.1"
+  },
+  {
+   "term": "Non-imitative falsehoods",
+   "definition": "False statements that are the result of the model failing to achieve its training objective, including most hallucinations",
+   "where": "Sec 6.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Learning to summarize from human feedback (Stiennon et al.)",
+   "year": 2020,
+   "arxiv": "2009.01325",
+   "relation": "extends",
+   "note": "RM Elo formulation, PPO with KL penalty and human feedback follow it",
+   "quote": "Following Stiennon et al. [2020], we use human feedback to directly optimize answer quality"
+  },
+  {
+   "work": "GPT-3 (Brown et al.)",
+   "year": 2020,
+   "arxiv": "2005.14165",
+   "relation": "uses-method",
+   "note": "Base models 760M, 13B, 175B",
+   "quote": null
+  },
+  {
+   "work": "PPO (Schulman et al.)",
+   "year": 2017,
+   "arxiv": "1707.06347",
+   "relation": "uses-method",
+   "note": "RL algorithm",
+   "quote": null
+  },
+  {
+   "work": "ELI5 (Fan et al.)",
+   "year": 2019,
+   "arxiv": "1907.09190",
+   "relation": "uses-data",
+   "note": "Main question set",
+   "quote": null
+  },
+  {
+   "work": "TruthfulQA (Lin et al.)",
+   "year": 2021,
+   "arxiv": "2109.07958",
+   "relation": "evaluates",
+   "note": "Truthfulness eval",
+   "quote": null
+  },
+  {
+   "work": "TriviaQA (Joshi et al.)",
+   "year": 2017,
+   "arxiv": "1705.03551",
+   "relation": "uses-data",
+   "note": "Short-form eval and RL mix",
+   "quote": null
+  },
+  {
+   "work": "Hurdles to progress in long-form question answering (Krishna et al.)",
+   "year": 2021,
+   "arxiv": "2103.06332",
+   "relation": "baseline",
+   "note": "Prior LFQA system; ROUGE-L found not meaningful",
+   "quote": null
+  },
+  {
+   "work": "UnitedQA (Cheng et al.)",
+   "year": 2021,
+   "arxiv": "2101.00178",
+   "relation": "baseline",
+   "note": "TriviaQA comparison",
+   "quote": null
+  },
+  {
+   "work": "REALM / RAG / DPR",
+   "year": 2020,
+   "arxiv": "2002.08909",
+   "relation": "related",
+   "note": "Differentiable retrieval, contrasted with search-engine browsing",
+   "quote": null
+  },
+  {
+   "work": "Boosting search engines with interactive agents (Adolphs et al.)",
+   "year": 2021,
+   "arxiv": "2109.00527",
+   "relation": "related",
+   "note": "BC and RL for search queries",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "Human evaluations on ELI5 comparing against (a) demonstrations collected using our web browser, (b) the highest-voted answer for each question.",
+   "page": 6,
+   "why": "Headline 56% and 69% preference by model size"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Preference of RL models over BC models, with and without rejection sampling.",
+   "page": 8,
+   "why": "RL helps only without rejection sampling"
+  },
+  {
+   "figure": "Fig 8",
+   "caption": "Best-of-n scaling, varying parameter count of policy and reward model together, as well as number of answers sampled.",
+   "page": 9,
+   "why": "Compute-efficient frontier choosing n per model size"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Paper text contains no embedded instructions",
+  "Figure values (Fig 2, 3) are not tabulated in the text, so TruthfulQA percentages beyond 75/54 and per-size preferences are not recorded",
+  "Abstract and Sec 1 print 'around 6,000 demonstrations' while Table 4 total is 6,209"
+ ]
+}

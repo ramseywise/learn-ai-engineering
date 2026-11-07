@@ -1,0 +1,122 @@
+{
+ "schema": 1,
+ "key": "https://doi.org/10.18653/v1/2023.findings-acl.824",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/suzgun-2023-challenging-big-bench-tasks-whether.pdf",
+ "bib": {
+  "title": "Challenging BIG-Bench Tasks and Whether Chain-of-Thought Can Solve Them",
+  "authors": ["Mirac Suzgun","Nathan Scales","Nathanael Schärli","Sebastian Gehrmann","Yi Tay","Hyung Won Chung","Aakanksha Chowdhery","Quoc V. Le","Ed H. Chi","Denny Zhou","Jason Wei"],
+  "first_author": "Suzgun",
+  "year": 2023,
+  "venue": "Findings of the Association for Computational Linguistics: ACL 2023, pages 13003-13051",
+  "arxiv": "2210.09261",
+  "doi": "10.18653/v1/2023.findings-acl.824"
+ },
+ "read": {"by": "source-reader", "at": "2026-11-07", "chars_read": 127704, "chars_total": 127704, "engine": "pymupdf",
+  "skipped": "Per-task scaling plots in Appendix B (figure axis text) and the per-task CoT exemplar prompts in Appendix C were skimmed, not read line by line; the exemplar text is long and is released in the authors' repo."},
+ "type": "benchmark",
+ "question": "On which BIG-Bench tasks do language models still fall short of the average human rater, and can chain-of-thought prompting close the gap?",
+ "hypothesis": "Standard answer-only few-shot prompting underestimates model capability on tasks that need multi-step reasoning, which CoT prompting would reveal.",
+ "contributions": [
+  "BIG-Bench Hard (BBH): 23 BIG-Bench tasks (27 subtasks) where no prior reported model beat the average human rater",
+  "Manually written 3-shot CoT exemplars for every BBH task, with Codex outputs released",
+  "Evaluation of Codex, InstructGPT and PaLM with answer-only vs CoT prompting, and of how the CoT gain depends on scale"
+ ],
+ "method": {
+  "summary": "Filters BIG-Bench from 209 tasks down to 23 hard multiple-choice or exact-match tasks, writes three CoT exemplars per task, and compares few-shot answer-only against CoT prompting on Codex, InstructGPT and PaLM families by greedy decoding and exact match.",
+  "task": "few-shot evaluation of multi-step reasoning on BIG-Bench Hard",
+  "trains": false,
+  "datasets": [
+   {"name": "BIG-Bench Hard (BBH)", "role": "eval", "size": "6,511 evaluation examples over 23 tasks (27 subtasks)", "split": "random subset of 250 test examples per task, except Causal Judgement (187), Penguins in a Table (146) and Snarks (178), which use all available examples; 3 further examples per task are reserved for few-shot prompting", "source": "subset of BIG-Bench (Srivastava et al., 2022); released at github.com/suzgunmirac/BIG-Bench-Hard", "preprocessing": "Filtered in steps 209 -> 187 (more than three subtasks removed) -> 130 (fewer than 103 examples removed) -> 85 (no human-rater baseline removed) -> 78 (not multiple-choice or exact match removed) -> 36 (best reported model beats average human rater removed) -> 23 (13 tasks judged too hard or out of scope removed). Answer order was randomised for tasks where the first answer was always correct."}
+  ],
+  "models": [
+   {"name": "PaLM 8B / 62B / 540B", "role": "evaluated", "params": "8B, 62B, 540B", "architecture": "decoder-only transformer", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": "input length 2,048 and target length 512 (Appendix B)", "other": {}},
+   {"name": "InstructGPT: text-ada-001, text-babbage-001, text-curie-001 (also written text-curie-002 in Section 3), text-davinci-001, text-davinci-002", "role": "evaluated", "params": null, "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"note": "parameter counts not stated"}},
+   {"name": "Codex: code-cushman-001, code-davinci-002 (Section 3 lists code-davinci-002 twice; Figure 4 labels d-1 and d-2 both code-davinci-002)", "role": "evaluated", "params": null, "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"note": "parameter counts not stated"}}
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "greedy decoding (temperature sampling with temperature tau = 0)",
+   "temperature": "0",
+   "top_p": null,
+   "max_tokens": "OpenAI models: target length 1,000 for Geometric Shapes, 900 for Formal Fallacies, Salient Translation Error Detection and Temporal Sequences, 512 for all other tasks; PaLM: input length 2,048, target length 512",
+   "samples": "one greedy output per item; no repeats or seeds reported",
+   "prompting": "3-shot. Answer-only: task description, exemplar questions with options and answers. CoT: same, with a manually written chain of thought after 'A: Let's think step by step.' in each exemplar, ending 'So the answer is ...'. Both include a task instruction and the answer options in the input.",
+   "retrieval": null,
+   "parameters": {"num_exemplars": "3 per task (manually composed CoT exemplars)", "answer_extraction": "keyword 'the answer is'"},
+   "other": {"cost_estimate": "Footnote 3: evaluating BBH on text-davinci-002 would cost $195.33 USD at $0.02 per 1K tokens, assuming an average prompt length of 1.5K"}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "exact match accuracy", "definition": "generated final answer, extracted after 'the answer is', compared with the ground-truth label; multiple-choice options are all shown in the prompt and the model generates the answer (differs from rank/scoring classification)", "unit": "%", "higher_is_better": true},
+    {"name": "tasks above average human rater", "definition": "count of the 23 tasks on which model accuracy exceeds the BIG-Bench average human-rater score", "unit": "tasks / 23", "higher_is_better": true}
+   ],
+   "baselines": ["Average and maximum human rater (Srivastava et al., 2022)", "Best prior BIG-Bench result", "Random", "answer-only prompting"],
+   "protocol": "Unweighted average over tasks; single run each, no error bars or significance tests."
+  },
+  "availability": {"code": "https://github.com/suzgunmirac/BIG-Bench-Hard", "weights": null, "data": "BBH data, prompts and Codex outputs at the same repository"},
+  "prompts": [
+   {"purpose": "CoT trigger inside every exemplar and the test question", "text": "A: Let's think step by step.", "where": "Section 3, Figure 3"},
+   {"purpose": "Task-description line prefixed to each task prompt (example, Temporal Sequences)", "text": "Task description: Answer questions about which times certain events could have occurred.", "where": "Figure 3"}
+  ],
+  "evidence": [
+   {"field": "inference.decoding", "quote": "We evaluate all language models via greedy decoding (i.e., temperature sampling with temperature parameter τ = 0).", "where": "Section 3"}
+  ]
+ },
+ "results": [
+  {"claim": "With CoT prompting, Codex beats the average human rater on 17 of 23 BBH tasks.", "kind": "measured", "source": null, "metric": "tasks above average human rater", "value": "17", "unit": "tasks of 23", "baseline_value": "5 of 23 with answer-only", "n": 23, "setup": "code-davinci-002, 3-shot, greedy, exact match", "quote": "For the best model (Codex), CoT prompting outperforms the av-", "table": "Table 2, row Codex CoT prompting, column # tasks above avg. human-rater", "note": null, "where": "Table 2, Section 4.1"},
+  {"claim": "Codex CoT averages 73.9% on BBH against 56.6% answer-only and a 67.7% average human rater.", "kind": "measured", "source": null, "metric": "exact match, 23-task average", "value": "73.9", "unit": "%", "baseline_value": "56.6", "n": 6511, "setup": "code-davinci-002, 3-shot, greedy", "quote": null, "table": "Table 2, row Codex CoT prompting, column BBH all; Table 3 last row", "note": null, "where": "Table 2"},
+  {"claim": "PaLM 540B CoT averages 65.2% on BBH, up 12.9 over answer-only 52.3%, and beats the average human rater on 10 of 23 tasks.", "kind": "measured", "source": null, "metric": "exact match, 23-task average", "value": "65.2", "unit": "%", "baseline_value": "52.3", "n": 6511, "setup": "PaLM 540B, 3-shot, greedy", "quote": null, "table": "Table 2, row PaLM 540B CoT prompting, column BBH all", "note": "Table 3 last row prints PaLM 540B CoT 'All Tasks (avg)' as 63.3, not 65.2; the paper does not reconcile the two.", "where": "Table 2 vs Table 3"},
+  {"claim": "InstructGPT (text-davinci-002) CoT averages 68.4%, +16.6 over answer-only 51.8%, above the human average on 15 of 23 tasks.", "kind": "measured", "source": null, "metric": "exact match, 23-task average", "value": "68.4", "unit": "%", "baseline_value": "51.8", "n": 6511, "setup": "text-davinci-002, 3-shot, greedy", "quote": null, "table": "Table 2, row InstructGPT CoT prompting, column BBH all", "note": null, "where": "Table 2"},
+  {"claim": "Average human-rater score on BBH is 67.7% and max human-rater 94.4%; the best prior BIG-Bench result is 50.9% on the Table 2 average (52.1 in Table 3).", "kind": "reported", "source": "Srivastava et al., 2022", "metric": "accuracy", "value": "67.7", "unit": "%", "baseline_value": null, "n": null, "setup": "BBH 23 tasks, human raters as in BIG-Bench", "quote": null, "table": "Table 2, row Average human-rater, column BBH all", "note": "Best prior BIG-Bench result is 50.9 in Table 2 but 52.1 (SOTA) in Table 3.", "where": "Table 2, Table 3"},
+  {"claim": "Even with CoT, Codex lags the best human rater by over 20%.", "kind": "measured", "source": null, "metric": "gap to max human rater", "value": "20", "unit": "% (lower bound)", "baseline_value": null, "n": null, "setup": "Codex CoT 73.9 vs max human rater 94.4", "quote": "it still lags behind the best", "table": null, "note": "Quote fragment from the sentence 'but it still lags behind the best human-rater performance by over 20%'.", "where": "Section 4.1"},
+  {"claim": "PaLM 540B answer-only with instructions and options is 1.4% better than the BIG-Bench reported result and beats the human average on 6 of 23 tasks.", "kind": "measured", "source": null, "metric": "tasks above average human rater", "value": "6", "unit": "tasks of 23", "baseline_value": "0 of 23 in BIG-Bench", "n": 23, "setup": "PaLM 540B, answer-only, with task instruction and answer options in the prompt", "quote": null, "table": "Table 2, row PaLM 540B Answer-only prompting, column # tasks above avg. human-rater", "note": "Text says 1.4% better; Table 2 gives 52.3 vs 50.9, a 1.4 point gap.", "where": "Section 4.1"},
+  {"claim": "CoT gains on algorithmic tasks are larger than on NLP tasks (Codex +28.5 vs +7.1 points).", "kind": "measured", "source": null, "metric": "CoT minus answer-only", "value": "28.5", "unit": "points", "baseline_value": "7.1 (NLP)", "n": null, "setup": "Codex, 11 algorithmic vs 12 NLP tasks", "quote": null, "table": "Table 2, row Codex CoT prompting, column Algorithmic (11 tasks)", "note": null, "where": "Table 2"},
+  {"claim": "Codex CoT gains on single tasks: Tracking Shuffled Objects 60.4, Multi-Step Arithmetic 46.4, Navigate 46.0, Temporal Sequences 19.8 points.", "kind": "measured", "source": null, "metric": "CoT gain", "value": "60.4", "unit": "points", "baseline_value": null, "n": null, "setup": "Codex code-davinci-002", "quote": "Tracking Shuffled Objects (60.4% ↑), Multi-", "table": null, "note": null, "where": "Section 5.1"},
+  {"claim": "CoT gives negative or zero gain for the smallest models and grows with scale, so CoT is an emergent strategy.", "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "InstructGPT text-ada-001 to text-curie, PaLM 8B negative; larger models positive (Fig 4)", "quote": null, "table": null, "note": null, "where": "Section 4.2, Fig 4"},
+  {"claim": "CoT turns flat scaling curves into improving ones on Multi-Step Arithmetic, Tracking Shuffled Objects and Web of Lies but not on Causal Judgement.", "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "OpenAI and PaLM scales, Fig 5", "quote": null, "table": null, "note": null, "where": "Section 4.3, Fig 5"},
+  {"claim": "Causal Judgement scores 57.8% answer-only (InstructGPT) and does not improve with CoT; random is 50%, highest human rater 100%.", "kind": "measured", "source": null, "metric": "exact match", "value": "57.8", "unit": "%", "baseline_value": "50", "n": 187, "setup": "InstructGPT text-davinci-002 answer-only", "quote": "Causal Judgement, for instance, achieves", "table": "Table 3, row Causal Judgement, InstructGPT AO", "note": "Text sentence reads '57.8% performance with answer-only prompting'.", "where": "Section 4.3, Table 3"},
+  {"claim": "CoT lags answer-only prompting on Causal Judgement, Ruin Names and Snarks across all three model families.", "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "Table 3: e.g. Snarks Codex AO 61.2 vs CoT 59.6, Ruin Names Codex AO 75.2 vs CoT 68.4", "quote": null, "table": null, "note": "Table 3 shows exceptions: Snarks PaLM 540B AO 78.1 vs CoT 61.8 is lower with CoT, but Causal Judgement PaLM 540B AO 61.0 vs CoT 59.4 and Ruin Names InstructGPT AO 65.6 vs CoT 62.8 also lower; consistent with the claim. Causal Judgement InstructGPT AO 57.8 vs CoT 56.1.", "where": "Section 5.5, Table 3"},
+  {"claim": "Authors attribute CoT failures on Causal Judgement and Ruin Names to missing world knowledge, and on Snarks to models classing both statements neutral and picking an option at random.", "kind": "claim", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "qualitative inspection, Fig 7", "quote": null, "table": null, "note": null, "where": "Section 5.5"},
+  {"claim": "Multi-step arithmetic example: Codex CoT 47.6% vs answer-only 1.2%.", "kind": "measured", "source": null, "metric": "exact match", "value": "47.6", "unit": "%", "baseline_value": "1.2", "n": 250, "setup": "Multi-Step Arithmetic [Two], Codex, row in Table 3", "quote": null, "table": "Table 3, row Multi-Step Arithmetic [Two], Codex CoT", "note": "Table 3 columns: InstructGPT AO 1.2 CoT 53.2; Codex AO 1.2 CoT 47.6; PaLM AO 1.6 CoT 19.6. Text says Codex gains 46.4 points.", "where": "Table 3"}
+ ],
+ "limits": [
+  "Human-rater scores are not representative of human performance; raters had hours per day, could use the Internet, and task formats changed over a year. Beating the average should not be confused with true understanding or reasoning (Section 8.1).",
+  "Possible residual label biases despite 250-example subsampling and answer-order randomisation (8.2).",
+  "CoT exemplars were hand-written; results may change with their format and wording (8.3).",
+  "Almost all tasks are in English (8.4).",
+  "Single greedy run, no error bars or significance tests; 250 examples per task makes single-task differences noisy.",
+  "Table 2 and Table 3 disagree on PaLM CoT average (65.2 vs 63.3) and best prior result (50.9 vs 52.1).",
+  "OpenAI models named are text-davinci-002 and code-davinci-002 and are deprecated; no parameter counts are given for them."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "BIG-Bench Hard (BBH)", "definition": "a subset of 23 particularly challenging BIG-Bench tasks (27 subtasks) for which no prior result from Srivastava et al. (2022) has outperformed the average human-rater score", "where": "Section 2"},
+  {"term": "flat scaling curve", "definition": "model performance is approximately random and does not improve with increasing model scale", "where": "Section 4.3"},
+  {"term": "answer-only prompting", "definition": "few-shot prompting with task instruction and answer options but no reasoning steps in the exemplars", "where": "Section 3"}
+ ],
+ "lineage": [
+  {"work": "Beyond the Imitation Game (BIG-Bench)", "year": 2022, "arxiv": "2206.04615", "relation": "uses-data", "note": "source of the tasks, human-rater baselines and prior results", "quote": null},
+  {"work": "Chain of thought prompting elicits reasoning in large language models", "year": 2022, "arxiv": "2201.11903", "relation": "uses-method", "note": "CoT prompting", "quote": null},
+  {"work": "Large language models are zero-shot reasoners", "year": 2022, "arxiv": "2205.11916", "relation": "uses-method", "note": "'Let's think step by step' trigger", "quote": null},
+  {"work": "PaLM", "year": 2022, "arxiv": "2204.02311", "relation": "evaluates", "note": "PaLM 8B, 62B, 540B", "quote": null},
+  {"work": "Codex (Evaluating large language models trained on code)", "year": 2021, "arxiv": "2107.03374", "relation": "evaluates", "note": "code-davinci-002, code-cushman-001", "quote": null},
+  {"work": "InstructGPT (Ouyang et al.)", "year": 2022, "arxiv": "2203.02155", "relation": "evaluates", "note": "text-davinci-002 and smaller", "quote": null},
+  {"work": "Emergent abilities of large language models", "year": 2022, "arxiv": "2206.07682", "relation": "extends", "note": "CoT as emergent prompting strategy", "quote": null},
+  {"work": "Language models are few-shot learners (GPT-3)", "year": 2020, "arxiv": "2005.14165", "relation": "uses-method", "note": "few-shot answer-only baseline", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Figure 1", "caption": "Per-task delta between Codex (code-davinci-002) and the average human-rater performance on 23 challenging tasks in BIG-Bench Hard, for standard answer-only (left) and chain-of-thought (right) prompting.", "page": 2, "why": "Shows at a glance which tasks flip above the human average with CoT."},
+  {"figure": "Figure 3", "caption": "An illustration of the two prompting setups we explore in our paper (answer-only and CoT prompting). Both setups include task descriptions and options in the input prompt.", "page": 5, "why": "Exact prompt layout for a rerun."},
+  {"figure": "Figure 4", "caption": "Scaling behavior of CoT prompting on BBH (23 task unweighted average).", "page": 8, "why": "CoT gain appears only at large scale."},
+  {"figure": "Figure 5", "caption": "For three tasks where prompting without CoT has a flat scaling curve, CoT prompting enables emergent-task performance.", "page": 8, "why": "Emergence under CoT."},
+  {"figure": "Table 3", "caption": "Few-shot prompting performance of several large language models on BIG-Bench Hard.", "page": 9, "why": "Per-task numbers for every model and prompt style."}
+ ],
+ "code": [],
+ "problems": [
+  "Table 3 cells extract one value per line; column order inferred as Random, SOTA, Avg, Max, InstructGPT AO/CoT, Codex AO/CoT, PaLM AO/CoT, confirmed against Table 2 averages.",
+  "Table 3 PaLM CoT all-tasks average 63.3 vs Table 2 65.2 (printed inconsistency).",
+  "Section 3 lists code-davinci-002 twice for Codex; Figure 4 labels both d-1 and d-2 as code-davinci-002 and InstructGPT d-1 as text-davinci-001 while Section 3 lists text-curie-002 and text-babbgage-001 (typos).",
+  "Appendix C exemplar prompts and Appendix B per-task plots were skimmed only.",
+  "No embedded instructions found; the appendix carries a BIG-Bench canary string."
+ ]
+}

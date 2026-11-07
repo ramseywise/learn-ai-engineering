@@ -1,0 +1,466 @@
+{
+ "schema": 1,
+ "key": "2203.13131",
+ "pdf": "ai-engineering/08-multimodal-engineering/sources/gafni-2022-make-scene.pdf",
+ "bib": {
+  "title": "Make-A-Scene: Scene-Based Text-to-Image Generation with Human Priors",
+  "authors": [
+   "Oran Gafni",
+   "Adam Polyak",
+   "Oron Ashual",
+   "Shelly Sheynin",
+   "Devi Parikh",
+   "Yaniv Taigman"
+  ],
+  "first_author": "Gafni",
+  "year": 2022,
+  "venue": "preprint",
+  "arxiv": "2203.13131",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 52312,
+  "chars_total": 52312,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can text-to-image generation gain controllability, human-perception-aware quality and 512x512 resolution by adding scene (segmentation) tokens, region-aware tokenizer losses and classifier-free guidance to an autoregressive transformer?",
+ "hypothesis": "Conditioning on scene tokens, adding face/object-aware VQ losses and using classifier-free guidance improves FID and human preference over text-only baselines.",
+ "contributions": [
+  "Scene as a control mechanism complementary to text",
+  "Face- and object-aware tokenization with explicit losses on key image regions",
+  "Classifier-free guidance adapted to transformers, removing post-generation reranking",
+  "512x512 generation with state-of-the-art FID and human evaluation"
+ ],
+ "method": {
+  "summary": "A 4B-parameter GPT-3-style autoregressive transformer over [text, scene, image] token sequences. Scene tokens come from VQ-SEG (a VQ-VAE over panoptic, human and face segmentation plus an edge channel); image tokens come from VQ-IMG (VQGAN with face- and object-aware feature-matching losses). Classifier-free guidance is applied on logits.",
+  "task": "text-to-image generation with optional scene layout",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "CC12m, CC, subsets of YFCC100m and Redcaps (transformer)",
+    "role": "train",
+    "size": "35m text-image pairs",
+    "split": null,
+    "source": "CC12m, CC, YFCC100m, Redcaps",
+    "preprocessing": null
+   },
+   {
+    "name": "CC12m, CC, MS-COCO (VQ-SEG and VQ-IMG)",
+    "role": "train",
+    "size": null,
+    "split": null,
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "MS-COCO",
+    "role": "eval",
+    "size": "30k generated images from validation prompts",
+    "split": "validation text prompts; train-vs-val ground-truth FID as loose lower bound",
+    "source": "Lin et al. 2014",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Make-A-Scene scene-based transformer (256 and 512 variants)",
+    "role": "proposed",
+    "params": "4B",
+    "architecture": "GPT-3-based autoregressive transformer",
+    "init_from": null,
+    "tokenizer": "BPE for text; VQ-SEG for scene; VQ-IMG for image",
+    "vocab": "VQ-SEG dictionary 1024; VQ-IMG dictionary 8192",
+    "layers": 48,
+    "hidden": "2560",
+    "heads": 48,
+    "context": "256 text + 256 scene + 1024 image tokens",
+    "other": {
+     "output_resolution": "256x256 or 512x512",
+     "VQ-IMG channel multiplier": "[1,1,2,4] (256) and [1,1,2,4,4] (512)",
+     "segmentation categories": "mp=133 panoptic, mh=20 human, mf=5 face, +1 edge channel"
+    }
+   },
+   {
+    "name": "DALL-E re-implementation",
+    "role": "baseline",
+    "params": "4B",
+    "architecture": "autoregressive transformer with VQGAN",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "CogView (256 and 512 released weights)",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "reranking": "self-reranking of 60 used for qualitative figure 2"
+    }
+   },
+   {
+    "name": "GLIDE, LAFITE, XMC-GAN, DM-GAN(+CL), DF-GAN, AttnGAN",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "Autoregressive next-token loss with image:text token loss ratio 7/1; VQ-SEG adds weighted BCE (face parts weight 20); VQ-IMG adds face-embedding and VGG feature-matching losses on top of VQGAN losses",
+   "optimizer": "Adam, beta1=0.9, beta2=0.96",
+   "lr": "4.5e-4 for first 40k iterations, then 1.5e-4",
+   "lr_schedule": "step: 4.5e-4 to 1.5e-4 after 40k iterations",
+   "warmup": null,
+   "batch_size": "1024 (transformer); VQ-SEG 48; VQ-IMG 192 (256) and 128 (512)",
+   "steps": "170k iterations (transformer); VQ-SEG 600k; VQ-IMG256 800k; VQ-IMG512 940k",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "inferred: 256 text + 256 scene + 1024 image tokens (Sec 4)",
+   "precision": null,
+   "weight_decay": "4.5e-4",
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "classifier-free fine-tuning": "text tokens replaced with padding with pCF=0.2 in the last 30k iterations",
+    "face loss alphas": "alpha_f1=0.1, alpha_f2=0.25 (final); alternative tried 1.0/1.0",
+    "face loss layers": "1x1, 7x7, 28x28, 56x56, 128x128 (appendix) vs 112x112 in Sec 3.3",
+    "512 model": "VQ-IMG gets an extra down/up-sample layer; object-aware loss applied to 512 model only"
+   }
+  },
+  "inference": {
+   "decoding": "Sample next token from the top half of logits by probability, softmax, multinomial; guided logits used for scene and image tokens",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": "1024 image tokens",
+   "samples": "no reranking; 30k images for FID",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "guidance scale alpha_c": "5 (3 also works)",
+    "pCF": 0.2,
+    "formula": "logits_cf = logits_uncond + alpha_c*(logits_cond - logits_uncond)"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "FID",
+     "definition": "Frechet Inception Distance over 30k images generated from MS-COCO validation prompts, no reranking; (filt.) = model trained without MS-COCO train set",
+     "unit": "FID",
+     "higher_is_better": false
+    },
+    {
+     "name": "Human preference (image quality, photorealism, text alignment)",
+     "definition": "Percentage of majority votes in favour of Make-A-Scene in pairwise AMT comparison; 500 image pairs per question, 5 evaluators each, 2500 instances",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "DALL-E re-implementation",
+    "CogView 256/512",
+    "GLIDE",
+    "LAFITE",
+    "XMC-GAN",
+    "DM-GAN+CL",
+    "DF-GAN",
+    "DM-GAN",
+    "AttnGAN"
+   ],
+   "protocol": "Pairwise AMT human evaluation plus FID on MS-COCO val prompts; no seeds or significance tests stated"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": null
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.lr",
+    "quote": "with a starting learning-rate of 4.5 × 10−4 for the ﬁrst 40k iterations, transitioning to 1.5 × 10−4 for the remainder",
+    "where": "A.3"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Make-A-Scene 256 obtains FID 7.55 on MS-COCO, lowest among compared models trained with MS-COCO",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": 7.55,
+   "unit": "FID",
+   "baseline_value": 9.33,
+   "n": null,
+   "setup": "MS-COCO val prompts, 30k images, no reranking, 256x256 model",
+   "quote": "In both scenarios our model achieves the lowest FID.",
+   "table": "Table 1, row Ours256, column FID",
+   "note": "Baseline is XMC-GAN 9.33",
+   "where": "Sec 4.6, Table 1"
+  },
+  {
+   "claim": "Filtered FID (no MS-COCO train) of 11.84 vs GLIDE 12.24",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID (filt.)",
+   "value": 11.84,
+   "unit": "FID",
+   "baseline_value": 12.24,
+   "n": null,
+   "setup": "30k MS-COCO val prompts, model trained without COCO train",
+   "quote": "In both scenarios our model achieves the lowest FID.",
+   "table": "Table 1, row Ours256, column FID (filt.)",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Ground-truth FID lower bound between COCO train and val is 2.47",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": 2.47,
+   "unit": "FID",
+   "baseline_value": null,
+   "n": null,
+   "setup": "train vs val subsets of MS-COCO",
+   "quote": "We add a loose practical lower-bound (denoted as ground-",
+   "table": "Table 1, row Ground-truth, column FID",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Best model given scene input reaches FID 4.69",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": 4.69,
+   "unit": "FID",
+   "baseline_value": null,
+   "n": null,
+   "setup": "+CF with scene input, ablation, 30k COCO val prompts",
+   "quote": "we re-examine the FID of the best model, where the scene is given as an additional in-",
+   "table": "Table 2, row +CF with scene input, column FID",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Classifier-free guidance cuts FID from 14.45 to 7.55",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": 7.55,
+   "unit": "FID",
+   "baseline_value": 14.45,
+   "n": null,
+   "setup": "ablation, +CF vs +Face-aware",
+   "quote": "",
+   "table": "Table 2, row +CF, column FID",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Adding scene tokens alone raises FID from 18.01 to 19.16 but is preferred by humans",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": 19.16,
+   "unit": "FID",
+   "baseline_value": 18.01,
+   "n": null,
+   "setup": "ablation, +Scene tokens vs Base",
+   "quote": "",
+   "table": "Table 2, row +Scene tokens, column FID",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "512 model with object-aware loss has FID 8.70, worse than 256 +CF 7.55 but preferred by humans for quality (62.0%)",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": 8.7,
+   "unit": "FID",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ablation +Obj-aware512",
+   "quote": "We note that while the lowest FID is attained by the 256 × 256 model, human preference favors",
+   "table": "Table 2, row +Obj-aware512, column FID",
+   "note": null,
+   "where": "Sec 4.11, Table 2"
+  },
+  {
+   "claim": "Humans prefer Make-A-Scene over CogView256 on image quality 92.2%",
+   "kind": "measured",
+   "source": null,
+   "metric": "preference",
+   "value": 92.2,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "pairwise AMT, 500 pairs x 5 evaluators",
+   "quote": "Compared with the three methods, ours achieves signiﬁcantly higher",
+   "table": "Table 1, row CogView256, column Image quality",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Humans prefer Make-A-Scene over the DALL-E re-implementation on text alignment 65.9%",
+   "kind": "measured",
+   "source": null,
+   "metric": "preference",
+   "value": 65.9,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "pairwise AMT, 4B DALL-E re-implementation with same VQGAN",
+   "quote": "We train a re-",
+   "table": "Table 1, row DALL-E, column Text alignment",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Ablation: +CF preferred 76.8% on image quality",
+   "kind": "measured",
+   "source": null,
+   "metric": "preference",
+   "value": 76.8,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ablation, majority votes for added element vs previous model",
+   "quote": "",
+   "table": "Table 2, row +CF, column Image quality",
+   "note": null,
+   "where": "Table 2"
+  }
+ ],
+ "limits": [
+  "No code, weights or data release stated; compute and hardware not given",
+  "No seeds, confidence intervals or significance tests",
+  "Human evaluation and FID compare against baselines of different training data; DALL-E is the authors' own re-implementation",
+  "Lowest FID is attained by the 256 model while humans favour 512",
+  "Scene categories are fixed; absent categories (mouse, lion) need substitute classes",
+  "Ablation rows are cumulative so effects are order-dependent"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "implicit conditioning",
+   "definition": "the network may disregard any scene information, and generate the image conditioned solely on text",
+   "where": "Sec 3.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "DALL-E (Zero-shot text-to-image generation)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "autoregressive transformer baseline, re-implemented at 4B",
+   "quote": null
+  },
+  {
+   "work": "VQGAN (Taming transformers)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "tokenizer modified with region-aware losses",
+   "quote": null
+  },
+  {
+   "work": "GLIDE",
+   "year": 2021,
+   "arxiv": "2112.10741",
+   "relation": "baseline",
+   "note": "diffusion baseline; classifier-free guidance source",
+   "quote": null
+  },
+  {
+   "work": "CogView",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "human and FID comparison",
+   "quote": null
+  },
+  {
+   "work": "Classifier-free diffusion guidance (Ho and Salimans)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "adapted to transformer logits",
+   "quote": null
+  },
+  {
+   "work": "SPADE",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "related",
+   "note": "segmentation-conditioned image synthesis",
+   "quote": null
+  },
+  {
+   "work": "Conceptual 12M / Conceptual Captions / YFCC100m / Redcaps / MS-COCO",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "training and eval data",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 6",
+   "caption": "The scene-based method high-level architecture.",
+   "page": 7,
+   "why": "Shows text, scene, image token streams"
+  },
+  {
+   "figure": "Table 2",
+   "caption": "Ablation study (FID and human preference).",
+   "page": 9,
+   "why": "Isolates each component"
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 3.7",
+   "snippet": "logitscf = logitsuncond + αc · (logitscond −logitsuncond)",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Table 1 Ours256 row loses its human-preference cells in the text layer",
+  "Section numbering in text refers to Tab. 4.6 / 4.11 oddly (link artifacts)"
+ ]
+}

@@ -1,0 +1,509 @@
+{
+ "schema": 1,
+ "key": "1609.07843",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/merity-2016-pointer-sentinel-mixture-models.pdf",
+ "bib": {
+  "title": "Pointer Sentinel Mixture Models",
+  "authors": [
+   "Stephen Merity",
+   "Caiming Xiong",
+   "James Bradbury",
+   "Richard Socher"
+  ],
+  "first_author": "Merity",
+  "year": 2016,
+  "venue": "preprint",
+  "arxiv": "1609.07843",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 51112,
+  "chars_total": 51112,
+  "engine": "pymupdf",
+  "skipped": "Supplementary pointer-visualisation figures 5 onward are token lists; skimmed captions only."
+ },
+ "type": "empirical",
+ "question": "Can a mixture of a softmax RNN and a pointer over recent context, gated by a sentinel, predict rare and unseen words better than a plain softmax LSTM, and what benchmark can test long-range context?",
+ "hypothesis": "The pointer component lets the model reproduce rare words and frees RNN hidden-state capacity, so it should beat an LSTM, most on rare words.",
+ "contributions": [
+  "The pointer sentinel mixture architecture",
+  "State-of-the-art Penn Treebank perplexity (70.9) with far fewer parameters than a standard softmax LSTM",
+  "The WikiText-2 and WikiText-103 corpora"
+ ],
+ "method": {
+  "summary": "A pointer sentinel-LSTM adds a pointer-sum attention over the last L=100 hidden states; a sentinel element in the attention softmax gives the gate g that routes mass to the vocabulary softmax. Trained on PTB and WikiText-2 following Zaremba/Gal setups with longer BPTT.",
+  "task": "word-level language modelling (next-word prediction)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Penn Treebank (Mikolov et al. 2010 version)",
+    "role": "both",
+    "size": "929,590 train / 73,761 valid / 82,431 test tokens; vocab 10,000; OoV 4.8%",
+    "split": "standard",
+    "source": "Marcus et al. 1993, preprocessed by Mikolov et al. 2010",
+    "preprocessing": "lower-cased, numbers to N, newlines to <eos>, punctuation removed, rare words to <unk>"
+   },
+   {
+    "name": "WikiText-2",
+    "role": "both",
+    "size": "2,088,628 train / 217,646 valid / 245,569 test tokens; 600/60/60 articles; vocab 33,278; OoV 2.6%",
+    "split": "train/valid/test by article",
+    "source": "Wikipedia Good (23,805) and Featured (4,790) articles via Wikipedia API",
+    "preprocessing": "list sections removed; formulae to <formula>; Moses tokenizer with numbers split (8,600 -> 8 @,@ 600); vocab = words with count >= 3; others to <unk>; case and punctuation kept"
+   },
+   {
+    "name": "WikiText-103",
+    "role": "pretrain",
+    "size": "103,227,021 train / 217,646 valid / 245,569 test tokens; 28,475/60/60 articles; vocab 267,735; OoV 0.4%",
+    "split": "same valid/test articles as WikiText-2",
+    "source": "same as WikiText-2, all extracted articles",
+    "preprocessing": "same as WikiText-2; no experiments reported on it"
+   }
+  ],
+  "models": [
+   {
+    "name": "Pointer Sentinel-LSTM (medium)",
+    "role": "proposed",
+    "params": "21M (PTB and WikiText-2)",
+    "architecture": "2-layer LSTM + pointer sentinel mixture",
+    "init_from": null,
+    "tokenizer": "word-level",
+    "vocab": "10,000 (PTB); 33,278 (WikiText-2)",
+    "layers": "2",
+    "hidden": "650",
+    "heads": null,
+    "context": "pointer window L=100",
+    "other": {
+     "extra_params": "H^2+2H (W, b, sentinel s)"
+    }
+   },
+   {
+    "name": "Zoneout + Variational LSTM (medium)",
+    "role": "baseline",
+    "params": "20M",
+    "architecture": "2-layer LSTM, hidden 650",
+    "init_from": null,
+    "tokenizer": "word-level",
+    "vocab": null,
+    "layers": "2",
+    "hidden": "650",
+    "heads": null,
+    "context": "BPTT 100",
+    "other": {}
+   },
+   {
+    "name": "Gal (2015) Variational LSTM medium/large",
+    "role": "baseline",
+    "params": "20M / 66M",
+    "architecture": "2-layer LSTM, hidden 650 / 1500",
+    "init_from": null,
+    "tokenizer": "word-level",
+    "vocab": null,
+    "layers": "2",
+    "hidden": "650 / 1500",
+    "heads": null,
+    "context": "BPTT 35 (inferred: paper says most LMs truncate at 35)",
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "cross-entropy of the mixture; pointer loss -log(g + sum_{i in I(y,x)} a_i)",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": "halve learning rate when validation perplexity is worse than previous iteration",
+   "warmup": null,
+   "batch_size": "32 (up from 20)",
+   "steps": null,
+   "epochs": "stop when validation perplexity fails to improve for three epochs or at 64 epochs",
+   "tokens": null,
+   "seq_len": "100 timesteps (up from 35), equal to L",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": "0.5 variational dropout on input to each RNN layer and on final RNN output; zoneout on recurrent connections",
+   "regularisation": "zoneout and variational dropout; gradient rescale when global norm exceeds 1",
+   "hardware": "12GB K80 GPU mentioned (Gal large OOM on WikiText-2)",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "bptt": "k1=1, k2=L: backprop L steps every timestep; only final word's loss used",
+    "stale_outputs": "window of RNN outputs regenerated after each gradient update",
+    "zoneout_rate": null
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single run per model (inferred: no seeds reported)",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "pointer_window_L": "100",
+    "mixing": "at prediction at most L word probabilities mixed, on CPU"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "perplexity",
+     "definition": "exp of per-word cross-entropy on validation and test sets",
+     "unit": "perplexity",
+     "higher_is_better": false
+    },
+    {
+     "name": "mean difference in log perplexity by frequency bucket",
+     "definition": "words sorted by frequency in equal buckets; LSTM minus pointer sentinel-LSTM",
+     "unit": "log perplexity",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "KN-5",
+    "KN5+cache",
+    "RNN",
+    "RNN-LDA",
+    "Deep RNN",
+    "Sum-Prod Net",
+    "Zaremba LSTM",
+    "Gal variational LSTM (MC)",
+    "CharCNN",
+    "Variational RHN",
+    "Zoneout + Variational LSTM"
+   ],
+   "protocol": "single model perplexity on valid and test; no significance test; Gal numbers carry +/- from his paper"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "WikiText freely available (footnote 1, dataset site; no URL printed)"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.batch_size",
+    "quote": "Batch size was increased to 32 from 20.",
+    "where": "5.2"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Pointer sentinel-LSTM (medium) gets test perplexity 70.9 on PTB, best in the table.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test perplexity",
+   "value": 70.9,
+   "unit": "perplexity",
+   "baseline_value": 71.3,
+   "n": null,
+   "setup": "Penn Treebank (Mikolov preprocessing, 10k vocab), word-level, single model, two-layer LSTM, medium (650 hidden), 21M params",
+   "note": null,
+   "where": "Abstract; Table 2",
+   "quote": "Penn Treebank (70.9 perplexity)"
+  },
+  {
+   "claim": "Pointer sentinel-LSTM (medium) validation perplexity on PTB.",
+   "kind": "measured",
+   "source": null,
+   "metric": "validation perplexity",
+   "value": 72.4,
+   "unit": "perplexity",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Penn Treebank (Mikolov preprocessing, 10k vocab), word-level, single model, two-layer LSTM, 21M params",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Pointer Sentinel-LSTM (medium), column Validation"
+  },
+  {
+   "claim": "Large Gal variational LSTM with MC dropout, 66M params, test perplexity 73.4, vs pointer model with a third of the parameters.",
+   "kind": "reported",
+   "source": null,
+   "metric": "test perplexity",
+   "value": 73.4,
+   "unit": "perplexity",
+   "baseline_value": null,
+   "n": null,
+   "setup": "PTB, Gal (2015) large untied MC, 66M",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Gal (2015) - Variational LSTM (large, untied, MC), column Test"
+  },
+  {
+   "claim": "Zoneout + variational LSTM (the RNN component alone) scores 80.6 test on PTB.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test perplexity",
+   "value": 80.6,
+   "unit": "perplexity",
+   "baseline_value": null,
+   "n": null,
+   "setup": "PTB, medium, 20M, BPTT L=100",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Zoneout + Variational LSTM (medium), column Test"
+  },
+  {
+   "claim": "Pointer sentinel-LSTM gets 80.8 test perplexity on WikiText-2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test perplexity",
+   "value": 80.8,
+   "unit": "perplexity",
+   "baseline_value": 96.3,
+   "n": null,
+   "setup": "WikiText-2, 2-layer LSTM hidden 650, PTB-best hyperparameters, 21M",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row Pointer Sentinel-LSTM, column Test"
+  },
+  {
+   "claim": "Gal (2015) variational LSTM baseline on WikiText-2 test.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test perplexity",
+   "value": 96.3,
+   "unit": "perplexity",
+   "baseline_value": null,
+   "n": null,
+   "setup": "WikiText-2, 20M",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row Variational LSTM implementation from Gal (2015), column Test"
+  },
+  {
+   "claim": "Zoneout + variational LSTM on WikiText-2 test.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test perplexity",
+   "value": 100.9,
+   "unit": "perplexity",
+   "baseline_value": null,
+   "n": null,
+   "setup": "WikiText-2, 20M",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row Zoneout + Variational LSTM, column Test"
+  },
+  {
+   "claim": "WikiText-103 has about 103M training tokens and a 267,735-word vocabulary.",
+   "kind": "measured",
+   "source": null,
+   "metric": "training tokens",
+   "value": "103,227,021",
+   "unit": "tokens",
+   "baseline_value": null,
+   "n": null,
+   "setup": "WikiText-103 train split",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Tokens, column WikiText-103 Train"
+  },
+  {
+   "claim": "WikiText-2 has 2,088,628 training tokens and 33,278 vocab, OoV 2.6%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "training tokens",
+   "value": "2,088,628",
+   "unit": "tokens",
+   "baseline_value": null,
+   "n": null,
+   "setup": "WikiText-2",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Tokens, column WikiText-2 Train"
+  },
+  {
+   "claim": "PTB has 929,590 training tokens, 10,000 vocab, OoV 4.8%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "training tokens",
+   "value": "929,590",
+   "unit": "tokens",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Penn Treebank",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Tokens, column Penn Treebank Train"
+  },
+  {
+   "claim": "WikiText-103 is about a hundred times larger than PTB and a tenth of the One Billion Word Benchmark.",
+   "kind": "claim",
+   "source": null,
+   "metric": "size ratio",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "WikiText-103 vs PTB",
+   "note": null,
+   "where": "4.4"
+  },
+  {
+   "claim": "Mixture adds only H^2+2H parameters, versus 8H^2+4H for one LSTM layer.",
+   "kind": "claim",
+   "source": null,
+   "metric": "extra parameters",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "any depth; pointer only reads final layer",
+   "note": null,
+   "where": "2.7",
+   "quote": "The additional H2 + 2H parameters"
+  },
+  {
+   "claim": "Pointer gains grow as words get rarer (Fig 4), including on PTB.",
+   "kind": "measured",
+   "source": null,
+   "metric": "log perplexity gain",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "PTB, 10 equal frequency buckets",
+   "note": null,
+   "where": "6.1, Fig 4"
+  }
+ ],
+ "limits": [
+  "Only the medium model was run for the pointer sentinel; no WikiText-103 results.",
+  "Gal large model ran out of memory on a 12GB K80 for WikiText-2, so no large baseline there.",
+  "Single runs, no seeds or significance tests; optimizer and learning rate not stated.",
+  "Rare-word benefit is shown as a figure and qualitative examples, not a controlled ablation of the sentinel versus other gates.",
+  "Parameter counts marked with a double-dagger in Table 2 are estimates.",
+  "LSTM-era results, long superseded by Transformers."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "sentinel",
+   "definition": "A sentinel value is inserted at the end of a search space ... Our sentinel value terminates the pointer search space and distributes the rest of the probability mass to the RNN vocabulary.",
+   "where": "footnote 2"
+  },
+  {
+   "term": "pointer sum attention",
+   "definition": "probability mass of a word is the sum of attention over all positions where it appears",
+   "where": "2.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Pointer networks",
+   "year": 2015,
+   "arxiv": "1506.03134",
+   "relation": "extends",
+   "note": "pointer attention over input; cannot output words outside input",
+   "quote": null
+  },
+  {
+   "work": "Pointing the Unknown Words",
+   "year": 2016,
+   "arxiv": "1603.08148",
+   "relation": "extends",
+   "note": "pointer softmax with switching network; this paper uses a sentinel mixture instead",
+   "quote": null
+  },
+  {
+   "work": "Text Understanding with the Attention Sum Reader Network",
+   "year": 2016,
+   "arxiv": "1603.01547",
+   "relation": "uses-method",
+   "note": "pointer sum attention",
+   "quote": null
+  },
+  {
+   "work": "Recurrent neural network regularization",
+   "year": 2014,
+   "arxiv": "1409.2329",
+   "relation": "baseline",
+   "note": "experimental setup and LSTM baselines",
+   "quote": null
+  },
+  {
+   "work": "A Theoretically Grounded Application of Dropout in RNNs",
+   "year": 2015,
+   "arxiv": "1512.05287",
+   "relation": "baseline",
+   "note": "variational dropout, MC dropout baselines",
+   "quote": null
+  },
+  {
+   "work": "Zoneout",
+   "year": 2016,
+   "arxiv": "1606.01305",
+   "relation": "uses-method",
+   "note": "recurrent regularisation",
+   "quote": null
+  },
+  {
+   "work": "Recurrent Highway Networks",
+   "year": 2016,
+   "arxiv": "1607.03474",
+   "relation": "baseline",
+   "note": "previous PTB best, 71.3 test",
+   "quote": null
+  },
+  {
+   "work": "One Billion Word Benchmark",
+   "year": 2013,
+   "arxiv": "1312.3005",
+   "relation": "related",
+   "note": "shuffled sentences; vocab cutoff method followed",
+   "quote": null
+  },
+  {
+   "work": "Penn Treebank (Marcus et al. 1993; Mikolov et al. 2010 preprocessing)",
+   "year": 2010,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "main benchmark",
+   "quote": null
+  },
+  {
+   "work": "Long Short-Term Memory",
+   "year": 1997,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "RNN component",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Illustration of the pointer sentinel-RNN mixture model.",
+   "page": 1,
+   "why": "Shows the gate g mixing the softmax and pointer distributions."
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Zipfian plot over the training partition in Penn Treebank and WikiText-2 datasets.",
+   "page": 4,
+   "why": "Shows PTB's vocabulary cut-off versus WikiText-2's long tail."
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Mean difference in log perplexity on PTB when using the pointer sentinel-LSTM compared to the LSTM model.",
+   "page": 5,
+   "why": "Gain grows for rarer words."
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq. 6-8",
+   "snippet": "p(y|x) = g p_vocab + (1-g) p_ptr; a = softmax([z; q^T s]); g = a[V+1]; p_ptr = a[1:V]/(1-g)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Some cached text is figure token lists from the supplement; no embedded instructions found."
+ ]
+}

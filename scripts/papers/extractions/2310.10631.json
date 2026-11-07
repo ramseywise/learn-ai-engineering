@@ -1,0 +1,585 @@
+{
+ "schema": 1,
+ "key": "2310.10631",
+ "pdf": "generative-ai/05-RL/sources/azerbayev-2023-llemma.pdf",
+ "bib": {
+  "title": "LLEMMA: An Open Language Model for Mathematics",
+  "authors": [
+   "Zhangir Azerbayev",
+   "Hailey Schoelkopf",
+   "Keiran Paster",
+   "Marco Dos Santos",
+   "Stephen McAleer",
+   "Albert Q. Jiang",
+   "Jia Deng",
+   "Stella Biderman",
+   "Sean Welleck"
+  ],
+  "first_author": "Azerbayev",
+  "year": 2023,
+  "venue": "ICLR 2024",
+  "arxiv": "2310.10631",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 87356,
+  "chars_total": 87356,
+  "engine": "pymupdf",
+  "skipped": "reference list skimmed"
+ },
+ "type": "empirical",
+ "question": "Can continued pretraining of Code Llama on a large open mixture of mathematical text and code yield an open base model that matches or beats closed domain models such as Minerva on mathematics?",
+ "hypothesis": "Continued pretraining on Proof-Pile-2 improves a pretrained model's few-shot mathematical problem solving, tool use and formal theorem proving.",
+ "contributions": [
+  "Train and release LLEMMA 7B and 34B, new state of the art for public base models on MATH",
+  "Release AlgebraicStack, 11B tokens of mathematical code",
+  "Demonstrate tool use (Python interpreter) and formal theorem provers",
+  "Open access models, data and code as a research platform"
+ ],
+ "method": {
+  "summary": "Continue pretraining Code Llama 7B/34B with the autoregressive objective on Proof-Pile-2 (55B tokens of arXiv, OpenWebMath and AlgebraicStack) mixed with 5% general data, for 200B (7B) and 50B (34B) tokens. Evaluate few-shot on chain-of-thought maths, tool use and formal proving.",
+  "task": "continued pretraining for mathematics",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Proof-Pile-2",
+    "role": "pretrain",
+    "size": "55B tokens",
+    "split": "canonical train/validation/test; held-out randomly",
+    "source": "AlgebraicStack 11B + OpenWebMath 15B + ArXiv (RedPajama) 29B; cutoff April 2023 except Lean proofsteps",
+    "preprocessing": "AlgebraicStack filtered by keyword whitelists, filesize < 1048575 bytes, numerical density 0.5, exact dedup on 2048-char chunks; Stack v1.2 near-deduplicated"
+   },
+   {
+    "name": "General mix (Pile without ArXiv, RedPajama GitHub)",
+    "role": "pretrain",
+    "size": "2% Pile, 3% GitHub of mixture",
+    "split": null,
+    "source": "Pile, RedPajama GitHub",
+    "preprocessing": null
+   },
+   {
+    "name": "MATH",
+    "role": "eval",
+    "size": "12.5k problems (5k evaluation)",
+    "split": "test",
+    "source": "Hendrycks et al. 2021b",
+    "preprocessing": null
+   },
+   {
+    "name": "GSM8k",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Cobbe et al. 2021",
+    "preprocessing": null
+   },
+   {
+    "name": "miniF2F",
+    "role": "eval",
+    "size": "488 formalized statements",
+    "split": "valid/test",
+    "source": "Zheng et al. 2021",
+    "preprocessing": null
+   },
+   {
+    "name": "SAT (May 2023)",
+    "role": "eval",
+    "size": "32 math questions without figures",
+    "split": null,
+    "source": "College Board May 2023 exam, built by authors",
+    "preprocessing": null
+   },
+   {
+    "name": "MetaMathQA",
+    "role": "train",
+    "size": null,
+    "split": null,
+    "source": "Yu et al. 2023, used for preliminary SFT (Appendix G)",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "LLEMMA 7B",
+    "role": "proposed",
+    "params": "7B",
+    "architecture": "decoder-only transformer",
+    "init_from": "Code Llama 7B",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "4096 tokens",
+    "other": {
+     "rope": "base period contracted from 1,000,000 to 10,000"
+    }
+   },
+   {
+    "name": "LLEMMA 34B",
+    "role": "proposed",
+    "params": "34B",
+    "architecture": "decoder-only transformer",
+    "init_from": "Code Llama 34B",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "4096 tokens",
+    "other": {
+     "rope": "base period kept at 1,000,000"
+    }
+   },
+   {
+    "name": "Minerva 8B/62B/540B",
+    "role": "baseline",
+    "params": "8B, 62B, 540B",
+    "architecture": "PaLM continued pretrained",
+    "init_from": "PaLM",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "scores quoted from Lewkowycz et al. 2022"
+    }
+   },
+   {
+    "name": "Code Llama 7B/34B",
+    "role": "baseline",
+    "params": "7B, 34B",
+    "architecture": "decoder-only transformer",
+    "init_from": "Llama 2, trained on 500B tokens of code",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Llama 2 7B",
+    "role": "baseline",
+    "params": "7B",
+    "architecture": "decoder-only transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "standard autoregressive language modeling",
+   "optimizer": null,
+   "lr": "7B: 1e-4 peak; 34B: 5e-5 peak",
+   "lr_schedule": "cosine decay to 1/30th of peak (7B scheduler length 48,000 steps; 34B decayed to 1/30th peak)",
+   "warmup": "500 steps",
+   "batch_size": "4 million tokens (global)",
+   "steps": "7B: 42,000 (planned 48,000, NaN losses after 42,000); 34B: 12,000",
+   "epochs": null,
+   "tokens": "7B: 200B; 34B: 50B",
+   "seq_len": "4096 tokens",
+   "precision": "bfloat16 mixed precision",
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "general-domain data (5% of mixture) as regularization",
+   "hardware": "256 A100 40GB GPUs; GPT-NeoX; tensor parallel 2 (7B) or 8 (34B); ZeRO Stage 1; Flash Attention 2",
+   "compute": "7B ~23,000 A100-hours; 34B ~47,000 A100-hours",
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "mixture": "95% Proof-Pile-2, 2% Pile (no ArXiv), 3% RedPajama GitHub; arXiv:web:code ratio 2:4:1 chosen by short runs minimizing MATH training-set perplexity",
+    "weights_table8": "AlgebraicStack 1.00, OpenWebMath 4.00, ArXiv 2.00, RedPajama code 0.22, Pile 0.15",
+    "sft_appendix_G": "LLEMMA 7B finetuned on MetaMathQA with hyperparameters identical to Yu et al. 2023 (not listed)"
+   }
+  },
+  "inference": {
+   "decoding": "greedy for Table 1, Table 4 informal-to-formal; majority voting uses nucleus sampling; Lean uses beam search for tactics",
+   "temperature": "0.6 (k=256, k=100), 0.3 (k=16) for majority voting",
+   "top_p": "0.95",
+   "max_tokens": null,
+   "samples": "maj@k: k=256 MATH, k=100 GSM8k and OCW, k=16 MMLU-STEM and SAT; Lean best-first search N=1, S=32, T=100",
+   "prompting": "MATH 4-shot (Minerva prompt), GSM8k 8-shot (Wei et al.), OCW 4-shot, MMLU-STEM 4-shot CoT, Isabelle 11 examples (7 for number theory, 6 others), Lean 3 examples",
+   "retrieval": null,
+   "parameters": {
+    "lean_search": "best first search, 10-minute timeout",
+    "sledgehammer_timeout": "30 s"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "accuracy (greedy)",
+     "definition": "exact string match or SymPy equivalence against reference answer",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "maj@k",
+     "definition": "majority vote over k sampled solutions",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "pass@1 (tool use)",
+     "definition": "fraction solved with Python program execution",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "proved theorems",
+     "definition": "percentage of miniF2F theorems proven and checked by proof assistant",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Minerva",
+    "Code Llama",
+    "Llama 2",
+    "Sledgehammer",
+    "ReProver",
+    "COPRA (GPT-4)"
+   ],
+   "protocol": "Single greedy run; majority voting for sampled settings; Minerva numbers quoted from the Minerva paper; no seeds or significance tests stated."
+  },
+  "availability": {
+   "code": "https://github.com/EleutherAI/math-lm",
+   "weights": "released (7B and 34B)",
+   "data": "hf.co/datasets/EleutherAI/proof-pile-2"
+  },
+  "prompts": [
+   {
+    "purpose": "Lean 4 next-tactic prediction",
+    "text": "\"\"\"Given the Lean 4 tactic state, suggest a next tactic.\nHere are some examples: ... (three tactic state / next tactic pairs) ... Tactic state:\n---\n%s\n---\nNext tactic:\n---\"\"\"",
+    "where": "Figure 5, Appendix D.2"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training.steps",
+    "quote": "we planned to train for 48, 000 steps, but encountered NaN losses after step 42, 000",
+    "where": "Section 2.2"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "LLEMMA 7B beats Code Llama 7B and Minerva 8B on 4-shot MATH with greedy decoding",
+   "kind": "measured",
+   "source": null,
+   "metric": "MATH accuracy",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "MATH, greedy decoding, 4-shot Minerva prompt",
+   "quote": null,
+   "table": "Table 1, row LLEMMA 7B, column MATH (18.0%; Code Llama 7B 4.5%; Minerva 8B 14.1%)",
+   "note": null,
+   "where": null
+  },
+  {
+   "claim": "LLEMMA 34B MATH accuracy greedy, below Minerva 62B 27.6%",
+   "kind": "measured",
+   "source": null,
+   "metric": "MATH accuracy",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "MATH, greedy, 4-shot",
+   "quote": null,
+   "table": "Table 1, row LLEMMA 34B, column MATH (25.0%; Minerva 62B 27.6%)",
+   "note": null,
+   "where": null
+  },
+  {
+   "claim": "LLEMMA 34B MATH maj@256 is about level with Minerva 62B",
+   "kind": "measured",
+   "source": null,
+   "metric": "MATH maj@256",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "MATH maj@256, T=0.6, top_p 0.95",
+   "quote": null,
+   "table": "Table 2, row LLEMMA 34B, column MATH (43.1%; Minerva 62B 43.4%)",
+   "note": null,
+   "where": null
+  },
+  {
+   "claim": "Continued pretraining raises GSM8k by 20 points and MATH by 13 points at 34B over Code Llama",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "20 / 13",
+   "unit": "percentage points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LLEMMA 34B vs Code Llama 34B, greedy",
+   "quote": "LLEMMA 34B improves over Code Llama by 20 percentage points on GSM8k and 13 points on MATH",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.1"
+  },
+  {
+   "claim": "7B model trained for 200B tokens costs about 23,000 A100-hours",
+   "kind": "measured",
+   "source": null,
+   "metric": "compute",
+   "value": "23,000",
+   "unit": "A100-hours",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LLEMMA 7B, 42,000 steps, 4M token batch",
+   "quote": "This corresponds to roughly 23, 000 A100-hours.",
+   "table": null,
+   "note": null,
+   "where": "Sec 2.2"
+  },
+  {
+   "claim": "34B model costs about 47,000 A100-hours",
+   "kind": "measured",
+   "source": null,
+   "metric": "compute",
+   "value": "47,000",
+   "unit": "A100-hours",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LLEMMA 34B, 12,000 steps",
+   "quote": "This corresponds to roughly 47, 000 A100-hours.",
+   "table": null,
+   "note": null,
+   "where": "Sec 2.2"
+  },
+  {
+   "claim": "Tool use raises MATH+Python pass@1 for LLEMMA 7B over Code Llama 7B",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "MATH+Python, pass@1",
+   "quote": null,
+   "table": "Table 3, row LLEMMA 7B, column MATH+Python (21.5%; Code Llama 7B 17.2%)",
+   "note": null,
+   "where": null
+  },
+  {
+   "claim": "LLEMMA 34B GSM8k+Python pass@1",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "GSM8k+Python",
+   "quote": null,
+   "table": "Table 3, row LLEMMA 34B, column GSM8k+Python (62.6%; Code Llama 34B 52.7%)",
+   "note": null,
+   "where": null
+  },
+  {
+   "claim": "LLEMMA-7b proves 22.13% of miniF2F-test in informal-to-formal Isabelle, above Sledgehammer 20.49%",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "miniF2F-test, greedy, 11-example prompt",
+   "quote": null,
+   "table": "Table 4, row LLEMMA-7b, column miniF2F-test (22.13%; Sledgehammer 20.49%)",
+   "note": null,
+   "where": null
+  },
+  {
+   "claim": "LLEMMA-7b formal-to-formal Lean proving close to fine-tuned ReProver",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "miniF2F-test, best first search 1x32, 10-minute timeout",
+   "quote": null,
+   "table": "Table 4 right, row LLEMMA-7b (26.23%; ReProver 26.50%; Code Llama 7b 20.49%)",
+   "note": null,
+   "where": null
+  },
+  {
+   "claim": "About 7% of MATH test problems and 0.6% of solutions have a 30-gram hit in Proof-Pile-2",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "7% / 0.6%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "30-gram match against OpenWebMath and AlgebraicStack",
+   "quote": "around 7% of MATH test problem statements and 0.6% of MATH test solutions have hits",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.5"
+  },
+  {
+   "claim": "Accuracy on hit problems is not higher: Level 5 6.08% with hit vs 6.39% without",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "6.08 vs 6.39",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LLEMMA-34b, MATH Level 5",
+   "quote": "6.08% on Level 5 prob-\nlems with a hit, versus 6.39% on problems without a hit",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.5, Table 7"
+  },
+  {
+   "claim": "Mixture 2:4:1 (arXiv:web:code) gives lowest MATH training perplexity",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "1.478",
+   "unit": "perplexity",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Code Llama 7B, reduced steps",
+   "quote": null,
+   "table": "Table 5, row 2:4:1, column Overall",
+   "note": null,
+   "where": "Table 5"
+  },
+  {
+   "claim": "LLEMMA 7B finetuned on MetaMathQA reaches 25.2% MATH vs 19.4% for Llama 2 7B",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "MetaMathQA SFT, hyperparameters of Yu et al. 2023; Llama 2 numbers copied from literature",
+   "quote": null,
+   "table": "Table 12, row LLEMMA 7B MetaMathQA, column MATH (25.2%; Llama 2 7B 19.4%)",
+   "note": null,
+   "where": null
+  }
+ ],
+ "limits": [
+  "No from-scratch comparison; gains are over the Code Llama initialization",
+  "Mixture weights tuned on MATH training-set perplexity, using in-domain data for a hyperparameter",
+  "Could not check that contracting RoPE base period for 34B has no penalty",
+  "7B run stopped at 42,000 of 48,000 planned steps after NaN losses",
+  "Memorization analysis is a lower bound (exact n-gram match only)",
+  "Minerva scores quoted not re-run; no majority-vote scores for Llama 2 and Code Llama due to compute",
+  "SFT study is preliminary; no seeds or significance tests"
+ ],
+ "practices": [],
+ "terms": [],
+ "lineage": [
+  {
+   "work": "Minerva (Solving quantitative reasoning problems with language models)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "recipe repeated on open data and prompts reused",
+   "quote": "Our work builds on findings in Minerva"
+  },
+  {
+   "work": "Code Llama",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "initialization",
+   "quote": null
+  },
+  {
+   "work": "OpenWebMath",
+   "year": 2023,
+   "arxiv": "2310.06786",
+   "relation": "uses-data",
+   "note": "web portion",
+   "quote": null
+  },
+  {
+   "work": "MetaMathQA / MetaMath",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "SFT experiment",
+   "quote": null
+  },
+  {
+   "work": "Draft, Sketch and Prove",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Isabelle informal-to-formal prompt",
+   "quote": null
+  },
+  {
+   "work": "ReProver (LeanDojo)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Lean tactic prediction",
+   "quote": null
+  },
+  {
+   "work": "MATH",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "benchmark",
+   "quote": null
+  },
+  {
+   "work": "GSM8k",
+   "year": 2021,
+   "arxiv": "2110.14168",
+   "relation": "uses-data",
+   "note": "benchmark",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Continued pretraining on Proof-Pile-2 yields LLEMMA, a base model with improved mathematical capabilities.",
+   "page": 1,
+   "why": "MATH maj@256 vs parameters against Minerva"
+  },
+  {
+   "figure": "Table 8",
+   "caption": "Proof-Pile-2 data sources, general data and mixture weights",
+   "page": 17,
+   "why": "exact mixture weights"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Table 1 and 2 cells are flattened in extracted text; mapped by column order",
+  "Hyperparameters not stated: optimizer, weight decay, dropout, seeds, SFT settings"
+ ]
+}

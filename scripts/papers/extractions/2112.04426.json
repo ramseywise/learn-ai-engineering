@@ -1,19 +1,701 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2112.04426",
  "pdf": "generative-ai/02-rag-retrieval/sources/borgeaud-2021-improving-language-models-retrieving-trillions.pdf",
  "bib": {
   "title": "Improving language models by retrieving from trillions of tokens",
+  "authors": [
+   "Sebastian Borgeaud",
+   "Arthur Mensch",
+   "Jordan Hoffmann",
+   "Trevor Cai",
+   "Eliza Rutherford",
+   "Katie Millican",
+   "George van den Driessche",
+   "Jean-Baptiste Lespiau",
+   "Bogdan Damoc",
+   "Aidan Clark",
+   "Diego de Las Casas",
+   "Aurelia Guy",
+   "Jacob Menick",
+   "Roman Ring",
+   "Tom Hennigan",
+   "Saffron Huang",
+   "Loren Maggiore",
+   "Chris Jones",
+   "Albin Cassirer",
+   "Andy Brock",
+   "Michela Paganini",
+   "Geoffrey Irving",
+   "Oriol Vinyals",
+   "Simon Osindero",
+   "Karen Simonyan",
+   "Jack W. Rae",
+   "Erich Elsen",
+   "Laurent Sifre"
+  ],
   "first_author": "Borgeaud",
   "year": 2021,
-  "venue": "ICML 2022",
+  "venue": "preprint (arXiv v3, 7 Feb 2022)",
   "arxiv": "2112.04426",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-04",
-  "session": "5f2f0582-f958-4d9c-8469-02f3d5079657"
+  "at": "2026-11-07",
+  "chars_read": 142175,
+  "chars_total": 142175,
+  "engine": "pymupdf",
+  "skipped": "Qualitative colour-coded sample tables (Tables 6,7,16-21) and the per-subset figure grids (Figs 10-12) come out jumbled; read captions and surrounding text only. References skimmed for lineage."
  },
- "legacy_report": "SOURCE: \"Improving language models by retrieving from trillions of tokens\" (RETRO). Borgeaud, Mensch, Hoffmann, et al. (DeepMind). arXiv:2112.04426v3, 7 Feb 2022. The extraction shows it as a preprint, with no venue printed. Local file: /Users/ramsey-wise/workspace/learn-ai-engineering/generative-ai/02-rag-retrieval/sources/borgeaud-2021-improving-language-models-retrieving-trillions.pdf\n\nCOVERAGE: I read all 144,897 chars across 43 pages. That covers the body, references, Appendices A–D, all of F (Tables 14 and 15, Figs 10–12), E.1–E.3, and Table 21's caption. Two parts got less attention. The references I skimmed for where the method comes from. The qualitative sample tables (Tables 16–21, about chars 110k–145k) are colour-coded token grids that come out of the extraction as jumbled columns, so I read only their captions. They contain no numeric results.\n\nCLAIMS\n- claim: The headline. With a 2-trillion-token database, the 7.5B RETRO matches GPT-3 and Jurassic-1 on the Pile while using 25× fewer parameters.\n  number: 25× (the \"×\" is dropped in the extraction)\n  setup: Comparison against Jurassic-1 (178B), Gopher (280B) and GPT-3 (175B) on the Pile test subsets, in bits-per-byte. The 7.5B RETRO beats Jurassic-1 and Gopher on \"a majority\" of subsets, not all of them. The authors drop Enron Emails and YouTube Subtitles. The other models' numbers are copied from their own papers (Table 15). The figure also leaves GPT-3 out (\"We do not compare against GPT-3 as it is outperformed by Jurassic-1 and Gopher on almost all subsets\"), and GPT-3 appears only in Table 15.\n  quote: \"With a 2 trillion token database, our Retrieval-Enhanced Transformer (RETRO) obtains comparable performance to GPT-3 and Jurassic-1 on the Pile, despite using 25 fewer parameters.\" / \"Overall, RETRO 7.5B outperforms Jurassic-1 and Gopher on a majority of the test sets.\"\n  where: abstract p1; p11–12, Fig 4; Table 15 p35\n- claim: Retrieval gives a gain that stays constant across model scale, and the gain is about what you would get from a 10× bigger model without retrieval. The conclusion limits this to \"certain datasets\".\n  number: 10×; 150M–7B parameters\n  setup: C4 validation set, bits-per-byte. Model sizes 172M, 425M, 1.5B and 7.5B. Baseline C4 bpb is 0.98/0.92/0.84/0.78 and RETRO[ON] is 0.82/0.77/0.71/0.66 (Table 14).\n  quote: \"The performance gain of our retrieval models remains constant with model scale (left), and is comparable to multiplying the parameteric model size by 10.\" / \"correspond to non-retrieval models with 10 more parameters on certain datasets\"\n  where: Fig 1 caption p2; Conclusion p16; Table 14 p34\n- claim: Test-set leakage. RETRO exploits overlap between evaluation and training data more than the baselines do. It still beats them on chunks with almost no overlap, and the authors say leakage accounts for only \"a modest fraction\" of the gain.\n  number: α = 12.5% (fewer than 8 contiguous shared tokens)\n  setup: The filtered bits-per-byte metric (§2.6). Each 64-token evaluation chunk is matched against its 10 nearest training neighbours using the longest common substring. Tested on C4, Wikitext103, Curation Corpus, Wikipedia Sept 2021 and the Pile (Fig 6; Figs 11 and 12).\n  quote: \"RETRO models exploit leakage more strongly than baseline models, as indicated by the more negative slope.\" / \"RETRO outperforms baseline models at all leakage levels, down to α = 12.5%. At this level, the loss is computed on chunks with less than 8 contiguous tokens shared with the closest matching chunk\" / \"only a modest fraction of the gains obtained by RETRO are due to test set leakage\"\n  where: §4.4 pp14–15; Conclusion p16\n- claim: The authors say themselves that the dramatic Wikitext103 numbers are partly leakage.\n  number: test perplexity 3.92 (with MassiveText retrieval) against 18.97 (with Wikipedia retrieval) and 22.96 (baseline)\n  setup: A RETROfit model fine-tuned from a 24-layer Wikitext103 baseline, with 10 neighbours at evaluation (Table 4).\n  quote: \"The perplexities for retrieving from full MassiveText are quite low, which is partly due to partial overlap with Wikitext103 not caught by our deduplication.\" / \"RETRO MassiveText (100%) 1792B 28B 3.21 3.92\"\n  where: Table 4 p12; §4.1 p13\n- claim: Retrieval and the training database. They retrieve from 600B tokens during training and from 1.75T tokens at evaluation. To limit leakage, training documents are removed when their 13-gram Jaccard similarity to an evaluation document is 0.8 or higher.\n  number: 600B / 1.75T / 0.8\n  setup: Multilingual MassiveText, more than 5T tokens in total. Books are subsampled to 4% for the evaluation database.\n  quote: \"During training (unless otherwise specified), we retrieve from 600B tokens from the training data.\" / \"The evaluation retrieval database thus contains 1.75T tokens.\" / \"remove all training documents with high similarity (0.8 or higher) to a validation or test set document.\"\n  where: §2.1 p3\n- claim: How the method works. A frozen BERT retriever finds k-NN chunks (L2 distance, SCaNN). The input is split into 64-token chunks, and each retrieved neighbour is 128 tokens (the chunk plus its continuation). Because the embeddings are frozen, neighbours are precomputed for training. A query takes about 10ms.\n  number: n=2048, m=64, r=128; ~10ms\n  setup: The 2-trillion-token database.\n  quote: \"We use n = 2048 and m = 64.\" / \"we can query our 2 trillion token database in 10ms whilst evaluating or sampling from the model\"\n  where: §2.2–2.3 pp3–4\n- claim: Making the database bigger at evaluation keeps improving results. Going from Wikipedia (4B tokens) to all of MassiveText (1.7T) gives \"dramatic gains\". Models were trained with 2 neighbours. At evaluation the 7B model keeps improving up to 40 neighbours and the 172M model up to 10.\n  number: 4B→1.7T; 40 neighbours\n  setup: C4 evaluation bpb (Fig 1 middle/right, Table 14). For example, the 7.5B model goes from 0.78 bpb with 2B tokens to 0.66 with the full database.\n  quote: \"We observe dramatic gains as the retrieval data is increased from Wikipedia (4 billion tokens) to all of Massive text (1.7T tokens).\" / \"the 172M model improves with up to 10 neighbours, whereas the 7B model improves with up to 40 neighbours.\"\n  where: §4.1 p11; Table 14 p34\n- claim: \"RETROfitting\". You can freeze a pretrained model and train only the new retrieval weights, and get close to a RETRO trained from scratch for about 3% of the pretraining sequences. The model's performance with retrieval switched off stays exactly the same.\n  number: <10% of weights; 6M sequences (3%)\n  setup: Baselines from 172M to 7B, on MassiveText.\n  quote: \"training only chunked cross-attention and neighbour encoder parameters (less than 10% of weights for the 7B model) ... requiring only 6 million sequences (3% of the pre-training sequences that we used).\"\n  where: §4.2 p13\n- claim: On question answering, RETRO is competitive with REALM, RAG and DPR but scores below FiD. More than 20 neighbours does not help.\n  number: 45.5 EM, against 30.4 closed-book, RAG 44.5, FiD 51.4\n  setup: Natural Questions, using the top-20 DPR passages. The 7.5B model is fully fine-tuned for 25k steps.\n  quote: \"Baseline 7B (closed book) 30.4\" / \"RETRO 7.5B (DPR retrieval) 45.5\" / \"underperforms the more recent FiD\"\n  where: Table 5 p14; §4.3 p14\n- claim: The size of the retrieval index. kNN-LM stores one vector per token, so it does not scale to trillions of tokens. RETRO's chunk-level keys do.\n  number: 15 TB vs 215 GB (Wikipedia); 93 TB (MassiveText)\n  setup: kNN-LM keeps 1024 floats per token.\n  quote: \"totalling 15 terabytes (Tb) for the 4 billion tokens in Wikipedia ... RETRO only requires 215Gb to index our Wikipedia dataset, and 93Tb for MassiveText.\"\n  where: p13\n- claim: The parameters retrieval adds. Each RETRO model is larger than its baseline by +30% at 132M, falling to +8% at 7B.\n  number: 6,982M → 7,532M (+8%)\n  quote: \"6,982M 7,532M (+8%)\"\n  where: Table 2 p7\n- claim: The model's own weights still do work. With retrieval switched off at evaluation (RETRO[OFF]), performance is close to the baseline.\n  number: C4 bpb is identical (0.98/0.92/0.84/0.78)\n  quote: \"At evaluation RETRO can be used without retrieval data (RETRO[OFF]), bringing limited performance degradation compared to baseline transformers.\"\n  where: Fig 1 caption p2; Table 14 p34\n- claim: Ablation. Attending to the neighbour alone gives 22% of the retrieval gain, and attending to its continuation gives 56%.\n  number: 22% / 56%\n  setup: A 247M model trained on 157B tokens, C4 bpb (RETRO 0.822, no retrieval 0.987).\n  quote: \"attending to neighbours only provides 22% of the performance improvement due to retrieval in RETRO, while attending the future of the neighbours gives 56% of the performance.\"\n  where: App D pp30–31\n- claim: Benefits for keeping knowledge current and for privacy. These are argued in the text, not measured. Updating the database is \"orders of magnitude cheaper\" than retraining, and data can be deleted from the database at inference time.\n  number: none\n  quote: \"To keep retrieval models up-to-date, it may be sufficient to update the retrieval database, which is orders of magnitude cheaper than re-training a model from scratch.\"\n  where: §3.2 p10\n\nLIMITS:\n- They do not measure that updating the database keeps the model current or removes data. Those benefits are argued in §3.2 only. The \"future\" Wikipedia Sept 2021 set (23 articles) shows consistent but small gains: 7.5B bpb goes from 0.65 to 0.61.\n- The 25× figure is a comparison of language-model bits-per-byte on the Pile. It is not about downstream tasks, and it holds on \"a majority\" of subsets only. On dm_mathematics and ubuntu_irc, RETRO does not beat its own 7B baseline. The 10× figure holds \"on certain datasets\". Curation Corpus shows only a small gain.\n- Leakage. Deduplication missed some Wikitext103 overlap, and RETRO \"can dramatically exploit such leakage\" (Table 19).\n- On QA, RETRO trails FiD and does not use the retrieval encoder enough.\n- Training RETRO from scratch on the small Wikitext103 dataset overfits.\n- §3.2 says retrieval can add bias through which documents get selected.\n- The \"RETRO\" in this paper is retrieval built into pretraining through chunked cross-attention. It is not the RAG pattern of putting retrieved text into the prompt, and Table 3 sets RETRO apart from REALM's \"prepend to prompt\".\n- The paper is from 2021–22. Its comparison models are GPT-3, Jurassic-1 and Gopher, all now superseded.\n\nBUILDS ON: kNN-LM (Khandelwal et al., 2020); continuous cache (Grave et al., 2017); SPALM (Yogatama et al., 2021); DPR (Karpukhin et al., 2020); REALM (Guu et al., 2020); RAG (Lewis et al., 2020); FiD (Izacard and Grave, 2021); EMDR2 (Sachan et al., 2021); BERT (Devlin et al., 2019); ScaNN (Guo et al., 2020); Transformer (Vaswani et al., 2017); MassiveText/Gopher (Rae et al., 2021); leakage concerns from Lee et al. (2021) and Lewis et al. (2021); scaling (Kaplan et al., 2020); retrieval reduces hallucination (Shuster et al., 2021).\n\nCODE: Listing 1 on p27 is a simplified JAX implementation of chunked cross-attention (`multi_chunk_cross_attention`, using `jnp.vectorize`). It is too architecture-specific for this note. The QA prompt format may be useful: \"question: {question} \\n answer: {answer}\", with each neighbour formatted as \"title: {title}, source: {source}\" (§4.3 p13, §C.4 p29).\n\nFIGURES:\n- Fig 1, p2: \"Scaling of RETRO. The performance gain of our retrieval models remains constant with model scale (left), and is comparable to multiplying the parameteric model size by 10. The gain increases with the size of the retrieval database (middle) and the number of retrieved neighbours (right)...\" This is my candidate. One three-panel image shows the parametric versus non-parametric trade-off: model size, database size and number of neighbours, each against C4 bpb.\n- Alternatives: Fig 6, p15 (bpb against the leakage threshold α), which suits a leakage callout. Fig 2, p3, which shows the architecture but is more detail than this note needs.\n\nPROBLEMS:\n- In the extraction, small-caps names come out as \"R/e.sc /t.sc /r.sc/o.sc\" (RETRO), \"B/e.sc /r.sc/t.sc\" (BERT) and so on. I normalised these in the quotes above, and the rest of each quote is verbatim.\n- The extraction drops the \"×\" glyph. The abstract reads \"25 fewer parameters\" and the conclusion reads \"10 more parameters\", so the 25× and 10× multipliers come from context. Check them against the PDF before quoting.\n- Decimal points are dropped in some places, for example \"𝜆 = 0118\" for 0.118 and \"1846\" for 18.46.\n- `figures.py captions` printed nothing, so I took the figure captions from the text extraction.\n- Tables 16–21 are garbled.\n- The PDF contains no embedded instructions."
+ "type": "empirical",
+ "question": "Can a language model be improved by conditioning on chunks retrieved from a database of trillions of tokens, as an alternative to scaling parameters?",
+ "hypothesis": "Retrieval from a massive database is a complementary path to scaling that decouples memorisation from model size and compute.",
+ "contributions": [
+  "Retro, a retrieval-enhanced autoregressive LM with chunked cross-attention (linear in retrieved data) and a frozen BERT retriever",
+  "Scaling with model size (150M to 7B) and database size/number of neighbours; SOTA on Wikitext103 and Pile among large-data models; fine-tunes to QA",
+  "An evaluation methodology aware of train/test overlap (filtered bpb)"
+ ],
+ "method": {
+  "summary": "Input of 2048 tokens is split into 64-token chunks; for each chunk the 2 nearest chunks (plus their continuations) are fetched by L2 distance on frozen BERT embeddings from a MassiveText database and encoded by a small bidirectional encoder; decoder layers every 3rd from layer 6 cross-attend to the previous chunk's neighbours via chunked cross-attention. Models are trained from scratch with a retrieval database of 600B tokens, or retro-fitted by freezing a pre-trained model and training only cross-attention and encoder.",
+  "task": "retrieval-enhanced next-token pretraining and language modelling evaluation",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "MassiveText (multilingual version)",
+    "role": "pretrain",
+    "size": "over 5 trillion tokens (5,026,463M tokens, 1,792M documents)",
+    "split": "sampling weights: Web 55%, Books 25%, News 10%, Wikipedia 5%, GitHub 5%",
+    "source": "Rae et al. 2021, DeepMind",
+    "preprocessing": "SentencePiece, vocab 128,000; training docs with 13-gram MinHash Jaccard similarity >= 0.8 to any validation/test doc removed; Wikitext103 val/test articles removed from Wikipedia"
+   },
+   {
+    "name": "Retrieval database (training)",
+    "role": "train",
+    "size": "600B tokens",
+    "split": "same subsets as training data in proportion to sampling frequency",
+    "source": "MassiveText",
+    "preprocessing": "neighbours from the same document as the training sequence filtered out"
+   },
+   {
+    "name": "Retrieval database (evaluation)",
+    "role": "eval",
+    "size": "1.75T tokens",
+    "split": "full union of MassiveText with Books sub-sampled to 4%",
+    "source": "MassiveText",
+    "preprocessing": null
+   },
+   {
+    "name": "C4, Wikitext103, Curation Corpus, Lambada, The Pile, Wikipedia Sept 2021",
+    "role": "eval",
+    "size": "Wikipedia Sept 2021: 23 articles; others not stated",
+    "split": "C4 validation; Wikitext103 valid/test; Pile test (Enron Emails and YouTube Subtitles excluded)",
+    "source": "Raffel 2020; Merity 2017; Curation 2020; Paperno 2016; Gao 2020",
+    "preprocessing": "Wikipedia Sept 2021 filtered for templated overlap; evaluated at sequence length 2048 with stride 1024"
+   },
+   {
+    "name": "Natural Questions (FiD version with DPR passages)",
+    "role": "both",
+    "size": null,
+    "split": "test exact match",
+    "source": "Izacard and Grave 2021 / Kwiatkowski 2019",
+    "preprocessing": "format 'question: {question} \\n answer: {answer}', left padded so 'answer:' ends the first 64-token chunk; each neighbour 'title: {title}, source: {source}'"
+   },
+   {
+    "name": "Wikitext103",
+    "role": "both",
+    "size": null,
+    "split": "train for baseline and Retro-fit",
+    "source": "Merity 2017",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Retro",
+    "role": "proposed",
+    "params": "172M / 425M / 1.5B / 7.5B non-embedding (Table 2: 172M, 425M, 1,451M, 7,532M; Table 10: 247M, 564M, 1,574M, 7,505M)",
+    "architecture": "decoder with chunked cross-attention plus 2-layer bidirectional neighbour encoder (d'=896, ~19M params)",
+    "init_from": "from scratch (also Retro-fit from baselines)",
+    "tokenizer": "SentencePiece",
+    "vocab": "128,000",
+    "layers": "12 / 12 / 24 / 32",
+    "hidden": "896 / 1536 / 2048 / 4096",
+    "heads": "16 / 12 / 16 / 32",
+    "context": "2048 tokens (n=2048, chunk m=64, k neighbours of r=128 tokens: 64 neighbour + 64 continuation)",
+    "other": {
+     "cross_attention_layers": "every 3rd from layer 6 (P=[6,9,12] for 12-layer models)",
+     "d_ffw": "3584 / 6144 / 8192 / 16384",
+     "retrieval": "frozen BERT, L2 distance, SCaNN approximate kNN",
+     "libs": "JAX, Haiku",
+     "extra_params": "+30% / +15% / +11% / +8% over baseline (Table 2)",
+     "ablation_model": "247M"
+    }
+   },
+   {
+    "name": "Baseline transformer",
+    "role": "baseline",
+    "params": "132M / 368M / 1.3B / 7.0B (Table 2: 132M, 368M, 1,309M, 6,982M)",
+    "architecture": "Radford 2019 GPT-2-like, RMSNorm instead of LayerNorm, relative position encodings (Dai 2019)",
+    "init_from": null,
+    "tokenizer": "SentencePiece",
+    "vocab": "128,000",
+    "layers": "12 / 12 / 24 / 32",
+    "hidden": "896 / 1536 / 2048 / 4096",
+    "heads": "16 / 12 / 16 / 32",
+    "context": "2048",
+    "other": {}
+   },
+   {
+    "name": "Frozen BERT",
+    "role": "retriever",
+    "params": null,
+    "architecture": "BERT embedding of neighbour chunk N averaged over time as key",
+    "init_from": "pre-trained, frozen",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "BERT size/checkpoint not stated"
+    }
+   },
+   {
+    "name": "Jurassic-1, Gopher, GPT-3",
+    "role": "evaluated",
+    "params": "178B (Jurassic-1) / 280B (Gopher); GPT-3 size not stated in text",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "numbers copied from Lieber 2021 and Rae 2021"
+    }
+   }
+  ],
+  "training": {
+   "objective": "retrieval-enhanced autoregressive log-likelihood (Eq 1); first chunk has no retrieval",
+   "optimizer": "AdamW",
+   "lr": "max 2e-4 (172M, 425M, 1.5B), 1e-4 (7.5B); min 0.1x max",
+   "lr_schedule": "cosine decay with cycle length equal to total training tokens",
+   "warmup": "linear from 1e-7 to max over first 750 steps",
+   "batch_size": "256 (three smaller models), 1024 (largest)",
+   "steps": null,
+   "epochs": null,
+   "tokens": "419,430,400,000 training tokens",
+   "seq_len": "2048",
+   "precision": null,
+   "weight_decay": "0.1",
+   "dropout": null,
+   "regularisation": "ZeRO optimiser state sharding (infrastructure, not regularisation)",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "training_neighbours": "2",
+    "retro_fit_lr": "2e-4 -> 2e-5 (172M, 425M, 1.5B), 1e-4 -> 1e-5 (7.5B), batch 256, new weights only, cross-attn every 3rd layer from 6, 6M sequences (3% of pre-training)",
+    "wikitext103_baseline": "18 layers (Table 11; Sec 4.1 text says 24), d 1024, d_ffw 4096, 16 heads, seq len 3072, batch 128, Adam b1 0.9 b2 0.95 eps 1e-8, dropout 0.25, lr 1e-7 -> 2.5e-4 over 4,000 warmup steps, cosine to 2e-5 at 100,000 steps; checkpoint at step 35,000 used (valid ppl 21.58 at 75% overlap, 21.53 at 87.5%); Retro-fit from it, 2 neighbours trained, Wikipedia retrieval; training Retro from scratch overfit",
+    "nq_finetune": "all weights of 7.5B Retro, 25,000 steps, batch 128, lr cosine 1e-6 -> 1e-7, 750-step linear ramp, dropout in decoder only, top 20 DPR neighbours at train and eval",
+    "ablation_schedule": "247M model, 157B-token schedule"
+   }
+  },
+  "inference": {
+   "decoding": "Lambada: greedy generation on the last word; other evaluation by likelihood",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single run per model; no seeds or confidence intervals reported",
+   "prompting": "Curation Corpus: article + 'TL;DR:' + summary, bpb on summary only; NQ format given in datasets",
+   "retrieval": "SCaNN approx kNN on frozen BERT chunk embeddings, L2; 2 neighbours trained; evaluation default 2 (Fig 1 sweeps 1-100; 10 for Wikitext103); 10 ms per query on 2T tokens; retrieval re-done at the end of each generated chunk",
+   "parameters": {
+    "kNN-LM lambda": "0.118",
+    "kNN-LM alpha": "0.00785",
+    "eval window": "seq len 2048, stride 1024 (Wikitext103 overlap proportion 87.5%)"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "bits-per-byte",
+     "definition": "model log-likelihood per byte of text; tokenizer agnostic",
+     "unit": "bpb",
+     "higher_is_better": false
+    },
+    {
+     "name": "filtered bpb(alpha)",
+     "definition": "bpb over evaluation chunks whose longest common token substring with their 10 nearest training neighbours is at most alpha*64 tokens (Eq 5)",
+     "unit": "bpb",
+     "higher_is_better": false
+    },
+    {
+     "name": "Wikitext103 perplexity",
+     "definition": "word-level style perplexity on valid/test",
+     "unit": "perplexity",
+     "higher_is_better": false
+    },
+    {
+     "name": "Lambada accuracy",
+     "definition": "accuracy on last word, greedy",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Natural Questions exact match",
+     "definition": "exact match accuracy on test",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Retrieval-free transformers (132M-7.0B)",
+    "Retro[Off]",
+    "kNN-LM (own re-implementation)",
+    "Jurassic-1 178B, Gopher 280B, GPT-3 (Pile)",
+    "Adaptive Inputs, Spalm, Megatron (Wikitext103)",
+    "Realm, DPR, RAG, Emdr2, FiD (NQ)"
+   ],
+   "protocol": "Single trained model per configuration, no seeds, no significance tests reported."
+  },
+  "availability": {
+   "code": "A simplified JAX Cca implementation is printed in Listing 1; no release stated",
+   "weights": null,
+   "data": "MassiveText is DeepMind-internal (Rae et al. 2021); evaluation sets public"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.tokens",
+    "quote": "In all cases, we train for 419,430,400,000 training tokens.",
+    "where": "App C.1 p26"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "A 7.5B Retro with a 2T-token database is comparable to GPT-3 and Jurassic-1 on the Pile with 25x fewer parameters.",
+   "kind": "measured",
+   "source": null,
+   "metric": "parameter ratio",
+   "value": "25",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Pile test subsets (Enron Emails and YouTube Subtitles excluded), bits-per-byte, Retro 7.5B vs Jurassic-1 178B and Gopher 280B; their numbers copied from their papers; Retro beats them on a majority of subsets, not all.",
+   "note": null,
+   "where": "Abstract; Fig 4, Table 15",
+   "quote": "obtains comparable performance to GPT-3 and Jurassic-1 on the Pile, despite using 25× fewer parameters"
+  },
+  {
+   "claim": "Retro 7.5B outperforms Jurassic-1 and Gopher on a majority of Pile test sets; it does not beat the 7B baseline on dm_mathematics and ubuntu_irc.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Pile, 7.5B Retro vs 178B Jurassic-1 and 280B Gopher, relative bpb improvement over the 7B baseline.",
+   "note": null,
+   "where": "Sec 4.1 The Pile, p11-12",
+   "quote": "Overall, Retro 7.5B outperforms Jurassic-1 and Gopher on a majority of the test sets."
+  },
+  {
+   "claim": "Retro gain is constant across model sizes and comparable to multiplying parameters by about 10x (stated for C4; 'certain datasets' in the conclusion).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "C4 validation, bpb, 172M to 7.5B non-embedding params, training database 600B tokens, evaluation database 1.75T tokens.",
+   "note": null,
+   "where": "Fig 1 caption p2",
+   "quote": "The performance gain of our retrieval models remains constant with model scale (left), and is comparable to multiplying the parameteric model size by ∼10×."
+  },
+  {
+   "claim": "C4 bpb with retrieval vs baseline at 7.5B.",
+   "kind": "measured",
+   "source": null,
+   "metric": "C4 eval bits-per-byte",
+   "value": "0.66",
+   "unit": "bpb",
+   "baseline_value": "0.78",
+   "n": null,
+   "setup": "C4 eval, Table 14, 7.5B model, Retro[On] vs baseline.",
+   "note": null,
+   "where": "Table 14 p34",
+   "table": "Table 14, row C4 Eval bpb, 7.5B columns: baseline 0.78, Retro[On] 0.66"
+  },
+  {
+   "claim": "Retro[Off] (retrieval disabled at evaluation) matches the baseline on C4 at every size.",
+   "kind": "measured",
+   "source": null,
+   "metric": "C4 eval bits-per-byte",
+   "value": "0.78",
+   "unit": "bpb",
+   "baseline_value": "0.78",
+   "n": null,
+   "setup": "Table 14, C4 eval bpb.",
+   "note": null,
+   "where": "Table 14 p34",
+   "table": "Table 14, row C4 Eval bpb, Retro[Off] 7.5B column"
+  },
+  {
+   "claim": "Growing the evaluation retrieval database improves C4 bpb for the 7.5B model.",
+   "kind": "measured",
+   "source": null,
+   "metric": "C4 eval bpb at 900B-token database",
+   "value": "0.71",
+   "unit": "bpb",
+   "baseline_value": "0.78",
+   "n": null,
+   "setup": "C4 eval, 7.5B Retro, varying evaluation database size; Table 14 rows C4 Eval bpb (2B) to (900B).",
+   "note": null,
+   "where": "Table 14 p34; Fig 1 middle",
+   "table": "Table 14, row C4 Eval bpb (2B) 7.5B column 0.78; row C4 Eval bpb (900B) 7.5B column 0.71; full 0.66"
+  },
+  {
+   "claim": "Despite training with 2 neighbours, more neighbours help at evaluation; the 172M model improves up to 10 neighbours and the 7B model up to 40, after which quality degrades.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "C4 validation, Fig 1 right.",
+   "note": null,
+   "where": "Sec 4.1 Data scaling p11",
+   "quote": "the 172M model improves with up to 10 neighbours, whereas the 7B model improves with up to 40 neighbours"
+  },
+  {
+   "claim": "Wikitext103 test perplexity with full MassiveText retrieval is 3.92, which the authors say is partly leakage.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Wikitext103 test perplexity",
+   "value": "3.92",
+   "unit": "perplexity",
+   "baseline_value": "22.96",
+   "n": null,
+   "setup": "Retro fine-tuned (Retro-fit) from an 18-layer Wikitext103 baseline, 10 neighbours at evaluation; baseline 22.96, Retro retrieving Wikipedia 18.97, kNN-LM (ours) 19.54.",
+   "note": "Section 4.1 says the baseline has 24 layers; Table 11 lists 18 layers.",
+   "where": "Table 4 p12; Table 11 p28",
+   "quote": "The perplexities for retrieving from full MassiveText are quite low, which is partly due to partial overlap with Wikitext103 not caught by our deduplication."
+  },
+  {
+   "claim": "Retro-fitting needs only 6 million sequences (3% of pre-training sequences) and trains under 10% of weights at 7B.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "3",
+   "unit": "% of pre-training sequences",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Frozen pre-trained decoder, new chunked cross-attention and neighbour encoder trained on MassiveText.",
+   "note": null,
+   "where": "Sec 4.2 p13",
+   "quote": "requiring only 6 million sequences (3% of the pre-training sequences that we used)"
+  },
+  {
+   "claim": "Fine-tuned Retro 7.5B reaches 45.5 exact match on Natural Questions, below FiD (51.4) and Emdr2 (52.5); closed-book 7B baseline is 30.4.",
+   "kind": "measured",
+   "source": null,
+   "metric": "exact match",
+   "value": "45.5",
+   "unit": "%",
+   "baseline_value": "30.4",
+   "n": null,
+   "setup": "NQ test exact match; all weights of 7.5B Retro fine-tuned 25,000 steps with top-20 DPR passages.",
+   "note": null,
+   "where": "Table 5 p14; Sec 4.3",
+   "table": "Table 5, row Retro 7.5B (DPR retrieval), column Test Accuracy"
+  },
+  {
+   "claim": "Retro exploits train/eval leakage more strongly than baselines, but still beats them on chunks with under 8 shared contiguous tokens.",
+   "kind": "measured",
+   "source": null,
+   "metric": "leakage level alpha",
+   "value": "12.5",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Filtered bpb (Eq 5) on C4, Wikitext103, Curation Corpus, Wikipedia Sept 2021; alpha = 12.5%.",
+   "note": null,
+   "where": "Sec 4.4 p15",
+   "quote": "Retro outperforms baseline models at all leakage levels, down to α = 12.5%."
+  },
+  {
+   "claim": "Only a modest fraction of Retro's gain is due to test set leakage.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Authors' conclusion from the filtered evaluation.",
+   "note": null,
+   "where": "Conclusion p16",
+   "quote": "only a modest fraction of the gains obtained by Retro are due to test set leakage"
+  },
+  {
+   "claim": "Ablation: attending to neighbours only gives 22% of the retrieval gain, continuations only 56%; using both is best.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "22",
+   "unit": "% of retrieval gain",
+   "baseline_value": null,
+   "n": null,
+   "setup": "247M model, 157B-token schedule, C4 eval bpb: Retro 0.822, neighbours N 0.950, continuations F 0.895, no retrieval 0.987.",
+   "note": null,
+   "where": "App D p30-31; Table 13",
+   "quote": "attending to neighbours only provides 22% of the performance"
+  },
+  {
+   "claim": "Ablation: training with 1 neighbour is much worse (0.858) and 4 neighbours (0.847) gives no large gain over 2 (0.822) but costs more.",
+   "kind": "measured",
+   "source": null,
+   "metric": "C4 eval bpb",
+   "value": "0.822",
+   "unit": "bpb",
+   "baseline_value": null,
+   "n": null,
+   "setup": "247M model, 157B-token schedule, C4 eval bpb.",
+   "note": null,
+   "where": "Table 13 p30",
+   "table": "Table 13, rows 1 training neighbours 0.858, 4 training neighbours 0.847, Retro 0.822"
+  },
+  {
+   "claim": "Retrieval at the chunk level makes the index tractable: kNN-LM needs 15 TB for 4B Wikipedia tokens; Retro needs 215 GB for Wikipedia and 93 TB for MassiveText.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Index storage, Sec 4.1.",
+   "note": null,
+   "where": "Sec 4.1 Wikitext103 p13",
+   "quote": "Retro only requires 215Gb to index our Wikipedia dataset, and 93Tb"
+  },
+  {
+   "claim": "Retro nearest-neighbour lookup in a 2T-token database takes about 10 ms.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "10",
+   "unit": "ms",
+   "baseline_value": null,
+   "n": null,
+   "setup": "SCaNN approximate search, amortised over a 64-token chunk.",
+   "note": null,
+   "where": "Sec 2.3 p4",
+   "quote": "we can query our 2 trillion token database in 10 ms"
+  },
+  {
+   "claim": "Retrieval reduces hallucination in samples (qualitative, 7.5B).",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Hand-picked prompts, Tables 6 and 7.",
+   "note": null,
+   "where": "Sec 4.5 p15",
+   "quote": "retrieval reduces hallucinations (in line with the ﬁndings of Shuster et al. (2021))"
+  }
+ ],
+ "limits": [
+  "No seeds or confidence intervals; one model per configuration.",
+  "Training and evaluation data are the same corpus, so leakage cannot be removed; dedup missed Wikitext103 overlap (3.92 ppl).",
+  "Pile comparison excludes two subsets and uses other labs' published numbers; GPT-3 omitted from Fig 4.",
+  "On NQ, Retro under-performs FiD; authors hypothesise Retro relies less on encoder output; more than 20 neighbours does not help.",
+  "Retro does not beat the baseline on dm_mathematics and ubuntu_irc.",
+  "Claims that database updates keep the model current or remove data are argued (Sec 3.2), not measured.",
+  "Compute, hardware and wall-clock are not stated in the paper.",
+  "Possible bias and toxicity effects of retrieval flagged as needing further work."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Retro[Off]",
+   "definition": "Retro evaluated without retrieval data",
+   "where": "Fig 1 caption"
+  },
+  {
+   "term": "Retro-fitting",
+   "definition": "freezing a pre-trained transformer and training only chunked cross-attention and retrieval encoder weights",
+   "where": "Sec 4.2"
+  },
+  {
+   "term": "filtered bits-per-byte",
+   "definition": "bpb restricted to evaluation chunks with overlap with training chunks at most alpha",
+   "where": "Sec 2.6"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "kNN-LM (Khandelwal et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "token-level retrieval re-implemented on Wikitext103",
+   "quote": null
+  },
+  {
+   "work": "REALM (Guu et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "related",
+   "note": "end-to-end retriever; NQ baseline",
+   "quote": null
+  },
+  {
+   "work": "RAG (Lewis et al.)",
+   "year": 2020,
+   "arxiv": "2005.11401",
+   "relation": "baseline",
+   "note": "NQ baseline 44.5",
+   "quote": null
+  },
+  {
+   "work": "FiD (Izacard and Grave)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "neighbours encoded separately; NQ 51.4; also source of NQ data",
+   "quote": null
+  },
+  {
+   "work": "DPR (Karpukhin et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "supplies the NQ passages",
+   "quote": null
+  },
+  {
+   "work": "Emdr2 (Sachan et al.)",
+   "year": 2021,
+   "arxiv": "2106.05346",
+   "relation": "baseline",
+   "note": "NQ 52.5",
+   "quote": null
+  },
+  {
+   "work": "Spalm (Yogatama et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Wikitext103 baseline",
+   "quote": null
+  },
+  {
+   "work": "Scaling language models: Gopher (Rae et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "MassiveText; Gopher Pile numbers",
+   "quote": null
+  },
+  {
+   "work": "Jurassic-1 (Lieber et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "178B Pile comparison",
+   "quote": null
+  },
+  {
+   "work": "Megatron-LM (Shoeybi et al.)",
+   "year": 2019,
+   "arxiv": "1909.08053",
+   "relation": "baseline",
+   "note": "Wikitext103 10.81",
+   "quote": null
+  },
+  {
+   "work": "BERT (Devlin et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "frozen retriever embeddings",
+   "quote": null
+  },
+  {
+   "work": "SCaNN (Guo et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "approximate nearest neighbour search",
+   "quote": null
+  },
+  {
+   "work": "Shuster et al.: Retrieval augmentation reduces hallucination",
+   "year": 2021,
+   "arxiv": "2104.07567",
+   "relation": "related",
+   "note": "cited for reduced hallucination",
+   "quote": null
+  },
+  {
+   "work": "Lee et al.: deduplicating training data; Lewis et al.: test-train overlap",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "related",
+   "note": "motivate leakage analysis",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Scaling of Retro. The performance gain of our retrieval models remains constant with model scale (left), and is comparable to multiplying the parameteric model size by ~10x.",
+   "page": 2,
+   "why": "Shows gain vs model size, database size and neighbours on C4"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Retro architecture.",
+   "page": 3,
+   "why": "Chunk, neighbour, encoder and CCA data flow and causality"
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "Performance vs. longest common retrieval substring.",
+   "page": 15,
+   "why": "Separates leakage from genuine retrieval gain"
+  },
+  {
+   "figure": "Table 4",
+   "caption": "Perplexities on Wikitext103.",
+   "page": 12,
+   "why": "Effect of database size and leakage"
+  }
+ ],
+ "code": [
+  {
+   "where": "Listing 1, p27",
+   "snippet": "def multi_chunk_cross_attention(observation, neighbours): ... (simplified JAX chunked cross-attention)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text extraction renders 'x' in '25x' and symbols; chunk tables 6,7,16-21 are jumbled colour grids and unread.",
+  "Model sizes differ between Table 2 (172M/425M/1,451M/7,532M) and Table 10 (247M/564M/1,574M/7,505M); Table 10 counts include the retrieval encoder differently or are decoder sizes. Wikitext103 baseline: text 24 layers, Table 11 18 layers.",
+  "Old schema-0 report used only as a map."
+ ]
 }

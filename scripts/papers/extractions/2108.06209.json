@@ -1,19 +1,540 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2108.06209",
  "pdf": "ai-engineering/08-multimodal-engineering/sources/chung-2021-w2v-bert.pdf",
  "bib": {
-  "title": "w2v-BERT: Combining Contrastive Learning and Masked Language Modeling for Self-Supervised Speech Pre-Training",
+  "title": "W2V-BERT: Combining Contrastive Learning and Masked Language Modeling for Self-Supervised Speech Pre-Training",
+  "authors": [
+   "Yu-An Chung",
+   "Yu Zhang",
+   "Wei Han",
+   "Chung-Cheng Chiu",
+   "James Qin",
+   "Ruoming Pang",
+   "Yonghui Wu"
+  ],
   "first_author": "Chung",
   "year": 2021,
-  "venue": "ASRU 2021",
+  "venue": "preprint (arXiv:2108.06209v2; PDF does not print a venue)",
   "arxiv": "2108.06209",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-04",
-  "session": "97b4134b-decf-4866-ae85-c6872cbbba19"
+  "at": "2026-11-07",
+  "chars_read": 40720,
+  "chars_total": 40720,
+  "engine": "pymupdf",
+  "skipped": null
  },
- "legacy_report": "SOURCE: \"w2v-BERT: Combining Contrastive Learning and Masked Language Modeling for Self-Supervised Speech Pre-Training\", Yu-An Chung, Yu Zhang, Wei Han, Chung-Cheng Chiu, James Qin, Ruoming Pang, Yonghui Wu (MIT CSAIL / Google Brain). The file is arXiv:2108.06209v2 (13 Sep 2021). The PDF never prints \"ASRU\", so the venue comes from your brief, not from the text.\n\nCOVERAGE: All 7 of 7 pages, 40,778 of 40,778 chars. Body text and Tables 1–4 read in full; references skimmed. There are no appendices.\n\nCLAIMS\n1. Two losses, trained together end to end. The contrastive loss is wav2vec 2.0's task plus a codebook diversity term. The masked-prediction loss is cross-entropy on the quantizer's token IDs. Both are weighted 1.\n   - Quote: \"Lc =Lw +α·L d, (1) whereα = 0.1 following [23].\" / \"Lp =β·L c +γ·L m. (2) In our experiments, we simply set bothβ andγ to 1.\" (p3)\n   - Setup: the contrastive task picks the true quantized vector from K distractors drawn from other masked steps of the same utterance. Masked positions are filled with random vectors, not a learned mask vector. Masking: \"probability of 0.065 and mask the subsequent 10 time steps\" (p3).\n2. Quantizer and sizes. The quantizer follows wav2vec 2.0's mechanism. It sees the feature-encoder output without masking, and its token IDs are the targets for masked prediction. Codebook size is 1024 and code dimension is 1024. XL has 0.6B parameters (12 contrastive + 12 masked conformer layers). XXL has 1.0B (12 + 30).\n   - Quote: \"w2v-BERT XL 0.6 12 12 1024 8 5 N 1024 1024\" / \"w2v-BERT XXL 1.0 12 30 1024 8 5 N 1024 1024\" (Table 1, p3)\n   - Setup: input is 80-dim log-mel; the conv subsampling cuts sequence length 4x. Fine-tuning uses an RNN-T with a 2-layer LSTM decoder, from checkpoints at 400k steps.\n3. Pretraining data.\n   - Quote: \"Libri-Light unlab-60k subset [34], which contains about 60,000 hours of unannotated speech audio\" (p3)\n   - Setup: fine-tuned on LibriSpeech 960h for the main results; 100h for ablations.\n4. Headline LibriSpeech WER (Table 2, test / test-other):\n   - Pre-training only, no LM: w2v-BERT XXL 1.5/2.8, XL 1.5/2.9, wav2vec 2.0 (0.3B) 2.2/4.5. Quote: \"w2v-BERT XL achieves a WER of 1.5/2.9 (test/test-other)\" (p4)\n   - Pre-training only, with LM: XXL 1.5/2.7, wav2vec 2.0 1.8/3.3, HuBERT X-Large (1.0B) 1.8/2.9, HuBERT Large 1.9/3.3.\n   - Pre-training + self-training (NST) + LM: XXL 1.4/2.5, w2v-Conformer XXL+ 1.4/2.6, wav2vec 2.0 1.5/3.1.\n   - Versus wav2vec 2.0: \"a relative WER reduction of 28%, 42%, 32%, and 38% on the four evaluation subsets respectively without LM, and 13%/ 13%/ 17%/ 18% when LM is employed\" (p4). The abstract's summary: \"5% to 10% relative WER reduction on the test-clean and test-other subsets\" vs conformer-based wav2vec 2.0 and HuBERT (p1).\n   - Caveat: the HuBERT rows exist only with an LM. HuBERT has no no-LM or self-training numbers (\"−\"). The authors say wav2vec 2.0's LM is \">0.4B\", so its total size, \">0.7B\", is comparable to XL's (p4).\n5. Voice search: the gain holds on short, noisy, real-world traffic.\n   - Quote: \"w2v-BERT XL (Ours) 34.3k (V oice search) 6.2\" vs \"w2v-Conformer-XL-tuned ... 8.9\", and the from-scratch Conformer at 10.7 (Table 4, p6). The text says \"relative 30%\" (p6); the abstract says \"more than 30%\" (p1).\n   - Setup: 34.3k h of English voice-search audio for pretraining, 1k h transcribed for fine-tuning, test set of about 12k utterances under 5.5 s. All models are 600M except the 100M baseline.\n6. Masked prediction collapses without the contrastive loss. Training without the contrastive module drives MLM loss to about 0 and accuracy to 100%, which is codebook collapse, at α = 0.1, 0.3, 0.5 and 0.7.\n   - Quote: \"we ﬁnd all models are untrainable and quickly collapse regardless of the value of α\" (p5)\n   - Setup: 24-layer XL-sized variants. Related ablation (Table 3, 100h, no LM): with 24 layers fixed, test-other is best around C6–C12 (4.6–4.7) and worse at C2 (5.1) and C24 (5.0).\n\nLIMITS\n- The tokens are used only as pretraining targets for ASR. The paper never generates or resynthesizes speech from them and never measures what the tokens encode (phonetic or semantic content). Calling them \"semantic tokens\", as AudioPaLM-style work later did, is not shown here.\n- Results are English only: read speech (LibriSpeech) plus Google's internal voice search, which cannot be reproduced.\n- No low-resource results (10min/1h/10h); the authors list these as future work.\n- Hyperparameters are copied from [21] with no tuning: \"all the hyperparameter setups are directly taken from [21] without any changes\" (p6).\n- Baselines are quoted from other papers, so pipelines differ. The only matched comparison is with w2v-Conformer.\n- Voice search needed a pipeline change, stacking 3 frames instead of the 4x conv stride, which was applied to \"the tuned contrastive baseline\" (p6).\n\nBUILDS ON: wav2vec 2.0 (Baevski et al., NeurIPS 2020), BERT (Devlin et al., NAACL-HLT 2019), HuBERT (Hsu et al., arXiv 2021), vq-wav2vec (Baevski et al., ICLR 2020), DiscreteBERT (Baevski et al., arXiv 2019), Conformer (Gulati et al., Interspeech 2020), w2v-Conformer / \"Pushing the limits of semi-supervised learning\" (Zhang et al., arXiv 2020), Libri-Light (Kahn et al., ICASSP 2020), RNN-T (Graves, arXiv 2012).\n\nCODE: none.\n\nFIGURES: Fig. 1, p2, \"Illustration of the w2v-BERT pre-training framework ... a feature encoder, a contrastive module, and a masked language modeling (MLM) module\". In one picture it shows where the discrete IDs come from (an unmasked quantizer branch) and which stack each loss trains. That is clearer than the prose. Fig. 2 (p5, collapse curves) is a second choice.\n\nPROBLEMS: The extraction is clean. \"V oice\" is an extraction artifact of \"Voice\". The page-1 venue line shows the arXiv ID, not ASRU. There were no embedded instructions."
+ "type": "empirical",
+ "question": "Can masked-language-model style prediction over learned discrete speech tokens be trained end to end together with wav2vec 2.0's contrastive task, and does it beat contrastive-only pre-training for ASR?",
+ "hypothesis": "Combining a contrastive task (which yields a discriminative codebook) with a masked prediction task over its token IDs gives better speech representations than contrastive learning alone, and avoids HuBERT's iterative re-clustering.",
+ "contributions": [
+  "Propose w2v-BERT, optimizing contrastive and masked prediction losses simultaneously end to end.",
+  "State-of-the-art on LibriSpeech.",
+  "Large gain on a real-world voice search task over conformer wav2vec 2.0.",
+  "Analysis showing the contrastive module is necessary for masked prediction, and that masked prediction helps with easy negatives."
+ ],
+ "method": {
+  "summary": "A conformer feature encoder, a contrastive module (quantizer + conformer stack, wav2vec 2.0 task) and a masked prediction module (conformer stack with softmax over quantizer token IDs) are pre-trained jointly on unlabeled speech with Lp = beta*Lc + gamma*Lm. The pre-trained encoder is then fine-tuned with an LSTM decoder as a sequence transducer on LibriSpeech or Voice Search.",
+  "task": "self-supervised speech pre-training, then ASR fine-tuning",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Libri-Light unlab-60k",
+    "role": "pretrain",
+    "size": "about 60,000 hours",
+    "split": null,
+    "source": "Kahn et al. 2020",
+    "preprocessing": "80-dim log-mel filter bank coefficients"
+   },
+   {
+    "name": "LibriSpeech 960hr",
+    "role": "train",
+    "size": "960 hours",
+    "split": "eval on dev-clean, dev-other, test-clean, test-other",
+    "source": "Panayotov et al. 2015",
+    "preprocessing": "1024-token WordPiece model built from training transcripts"
+   },
+   {
+    "name": "LibriSpeech 100hr subset",
+    "role": "train",
+    "size": "100 hours",
+    "split": "same four eval sets",
+    "source": "Panayotov et al. 2015",
+    "preprocessing": "WordPiece 1024 built from the 100hr transcripts"
+   },
+   {
+    "name": "Google Voice Search (pre-training)",
+    "role": "pretrain",
+    "size": "34.3k hours English",
+    "split": null,
+    "source": "derived from Li et al. 2021 [42]; internal",
+    "preprocessing": null
+   },
+   {
+    "name": "Google Voice Search (fine-tune)",
+    "role": "train",
+    "size": "1k hours, randomly picked, anonymized, human-transcribed",
+    "split": null,
+    "source": "internal",
+    "preprocessing": null
+   },
+   {
+    "name": "Voice Search test",
+    "role": "eval",
+    "size": "around 12k utterances, under 5.5s",
+    "split": null,
+    "source": "internal, anonymized, human-transcribed",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "w2v-BERT XL",
+    "role": "proposed",
+    "params": "0.6B",
+    "architecture": "conv subsampling + 12 contrastive conformer blocks + 12 masked conformer blocks",
+    "init_from": null,
+    "tokenizer": "WordPiece",
+    "vocab": "1024 (transcript tokens)",
+    "layers": "12 + 12",
+    "hidden": "1024",
+    "heads": "8",
+    "context": null,
+    "other": {
+     "conv kernel size": "5",
+     "relative attention": "N",
+     "codebook size": "1024",
+     "code dim": "1024"
+    }
+   },
+   {
+    "name": "w2v-BERT XXL",
+    "role": "proposed",
+    "params": "1.0B",
+    "architecture": "as XL but 30 masked conformer blocks",
+    "init_from": null,
+    "tokenizer": "WordPiece",
+    "vocab": "1024 (transcript tokens)",
+    "layers": "12 + 30",
+    "hidden": "1024",
+    "heads": "8",
+    "context": null,
+    "other": {
+     "conv kernel size": "5",
+     "codebook size": "1024",
+     "code dim": "1024"
+    }
+   },
+   {
+    "name": "ASR network",
+    "role": "base",
+    "params": null,
+    "architecture": "sequence transducer: pre-trained w2v-BERT + linear (Swish, batch norm) projection + 2-layer LSTM decoder, hidden 640",
+    "init_from": "w2v-BERT checkpoint at 400k steps",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": "640 (decoder)",
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "w2v-Conformer XL/XXL",
+    "role": "baseline",
+    "params": "0.6B / 1.0B",
+    "architecture": "conformer, contrastive-only, linear layer instead of quantizer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "wav2vec 2.0, HuBERT Large/X-Large, Conformer L",
+    "role": "baseline",
+    "params": "0.3B, 0.3B/1.0B, 0.1B",
+    "architecture": "numbers quoted from literature",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "Lp = beta*Lc + gamma*Lm, Lc = Lw + alpha*Ld (contrastive + codebook diversity), Lm = cross-entropy on quantizer token IDs at masked positions; beta = gamma = 1, alpha = 0.1",
+   "optimizer": "XL: Adam with transformer schedule; XXL: Adafactor beta1=0.9 beta2=0.98 (pre-training); fine-tune same families",
+   "lr": "pre-train peak 2e-3; fine-tune XL encoder peak 3e-4, decoder peak 1e-3",
+   "lr_schedule": "transformer learning rate schedule (Vaswani sec 5.3)",
+   "warmup": "pre-train 25k steps; fine-tune encoder 5k, decoder 1.5k",
+   "batch_size": "pre-train 2048 (XL); fine-tune 256",
+   "steps": "fine-tune from checkpoints at 400k pre-training steps; total pre-training steps not stated",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "SpecAugment, Noisy Student Training self-training, LM fusion (where used), following Zhang et al. 2020 [21]; mask start prob 0.065, span 10, masked frames replaced by random vectors",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "XXL fine-tune optimizer": "Adafactor same configuration as pre-training; encoder/decoder schedules same as XL",
+    "note": "batch size and peak lr for XXL pre-training not stated separately; hyperparameters taken from [21] unchanged"
+   }
+  },
+  "inference": {
+   "decoding": "sequence transducer; LM fusion in some rows, details deferred to [21]",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single reported number per cell; no seeds or runs stated",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "contrastive distractors K": "not given",
+    "alpha": "0.1; ablation tried α = 0.1, 0.3, 0.5, and 0.7"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "WER",
+     "definition": "word error rate",
+     "unit": "%",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "Conformer L (scratch)",
+    "Conformer L with NST",
+    "wav2vec 2.0",
+    "HuBERT Large / X-Large",
+    "w2v-Conformer XL / XXL / XXL+"
+   ],
+   "protocol": "LibriSpeech dev, dev-other, test, test-other under four settings (scratch, self-training only, pre-training only, pre-training + self-training), each with and without LM; single run, no significance test; baselines quoted from literature"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "Libri-Light and LibriSpeech public; Voice Search data internal"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "w2v-BERT XL, pre-training only, no LM, test-clean WER.",
+   "kind": "measured",
+   "source": null,
+   "metric": "WER",
+   "value": 1.5,
+   "unit": "%",
+   "baseline_value": "2.2 (wav2vec 2.0, no LM, test)",
+   "n": null,
+   "setup": "LibriSpeech 960hr supervised, Libri-Light 60k pre-training, no self-training, no LM; test/test-other",
+   "note": null,
+   "where": "Sec 5.1",
+   "quote": "w2v-BERT XL\nachieves a WER of 1.5/2.9 (test/test-other)"
+  },
+  {
+   "claim": "w2v-BERT XL, pre-training only, no LM, test-other WER.",
+   "kind": "measured",
+   "source": null,
+   "metric": "WER",
+   "value": 2.9,
+   "unit": "%",
+   "baseline_value": "4.5 (wav2vec 2.0, no LM, test-other)",
+   "n": null,
+   "setup": "as above",
+   "note": null,
+   "where": "Sec 5.1",
+   "quote": "w2v-BERT XL\nachieves a WER of 1.5/2.9 (test/test-other)"
+  },
+  {
+   "claim": "w2v-BERT XXL pre-training+self-training+LM test-other WER, best system.",
+   "kind": "measured",
+   "source": null,
+   "metric": "WER",
+   "value": 2.5,
+   "unit": "%",
+   "baseline_value": "2.6 (w2v-Conformer XXL+)",
+   "n": null,
+   "setup": "LibriSpeech 960hr, NST, with LM, 1.0B AM, 0.1B LM",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row w2v-BERT XXL (Ours) under Pre-training + Self-training, column With LM test-other"
+  },
+  {
+   "claim": "w2v-BERT XXL pre-training only, no LM, test-other WER.",
+   "kind": "measured",
+   "source": null,
+   "metric": "WER",
+   "value": 2.8,
+   "unit": "%",
+   "baseline_value": "3.5 (w2v-Conformer XL)",
+   "n": null,
+   "setup": "LibriSpeech 960hr, no LM, no self-training",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row w2v-BERT XXL (Ours) under Pre-training Only, column No LM test-other"
+  },
+  {
+   "claim": "Relative WER reduction of w2v-BERT XXL versus wav2vec 2.0 without LM on the four sets.",
+   "kind": "measured",
+   "source": null,
+   "metric": "relative WER reduction",
+   "value": "28%, 42%, 32%, 38%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "pre-training only, no LM, LibriSpeech 960hr",
+   "note": null,
+   "where": "Sec 5.1",
+   "quote": "relative WER reduction of 28%, 42%, 32%,\nand 38% on the four evaluation subsets respectively without LM"
+  },
+  {
+   "claim": "Relative WER reduction of w2v-BERT XXL versus wav2vec 2.0 with LM.",
+   "kind": "measured",
+   "source": null,
+   "metric": "relative WER reduction",
+   "value": "13%/ 13%/ 17%/ 18%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "pre-training only, with LM",
+   "note": null,
+   "where": "Sec 5.1",
+   "quote": "13%/ 13%/ 17%/ 18% when LM is employed"
+  },
+  {
+   "claim": "Voice Search test WER, w2v-BERT XL.",
+   "kind": "measured",
+   "source": null,
+   "metric": "WER",
+   "value": 6.2,
+   "unit": "%",
+   "baseline_value": "8.9 (w2v-Conformer-XL-tuned)",
+   "n": null,
+   "setup": "34.3k h voice-search pre-training, 1k h fine-tune, ~12k test utterances, all 600M XL models",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row w2v-BERT XL (Ours), column Test (VS)"
+  },
+  {
+   "claim": "Tuned contrastive baseline on Voice Search.",
+   "kind": "measured",
+   "source": null,
+   "metric": "WER",
+   "value": 8.9,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "w2v-Conformer-XL-tuned, 3 stacked frames instead of 4x conv stride",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row w2v-Conformer-XL-tuned, column Test (VS)"
+  },
+  {
+   "claim": "Untuned w2v-Conformer-XL does not beat supervised 100M Conformer on Voice Search (10.8 vs 10.7).",
+   "kind": "measured",
+   "source": null,
+   "metric": "WER",
+   "value": 10.8,
+   "unit": "%",
+   "baseline_value": "10.7 (Conformer, no pre-training)",
+   "n": null,
+   "setup": "Table 4 untuned contrastive baseline",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row w2v-Conformer-XL, column Test (VS)"
+  },
+  {
+   "claim": "Relative Voice Search improvement over tuned contrastive baseline.",
+   "kind": "measured",
+   "source": null,
+   "metric": "relative WER reduction",
+   "value": "30%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "w2v-BERT XL vs w2v-Conformer-XL-tuned; abstract says 'more than 30%' versus internal wav2vec 2.0",
+   "note": "Abstract: 'outperforms our internal conformer-based wav2vec 2.0 by more than 30% relatively'. 6.2 vs 8.9 computes to about 30%.",
+   "where": "Sec 5.3",
+   "quote": "significantly improves the\ntuned contrastive baseline by relative 30%"
+  },
+  {
+   "claim": "Without the contrastive module, all models collapse (MLM loss near 0, 100% accuracy, diversity loss near 1).",
+   "kind": "measured",
+   "source": null,
+   "metric": "alpha values tried",
+   "value": "0.1, 0.3, 0.5, 0.7",
+   "unit": "alpha",
+   "baseline_value": null,
+   "n": null,
+   "setup": "24 conformer layers, no contrastive module",
+   "note": null,
+   "where": "Sec 5.2, Fig 2",
+   "quote": "We try different values of α = 0.1, 0.3, 0.5,\nand 0.7 in Equation 1"
+  },
+  {
+   "claim": "Contrastive module depth sweet spot: C8 test-other 4.6 vs C2 5.1 (100hr, no ST, no LM); C12 4.6, C24 5.0.",
+   "kind": "measured",
+   "source": null,
+   "metric": "WER",
+   "value": 4.6,
+   "unit": "%",
+   "baseline_value": "5.1 (C2)",
+   "n": null,
+   "setup": "LibriSpeech 100hr, 24 total layers, no self-training or LM",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row C8, column test-other"
+  },
+  {
+   "claim": "w2v-BERT XXL on 100hr, no ST/LM, test-other.",
+   "kind": "measured",
+   "source": null,
+   "metric": "WER",
+   "value": 4.3,
+   "unit": "%",
+   "baseline_value": "6.3 (wav2vec 2.0)",
+   "n": null,
+   "setup": "LibriSpeech 100hr",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row w2v-BERT XXL (Ours), column test-other"
+  }
+ ],
+ "limits": [
+  "All hyperparameters copied from Zhang et al. [21] without tuning; authors plan to search the best configuration (Sec 6).",
+  "Low-resource benchmarks (Libri-Light 10min, 1hr, 10hr) not evaluated.",
+  "Voice Search data and test set are internal; no code or weights stated.",
+  "Baselines are quoted from the literature, not rerun; wav2vec 2.0 and w2v-BERT differ in model and LM size (authors compare sums).",
+  "Single runs, no seeds or significance; no compute, hardware or total pre-training steps stated.",
+  "English only; the contrastive module needed a less aggressive subsampling (3 stacked frames) on voice search, and contrastive-only baseline needed tuning.",
+  "The collapse explanation for the no-contrastive case is a hypothesis supported by training curves, not a controlled proof."
+ ],
+ "practices": [],
+ "terms": [],
+ "lineage": [
+  {
+   "work": "wav2vec 2.0",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "contrastive task and quantization mechanism reused",
+   "quote": null
+  },
+  {
+   "work": "BERT",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "masked language modeling idea",
+   "quote": null
+  },
+  {
+   "work": "HuBERT",
+   "year": 2021,
+   "arxiv": "2106.07447",
+   "relation": "baseline",
+   "note": "iterative k-means re-clustering; w2v-BERT is end to end",
+   "quote": null
+  },
+  {
+   "work": "vq-wav2vec",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "related",
+   "note": "two separately trained modules",
+   "quote": null
+  },
+  {
+   "work": "DiscreteBERT (Effectiveness of self-supervised pre-training for speech recognition)",
+   "year": 2019,
+   "arxiv": "1911.03912",
+   "relation": "related",
+   "note": "two-stage discretize then MLM",
+   "quote": null
+  },
+  {
+   "work": "Pushing the limits of semi-supervised learning for ASR (w2v-Conformer)",
+   "year": 2020,
+   "arxiv": "2010.10504",
+   "relation": "baseline",
+   "note": "same fine-tuning pipeline and hyperparameters; contrastive-only conformer",
+   "quote": null
+  },
+  {
+   "work": "Conformer",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "building block",
+   "quote": null
+  },
+  {
+   "work": "Libri-Light",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "unlab-60k pre-training",
+   "quote": null
+  },
+  {
+   "work": "LibriSpeech",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "supervised fine-tuning and evaluation",
+   "quote": null
+  },
+  {
+   "work": "Self-training and pre-training are complementary for speech recognition",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "wav2vec 2.0 numbers with LM",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Illustration of the w2v-BERT pre-training framework: feature encoder, contrastive module, MLM module.",
+   "page": 2,
+   "why": "shows how quantizer IDs from the contrastive stack become the MLM target."
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Training curves with and without contrastive module: MLM loss, MLM accuracy, diversity loss, first 300k steps.",
+   "page": 4,
+   "why": "shows the code collapse when the contrastive module is removed."
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 1-2, Sec 3.2",
+   "snippet": "Lc = Lw + alpha*Ld, alpha=0.1; Lp = beta*Lc + gamma*Lm, beta=gamma=1",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Table 2 header columns (dev / dev-other / test / test-other) are flattened in text; read by position. PDF does not print a conference name.",
+  "Table 1 and Fig 2 axes not machine readable beyond the cell values."
+ ]
 }

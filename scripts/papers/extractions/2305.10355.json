@@ -1,0 +1,643 @@
+{
+ "schema": 1,
+ "key": "2305.10355",
+ "pdf": "ai-engineering/08-multimodal-engineering/sources/li-2023-evaluating-object-hallucination-large-vision.pdf",
+ "bib": {
+  "title": "Evaluating Object Hallucination in Large Vision-Language Models",
+  "authors": [
+   "Yifan Li",
+   "Yifan Du",
+   "Kun Zhou",
+   "Jinpeng Wang",
+   "Wayne Xin Zhao",
+   "Ji-Rong Wen"
+  ],
+  "first_author": "Li",
+  "year": 2023,
+  "venue": "Proceedings of the 2023 Conference on Empirical Methods in Natural Language Processing (EMNLP), pages 292-305",
+  "arxiv": "2305.10355",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 54001,
+  "chars_total": 54001,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "benchmark",
+ "question": "Do large vision-language models hallucinate objects absent from the image, and how can this be evaluated more stably than with caption-based CHAIR?",
+ "hypothesis": "LVLMs are prone to hallucinate objects that appear frequently in the visual instruction data and objects that frequently co-occur with ground-truth objects in the image.",
+ "contributions": [
+  "An empirical study of object hallucination in several representative LVLMs, finding them highly affected.",
+  "A discussion of potential reasons, e.g. LVLMs tend to generate frequently appearing or co-occurring objects in the instruction corpora.",
+  "POPE, a polling-based hallucination evaluation that is more stable and easily extended to unannotated datasets."
+ ],
+ "method": {
+  "summary": "Evaluates five open LVLMs on MSCOCO with CHAIR using two caption prompts, analyses hallucinated objects against object frequency and co-occurrence (HR@k), then proposes POPE: yes/no 'Is there a <object> in the image?' questions with 1:1 present/absent objects, absent objects sampled randomly, by popularity or adversarially by co-occurrence. POPE is run on annotation-based and SEEM-segmentation-based object lists.",
+  "task": "object hallucination evaluation of LVLMs (image captioning and yes/no polling)",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "MSCOCO validation (CHAIR and HR analysis)",
+    "role": "eval",
+    "size": "2,000 randomly sampled images",
+    "split": "validation",
+    "source": "Lin et al., 2014",
+    "preprocessing": "CHAIR considers only the 80 objects of the MSCOCO segmentation challenge"
+   },
+   {
+    "name": "MSCOCO validation (POPE)",
+    "role": "eval",
+    "size": "500 images with more than 3 ground-truth objects; 6 questions per image (l = 6)",
+    "split": "validation",
+    "source": "Lin et al., 2014",
+    "preprocessing": "Ground-truth objects from annotations; absent objects sampled Random/Popular/Adversarial; ratio of present to absent 1:1"
+   },
+   {
+    "name": "A-OKVQA (SEEM-based POPE and VQA)",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Schwenk et al., 2022",
+    "preprocessing": "objects from SEEM segmentation"
+   },
+   {
+    "name": "GQA (SEEM-based POPE and VQA)",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Hudson and Manning, 2019",
+    "preprocessing": "objects from SEEM segmentation"
+   }
+  ],
+  "models": [
+   {
+    "name": "mPLUG-Owl",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "ViT-L/14 + attention alignment + LLaMA7B (LoRA-tuned LLM)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "Table 7": "VE ViT-L/14, AN Attention, LLM LLaMA7B"
+    }
+   },
+   {
+    "name": "LLaVA",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "ViT-L/14 + linear + LLaMA13B",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "MultiModal-GPT",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "ViT-L/14 + attention + LLaMA7B (LoRA-tuned LLM)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "MiniGPT-4",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "ViT-G/14 + linear + Vicuna13B",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "InstructBLIP",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "ViT-G/14 + Q-Former + Vicuna13B",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "OSCAR, VinVL, OFA, BLIP (large VLPMs)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "small vision-language pretrained models",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "CHAIR numbers collected from Dai et al. (2023b); BLIP fine-tuned on VQAv2 from LAVIS used as POPE baseline in Table 11"
+    }
+   },
+   {
+    "name": "ChatGPT",
+    "role": "judge",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "parses open-ended VQA answers against 10 reference answers; version not stated"
+    }
+   },
+   {
+    "name": "SEEM",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "segmentation tool (Zou et al., 2023)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "automatic object annotation for POPE"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "one run per model/setting; random sampling of 500 images; seed not stated",
+   "prompting": "CHAIR captions: I1 'Generate a short caption of the image.' and I2 'Provide a brief description of the given image.' POPE: 'Is there a/an <object> in the image?'; answer parsed by matching 'Yes'/'No'.",
+   "retrieval": null,
+   "parameters": {
+    "POPE questions per image l": "6",
+    "present:absent ratio": "1:1",
+    "Popular sampling": "top-k most frequent objects in the whole dataset absent from the image, k = l/2",
+    "Adversarial sampling": "rank objects by co-occurrence with ground-truth objects, take top-k absent ones, k = l/2",
+    "Random sampling": "random absent objects",
+    "HR@k": "k in 10, 20, 30"
+   },
+   "other": {
+    "prompt_variants_Table4": "POPE: 'Is there a <object> in the image?', 'Does the image contain a <object>?', 'Have you noticed a <object> in the image?', 'Can you see a <object> in the image?'; CHAIR: 'Generate a short caption of the image.', 'Provide a brief description of the image.', 'Generate a concise description for the image.', 'Create a short textual summary for the image.'"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "CHAIR_I",
+     "definition": "|{hallucinated objects}| / |{all mentioned objects}|",
+     "unit": "%",
+     "higher_is_better": false
+    },
+    {
+     "name": "CHAIR_S",
+     "definition": "|{captions with hallucinated objects}| / |{all captions}|",
+     "unit": "%",
+     "higher_is_better": false
+    },
+    {
+     "name": "HR_A@k",
+     "definition": "mean over images of Hit@k(i)/Hallucinated(i): share of hallucinated objects that are among the top-k most frequent MSCOCO objects",
+     "unit": "ratio",
+     "higher_is_better": null
+    },
+    {
+     "name": "HR_C@k(o)",
+     "definition": "share of hallucinated objects among the top-k objects co-occurring with probing object o",
+     "unit": "ratio",
+     "higher_is_better": null
+    },
+    {
+     "name": "POPE Accuracy / Precision / Recall / F1",
+     "definition": "binary classification of Yes/No answers; F1 is the major metric; Precision and Recall are as printed ('ratios of correctly answering questions whose answers are Yes or No')",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Yes (%)",
+     "definition": "proportion of questions answered Yes, reported for model behaviour",
+     "unit": "%",
+     "higher_is_better": null
+    },
+    {
+     "name": "VQA score / accuracy",
+     "definition": "VQA score on A-OKVQA, accuracy on GQA, with ChatGPT-assisted answer matching",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "OSCAR base",
+    "VinVL large",
+    "OFA large",
+    "BLIP large (CHAIR results from Dai et al. 2023b)",
+    "BLIP (VQAv2 fine-tuned) in SEEM-based POPE"
+   ],
+   "protocol": "Single run per setting, no significance tests or seeds reported. Stability tested with 4 prompts each for POPE and CHAIR_I on LLaVA. Consistency check between POPE answers and captions on InstructBLIP and MiniGPT-4."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": null
+  },
+  "prompts": [
+   {
+    "purpose": "CHAIR caption instruction I1",
+    "text": "Generate a short caption of the image.",
+    "where": "Section 3.1"
+   },
+   {
+    "purpose": "CHAIR caption instruction I2",
+    "text": "Provide a brief description of the given image.",
+    "where": "Section 3.1"
+   },
+   {
+    "purpose": "POPE question template",
+    "text": "Is there a/an <object> in the image?",
+    "where": "Section 5.1"
+   },
+   {
+    "purpose": "ChatGPT answer matcher for VQA",
+    "text": "You are an examiner who can judge whether a student's answer matches the correct answers. Next, I will provide you with 10 correct answers in the form of a list and a student's answer. Please judge whether the student's answer matches one of the 10 correct answers. If it matches, please output the correct answer directly (must be an element in the list, if it matches multiple correct answers, please output the most frequent occurrence in the list); if not, please output <NAN> directly. Do NOT output anything else! correct answers: student answer:",
+    "where": "Appendix E"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "datasets[1].size",
+    "quote": "We randomly select 500 images with more than 3 ground-truth objects in the annotations and construct 6 questions for each image (i.e., l = 6).",
+    "where": "Section 5.2"
+   },
+   {
+    "field": "datasets[0].size",
+    "quote": "we randomly sample 2,000 images with annotations about contained objects and human-labeled captions from its validation set",
+    "where": "Appendix A"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Instruction-tuned LVLMs hallucinate more than small VLPMs: LLaVA CHAIR_S with I1 vs OSCAR base.",
+   "kind": "measured",
+   "source": null,
+   "metric": "CHAIR_S",
+   "value": 32.7,
+   "unit": "%",
+   "baseline_value": 13.0,
+   "n": null,
+   "setup": "MSCOCO val, 2,000 images, prompt I1",
+   "quote": "LLaVA (32.7) v.s. OSCARbase (13.0) on CHAIRS using Instruction 1",
+   "table": null,
+   "note": null,
+   "where": "Section 3.2"
+  },
+  {
+   "claim": "InstructBLIP hallucinates least in CHAIR_S under I1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "CHAIR_S",
+   "value": 3.7,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MSCOCO val, prompt I1",
+   "quote": null,
+   "table": "Table 1, row InstructBLIP, column CHAIR_S (I1)",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "mPLUG-Owl CHAIR_S rises from 25.4 under I1 to 76.8 under I2, so CHAIR is prompt-sensitive.",
+   "kind": "measured",
+   "source": null,
+   "metric": "CHAIR_S",
+   "value": 76.8,
+   "unit": "%",
+   "baseline_value": 25.4,
+   "n": null,
+   "setup": "MSCOCO val, prompt I2 (Provide a brief description of the given image)",
+   "quote": null,
+   "table": "Table 1, row mPLUG-Owl, column CHAIR_S (I2); I1 value 25.4",
+   "note": "Text says values 'can even result in doubled' under I2.",
+   "where": "Table 1"
+  },
+  {
+   "claim": "LLaVA CHAIR_I varies across four prompts, std 3.22, against POPE F1 std 0.78.",
+   "kind": "measured",
+   "source": null,
+   "metric": "std of CHAIR_I",
+   "value": 3.22,
+   "unit": "points",
+   "baseline_value": 0.78,
+   "n": null,
+   "setup": "LLaVA, MSCOCO, 4 prompts each for POPE and CHAIR",
+   "quote": null,
+   "table": "Table 4, row Avg±Std., column CHAIR_I (13.88±3.22); POPE 67.43±0.78",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "InstructBLIP F1 on POPE random setting is 89.29; LLaVA, MultiModal-GPT and mPLUG-Owl are below 70.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 89.29,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MSCOCO val annotation-based POPE, 500 images, Random",
+   "quote": "whose F1 Score are below 70",
+   "table": "Table 3, Random, row InstructBLIP, column F1 Score",
+   "note": null,
+   "where": "Table 3 / Section 5.2"
+  },
+  {
+   "claim": "MultiModal-GPT answers Yes to 99.97% of random-setting questions with accuracy 50.03.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Yes (%)",
+   "value": 99.97,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MSCOCO annotation-based POPE, Random",
+   "quote": null,
+   "table": "Table 3, Random, row MultiModal-GPT, column Yes (%)",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "InstructBLIP F1 falls from random 89.29 to popular 83.45 to adversarial 78.45.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 78.45,
+   "unit": "%",
+   "baseline_value": 89.29,
+   "n": null,
+   "setup": "MSCOCO annotation-based POPE, adversarial",
+   "quote": null,
+   "table": "Table 3, Adversarial, row InstructBLIP, column F1 Score",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "MiniGPT-4 F1 falls from 78.86 (random) to 71.37 (adversarial).",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 71.37,
+   "unit": "%",
+   "baseline_value": 78.86,
+   "n": null,
+   "setup": "MSCOCO annotation-based POPE, adversarial",
+   "quote": null,
+   "table": "Table 3, Adversarial, row MiniGPT-4, column F1 Score",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "About half of hallucinated objects per image are among the top-10 most frequent COCO objects (mPLUG-Owl HR_A@10).",
+   "kind": "measured",
+   "source": null,
+   "metric": "HR_A@10",
+   "value": 0.5455,
+   "unit": "ratio",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MSCOCO val captions, mPLUG-Owl",
+   "quote": "The HRA@10 and HRC@10(dining table) of all LVLMs are near 0.5 and 0.6, respectively.",
+   "table": "Table 2, row mPLUG-Owl, column HRA @10",
+   "note": null,
+   "where": "Table 2 / Section 4.3"
+  },
+  {
+   "claim": "Top 30 COCO objects account for about 70% of all hallucinated objects.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accumulated proportion",
+   "value": 69.74,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LLaVA, top 30 by appearance frequency, all 80 COCO objects",
+   "quote": "the top 30 objects comprise approximately 70% of all hallucinated objects",
+   "table": "Table 8, row LLaVA, column Top 30",
+   "note": null,
+   "where": "Appendix B"
+  },
+  {
+   "claim": "SEEM-based POPE is harder: MiniGPT-4 adversarial F1 62.70 vs 71.37 with annotations.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 62.7,
+   "unit": "%",
+   "baseline_value": 71.37,
+   "n": null,
+   "setup": "MSCOCO, SEEM-derived objects, adversarial",
+   "quote": "F1 Score 71.37 v.s. 62.70 for MiniGPT-4 under the Adversarial setting",
+   "table": null,
+   "note": null,
+   "where": "Section 5.3"
+  },
+  {
+   "claim": "Consistency: of 1303 InstructBLIP objects answered No, 0 appeared in captions; for MiniGPT-4, 5 of 1445.",
+   "kind": "measured",
+   "source": null,
+   "metric": "objects answered No yet in captions",
+   "value": 0,
+   "unit": "objects",
+   "baseline_value": null,
+   "n": null,
+   "setup": "InstructBLIP, MiniGPT-4, MSCOCO",
+   "quote": "out of the 1303 and 1445 objects that are given \"No\" responses by InstructBLIP and MiniGPT-4, merely 0 and 5 of those objects were referenced in captions",
+   "table": null,
+   "note": null,
+   "where": "Section 5.3"
+  },
+  {
+   "claim": "Lower hallucination does not always mean better VQA: MiniGPT-4 has higher POPE F1 than LLaVA on A-OKVQA (72.47 vs 66.64) but lower VQA score (38.69 vs 50.51).",
+   "kind": "measured",
+   "source": null,
+   "metric": "VQA score",
+   "value": 38.69,
+   "unit": "%",
+   "baseline_value": 50.51,
+   "n": null,
+   "setup": "A-OKVQA, MiniGPT-4, SEEM-based POPE random setting",
+   "quote": null,
+   "table": "Table 6, A-OKVQA, row MiniGPT-4, column VQA",
+   "note": "InstructBLIP was trained on A-OKVQA, so its result should be read with caution.",
+   "where": "Table 6"
+  }
+ ],
+ "limits": [
+  "Only object-level hallucination; attributes, counts and positions left for future work.",
+  "Measures hallucination only, so a higher POPE score does not mean a stronger model overall.",
+  "Evaluated on a subset of each validation set (500 images for POPE) because of compute; results may depend on the sample.",
+  "POPE decides Yes/No by word matching; models may not answer with those words.",
+  "SEEM labels use the tool's label set, which may diverge from human annotations.",
+  "Only a small number of open LVLMs; no closed-source or later models.",
+  "The causal link to instruction data is shown by correlation of hallucination counts with frequency, not by retraining on altered data.",
+  "Single run, no seeds or confidence intervals reported."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "POPE",
+   "definition": "Polling-based Object Probing Evaluation: object hallucination cast as a Yes/No binary classification by prompting LVLMs with questions about probing objects",
+   "where": "Section 5.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Object hallucination in image captioning (CHAIR)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Rohrbach et al., metric the paper critiques",
+   "quote": null
+  },
+  {
+   "work": "Plausible may not be faithful: Probing object hallucination in vision-language pre-training",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Dai et al. 2023b, source of VLPM CHAIR numbers",
+   "quote": null
+  },
+  {
+   "work": "InstructBLIP",
+   "year": 2023,
+   "arxiv": "2305.06500",
+   "relation": "evaluates",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "LLaVA (Visual instruction tuning)",
+   "year": 2023,
+   "arxiv": "2304.08485",
+   "relation": "evaluates",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "MiniGPT-4",
+   "year": 2023,
+   "arxiv": "2304.10592",
+   "relation": "evaluates",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "mPLUG-Owl",
+   "year": 2023,
+   "arxiv": "2304.14178",
+   "relation": "evaluates",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "Multimodal-GPT",
+   "year": 2023,
+   "arxiv": "2305.04790",
+   "relation": "evaluates",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "Segment Everything Everywhere All at Once (SEEM)",
+   "year": 2023,
+   "arxiv": "2304.06718",
+   "relation": "uses-method",
+   "note": "automatic object annotation for POPE",
+   "quote": null
+  },
+  {
+   "work": "Microsoft COCO",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "A-OKVQA",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "GQA",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Cases of object hallucination in LVLMs...",
+   "page": 2,
+   "why": "shows a CHAIR-style caption with hallucinated objects beside the three POPE variants"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Overview of the POPE pipeline.",
+   "page": 5,
+   "why": "shows annotation or SEEM objects, negative sampling, and question templates"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 5, Section 5.1",
+   "snippet": "<x, {q(o_i), a_i}_{i=1}^{l}>",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Table 1 and Table 3 text layout was flattened; values read column-wise in order. Table 7 symbols (frozen/trainable) were lost, so trainable components are not recorded.",
+  "Table 8 Top 40 for mPLUG-Owl (79.93) then Top 50 (90.41) looks as printed; not verified.",
+  "CHAIR used 2,000 images (Appendix A) while POPE used 500; paper does not say which images the Section 4 analysis used beyond 'validation set of MSCOCO'."
+ ]
+}

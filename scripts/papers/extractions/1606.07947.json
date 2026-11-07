@@ -1,0 +1,516 @@
+{
+ "schema": 1,
+ "key": "1606.07947",
+ "pdf": "ai-engineering/07-inference-engineering/sources/kim-2016-sequence-level-knowledge-distillation.pdf",
+ "bib": {
+  "title": "Sequence-Level Knowledge Distillation",
+  "authors": [
+   "Yoon Kim",
+   "Alexander M. Rush"
+  ],
+  "first_author": "Kim",
+  "year": 2016,
+  "venue": "Proceedings of the 2016 Conference on Empirical Methods in Natural Language Processing (EMNLP), pages 1317-1327",
+  "arxiv": "1606.07947",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 42842,
+  "chars_total": 42842,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can knowledge distillation, including new sequence-level variants, compress large NMT models into small fast students with little loss in BLEU?",
+ "hypothesis": "Training the student on the teacher's beam-search outputs (its approximate sequence mode) transfers sequence-level knowledge and removes the need for beam search at test time.",
+ "contributions": [
+  "Apply word-level knowledge distillation to NMT",
+  "Introduce sequence-level knowledge distillation (Seq-KD) and sequence-level interpolation (Seq-Inter)",
+  "Show students run 10x faster than teacher with beam search with little BLEU loss",
+  "Combine with weight pruning for 13x fewer parameters at -0.4 BLEU",
+  "Release code"
+ ],
+ "method": {
+  "summary": "Teacher NMT (attentional LSTM seq2seq, Luong 2015) is trained on gold data; beam search over the training set yields new targets (Seq-KD) or the beam hypothesis with highest smoothed sentence BLEU against gold (Seq-Inter); a smaller student is trained with ordinary NLL on those targets, optionally with word-level KD loss, and optionally pruned by magnitude then retrained.",
+  "task": "neural machine translation compression (English-German, Thai-English)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "WMT 2014 English-German",
+    "role": "both",
+    "size": "4m training sentences",
+    "split": "dev newstest2012/newstest2013; test newstest2014",
+    "source": "http://statmt.org/wmt14",
+    "preprocessing": "top 50k most frequent words kept, rest replaced with UNK; Seq-Inter data generated on ~50% of the training set for efficiency"
+   },
+   {
+    "name": "IWSLT 2015 Thai-English",
+    "role": "both",
+    "size": "90k training sentences",
+    "split": "dev 2010/2011/2012; test 2012/2013",
+    "source": "IWSLT 2015 MT track",
+    "preprocessing": "vocabulary 25k"
+   }
+  ],
+  "models": [
+   {
+    "name": "Teacher 4x1000 LSTM (En-De)",
+    "role": "teacher",
+    "params": "221m",
+    "architecture": "LSTM seq2seq with global-general attention and input feeding (Luong et al. 2015)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": "50k",
+    "layers": 4,
+    "hidden": 1000,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Student 2x500 LSTM (En-De)",
+    "role": "proposed",
+    "params": "84m",
+    "architecture": "same",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": "50k",
+    "layers": 2,
+    "hidden": 500,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Student 2x300 LSTM (En-De)",
+    "role": "proposed",
+    "params": "49m",
+    "architecture": "same",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": "50k",
+    "layers": 2,
+    "hidden": 300,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Teacher 2x500 LSTM (Th-En)",
+    "role": "teacher",
+    "params": "47m",
+    "architecture": "same",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": "25k",
+    "layers": 2,
+    "hidden": 500,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "performed better than 4x1000 and 2x750"
+    }
+   },
+   {
+    "name": "Student 2x100 LSTM (Th-En)",
+    "role": "proposed",
+    "params": "8m",
+    "architecture": "same",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": "25k",
+    "layers": 2,
+    "hidden": 100,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "NLL on teacher beam outputs (Seq-KD); mixture (1-alpha)*NLL + alpha*cross-entropy to teacher word distribution (Word-KD); NLL on highest-BLEU beam hypothesis (Seq-Inter)",
+   "optimizer": null,
+   "lr": "0.1 for Seq-Inter fine-tuning; 0.2 for retraining pruned model on Seq-KD data then 0.1 for Seq-Inter fine-tune",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "other_details": "Other training details mirror Luong et al. (2015), not restated",
+    "word_kd_alpha": "tested 0.5 and 0.9; 0.5 used",
+    "temperature": "tested tau in {1,1.5,2}; tau=1 best",
+    "seq_inter_init": "fine-tune from pretrained model (original data or Seq-KD data)",
+    "pruning": "remove weights with lowest absolute value, retrain"
+   }
+  },
+  "inference": {
+   "decoding": "greedy (K=1) and beam search K=5 for evaluation; teacher data generation beam K=5 for Seq-KD, K=35 for Seq-Inter",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single run per config; no seeds reported",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "seq_kd_beam": "5 (no improvement with larger)",
+    "seq_inter_beam": "35",
+    "sim": "smoothed sentence-level BLEU (Chen and Cherry 2014)"
+   },
+   "other": {
+    "speed_hardware": "GeForce GTX Titan X GPU, CPU (unspecified), Samsung Galaxy 6 smartphone"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "BLEU",
+     "definition": "tokenized BLEU with multi-bleu.perl, greedy (K=1) and beam 5",
+     "unit": "BLEU",
+     "higher_is_better": true
+    },
+    {
+     "name": "PPL",
+     "definition": "perplexity on test set",
+     "unit": "perplexity",
+     "higher_is_better": false
+    },
+    {
+     "name": "p(t=y_hat)",
+     "definition": "probability of greedy-decoded output sequence, averaged over test set",
+     "unit": "%",
+     "higher_is_better": null
+    },
+    {
+     "name": "Decoding speed",
+     "definition": "average source words translated per second",
+     "unit": "words/sec",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Teacher baseline",
+    "same-size student trained on original data",
+    "Word-KD"
+   ],
+   "protocol": "Single reported value per cell; no seeds, no significance tests."
+  },
+  "availability": {
+   "code": "https://github.com/harvardnlp/seq2seq-attn ; https://github.com/harvardnlp/nmt-android",
+   "weights": null,
+   "data": "WMT14, IWSLT15 public"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Seq-KD 2x500 student beats the same-size baseline by 4.2 BLEU with greedy decoding",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": "18.9",
+   "unit": "BLEU",
+   "baseline_value": "14.7",
+   "n": null,
+   "setup": "English-German WMT 2014, newstest2014 test, 2x500 LSTM student (84m params) distilled from 4x1000 LSTM teacher (221m), BLEU tokenized multi-bleu.perl, greedy (K=1)",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Student 2 x 500 Seq-KD, column BLEU K=1"
+  },
+  {
+   "claim": "Seq-KD gain over baseline with beam search K=5 is 1.4 BLEU (abstract: 1.7 for best combination)",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": "19.0",
+   "unit": "BLEU",
+   "baseline_value": "17.6",
+   "n": null,
+   "setup": "English-German WMT 2014, newstest2014 test, 2x500 LSTM student (84m params) distilled from 4x1000 LSTM teacher (221m), BLEU tokenized multi-bleu.perl, beam 5",
+   "note": "Abstract says 1.7 BLEU with beam search, which matches Seq-KD + Seq-Inter (19.3, +1.7), not Seq-KD alone.",
+   "where": "Table 1",
+   "table": "Table 1, row Student 2 x 500 Seq-KD, column BLEU K=5"
+  },
+  {
+   "claim": "Word-level KD gives only +0.7 BLEU greedy on the 2x500 student",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": "15.4",
+   "unit": "BLEU",
+   "baseline_value": "14.7",
+   "n": null,
+   "setup": "English-German WMT 2014, newstest2014 test, 2x500 LSTM student (84m params) distilled from 4x1000 LSTM teacher (221m), BLEU tokenized multi-bleu.perl, greedy",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Student 2 x 500 Word-KD, column BLEU K=1"
+  },
+  {
+   "claim": "Student with greedy decoding runs about 10x faster than the teacher with beam search on GPU",
+   "kind": "measured",
+   "source": null,
+   "metric": "words/sec",
+   "value": "1051.3",
+   "unit": "source words/sec",
+   "baseline_value": "101.9",
+   "n": null,
+   "setup": "English-German, 2x500 student greedy vs 4x1000 teacher beam 5, GeForce GTX Titan X",
+   "note": null,
+   "where": "Sec 5.1, Table 2",
+   "quote": "We ﬁnd that we can run the student model 10 times faster with greedy decoding than the teacher model with beam search on GPU (1051.3 vs 101.9 words/sec), with similar performance."
+  },
+  {
+   "claim": "CPU speed: 2x500 student greedy vs 4x1000 teacher beam 5",
+   "kind": "measured",
+   "source": null,
+   "metric": "words/sec",
+   "value": "63.6",
+   "unit": "source words/sec",
+   "baseline_value": "7.9",
+   "n": null,
+   "setup": "English-German, CPU (model not stated)",
+   "note": "Baseline 7.9 is Table 2, Beam = 5, 4 x 1000, CPU.",
+   "where": "Table 2",
+   "table": "Table 2, row Beam=1 2 x 500, column CPU"
+  },
+  {
+   "claim": "Android speed of 2x500 student greedy",
+   "kind": "measured",
+   "source": null,
+   "metric": "words/sec",
+   "value": "8.8",
+   "unit": "source words/sec",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Samsung Galaxy 6; 4x1000 teacher could not be opened on phone",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Beam=1 2 x 500, column Android"
+  },
+  {
+   "claim": "Pruning 80% of the 2x500 student leaves 13x fewer parameters than teacher with 0.4 BLEU loss",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": "19.1",
+   "unit": "BLEU",
+   "baseline_value": "19.5",
+   "n": null,
+   "setup": "English-German, 2x500 Seq-KD + Seq-Inter student pruned by magnitude, retrained, beam 5; teacher 19.5",
+   "note": null,
+   "where": "Sec 5.2, Table 3",
+   "table": "Table 3, row 2 x 500 80%, column BLEU"
+  },
+  {
+   "claim": "Pruning 90% gives 8m params (26x fewer) with 1.0 BLEU decrease",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": "18.5",
+   "unit": "BLEU",
+   "baseline_value": "19.5",
+   "n": null,
+   "setup": "Same as above, 90% pruned, beam 5",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row 2 x 500 90%, column BLEU"
+  },
+  {
+   "claim": "Baseline teacher fine-tuned on Seq-Inter data decodes greedily as well as the original with beam search",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": "19.6",
+   "unit": "BLEU",
+   "baseline_value": "19.5",
+   "n": null,
+   "setup": "English-German 4x1000 teacher + Seq-Inter, greedy (original beam 5: 19.5)",
+   "note": null,
+   "where": "Sec 5",
+   "quote": "In fact, greedy decoding with this ﬁne-tuned model has similar performance (19.6) as beam search with the original model (19.5)"
+  },
+  {
+   "claim": "Seq-KD student concentrates probability mass on its greedy output (16.9% vs 0.9% baseline)",
+   "kind": "measured",
+   "source": null,
+   "metric": "p(t=y_hat)",
+   "value": "16.9",
+   "unit": "% of distribution",
+   "baseline_value": "0.9",
+   "n": null,
+   "setup": "English-German 2x500, average over test set",
+   "note": null,
+   "where": "Sec 5",
+   "quote": "accounts for 16.9% of the total probability mass, while the corresponding number is 0.9% for the baseline"
+  },
+  {
+   "claim": "Teacher beam-1 output holds only 1.3% of the teacher distribution (German-English wording in text)",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "1.3",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "4x1000 teacher, beam 1",
+   "note": "Text says German->English but experiments are English->German; Table 1 gives 1.3% for English-German teacher.",
+   "where": "Sec 3.2",
+   "quote": "q(ˆy | s) (on aver-\nage) accounts for 1.3% of the distribution for Ger-\nman →English"
+  },
+  {
+   "claim": "Lower perplexity does not mean higher BLEU: Seq-KD PPL 22.7 vs baseline 8.2",
+   "kind": "measured",
+   "source": null,
+   "metric": "PPL",
+   "value": "22.7",
+   "unit": "perplexity",
+   "baseline_value": "8.2",
+   "n": null,
+   "setup": "English-German 2x500, test set",
+   "note": null,
+   "where": "Sec 5",
+   "quote": "while the perplexity of the corresponding Seq-KD model is\n22.7"
+  },
+  {
+   "claim": "Thai-English 2x100 student: Seq-KD + Seq-Inter + Word-KD best, +3.6 BLEU greedy",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": "14.2",
+   "unit": "BLEU",
+   "baseline_value": "10.6",
+   "n": null,
+   "setup": "IWSLT 2015 Thai-English, teacher 2x500 (47m), student 2x100 (8m), greedy",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Student 2 x 100 Seq-KD + Seq-Inter + Word-KD, column BLEU K=1"
+  },
+  {
+   "claim": "Word embeddings are ~63% of 2x500 student parameters",
+   "kind": "measured",
+   "source": null,
+   "metric": "param share",
+   "value": "63",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "English-German 2x500: 50m of 84m",
+   "note": null,
+   "where": "Sec 5.2",
+   "quote": "the word em-\nbeddings account for approximately 63% (50m out\nof 84m) of the parameters"
+  }
+ ],
+ "limits": [
+  "Only two language pairs and LSTM attention models; no Transformers.",
+  "Single run per cell, no seeds or significance reported.",
+  "Optimizer, batch size, epochs, dropout and hardware for training are not stated (deferred to Luong et al. 2015).",
+  "Seq-KD student has much higher perplexity (22.7 vs 8.2) and is more peaked.",
+  "Speed benchmarks: CPU model unspecified; 4x1000 teacher could not run on smartphone.",
+  "Authors note Seq-KD approximates teacher distribution with a single beam mode that holds only ~1-3% of mass."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Seq-KD",
+   "definition": "Student is trained on the teacher-generated data, which is the result of running beam search and taking the highest-scoring sequence with the teacher model.",
+   "where": "Sec 4"
+  },
+  {
+   "term": "Seq-Inter",
+   "definition": "Student is trained on the sequence on the teacher's beam that had the highest BLEU against gold.",
+   "where": "Sec 4"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Distilling the Knowledge in a Neural Network (Hinton et al.)",
+   "year": 2015,
+   "arxiv": "1503.02531",
+   "relation": "extends",
+   "note": "word-level KD baseline",
+   "quote": null
+  },
+  {
+   "work": "Model Compression (Bucila et al.)",
+   "year": 2006,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "KD origin",
+   "quote": null
+  },
+  {
+   "work": "Effective Approaches to Attention-based NMT (Luong et al.)",
+   "year": 2015,
+   "arxiv": "1508.04025",
+   "relation": "uses-method",
+   "note": "teacher architecture and training details",
+   "quote": null
+  },
+  {
+   "work": "Compression of NMT via Pruning (See et al.)",
+   "year": 2016,
+   "arxiv": "1606.09274",
+   "relation": "uses-method",
+   "note": "magnitude pruning plus retraining",
+   "quote": null
+  },
+  {
+   "work": "Liang et al. local updating",
+   "year": 2006,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "inspires Seq-Inter",
+   "quote": null
+  },
+  {
+   "work": "WMT 2014 / IWSLT 2015",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "En-De and Th-En",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Overview of the different knowledge distillation approaches (word-level, sequence-level, sequence-level interpolation).",
+   "page": 3,
+   "why": "Shows which target each variant trains on."
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Results on English-German (newstest2014) and Thai-English (2012/2013) test sets.",
+   "page": 6,
+   "why": "All BLEU, PPL, mass results."
+  },
+  {
+   "figure": "Table 2",
+   "caption": "Number of source words translated per second across GPU, CPU and smartphone.",
+   "page": 7,
+   "why": "Speed claim."
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 3.2",
+   "snippet": "L_SEQ-KD ≈ -log p(t = ŷ | s), ŷ = beam search output of teacher",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text says German->English in Sec 3.2 for the 1.3% figure though experiments are English->German."
+ ]
+}

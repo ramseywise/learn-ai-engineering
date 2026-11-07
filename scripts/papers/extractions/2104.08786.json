@@ -1,19 +1,460 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2104.08786",
  "pdf": "ai-engineering/01-prompt-engineering/sources/lu-2022-fantastically-ordered-prompts-where-find.pdf",
  "bib": {
   "title": "Fantastically Ordered Prompts and Where to Find Them: Overcoming Few-Shot Prompt Order Sensitivity",
+  "authors": [
+   "Yao Lu",
+   "Max Bartolo",
+   "Alastair Moore",
+   "Sebastian Riedel",
+   "Pontus Stenetorp"
+  ],
   "first_author": "Lu",
   "year": 2022,
-  "venue": "ACL (1) 2022",
+  "venue": "Proceedings of the 60th Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers), pages 8086-8098",
   "arxiv": "2104.08786",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-04",
-  "session": "5cfd23c4-1604-4533-96a3-ace4b4e9da63"
+  "at": "2026-11-07",
+  "chars_read": 44750,
+  "chars_total": 44750,
+  "engine": "pymupdf",
+  "skipped": null
  },
- "legacy_report": "SOURCE: \"Fantastically Ordered Prompts and Where to Find Them: Overcoming Few-Shot Prompt Order Sensitivity\", Yao Lu, Max Bartolo, Alastair Moore, Sebastian Riedel, Pontus Stenetorp (UCL; Mishcon de Reya). ACL 2022 (Volume 1: Long Papers, pp. 8086-8098). arXiv 2104.08786.\nFile: /Users/ramsey-wise/workspace/learn-ai-engineering/ai-engineering/01-prompt-engineering/sources/lu-2022-fantastically-ordered-prompts-where-find.pdf\n\nCOVERAGE: 44,680 of 44,680 chars. I read all of it: the body, Tables 2-5, the references (skimmed), and appendix Tables 6-9 (templates, notation, dataset statistics, examples of the generated probing set). Nothing was skipped. The paper has no limitations section.\n\nCLAIMS\n- claim: With the same 4 examples, the order alone can move SST-2 accuracy from near state-of-the-art to near chance.\n  number: over 85% vs around 50%\n  setup: SST-2, 4-shot, all 24 orders of one fixed balanced set of 4 examples, GPT-2 0.1B-1.5B and GPT-3 2.7B-175B (Figure 1)\n  quote: \"some permutations have comparable performance (over 85% accuracy) to supervised training for sentiment classification, while others perform close to random (around 50%).\"\n  where: p.2 (8087), ~char 4,000\n- claim: Bigger models reduce order sensitivity but do not remove it, and it persists on Subj for models with billions of parameters.\n  number: none\n  setup: Figure 1, SST-2 and Subj, 0.1B-175B\n  quote: \"although increasing the model size somewhat addresses it, the problem is still present for some text classification tasks (Subj in Figure 1) for models with billions of parameters.\"\n  where: p.2\n- claim: Adding examples raises accuracy but does not reduce the variance, which can even grow. Note that this was tested only up to 32 shots, on GPT-2 models (0.1B-1.5B), with at most 24 orders sampled.\n  number: 1-32 shots\n  setup: SST-2, GPT-2 Small/Medium/Large/XL (Figure 3)\n  quote: \"increasing the number of training samples leads to increases in performance. However, a high level of variance remains, even with a large number of samples and can even increase.\"\n  where: p.3 (8088)\n- claim: A good order does not transfer between models, even between sizes of the same model family.\n  number: 88.7% to 51.6%; Spearman 0.05 (175B vs 2.7B)\n  setup: SST-2, 24 orders of 4 examples, pairwise rank correlation across 8 model sizes (Figure 4). Off-diagonal values range from -0.35 to 0.27.\n  quote: \"a specific permutation's performance may drop from 88.7% to 51.6% by changing the underlying model from GPT2-XL (1.5B) to GPT2-Large (0.8B)\" / \"the 175B and 2.7B model only has a correlation of 0.05\"\n  where: p.3\n- claim: Label-order patterns (e.g. NNPP vs PNPN) also fail to transfer across models.\n  number: 6 label patterns\n  setup: Figure 5, the same 8 models\n  quote: \"It is thus not possible to identify a label ordering that is performant across different models.\"\n  where: p.3-4\n- claim: Bad orders mostly fail by collapsing onto one label. Calibration (Zhao et al. 2021) raises accuracy, but the variance stays high.\n  number: none (Figure 6 x-axis endpoints 51.6 and 85.2)\n  setup: SST-2, GPT2-XL 1.5B, 2-shot calibrated\n  quote: \"the majority of failing prompts suffer from highly unbalanced predicted label distributions\" / \"although calibration leads to much higher performance, the variance remains high\"\n  where: p.4 (8089)\n- claim: Method. Have the language model generate an unlabelled \"probing set\" from every candidate order and discard the generated labels. Score each order by entropy on that set, using GlobalE (entropy of the predicted-label histogram) or LocalE (mean per-example prediction entropy). Keep the top-4 of the 24 orders by highest entropy. No labelled dev data is needed.\n  number: top k = 4 of 24\n  setup: generation limited to 128 tokens, temperature 2, block n-gram repetition\n  quote: \"We then select top k samples ranked by highest entropy values, where k = 4 in our experiments, of the available 24 permutations as performant prompts.\"\n  where: p.5-6 (8089-8091)\n- claim: GlobalE gives an average 13% relative improvement across 11 classification tasks, and LocalE gives 9.6%. Both also lower the variance.\n  number: 13%; 9.6%\n  setup: GPT-2 0.1/0.3/0.8/1.5B and GPT-3 2.7B/175B; 4-shot (1-shot DBPedia, 2-shot AGNews); 5 sets × 24 orders (175B: 2 sets × 12); 256 validation examples per dataset\n  quote: \"GlobalE achieves, on average, a 13% relative improvement across the eleven different sentence classification tasks in comparison to prompts that do not make use of probing. LocalE provides results slightly inferior to GlobalE, with an average 9.6% relative improvement\"\n  where: p.7 (8091)\n- claim: The gains are largest where the variance is high. For GPT-2 0.3B on SST-2, the baseline mean ± std of 61.0 ± 13.2 becomes 78.7 ± 5.2 with GlobalE, against an oracle of 85.5. For GPT-3 175B on SST-2 there is essentially no gain: 93.9 ± 0.6 against 93.9 ± 0.6. On 175B Subj, 71.2 ± 7.3 becomes 76.3 ± 3.5.\n  number: up to 30% relative\n  setup: Table 2 (in the extraction, the std is fused onto the mean, so \"61.013.2\" means 61.0 ± 13.2)\n  quote: \"for models that suffer from high prompt variance, our prompt selection process can show large improvements – up to 30% relative improvement. Furthermore, for tasks with low initial prompt performance variance, our method does not negatively impact performance.\"\n  where: p.7; Table 2 p.6\n- claim: On sentence-pair tasks (CB, RTE), small GPT-2 models stay near chance whatever the order. On GPT-3 175B, GlobalE improves CB by 4.9% (75.1 to 79.9).\n  number: 4.9%\n  setup: CB, GPT-3 175B\n  quote: \"prompt selection using GlobalE improves performance by 4.9% for GPT-3 175B on CB.\"\n  where: p.7-8\n- claim: Entropy probing does better than holding out half of the 4 shots as a dev set, at every GPT-2 size. On GPT-2 1.5B SST-2: split training set 71.4, GlobalE 81.8.\n  number: 71.4 vs 81.8\n  setup: Table 5, SST-2\n  quote: \"Split Training Set 62.85.3 64.26.1 75.16.8 71.47.8\"\n  where: p.8 (8092-8093)\n- claim: The gains hold across 4 SST-2 templates. Both the order sensitivity and the improvement appear for every template.\n  number: none\n  setup: Tables 3-4, GPT-2 sizes\n  quote: \"Entropy-based probing is not sensitive to specific templates, as it consistently provides improvements for all cases.\"\n  where: p.7\n- claim: Supervised fine-tuning is far more stable across seeds than in-context learning is across orders.\n  number: less than 1% std\n  setup: cited from Gao et al. 2020\n  quote: \"different initialisations of supervised fine-tuning approaches typically result in less than 1% standard deviation for their test set performance (Gao et al., 2020).\"\n  where: p.2\n\nRelevance to the target note:\n- The paper does not show that orders \"teach spurious patterns\". Its stated mechanism is that bad orders produce skewed, degenerate predicted-label distributions.\n- Its scale tests stop at 32 shots on GPT-2 (≤1.5B) and 4-shot on GPT-3 175B. It does not contradict a finding that shuffling matters little at 50-100 shots on modern models.\n- Its own 175B SST-2 results already show a tiny spread (std 0.6).\n\nLIMITS\n- There is no limitations section. Concessions in the text:\n  - The 175B runs use only 2 sets × 12 orders \"due to the high monetary cost\".\n  - Evaluation uses 256-example subsamples.\n  - Context-window limits force 1-2 shots on DBPedia and AGNews.\n  - On CB and RTE with small models \"no good prompt exists\".\n- Classification only, with 2022-era base models (GPT-2, GPT-3 davinci-era API). There are no instruction-tuned or chat models, and no generation or reasoning tasks.\n- The shot-count analysis covers GPT-2 only and stops at 32 shots.\n- The method requires enumerating n! orders, which is only practical at small n.\n- Related Work claims the method beats held-out examples \"(Figure 5)\"; this should read Table 5.\n- The paper reports the opposite conclusion to Liu et al. 2021, who found order had little effect when examples are retrieved.\n\nBUILDS ON\n- Brown et al., 2020 (GPT-3, in-context learning)\n- Radford et al., 2019 (GPT-2)\n- Zhao et al., 2021 (\"Calibrate before use\", calibration baseline and templates)\n- Gao et al., 2020 (templates, fine-tuning stability, dataset setup)\n- Perez et al., 2021 (true few-shot learning without a dev set)\n- Liu et al., 2021 (retrieval of examples, order has little effect)\n- Paulus et al., 2018 (block n-gram repetition)\n- Template-design work: Shin et al., 2020; Schick and Schütze, 2020; Jiang et al., 2020\n\nCODE: None. The method is given only as equations: GlobalE_m = Σ_v −p_v^m log p_v^m over the predicted-label frequencies on the probing set (Eq. 3), and LocalE_m = mean over the probing set of the per-example prediction entropy (Eq. 5). Probing template: \"T(xi, yi) = input:xi type:yi\" (p.5).\n\nFIGURES\n- Figure 1, p.1: \"Four-shot performance for 24 different sample orders across different sizes of GPT-family models (GPT-2 and GPT-3) for the SST-2 and Subj datasets.\" Best figure candidate. A single dot-spread per model size shows the best-to-worst gap and that scale shrinks it only partly.\n- Figure 4, p.3: \"Training sample permutation performance correlation across different models.\" A near-zero correlation heatmap makes the non-transfer point at a glance.\n- Figure 3, p.3: \"Order sensitivity using different numbers of training samples.\" Variance bands from 1 to 32 shots. Useful next to the 2025 many-shot result.\n- Figure 7, p.5: Probing set construction. Explains the method faster than the equations do.\n- Figure 6, p.4: Label-distribution collapse, and calibration not fixing the variance.\n- Figure 8, p.7: Top-K curve on GPT2-Large. A negative slope shows the ranking works.\n\nPROBLEMS\n- Table 2, 3 and 5 cells fuse the mean with the std subscript (e.g. \"58.97.8\" = 58.9 ± 7.8). I read them under that convention.\n- Figure axis values are extracted as loose numbers. The Figure 4 and 5 matrices were readable.\n- No embedded instructions were found. The extraction is otherwise clean."
+ "type": "empirical",
+ "question": "How much does the order of few-shot examples in an in-context prompt change classification accuracy, and can good orders be chosen without a labelled development set?",
+ "hypothesis": "Prompt order sensitivity is a fundamental property of in-context learning, and an unlabelled probing set generated by the model itself can rank orderings well enough to pick performant ones.",
+ "contributions": [
+  "We study order sensitivity for In-context Learning, which we show is crucial for the success of pretrained language models for few-shot learning.",
+  "We propose a simple, generation-based probing method to identify performant prompts without requiring additional data.",
+  "Our probing method is universally applicable and effective across different sizes of pretrained language models and for different types of datasets - achieving on average a 13% relative improvement over a wide range of tasks."
+ ],
+ "method": {
+  "summary": "For a random set of 4 training examples, all 24 orderings are used as prompts; each prompt is sampled from the LM (temperature 2) to build an unlabelled probing set. Orderings are ranked by GlobalE (entropy of predicted label distribution over the probing set) or LocalE (mean per-item prediction entropy), and the top 4 of 24 are used for evaluation on 11 classification datasets.",
+  "task": "few-shot text classification via in-context learning; prompt order selection",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "SST-2, SST-5, MR, CR, MPQA, Subj, TREC, AGNews, DBPedia, CB, RTE",
+    "role": "eval",
+    "size": "256 validation examples sub-sampled per dataset",
+    "split": "validation set subset; training examples (k-shot) drawn at random, 5 sets",
+    "source": "Socher 2013; Pang and Lee 2004/2005; Hu and Liu 2004; Wiebe 2005; Voorhees and Tice 2000; Zhang 2015; De Marneffe 2019; Dagan 2005",
+    "preprocessing": "Template 'Review: {x} Sentiment: {y}' style per task (Table 6)"
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT-2",
+    "role": "evaluated",
+    "params": "0.1B, 0.3B, 0.8B, 1.5B",
+    "architecture": "decoder-only transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "1024 word-pieces",
+    "other": {}
+   },
+   {
+    "name": "GPT-3",
+    "role": "evaluated",
+    "params": "2.7B, 175B in main experiments (Figs 1 and 4 also show 6.7B and 13B)",
+    "architecture": "decoder-only transformer, OpenAI API",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "probing set: sampling with temperature 2 and block n-gram repetition; stop at template end-of-sentence token or length limit; classification: argmax over label set",
+   "temperature": "2 (probing set generation)",
+   "top_p": null,
+   "max_tokens": "128 (probing generation length)",
+   "samples": "24 permutations x 5 random training sets = 120 runs per experiment; GPT-3 175B: 2 sets x 12 permutations; mean and std over sets",
+   "prompting": "4-shot for all datasets except 1-shot DBPedia and 2-shot AGNews (Table 2 caption); template T(x,y)=input:x type:y for probing",
+   "retrieval": null,
+   "parameters": {
+    "top_k_selected": "4 of 24 permutations",
+    "probing_metrics": "GlobalE, LocalE",
+    "K sweep": "Fig 8, K=1..24 on GPT2-Large"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "accuracy",
+     "definition": "classification accuracy on 256-example validation subset, mean and std over 5 sets",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "relative improvement",
+     "definition": "improvement of selected prompts over mean of all candidate prompts, averaged over eleven tasks",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Majority label",
+    "Full finetuning",
+    "All 24 permutations (no probing)",
+    "Oracle (top 4 orderings by validation performance)",
+    "Split training set into train/dev (Table 5)"
+   ],
+   "protocol": "Mean and standard deviation over 5 random training sets; no significance test stated"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": null
+  },
+  "prompts": [
+   {
+    "purpose": "SST-2 prompt templates",
+    "text": "Review: {Sentence} Sentiment: {Label} (templates 1 and 3, label words positive/negative or good/bad); Input: {Sentence} Prediction: {Label} (template 2); {Sentence} It was {Label} (template 4)",
+    "where": "Table 4"
+   },
+   {
+    "purpose": "probing template",
+    "text": "T(xi, yi) = input:xi type:yi",
+    "where": "Section 3.1"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Order alone can move SST-2 accuracy from over 85% to around 50% with the same four examples.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 85,
+   "unit": "% accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "SST-2, 4-shot, all 24 orders of one balanced set, GPT-2 0.1B-1.5B and GPT-3 2.7B-175B (Fig 1)",
+   "quote": "some permutations have comparable performance (over 85% accuracy) to supervised training for sentiment classification, while others perform close to random (around 50%).",
+   "table": null,
+   "note": null,
+   "where": "p.2"
+  },
+  {
+   "claim": "GlobalE gives an average relative improvement across eleven tasks.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 13,
+   "unit": "% relative",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 2, all GPT-2 and GPT-3 sizes, 4 of 24 selected orders vs mean of all 24",
+   "quote": "GlobalE achieves, on average, a 13% relative improvement across the eleven dif-",
+   "table": null,
+   "note": null,
+   "where": "Section 5"
+  },
+  {
+   "claim": "LocalE gives a slightly smaller average relative improvement than GlobalE.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 9.6,
+   "unit": "% relative",
+   "baseline_value": null,
+   "n": null,
+   "setup": "As GlobalE",
+   "quote": "LocalE provides results slightly inferior to GlobalE, with an average 9.6% relative improvement over the baseline model.",
+   "table": null,
+   "note": null,
+   "where": "Section 5"
+  },
+  {
+   "claim": "A specific permutation drops sharply when the model changes from GPT2-XL to GPT2-Large.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 88.7,
+   "unit": "% accuracy",
+   "baseline_value": 51.6,
+   "n": null,
+   "setup": "SST-2, 4-shot, one permutation, GPT2-XL (1.5B) vs GPT2-Large (0.8B)",
+   "quote": "a specific permuta- tion's performance may drop from 88.7% to 51.6%",
+   "table": null,
+   "note": "quote is the model's score for GPT2-XL; 51.6 is for GPT2-Large",
+   "where": "Section 2"
+  },
+  {
+   "claim": "Order rank correlation between 175B and 2.7B is near zero.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 0.05,
+   "unit": "Spearman",
+   "baseline_value": null,
+   "n": null,
+   "setup": "SST-2, 24 permutations, pairwise Spearman across 8 model sizes (Fig 4)",
+   "quote": "the 175B and 2.7B model only has a correlation of 0.05",
+   "table": null,
+   "note": null,
+   "where": "Section 2"
+  },
+  {
+   "claim": "GPT2-XL surpasses 90% accuracy on SST-2 with four examples for the best order.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 90,
+   "unit": "% accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "SST-2, 4-shot",
+   "quote": "We see that the GPT2-XL (1.5B) model can even surpass 90% accuracy given just four samples.",
+   "table": null,
+   "note": null,
+   "where": "Section 2"
+  },
+  {
+   "claim": "Supervised finetuning seeds typically vary by under 1% std, versus large order variance.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 1,
+   "unit": "% std",
+   "baseline_value": null,
+   "n": null,
+   "setup": "cited from Gao et al. 2020",
+   "quote": "less than 1% standard deviation for their test set",
+   "table": null,
+   "note": null,
+   "where": "Section 2"
+  },
+  {
+   "claim": "GlobalE improves GPT-3 175B on CB.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 4.9,
+   "unit": "% (as printed)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CB, GPT-3 175B, Table 2 (79.9 vs 75.1 baseline)",
+   "quote": "prompt selection using GlobalE improves performance by 4.9% for GPT-3 175B on CB",
+   "table": null,
+   "note": null,
+   "where": "Section 5"
+  },
+  {
+   "claim": "Maximum relative improvement for models with high prompt variance.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 30,
+   "unit": "% relative",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Models with high prompt variance",
+   "quote": "up to 30% relative improvement",
+   "table": null,
+   "note": null,
+   "where": "Section 5"
+  },
+  {
+   "claim": "Table 2: SST-2 GPT-2 0.8B baseline 74.5 std 10.3, GlobalE 84.8 std 4.1, Oracle 88.9.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 84.8,
+   "unit": "%",
+   "baseline_value": 74.5,
+   "n": null,
+   "setup": "SST-2, GPT-2 0.8B, 4-shot, 5 sets x 24 perms, top 4 selected",
+   "quote": null,
+   "table": "Table 2, GPT-2 0.8B block, row GlobalE, column SST-2",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Splitting the 4-shot training set in half for validation is worse than entropy probing on SST-2 (GPT-2 0.8B 75.1 vs GlobalE 84.8).",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 75.1,
+   "unit": "%",
+   "baseline_value": 74.5,
+   "n": null,
+   "setup": "SST-2, GPT-2 0.8B, 4-shot split 2/2, top 4 by dev performance",
+   "quote": null,
+   "table": "Table 5, row Split Training Set, column GPT-2 0.8B",
+   "note": null,
+   "where": "Table 5"
+  },
+  {
+   "claim": "Calibration raises accuracy but variance remains high; majority of failing prompts predict an unbalanced label distribution.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "SST-2, GPT2-XL, 2-shot calibrated (Zhao et al. 2021) over all permutations",
+   "quote": "the majority of failing prompts suffer from highly unbalanced predicted label distributions (Figure 6, left).",
+   "table": null,
+   "note": null,
+   "where": "Section 2"
+  },
+  {
+   "claim": "Adding training samples raises accuracy but variance remains and can grow.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "SST-2, GPT-2 family, 1-32 shots, at most 24 orderings sampled (Fig 3)",
+   "quote": "a high level of variance remains, even with a large number of samples and can even increase.",
+   "table": null,
+   "note": null,
+   "where": "Section 2"
+  },
+  {
+   "claim": "Performant label orderings are not consistent across models.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "SST-2, six label patterns, Spearman across model sizes (Fig 5)",
+   "quote": "It is thus not possible to identify a label",
+   "table": null,
+   "note": null,
+   "where": "Section 2"
+  }
+ ],
+ "limits": [
+  "The paper has no limitations section.",
+  "Probing requires sampling from the model for each of the n! orderings (24 for four examples), so cost grows factorially with shots; only 4-shot (1-2 shot for DBPedia/AGNews) tested because of the 1024 word-piece GPT-2 context.",
+  "Only classification tasks; GPT-3 175B uses 2 sets x 12 permutations because of cost; no significance tests.",
+  "On CB and RTE the GPT-2 models are near random and gains are within random guess or majority vote levels.",
+  "Order sensitivity study (Figs 1-5) uses one fixed 4-example SST-2 set for visualisation; other sets only summarised as variance in Section 5.",
+  "Models are GPT-2 and GPT-3 (2021); instruction-tuned models were not studied."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "probing set",
+   "definition": "an unlabelled artificial development set generated by sampling from the language model conditioned on each candidate prompt",
+   "where": "Introduction, Section 3.1"
+  },
+  {
+   "term": "GlobalE",
+   "definition": "entropy of the predicted label distribution over the probing set under a candidate prompt",
+   "where": "Section 3.2, Eq 3"
+  },
+  {
+   "term": "LocalE",
+   "definition": "average per-item prediction entropy over the probing set",
+   "where": "Section 3.2, Eq 5"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Language models are few-shot learners",
+   "year": 2020,
+   "arxiv": "2005.14165",
+   "relation": "evaluates",
+   "note": "GPT-3 models evaluated; source of in-context learning",
+   "quote": null
+  },
+  {
+   "work": "Language models are unsupervised multitask learners (GPT-2)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "four GPT-2 sizes evaluated",
+   "quote": null
+  },
+  {
+   "work": "Calibrate before use",
+   "year": 2021,
+   "arxiv": "2102.09690",
+   "relation": "related",
+   "note": "calibration compared in Fig 6; variance remains high",
+   "quote": null
+  },
+  {
+   "work": "What makes good in-context examples for GPT-3?",
+   "year": 2021,
+   "arxiv": "2101.06804",
+   "relation": "contradicts",
+   "note": "Liu et al. concluded order has little effect after nearest-neighbour retrieval; this paper comes to the opposite conclusion",
+   "quote": "we do come to the opposite conclusion"
+  },
+  {
+   "work": "True few-shot learning with language models",
+   "year": 2021,
+   "arxiv": "2105.11447",
+   "relation": "related",
+   "note": "motivates avoiding a held-out dev set",
+   "quote": null
+  },
+  {
+   "work": "Making pre-trained language models better few-shot learners",
+   "year": 2020,
+   "arxiv": "2012.15723",
+   "relation": "uses-method",
+   "note": "datasets, templates and finetuning-variance figure follow Gao et al.",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Four-shot performance for 24 different sample orders across different sizes of GPT-family models (GPT-2 and GPT-3) for the SST-2 and Subj datasets.",
+   "page": 2,
+   "why": "shows the spread across orders at every model size"
+  },
+  {
+   "figure": "Fig 7",
+   "caption": "Our probing set construction method, showing the various possible ordering permutations of the randomly selected training samples, the resulting generation for each permutation, and the concatenation of each into a probing set.",
+   "page": 6,
+   "why": "pipeline diagram"
+  },
+  {
+   "figure": "Table 2",
+   "caption": "Our main results on subset of the validation set.",
+   "page": 6,
+   "why": "all 11 tasks x 6 models for baseline, LocalE, GlobalE, oracle"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 3",
+   "snippet": "GlobalE_m = sum_{v in V} -p^v_m log p^v_m, with p^v_m = sum_i 1{yhat_{i,m}=v} / |D|",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text says the probing method beats held-out examples in 'Figure 5'; the comparison is Table 5.",
+  "Section 4 says two GPT-3 sizes (2.7B, 175B) but Figures 1 and 4 show 6.7B and 13B too.",
+  "Table 2 oracle SST-5 GPT-3 175B std missing in the text extraction (58.2).",
+  "Quote check for 'permuta- tion' hyphenation depends on the checker's normalisation."
+ ]
 }

@@ -1,0 +1,534 @@
+{
+ "schema": 1,
+ "key": "1904.10509",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/child-2019-generating-long-sequences-sparse-transformers.pdf",
+ "bib": {
+  "title": "Generating Long Sequences with Sparse Transformers",
+  "authors": [
+   "Rewon Child",
+   "Scott Gray",
+   "Alec Radford",
+   "Ilya Sutskever"
+  ],
+  "first_author": "Child",
+  "year": 2019,
+  "venue": "preprint",
+  "arxiv": "1904.10509",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 36183,
+  "chars_total": 36183,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can self-attention be made sub-quadratic in sequence length, via sparse factorizations, while matching dense attention for density modeling of images, text and audio?",
+ "hypothesis": "Factorized attention patterns that connect all positions over several steps can match the performance of the rich learned patterns of full attention.",
+ "contributions": [
+  "Sparse factorizations of the attention matrix reducing cost to O(n sqrt n)",
+  "A restructured residual block and weight initialization for training deeper networks",
+  "Recomputation of attention matrices to save memory",
+  "Fast block-sparse attention kernels"
+ ],
+ "method": {
+  "summary": "Decoder-only Transformer with pre-activation residual blocks and two factorized attention patterns (strided, fixed) with p=2 heads, trained autoregressively on raw bytes of CIFAR-10, Enwik8, ImageNet 64x64 and classical music audio. Uses gradient checkpointing of attention/FF blocks, custom block-sparse GPU kernels and mixed precision.",
+  "task": "autoregressive density modeling of raw bytes (images, text, audio)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "CIFAR-10",
+    "role": "both",
+    "size": "sequences of 3072 bytes",
+    "split": "48000 train, 2000 validation, best models evaluated on test set",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "Enwik8",
+    "role": "both",
+    "size": "first 10^8 bytes of Wikipedia; context 12,288",
+    "split": "first 90 million tokens train, last 10 million validation and test",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "ImageNet 64x64 (downsampled, Oord et al. 2016)",
+    "role": "both",
+    "size": null,
+    "split": "evaluated on validation set",
+    "source": "version released by Oord et al., 2016",
+    "preprocessing": null
+   },
+   {
+    "name": "Classical music (Dieleman et al. 2018)",
+    "role": "both",
+    "size": null,
+    "split": null,
+    "source": "released by Dieleman et al., 2018",
+    "preprocessing": "mu-law encoded at 12 kHz; paper says details of the dataset processing are unavailable"
+   }
+  ],
+  "models": [
+   {
+    "name": "Sparse Transformer 59M (strided), CIFAR-10",
+    "role": "proposed",
+    "params": "59M",
+    "architecture": "decoder-only, strided factorized attention, half-size FF and query-key projections",
+    "init_from": null,
+    "tokenizer": "raw bytes",
+    "vocab": null,
+    "layers": 128,
+    "hidden": "d=256",
+    "heads": 2,
+    "context": "3072",
+    "other": {}
+   },
+   {
+    "name": "Sparse Transformer 95M (fixed), Enwik8",
+    "role": "proposed",
+    "params": "95M",
+    "architecture": "decoder-only, fixed attention, merged heads, stride 128, c=32",
+    "init_from": null,
+    "tokenizer": "raw bytes",
+    "vocab": null,
+    "layers": 30,
+    "hidden": "d=512",
+    "heads": 8,
+    "context": "12,288",
+    "other": {}
+   },
+   {
+    "name": "Sparse Transformer 152M (strided), ImageNet 64x64",
+    "role": "proposed",
+    "params": "152M",
+    "architecture": "decoder-only, strided, stride 128",
+    "init_from": null,
+    "tokenizer": "raw bytes",
+    "vocab": null,
+    "layers": 48,
+    "hidden": "d=512",
+    "heads": 16,
+    "context": null,
+    "other": {
+     "inferred": "inferred: 64*64*3=12,288 bytes; paper does not state context for ImageNet",
+     "samples": "also a 300M model with twice the layers"
+    }
+   },
+   {
+    "name": "Sparse Transformer 152M (strided), classical music",
+    "role": "proposed",
+    "params": "152M / 25M / 3M",
+    "architecture": "strided",
+    "init_from": null,
+    "tokenizer": "raw bytes",
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "65,536 / 262,144 / 1,048,576",
+    "other": {
+     "sizing": "largest model that fits a 16GB V100 without model parallelism, per sequence length"
+    }
+   },
+   {
+    "name": "Dense attention baseline",
+    "role": "baseline",
+    "params": null,
+    "architecture": "full attention, same datasets (Table 2)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "12,288 (Enwik8), 3,072 (CIFAR-10)",
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "maximize log-probability of the data (autoregressive next-byte, softmax over v values)",
+   "optimizer": "Adam",
+   "lr": "0.00035 (CIFAR-10); not stated for other datasets",
+   "lr_schedule": "cosine decay",
+   "warmup": "linear, 5000 iterations",
+   "batch_size": null,
+   "steps": null,
+   "epochs": "120 (CIFAR-10), 80 (Enwik8), 70 (ImageNet 64x64)",
+   "tokens": null,
+   "seq_len": "3072 (CIFAR-10), 12,288 (Enwik8)",
+   "precision": "weights single-precision, activations and gradients half-precision, dynamic loss scaling; queries and keys cast to single-precision when sampling",
+   "weight_decay": "0.01",
+   "dropout": "0.25 (CIFAR-10), 0.40 (Enwik8), 0.01 (ImageNet); applied only at end of each residual addition, none inside attention",
+   "regularisation": "gradient clipping 1.0",
+   "hardware": "8 V100 GPUs unless noted; 64 V100 GPUs for ImageNet",
+   "compute": null,
+   "wall_clock": "7 days on 64 V100 GPUs (ImageNet 64x64)",
+   "seeds": "1, 2, 3 for CIFAR-10 and Enwik8; 1 run for ImageNet",
+   "other": {
+    "init": "token embedding N(0, 0.125/sqrt(d)); position embeddings N(0, 0.125/sqrt(d*n_emb)); weights N(0, 0.125/sqrt(d_in)); biases 0; output logit matrix 0; W2 and Wp scaled by 1/sqrt(2N)",
+    "embedding dims": "d in {256,512,1024}; FF projects to 4d, or 2d for half-size",
+    "gradient checkpointing": "attention and feed-forward blocks recomputed in backward pass",
+    "stopping": "trained until validation error stops decreasing (CIFAR-10, Enwik8)",
+    "fixed pattern": "stride l in {128,256}, c in {8,16,32}",
+    "activation": "GELU x*sigmoid(1.702x)",
+    "norm": "Layer Normalization, pre-activation residual block"
+   }
+  },
+  "inference": {
+   "decoding": "ancestral sampling from softmax",
+   "temperature": "1.0 (unmodified) for unconditional samples",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {
+    "enwik8 eval": "minimum context length varied by evaluating fewer tokens in parallel (Table 3)"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "bits per byte",
+     "definition": "negative log2 likelihood per byte; equals bits per dim for image tasks",
+     "unit": "bits per byte",
+     "higher_is_better": false
+    },
+    {
+     "name": "Time/Iter",
+     "definition": "training time per iteration; unit not stated in the paper",
+     "unit": null,
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "PixelCNN",
+    "PixelCNN++",
+    "Image Transformer",
+    "PixelSNAIL",
+    "Deeper Self-Attention",
+    "Transformer-XL 88M/277M",
+    "Parallel Multiscale",
+    "Glow",
+    "SPN 150M",
+    "dense attention"
+   ],
+   "protocol": "CIFAR-10 and Enwik8 reported over seeds 1,2,3; ImageNet single run; no direct comparison for audio"
+  },
+  "availability": {
+   "code": "GPU kernels implemented; release not stated in the paper",
+   "weights": null,
+   "data": "samples at https://openai.com/blog/sparse-transformer"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "eval.metrics[1].unit",
+    "quote": "Time/Iter",
+    "where": "Table 2 header, no unit given"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Sparse Transformer sets state of the art on CIFAR-10 (strided, 59M).",
+   "kind": "measured",
+   "source": null,
+   "metric": "bits per byte",
+   "value": 2.8,
+   "unit": "bits per dim",
+   "baseline_value": "2.85 (PixelSNAIL)",
+   "n": null,
+   "setup": "CIFAR-10, 128 layers, d=256, test set",
+   "quote": "The model achieves 2.80 bits per dim (2.798 ±",
+   "table": null,
+   "note": null,
+   "where": "Sec 7.1"
+  },
+  {
+   "claim": "Fixed Sparse Transformer 95M reaches 0.99 bpb on Enwik8, matching Transformer-XL 277M and beating Transformer-XL 88M (1.03).",
+   "kind": "measured",
+   "source": null,
+   "metric": "bits per byte",
+   "value": 0.99,
+   "unit": "bits per byte",
+   "baseline_value": "1.03 (Transformer-XL 88M)",
+   "n": null,
+   "setup": "Enwik8, context 12,288, 30 layers, d=512, 8 heads, stride 128, c=32, merged heads",
+   "quote": "Our best model reached 0.99 bits per dim (0.992 ± 0.001",
+   "table": null,
+   "note": null,
+   "where": "Sec 7.2"
+  },
+  {
+   "claim": "Strided Sparse Transformer 152M beats prior ImageNet 64x64 state of the art.",
+   "kind": "measured",
+   "source": null,
+   "metric": "bits per byte",
+   "value": 3.44,
+   "unit": "bits per dim",
+   "baseline_value": "3.52 (SPN)",
+   "n": null,
+   "setup": "48 layers, 16 heads, d=512, 70 epochs, 7 days on 64 V100, 1 run",
+   "quote": "Our model achieves a loss of 3.44 bits per dim (3.437 across",
+   "table": null,
+   "note": null,
+   "where": "Sec 7.3"
+  },
+  {
+   "claim": "Dense attention on Enwik8 scores 1.00 bpb at 1.31 time/iter vs fixed sparse 0.99 at 0.55.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Time/Iter",
+   "value": 0.55,
+   "unit": "Time/Iter (unit not stated)",
+   "baseline_value": "1.31 (dense)",
+   "n": null,
+   "setup": "Enwik8, 12,288 context",
+   "quote": null,
+   "table": "Table 2, row Sparse Transformer (Fixed), column Time/Iter",
+   "note": "Table gives no unit for Time/Iter",
+   "where": "Table 2"
+  },
+  {
+   "claim": "Strided pattern does poorly on text (Enwik8).",
+   "kind": "measured",
+   "source": null,
+   "metric": "bits per byte",
+   "value": 1.13,
+   "unit": "bits per byte",
+   "baseline_value": "0.99 (fixed)",
+   "n": null,
+   "setup": "Enwik8, 12,288 context",
+   "quote": null,
+   "table": "Table 2, row Sparse Transformer (Strided), column Bits per byte",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "On CIFAR-10 strided beats dense and is faster.",
+   "kind": "measured",
+   "source": null,
+   "metric": "bits per byte",
+   "value": 2.8,
+   "unit": "bits per byte",
+   "baseline_value": "2.82 (dense)",
+   "n": null,
+   "setup": "CIFAR-10, 3,072 context",
+   "quote": null,
+   "table": "Table 2, row Sparse Transformer (Strided), CIFAR-10, column Bits per byte",
+   "note": "Time/Iter 0.38 vs 0.54 dense",
+   "where": "Table 2"
+  },
+  {
+   "claim": "Enwik8 bpb improves monotonically with longer minimum eval context, up to 12,160 of 12,288.",
+   "kind": "measured",
+   "source": null,
+   "metric": "bits per byte",
+   "value": 0.9908,
+   "unit": "bits per byte",
+   "baseline_value": "0.9952 at 6,144 tokens",
+   "n": null,
+   "setup": "Enwik8 test, min context 12,160 tokens",
+   "quote": null,
+   "table": "Table 3, row 12,160 tokens, column Bits per byte",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Audio: 4x longer sequence needs ~8x fewer parameters; 1M-timestep sequences trainable with 3M parameters.",
+   "kind": "measured",
+   "source": null,
+   "metric": "bits per byte",
+   "value": 2.99,
+   "unit": "bits per byte",
+   "baseline_value": "1.97 at 65,536 / 152M",
+   "n": null,
+   "setup": "classical music, 12 kHz mu-law, 1,048,576 length, 3M params, strided",
+   "quote": "albeit with extremely few parameters (3 million).",
+   "table": "Table 4, row 1,048,576, column Bits per byte",
+   "note": null,
+   "where": "Sec 7.4, Table 4"
+  },
+  {
+   "claim": "Recomputation alone allows training dense attention networks with hundreds of layers on sequence lengths of 16,384 (asserted, no table).",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "dense attention, gradient checkpointing",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Sec 5.4"
+  }
+ ],
+ "limits": [
+  "Only density modeling (bits per byte); no downstream tasks",
+  "Strided pattern fails on text; fixed pattern costs c times more than strided",
+  "Sparse beating dense is attributed to inductive bias or an unexplained optimization issue with full attention",
+  "Audio data processing unavailable so no comparison with other work; sample quality degrades at greater lengths from reduced capacity",
+  "ImageNet result is a single run",
+  "Time/Iter unit and hardware for timing not stated; batch size, ImageNet/audio learning rates and layer counts for audio not stated",
+  "Fixed patterns cannot express the global and data-dependent patterns seen in dense models (Fig 2c,d)"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "strided attention",
+   "definition": "one head attends to the previous l locations, the other to every lth location, l close to sqrt(n)",
+   "where": "Sec 4.3"
+  },
+  {
+   "term": "fixed attention",
+   "definition": "one head attends within its block of l; the other to the last c positions of each block, which summarize and propagate to all future cells",
+   "where": "Sec 4.3"
+  },
+  {
+   "term": "merged head",
+   "definition": "a single head attending to the union of the locations the factorized heads attend to",
+   "where": "Sec 5.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Attention is all you need",
+   "year": 2017,
+   "arxiv": "1706.03762",
+   "relation": "extends",
+   "note": "base Transformer",
+   "quote": null
+  },
+  {
+   "work": "Radford et al. 2018 (GPT)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "decoder-only Transformer, GELU, cosine decay",
+   "quote": null
+  },
+  {
+   "work": "Identity mappings in deep residual networks",
+   "year": 2016,
+   "arxiv": "1603.05027",
+   "relation": "uses-method",
+   "note": "pre-activation residual block",
+   "quote": null
+  },
+  {
+   "work": "Training deep nets with sublinear memory cost",
+   "year": 2016,
+   "arxiv": "1604.06174",
+   "relation": "uses-method",
+   "note": "gradient checkpointing",
+   "quote": null
+  },
+  {
+   "work": "Mixed precision training",
+   "year": 2017,
+   "arxiv": "1710.03740",
+   "relation": "uses-method",
+   "note": "half-precision training",
+   "quote": null
+  },
+  {
+   "work": "Transformer-XL",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Enwik8 comparison",
+   "quote": null
+  },
+  {
+   "work": "Character-level language modeling with deeper self-attention",
+   "year": 2018,
+   "arxiv": "1808.04444",
+   "relation": "baseline",
+   "note": "Enwik8; deep Transformer training difficulty",
+   "quote": null
+  },
+  {
+   "work": "PixelSNAIL",
+   "year": 2017,
+   "arxiv": "1712.09763",
+   "relation": "baseline",
+   "note": "CIFAR-10",
+   "quote": null
+  },
+  {
+   "work": "Subscale pixel networks (Menick & Kalchbrenner)",
+   "year": 2018,
+   "arxiv": "1812.01608",
+   "relation": "baseline",
+   "note": "ImageNet 64",
+   "quote": null
+  },
+  {
+   "work": "Image Transformer",
+   "year": 2018,
+   "arxiv": "1802.05751",
+   "relation": "baseline",
+   "note": "local attention on images",
+   "quote": null
+  },
+  {
+   "work": "Dieleman et al. 2018 classical music dataset",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "audio",
+   "quote": null
+  },
+  {
+   "work": "Pixel RNN (Oord et al.)",
+   "year": 2016,
+   "arxiv": "1601.06759",
+   "relation": "uses-data",
+   "note": "downsampled ImageNet",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "Learned attention patterns from a 128-layer network on CIFAR-10 trained with full attention.",
+   "page": 3,
+   "why": "Motivates sparsity: early layers local, mid layers row/column, late layers highly sparse."
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Two 2d factorized attention schemes compared to full attention (a): strided (b), fixed (c).",
+   "page": 3,
+   "why": "Shows which positions each head reads and the connectivity matrix."
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "One residual block of the Sparse Transformer; shaded tensors are checkpointed.",
+   "page": 5,
+   "why": "Shows what is stored vs recomputed."
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 4.3",
+   "snippet": "A(1)_i = {t, t+1, ..., i} for t = max(0, i-l); A(2)_i = {j : (i-j) mod l = 0}",
+   "verbatim": false
+  },
+  {
+   "where": "Sec 4.3",
+   "snippet": "A(1)_i = {j : floor(j/l) = floor(i/l)}; A(2)_i = {j : j mod l in {t, ..., l}}, t = l-c",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Equations garbled by PDF text extraction; code snippets paraphrased",
+  "Text says '0.99 bits per dim' for Enwik8 while Table 1 says bits per byte"
+ ]
+}

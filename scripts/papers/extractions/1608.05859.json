@@ -1,0 +1,634 @@
+{
+ "schema": 1,
+ "key": "1608.05859",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/press-2017-using-output-embedding-improve-language.pdf",
+ "bib": {
+  "title": "Using the Output Embedding to Improve Language Models",
+  "authors": [
+   "Ofir Press",
+   "Lior Wolf"
+  ],
+  "first_author": "Press",
+  "year": 2017,
+  "venue": "Proceedings of the 15th Conference of the European Chapter of the Association for Computational Linguistics: Volume 2, Short Papers (EACL 2017)",
+  "arxiv": "1608.05859",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 29577,
+  "chars_total": 29577,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Is the output embedding (topmost weight matrix) of a neural language model a valid word embedding, and does tying it to the input embedding improve language and translation models?",
+ "hypothesis": "Tying input and output embeddings (U = V) reduces perplexity and parameter count in NNLMs and NMT, because the tied matrix evolves like the output embedding and overfits less.",
+ "contributions": [
+  "In word2vec skip-gram the output embedding is only slightly inferior to the input embedding",
+  "In RNN language models the output embedding outperforms the input embedding",
+  "Tied embedding evolves more like the output embedding than the input embedding of the untied model",
+  "Weight tying improves perplexity of various LMs, with or without dropout",
+  "Projection regularization (matrix P before V) for models without dropout",
+  "Weight tying in NMT cuts size to less than half without harming performance"
+ ],
+ "method": {
+  "summary": "Weight tying (U = V = S) is applied to LSTM language models (Zaremba small and large, plus RHN), word2vec skip-gram and attention NMT (DL4MT), with a three-way tying variant for NMT. For untied small models a projection P with an L2 penalty is added before the output embedding.",
+  "task": "word-level language modelling; embedding quality; EN-FR and EN-DE machine translation",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Penn Treebank",
+    "role": "both",
+    "size": null,
+    "split": "same train/validation/test split and vocabulary as Mikolov et al. 2011",
+    "source": "Marcus et al. 1993",
+    "preprocessing": null
+   },
+   {
+    "name": "text8",
+    "role": "both",
+    "size": null,
+    "split": "split/vocabulary from Mikolov et al. 2014; word2vec vocabulary of words appearing at least five times",
+    "source": "mattmahoney.net/dc/textdata",
+    "preprocessing": null
+   },
+   {
+    "name": "BBC",
+    "role": "both",
+    "size": null,
+    "split": "own train/validation/test split, vocabularies from Miyamoto and Cho 2016",
+    "source": "Greene and Cunningham 2006",
+    "preprocessing": null
+   },
+   {
+    "name": "IMDB",
+    "role": "both",
+    "size": null,
+    "split": "own train/validation/test split, vocabularies from Miyamoto and Cho 2016",
+    "source": "Maas et al. 2011",
+    "preprocessing": null
+   },
+   {
+    "name": "WMT 2014 EN-FR",
+    "role": "both",
+    "size": null,
+    "split": "as processed by Cho et al. 2014 with the data selection method of Axelrod et al. 2011",
+    "source": "statmt.org/wmt14",
+    "preprocessing": "BPE learned on union of source and target vocabularies, 89500 merge operations"
+   },
+   {
+    "name": "WMT 2015 EN-DE",
+    "role": "both",
+    "size": null,
+    "split": "validate on newstest2013, test on newstest2014 and newstest2015",
+    "source": "statmt.org/wmt15",
+    "preprocessing": "BPE learned on union of source and target vocabularies, 89500 merge operations"
+   },
+   {
+    "name": "Simlex999, Verb-143, MEN, Rare-Word, MTurk-771",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Hill 2016; Baker 2014; Bruni 2014; Luong 2013; Halawi 2012",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Small NNLM (Zaremba et al. 2014)",
+    "role": "base",
+    "params": "4.65M (untied, PTB)",
+    "architecture": "2-layer LSTM LM, no dropout",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "2 LSTM",
+    "hidden": "200",
+    "heads": null,
+    "context": null,
+    "other": {
+     "variants": "+WT 2.65M, +PR 4.69M, +WT+PR 2.69M"
+    }
+   },
+   {
+    "name": "Large NNLM (Zaremba et al. 2014)",
+    "role": "base",
+    "params": "66M (untied, PTB)",
+    "architecture": "2-layer LSTM LM with three dropout layers, p=0.65",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "2 LSTM",
+    "hidden": "1500",
+    "heads": null,
+    "context": null,
+    "other": {
+     "WT": "51M"
+    }
+   },
+   {
+    "name": "RHN (Zilly et al. 2016) + Bayesian dropout",
+    "role": "base",
+    "params": "32M (untied), 24M tied",
+    "architecture": "recurrent highway network LM",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "DL4MT attention NMT",
+    "role": "base",
+    "params": "168M EN-FR baseline, 165M EN-DE baseline",
+    "architecture": "attention encoder-decoder (DL4MT); decoder WT or three-way WT (TWWT)",
+    "init_from": null,
+    "tokenizer": "BPE, 89500 merges",
+    "vocab": "shared source/target BPE vocabulary for TWWT",
+    "layers": null,
+    "hidden": "1000 (embeddings 500)",
+    "heads": null,
+    "context": null,
+    "other": {
+     "WT params": "122M EN-FR, 119M EN-DE",
+     "TWWT params": "80M EN-FR, 79M EN-DE"
+    }
+   },
+   {
+    "name": "word2vec skip-gram",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "skip-gram, tied and untied",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": "words with count >= 5 on text8",
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "cross entropy loss without regularization terms; small model adds lambda*||P||^2 projection regularizer, lambda = 0.15",
+   "optimizer": "SGD for NNLMs (analysis section); Adadelta for NMT",
+   "lr": null,
+   "lr_schedule": "NNLM: same as Zaremba et al. 2014 (values not restated)",
+   "warmup": null,
+   "batch_size": null,
+   "steps": "300K updates (NMT)",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": "large NNLM: 0.65, three dropout layers; small NNLM: none",
+   "regularisation": "projection regularization (PR) lambda=0.15 on small model; Bayesian dropout (Gal 2015) in some runs",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "init and batch size": "NNLM weight initialization, learning rate schedule and batch size follow Zaremba et al. 2014 but are not given"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Perplexity",
+     "definition": "word-level perplexity on train/validation/test",
+     "unit": "perplexity",
+     "higher_is_better": false
+    },
+    {
+     "name": "Spearman rho",
+     "definition": "rank correlation between cosine distances of embeddings and human similarity judgments (five benchmarks), or between distance vectors of two embeddings",
+     "unit": "correlation",
+     "higher_is_better": true
+    },
+    {
+     "name": "BLEU",
+     "definition": "translation BLEU on validation and test sets",
+     "unit": "BLEU",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Zaremba et al. 2014 small and large LSTM",
+    "Large + Bayesian dropout + weight decay (Gal 2015)",
+    "RHN + Bayesian dropout (Zilly 2016)",
+    "KN 5-gram, RNN, LSTM, Stack RNN, FOFE-FNN, Noisy LSTM, Deep RNN",
+    "untied DL4MT"
+   ],
+   "protocol": "single reported numbers per configuration; no seeds, runs or significance tests stated"
+  },
+  "availability": {
+   "code": "DL4MT used (github.com/nyu-dl/dl4mt-tutorial); no release of own code stated",
+   "weights": null,
+   "data": "public benchmarks"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.optimizer",
+    "quote": "All models were trained using Adadelta (Zeiler, 2012)",
+    "where": "4.3"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Tying the large LSTM LM on PTB lowers test perplexity and size.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test perplexity",
+   "value": 74.3,
+   "unit": "perplexity",
+   "baseline_value": 78.4,
+   "n": null,
+   "setup": "PTB, Zaremba large LSTM with dropout, 66M to 51M params",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row Large + Weight Tying, column Test"
+  },
+  {
+   "claim": "Tied large model has higher train perplexity (less overfitting).",
+   "kind": "measured",
+   "source": null,
+   "metric": "train perplexity",
+   "value": 48.5,
+   "unit": "perplexity",
+   "baseline_value": 37.8,
+   "n": null,
+   "setup": "PTB, large LSTM, tied vs untied",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row Large + Weight Tying, column Train"
+  },
+  {
+   "claim": "RHN + Bayesian dropout + WT reaches state of the art on PTB test.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test perplexity",
+   "value": 66.0,
+   "unit": "perplexity",
+   "baseline_value": 68.5,
+   "n": null,
+   "setup": "PTB, RHN 32M to 24M params",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row RHN + BD + WT, column Test"
+  },
+  {
+   "claim": "Large + BD + WD with WT improves test perplexity.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test perplexity",
+   "value": 73.2,
+   "unit": "perplexity",
+   "baseline_value": 75.2,
+   "n": null,
+   "setup": "PTB, 66M to 51M",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row Large + BD + WT, column Test"
+  },
+  {
+   "claim": "Small no-dropout model with WT and projection regularization on PTB.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test perplexity",
+   "value": 100.9,
+   "unit": "perplexity",
+   "baseline_value": 114.5,
+   "n": null,
+   "setup": "PTB, small model, 4.65M to 2.69M params",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row Small + WT + PR, column Test"
+  },
+  {
+   "claim": "WT alone on small model PTB.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test perplexity",
+   "value": 112.4,
+   "unit": "perplexity",
+   "baseline_value": 114.5,
+   "n": null,
+   "setup": "PTB small model, 2.65M params",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row Small + WT, column Test"
+  },
+  {
+   "claim": "WT + PR on text8.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test perplexity",
+   "value": 183.2,
+   "unit": "perplexity",
+   "baseline_value": 195.3,
+   "n": null,
+   "setup": "text8 small model",
+   "note": null,
+   "where": "Table 7",
+   "table": "Table 7, text8 Test, column S + WT + PR"
+  },
+  {
+   "claim": "WT + PR on BBC.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test perplexity",
+   "value": 98.9,
+   "unit": "perplexity",
+   "baseline_value": 110.8,
+   "n": null,
+   "setup": "BBC small model",
+   "note": null,
+   "where": "Table 7",
+   "table": "Table 7, BBC Test, column S + WT + PR"
+  },
+  {
+   "claim": "WT + PR on IMDB.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test perplexity",
+   "value": 91.5,
+   "unit": "perplexity",
+   "baseline_value": 94.3,
+   "n": null,
+   "setup": "IMDB small model",
+   "note": null,
+   "where": "Table 7",
+   "table": "Table 7, IMDB Test, column S + WT + PR"
+  },
+  {
+   "claim": "Weight-tied NMT has about 28% fewer parameters with similar BLEU.",
+   "kind": "measured",
+   "source": null,
+   "metric": "parameter reduction",
+   "value": 28,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "DL4MT EN-FR/EN-DE decoder WT",
+   "note": null,
+   "where": "4.3",
+   "quote": "have about 28% fewer parameters than the baseline models"
+  },
+  {
+   "claim": "Three-way weight tying has about 52% fewer parameters with similar BLEU.",
+   "kind": "measured",
+   "source": null,
+   "metric": "parameter reduction",
+   "value": 52,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "DL4MT EN-FR/EN-DE TWWT",
+   "note": "text line-wrapped as 'about 52% fewer pa- rameters'",
+   "where": "4.3",
+   "quote": "they have about 52% fewer pa-"
+  },
+  {
+   "claim": "EN-FR test BLEU with TWWT vs baseline.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": 33.46,
+   "unit": "BLEU",
+   "baseline_value": 33.13,
+   "n": null,
+   "setup": "WMT14 EN-FR, 80M vs 168M params",
+   "note": null,
+   "where": "Table 8",
+   "table": "Table 8, EN-FR row TWWT, column Test"
+  },
+  {
+   "claim": "EN-DE test BLEU with TWWT vs baseline.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": 17.15,
+   "unit": "BLEU",
+   "baseline_value": 16.79,
+   "n": null,
+   "setup": "WMT15 EN-DE newstest, 79M vs 165M params",
+   "note": null,
+   "where": "Table 8",
+   "table": "Table 8, EN-DE row TWWT, column Test"
+  },
+  {
+   "claim": "EN-DE test BLEU with decoder WT is below baseline.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": 16.54,
+   "unit": "BLEU",
+   "baseline_value": 16.79,
+   "n": null,
+   "setup": "EN-DE decoder WT 119M",
+   "note": null,
+   "where": "Table 8",
+   "table": "Table 8, EN-DE row Decoder WT, column Test"
+  },
+  {
+   "claim": "In word2vec the output embedding is nearly as good as input; tied is not competitive (Simlex999).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Spearman rho",
+   "value": 0.29,
+   "unit": "rho",
+   "baseline_value": 0.3,
+   "n": null,
+   "setup": "word2vec skip-gram on text8, Simlex999 output vs input; tied 0.17",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Simlex999, column Output"
+  },
+  {
+   "claim": "In small NNLM on PTB, input embedding is far inferior to output (Simlex999).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Spearman rho",
+   "value": 0.13,
+   "unit": "rho",
+   "baseline_value": 0.02,
+   "n": null,
+   "setup": "small NNLM PTB, Simlex999 output vs input; tied 0.14",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row Simlex999, PTB Out"
+  },
+  {
+   "claim": "Output and tied embeddings are highly correlated in the large NNLM, input and tied less.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Spearman rho",
+   "value": 0.77,
+   "unit": "rho",
+   "baseline_value": 0.45,
+   "n": null,
+   "setup": "large NNLM, Out vs Tied vs In vs Tied pair correlation",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row Out/Tied, column NNLM(L)"
+  },
+  {
+   "claim": "Up to 90% (85%) of BPE subwords between English and French (German) are shared.",
+   "kind": "measured",
+   "source": null,
+   "metric": "shared BPE subwords",
+   "value": 90,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "WMT14 EN-FR, WMT15 EN-DE",
+   "note": "Table 1: EN-FR 85K shared of 94K total; EN-DE 80K of 94K",
+   "where": "Sec 3",
+   "quote": "up to 90% (85%) of BPE subwords between English and"
+  }
+ ],
+ "limits": [
+  "Short paper; single runs, no seeds or significance tests.",
+  "NNLM hyperparameters (learning rate, batch size, init) deferred to Zaremba et al. 2014 and not restated.",
+  "LSTM and RHN era models only; PTB-scale data (dataset sizes not given).",
+  "Weight tying is argued inappropriate for word2vec; it hurts embedding quality there.",
+  "Projection regularization does not help the large dropout models.",
+  "Analysis assumes input word differs from target (i_t != o_t) for simplicity.",
+  "NMT weight tying does not improve BLEU; claims only equal performance, and EN-DE decoder WT test BLEU fell 16.79 to 16.54."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "input embedding / output embedding",
+   "definition": "U is the input embedding and V the output embedding",
+   "where": "Sec 1"
+  },
+  {
+   "term": "three-way weight tying (TWWT)",
+   "definition": "the input embedding of the decoder, the output embedding of the decoder and the input embedding of the encoder are all tied",
+   "where": "Sec 3"
+  },
+  {
+   "term": "projection regularization (PR)",
+   "definition": "a projection matrix P inserted before the output embedding, h3 = V P h2, with regularizing term lambda||P||^2 added to the loss",
+   "where": "Sec 3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Recurrent neural network regularization",
+   "year": 2014,
+   "arxiv": "1409.2329",
+   "relation": "extends",
+   "note": "small and large LSTM LMs and hyperparameters",
+   "quote": null
+  },
+  {
+   "work": "A Theoretically Grounded Application of Dropout in RNNs",
+   "year": 2015,
+   "arxiv": "1512.05287",
+   "relation": "baseline",
+   "note": "Bayesian dropout baseline",
+   "quote": null
+  },
+  {
+   "work": "Recurrent highway networks",
+   "year": 2016,
+   "arxiv": "1607.03474",
+   "relation": "baseline",
+   "note": "RHN state of the art base",
+   "quote": null
+  },
+  {
+   "work": "Tying word vectors and word classifiers",
+   "year": 2016,
+   "arxiv": "1611.01462",
+   "relation": "related",
+   "note": "concurrent, independent explanation of weight tying",
+   "quote": null
+  },
+  {
+   "work": "word2vec explained",
+   "year": 2014,
+   "arxiv": "1402.3722",
+   "relation": "related",
+   "note": "argued output embedding must differ from input",
+   "quote": null
+  },
+  {
+   "work": "Neural Machine Translation of Rare Words with Subword Units",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "BPE segmentation",
+   "quote": null
+  },
+  {
+   "work": "Efficient estimation of word representations in vector space",
+   "year": 2013,
+   "arxiv": "1301.3781",
+   "relation": "evaluates",
+   "note": "skip-gram model",
+   "quote": null
+  },
+  {
+   "work": "Adadelta",
+   "year": 2012,
+   "arxiv": "1212.5701",
+   "relation": "uses-method",
+   "note": "NMT optimizer",
+   "quote": null
+  },
+  {
+   "work": "A scalable hierarchical distributed language model",
+   "year": 2009,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Mnih and Hinton earlier used weight tying untested",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Table 5",
+   "caption": "Word level perplexity on PTB and size of models that use either dropout or Bayesian dropout",
+   "page": 4,
+   "why": "shows 66M to 51M params and 78.4 to 74.3 test perplexity"
+  },
+  {
+   "figure": "Table 8",
+   "caption": "Size and BLEU score of various translation models",
+   "page": 5,
+   "why": "parameter cut vs BLEU"
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 3",
+   "snippet": "h3 = V P h2; loss + lambda ||P||^2, lambda = 0.15",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Table 1 and others are reconstructed from flattened text; no instructions embedded in the PDF."
+ ]
+}

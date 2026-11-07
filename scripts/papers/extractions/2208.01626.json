@@ -1,0 +1,304 @@
+{
+ "schema": 1,
+ "key": "2208.01626",
+ "pdf": "ai-engineering/08-multimodal-engineering/sources/hertz-2022-prompt-prompt-image-editing-cross.pdf",
+ "bib": {
+  "title": "Prompt-to-Prompt Image Editing with Cross Attention Control",
+  "authors": [
+   "Amir Hertz",
+   "Ron Mokady",
+   "Jay Tenenbaum",
+   "Kfir Aberman",
+   "Yael Pritch",
+   "Daniel Cohen-Or"
+  ],
+  "first_author": "Hertz",
+  "year": 2022,
+  "venue": "preprint",
+  "arxiv": "2208.01626",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 50396,
+  "chars_total": 50396,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can a text-conditioned diffusion model's generated image be edited by changing only the text prompt, preserving the original layout, with no user mask?",
+ "hypothesis": "Cross-attention maps determine the spatial layout of the generated image, so injecting the source image's maps into a generation with an edited prompt preserves structure.",
+ "contributions": [
+  "Analysis showing cross-attention layers bind prompt words to spatial layout",
+  "Prompt-to-Prompt editing: word swap, adding a phrase, attention re-weighting, needing no training, fine-tuning, extra data or optimization",
+  "Application to real images via DDIM inversion plus attention-derived masks"
+ ],
+ "method": {
+  "summary": "Runs the diffusion process for the source prompt and edited prompt in parallel with the same random seed, and overrides the edited run's cross-attention maps with source maps (all or a prefix of steps, or only for shared tokens), or rescales one token's map. Built on Imagen's 64x64 text-to-image diffusion model; super-resolution used unchanged.",
+  "task": "text-driven image editing with a pretrained text-to-image diffusion model",
+  "trains": false,
+  "datasets": [],
+  "models": [
+   {
+    "name": "Imagen (64x64 text-to-image diffusion model, super-resolution stages used as is)",
+    "role": "base",
+    "params": null,
+    "architecture": "U-Net with cross-attention at resolutions [16, 8] and hybrid attention at [32, 16, 8]; text embedding fused via cross-attention",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "sr_models": "64->256 hybrid attention in bottleneck (32); 256->1024 cross-attention in bottleneck (64)"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "deterministic DDIM sampling (sigma_t = 0) with a fixed random seed shared between source and edited generations",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "qualitative examples only; number of images, seeds or runs not stated",
+   "prompting": "source prompt P and edited prompt P*; edits are word swap, added phrase, or re-weighted token",
+   "retrieval": null,
+   "parameters": {
+    "tau": "timestamp until which source attention is injected in word swap and added phrase; value not given",
+    "c": "attention re-weighting scale in [-2, 2]",
+    "classifier_free_guidance": "value not stated; lowering it improves inversion reconstruction but limits editing",
+    "attention_maps": "kept separate per head; only text-token channels of hybrid attention modified"
+   },
+   "other": {
+    "overhead": "one diffusion step applied to both z_{t-1} and z*_t in the same batch, so one-step overhead vs original inference (as printed)",
+    "real_image": "DDIM inversion x0->xT; or naive noise-then-denoise (DDPM) with attention-derived mask restoring unedited regions"
+   }
+  },
+  "eval": {
+   "metrics": [],
+   "baselines": [
+    "same prompt with fixed seed but no attention injection (Fig 2, Fig 6)"
+   ],
+   "protocol": "qualitative figures only; no quantitative metric, user study or benchmark"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": null
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "inference.parameters.c",
+    "quote": "we scale the attention map of the assigned token j∗with parameter c ∈[−2, 2]",
+    "where": "Sec 3.2"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "The method needs no training, fine-tuning, extra data or optimization.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Pretrained Imagen text-to-image diffusion model",
+   "quote": "does not requires model training, ﬁne-tuning, extra data, or optimization",
+   "table": null,
+   "note": null,
+   "where": "Sec 1"
+  },
+  {
+   "claim": "Fixing only the random seed and changing the prompt gives a completely different image; injecting source cross-attention maps preserves layout.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "'lemon cake' to other cakes, Imagen, DDIM, qualitative (Fig 2)",
+   "quote": "naively feeding the synthesis model with the prompt “pumpkin cake” results in a completely different geometry (3rd row), even when using the same random seed in a deterministic setting",
+   "table": null,
+   "note": null,
+   "where": "Sec 4, Fig 2"
+  },
+  {
+   "claim": "Injecting attention through all diffusion steps can over-constrain geometry; limiting injection to early steps balances fidelity and prompt adherence.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "'cat riding on a bicycle', bicycle swapped for car, airplane, motorcycle, train; injection 0 to 100% of steps (Fig 6)",
+   "quote": "the optimal result is not necessarily achieved by applying the injection throughout all diffusion steps",
+   "table": null,
+   "note": null,
+   "where": "Sec 4, Fig 6"
+  },
+  {
+   "claim": "Image structure is already determined in the early diffusion steps.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Attention maps of 'a furry bear watching a bird' at different steps (Fig 4)",
+   "quote": "we can see that the structure of the image is already determined in the early steps of the diffusion process",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.2"
+  },
+  {
+   "claim": "The overhead over normal inference is one diffusion step since source and edited runs batch in parallel.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Algorithm 1",
+   "quote": "there is only one step overhead with respect to the original inference of the diffusion model",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.2"
+  },
+  {
+   "claim": "DDIM inversion of real images is often adequate but fails on other images; lowering classifier-free guidance improves reconstruction but limits edits.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 10, Fig 11, qualitative",
+   "quote": "reducing the classiﬁer-free guidance [18] parameter (i.e., reducing the prompt influence) improves reconstruction but constrains our ability to perform signiﬁcant manipulations",
+   "table": null,
+   "note": "quote ligature as printed",
+   "where": "Sec 4"
+  }
+ ],
+ "limits": [
+  "All evidence is qualitative figures; no benchmark, metric, user study or comparison with baselines is reported.",
+  "Real-image inversion gives visible distortion on some images and requires the user to supply a suitable prompt.",
+  "Cross-attention maps are low resolution (network bottleneck), bounding precise local edits.",
+  "Cannot spatially move existing objects.",
+  "Tau, guidance scale, number of examples and seeds are not stated."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Prompt-to-Prompt",
+   "definition": "editing an image by changing only the text prompt while controlling cross-attention maps",
+   "where": "Sec 1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Imagen (Saharia et al. 2022)",
+   "year": 2022,
+   "arxiv": "2205.11487",
+   "relation": "uses-method",
+   "note": "backbone diffusion model",
+   "quote": null
+  },
+  {
+   "work": "GLIDE (Nichol et al. 2021)",
+   "year": 2021,
+   "arxiv": "2112.10741",
+   "relation": "baseline",
+   "note": "mask-based inpainting editing",
+   "quote": null
+  },
+  {
+   "work": "Blended diffusion (Avrahami et al. 2022)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "requires user mask",
+   "quote": null
+  },
+  {
+   "work": "Text2LIVE (Bar-Tal et al. 2022)",
+   "year": 2022,
+   "arxiv": "2204.02491",
+   "relation": "related",
+   "note": "mask-free but trains a network per input; textures only",
+   "quote": null
+  },
+  {
+   "work": "DDIM (Song et al. 2020)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "deterministic sampling and inversion",
+   "quote": null
+  },
+  {
+   "work": "Classifier-free guidance (Ho and Salimans 2021)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "guidance parameter trade-off",
+   "quote": null
+  },
+  {
+   "work": "Fader networks (Lample et al. 2017)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "related",
+   "note": "inspiration for attention re-weighting control",
+   "quote": null
+  },
+  {
+   "work": "Attention is all you need (Vaswani et al. 2017)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "multi-head attention",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "Content modification through attention injection: lemon cake edited to other cakes, with and without injection",
+   "page": 3,
+   "why": "shows fixed seed alone fails"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Method overview of cross-attention and the three edit operations",
+   "page": 4,
+   "why": "the whole mechanism in one diagram"
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "Attention injection through a varied number of diffusion steps",
+   "page": 7,
+   "why": "shows the fidelity versus prompt-adherence tradeoff"
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 3.2 Algorithm 1",
+   "snippet": "for t = T..1: z_{t-1}, M_t <- DM(z_t, P, t, s); M*_t <- DM(z*_t, P*, t, s); Mhat_t <- Edit(M_t, M*_t, t); z*_{t-1} <- DM(z*_t, P*, t, s){M <- Mhat_t}",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "No embedded instructions found. Several equations garbled in text extraction."
+ ]
+}

@@ -1,19 +1,532 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2103.07191",
  "pdf": "ai-engineering/01-prompt-engineering/sources/patel-2021-nlp-models-really-able-solve.pdf",
  "bib": {
   "title": "Are NLP Models really able to Solve Simple Math Word Problems?",
+  "authors": [
+   "Arkil Patel",
+   "Satwik Bhattamishra",
+   "Navin Goyal"
+  ],
   "first_author": "Patel",
   "year": 2021,
-  "venue": "NAACL-HLT 2021",
+  "venue": "Proceedings of NAACL-HLT 2021, pages 2080-2094",
   "arxiv": "2103.07191",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-04",
-  "session": "5cfd23c4-1604-4533-96a3-ace4b4e9da63"
+  "at": "2026-11-07",
+  "chars_read": 62465,
+  "chars_total": 62465,
+  "engine": "pymupdf",
+  "skipped": null
  },
- "legacy_report": "SOURCE: \"Are NLP Models really able to Solve Simple Math Word Problems?\", Arkil Patel, Satwik Bhattamishra, Navin Goyal (Microsoft Research India), NAACL-HLT 2021, pages 2080–2094. Also published as arXiv 2103.07191.\n\nCOVERAGE: Read 62,620 of 62,620 chars (15 PDF pages): the body, references and appendices A–E, including Tables 16–23. I skimmed the references for origins only. The figure caption script returned nothing, and the paper has no figures, only tables. Page numbers below are PDF page (printed page).\n\nREAD THIS FIRST: There are no LLMs, no prompting and no chain-of-thought anywhere in the paper. The models are pre-LLM solvers trained on the datasets: Seq2Seq (BiLSTM encoder with LSTM attention decoder), GTS (LSTM encoder with tree decoder) and Graph2Tree (graph encoder with tree decoder). Each is trained from scratch (S) or with RoBERTa embeddings (R) and evaluated by execution accuracy. For 03-core-techniques the paper can only be cited as the origin of the SVAMP benchmark, which later CoT papers report on. It contains no CoT result. It fits 09-evaluating-prompts much better: ablation baselines, perturbation categories and the gap between benchmark and challenge-set scores.\n\nCLAIMS\n- claim: Strong solvers that score high on standard benchmarks score below 44% on SVAMP, a set of simple variations of grade-4-and-lower problems.\n  number: 43.8% (best, Graph2Tree R), against 88.7 on MAWPS and 82.2 on ASDiv-A\n  setup: trained on MAWPS plus ASDiv-A combined, tested on SVAMP's 1000 problems. The benchmark scores are 5-fold CV.\n  quote: \"The best performing Graph2Tree model is only able to achieve an accuracy of 43.8% on SV AMP.\" / Table 2 \"Graph2Tree (R) 88.7 82.2\"\n  where: p8 (2087) Table 10; p3 (2082) Table 2\n- claim: With the question removed from each test problem, leaving only the narrative, models still solve most benchmark problems. This points to dataset artifacts that the models exploit.\n  number: 64.4% ASDiv-A, 77.7% MAWPS (best model, Graph2Tree)\n  setup: trained normally on full problems; question text Q removed only at test time. RoBERTa-embedding models, 5-fold CV.\n  quote: \"The best performing model is able to achieve a 5-fold cross-validation accuracy of 64.4% on ASDiv-A and 77.7% on MAWPS. Loosely translated, this means that nearly 64% of the problems in ASDiv-A and 78% of the problems in MAWPS can be correctly answered without even looking at the question.\"\n  where: p3–4 (2082–2083) Table 3\n- claim: The same question-removed test on SVAMP roughly halves accuracy, so SVAMP depends on the question.\n  number: 30.8 (SVAMP without questions) vs 64.4 (ASDiv-A without questions), Graph2Tree\n  setup: trained on MAWPS plus ASDiv-A, RoBERTa\n  quote: \"Graph2Tree 30.8 64.4\" / \"The accuracy drops by half when compared to ASDiv-A and more than half compared to MAWPS\"\n  where: p8 (2087) Table 11\n- claim: A bag-of-words model with no word-order information (an FFN encoder in place of the LSTM, feeding an LSTM decoder) solves most MAWPS problems. On SVAMP it barely beats always predicting the most frequent template.\n  number: 77.9 MAWPS, 51.2 ASDiv-A; 18.3 on SVAMP vs 11.7 majority-template baseline\n  setup: non-contextual RoBERTa embeddings, 5-fold CV. The SVAMP run trains on MAWPS plus ASDiv-A.\n  quote: \"The constrained model with non-contextual RoBERTa embeddings is able to achieve a cross-validation accuracy of 51.2 on ASDiv-A and an astounding 77.9 on MAWPS.\" / \"The best model achieves only 18.3% accuracy (see Table 12) which is marginally better than the majority template baseline.\"\n  where: p4 (2083) Table 5; p8 (2087) Table 12\n- claim: Most of the models' success comes from \"Easy\" problems, defined as those solvable without the question.\n  number: ASDiv-A Easy vs Hard: Graph2Tree 92.8 vs 63.3; Seq2Seq 91.3 vs 56.1\n  setup: per-model split of the test set by question-removed correctness\n  quote: \"Graph2Tree 93.4 71.0 92.8 63.3\" (MAWPS Easy, Hard, ASDiv-A Easy, Hard)\n  where: p4 (2083) Table 4\n- claim: Attention analysis shows the bag-of-words model attends to a single cue word such as \"every\" and keeps predicting the same equation when a small edit changes the correct one.\n  number: attention weight 1 on \"every\"\n  setup: constrained model with RoBERTa, trained on full ASDiv-A\n  quote: \"the model assigns an attention weight of 1 to the representation of the word 'every' and predicts the correct equation. However, when we make a subtle change ... the model keeps on attending over the word 'every' and predicts the same equation, which is now incorrect.\"\n  where: p5 (2084) Table 6; more examples in Table 22, p15 (2094)\n- claim: SVAMP applies nine variations in three categories to 100 seed problems from ASDiv-A. Question Sensitivity changes the question and keeps the body. Reasoning Ability covers add relevant information, change information and invert operation. Structural Invariance covers add irrelevant information, reorder objects and reorder phrases.\n  number: 100 seeds; 1098 created, 1000 kept\n  setup: written in-house by the authors and colleagues; 98 problems with more than two operators discarded; an external volunteer checked grammar and logic\n  quote: \"We created a total of 1098 examples. However, since ASDiv-A does not have examples with equations of more than two operators, we discarded 98 examples\"\n  where: p6–7 (2085–2086) Table 8; Table 7 (seed counts Add 28, Sub 33, Mul 19, Div 20)\n- claim: Removing a category's problems raises accuracy for Question Sensitivity and Structural Invariance, so those categories are the hard part. Removing Reasoning Ability lowers accuracy, mostly because Invert Operation problems look like ASDiv-A training problems.\n  number: +13.7 (QS, 462 removed), -3.3 (RA, 649), +4.5 (SI, 467); per variation: Same Obj Diff Struct +7.3, Add Irrel Info +6.9, Invert Operation -10.2\n  setup: best model on SVAMP; delta = accuracy without the category minus full-set accuracy\n  quote: \"Question Sensitivity 462 +13.7 / Reasoning Ability 649 -3.3 / Structural Invariance 467 +4.5\"\n  where: p8–9 (2087–2088) Tables 13, 14\n- claim: Accuracy falls steeply as the number of quantities in the text grows, so the models cannot tie numbers to their context.\n  number: SVAMP 78.3 / 25.4 / 25.4 for 2 / 3 / 4 numbers; ASDiv-A 93.3 / 59.0 / 47.5\n  setup: Graph2Tree; SVAMP after training on MAWPS plus ASDiv-A, ASDiv-A by 5-fold CV\n  quote: \"ASDiv-A 93.3 59.0 47.5 / SV AMP 78.3 25.4 25.4\"\n  where: p9 (2088) Table 15\n- claim: Adding SVAMP to the training data still leaves the best model far below its benchmark scores.\n  number: about 65%\n  setup: 5-fold CV over SVAMP, with folds split by seed so variations of one seed stay together; trained on MAWPS plus ASDiv-A plus SVAMP folds\n  quote: \"We found that the best model achieved about 65% accuracy.\"\n  where: p8 (2087)\n- claim: Lexical diversity (CLD) is not a reliable quality measure. SVAMP has lower CLD than ASDiv-A but is harder, and its template count and operator count are comparable.\n  number: CLD 0.22 SVAMP vs 0.50 ASDiv-A vs 0.26 MAWPS; templates 26 / 19 / 39; average ops 1.24 / 1.23 / 1.78\n  setup: dataset statistics\n  quote: \"SV AMP 1000 26 1.24 0.22\"\n  where: p7 (2086) Table 9\n- claim: Cross-dataset transfer is asymmetric, which the authors use to argue that ASDiv-A is harder and better quality than MAWPS.\n  number: 82% (train ASDiv-A, test MAWPS) vs 73% (train MAWPS, test ASDiv-A)\n  setup: Graph2Tree\n  quote: \"when we train a Graph2Tree model on ASDiv-A, it achieves 82% accuracy on MAWPS. However, when trained on MAWPS and tested on ASDiv-A, the model achieved only 73% accuracy.\"\n  where: p5 (2084)\n\nLIMITS:\n- Pre-LLM only. The solvers have 5M–143M parameters (Table 16), are trained on the datasets and generate expression trees. No few-shot, prompting or CoT results. Later LLM scores on SVAMP must come from other papers.\n- The authors concede the spurious correlations they found are \"only a few types ... there could be other types of correlations that might have been missed\". They do not claim every model relies on cue words the way the constrained model does (p5).\n- SVAMP is small (1000 problems from 100 seeds), English only, one unknown, at most two operators, written in-house rather than independently. Workers agreed with each other in a 5-seed trial only, with no agreement statistic. Scaling up from the templates is \"left for future work\" (App. B).\n- Attention as explanation is justified by citing Wiegreffe and Pinter (2019), and only for the non-contextual constrained model.\n- The question-removed setup differs from hypothesis-only NLI: the models are trained on full problems, which the authors argue is more natural.\n- Dated: the \"SOTA\" models (Graph2Tree 2020) have been superseded. The lasting parts are the method (question-removed and bag-of-words baselines, perturbation categories) and the dataset.\n\nBUILDS ON:\n- Gururangan et al. (2018) and Poliak et al. (2018): hypothesis-only NLI baselines, the template for the question-removed test and the Easy/Hard split.\n- McCoy et al. (2019): NLI heuristics. Cai et al. (2017): ROC story-cloze ending bias. Rosenman et al. (2020): relation-extraction heuristics.\n- Gardner et al. (2020): contrast sets. Ribeiro et al. (2020): CheckList variations. Nie et al. (2020): Adversarial NLI, a model-dependent approach SVAMP avoids. Linzen (2020): normative evaluation.\n- Datasets: MAWPS (Koncel-Kedziorski et al., 2016), ASDiv (Miao et al., 2020, which also defines CLD).\n- Models: GTS (Xie and Sun, 2019), Graph2Tree (Zhang et al., 2020), RoBERTa (Liu et al., 2019), Luong et al. (2015) attention, Wiegreffe and Pinter (2019).\n\nCODE: None in the paper. Its footnote gives the dataset and code at https://github.com/arkilpatel/SVAMP (p2). App. B describes a template scheme with tags [NUMx], [NAMEx], [OBJsx], [OBJpx], [MODx] (Table 17, p13) and a six-step variation order: QS, then Invert, then Add-relevant+QS, then Add-irrelevant, then Change-info, then Reorder (p13–14).\n\nFIGURES: The paper has no figures. Tables that explain faster than prose:\n- Table 1, p2 (2081): one pens problem shown under each of the three variation categories with its equation. This is the best single slide for perturbation and invariance tests.\n- Table 8, p6 (2085): all nine variations, each with an original/variation pair. Use it as a catalogue for building perturbation eval sets.\n- Table 6, p5 (2084): cue-word failures, e.g. \"every\" leading to 3*24=72. It shows a shortcut in one glance.\n- Table 3 with Table 11, p3/p8: question-removed accuracy, high on the benchmarks and low on SVAMP. A compact \"ablate the input\" baseline.\n- Table 23, p15 (2094): simple SVAMP problems the best model gets wrong, mostly operand-order reversals such as 6-2 vs 2-6.\n\nPROBLEMS: The text extracted cleanly. The \"SVAMP\" name appears as \"SV AMP\" throughout because of a ligature or spacing artifact. The template tags in App. B and Tables 19–21 break across lines (\"[ N U M ]\"), but their meaning is recoverable. Table 16 lost its bold best-hyperparameter marks in extraction, so I cannot tell which values were chosen. In Section 3.2 the model list runs (a), (c), (d), a numbering slip in the source. Table 8 says Structural Invariance has \"Change order of phrases\"; App. B step 6 calls it \"Change order of Events or Phrases\". The PDF contains no embedded instructions.\n\nFile: /Users/ramsey-wise/workspace/learn-ai-engineering/ai-engineering/01-prompt-engineering/sources/patel-2021-nlp-models-really-able-solve.pdf"
+ "type": "benchmark",
+ "question": "Do NLP math word problem solvers actually solve one-unknown arithmetic MWPs, or do they exploit shallow heuristics in the benchmark datasets?",
+ "hypothesis": "Existing solvers rely on shallow heuristics (patterns in the story, specific words) rather than reading the question and reasoning.",
+ "contributions": [
+  "We show that the majority of problems in benchmark datasets can be solved by shallow heuristics lacking word-order information or lacking question text.",
+  "We create a challenge set called SVAMP for more robust evaluation of methods developed to solve elementary level math word problems."
+ ],
+ "method": {
+  "summary": "Trains three pre-LLM solvers (Seq2Seq, GTS, Graph2Tree) on MAWPS and ASDiv-A, tests them with the question removed and with a word-order-free constrained model, then builds SVAMP (1000 hand-made variations of 100 ASDiv-A seed problems) and evaluates the same solvers on it. No LLMs or prompting.",
+  "task": "one-unknown arithmetic math word problem to equation (execution accuracy)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "MAWPS",
+    "role": "both",
+    "size": "2373 MWPs",
+    "split": "5-fold cross-validation, pre-assigned splits of equal test size",
+    "source": "Koncel-Kedziorski et al. 2016",
+    "preprocessing": null
+   },
+   {
+    "name": "ASDiv-A",
+    "role": "both",
+    "size": "1218 MWPs (arithmetic subset of ASDiv, mostly up to grade 4)",
+    "split": "5-fold CV, folds [238, 238, 238, 238, 266]",
+    "source": "Miao et al. 2020",
+    "preprocessing": null
+   },
+   {
+    "name": "SVAMP",
+    "role": "eval",
+    "size": "1000 problems (1098 created, 98 with more than two operators discarded)",
+    "split": "evaluation after training on MAWPS+ASDiv-A; also 5-fold CV over seed-example groups when trained with SVAMP",
+    "source": "built by authors and colleagues from 100 seed ASDiv-A examples; github.com/arkilpatel/SVAMP",
+    "preprocessing": "Seeds: drop types with <20 examples (TVQ-Change, TVQ-Initial, Ceil-Division, Floor-Division) and Difference type; drop examples >40 words; keep single-operator problems; K-Means on RoBERTa sentence embeddings per type, take example nearest centroid; 28 add, 33 sub, 19 mul, 20 div. Checked by an external volunteer for grammar and logic."
+   }
+  ],
+  "models": [
+   {
+    "name": "Seq2Seq",
+    "role": "evaluated",
+    "params": "8.5M (scratch) / 130M (RoBERTa)",
+    "architecture": "BiLSTM encoder, LSTM decoder with attention (Luong 2015)",
+    "init_from": "scratch (S) or RoBERTa embeddings (R)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "[1, 2] searched",
+    "hidden": "[256, 384] searched",
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GTS",
+    "role": "evaluated",
+    "params": "15M (S) / 140M (R)",
+    "architecture": "LSTM encoder, tree-based decoder (Xie and Sun 2019)",
+    "init_from": "scratch or RoBERTa",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "[1, 2] searched",
+    "hidden": "[384, 512] searched",
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Graph2Tree",
+    "role": "evaluated",
+    "params": "16M (S) / 143M (R)",
+    "architecture": "graph encoder, tree decoder (Zhang et al. 2020)",
+    "init_from": "scratch or RoBERTa",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "[1, 2] searched",
+    "hidden": "[256, 384] searched",
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Constrained model (FFN + LSTM decoder)",
+    "role": "proposed",
+    "params": "5M (S) / 130M (R)",
+    "architecture": "Seq2Seq with LSTM encoder replaced by feed-forward network; decoder starts from average of hidden representations, attends over token states; no word-order information",
+    "init_from": "scratch or non-contextual RoBERTa embedding matrix",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "[1, 2] searched",
+    "hidden": "[256, 384] searched",
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": null,
+   "optimizer": null,
+   "lr": "searched: Seq2Seq S [5e-4,8e-4,1e-3], R [1e-4,2e-4,5e-4]; GTS S [8e-4,1e-3,2e-3], R [5e-4,8e-4,1e-3]; Graph2Tree same as GTS; constrained [1e-3,2e-3]",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "searched: [8,16] scratch, [4,8] RoBERTa",
+   "steps": null,
+   "epochs": "60 (scratch), 50 (RoBERTa)",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": "0.1 Seq2Seq and constrained; 0.5 GTS and Graph2Tree",
+   "regularisation": null,
+   "hardware": "8x NVIDIA Tesla P100 16 GB",
+   "compute": "average time per epoch (s): Seq2Seq 10/40, GTS 60/120, Graph2Tree 60/120, constrained 10/15 (S/R)",
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "embedding_size": "[128,256] scratch, [768] RoBERTa",
+    "embedding_lr": "RoBERTa runs [5e-6,8e-6,1e-5] for seq2seq/GTS/Graph2Tree; [1e-3,2e-3] constrained",
+    "note": "Table 16 bolds the best values but bold is lost in the extracted text, so the chosen values are not recoverable; hyperparameter search done on a single fold first"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single 5-fold CV run per cell as far as reported; no seeds stated",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Execution Accuracy",
+     "definition": "predicted equation is evaluated and its answer compared with the annotated answer",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Majority Template Baseline (always predict most frequent equation template): 17.7 MAWPS, 21.2 ASDiv-A, 11.7 SVAMP",
+    "Seq2Seq, GTS, Graph2Tree each scratch and RoBERTa"
+   ],
+   "protocol": "5-fold CV on MAWPS and ASDiv-A; question-removed variant keeps train sets unchanged and strips Q from test sets; Easy/Hard split per model by whether it answers correctly without the question; SVAMP evaluated after training on MAWPS+ASDiv-A; no significance test."
+  },
+  "availability": {
+   "code": "https://github.com/arkilpatel/SVAMP",
+   "weights": null,
+   "data": "https://github.com/arkilpatel/SVAMP"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "eval.metrics",
+    "quote": "The metric used to evaluate models on the MWP task is Execution Accuracy",
+    "where": "Sec 3.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Best solver answers 64.4% of ASDiv-A and 77.7% of MAWPS test problems with the question removed",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "64.4 / 77.7",
+   "unit": "%",
+   "baseline_value": "82.2 / 88.7 on full problems (Table 2)",
+   "n": null,
+   "setup": "Graph2Tree with RoBERTa embeddings, 5-fold cross-validation; trained on full problems, test questions removed",
+   "note": null,
+   "where": "Sec 4.1, Table 3",
+   "quote": "The best performing model is able to achieve a 5-fold cross-validation accuracy of 64.4% on ASDiv-A and 77.7% on MAWPS."
+  },
+  {
+   "claim": "Constrained model with no word-order information (FFN encoder, non-contextual RoBERTa embeddings) reaches 77.9% on MAWPS",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 77.9,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "FFN + LSTM Decoder (R), 5-fold CV",
+   "note": null,
+   "where": "Sec 4.2, Table 5",
+   "quote": "an astounding 77.9 on MAWPS"
+  },
+  {
+   "claim": "Same constrained model reaches 51.2% on ASDiv-A",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 51.2,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "FFN + LSTM Decoder (R), 5-fold CV",
+   "note": null,
+   "where": "Sec 4.2, Table 5",
+   "quote": "cross-validation accuracy of 51.2 on ASDiv-A"
+  },
+  {
+   "claim": "Best model (Graph2Tree R) scores 43.8% on SVAMP",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 43.8,
+   "unit": "%",
+   "baseline_value": "82.2 ASDiv-A, 88.7 MAWPS (Table 2)",
+   "n": null,
+   "setup": "Trained on MAWPS + ASDiv-A, tested on the 1000-example SVAMP",
+   "note": null,
+   "where": "Sec 5.3, Table 10",
+   "quote": "The best performing Graph2Tree model is only able to achieve an accuracy of 43.8% on SVAMP."
+  },
+  {
+   "claim": "Graph2Tree (R) on ASDiv-A in 5-fold CV for the same model",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 82.2,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Graph2Tree (R), 5-fold CV",
+   "note": null,
+   "where": null,
+   "table": "Table 2, row Graph2Tree (R), column ASDiv-A"
+  },
+  {
+   "claim": "Graph2Tree (R) on MAWPS in 5-fold CV",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 88.7,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Graph2Tree (R), 5-fold CV",
+   "note": null,
+   "where": null,
+   "table": "Table 2, row Graph2Tree (R), column MAWPS"
+  },
+  {
+   "claim": "SVAMP without questions: best model 30.8%, about half the ASDiv-A without-question score",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 30.8,
+   "unit": "%",
+   "baseline_value": 64.4,
+   "n": null,
+   "setup": "Graph2Tree R trained on MAWPS+ASDiv-A, SVAMP questions removed",
+   "note": null,
+   "where": null,
+   "table": "Table 11, row Graph2Tree, column SVAMP w/o ques"
+  },
+  {
+   "claim": "Constrained model gets only 18.3% on SVAMP, close to majority template baseline 11.7%",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 18.3,
+   "unit": "%",
+   "baseline_value": 11.7,
+   "n": null,
+   "setup": "FFN + LSTM Decoder (R) trained on MAWPS+ASDiv-A",
+   "note": null,
+   "where": "Sec 5.3, Table 12",
+   "quote": "The best model achieves only 18.3% accuracy"
+  },
+  {
+   "claim": "With SVAMP added to training, 5-fold CV on SVAMP gives about 65%",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 65,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Best model, trained on MAWPS+ASDiv-A+SVAMP folds, tested on held-out SVAMP seed groups",
+   "note": null,
+   "where": "Sec 5.3",
+   "quote": "We found that the best model achieved about 65% accuracy."
+  },
+  {
+   "claim": "Removing Question Sensitivity examples raises best model accuracy by 13.7 points",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 13.7,
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Best model; delta = Acc(Full-Cat) - Acc(Full); 462 examples removed",
+   "note": null,
+   "where": "Table 13",
+   "table": "Table 13, row Question Sensitivity, column Change in Accuracy"
+  },
+  {
+   "claim": "Removing Invert Operation examples lowers accuracy by 10.2 points",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": -10.2,
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Best model; 255 examples removed",
+   "note": null,
+   "where": "Table 14",
+   "table": "Table 14, row Invert Operation"
+  },
+  {
+   "claim": "Accuracy by count of numbers in the problem: SVAMP 78.3 / 25.4 / 25.4 for 2/3/4 numbers vs ASDiv-A 93.3 / 59.0 / 47.5",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 25.4,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Graph2Tree trained on ASDiv-A+MAWPS; ASDiv-A figures from 5-fold CV",
+   "note": "Both 3 nums and 4 nums are 25.4",
+   "where": null,
+   "table": "Table 15, row SVAMP, columns 3 nums and 4 nums"
+  },
+  {
+   "claim": "Seq2Seq (S) scores 24.2 on SVAMP full set; GTS (R) 41.0; Seq2Seq (R) 40.3",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 24.2,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Trained on MAWPS+ASDiv-A",
+   "note": null,
+   "where": null,
+   "table": "Table 10, row Full Set, column Seq2Seq S"
+  },
+  {
+   "claim": "Graph2Tree two-operator subset is worst: 16.1 (S), 17.8 (R) vs one-operator 42.9 / 51.9",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 17.8,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Graph2Tree R, SVAMP Two-Op subset",
+   "note": null,
+   "where": null,
+   "table": "Table 10, row Two-Op, column Graph2Tree R"
+  },
+  {
+   "claim": "Cross-dataset: Graph2Tree trained on ASDiv-A gets 82% on MAWPS, trained on MAWPS gets 73% on ASDiv-A",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 73,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Graph2Tree, MAWPS -> ASDiv-A",
+   "note": null,
+   "where": "Sec 5.1",
+   "quote": "the model achieved only 73% accuracy"
+  }
+ ],
+ "limits": [
+  "Models are 2021 task-specific solvers trained on the data, not prompted LLMs; nothing is shown about LLMs.",
+  "Only one-unknown arithmetic MWPs up to grade 4, English; SVAMP has at most two operators and 100 seed problems.",
+  "SVAMP made in-house by the authors and colleagues; lower lexical diversity (CLD 0.22 vs 0.50 ASDiv-A).",
+  "Authors state they do not claim every model uses specific-word heuristics; only that such a brittle model scores well.",
+  "Single 5-fold runs, no variance reported."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Equation Template",
+   "definition": "the equation converted into prefix form with all numbers masked out by a meta symbol",
+   "where": "Sec 5.2"
+  },
+  {
+   "term": "Easy/Hard",
+   "definition": "Easy: problems the model predicted correctly without the question; Hard: those it could not",
+   "where": "Sec 4.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "MAWPS",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "benchmark (Koncel-Kedziorski et al.)",
+   "quote": null
+  },
+  {
+   "work": "ASDiv",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "source of SVAMP seeds (Miao et al.)",
+   "quote": null
+  },
+  {
+   "work": "Graph-to-tree learning for solving math word problems",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Graph2Tree, SOTA (Zhang et al.)",
+   "quote": null
+  },
+  {
+   "work": "A goal-driven tree-structured neural model for math word problems",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "GTS (Xie and Sun)",
+   "quote": null
+  },
+  {
+   "work": "RoBERTa",
+   "year": 2019,
+   "arxiv": "1907.11692",
+   "relation": "uses-method",
+   "note": "pretrained embeddings",
+   "quote": null
+  },
+  {
+   "work": "Annotation artifacts in natural language inference data",
+   "year": 2018,
+   "arxiv": "1803.02324",
+   "relation": "extends",
+   "note": "question-removed analogous to hypothesis-only; Easy/Hard split follows it (Gururangan et al.)",
+   "quote": null
+  },
+  {
+   "work": "Hypothesis only baselines in NLI",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Poliak et al.",
+   "quote": null
+  },
+  {
+   "work": "Beyond accuracy: CheckList",
+   "year": 2020,
+   "arxiv": "2005.04118",
+   "relation": "related",
+   "note": "variation-based testing (Ribeiro et al.)",
+   "quote": null
+  },
+  {
+   "work": "Evaluating models' local decision boundaries via contrast sets",
+   "year": 2020,
+   "arxiv": "2004.02709",
+   "relation": "related",
+   "note": "Gardner et al.",
+   "quote": null
+  },
+  {
+   "work": "Attention is not not explanation",
+   "year": 2019,
+   "arxiv": "1908.04626",
+   "relation": "uses-method",
+   "note": "justifies attention analysis (Wiegreffe and Pinter)",
+   "quote": null
+  },
+  {
+   "work": "Effective approaches to attention-based NMT",
+   "year": 2015,
+   "arxiv": "1508.04025",
+   "relation": "uses-method",
+   "note": "attention decoder (Luong et al.)",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Table 1",
+   "caption": "Example of a Math Word Problem along with the types of variations that we make to create SVAMP.",
+   "page": 1,
+   "why": "Shows the three variation types on one problem."
+  },
+  {
+   "figure": "Table 6",
+   "caption": "Attention paid to specific words by the constrained model.",
+   "page": 5,
+   "why": "Shows the model keying on 'every' and giving wrong answers when the question changes."
+  },
+  {
+   "figure": "Table 10",
+   "caption": "Results of models on the SVAMP challenge set.",
+   "page": 8,
+   "why": "Main result: all solvers far below benchmark scores."
+  }
+ ],
+ "code": [],
+ "problems": [
+  "No figures, only tables. Bold marking in Table 16 is lost in text extraction. Prior schema-0 extraction replaced."
+ ]
 }

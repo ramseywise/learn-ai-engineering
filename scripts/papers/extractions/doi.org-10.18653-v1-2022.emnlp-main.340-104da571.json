@@ -1,0 +1,620 @@
+{
+ "schema": 1,
+ "key": "https://doi.org/10.18653/v1/2022.emnlp-main.340",
+ "pdf": "generative-ai/05-RL/sources/wang-2022-super-naturalinstructions.pdf",
+ "bib": {
+  "title": "SUPER-NATURALINSTRUCTIONS: Generalization via Declarative Instructions on 1600+ NLP Tasks",
+  "authors": [
+   "Yizhong Wang",
+   "Swaroop Mishra",
+   "Pegah Alipoormolabashi",
+   "Yeganeh Kordi",
+   "Amirreza Mirzaei",
+   "Anjana Arunkumar",
+   "Arjun Ashok",
+   "Arut Selvan Dhanasekaran",
+   "Atharva Naik",
+   "David Stap",
+   "Eshaan Pathak",
+   "Giannis Karamanolakis",
+   "Haizhi Gary Lai",
+   "Ishan Purohit",
+   "Ishani Mondal",
+   "Jacob Anderson",
+   "Kirby Kuznia",
+   "Krima Doshi",
+   "Maitreya Patel",
+   "Kuntal Kumar Pal",
+   "Mehrad Moradshahi",
+   "Mihir Parmar",
+   "Mirali Purohit",
+   "Neeraj Varshney",
+   "Phani Rohitha Kaza",
+   "Pulkit Verma",
+   "Ravsehaj Singh Puri",
+   "Rushang Karia",
+   "Shailaja Keyur Sampat",
+   "Savan Doshi",
+   "Siddhartha Mishra",
+   "Sujan Reddy",
+   "Sumanta Patro",
+   "Tanay Dixit",
+   "Xudong Shen",
+   "Chitta Baral",
+   "Yejin Choi",
+   "Noah A. Smith",
+   "Hannaneh Hajishirzi",
+   "Daniel Khashabi"
+  ],
+  "first_author": "Wang",
+  "year": 2022,
+  "venue": "Proceedings of the 2022 Conference on Empirical Methods in Natural Language Processing (EMNLP), pages 5085-5109",
+  "arxiv": "2204.07705",
+  "doi": "10.18653/v1/2022.emnlp-main.340"
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 104289,
+  "chars_total": 104289,
+  "engine": "pymupdf",
+  "skipped": "Appendix G/H per-task tables and task example tables 6-17 skimmed (lists of task ids, examples); references skimmed."
+ },
+ "type": "benchmark",
+ "question": "How well can NLP models generalize to unseen tasks when given only in-context task instructions, when trained on a large collection of tasks with instructions?",
+ "hypothesis": "Training on a large, diverse set of tasks with declarative instructions lets a smaller model follow instructions on unseen tasks better than much larger instruction-tuned models.",
+ "contributions": [
+  "SUP-NATINST, a benchmark of 1,616 NLP tasks with expert-written instructions across 76 task types",
+  "Tk-Instruct and mTk-Instruct, T5/mT5 models trained to follow in-context instructions",
+  "Analysis of generalization versus number of tasks, instances per task, model size and instruction elements"
+ ],
+ "method": {
+  "summary": "A community-built meta-dataset of 1,616 tasks, each with a definition and positive/negative examples, is split into 757 English training tasks and 154 held-out evaluation tasks (119 English, 35 cross-lingual). T5-11B and mT5-13B are fine-tuned on instruction+input encodings and scored with ROUGE-L in open-ended generation against heuristics, T5-LM, GPT-3, T0, InstructGPT and a supervised upper bound.",
+  "task": "cross-task generalization via instructions (text-to-text generation)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "SUP-NATINST",
+    "role": "both",
+    "size": "1616 tasks, ~5M instances, avg 3106.0 instances per task, 76 task types, 55 languages, 33 domains, 576 non-English tasks; instances capped at 6.5K per task",
+    "split": "eval: 12 manually selected categories = 154 tasks (119 English, 35 cross-lingual), max 100 instances per task = 15,310 test instances; train: 757 tasks (English track) or 1271 tasks (cross-lingual track), after excluding tasks from the same source dataset as any test task",
+    "source": "88 contributors via GitHub (github.com/allenai/natural-instructions); public datasets, crowdsourcing intermediate annotations, synthetic tasks",
+    "preprocessing": "Automatic checks, 1-2 peer reviewers (4-6 iterations), 3 AMT workers per English task give feedback; avg 2.8 positive and 2.4 negative examples, 56.6-word definitions"
+   }
+  ],
+  "models": [
+   {
+    "name": "Tk-Instruct",
+    "role": "proposed",
+    "params": "11B (3B for analyses; small/base/large/xl/xxl for size study)",
+    "architecture": "T5 encoder-decoder",
+    "init_from": "T5.1.1.xxl checkpoint (C4 only); T5-LM checkpoint tried and was worse",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "max input 1024, max output 128 (GPU runs)",
+    "other": {}
+   },
+   {
+    "name": "mTk-Instruct",
+    "role": "proposed",
+    "params": "13B",
+    "architecture": "mT5 encoder-decoder",
+    "init_from": "mT5",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "T5-LM",
+    "role": "baseline",
+    "params": "11B",
+    "architecture": "T5 LM-adapted",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-3 (davinci)",
+    "role": "baseline",
+    "params": "175B",
+    "architecture": "decoder-only",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "InstructGPT (text-davinci-001)",
+    "role": "baseline",
+    "params": "175B",
+    "architecture": "decoder-only, RLHF",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "T0",
+    "role": "baseline",
+    "params": "11B",
+    "architecture": "T5 fine-tuned on PromptSource prompts",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Supervised upper bound",
+    "role": "baseline",
+    "params": "T5-11B (119 English tasks); mT5-13B (35 non-English tasks)",
+    "architecture": "fine-tuned on 1K random training instances per evaluation task",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "inferred: supervised seq2seq (text-to-text) fine-tuning on enc(instruction, input) -> output; loss not named",
+   "optimizer": null,
+   "lr": "1e-5 constant (both T5-11B TPU and smaller GPU runs)",
+   "lr_schedule": "constant",
+   "warmup": null,
+   "batch_size": "T5-11B: 1,048,576 tokens (1,024 examples); smaller models: 16",
+   "steps": "T5-11B: 1000 steps",
+   "epochs": "smaller models: 2 epochs",
+   "tokens": null,
+   "seq_len": "max input 1024, max output 128 (smaller models)",
+   "precision": "bfloat16 (DeepSpeed, smaller models)",
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "T5-11B: Google V3-256 TPUs; smaller models: 8 A100 GPUs with 48GB each, DeepSpeed",
+   "compute": null,
+   "wall_clock": "T5-11B: 4 hours per run; smaller models: 6 hours per run",
+   "seeds": null,
+   "other": {
+    "default_instruction_encoding": "task definition + 2 positive examples, no negatives or explanations",
+    "instances_per_task_in_training": "not stated for main model; Fig 5b varies it, saturating at 64",
+    "code_library": "T5 library (11B); HuggingFace transformers (smaller)"
+   }
+  },
+  "inference": {
+   "decoding": "GPT-3/InstructGPT via OpenAI API: temperature 0; local models decoding not stated",
+   "temperature": "0 (API models)",
+   "top_p": "1 (API models)",
+   "max_tokens": "128 (API models)",
+   "samples": "GPT-3 and InstructGPT: 20 random instances from each of 119 English test tasks; others: max 100 instances per task; single run",
+   "prompting": "Same encoding for all methods: definition + 2 positive examples (Fig 8 template) then 'Now complete the following example- input: ... output:'",
+   "retrieval": null,
+   "parameters": {},
+   "other": {
+    "api_date": "All API requests were made on May 30, 2022"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "ROUGE-L",
+     "definition": "soft string overlap, aggregated over tasks; open-ended generation, no option ranking",
+     "unit": "points (0-100)",
+     "higher_is_better": true
+    },
+    {
+     "name": "Exact Match",
+     "definition": "used per task for classification-style categories in Table 5",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Human preference",
+     "definition": "fraction of instances where model output rated at least as good as ground truth (tie allowed), AMT, 60 tasks x 10 instances, English only",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Copying Instance Input",
+    "Copying Demo Output",
+    "T5-LM 11B",
+    "GPT-3 175B",
+    "T0 11B",
+    "InstructGPT 175B",
+    "supervised T5-11B/mT5-13B upper bound"
+   ],
+   "protocol": "Single run, no seeds or significance tests stated. Analyses on English track with T5-3B. Human eval: crowdworkers from US/UK/Canada/Australia, 5000+ HITs, >=99% approval."
+  },
+  "availability": {
+   "code": "https://github.com/allenai/natural-instructions; leaderboard at https://instructions.apps.allenai.org",
+   "weights": "models stated as publicly available",
+   "data": "https://github.com/allenai/natural-instructions"
+  },
+  "prompts": [
+   {
+    "purpose": "Instruction encoding template",
+    "text": "Definition : {{definition}} Positive Example 1- input : {{p_ex1.input}} output : {{p_ex1.output}} explanation : {{p_ex1.exp}} Positive Example 2- ... Negative Example 1- input : {{n_ex1.input}} output : {{n_ex1.output}} explanation : {{n_ex1.exp}} Negative Example 2- ... Now complete the following example- input : {{x.input}} output :",
+    "where": "Fig 8, p.5098"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training.batch_size",
+    "quote": "a batch size of 1,048,576 tokens (1,024 examples), a constant learning rate of 1e-5 and a total of 1000 steps",
+    "where": "Appendix D"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Tk-Instruct 11B beats InstructGPT 175B on 119 unseen English tasks",
+   "kind": "measured",
+   "source": null,
+   "metric": "ROUGE-L",
+   "value": 9.9,
+   "unit": "ROUGE-L points",
+   "baseline_value": 52.1,
+   "n": null,
+   "setup": "English track, 119 unseen tasks, definition + 2 positive examples, 11B vs 175B text-davinci-001 (InstructGPT on 20 instances per task)",
+   "quote": "an 11B-parameter Tk-INSTRUCT can out- perform the 175B-parameter InstructGPT model by 9.9 ROUGE-L points when evaluated on 119 unseen English tasks",
+   "table": null,
+   "note": "Table 3: 62.0 vs 52.1. Abstract says 'by over 9%'.",
+   "where": "Sec 1"
+  },
+  {
+   "claim": "Tk-Instruct 11B overall ROUGE-L on English track",
+   "kind": "measured",
+   "source": null,
+   "metric": "ROUGE-L",
+   "value": 62.0,
+   "unit": "ROUGE-L",
+   "baseline_value": null,
+   "n": null,
+   "setup": "119 English unseen tasks",
+   "quote": null,
+   "table": "Table 3, row Tk-INSTRUCT (ours, 11B), column En",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "mTk-Instruct 13B beats InstructGPT on 35 non-English tasks",
+   "kind": "measured",
+   "source": null,
+   "metric": "ROUGE-L",
+   "value": 13.3,
+   "unit": "ROUGE-L points",
+   "baseline_value": 52.8,
+   "n": null,
+   "setup": "35 cross-lingual tasks",
+   "quote": "the multilingual variant mTk-INSTRUCT outperforms InstructGPT by 13.3 points on 35 non-English tasks",
+   "table": null,
+   "note": "Table 3: 66.1 vs 52.8",
+   "where": "Sec 1"
+  },
+  {
+   "claim": "T0 11B only slightly better than T5-LM",
+   "kind": "measured",
+   "source": null,
+   "metric": "ROUGE-L",
+   "value": 32.3,
+   "unit": "ROUGE-L",
+   "baseline_value": 30.2,
+   "n": null,
+   "setup": "English track",
+   "quote": null,
+   "table": "Table 3, row T0 (11B), column En",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "GPT-3 175B English ROUGE-L",
+   "kind": "measured",
+   "source": null,
+   "metric": "ROUGE-L",
+   "value": 45.0,
+   "unit": "ROUGE-L",
+   "baseline_value": null,
+   "n": null,
+   "setup": "20 instances per task",
+   "quote": null,
+   "table": "Table 3, row GPT3 (175B), column En",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Supervised upper bound on English track",
+   "kind": "measured",
+   "source": null,
+   "metric": "ROUGE-L",
+   "value": 74.3,
+   "unit": "ROUGE-L",
+   "baseline_value": null,
+   "n": null,
+   "setup": "T5-11B trained on 1K instances per eval task",
+   "quote": null,
+   "table": "Table 3, row Upper-bound (est.) Supervised Training, column En",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Human evaluation: Tk-Instruct output rated at least as good as ground truth",
+   "kind": "measured",
+   "source": null,
+   "metric": "human preference",
+   "value": 77,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "60 tasks x 10 instances, English, crowdworkers",
+   "quote": "Tk-INSTRUCT generates re- sponses at least as well as the ground truth for 77% of the testing instances",
+   "table": null,
+   "note": "Fig 3 shows 76.9 for Tk-Instruct 11B",
+   "where": "Sec 1 / 6.2"
+  },
+  {
+   "claim": "Human eval and ROUGE-L trends highly correlated",
+   "kind": "measured",
+   "source": null,
+   "metric": "Pearson r",
+   "value": 0.998,
+   "unit": "Pearson",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 3 methods",
+   "quote": "highly correlated with a Pearson coefficient of 0.998",
+   "table": null,
+   "note": null,
+   "where": "Fig 3"
+  },
+  {
+   "claim": "ROUGE-L correlates with accuracy for classification task types",
+   "kind": "measured",
+   "source": null,
+   "metric": "Pearson r",
+   "value": 0.97,
+   "unit": "Pearson",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 9 task types",
+   "quote": "highly correlated with a Pearson coefficient of 0.970",
+   "table": null,
+   "note": null,
+   "where": "Fig 9"
+  },
+  {
+   "claim": "Performance saturates at about 64 instances per training task",
+   "kind": "measured",
+   "source": null,
+   "metric": "instances at saturation",
+   "value": 64,
+   "unit": "instances per task",
+   "baseline_value": null,
+   "n": null,
+   "setup": "T5-3B, English track, Fig 5b",
+   "quote": "the model’s performance saturates when only 64 instances per task are used for training",
+   "table": null,
+   "note": null,
+   "where": "Sec 7.1"
+  },
+  {
+   "claim": "Generalization grows log-linearly with number of training tasks",
+   "kind": "measured",
+   "source": null,
+   "metric": "ROUGE-L",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "T5-3B, English track, up to 757 training tasks (Fig 5a)",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Sec 7.1"
+  },
+  {
+   "claim": "T5-large trained on 757 tasks matches T5-3B trained on 128 tasks",
+   "kind": "measured",
+   "source": null,
+   "metric": "ROUGE-L",
+   "value": 48.0,
+   "unit": "ROUGE-L",
+   "baseline_value": 48.4,
+   "n": null,
+   "setup": "English track",
+   "quote": "a T5-large model trained with 757 tasks can achieve comparable per- formance (48.0 ROUGE-L) to the T5-3B model trained with 128 tasks (48.4 ROUGE-L)",
+   "table": null,
+   "note": null,
+   "where": "Sec 7.1"
+  },
+  {
+   "claim": "Model size effect, log-linear; contradicts Xu et al. 2022 claim of little size impact",
+   "kind": "measured",
+   "source": null,
+   "metric": "ROUGE-L",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "T5 small to xxl, Fig 5c; values 40.1 42.1 48.0 54.3 62.0",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Sec 7.1"
+  },
+  {
+   "claim": "Definition + 2 positive examples best encoding when trained and tested the same",
+   "kind": "measured",
+   "source": null,
+   "metric": "ROUGE-L",
+   "value": 54.3,
+   "unit": "ROUGE-L",
+   "baseline_value": null,
+   "n": null,
+   "setup": "T5-3B, English track",
+   "quote": null,
+   "table": "Table 4, row Def + Pos (2), diagonal",
+   "note": "Definition alone diagonal 45.0 ... explanations decrease performance (Def+Pos(2)+Neg(2)+Expl 51.9... diagonal)",
+   "where": "Table 4"
+  },
+  {
+   "claim": "Largest training set after leakage filtering",
+   "kind": "measured",
+   "source": null,
+   "metric": "training tasks",
+   "value": 757,
+   "unit": "tasks",
+   "baseline_value": null,
+   "n": null,
+   "setup": "English track",
+   "quote": "This results in 757 training tasks for the English track and 1271 training tasks for the cross-lingual track.",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.1 fn 6"
+  }
+ ],
+ "limits": [
+  "Skewed to English, short responses; task-type distribution skewed (Appendix F)",
+  "ROUGE-L is a weak proxy for rewriting and error-correction tasks where copying input scores high",
+  "InstructGPT training data may overlap with evaluation tasks since it is unavailable",
+  "Largest models not trained due to compute budget",
+  "Analyses use T5-3B on English track only; single run, no seeds or significance tests stated",
+  "InstructGPT/GPT-3 evaluated on only 20 instances per task, text-davinci-001 (May 2022)",
+  "Explanations hurt only for models of this size, per authors"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "meta-dataset",
+   "definition": "dataset of datasets (Triantafillou et al., 2019)",
+   "where": "Sec 1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Natural Instructions (Mishra et al.)",
+   "year": 2022,
+   "arxiv": "2104.08773",
+   "relation": "extends",
+   "note": "26x more tasks, simplified schema",
+   "quote": null
+  },
+  {
+   "work": "T5 (Raffel et al.)",
+   "year": 2020,
+   "arxiv": "1910.10683",
+   "relation": "uses-method",
+   "note": "base for Tk-Instruct",
+   "quote": null
+  },
+  {
+   "work": "mT5 (Xue et al.)",
+   "year": 2021,
+   "arxiv": "2010.11934",
+   "relation": "uses-method",
+   "note": "base for mTk-Instruct",
+   "quote": null
+  },
+  {
+   "work": "InstructGPT (Ouyang et al.)",
+   "year": 2022,
+   "arxiv": "2203.02155",
+   "relation": "baseline",
+   "note": "text-davinci-001",
+   "quote": null
+  },
+  {
+   "work": "T0 (Sanh et al.)",
+   "year": 2022,
+   "arxiv": "2110.08207",
+   "relation": "baseline",
+   "note": "PromptSource-tuned T5",
+   "quote": null
+  },
+  {
+   "work": "GPT-3 (Brown et al.)",
+   "year": 2020,
+   "arxiv": "2005.14165",
+   "relation": "baseline",
+   "note": "davinci",
+   "quote": null
+  },
+  {
+   "work": "FLAN (Wei et al.)",
+   "year": 2022,
+   "arxiv": "2109.01652",
+   "relation": "related",
+   "note": "instruction tuning comparison",
+   "quote": null
+  },
+  {
+   "work": "PromptSource (Bach et al.)",
+   "year": 2022,
+   "arxiv": "2202.01279",
+   "relation": "related",
+   "note": "concurrent prompt benchmark",
+   "quote": null
+  },
+  {
+   "work": "ZeroPrompt (Xu et al.)",
+   "year": 2022,
+   "arxiv": "2201.06910",
+   "relation": "contradicts",
+   "note": "claim that model size has little impact with many tasks",
+   "quote": "This finding contradicts the claim in Xu et al. (2022)"
+  },
+  {
+   "work": "CrossFit (Ye et al.)",
+   "year": 2021,
+   "arxiv": "2104.08835",
+   "relation": "related",
+   "note": "few-shot cross-task benchmark",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 5",
+   "caption": "Scaling trends of model performance as a function of (a) number of training tasks, (b) instances per training task, (c) model sizes",
+   "page": 5092,
+   "why": "Shows tasks and model size scale log-linearly while instances saturate"
+  },
+  {
+   "figure": "Table 3",
+   "caption": "Overall performance of different methods on unseen tasks",
+   "page": 5090,
+   "why": "Headline comparison"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Table and figure values extracted as scattered tokens; Table 4 and Fig 5 mapping inferred from order",
+  "Fig 3 human-eval values for Tk-Instruct 3B/InstructGPT ambiguous in token order"
+ ]
+}

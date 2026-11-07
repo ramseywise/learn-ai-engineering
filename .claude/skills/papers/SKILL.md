@@ -2,6 +2,7 @@
 name: papers
 description: "Integrate queued or downloaded papers (DAIR AI Papers of the Week and PDFs already in the repo) into the course: read each PDF in its home's sources/, add a row to that home's references.md, write the finding into the note it maps to, and pull the key figure into sources/images/. Works for ai-engineering and generative-ai pillars and the subject homes (data-analytics, data-science, data-engineering, programming). Optional filter: /papers loop, /papers rag, /papers rag tier:1, /papers 2610.28577, /papers cited (audit papers the notes already cite), /papers filed. Run from the learn-ai-engineering repo."
 ---
+<!-- Generated from .claude/skills/_shared/papers.md in the librarian repo (uv run python -m librarian.tools.skillsync sync). Edit the template, not this file. -->
 
 You are integrating research papers into the AI-engineering course notes. The weekly job
 (`scripts/papers/potw.py run`, launchd `com.wiseer.potw`) has already fetched DAIR's AI
@@ -13,6 +14,13 @@ inbox) are triaged the same way and moved home by `potw.py route`. Homes are the
 `post-training`, …) and two subject homes, `classical-ml` (`data-science/`) and
 `ml-systems` (`data-engineering/`), which have notes like any other home. Book chapters go through `/chapter`, not this skill. Your job is the part that needs judgement: turn the
 paper into citations and findings in the notes.
+
+## Where commands run
+
+Run from the repo root: the pipeline (`scripts/papers/`), the PDFs under `<home>/sources/` and the notes this skill
+edits are all here. Lessons are also authored in the sibling librarian repo (`../librarian/data/courses/`). Whether
+an edit made here has to be mirrored there is the user's call: ask once per session rather than assuming, and list
+the edit in the report.
 
 The notes are the product. A paper earns a place by changing, sharpening, or evidencing a
 claim a note makes. It never earns a "Recent papers" list bolted onto the end.
@@ -155,7 +163,9 @@ Use **★** only for papers that change a claim (contradicts / strong extends).
   ```
   Use `crop --clip x0,y0,x1,y1` for vector figures (no xref); render the page with `page`
   first and look at it with Read to choose the box. Look at the saved PNG before embedding
-  it. Caption it the way the notes already do:
+  it.
+  Embed it as `../sources/images/<file>`.
+  Caption it the way the notes already do:
   `*Image Source: <Author>, [<Title>](https://...) (<year>), Fig. <N>*`, plus the licence when there is one.
   At most one figure per paper; none is fine.
 
@@ -165,7 +175,7 @@ Use **★** only for papers that change a claim (contradicts / strong extends).
 python3 scripts/papers/extract.py check <key> [<key> ...]          # every paper you read has a passing extraction
 python3 scripts/papers/potw.py mark integrated <key> [<key> ...]
 python3 scripts/papers/citegraph.py refs --home <home> --write   # refresh "Where the ideas come from"
-make link-check
+make link-check   # checks this repo only
 ```
 
 `mark integrated` warns about a key with no full extraction. Do not leave one behind: a paper read without an

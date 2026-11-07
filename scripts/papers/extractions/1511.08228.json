@@ -1,0 +1,472 @@
+{
+ "schema": 1,
+ "key": "1511.08228",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/kaiser-2015-neural-gpus-learn-algorithms.pdf",
+ "bib": {
+  "title": "Neural GPUs Learn Algorithms",
+  "authors": [
+   "Łukasz Kaiser",
+   "Ilya Sutskever"
+  ],
+  "first_author": "Kaiser",
+  "year": 2016,
+  "venue": "ICLR 2016 (arXiv v3)",
+  "arxiv": "1511.08228",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 36233,
+  "chars_total": 36233,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can a highly parallel, shallow recurrent architecture learn algorithms from short examples and generalize to arbitrarily long inputs?",
+ "hypothesis": "A convolutional gated recurrent unit applied for n steps over a 2D state (Neural GPU) is easier to train than an NTM and generalizes to much longer inputs.",
+ "contributions": [
+  "Neural GPU architecture based on a convolutional GRU, computationally universal and parallel",
+  "First network to learn long binary multiplication that generalizes without error",
+  "Parameter sharing relaxation for training deep recurrent networks",
+  "Small dropout and gradient noise give large gains in learning and generalization"
+ ],
+ "method": {
+  "summary": "A Neural GPU writes the embedded input into the first column of a [w,n,m] state tensor and applies l stacked convolutional GRU layers for n steps; outputs are read from the first column. Trained with curriculum on binary tasks up to 20 bits (41 for simple tasks), with a 729-run grid search, and tested on lengths up to 2000-4001.",
+  "task": "algorithm learning: binary addition, binary multiplication, copy, reverse, duplicate, count/sort bits",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Synthetic binary arithmetic and sequence tasks",
+    "role": "both",
+    "size": "10k random training examples per training length (about 200k total for lengths up to 20)",
+    "split": "train on lengths up to 20 bits (up to 41 for simple tasks); test on longer lengths up to 2000 bits (4001 for simple tasks)",
+    "source": "generated",
+    "preprocessing": "numbers lower-endian binary, equal-length operands zero-padded, sequence length n=2d+1; symbols {0,1,+,PAD} or {0,1,.,PAD}"
+   }
+  ],
+  "models": [
+   {
+    "name": "Neural GPU",
+    "role": "proposed",
+    "params": "about 30k (m=24)",
+    "architecture": "convolutional GRU, 2D state",
+    "init_from": null,
+    "tokenizer": "symbol embedding lookup",
+    "vocab": "4 symbols for addition/multiplication",
+    "layers": "l=2 CGRU layers",
+    "hidden": "m=24 maps per point",
+    "heads": null,
+    "context": null,
+    "other": {
+     "width w": "4",
+     "kernel": "kw=kh=3",
+     "gate": "1.2*sigmoid(x)-0.1 clipped to [0,1]",
+     "relaxation sets r": "often 6"
+    }
+   },
+   {
+    "name": "LSTM+A",
+    "role": "baseline",
+    "params": "about 200k",
+    "architecture": "3-layer LSTM seq2seq with attention, 64 units per cell, as in Vinyals & Kaiser et al. 2015",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "3",
+    "hidden": "64",
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "stackRNN",
+    "role": "baseline",
+    "params": null,
+    "architecture": "stack-augmented RNN of Joulin & Mikolov 2015",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "training": "original source code, nmax=41, not the authors' regime; run 729 times, best reported"
+    }
+   }
+  ],
+  "training": {
+   "objective": "softmax over output logits, negative log probability of target",
+   "optimizer": "Adam, epsilon=1e-4, gradient norm clipped to 1",
+   "lr": "grid search over 3 settings (values not stated)",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "curriculum up to 20-bit numbers (n=41)",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": "6%, 9%, 13.5% grid, applied to whole state each step",
+   "regularisation": "gradient noise (Gaussian, std proportional to step^(1/4) -ish: variance inverse to sqrt of step, scaled by noise scale and fraction of non-fully-correct outputs); parameter sharing relaxation; curriculum",
+   "hardware": "NVIDIA GTX 970 (speed test)",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": "729 grid instances, each with different random seed",
+   "other": {
+    "grid search": "3^6=729 instances over learning rate, initial parameter scale, relaxation pull factor, curriculum progress threshold, gradient noise scale, dropout",
+    "curriculum": "move to d+1 digits after threshold (e.g. over 90% fully correct) on d digits; 20% of minibatches use d uniform in 1..20",
+    "relaxation": "r sets of parameters with pull term toward mean, multiplied by factor at each curriculum step; averaged at max length"
+   }
+  },
+  "inference": {
+   "decoding": "argmax over logits at each output position",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "best of 729 grid-search models reported; ensembles of 5 averaged outputs mentioned",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "fraction fully correct",
+     "definition": "fraction of test cases for which every bit of the output is correct",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "LSTM+A",
+    "stackRNN (addition only)"
+   ],
+   "protocol": "test at lengths 20, 25, 100, 200, 2000 bits; best of 729 runs reported; no significance tests"
+  },
+  "availability": {
+   "code": "https://github.com/tensorflow/models/tree/master/neural_gpu",
+   "weights": null,
+   "data": null
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.optimizer",
+    "quote": "we used the Adam optimizer (Kingma & Ba, 2014) with ε = 10−4 and gradients norm clipped to 1",
+    "where": "Section 2"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "A Neural GPU trained on up to 20-bit numbers gets 100% fully correct binary multiplication at 2000 bits",
+   "kind": "measured",
+   "source": null,
+   "metric": "fully correct",
+   "value": 100,
+   "unit": "%",
+   "baseline_value": 0,
+   "n": null,
+   "setup": "bmul@2000, best model of 729-run grid search",
+   "quote": null,
+   "table": "Table 1, row bmul@2000, column Neural GPU",
+   "note": "baseline is LSTM+A",
+   "where": "Table 1"
+  },
+  {
+   "claim": "Neural GPU gets 100% on binary addition at 2000 bits; stackRNN 0%",
+   "kind": "measured",
+   "source": null,
+   "metric": "fully correct",
+   "value": 100,
+   "unit": "%",
+   "baseline_value": 0,
+   "n": null,
+   "setup": "badd@2000",
+   "quote": null,
+   "table": "Table 1, row badd@2000, column Neural GPU",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "stackRNN addition generalizes to about 100 bits only",
+   "kind": "measured",
+   "source": null,
+   "metric": "fully correct",
+   "value": 88,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "badd@100, stackRNN, best of 729 runs, nmax=41",
+   "quote": null,
+   "table": "Table 1, row badd@100, column stackRNN",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "LSTM+A does not fit multiplication at training length",
+   "kind": "measured",
+   "source": null,
+   "metric": "fully correct",
+   "value": 0,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "bmul@20 LSTM+A",
+   "quote": "Note that LSTM+A is not able to learn long binary multiplication at this length, it does not even ﬁt the training data.",
+   "table": null,
+   "note": null,
+   "where": "Section 3.1"
+  },
+  {
+   "claim": "LSTM+A addition drops to 73% at 25 bits",
+   "kind": "measured",
+   "source": null,
+   "metric": "fully correct",
+   "value": 73,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "badd@25 LSTM+A",
+   "quote": null,
+   "table": "Table 1, row badd@25, column LSTM+A",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Neural GPU has about 30k parameters vs about 200k for LSTM+A",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "m=24 vs 3-layer 64-unit LSTM",
+   "quote": "It is a 3-layer model with 64 units in each LSTM cell in each layer, which results in about 200k param-\neters (the Neural GPU uses m = 24 and has about 30k paramters).",
+   "table": null,
+   "note": null,
+   "where": "Section 3.1"
+  },
+  {
+   "claim": "Usually only a few of the 729 models generalize to 2000 bits",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "729-run grid search",
+   "quote": "Usually only a few of these models generalize to 2000-bit numbers, but a signiﬁcant fraction works well on 200-bit numbers",
+   "table": null,
+   "note": null,
+   "where": "Section 3.3"
+  },
+  {
+   "claim": "Ensembles of 5 models almost always generalize perfectly on binary tasks",
+   "kind": "measured",
+   "source": null,
+   "metric": "ensemble size",
+   "value": 5,
+   "unit": "models",
+   "baseline_value": null,
+   "n": null,
+   "setup": "averaging outputs",
+   "quote": "ensembles of 5 models almost always generalize perfectly on binary tasks",
+   "table": null,
+   "note": null,
+   "where": "Section 4"
+  },
+  {
+   "claim": "Decimal multiplication was not learned (m=24)",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "decimal inputs",
+   "quote": "we did not manage to learn long decimal multiplication",
+   "table": null,
+   "note": null,
+   "where": "Section 4"
+  },
+  {
+   "claim": "Training with 100 examples per length (about 2000 total) worked for addition but never for multiplication",
+   "kind": "measured",
+   "source": null,
+   "metric": "examples per length",
+   "value": 100,
+   "unit": "examples per length",
+   "baseline_value": null,
+   "n": null,
+   "setup": "binary addition, generalized to 200 bits",
+   "quote": "We tried to train using\nonly 100 examples per length, so about 2000 total training instances.",
+   "table": null,
+   "note": null,
+   "where": "Section 4"
+  },
+  {
+   "claim": "Forward-backward step of 2-layer Neural GPU, n=32, m=64 (128 CGRU layers unfolded)",
+   "kind": "measured",
+   "source": null,
+   "metric": "step time",
+   "value": 0.6,
+   "unit": "s",
+   "baseline_value": null,
+   "n": null,
+   "setup": "NVIDIA GTX 970",
+   "quote": "The joint forward-backward step time for this network was about 0.6s on an NVIDIA GTX 970 GPU.",
+   "table": null,
+   "note": null,
+   "where": "Section 4"
+  },
+  {
+   "claim": "Dropout was necessary for multiplication models generalizing to 2000 bits",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "dropout 6-13.5%",
+   "quote": "dropout was necessary to train models for multiplication that generalize to 2000 bits",
+   "table": null,
+   "note": null,
+   "where": "Section 3.3.1"
+  },
+  {
+   "claim": "Parameter sharing relaxation is crucial for multiplication",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "m=24",
+   "quote": "This method is crucial for learning multiplication.",
+   "table": null,
+   "note": null,
+   "where": "Section 3.3.2"
+  }
+ ],
+ "limits": [
+  "Only a few of 729 grid-search models generalize to 2000 bits; the reported result is best-of-729",
+  "Long decimal multiplication not learned at m=24",
+  "Generalization only tested up to about 2000 bits (4001 for simple tasks); technical limits of implementation",
+  "No data on natural-language tasks; proposed as future work",
+  "stackRNN baseline was not trained with the authors' regime",
+  "No learning rates, batch size or step counts given in the paper; defer to released code"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "mental image",
+   "definition": "the 2D state tensor of shape [w,h,m] evolved by the CGRU",
+   "where": "Section 2"
+  },
+  {
+   "term": "parameter sharing relaxation",
+   "definition": "train r unshared parameter sets with a pull term toward their mean, increasing the pull during the curriculum",
+   "where": "Section 3.3.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Neural Turing Machines (Graves et al.)",
+   "year": 2014,
+   "arxiv": "1410.5401",
+   "relation": "extends",
+   "note": "main motivation: NTM is sequential and deep",
+   "quote": null
+  },
+  {
+   "work": "Stack-augmented recurrent nets (Joulin & Mikolov)",
+   "year": 2015,
+   "arxiv": "1503.01007",
+   "relation": "baseline",
+   "note": "stackRNN baseline",
+   "quote": null
+  },
+  {
+   "work": "Grammar as a foreign language (Vinyals & Kaiser et al.)",
+   "year": 2015,
+   "arxiv": "1412.7449",
+   "relation": "baseline",
+   "note": "LSTM+A model",
+   "quote": null
+  },
+  {
+   "work": "Learning to execute (Zaremba & Sutskever)",
+   "year": 2015,
+   "arxiv": "1410.4615",
+   "relation": "uses-method",
+   "note": "curriculum learning",
+   "quote": null
+  },
+  {
+   "work": "Gated recurrent unit (Cho et al.)",
+   "year": 2014,
+   "arxiv": "1406.1078",
+   "relation": "uses-method",
+   "note": "GRU basis of CGRU",
+   "quote": null
+  },
+  {
+   "work": "Grid LSTM (Kalchbrenner et al.)",
+   "year": 2016,
+   "arxiv": "1507.01526",
+   "relation": "related",
+   "note": "similar architecture",
+   "quote": null
+  },
+  {
+   "work": "Adam (Kingma & Ba)",
+   "year": 2014,
+   "arxiv": "1412.6980",
+   "relation": "uses-method",
+   "note": "optimizer",
+   "quote": null
+  },
+  {
+   "work": "Bayesian learning via SGLD (Welling & Teh)",
+   "year": 2011,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "gradient noise schedule",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Figure 1",
+   "caption": "Neural GPU with 2 layers and width w = 3 unfolded in time.",
+   "page": 4,
+   "why": "shows state evolving by CGRU layers over n steps"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Neural GPU, stackRNN, and LSTM+A results on addition and multiplication. The table shows the fraction of test cases for which every single bit of the model's output is correct.",
+   "page": 5,
+   "why": "headline generalization results"
+  }
+ ],
+ "code": [
+  {
+   "where": "Section 2",
+   "snippet": "CGRU(s) = u ⊙s + (1 −u) ⊙tanh(U ∗(r ⊙s) + B), where u = σ(U ′ ∗s + B′) and r = σ(U ′′ ∗s + B′′).",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Text extraction of tables and examples is one cell per line; Table 1 read in order Neural GPU, stackRNN, LSTM+A. No embedded instructions found."
+ ]
+}

@@ -1,19 +1,554 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2306.14898",
  "pdf": "generative-ai/08-eval/sources/yang-2023-intercode.pdf",
  "bib": {
-  "title": "InterCode",
-  "first_author": null,
-  "year": null,
-  "venue": "NeurIPS 2023",
+  "title": "InterCode: Standardizing and Benchmarking Interactive Coding with Execution Feedback",
+  "authors": [
+   "John Yang",
+   "Akshara Prabhakar",
+   "Karthik Narasimhan",
+   "Shunyu Yao"
+  ],
+  "first_author": "Yang",
+  "year": 2023,
+  "venue": "37th Conference on Neural Information Processing Systems (NeurIPS 2023) Track on Datasets and Benchmarks",
   "arxiv": "2306.14898",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-04",
-  "session": "f41849e1-2248-44b9-9f1a-225f57aa8c59"
+  "at": "2026-11-07",
+  "chars_read": 106272,
+  "chars_total": 106272,
+  "engine": "pymupdf",
+  "skipped": "References skimmed only."
  },
- "legacy_report": "SOURCE: \"InterCode: Standardizing and Benchmarking Interactive Coding with Execution Feedback\", John Yang, Akshara Prabhakar, Karthik Narasimhan, Shunyu Yao (Princeton). Venue as printed on p1: \"37th Conference on Neural Information Processing Systems (NeurIPS 2023) Track on Datasets and Benchmarks.\" arXiv:2306.14898v3, 30 Oct 2023.\n\nCOVERAGE: 29 of 29 pages, 106,622 of 106,622 chars (text extracted with page markers). References (pp10-13) skimmed for origins. Everything else read in full: main text, appendices A-C, Tables 1-14 and the prompt templates.\n\nCLAIMS (ranked by importance for verification loops)\n\n- claim: Every model does better with multi-turn execution feedback (\"Try Again\") than with a single turn on SQL. GPT-4 shows the largest gain.\n  number: GPT-4 SQL 9.1 -> 73.7; gpt-3.5-turbo 10.5 -> 47.3\n  setup: InterCode-SQL (Spider 1.0 dev, 1034 tasks, MySQL), zero-shot Single Turn vs Try Again with n = 10. Temperature 0. Observations capped at 1000 tokens.\n  quote: \"performance across different levels of task difficulty (SQL) and different file systems (Bash) is superior in the interactive setting for all models, with a notable multi-fold increase for GPT-4 (9.1% → 73.7%) on the InterCode-SQL task.\" Table 2 rows: \"gpt-3.5-turbo 22.6 8.3 5.7 3.6 10.5 72.5 44.3 43.7 21.1 47.3\" / \"gpt-4 19.8 7.2 4.6 3.0 9.1 87.5 76.7 66.7 52.4 73.7\"\n  where: p7, Table 2 and text\n\n- claim: The Bash gains are real but much smaller than the SQL gains.\n  number: gpt-4 34.0 -> 48.5; gpt-3.5-turbo 34.5 -> 46.5; text-davinci-003 24.6 -> 38.7; chat-bison-001 17.7 -> 19.2\n  setup: InterCode-Bash (200 NL2Bash-derived tasks across 4 file systems), Single Turn vs Try Again with n = 10\n  quote: Table 3: \"gpt-3.5-turbo 30.0 39.6 33.3 37.0 34.5 45.0 49.1 45.0 48.1 46.5\" / \"gpt-4 25.0 37.7 36.7 40.7 34.0 41.7 47.2 51.7 59.2 48.5\" / \"chat-bison-001 12.1 22.5 16.7 22.2 17.7 13.8 24.5 18.3 22.2 19.2\"\n  where: p7, Table 3\n\n- CAVEAT ON THE ABOVE (important for the note): in Try Again, each observation includes the gold-derived reward. The episode also stops automatically once the reward hits 1. So the agent is checked against an oracle, not left to verify itself. ReAct and Plan & Solve stop when the agent judges it is done.\n  quote: \"This continues until a reward of 1 (task completion) is achieved or the number of turns (n) is exhausted.\" Template: \"Output: <Observation from Intercode Environment> Reward: <Value ∈ [0, 1]>\"; Fig 2: \"The \"Try Again\" termination constraint is conditioned on reward = 1, while ReAct [51] and Plan & Solve [43] are determined by the agent itself.\"\n  where: p6, p27 (Table 11), p6 Fig 2\n\n- claim: Giving the full schema shrinks the single-turn vs interactive gap a lot, but interaction still comes out ahead.\n  number: gpt-3.5-turbo 67.9 -> 72.8; text-bison-001 61.4 -> 63.9; chat-bison-001 49.2 -> 54.9\n  setup: InterCode-SQL with the relevant DB schema added to the question, max 10 turns\n  quote: \"while Single Turn performance improves drastically, a non-trivial difference in favor of Try Again remains.\" Table 5: \"gpt-3.5-turbo 90.7 70.2 59.2 37.3 67.9 92.7 74.9 67.2 43.4 72.8\"\n  where: p21, Table 5\n\n- claim: Success rate rises with more turns, then plateaus. As history builds up, models repeat actions and ignore recent observations.\n  number: none (Fig 3 curves only)\n  setup: Try Again, all 7 models, Bash and SQL, turns 1-10\n  quote: \"both Figure 3 exhibits a plateauing in Success Rate and and Error %. This suggests that as the amount of context and feedback builds up, models are less capable of discerning relevant past history toward future actions. In late-turn scenarios, task episode trajectories often reveal repetition of earlier actions, a failure to effectively use recent observations towards deciding an appropriate next action, or an inability to recognize that a current problem-solving chain of thought is inconclusive or futile.\"\n  where: p7, §5.1 \"Failure cases\"\n\n- claim: On SQL, the error rate (non-admissible actions) falls sharply after turn 1 because models start discovering context. It does not keep improving in later turns. Bash shows no such early drop.\n  number: SQL turn 1 90.2%, turn 2 46.4%; 60.3% of second-turn actions use SHOW TABLES/DESC\n  setup: Try Again, GPT-3.5, per-turn Error %\n  quote: \"SQL 90.2 46.4 34.4 39.7 31.1 42.9 51.5 47.4 48.4 46.6\" / \"Bash 23.1 28.6 34.7 37.5 37.6 42.9 39.3 37.1 33.7 38.2\"; \"60.3% of second turn actions contain either the SHOW TABLES orDESC keywords\"; \"in later turns, the rate of admissible actions does not improve consistently... a model will tend to make small, cursory adjustments to the prior action based on execution feedback, often resulting in both a repetition of the same types of mistakes and hallucinations that introduce new issues.\"\n  where: p21, Table 6 and text\n\n- claim: Prompting strategy matters, and the best one depends on the task. ReAct is best on SQL. Try Again (which sees the reward) is best on Bash. Plan & Solve has a very high error rate on Bash.\n  number: SQL SR: Try Again 47.3 / ReAct 58.7 / P&S 49.1. Bash SR: 46.5 / 20.5 / 28.0\n  setup: gpt-3.5-turbo, full datasets; n = 10 for Try Again and ReAct\n  quote: \"SQL 47.3 7.25 46.4 58.7 5.30 6.94 49.1 4.29 16.2\" / \"Bash 46.5 6.15 24.9 20.5 4.40 20.4 28.0 6.65 53.3\"; \"explicit reasoning frameworks such as ReAct and Plan & Solve policies generally achieve higher success rates (SQL: 47.3% → 58.7%) with fewer turns and a higher rate of admissible commands.\"\n  where: p8, Table 4\n\n- claim: Plan & Solve is weak at \"adjusting on the fly in response to execution feedback.\" ReAct and P&S solve largely different subsets of tasks.\n  number: 57% (407/708) SQL; 27.6% (21/76) Bash overlap\n  quote: \"tasks solved by both strategies withgpt-3.5-turbo make up 57% (407/708) and 27.6% (21/76) of the union of all successfully solved InterCode-SQL and InterCode-Bash tasks respectively.\"\n  where: p8\n\n- claim: Adding a refine stage after Plan & Solve does not help much.\n  number: SR 45.5, 6.34 turns, Error 22.4%, on 44 SQL tasks\n  quote: \"These preliminary tests have an average Success Rate of 45.5, a Number of Turns of 6.34 ... and an Error % of 22.4. Compared to the original Plan & Solve performance presented in Section 5.2, this strategy does not yield a significant improvement.\"\n  where: p22, §B.3\n\n- claim: Without a reasoning framework, models only correct errors and discover context. They do no other kind of reasoning.\n  quote: \"current language models do not demonstrate any innate reasoning capacity for the interactive coding task beyond error correction and context discovery.\"\n  where: p23, §B.4\n\n- claim: The Bash single-vs-interactive gap holds up under standard errors.\n  number: gpt-4 38.37 ± 1.20 -> 52.70 ± 3.50; gpt-3.5-turbo 36.63 ± 1.83 -> 47.40 ± 1.23\n  setup: file systems 2-4 only (FS1 is harder and was excluded)\n  quote: \"gpt-3.5-turbo 36.63 ± 1.83 47.40 ± 1.23\" / \"gpt-4 38.37 ± 1.20 52.70 ± 3.50\"\n  where: p22, Table 7\n\n- claim: Humans (the authors) reach a higher success rate. They break queries into sub-problems, where agents write one monolithic command.\n  number: 13/15, SR 0.87\n  setup: 15 random SQL tasks, n = 10, human decides when to submit\n  quote: \"The human task worker was able to complete 13 of 15 tasks (Success Rate = 0.87) with low Error %\"\n  where: p25, §B.6\n\n- claim: The reward is a graded score, but Success Rate counts only exact completion. Bash: R = 0.34·TF-IDF similarity of stdout + 0.33·(1 − erf(missed/extra file-system changes)) + 0.33·(fraction of shared paths with matching md5). SQL: IoU × rescaled Kendall τ.\n  quote: \"The scalar weights for each component are arbitrarily assigned.\"; \"the scalar 3/7 output shown in the figure is treated as a 0 when quantifying whether the task was completed via the 0/1 Success Rate metric.\"\n  where: p16, p19\n\nLIMITS\n- Main comparison: the Try Again agent sees a reward computed from the gold answer, and the episode stops on success. The single-turn vs interactive delta therefore measures oracle-guided retry. It does not measure unaided self-verification. The authors frame Try Again as probing \"error correction from feedback\" (p6 Fig 2).\n- The prompting-strategy comparison uses only gpt-3.5-turbo. The B.3 refine experiment covers 44 tasks. The human baseline is 15 tasks, done by the authors themselves.\n- Python (MBPP) has an environment but no results are reported.\n- Authors concede that only Bash/SQL/Python are covered. The CTF dataset is internally inconsistent: §5.3 says \"100 CTF objectives from picoCTF\" (p9), while Limitations says \"the CTF dataset is limited to just four task instances due to our manual curation procedure\" (p9). The CTF demonstration is qualitative and needed a hint (\"without the provided hint regarding the usefulness of the \"sleuthkit\" library, the agent fails\", p24).\n- Bash file system 1 was deliberately made harder (p16). Bash tasks number only 200.\n- Dated: models are 2023-era (text-davinci-003, PaLM-2 bison, Vicuna-13B, StarChat-16B). Observations are truncated to 1000 tokens, and open-source models get max_new_tokens 100 (p20), which may handicap them.\n- Suggested remedies for long-horizon degradation are speculative: \"A larger context window size, retrieval of useful memory, and more adaptive reasoning paradigms\" (p7).\n\nBUILDS ON\nReAct (Yao et al., 2023 [51]); Plan-and-Solve (Wang et al., 2023 [43]); OpenAI Gym API (Brockman et al., 2016 [5]); Docker (Merkel, 2014 [34]); datasets NL2Bash (Lin et al., 2018 [32]), Spider (Yu et al., 2018 [55]), MBPP (Austin et al., 2021 [4]); picoCTF ([42]); \"admissible\" actions from Yao et al., 2020 [49]. Related execution-feedback work it cites: Self-Debug (Chen et al., 2023 [12]), Reflexion (Shinn et al., 2023 [40]), Execution-guided synthesis (Chen et al., 2018 [11]), REPL synthesis (Ellis et al., 2019 [17]), LEVER (Ni et al., 2023 [35]), Self-Edit (Zhang et al., 2023 [59]), compiler feedback (Wang et al., 2022 [44]).\n\nCODE\n- POMDP and metric definitions (p4): \"We use the Success Rate (SR) metric, defined as the proportion of task episodes where r = 1. We also define the Error % metric, which is the percentage of non admissible actions across task episodes.\"\n- Interactive loop (Fig 5, p15), verbatim:\n  env = BashEnv(...)\n  for # of episodes:\n    env.reset()\n    policy = ...\n    done = false\n    while not done:\n      policy(obs) → act\n      env.step(act)\n        → obs, done\n  env.close()\n- Bash reset uses git (p15): \"git status -s\" for diffs and \"git reset –hard; git clean -fd;\" to restore state.\n\nFIGURES\n- Fig 3, p8: success rate vs number of interaction turns (1-10), per model, for Bash and SQL under Try Again. This shows the rise-then-plateau of more turns at a glance. Best candidate for the note.\n- Fig 2, p6: the four prompting strategies (Single Turn, Try Again, ReAct, Plan & Solve) with their termination rules. It makes clear that Try Again stops on reward and the others stop on the agent's own judgement.\n- Fig 1, p2: the agent-environment loop for Bash plus the evaluation (file-system diff, md5, lexical similarity). It shows execution-based verification of state, not just output.\n- Table 9, p24 (a table, not a figure): Try Again and ReAct trajectories side by side on the same SQL task. Try Again keeps hallucinating column names. ReAct discovers context and submits. Good concrete illustration of the failure modes.\n- Fig 4, p9: GPT-4 CTF trajectory, with feedback-to-next-action links highlighted.\n\nPROBLEMS\n- Extraction was clean. Tables were mostly parseable. Bold \"best\" markers were lost.\n- The Vicuna row of Table 7 is split across a chunk boundary. Reconstructed as \"16.73 ± 5.00 27.67 ± 4.15\", which is low risk.\n- Table 1's caption says \"two environments with Bash and SQL\" but the table lists three (Bash, SQL, Python). The CTF count is inconsistent (100 vs four).\n- The Fig 8 SQL difficulty distribution is an image with no extractable values.\n- No embedded instructions found."
+ "type": "benchmark",
+ "question": "Does giving an LLM coding agent execution feedback over multiple turns improve code generation, and how can interactive coding be evaluated in a standard, reproducible way?",
+ "hypothesis": "Interactive code generation with execution feedback beats static one-shot generation.",
+ "contributions": [
+  "We develop InterCode, a new, universal framework for interactive code generation, which provides ease of use, extensibility, and safety.",
+  "Using InterCode, we perform a comprehensive evaluation of state-of-the-art models and identify several avenues for improvements.",
+  "We release our framework as a new benchmark along with useful empirical tools to customize any new static code datasets into interactive tasks."
+ ],
+ "method": {
+  "summary": "InterCode wraps code execution in Docker as a gym-style POMDP (code = action, execution output = observation, reward in [0,1]). Environments for Bash (NL2Bash), SQL (Spider) and Python (MBPP) are built; seven LLMs are prompted Single Turn, Try Again (retry with execution output and reward until reward 1 or n turns), ReAct, and Plan & Solve. No training.",
+  "task": "interactive code generation with execution feedback (Bash, SQL, Python)",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "InterCode-SQL (Spider 1.0 dev)",
+    "role": "eval",
+    "size": "1034 task instances, 20 databases",
+    "split": "development set",
+    "source": "Spider, CC BY-SA 4.0; converted to MySQL with sqlite3mysql",
+    "preprocessing": "kept only question and gold SQL; lower_case_table_names enabled; test user with all privileges"
+   },
+   {
+    "name": "InterCode-Bash (NL2Bash)",
+    "role": "eval",
+    "size": "200 commands in 4 disjoint sets (3 grounded to custom file systems, 1 file-system agnostic)",
+    "split": "all 200",
+    "source": "NL2Bash, GPLv3",
+    "preprocessing": "subset of 1000 commands with >=4 utilities; filtered non-UNIX/Linux and unsupported (ssh, sudo, time, GUI); under-specified commands given concrete names/paths; deprecated flags updated"
+   },
+   {
+    "name": "InterCode-Python (MBPP)",
+    "role": "eval",
+    "size": "117 task instances",
+    "split": null,
+    "source": "MBPP",
+    "preprocessing": "none; unit tests inherited. Not evaluated in the experiments"
+   },
+   {
+    "name": "InterCode-CTF (picoCTF)",
+    "role": "eval",
+    "size": "100 CTF objectives per Sec 5.3",
+    "split": null,
+    "source": "picoCTF",
+    "preprocessing": "toy demo only"
+   }
+  ],
+  "models": [
+   {
+    "name": "text-davinci-003, gpt-3.5-turbo, gpt-4",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "text-bison-001, chat-bison-001 (PaLM-2)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Vicuna-13B",
+    "role": "evaluated",
+    "params": "13B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "StarChat-16B",
+    "role": "evaluated",
+    "params": "16B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "API sampling; OpenAI n=1 completion, PaLM candidate_count=1",
+   "temperature": "0 (OpenAI, PaLM); 0.01 (open source)",
+   "top_p": "1 (OpenAI, PaLM)",
+   "max_tokens": "512 (OpenAI max_tokens); 100 (open-source max_new_tokens)",
+   "samples": "one run per item as far as stated; Table 7 reports standard errors over file systems 2-3-4 for Bash, number of runs not stated",
+   "prompting": "Single Turn zero-shot; Try Again zero-shot with task description; ReAct and Plan & Solve with few-shot demonstrations (ReAct example shown; Plan & Solve 'three examples'); templates Tables 11-14",
+   "retrieval": null,
+   "parameters": {
+    "max_turns_n": "10 for Try Again and ReAct",
+    "plan_and_solve_refine_n": "3",
+    "observation_cap": "1000 tokens per observation",
+    "Try Again termination": "reward = 1 or n turns exhausted",
+    "ReAct / Plan & Solve termination": "agent's own judgment (submit)",
+    "default Bash reward": "0.34*TF-IDF cosine similarity of outputs + 0.33*(1-erf(#fs mismatches)) + 0.33*share of commonly changed paths with equal md5sum",
+    "SQL reward": "Jaccard IoU of record lists scaled by (Kendall tau+1)/2",
+    "Success Rate counts": "reward = 1 only"
+   },
+   "other": {
+    "human_baseline": "authors (all proficient in SQL), 15 random SQL tasks, n=10, human decides when to submit"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Success Rate (SR)",
+     "definition": "proportion of task episodes where r = 1",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Error %",
+     "definition": "percentage of non-admissible actions (cannot be parsed/executed) across task episodes",
+     "unit": "%",
+     "higher_is_better": false
+    },
+    {
+     "name": "Turns",
+     "definition": "average number of turns per task episode",
+     "unit": "turns",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "Single Turn zero-shot",
+    "Try Again",
+    "ReAct",
+    "Plan & Solve",
+    "human task worker (15 SQL tasks)"
+   ],
+   "protocol": "Each model run on all tasks per strategy; Spider hardness buckets (Easy/Med/Hard/Extra) and 4 Bash file systems reported; no significance test; standard errors only in Table 7."
+  },
+  "availability": {
+   "code": "https://github.com/princeton-nlp/intercode",
+   "weights": null,
+   "data": "https://intercode-benchmark.github.io/"
+  },
+  "prompts": [
+   {
+    "purpose": "Try Again initial message (SQL/Bash, templated)",
+    "text": "## TASK DESCRIPTION You are a {self.language} code generator helping a user answer a question using {self.language}. The user will ask you a question, and your task is to interact with a {self.setting} system using {self.language} commands to come up with the answer. ... DO NOT WRITE ANYTHING EXCEPT FOR CODE in your response. ## OUTPUT DESCRIPTION Given your {self.language} command input, the system will then give back output formatted as follows: Output: <string> Reward: [0, 1] ... The closer the reward is to 1, the closer your {self.language} command is to the correct answer.",
+    "where": "Table 11 (abridged)"
+   },
+   {
+    "purpose": "ReAct initial message",
+    "text": "Interact with a {self.setting} system using {self.language} queries to answer a question. Use interleaving Thought, Action, Observation steps. Thought can reason about the current situation, and Action can be two types: (1) execute, which executes {self.language} code on the {self.setting} system (2) submit, which indicates that the previous observation is the answer",
+    "where": "Table 12 (abridged; few-shot examples follow)"
+   },
+   {
+    "purpose": "Plan & Solve plan message",
+    "text": "For the following user question, let's first understand the problem and devise a plan to solve the problem. Then, let's carry out the plan to solve the problem step by step.",
+    "where": "Table 14 (abridged)"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Interaction raises GPT-4 SQL success rate from 9.1% single turn to 73.7% with Try Again (n=10).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Success Rate",
+   "value": 73.7,
+   "unit": "%",
+   "baseline_value": 9.1,
+   "n": null,
+   "setup": "InterCode-SQL: Spider 1.0 dev, 1034 tasks, MySQL, zero-shot, temperature 0, observations capped at 1000 tokens; gpt-4, Try Again n=10 with reward shown in each observation and episode stopping at reward 1",
+   "note": null,
+   "where": "Sec 5.1, Table 2",
+   "quote": "a notable multi-fold increase for GPT-4 (9.1% →73.7%) on the InterCode-SQL task"
+  },
+  {
+   "claim": "gpt-3.5-turbo SQL rises from 10.5% to 47.3% with Try Again.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Success Rate",
+   "value": 47.3,
+   "unit": "%",
+   "baseline_value": 10.5,
+   "n": null,
+   "setup": "InterCode-SQL: Spider 1.0 dev, 1034 tasks, MySQL, zero-shot, temperature 0, observations capped at 1000 tokens; gpt-3.5-turbo",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row gpt-3.5-turbo, columns All (Single Turn 10.5, Try Again 47.3)"
+  },
+  {
+   "claim": "Bash gain from Try Again is smaller: gpt-4 34.0% to 48.5%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Success Rate",
+   "value": 48.5,
+   "unit": "%",
+   "baseline_value": 34.0,
+   "n": null,
+   "setup": "InterCode-Bash: 200 NL2Bash-derived tasks over 4 file systems, zero-shot, temperature 0; gpt-4, Try Again n=10",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row gpt-4, column All (Single Turn 34.0, Try Again 48.5)"
+  },
+  {
+   "claim": "gpt-3.5-turbo Bash 34.5% to 46.5%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Success Rate",
+   "value": 46.5,
+   "unit": "%",
+   "baseline_value": 34.5,
+   "n": null,
+   "setup": "InterCode-Bash: 200 NL2Bash-derived tasks over 4 file systems, zero-shot, temperature 0; gpt-3.5-turbo",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row gpt-3.5-turbo, column All (34.5 -> 46.5)"
+  },
+  {
+   "claim": "Weaker models gain little: chat-bison-001 Bash 17.7 to 19.2; StarChat-16B SQL 8.9 to 9.7; chat-bison-001 SQL 7.9 to 9.9.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Success Rate",
+   "value": 9.9,
+   "unit": "%",
+   "baseline_value": 7.9,
+   "n": null,
+   "setup": "InterCode-SQL chat-bison-001, Try Again n=10",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row chat-bison-001, column All (7.9 -> 9.9)"
+  },
+  {
+   "claim": "ReAct (gpt-3.5-turbo) beats plain Try Again on SQL: 58.7% vs 47.3%, with fewer turns (5.30 vs 7.25).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Success Rate",
+   "value": 58.7,
+   "unit": "%",
+   "baseline_value": 47.3,
+   "n": null,
+   "setup": "InterCode-SQL: Spider 1.0 dev, 1034 tasks, MySQL, zero-shot, temperature 0, observations capped at 1000 tokens; gpt-3.5-turbo; ReAct n=10, agent decides when to stop",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row SQL, columns ReAct SR / Try Again SR"
+  },
+  {
+   "claim": "ReAct is much worse than Try Again on Bash: 20.5% vs 46.5%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Success Rate",
+   "value": 20.5,
+   "unit": "%",
+   "baseline_value": 46.5,
+   "n": null,
+   "setup": "InterCode-Bash: 200 NL2Bash-derived tasks over 4 file systems, zero-shot, temperature 0; gpt-3.5-turbo; ReAct n=10",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row Bash, columns ReAct SR / Try Again SR"
+  },
+  {
+   "claim": "Plan & Solve: SQL 49.1%, Bash 28.0%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Success Rate",
+   "value": 28.0,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "gpt-3.5-turbo, Plan & Solve, whole datasets",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row Bash, column Plan & Solve SR (SQL 49.1)"
+  },
+  {
+   "claim": "Even with the relevant schema given in the prompt, Try Again still beats Single Turn for gpt-3.5-turbo on SQL (72.8 vs 67.9); single turn alone jumps from 10.5 to 67.9.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Success Rate",
+   "value": 72.8,
+   "unit": "%",
+   "baseline_value": 67.9,
+   "n": null,
+   "setup": "InterCode-SQL: Spider 1.0 dev, 1034 tasks, MySQL, zero-shot, temperature 0, observations capped at 1000 tokens + relevant DB schema in the question; gpt-3.5-turbo",
+   "note": null,
+   "where": "Sec B.2, Table 5",
+   "table": "Table 5, row gpt-3.5-turbo, column All (Single Turn 67.9, Try Again 72.8)"
+  },
+  {
+   "claim": "At turn 1 SQL actions are non-admissible 90.2% of the time (hallucinated tables/columns), dropping to 46.4% at turn 2; 60.3% of second-turn actions use SHOW TABLES or DESC.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Error %",
+   "value": 90.2,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "gpt-3.5 Try Again SQL, per-turn Error %",
+   "note": null,
+   "where": "Sec B.2, Table 6",
+   "quote": "60.3% of second turn actions contain either the SHOW TABLES or DESC keywords",
+   "table": "Table 6, row SQL, column Turn 1"
+  },
+  {
+   "claim": "Success rate plateaus with more turns, models repeat earlier actions and fail to use recent observations.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Try Again, Bash and SQL, Fig 3",
+   "note": null,
+   "where": "Sec 5.1",
+   "quote": "both Figure 3 exhibits a plateauing in Success Rate and and Error %"
+  },
+  {
+   "claim": "Human (authors) completed 13 of 15 SQL tasks.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Success Rate",
+   "value": 0.87,
+   "unit": "fraction",
+   "baseline_value": null,
+   "n": 15,
+   "setup": "15 random InterCode-SQL tasks, n=10, human decides when to submit; the authors themselves",
+   "note": null,
+   "where": "Sec B.6",
+   "quote": "The human task worker was able to complete 13 of 15 tasks (Success Rate = 0.87)"
+  },
+  {
+   "claim": "ReAct and Plan & Solve solve overlapping but different task sets: both solved 57% (407/708) of the union on SQL and 27.6% (21/76) on Bash.",
+   "kind": "measured",
+   "source": null,
+   "metric": "overlap share",
+   "value": 57,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "gpt-3.5-turbo, tasks solved by both strategies as share of union",
+   "note": null,
+   "where": "Sec 5.2",
+   "quote": "57% (407/708) and 27.6% (21/76)"
+  },
+  {
+   "claim": "Hybrid Plan & Solve + Refine gives no significant gain: SR 45.5 on 44 random SQL tasks.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Success Rate",
+   "value": 45.5,
+   "unit": "%",
+   "baseline_value": null,
+   "n": 44,
+   "setup": "44 randomly selected SQL tasks, n=3 refine turns, gpt-3.5-turbo presumably (not stated)",
+   "note": "model not stated in the passage",
+   "where": "Sec B.3",
+   "quote": "average Success Rate of 45.5, a Number of Turns of 6.34"
+  },
+  {
+   "claim": "Bash gold-vs-agent robustness: Try Again 47.40 +/- 1.23 vs Single Turn 36.63 +/- 1.83 for gpt-3.5-turbo (file systems 2-4).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Success Rate",
+   "value": 47.4,
+   "unit": "%",
+   "baseline_value": 36.63,
+   "n": null,
+   "setup": "InterCode-Bash file systems 2-4 only",
+   "note": null,
+   "where": "Table 7",
+   "table": "Table 7, row gpt-3.5-turbo (Single 36.63 ± 1.83, Try Again 47.40 ± 1.23)"
+  }
+ ],
+ "limits": [
+  "Try Again feeds the reward (computed against the gold output) back to the agent and stops the episode automatically when reward = 1; ReAct and Plan & Solve stop on the agent's own judgment. The headline gains are therefore retry against an oracle, not self-verification (Fig 2 caption: the purpose is to explore how capable agents are at error correction from feedback).",
+  "SQL Single Turn is zero-shot with no schema; the schema ablation (Table 5) shows much of the SQL gain is information gathering (single turn 10.5 -> 67.9 once schema is given).",
+  "Only Bash and SQL evaluated; Python environment built but not benchmarked. Environments limited to Bash, SQL, Python.",
+  "CTF: Sec 5.3 says 100 objectives; Limitations says the CTF dataset is limited to just four task instances.",
+  "Plan & Solve + Refine tested on only 44 tasks; human baseline only 15 tasks by the authors.",
+  "Models plateau in later turns and repeat actions; context handling is the failure point.",
+  "Single run per configuration at temperature 0; standard errors only for Bash file systems 2-4.",
+  "Models are 2023 vintage (text-davinci-003, gpt-3.5-turbo, gpt-4, Vicuna-13B)."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Success Rate (SR)",
+   "definition": "the proportion of task episodes where r = 1",
+   "where": "Sec 3.1"
+  },
+  {
+   "term": "Error %",
+   "definition": "the percentage of non admissible actions across task episodes",
+   "where": "Sec 3.1"
+  },
+  {
+   "term": "admissible action",
+   "definition": "an action that can be parsed and executed in the compiler/interpreter environment",
+   "where": "Sec 3.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "ReAct",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "prompting strategy adapted",
+   "quote": null
+  },
+  {
+   "work": "Plan & Solve prompting",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "prompting strategy adapted",
+   "quote": null
+  },
+  {
+   "work": "NL2Bash (Lin et al.)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Bash dataset",
+   "quote": null
+  },
+  {
+   "work": "Spider (Yu et al.)",
+   "year": 2018,
+   "arxiv": "1809.08887",
+   "relation": "uses-data",
+   "note": "SQL dataset",
+   "quote": null
+  },
+  {
+   "work": "MBPP (Austin et al.)",
+   "year": 2021,
+   "arxiv": "2108.07732",
+   "relation": "uses-data",
+   "note": "Python dataset",
+   "quote": null
+  },
+  {
+   "work": "OpenAI Gym (Brockman et al.)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "InterCodeEnv inherits the gym API",
+   "quote": null
+  },
+  {
+   "work": "Teaching large language models to self-debug (Chen et al.)",
+   "year": 2023,
+   "arxiv": "2304.05128",
+   "relation": "related",
+   "note": "execution-feedback prior work",
+   "quote": null
+  },
+  {
+   "work": "picoCTF",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "CTF tasks",
+   "quote": null
+  },
+  {
+   "work": "GPT-4, gpt-3.5-turbo, text-davinci-003, PaLM 2, Vicuna, StarChat",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "models evaluated",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "Overview of Prompting Strategies adjusted for evaluation on InterCode.",
+   "page": 6,
+   "why": "Shows that Try Again terminates on reward = 1 while ReAct/Plan & Solve self-terminate"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Growth in Success Rate with increase in number of interaction turns across models configured with Try Again",
+   "page": 8,
+   "why": "Shows the plateau across turns"
+  },
+  {
+   "figure": "Table 4",
+   "caption": "Comparison of different prompting strategies across the entire InterCode-SQL and InterCode-Bash datasets using gpt-3.5-turbo",
+   "page": 8,
+   "why": "Strategy trade-offs differ by task"
+  }
+ ],
+ "code": [
+  {
+   "where": "App A.2, Eq 1",
+   "snippet": "R = 0.34*similarity(Aout,Gout) + 0.33*(1 - erf(|Afs ∪ Gfs - Afs ∩ Gfs|)) + 0.33*is_correct(Afs ∩ Gfs)/|Afs ∩ Gfs|",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text extraction garbles table layouts into one cell per line; values were matched by position and checked against the legacy report.",
+  "Table 7 caption/text: 'Best metrics are in bold' bold lost in text."
+ ]
 }

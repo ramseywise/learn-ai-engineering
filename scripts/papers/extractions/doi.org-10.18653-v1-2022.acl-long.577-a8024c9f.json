@@ -1,0 +1,678 @@
+{
+ "schema": 1,
+ "key": "https://doi.org/10.18653/v1/2022.acl-long.577",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/lee-2022-deduplicating-training-data-makes-language.pdf",
+ "bib": {
+  "title": "Deduplicating Training Data Makes Language Models Better",
+  "authors": [
+   "Katherine Lee",
+   "Daphne Ippolito",
+   "Andrew Nystrom",
+   "Chiyuan Zhang",
+   "Douglas Eck",
+   "Chris Callison-Burch",
+   "Nicholas Carlini"
+  ],
+  "first_author": "Lee",
+  "year": 2022,
+  "venue": "Proceedings of the 60th Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers), ACL 2022",
+  "arxiv": "2107.06499",
+  "doi": "10.18653/v1/2022.acl-long.577"
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 82484,
+  "chars_total": 82484,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "How much duplicated text do common LM training sets contain, and does removing it change perplexity, memorization and train-test leakage?",
+ "hypothesis": "Deduplicating training data reduces memorized output and train-test overlap without hurting perplexity.",
+ "contributions": [
+  "Two scalable deduplication tools: EXACTSUBSTR (suffix array) and NEARDUP (MinHash)",
+  "Measurement of duplication in C4, RealNews, LM1B, Wiki-40B",
+  "Showing deduplicated training reduces memorization ~10x and keeps or improves perplexity",
+  "Quantifying train-test leakage effect on released models",
+  "Released code and deduplicated datasets"
+ ],
+ "method": {
+  "summary": "Deduplicate C4, RealNews, LM1B and Wiki-40B with exact 50-token substring matching via suffix arrays and with MinHash plus edit similarity >0.8, then train 1.5B (XL) and 110M (base) T5-codebase decoder-only LMs on original and deduplicated C4 and compare perplexity and memorization in sampled text.",
+  "task": "dataset deduplication; causal LM pretraining on C4; memorization measurement",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "C4",
+    "role": "pretrain",
+    "size": "360M web documents, avg 486 BPE tokens; 364.87M examples / 177.3B tokens (Table 13)",
+    "split": "train and validation",
+    "source": "Raffel et al. 2020",
+    "preprocessing": "Original paragraph-hash dedup; NearDup leaves 350.48M examples / 173.7B tokens; ExactSubstr 350.48M examples / 165.4B tokens"
+   },
+   {
+    "name": "RealNews",
+    "role": "eval",
+    "size": "31M documents, avg 793 BPE tokens; 24.7B tokens",
+    "split": "train/valid",
+    "source": "Zellers et al. 2019",
+    "preprocessing": "deduplicated only, not trained on"
+   },
+   {
+    "name": "LM1B",
+    "role": "eval",
+    "size": "30M sentences, avg 32 BPE tokens; 1.0B tokens",
+    "split": "train/valid",
+    "source": "Chelba et al. 2013",
+    "preprocessing": null
+   },
+   {
+    "name": "Wiki-40B (English)",
+    "role": "eval",
+    "size": "2.9M pages, avg 768 BPE tokens; 2.25B tokens",
+    "split": "train/valid",
+    "source": "Guo et al. 2020",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "T5 XL decoder-only (XL-ORIGINAL, XL-NEARDUP, XL-EXACTSUBSTR)",
+    "role": "proposed",
+    "params": "1.5B",
+    "architecture": "decoder-only Transformer, T5 codebase",
+    "init_from": null,
+    "tokenizer": "BPE trained on C4-NEARDUP",
+    "vocab": "50K budget (same size as GPT-2)",
+    "layers": "24",
+    "hidden": "2,048",
+    "heads": "32",
+    "context": "512 tokens",
+    "other": {
+     "ffn_hidden": "5,120",
+     "kv_dim": "64"
+    }
+   },
+   {
+    "name": "T5 base decoder-only",
+    "role": "proposed",
+    "params": "110M",
+    "architecture": "decoder-only Transformer, T5 codebase",
+    "init_from": null,
+    "tokenizer": "same BPE",
+    "vocab": "50K budget",
+    "layers": "12",
+    "hidden": "768",
+    "heads": "12",
+    "context": "512 tokens",
+    "other": {
+     "ffn_hidden": "2,048",
+     "kv_dim": "64"
+    }
+   },
+   {
+    "name": "Transformer-XL",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "Transformer-XL",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GROVER-Base / XL / Mega",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-Neo 1.3B",
+    "role": "evaluated",
+    "params": "1.3B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "inferred: next-token prediction (decoder-only LM, perplexity evaluated)",
+   "optimizer": "Adafactor",
+   "lr": "constant 0.01 (base), 0.001 (XL)",
+   "lr_schedule": "constant",
+   "warmup": null,
+   "batch_size": "4800",
+   "steps": "152K (C4-ORIGINAL, C4-EXACTSUBSTR); 146K (C4-NEARDUP)",
+   "epochs": "about 2",
+   "tokens": null,
+   "seq_len": "512 tokens (longer documents: random subsequence)",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "128-core TPU v3 pod slice (XL); 64-core TPU v3 pod slice (base)",
+   "compute": "XL: 16804.70 TPU hrs original, 16149.31 ExactSubstr, 5.86/5.63 MWh; base 1.61 MWh (Table 6)",
+   "wall_clock": "XL ~131 h (original, ExactSubstr), ~126 h (NearDup); base ~3 days",
+   "seeds": "3 random seeds per dataset for base models (9 base models); XL single run",
+   "other": {
+    "dedup_machine": "96-core VM, 768GB RAM"
+   }
+  },
+  "inference": {
+   "decoding": "top-k random sampling, k=50",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": "512 tokens per sample",
+   "samples": "100,000 sequences per setting; five prompt types x two checkpoints, 1M sequences per model",
+   "prompting": "no prompt, or first 32 tokens of train-dup, train-unique, valid-in-train, valid-unique examples",
+   "retrieval": null,
+   "parameters": {
+    "exactsubstr_k": "50 BPE tokens (suffix array on bytes of BPE tokens)",
+    "neardup_ngram": "5-grams",
+    "minhash_signature": "9,000",
+    "bands_b": "20",
+    "rows_r": "450",
+    "edit_similarity_threshold": "0.8",
+    "memorized_token_rule": "token part of a 50-token substring exactly in training data",
+    "clustering": "connected components (Lacki et al. 2018)"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Perplexity",
+     "definition": "validation perplexity on C4 Original, C4 Unique (no NearDup match), C4 Duplicates (NearDup match in train), LM1B, Wiki-40B",
+     "unit": "perplexity",
+     "higher_is_better": false
+    },
+    {
+     "name": "Memorized token rate",
+     "definition": "% generated tokens that are part of a 50-token substring exactly in training data",
+     "unit": "%",
+     "higher_is_better": false
+    },
+    {
+     "name": "Continuation match",
+     "definition": "fraction of generations with edit similarity >0.8 to ground-truth continuation for 32-token prompts",
+     "unit": "fraction",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "Models trained on original (non-deduplicated) C4"
+   ],
+   "protocol": "3 seeds for base models; one XL run per dataset; perplexity compared on validation subsets; no significance test stated"
+  },
+  "availability": {
+   "code": "https://github.com/google-research/deduplicate-text-datasets",
+   "weights": null,
+   "data": "deduplicated datasets released (stated in Conclusion)"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.steps",
+    "quote": "we performed 152K\nsteps with a batch size of 4800",
+    "where": "App C"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Unprompted generations from XL trained on original C4 have over 1% of tokens in memorized 50-token substrings; deduplicated models emit about 10x less.",
+   "kind": "measured",
+   "metric": "% generated tokens in 50-token training substring (1 epoch)",
+   "value": "1.926",
+   "unit": "%",
+   "baseline_value": "0.189 (NearDup), 0.138 (ExactSubstr)",
+   "n": "100k sequences, up to 512 tokens",
+   "setup": "T5-codebase 1.5B XL decoder-only LM trained ~2 epochs on C4; checkpoint at epoch 1; top-k=50 sampling, no prompt",
+   "table": "Table 4, row XL-ORIGINAL, column 1 Epoch",
+   "note": "Epoch 2 values: Original 1.571%, NearDup 0.264%, ExactSubstr 0.168% (Table 4). Same in Table 12.",
+   "where": "Table 4",
+   "quote": null,
+   "source": null
+  },
+  {
+   "claim": "At 2 epochs the original XL model still has 1.571% memorized tokens in unprompted output versus 0.264% (NearDup) and 0.168% (ExactSubstr).",
+   "kind": "measured",
+   "metric": "% generated tokens memorized (2 epochs)",
+   "value": "1.571",
+   "unit": "%",
+   "baseline_value": "0.264 NearDup; 0.168 ExactSubstr",
+   "n": "100k sequences",
+   "setup": "XL 1.5B, C4, no prompt, top-k 50, final checkpoint",
+   "table": "Table 4, row XL-ORIGINAL, column 2 Epochs",
+   "note": null,
+   "where": "Table 4",
+   "quote": null,
+   "source": null
+  },
+  {
+   "claim": "Prompted with duplicated training examples, XL-Original copies the ground-truth continuation over 40% of the time.",
+   "kind": "measured",
+   "metric": "fraction of continuations with edit sim >0.8",
+   "value": "over 40%",
+   "unit": "%",
+   "n": "32-token prompts",
+   "setup": "XL on C4, prompt = first 32 tokens of train examples with near-duplicates",
+   "quote": "XL-ORIGINAL repro-\nduces the groundtruth continuation over 40% of the\ntime.",
+   "note": "Read from Fig 3; Table 12 gives 35.88% (1 epoch) of tokens memorized for Duplicate Train Prompts, a different metric.",
+   "where": "Sec 6.2",
+   "baseline_value": null,
+   "table": null,
+   "source": null
+  },
+  {
+   "claim": "NearDup finds 3.04% of C4 train examples are near-duplicates, 13.63% of RealNews.",
+   "kind": "measured",
+   "metric": "% train examples with dup in train (NearDup)",
+   "value": "3.04",
+   "unit": "%",
+   "setup": "MinHash 5-grams, signature 9,000, b=20, r=450, edit sim >0.8, English datasets",
+   "quote": "between 3.04% (on C4) to 13.63%\n(on RealNews) near duplicates (Table 2)",
+   "where": "Sec 5.1",
+   "baseline_value": null,
+   "n": null,
+   "table": null,
+   "note": null,
+   "source": null
+  },
+  {
+   "claim": "4.60% of the C4 validation set has a near-duplicate in the C4 train set.",
+   "kind": "measured",
+   "metric": "% valid with dup in train (NearDup)",
+   "value": "4.60",
+   "unit": "%",
+   "setup": "C4 validation vs C4 train, NearDup",
+   "table": "Table 2, row C4, column % valid with dup in train",
+   "note": "Text in 5.3 says 14.4% for RealNews, Table 2 prints 14.35%.",
+   "where": "Table 2",
+   "baseline_value": null,
+   "n": null,
+   "quote": null,
+   "source": null
+  },
+  {
+   "claim": "ExactSubstr marks 7.18% of C4 train tokens as part of an exact duplicate 50-token substring (19.4% RealNews).",
+   "kind": "measured",
+   "metric": "% train tokens in duplicate 50-token substring",
+   "value": "7.18",
+   "unit": "%",
+   "setup": "Suffix array over BPE tokens, threshold 50",
+   "table": "Table 3, row C4, column % train tokens with dup in train",
+   "where": "Table 3",
+   "baseline_value": null,
+   "n": null,
+   "quote": null,
+   "note": null,
+   "source": null
+  },
+  {
+   "claim": "A single 61-word C4 sentence appears 61,036 times in train and 61 times in validation.",
+   "kind": "measured",
+   "metric": "repeat count",
+   "value": "61,036",
+   "unit": "times",
+   "setup": "C4 train",
+   "quote": "repeated 61,036 times verbatim in the\ntraining dataset and 61 times in the validation\nset",
+   "where": "Sec 1",
+   "baseline_value": null,
+   "n": null,
+   "table": null,
+   "note": null,
+   "source": null
+  },
+  {
+   "claim": "Deduplicated datasets are up to 19% smaller.",
+   "kind": "measured",
+   "metric": "dataset size reduction",
+   "value": "19%",
+   "unit": "%",
+   "setup": "RealNews 24.7B to 20.1B tokens under ExactSubstr is the largest cut; C4 177.3B to 165.4B",
+   "quote": "these datasets are\nup to 19% smaller",
+   "note": "Intro says 19%; Appendix D says 3.9% smaller dataset (C4, XL training), Table 13 gives C4 177.3B -> 165.4B tokens.",
+   "where": "Sec 1",
+   "baseline_value": null,
+   "n": null,
+   "table": null,
+   "source": null
+  },
+  {
+   "claim": "C4 sizes in tokens: original 177.3B, NearDup 173.7B, ExactSubstr 165.4B.",
+   "kind": "measured",
+   "metric": "C4 train tokens",
+   "value": "165.4B",
+   "unit": "tokens",
+   "setup": "50k BPE vocab",
+   "table": "Table 13, row C4, column EXACTSUBSTR (tokens)",
+   "where": "Table 13",
+   "baseline_value": null,
+   "n": null,
+   "quote": null,
+   "note": null,
+   "source": null
+  },
+  {
+   "claim": "Deduplication does not hurt perplexity, and in some cases reduces it by up to 10%.",
+   "kind": "measured",
+   "metric": "perplexity change",
+   "value": "10%",
+   "unit": "%",
+   "setup": "models trained on deduplicated C4, various validation sets",
+   "quote": "In some cases deduplication reduces\nperplexity by up to 10%.",
+   "where": "Sec 1",
+   "baseline_value": null,
+   "n": null,
+   "table": null,
+   "note": null,
+   "source": null
+  },
+  {
+   "claim": "ExactSubstr dedup lowers XL perplexity on Wiki-40B by almost 3 points, versus ~1 point variation across base seeds.",
+   "kind": "measured",
+   "metric": "perplexity difference",
+   "value": "almost 3",
+   "unit": "perplexity points",
+   "setup": "XL on C4 variants, Wiki-40B validation",
+   "quote": "EXACTSUBSTR\ndeduplication decreases perplexity of the XL model\nby almost 3 points perplexity on Wiki-40B",
+   "where": "Sec 6.1",
+   "baseline_value": null,
+   "n": null,
+   "table": null,
+   "note": null,
+   "source": null
+  },
+  {
+   "claim": "Models trained on deduplicated C4 have higher perplexity on validation examples that have a train duplicate.",
+   "kind": "measured",
+   "metric": "qualitative perplexity (Fig 2)",
+   "setup": "C4 Duplicates subset, base and XL",
+   "quote": "both models trained on\ndeduplicated data have signiﬁcantly higher perplex-\nity on validation set examples that have duplicates\nin the training set than the model trained on the\noriginal C4.",
+   "where": "Sec 6.1",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "table": null,
+   "note": null,
+   "source": null
+  },
+  {
+   "claim": "All XL models reach under 35 perplexity on LM1B, below the 42.16 reported for 1.5B GPT-2.",
+   "kind": "measured",
+   "metric": "LM1B perplexity",
+   "value": "<35",
+   "unit": "perplexity",
+   "baseline_value": "42.16",
+   "setup": "XL models, 50k BPE vocab",
+   "quote": "all our XL models achieved <35\nperplexity on LM1B, which is less than the 42.16\nperplexity reported for the 1.5B GPT-2",
+   "where": "Sec 6.1",
+   "n": null,
+   "table": null,
+   "note": null,
+   "source": null
+  },
+  {
+   "claim": "Transformer-XL perplexity on LM1B validation halves on examples with near-duplicates in train (10.11 vs 23.58 unique).",
+   "kind": "measured",
+   "metric": "perplexity",
+   "value": "10.11",
+   "unit": "perplexity",
+   "baseline_value": "23.58 (Unique), 21.77 (Orig)",
+   "setup": "released Transformer-XL on LM1B, NearDup subsets",
+   "table": "Table 5, row Transformer-XL, column Dups",
+   "where": "Table 5",
+   "n": null,
+   "quote": null,
+   "note": null,
+   "source": null
+  },
+  {
+   "claim": "1.38% of tokens in 25k official GROVER-Mega outputs are verbatim 50-token matches in RealNews.",
+   "kind": "measured",
+   "metric": "% tokens memorized",
+   "value": "1.38",
+   "unit": "%",
+   "setup": "released GROVER-Mega outputs",
+   "quote": "1.38% of the tokens in the ofﬁcial release of\n25k GROVER-Mega outputs",
+   "where": "Sec 6.3",
+   "baseline_value": null,
+   "n": null,
+   "table": null,
+   "note": null,
+   "source": null
+  },
+  {
+   "claim": "More than 5% of tokens in ~200k GPT-Neo 1.3B outputs are 50-token matches of the Pile.",
+   "kind": "measured",
+   "metric": "% tokens memorized",
+   "value": "5%",
+   "unit": "%",
+   "setup": "GPT-Neo 1.3B, ~200k sequences, Pile",
+   "quote": "more than 5% of the tokens in ~200k se-\nquences outputted by GPT-Neo 1.3B",
+   "where": "Sec 6.3",
+   "baseline_value": null,
+   "n": null,
+   "table": null,
+   "note": null,
+   "source": null
+  },
+  {
+   "claim": "Deduplicated C4 training saves roughly 5 hours of the ~131 hour XL run.",
+   "kind": "measured",
+   "metric": "compute saved",
+   "value": "5 hours",
+   "unit": "hours",
+   "setup": "128-core TPU v3, two epochs",
+   "quote": "saving\nus around 5 hours of compute time for the two\nepochs",
+   "note": "Appendix D says dataset 3.9% smaller; NearDup run 126 h vs 131 h.",
+   "where": "App D",
+   "baseline_value": null,
+   "n": null,
+   "table": null,
+   "source": null
+  },
+  {
+   "claim": "XL-Original/ExactSubstr training estimated at 5.86 MWh, NearDup 5.63 MWh.",
+   "kind": "measured",
+   "metric": "energy",
+   "value": "5.86",
+   "unit": "MWh",
+   "setup": "Patterson et al. 2021 per-core estimates, Taiwan datacenter assumption",
+   "quote": "uses 5.86MWh",
+   "where": "App D",
+   "baseline_value": null,
+   "n": null,
+   "table": null,
+   "note": null,
+   "source": null
+  },
+  {
+   "claim": "77% of C4 training examples removed by NearDup have a verbatim 50-token match found by ExactSubstr.",
+   "kind": "measured",
+   "metric": "overlap",
+   "value": "77%",
+   "unit": "%",
+   "setup": "C4",
+   "quote": "77% of the training examples that\nNEARDUP removes from C4 have at least one ver-\nbatim length-50 match",
+   "where": "Sec 5.1",
+   "baseline_value": null,
+   "n": null,
+   "table": null,
+   "note": null,
+   "source": null
+  },
+  {
+   "claim": "Suffix array of 350GB C4 takes under 12 hours wall-clock (~1000 CPU-hours) on 96-core 768GB VM; array is 1.5TB.",
+   "kind": "measured",
+   "metric": "wall-clock",
+   "value": "12 hours",
+   "unit": "hours",
+   "setup": "single cloud VM, 96 cores, 768GB",
+   "quote": "The 350GB C4 dataset takes under 12 hours (wall-\nclock) to build a sufﬁx array",
+   "where": "App B",
+   "baseline_value": null,
+   "n": null,
+   "table": null,
+   "note": null,
+   "source": null
+  }
+ ],
+ "limits": [
+  "No downstream-task evaluation; only perplexity and memorization.",
+  "EXACTSUBSTR and NEARDUP use different thresholds; a different choice could change the comparison (Sec 6.1).",
+  "Does not distinguish harmful from innocuous memorization; no privacy study.",
+  "Does not study negative consequences of deduplication (tasks needing memorization, loss of attribution).",
+  "Deduplicated models still copy ground truth more often from duplicate prompts, so more stringent dedup may be needed.",
+  "English datasets only; XL models trained once (no seeds), base models 3 seeds.",
+  "Deduplication is not sufficient to remove private data.",
+  "Dataset size reduction: abstract says up to 19% smaller (RealNews tokens), App D says 3.9% for the C4 runs."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "EXACTSUBSTR",
+   "definition": "remove substrings of at least k=50 tokens shared verbatim by more than one example, found with a suffix array",
+   "where": "Sec 4.1"
+  },
+  {
+   "term": "NEARDUP",
+   "definition": "MinHash-based approximate matching of whole documents, followed by edit similarity >0.8 filter",
+   "where": "Sec 4.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Exploring the Limits of Transfer Learning with a Unified Text-to-Text Transformer (T5/C4)",
+   "year": 2020,
+   "arxiv": "1910.10683",
+   "relation": "uses-data",
+   "note": "C4 dataset and T5 codebase/architecture",
+   "quote": null
+  },
+  {
+   "work": "Carlini et al. extracting training data from LLMs",
+   "year": 2020,
+   "arxiv": "2012.07805",
+   "relation": "extends",
+   "note": "memorization in GPT-2; this paper measures >1% of output",
+   "quote": null
+  },
+  {
+   "work": "Broder MinHash",
+   "year": 1997,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "approximate dedup",
+   "quote": null
+  },
+  {
+   "work": "Manber and Myers suffix arrays",
+   "year": 1993,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "exact substring dedup",
+   "quote": null
+  },
+  {
+   "work": "Dodge et al. documenting C4",
+   "year": 2021,
+   "arxiv": "2104.08758",
+   "relation": "related",
+   "note": "C4 analysis and contamination up to 14.4%",
+   "quote": null
+  },
+  {
+   "work": "Zellers et al. GROVER / RealNews",
+   "year": 2019,
+   "arxiv": "1905.12616",
+   "relation": "evaluates",
+   "note": "RealNews data and GROVER models",
+   "quote": null
+  },
+  {
+   "work": "Dai et al. Transformer-XL",
+   "year": 2019,
+   "arxiv": "1901.02860",
+   "relation": "evaluates",
+   "note": "leakage on LM1B",
+   "quote": null
+  },
+  {
+   "work": "Shazeer and Stern Adafactor",
+   "year": 2018,
+   "arxiv": "1804.04235",
+   "relation": "uses-method",
+   "note": "optimizer",
+   "quote": null
+  },
+  {
+   "work": "Radford et al. GPT-2",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "related",
+   "note": "13.2% LM1B test overlap; 8-gram overlap analysis",
+   "quote": null
+  },
+  {
+   "work": "Brown et al. GPT-3",
+   "year": 2020,
+   "arxiv": "2005.14165",
+   "relation": "related",
+   "note": "13-gram decontamination",
+   "quote": null
+  },
+  {
+   "work": "Black et al. GPT-Neo",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "memorization in Pile-trained model",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "Impact of deduplicating the training set on validation perplexity (T5 XL).",
+   "page": 6,
+   "why": "shows perplexity on duplicate vs unique validation subsets"
+  },
+  {
+   "figure": "Table 4",
+   "caption": "Memorized token rate in 100k unprompted generations.",
+   "page": 7,
+   "why": "headline 10x memorization drop"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Proportion of generations with edit similarity above 0.8 with ground truth, 32-token prompts.",
+   "page": 7,
+   "why": "memorization under prompting"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "No embedded instructions found. Fig 2, 3 values read only qualitatively; 'over 40%' is from text."
+ ]
+}

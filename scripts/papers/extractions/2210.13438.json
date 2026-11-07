@@ -1,0 +1,675 @@
+{
+ "schema": 1,
+ "key": "2210.13438",
+ "pdf": "ai-engineering/08-multimodal-engineering/sources/defossez-2022-high-fidelity-neural-audio-compression.pdf",
+ "bib": {
+  "title": "High Fidelity Neural Audio Compression",
+  "authors": [
+   "Alexandre Défossez",
+   "Jade Copet",
+   "Gabriel Synnaeve",
+   "Yossi Adi"
+  ],
+  "first_author": "Défossez",
+  "year": 2022,
+  "venue": "preprint",
+  "arxiv": "2210.13438",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 66050,
+  "chars_total": 66050,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can a streaming neural encoder-decoder codec with residual vector quantization and a simple spectrogram adversary beat Opus, EVS and Lyra-v2 in human-rated quality at low bitrates, in real time?",
+ "hypothesis": "A single multiscale STFT discriminator plus a gradient loss balancer gives a simpler, more stable training than prior codecs and yields better perceptual quality at equal bandwidth.",
+ "contributions": [
+  "Streaming encoder-decoder codec with quantized latent space trained end to end, 24 kHz mono and 48 kHz stereo",
+  "Single multiscale STFT (MS-STFT) discriminator as perceptual loss",
+  "Loss balancer where a weight is the fraction of the gradient a loss represents",
+  "Small Transformer language model plus arithmetic coding cutting bandwidth by up to 40%",
+  "Extensive MUSHRA evaluation and ablations over speech, noisy-reverberant speech and music"
+ ],
+ "method": {
+  "summary": "EnCodec is a convolutional encoder (4 blocks, strides 2,4,5,8, 2-layer LSTM), an RVQ with up to 32 codebooks of 1024 entries, and a mirrored decoder, trained with time and mel-frequency L1/L2 reconstruction, MS-STFT hinge adversarial loss, feature matching and commitment loss, with a gradient balancer. An optional 5-layer Transformer LM over the codes drives a range coder for further compression.",
+  "task": "neural audio compression (lossy codec) with variable bandwidth",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Common Voice 7.0",
+    "role": "train",
+    "size": "9,096 h, 48 kHz, 1 channel",
+    "split": "99.5% train, 0.25% valid, rest test (random)",
+    "source": "CC-0",
+    "preprocessing": null
+   },
+   {
+    "name": "DNS Challenge 4 (speech)",
+    "role": "both",
+    "size": "2,425 h, 48 kHz, 1 channel",
+    "split": "98% train, 1% valid, 1% test of clean segments",
+    "source": "licences vary per sample",
+    "preprocessing": null
+   },
+   {
+    "name": "AudioSet",
+    "role": "both",
+    "size": "4,989 h, 48 kHz, 2 channels",
+    "split": "unbalanced train segments for train; half of eval for valid, half for test",
+    "source": "CC BY 4.0, varies per sample",
+    "preprocessing": null
+   },
+   {
+    "name": "FSD50K",
+    "role": "both",
+    "size": "108 h, 44.1 kHz, 1 channel",
+    "split": "dev set for train; eval split between valid and test",
+    "source": "CC, varies per sample",
+    "preprocessing": null
+   },
+   {
+    "name": "Jamendo",
+    "role": "both",
+    "size": "919 h, multiple rates, 2 channels",
+    "split": "96% of artists train, 2% valid, 2% test, no artist overlap",
+    "source": "CC, varies per sample",
+    "preprocessing": "48 kHz stereo model trained on music only"
+   },
+   {
+    "name": "proprietary music dataset",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "proprietary",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "EnCodec 24 kHz mono",
+    "role": "proposed",
+    "params": null,
+    "architecture": "streaming conv encoder-decoder, 2-layer LSTM, RVQ",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": "1024 entries per codebook",
+    "layers": "B=4 conv blocks + 2-layer LSTM",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "channels C": "32",
+     "strides": "(2,4,5,8)",
+     "latent steps per second": "75 at 24 kHz, 150 at 48 kHz",
+     "codebooks": "at most 32 (16 at 48 kHz), 10 bits each",
+     "bandwidths": "1.5, 3, 6, 12, 24 kbps at 24 kHz; 3, 6, 12, 24 kbps at 48 kHz",
+     "activation": "ELU",
+     "norm": "weight norm (streamable), layer norm (non-streamable)",
+     "commitment/EMA decay": "0.99"
+    }
+   },
+   {
+    "name": "EnCodec 48 kHz stereo",
+    "role": "proposed",
+    "params": null,
+    "architecture": "same as 24 kHz, non-streamable, discriminator STFT windows doubled",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "latency": "1 s"
+    }
+   },
+   {
+    "name": "EnCodec entropy-coding LM",
+    "role": "proposed",
+    "params": null,
+    "architecture": "causal Transformer, one embedding table and one linear head per codebook",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": "1024 per codebook",
+    "layers": "5",
+    "hidden": "200 channels, feed-forward 800",
+    "heads": "8",
+    "context": "3.5 s causal receptive field, trained on 5 s sequences",
+    "other": {
+     "dropout": "none"
+    }
+   },
+   {
+    "name": "MS-STFT discriminator",
+    "role": "proposed",
+    "params": null,
+    "architecture": "5 identical 2D conv nets on complex STFT",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "STFT windows": "[2048,1024,512,256,128]",
+     "kernel": "3x8 first conv, 32 channels, dilation 1,2,4 in time, stride 2 on frequency, final 3x3",
+     "activation": "LeakyReLU, weight norm"
+    }
+   },
+   {
+    "name": "Opus",
+    "role": "baseline",
+    "params": null,
+    "architecture": "traditional codec",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "EVS",
+    "role": "baseline",
+    "params": null,
+    "architecture": "traditional codec",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Lyra-v2 (SoundStream)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "neural codec, official Lyra 2 at 3.2 and 6 kbps on audio upsampled to 32 kHz",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "SoundStream reimplementation",
+    "role": "baseline",
+    "params": null,
+    "architecture": "RVQ with STFTD+MSD discriminators, relative feature loss, layer norm in discriminators",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "MP3",
+    "role": "baseline",
+    "params": null,
+    "architecture": "64 kbps, stereo case only",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "LG = lt*L1 time + lf*mel L1/L2 (64 bins, scales 2^5..2^11, hop window/4) + lg*hinge adversarial + lfeat*relative feature matching + lw*RVQ commitment; discriminator hinge loss",
+   "optimizer": "Adam, beta1=0.5, beta2=0.9",
+   "lr": "3e-4",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "64 examples of 1 second each",
+   "steps": "300 epochs of 2,000 updates",
+   "epochs": "300 (epoch = 2,000 updates)",
+   "tokens": null,
+   "seq_len": "1 second (5 seconds for the LM)",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": "none in the LM",
+   "regularisation": "loss balancer R=1, beta=0.999; discriminator updated with probability 2/3 at 24 kHz and 0.5 at 48 kHz; per-bandwidth discriminator",
+   "hardware": "8x A100",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "loss weights 24 kHz": "lt=0.1, lf=1, lg=3, lfeat=3",
+    "loss weights 48 kHz": "lg=4, lfeat=4 (others as 24 kHz, inferred)",
+    "data mixing": "s1 Jamendo single 0.32; s2 other single 0.32; s3 mix of two 0.24; s4 mix of three non-music 0.12",
+    "augmentation": "random gain -10 to 6 dB, clipped samples rejected, reverb with prob 0.2, RT60 in [0.3,1.3] except single-source music",
+    "bandwidth sampling": "number of codebooks random multiple of 4",
+    "LM training objective": "cross entropy over codebook indexes",
+    "range coder": "probabilities rounded to 1e-6, total range width 2^24, minimum range width 2",
+    "non-streamable chunking": "1 s chunks, 10 ms overlap"
+   }
+  },
+  "inference": {
+   "decoding": "range-based arithmetic coding with LM probabilities (entropy coding option)",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "50 random 5 s samples per test category for MUSHRA, at least 10 annotations per sample",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {
+    "streamable first-output": "320 samples (13 ms)",
+    "latency": "13.3 ms at 24 kHz streaming; 1 s at 48 kHz"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "MUSHRA",
+     "definition": "crowd-sourced ratings 1 to 100 with hidden reference and low anchor; annotators dropped if reference rated under 90 in at least 20% of cases or anchor above 80 more than 50% of time",
+     "unit": "points (0-100) with 95% CI",
+     "higher_is_better": true
+    },
+    {
+     "name": "ViSQOL",
+     "definition": "objective perceptual quality (Hines 2012, Chinen 2020)",
+     "unit": "score",
+     "higher_is_better": true
+    },
+    {
+     "name": "SI-SNR",
+     "definition": "scale-invariant signal-to-noise ratio",
+     "unit": "dB (inferred)",
+     "higher_is_better": true
+    },
+    {
+     "name": "Real time factor",
+     "definition": "duration of audio divided by processing time; >1 is faster than real time",
+     "unit": "ratio",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Opus",
+    "EVS",
+    "Lyra-v2",
+    "SoundStream reimplementation",
+    "MP3 64 kbps (stereo)"
+   ],
+   "protocol": "Test categories: clean speech (DNS), clean speech mixed with FSD50K, Jamendo music, proprietary music. RTF profiled on a single thread of a MacBook Pro 2019 CPU at 6 kbps. No seeds or repeated training runs reported."
+  },
+  "availability": {
+   "code": "github.com/facebookresearch/encodec",
+   "weights": "models released at same URL",
+   "data": "public datasets except proprietary music set"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.steps",
+    "quote": "We train all models for 300 epochs, with one epoch being 2,000 updates",
+    "where": "Section 4.4"
+   },
+   {
+    "field": "training.other.loss weights 48 kHz",
+    "quote": "For the 48 kHz model, we use instead λg = 4, λfeat = 4.",
+    "where": "Section 4.4"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "At equal bandwidth EnCodec 3 kbps beats Lyra-v2 at 6 kbps and Opus at 12 kbps on average MUSHRA.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "24 kHz mono, streamable, MUSHRA averaged over speech and music categories",
+   "quote": "EnCodec at 3kbps reaches better performance on average than Lyra-v2 using 6kbps and Opus at 12kbps.",
+   "table": null,
+   "note": null,
+   "where": "Section 4.5"
+  },
+  {
+   "claim": "Clean speech MUSHRA, EnCodec 6 kbps.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MUSHRA",
+   "value": 83.1,
+   "unit": "points",
+   "baseline_value": 30.1,
+   "n": null,
+   "setup": "24 kHz streamable, clean speech",
+   "quote": null,
+   "table": "Table 1, row EnCodec 6.0 kbps, column Clean Speech",
+   "note": "Baseline value is Opus 6.0 kbps (30.1); Lyra-v2 6.0 kbps scored 66.2",
+   "where": "Table 1"
+  },
+  {
+   "claim": "Music Set-1 MUSHRA, EnCodec 3 kbps vs Lyra-v2 3 kbps.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MUSHRA",
+   "value": 89.6,
+   "unit": "points",
+   "baseline_value": 69.3,
+   "n": null,
+   "setup": "24 kHz streamable, music set-1",
+   "quote": null,
+   "table": "Table 1, row EnCodec 3.0 kbps, column Music Set-1",
+   "note": "Baseline is Lyra-v2 3.0 kbps",
+   "where": "Table 1"
+  },
+  {
+   "claim": "Entropy coding with the LM cuts bandwidth by about 25 to 40% (3 kbps model to 1.9 kbps).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "24 kHz mono",
+   "quote": "When considering the additional language model over the codes, we can reduce the bandwidth by ∼25 −40%. For instance, we can reduce the bandwidth of the 3 kpbs model to 1.9 kbps.",
+   "table": null,
+   "note": null,
+   "where": "Section 4.5"
+  },
+  {
+   "claim": "Compression gain from entropy coding is smaller at higher bandwidth, attributed to the small Transformer.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "24 kHz mono",
+   "quote": "We observe that for higher bandwidth, the compression ratio is lower, which could be explained by the small size of the Transformer model used, making hard to model all codebooks together.",
+   "table": null,
+   "note": null,
+   "where": "Section 4.5"
+  },
+  {
+   "claim": "MS-STFT discriminator alone reaches MUSHRA 77.5, versus 62.91 for MSD+Mono-STFT.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MUSHRA",
+   "value": 77.5,
+   "unit": "points",
+   "baseline_value": 62.91,
+   "n": null,
+   "setup": "Discriminator ablation, 24 kHz streamable (setup of Table 2 not further specified)",
+   "quote": null,
+   "table": "Table 2, row MS-STFT, column MUSHRA",
+   "note": "MS-STFT+MPD scored 79.0, MPD 60.7",
+   "where": "Table 2"
+  },
+  {
+   "claim": "Streamable EnCodec loses a little on SI-SNR versus non-streamable at 6 kbps.",
+   "kind": "measured",
+   "source": null,
+   "metric": "SI-SNR",
+   "value": 6.67,
+   "unit": "dB (inferred)",
+   "baseline_value": 7.46,
+   "n": null,
+   "setup": "6 kbps, equal mix of speech and music",
+   "quote": null,
+   "table": "Table 3, row EnCodec, column SI-SNR",
+   "note": "Streamable 6.67 / ViSQOL 4.35; non-streamable 7.46 / 4.39. The checkmark column is lost in the text; the order is inferred from the prose that streamable degrades",
+   "where": "Table 3"
+  },
+  {
+   "claim": "Stereo 48 kHz EnCodec at 6 kbps matches Opus at 24 kbps and beats Opus at 6 kbps.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MUSHRA",
+   "value": 82.9,
+   "unit": "points",
+   "baseline_value": 17.7,
+   "n": null,
+   "setup": "48 kHz stereo music",
+   "quote": null,
+   "table": "Table 4, row EnCodec 6 kbps, column MUSHRA",
+   "note": "Baseline is Opus 6 kbps (17.7); Opus 24 kbps 82.9; MP3 64 kbps 82.7",
+   "where": "Table 4"
+  },
+  {
+   "claim": "Entropy coding on stereo gives 20 to 30% gain.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "48 kHz stereo music",
+   "quote": "Using a language model and entropy coding gives a variable gain between 20% to 30%.",
+   "table": null,
+   "note": null,
+   "where": "Section 4.5.2"
+  },
+  {
+   "claim": "24 kHz streaming EnCodec processes audio about 10 times faster than real time without entropy coding.",
+   "kind": "measured",
+   "source": null,
+   "metric": "real time factor",
+   "value": 9.8,
+   "unit": "x",
+   "baseline_value": 27.4,
+   "n": null,
+   "setup": "Single thread MacBook Pro 2019 CPU, 6 kbps",
+   "quote": null,
+   "table": "Table 5, row EnCodec 24 kHz, column Enc.",
+   "note": "Baseline is Lyra v2 encoding RTF 27.4; EnCodec decoding RTF 10.4",
+   "where": "Table 5"
+  },
+  {
+   "claim": "With entropy coding, EnCodec 24 kHz RTF drops to 1.6 and 48 kHz falls below real time (0.68 encoding).",
+   "kind": "measured",
+   "source": null,
+   "metric": "real time factor",
+   "value": 0.68,
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Single thread MacBook Pro 2019 CPU, 6 kbps",
+   "quote": null,
+   "table": "Table 5, row EnCodec 48 kHz, column Enc. + EC",
+   "note": "48 kHz without EC: 6.8 enc, 5.1 dec; with EC dec 0.66",
+   "where": "Table 5"
+  },
+  {
+   "claim": "Initial latency of the 24 kHz streaming model.",
+   "kind": "measured",
+   "source": null,
+   "metric": "initial latency",
+   "value": 13.3,
+   "unit": "ms",
+   "baseline_value": null,
+   "n": null,
+   "setup": "24 kHz streaming, excluding computation time",
+   "quote": "The 24 kHz streaming EnCodec model has an initial latency (i.e., without the computation time) of 13.3 ms.",
+   "table": null,
+   "note": null,
+   "where": "Section 4.6"
+  },
+  {
+   "claim": "The balancer stabilises training: without it, high lg/lfeat weights give SI-SNR collapse.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "EnCodec with DiffQ quantizer on Jamendo only, loss-weight grid",
+   "quote": "Results suggest the balancer signiﬁcantly stabilizes the training process.",
+   "table": null,
+   "note": null,
+   "where": "Section A.3, Table A.4"
+  },
+  {
+   "claim": "EnCodec RVQ at 3 kbps scores MUSHRA 76.8 versus 71.8 for the authors' SoundStream reimplementation.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MUSHRA",
+   "value": 76.8,
+   "unit": "points",
+   "baseline_value": 71.8,
+   "n": null,
+   "setup": "3 kbps, own reimplementation of SoundStream with the same training hyperparameters",
+   "quote": null,
+   "table": "Table A.2, row EnCodec (RVQ), column MUSHRA",
+   "note": null,
+   "where": "Table A.2"
+  }
+ ],
+ "limits": [
+  "Authors say the entropy-coding probabilities were rounded to 1e-6 because batch and streaming evaluation differ by more than 1e-8, and that more contexts would be needed before deployment.",
+  "48 kHz model is slower than real time with entropy coding and has 1 s latency due to normalisation.",
+  "Entropy coding adds latency (about 13 ms more) and is slower, so it is suited to non-low-latency use.",
+  "Compression gain from the small LM shrinks at higher bandwidths.",
+  "Compared against the official Lyra-v2, not the original SoundStream, which is not open sourced; the SoundStream comparison uses a reimplementation with the same hyperparameters.",
+  "No number of training seeds or run-to-run variance reported; MUSHRA CIs only.",
+  "Only quality of reconstruction is evaluated; use as tokens for language models is not tested."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Loss balancer",
+   "definition": "each loss weight defines the fraction of the overall gradient it should represent, decoupling the weight from the typical scale of the loss",
+   "where": "Abstract, Section 3.4"
+  },
+  {
+   "term": "Real time factor (RTF)",
+   "definition": "the ratio between the duration of the audio and the processing time, so that it is greater than one when the method is faster than real time",
+   "where": "Section 4.6"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "SoundStream: An end-to-end neural audio codec",
+   "year": 2021,
+   "arxiv": "2107.03312",
+   "relation": "extends",
+   "note": "closest related work; RVQ codec with adversarial losses",
+   "quote": "The most relevant related work to ours is the SoundStream model"
+  },
+  {
+   "work": "Lyra-v2",
+   "year": null,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "official implementation of SoundStream",
+   "quote": null
+  },
+  {
+   "work": "Opus (Valin et al.)",
+   "year": 2012,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "traditional codec",
+   "quote": null
+  },
+  {
+   "work": "EVS (Dietz et al.)",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "traditional codec",
+   "quote": null
+  },
+  {
+   "work": "Jukebox (Dhariwal et al.)",
+   "year": 2020,
+   "arxiv": "2005.00341",
+   "relation": "uses-method",
+   "note": "RVQ/codebook EMA training procedure",
+   "quote": "We follow the same training procedure as described by Dhariwal et al. (2020) and Zeghidour et al. (2021)."
+  },
+  {
+   "work": "HiFi-GAN (Kong et al.)",
+   "year": 2020,
+   "arxiv": "2010.05646",
+   "relation": "uses-method",
+   "note": "multi-period discriminator and feature matching",
+   "quote": null
+  },
+  {
+   "work": "MelGAN (Kumar et al.)",
+   "year": 2019,
+   "arxiv": "1910.06711",
+   "relation": "uses-method",
+   "note": "multi-scale discriminator",
+   "quote": null
+  },
+  {
+   "work": "DiffQ (Défossez et al.)",
+   "year": 2021,
+   "arxiv": "2104.09987",
+   "relation": "uses-method",
+   "note": "alternative quantizer in appendix",
+   "quote": null
+  },
+  {
+   "work": "Common Voice, DNS Challenge 4, AudioSet, FSD50K, MTG-Jamendo",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "training and test data",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "EnCodec: an encoder decoder codec architecture trained with reconstruction (lf and lt) as well as adversarial losses (lg for the generator and ld for the discriminator). The RVQ commitment loss (lw) applies only to the encoder. Optionally, a small Transformer language model for entropy coding over the quantized units with ll.",
+   "page": 2,
+   "why": "Shows the full pipeline from waveform to RVQ codes to optional entropy coding"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Human evaluations (MUSHRA) across bandwidths of standard codecs and neural codecs.",
+   "page": 7,
+   "why": "Quality versus bitrate curves for all codecs"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "MUSHRA scores for Opus, EVS, Lyra-v2, and EnCodec for various bandwidths under the streamable setting.",
+   "page": 8,
+   "why": "Per-category scores"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq. 5, Section 3.4",
+   "snippet": "g~_i = R * (lambda_i / sum_j lambda_j) * g_i / <||g_i||_2>_beta, with R=1, beta=0.999",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Table 3 checkmark column for streamable is lost in text extraction; which row is streamable is inferred from the prose.",
+  "Table 3 and Table 2 do not state the exact bandwidth/domain for Table 2.",
+  "Paper shown is arXiv v1 (preprint); the note cites TMLR 2023."
+ ]
+}

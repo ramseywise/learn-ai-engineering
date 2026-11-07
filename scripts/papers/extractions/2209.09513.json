@@ -1,19 +1,583 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2209.09513",
  "pdf": "ai-engineering/08-multimodal-engineering/sources/lu-2022-learn-explain.pdf",
  "bib": {
-  "title": "Learn to Explain: Multimodal Reasoning Via Thought Chains for Science Question Answering",
+  "title": "Learn to Explain: Multimodal Reasoning via Thought Chains for Science Question Answering",
+  "authors": [
+   "Pan Lu",
+   "Swaroop Mishra",
+   "Tony Xia",
+   "Liang Qiu",
+   "Kai-Wei Chang",
+   "Song-Chun Zhu",
+   "Oyvind Tafjord",
+   "Peter Clark",
+   "Ashwin Kalyan"
+  ],
   "first_author": "Lu",
   "year": 2022,
-  "venue": "NeurIPS 2022",
+  "venue": "36th Conference on Neural Information Processing Systems (NeurIPS 2022)",
   "arxiv": "2209.09513",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-04",
-  "session": "97b4134b-decf-4866-ae85-c6872cbbba19"
+  "at": "2026-11-07",
+  "chars_read": 79619,
+  "chars_total": 79619,
+  "engine": "pymupdf",
+  "skipped": "Reference list skimmed only; figure text garbled by font encoding (Fig 1, 15-17 text unreadable, not needed)."
  },
- "legacy_report": "SOURCE: \"Learn to Explain: Multimodal Reasoning via Thought Chains for Science Question Answering\". Lu, Mishra, Xia, Qiu, Chang, Zhu, Tafjord, Clark, Kalyan. NeurIPS 2022 (arXiv 2209.09513v2).\n\nCOVERAGE: All 22 pages, 80,013 of 80,013 chars, including the checklist and appendices A and B. I skimmed the references. Page numbers below come from the printed page footers.\n\nCLAIMS\n1. Dataset size and composition. There are 21,208 multiple-choice questions, split 60:20:20 into 12,726 / 4,241 / 4,241. Context mix: image 10,332 (48.7%), text 10,220 (48.2%), both 6,532 (30.8%), none 7,188 (33.9%). As exclusive bins: image only 3,800 (17.92%), text only 3,688 (17.39%). Images are diagrams ≈7,372 (34.8%) or natural photos ≈2,960 (14.0%). 52.08% of questions have only 2 options.\n   quote: \"Out of the 21,208 questions in SCIENCE QA, 10,332 (48.7%) have an image context, 10,220 (48.2%) have a text context, and 6,532 (30.8%) have both.\" (p4, Table 1, Fig 3b)\n2. Headline accuracy, test set (Table 3). Human 88.40, GPT-3 CoT (2-shot, QCM→ALE, text-davinci-002) 75.17, UnifiedQA-base fine-tuned 70.12 and 74.11 with CoT, best VQA model VisualBERT 61.87, random 39.83.\n   quote: \"if we prompt GPT-3 with chain-of-thought prompting (QCM→ALE), we obtain the state-of-the-art result so far (75.17%).\" (p7). On image questions: \"a 20.07% gap for questions with the image context (IMG) between humans and our best performing model\" (p8).\n3. Models that get a caption instead of the image beat the models that see it. This is the shortcut signal; the paper never frames it that way. UnifiedQA and GPT-3 never see pixels: \"the image is converted into a caption\" (p6), made by a ViT+GPT-2 captioner with \"maximum length of generated captions is 16\" (p18). Zero-shot GPT-3 with captions already scores 74.04 overall and 65.74 on IMG. VisualBERT, which receives the actual image, scores 61.87 overall and 62.17 on IMG.\n   quote: \"Without any fine-tuning, GPT-3 already reaches almost the best performance we can get.\" (p7)\n4. Blind and no-image baselines, an ablation of Top-Down (Table 3, p8):\n   - Q only 39.85, CI only 39.87. Both near random, but neither sees the answer options.\n   - Q+M (no context) 54.44. Q+CT+M (text context, no image) 56.61. Q+CI+M 58.26. Full QCM 59.02.\n   - Adding the image to Q+M is worth about 3.8 points. The authors read this as robustness.\n   quote: \"The results achieved in blind studies of Q only and CI only are close to random chance, showing that the SCIENCE QA dataset is robust and reliable in distribution.\" (p9). Also: \"all input components provide critical information\" (p9).\n5. Generating lecture and explanation gives small gains. Feeding in the gold explanation gives large ones.\n   - Gains from generating them: +1.20 for GPT-3 and +3.99 for UnifiedQA.\n   - Gold explanation in the input: 94.13 (QCMLE*→A) against 75.17. This is a leak of the answer's reasoning, so treat it as an upper bound only.\n   - Explanation before answer hurts: QCM→LEA 55.4 against QCM→ALE 73.6, on 1,000 test examples.\n   - UnifiedQA with CoT matches no-CoT accuracy using 40% of the training data.\n   quote: \"QCMLE*→A outperforms QCM→ALE by 18.96%\" (p9). Table 7: \"QCM→LEA Random 55.4 ... QCM→ALE Random 73.6\" (p10)\n6. Explanation quality. 65.2% of GPT-3 CoT explanations were rated \"gold\" (relevant, correct and complete) by majority vote of 3 MTurk workers. UnifiedQA CoT scores best on BLEU and ROUGE but only 56.9% gold.\n   quote: \"65.2% of explanations meet the gold standard of human evaluations\" (p2, Table 4 p9)\n\nLIMITS\n- The authors concede that captions are weak: \"these captions lack fine-grained semantics and usually do not work well for diagrams\" (p20, B.4). Diagrams are 34.8% of the data.\n- There is no blind baseline for the strong models. No GPT-3 or UnifiedQA run drops the caption on image questions, so the paper cannot say how many IMG questions are answerable without the image. The only no-image ablation uses the weak Top-Down model.\n- The \"robust\" claim rests on Q-only and CI-only runs that lack the options. That makes near-random expected, so it is not evidence against shortcuts.\n- The GPT-3 results come from a single in-context trial (trial ID 1). Error bars exist only for Fig 7, from 4 repeats.\n- The test split is random, not held out by skill. The data comes from IXL under CC BY-NC-SA, non-commercial only. The human baseline is MTurk workers at $6/hr, not domain experts.\n- Dated: text-davinci-002, UnifiedQA-base and 2022 VQA models.\n\nBUILDS ON\n- Chain-of-thought prompting: Wei et al., arXiv 2022 [54].\n- Explanations generated after the answer: WT5, Narang et al., arXiv 2020 [41].\n- UnifiedQA: Khashabi et al., Findings of EMNLP 2020 [19].\n- GPT-3 few-shot: Brown et al., NeurIPS 2020 [4]. The paper's text cites [5] for GPT-3, but [5] is Chen et al., a citation error in the paper.\n- Top-Down attention: Anderson et al., CVPR 2018 [1].\n- VQA: Antol et al., 2015 [2].\n- Making the V in VQA matter: Goyal et al., CVPR 2017 [11]. It is cited only as a VQA dataset, not for its shortcut finding.\n\nCODE: none.\n\nFIGURES\n- Best candidate: Table 3 (p8), \"Evaluation of baselines over different classes in accuracy (%)\". One table shows the no-image ablations, captions-only LLMs beating image-seeing VQA models, and the human gap.\n- Alternative: Fig 3b (p4), \"Question distribution with different context formats\". A pie chart of the image / text / both / none mix.\n\nPROBLEMS\n- The text in Fig 1 and Figs 4, 15, 16 and 17 is font-garbled in the extraction (Caesar-shifted glyphs). I relied only on their captions and surrounding prose.\n- Internal inconsistency: the share with an explanation is 90.5% in Table 1 but \"91.3%\" on p4.\n- No embedded instructions.\n\nPDF: /Users/ramsey-wise/workspace/learn-ai-engineering/ai-engineering/08-multimodal-engineering/sources/lu-2022-learn-explain.pdf"
+ "type": "benchmark",
+ "question": "Can a multimodal science QA benchmark with annotated lectures and explanations show whether language models benefit from generating chains of thought, in fine-tuning and few-shot settings?",
+ "hypothesis": "Models that generate lectures and explanations as a chain of thought answer better, and learn from less data, as humans do with explanations.",
+ "contributions": [
+  "Build SCIENCEQA, 21,208 multimodal science questions with rich domain diversity and annotated lectures and explanations.",
+  "Show CoT benefits large language models in both few-shot and fine-tuning learning by improving performance and reliability via explanations.",
+  "Explore the upper bound of GPT-3 with gold explanations and show CoT helps models learn from fewer data."
+ ],
+ "method": {
+  "summary": "The authors scrape K-12 science questions from IXL Learning, clean them, and release SCIENCEQA. They benchmark heuristic, VQA, UnifiedQA (fine-tuned, with and without CoT output) and GPT-3 (zero-, 2-shot, CoT prompting) with images replaced by captions for the language models. Explanations are scored with BLEU, ROUGE-L, Sentence-BERT similarity and MTurk ratings.",
+  "task": "multimodal multiple-choice science question answering with explanation generation",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "SCIENCEQA",
+    "role": "both",
+    "size": "21,208 questions; 9,122 different questions; 261 different lectures; 26 topics, 127 categories, 379 skills; 7,803 unique image contexts, 4,651 unique text contexts",
+    "split": "random 60:20:20 train/val/test = 12,726 / 4,241 / 4,241",
+    "source": "IXL Learning open resources, California Common Core aligned; CC BY-NC-SA 4.0, non-commercial research only",
+    "preprocessing": "Components extracted by heuristic rules; removed single-choice, faulty and duplicate questions; kept one correct answer where several applied; shuffled options; semi-automated reformatting of lectures/solutions; experts manually revised incorrect annotations; newline \\n replaced with \\\\n for language-model inputs; empty string for missing context; images captioned for language models"
+   }
+  ],
+  "models": [
+   {
+    "name": "UnifiedQA_BASE / SMALL (and CoT variant)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "seq2seq text QA model, fine-tuned to emit answer (+ lecture + explanation for CoT)",
+    "init_from": "UnifiedQA (Khashabi 2020; ref [48] in table)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-3 text-davinci-002",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "decoder LM via OpenAI API",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "engine": "text-davinci-002"
+    }
+   },
+   {
+    "name": "VQA baselines: MCAN, Top-Down, BAN, DFAF, ViLT, Patch-TRM, VisualBERT",
+    "role": "baseline",
+    "params": null,
+    "architecture": "VQA models with linear classifier over choice scores",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Captioner nlpconnect/vit-gpt2-image-captioning",
+    "role": "base",
+    "params": null,
+    "architecture": "ViT encoder + GPT-2 decoder",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "max caption length": "16",
+     "beams": "4",
+     "max output tokens": "512"
+    }
+   }
+  ],
+  "training": {
+   "objective": "VQA baselines: classification over choices; UnifiedQA: text generation of answer (QCM->A) or answer+lecture+explanation (QCM->ALE)",
+   "optimizer": null,
+   "lr": "5e-5 (VQA baselines; UnifiedQA lr not stated)",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "64 (VQA baselines), 4 (UnifiedQA)",
+   "steps": "UnifiedQA: up to 50k iterations, evaluated every 1k, early stopping patience 3 evaluations",
+   "epochs": "VQA baselines: max 50",
+   "tokens": null,
+   "seq_len": "VQA baselines: max 100 input words or tokens",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "early stopping (UnifiedQA)",
+   "hardware": "two GeForce RTX 3090 GPUs",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "fine-tune protocol": "train on train, develop on val, evaluate on test"
+   }
+  },
+  "inference": {
+   "decoding": "GPT-3 via online API, default settings",
+   "temperature": "0.0",
+   "top_p": "1.0",
+   "max_tokens": null,
+   "samples": "Fig 7 experiments repeated four times with different in-context example sets (Table 9, seeds 3,5,7,9); Tables 3,5,6,7 use trial 1 only; random chance averaged over 3 trials",
+   "prompting": "GPT-3: 2-shot in-context examples from train set (peak at 2; Fig 7b tests 1-5), format Question/Options/Context/Answer: The answer is X. BECAUSE: lecture explanation; zero-shot and QCM->A baselines too",
+   "retrieval": "Dynamic sampling of in-context examples from same topic/category/skill tested (Table 5); default random",
+   "parameters": {
+    "frequency penalty": "0.0",
+    "presence penalty": "0.0",
+    "prediction rule": "generated text mapped to most similar option"
+   },
+   "other": {
+    "note": "authors say long lecture/explanation before answer risks hitting max token limit; limit value not stated"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Accuracy",
+     "definition": "fraction correct among test questions; for generated text the most similar option is the prediction",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "BLEU-1/BLEU-4, ROUGE-L",
+     "definition": "overlap of generated lecture+explanation with gold",
+     "unit": "score 0-1",
+     "higher_is_better": true
+    },
+    {
+     "name": "Similarity",
+     "definition": "cosine similarity of Sentence-BERT embeddings of two sentences",
+     "unit": "score 0-1",
+     "higher_is_better": true
+    },
+    {
+     "name": "Relevant / Correct / Complete / Gold",
+     "definition": "MTurk majority vote of 3 workers; Gold = relevant, correct and complete",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Random chance",
+    "Blind ablations on Top-Down (Q, CI, QM, QCTM, QCIM)",
+    "MCAN",
+    "Top-Down",
+    "BAN",
+    "DFAF",
+    "ViLT",
+    "Patch-TRM",
+    "VisualBERT",
+    "UnifiedQA zero-shot/fine-tuned",
+    "GPT-3 zero-shot/2-shot",
+    "Human (AMT)"
+   ],
+   "protocol": "Accuracy on 4,241 test questions broken down by NAT/SOC/LAN, TXT/IMG/NO, G1-6/G7-12. Human accuracy: test set split into 425 batches of 10 questions plus 5 train questions as exam, each set of 15 given to 3 workers; workers need >=4/5 exam correct, $0.5 per HIT. Explanation evaluation: batches of 10, 3 workers each, $0.3 per batch, majority vote. Error bars only for GPT-3 CoT in Fig 7 (4 repeats); no significance test."
+  },
+  "availability": {
+   "code": "https://scienceqa.github.io (stated 'will be available' in checklist)",
+   "weights": null,
+   "data": "https://scienceqa.github.io, CC BY-NC-SA 4.0"
+  },
+  "prompts": [
+   {
+    "purpose": "GPT-3 (CoT) prompt format, 1 in-context example then test example",
+    "text": "Question: <question> Options: (A) <opt> (B) <opt> (C) <opt> Context: <context> Answer: The answer is <answer>. BECAUSE: <lecture> <explanation> ... Question: ... Options: (A)...(D) Context: ... Answer:",
+    "where": "Figure 5, p7 (reconstructed from garbled figure text)"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "inference.temperature",
+    "quote": "we choose temperature, frequency penalty and presence penalty as 0.0, and top probability as 1.0",
+    "where": "App B.1"
+   },
+   {
+    "field": "models.captioner",
+    "quote": "The maximum length of generated captions is 16, the number of beams is 4, and the maximum number of output tokens is 512.",
+    "where": "App B.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Few-shot GPT-3 with CoT prompting (QCM->ALE) is the best model on the test set.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 75.17,
+   "unit": "%",
+   "baseline_value": 73.97,
+   "n": null,
+   "setup": "SCIENCEQA test, GPT-3 text-davinci-002, 2-shot, temperature 0",
+   "note": "baseline is 2-shot QCM->A; paper text calls the gain 1.20%",
+   "where": null,
+   "quote": "we obtain the state-of-the-art result so far (75.17%)"
+  },
+  {
+   "claim": "CoT gain for 2-shot GPT-3 over plain answers is small.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy gain",
+   "value": 1.2,
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "same setup, QCM->ALE vs 2-shot QCM->A",
+   "note": null,
+   "where": null,
+   "quote": "an improvement of 1.20% compared to the few-shot GPT-3 without CoT"
+  },
+  {
+   "claim": "Fine-tuned UnifiedQA_BASE gains from generating lecture and explanation.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy gain",
+   "value": 3.99,
+   "unit": "points",
+   "baseline_value": 70.12,
+   "n": null,
+   "setup": "UnifiedQA_BASE fine-tuned on train set, QCM->ALE vs QCM->A (70.12)",
+   "note": null,
+   "where": null,
+   "quote": "brings additional improvements of +3.21% (QCM→AE) and +3.99% (QCM→ALE)"
+  },
+  {
+   "claim": "UnifiedQA_BASE (CoT) QCM->ALE test average.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 74.11,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "fine-tuned, test set",
+   "note": null,
+   "where": null,
+   "table": "Table 3, row UnifiedQA_BASE (CoT) QCM->ALE, column Avg"
+  },
+  {
+   "claim": "Humans outperform every model on the test set.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 88.4,
+   "unit": "%",
+   "baseline_value": 75.17,
+   "n": null,
+   "setup": "AMT workers, 3 per question, test set",
+   "note": null,
+   "where": null,
+   "table": "Table 3, row Human, column Avg"
+  },
+  {
+   "claim": "Image-context questions: gap between humans and best model.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy gap",
+   "value": 20.07,
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "IMG column, human vs best model",
+   "note": "Table 3: human IMG 87.50 vs GPT-3 (CoT) ALE 67.43",
+   "where": null,
+   "quote": "a 20.07% gap for questions with the image context (IMG) between humans and our best performing model"
+  },
+  {
+   "claim": "Zero-shot GPT-3 with caption already near best on image-context questions.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 65.74,
+   "unit": "%",
+   "baseline_value": 62.17,
+   "n": null,
+   "setup": "GPT-3 zero-shot QCM->A, IMG column, images replaced by captions",
+   "note": "baseline is VisualBERT (given the image) IMG 62.17",
+   "where": null,
+   "table": "Table 3, row GPT-3 zero-shot, column IMG"
+  },
+  {
+   "claim": "Best VQA model average (VisualBERT).",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 61.87,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "VQA baseline fine-tuned on train set, QCM->A",
+   "note": null,
+   "where": null,
+   "quote": "VisualBERT [26, 27] performs the best on average (61.87%)"
+  },
+  {
+   "claim": "Blind baselines (question only, image caption only) are near random.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 39.85,
+   "unit": "%",
+   "baseline_value": 39.83,
+   "n": null,
+   "setup": "Top-Down modified, Q only; CI only 39.87; random chance 39.83. Inputs exclude the options",
+   "note": null,
+   "where": null,
+   "table": "Table 3, row Q only, column Avg"
+  },
+  {
+   "claim": "Gold lecture+explanation fed in the prompt lifts GPT-3 sharply (upper bound).",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy gain",
+   "value": 18.96,
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-3 2-shot random sampling, QCMLE*->A = 94.13 vs QCM->ALE 75.17",
+   "note": null,
+   "where": null,
+   "quote": "QCMLE*→A outperforms QCM→ALE by 18.96%"
+  },
+  {
+   "claim": "Gold explanation only (no lecture) in prompt.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 94.03,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "QCME*->A, random sampling",
+   "note": "gain printed 18.86",
+   "where": null,
+   "table": "Table 6, row QCME*->A, column Acc."
+  },
+  {
+   "claim": "Predicting lecture/explanation before the answer collapses GPT-3 accuracy.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 51.5,
+   "unit": "%",
+   "baseline_value": 73.6,
+   "n": null,
+   "setup": "1,000 test examples, QCM->ELA vs QCM->ALE 73.6",
+   "note": null,
+   "where": null,
+   "table": "Table 7, row QCM->ELA, column Acc."
+  },
+  {
+   "claim": "GPT-3 (CoT) QCM->ALE explanations meeting the gold standard by human judgment.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Gold rate",
+   "value": 65.2,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MTurk majority vote of 3, relevant+correct+complete",
+   "note": null,
+   "where": null,
+   "quote": "65.2% of explanations meet the gold standard of human evaluations"
+  },
+  {
+   "claim": "UnifiedQA (CoT) explanations most similar to gold by automatic metrics but weaker on human Gold rate.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Gold rate",
+   "value": 56.9,
+   "unit": "%",
+   "baseline_value": 65.2,
+   "n": null,
+   "setup": "UnifiedQA_BASE (CoT) QCM->ALE; BLEU-1 0.397, Similarity 0.811",
+   "note": null,
+   "where": null,
+   "table": "Table 4, row UnifiedQA_BASE (CoT) QCM->ALE, column Gold"
+  },
+  {
+   "claim": "Dynamic same-topic sampling of in-context examples gives no gain over random.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 75.15,
+   "unit": "%",
+   "baseline_value": 75.17,
+   "n": null,
+   "setup": "GPT-3 QCM->ALE, dynamic (same topic); category 74.58, skill 75.10",
+   "note": null,
+   "where": null,
+   "table": "Table 5, row QCM->ALE Dynamic (same topic), column Acc."
+  },
+  {
+   "claim": "UnifiedQA with CoT matches UnifiedQA without CoT using 40% of training data.",
+   "kind": "measured",
+   "source": null,
+   "metric": "training data fraction",
+   "value": 40,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "UnifiedQA vs UnifiedQA (CoT), Fig 8",
+   "note": "value read from Fig 8 per abstract; Fig 8 itself not tabulated",
+   "where": null,
+   "quote": "UniﬁedQA with CoT obtains the same results as UniﬁedQA without CoT with only 40% of the training data"
+  },
+  {
+   "claim": "Dataset test split size.",
+   "kind": "measured",
+   "source": null,
+   "metric": "questions",
+   "value": 4241,
+   "unit": "questions",
+   "baseline_value": null,
+   "n": null,
+   "setup": "60:20:20 random split",
+   "note": null,
+   "where": null,
+   "quote": "Each split has 12,726, 4,241, and 4,241 examples, respectively"
+  }
+ ],
+ "limits": [
+  "Language models see only a generated caption (max length 16) in place of the image, and captions are poor for diagrams (Fig 17a,b).",
+  "Blind studies are run on Top-Down only and omit the answer options; no run removes the caption from GPT-3 or UnifiedQA.",
+  "GPT-3 results use one in-context example set (trial 1) for Tables 3, 5, 6, 7; error bars only in Fig 7 over 4 repeats; no significance tests.",
+  "CoT gain in few-shot GPT-3 is small (1.20 points); explanations placed before the answer reduce accuracy.",
+  "Upper bound uses gold lecture/explanation, so it measures leakage of the solution, not achievable accuracy.",
+  "Human accuracy comes from AMT with a qualification exam, not expert baselines.",
+  "Dataset is K-12 curriculum from one source (IXL), English, non-commercial licence.",
+  "GPT-3 text-davinci-002 has been deprecated."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Chain of thought",
+   "definition": "a coherent flow of sentences that reveals the premises and conclusion of a reasoning problem",
+   "where": "Sec 4.2"
+  },
+  {
+   "term": "QCM->ALE",
+   "definition": "input question, context, multiple options; output answer then lecture then explanation",
+   "where": "Table 3 caption"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Chain of thought prompting elicits reasoning in large language models",
+   "year": 2022,
+   "arxiv": "2201.11903",
+   "relation": "uses-method",
+   "note": "CoT idea; here the explanation follows the answer",
+   "quote": null
+  },
+  {
+   "work": "Language models are few-shot learners (GPT-3)",
+   "year": 2020,
+   "arxiv": "2005.14165",
+   "relation": "evaluates",
+   "note": "text-davinci-002 prompted",
+   "quote": null
+  },
+  {
+   "work": "UnifiedQA: Crossing format boundaries with a single QA system",
+   "year": 2020,
+   "arxiv": "2005.00700",
+   "relation": "baseline",
+   "note": "fine-tuned with and without CoT output",
+   "quote": null
+  },
+  {
+   "work": "Bottom-up and top-down attention for image captioning and VQA",
+   "year": 2018,
+   "arxiv": "1707.07998",
+   "relation": "baseline",
+   "note": "Top-Down model, base of blind studies",
+   "quote": null
+  },
+  {
+   "work": "VisualBERT",
+   "year": 2019,
+   "arxiv": "1908.03557",
+   "relation": "baseline",
+   "note": "best VQA baseline",
+   "quote": null
+  },
+  {
+   "work": "AI2D, TQA, VLQA, IconQA, WorldTree, OpenBookQA, QASC, ARC",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "existing science datasets compared in Table 2",
+   "quote": null
+  },
+  {
+   "work": "Sentence-BERT",
+   "year": 2019,
+   "arxiv": "1908.10084",
+   "relation": "uses-method",
+   "note": "Similarity metric",
+   "quote": null
+  },
+  {
+   "work": "ViT-GPT2 image captioning",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "captions for language models",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 5",
+   "caption": "Prompt instruction encoding for the test example t in GPT-3 (CoT).",
+   "page": 7,
+   "why": "shows the exact prompt format with the answer first, BECAUSE, lecture, explanation"
+  },
+  {
+   "figure": "Table 3",
+   "caption": "Evaluation of baselines over different classes in accuracy (%).",
+   "page": 8,
+   "why": "all models by subject, context and grade"
+  },
+  {
+   "figure": "Fig 7",
+   "caption": "Accuracy of GPT-3 (CoT) across different prompt types (a) and number of training examples (b).",
+   "page": 9,
+   "why": "variance across 4 repeats and the peak at 2 examples"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Figure text (Fig 1, 15-17) is font-garbled in the cache; table 3 cells appear merged like '73.333.21↑' (73.33 with +3.21).",
+  "Paper prints explanation share as 90.5% (Table 1) and 91.3% (Sec 3.1).",
+  "Table 7 QCM->ALE is 73.6 while Table 3 gives 75.17, because Table 7 uses 1,000 test examples.",
+  "Table 2 text is garbled; not used.",
+  "No embedded instructions found."
+ ]
 }

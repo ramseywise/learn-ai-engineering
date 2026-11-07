@@ -1,9 +1,16 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "1911.00172",
  "pdf": "generative-ai/02-rag-retrieval/sources/khandelwal-2019-generalization-through-memorization.pdf",
  "bib": {
   "title": "Generalization through Memorization: Nearest Neighbor Language Models",
+  "authors": [
+   "Urvashi Khandelwal",
+   "Omer Levy",
+   "Dan Jurafsky",
+   "Luke Zettlemoyer",
+   "Mike Lewis"
+  ],
   "first_author": "Khandelwal",
   "year": 2019,
   "venue": "ICLR 2020",
@@ -12,8 +19,474 @@
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-04",
-  "session": "5f2f0582-f958-4d9c-8469-02f3d5079657"
+  "at": "2026-11-07",
+  "chars_read": 41827,
+  "chars_total": 41827,
+  "engine": "pymupdf",
+  "skipped": null
  },
- "legacy_report": "SOURCE: \"Generalization through Memorization: Nearest Neighbor Language Models\", Urvashi Khandelwal, Omer Levy, Dan Jurafsky, Luke Zettlemoyer, Mike Lewis (Stanford / Facebook AI Research). ICLR 2020, conference paper; arXiv 1911.00172v2, 15 Feb 2020.\n\nCOVERAGE: I read all 41,822 of 41,822 extracted characters across 13 pages. That covers the body, related work, conclusion, the references (skimmed, since they only give origins) and Appendix A on pp. 12-13 (Tables 6-9, qualitative examples). Nothing was skipped. The PDF has no limitations section.\n\nCLAIMS\n- claim: Adding kNN retrieval over the LM's own training set to a strong WikiText-103 LM sets a new state of the art. It needs no extra training, and the gain stacks with a continuous cache.\n  number: test perplexity 18.65 -> 16.12 (kNN-LM), and 15.79 with the continuous cache added\n  setup: Baevski & Auli (2019) decoder-only Transformer: 16 layers, 1024-d, 247M parameters, 3072-token context, adaptive inputs and softmax. The datastore is the 103M-token WikiText-103 train set. k=1024, λ tuned on validation. Table 1 reports the median of three seeds.\n  quote: \"Base LM (Baevski & Auli, 2019) 17.96 18.65 247M / +kNN-LM 16.06 16.12 247M / ... +kNN-LM + Continuous Cache 15.81 15.79 247M\" and \"pushing our state-of-the-art result to 15.79, a gain of 2.86 over the base model\"\n  where: p.4 Table 1; p.5\n- claim: Retrieving from a large corpus beats training on it. A 100M-token LM with a 3B-token datastore outperforms the same architecture trained on all 3B tokens.\n  number: test perplexity 19.59 (Wiki-100M LM) -> 13.73 (plus a Wiki-3B datastore), against 15.17 for the LM trained on Wiki-3B\n  setup: Wiki-3B is English Wikipedia, about 2.87B tokens, BPE with BERT's 29K vocabulary, 1024-token context. The Wiki-3B baseline was trained for 572K steps.\n  quote: \"adding nearest neighbors retrieval over those 3B examples to the model trained on 100M tokens improves perplexity from 19.59 to 13.73; i.e. retrieving nearest neighbors from the corpus outperforms training on it.\"\n  where: p.5, Table 3\n- claim: Perplexity keeps improving as the datastore grows, with no plateau by about 3B entries. 1.6B entries is already enough to beat the LM trained on 3B tokens.\n  number: 1.6B entries; not saturated at 3B\n  setup: The Wiki-100M LM, with datastores randomly sampled from Wiki-3B (Fig. 2a).\n  quote: \"using only 1.6B examples for the datastore already surpasses the performance of the model trained on all of W IKI -3B. In addition, performance does not saturate at 3B examples in the datastore\"\n  where: p.6 (Fig. 2, p.5)\n- claim: The optimal interpolation weight λ rises with datastore size. It is higher for domain adaptation than in-domain.\n  number: λ = 0.25 on WikiText-103; λ = 0.65 for domain adaptation\n  setup: λ tuned on validation (Fig. 2b, Fig. 5)\n  quote: \"Figure 5 shows that λ = 0.25 is optimal on WIKITEXT -103. However, λ = 0.65 works best for domain adaptation results\" and \"The optimal value ofλ increases with the size of the datastore.\"\n  where: p.7; p.5 Fig. 2 caption\n- claim: Swapping in an in-domain datastore adapts a model to a new domain with no retraining. It closes much of the gap to in-domain training, but not all of it.\n  number: Books test perplexity 34.84 (Wiki-3B LM) -> 20.47 (plus a Books datastore), against 11.89 for an LM trained on Books\n  setup: Books is the Toronto Books Corpus, 0.7B tokens. The LM was trained on Wiki-3B.\n  quote: \"AddingkNN search over BOOKS to the WIKI -3B model reduces perplexity by 14 points (to 20.47), demonstrating thatkNN-LM allows a single model to be useful in multiple domains, by simply adding a datastore per domain.\"\n  where: p.6, Table 4\n- claim: The gain also appears on a second domain (Books, using its own training set as the datastore).\n  number: test perplexity 11.89 -> 10.89\n  setup: The LM is trained on Books and the datastore is the Books training set.\n  quote: \"Table 2 shows an improvement in test set perplexity from 11.89 to 10.89\"\n  where: p.5, Table 2 on p.4\n- claim: Costs. Building the datastore takes one forward pass over the data, under one training epoch. Building the index takes CPU-hours, and evaluation is slower because of retrieval.\n  number: about 2 hours on one CPU to build a 103M-entry cache; about 25 min to run the validation set with k=1024\n  setup: WikiText-103. FAISS index with 4096 centroids learned from 1M sampled keys, 64-byte quantised keys, 32 centroids probed.\n  quote: \"for WIKITEXT -103 building the cache with 103M entries takes roughly two hours on a single CPU. Finally, running on the validation set took approximately 25 minutes when retrieving 1024 keys. While the cost of building a large cache grows linearly in the number of entries, it is trivial to parallelize and requires no GPU-based training.\"\n  where: p.4\n- claim: The datastore has one entry per training token. The key is the 1024-d input to the final layer's feed-forward network, after layer norm, and the value is the next token.\n  number: 16.06 dev perplexity for the FFN input after layer norm, against 17.96 with no datastore and 17.07 using the model output\n  setup: WikiText-103 dev, k=1024 (Table 5)\n  quote: \"FFN input after layer norm 16.06\" / \"No datastore 17.96\" / \"Model output 17.07\"\n  where: p.6, Table 5\n- claim: More neighbours help monotonically, but even k=8 reaches state of the art.\n  number: k = 8\n  setup: WikiText-103 validation (Fig. 4)\n  quote: \"even a small number of neighbors (k = 8) is enough to achieve a new state of the art.\"\n  where: p.7\n- claim: Exact distances matter. Recomputing squared L2 with full-precision keys beats FAISS quantised distances.\n  number: 16.5 -> 16.06\n  setup: WikiText-103 dev\n  quote: \"We found results were improved from 16.5 perplexity on W IKITEXT -103 to 16.06 by computing squaredL2 distances with full precision keys for Equation 2.\"\n  where: p.7\n- claim: Learned representations are what make it work. Interpolating with an n-gram LM gains little. A Transformer trained without dropout memorises the training set, overfits, and adds almost nothing when interpolated.\n  number: n-gram gives 0.2 perplexity points; the memorising LM's best validation perplexity is 28.59; interpolating it gives 0.1 against 1.9 for kNN-LM\n  setup: WikiText-103 validation (Figs. 7 and 8)\n  quote: \"Figure 7 shows little improvement from using n-gram LMs – 0.2 perplexity points\" and \"Interpolating the memorizing LM with the original LM improves validation perplexity by just 0.1 – compared to 1.9 from kNN-LM.\"\n  where: p.7; p.8\n- claim: Qualitatively, the gains come from the long tail: factual knowledge, names and near-duplicate training sentences.\n  number: none\n  setup: Manual inspection of examples (Fig. 6, Appendix Tables 6-9)\n  quote: \"examples where kNN-LM is most helpful typically contain rare patterns. Examples include factual knowledge, names, and near-duplicate sentences from the training set.\"\n  where: p.7\n- claim: Central framing for the target note. kNN-LM does retrieval inside the LM, at the level of individual tokens and in output-distribution space, rather than adding retrieved text to the input. Retrieval is not part of training.\n  number: none\n  setup: Contrast with Gu et al. 2018, Weston et al. 2018 and Guu et al. 2018\n  quote: \"kNN-LM differs from these approaches by working at the level of individual tokens instead of whole training sentences, as well as not incorporating the retrieval mechanism into the training pipeline.\"\n  where: p.9\n- Formula (Eq. 3, p.2): \"p(y|x) = λ p kNN(y|x) + (1−λ) pLM(y|x)\". pkNN is a softmax over the negative squared L2 distances of the k retrieved neighbours, summed per vocabulary item (Eq. 2).\n\nLIMITS\n- It is evaluated on perplexity only. There are no downstream tasks, generation quality, factuality or QA results.\n- Only one model size is tested (247M parameters). It does not show whether the gains persist for much larger LMs.\n- Storage is never given in bytes. The only figures are 64-byte quantised keys and one entry per token, so a 3B datastore is about 3B entries. There is no per-token latency number, only about 25 min for the validation set and about 2 h of CPU time for the index. A query happens at every generated token.\n- The authors list \"reducing the size of the datastore\" and \"explicitly training similarity functions\" as future work (p.9). There is no explicit limitations section.\n- Because the keys come from the frozen LM, the datastore is tied to that model. Swapping the LM means rebuilding the datastore. This follows from the method, but the paper does not state it.\n- Domain adaptation still trails in-domain training by a wide margin (20.47 vs 11.89).\n- WikiText-103 scores 512 tokens per example with up to 2560 tokens of prior context. The baselines exclude models trained on extra data (Krause 2019, Megatron).\n- Dated: \"state of the art\" is as of 2019/2020. Later retrieval LMs (RETRO, the ones the target note discusses) postdate it, and nothing here covers chunk-level retrieval or retrieval inside the prompt.\n\nBUILDS ON\n- Grave et al. (2017a), \"Unbounded cache model for online language modeling\": source of the interpolation with tuned λ and of nearest-neighbour search over hidden states.\n- Grave et al. (2017c), continuous cache, and Merity et al. (2017): earlier caches over hidden states.\n- Baevski & Auli (2019): the base LM.\n- Johnson et al. (2017): FAISS.\n- Earlier memory-based NLP: Daelemans et al. (1996), Bosch et al. (2007).\n- Retrieval for generation: Gu et al. (2018), Weston et al. (2018), Guu et al. (2018), Kaiser et al. (2017).\n- kNN in vision: Papernot & McDaniel (2018), Orhan (2018), Zhao & Cho (2018).\n\nCODE: No code listings. The repository is given in a footnote on p.4: \"Code is available at: https://github.com/urvashik/knnlm\". The key equations are quoted above (Eqs. 1-3, p.2).\n\nFIGURES\n- Figure 1, p.2. Caption: \"An illustration of kNN-LM. A datastore is constructed with an entry for each training set token, and an encoding of its leftward context. For inference, a test context is encoded, and the k most similar training contexts are retrieved from the datastore, along with the corresponding targets. A distribution over targets is computed based on the distance of the corresponding context from the test context. This distribution is then interpolated with the original model's output distribution.\" This is the best candidate. Using the \"Obama's birthplace is → Hawaii\" example, one diagram shows the whole pipeline: datastore, distances, normalisation, aggregation, then interpolation. It makes \"retrieval inside the LM's output distribution\" clear next to RETRO and prompt-side RAG.\n- Figure 2, p.5, as an alternative. Caption: \"Varying the size of the datastore... A kNN-LM trained on 100M tokens with a datastore of 1.6B tokens already outperforms the LM trained on all 3B tokens.\" It shows the scaling trade-off between datastore size and training data at a glance.\n\nPROBLEMS\n- Inconsistent headline gain. The abstract says \"a 2.9 point improvement\", while the introduction and p.5 say \"2.86\". This is just rounding of 18.65 - 15.79.\n- The Table 4 caption (p.6) says \"Adding an in-domain datastore to a Wikipedia-trained model improves results by 23 points\". The body text says \"reduces perplexity by 14 points (to 20.47)\". The table gives 34.84 -> 20.47 on test (about 14.4) and 37.13 -> 24.85 on dev (about 12.3), so the caption's \"23\" does not match the table. Cite the body text figure.\n- The Luo et al. (2019) reference is garbled in the extraction (\"Hongyin Luo, Lan Jiang, Yonatan Belinkov, andg the future\").\n- Spaced small caps come through broken, e.g. \"W IKITEXT -103\", and some words run together, e.g. \"introducekNN-LMs\".\n- The text contains no embedded instructions.\n- Source file: /Users/ramsey-wise/workspace/learn-ai-engineering/generative-ai/02-rag-retrieval/sources/khandelwal-2019-generalization-through-memorization.pdf"
+ "type": "empirical",
+ "question": "Can a pre-trained LM be improved at test time, without further training, by interpolating it with a nearest-neighbour distribution over a datastore of context-target pairs?",
+ "hypothesis": "Learning a prefix representation (similarity between contexts) is easier than predicting the next word, so kNN over LM embeddings should help, especially on long-tail patterns.",
+ "contributions": [
+  "kNN-LM: linear interpolation of a pre-trained LM with a kNN model over LM embeddings, no extra training",
+  "New state of the art on WikiText-103 (15.79)",
+  "Retrieval over a 3B-token datastore beats training on 3B tokens",
+  "Domain adaptation by swapping the datastore",
+  "Analysis of key function, k, lambda, precision, n-gram and memorizing-LM alternatives"
+ ],
+ "method": {
+  "summary": "A trained decoder-only Transformer LM is run once over a text collection to store (final-layer FFN-input representation, next token) pairs in a FAISS index. At inference the k nearest keys by L2 give a softmax-over-negative-distance distribution that is interpolated with the LM with weight lambda.",
+  "task": "autoregressive language modelling (perplexity)",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "WikiText-103",
+    "role": "both",
+    "size": "103M train tokens; 250K tokens each dev and test",
+    "split": "standard train/dev/test",
+    "source": "Merity et al. 2017, 250K word-level vocabulary",
+    "preprocessing": null
+   },
+   {
+    "name": "Books (Toronto Books Corpus)",
+    "role": "both",
+    "size": "0.7B tokens",
+    "split": "complete books held out for validation/test",
+    "source": "Zhu et al. 2015",
+    "preprocessing": "BPE, 29K BERT subword vocabulary"
+   },
+   {
+    "name": "Wiki-3B",
+    "role": "both",
+    "size": "about 2.87B tokens",
+    "split": "whole articles held out for validation/test",
+    "source": "English Wikipedia",
+    "preprocessing": "BPE, 29K BERT subword vocabulary"
+   },
+   {
+    "name": "Wiki-100M",
+    "role": "train",
+    "size": "100M tokens",
+    "split": "random subset of Wiki-3B, complete articles",
+    "source": "subset of Wiki-3B",
+    "preprocessing": "BPE, 29K BERT subword vocabulary"
+   }
+  ],
+  "models": [
+   {
+    "name": "Baevski & Auli (2019) decoder-only Transformer LM",
+    "role": "base",
+    "params": "247M",
+    "architecture": "decoder-only Transformer; adaptive inputs and adaptive softmax with tied weights on WikiText-103 only",
+    "init_from": null,
+    "tokenizer": "word-level (WikiText-103); BERT BPE (others)",
+    "vocab": "250K (WikiText-103); 29K (others)",
+    "layers": "16",
+    "hidden": "1024 (FFN 4096)",
+    "heads": "16",
+    "context": "3072 tokens (WikiText-103); 1024 tokens (others)",
+    "other": {}
+   },
+   {
+    "name": "kNN-LM",
+    "role": "proposed",
+    "params": "247M",
+    "architecture": "base LM + FAISS datastore",
+    "init_from": "the trained base LM, unchanged",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "not applicable (perplexity evaluation)",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "Table 1 reports the median of three random seeds; other tables do not state runs",
+   "prompting": null,
+   "retrieval": "FAISS index; keys are 1024-d inputs to the final-layer FFN after layer norm; index trained on 1M randomly sampled keys with 4096 centroids; keys quantized to 64 bytes; k=1024 neighbours; 32 centroids probed; squared L2 with full-precision keys on WikiText-103, unquantized-FAISS (not squared) L2 on quantized keys for other datasets",
+   "parameters": {
+    "k": "1024",
+    "lambda": "tuned on validation; 0.25 optimal on WikiText-103, 0.65 best for domain adaptation (Fig 5)",
+    "min prior context when building datastore": "1536 tokens (WikiText-103), 512 tokens (others)",
+    "distance": "squared L2 (RBF kernel)"
+   },
+   "other": {
+    "datastore build cost": "one forward pass over the training set; 103M entries took roughly two hours on a single CPU",
+    "validation run": "about 25 minutes at k=1024",
+    "eval context": "512 tokens scored per example; up to 2560 extra prior tokens (WikiText-103) or 512 (others)"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "perplexity",
+     "definition": "exponentiated negative log-likelihood on held-out data",
+     "unit": "ppl",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "Baevski & Auli 2019",
+    "Transformer-XL (Dai et al. 2019)",
+    "Phrase Induction (Luo et al. 2019)",
+    "continuous cache (Grave et al. 2017c)",
+    "n-gram LM interpolation",
+    "memorizing LM without dropout"
+   ],
+   "protocol": "Held-out dev/test perplexity; lambda tuned on dev; median of three seeds in Table 1."
+  },
+  "availability": {
+   "code": "https://github.com/urvashik/knnlm",
+   "weights": null,
+   "data": null
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "inference.retrieval",
+    "quote": "we retrieve k = 1024 neighbors, and the index looks up 32 cluster centroids while searching for the nearest neighbors.",
+    "where": "Sec 3 kNN-LM"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "kNN-LM over the WikiText-103 training set improves test perplexity of the base LM",
+   "kind": "measured",
+   "source": null,
+   "metric": "perplexity",
+   "value": "16.12",
+   "unit": "ppl",
+   "baseline_value": "18.65",
+   "n": null,
+   "setup": "WikiText-103, 247M Baevski & Auli LM, datastore = 103M train tokens, k=1024, median of 3 seeds",
+   "quote": null,
+   "table": "Table 1, row +kNN-LM, column Test",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Adding a continuous cache to kNN-LM gives a new state of the art",
+   "kind": "measured",
+   "source": null,
+   "metric": "perplexity",
+   "value": "15.79",
+   "unit": "ppl",
+   "baseline_value": "18.65",
+   "n": null,
+   "setup": "WikiText-103 test, same setup",
+   "quote": "pushing our state-of-the-art result to 15.79, a gain of 2.86 over the base model",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.1"
+  },
+  {
+   "claim": "A 100M-token LM with a 3B-token datastore beats the same LM trained on all 3B tokens",
+   "kind": "measured",
+   "source": null,
+   "metric": "perplexity",
+   "value": "13.73",
+   "unit": "ppl",
+   "baseline_value": "15.17",
+   "n": null,
+   "setup": "Wiki-100M LM, datastore Wiki-3B, test; Wiki-3B baseline trained 572K steps",
+   "quote": "adding nearest neighbors retrieval over those 3B examples to the model trained on 100M tokens improves perplexity from 19.59 to 13.73",
+   "table": null,
+   "note": "Wiki-3B-trained LM test ppl 15.17; Wiki-100M LM 19.59",
+   "where": "Sec 4.2, Table 3"
+  },
+  {
+   "claim": "Datastore of 1.6B entries already surpasses the LM trained on Wiki-3B; no saturation at 3B",
+   "kind": "measured",
+   "source": null,
+   "metric": "datastore size at which kNN-LM beats Wiki-3B LM",
+   "value": "1.6",
+   "unit": "B entries",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Wiki-100M LM, datastores randomly sampled from Wiki-3B (Fig 2a)",
+   "quote": "using only 1.6B examples for the datastore already surpasses the performance of the model trained on all of WIKI-3B",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2, Fig 2a"
+  },
+  {
+   "claim": "Adding an in-domain Books datastore to a Wikipedia-trained LM cuts Books perplexity",
+   "kind": "measured",
+   "source": null,
+   "metric": "perplexity",
+   "value": "20.47",
+   "unit": "ppl",
+   "baseline_value": "34.84",
+   "n": null,
+   "setup": "Wiki-3B LM, Books datastore, test; in-domain Books LM gets 11.89",
+   "quote": "Adding kNN search over BOOKS to the WIKI-3B model reduces perplexity by 14 points (to 20.47)",
+   "table": null,
+   "note": "Table 4 caption says 'improves results by 23 points' but 34.84-20.47 is about 14.4, matching the text; the caption figure is inconsistent",
+   "where": "Sec 4.3, Table 4"
+  },
+  {
+   "claim": "kNN-LM also helps on a second domain (Books)",
+   "kind": "measured",
+   "source": null,
+   "metric": "perplexity",
+   "value": "10.89",
+   "unit": "ppl",
+   "baseline_value": "11.89",
+   "n": null,
+   "setup": "Books corpus, 247M LM without adaptive softmax, 1024 context, test",
+   "quote": "Table 2 shows an improvement in test set perplexity from 11.89 to 10.89",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.1, Table 2"
+  },
+  {
+   "claim": "Best key is the input to the final-layer FFN after layer norm",
+   "kind": "measured",
+   "source": null,
+   "metric": "perplexity",
+   "value": "16.06",
+   "unit": "ppl",
+   "baseline_value": "17.96",
+   "n": null,
+   "setup": "WikiText-103 dev, k=1024, lambda tuned per key",
+   "quote": null,
+   "table": "Table 5, row FFN input after layer norm, column Dev ppl.",
+   "note": null,
+   "where": "Table 5"
+  },
+  {
+   "claim": "Even k=8 neighbours reach a new state of the art; more neighbours help monotonically",
+   "kind": "measured",
+   "source": null,
+   "metric": "k",
+   "value": "8",
+   "unit": "neighbours",
+   "baseline_value": null,
+   "n": null,
+   "setup": "WikiText-103 validation, Fig 4",
+   "quote": "even a small number of neighbors (k = 8) is enough to achieve a new state of the art",
+   "table": null,
+   "note": null,
+   "where": "Sec 5"
+  },
+  {
+   "claim": "Full-precision squared L2 beats quantized FAISS distances",
+   "kind": "measured",
+   "source": null,
+   "metric": "perplexity",
+   "value": "16.06",
+   "unit": "ppl",
+   "baseline_value": "16.5",
+   "n": null,
+   "setup": "WikiText-103 validation",
+   "quote": "We found results were improved from 16.5 perplexity on WIKITEXT-103 to 16.06 by computing squared L2 distances with full precision keys",
+   "table": null,
+   "note": null,
+   "where": "Sec 5"
+  },
+  {
+   "claim": "Optimal lambda is 0.25 on WikiText-103 and 0.65 for domain adaptation",
+   "kind": "measured",
+   "source": null,
+   "metric": "optimal lambda",
+   "value": "0.25",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 5",
+   "quote": "Figure 5 shows that λ = 0.25 is optimal on WIKITEXT-103. However, λ = 0.65 works best for domain adaptation results",
+   "table": null,
+   "note": null,
+   "where": "Sec 5"
+  },
+  {
+   "claim": "Interpolating with n-gram LMs gives little gain, so the learned representation matters",
+   "kind": "measured",
+   "source": null,
+   "metric": "perplexity",
+   "value": "0.2",
+   "unit": "ppl",
+   "baseline_value": null,
+   "n": null,
+   "setup": "WikiText-103 validation (Fig 7)",
+   "quote": "Figure 7 shows little improvement from using n-gram LMs – 0.2 perplexity points",
+   "table": null,
+   "note": null,
+   "where": "Sec 6"
+  },
+  {
+   "claim": "A Transformer trained without dropout memorizes the training set but generalizes badly; interpolating it gives only 0.1 gain versus 1.9 from kNN-LM",
+   "kind": "measured",
+   "source": null,
+   "metric": "validation ppl gain",
+   "value": "0.1",
+   "unit": "ppl",
+   "baseline_value": "1.9",
+   "n": null,
+   "setup": "WikiText-103 validation",
+   "quote": "Interpolating the memorizing LM with the original LM improves validation perplexity by just 0.1 – compared to 1.9 from kNN-LM",
+   "table": null,
+   "note": null,
+   "where": "Sec 6"
+  },
+  {
+   "claim": "Building the 103M-entry cache takes about two hours on one CPU",
+   "kind": "measured",
+   "source": null,
+   "metric": "datastore build time",
+   "value": "2",
+   "unit": "hours",
+   "baseline_value": null,
+   "n": null,
+   "setup": "WikiText-103",
+   "quote": "for WIKITEXT-103 building the cache with 103M entries takes roughly two hours on a single CPU",
+   "table": null,
+   "note": null,
+   "where": "Sec 3"
+  }
+ ],
+ "limits": [
+  "Only perplexity is reported; no downstream or generation tasks.",
+  "Datastore holds one entry per token (billions of entries) and the authors list reducing its size as future work.",
+  "Cost: retrieval at k=1024 took about 25 minutes on the WikiText-103 validation set; no latency or memory figures for the 3B datastore.",
+  "Table 1 uses three seeds; other tables do not state run counts or variance.",
+  "Similarity function is not trained; the authors name explicit training as future work.",
+  "The analysis of why it works is a conjecture (Sec 6), not tested causally.",
+  "No limitations section."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "kNN-LM",
+   "definition": "extends a pre-trained neural LM by linearly interpolating it with a k-nearest neighbors model",
+   "where": "Abstract"
+  },
+  {
+   "term": "datastore",
+   "definition": "key-value store of (context representation f(c_i), next word w_i) for all training examples",
+   "where": "Sec 2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Adaptive input representations for neural language modeling (Baevski & Auli)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "base LM, exact architecture and optimization reused",
+   "quote": null
+  },
+  {
+   "work": "Improving neural language models with a continuous cache (Grave et al.)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "related cache model, also combined with kNN-LM",
+   "quote": null
+  },
+  {
+   "work": "Unbounded cache model for online language modeling (Grave et al.)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "related",
+   "note": "interpolation scheme followed; nearest neighbour over previous hidden states",
+   "quote": null
+  },
+  {
+   "work": "Billion-scale similarity search with GPUs (Johnson et al.)",
+   "year": 2017,
+   "arxiv": "1702.08734",
+   "relation": "uses-method",
+   "note": "FAISS for retrieval",
+   "quote": null
+  },
+  {
+   "work": "Pointer sentinel mixture models (Merity et al.)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "WikiText-103",
+   "quote": null
+  },
+  {
+   "work": "Transformer-XL (Dai et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "reported 18.30 test",
+   "quote": null
+  },
+  {
+   "work": "Improving neural language models by segmenting, attending, and predicting the future (Luo et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "phrase induction, 17.40 test",
+   "quote": null
+  },
+  {
+   "work": "Toronto Books Corpus (Zhu et al.)",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Books",
+   "quote": null
+  },
+  {
+   "work": "Retrieve and refine (Weston et al.)",
+   "year": 2018,
+   "arxiv": "1808.04776",
+   "relation": "related",
+   "note": "sentence-level use of training examples",
+   "quote": null
+  },
+  {
+   "work": "Search engine guided NMT (Gu et al.)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "related",
+   "note": "attends over retrieved training examples",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Figure 1",
+   "caption": "An illustration of kNN-LM.",
+   "page": 2,
+   "why": "Shows datastore build, retrieval, normalisation, aggregation and interpolation in one picture"
+  },
+  {
+   "figure": "Figure 2",
+   "caption": "Varying the size of the datastore.",
+   "page": 5,
+   "why": "Perplexity vs datastore size, and lambda rising with size"
+  },
+  {
+   "figure": "Table 3",
+   "caption": "Experimental results on WIKI-3B.",
+   "page": 5,
+   "why": "Retrieval over 3B tokens beats training on them"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 2-3",
+   "snippet": "p_kNN(y|x) ∝ Σ_{(k_i,v_i)∈N} 1_{y=v_i} exp(−d(k_i, f(x)));  p(y|x) = λ p_kNN(y|x) + (1 − λ) p_LM(y|x)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Table 4 caption says the in-domain datastore improves results by 23 points; text says 14 (34.84 to 20.47).",
+  "Table 1 Dev and Test for +kNN-LM and +kNN-LM + Continuous Cache are printed as separate cells; Fig 5/6 values read only from text."
+ ]
 }

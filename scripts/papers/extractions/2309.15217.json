@@ -1,0 +1,345 @@
+{
+ "schema": 1,
+ "key": "2309.15217",
+ "pdf": "generative-ai/08-eval/sources/es-2023-ragas.pdf",
+ "bib": {
+  "title": "Ragas: Automated Evaluation of Retrieval Augmented Generation",
+  "authors": [
+   "Shahul Es",
+   "Jithin James",
+   "Luis Espinosa-Anke",
+   "Steven Schockaert"
+  ],
+  "first_author": "Es",
+  "year": 2023,
+  "venue": "preprint",
+  "arxiv": "2309.15217",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 31952,
+  "chars_total": 31952,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "How can RAG pipelines be evaluated automatically without ground-truth reference answers?",
+ "hypothesis": "LLM-prompted reference-free metrics for faithfulness, answer relevance and context relevance align with human judgements better than direct LLM scoring or ranking.",
+ "contributions": [
+  "Ragas, a suite of reference-free RAG metrics (faithfulness, answer relevance, context relevance)",
+  "WikiEval, a dataset with human judgements of the three aspects"
+ ],
+ "method": {
+  "summary": "Three metrics computed by prompting gpt-3.5-turbo-16k (plus ada-002 embeddings for answer relevance). Validated on WikiEval by pairwise agreement with human annotators against two prompting baselines.",
+  "task": "Reference-free evaluation of RAG",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "WikiEval",
+    "role": "eval",
+    "size": "50 Wikipedia pages, one question each",
+    "split": "all used for eval",
+    "source": "https://huggingface.co/datasets/explodinggradients/WikiEval; pages on events since start of 2022, prioritising recent edits; questions and answers by ChatGPT from introductory section",
+    "preprocessing": "Low-faithfulness answers: ChatGPT answer without context. Low answer relevance: ChatGPT told to answer incompletely. Low context relevance: back-link text added to context, or ChatGPT-completed context if no back-links."
+   }
+  ],
+  "models": [
+   {
+    "name": "gpt-3.5-turbo-16k",
+    "role": "judge",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "16k (from name)",
+    "other": {}
+   },
+   {
+    "name": "text-embedding-ada-002",
+    "role": "retriever",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "embeds generated questions for cosine similarity"
+    }
+   },
+   {
+    "name": "ChatGPT",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "GPT Score and GPT Ranking baselines; WikiEval generation. Version not stated."
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "n generated questions per answer for answer relevance (n value not stated); other runs/seeds not stated",
+   "prompting": "zero-shot prompts listed in the paper; faithfulness statement-extraction prompt includes an undisclosed demonstration (footnote 3)",
+   "retrieval": null,
+   "parameters": {
+    "n_questions": null,
+    "ties": "GPT Score ties broken randomly"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Faithfulness",
+     "definition": "F=|V|/|S|: share of statements extracted from the answer that the LLM judges inferable from the context",
+     "unit": "0-1",
+     "higher_is_better": true
+    },
+    {
+     "name": "Answer relevance",
+     "definition": "AR=(1/n) sum cos(emb(q), emb(q_i)) over n questions the LLM generates from the answer",
+     "unit": "cosine",
+     "higher_is_better": true
+    },
+    {
+     "name": "Context relevance",
+     "definition": "CR = extracted crucial sentences / total sentences in context",
+     "unit": "0-1",
+     "higher_is_better": true
+    },
+    {
+     "name": "Agreement with humans",
+     "definition": "fraction of WikiEval pairs where the metric prefers the same answer/context as annotators",
+     "unit": "accuracy",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "GPT Score (ChatGPT scores 0-10, ties random)",
+    "GPT Ranking (ChatGPT picks preferred item)"
+   ],
+   "protocol": "Two human annotators, disagreements resolved by discussion; single run, no significance test stated"
+  },
+  "availability": {
+   "code": "https://github.com/explodinggradients/ragas",
+   "weights": null,
+   "data": "https://huggingface.co/datasets/explodinggradients/WikiEval"
+  },
+  "prompts": [
+   {
+    "purpose": "faithfulness statement extraction",
+    "text": "Given a question and answer, create one or more statements from each sentence in the given answer.\nquestion: [question]\nanswer: [answer]",
+    "where": "Sec 3"
+   },
+   {
+    "purpose": "faithfulness verification",
+    "text": "Consider the given context and following statements, then determine whether they are supported by the information present in the context. Provide a brief explanation for each statement before arriving at the verdict (Yes/No). Provide a final verdict for each statement in order at the end in the given format. Do not deviate from the specified format.\nstatement: [statement 1]\n...\nstatement: [statement n]",
+    "where": "Sec 3"
+   },
+   {
+    "purpose": "answer relevance question generation",
+    "text": "Generate a question for the given answer.\nanswer: [answer]",
+    "where": "Sec 3"
+   },
+   {
+    "purpose": "context relevance sentence extraction",
+    "text": "Please extract relevant sentences from the provided context that can potentially help answer the following question. If no relevant sentences are found, or if you believe the question cannot be answered from the given context, return the phrase \"Insufficient Information\". While extracting candidate sentences you're not allowed to make any changes to sentences from given context.",
+    "where": "Sec 3"
+   },
+   {
+    "purpose": "GPT Score baseline (faithfulness)",
+    "text": "Faithfulness measures the information consistency of the answer against the given context. Any claims that are made in the answer that cannot be deduced from context should be penalized.\nGiven an answer and context, assign a score for faithfulness in the range 0-10.\ncontext: [context]\nanswer: [answer]",
+    "where": "Sec 5"
+   },
+   {
+    "purpose": "GPT Ranking baseline (answer relevance)",
+    "text": "Answer Relevancy measures the degree to which a response directly addresses and is appropriate for a given question. It penalizes the present of redundant information or incomplete answers given a question. Given an question and answer, rank each answer based on Answer Relevancy.\nquestion: [question]\nanswer 1: [answer 1]\nanswer 2: [answer 2]",
+    "where": "Sec 5"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Ragas faithfulness agrees with human pairwise preference 0.95 of the time, vs 0.72 GPT Score and 0.54 GPT Ranking.",
+   "kind": "measured",
+   "source": null,
+   "metric": "faithfulness agreement",
+   "value": 0.95,
+   "unit": "accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "WikiEval (50 Wikipedia pages on post-2022 events), pairwise comparison of two answers or two contexts, agreement with human annotators; metrics computed with gpt-3.5-turbo-16k",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Ragas, column Faith."
+  },
+  {
+   "claim": "Ragas answer relevance agreement is 0.78 (GPT Score 0.52, GPT Ranking 0.40).",
+   "kind": "measured",
+   "source": null,
+   "metric": "answer relevance agreement",
+   "value": 0.78,
+   "unit": "accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "WikiEval (50 Wikipedia pages on post-2022 events), pairwise comparison of two answers or two contexts, agreement with human annotators; metrics computed with gpt-3.5-turbo-16k",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Ragas, column Ans. Rel."
+  },
+  {
+   "claim": "Ragas context relevance agreement is 0.70 (GPT Score 0.63, GPT Ranking 0.52); weakest dimension.",
+   "kind": "measured",
+   "source": null,
+   "metric": "context relevance agreement",
+   "value": 0.7,
+   "unit": "accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "WikiEval (50 Wikipedia pages on post-2022 events), pairwise comparison of two answers or two contexts, agreement with human annotators; metrics computed with gpt-3.5-turbo-16k",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Ragas, column Cont. Rel."
+  },
+  {
+   "claim": "Annotators agreed on about 95% of cases for faithfulness and context relevance.",
+   "kind": "measured",
+   "source": null,
+   "metric": "inter-annotator agreement",
+   "value": 95,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Two annotators on WikiEval, before discussion",
+   "note": null,
+   "where": "Sec 4",
+   "quote": "For faithfulness and context relevance, the two annotators agreed in around 95% of cases."
+  },
+  {
+   "claim": "Annotators agreed on about 90% for answer relevance.",
+   "kind": "measured",
+   "source": null,
+   "metric": "inter-annotator agreement",
+   "value": 90,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Two annotators on WikiEval",
+   "note": null,
+   "where": "Sec 4",
+   "quote": "For answer relevance, they agreed in around 90% of the cases."
+  },
+  {
+   "claim": "Context relevance was hardest: ChatGPT struggles to pick crucial sentences, especially from longer contexts.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Qualitative observation, Sec 5",
+   "note": null,
+   "where": "Sec 5"
+  }
+ ],
+ "limits": [
+  "Only 50 questions from Wikipedia; pairwise task against deliberately degraded alternatives, not absolute scoring",
+  "Judge is a single closed model (gpt-3.5-turbo-16k); no variance, seeds or significance reported",
+  "Context relevance weak (0.70); ChatGPT struggles with long contexts",
+  "Answer relevance ignores factuality by design",
+  "Paper defines no context recall or context precision; later Ragas versions differ"
+ ],
+ "practices": [],
+ "terms": [],
+ "lineage": [
+  {
+   "work": "GPTScore (Fu et al.)",
+   "year": 2023,
+   "arxiv": "2302.04166",
+   "relation": "related",
+   "note": "prompted LM scoring of aspects",
+   "quote": null
+  },
+  {
+   "work": "SelfCheckGPT (Manakul et al.)",
+   "year": 2023,
+   "arxiv": "2303.08896",
+   "relation": "related",
+   "note": "sampling-based hallucination detection",
+   "quote": null
+  },
+  {
+   "work": "BARTScore (Yuan et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "related",
+   "note": "reference-based generation scoring",
+   "quote": null
+  },
+  {
+   "work": "Is ChatGPT a good NLG evaluator? (Wang et al.)",
+   "year": 2023,
+   "arxiv": "2303.04048",
+   "relation": "related",
+   "note": "direct ChatGPT scoring, basis of GPT Score baseline",
+   "quote": null
+  },
+  {
+   "work": "Lost in the middle (Liu et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "motivates focused context",
+   "quote": null
+  },
+  {
+   "work": "FActScore (Min et al.)",
+   "year": 2023,
+   "arxiv": "2305.14251",
+   "relation": "related",
+   "note": "atomic fact decomposition",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Table 1",
+   "caption": "Agreement with human annotators in pairwise comparisons of faithfulness, answer relevance and context relevance, using the WikEval dataset (accuracy).",
+   "page": 3,
+   "why": "Only headline result"
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 3, Eq 1",
+   "snippet": "AR = 1/n * sum_{i=1..n} sim(q, q_i)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text mentions 'Table 1' placed oddly in extraction; no embedded instructions found"
+ ]
+}

@@ -1,19 +1,664 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2109.05014",
  "pdf": "ai-engineering/08-multimodal-engineering/sources/yang-2022-empirical-study-gpt-3-few.pdf",
  "bib": {
   "title": "An Empirical Study of GPT-3 for Few-Shot Knowledge-Based VQA",
+  "authors": [
+   "Zhengyuan Yang",
+   "Zhe Gan",
+   "Jianfeng Wang",
+   "Xiaowei Hu",
+   "Yumao Lu",
+   "Zicheng Liu",
+   "Lijuan Wang"
+  ],
   "first_author": "Yang",
   "year": 2022,
-  "venue": "AAAI 2022",
+  "venue": "preprint (arXiv v2, Sep 2022; AAAI 2022)",
   "arxiv": "2109.05014",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-04",
-  "session": "97b4134b-decf-4866-ae85-c6872cbbba19"
+  "at": "2026-11-07",
+  "chars_read": 52174,
+  "chars_total": 52174,
+  "engine": "pymupdf",
+  "skipped": null
  },
- "legacy_report": "SOURCE: Yang, Gan, Wang, Hu, Lu, Liu, Wang (Microsoft), \"An Empirical Study of GPT-3 for Few-Shot Knowledge-Based VQA\" (PICa), AAAI 2022. The extraction is arXiv:2109.05014v2.\n\nCOVERAGE: All 10 pages, about 62,194 of 62,194 characters, including the references and the supplementary Figure 5 text. pypdf printed one harmless FloatObject warning. Figure-internal text (the qualitative panels) comes out jumbled but can still be read. I skimmed the references.\n\nCLAIMS\n- claim: With a text-only GPT-3 fed captions plus tags, PICa beats the best fully supervised method on OK-VQA by 8.6 points with no fine-tuning.\n  number: 48.0 vs 39.4 (MAVEx), 16 shots\n  setup: OK-VQA test set (14,055 image-question pairs, VQAv2 soft accuracy). GPT-3 175B, frozen. Captions from VinVL-base fine-tuned on COCO-train14, tags from the Azure tagging API, PICa-Full.\n  quote: \"PICa-Full achieves an accuracy of 48.0% with 16 in-context VQA examples, compared with the supervised state-of-the-art accuracy of 39.4% trained on the entire OK-VQA training set.\"\n  where: p.4, Table 1\n- claim: More shots help. n=16 is about the most that fits in GPT-3's 2049-token input.\n  number: 40.8 at n=1 to 48.0 at n=16. Zero-shot is 17.1.\n  setup: PICa-Full with captions plus tags (Table 2, row e). Frozen at 7B scores 12.6 at n=4.\n  quote: \"more shots generally lead to better performance, e.g., 40.8% when n = 1 to 48.0% when n = 16\"; \"n = 16 is roughly the max number of examples that GPT-3 can take, with a max input length of 2049.\"\n  where: p.4–5, Table 2\n- claim: Picking in-context examples by similarity beats random picks. Dissimilar examples do worse than random.\n  number: random 43.3, question-similar 45.8, image only 44.1, question+image 46.5, dissimilar 40.1. The oracle that also matches on the answer reaches 49.1.\n  setup: OK-VQA, 16 shots, CLIP ViT-B/16 cosine similarity (RoBERTa scores 45.4 for question-similar). Table 4.\n  quote: \"PICa-Full jointly considers the question and image similarities, and further improves the accuracy to 46.5%\"\n  where: p.5–6, Table 4\n- claim: Multi-query ensembling gives a further gain. It sends k prompts, each with different selected examples, and keeps the answer with the highest summed log-probability.\n  number: 46.5 (k=1) to 47.7 (k=3) to 48.0 (k=5) at n=16. At n=1 the jump is 36.4 to 40.8.\n  setup: OK-VQA, with question+image example selection in place. Table 5.\n  quote: \"(b) k=1 36.4 43.0 46.5 (c) k=3 40.0 45.2 47.7 (d) k=5 40.8 45.4 48.0\"\n  where: p.6, Table 5\n- claim: Accuracy depends on how much the text says about the image. Captions plus tags beat either one alone, and oracle human captions show how far a better description could go.\n  number: blind 30.1; tags 44.6; COCO caption 46.9; caption+tags 48.0; 1 GT caption 48.7; all 5 GT captions 53.3. A captioner trained only on Conceptual Captions (no COCO) still gets 44.0.\n  setup: OK-VQA, PICa-Full, 16 shots. Table 3.\n  quote: \"Concatenating all the ground-truth captions as shown in row (g) provides a more thorough description of the image content, thus further improving the accuracy to 53.3%\"; \"we find that detailed and thorough descriptions lead to better VQA performance.\"\n  where: p.5, Table 3\n- claim: Turning the image into text first costs accuracy on questions about visual detail. On VQAv2, PICa trails supervised models by about 17 points.\n  number: 56.1 vs Oscar 73.8. Frozen scores 38.2. With 5 GT captions PICa reaches 59.7.\n  setup: VQAv2 validation set, answers generated open-ended. Table 6.\n  quote: \"Compared with the supervised performance of 73.8% by Oscar (Li et al. 2020), the proposed method is still around 17% lower in accuracy\"\n  where: p.7, Table 6\n\nLIMITS\n- The authors concede this point directly: \"one limitation of our method is that the image is abstracted as text. Captions or tags only provide a partial description of the image, and might miss important visual details\" (p.7). The failures they show are colour (the jacket is red, PICa says \"black\") and counting (\"3\" giraffes when the truth is 6–8). The successes on colour are often guesses: \"bedroom walls are usually white.\" They expect that \"an end-to-end vision encoder tuning can help answer such questions better.\"\n- The VQAv2 human baselines they cite measure the same text bottleneck in people: \"40.8% with questions only, and 57.5% with questions and captions, compared with 83.3% with both questions and images\" (p.7).\n- The text-only GPT-3 still scores 30.1 with no image at all (blind), so part of the OK-VQA result comes from language priors.\n- Only COCO photos are tested, with no charts, documents or diagrams. The source does not show whether the caption route works for charts.\n- Their best captioner is fine-tuned on COCO, the same image distribution as the test set. The variant that never saw COCO falls to 44.0.\n- Open-ended answers make scoring hard; the authors note this themselves. The rationales are generated zero-shot and are not validated.\n- Dated: GPT-3 davinci (175B) with a 2049-token limit, and the API only. They say \"inaccessibility of the GPT-3 raw model makes it difficult to conduct an in-depth analysis.\" There is no compute or cost reporting.\n\nBUILDS ON: GPT-3 (Brown et al. 2020, arXiv); LMs as knowledge bases (Petroni et al. 2019, arXiv); Frozen (Tsimpoukelli et al. 2021, arXiv); in-context example selection (Liu et al. 2021, arXiv \"What Makes Good In-Context Examples for GPT-3?\"); log-probability answer ranking (Chen et al. 2021, Codex, arXiv); VinVL (Zhang et al. 2021, CVPR); CLIP (Radford et al. 2021, arXiv); OK-VQA (Marino et al. 2019, CVPR); VQAv2 (Goyal et al. 2017, CVPR). Baselines are KRISP (Marino et al. 2021, CVPR) and MAVEx (Wu et al. 2021, arXiv). Code: https://github.com/microsoft/PICa.\n\nCODE: none. The prompt format is in Figure 2 (p.3): the head \"Please answer the question according to the above context.\", then n blocks of the form \"Context: <caption> === Q: <q> A: <a> ===\", then the test block.\n\nFIGURES\n- Figure 2, p.3: \"Inference-time interface of PICa for n-shot VQA. The input prompt to GPT-3 consists of a prompt head h (blue box), n in-context examples ... and the VQA input x (green box).\" It shows the whole pipeline (caption, then text prompt, then frozen LLM) in one image. It fits \"Separate seeing from reasoning.\"\n- Alternative, Figure 4, p.7: VQAv2 successes and failures (the colour and giraffe-count errors). It makes the \"what is lost\" point concretely.\n\nPROBLEMS: The figure panels extract out of order and some are duplicated. The tables extracted cleanly. I found no embedded instructions. I ran the figure-captions script only by reading captions in the text, not with figures.py. The full extraction was written to /tmp/pica.txt."
+ "type": "empirical",
+ "question": "Can a frozen GPT-3, given images as captions or tags and a few in-context examples, answer knowledge-based VQA without explicit knowledge retrieval or fine-tuning?",
+ "hypothesis": "GPT-3 acts as an implicit unstructured knowledge base, so prompting it with textual image descriptions unifies knowledge retrieval and reasoning and can beat two-step supervised methods.",
+ "contributions": [
+  "PICa: GPT-3 for knowledge-based VQA, the first use of GPT-3 for multimodal tasks",
+  "Images as text, plus in-context example selection and multi-query ensemble",
+  "48.0% on OK-VQA few-shot vs 39.4% supervised SOTA; decent few-shot VQAv2"
+ ],
+ "method": {
+  "summary": "Images are converted offline to captions (VinVL-base) and optionally tags (Azure API); a prompt with a fixed head, n in-context VQA examples (caption, question, answer) and the test item is sent to frozen GPT-3, which generates the answer. PICa-Full adds CLIP-similarity example selection and a k-prompt multi-query ensemble choosing the highest summed log-probability answer.",
+  "task": "knowledge-based visual question answering (few-shot, in-context)",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "OK-VQA",
+    "role": "eval",
+    "size": "14,055 image-question pairs; 5 ground-truth answers per question",
+    "split": "test set; in-context examples drawn from an example pool (training set, inferred)",
+    "source": "Marino et al. 2019, COCO images",
+    "preprocessing": null
+   },
+   {
+    "name": "VQAv2",
+    "role": "eval",
+    "size": null,
+    "split": "validation set (following Frozen)",
+    "source": "Goyal et al. 2017, COCO images",
+    "preprocessing": null
+   },
+   {
+    "name": "COCO 2014 train",
+    "role": "train",
+    "size": null,
+    "split": "train14",
+    "source": "used to fine-tune VinVL-base captioner (VinVL-Caption-COCO)",
+    "preprocessing": null
+   },
+   {
+    "name": "Conceptual Captions",
+    "role": "train",
+    "size": null,
+    "split": null,
+    "source": "Sharma et al. 2018, used to train VinVL-Caption-CC",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT-3",
+    "role": "base",
+    "params": "175B",
+    "architecture": "decoder-only LM, frozen, accessed via API",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "2049 tokens max input",
+    "other": {
+     "variant": "inferred: not stated which GPT-3 engine; 175B per Table 1"
+    }
+   },
+   {
+    "name": "VinVL-base captioner",
+    "role": "proposed",
+    "params": null,
+    "architecture": "VinVL-base",
+    "init_from": "pre-trained VinVL-base checkpoint, fine-tuned on COCO 2014 train (or trained on Conceptual Captions)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Azure tagging/captioning API",
+    "role": "proposed",
+    "params": null,
+    "architecture": "public API",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "CLIP ViT-B/16",
+    "role": "retriever",
+    "params": null,
+    "architecture": "ViT-B/16",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "cosine similarity of question text and image features for example selection; RoBERTa compared"
+    }
+   },
+   {
+    "name": "Frozen",
+    "role": "baseline",
+    "params": "7B",
+    "architecture": "GPT-like LM with trained visual encoder",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "open-ended text generation, yt = argmax p(yt | C, x, y<t) (greedy as written); stop at EOS",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "n in-context examples (0 to 16); k prompts per question in ensemble (1, 3, 5); single run, no seeds stated",
+   "prompting": "Prompt head 'Please answer the question according to the above context.', then n examples 'Context: <caption> Q: <question> A: <answer>', then test 'Context: ... Q: ... A:'. Examples re-selected shorter if prompt exceeds 2049 tokens.",
+   "retrieval": "in-context example selection: average of CLIP ViT-B/16 question text cosine similarity and image similarity; top n (or n*k) examples; PICa-Base uses random examples",
+   "parameters": {
+    "n": "0,1,4,8,16",
+    "k": "1,3,5 prompts in multi-query ensemble; n*k examples split over k prompts",
+    "answer_pick": "highest sum_t log p(y_t) across k answers"
+   },
+   "other": {
+    "rationale_prompt": "question + predicted answer + 'This is because', zero-shot",
+    "temperature_max_tokens": "not stated"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "VQAv2 soft accuracy",
+     "definition": "soft accuracy against 5 (OK-VQA) ground-truth answers per question",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "MUTAN+AN",
+    "Mucko",
+    "ConceptBert",
+    "ViLBERT",
+    "KRISP",
+    "MAVEx",
+    "Frozen",
+    "Oscar (VQAv2)"
+   ],
+   "protocol": "single reported number per setting, no seeds or confidence intervals stated"
+  },
+  "availability": {
+   "code": "https://github.com/microsoft/PICa",
+   "weights": null,
+   "data": null
+  },
+  "prompts": [
+   {
+    "purpose": "VQA prompt head",
+    "text": "Please answer the question according to the above context.",
+    "where": "Approach, Fig 2"
+   },
+   {
+    "purpose": "VQA input format",
+    "text": "Context: People are standing in a parking lot with some umbrellas as it snows. Q: What is the warmest temperature at which this weather can happen? A:",
+    "where": "Fig 2 / Approach"
+   },
+   {
+    "purpose": "answer rationale (zero-shot)",
+    "text": "This is because",
+    "where": "Qualitative Analysis"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "PICa-Full beats the supervised OK-VQA state of the art with 16 examples and no fine-tuning.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 48.0,
+   "unit": "%",
+   "baseline_value": 39.4,
+   "n": null,
+   "setup": "OK-VQA test set (14,055 image-question pairs), frozen GPT-3 175B, soft VQAv2 accuracy, captions+tags, 16 shots",
+   "quote": "PICa-Full achieves an accuracy of 48.0% with 16 in-context VQA examples",
+   "table": null,
+   "note": null,
+   "where": "Table 1, Experiments"
+  },
+  {
+   "claim": "Absolute gain over supervised SOTA.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy gain",
+   "value": 8.6,
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "OK-VQA test set (14,055 image-question pairs), frozen GPT-3 175B, soft VQAv2 accuracy",
+   "quote": "PICa surpasses the supervised state of the art by an absolute +8.6 points",
+   "table": null,
+   "note": null,
+   "where": "Abstract"
+  },
+  {
+   "claim": "Caption-only PICa-Full.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 46.9,
+   "unit": "%",
+   "baseline_value": 42.0,
+   "n": null,
+   "setup": "OK-VQA test set (14,055 image-question pairs), frozen GPT-3 175B, soft VQAv2 accuracy, VinVL caption, 16 shots",
+   "quote": "PICa-Full improves over PICa-Base from 42.0% to 46.9% with captions",
+   "table": null,
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Random-example PICa-Base with caption+tags.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 43.3,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "OK-VQA test set (14,055 image-question pairs), frozen GPT-3 175B, soft VQAv2 accuracy, 16 shots, random examples",
+   "quote": null,
+   "table": "Table 1, row PICa-Base Caption+Tags",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Frozen (7B, trained visual encoder) on OK-VQA.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 12.6,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Frozen, n=4",
+   "quote": null,
+   "table": "Table 2, row (a) Frozen, column n=4",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Zero-shot PICa-Full caption+tags is low; one example gives a large jump.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy n=0 vs n=1",
+   "value": 17.1,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "OK-VQA test set (14,055 image-question pairs), frozen GPT-3 175B, soft VQAv2 accuracy, row (e)",
+   "quote": "40.8% when n = 1 to 48.0% when n = 16",
+   "table": null,
+   "note": "n=0: 17.1, n=1: 40.8 (Table 2 row e)",
+   "where": "Table 2"
+  },
+  {
+   "claim": "Accuracy at n=1 for PICa-Full.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 40.8,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "OK-VQA test set (14,055 image-question pairs), frozen GPT-3 175B, soft VQAv2 accuracy, PICa-Full caption+tags",
+   "quote": "40.8% when n = 1 to 48.0% when n = 16",
+   "table": null,
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Tags only (PICa-Full) vs caption+tags.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 44.6,
+   "unit": "%",
+   "baseline_value": 48.0,
+   "n": null,
+   "setup": "OK-VQA test set (14,055 image-question pairs), frozen GPT-3 175B, soft VQAv2 accuracy, tags only, 16 shots, PICa-Full",
+   "quote": null,
+   "table": "Table 3, row (b) Tags, column Full",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Blind baseline (no image) PICa-Full.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 30.1,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "OK-VQA test set (14,055 image-question pairs), frozen GPT-3 175B, soft VQAv2 accuracy, empty image string, question-similarity selection",
+   "quote": null,
+   "table": "Table 3, row (a) Blind, column Full",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Ground-truth 5 COCO captions (oracle).",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 53.3,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "OK-VQA test set (14,055 image-question pairs), frozen GPT-3 175B, soft VQAv2 accuracy, PICa-Full, oracle",
+   "quote": "further improving the accuracy to 53.3%",
+   "table": null,
+   "note": null,
+   "where": "Table 3 row (g)"
+  },
+  {
+   "claim": "Conceptual-Captions captioner (never saw COCO) still beats supervised SOTA with selection+ensemble.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 44.0,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "OK-VQA test set (14,055 image-question pairs), frozen GPT-3 175B, soft VQAv2 accuracy, VinVL-Caption-CC, PICa-Full",
+   "quote": "The performance can be further improved to 44.0%",
+   "table": null,
+   "note": null,
+   "where": "Table 3 row (c)"
+  },
+  {
+   "claim": "Same captioner, PICa-Base (random examples), 16 shots.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 37.0,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "OK-VQA test set (14,055 image-question pairs), frozen GPT-3 175B, soft VQAv2 accuracy",
+   "quote": "achieves a decent accuracy of 37.0% with n = 16",
+   "table": null,
+   "note": null,
+   "where": "Table 3 row (c)"
+  },
+  {
+   "claim": "Example selection by question similarity (CLIP) vs random.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 45.8,
+   "unit": "%",
+   "baseline_value": 43.3,
+   "n": null,
+   "setup": "OK-VQA test set (14,055 image-question pairs), frozen GPT-3 175B, soft VQAv2 accuracy, 16 shots, base captions+tags",
+   "quote": null,
+   "table": "Table 4, row (b) Question, column CLIP",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "Dissimilar examples hurt.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 40.1,
+   "unit": "%",
+   "baseline_value": 43.3,
+   "n": null,
+   "setup": "OK-VQA test set (14,055 image-question pairs), frozen GPT-3 175B, soft VQAv2 accuracy, 16 shots",
+   "quote": null,
+   "table": "Table 4, row (c) QuestionDissimilar, column CLIP",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "Question+image similarity selection.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 46.5,
+   "unit": "%",
+   "baseline_value": 43.3,
+   "n": null,
+   "setup": "OK-VQA test set (14,055 image-question pairs), frozen GPT-3 175B, soft VQAv2 accuracy, 16 shots",
+   "quote": "further improves the accuracy to 46.5%",
+   "table": null,
+   "note": null,
+   "where": "Table 4 row (f)"
+  },
+  {
+   "claim": "Oracle selection using answer similarity.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 49.1,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "OK-VQA test set (14,055 image-question pairs), frozen GPT-3 175B, soft VQAv2 accuracy, 16 shots, oracle",
+   "quote": null,
+   "table": "Table 4, row (d) Question+Answer, column CLIP",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "Multi-query ensemble k=1 -> k=5 at n=16.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 48.0,
+   "unit": "%",
+   "baseline_value": 46.5,
+   "n": null,
+   "setup": "OK-VQA test set (14,055 image-question pairs), frozen GPT-3 175B, soft VQAv2 accuracy, n=16, k=5, with selection",
+   "quote": null,
+   "table": "Table 5, row (d) k=5, column n=16",
+   "note": null,
+   "where": "Table 5"
+  },
+  {
+   "claim": "Ensemble gain is larger at n=1 (k=1 36.4 to k=5 40.8).",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 40.8,
+   "unit": "%",
+   "baseline_value": 36.4,
+   "n": null,
+   "setup": "OK-VQA test set (14,055 image-question pairs), frozen GPT-3 175B, soft VQAv2 accuracy, n=1, k=5",
+   "quote": null,
+   "table": "Table 5, row (d) k=5, column n=1",
+   "note": null,
+   "where": "Table 5"
+  },
+  {
+   "claim": "VQAv2 val few-shot PICa-Full caption+tags vs Frozen.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 56.1,
+   "unit": "%",
+   "baseline_value": 38.2,
+   "n": null,
+   "setup": "VQAv2 validation, open-ended generation",
+   "quote": "PICa-Full achieves an accuracy of 56.1%",
+   "table": null,
+   "note": null,
+   "where": "Table 6"
+  },
+  {
+   "claim": "Supervised Oscar on VQAv2 val remains far ahead.",
+   "kind": "reported",
+   "source": null,
+   "metric": "accuracy",
+   "value": 73.8,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "VQAv2 validation",
+   "quote": "Compared with the supervised performance of 73.8% by Oscar",
+   "table": null,
+   "note": null,
+   "where": "Table 6"
+  },
+  {
+   "claim": "VQAv2 oracle with 5 GT captions.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 59.7,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "VQAv2 val, PICa-Full, GT-Caption-5 oracle",
+   "quote": null,
+   "table": "Table 6, row PICa-Full† GT-Caption-5",
+   "note": null,
+   "where": "Table 6"
+  }
+ ],
+ "limits": [
+  "Image abstracted as text: captions or tags only partially describe the image and miss visual details such as colour and counts (VQAv2 failures, Fig 4).",
+  "Authors expect end-to-end vision encoder tuning would help detail questions.",
+  "GPT-3 raw model inaccessible, so behaviour analysis is limited to prompted rationales.",
+  "Open-ended answers make evaluation hard (answer-format disagreements).",
+  "The best captioner is fine-tuned on COCO 2014 train, which shares the image source with OK-VQA test (COCO val); the CC variant addresses this.",
+  "Decoding temperature, max tokens, and GPT-3 engine are not stated; single runs, no variance reported.",
+  "All images are COCO photos; no charts or documents."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "PICa",
+   "definition": "Prompts GPT-3 via the use of Image Captions",
+   "where": "footnote 2"
+  },
+  {
+   "term": "multi-query ensemble",
+   "definition": "use n*k in-context examples to generate k prompts and pick the answer with highest sum of log-probability",
+   "where": "Approach"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Language models are few-shot learners (GPT-3)",
+   "year": 2020,
+   "arxiv": "2005.14165",
+   "relation": "uses-method",
+   "note": "frozen GPT-3 in-context learning",
+   "quote": null
+  },
+  {
+   "work": "Frozen: Multimodal Few-Shot Learning with Frozen Language Models",
+   "year": 2021,
+   "arxiv": "2106.13884",
+   "relation": "baseline",
+   "note": "12.6 on OK-VQA, 38.2 on VQAv2",
+   "quote": null
+  },
+  {
+   "work": "MAVEx",
+   "year": 2021,
+   "arxiv": "2103.12248",
+   "relation": "baseline",
+   "note": "supervised SOTA 39.4",
+   "quote": null
+  },
+  {
+   "work": "KRISP",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "38.9",
+   "quote": null
+  },
+  {
+   "work": "What Makes Good In-Context Examples for GPT-3?",
+   "year": 2021,
+   "arxiv": "2101.06804",
+   "relation": "uses-method",
+   "note": "in-context example selection",
+   "quote": null
+  },
+  {
+   "work": "Evaluating Large Language Models Trained on Code",
+   "year": 2021,
+   "arxiv": "2107.03374",
+   "relation": "uses-method",
+   "note": "highest sum log-prob answer selection",
+   "quote": null
+  },
+  {
+   "work": "OK-VQA",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "main benchmark",
+   "quote": null
+  },
+  {
+   "work": "VQAv2",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "second benchmark",
+   "quote": null
+  },
+  {
+   "work": "VinVL",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "captioner",
+   "quote": null
+  },
+  {
+   "work": "CLIP",
+   "year": 2021,
+   "arxiv": "2103.00020",
+   "relation": "uses-method",
+   "note": "similarity for example selection",
+   "quote": null
+  },
+  {
+   "work": "Oscar",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "supervised VQAv2 73.8",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "Inference-time interface of PICa for n-shot VQA.",
+   "page": 3,
+   "why": "Shows the exact prompt layout."
+  },
+  {
+   "figure": "Table 5",
+   "caption": "The multi-query ensemble performance on OK-VQA.",
+   "page": 6,
+   "why": "Shows ensemble gains by n and k."
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Text mentions 'detailed ablation studies are provided in Table 5' for what is Tables 3-5; Introduction says 46.9 is +7.5 over SOTA while abstract's +8.6 refers to 48.0.",
+  "Table 1 Few-shot checkmark column did not extract."
+ ]
 }

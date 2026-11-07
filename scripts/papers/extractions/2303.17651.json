@@ -1,0 +1,149 @@
+{
+ "schema": 1,
+ "key": "2303.17651",
+ "pdf": "generative-ai/03-agentic-foundations/sources/madaan-2023-self-refine.pdf",
+ "bib": {
+  "title": "SELF-REFINE: Iterative Refinement with Self-Feedback",
+  "authors": ["Aman Madaan", "Niket Tandon", "Prakhar Gupta", "Skyler Hallinan", "Luyu Gao", "Sarah Wiegreffe", "Uri Alon", "Nouha Dziri", "Shrimai Prabhumoye", "Yiming Yang", "Shashank Gupta", "Bodhisattwa Prasad Majumder", "Katherine Hermann", "Sean Welleck", "Amir Yazdanbakhsh", "Peter Clark"],
+  "first_author": "Madaan",
+  "year": 2023,
+  "venue": "preprint (arXiv v2, 'Preprint. Under review.')",
+  "arxiv": "2303.17651",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 124630,
+  "chars_total": 124630,
+  "engine": "pymupdf",
+  "skipped": "Prompt figures 24-35 (truncated few-shot prompts) skimmed by figure label only; their full text is not recorded."
+ },
+ "type": "empirical",
+ "question": "Can a single LLM improve its own outputs at test time by generating feedback on them and refining iteratively, with no training?",
+ "hypothesis": "Like humans, LLMs do not produce their best output first try, and the same LLM can supply useful feedback and use it to improve (stated in the abstract and introduction).",
+ "contributions": [
+  "SELF-REFINE: an iterative FEEDBACK-REFINE loop using one LLM as generator, feedback provider and refiner, with few-shot prompts and no training",
+  "Evaluation on 7 tasks with GPT-3.5, ChatGPT and GPT-4 (and Codex for code), including two new tasks, Acronym Generation and Constrained Generation (CommonGen-Hard)",
+  "Ablations on feedback quality, number of iterations, multiple-sample baseline and a weaker model (Vicuna-13B)"
+ ],
+ "method": {
+  "summary": "Given input x, the model produces y0 from a few-shot generation prompt, then alternates a few-shot FEEDBACK prompt (fb_t from x and y_t) and a few-shot REFINE prompt (y_t+1 from x, all earlier outputs and feedback) until a stop condition or a maximum number of iterations. Compared with the same base LLM generating once.",
+  "task": "test-time iterative refinement across dialogue, code optimisation, code readability, math reasoning, sentiment reversal, acronym generation, constrained generation",
+  "trains": false,
+  "datasets": [
+   {"name": "Sentiment Reversal (Zhang et al., 2015 reviews)", "role": "eval", "size": "1000 review passages", "split": null, "source": "Zhang et al. 2015", "preprocessing": null},
+   {"name": "Dialogue Response Generation (FED, Mehri and Eskenazi 2020)", "role": "eval", "size": "372 conversations in Table 4; 342 test instances in Appendix M.2", "split": null, "source": "Mehri and Eskenazi 2020", "preprocessing": null},
+   {"name": "Code Optimization (PIE, Madaan et al. 2023)", "role": "eval", "size": "1000 programs", "split": null, "source": "Madaan et al. 2023", "preprocessing": null},
+   {"name": "Code Readability Improvement (CodeNet, Puri et al. 2021)", "role": "eval", "size": "300 programs (random subset)", "split": null, "source": "Puri et al. 2021", "preprocessing": null},
+   {"name": "Math Reasoning (GSM8K, Cobbe et al. 2021)", "role": "eval", "size": "1319 questions", "split": null, "source": "Cobbe et al. 2021", "preprocessing": "solutions written in Python following Gao et al. 2022 (PaL)"},
+   {"name": "Acronym Generation (new)", "role": "eval", "size": "250 acronyms", "split": null, "source": "krishnakt031990/Crawl-Wiki-For-Acronyms AcronymsFile.csv, manually pruned of offensive or uninformative entries", "preprocessing": "manual pruning"},
+   {"name": "Constrained Generation (CommonGen-Hard, new)", "role": "eval", "size": "200 samples", "split": null, "source": "harder version of Lin et al. 2020 with 20-30 concepts instead of 3-5", "preprocessing": null}
+  ],
+  "models": [
+   {"name": "GPT-3.5 (text-davinci-003)", "role": "base", "params": null, "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"note": "sizes and pretraining not described (Limitations)"}},
+   {"name": "ChatGPT (gpt-3.5-turbo)", "role": "base", "params": null, "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "GPT-4", "role": "base", "params": null, "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"also_role": "judge (GPT-4-pref)"}},
+   {"name": "Codex (code-davinci-002)", "role": "base", "params": null, "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"used": "code tasks only, results in Appendix F"}},
+   {"name": "Vicuna-13B", "role": "evaluated", "params": "13B", "architecture": "LLaMA-13B fine-tuned on web conversations", "init_from": "LLaMA-13B", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}}
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "'greedy decoding with a temperature of 0.7 for all setups' (as printed; internally contradictory). Appendix L: critique at T=0.0 and T=0.7, code editor always T=0.0.",
+   "temperature": "0.7",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "One SELF-REFINE run per item (not stated). 1-vs-k check: ChatGPT generates k=4 samples without feedback and SELF-REFINE is compared with all k.",
+   "prompting": "Few-shot prompts for generation, feedback and refine, even for ChatGPT and GPT-4. Examples: Acronym 15 (title, acronym) pairs, 3 for feedback and refine; Dialogue 6 examples for feedback in 4.1 (Appendix M.1) but 3 for init/feedback/iterate in M.2; Math 2 examples from GSM8K train on which Codex fails; Constrained Gen 10 init examples; Code Opt uses PIE slow/fast pairs and explanations.",
+   "retrieval": null,
+   "parameters": {
+    "max_iterations": "4 (Section 3.1); Dialogue k=3 (App. M.2); Sentiment k=4 (App. P); Code Readability N=5 (App. L)",
+    "stop_condition": "fixed iteration count or a stop indicator extracted from the feedback (e.g. scalar score), set per task",
+    "history": "all previous outputs and feedback are appended to the REFINE prompt (Eq. 4)",
+    "output_selection": "Dialogue and Acronym: output with highest total feedback score across iterations (excluding the initial response for Dialogue); otherwise the last refinement y_t"
+   },
+   "other": {"oracle_feedback_math": "App. H.1: only refine when the current answer is incorrect, following Welleck et al. 2022"}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "Math Reasoning solve rate", "definition": "% solved", "unit": "%", "higher_is_better": true},
+    {"name": "Code Optimization %OPT", "definition": "% programs optimized", "unit": "%", "higher_is_better": true},
+    {"name": "Constrained Generation coverage", "definition": "coverage % of given concepts", "unit": "%", "higher_is_better": true},
+    {"name": "Human-pref", "definition": "blind A/B between baseline and SELF-REFINE outputs; tie options; done by the authors", "unit": "% preferred", "higher_is_better": true},
+    {"name": "GPT-4-pref", "definition": "GPT-4 as proxy judge for Sentiment Reversal, Acronym, Dialogue; for Code Readability GPT-4 computes fraction of variables appropriately named", "unit": "% preferred", "higher_is_better": true}
+   ],
+   "baselines": ["Same base LLM with one-step generation", "Welleck et al. 2022 Self-Correction", "PaL, CoT, PIE, Scalene, CodeGen (Appendix F)", "generic feedback and no-feedback ablations", "multiple-sample (k=4)"],
+   "protocol": "GPT-4-pref correlation with human-pref reported as 82% (Sentiment), 68% (Acronym), 71% (Dialogue). Wilson intervals in Table 13. Human A/B on 150 examples per dataset (Table 6). No seeds reported."
+  },
+  "availability": {"code": "https://selfrefine.info/", "weights": null, "data": "https://selfrefine.info/ (code, data, prompts, model outputs)"},
+  "prompts": [
+   {"purpose": "GPT-4 judge, Sentiment Reversal", "text": "Which review is aligned with the sentiment {target_sentiment}? Review A: {review_a} Review B: {review_b}. Pick your answer from ['Review A', 'Review B', 'both', 'neither']. Generate a short explanation for your choice first. Then, generate 'The more aligned review is A' or 'The more aligned review is B' or 'The more aligned review is both' or 'The more aligned review is neither'. Format: <explanation> <answer> STOP", "where": "Appendix D, Listing 1"},
+   {"purpose": "GPT-4 judge, Acronym Generation", "text": "Title: {title} Acronym A: {acronym_a} Acronym B: {acronym_b} Pick the better acronym for the given title. The acronyms should be compared based on the following criteria: Ease of pronunciation. Ease of spelling. Relation to title. Positive connotation. Generate your answer in the following format: <Short explanation>. The better acronym is A OR The better acronym is B OR The acronyms are equally good OR Neither acronym is good. STOP.", "where": "Appendix D, Listing 2"},
+   {"purpose": "GPT-4 judge, Dialogue Response", "text": "Which response is better given this context: {context}? Response A: {response_a} Response B: {response_b}. Pick your answer from ['Response A', 'Response B', 'both', 'neither']. Generate a short explanation for your choice first. Then, generate 'The better response is A' or 'The better response is B' or 'The better response is both' or 'The better response is neither'. Format: <explanation> <answer> STOP", "where": "Appendix D, Listing 3"},
+   {"purpose": "Task generation, feedback and refine few-shot prompts (all 7 tasks)", "text": "Full few-shot prompts are in Figures 16-35 (several truncated in the paper); not copied here.", "where": "Appendix S"}
+  ],
+  "evidence": [
+   {"field": "inference.temperature", "quote": "We use greedy decoding with a temperature of 0.7 for all setups.", "where": "Section 3.1"}
+  ]
+ },
+ "results": [
+  {"claim": "SELF-REFINE improves task performance by about 20 points absolute on average over one-step generation with the same LLM.", "kind": "measured", "source": null, "metric": "average absolute improvement", "value": "~20", "unit": "% absolute", "baseline_value": null, "n": null, "setup": "7 tasks, GPT-3.5 and GPT-4 (abstract), human and automatic metrics", "quote": "improving by ∼20% absolute on average in task performance", "table": null, "note": "Intro says 5-40% absolute improvement; Math Reasoning gains are only 0 to 0.2 in Table 1.", "where": "Abstract"},
+  {"claim": "GPT-4 Dialogue Response preference rises from 25.4 to 74.6 with SELF-REFINE.", "kind": "measured", "source": null, "metric": "GPT-4-pref", "value": "74.6", "unit": "%", "baseline_value": "25.4", "n": null, "setup": "Dialogue Response Generation, GPT-4 as base and as judge", "quote": "GPT-4 preference score improve by 49.2% – from 25.4% to 74.6%", "table": null, "note": null, "where": "Section 3.3"},
+  {"claim": "GPT-4 Code Optimization %OPT rises from 27.3 to 36.0.", "kind": "measured", "source": null, "metric": "% programs optimized", "value": "36.0", "unit": "%", "baseline_value": "27.3", "n": 1000, "setup": "PIE, GPT-4 base", "quote": "increasing optimization percentage from 27.3% to 36.0%", "table": null, "note": "Table 8 prints ChatGPT base 22.2 and SELF-REFINE 26.7, Table 1 prints 23.9 and 27.5.", "where": "Section 3.3, Table 1"},
+  {"claim": "Math Reasoning gains are near zero: GPT-4 92.9 to 93.1.", "kind": "measured", "source": null, "metric": "solve rate", "value": "93.1", "unit": "%", "baseline_value": "92.9", "n": 1319, "setup": "GSM8K, GPT-4, no oracle", "quote": "92.9 93.1 (↑0.2)", "table": null, "note": "ChatGPT 74.8 to 75.0; GPT-3.5 64.1 to 64.1. Table 7 prints SELF-REFINE w/ GPT-3.5 as 62.4 and ChatGPT 75.1, not matching Table 1.", "where": "Table 1"},
+  {"claim": "In Math Reasoning ChatGPT's feedback says everything looks good for 94% of instances, explaining the modest gain.", "kind": "measured", "source": null, "metric": "share of feedback saying nothing wrong", "value": "94", "unit": "%", "baseline_value": null, "n": null, "setup": "Math Reasoning, ChatGPT", "quote": "ChatGPT feedback for 94% instances is ’everything looks good’", "table": null, "note": null, "where": "Section 3.3"},
+  {"claim": "With oracle correctness feedback, GPT-3.5 Math Reasoning gains 4.8 points (64.06 to 68.9).", "kind": "measured", "source": null, "metric": "solve rate", "value": "68.9", "unit": "%", "baseline_value": "64.06", "n": 1319, "setup": "GSM8K, oracle tells whether current answer is wrong", "quote": "Math Reasoning (Oracle) 64.06 68.9 (↑4.8)", "table": null, "note": "Text of H.1 says 'GPT-3 improving by 4.8%'; Section 3.3 says 'much bigger (5%+)'.", "where": "Table 9, Appendix H.1"},
+  {"claim": "Generic feedback drops ChatGPT Sentiment Reversal from 43.2 to 31.2; with no feedback the task fails (0).", "kind": "measured", "source": null, "metric": "GPT-4-pref", "value": "31.2", "unit": "%", "baseline_value": "43.2", "n": null, "setup": "ChatGPT, Sentiment Reversal, feedback ablation", "quote": "changing from our feedback to generic feedback leads to a significant performance drop (43.2 to 31.2)", "table": null, "note": null, "where": "Section 4, Table 2"},
+  {"claim": "Code Optimization: specific feedback 27.5, generic 26.0, none 24.8.", "kind": "measured", "source": null, "metric": "% programs optimized", "value": "24.8", "unit": "%", "baseline_value": "27.5", "n": null, "setup": "ChatGPT, Code Optimization, no-feedback ablation", "quote": "performance slightly dips from 27.5 (SELF-REFINE feedback) to 26.0 (generic feedback), and further to 24.8 (no feedback)", "table": null, "note": null, "where": "Section 4, Table 2"},
+  {"claim": "Acronym Generation: specific feedback 56.4, no actionable feedback 48.0.", "kind": "measured", "source": null, "metric": "GPT-4-pref", "value": "48.0", "unit": "%", "baseline_value": "56.4", "n": 250, "setup": "GPT-3.5, Acronym Generation", "quote": "performance drops from 56.4 to 48.0, even with iterative refinements", "table": null, "note": null, "where": "Section 4, Table 2"},
+  {"claim": "Code Optimization score rises over iterations 22.0, 27.0, 27.9, 28.8, with diminishing returns.", "kind": "measured", "source": null, "metric": "% programs optimized", "value": "28.8", "unit": "%", "baseline_value": "22.0", "n": null, "setup": "average over ChatGPT, GPT-3.5 and GPT-4; y0 to y3", "quote": "the initial output (y0) has a score of 22.0, which improves to 28.8 after three iterations (y3)", "table": null, "note": "Averaged over three models per Fig 4 caption.", "where": "Section 4, Figure 4"},
+  {"claim": "Constrained Generation score rises from 29.0 to 49.7 after three iterations.", "kind": "measured", "source": null, "metric": "coverage", "value": "49.7", "unit": "%", "baseline_value": "29.0", "n": 200, "setup": "average over three models", "quote": "the score increases from 29.0 to 49.7 after three iterations", "table": null, "note": null, "where": "Section 4"},
+  {"claim": "Among failed refinements, 33% were feedback misplacing the error, 61% inappropriate fix, 6% faulty refinement.", "kind": "measured", "source": null, "metric": "failure cause share", "value": "6", "unit": "% refiner-caused", "baseline_value": null, "n": 35, "setup": "manual analysis of 70 samples (35 success, 35 failure) on Code Optimization and Math Reasoning", "quote": "Only 6% of failures were due to the refiner incorrectly implementing good feedback.", "table": null, "note": null, "where": "Section 4, Qualitative Analysis"},
+  {"claim": "In successful cases, accurate feedback guided precise fixes in 61%, and 33% succeeded despite partially incorrect feedback.", "kind": "measured", "source": null, "metric": "share of successes", "value": "61", "unit": "%", "baseline_value": null, "n": 35, "setup": "same 35 success cases", "quote": "the refiner was guided by accurate and useful feedback to make precise fixes to the original generation in 61% of the cases", "table": null, "note": null, "where": "Section 4"},
+  {"claim": "SELF-REFINE output was still preferred by humans over all k=4 ChatGPT samples.", "kind": "measured", "source": null, "metric": "1 vs k preference", "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "ChatGPT, k=4 samples without feedback, Sentiment Reversal and Acronym (Fig 6)", "quote": "the outputs of SELF-REFINE are still preferred by humans over all k initial outputs", "table": null, "note": "Figure 6 values are not tied to labels in the extracted text.", "where": "Section 4, Figure 6"},
+  {"claim": "Vicuna-13B cannot do the feedback/refine steps; mixed setup (Vicuna init, ChatGPT feedback/refine) raises Math from 24.18 to 40.5.", "kind": "measured", "source": null, "metric": "Math Reasoning solve rate", "value": "40.5", "unit": "%", "baseline_value": "24.18", "n": null, "setup": "Vicuna-13b init, ChatGPT as FEEDBACK and REFINE", "quote": "while Vicuna-13b was able to get only 24.18% on Math Reasoning, it was able to improve to 40.5% in this mixed-refinement setting", "table": null, "note": null, "where": "Appendix G"},
+  {"claim": "GSM8K Self-Correction 45.9 vs SELF-REFINE 55.7 with GPT-3.", "kind": "measured", "source": null, "metric": "GSM8K accuracy", "value": "55.7", "unit": "%", "baseline_value": "45.9", "n": null, "setup": "same GPT-3 base and settings as Welleck et al. 2022", "quote": "Self-Correction achieved 45.9% accuracy while SELF-REFINE (this work) achieved 55.7%", "table": null, "note": null, "where": "Appendix B"},
+  {"claim": "Nearly all GPT-4 gains are statistically significant, ChatGPT 4 of 7, GPT-3.5 3 of 7.", "kind": "measured", "source": null, "metric": "significant gains", "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "Wilson intervals on Table 1", "quote": "We find that nearly all of GPT-4 gains are statistically significant, ChatGPT gains are significant for 4 out of 7 datasets, and GPT-3.5 gains are significant for 3 out of 7 datasets.", "table": null, "note": "Table 13 caption says 95% confidence, text says alpha=99%.", "where": "Appendix J"},
+  {"claim": "Human A/B: Sentiment Transfer SELF-REFINE preferred 75.00% vs Direct 21.43%.", "kind": "measured", "source": null, "metric": "preference rate", "value": "75.00", "unit": "%", "baseline_value": "21.43", "n": 150, "setup": "authors as blind judges, 150 examples per dataset", "quote": null, "table": "Table 6, row Sentiment Transfer, column SELF-REFINE (%)", "note": "Judges were the authors.", "where": "Appendix C, Table 6"}
+ ],
+ "limits": [
+  "Base models need sufficient few-shot or instruction-following ability; Vicuna-13B failed (Limitations, Section 4).",
+  "All main models are closed (GPT-3.5, ChatGPT, GPT-4, Codex), details undisclosed and paid; English only; no safeguard against toxic steering (Section 6).",
+  "Math Reasoning gains are near zero without an external correctness signal because the model cannot detect its own errors.",
+  "Human A/B evaluation was done by the authors, and GPT-4-pref correlation with humans is only 68-82%.",
+  "Per-iteration averages in Fig 4 pool three models; no seeds or repeated runs reported; many gains are not significant for GPT-3.5 and ChatGPT.",
+  "Baseline is the same LLM generating once, not compute-matched against multiple samples, except the k=4 human 1-vs-k test.",
+  "Paper is internally inconsistent in places: temperature 'greedy ... 0.7', Table 1 vs Tables 7/8 numbers, 95% vs 99% intervals, 372 vs 342 dialogue instances, an unfinished 'TODO' line in Appendix S."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "actionable feedback", "definition": "the feedback should contain a concrete action that would likely improve the output", "where": "Section 2"},
+  {"term": "specific feedback", "definition": "the feedback should identify concrete phrases in the output to change", "where": "Section 2"}
+ ],
+ "lineage": [
+  {"work": "Self-Correction (Welleck et al., Generating sequences by learning to self-correct)", "year": 2022, "arxiv": "2211.00053", "relation": "baseline", "note": "closest work; trained corrector; oracle feedback protocol followed", "quote": null},
+  {"work": "Reflexion (Shinn et al.)", "year": 2023, "arxiv": null, "relation": "related", "note": "concurrent prompted refiner", "quote": null},
+  {"work": "Learning performance-improving code edits (PIE)", "year": 2023, "arxiv": "2302.07867", "relation": "uses-data", "note": "Code Optimization task and prompts", "quote": null},
+  {"work": "Training verifiers to solve math word problems (GSM8K)", "year": 2021, "arxiv": "2110.14168", "relation": "uses-data", "note": "Math Reasoning", "quote": null},
+  {"work": "PaL: Program-aided language models", "year": 2022, "arxiv": "2211.10435", "relation": "uses-method", "note": "Python solutions and prompts for math", "quote": null},
+  {"work": "Few-shot prompting (Brown et al., Language models are few-shot learners)", "year": 2020, "arxiv": null, "relation": "uses-method", "note": "FEEDBACK and REFINE are few-shot prompts", "quote": null},
+  {"work": "CommonGen (Lin et al.)", "year": 2020, "arxiv": null, "relation": "extends", "note": "CommonGen-Hard with 20-30 concepts", "quote": null},
+  {"work": "FED dialogue evaluation (Mehri and Eskenazi)", "year": 2020, "arxiv": null, "relation": "uses-data", "note": "Dialogue task", "quote": null},
+  {"work": "Vicuna (Chiang et al.)", "year": 2023, "arxiv": null, "relation": "evaluates", "note": "weaker model test", "quote": null},
+  {"work": "GPT-4 technical report", "year": 2023, "arxiv": "2303.08774", "relation": "evaluates", "note": "base model and judge", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 1", "caption": "Given an input, SELF-REFINE starts by generating an output and passing it back to the same model M to get feedback. The feedback is passed back to M, which refines the previously generated output.", "page": 2, "why": "the whole loop in one diagram"},
+  {"figure": "Fig 3 / Algorithm 1", "caption": "The SELF-REFINE algorithm", "page": 3, "why": "pseudocode with stop condition and history-concatenated refine prompt"},
+  {"figure": "Fig 4", "caption": "Iteration-wise score improvements; most gains in the initial iterations.", "page": 7, "why": "shows diminishing returns across rounds"},
+  {"figure": "Table 2", "caption": "Prompting to generate generic feedback or no feedback leads to reduced scores.", "page": 6, "why": "feedback-quality ablation"}
+ ],
+ "code": [
+  {"where": "Algorithm 1, Eq 4", "snippet": "yt+1 = M (prefine∥x∥y0∥fb0∥...∥yt∥fbt)", "verbatim": true}
+ ],
+ "problems": [
+  "Text extraction scrambles tables and figure data; Figure 6 numbers cannot be mapped to labels.",
+  "Appendix S ends with a leftover 'TODO: Add relevant information for the remaining task.'",
+  "No embedded instructions found."
+ ]
+}

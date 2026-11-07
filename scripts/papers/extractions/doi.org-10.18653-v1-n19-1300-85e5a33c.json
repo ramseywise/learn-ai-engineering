@@ -1,0 +1,578 @@
+{
+ "schema": 1,
+ "key": "https://doi.org/10.18653/v1/n19-1300",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/clark-2019-boolq.pdf",
+ "bib": {
+  "title": "BoolQ: Exploring the Surprising Difficulty of Natural Yes/No Questions",
+  "authors": [
+   "Christopher Clark",
+   "Kenton Lee",
+   "Ming-Wei Chang",
+   "Tom Kwiatkowski",
+   "Michael Collins",
+   "Kristina Toutanova"
+  ],
+  "first_author": "Clark",
+  "year": 2019,
+  "venue": "Proceedings of NAACL-HLT 2019, pages 2924-2936",
+  "arxiv": "1905.10044",
+  "doi": "10.18653/v1/n19-1300"
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 52387,
+  "chars_total": 52387,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "benchmark",
+ "question": "How hard are naturally occurring yes/no questions for reading comprehension, and which transfer-learning sources best help models answer them?",
+ "hypothesis": "Naturally occurring yes/no questions require difficult entailment-like inference, so entailment data should transfer better than paraphrase or extractive QA data (stated in the abstract as a finding; MultiNLI's contradiction examples are hypothesised as the key advantage).",
+ "contributions": [
+  "BoolQ, a reading comprehension dataset of 16k naturally occurring yes/no questions paired with Wikipedia paragraphs",
+  "Analysis of question topics, types and required inference",
+  "Transfer-learning baselines comparing entailment, extractive QA, multiple-choice QA, paraphrase, heuristic yes/no and unsupervised pre-training sources"
+ ],
+ "method": {
+  "summary": "Questions come from anonymised Google search queries filtered by first-word heuristics, kept if a Wikipedia page is in the top five results, then annotated for goodness, answer passage and yes/no. Baselines fine-tune recurrent, ELMo, GPT and BERT-large models, with and without supervised pre-training on other datasets.",
+  "task": "yes/no reading comprehension (question + passage -> yes/no)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "BoolQ",
+    "role": "both",
+    "size": "16k questions (13k from NQ-style pipeline + 3k yes/no questions from NQ train)",
+    "split": "9.4k train, 3.2k dev, 3.2k test; NQ questions always in train; 62.31% yes in train",
+    "source": "Anonymised Google queries, Wikipedia passages, annotated by humans (NQ pipeline)",
+    "preprocessing": "Only questions marked yes/no kept; paired with the selected passage rather than the whole document; avg question 8.9 tokens, passage 108 tokens; article title included but unused"
+   },
+   {
+    "name": "MultiNLI",
+    "role": "pretrain",
+    "size": "392k",
+    "split": null,
+    "source": "Williams et al. 2018",
+    "preprocessing": "Probability of entailment class used as probability of yes; ablations drop one class (262k)"
+   },
+   {
+    "name": "SNLI",
+    "role": "pretrain",
+    "size": "351k",
+    "split": null,
+    "source": "Bowman et al. 2015",
+    "preprocessing": null
+   },
+   {
+    "name": "RACE",
+    "role": "pretrain",
+    "size": "549k",
+    "split": null,
+    "source": "Lai et al. 2017",
+    "preprocessing": "Questions + options converted to statements; softmax over statements per question; negative log prob of correct statement"
+   },
+   {
+    "name": "QNLI (SQuAD 1.1)",
+    "role": "pretrain",
+    "size": "108k",
+    "split": null,
+    "source": "GLUE",
+    "preprocessing": null
+   },
+   {
+    "name": "SQuAD 2.0 (entailment-like)",
+    "role": "pretrain",
+    "size": "130k",
+    "split": null,
+    "source": "Rajpurkar et al. 2018",
+    "preprocessing": "Question concatenated with correct answer or distractor; classify which"
+   },
+   {
+    "name": "NQ Long Answer",
+    "role": "pretrain",
+    "size": "93k",
+    "split": null,
+    "source": "Natural Questions",
+    "preprocessing": "Only questions with an answer; one answer-containing paragraph plus up to 15 random non-answer paragraphs; softmax over paragraphs"
+   },
+   {
+    "name": "QQP",
+    "role": "pretrain",
+    "size": "364k",
+    "split": null,
+    "source": "Quora Question Pairs",
+    "preprocessing": null
+   },
+   {
+    "name": "Y/N MS Marco",
+    "role": "pretrain",
+    "size": "39k in Table 3 (38k in text)",
+    "split": null,
+    "source": "MS Marco",
+    "preprocessing": "Answers starting with yes or no, paired with related snippets; 80% yes"
+   }
+  ],
+  "models": [
+   {
+    "name": "Majority",
+    "role": "baseline",
+    "params": null,
+    "architecture": "always yes",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Recurrent",
+    "role": "baseline",
+    "params": null,
+    "architecture": "char CNN + fasttext embeddings, BiLSTM, co-attention, BiLSTM, attention pool, FC",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": "200-dim LSTMs, 100-dim fully connected layer",
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Recurrent +ELMo",
+    "role": "baseline",
+    "params": null,
+    "architecture": "Recurrent with ELMo embeddings",
+    "init_from": "ELMo (Peters et al. 2018), Billion Word",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "OpenAI GPT",
+    "role": "baseline",
+    "params": null,
+    "architecture": "uni-directional transformer",
+    "init_from": "Radford et al. 2018, Books corpus",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "12",
+    "hidden": "768",
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "BERT-large",
+    "role": "proposed",
+    "params": null,
+    "architecture": "bidirectional transformer",
+    "init_from": "Devlin et al. 2018, Book Corpus and Wikipedia; optionally fine-tuned on MultiNLI first",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "24",
+    "hidden": "1024",
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "Binary: sigmoid of score on (question, passage) for yes; entailment-class probability for NLI-pretrained models; GPT adds language-model loss weight 0.5",
+   "optimizer": "Adam for the Recurrent model; 'optimizers recommended by the authors' for BERT and GPT (not named)",
+   "lr": "BERT 1e-5; GPT 6.25e-5; Recurrent not stated",
+   "lr_schedule": "Recurrent: decayed by 0.999 every 100 steps; BERT/GPT not stated",
+   "warmup": null,
+   "batch_size": "BERT 24; GPT 6; Recurrent not stated",
+   "steps": null,
+   "epochs": "BERT 5 (3 when pre-trained on MultiNLI); GPT 3",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": "0.2 between all layers (Recurrent)",
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": "5 runs per model; pretraining and fine-tuning both repeated for supervised sources; Table 4 reports the run with best dev accuracy",
+   "other": {
+    "unsupervised_pretraining_data": "ELMo Billion Word 1000M; GPT Books 800M; BERT Books/Wikipedia 3,300M (Table 3)"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "Table 3 averaged over five runs; Table 4 single best-dev run of five",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Accuracy",
+     "definition": "fraction of questions answered correctly (yes/no)",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Majority class",
+    "Recurrent",
+    "Question-only and passage-only BERT-large",
+    "Human annotation vs gold labels"
+   ],
+   "protocol": "Dev accuracy averaged over five runs (Table 3); test accuracy of best-dev run of five seeds (Table 4). Human accuracy from 110 examples labelled by three authors; no significance test."
+  },
+  "availability": {
+   "code": "https://goo.gl/boolq",
+   "weights": null,
+   "data": "https://goo.gl/boolq"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.lr",
+    "quote": "We use a batch size of 24, learning rate of 1e-5, and 5 training epochs for BERT",
+    "where": "5.2"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Best model (BERT-large pre-trained on MultiNLI then fine-tuned on BoolQ) reaches 80.43% test accuracy.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test accuracy",
+   "value": 80.43,
+   "unit": "%",
+   "baseline_value": 62.31,
+   "n": null,
+   "setup": "BoolQ test set, BERT-large +MultiNLI, best-dev run of five seeds",
+   "quote": null,
+   "table": "Table 4, row +MultiNLI (BERT-L), column Test Acc.",
+   "note": "Abstract prints 80.4%, intro 80.43%.",
+   "where": "Table 4"
+  },
+  {
+   "claim": "Human annotators reach about 90% accuracy against gold labels.",
+   "kind": "measured",
+   "source": null,
+   "metric": "human accuracy",
+   "value": 90,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "110 random examples, three authors labelled and conferred for gold; annotator answers compared to gold",
+   "quote": "the answer annotations reached 90% ac-curacy compared to the gold-standard labels",
+   "table": null,
+   "note": "Annotators were not the same as the authors who made gold labels; sample of 110.",
+   "where": "3.3"
+  },
+  {
+   "claim": "Majority baseline is 62.17% dev and 62.31% test.",
+   "kind": "measured",
+   "source": null,
+   "metric": "majority accuracy",
+   "value": 62.31,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BoolQ test set",
+   "quote": null,
+   "table": "Table 4, row Majority Class, column Test Acc.",
+   "note": "Text also says 62.31% yes in train set; dev majority 62.17%.",
+   "where": "Table 4"
+  },
+  {
+   "claim": "Pre-trained BERT-large without MultiNLI gets 76.70% test, 78.09% dev.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test accuracy",
+   "value": 76.7,
+   "unit": "%",
+   "baseline_value": 62.31,
+   "n": null,
+   "setup": "BoolQ test, BERT-large fine-tuned on BoolQ only",
+   "quote": null,
+   "table": "Table 4, row Pre-trained BERT-L, column Test Acc.",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "MultiNLI pre-training adds about 3.5 points on top of BERT-large.",
+   "kind": "measured",
+   "source": null,
+   "metric": "gain",
+   "value": 3.5,
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BERT-large, MultiNLI then BoolQ",
+   "quote": "the additional gain of 3.5 points due to using MultiNLI is remarkable",
+   "table": null,
+   "note": "Table 4 differences are 4.11 dev (82.20-78.09) and 3.73 test (80.43-76.70).",
+   "where": "5.5"
+  },
+  {
+   "claim": "Recurrent model trained only on BoolQ gets 69.6%, 8% above majority.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 69.6,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BoolQ train only, dev (Table 3)",
+   "quote": "Our best model reaches 69.6% accuracy, only 8% better than the majority baseline.",
+   "table": null,
+   "note": "Table 4 gives Recurrent dev 70.28 and test 67.52; Table 3 gives 69.60 averaged over five runs.",
+   "where": "4"
+  },
+  {
+   "claim": "MultiNLI is the best supervised transfer source for the Recurrent model.",
+   "kind": "measured",
+   "source": null,
+   "metric": "dev accuracy",
+   "value": 75.57,
+   "unit": "%",
+   "baseline_value": 69.6,
+   "n": null,
+   "setup": "BoolQ dev, Recurrent model, averaged over five runs",
+   "quote": null,
+   "table": "Table 3, row MultiNLI, column BoolQ Acc.",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "BERT-large unsupervised pre-training alone gets 76.90% dev.",
+   "kind": "measured",
+   "source": null,
+   "metric": "dev accuracy",
+   "value": 76.9,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BoolQ dev, five runs averaged",
+   "quote": null,
+   "table": "Table 3, row BERT-L, column BoolQ Acc.",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Question-only BERT-large gets 64.48% and passage-only 66.74% dev, near majority 62.17%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "dev accuracy (question only)",
+   "value": 64.48,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BoolQ dev, BERT-large",
+   "quote": "The pre-trained BERTL model reached 64.48% dev set accuracy using just the question and 66.74% using just the passage.",
+   "table": null,
+   "note": null,
+   "where": "5.3"
+  },
+  {
+   "claim": "SNLI transfers worse than MultiNLI.",
+   "kind": "measured",
+   "source": null,
+   "metric": "dev accuracy",
+   "value": 73.16,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Recurrent, SNLI pre-training, dev",
+   "quote": null,
+   "table": "Table 3, row SNLI, column BoolQ Acc.",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "RACE transfer gives no gain over no pre-training.",
+   "kind": "measured",
+   "source": null,
+   "metric": "dev accuracy",
+   "value": 68.4,
+   "unit": "%",
+   "baseline_value": 69.6,
+   "n": null,
+   "setup": "Recurrent, RACE pre-training, dev (baseline 69.60)",
+   "quote": null,
+   "table": "Table 3, row RACE, column BoolQ Acc.",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Removing the contradiction class from MultiNLI drops two-step BERT to 78.43% dev.",
+   "kind": "measured",
+   "source": null,
+   "metric": "dev accuracy",
+   "value": 78.43,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BERT-large, MultiNLI without contradiction, then BoolQ",
+   "quote": "only reaches 78.43% dev set accuracy if we remove the contradiction class from MultiNLI",
+   "table": null,
+   "note": null,
+   "where": "5.7"
+  },
+  {
+   "claim": "Less than 40% of examples are solvable by paraphrase detection (paraphrasing 38.7%).",
+   "kind": "measured",
+   "source": null,
+   "metric": "share of examples",
+   "value": 38.7,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Manual categorisation of reasoning types; dataset since updated so possibly out of date",
+   "quote": null,
+   "table": "Table 2, row Paraphrasing",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Pre-training on MultiNLI gives at least 5-6 points, nearly 10 for BERT-large with 1000 examples.",
+   "kind": "measured",
+   "source": null,
+   "metric": "gain",
+   "value": 10,
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BoolQ dev, varying train size (read from Fig 2)",
+   "quote": "Pre-training on MultiNLI gives at least a 5-6 point gain, and nearly a 10 point gain for BERTL when only using 1000 examples.",
+   "table": null,
+   "note": "'nearly 10' is approximate, 5-6 lower bound.",
+   "where": "5.6"
+  }
+ ],
+ "limits": [
+  "Annotation quality checked on only 110 examples; train/dev/test are singly annotated.",
+  "Inference-type analysis (Table 2) was done before a dataset update and may be out of date (footnote 4).",
+  "Only passages, not whole documents; authors suggest a document-level version as future work.",
+  "Table 4 reports the best-dev run of five seeds, not a mean.",
+  "Multi-source pre-training combinations were left to future work.",
+  "Dated: 2019 baselines (BERT-large, GPT-1, ELMo); modern LLMs not evaluated."
+ ],
+ "practices": [],
+ "terms": [],
+ "lineage": [
+  {
+   "work": "Natural Questions (Kwiatkowski et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Uses NQ pipeline plus yes/no filter; adds 3k NQ train yes/no questions",
+   "quote": "We follow the data collection method used by Natural Questions (NQ)"
+  },
+  {
+   "work": "BERT (Devlin et al.)",
+   "year": 2018,
+   "arxiv": "1810.04805",
+   "relation": "evaluates",
+   "note": "BERT-large fine-tuned as main model",
+   "quote": null
+  },
+  {
+   "work": "ELMo (Peters et al.)",
+   "year": 2018,
+   "arxiv": "1802.05365",
+   "relation": "baseline",
+   "note": "Recurrent +ELMo",
+   "quote": null
+  },
+  {
+   "work": "OpenAI GPT (Radford et al.)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "12-layer transformer fine-tuned",
+   "quote": null
+  },
+  {
+   "work": "MultiNLI (Williams et al.)",
+   "year": 2018,
+   "arxiv": "1704.05426",
+   "relation": "uses-data",
+   "note": "Best transfer source",
+   "quote": null
+  },
+  {
+   "work": "SNLI (Bowman et al.)",
+   "year": 2015,
+   "arxiv": "1508.05326",
+   "relation": "uses-data",
+   "note": "Transfer source",
+   "quote": null
+  },
+  {
+   "work": "GLUE (Wang et al.)",
+   "year": 2018,
+   "arxiv": "1804.07461",
+   "relation": "uses-method",
+   "note": "Transfer-learning baseline paradigm, QNLI, recurrent baseline",
+   "quote": null
+  },
+  {
+   "work": "Phang et al. (supplementary training on intermediate tasks)",
+   "year": 2018,
+   "arxiv": "1811.01088",
+   "relation": "replicates",
+   "note": "Confirms their result for yes/no QA",
+   "quote": "Our work conﬁrms these results for yes/no question answering."
+  },
+  {
+   "work": "RACE, SQuAD 2.0, QQP, MS Marco",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Other transfer sources",
+   "quote": null
+  },
+  {
+   "work": "QuAC, CoQA, HotPotQA, ShARC",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Contain yes/no questions but not natural",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Table 3",
+   "caption": "Transfer learning results on the BoolQ dev set after fine-tuning on the BoolQ training set. Results are averaged over five runs.",
+   "page": 7,
+   "why": "Compares every transfer source side by side."
+  },
+  {
+   "figure": "Table 4",
+   "caption": "Test set results on BoolQ",
+   "page": 8,
+   "why": "Final test numbers for the main models."
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Accuracy for various models on the BoolQ dev set as the number of training examples varies.",
+   "page": 8,
+   "why": "Shows sample-efficiency gain of MultiNLI."
+  }
+ ],
+ "code": [],
+ "problems": []
+}

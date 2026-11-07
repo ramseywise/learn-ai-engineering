@@ -1,0 +1,680 @@
+{
+ "schema": 1,
+ "key": "2110.08207",
+ "pdf": "generative-ai/05-RL/sources/sanh-2021-multitask-prompted-training-enables-zero.pdf",
+ "bib": {
+  "title": "Multitask Prompted Training Enables Zero-Shot Task Generalization",
+  "authors": [
+   "Victor Sanh",
+   "Albert Webson",
+   "Colin Raffel",
+   "Stephen H. Bach",
+   "Lintang Sutawika",
+   "Zaid Alyafeai",
+   "Antoine Chaffin",
+   "Arnaud Stiegler",
+   "Teven Le Scao",
+   "Arun Raja",
+   "Manan Dey",
+   "M Saiful Bari",
+   "Canwen Xu",
+   "Urmish Thakker",
+   "Shanya Sharma",
+   "Eliza Szczechla",
+   "Taewoon Kim",
+   "Gunjan Chhablani",
+   "Nihal V. Nayak",
+   "Debajyoti Datta",
+   "Jonathan Chang",
+   "Mike Tian-Jian Jiang",
+   "Han Wang",
+   "Matteo Manica",
+   "Sheng Shen",
+   "Zheng-Xin Yong",
+   "Harshit Pandey",
+   "Michael McKenna",
+   "Rachel Bawden",
+   "Thomas Wang",
+   "Trishala Neeraj",
+   "Jos Rozen",
+   "Abheesht Sharma",
+   "Andrea Santilli",
+   "Thibault Fevry",
+   "Jason Alan Fries",
+   "Ryan Teehan",
+   "Tali Bers",
+   "Stella Biderman",
+   "Leo Gao",
+   "Thomas Wolf",
+   "Alexander M. Rush"
+  ],
+  "first_author": "Sanh",
+  "year": 2022,
+  "venue": "ICLR 2022 (arXiv v3, Mar 2022)",
+  "arxiv": "2110.08207",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 270632,
+  "chars_total": 270632,
+  "engine": "pymupdf",
+  "skipped": "Appendix G prompt listing (about 170k chars of templates) skimmed only via its contents page; references skimmed."
+ },
+ "type": "empirical",
+ "question": "Can zero-shot generalization to held-out tasks be induced directly by explicit multitask training on many datasets rewritten as natural-language prompts?",
+ "hypothesis": "Implicit multitask supervision in pretraining plays a large role in zero-shot generalization, so explicit supervised multitask prompted training should induce it without massive scale and make the model more robust to prompt wording.",
+ "contributions": [
+  "A templating language and tool (PromptSource) for mapping datasets to prompts, and the Public Pool of Prompts (P3) with 2073 prompts for 177 datasets",
+  "T0, T0+ and T0++: T5+LM 11B fine-tuned on a multitask prompted mixture, with strong zero-shot results on held-out tasks and BIG-bench",
+  "Ablations on prompts per dataset and number of datasets, and a prompt-robustness comparison with GPT-3",
+  "Release of models, prompts and materialized data"
+ ],
+ "method": {
+  "summary": "Fine-tune LM-adapted T5 (3B and 11B) with maximum likelihood on a shuffled mixture of 39 (T0), 49 (T0+) or 55 (T0++) datasets, each rendered through many prompt templates. Evaluate zero-shot on whole held-out tasks (NLI, coreference, sentence completion, WSD) and 14 BIG-bench tasks, reporting median and interquartile range across prompts.",
+  "task": "multitask prompted fine-tuning for zero-shot task generalization",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "T0 training mixture (8 task families, 39 datasets)",
+    "role": "train",
+    "size": "39 datasets (d=39); any dataset with over 500’000 examples treated as 500’000 / num templates examples for sampling",
+    "split": "train splits; checkpoint chosen on validation splits of training datasets",
+    "source": "Hugging Face datasets; prompts from P3",
+    "preprocessing": "Examples materialized with Jinja prompt templates; p=8.03 prompts per dataset on average incl. non-original-task prompts; shuffled together; inputs truncated to 1024 tokens, targets to 256, packed"
+   },
+   {
+    "name": "T0+ mixture",
+    "role": "train",
+    "size": "49 datasets",
+    "split": null,
+    "source": "T0 mixture plus GPT-3's evaluation datasets",
+    "preprocessing": null
+   },
+   {
+    "name": "T0++ mixture",
+    "role": "train",
+    "size": "55 datasets",
+    "split": null,
+    "source": "T0+ plus SuperGLUE except RTE and CB",
+    "preprocessing": null
+   },
+   {
+    "name": "Held-out NLI, coreference, sentence completion, WSD (11 datasets: RTE, CB, ANLI R1-R3, WSC, Winogrande, COPA, StoryCloze, HellaSwag, WiC)",
+    "role": "eval",
+    "size": null,
+    "split": "validation splits unless stated",
+    "source": "Hugging Face datasets",
+    "preprocessing": "Prompts from P3; no prompt selection on validation; non-original-task prompts excluded from evaluation"
+   },
+   {
+    "name": "BIG-bench subset (14 tasks)",
+    "role": "eval",
+    "size": "14 tasks",
+    "split": null,
+    "source": "BIG-bench; English, in-vocabulary for T5 tokenizer, tasks with preliminary baselines",
+    "preprocessing": "One prompt per task supplied by BIG-bench maintainers"
+   },
+   {
+    "name": "P3 (Public Pool of Prompts)",
+    "role": "train",
+    "size": "2073 prompts for 177 datasets (11.7 per dataset)",
+    "split": null,
+    "source": "36 contributors from 24 institutions in 8 countries",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "T0",
+    "role": "proposed",
+    "params": "11B",
+    "architecture": "encoder-decoder Transformer (T5+LM)",
+    "init_from": "T5+LM 11B (Lester et al. 2021: T5 plus 100B more tokens of LM objective on C4)",
+    "tokenizer": "T5 tokenizer",
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "inputs 1024, targets 256 tokens",
+    "other": {
+     "T5 pretraining": "masked LM on 1T tokens of C4"
+    }
+   },
+   {
+    "name": "T0+",
+    "role": "proposed",
+    "params": "11B",
+    "architecture": "as T0",
+    "init_from": "T5+LM 11B",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "mixture": "adds GPT-3 eval datasets"
+    }
+   },
+   {
+    "name": "T0++",
+    "role": "proposed",
+    "params": "11B",
+    "architecture": "as T0",
+    "init_from": "T5+LM 11B",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "mixture": "adds SuperGLUE except RTE and CB"
+    }
+   },
+   {
+    "name": "T0 (3B)",
+    "role": "proposed",
+    "params": "3B",
+    "architecture": "as T0",
+    "init_from": "T5+LM 3B",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "T5+LM",
+    "role": "baseline",
+    "params": "11B",
+    "architecture": "encoder-decoder",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-3",
+    "role": "evaluated",
+    "params": "6.7B, 13B, 175B",
+    "architecture": "decoder-only",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "davinci": "used via OpenAI API for RTE robustness check, assumed 175B (Gao et al. 2021)"
+    }
+   },
+   {
+    "name": "BIG-bench baseline LMs",
+    "role": "baseline",
+    "params": "8.5B, 28B, 68B",
+    "architecture": "decoder-only Transformer LM",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "provider": "Google, evaluated by BIG-bench maintainers"
+    }
+   }
+  ],
+  "training": {
+   "objective": "standard maximum likelihood, autoregressive generation of target given input",
+   "optimizer": "Adafactor",
+   "lr": "1e-3",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "1024 sequences (2^20 total input tokens per batch)",
+   "steps": null,
+   "epochs": null,
+   "tokens": "about 250 billion tokens across all training runs incl. preliminary experiments",
+   "seq_len": "1024 input / 256 target, with packing",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": "0.1",
+   "regularisation": null,
+   "hardware": "Cloud TPU v3-512",
+   "compute": "about 270 total hours on v3-512 for all runs; about 27 h per single T0 run; about 8.9 tCO2e",
+   "wall_clock": "27 hours (single T0 run)",
+   "seeds": null,
+   "other": {
+    "checkpoint selection": "highest score on validation splits of training datasets",
+    "ablations": "same hyperparameters and same number of steps across p ablations"
+   }
+  },
+  "inference": {
+   "decoding": "rank classification: pick the answer option with highest log-likelihood under the model, no length normalization",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "all P3 prompts per dataset (about 10 per held-out dataset); median and IQR reported; single run",
+   "prompting": "zero-shot, no examples; prompts from P3; BIG-bench prompts from maintainers",
+   "retrieval": null,
+   "parameters": {},
+   "other": {
+    "prompt selection": "none"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "accuracy",
+     "definition": "fraction correct under rank classification; median over prompts, interquartile range Q3-Q1 as robustness",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "T5+LM 11B",
+    "GPT-3 6.7B/13B/175B (Brown et al. 2020)",
+    "BIG-bench decoder-only LMs 8.5B/28B/68B",
+    "FLAN (Wei et al. 2021, discussion only)"
+   ],
+   "protocol": "Validation splits, true zero-shot (no held-out example used to select checkpoint or prompt); median and IQR over prompts; no seeds or significance tests."
+  },
+  "availability": {
+   "code": "https://github.com/bigscience-workshop/t-zero",
+   "weights": "https://github.com/bigscience-workshop/t-zero",
+   "data": "https://huggingface.co/datasets/bigscience/P3 and https://github.com/bigscience-workshop/promptsource"
+  },
+  "prompts": [
+   {
+    "purpose": "example QQP prompt, Section 7",
+    "text": "I'm an administrator on the website Quora. There are two posts, one that asks \"question1\" and another that asks \"question2\". I can merge questions if they are asking the same thing. Can I merge these two questions?",
+    "where": "Section 7"
+   },
+   {
+    "purpose": "example NLI template, Section 4",
+    "text": "If {Premise} is true, is it also true that {Hypothesis}?",
+    "where": "Section 4"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training.batch_size",
+    "quote": "We use a batch size of 1024 sequences (corresponding to 220 total input tokens per batch)",
+    "where": "Section 5 (220 is 2^20 with lost superscript)"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "T0 matches or exceeds all GPT-3 models on 9 of 11 held-out datasets despite being about 16x smaller",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 9,
+   "unit": "datasets of 11",
+   "baseline_value": null,
+   "n": null,
+   "setup": "11 held-out datasets, T0 11B median over prompts vs GPT-3 up to 175B single prompt",
+   "quote": "We ﬁnd that T0 matches or exceeds the performance of all GPT-3 models on 9 out of 11 held-out datasets.",
+   "table": null,
+   "note": null,
+   "where": "Section 6.1"
+  },
+  {
+   "claim": "At least one T0 variant beats all BIG-bench baselines on all tasks except StrategyQA; the T0 variants improve over T5+LM on 13 of 14 BIG-bench tasks per the introduction",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 13,
+   "unit": "tasks of 14",
+   "baseline_value": null,
+   "n": null,
+   "setup": "14 BIG-bench tasks, zero-shot, baselines up to 68B",
+   "quote": "We also show that the model improves over a large baseline language model on 13 out of 14 tasks in the BIG-bench benchmark",
+   "table": null,
+   "note": null,
+   "where": "Section 1"
+  },
+  {
+   "claim": "Prompts per dataset: going from 1 to 5.7 raises median on 8 of 11 datasets and shrinks spread on 7 of 11",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 8,
+   "unit": "datasets of 11",
+   "baseline_value": null,
+   "n": null,
+   "setup": "T0 ablation p=1 vs p=5.7",
+   "quote": "median (increases for 8/11 datasets) and spread (decreases for 7/11 datasets)",
+   "table": null,
+   "note": null,
+   "where": "Section 6.2"
+  },
+  {
+   "claim": "Adding non-original-task prompts (p=8.03) raises median on 9 of 11 datasets and shrinks spread on 8 of 11",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 9,
+   "unit": "datasets of 11",
+   "baseline_value": null,
+   "n": null,
+   "setup": "T0 vs p=5.7",
+   "quote": "median (increases for 9/11 datasets) and spread (decreases for 8/11 datasets)",
+   "table": null,
+   "note": null,
+   "where": "Section 6.2"
+  },
+  {
+   "claim": "More datasets (39 to 49 to 55) raises median on all 5 held-out datasets but does not consistently reduce spread",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 1,
+   "unit": "datasets of 5 with reduced spread, 39 to 49",
+   "baseline_value": null,
+   "n": null,
+   "setup": "T0 vs T0+ vs T0++, p=all prompts",
+   "quote": "the spread only decreases for 1 out of 5 datasets",
+   "table": null,
+   "note": null,
+   "where": "Section 6.2"
+  },
+  {
+   "claim": "GPT-3 davinci on RTE with the same 10 prompts: nine non-original prompts give near chance, median accuracy 52.96%, IQR 1.28%",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 52.96,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "RTE, 10 prompts, OpenAI davinci (assumed 175B)",
+   "quote": "median accuracy = 52.96% and interquartile range = 1.28%",
+   "table": null,
+   "note": "Brown et al. prompt scored 58.8% vs 63.5% reported by Brown et al.",
+   "where": "Section 6.2"
+  },
+  {
+   "claim": "Removing instructions from HellaSwag prompts lifts T0 median from 33.65% to 57.93%",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 57.93,
+   "unit": "%",
+   "baseline_value": 33.65,
+   "n": null,
+   "setup": "HellaSwag, T0 11B, prompts without instructions",
+   "quote": "improves performance on HellaSwag from a median of 33.65% to 57.93%",
+   "table": null,
+   "note": null,
+   "where": "Section 7"
+  },
+  {
+   "claim": "Winogrande with FLAN prompt without instructions gives 62.15%, no substantial change",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 62.15,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Winogrande, T0 11B",
+   "quote": "accuracy = 62.15%",
+   "table": null,
+   "note": null,
+   "where": "Section 7"
+  },
+  {
+   "claim": "T0 median accuracy on CB",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 78.57,
+   "unit": "%",
+   "baseline_value": 33.93,
+   "n": null,
+   "setup": "T0 11B, CB, median over prompts; T5+LM median 33.93",
+   "quote": null,
+   "table": "Table 6, row CB, column T0 Med.",
+   "note": null,
+   "where": "Appendix F"
+  },
+  {
+   "claim": "T0 median accuracy on RTE",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 81.23,
+   "unit": "%",
+   "baseline_value": 51.81,
+   "n": null,
+   "setup": "T0 11B, RTE, median over prompts; T5+LM median 51.81",
+   "quote": null,
+   "table": "Table 6, row RTE, column T0 Med.",
+   "note": null,
+   "where": "Appendix F"
+  },
+  {
+   "claim": "T0 (3B) median accuracy on RTE, much below 11B",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 64.08,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "T0 3B, RTE",
+   "quote": null,
+   "table": "Table 6, row RTE, column T0 (3B) Med.",
+   "note": null,
+   "where": "Appendix F"
+  },
+  {
+   "claim": "T0++ median accuracy on WiC (not zero-shot: SuperGLUE added to T0++ training)",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 69.98,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "T0++ 11B, WiC; WiC is in the T0++ training mixture",
+   "quote": null,
+   "table": "Table 6, row WiC, column T0++ Med.",
+   "note": "Greyed-out entries in Table 6 are not zero-shot; the PDF text does not show which.",
+   "where": "Appendix F"
+  },
+  {
+   "claim": "Estimated carbon emissions for all experiments",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 8.9,
+   "unit": "tCO2e",
+   "baseline_value": null,
+   "n": null,
+   "setup": "270 hours on v3-512 in europe-west4-a at 410 gCO2eq/kWh",
+   "quote": "≈8.9 tCO2e",
+   "table": null,
+   "note": null,
+   "where": "Appendix B.1"
+  },
+  {
+   "claim": "T5+LM on standard LAMBADA scores 6.2% and T0 18.7%, so LAMBADA was dropped from evaluation",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 18.7,
+   "unit": "%",
+   "baseline_value": 6.2,
+   "n": null,
+   "setup": "LAMBADA, original unprompted next-word form",
+   "quote": "T0 did not fare much better, achieving only 18.7%.",
+   "table": null,
+   "note": null,
+   "where": "Appendix D.3"
+  },
+  {
+   "claim": "HellaSwag has 912 of 10000 examples with C4 substring matches",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 9.12,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "contamination search, 16-token exact-match groups against C4",
+   "quote": "HellaSwag has 9.12% matches",
+   "table": null,
+   "note": null,
+   "where": "Appendix E"
+  },
+  {
+   "claim": "T0++ on WinoGender mean accuracy as a bias-recognition task",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 89.2,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "WinoGender cast as entailment, 5-10 prompts",
+   "quote": null,
+   "table": "Table 3, row WinoGender T0++, column Mean (Acc.)",
+   "note": null,
+   "where": "Appendix B.3"
+  }
+ ],
+ "limits": [
+  "Zero-shot performance still lags models fine-tuned per task (Appendix B.2).",
+  "Task taxonomy is a heuristic; held-out tasks may overlap with training QA data (D.2).",
+  "Authors remain agnostic about why prompts support generalization (Section 2).",
+  "More datasets does not consistently reduce prompt-wording variance (Section 6.2).",
+  "Differences from FLAN (architecture, prompt diversity) are hypotheses left to future work (Section 7).",
+  "Contamination: HellaSwag 9.12% and RTE hypotheses 5.2% overlap with C4 (Appendix E).",
+  "T0++ gives biased or conspiracist answers (Table 2); not bias free.",
+  "Checkpoint steps, learning-rate schedule, warmup and seeds are not stated; single training run, no significance tests."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "P3",
+   "definition": "Public Pool of Prompts: 2073 prompts for 177 datasets",
+   "where": "Section 4"
+  },
+  {
+   "term": "rank classification",
+   "definition": "compute the log-likelihood of each target option and select the highest",
+   "where": "Section 5"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Exploring the limits of transfer learning with a unified text-to-text transformer (T5)",
+   "year": 2020,
+   "arxiv": "1910.10683",
+   "relation": "extends",
+   "note": "base architecture, mixture capping and packing",
+   "quote": null
+  },
+  {
+   "work": "The power of scale for parameter-efficient prompt tuning (T5+LM)",
+   "year": 2021,
+   "arxiv": "2104.08691",
+   "relation": "uses-method",
+   "note": "LM-adapted T5 initialization",
+   "quote": null
+  },
+  {
+   "work": "Language models are few-shot learners (GPT-3)",
+   "year": 2020,
+   "arxiv": "2005.14165",
+   "relation": "baseline",
+   "note": "zero-shot comparison and rank classification",
+   "quote": null
+  },
+  {
+   "work": "Finetuned language models are zero-shot learners (FLAN)",
+   "year": 2021,
+   "arxiv": "2109.01652",
+   "relation": "contradicts",
+   "note": "concurrent; FLAN found multitask prompting hurt at 8B, T0 finds gains at 3B",
+   "quote": "Surprisingly, Wei et al. (2021) perform an ablation with a model of comparable size (8B parameters)"
+  },
+  {
+   "work": "PromptSource",
+   "year": 2022,
+   "arxiv": "2202.01279",
+   "relation": "uses-method",
+   "note": "prompt tool (Bach et al. 2022)",
+   "quote": null
+  },
+  {
+   "work": "BIG-bench",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "14-task subset",
+   "quote": null
+  },
+  {
+   "work": "True few-shot learning with language models",
+   "year": 2021,
+   "arxiv": "2105.11447",
+   "relation": "uses-method",
+   "note": "no prompt selection on validation",
+   "quote": null
+  },
+  {
+   "work": "Adafactor",
+   "year": 2018,
+   "arxiv": "1804.04235",
+   "relation": "uses-method",
+   "note": "optimizer",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Figure 1",
+   "caption": "Our model and prompt format.",
+   "page": 2,
+   "why": "shows training tasks vs held-out tasks and prompted examples"
+  },
+  {
+   "figure": "Figure 4",
+   "caption": "Results for T0 task generalization experiments compared to GPT-3",
+   "page": 7,
+   "why": "per-prompt dots show spread vs median"
+  },
+  {
+   "figure": "Figure 6",
+   "caption": "Effect of more prompts per dataset.",
+   "page": 9,
+   "why": "the p ablation"
+  }
+ ],
+ "code": [
+  {
+   "where": "Appendix C",
+   "snippet": "If {{premise}} is true, is it also true that {{hypothesis}}? ||| {{entailed}}",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Superscript lost: 'batch size 1024 sequences (220 total input tokens)' means 2^20; I did not record 2^20 as printed, it is stated as inferred in evidence.",
+  "Greyed-out (non-zero-shot) cells in Table 6 are not distinguishable in text.",
+  "Appendix G prompt list not read in full."
+ ]
+}

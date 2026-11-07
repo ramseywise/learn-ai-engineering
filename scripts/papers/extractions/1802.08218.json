@@ -1,19 +1,585 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "1802.08218",
  "pdf": "ai-engineering/08-multimodal-engineering/sources/gurari-2018-vizwiz-grand-challenge.pdf",
  "bib": {
   "title": "VizWiz Grand Challenge: Answering Visual Questions from Blind People",
+  "authors": [
+   "Danna Gurari",
+   "Qing Li",
+   "Abigale J. Stangl",
+   "Anhong Guo",
+   "Chi Lin",
+   "Kristen Grauman",
+   "Jiebo Luo",
+   "Jeffrey P. Bigham"
+  ],
   "first_author": "Gurari",
   "year": 2018,
-  "venue": "CVPR 2018",
+  "venue": "preprint (arXiv 1802.08218v4, 9 May 2018)",
   "arxiv": "1802.08218",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-04",
-  "session": "97b4134b-decf-4866-ae85-c6872cbbba19"
+  "at": "2026-11-07",
+  "chars_read": 57655,
+  "chars_total": 57655,
+  "engine": "pymupdf",
+  "skipped": "reference list skimmed"
  },
- "legacy_report": "SOURCE: \"VizWiz Grand Challenge: Answering Visual Questions from Blind People\", Gurari, Li, Stangl, Guo, Lin, Grauman, Luo, Bigham. CVPR 2018 (the copy read is arXiv 1802.08218v4, 9 May 2018).\n\nCOVERAGE: All 16 pages, 57,654 of 57,654 chars: the main paper, the references (skimmed) and the supplementary material on pp. 11–16, which holds Tables 5 and 6.\n\nCLAIMS\n1. Dataset size and how it was collected\n- number: 31,173 visual questions with 10 answers each, filtered down from 48,169 shareable ones (72,205 asked in total by 11,045 users). The split is 20,000 train / 3,173 val / 8,000 test.\n- setup: Blind users of the VizWiz app took a phone photo and recorded a spoken question. Questions were transcribed on Amazon Mechanical Turk (AMT). About 31% were filtered out for PII, location, indecent content, \"suspicious\" complex scenes or low-quality images, plus 7,477 with a missing question. Answers came from US AMT workers following the VQA 1.0 protocol.\n- quote: \"VizWiz consists of over 31,000 visual questions originating from blind people who each took a picture using a mobile phone and recorded a spoken question\" (p1); \"In total, ∼31% of visual questions (i.e., 14,796) were filtered from the original 48,169\" (p5)\n\n2. Share of questions that cannot be answered\n- number: 28.63%\n- setup: A question counts as unanswerable when at least half of its 10 answers are \"unanswerable\" or \"unsuitable image\". \"Unsuitable Image\" was defined as \"all white, all black, or too blurry\".\n- quote: \"We find 28.63% of visual questions are not answerable.\" (p6). Causes: \"blur, inadequate lighting, finger covering the lens, etc.\" (p2)\n\n3. Image quality\n- number: 28% of images\n- setup: An image is counted when at least 2 of its 10 workers answered \"unsuitable image\". This is the only statistic on image quality. There is no blur metric or per-cause breakdown.\n- quote: \"We found 28% of images were labelled as such.\" (p6)\n- note: Table 4 says unanswerable makes up 34.6% of answer types, which does not match the 28.63% above. The paper does not explain the difference.\n\n4. Models trained on VQA v2 versus fine-tuned\n- number: about 0.14 accuracy off the shelf. Fine-tuned models reach 0.466–0.475. Models trained only on VizWiz reach 0.465–0.469. Humans reach 0.75.\n- setup: Test set of 8,000. The three models are Goyal et al. [18] (Q+I), attention [24] (Q+I+A) and bottom-up/top-down attention [6] (Q+I+BUA). Each predicts its top 3,000 answers and is scored with VQA accuracy. The cause offered is answer-vocabulary mismatch: \"only 824 out of the top 3,000 answers in VizWiz are included\" in VQA 2.0. Off-the-shelf accuracy on unanswerable questions is 0.060–0.071, against 0.770–0.805 after adaptation (Table 4).\n- quote: \"these models perform poorly, as indicated by low values for all metrics; e.g., ∼0.14 accuracy for all algorithms\" (p7); \"We find little performance difference between fine-tuning and training from scratch\" (p7)\n\n5. The domain shift runs both ways\n- number: 0.218 to 0.318\n- setup: The six models trained or fine-tuned on VizWiz were tested on the VQA 2.0 test set (Table 5, p14).\n- quote: \"do not generalize well; i.e., accuracy scores range from 0.218 to 0.318\" (p8)\n\n6. Predicting whether a question is answerable\n- number: average precision (AP) 0.306 for the existing relevance model, 0.640 from image features alone, 0.717 for question plus image (F1 0.648)\n- setup: The baseline is Mahendru et al. [30], a caption-question similarity model trained on QRPE. The new models are LSTM encoders and ResNet-152 pool5 features feeding a softmax, trained for 10 epochs (Table 6, p14).\n- quote: \"AP score of 30.6 for [30] versus 71.7 for Q+I\" (p8); \"the image provides the greatest predictive power (i.e., AP = 64)\" (p8)\n\nLIMITS\n- The paper never measures image quality directly. There are no blur, lighting or framing counts, and no split between unsuitable-image and unanswerable reasons, even though it collected both labels.\n- The filtering removed suspicious low-quality images (578) and complex scenes (725), so the released set probably understates how bad the raw images were. The authors raise this concern themselves.\n- It does not separate the effect of image quality from the effect of answer vocabulary. The off-the-shelf failure is blamed mainly on the 824/3,000 answer overlap, not on photo quality. So it does not show that clean-photo training alone causes the drop.\n- All models are 2017-era classifiers over a fixed answer set. There are no generative vision-language models (VLMs), so the absolute numbers are dated.\n- Human agreement is measured by exact string match, which the authors call a lower bound.\n- The 28.63% and 34.6% unanswerable figures are not reconciled.\n\nBUILDS ON\n- Bigham et al. 2010, \"VizWiz: Nearly real-time answers to visual questions\", UIST (the app and the data source)\n- Brady et al., CHI, \"Visual challenges in the everyday lives of blind people\" (year cut off in the extraction)\n- Antol et al. 2015, VQA, ICCV (answer protocol and accuracy metric)\n- Goyal et al. 2016, \"Making the V in VQA matter\", arXiv\n- Anderson et al. 2017, bottom-up/top-down attention, arXiv\n- Mahendru et al. [30], the QRPE relevance model (its reference entry was not read in full)\n\nCODE: none.\n\nFIGURES\n- Fig. 1, p2: \"Examples of visual questions asked by blind people and corresponding answers agreed upon by crowd workers. The examples include questions that both can be answered from the image (top row) and cannot be answered from the image (bottom row).\" This is the best candidate for the clean-screenshot versus phone-photo pitfall. It shows blur, framing and finger-on-lens failures in one glance.\n- Fig. 5, p8 (precision-recall curves for answerability) is a second option.\n\nPROBLEMS\n- The extraction is clean. There are no embedded instructions.\n- In Section 5.1 the labels look swapped: \"Q+I [24], Q+I+A [18]\". Tables 3 and 4 give Q+I [18] and Q+I+A [24].\n- The text says the attention models \"consistently outperform\", but in Table 3 Q+I+BUA [6] scores 0.134, below Q+I at 0.137.\n- The text says the filtering removed \"∼31% (i.e., 14,796)\" of 48,169, but 48,169 − 31,173 = 16,996. That arithmetic is mine, not the paper's.\n\nPDF: /Users/ramsey-wise/workspace/learn-ai-engineering/ai-engineering/08-multimodal-engineering/sources/gurari-2018-vizwiz-grand-challenge.pdf"
+ "type": "benchmark",
+ "question": "How do visual questions asked by blind people with phone photos and spoken questions differ from artificial VQA data, and how well do existing VQA and answerability algorithms handle them?",
+ "hypothesis": "Existing VQA algorithms trained on artificial datasets will perform poorly on goal-oriented, naturally captured visual questions from blind people.",
+ "contributions": [
+  "VizWiz, the first goal-oriented VQA dataset from a natural setting: 31,000+ visual questions from blind people with 10 crowdsourced answers each",
+  "Anonymisation and filtering process with a vulnerability taxonomy",
+  "Analysis of questions, images, answers and answerability",
+  "Benchmark of nine VQA methods and eight answerability predictors"
+ ],
+ "method": {
+  "summary": "Blind users' photos and spoken questions from the VizWiz app were transcribed, filtered for privacy, and given 10 AMT answers each. Three published VQA models were evaluated off the shelf, fine-tuned and trained from scratch, plus eight answerability predictors.",
+  "task": "visual question answering and answerability prediction on images from blind photographers",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "VizWiz",
+    "role": "both",
+    "size": "31,173 visual questions, 10 answers each",
+    "split": "20,000 train / 3,173 val / 8,000 test (approx 65/10/25); all results on test",
+    "source": "72,205 questions from the VizWiz app (May 2011 onward, 11,045 users); 48,169 from users who agreed to share; 14,796 (~31%) filtered; publicly released at vizwiz.org/data",
+    "preprocessing": "Audio transcribed by AMT workers, spell-checked; images re-saved lossless to strip metadata; AMT PII round (4,626 removed), expert round (2,693 removed), 7,477 with under two words removed; answers lowercased, numbers to digits, punctuation/articles/filler words removed, spelling fixed"
+   },
+   {
+    "name": "VQA v2.0",
+    "role": "train",
+    "size": null,
+    "split": null,
+    "source": "Goyal et al.",
+    "preprocessing": "Used to train the three off-the-shelf models on the 3,000 most frequent answers; also the cross-dataset test set (Table 5)"
+   },
+   {
+    "name": "QRPE",
+    "role": "train",
+    "size": null,
+    "split": null,
+    "source": "Mahendru et al. [30]",
+    "preprocessing": "Trains the relevance model Q+C [30]"
+   }
+  ],
+  "models": [
+   {
+    "name": "Q+I (Goyal et al. [18] in Table 3; [24] in text)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "question and image only",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "answer_classes": "3,000 most frequent answers"
+    }
+   },
+   {
+    "name": "Q+I+A (Kazemi and Elqursh [24] in Table 3; [18] in text)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "adds attention over image regions",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Q+I+BUA (Anderson et al. [6])",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "bottom-up and top-down attention",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "FT variants of the three",
+    "role": "proposed",
+    "params": null,
+    "architecture": "fine-tuned on VizWiz, top 3,000 VizWiz answers",
+    "init_from": "VQA v2.0 pre-trained model; last-layer rows copied for answers also in VQA v2.0, random otherwise",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "VizWiz-from-scratch variants of the three",
+    "role": "proposed",
+    "params": null,
+    "architecture": "random init, trained on VizWiz only, top 3,000 answers",
+    "init_from": "random",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Answerability models Q, C, I, Q+C, Q+I, FT[30], VizWiz[30], VQA[18]",
+    "role": "proposed",
+    "params": null,
+    "architecture": "Q/C: one-layer LSTM + softmax; I: ResNet-152 pool5 + softmax; Q+C and Q+I: concatenated features + softmax; captions from NeuralTalk2 pre-trained on MSCOCO captions",
+    "init_from": "FT: pre-trained model; VizWiz: random",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "one-layer LSTM",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "inferred: classification over 3,000 answers (softmax)",
+   "optimizer": "Adam",
+   "lr": "0.01, dropped to 0.001 after the first 10 epochs (fine-tuning)",
+   "lr_schedule": "step drop after 10 epochs",
+   "warmup": null,
+   "batch_size": "128",
+   "steps": null,
+   "epochs": "10 epochs at lr 0.01, then another 10 (VQA fine-tuning); 10 epochs (answerability)",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": "used, rate not stated",
+   "regularisation": "dropout and batch normalization",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "scratch_hyperparameters": "not stated for from-scratch VQA models beyond random init and 3,000 answers"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single run per model; no seeds or variance reported",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Accuracy",
+     "definition": "VQA accuracy of Antol et al. [8]",
+     "unit": "fraction 0-1",
+     "higher_is_better": true
+    },
+    {
+     "name": "CIDEr, BLEU4, METEOR",
+     "definition": "image description metrics from the COCO caption server, used because nearly half of answers exceed one word",
+     "unit": "score",
+     "higher_is_better": true
+    },
+    {
+     "name": "Average precision (AP) and average F1",
+     "definition": "AP is the area under the precision-recall curve for predicting a question is not answerable",
+     "unit": "0-1 in Table 6, 0-100 in text",
+     "higher_is_better": true
+    },
+    {
+     "name": "Human accuracy",
+     "definition": "Dataset split into 10 sets of one answer per question; one set scored against the other nine, for all 10 partitions",
+     "unit": "fraction",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Off-the-shelf VQA v2.0 models",
+    "Q+C [30] relevance model for answerability"
+   ],
+   "protocol": "All results on the 8,000-question test set; unanswerable means at least half of the 10 answers are 'unanswerable' or 'unsuitable image'"
+  },
+  "availability": {
+   "code": "shared at http://vizwiz.org/data/ (per text)",
+   "weights": null,
+   "data": "http://vizwiz.org/data/"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "models.Q+I / Q+I+A",
+    "quote": "which we refer to as Q+I [24], Q+I+A [18], and Q+I+BUA [6]",
+    "where": "Section 5.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "VizWiz has 31,173 visual questions split 20,000/3,173/8,000.",
+   "kind": "measured",
+   "source": null,
+   "metric": "visual questions",
+   "value": "31,173",
+   "unit": "count",
+   "baseline_value": null,
+   "n": null,
+   "setup": "After filtering 48,169 shareable candidates",
+   "quote": "We next collected answers for a final set of 31,173 vi- sual questions.",
+   "table": null,
+   "note": "The quote line-break hyphen may fail the check; see the abstract's 'over 31,000'.",
+   "where": "Sec 3.3"
+  },
+  {
+   "claim": "About 28.63% of visual questions are unanswerable.",
+   "kind": "measured",
+   "source": null,
+   "metric": "share unanswerable",
+   "value": "28.63",
+   "unit": "%",
+   "baseline_value": null,
+   "n": 31173,
+   "setup": "At least half of the 10 answers are 'unanswerable' or 'unsuitable image'",
+   "quote": "We find 28.63% of visual questions are not answerable.",
+   "table": null,
+   "note": "Section 5.1 gives the 'unanswerable' answer-type share as 34.6% (Table 4 text); the paper does not reconcile the two.",
+   "where": "Sec 4.3"
+  },
+  {
+   "claim": "28% of images were labelled unsuitable by at least two of 10 workers.",
+   "kind": "measured",
+   "source": null,
+   "metric": "share unsuitable images",
+   "value": "28",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "At least two crowd workers answered 'unsuitable image'",
+   "quote": "We found 28% of images were labelled as such.",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2"
+  },
+  {
+   "claim": "Off-the-shelf VQA v2.0 models score about 0.14 accuracy on VizWiz test.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Accuracy",
+   "value": "0.145",
+   "unit": "fraction",
+   "baseline_value": null,
+   "n": 8000,
+   "setup": "Best of three models used as is, VizWiz test",
+   "quote": "∼0.14 accuracy for all algorithms",
+   "table": "Table 3, row Q+I+A [24], column Acc",
+   "note": "Q+I 0.137, Q+I+BUA 0.134",
+   "where": "Sec 5.1, Table 3"
+  },
+  {
+   "claim": "Fine-tuning the best model (bottom-up/top-down) reaches 0.475 accuracy.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Accuracy",
+   "value": "0.475",
+   "unit": "fraction",
+   "baseline_value": "0.134",
+   "n": 8000,
+   "setup": "FT [6] on VizWiz test, 3,000 answers",
+   "quote": null,
+   "table": "Table 3, row FT [6], column Acc",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Training from scratch on VizWiz alone gives accuracy 0.465 to 0.469, close to fine-tuning.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Accuracy",
+   "value": "0.469",
+   "unit": "fraction",
+   "baseline_value": null,
+   "n": 8000,
+   "setup": "VizWiz [24] and VizWiz [6] rows",
+   "quote": null,
+   "table": "Table 3, row VizWiz [24], column Acc",
+   "note": "VizWiz [18] is 0.465",
+   "where": "Table 3"
+  },
+  {
+   "claim": "Human accuracy is 0.75.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Accuracy",
+   "value": "0.75",
+   "unit": "fraction",
+   "baseline_value": null,
+   "n": null,
+   "setup": "One answer set scored against the other nine, 10 partitions",
+   "quote": "human performance (i.e., 0.75 accuracy)",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.1 and footnote 1"
+  },
+  {
+   "claim": "Only 824 of the top 3,000 VizWiz answers are in the top 3,000 VQA 2.0 answers.",
+   "kind": "measured",
+   "source": null,
+   "metric": "answer overlap",
+   "value": "824",
+   "unit": "of 3,000",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Explains the off-the-shelf failure",
+   "quote": "only 824 out of the top 3,000 answers in VizWiz are included in the top 3,000 answers in VQA 2.0",
+   "table": null,
+   "note": "Section 5.1 words it as 'in the dataset (i.e., VQA 2.0)'",
+   "where": "Sec 4.3, 5.1"
+  },
+  {
+   "claim": "Models trained on VizWiz transfer poorly to VQA 2.0 test (0.218 to 0.318).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Accuracy",
+   "value": "0.318",
+   "unit": "fraction",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Six VizWiz-trained models on VQA 2.0 test; 0.318 is FT [24]",
+   "quote": "accuracy scores range from 0.218 to 0.318",
+   "table": "Table 5, row FT [24], column All",
+   "note": null,
+   "where": "Sec 5.1, Table 5"
+  },
+  {
+   "claim": "On unanswerable questions off-the-shelf models score 0.06-0.07 while fine-tuned reach 0.77-0.78 and scratch 0.80.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Accuracy, unanswerable",
+   "value": "0.781",
+   "unit": "fraction",
+   "baseline_value": "0.070",
+   "n": null,
+   "setup": "FT [18] vs Q+I [18]",
+   "quote": null,
+   "table": "Table 4, row FT [18], column Unans",
+   "note": "Number-type accuracy stays low (0.045-0.262)",
+   "where": "Table 4"
+  },
+  {
+   "claim": "Q+I is the best answerability predictor at AP 71.7, versus 30.6 for the prior relevance method.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Average precision",
+   "value": "71.7",
+   "unit": "AP",
+   "baseline_value": "30.6",
+   "n": 8000,
+   "setup": "VizWiz test, predicting unanswerable",
+   "quote": "AP score of 30.6 for [30] versus 71.7",
+   "table": "Table 6, row Q+I, column Average Precision",
+   "note": "Table 6 prints 0.717 and 0.306",
+   "where": "Sec 5.2"
+  },
+  {
+   "claim": "Image alone gives AP 64, the largest single feature.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Average precision",
+   "value": "64",
+   "unit": "AP",
+   "baseline_value": null,
+   "n": 8000,
+   "setup": "ResNet-152 pool5 features",
+   "quote": "the image provides the greatest predictive power (i.e., AP = 64)",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.2"
+  },
+  {
+   "claim": "27.88% of VizWiz questions start with a rare first word versus 13.4% for VQA 2.0.",
+   "kind": "measured",
+   "source": null,
+   "metric": "rare first word share",
+   "value": "27.88",
+   "unit": "%",
+   "baseline_value": "13.4",
+   "n": null,
+   "setup": "First word occurring in less than 5% of questions; VQA 2.0 on a random subset of 40,000",
+   "quote": "27.88% for VizWiz versus 13.4% for VQA 2.0",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.1"
+  },
+  {
+   "claim": "Median question length is five words and mean 6.68.",
+   "kind": "measured",
+   "source": null,
+   "metric": "question length",
+   "value": "6.68",
+   "unit": "words (mean)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "All VizWiz questions",
+   "quote": "The median and mean question lengths are five and 6.68",
+   "table": null,
+   "note": "Source text has 'ﬁve and 6.68' with ligature",
+   "where": "Sec 4.1"
+  },
+  {
+   "claim": "67.32% of answers are one word; mean answer length 1.66 words.",
+   "kind": "measured",
+   "source": null,
+   "metric": "answer length",
+   "value": "67.32",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "All answers",
+   "quote": "67.32% have one word",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.3"
+  },
+  {
+   "claim": "Humans agree on an answer for 97.7% of visual questions under exact string matching.",
+   "kind": "measured",
+   "source": null,
+   "metric": "agreement",
+   "value": "97.7",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "At least two of 10 agree",
+   "quote": "(i.e., 97.7%)",
+   "table": null,
+   "note": "72.83% more than three agree; 15.5% exactly three; 9.67% exactly two",
+   "where": "Sec 4.3"
+  },
+  {
+   "claim": "About 31% (14,796) of 48,169 candidates were filtered.",
+   "kind": "measured",
+   "source": null,
+   "metric": "filtered",
+   "value": "14,796",
+   "unit": "count",
+   "baseline_value": null,
+   "n": 48169,
+   "setup": "Crowd round 4,626, expert round 2,693 (PII 895, location 377, indecent 55, complex scene 725, low quality 578, other 63), 7,477 missing question",
+   "quote": "(i.e., 14,796)",
+   "table": "Table 2",
+   "note": "4,626+2,693+7,477=14,796",
+   "where": "Sec 3.2"
+  }
+ ],
+ "limits": [
+  "Answer types in Table 4: yes/no 4.80%, number 1.69%, other 58.91%, unanswerable 34.6%; the 34.6% differs from 28.63% without explanation.",
+  "Model citation labels are swapped between text (Q+I [24], Q+I+A [18]) and Table 3 (Q+I [18], Q+I+A [24]).",
+  "Filtering erred towards removing complex scenes and blurry images, so the released set may be easier than the raw stream (authors check with an average image).",
+  "No seeds, variance, hardware or from-scratch hyperparameters reported; 2018 models (no pre-trained vision-language models).",
+  "Answerability is judged by crowd workers, not blind users."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "unanswerable (visual question)",
+   "definition": "at least half of the 10 crowdsourced answers say 'unanswerable' or 'unsuitable image'",
+   "where": "Sec 4.3"
+  },
+  {
+   "term": "Unsuitable Image",
+   "definition": "an image too poor in quality to answer the question (all white, all black, or too blurry)",
+   "where": "Sec 3.3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "VizWiz: Nearly real-time answers to visual questions (Bigham et al.)",
+   "year": 2010,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Source of the app and 72,205 questions",
+   "quote": null
+  },
+  {
+   "work": "VQA: Visual Question Answering (Antol et al.)",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Answer collection protocol and accuracy metric",
+   "quote": null
+  },
+  {
+   "work": "Making the V in VQA matter (Goyal et al.)",
+   "year": 2016,
+   "arxiv": "1612.00837",
+   "relation": "evaluates",
+   "note": "VQA v2.0 and a baseline",
+   "quote": null
+  },
+  {
+   "work": "Show, ask, attend, and answer (Kazemi and Elqursh)",
+   "year": 2017,
+   "arxiv": "1704.03162",
+   "relation": "evaluates",
+   "note": "Attention baseline",
+   "quote": null
+  },
+  {
+   "work": "Bottom-up and top-down attention (Anderson et al.)",
+   "year": 2017,
+   "arxiv": "1707.07998",
+   "relation": "evaluates",
+   "note": "Best baseline",
+   "quote": null
+  },
+  {
+   "work": "QRPE relevance dataset and method (Mahendru et al.)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Question relevance predictor",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Examples of visual questions asked by blind people and corresponding answers agreed upon by crowd workers.",
+   "page": 2,
+   "why": "Shows answerable and unanswerable cases"
+  },
+  {
+   "figure": "Table 3",
+   "caption": "Performance of VQA methods on the VizWiz test data with respect to four metrics.",
+   "page": 7,
+   "why": "Off-the-shelf 0.14 versus fine-tuned 0.47"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Table cell values are one per line in extracted text; the model label order [18]/[24] conflicts with the prose.",
+  "No embedded instructions found."
+ ]
 }

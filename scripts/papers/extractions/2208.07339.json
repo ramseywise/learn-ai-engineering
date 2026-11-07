@@ -1,0 +1,131 @@
+{
+ "schema": 1,
+ "key": "2208.07339",
+ "pdf": "ai-engineering/07-inference-engineering/sources/dettmers-2022-llm-int8.pdf",
+ "bib": {
+  "title": "LLM.int8(): 8-bit Matrix Multiplication for Transformers at Scale",
+  "authors": ["Tim Dettmers", "Mike Lewis", "Younes Belkada", "Luke Zettlemoyer"],
+  "first_author": "Dettmers",
+  "year": 2022,
+  "venue": "36th Conference on Neural Information Processing Systems (NeurIPS 2022)",
+  "arxiv": "2208.07339",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 71372,
+  "chars_total": 71372,
+  "engine": "pymupdf",
+  "skipped": "reference list skimmed only; checklist pages skimmed"
+ },
+ "type": "empirical",
+ "question": "Can multi-billion-parameter transformers be quantized to Int8 for inference without any performance degradation, and why do standard 8-bit methods fail at scale?",
+ "hypothesis": "Emergent, systematic large-magnitude outlier feature dimensions cause quantization failure beyond about 6.7B parameters; isolating them in 16-bit while quantizing the rest vector-wise should remove the degradation.",
+ "contributions": [
+  "Vector-wise Int8 quantization with separate normalization constants per inner product",
+  "Mixed-precision decomposition: outlier feature dimensions multiplied in 16-bit, other 99.9% in 8-bit",
+  "Analysis of emergent outlier features (phase shift at 6.7B, tied to perplexity), with their effect on attention and perplexity",
+  "Open-source bitsandbytes software and Hugging Face Transformers integration"
+ ],
+ "method": {
+  "summary": "LLM.int8() combines absmax vector-wise Int8 quantization (row constants for X, column constants for W, dequantized by their outer product) with mixed-precision decomposition: input feature dimensions with any value of magnitude >= 6.0 are multiplied in FP16, the rest in Int8 with Int32 accumulation. Applied to feed-forward and attention projection layers of pretrained models without further training; evaluated by C4 perplexity (125M-13B fairseq models) and zeroshot accuracy (OPT 125M-175B).",
+  "task": "Post-training Int8 quantization of transformer LM inference",
+  "trains": false,
+  "datasets": [
+   {"name": "C4 validation", "role": "eval", "size": null, "split": "validation", "source": "Raffel et al. 2019, Common Crawl subset", "preprocessing": null},
+   {"name": "EleutherAI LM evaluation harness (WinoGrande, HellaSwag, PIQA, LAMBADA)", "role": "eval", "size": null, "split": null, "source": "Gao et al. 2021", "preprocessing": null},
+   {"name": "RoBERTa corpus subset (Books, CC-News, OpenWebText, CC-Stories) for Int8 training test", "role": "train", "size": null, "split": null, "source": "appendix E", "preprocessing": null},
+   {"name": "WMT14+WMT16 NMT", "role": "train", "size": null, "split": null, "source": "Appendix E", "preprocessing": null},
+   {"name": "GLUE (MNLI, QNLI, QQP, RTE, SST-2, MRPC, CoLA, STS-B)", "role": "train", "size": null, "split": null, "source": "RoBERTa-large fine-tuning, Appendix F", "preprocessing": null}
+  ],
+  "models": [
+   {"name": "fairseq dense autoregressive transformers 125M-13B (Artetxe et al. 2021)", "role": "evaluated", "params": "125M, 1.3B, 2.7B, 6.7B, 13B", "architecture": "dense decoder-only transformer", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": "2048 tokens (outlier analysis sequence length)", "other": {"pretraining_data": "Books, English Wikipedia, CC-News, OpenWebText, CC-Stories, English CC100"}},
+   {"name": "OPT 125M-175B", "role": "evaluated", "params": "125M to 175B", "architecture": "decoder-only transformer", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "BLOOM-176B", "role": "evaluated", "params": "176B", "architecture": "decoder-only transformer", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "GPT-2 (4 models), GPT-J 6B", "role": "evaluated", "params": "117M-1.5B; 6.0B", "architecture": "decoder-only transformer", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"use": "outlier analysis only"}}
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single evaluation per model; seeds not stated for the inference experiments",
+   "prompting": "zeroshot via EleutherAI harness",
+   "retrieval": null,
+   "parameters": {
+    "outlier_threshold_alpha": "6.0 (feature dimension with at least one value of magnitude >= 6 goes to 16-bit)",
+    "outlier_dims_cap": "|O| <= 7 for transformers up to 13B",
+    "quantizer": "absmax vector-wise (row constants for X, column constants for W), Int32 accumulate, dequantize by outer product",
+    "layers_quantized": "feed-forward and attention projection layers; attention function itself not Int8",
+    "outlier_analysis_criteria": "magnitude >= 6.0, in the same feature dim in >= 25% of layers, and >= 6% of sequence dimensions"
+   },
+   "other": {
+    "gpu_perplexity_eval": "NVIDIA A40",
+    "end_to_end_benchmark": "BLOOM-176B in Hugging Face transformers + accelerate, 8xA100 80GB / 4x / 3x",
+    "training_tests": "Int8 training on 209M and 1.1B LM and NMT; GLUE fine-tune RoBERTa-large 5 seeds median (Appendix E, F); hyperparameters not given"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {"name": "C4 validation perplexity", "definition": "perplexity of the 8-bit model on C4 validation", "unit": "perplexity", "higher_is_better": false},
+    {"name": "Mean zeroshot accuracy", "definition": "mean over WinoGrande, HellaSwag, PIQA, LAMBADA for OPT models", "unit": "accuracy", "higher_is_better": true},
+    {"name": "Speedup vs FP16", "definition": "matmul time ratio for first FFN layer of GPT-3 sized models", "unit": "x", "higher_is_better": true},
+    {"name": "Per-token latency", "definition": "BLOOM-176B generation per token", "unit": "ms", "higher_is_better": false}
+   ],
+   "baselines": ["32-bit/16-bit float", "Int8 absmax", "Int8 zeropoint", "Int8 absmax row-wise", "absmax vector-wise", "zeropoint vector-wise", "row-wise + decomposition", "Q-BERT, Q8BERT, PSQ (fine-tuning)"],
+   "protocol": "Trend across scale; perplexity for baseline comparison, zeroshot for OPT vs 16-bit; fine-tuning median of 5 seeds (NMT median of 3)"
+  },
+  "availability": {"code": "https://github.com/TimDettmers/bitsandbytes", "weights": null, "data": null},
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {"claim": "At 13B, LLM.int8() matches 32-bit C4 perplexity while Int8 absmax degrades sharply.", "kind": "measured", "source": null, "metric": "C4 perplexity", "value": "12.45", "unit": "perplexity", "baseline_value": "19.08 (absmax); 12.45 (32-bit)", "n": null, "setup": "fairseq 13B, C4 validation, Absmax LLM.int8() (vector-wise + decomp)", "quote": null, "table": "Table 1, row Absmax LLM.int8() (vector-wise + decomp), column 13B", "note": null, "where": "Table 1"},
+  {"claim": "Zeropoint vector-wise without decomposition degrades at 13B.", "kind": "measured", "source": null, "metric": "C4 perplexity", "value": "13.47", "unit": "perplexity", "baseline_value": "12.45", "n": null, "setup": "fairseq 13B, Int8 zeropoint vector-wise", "quote": null, "table": "Table 1, row Int8 zeropoint vector-wise, column 13B", "note": null, "where": "Table 1"},
+  {"claim": "Memory footprint of BLOOM-176B reduced by 1.96x.", "kind": "measured", "source": null, "metric": "memory reduction", "value": "1.96x", "unit": "x", "baseline_value": null, "n": null, "setup": "BLOOM-176B, LLM.int8() vs 16-bit", "quote": "For example, for BLOOM-176B, we reduce the memory footprint of the model by 1.96x.", "table": null, "note": null, "where": "Section 3"},
+  {"claim": "Outlier features appear in all layers abruptly between 6B and 6.7B parameters.", "kind": "measured", "source": null, "metric": "layers affected", "value": "65% to 100%", "unit": "% of layers", "baseline_value": null, "n": null, "setup": "fairseq/GPT-2/GPT-J models up to 13B; outliers magnitude >= 6, >= 25% layers, >= 6% sequence dims", "quote": "occurs suddenly between 6B and 6.7B parameters as shown in Figure 3a as the percentage of layers affected increases from 65% to 100%", "table": null, "note": null, "where": "Section 4.2"},
+  {"claim": "About 150k outliers per sequence at 6.7B concentrated in 6 feature dimensions.", "kind": "measured", "source": null, "metric": "outliers per sequence", "value": "150,000", "unit": "outliers (6 dims)", "baseline_value": null, "n": null, "setup": "6.7B transformer, sequence length 2048", "quote": "At the 6.7B scale, 150,000 outliers occur\nper sequence, but they are concentrated in only 6 feature dimensions across the entire transformer.", "table": null, "note": "Section 4.2 says 'about 150k outliers features per sequence' and body text of Section 4 intro says up to 150k per 2048-token sequence for a 13B model", "where": "Introduction"},
+  {"claim": "Zeroing outlier dimensions raises perplexity 600-1000% while removing random dimensions raises it about 0.1%.", "kind": "measured", "source": null, "metric": "perplexity increase", "value": "600-1000%", "unit": "%", "baseline_value": "0.1% (random)", "n": null, "setup": "outlier dims set to zero, at most 7 dims, ~0.1% of features", "quote": "validation perplexity increases by 600-1000% even though there are at most 7 outlier feature dimensions", "table": null, "note": null, "where": "Section 4.2"},
+  {"claim": "Removing outliers cuts mean top-1 attention softmax probability from about 40% to about 20%.", "kind": "measured", "source": null, "metric": "top-1 softmax probability", "value": "40% to 20%", "unit": "%", "baseline_value": null, "n": null, "setup": "per-layer independent removal, outlier dims zeroed", "quote": "the mean top-1\nsoftmax probability is reduced from about 40% to about 20%", "table": null, "note": null, "where": "Section 4.2"},
+  {"claim": "Raw Int8 matmul is 2x faster only at large size; with quantization overhead, LLM.int8() is slower for small models and 1.81x at 175B-size dimension.", "kind": "measured", "source": null, "metric": "matmul speedup vs FP16", "value": "1.81x", "unit": "x", "baseline_value": "1.00x", "n": null, "setup": "first FFN layer of GPT-3 175B (model dim 12288)", "quote": null, "table": "Table 5, row LLM.int8() (vector-wise+decomp), column 175B (1.81x); 0.14x at Small", "note": null, "where": "Table 5"},
+  {"claim": "End-to-end BLOOM-176B Int8 inference is slightly slower than bfloat16 at batch size 1.", "kind": "measured", "source": null, "metric": "ms per token", "value": "253", "unit": "ms", "baseline_value": "239", "n": null, "setup": "BLOOM-176B, 8xA100 80GB, batch size 1, Hugging Face transformers", "quote": null, "table": "Table 6, row LLM.int8() 8xA100 80GB, column batch size 1; bfloat16 baseline 239", "note": "text: 'Overall Int8 inference is slightly slower but close to the millisecond latency per token'", "where": "Table 6"},
+  {"claim": "Int8 fine-tuning of FFN only gives no degradation on GLUE (vector-wise mean 88.81 vs 88.61 32-bit).", "kind": "measured", "source": null, "metric": "GLUE mean", "value": "88.81", "unit": "score", "baseline_value": "88.61", "n": "5 seeds median", "setup": "RoBERTa-large GLUE, 8-bit FFN, no decomposition", "quote": null, "table": "Table 9, row Vector-wise, column Mean", "note": null, "where": "Table 9"},
+  {"claim": "Int8 training with 8-bit FFN plus attention projections degrades at 1.1B LM (PPL 10.52 vs 9.99).", "kind": "measured", "source": null, "metric": "perplexity", "value": "10.52", "unit": "perplexity", "baseline_value": "9.99", "n": null, "setup": "1.1B LM, FFN and linear attention in 8-bit, no decomposition", "quote": null, "table": "Table 7, 1.1B rows", "note": null, "where": "Table 7"}
+ ],
+ "limits": [
+  "Only the Int8 data type studied, not FP8.",
+  "Only models up to 175B studied; additional emergent properties might disrupt quantization at larger scales.",
+  "Int8 not used for the attention function (no parameters); left for future work.",
+  "Focuses on inference; training and fine-tuning only an initial analysis in Appendix E and F.",
+  "Quantization overhead slows inference for models under 6.7B; primary aim is memory, not speed.",
+  "Perplexity comparison across baselines covers only 125M to 13B; larger scales only via OPT zeroshot accuracy (Figure 1).",
+  "Hyperparameters of the Int8 training and fine-tuning experiments are not given."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "vector-wise quantization", "definition": "assign a separate scaling constant to each row of X and each column of W, and dequantize by the outer product of the constants", "where": "Section 3.1"},
+  {"term": "mixed-precision decomposition", "definition": "outlier feature dimensions (magnitude >= alpha = 6.0) are multiplied in 16-bit, the other dimensions in 8-bit", "where": "Section 3.2"}
+ ],
+ "lineage": [
+  {"work": "Row-wise quantization (Khudia et al., FBGEMM)", "year": 2021, "arxiv": "2101.05615", "relation": "extends", "note": "vector-wise quantization improves on row-wise", "quote": null},
+  {"work": "OPT: Open Pre-trained Transformer Language Models (Zhang et al.)", "year": 2022, "arxiv": null, "relation": "evaluates", "note": "zeroshot accuracy up to 175B", "quote": null},
+  {"work": "Efficient large scale language modeling with mixtures of experts (Artetxe et al.)", "year": 2021, "arxiv": "2112.10684", "relation": "uses-data", "note": "fairseq pretrained dense models", "quote": null},
+  {"work": "ZeroQuant (Yao et al.)", "year": 2022, "arxiv": null, "relation": "related", "note": "parallel work, group-wise quantization, up to 20B", "quote": null},
+  {"work": "nuQmm (Park et al.)", "year": 2022, "arxiv": "2206.09557", "relation": "related", "note": "parallel work, up to 2.7B", "quote": null},
+  {"work": "GLM-130B (Zeng et al.)", "year": 2022, "arxiv": null, "relation": "related", "note": "uses insights from this work", "quote": null},
+  {"work": "Outliers dimensions that disrupt transformers are driven by frequency (Puccetti et al.)", "year": 2022, "arxiv": "2205.11380", "relation": "extends", "note": "relates outlier scale to autoregressive model scale", "quote": null},
+  {"work": "BERT busters (Kovaleva et al.)", "year": 2021, "arxiv": "2105.06990", "relation": "extends", "note": "outliers in BERT attributed to LayerNorm", "quote": null},
+  {"work": "Q8BERT, Q-BERT, PSQ (Zafrir; Shen; Chen)", "year": 2020, "arxiv": null, "relation": "baseline", "note": "GLUE fine-tuning comparison", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 1", "caption": "OPT model mean zeroshot accuracy for WinoGrande, HellaSwag, PIQA, and LAMBADA datasets. Shown is the 16-bit baseline, the most precise previous 8-bit quantization method as a baseline, and our new 8-bit quantization method, LLM.int8().", "page": 2, "why": "Shows baseline collapse at 6.7B while LLM.int8() tracks 16-bit to 175B"},
+  {"figure": "Fig 2", "caption": "Schematic of LLM.int8().", "page": 3, "why": "Shows the outlier split into FP16 and Int8 vector-wise paths"},
+  {"figure": "Fig 3", "caption": "Percentage of layers and all sequence dimensions affected by large magnitude outlier features by model size or C4 perplexity.", "page": 7, "why": "Phase shift at 6.7B"}
+ ],
+ "code": [
+  {"where": "Eq 8", "snippet": "C_f16 ≈ sum_{h in O} X_f16^h W_f16^h + S_f16 · sum_{h not in O} X_i8^h W_i8^h", "verbatim": false}
+ ],
+ "problems": []
+}

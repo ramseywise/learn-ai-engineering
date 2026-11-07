@@ -1,0 +1,637 @@
+{
+ "schema": 1,
+ "key": "2207.00032",
+ "pdf": "ai-engineering/07-inference-engineering/sources/aminabadi-2022-deepspeed-inference.pdf",
+ "bib": {
+  "title": "DeepSpeed Inference: Enabling Efficient Inference of Transformer Models at Unprecedented Scale",
+  "authors": [
+   "Reza Yazdani Aminabadi",
+   "Samyam Rajbhandari",
+   "Minjia Zhang",
+   "Ammar Ahmad Awan",
+   "Cheng Li",
+   "Du Li",
+   "Elton Zheng",
+   "Jeff Rasley",
+   "Shaden Smith",
+   "Olatunji Ruwase",
+   "Yuxiong He"
+  ],
+  "first_author": "Aminabadi",
+  "year": 2022,
+  "venue": "preprint",
+  "arxiv": "2207.00032",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 75437,
+  "chars_total": 75437,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "system",
+ "question": "How can transformer inference, dense and MoE, be made fast and affordable across latency-critical, throughput-oriented and GPU-poor settings?",
+ "hypothesis": "Memory-bandwidth-centric kernels plus inference-specific parallelism and heterogeneous-memory offload beat training-oriented inference stacks.",
+ "contributions": [
+  "Single GPU transformer kernels (Deep-Fusion, SBI-GeMM) for low latency and high throughput",
+  "Many-GPU dense inference with tensor parallelism plus inference-optimized pipeline parallelism and memory optimizations",
+  "Massive-GPU sparse (MoE) inference: expert, data, tensor parallelism, PCC all-to-all, sparse kernel optimizations",
+  "ZeRO-Inference using CPU, NVMe and GPU memory",
+  "Extensive evaluation across four aspects"
+ ],
+ "method": {
+  "summary": "DeepSpeed Transformer is a GPU-only stack of fused small-batch kernels, TP+PP for dense models and TP/EP/DP with optimized all-to-all for MoE. ZeRO-Inference streams weights layer by layer from DRAM or NVMe to the GPU to run huge models on few GPUs. Compared with FasterTransformer (dense) and a PyTorch MoE implementation (sparse) on A100, A6000 and V100 testbeds.",
+  "task": "transformer (GPT-style decoder) inference serving: latency, throughput, feasibility",
+  "trains": false,
+  "datasets": [],
+  "models": [
+   {
+    "name": "GPT-2, GPT-Neo, GPT-J, GPT-13B",
+    "role": "evaluated",
+    "params": "1.5, 2.7, 6, 13 (B)",
+    "architecture": "GPT-style decoder",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "48, 32, 28, 40",
+    "hidden": "1.6K, 2.5K, 4K, 5K",
+    "heads": "25, 20, 32, 40",
+    "context": null,
+    "other": {
+     "Fig 6": "TP=1"
+    }
+   },
+   {
+    "name": "GPT-NeoX, GPT-50B, GPT-87B",
+    "role": "evaluated",
+    "params": "20, 50, 87 (B)",
+    "architecture": "GPT-style decoder",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "44, 62, 48",
+    "hidden": "6K, 8K, 12K",
+    "heads": "64, 64, 96",
+    "context": null,
+    "other": {
+     "Fig 6": "TP=2,4,8",
+     "Fig 9": "TP=1 (ZeRO-Inference)"
+    }
+   },
+   {
+    "name": "LM-175B",
+    "role": "evaluated",
+    "params": "175B",
+    "architecture": "GPT-3-like dense decoder",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "96",
+    "hidden": "12K",
+    "heads": "96",
+    "context": null,
+    "other": {
+     "Fig 6": "TP=16",
+     "Fig 8": "TP=8, PP=2"
+    }
+   },
+   {
+    "name": "LM-530B",
+    "role": "evaluated",
+    "params": "530B",
+    "architecture": "dense decoder (MT-NLG-like)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "105",
+    "hidden": "20K",
+    "heads": "128",
+    "context": null,
+    "other": {
+     "Fig 8": "TP=8, PP=5"
+    }
+   },
+   {
+    "name": "MoE-128 family (1.3B+MoE-128 ... 47B+MoE-128)",
+    "role": "evaluated",
+    "params": "52, 107.7, 349.0, 1064.9, 2024.0 (B)",
+    "architecture": "sparse MoE decoder, 128 experts",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "24, 16, 30, 40, 58",
+    "hidden": "2048, 3584, 4096, 8192, 8192",
+    "heads": null,
+    "context": null,
+    "other": {
+     "MP degree": "1,1,4,8,8",
+     "EP degree": "128 for all",
+     "Expert-slicing": "1,1,1,2,2",
+     "#GPUs": "128,128,128,256,256"
+    }
+   },
+   {
+    "name": "FasterTransformer",
+    "role": "baseline",
+    "params": null,
+    "architecture": "NVIDIA inference library",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "PyTorch distributed MoE (TP+EP)",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": "dense latency: generate 8 tokens from 128-token prompt; MoE: 100 tokens from 128-token prompt, batch 8; throughput: 512-token prompt, 50 tokens generated",
+   "samples": null,
+   "prompting": "Synthetic lengths only; no prompt text.",
+   "retrieval": null,
+   "parameters": {
+    "SBI-GeMM M": "2 for half precision, 4 for INT8 (128-byte cache line)",
+    "micro-batches": "number = pipeline depth P; fewer micro-batches during token generation than during prompt processing (hybrid scheduling)",
+    "hybrid scheduling batch size": "24 (latency rises dramatically above 24, suspected PyTorch AllReduce issue)",
+    "kernel dtypes": "FP32, FP16, INT8 (CUTLASS)",
+    "CUDA-Graph": "kernel trace stored on first launch and reused",
+    "KV offload": "to CPU memory when activation memory exceeds a threshold; odd/even GPUs offload odd/even layers",
+    "ZeRO-Inference": "weights pinned in DRAM or NVMe, one or few layers streamed to GPU, configurable prefetch depth",
+    "dense batch sizes": "1, 8, 16 (Fig 6)"
+   },
+   "other": {
+    "hardware_not_precise": "Fig 6 absolute latencies only readable from plots",
+    "resource-constrained": "max batch size possible for generating a single token"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "latency",
+     "definition": "end-to-end output generation time for a batch of input prompts",
+     "unit": "ms",
+     "higher_is_better": false
+    },
+    {
+     "name": "token throughput",
+     "definition": "tokens-per-second processed",
+     "unit": "tokens/s",
+     "higher_is_better": true
+    },
+    {
+     "name": "compute throughput",
+     "definition": "TFLOPS per GPU",
+     "unit": "TFLOPS",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "FasterTransformer FP16 (dense)",
+    "PyTorch distributed MoE with TP and EP (sparse)",
+    "GPU-only and CPU-only solutions (ZeRO-Inference)",
+    "E.T. kernels (DistilBERT, BERT)",
+    "PyTorch/Megatron baseline (kernel breakdown)"
+   ],
+   "protocol": "Single configuration per point, no repeats, seeds or significance stated. Baseline and DeepSpeed use identical TP/parallelism config. Testbeds: up to 256 A100 40GB (32 DGX A100 boxes); Lambda A6000 workstation (2x A6000-48GB, 256GB DRAM, 2TB NVMe); DGX-2 V100 (16x V100-32GB, 1500GB DRAM, 30TB NVMe)."
+  },
+  "availability": {
+   "code": "https://github.com/microsoft/DeepSpeed",
+   "weights": null,
+   "data": null
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "eval.protocol",
+    "quote": "a cluster of up to 256 NVIDIA Ampere A100 40GB GPUs (32 8×A100 DGX boxes [38])",
+    "where": "VII-A4"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Latency reduction for sparse MoE models versus a PyTorch MoE baseline, up to 7.3x on 256 GPUs.",
+   "kind": "measured",
+   "source": null,
+   "metric": "latency reduction",
+   "value": "7.3",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "100B to 2T MoE models, up to 256 A100 40GB, same data/tensor/expert parallel config in baseline and DeepSpeed; baseline is a PyTorch MoE implementation, not FasterTransformer; per-token latency, prompt 128, batch 8",
+   "quote": "with up to 7.3× reduction in latency",
+   "table": null,
+   "note": "Intro contribution list says 7.2x for sparse models; abstract and Sec VII say 7.3x.",
+   "where": "VII-B2"
+  },
+  {
+   "claim": "A trillion-parameter MoE served under 25 ms.",
+   "kind": "measured",
+   "source": null,
+   "metric": "per-token latency",
+   "value": "25",
+   "unit": "ms",
+   "baseline_value": null,
+   "n": null,
+   "setup": "1T MoE (24B+MoE-128, 1064.9B) on 256 A100 40GB, aggregate memory bandwidth 128 TB/sec",
+   "quote": "a staggering trillion parameter MoE model can be served under 25ms",
+   "table": null,
+   "note": null,
+   "where": "VII-B2"
+  },
+  {
+   "claim": "Memory bandwidth utilization when serving the 1T MoE.",
+   "kind": "measured",
+   "source": null,
+   "metric": "memory bandwidth utilization",
+   "value": "33",
+   "unit": "% of peak",
+   "baseline_value": null,
+   "n": null,
+   "setup": "256 A100 GPUs, 1T MoE, 128 TB/sec aggregate",
+   "quote": "(33 % of peak memory bandwidth)",
+   "table": null,
+   "note": null,
+   "where": "VII-B2"
+  },
+  {
+   "claim": "Dense model small-batch latency speedup of DeepSpeed FP16 over FasterTransformer FP16.",
+   "kind": "measured",
+   "source": null,
+   "metric": "latency speedup",
+   "value": "1.55",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Dense models 1.5B-175B, small batch, identical TP strategy; largest gain for the smallest models; prompt 128, 8 tokens generated",
+   "quote": "DeepSpeed-FP16 achieves a speedup of up to 1.55× over the baseline",
+   "table": null,
+   "note": null,
+   "where": "VII-B1"
+  },
+  {
+   "claim": "INT8 small-batch speedup over FT FP16 baseline.",
+   "kind": "measured",
+   "source": null,
+   "metric": "latency speedup",
+   "value": "1.95",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "As above; FT supports INT8 only for encoder models so baseline stays FP16",
+   "quote": "further performance boost of up to 1.95× over the FP16 baseline",
+   "table": null,
+   "note": null,
+   "where": "VII-B1"
+  },
+  {
+   "claim": "Larger-batch latency reduction, FP16 and INT8.",
+   "kind": "measured",
+   "source": null,
+   "metric": "latency speedup (FP16)",
+   "value": "1.57",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Dense models, larger batch sizes (up to 16), vs FT FP16",
+   "quote": "DeepSpeed-FP16 reduces the latency by up to 1.57× over the baseline",
+   "table": null,
+   "note": "INT8 gives up to 1.93x at larger batch.",
+   "where": "VII-B1"
+  },
+  {
+   "claim": "Overall dense latency gain headline (up to 1.9x vs state of the art).",
+   "kind": "measured",
+   "source": null,
+   "metric": "latency reduction",
+   "value": "1.9",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Dense models up to 175B (INT8 included), vs FasterTransformer",
+   "quote": "latency reduction over state-of-the-art of up to 1.9× for dense models (up to 175B parameters)",
+   "table": null,
+   "note": "Sec VII intro says 1.9x for 'hundreds of billions'; the abstract says up to 7.3x over state-of-the-art for latency overall.",
+   "where": "I contributions"
+  },
+  {
+   "claim": "Throughput gain over best FT config for GPT-3 175B on two nodes.",
+   "kind": "measured",
+   "source": null,
+   "metric": "throughput improvement",
+   "value": "1.51",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "175B on 2x8 A100, best batch size per config, prompt 512, 50 tokens generated; from better PP schedule and larger batch",
+   "quote": "DeepSpeed Inference achieves 1.51× throughput improvement over the best FasterTransformer (FT) configuration",
+   "table": null,
+   "note": null,
+   "where": "VII-C"
+  },
+  {
+   "claim": "530B throughput gain over TP-only FT; FT with TP+PP crashed.",
+   "kind": "measured",
+   "source": null,
+   "metric": "throughput improvement",
+   "value": "1.53",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "530B on 5 nodes (40 A100), vs TP-only FasterTransformer",
+   "quote": "DeepSpeed Inference achieves over 1.53× throughput improvement running on 5 nodes",
+   "table": null,
+   "note": null,
+   "where": "VII-C"
+  },
+  {
+   "claim": "ZeRO-Inference runs a 530B model on a single A6000 GPU, 25x larger than GPU-only (530B vs 20B).",
+   "kind": "measured",
+   "source": null,
+   "metric": "max model size ratio",
+   "value": "25",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Single A6000 48GB, 256GB DRAM, 2TB NVMe; weights on NVMe/DRAM",
+   "quote": "ZeRO-Inference can inference a 530B parameter model on a single A6000 GPU, 25× larger than the largest model that can be inferenced with a GPU-only solution",
+   "table": null,
+   "note": null,
+   "where": "VII-D1"
+  },
+  {
+   "claim": "ZeRO-Inference reaches 84 TFLOPS, 54% of the 158.4 TFLOPS peak.",
+   "kind": "measured",
+   "source": null,
+   "metric": "compute throughput",
+   "value": "84",
+   "unit": "TFLOPS",
+   "baseline_value": null,
+   "n": null,
+   "setup": "A6000, offline inference with very large batch sizes (max batch for one token)",
+   "quote": "up to 84 TFLOPS, 54% of theoretical peak (158.4 TFLOPS)",
+   "table": null,
+   "note": null,
+   "where": "VII-D2"
+  },
+  {
+   "claim": "ZeRO-Inference beats CPU-only throughput by over 25x for models fitting CPU memory.",
+   "kind": "measured",
+   "source": null,
+   "metric": "throughput ratio vs CPU-only",
+   "value": "25",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Models that fit in CPU memory, A6000 workstation",
+   "quote": "it offers over 25× higher throughput than the CPU-only solution",
+   "table": null,
+   "note": null,
+   "where": "VII-D2"
+  },
+  {
+   "claim": "Hybrid scheduling speeds prompt processing 1.18x (PP+MP) and 3.06x (MP only) over FT.",
+   "kind": "measured",
+   "source": null,
+   "metric": "prompt processing speedup",
+   "value": "1.18",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-3 175B, 2 nodes x 8 A100, batch size 24",
+   "quote": "achieves 1.18x and 3.06x prompt processing speed-up over FasterTransformer",
+   "table": null,
+   "note": "3.06x is the MP-only configuration.",
+   "where": "VII-E3"
+  },
+  {
+   "claim": "MoE kernel optimizations cut MoE kernel-related latency over 6x.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MoE kernel latency reduction",
+   "value": "6",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Dense-representation gating and data-layout transforms replacing sparse einsum, fused",
+   "quote": "Combined, these optimizations result in over 6× reduction in MoE kernel-related latency.",
+   "table": null,
+   "note": null,
+   "where": "V-C"
+  },
+  {
+   "claim": "Faster than E.T. on small encoder models: 1.7x DistilBERT, 1.4x BERT.",
+   "kind": "measured",
+   "source": null,
+   "metric": "latency speedup",
+   "value": "1.7",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "A100, batch 1, sequence length 128",
+   "quote": "DeepSpeed Inference is 1.7x and 1.4x faster than E.T.",
+   "table": null,
+   "note": null,
+   "where": "VII-E6"
+  },
+  {
+   "claim": "PCC reduces all-to-all latency overhead from O(p) to O(p/L).",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Tensor-slicing degree L, p devices; 128 GPUs with 8-way TS: 128C1+C2 to 16C1+C2",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "V-B"
+  },
+  {
+   "claim": "MT-NLG 530B needs about 1TB GPU memory just for weights.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "fp16 weights implied",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "I"
+  }
+ ],
+ "limits": [
+  "No repeats, seeds or variance reported; speedups are 'up to' maxima.",
+  "MoE speedup baseline is an unoptimized PyTorch implementation, not FasterTransformer.",
+  "FT could not run TP+PP for 530B (crashed); comparison is against TP-only.",
+  "Hybrid scheduling evaluated only at batch 24 due to a suspected PyTorch AllReduce issue, left as future work.",
+  "No accuracy evaluation; INT8 effect on quality not reported. FT INT8 not available for decoders at time of writing.",
+  "ZeRO-Inference is throughput-only and not latency-sensitive.",
+  "2022 hardware (A100/A6000/V100); superseded by continuous batching and paged KV systems, not covered here.",
+  "Absolute latencies are only in figures."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Deep-Fusion",
+   "definition": "tiles the computation space along dimensions with no cross-tile dependencies so operators including reductions, transposes and GeMMs can fuse when each tile of the second depends on one tile of the first",
+   "where": "III-B"
+  },
+  {
+   "term": "PCC",
+   "definition": "Parallelism Coordinated Communication: all-to-all only within devices sharing the same tensor-slicing rank, followed by allgather",
+   "where": "V-B"
+  },
+  {
+   "term": "ZeRO-Inference",
+   "definition": "pins model weights in DRAM or NVMe and streams each layer into GPU memory, allowing large batches",
+   "where": "VI"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "FasterTransformer (NVIDIA)",
+   "year": null,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "dense baseline",
+   "quote": null
+  },
+  {
+   "work": "Megatron-LM tensor slicing (Shoeybi et al.)",
+   "year": 2019,
+   "arxiv": "1909.08053",
+   "relation": "uses-method",
+   "note": "TP",
+   "quote": null
+  },
+  {
+   "work": "Efficient large-scale LM training on GPU clusters (Narayanan et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "NCCL all-reduce TP",
+   "quote": null
+  },
+  {
+   "work": "GPipe",
+   "year": 2018,
+   "arxiv": "1811.06965",
+   "relation": "uses-method",
+   "note": "pipeline parallelism",
+   "quote": null
+  },
+  {
+   "work": "PipeDream",
+   "year": 2018,
+   "arxiv": "1806.03377",
+   "relation": "uses-method",
+   "note": "pipeline parallelism",
+   "quote": null
+  },
+  {
+   "work": "ZeRO-Infinity (Rajbhandari et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "ZeRO-Inference adapts its offloading",
+   "quote": null
+  },
+  {
+   "work": "DeepSpeed-MoE (Rajbhandari et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "MoE inference",
+   "quote": null
+  },
+  {
+   "work": "Scalable and efficient MoE training (Kim et al.)",
+   "year": 2021,
+   "arxiv": "2109.10465",
+   "relation": "baseline",
+   "note": "PyTorch MoE baseline",
+   "quote": null
+  },
+  {
+   "work": "E.T. (Chen et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "kernel comparison",
+   "quote": null
+  },
+  {
+   "work": "MT-NLG 530B (Smith et al.)",
+   "year": 2022,
+   "arxiv": "2201.11990",
+   "relation": "evaluates",
+   "note": "530B model scale",
+   "quote": null
+  },
+  {
+   "work": "GPT-3 (Brown et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "model configs",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 6",
+   "caption": "Latency and throughput comparison of DeepSpeed Transformer with FasterTransformer [31] for different models and batch sizes.",
+   "page": 7,
+   "why": "dense per-model speedups"
+  },
+  {
+   "figure": "Fig 7",
+   "caption": "Latency and throughput improvement offered by DeepSpeed-MoE over baseline on 256 GPUs.",
+   "page": 7,
+   "why": "MoE 7.3x"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Illustration of three different batch size combinations for prompt processing and token generation.",
+   "page": 3,
+   "why": "hybrid scheduling idea"
+  },
+  {
+   "figure": "Fig 9",
+   "caption": "ZeRO-Inference throughput vs batch, models, GPUs.",
+   "page": 9,
+   "why": "offload scaling"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "No embedded instructions found. Fig 7 and 9 data are image-only. Section map from extractor listed few headings."
+ ]
+}

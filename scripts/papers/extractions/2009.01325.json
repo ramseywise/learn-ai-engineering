@@ -1,0 +1,690 @@
+{
+ "schema": 1,
+ "key": "2009.01325",
+ "pdf": "generative-ai/05-RL/sources/stiennon-2020-learning-summarize-human-feedback.pdf",
+ "bib": {
+  "title": "Learning to summarize from human feedback",
+  "authors": [
+   "Nisan Stiennon",
+   "Long Ouyang",
+   "Jeff Wu",
+   "Daniel M. Ziegler",
+   "Ryan Lowe",
+   "Chelsea Voss",
+   "Alec Radford",
+   "Dario Amodei",
+   "Paul Christiano"
+  ],
+  "first_author": "Stiennon",
+  "year": 2020,
+  "venue": "NeurIPS 2020 (arXiv v3)",
+  "arxiv": "2009.01325",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 132694,
+  "chars_total": 132694,
+  "engine": "pymupdf",
+  "skipped": "References skimmed; sample Tables 24-29 skimmed, not recorded."
+ },
+ "type": "empirical",
+ "question": "Can training a summarizer against a reward model learned from human pairwise comparisons beat supervised fine-tuning and human reference summaries?",
+ "hypothesis": "Optimising a learned human-preference reward yields better summaries than maximum likelihood on references or optimising ROUGE.",
+ "contributions": [
+  "Human feedback models significantly outperform strong baselines on English summarization, including 10x larger supervised models and the reference summaries",
+  "Human feedback models transfer to CNN/DM news without news-specific fine-tuning",
+  "Extensive analysis of the policy and reward model, including scaling and over-optimisation",
+  "Public release of 64,832 TL;DR comparisons and evaluation data"
+ ],
+ "method": {
+  "summary": "Fine-tune GPT-3-style 1.3B and 6.7B models on filtered Reddit TL;DR, collect pairwise human comparisons in batches, train a reward model from the supervised model, then optimise the policy with PPO plus a KL penalty to the supervised model. Evaluate with human preference and Likert scores, with transfer to CNN/DM.",
+  "task": "abstractive summarization from human feedback (RLHF)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Reddit TL;DR (Volske et al. 2017), filtered",
+    "role": "train",
+    "size": "123,169 posts with summaries, ~5% validation; 287,790 posts filtered by body only used for RL",
+    "split": "~5% held out; 1913 validation posts used for model selection and excluded from evaluations",
+    "source": "reddit.com, TL;DR dataset [63]; subreddit whitelist",
+    "preprocessing": "Remove ~20,000 exact duplicates, top-level posts only, whitelist subreddits, drop Edit/Update titles and sensitive topics, drop posts with body >512 tokens; reference summaries kept only 24-48 tokens, profanity and Edit/Update/P.S. removed"
+   },
+   {
+    "name": "Human comparison dataset (TL;DR)",
+    "role": "train",
+    "size": "64,832 summary comparisons released; RM scaling uses 8k-64k",
+    "split": null,
+    "source": "collected by Upwork, Scale and Lionbridge labelers",
+    "preprocessing": "Labelers write naive interpretations, then give a 9-point confidence comparison; most comparisons have a single label"
+   },
+   {
+    "name": "CNN/DailyMail",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Hermann et al. 2015",
+    "preprocessing": "Transfer only, no news training for human-feedback models; outputs lower-cased and re-capitalised for fairness; one 6.7B supervised model also fine-tuned on it"
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT-3-style pretrained 1.3B/3B/6.7B/13B",
+    "role": "base",
+    "params": "1.3B, 3B, 6.7B, 13B",
+    "architecture": "decoder-only Transformer, 2048 learned position embeddings",
+    "init_from": "pretrained on Commoncrawl, Webtext, books, Wikipedia",
+    "tokenizer": "BPE as in GPT-2 [48]",
+    "vocab": null,
+    "layers": "24 / 32 / 32 / 40",
+    "hidden": "2048 / 2560 / 4096 / 5120",
+    "heads": "16 / 32 / 32 / 40",
+    "context": "2048",
+    "other": {
+     "pretrain_tokens": "200-300 billion tokens, 1-3 epochs each",
+     "pretrain_lr_max": "2e-4 / 1.6e-4 / 1.2e-4 / 1e-4",
+     "pretrain_batch_max": "512 / 512 / 512 / 1024",
+     "schedule": "cosine with short warmup, decay to 10% of max"
+    }
+   },
+   {
+    "name": "Supervised TL;DR baseline (sup4, sup4_6b)",
+    "role": "baseline",
+    "params": "1.3B, 6.7B (also 3B, 13B)",
+    "architecture": "as base",
+    "init_from": "pretrained models",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "512 tokens input",
+    "other": {}
+   },
+   {
+    "name": "Reward model (rm4, rm4_6b)",
+    "role": "reward",
+    "params": "1.3B, 6.7B",
+    "architecture": "supervised baseline plus randomly initialised linear scalar head, weights N(0,1/(d_model+1))",
+    "init_from": "supervised baseline",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "loss": "-E log sigma(r(x,y_i)-r(x,y_1-i))",
+     "normalisation": "outputs shifted so reference summaries have mean 0"
+    }
+   },
+   {
+    "name": "PPO policy (sup4 ppo rm4, sup4_6b ppo rm4_6b)",
+    "role": "proposed",
+    "params": "1.3B, 6.7B",
+    "architecture": "as base; separate value network of the same size",
+    "init_from": "supervised baseline; value function initialised from reward model",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "final_KL_to_sup": "18.0 (1.3B), 14.0 (6.7B) per Table 9"
+    }
+   },
+   {
+    "name": "T5 (CNN/DM)",
+    "role": "evaluated",
+    "params": "11B",
+    "architecture": "encoder-decoder",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "decoding": "beam search"
+    }
+   }
+  ],
+  "training": {
+   "objective": "Supervised: next-token on reference summaries. RM: pairwise logistic loss on human comparisons. Policy: PPO on R(x,y)=r_theta(x,y)-beta*log[pi_RL(y|x)/pi_SFT(y|x)], reward only at EOS, gamma=1",
+   "optimizer": "Adam",
+   "lr": "Supervised TL;DR 6.35e-5 / 5.66e-5 / 2.83e-5 / 2.83e-5 (1.3B/3B/6.7B/13B), CNN/DM 6.7B 2.38e-5; RM 1.5e-5 (1.3B), 5e-6 (6.7B); PPO 1.5e-5 (1.3B), 7e-6 (6.7B)",
+   "lr_schedule": "cosine for supervised and RM; linear decay for PPO",
+   "warmup": null,
+   "batch_size": "Supervised 128; RM 64; PPO 512 (1.3B) and 256 (6.7B)",
+   "steps": "PPO 1 million episodes",
+   "epochs": "Supervised 1 epoch; RM 1 epoch; PPO 4 epochs per batch of rollouts",
+   "tokens": null,
+   "seq_len": "512 tokens for TL;DR input format",
+   "precision": "fp16 activations; fp32 weights except TL;DR supervised baselines (fp16 weights)",
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "KL penalty to SFT policy, coefficient 0.05 for both main runs; lambda=0.95 GAE",
+   "hardware": null,
+   "compute": "~320 GPU-days for 6.7B RL fine-tuning",
+   "wall_clock": null,
+   "seeds": "RM: sweep 3 to 10 seeds and pick best on development validation; lr from log-linear sweep of at least 7 values",
+   "other": {
+    "RM_selection": "best on development portion of validation set filtered to high-confidence labels",
+    "pipeline": "offline batch setting; each RM trained on all labels collected so far"
+   }
+  },
+  "inference": {
+   "decoding": "T=0 for all final human evaluations",
+   "temperature": "0 (final evals); 0.7 for best-of-N sampling and agreement tables; 0.3 for CNN/DM supervised",
+   "top_p": "Nucleus sampling tried and found worse than very low temperature (Fig 8)",
+   "max_tokens": "summaries under 48 tokens; input max 512 tokens (1999 for pretrained with few-shot context)",
+   "samples": "Best-of-N up to N=2048 from the 1.3B supervised baseline",
+   "prompting": "SUBREDDIT: r/{subreddit}\\nTITLE: {title}\\nPOST: {post}\\nTL;DR: for TL;DR models; pretrained models get context stuffed with example posts and summaries (Table 4)",
+   "retrieval": null,
+   "parameters": {
+    "KL_coefficient": "0.05 main runs; 0.35 to 0.05 swept in Table 9",
+    "best_of_N": "KL(BoN,sup)=log N-(N-1)/N"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Preference over reference summaries",
+     "definition": "fraction of a policy's summaries humans prefer to the dataset reference summary",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Likert quality",
+     "definition": "1-7 scores on coverage, accuracy, coherence, overall",
+     "unit": "1-7",
+     "higher_is_better": true
+    },
+    {
+     "name": "RM validation accuracy / agreement",
+     "definition": "fraction of human comparisons the RM (or metric) agrees with",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "ROUGE",
+     "definition": "ROUGE-1/2/L on references",
+     "unit": "points",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Human reference summaries",
+    "Pretrained zero-shot (few-shot context stuffing)",
+    "Supervised TL;DR fine-tuning",
+    "Lead-3",
+    "T5 on CNN/DM",
+    "Best-of-N rejection sampling"
+   ],
+   "protocol": "Hired labelers (Upwork, Scale, Lionbridge); error bars are 1 standard error; agreement with researchers monitored; 1913 validation posts excluded from evaluation."
+  },
+  "availability": {
+   "code": "inference code for the 1.3B models and baselines released (link not in text)",
+   "weights": null,
+   "data": "human feedback dataset released (64,832 comparisons)"
+  },
+  "prompts": [
+   {
+    "purpose": "TL;DR input format",
+    "text": "SUBREDDIT: r/{subreddit}\nTITLE: {title}\nPOST: {post}\nTL;DR:",
+    "where": "Table 4"
+   },
+   {
+    "purpose": "CNN/DM transfer input",
+    "text": "{article}\nTL;DR:",
+    "where": "Table 4"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training.regularisation",
+    "quote": "We used a KL coefﬁcient of 0.05 for both of the main runs",
+    "where": "App B.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "A 1.3B human-feedback policy beats a 10x larger supervised policy on preference against reference summaries.",
+   "kind": "measured",
+   "source": null,
+   "metric": "fraction of summaries preferred over reference",
+   "value": "61",
+   "unit": "%",
+   "baseline_value": "43",
+   "n": null,
+   "setup": "TL;DR (filtered Reddit), human pairwise or Likert evaluation, T=0 sampling for final evaluations; 1.3B PPO vs 6.7B supervised",
+   "where": "Sec 4.1",
+   "note": null,
+   "quote": "61% versus 43% raw preference score against reference summaries"
+  },
+  {
+   "claim": "After controlling for length the 6.7B human-feedback model is still preferred to reference summaries.",
+   "kind": "measured",
+   "source": null,
+   "metric": "length-controlled preference over reference",
+   "value": "~65",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "TL;DR (filtered Reddit), human pairwise or Likert evaluation, T=0 sampling for final evaluations; 6.7B PPO; logistic regression on policy id and log length ratio (App F)",
+   "where": "Sec 4.1",
+   "note": "Text says preference drops by ~5% after length control.",
+   "quote": "preferred to the reference summaries ~65% of the time"
+  },
+  {
+   "claim": "6.7B PPO summaries get a perfect 7/7 overall score far more often than supervised or reference.",
+   "kind": "measured",
+   "source": null,
+   "metric": "share of 7/7 overall Likert scores",
+   "value": "45",
+   "unit": "%",
+   "baseline_value": "20 (supervised), 23 (reference)",
+   "n": null,
+   "setup": "TL;DR (filtered Reddit), human pairwise or Likert evaluation, T=0 sampling for final evaluations; 7-point Likert; 6.7B PPO vs 6.7B supervised (20%) and reference (23%)",
+   "where": "Sec 4.1",
+   "note": null,
+   "quote": "overall score 45% of the time (compared to 20% and 23%"
+  },
+  {
+   "claim": "Labeler-researcher agreement is as high as researcher-researcher agreement.",
+   "kind": "measured",
+   "source": null,
+   "metric": "labeler-researcher agreement",
+   "value": "77",
+   "unit": "%",
+   "baseline_value": "73 (researchers with each other)",
+   "n": null,
+   "setup": "Subset of comparisons between 1.3B supervised baseline samples (App C.2); researcher-researcher 73% ± 4%",
+   "where": "Sec 3.3, App C.2",
+   "note": null,
+   "quote": "labelers agree with researchers 77% ± 2% of the time"
+  },
+  {
+   "claim": "Over the whole reward-model training corpus labelers agree with each other 72% of the time (73% ± 3% with researchers).",
+   "kind": "measured",
+   "source": null,
+   "metric": "labeler-labeler agreement",
+   "value": "72",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Whole RM training corpus, volume-weighted, mostly one label per comparison",
+   "where": "App C.2",
+   "note": null,
+   "quote": "Labelers agree with each other 72% of the time in the training corpus"
+  },
+  {
+   "claim": "Taking the modal label of 3 labelers raises agreement with researchers.",
+   "kind": "measured",
+   "source": null,
+   "metric": "agreement with researchers",
+   "value": "77",
+   "unit": "%",
+   "baseline_value": "72",
+   "n": null,
+   "setup": "Subset of training data with enough shared comparisons",
+   "where": "App C.2",
+   "note": null,
+   "quote": "increases their agreement rate with researchers from 72% to 77%"
+  },
+  {
+   "claim": "Doubling reward-model training data adds about 1.1 points of validation accuracy.",
+   "kind": "measured",
+   "source": null,
+   "metric": "RM validation accuracy gain per doubling of data",
+   "value": "~1.1",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "7 reward models, 160M to 13B params, 8k to 64k comparisons",
+   "where": "Sec 4.3, Fig 6",
+   "note": null,
+   "quote": "doubling the training data amount leads to a ~1.1% increase in the reward model"
+  },
+  {
+   "claim": "Doubling reward-model size adds about 1.8 points of validation accuracy.",
+   "kind": "measured",
+   "source": null,
+   "metric": "RM validation accuracy gain per doubling of size",
+   "value": "~1.8",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "7 reward models, 160M to 13B params, 8k to 64k comparisons",
+   "where": "Sec 4.3, Fig 6",
+   "note": null,
+   "quote": "doubling the model size leads to a ~1.8% increase"
+  },
+  {
+   "claim": "Optimising against an earlier RM (rm3) first improves then degrades true preference; the RM eventually becomes anti-correlated with human preference. The text gives no KL or preference values; they are only in Fig 5.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "PPO at a range of KL coefficients on rm3, labelers compare to reference summaries",
+   "where": "Sec 4.3, Fig 5",
+   "note": null
+  },
+  {
+   "claim": "The reward models agree with labelers on CNN/DM summaries (never trained there).",
+   "kind": "measured",
+   "source": null,
+   "metric": "RM-labeler agreement on CNN/DM",
+   "value": "62.4 (1.3B), 66.5 (6.7B)",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "1.3B and 6.7B RMs; inter-labeler agreement 66.9% (Table 23)",
+   "where": "Sec 4.3",
+   "note": null,
+   "quote": "agreeing with labeler preferences 62.4% and 66.5% of the time"
+  },
+  {
+   "claim": "RMs prefer human-improved edits nearly as often as other humans do.",
+   "kind": "measured",
+   "source": null,
+   "metric": "RM prefers edited summary",
+   "value": "79.4 (1.3B), 82.8 (6.7B)",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Minimal-edit validation set; human evaluators 84.1% in text",
+   "where": "Sec 4.3, Table 17",
+   "note": "Table 17 prints Avg 81.2% (1.3B) and 83.7% (6.7B) with human 85.6%, not the text's 79.4/82.8/84.1.",
+   "quote": "79.4% for 1.3B"
+  },
+  {
+   "claim": "RMs reliably pick the original over a role-reversed perturbation.",
+   "kind": "measured",
+   "source": null,
+   "metric": "RM picks original",
+   "value": "92.9 (1.3B), 97.2 (6.7B)",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Reference vs summary with participant roles reversed",
+   "where": "Sec 4.3, Table 18",
+   "note": "Table 18 prints 93.1% and 97.4% for the same row.",
+   "quote": "92.9% of the time for 1.3B, 97.2% for 6.7B"
+  },
+  {
+   "claim": "The 6.7B RM is biased toward length: it prefers shortening edits less often than humans.",
+   "kind": "measured",
+   "source": null,
+   "metric": "RM prefers shortening edit",
+   "value": "62.6",
+   "unit": "%",
+   "baseline_value": "76.4 (humans)",
+   "n": null,
+   "setup": "6.7B RM, edit validation set",
+   "where": "Sec 4.3",
+   "note": "Table 17 prints 66.0% (RM) and 76.2% (human) for the Shorter row.",
+   "quote": "shorter only 62.6% of the time (vs. 76.4% for humans)"
+  },
+  {
+   "claim": "ROUGE agreement with labelers falls to chance on samples from human-feedback models.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ROUGE-labeler agreement",
+   "value": "~50",
+   "unit": "%",
+   "baseline_value": "~57",
+   "n": null,
+   "setup": "TL;DR; ~57% on samples from supervised baselines",
+   "where": "Sec 4.4",
+   "note": null,
+   "quote": "this drops to ~50% for samples from our human feedback model"
+  },
+  {
+   "claim": "RL fine-tuning the 6.7B model took about 320 GPU-days.",
+   "kind": "measured",
+   "source": null,
+   "metric": "compute for 6.7B RL",
+   "value": "~320",
+   "unit": "GPU-days",
+   "baseline_value": null,
+   "n": null,
+   "setup": "6.7B PPO",
+   "where": "Sec 5",
+   "note": null,
+   "quote": "required approximately 320 GPU-days"
+  },
+  {
+   "claim": "Dataset release: human comparisons on TL;DR.",
+   "kind": "measured",
+   "source": null,
+   "metric": "comparisons released",
+   "value": "64832",
+   "unit": "count",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Plus TL;DR comparisons/Likert and CNN/DM Likert evaluation data",
+   "where": "Sec 1",
+   "note": null,
+   "quote": "64,832 summary comparisons on the TL;DR dataset"
+  },
+  {
+   "claim": "On CNN/DM the transferred 6.7B TL;DR human-feedback model scores 5.25 overall vs 5.92 for T5 and 5.54 for reference.",
+   "kind": "measured",
+   "source": null,
+   "metric": "overall Likert quality",
+   "value": "5.25",
+   "unit": "1-7",
+   "baseline_value": "5.92 (T5), 5.54 (ref), 5.4 (sl(cnn)-6.7b), 4.41 (sl(tldr)-6.7b)",
+   "n": null,
+   "setup": "CNN/DM, 7-point Likert; rl(tldr)-6.7b average length 175 chars vs reference 314 and T5 316",
+   "where": "Table 14",
+   "note": null,
+   "table": "Table 14, row rl(tldr)-6.7b, column Quality (1-7)"
+  },
+  {
+   "claim": "Own 6.7B supervised CNN/DM model reaches ROUGE-1 42.49, above mid-2019 SOTA (42.04) but below T5 (43.52).",
+   "kind": "measured",
+   "source": null,
+   "metric": "ROUGE-1",
+   "value": "42.49",
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CNN/DM, 6.7B supervised, T=0",
+   "where": "Table 15",
+   "note": null,
+   "table": "Table 15, row Our 6.7B supervised model, column ROUGE-1"
+  },
+  {
+   "claim": "Best-of-N optimisation against ROUGE peaks sooner and lower than against reward models.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Best-of-N up to 2048 from 1.3B supervised baseline (Fig 7)",
+   "where": "Sec 4.4, App G.3",
+   "note": "No number in the text; at equal average reward, BoN and PPO have similar human-judged quality (not shown)."
+  },
+  {
+   "claim": "A separate value network beats a shared policy/value network for PPO.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Value function ablation (Fig 11), reward obtained",
+   "where": "App G.1",
+   "note": "Qualitative; costs more memory."
+  },
+  {
+   "claim": "Lead-3 is preferred to CNN/DM reference summaries; labelers preferred lead-3 by 3+ points in 20/143 checked cases.",
+   "kind": "measured",
+   "source": null,
+   "metric": "cases lead-3 preferred by >=3 points",
+   "value": "20/143",
+   "unit": "count",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Researcher check of labeler judgments on CNN/DM",
+   "where": "App E",
+   "note": null,
+   "quote": "in 20/143"
+  }
+ ],
+ "limits": [
+  "No baseline of supervised fine-tuning on an equal amount of high-quality human demonstrations (too expensive, App D)",
+  "Roughly two thirds of TL;DR is relationship posts, a narrow domain",
+  "RL for 6.7B cost ~320 GPU-days and labels took thousands of labeler hours",
+  "Supervised TL;DR baselines used fp16 weights while RL used fp32, a small unfixed discrepancy (footnote 11)",
+  "Over-optimising the RM makes it anti-correlated with human preference; RM biased toward longer summaries",
+  "Labeler pool skews White and American; data collection was exploratory and unsystematic (App C.6)",
+  "CNN/DM reference summaries (highlights) are questionable references"
+ ],
+ "practices": [],
+ "terms": [],
+ "lineage": [
+  {
+   "work": "Fine-tuning language models from human preferences (Ziegler et al.)",
+   "year": 2019,
+   "arxiv": "1909.08593",
+   "relation": "extends",
+   "note": "Online setting, called [73]; this work moves to batch, larger models, higher labeler agreement, separate value network",
+   "quote": null
+  },
+  {
+   "work": "Bohm et al., Better rewards yield better summaries",
+   "year": 2019,
+   "arxiv": "1909.01214",
+   "relation": "related",
+   "note": "Learned reward from ratings of 2.5k CNN/DM summaries",
+   "quote": null
+  },
+  {
+   "work": "Deep reinforcement learning from human preferences",
+   "year": 2017,
+   "arxiv": "1706.03741",
+   "relation": "uses-method",
+   "note": "Reward learning from pairwise preferences",
+   "quote": null
+  },
+  {
+   "work": "Proximal policy optimization (Schulman et al.)",
+   "year": 2017,
+   "arxiv": "1707.06347",
+   "relation": "uses-method",
+   "note": "PPO for policy optimisation",
+   "quote": null
+  },
+  {
+   "work": "Jaques et al., Way off-policy batch deep RL of implicit human preferences in dialog",
+   "year": 2019,
+   "arxiv": "1907.00456",
+   "relation": "uses-method",
+   "note": "KL penalty to the original model",
+   "quote": null
+  },
+  {
+   "work": "Language models are few-shot learners",
+   "year": 2020,
+   "arxiv": "2005.14165",
+   "relation": "uses-method",
+   "note": "GPT-3 architecture for all models",
+   "quote": null
+  },
+  {
+   "work": "TL;DR dataset (Volske et al.)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Reddit TL;DR [63]",
+   "quote": null
+  },
+  {
+   "work": "CNN/DailyMail (Hermann et al.)",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Transfer evaluation",
+   "quote": null
+  },
+  {
+   "work": "T5 (Raffel et al.)",
+   "year": 2019,
+   "arxiv": "1910.10683",
+   "relation": "baseline",
+   "note": "Fine-tuned on CNN/DM, beam search",
+   "quote": null
+  },
+  {
+   "work": "Paulus et al., A deep reinforced model for abstractive summarization",
+   "year": 2017,
+   "arxiv": "1705.04304",
+   "relation": "related",
+   "note": "ROUGE over-optimisation also observed",
+   "quote": null
+  },
+  {
+   "work": "Holtzman et al., The curious case of neural text degeneration",
+   "year": 2019,
+   "arxiv": "1904.09751",
+   "relation": "related",
+   "note": "Nucleus sampling compared against low temperature",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Fraction of the time humans prefer our models' summaries over the human-generated reference summaries on the TL;DR dataset.",
+   "page": 2,
+   "why": "Headline result across model sizes"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Diagram of our human feedback, reward model training, and policy training procedure.",
+   "page": 4,
+   "why": "The three-step RLHF loop"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Preference scores versus degree of reward model optimization.",
+   "page": 8,
+   "why": "Shows RM over-optimisation against human preference"
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "Reward model performance versus data size and model size.",
+   "page": 8,
+   "why": "RM scaling with data and size"
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 3.4",
+   "snippet": "R(x, y) = rθ(x, y) −β log[πRL φ (y|x)/πSFT(y|x)]",
+   "verbatim": true
+  },
+  {
+   "where": "Sec 3.4",
+   "snippet": "loss(rθ) = −E(x,y0,y1,i)∼D[log(σ(rθ(x, yi) −rθ(x, y1−i)))]",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Figures not parsed; Fig 1, 3, 5 values are not in text. MuPDF colour-space warning on open."
+ ]
+}

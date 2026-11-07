@@ -1,19 +1,543 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2301.12597",
  "pdf": "ai-engineering/08-multimodal-engineering/sources/li-2023-blip-2.pdf",
  "bib": {
   "title": "BLIP-2: Bootstrapping Language-Image Pre-training with Frozen Image Encoders and Large Language Models",
+  "authors": [
+   "Junnan Li",
+   "Dongxu Li",
+   "Silvio Savarese",
+   "Steven Hoi"
+  ],
   "first_author": "Li",
   "year": 2023,
-  "venue": "ICML 2023",
+  "venue": "preprint",
   "arxiv": "2301.12597",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-04",
-  "session": "97b4134b-decf-4866-ae85-c6872cbbba19"
+  "at": "2026-11-07",
+  "chars_read": 50040,
+  "chars_total": 50040,
+  "engine": "pymupdf",
+  "skipped": null
  },
- "legacy_report": "SOURCE: BLIP-2: Bootstrapping Language-Image Pre-training with Frozen Image Encoders and Large Language Models. Junnan Li, Dongxu Li, Silvio Savarese, Steven Hoi (Salesforce Research). This file is arXiv:2301.12597v3, dated 15 Jun 2023. The extracted text names no venue, so treat it as a preprint (ICML 2023 is the published venue, but this PDF does not say so).\n\nCOVERAGE: I read all 50,034 of 50,034 chars: the body, the Limitation section, every table (1–9), the appendix hyperparameter tables, the Figure 6/7 pages and the references.\n\nAUDIT OF THE NOTE'S NUMBERS\n- 32 learned queries, 32×768 output, 257×1024 frozen features: CONFIRMED. One detail to add: 257×1024 is the example \"for ViT-L/14\". BLIP-2's other encoder, ViT-g/14, has a different shape, and the paper does not give it.\n- One linear layer to the LLM: CONFIRMED. The paper says \"a fully-connected (FC) layer to linearly project the output query embeddings Z into the same dimension as the text embedding of the LLM\". The projected queries are prepended to the LLM's input text embeddings as \"soft visual prompts\".\n- 188M trainable parameters: CONFIRMED with a caveat. \"In total, Q-Former contains 188M parameters\", and Table 1 lists BLIP-2 at 188M. But Table 2 gives a much smaller \"#TrainableParams\" for each zero-shot VQA variant: 103M–108M, with 108M for ViT-g FlanT5XXL. The paper does not explain the gap. The \"54x fewer\" claim uses 188M (10.2B / 188M ≈ 54). So the note should say \"Q-Former, 188M parameters (Table 1)\" and not tie 188M to the 65.0 model. Two other figures also differ: fine-tuning trains far more parameters, 1.1B–1.2B in Tables 3–5, because the image encoder is unfrozen.\n- VQAv2 zero-shot 65.0 vs Flamingo-80B 56.3: CONFIRMED, but the setup must be stated. 65.0 is the BLIP-2 ViT-g + FlanT5-XXL variant on the VQAv2 test-dev split. That variant has 12.1B total parameters. On the val split the same model scores 65.2. Flamingo80B's 56.3 is also test-dev; it has no val number. The \"8.7%\" is a gap in percentage points (65.0 − 56.3), not a relative gain. The best OPT variant (ViT-g OPT6.7B) scores 52.6 on test-dev, below Flamingo80B.\n- No gain from in-context examples, blamed on single image-caption pretraining: CONFIRMED (Section 5, Limitation). One wording fix: the paper says \"single image-text pair per sample\", and the data is web image-text pairs with synthetic captions. It also notes that Flamingo reports the same observation.\n\nCLAIMS\n- claim: BLIP-2 ViT-g FlanT5-XXL beats Flamingo80B on zero-shot VQAv2 test-dev while training far fewer parameters.\n  number: 65.0 vs 56.3; 54x fewer trainable params\n  setup: zero-shot; FlanT5 prompt \"Question: {} Short answer:\"; beam width 5; length penalty -1\n  quote: \"BLIP-2 ViT-g FlanT5XXL 108M 12.1B 65.2 65.0 45.9 44.7\" and \"Flamingo80B (Alayrac et al., 2022) 10.2B 80B - 56.3 50.6 -\"; \"It outperforms Flamingo80B by 8.7% on VQAv2, despite having 54x fewer trainable parame- ters.\"\n  where: Table 2, p6 (~char 23–26k)\n- claim: The Q-Former outputs a fixed bottleneck of 32 query vectors, much smaller than the frozen image features.\n  number: 32×768 vs 257×1024\n  setup: example given for ViT-L/14; 32 queries, each of dimension 768\n  quote: \"The size of Z (32 × 768) is much smaller than the size of frozen image features (e.g. 257 × 1024 for ViT-L/14).\"\n  where: Sec 3.1, p3\n- claim: The Q-Former is initialised from BERT-base, with randomly initialised cross-attention every other block, and has 188M parameters, counting the queries.\n  number: 188M\n  setup: Q-Former only\n  quote: \"In total, Q-Former contains 188M parameters. Note that the queries are considered as model parameters.\"\n  where: Sec 3.1, p3\n- claim: Without first-stage representation learning, zero-shot VQA drops substantially, and OPT suffers catastrophic forgetting.\n  number: none (Figure 5 curves only)\n  setup: ViT-g with OPT6.7B and with FlanT5-XL, over 80k second-stage iterations\n  quote: \"Without representation learning, both types of LLMs give substan- tially lower performance on zero-shot VQA. In particular, OPT suffers from catastrophic forgetting\"\n  where: Sec 4.1, p7\n- claim: A stronger image encoder or a stronger LLM each improve results, and instruction-tuned FlanT5 beats OPT.\n  number: e.g. ViT-L FlanT5XL 62.3 vs ViT-g FlanT5XL 63.0 (test-dev)\n  setup: zero-shot VQAv2, Table 2\n  quote: \"BLIP-2 ViT-L FlanT5XL 103M 3.4B 62.6 62.3 39.4 44.4\" / \"BLIP-2 ViT-g FlanT5XL 107M 4.1B 63.1 63.0 40.7 44.2\"\n  where: Table 2, p6\n- claim: On OK-VQA, BLIP-2 comes second to Flamingo80B. The authors attribute this to Chinchilla-70B knowing more than FlanT5-XXL.\n  number: 45.9 vs 50.6\n  setup: zero-shot OK-VQA test\n  quote: \"On the OK-VQA (Marino et al., 2019) dataset, BLIP-2 comes secondary to Flamingo80B.\"\n  where: Sec 4.1, p6\n- claim: Pretraining is cheap: the largest model trains in under 6 + 3 days on one 16-A100 machine.\n  number: <6 days stage 1, <3 days stage 2\n  setup: ViT-g + FlanT5-XXL; 16×A100 40G; 250k + 80k steps; 224×224 images; 129M images\n  quote: \"using a single 16-A100(40G) machine, our largest model with ViT-g and FlanT5-XXL requires less than 6 days for the first stage and less than 3 days for the second stage.\"\n  where: Sec 3.4, p4\n- claim: The pretraining data is BLIP's 129M images, with CapFilt synthetic captions.\n  number: 129M; 115M from LAION400M\n  setup: COCO, VG, CC3M, CC12M, SBU, LAION subset\n  quote: \"We use the same pre-training dataset as BLIP with 129M images in total\"\n  where: Sec 3.4, p4\n- claim: Fine-tuned zero-shot results lead the comparison table: NoCaps 121.6 CIDEr and Flickr30K TR@1 97.6 / IR@1 89.7.\n  number: 121.6 / 97.6 / 89.7\n  setup: NoCaps val after COCO fine-tuning; Flickr30K 1K test after COCO fine-tuning\n  quote: \"BLIP-2 188M ✓ 65.0 121.6 15.8 97.6 89.7\"\n  where: Table 1, p6\n- claim: Fine-tuned VQAv2 is roughly on par with Flamingo80B among open-ended models.\n  number: 82.19 test-dev (ViT-g OPT6.7B)\n  setup: Q-Former and ViT fine-tuned, LLM frozen, Q-Former also conditioned on the question; image resolution 490\n  quote: \"BLIP-2 ViT-g OPT6.7B 1.2B 82.19 82.30\"\n  where: Table 4, p7\n- claim: Adding the ITG loss improves retrieval.\n  number: TR@1 84.5 -> 85.4\n  setup: COCO fine-tuned retrieval\n  quote: \"ITC + ITM 84.5 96.2 67.2 87.1\" / \"ITC + ITM + ITG 85.4 97.0 68.3 87.7\"\n  where: Table 6, p8\n- claim: The Q-Former's output size does not depend on input resolution.\n  number: none\n  setup: architecture\n  quote: \"It extracts a fixed number of output features from the image encoder, independent of input image resolution.\"\n  where: Sec 3.1, p2–3\n\nLIMITS\n- No in-context or few-shot gain on VQA. The authors blame single-pair pretraining samples and plan an interleaved dataset (Sec 5).\n- Generation can fail through inaccurate LLM knowledge, a wrong reasoning path, or outdated information (Figure 6 examples: wrong person for a quote, ignoring December weather in Canada, iPhone 11 for an iPhone 14).\n- Because the models are frozen, BLIP-2 inherits LLM risks: offensive output, social bias, privacy leakage.\n- OK-VQA trails Flamingo80B. The OPT variants trail Flamingo80B on VQAv2 test-dev.\n- Not shown: the 257×1024 example covers ViT-L only. Pretraining uses 224×224 images. There is no latency or inference-cost comparison. Trainable parameter counts are inconsistent across tables (188M vs 103–108M) and the paper does not explain why.\n- Dated: the comparisons are against 2022 models (Flamingo, BEIT-3). Successors such as LLaVA-style MLP projectors are not covered.\n\nBUILDS ON: BLIP (Li et al., 2022) for the objectives, CapFilt and data. ALBEF (Li et al., 2021) for hard-negative mining and ITM reranking. BERT base (Devlin et al., 2019) for Q-Former initialisation. UniLM (Dong et al., 2019) for the causal mask. CLIP (Radford et al., 2021) ViT-L/14. EVA-CLIP (Fang et al., 2022) ViT-g/14. OPT (Zhang et al., 2022). FlanT5 (Chung et al., 2022). Contrasted with Frozen (Tsimpoukelli et al., 2021) and Flamingo (Alayrac et al., 2022), whose Perceiver Resampler the paper likens to the Q-Former without stage 1.\n\nCODE: No code, only prompts. Zero-shot VQA uses \"Question: {} Answer:\" for OPT and \"Question: {} Short answer:\" for FlanT5 (Sec 4.1, p6). Captioning uses the prompt \"a photo of\" (Sec 4.2; Table 7).\n\nFIGURES\n- Fig 2, p3: \"(Left) Model architecture of Q-Former and BLIP-2's first-stage vision-language representation learning objectives...\" It shows the three attention masks (ITC, ITM, ITG) side by side, which is much faster than reading the prose.\n- Fig 3, p4: \"BLIP-2's second-stage vision-to-language generative pre-training...\" It shows the FC projection and soft prompts going into a decoder-only LLM vs an encoder-decoder LLM. It is the best single image for \"what the model actually sees\".\n- Fig 5, p7: \"Effect of vision-language representation learning...\" The w/ vs w/o curves show OPT collapsing without stage 1.\n- Fig 6, p12: incorrect-output examples, useful for the failure modes.\n\nPROBLEMS: The extraction is clean. There are no embedded instructions. Small faults in the source itself:\n- The Limitation section points to \"see Figure 7\" for incorrect outputs, but those are in Figure 6; Figure 7 is the VQA fine-tuning architecture.\n- Sec 3.4 prints \"β1 = 0.9, β1 = 0.98\", where the second should be β2.\n- Table 1 headers extract run together, but the values are readable."
+ "type": "empirical",
+ "question": "Can vision-language pre-training be made compute-efficient by bridging a frozen image encoder and a frozen LLM with a small trainable module?",
+ "hypothesis": "A Q-Former pre-trained in two stages (representation learning, then generative learning) bridges the modality gap better than an image-to-text generation loss alone.",
+ "contributions": [
+  "Q-Former bridges frozen image encoder and frozen LLM, pre-trained in two stages",
+  "SOTA on VQA, captioning, retrieval with fewer trainable parameters",
+  "Zero-shot instructed image-to-text generation",
+  "Generic: benefits from stronger unimodal models"
+ ],
+ "method": {
+  "summary": "A 188M-parameter Q-Former with 32 learned queries extracts features from a frozen ViT; stage 1 trains it with ITC, ITG and ITM; stage 2 projects its outputs via one FC layer as soft prompts to a frozen OPT or FlanT5. Pre-trained on 129M images with CapFilt synthetic captions.",
+  "task": "vision-language pre-training; VQA, captioning, image-text retrieval",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Pre-training mix (COCO, Visual Genome, CC3M, CC12M, SBU, LAION400M subset)",
+    "role": "pretrain",
+    "size": "129M images (115M from LAION400M)",
+    "split": null,
+    "source": "same as BLIP",
+    "preprocessing": "CapFilt: 10 captions from BLIP-large per image, ranked with the web caption by CLIP ViT-L/14 similarity, keep top 2, sample 1 per step; 224x224, random resized crop + horizontal flip"
+   },
+   {
+    "name": "COCO",
+    "role": "both",
+    "size": null,
+    "split": "Karpathy test for captioning; 5K test for retrieval",
+    "source": "Lin et al. 2014",
+    "preprocessing": null
+   },
+   {
+    "name": "NoCaps",
+    "role": "eval",
+    "size": null,
+    "split": "validation, zero-shot transfer",
+    "source": "Agrawal et al. 2019",
+    "preprocessing": null
+   },
+   {
+    "name": "VQAv2 (+ Visual Genome train samples)",
+    "role": "both",
+    "size": null,
+    "split": "fine-tune on train+val of VQAv2; eval test-dev/test-std; zero-shot eval on val and test-dev",
+    "source": "Goyal et al. 2017",
+    "preprocessing": null
+   },
+   {
+    "name": "OK-VQA, GQA",
+    "role": "eval",
+    "size": null,
+    "split": "OK-VQA test, GQA test-dev, zero-shot",
+    "source": "Marino 2019; Hudson & Manning 2019",
+    "preprocessing": null
+   },
+   {
+    "name": "Flickr30K",
+    "role": "eval",
+    "size": null,
+    "split": "1K test, zero-shot",
+    "source": "Plummer 2015",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Q-Former",
+    "role": "proposed",
+    "params": "188M",
+    "architecture": "two transformer submodules sharing self-attention; cross-attention every other block; 32 queries x 768 dim",
+    "init_from": "BERT-base (cross-attention random)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": 768,
+    "heads": null,
+    "context": null,
+    "other": {
+     "output_Z": "32 x 768",
+     "frozen_feature_example": "257 x 1024 for ViT-L/14"
+    }
+   },
+   {
+    "name": "ViT-L/14 (CLIP)",
+    "role": "base",
+    "params": null,
+    "architecture": "ViT",
+    "init_from": "CLIP",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "last layer removed, second-last layer features used"
+    }
+   },
+   {
+    "name": "ViT-g/14 (EVA-CLIP)",
+    "role": "base",
+    "params": null,
+    "architecture": "ViT",
+    "init_from": "EVA-CLIP",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "last layer removed, second-last layer features used"
+    }
+   },
+   {
+    "name": "OPT 2.7B / 6.7B",
+    "role": "base",
+    "params": "2.7B / 6.7B",
+    "architecture": "decoder-only",
+    "init_from": "Zhang et al. 2022",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "FlanT5 XL / XXL",
+    "role": "base",
+    "params": "XL, XXL (text says 11B for XXL)",
+    "architecture": "encoder-decoder",
+    "init_from": "Chung et al. 2022",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "Stage 1: ITC (in-batch negatives, max over queries) + ITG (multimodal causal mask, [DEC] token) + ITM (bidirectional mask, hard negatives, mean of per-query 2-class logits). Stage 2: LM loss (OPT) or prefix LM loss (FlanT5) through one FC layer; frozen ViT and LLM.",
+   "optimizer": "AdamW, beta1=0.9, beta2=0.98 (text prints 'beta1 = 0.9, beta1 = 0.98')",
+   "lr": "1e-4 peak; stage 2 minimum 5e-5",
+   "lr_schedule": "cosine decay",
+   "warmup": "2k steps linear",
+   "batch_size": "stage 1: 2320 (ViT-L) / 1680 (ViT-g); stage 2: 1920 (OPT) / 1520 (FlanT5)",
+   "steps": "250k stage 1; 80k stage 2",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": "FP16 frozen ViT and LLM; BFloat16 for FlanT5",
+   "weight_decay": "0.05",
+   "dropout": null,
+   "regularisation": "random resized crop, horizontal flip, 224x224",
+   "hardware": "single 16-A100(40G) machine",
+   "compute": null,
+   "wall_clock": "<6 days stage 1 + <3 days stage 2 (ViT-g + FlanT5-XXL)",
+   "seeds": null,
+   "other": {
+    "same hyperparameters for all models": true,
+    "finetune_captioning(Table 7)": "5 epochs, warmup 1000, lr 1e-5, bs 256, AdamW (0.9,0.999), wd 0.05, drop path 0, res 364, prompt 'a photo of', beam 5, ViT layer-wise LR decay 1 (FlanT5XL, OPT2.7B) / 0.95 (OPT6.7B)",
+    "finetune_VQA(Table 8)": "5 epochs, warmup 1000, lr 1e-5, bs 128, AdamW (0.9,0.999), wd 0.05, drop path 0, res 490, prompt 'Question: {} Answer:', beam 5, LLRD 0.95/0.95/0.9 for FlanT5XL/OPT2.7B/OPT6.7B",
+    "finetune_retrieval(Table 9)": "5 epochs, warmup 1000, lr 5e-6 (ViT-L) / 1e-5 (ViT-g), bs 224, AdamW (0.9,0.98) ViT-L / (0.9,0.999) ViT-g, wd 0.05, res 364, LLRD 1 / 0.95",
+    "finetune_scope": "LLM frozen; Q-Former and image encoder updated in captioning and VQA; retrieval fine-tunes ViT+Q-Former without LLM"
+   }
+  },
+  "inference": {
+   "decoding": "beam search, width 5",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": "Zero-shot VQA: OPT 'Question: {} Answer:'; FlanT5 'Question: {} Short answer:'; instructed generation appends text prompt after visual prompt",
+   "retrieval": "k=128 candidates by image-text feature similarity, reranked by ITM",
+   "parameters": {
+    "length_penalty": "-1"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "VQA accuracy",
+     "definition": "standard VQAv2/OK-VQA/GQA accuracy",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "CIDEr, SPICE, BLEU@4",
+     "definition": "caption metrics",
+     "unit": "points",
+     "higher_is_better": true
+    },
+    {
+     "name": "Recall@K",
+     "definition": "image-text retrieval",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "BLIP",
+    "SimVLM",
+    "BEiT-3",
+    "Flamingo 3B/9B/80B",
+    "Frozen",
+    "VLKD",
+    "FewVLM",
+    "OFA",
+    "CoCa",
+    "ALIGN",
+    "FILIP",
+    "Florence",
+    "ALBEF"
+   ],
+   "protocol": "single reported runs; no seeds or significance tests stated"
+  },
+  "availability": {
+   "code": "https://github.com/salesforce/LAVIS/tree/main/projects/blip2",
+   "weights": null,
+   "data": null
+  },
+  "prompts": [
+   {
+    "purpose": "zero-shot VQA, OPT",
+    "text": "Question: {} Answer:",
+    "where": "Sec 4.1"
+   },
+   {
+    "purpose": "zero-shot VQA, FlanT5",
+    "text": "Question: {} Short answer:",
+    "where": "Sec 4.1"
+   },
+   {
+    "purpose": "captioning initial input",
+    "text": "a photo of",
+    "where": "Sec 4.2"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training.optimizer",
+    "quote": "β1 = 0.9, β1 = 0.98",
+    "where": "Sec 3.4 (typo for beta2)"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "BLIP-2 ViT-g FlanT5-XXL beats Flamingo80B on zero-shot VQAv2 test-dev by 8.7 points with 54x fewer trainable parameters.",
+   "kind": "measured",
+   "metric": "VQAv2 test-dev accuracy",
+   "value": 65.0,
+   "unit": "VQA acc. %",
+   "baseline_value": 56.3,
+   "setup": "Zero-shot, ViT-g + FlanT5XXL (12.1B total params); beam 5, length-penalty -1, prompt 'Question: {} Short answer:'; Flamingo80B has 10.2B trainable",
+   "table": "Table 2, row BLIP-2 ViT-g FlanT5XXL, column test-dev",
+   "quote": "It outperforms Flamingo80B by 8.7% on VQAv2, despite having 54x fewer trainable parameters.",
+   "note": "8.7 is the absolute gap 65.0-56.3 (points). Table 2 lists 108M trainable for this model, Table 1 lists 188M for BLIP-2; 54x matches 10.2B/188M. Val score 65.2.",
+   "where": "Sec 4.1, Table 2"
+  },
+  {
+   "claim": "Q-Former has 188M parameters in total.",
+   "kind": "measured",
+   "metric": "Q-Former params",
+   "value": "188M",
+   "setup": "Initialised from BERT-base, cross-attention randomly initialised, 32 queries",
+   "quote": "In total, Q-Former contains 188M parameters.",
+   "where": "Sec 3.1"
+  },
+  {
+   "claim": "Table 2 lists far fewer trainable params (103M-108M) for the zero-shot VQA BLIP-2 variants than 188M in Table 1; the paper does not reconcile them.",
+   "kind": "measured",
+   "metric": "#Trainable params",
+   "value": "108M",
+   "setup": "BLIP-2 ViT-g FlanT5XXL, zero-shot VQA",
+   "table": "Table 2, row BLIP-2 ViT-g FlanT5XXL, column #Trainable Params",
+   "where": "Table 2"
+  },
+  {
+   "claim": "BLIP-2 ViT-g OPT6.7B scores 52.6 on VQAv2 test-dev zero-shot, below Flamingo80B (56.3).",
+   "kind": "measured",
+   "metric": "VQAv2 test-dev",
+   "value": 52.6,
+   "unit": "VQA acc. %",
+   "baseline_value": 56.3,
+   "setup": "Zero-shot, OPT prompt 'Question: {} Answer:'",
+   "table": "Table 2, row BLIP-2 ViT-g OPT6.7B, column test-dev",
+   "where": "Table 2"
+  },
+  {
+   "claim": "On OK-VQA BLIP-2 trails Flamingo80B (44.7 vs 50.6 for best BLIP-2 FlanT5XXL), which the authors hypothesise is due to Chinchilla 70B having more knowledge than FlanT5XXL 11B.",
+   "kind": "measured",
+   "metric": "OK-VQA test",
+   "value": 45.9,
+   "unit": "VQA acc. %",
+   "baseline_value": 50.6,
+   "setup": "Zero-shot; BLIP-2 ViT-g FlanT5XXL",
+   "table": "Table 2, row BLIP-2 ViT-g FlanT5XXL, column OK-VQA test",
+   "note": "Table column order is VQAv2 val, VQAv2 test-dev, OK-VQA test, GQA test-dev: OK-VQA 45.9, GQA 44.7. Hypothesis is the authors' own, untested.",
+   "where": "Sec 4.1"
+  },
+  {
+   "claim": "Zero-shot NoCaps overall CIDEr of BLIP-2 ViT-g FlanT5XL after COCO fine-tuning.",
+   "kind": "measured",
+   "metric": "NoCaps val overall CIDEr",
+   "value": 121.6,
+   "unit": "CIDEr",
+   "baseline_value": 113.2,
+   "setup": "Fine-tuned on COCO (LLM frozen, Q-Former+ViT updated), zero-shot transfer to NoCaps val; baseline BLIP",
+   "table": "Table 3, row BLIP-2 ViT-g FlanT5XL, column overall C",
+   "where": "Table 3, Table 1"
+  },
+  {
+   "claim": "Fine-tuned BLIP-2 ViT-g OPT2.7B COCO Karpathy test CIDEr.",
+   "kind": "measured",
+   "metric": "COCO Karpathy test CIDEr",
+   "value": 145.8,
+   "unit": "CIDEr",
+   "baseline_value": 145.3,
+   "setup": "COCO fine-tuned; baseline OFA",
+   "table": "Table 3, row BLIP-2 ViT-g OPT2.7B, column C",
+   "where": "Table 3"
+  },
+  {
+   "claim": "Fine-tuned VQAv2 test-dev for BLIP-2 ViT-g OPT6.7B, vs Flamingo80B 82.00.",
+   "kind": "measured",
+   "metric": "VQAv2 test-dev",
+   "value": 82.19,
+   "unit": "VQA acc. %",
+   "baseline_value": 82.0,
+   "setup": "Fine-tuned VQAv2 train+val plus Visual Genome, LLM frozen, image res 490, Q-Former conditioned on question",
+   "table": "Table 4, row BLIP-2 ViT-g OPT6.7B, column test-dev",
+   "where": "Table 4"
+  },
+  {
+   "claim": "Zero-shot Flickr30K image-to-text R@1 for BLIP-2 ViT-g after COCO fine-tuning.",
+   "kind": "measured",
+   "metric": "Flickr30K TR@1",
+   "value": 97.6,
+   "unit": "R@1 %",
+   "baseline_value": 96.7,
+   "setup": "Fine-tuned on COCO, zero-shot to Flickr30K 1K test, no LLM, k=128 ITC candidates then ITM rerank; baseline BLIP",
+   "table": "Table 5, row BLIP-2 ViT-g, column Flickr Image->Text R@1",
+   "where": "Table 5"
+  },
+  {
+   "claim": "Zero-shot Flickr30K text-to-image R@1 for BLIP-2 ViT-g.",
+   "kind": "measured",
+   "metric": "Flickr30K IR@1",
+   "value": 89.7,
+   "unit": "R@1 %",
+   "baseline_value": 86.7,
+   "setup": "As above",
+   "table": "Table 5, row BLIP-2 ViT-g, column Flickr Text->Image R@1",
+   "where": "Table 5"
+  },
+  {
+   "claim": "Adding ITG loss to ITC+ITM at COCO fine-tuning raises COCO text-to-image R@1 from 67.2 to 68.3.",
+   "kind": "measured",
+   "metric": "COCO IR@1",
+   "value": 68.3,
+   "unit": "R@1 %",
+   "baseline_value": 67.2,
+   "setup": "ViT-g, COCO 5K test, retrieval fine-tuning ablation",
+   "table": "Table 6, row ITC + ITM + ITG, column Text->Image R@1",
+   "where": "Table 6"
+  },
+  {
+   "claim": "Without the first-stage representation learning, zero-shot VQA is substantially lower and OPT suffers catastrophic forgetting; exact numbers only in Fig 5.",
+   "kind": "measured",
+   "setup": "ViT-g with OPT6.7B and FlanT5-XL, zero-shot VQAv2 over 80k iterations",
+   "quote": "In particular, OPT suffers from catastrophic forgetting where performance drastically degrades as training proceeds.",
+   "where": "Fig 5, Sec 4.1"
+  },
+  {
+   "claim": "Using a single 16-A100(40G) machine, the largest model needs under 6 days for stage 1 and under 3 days for stage 2.",
+   "kind": "measured",
+   "metric": "pre-training time",
+   "value": "<6 days + <3 days",
+   "setup": "ViT-g + FlanT5-XXL, 16x A100 40GB",
+   "quote": "our largest model with ViT-g and FlanT5-XXL requires less than 6 days for the first stage and less than 3 days for the second stage.",
+   "where": "Sec 3.4"
+  },
+  {
+   "claim": "BLIP-2 shows no VQA improvement from in-context examples, attributed to pretraining on single image-text pairs per sample.",
+   "kind": "claim",
+   "setup": "Authors' experiments, no numbers given",
+   "quote": "our experiments with BLIP-2 do not observe an improved VQA performance when providing the LLM with in-context VQA examples.",
+   "where": "Sec 5"
+  },
+  {
+   "claim": "Stronger image encoder or stronger LLM both improve zero-shot VQA (ViT-g>ViT-L; larger LLM > smaller; FlanT5 > OPT).",
+   "kind": "measured",
+   "setup": "Table 2 variants",
+   "quote": "a stronger image encoder or a stronger LLM both lead to better performance.",
+   "where": "Sec 4.1"
+  }
+ ],
+ "limits": [
+  "No gain from in-context examples (single image-text pair per sample pretraining)",
+  "Outputs can be wrong: inaccurate knowledge, wrong reasoning path, outdated info (Fig 6)",
+  "Inherits LLM risks: offensive language, social bias, privacy leakage",
+  "Zero-shot gains reported on single runs without seeds",
+  "Trainable-parameter counts differ between Table 1 (188M), Table 2 (103-108M) and fine-tuning tables (1.1-1.2B) without explanation"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Q-Former",
+   "definition": "lightweight transformer with learnable query vectors acting as an information bottleneck between frozen image encoder and frozen LLM",
+   "where": "Sec 1, 3.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "BLIP",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "pre-training objectives, data, CapFilt",
+   "quote": null
+  },
+  {
+   "work": "Flamingo",
+   "year": 2022,
+   "arxiv": "2204.14198",
+   "relation": "baseline",
+   "note": "main zero-shot comparison",
+   "quote": null
+  },
+  {
+   "work": "Frozen (Tsimpoukelli et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "frozen LLM with image soft prompts",
+   "quote": null
+  },
+  {
+   "work": "CLIP",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "ViT-L/14 encoder, caption ranking",
+   "quote": null
+  },
+  {
+   "work": "EVA-CLIP / EVA",
+   "year": 2022,
+   "arxiv": "2211.07636",
+   "relation": "uses-method",
+   "note": "ViT-g/14",
+   "quote": null
+  },
+  {
+   "work": "OPT",
+   "year": 2022,
+   "arxiv": "2205.01068",
+   "relation": "uses-method",
+   "note": "frozen decoder LLM",
+   "quote": null
+  },
+  {
+   "work": "Scaling instruction-finetuned language models (FlanT5)",
+   "year": 2022,
+   "arxiv": "2210.11416",
+   "relation": "uses-method",
+   "note": "frozen encoder-decoder LLM",
+   "quote": null
+  },
+  {
+   "work": "BERT",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Q-Former init",
+   "quote": null
+  },
+  {
+   "work": "LAION-400M",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "115M images",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "Q-Former architecture and stage-1 objectives with attention masks",
+   "page": 3,
+   "why": "shows how three masks share one set of weights"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Second-stage generative pre-training with OPT and FlanT5",
+   "page": 4,
+   "why": "shows FC projection and prefix/suffix split"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Effect of representation learning on generative learning",
+   "page": 7,
+   "why": "ablation of stage 1; the only evidence for catastrophic forgetting without it"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Fig 5 and the stage-1 ablation have no numbers in the text; curves only",
+  "Text prints 'beta1 = 0.9, beta1 = 0.98' (typo)"
+ ]
 }

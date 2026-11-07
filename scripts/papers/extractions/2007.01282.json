@@ -1,19 +1,468 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2007.01282",
  "pdf": "generative-ai/02-rag-retrieval/sources/izacard-2021-leveraging-passage-retrieval-generative-models.pdf",
  "bib": {
   "title": "Leveraging Passage Retrieval with Generative Models for Open Domain Question Answering",
+  "authors": [
+   "Gautier Izacard",
+   "Edouard Grave"
+  ],
   "first_author": "Izacard",
   "year": 2021,
-  "venue": "EACL 2021",
+  "venue": "Proceedings of the 16th Conference of the European Chapter of the Association for Computational Linguistics (EACL), pages 874-880",
   "arxiv": "2007.01282",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-04",
-  "session": "5f2f0582-f958-4d9c-8469-02f3d5079657"
+  "at": "2026-11-07",
+  "chars_read": 25720,
+  "chars_total": 25720,
+  "engine": "pymupdf",
+  "skipped": null
  },
- "legacy_report": "SOURCE: \"Leveraging Passage Retrieval with Generative Models for Open Domain Question Answering\", Gautier Izacard and Edouard Grave (Facebook AI Research, ENS, Inria). EACL 2021, pages 874–880 (arXiv 2007.01282). File: /Users/ramsey-wise/workspace/learn-ai-engineering/generative-ai/02-rag-retrieval/sources/izacard-2021-leveraging-passage-retrieval-generative-models.pdf\n\nCOVERAGE: Read all 25,716 of 25,716 extracted characters: body, Tables 1–2, Figure 3 axes and the full reference list. The paper has no appendix and no limitations section.\n\nCLAIMS\n- claim: Fusion-in-Decoder (FiD) encodes each retrieved passage on its own, with the question prepended, then lets the decoder attend over all the encoded passages joined together. All evidence fusion happens in the decoder.\n  number: none\n  setup: T5 encoder-decoder. Each encoder input is formatted as \"question:\", \"title:\" and \"context:\"\n  quote: \"each retrieved passage and its title are concatenated with the question, and processed independently from other passages by the encoder... the decoder performs attention over the concatenation of the resulting representations of all the retrieved passages. The model thus performs evidence fusion in the decoder only\"\n  where: p.2 (876), §3 Reading\n- claim: Encoding passages separately makes compute grow linearly with the number of passages, not quadratically. Joint decoding is what combines evidence across passages. This is how FiD differs from RAG (Lewis 2020b) and SpanSeqGen (Min 2020).\n  number: none\n  setup: an argument from the architecture. The paper measures no wall-clock time.\n  quote: \"computation time of the model grows linearly with the number of passages, instead of quadratically. On the other hand, processing passages jointly in the decoder allows to better aggregate evidence from multiple passages.\"\n  where: p.2 (876), §3\n- claim: Accuracy keeps rising as k grows from 10 to 100 passages. The authors cite other work saying extractive readers peak around 10–20 passages; they do not run those readers themselves.\n  number: +6% TriviaQA, +3.5% NQ\n  setup: FiD-base, validation sets. Training and test use the same k (Figure 3). The per-k values exist only as a plot.\n  quote: \"increasing the number of passages from 10 to 100 leads to 6% improvement on TriviaQA and 3.5% improvement on NaturalQuestions. On the other hand, the performance of most extractive models seems to peak around 10 to 20 passages (Wang et al., 2019; Yang et al., 2019).\"\n  where: p.4 (878)\n- claim: Per-k numbers from Table 2. Each row is the number of passages used in training, with testing always at 100 passages. Each pair is EM without and with a 1,000-step fine-tune on 100 passages.\n  number: NQ 5→37.8/45.0, 10→42.3/45.3, 25→45.3/46.0, 50→45.7/46.0, 100→46.5. TriviaQA 5→58.1/64.2, 10→61.1/63.6, 25→63.2/64.2, 50→64.2/64.3, 100→64.7\n  setup: dev sets, EM. The paper does not say whether this is the base or large model.\n  quote: \"5 37.8 45.0 58.1 64.2 / 10 42.3 45.3 61.1 63.6 / 25 45.3 46.0 63.2 64.2 / 50 45.7 46.0 64.2 64.3 / 100 46.5 - 64.7 -\"\n  where: p.4 (878), Table 2\n- claim: Training on fewer passages and then fine-tuning briefly at 100 passages reaches nearly full accuracy for about a third of the GPU hours.\n  number: 46.0 EM, 147 vs 425 GPU hours\n  setup: NaturalQuestions\n  quote: \"we can reach 46.0 EM on NaturalQues-tions, using 147 GPU hours, compared to 425 GPU hours when training on 100 passages.\"\n  where: p.4 (878)\n- claim: FiD beats both the extractive readers and the earlier retrieval-augmented generators in Table 1.\n  number: FiD-large NQ 51.4, TriviaQA 67.6 (open test) and 80.1 (hidden test), SQuAD 56.7 EM / 63.2 F1. FiD-base 48.2 / 65.0 / 77.1 / 53.4 / 60.6. RAG 44.5 / 56.1 / 68.0. DPR 41.5 / 57.9. REALM 40.4. Multi-Passage BERT SQuAD 53.0 / 60.9\n  setup: open test sets, EM. The second TriviaQA column is the hidden test set.\n  quote: \"Fusion-in-Decoder (base) 48.2 65.0 77.1 53.4 60.6 / Fusion-in-Decoder (large) 51.4 67.6 80.1 56.7 63.2\"; \"RAG (Lewis et al., 2020b) 44.5 56.1 68.0 - -\"; \"DPR (Karpukhin et al., 2020) 41.5 57.9 - 36.7 -\"\n  where: p.2 (876), Table 1\n- claim: A small model with retrieval beats a closed-book model 14 times its size, with roughly the same memory footprint.\n  number: 36.6% for T5 at 11B vs 44.1% for FiD at 770M with BM25\n  setup: NaturalQuestions. The 44.1 BM25 result is not in Table 1, which shows 51.4 with DPR.\n  quote: \"the closed book T5 model obtains 36.6% accuracy with 11B parame-ters, while our approach obtains 44.1% with 770M parameters plus Wikipedia with BM25 retrieval. Both methods use roughly the same amount of memory\"\n  where: p.3 (877)\n- claim: Comparison with GPT-3 few-shot.\n  number: GPT-3 NQ 29.9 and TriviaQA hidden 71.2, vs FiD-large 51.4 and 80.1\n  setup: the paper does not state GPT-3's parameter count\n  quote: \"GPT-3 few shot (Brown et al., 2020) 29.9 - 71.2 - -\"; \"T5 (Roberts et al., 2020) 36.6 - 60.5 - -\"\n  where: Table 1\n- claim: Setup details.\n  number: 220M and 770M parameters, 100 passages of 100 words each truncated to 250 word pieces, 10k steps, batch size 64 on 64 V100 GPUs\n  setup: DPR retrieval for NQ and TriviaQA, BM25 for SQuAD, greedy decoding\n  quote: \"base and large, contain-ing respectively 220M and 770M parameters\"; \"we retrieve 100 passages (un-less said otherwise), and truncate them to 250 word pieces\"; \"10k gradient steps, with a batch size of 64, using 64 Tesla V100 32Gb\"\n  where: p.3 (877)\n\nLIMITS:\n- No experiments on passage order or position within the context. It gives no direct evidence for the \"order\" half of \"Order and size of the context\".\n- The linear-compute claim is argued from the architecture and never measured. There are no inference latency or memory figures, and the decoder's cross-attention still covers all k×250 tokens.\n- The \"extractive readers peak at 10–20 passages\" point is cited from other papers, not run here.\n- Only short-answer factoid QA, scored with EM. There is no long-form generation and no measure of faithfulness or hallucination.\n- The retriever is fixed and not trained jointly; the authors leave end-to-end training to future work. They also concede the need to \"make this model more efficient... when scaling to large number of support passages\".\n- Dated: the reader is T5 at 770M parameters at most, from before long-context decoder LLMs. The comparison against GPT-3 is few-shot and closed-book.\n\nBUILDS ON: T5 (Raffel et al., 2020); BART (Lewis et al., 2020a); DPR (Karpukhin et al., 2020); BM25 (Robertson et al., 1995); closed-book QA (Roberts et al., 2020); RAG (Lewis et al., 2020b); SpanSeqGen (Min et al., 2020); DrQA retrieve-then-read (Chen et al., 2017); REALM (Guu et al., 2020); ORQA and the experimental setting (Lee et al., 2019); FAISS.\n\nCODE: none in the paper. The input format is quoted under the first claim.\n\nFIGURES:\n- Figure 1 (p.1): question plus retrieved passage, a seq2seq model, then the answer. It shows the two-component pipeline at a glance, which fits note 02's \"The two components\".\n- Figure 2 (p.2): \"Architecture of the Fusion-in-Decoder method.\" N encoders each read question + passage, their outputs are concatenated, and one decoder reads the result. It explains separate encoding with joint decoding faster than prose.\n- Figure 3 (p.4): \"Performance of Fusion-in-Decoder (base) on valid sets as a function of the number of retrieved passages.\" EM rises monotonically from 5 to 100 passages on NQ, TriviaQA and SQuAD. It is the clearest visual for the \"size of the context\" point.\n\nPROBLEMS:\n- The extraction is clean, and I found no embedded instructions.\n- The figures came through only as axis ticks, so the per-k EM values in Figure 3 cannot be quoted. The quotable per-k numbers are in Table 2.\n- The Table 1 header shows two TriviaQA columns without labels; the caption identifies them as open test and hidden test.\n- The 44.1% BM25 figure in the text does not appear in any table."
+ "type": "empirical",
+ "question": "How much can a generative seq2seq reader benefit from retrieving text passages for open-domain QA, and does it scale with the number of passages?",
+ "hypothesis": "Generative models can aggregate evidence from many retrieved passages better than extractive readers, so accuracy should keep improving as passages increase.",
+ "contributions": [
+  "Fusion-in-Decoder: encode each question-passage pair independently, fuse in the decoder",
+  "State-of-the-art on NaturalQuestions and TriviaQA open benchmarks",
+  "Accuracy keeps improving up to 100 passages"
+ ],
+ "method": {
+  "summary": "A retriever (BM25 or DPR) returns 100 passages; each is concatenated with the question and title and encoded independently by a T5 encoder; the decoder cross-attends over the concatenated encoder outputs and generates the answer. Models are fine-tuned per dataset.",
+  "task": "open-domain question answering",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "NaturalQuestions (open)",
+    "role": "both",
+    "size": null,
+    "split": "as Lee et al. (2019)",
+    "source": "Kwiatkowski et al., 2019",
+    "preprocessing": "answers longer than 5 tokens discarded"
+   },
+   {
+    "name": "TriviaQA (unfiltered)",
+    "role": "both",
+    "size": null,
+    "split": "as Lee et al. (2019); open-domain test and hidden test",
+    "source": "Joshi et al., 2017",
+    "preprocessing": "uppercase answers converted with Python title()"
+   },
+   {
+    "name": "SQuAD v1.1",
+    "role": "both",
+    "size": null,
+    "split": "validation used as test; 10% of training set kept for validation",
+    "source": "Rajpurkar et al., 2016",
+    "preprocessing": null
+   },
+   {
+    "name": "Wikipedia dumps",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Dec. 20, 2018 for NQ and TriviaQA; Dec. 21, 2016 for SQuAD",
+    "preprocessing": "as Chen et al. 2017 and Karpukhin et al. 2020: passages of 100 words, non-overlapping"
+   }
+  ],
+  "models": [
+   {
+    "name": "Fusion-in-Decoder (base)",
+    "role": "proposed",
+    "params": "220M",
+    "architecture": "T5 encoder-decoder",
+    "init_from": "pretrained T5 (HuggingFace Transformers)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "each passage truncated to 250 word pieces",
+    "other": {}
+   },
+   {
+    "name": "Fusion-in-Decoder (large)",
+    "role": "proposed",
+    "params": "770M",
+    "architecture": "T5 encoder-decoder",
+    "init_from": "pretrained T5 (HuggingFace Transformers)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "each passage truncated to 250 word pieces",
+    "other": {}
+   },
+   {
+    "name": "BM25",
+    "role": "retriever",
+    "params": null,
+    "architecture": "Apache Lucene, default parameters, SpaCy tokenisation",
+    "init_from": null,
+    "tokenizer": "SpaCy",
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "DPR",
+    "role": "retriever",
+    "params": null,
+    "architecture": "two BERT networks, dot product, FAISS approximate nearest neighbours",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "inferred: sequence-to-sequence cross-entropy on the answer (not stated); target sampled from answer list for NQ and SQuAD, unique human answer for TriviaQA",
+   "optimizer": "Adam",
+   "lr": "1e-4",
+   "lr_schedule": "constant",
+   "warmup": null,
+   "batch_size": "64",
+   "steps": "10k gradient steps",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "100 passages x 250 word pieces",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": "10%",
+   "regularisation": null,
+   "hardware": "64 Tesla V100 32Gb",
+   "compute": "425 GPU hours for NQ training on 100 passages (Section 4)",
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "checkpoint_selection": "evaluated every 500 steps, best on validation Exact Match",
+    "finetune_experiment": "models trained with fewer passages then finetuned with 100 passages for 1000 steps (147 GPU hours)"
+   }
+  },
+  "inference": {
+   "decoding": "greedy decoding",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single run per setting; no seeds or variance reported",
+   "prompting": "encoder input marked with special tokens question:, title:, context: before question, title and text of each passage",
+   "retrieval": "100 passages unless stated; DPR for NQ and TriviaQA, BM25 for SQuAD",
+   "parameters": {
+    "passages_k": "100 (varied 5 to 100 in Fig 3 and Table 2)"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Exact Match",
+     "definition": "correct if matches any acceptable answer after lowercasing and removing articles, punctuation and duplicated whitespace",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "F1",
+     "definition": "SQuAD token F1 (not defined in the paper)",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "DrQA",
+    "Multi-Passage BERT",
+    "Path Retriever",
+    "Graph Retriever",
+    "Hard EM",
+    "ORQA",
+    "REALM",
+    "DPR",
+    "SpanSeqGen",
+    "RAG",
+    "T5 (Roberts et al.)",
+    "GPT-3 few shot"
+   ],
+   "protocol": "Single runs; no significance tests; Table 1 on test sets, Fig 3 and Table 2 on validation/dev sets."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": null
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.lr",
+    "quote": "constant learning rate of 10−4 and a dropout rate of 10%",
+    "where": "Section 4, Technical details"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "FiD-large reaches 51.4 EM on the NaturalQuestions test set, above RAG at 44.5.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Exact Match",
+   "value": "51.4",
+   "unit": "%",
+   "baseline_value": "44.5",
+   "n": null,
+   "setup": "Fusion-in-Decoder (large) on NQ, TriviaQA and SQuAD Open test sets; 100 passages, DPR for NQ/TriviaQA, BM25 for SQuAD, T5-large 770M, greedy decoding",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Fusion-in-Decoder (large), column NQ EM (RAG row: 44.5)"
+  },
+  {
+   "claim": "FiD-large reaches 67.6 EM on TriviaQA open-domain test and 80.1 on the hidden test set.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Exact Match",
+   "value": "67.6",
+   "unit": "%",
+   "baseline_value": "56.1",
+   "n": null,
+   "setup": "Fusion-in-Decoder (large) on NQ, TriviaQA and SQuAD Open test sets; 100 passages, DPR for NQ/TriviaQA, BM25 for SQuAD, T5-large 770M, greedy decoding",
+   "note": "RAG: 56.1 open test, 68.0 hidden test. Hidden test is 80.1 for FiD-large.",
+   "where": "Table 1",
+   "table": "Table 1, row Fusion-in-Decoder (large), columns TriviaQA EM (67.6, 80.1)"
+  },
+  {
+   "claim": "FiD-base reaches 48.2 EM on NQ and 65.0 on TriviaQA open test.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Exact Match",
+   "value": "48.2",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fusion-in-Decoder (base), T5-base 220M, 100 passages",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Fusion-in-Decoder (base), columns NQ EM, TriviaQA EM"
+  },
+  {
+   "claim": "FiD-large scores 56.7 EM on SQuAD Open, narrowly above Path Retriever (56.5 EM).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Exact Match",
+   "value": "56.7",
+   "unit": "%",
+   "baseline_value": "56.5",
+   "n": null,
+   "setup": "SQuAD v1.1 open, BM25 retrieval, 100 passages",
+   "note": "F1: FiD-large 63.2, below Path Retriever 63.8. FiD-base 53.4 EM / 60.6 F1 is below both Path Retriever and Multi-Passage BERT on F1.",
+   "where": "Table 1",
+   "table": "Table 1, row Fusion-in-Decoder (large), columns SQuAD Open EM, F1"
+  },
+  {
+   "claim": "Going from 10 to 100 retrieved passages improves TriviaQA by 6% and NQ by 3.5% (FiD-base, valid sets, same k in training and test).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Exact Match change",
+   "value": "6 (TriviaQA), 3.5 (NQ)",
+   "unit": "% (as printed)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "FiD-base, validation sets, Fig 3; values per k only as plot",
+   "note": null,
+   "where": "Section 4, Scaling with number of passages",
+   "quote": "increasing the number of passages from 10 to 100 leads to 6% improvement on TriviaQA and 3.5% improvement on NaturalQuestions"
+  },
+  {
+   "claim": "Training with fewer passages lowers accuracy when testing with 100 passages: NQ w/o finetuning 37.8 at 5 passages vs 46.5 at 100.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Exact Match",
+   "value": "37.8 vs 46.5",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "FiD-base, test with 100 passages, dev sets",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, rows 5 and 100, column NaturalQuestions w/o finetuning"
+  },
+  {
+   "claim": "Finetuning with 100 passages for 1000 steps closes most of the gap: 46.0 EM on NQ at 147 GPU hours versus 425 GPU hours for training on 100 passages throughout.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GPU hours",
+   "value": "147 vs 425",
+   "unit": "GPU hours",
+   "baseline_value": null,
+   "n": null,
+   "setup": "NQ dev, models first trained with 25 or 50 passages (Table 2 w/ finetuning shows 46.0)",
+   "note": null,
+   "where": "Section 4, Impact of the number of training passages",
+   "quote": "we can reach 46.0 EM on NaturalQuestions, using 147 GPU hours, compared to 425 GPU hours when training on 100 passages"
+  },
+  {
+   "claim": "Table 2 w/ finetuning TriviaQA: 5 training passages 64.2, 10 passages 63.6, 25 passages 64.2, 50 passages 64.3; w/o finetuning 100 passages 64.7.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Exact Match",
+   "value": "64.7",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "FiD-base dev, tested with 100 passages",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, column TriviaQA w/ finetuning (64.2, 63.6, 64.2, 64.3) and w/o finetuning row 100 (64.7)"
+  },
+  {
+   "claim": "Retrieval beats parameters: FiD with 770M parameters plus Wikipedia/BM25 scores 44.1 on NQ versus closed-book T5 11B at 36.6.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Exact Match",
+   "value": "44.1",
+   "unit": "%",
+   "baseline_value": "36.6",
+   "n": null,
+   "setup": "NQ test; FiD-large 770M with BM25",
+   "note": "44.1 appears only in the text, not in Table 1; Table 1 has FiD-large at 51.4 on NQ (the retriever used for Table 1 is DPR per Technical details). So 44.1 is presumably the BM25 variant, which the paper never tabulates.",
+   "where": "Section 4, Comparison to state-of-the-art",
+   "quote": "while our approach obtains 44.1% with 770M parameters plus Wikipedia with BM25 retrieval"
+  },
+  {
+   "claim": "Encoding passages independently makes compute grow linearly, not quadratically, in the number of passages.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "architectural argument; no timing measured",
+   "note": null,
+   "where": "Section 3, Reading",
+   "quote": "the computation time of the model grows linearly with the number of passages, instead of quadratically"
+  },
+  {
+   "claim": "Extractive models peak at 10 to 20 passages (cited, not run by the authors).",
+   "kind": "reported",
+   "source": "Wang et al., 2019; Yang et al., 2019",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "extractive readers",
+   "note": null,
+   "where": "Section 4",
+   "quote": "the performance of most extractive models seems to peak around 10 to 20 passages"
+  }
+ ],
+ "limits": [
+  "Paper has no limitations section; conclusion says efficiency at large passage counts is future work",
+  "Retrieval is not trained jointly with the reader",
+  "No timing measurements: linear-cost claim is architectural",
+  "Passage order and position effects not tested",
+  "Only short-answer QA; single runs, no variance",
+  "Text reports 44.1 NQ with BM25 which is not in Table 1"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Fusion-in-Decoder",
+   "definition": "passages are processed independently in the encoder but jointly in the decoder; the model performs evidence fusion in the decoder only",
+   "where": "Section 3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Roberts et al. 2020, How much knowledge can you pack into the parameters of a language model?",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "closed-book generative QA that this work augments with retrieval; T5 11B 36.6 NQ",
+   "quote": null
+  },
+  {
+   "work": "Raffel et al. 2020, T5",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "initialisation of the reader",
+   "quote": null
+  },
+  {
+   "work": "Karpukhin et al. 2020, DPR",
+   "year": 2020,
+   "arxiv": "2004.04906",
+   "relation": "uses-method",
+   "note": "dense retriever for NQ and TriviaQA",
+   "quote": null
+  },
+  {
+   "work": "Lewis et al. 2020b, RAG",
+   "year": 2020,
+   "arxiv": "2005.11401",
+   "relation": "baseline",
+   "note": "differs in how passages are processed",
+   "quote": null
+  },
+  {
+   "work": "Min et al. 2020, AmbigQA (SpanSeqGen)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "retrieval-augmented generative model",
+   "quote": null
+  },
+  {
+   "work": "Lee et al. 2019, ORQA",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "dataset setting and splits",
+   "quote": null
+  },
+  {
+   "work": "Chen et al. 2017, DrQA",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "retrieve-then-read with extractive reader; passage preprocessing",
+   "quote": null
+  },
+  {
+   "work": "Wang et al. 2019, Multi-passage BERT",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "extractive reader peaking at 10-20 passages",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "Architecture of the Fusion-in-Decoder method.",
+   "page": 2,
+   "why": "shows independent encoding and concatenation before the decoder"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Performance of Fusion-in-Decoder (base) on valid sets as a function of the number of retrieved passages.",
+   "page": 4,
+   "why": "shows gain from 5 to 100 passages on NQ, TriviaQA, SQuAD"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Table 1 flattened by text extraction; column assignment inferred from the header (NQ EM; TriviaQA EM open test and hidden test; SQuAD EM, F1)",
+  "No appendix; Fig 3 values only in plot"
+ ]
 }

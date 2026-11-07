@@ -1,0 +1,461 @@
+{
+ "schema": 1,
+ "key": "2305.02301",
+ "pdf": "generative-ai/05-RL/sources/hsieh-2023-distilling-step-step-outperforming-larger.pdf",
+ "bib": {
+  "title": "Distilling Step-by-Step! Outperforming Larger Language Models with Less Training Data and Smaller Model Sizes",
+  "authors": [
+   "Cheng-Yu Hsieh",
+   "Chun-Liang Li",
+   "Chih-Kuan Yeh",
+   "Hootan Nakhost",
+   "Yasuhisa Fujii",
+   "Alexander Ratner",
+   "Ranjay Krishna",
+   "Chen-Yu Lee",
+   "Tomas Pfister"
+  ],
+  "first_author": "Hsieh",
+  "year": 2023,
+  "venue": "preprint (arXiv v2, 5 Jul 2023)",
+  "arxiv": "2305.02301",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 50319,
+  "chars_total": 50319,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can rationales extracted from an LLM serve as extra supervision so that small task-specific models need less training data and fewer parameters to match or beat the LLM?",
+ "hypothesis": "Rationales contain task knowledge that is hard to infer from inputs alone, so predicting them as an auxiliary task improves label prediction in small models.",
+ "contributions": [
+  "Distilling step-by-step: multi-task training of a small model on labels plus LLM-extracted rationales",
+  "Better performance than finetuning and distillation with over 50% fewer training examples on average (up to over 85%)",
+  "Smaller models outperform 540B PaLM few-shot CoT (up to 2000x smaller)",
+  "Ablations on teacher size and multi-task vs single-task"
+ ],
+ "method": {
+  "summary": "Few-shot CoT prompts 540B PaLM to produce a label and rationale for each input. A pretrained T5 is then trained multi-task with task prefixes [label] and [rationale], loss L = L_label + lambda L_rationale. Only the label is generated at test time.",
+  "task": "task-specific distillation / finetuning with LLM rationales (NLI, commonsense QA, math word problems)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "e-SNLI",
+    "role": "both",
+    "size": "549,367 train / 9,842 val / 9,824 test",
+    "split": "Table 3",
+    "source": "huggingface esnli",
+    "preprocessing": null
+   },
+   {
+    "name": "ANLI (R1 split)",
+    "role": "both",
+    "size": "16,946 train / 1,000 val / 1,000 test",
+    "split": "Table 3",
+    "source": "huggingface anli",
+    "preprocessing": null
+   },
+   {
+    "name": "CQA (CommonsenseQA with cos-e explanations)",
+    "role": "both",
+    "size": "8,766 train / 975 val / 1,221 test",
+    "split": "original validation set used as test set because test labels unavailable",
+    "source": "huggingface cos_e",
+    "preprocessing": null
+   },
+   {
+    "name": "SVAMP",
+    "role": "both",
+    "size": "720 train / 80 val / 200 test",
+    "split": "Table 3",
+    "source": "github arkilpatel/SVAMP",
+    "preprocessing": null
+   },
+   {
+    "name": "ASDiv",
+    "role": "train",
+    "size": "2,305 examples",
+    "split": "used as extra unlabeled augmentation for SVAMP",
+    "source": "github chaochun/nlu-asdiv-dataset",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "PaLM",
+    "role": "teacher",
+    "params": "540B",
+    "architecture": "LLM, few-shot CoT",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-NeoX",
+    "role": "teacher",
+    "params": "20B",
+    "architecture": "LLM (ablation, Table 1)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "T5-Base / T5-Large / T5-XXL",
+    "role": "proposed",
+    "params": "220M / 770M / 11B",
+    "architecture": "T5 encoder-decoder",
+    "init_from": "pretrained T5 weights from huggingface",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "max input length 1024",
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "L = L_label + lambda L_rationale (cross-entropy on label and rationale tokens), multi-task via task prefixes",
+   "optimizer": null,
+   "lr": "5e-5",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "64 (T5-Base, T5-Large); 32 (T5-XXL)",
+   "steps": "max 10000 (T5-Base, T5-Large); max 4000 (T5-XXL)",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "max input length 1024",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "cloud A100x16 GPU instances",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": "4 random runs, standard error in plots",
+   "other": {
+    "lambda": "value of lambda in Eq. 3 not stated",
+    "unlabeled setting": "standard task distillation uses PaLM predicted labels as targets"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "4 random runs per configuration",
+   "prompting": "few-shot CoT (about 10-shot per task) following Wei et al. 2022 where available, own examples for new datasets; each prompt is a triplet (x_p, r_p, y_p)",
+   "retrieval": null,
+   "parameters": {},
+   "other": {
+    "test-time": "student predicts label only; no rationale or LLM needed"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "task accuracy",
+     "definition": "accuracy on test set",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Standard finetuning (human labels)",
+    "Standard task distillation (PaLM labels)",
+    "Few-shot CoT 540B PaLM",
+    "PINTO tuning (T5-Base on PaLM outputs)",
+    "Single-task rationale+label training"
+   ],
+   "protocol": "4 random runs; 220M T5-Base for data-reduction and ablation experiments; 100% data for model-size experiments"
+  },
+  "availability": {
+   "code": "https://github.com/google-research/distilling-step-by-step",
+   "weights": null,
+   "data": "public datasets via huggingface/github"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "A 770M T5 beats few-shot PaLM-540B on ANLI with 80% of the labeled data, while standard finetuning cannot match it with 100%",
+   "kind": "measured",
+   "source": null,
+   "metric": "fraction of training data needed",
+   "value": 80,
+   "unit": "% of dataset",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ANLI, human-labeled, T5-Large 770M",
+   "quote": "our finetuned 770M T5 model outperforms the few-shot prompted 540B PaLM model using only 80% of available data on a benchmark",
+   "table": null,
+   "note": null,
+   "where": "Abstract"
+  },
+  {
+   "claim": "On e-SNLI, 12.5% of labeled data with Distilling step-by-step beats standard finetuning on 100%",
+   "kind": "measured",
+   "source": null,
+   "metric": "fraction of training data",
+   "value": 12.5,
+   "unit": "% of dataset",
+   "baseline_value": null,
+   "n": null,
+   "setup": "e-SNLI, T5-Base 220M, human labels",
+   "quote": "by using only 12.5% of the full e-SNLI dataset",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.1"
+  },
+  {
+   "claim": "Examples reduction needed to outperform standard finetuning on ANLI",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 75,
+   "unit": "% reduction",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ANLI, T5-Base 220M",
+   "quote": "we achieve 75%, 25%, and 20% reduction in training examples required to out-perform standard finetuning on ANLI, CQA, and SVAMP respectively",
+   "table": null,
+   "note": "Quote in text reads 'out-perform' hyphenated across line; CQA 25%, SVAMP 20%.",
+   "where": "Sec 4.1"
+  },
+  {
+   "claim": "On e-SNLI a 220M T5 outperforms PaLM few-shot CoT with only 0.1% of the dataset",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 0.1,
+   "unit": "% of dataset",
+   "baseline_value": null,
+   "n": null,
+   "setup": "e-SNLI, T5-Base 220M, labeled",
+   "quote": "only 0.1% of the full dataset",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.3"
+  },
+  {
+   "claim": "On ANLI, Distilling step-by-step beats standard finetuning and distillation across T5 sizes by an average",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 8,
+   "unit": "% accuracy vs finetuning",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ANLI, all T5 sizes, 100% data",
+   "quote": "outperforms standard finetuning and distillation by an average of 8% and 13% on task accuracy",
+   "table": null,
+   "note": "13% is versus standard distillation (unlabeled setting).",
+   "where": "Sec 4.2"
+  },
+  {
+   "claim": "Unlabeled setting: 11B T5 beats PaLM few-shot CoT with less than 3% of PaLM size",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 3,
+   "unit": "% of PaLM size",
+   "baseline_value": null,
+   "n": null,
+   "setup": "3 of 4 datasets, unlabeled only",
+   "quote": "by using 11B T5 with less than 3% of PaLM’s size",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2"
+  },
+  {
+   "claim": "Table 1: ANLI accuracy with 540B PaLM rationales (multi-task) vs standard finetuning 43.58",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 49.58,
+   "unit": "% accuracy",
+   "baseline_value": 43.58,
+   "n": null,
+   "setup": "T5-Base 220M, 100% data, PaLM 540B teacher",
+   "quote": null,
+   "table": "Table 1, row DISTILLING STEP-BY-STEP 540B, column ANLI",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Table 1: ANLI accuracy with 20B GPT-NeoX rationales, smaller lift",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 48.15,
+   "unit": "% accuracy",
+   "baseline_value": 43.58,
+   "n": null,
+   "setup": "T5-Base 220M, 100% data, GPT-NeoX 20B teacher",
+   "quote": null,
+   "table": "Table 1, row DISTILLING STEP-BY-STEP 20B, column ANLI",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Table 2: single-task rationale+label training on ANLI is below standard finetuning",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 43.5,
+   "unit": "% accuracy",
+   "baseline_value": 43.58,
+   "n": null,
+   "setup": "T5-Base 220M, 100% data",
+   "quote": null,
+   "table": "Table 2, row SINGLE-TASK TRAINING, column ANLI",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Table 2: multi-task training on SVAMP",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 65.5,
+   "unit": "% accuracy",
+   "baseline_value": 62.63,
+   "n": null,
+   "setup": "T5-Base 220M, 100% data",
+   "quote": null,
+   "table": "Table 2, row MULTI-TASK TRAINING, column SVAMP",
+   "note": null,
+   "where": "Table 2"
+  }
+ ],
+ "limits": [
+  "Needs about 10-shot human-written CoT demonstrations per task",
+  "Slight training-time compute overhead for rationale generation",
+  "LLM reasoning is limited on complex reasoning and planning tasks (Valmeekam 2022); effect of rationale quality left to future work",
+  "Student inherits teacher biases",
+  "Only 4 datasets, 3 task types; accuracy results mostly shown in figures (not tabulated)",
+  "Optimizer, lambda, schedule, warmup, decoding settings not stated"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Distilling step-by-step",
+   "definition": "train f(x) to output both label and LLM-extracted rationale as a multi-task problem with task prefixes",
+   "where": "Sec 3.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Chain-of-thought prompting elicits reasoning in large language models (Wei et al.)",
+   "year": 2022,
+   "arxiv": "2201.11903",
+   "relation": "uses-method",
+   "note": "few-shot CoT used to extract rationales and as LLM baseline",
+   "quote": null
+  },
+  {
+   "work": "PaLM (Chowdhery et al.)",
+   "year": 2022,
+   "arxiv": "2204.02311",
+   "relation": "uses-method",
+   "note": "540B teacher LLM",
+   "quote": null
+  },
+  {
+   "work": "T5 (Raffel et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "student model and task-prefix multi-task text-to-text framework",
+   "quote": null
+  },
+  {
+   "work": "PINTO (Wang et al.)",
+   "year": 2022,
+   "arxiv": "2211.01562",
+   "relation": "baseline",
+   "note": "extended to non-QA tasks",
+   "quote": null
+  },
+  {
+   "work": "Large language models are reasoning teachers (Ho et al.)",
+   "year": 2022,
+   "arxiv": "2212.10071",
+   "relation": "related",
+   "note": "concurrent; single-task rationale+label",
+   "quote": null
+  },
+  {
+   "work": "Teaching small language models to reason (Magister et al.)",
+   "year": 2022,
+   "arxiv": "2212.08410",
+   "relation": "related",
+   "note": "concurrent; single-task",
+   "quote": null
+  },
+  {
+   "work": "Distilling the knowledge in a neural network (Hinton et al.)",
+   "year": 2015,
+   "arxiv": "1503.02531",
+   "relation": "extends",
+   "note": "task distillation baseline",
+   "quote": null
+  },
+  {
+   "work": "GPT-NeoX-20B (Black et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "smaller teacher in ablation",
+   "quote": null
+  },
+  {
+   "work": "e-SNLI, ANLI, CommonsenseQA/cos-e, SVAMP, ASDiv",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "benchmarks",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "Overview on Distilling step-by-step",
+   "page": 3,
+   "why": "shows the two-step pipeline and task prefixes"
+  },
+  {
+   "figure": "Table 2",
+   "caption": "multi-task vs single-task training",
+   "page": 7,
+   "why": "shows single-task can hurt versus finetuning"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq. 3",
+   "snippet": "L = L_label + λ L_rationale",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Most headline results are in figures 4-9; only Tables 1-2 are numeric.",
+  "Venue printed on PDF is arXiv only."
+ ]
+}

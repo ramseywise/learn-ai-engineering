@@ -1,0 +1,502 @@
+{
+ "schema": 1,
+ "key": "2307.06281",
+ "pdf": "ai-engineering/08-multimodal-engineering/sources/liu-2024-mmbench.pdf",
+ "bib": {
+  "title": "MMBench: Is Your Multi-modal Model an All-around Player?",
+  "authors": [
+   "Yuan Liu",
+   "Haodong Duan",
+   "Yuanhan Zhang",
+   "Bo Li",
+   "Songyang Zhang",
+   "Wangbo Zhao",
+   "Yike Yuan",
+   "Jiaqi Wang",
+   "Conghui He",
+   "Ziwei Liu",
+   "Kai Chen",
+   "Dahua Lin"
+  ],
+  "first_author": "Liu",
+  "year": 2024,
+  "venue": "preprint (arXiv v5, 20 Aug 2024)",
+  "arxiv": "2307.06281",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 92356,
+  "chars_total": 92356,
+  "engine": "pymupdf",
+  "skipped": "per-model dev/test/CN tables 10-13 skimmed (numbers not individually recorded); reference list skimmed"
+ },
+ "type": "benchmark",
+ "question": "How can large vision-language models be evaluated objectively, fine-grained and robustly despite weak instruction following?",
+ "hypothesis": "Circular shifted-choice evaluation plus LLM choice extraction gives a more robust, discriminative evaluation than single-pass exact matching.",
+ "contributions": [
+  "Systematically-constructed dataset of 3,217 questions over 20 skills",
+  "Robust evaluation: CircularEval and GPT-4 choice matching",
+  "Analysis and observations on a series of well-known VLMs"
+ ],
+ "method": {
+  "summary": "Builds a 3,217-question bilingual multiple-choice VLM benchmark with a 3-level, 20-ability taxonomy, quality filtering by text-only LLM majority voting and VLM all-wrong checks, a CircularEval protocol (N shifted-choice passes, all must be right) and GPT-4 choice extraction. Evaluates ~30 VLMs zero-shot on dev/test, EN and CN.",
+  "task": "multiple-choice vision-language evaluation",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "MMBench",
+    "role": "eval",
+    "size": "3,217 questions, 20 L-3 abilities, each >=125",
+    "split": "dev:test 4:6; dev answers public, test answers on evaluation server",
+    "source": "80.5% Internet (2590), ~20% images from validation sets of public datasets (COCO 179, ScienceQA 156, ARAS 76, Places 59, etc.), questions self-built by volunteers",
+    "preprocessing": "text-only filter (GPT-4, Gemini-Pro, Qwen-Max; if more than half/two correct, manual check); wrong filter (3 proprietary + InternLM-XComposer2 + LLaVA-v1.5-13B all wrong under CircularEval -> manual check)"
+   },
+   {
+    "name": "MMBench-CN",
+    "role": "eval",
+    "size": "same 3,217 questions",
+    "split": "as MMBench",
+    "source": "GPT-4 translation of questions/choices, human-verified",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Open-source VLMs (OpenFlamingo v2, MiniGPT-4, InstructBLIP, IDEFICS, VisualGLM, Qwen-VL-Chat, MiniCPM-V, LLaVA-v1.5, mPLUG-Owl2, CogVLM, Yi-VL, InternLM-XComposer(2), LLaVA-InternLM2 etc.)",
+    "role": "evaluated",
+    "params": "3B to 80B (Table 9)",
+    "architecture": "various",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-4v, Gemini-Pro-V, Qwen-VL-Plus, Qwen-VL-Max",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "proprietary",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "gpt-4-0125",
+    "role": "judge",
+    "params": null,
+    "architecture": "choice extractor",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "open-ended generation",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "CircularEval: N passes per question, N = number of choices (2-4); stops at first failed pass",
+   "prompting": "zero-shot, same prompt for all VLMs (Hint optional, Question, options A-D, 'Please select the correct answer from the options above.'); few-shot and CoT tried, 'no encouraging results'",
+   "retrieval": null,
+   "parameters": {
+    "choice_extraction": "heuristic label match first, then gpt-4-0125 with 2 in-context examples; returns Z if no option fits"
+   },
+   "other": {
+    "harness": "VLMEvalKit"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "CircularEval Top-1 accuracy",
+     "definition": "question solved only if correct in all N circularly-shifted passes",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "VanillaEval accuracy",
+     "definition": "single pass",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Choice-extractor alignment with humans",
+     "definition": "extracted label identical to human extraction on ~420 hard samples",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "text-only GPT-4-Turbo (0125)"
+   ],
+   "protocol": "single run; no seeds or confidence intervals stated; GPT-4 extractor validated against volunteers"
+  },
+  "availability": {
+   "code": "VLMEvalKit; evaluation server for test",
+   "weights": null,
+   "data": "dev public with answers; test answers withheld"
+  },
+  "prompts": [
+   {
+    "purpose": "zero-shot inference",
+    "text": "Hint: xxx [optional]\nQuestion: xxx\nA. xxx\nB. xxx\nC. xxx [optional]\nD. xxx [optional]\nPlease select the correct answer from the options above.",
+    "where": "Fig 22"
+   },
+   {
+    "purpose": "choice extraction",
+    "text": "You are an AI assistant who will help me to match an answer with several options of a single-choice question. You are provided with a question, several options, and an answer, and you need to find which option is most similar to the answer. If the meaning of all options are significantly different from the answer, output Z. You should only do the matching based exactly on the literal meaning of the options and answer. You should not perform any external inference based on your knowledge during the matching. Your should output a single uppercase character in A, B, C, D (if they are valid options), and Z.",
+    "where": "Fig 21 (plus 2 examples)"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "GPT-4 matches human choice extraction on hard (heuristic-unparseable) predictions in 91.5% of cases.",
+   "kind": "measured",
+   "source": null,
+   "metric": "alignment rate with human",
+   "value": "91.5",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "~420 samples (10% of VLM outputs that heuristic matching could not parse); extracted choice must equal the human one; best of the LLMs tried",
+   "note": null,
+   "where": "Sec 4.2",
+   "quote": "GPT-4 achieves the highest level of alignment rate, which is 91.5%"
+  },
+  {
+   "claim": "Under CircularEval, OpenFlamingo v2 falls from 36.7% (VanillaEval) to 2.6% on MMBench-dev.",
+   "kind": "measured",
+   "source": null,
+   "metric": "CircularEval Top-1 acc",
+   "value": "2.6",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MMBench-dev, zero-shot, gpt-4-0125 extractor",
+   "note": "Table 2 prints 2.6% and change -34.1%.",
+   "where": "Sec 5.2",
+   "quote": "the performance of OpenFlamingo v2 drops from 36.7% to only 2.6%"
+  },
+  {
+   "claim": "LLaVA-v1.5-13B beats 7B by 2.1 points under VanillaEval but 4.7 under CircularEval (MMBench-dev).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Top-1 gap 13B vs 7B (CircularEval)",
+   "value": "4.7",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MMBench-dev",
+   "note": null,
+   "where": "Sec 5.2",
+   "quote": "LLaVA-v1.5-13B outperforms its 7B counterpart by 2.1% Top-1 accuracy under VanillaEval, while a much larger performance gap (4.7% Top-1) is observed under CircularEval"
+  },
+  {
+   "claim": "Top-1 CircularEval accuracy on MMBench-test: InternLM-XComposer2 is best open-source.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Overall CircularEval acc",
+   "value": "78.1",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MMBench-test, zero-shot",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row InternLM-XComposer2*, column Overall"
+  },
+  {
+   "claim": "Qwen-VL-Max is best proprietary on MMBench-test.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Overall CircularEval acc",
+   "value": "75.4",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MMBench-test",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row Qwen-VL-Max, column Overall"
+  },
+  {
+   "claim": "GPT-4v on MMBench-test.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Overall CircularEval acc",
+   "value": "74.3",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MMBench-test",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row GPT-4v, column Overall"
+  },
+  {
+   "claim": "Text-only GPT-4-Turbo scores near random after quality control.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Overall CircularEval acc",
+   "value": "2.9",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MMBench-test, text-only inputs",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row GPT-4-Turbo (0125), column Overall"
+  },
+  {
+   "claim": "Proprietary VLMs lose about 10% Top-1 moving from VanillaEval to CircularEval (GPT-4v).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Accuracy change",
+   "value": "-10.8",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MMBench-dev",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row GPT-4v, column Change"
+  },
+  {
+   "claim": "GPT-4v rejects answering in 1.8% of CircularEval passes (Gemini-Pro-V 1.6%, Qwen-VL-Max 0.1%); 74% of GPT-4v rejections are celebrity recognition.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Rejection rate GPT-4v",
+   "value": "1.8",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "all CircularEval passes in MMBench",
+   "note": null,
+   "where": "Sec 5.3",
+   "quote": "GPT-4v, Gemini-Pro-V, and Qwen-VL-Max reject answering in 1.8%, 1.6%, and 0.1% of cases across all CircularEval passes in MMBench, respectively"
+  },
+  {
+   "claim": "Content moderation lowers MMBench-test accuracy by at most 2.4% (upper bound assuming rejected questions answered correctly).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Upper-bound gain",
+   "value": "2.4",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MMBench-test, GPT-4v 74.3 -> 76.2",
+   "note": null,
+   "where": "Sec 5.3, Table 4",
+   "quote": "the content moderation policy affects the MMBench-test accuracy by up to 2.4%"
+  },
+  {
+   "claim": "Switching Vicuna 7B to 13B raises overall MMBench-test Top-1 by 8.3% (MiniGPT), 1.5% (InstructBLIP), 3.5% (LLaVA v1.5).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Gain 7B->13B (MiniGPT)",
+   "value": "8.3",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MMBench-test",
+   "note": null,
+   "where": "Sec 5.2",
+   "quote": "MiniGPT, InstructBLIP, and LLaVA v1.5 series outperform their 7B counterparts by 8.3%, 1.5%, and 3.5% overall Top-1 accuracies"
+  },
+  {
+   "claim": "Exact matching badly underestimates VisualGLM-6B: dev accuracy 19.4 exact vs 36.1 with GPT-4 extractor.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MMBench-dev CircularEval acc (GPT-4 extractor)",
+   "value": "36.1",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MMBench-dev",
+   "note": "Exact matching 19.4.",
+   "where": "Table 6",
+   "table": "Table 6, row VisualGLM-6B, column GPT-4-Turbo (0125)"
+  },
+  {
+   "claim": "Different LLM choice extractors change dev results little; VisualGLM range ~1.4%, top proprietary at most 0.3%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Max range across extractors (VisualGLM)",
+   "value": "1.4",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MMBench-dev, extractors GPT-4-0125, GPT-3.5-0613/0125, InternLM2-7B",
+   "note": null,
+   "where": "App C",
+   "quote": "VisualGLM displays the largest range across all choice extractors, which is around 1.4%"
+  },
+  {
+   "claim": "VisualGLM-6B heuristic match rate is only 64.8%; LLM extraction adds 23.2 points of dev accuracy.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Heuristic match rate",
+   "value": "64.8",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "single-pass inference on MMBench",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row VisualGLM-6B, column Match Rate"
+  },
+  {
+   "claim": "MMBench has 3,217 questions across 20 L-3 abilities; >80% collected from the Internet; dev:test split 4:6.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Questions",
+   "value": "3217",
+   "unit": "questions",
+   "baseline_value": null,
+   "n": null,
+   "setup": "whole benchmark",
+   "note": null,
+   "where": "Sec 3.3",
+   "quote": "we have gathered a total of 3,217 data samples spanning across 20 distinct L-3 abilities"
+  },
+  {
+   "claim": "Lowest best-model accuracy L-3 abilities: image quality Amax 61.3%, structuralized image-text 61.5%, physical relation 64.0%, spatial relationship 68.0%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Amax image quality",
+   "value": "61.3",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "max across all evaluated VLMs, CircularEval",
+   "note": "Read from Fig 10 text.",
+   "where": "Fig 10",
+   "quote": "Amax=61.3%"
+  }
+ ],
+ "limits": [
+  "Multiple-choice only; CircularEval makes accuracy much lower than single pass so scores are not comparable across protocols.",
+  "Content moderation by proprietary VLMs depresses their scores (up to 2.4%).",
+  "Paper is the v5 (MMBench v1.1) revision; earlier versions' numbers differ.",
+  "No seeds/variance reported; temperature and max tokens not stated."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "CircularEval",
+   "definition": "each question is fed to a VLM N times (N is the number of choices) with circular shifting of the choices and answer; success only if correct in all passes",
+   "where": "Sec 4.3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "OwlEval / mPLUG-Owl",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "subjective human-evaluated benchmark of 82 open-ended questions",
+   "quote": null
+  },
+  {
+   "work": "LVLM-eHub",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "human arena-style evaluation",
+   "quote": null
+  },
+  {
+   "work": "MME",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "small-scale benchmark; quality-control applied to it",
+   "quote": null
+  },
+  {
+   "work": "SEED-Bench",
+   "year": 2023,
+   "arxiv": "2307.16125",
+   "relation": "related",
+   "note": "quality control applied to it",
+   "quote": null
+  },
+  {
+   "work": "LLaVA-1.5",
+   "year": 2023,
+   "arxiv": "2310.03744",
+   "relation": "evaluates",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "Qwen-VL",
+   "year": 2023,
+   "arxiv": "2308.12966",
+   "relation": "evaluates",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "InstructBLIP",
+   "year": 2023,
+   "arxiv": "2305.06500",
+   "relation": "evaluates",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "MiniGPT-4",
+   "year": 2023,
+   "arxiv": "2304.10592",
+   "relation": "evaluates",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "ScienceQA",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "part of image/question source",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 6",
+   "caption": "CircularEval strategy.",
+   "page": 7,
+   "why": "Shows 4 shifted passes and failure at pass 3."
+  },
+  {
+   "figure": "Table 2",
+   "caption": "CircularEval vs. VanillaEval",
+   "page": 9,
+   "why": "Accuracy drops per model."
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Text cache contains no embedded instructions."
+ ]
+}

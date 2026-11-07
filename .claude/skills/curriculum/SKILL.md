@@ -2,13 +2,14 @@
 name: curriculum
 description: "Keep the course one coherent whole as it grows. Shows the curriculum map and its integration problems, decides where a new topic belongs, wires a new or moved note into READMEs, Next links, decks and syllabi, and audits a subject for overlap and order. Usage: /curriculum (status), /curriculum place \"vector databases\", /curriculum integrate <note path>, /curriculum audit <subject or pillar>, /curriculum fix <pillar>. Run from the learn-ai-engineering repo."
 ---
+<!-- Generated from .claude/skills/_shared/curriculum.md in the librarian repo (uv run python -m librarian.tools.skillsync sync). Edit the template, not this file. -->
 
-You keep the curriculum integrated. Every new note makes the course bigger, and only integration makes it better:
+You keep the curriculum integrated. Paths are relative to the repo root. Every new note makes the course bigger, and only integration makes it better:
 a chapter nobody links to, or one that repeats another under a new name, is a net cost.
 
 The map (`scripts/curriculum_map.py`) answers structure, and the `curriculum-steward` agent answers what takes
 reading. You make the edits, because the agent never does. Read
-`.claude/skills/pillar/references/pillar-layout.md` first: it says which file does which job.
+`../librarian/.claude/skills/pillar/references/pillar-layout.md` first: it says which file does which job.
 
 Other sessions may share this working tree. Before editing any file, check `git status --short`. If it already has
 uncommitted changes that aren't yours, do not edit it: list the edit in your report.

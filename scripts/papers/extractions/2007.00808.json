@@ -1,19 +1,159 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2007.00808",
  "pdf": "generative-ai/02-rag-retrieval/sources/xiong-2021-approximate-nearest-neighbor-negative-contrastive.pdf",
  "bib": {
   "title": "Approximate Nearest Neighbor Negative Contrastive Learning for Dense Text Retrieval",
+  "authors": ["Lee Xiong", "Chenyan Xiong", "Ye Li", "Kwok-Fung Tang", "Jialin Liu", "Paul Bennett", "Junaid Ahmed", "Arnold Overwijk"],
   "first_author": "Xiong",
   "year": 2021,
-  "venue": "ICLR 2021",
+  "venue": "preprint (arXiv v2, headed 'Preprint'; ICLR 2021)",
   "arxiv": "2007.00808",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-04",
-  "session": "5f2f0582-f958-4d9c-8469-02f3d5079657"
+  "at": "2026-11-07",
+  "chars_read": 57198,
+  "chars_total": 57198,
+  "engine": "pymupdf",
+  "skipped": null
  },
- "legacy_report": "SOURCE: \"Approximate Nearest Neighbor Negative Contrastive Learning for Dense Text Retrieval\" (ANCE), Lee Xiong, Chenyan Xiong, Ye Li, Kwok-Fung Tang, Jialin Liu, Paul Bennett, Junaid Ahmed, Arnold Overwijk (Microsoft). The file is the arXiv preprint 2007.00808v2, dated 20 Oct 2020 and headed \"Preprint\". The ICLR 2021 camera-ready may differ.\n\nCOVERAGE: I read all 57,117 of 57,117 extracted chars across 16 pages: body, Tables 1–9, Appendix A.1–A.5 and the references (skimmed). pypdf warned \"Exceeded 5000 form XObject invocations… further form content is skipped\". Only figure-internal content seems to be lost. Every section, table and appendix came through as text. I also ran the figure-caption script.\n\nCLAIMS\n- claim: Negatives with near-zero loss have near-zero gradients. A random or in-batch negative is almost never an informative one, so local negatives contribute little to convergence.\n  number: probability p = b|D−*|/|C|² ≈ 0\n  setup: The bound on per-sample gradient norm comes from Katharopoulos & Fleuret (2018) and is derived for MLPs. The authors carry it over to BERT. The conditions are batch size b ≪ |C| and informative negatives |D−*| ≪ |C|. The optimal sampler is proportional to per-instance gradient norm (importance sampling).\n  quote: \"l(d+,d−)→ 0⇒||∇ φLl(d+,d−)||2→ 0⇒||∇ θtl(d+,d−)||2→ 0\" and \"The two together make the probability that a random mini-batch includes meaningful negatives p = b|D−∗||C|2 close to zero.\"\n  where: p.3–4, ~chars 12,000–13,500 (the formula is flattened in extraction)\n- claim: Empirically, local negatives never overlap the top-100 hardest negatives. BM25 negatives overlap 15%. ANCE negatives start at 63% and converge to 100%. Gradient norms on ANCE negatives are orders of magnitude larger, and its training loss stays high.\n  number: 0%, 15%, 63%→100%\n  setup: TREC DL, models warmed up with BM25 negatives, RoBERTa-base BERT-Siamese. The gradient norms in Fig. 4 are measured on the bottom, middle and top BERT layers.\n  quote: \"This probability, either using NCE Neg or Rand Neg, iszero, the same as our theory assumes. In comparison, the overlap between BM25 Neg with top DR retrieved negatives is 15%, while that of ANCE negatives starts at 63% and converges to 100% by design.\" / \"the gradient norms on ANCE global negatives are bigger by orders of magnitude.\"\n  where: p.7, §6.2\n- claim: On MS MARCO and TREC DL 2019, ANCE beats every negative-sampling baseline, including the authors' reimplementation of DPR-style BM25+random negatives. The baselines use the same encoder.\n  number: MARCO Dev MRR@10 0.330 vs 0.311 (DPR) vs 0.299 (BM25 Neg) vs 0.261 (Rand Neg) vs 0.240 (BM25). TREC DL Doc retrieval NDCG@10 0.628 MaxP vs 0.557 DPR vs 0.519 BM25.\n  setup: Every dense retriever is RoBERTa-base BERT-Siamese with dot product and NLL loss. ANCE is warmed up on BM25 negatives. Faiss IndexFlatIP (exact search). One negative is sampled uniformly from the ANN top 200. Batch 8, grad accumulation 2, 4 GPUs, index refreshed every 10k batches.\n  quote: \"DPR (BM25 + Rand Neg) 0.311 0.952 0.653 0.600 0.629 0.557\" / \"ANCE (FirstP) 0.330 0.959 0.677 0.648 0.641 0.615\" / \"ANCE (MaxP) – – – – 0.671 0.628\" / \"BM25 0.240 0.814 – 0.506 – 0.519\"\n  where: p.6, Table 1\n- claim: In-batch hardest negatives (NCE Neg) do no better than random in-batch negatives.\n  number: MRR@10 0.256 vs 0.261\n  setup: Table 1, same encoder.\n  quote: \"Rand Neg 0.261 0.949 0.605 0.552 0.615 0.543\" / \"NCE Neg 0.256 0.943 0.602 0.539 0.618 0.542\"\n  where: p.6, Table 1\n- claim: ANCE improves on DPR retrieval coverage on NQ and TriviaQA.\n  number: NQ Top-20/100 81.9/87.5 vs DPR 78.4/85.4. TQA 80.3/85.3 vs 79.4/85.0 (single task).\n  setup: The DPR setting of Karpukhin et al. (2020), with ANCE warm-started from the released DPR checkpoints.\n  quote: \"DPR 78.4/85.4 79.4/85.0 79.4/86.0 78.8/84.7\" / \"ANCE 81.9/87.5 80.3 /85.3 82.1/87.9 80.3 /85.2\" / \"BM25 59.1/73.7 66.9/76.7\"\n  where: p.6, Table 2\n- claim: Swapping ANCE in as the retriever under existing readers raises end-to-end answer accuracy.\n  number: NQ 46.0 vs RAG-Token 44.1. TQA 57.5 vs DPR 56.8.\n  setup: RAG-Token reader on NQ (top-20 passages), DPR reader on TQA (top-100 passages).\n  quote: \"ANCE + Reader 46.0 57.5\" / \"RAG-Token (Lewis et al., 2020b) 44.1 55.2\"\n  where: p.7, Table 4, App. A.1\n- claim: Dense retrieval is about 100x faster online than BM25 plus a BERT reranker, and comes close to the cascade's accuracy.\n  number: 11.6ms vs 1.42s (BERT Rerank alone 1.15s). Doc NDCG@10 0.628 vs BERT Reranker 0.646.\n  setup: One query with 100 retrieved documents, TREC DL document retrieval, ANCE FirstP, one 32GB V100.\n  quote: \"DR with standard batching provides a 100x speed up compared to BERT Rerank\" / \"Dense Retrieval Total – 11.6ms\" / \"Sparse IR Total (BM25 + BERT) – 1.42s\"\n  where: p.6–7, Table 5\n- claim: The training cost is dominated by re-encoding the corpus for each index refresh. Building the index itself is cheap.\n  number: 10h corpus encoding (4.5ms per doc). ANN index build 10s. Negative construction 72ms vs backprop 19ms per batch.\n  setup: Same V100 measurement. A refresh happens every 10k batches with a 1:1 Trainer:Inferencer GPU split. One epoch takes about 1–2 hours and training converges in about 10 epochs.\n  quote: \"Encoding of Corpus/Per doc 10h/4.5ms –\" / \"ANN Index Build 10s –\" / \"Neg Construction Per Batch 72ms –\" / \"Back Propagation Per Batch 19ms –\"; \"The training often takes about 1-2 hours per ANCE epoch… It converges in about 10 epochs\"\n  where: p.7 Table 5; p.12 A.1\n- claim: A stale index (refreshed too rarely) or a high learning rate destabilises training. Refreshing every 5k batches is smooth but needs twice the Inferencer GPUs.\n  number: 5k vs 10k/20k refresh\n  setup: ANCE FirstP on documents, Fig. 5.\n  quote: \"Refreshing as often as every 5k Batches yields a smooth convergence (Figure 5(c)), but requires twice as many GPU allocated to the Inferencer. A 1:1 GPUs allocation of Trainer and Inference with appropriate learning rates is adequate\"\n  where: p.13, A.3\n- claim: The authors report a production gain of about 15% relative in the first-stage retrieval of a commercial search engine.\n  number: +18.4% / +14.2% / +15.5%\n  setup: 250M docs at 768 dims with KNN; 8B docs at 64 dims with KNN or ANN. The engine and the metric are not named.\n  quote: \"250 Million 768 KNN +18.4%\" / \"8 Billion 64 ANN +15.5%\"\n  where: p.6, Table 3\n- claim: Dense results overlap little with BM25 results.\n  number: at most about 25% of the top 100\n  quote: \"At most, only 25% of documents retrieved by DR are also retrieved by BM25.\"\n  where: p.13, A.2, Table 6\n- claim: Using cosine similarity, BCE or hinge loss makes the gradients on local negatives even smaller, but does not improve accuracy.\n  number: none\n  quote: \"We have experimented with cosine similarity and BCE/hinge loss, where we observe even smaller gradient norms on local negatives. But the retrieval accuracy is not much better.\"\n  where: p.7, §6.3\n\nLIMITS:\n- The convergence argument is a bound borrowed from the MLP analysis. It is not proven for transformers. The paper supports it with gradient-norm plots, not a proof.\n- ANCE is never trained from scratch. It is warm-started from BM25 negatives (MARCO) or from DPR checkpoints (QA), so its gains are on top of those models.\n- The \"DPR\" row in Table 1 is the authors' own reimplementation, not the released DPR model.\n- TREC DL labels were pooled from sparse-only systems. The authors concede high hole rates (DR Hole@10 up to 28.1%) and that recall there is \"not very informative\".\n- Hyperparameter search was minimal: the configurations in Table 7 \"are about all the explorations we did\". Settings were chosen mostly from the training loss.\n- No significance tests appear in the extraction, even though the text says \"significantly outperforms\".\n- The production results are relative gains from an unnamed engine on an unnamed metric.\n- The 10h re-encoding per refresh scales with corpus size. The authors call it \"inevitable\" if the model that samples negatives is the same model being trained.\n- Losing cases: ANCE returns related but not relevant documents, and it lacks domain knowledge (the \"active margin\" query).\n- Dated: the comparisons are against 2020 baselines only.\n\nBUILDS ON: Katharopoulos & Fleuret (2018) (gradient-norm bound); Alain et al. (2015) and Johnson & Guestrin (2018) (variance reduction and importance sampling); Guu et al. (2020) REALM (asynchronous index refresh); Karpukhin et al. (2020) DPR; Luan et al. (2020) (BERT-Siamese setup); Oord et al. (2018), Chen et al. (2020a), He et al. (2019) MoCo (contrastive and in-batch negatives); Gutmann & Hyvärinen (2010) NCE; Johnson et al. (2019) Faiss; Dai & Callan (2019b) FirstP/MaxP; Xiong et al. (2020) memory-bank DPR (parallel work).\n\nCODE: None in the paper. It points to https://aka.ms/ance.\n\nFIGURES:\n- Fig. 4, p.8, \"The loss and gradient norms during DR training (after BM25 warm up)\". The plot shows local-negative gradient norms pinned near zero while ANCE's stay large. It makes the core argument at a glance.\n- Fig. 2, p.4, \"ANCE Asynchronous Training\". The Trainer/Inferencer/checkpoint loop is clearer as a diagram than in prose.\n- Fig. 1, p.2, a t-SNE plot of query, relevant docs, and BM25, random and DR negatives. It shows that training negatives sit apart from the negatives the model actually faces at test time.\n- Fig. 3, p.7. The long tail of retrieval scores, with the overlap percentage between training and test negatives for each method.\n\nPROBLEMS:\n- pypdf's XObject-limit warning: some figure-internal content was skipped. The text and tables appear complete.\n- Math is flattened. For example, p = b|D−*|/|C|² extracts as \"p = b|D−∗||C|2\".\n- No embedded instructions found."
+ "type": "empirical",
+ "question": "Why does dense text retrieval underperform sparse retrieval, and can training with globally hard negatives from an asynchronously refreshed ANN index fix it?",
+ "hypothesis": "Local in-batch negatives are uninformative (near-zero loss and gradient), so selecting hard negatives globally from the whole corpus with the model being trained will speed convergence and raise accuracy.",
+ "contributions": [
+  "Theoretical analysis (variance reduction / importance sampling) showing local in-batch negatives give diminishing gradient norms in dense retrieval",
+  "ANCE: negatives drawn from top results of an asynchronously refreshed ANN index built from the model being trained",
+  "Experiments on TREC 2019 DL, Natural Questions, TriviaQA and a commercial search engine, plus gradient-norm analysis"
+ ],
+ "method": {
+  "summary": "A BERT-Siamese (RoBERTa-base) dot-product retriever trained with NLL loss. After a BM25-negative warm-up, an Inferencer re-encodes the corpus with a recent checkpoint and rebuilds a Faiss index every 10k batches while the Trainer continues; each positive gets one negative sampled uniformly from the ANN top 200 (minus positives).",
+  "task": "first-stage dense text retrieval (web search passages/documents, open-domain QA)",
+  "trains": true,
+  "datasets": [
+   {"name": "MS MARCO / TREC 2019 DL Track (passage and document)", "role": "both", "size": "passage-level labels for one million Bing queries; TREC DL document task has 43 evaluation queries", "split": "train and dev from MS MARCO; test labels from NIST assessors, top-10 pooling", "source": "Bajaj et al. 2016; Craswell et al. 2020", "preprocessing": "document: FirstP = first 512 tokens; MaxP = split into 512-token passages (maximum 4), scores max-pooled"},
+   {"name": "Natural Questions (NQ)", "role": "both", "size": null, "split": "exact settings of Karpukhin et al. (2020)", "source": "Kwiatkowski et al. 2019", "preprocessing": null},
+   {"name": "TriviaQA (TQA)", "role": "both", "size": null, "split": "exact settings of Karpukhin et al. (2020)", "source": "Joshi et al. 2017", "preprocessing": null},
+   {"name": "Commercial search engine first-stage production data", "role": "both", "size": "corpora of 250 million and 8 billion documents", "split": null, "source": "proprietary", "preprocessing": null}
+  ],
+  "models": [
+   {"name": "ANCE (BERT-Siamese, shared encoder for q and d)", "role": "proposed", "params": null, "architecture": "RoBERTa-base encoder, 768x768 projection layer on last-layer [CLS], then layer norm; dot product similarity", "init_from": "RoBERTa base for TREC DL, after BM25-negative warm-up; DPR released checkpoints for OpenQA", "tokenizer": null, "vocab": null, "layers": "12 (inferred from 'bottom (1-4), middle (5-8), top (9-12) BERT layers')", "hidden": "768", "heads": null, "context": "512 tokens (FirstP) per document or passage", "other": {}},
+   {"name": "Rand Neg, NCE Neg, BM25 Neg, BM25 + Rand Neg (DPR style) and BM25-warm-up variants", "role": "baseline", "params": null, "architecture": "same BERT-Siamese, differing only in negative construction", "init_from": "RoBERTa base", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "RAG-Token reader (NQ) and DPR Reader (TQA)", "role": "evaluated", "params": null, "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"note": "released models, retrieval swapped from DPR to ANCE"}}
+  ],
+  "training": {
+   "objective": "negative log likelihood over (q, d+, d-) with d- from ANN top-k (Eq. 13); also tried cosine with BCE/hinge",
+   "optimizer": "LAMB",
+   "lr": "5e-6 for document and 1e-6 for passage retrieval",
+   "lr_schedule": "linear warm-up and decay after 5000 steps",
+   "warmup": "5000 steps linear",
+   "batch_size": "batch size 8, gradient accumulation step 2 on 4 GPUs",
+   "steps": "index refresh every 10k training batches",
+   "epochs": "converges in about 10 epochs; about 1-2 hours per ANCE epoch",
+   "tokens": null,
+   "seq_len": "512 tokens",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "1:1 Trainer:Inferencer GPU allocation, 4 GPUs for training; efficiency measured on a single 32GB V100, Intel Xeon Platinum 8168, 650GB RAM",
+   "compute": "corpus re-encoding 10h per refresh for TREC DL documents (Table 5)",
+   "wall_clock": "about 1-2 hours per ANCE epoch",
+   "seeds": null,
+   "other": {"negative_sampling": "one negative per positive, uniformly from ANN top 200", "ann_index": "Faiss IndexFlatIP", "warm_up": "BM25 negatives from MARCO official for TREC DL; released DPR checkpoints for OpenQA", "tuned_configs": "Table 7 lists the only hyperparameter explorations (lr 2e-7 to 1e-5, top-K 100 to 1000, refresh 5k to 20k)"}
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "not stated; single runs, no seeds reported",
+   "prompting": null,
+   "retrieval": "dot-product ANN search; OpenQA: top 20 passages to RAG-Token on NQ, top 100 to DPR BERT Reader on TQA",
+   "parameters": {"refresh_interval": "10k batches", "top_k_neg": "200", "gpu_split": "1:1"},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "MRR@10", "definition": "mean reciprocal rank of first relevant result in top 10, MARCO Dev passage", "unit": "score 0-1", "higher_is_better": true},
+    {"name": "NDCG@10", "definition": "TREC DL passage and document, official NIST labels", "unit": "score 0-1", "higher_is_better": true},
+    {"name": "Recall@1k / Recall@100", "definition": "recall at cutoff; paper says recall on TREC DL is less meaningful due to low label coverage (high hole rate)", "unit": "score 0-1", "higher_is_better": true},
+    {"name": "Coverage@20/100", "definition": "whether the top-20/100 retrieved passages include the answer", "unit": "%", "higher_is_better": true},
+    {"name": "Hole@10", "definition": "fraction of top K ranked results without TREC labels", "unit": "%", "higher_is_better": false},
+    {"name": "OpenQA test score", "definition": "end-to-end answer accuracy with fixed reader", "unit": "%", "higher_is_better": true},
+    {"name": "Latency", "definition": "online, one query and 100 retrieved documents", "unit": "ms / s", "higher_is_better": false}
+   ],
+   "baselines": ["BM25", "Best DeepCT", "Best TREC Trad Retrieval", "BERT Reranker", "Rand Neg", "NCE Neg", "BM25 Neg", "DPR (BM25 + Rand Neg)", "BM25 -> Rand / NCE Neg / BM25 + Rand", "DPR", "BM25+DPR", "T5-11B", "REALM", "RAG-Token", "RAG-Sequence"],
+   "protocol": "single runs reported; no seeds or significance tests stated; hyperparameters chosen by training loss curve and otherwise MARCO Dev loss"
+  },
+  "availability": {"code": "https://aka.ms/ance", "weights": "trained models at https://aka.ms/ance", "data": "public benchmarks; production data not released"},
+  "prompts": [],
+  "evidence": [
+   {"field": "training.lr", "quote": "learning rate 5e-6 for document and 1e-6 for passage retrieval", "where": "Appendix A.1"},
+   {"field": "training.batch_size", "quote": "batch size 8, and gradient accumulation step 2 on 4 GPUs", "where": "Sec 5"}
+  ]
+ },
+ "results": [
+  {"claim": "ANCE (FirstP) beats the DPR-style BM25+Rand negative baseline on MARCO Dev passage MRR@10.", "kind": "measured", "source": null, "metric": "MRR@10", "value": "0.330", "unit": "score", "baseline_value": "0.311", "n": null, "setup": "MS MARCO passage dev, RoBERTa-base BERT-Siamese, ANCE warmed up on BM25 negatives; baseline DPR (BM25 + Rand Neg)", "table": "Table 1, row ANCE (FirstP), column MARCO Dev Passage Retrieval MRR@10; baseline row DPR (BM25 + Rand Neg)", "note": null, "where": "Table 1"},
+  {"claim": "With the same BM25 warm-up, in-batch random and NCE negatives reach only 0.280 and 0.279 MRR@10.", "kind": "measured", "source": null, "metric": "MRR@10", "value": "0.280", "unit": "score", "baseline_value": "0.279", "n": null, "setup": "MARCO Dev passage; rows BM25 -> Rand (0.280) and BM25 -> NCE Neg (0.279)", "table": "Table 1, rows BM25 →Rand and BM25 →NCE Neg, column MARCO Dev MRR@10", "note": null, "where": "Table 1"},
+  {"claim": "ANCE FirstP reaches 0.648 NDCG@10 in TREC DL passage retrieval versus 0.506 for BM25.", "kind": "measured", "source": null, "metric": "NDCG@10", "value": "0.648", "unit": "score", "baseline_value": "0.506", "n": null, "setup": "TREC DL 2019 passage retrieval", "table": "Table 1, row ANCE (FirstP), column TREC DL Passage NDCG@10 Retrieval; row BM25", "note": "Table cells were flattened by extraction; column order read as MARCO MRR@10, Recall@1k, Passage Rerank, Passage Retrieval, Doc Rerank, Doc Retrieval. ANCE FirstP row: 0.330, 0.959, 0.677, 0.648, 0.641, 0.615", "where": "Table 1"},
+  {"claim": "ANCE document retrieval NDCG@10 is 0.615 (FirstP) and 0.628 (MaxP), above BM25 0.519 and DeepCT 0.554.", "kind": "measured", "source": null, "metric": "NDCG@10", "value": "0.615", "unit": "score", "baseline_value": "0.519", "n": null, "setup": "TREC DL 2019 document retrieval", "table": "Table 1, row ANCE (FirstP), column TREC DL Document Retrieval NDCG@10", "note": "MaxP 0.628", "where": "Table 1"},
+  {"claim": "ANCE is the only negative scheme that robustly exceeds sparse methods in document retrieval; other DR variants stay at or below about 0.566.", "kind": "claim", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "TREC DL document retrieval, BERT-Siamese variants", "quote": "ANCE is the only one that elevates BERT-Siamese to robustly exceed the sparse methods in document retrieval.", "note": null, "where": "Sec 6.1"},
+  {"claim": "On Natural Questions single-task, ANCE top-20 answer coverage exceeds DPR.", "kind": "measured", "source": null, "metric": "Coverage@20", "value": "81.9", "unit": "%", "baseline_value": "78.4", "n": null, "setup": "NQ, single task, setting of Karpukhin et al. 2020, ANCE warmed up from released DPR checkpoints", "table": "Table 2, row ANCE, column Single Task NQ Top-20/100 (81.9/87.5); row DPR (78.4/85.4)", "note": null, "where": "Table 2"},
+  {"claim": "On TriviaQA single-task, ANCE gains are small.", "kind": "measured", "source": null, "metric": "Coverage@20", "value": "80.3", "unit": "%", "baseline_value": "79.4", "n": null, "setup": "TQA single task", "table": "Table 2, row ANCE, column Single Task TQA (80.3/85.3); row DPR (79.4/85.0)", "note": null, "where": "Table 2"},
+  {"claim": "Swapping DPR retrieval for ANCE under the same reader raises NQ test score from 41.5 (DPR) to 46.0.", "kind": "measured", "source": null, "metric": "OpenQA test score", "value": "46.0", "unit": "%", "baseline_value": "44.1 (RAG-Token)", "n": null, "setup": "NQ single task, RAG-Token reader on ANCE top 20 passages", "table": "Table 4, row ANCE + Reader, column NQ", "note": "TQA: ANCE + Reader 57.5 with DPR Reader vs DPR 56.8", "where": "Table 4"},
+  {"claim": "In a commercial search engine's first-stage retrieval, training with ANCE gave relative gains of 18.4%, 14.2% and 15.5%.", "kind": "measured", "source": null, "metric": "relative gain", "value": "+18.4%", "unit": "%", "baseline_value": null, "n": null, "setup": "250 Million docs, 768 dim, KNN: +18.4%; 8 Billion, 64 dim, KNN: +14.2%; 8 Billion, 64 dim, ANN: +15.5%; offline evaluation", "table": "Table 3, row 250 Million, column Gain", "note": "Metric the gain is measured in is not named in the paper", "where": "Table 3"},
+  {"claim": "Dense retrieval with ANCE is about 100x faster online than BM25 plus BERT rerank.", "kind": "measured", "source": null, "metric": "online latency", "value": "11.6ms", "unit": "ms", "baseline_value": "1.42s", "n": null, "setup": "TREC DL document retrieval, ANCE FirstP, one query and 100 retrieved documents, single 32GB V100", "table": "Table 5, row Dense Retrieval Total vs Sparse IR Total (BM25 + BERT)", "note": null, "where": "Table 5"},
+  {"claim": "Re-encoding the corpus for an ANCE index refresh takes about 10 hours.", "kind": "measured", "source": null, "metric": "corpus encoding time", "value": "10h", "unit": "h", "baseline_value": null, "n": null, "setup": "TREC DL document corpus, single V100, 4.5ms per doc", "table": "Table 5, row Encoding of Corpus/Per doc (10h/4.5ms)", "note": "Training per batch: neg construction 72ms, backprop 19ms; ANN index build 10s", "where": "Table 5"},
+  {"claim": "Local negatives (NCE Neg, Rand Neg) overlap 0% with top-100 hardest negatives, BM25 negatives 15%, ANCE negatives start at 63% and converge to 100%.", "kind": "measured", "source": null, "metric": "overlap with top-100 DR negatives", "value": "15%", "unit": "%", "baseline_value": null, "n": null, "setup": "TREC DL, models warmed up on BM25 Neg, RoBERTa-base", "quote": "In comparison, the overlap between BM25 Neg with top DR retrieved negatives is 15%, while that of ANCE negatives starts at 63% and converges to 100% by design.", "note": "Fig 3 titles also give BM25+Rand 7%", "where": "Sec 6.2"},
+  {"claim": "Gradient norms on ANCE global negatives are bigger by orders of magnitude than on local negatives, which sit near zero.", "kind": "measured", "source": null, "metric": "gradient norm", "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "Fig 4, pre-clip gradient norms on bottom, middle and top BERT layers, after BM25 warm-up, 30k steps", "quote": "In comparison, the gradient norms on ANCE global negatives are bigger by orders of magnitude.", "note": "Values only in Fig 4", "where": "Sec 6.2, Fig 4"},
+  {"claim": "DR results overlap little with BM25: at most 25% of DR top 100 are also in BM25's top 100; ANCE FirstP passage 17.4%, document 24.4%, MaxP 24.9%.", "kind": "measured", "source": null, "metric": "overlap with BM25 top 100", "value": "24.9%", "unit": "%", "baseline_value": null, "n": null, "setup": "TREC DL 2019, top 100 retrieved", "quote": "At most, only 25% of documents retrieved by DR are also retrieved by BM25.", "table": "Table 6, row ANCE (MaxP), column TREC DL Document Overlap w. BM25", "note": null, "where": "Appendix A.2, Table 6"},
+  {"claim": "ANCE has high hole rate at 10 in TREC DL document: 13.3% (FirstP) versus 0.2% for BM25, so recall and NDCG on TREC labels understate or misjudge dense retrievers.", "kind": "measured", "source": null, "metric": "Hole@10", "value": "13.3%", "unit": "%", "baseline_value": "0.2%", "n": null, "setup": "TREC DL document, ANCE (FirstP) vs BM25", "table": "Table 6, row ANCE (FirstP), column TREC DL Document Hole@10", "note": null, "where": "Table 6"},
+  {"claim": "A 1:1 Trainer:Inferencer GPU split is adequate; refreshing every 5k batches is smoother but needs twice as many GPUs for the Inferencer.", "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "ANCE FirstP on documents, Fig 5 configs (10k/4:4/1e-5, 20k/8:4/1e-6, 5k/4:8/1e-6, 10k/4:4/5e-6)", "quote": "A 1:1 GPUs allocation of Trainer and Inference with appropriate learning rates is adequate to minimize the impact of async gap.", "note": null, "where": "Appendix A.3"},
+  {"claim": "Among 43 TREC 2019 DL document queries, ANCE beats BM25 on 29, loses on 13 and ties on 1.", "kind": "measured", "source": null, "metric": "win/loss queries", "value": "29", "unit": "queries", "baseline_value": null, "n": 43, "setup": "NDCG@10 per query, ANCE FirstP vs BM25", "quote": "ANCE outperforms BM25 on 29 queries, loses on 13 queries, and ties on the rest 1 query.", "note": null, "where": "Appendix A.5"}
+ ],
+ "limits": [
+  "The gradient-norm bound is from Katharopoulos & Fleuret (2018) for MLPs and is carried over to BERT by assumption; the paper supports it with gradient-norm plots only.",
+  "The analysis uses a rough probability p = b|D-*|/|C|^2 for in-batch negatives without a derivation shown.",
+  "Hyperparameter exploration was barely done; Table 7 lists about all of it, chosen by training loss and MARCO Dev loss.",
+  "TREC DL 2019 pooled labels came only from sparse-retrieval systems, so DR has high hole rates and recall is not very informative.",
+  "No false-negative handling is discussed: ANCE samples from top 200 minus known positives, so unlabeled relevant documents may be used as negatives.",
+  "Single runs, no seeds or significance tests reported.",
+  "Commercial search gains (Table 3) are relative, on proprietary data and an unnamed metric.",
+  "RAG-Sequence was not used because the huggingface release was not stable; TriviaQA uses DPR Reader because RAG only released NQ models.",
+  "Training cost: each refresh re-encodes the corpus (10h for the TREC DL document corpus on one V100)."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "ANCE", "definition": "Approximate nearest neighbor Negative Contrastive Estimation: negatives are D-_ANCE = ANN_f(q,d) minus D+, the top results of the current model from an ANN index of the whole corpus", "where": "Sec 4"},
+  {"term": "Hole rate", "definition": "the fraction of the top K ranked results without TREC labels (not in the pool)", "where": "Appendix A.2"}
+ ],
+ "lineage": [
+  {"work": "Dense Passage Retrieval for Open-Domain Question Answering (Karpukhin et al.)", "year": 2020, "arxiv": "2004.04906", "relation": "baseline", "note": "DPR baseline and OpenQA settings; ANCE warms up from DPR checkpoints", "quote": null},
+  {"work": "REALM (Guu et al.)", "year": 2020, "arxiv": "2002.08909", "relation": "uses-method", "note": "asynchronous index refresh follows REALM", "quote": "Similar to Guu et al. (2020), we maintain an Inferencer"},
+  {"work": "Not all samples are created equal (Katharopoulos & Fleuret)", "year": 2018, "arxiv": "1803.00942", "relation": "uses-method", "note": "gradient norm bound and variance reduction framework", "quote": null},
+  {"work": "Variance reduction in SGD by distributed importance sampling (Alain et al.)", "year": 2015, "arxiv": "1511.06481", "relation": "uses-method", "note": "importance sampling SGD step", "quote": null},
+  {"work": "Sparse, dense, and attentional representations for text retrieval (Luan et al.)", "year": 2020, "arxiv": "2005.00181", "relation": "uses-method", "note": "BERT-Siamese configuration followed", "quote": null},
+  {"work": "RAG (Lewis et al.)", "year": 2020, "arxiv": "2005.11401", "relation": "evaluates", "note": "RAG-Token reader used on NQ", "quote": null},
+  {"work": "RoBERTa (Liu et al.)", "year": 2019, "arxiv": "1907.11692", "relation": "uses-method", "note": "encoder initialisation", "quote": null},
+  {"work": "Faiss (Johnson et al.)", "year": 2019, "arxiv": null, "relation": "uses-method", "note": "IndexFlatIP ANN search", "quote": null},
+  {"work": "MS MARCO (Bajaj et al.)", "year": 2016, "arxiv": "1611.09268", "relation": "uses-data", "note": "training data", "quote": null},
+  {"work": "TREC 2019 Deep Learning Track (Craswell et al.)", "year": 2020, "arxiv": null, "relation": "uses-data", "note": "main benchmark", "quote": null},
+  {"work": "Deeper text understanding for IR (Dai & Callan)", "year": 2019, "arxiv": null, "relation": "uses-method", "note": "FirstP and MaxP document settings; DeepCT baseline from Dai & Callan 2019a", "quote": null},
+  {"work": "Momentum contrast (He et al.)", "year": 2019, "arxiv": "1911.05722", "relation": "related", "note": "larger negative pool in vision; ANCE goes global", "quote": null},
+  {"work": "Multi-hop dense retrieval (Xiong et al.)", "year": 2020, "arxiv": "2009.12756", "relation": "related", "note": "parallel work sampling negatives from a memory bank", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 1", "caption": "T-SNE representations of query, relevant documents, negative training instances from BM25 or randomly sampled, and testing negatives (DR Neg) in dense retrieval.", "page": 2, "why": "shows training negatives differ from the test-time global negatives"},
+  {"figure": "Fig 2", "caption": "ANCE Asynchronous Training. The Trainer learns the representation using negatives from the ANN index. The Inferencer uses a recent checkpoint to update the representation of documents in the corpus and once finished, refreshes the ANN index.", "page": 4, "why": "the trainer/inferencer loop in one picture"},
+  {"figure": "Fig 4", "caption": "The loss and gradient norms during DR training (after BM25 warm up). Gradient norms on bottom (1-4), middle (5-8), top (9-12) BERT layers.", "page": 8, "why": "empirical support for the vanishing-gradient argument"}
+ ],
+ "code": [
+  {"where": "Eq. 13 / Sec 4", "snippet": "theta* = argmin_theta sum_q sum_{d+ in D+} sum_{d- in D-_ANCE} l(f(q,d+), f(q,d-)), with D-_ANCE = ANN_f(q,d) \\ D+", "verbatim": false}
+ ],
+ "problems": [
+  "pypdf may warn about form XObjects; only figure content is lost.",
+  "Table cells and equations are flattened by extraction; Table 1 column order was inferred from the header order."
+ ]
 }

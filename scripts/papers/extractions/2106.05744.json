@@ -1,0 +1,576 @@
+{
+ "schema": 1,
+ "key": "2106.05744",
+ "pdf": "ai-engineering/08-multimodal-engineering/sources/roich-2022-pivotal-tuning-latent-based-editing.pdf",
+ "bib": {
+  "title": "Pivotal Tuning for Latent-based Editing of Real Images",
+  "authors": [
+   "Daniel Roich",
+   "Ron Mokady",
+   "Amit H. Bermano",
+   "Daniel Cohen-Or"
+  ],
+  "first_author": "Roich",
+  "year": 2021,
+  "venue": "preprint",
+  "arxiv": "2106.05744",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 52067,
+  "chars_total": 52067,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "How can a real, possibly out-of-domain face image be inverted into StyleGAN so that it is reconstructed faithfully and still edited with latent-space editors, avoiding the distortion-editability trade-off?",
+ "hypothesis": "Because StyleGAN is disentangled, a slight local change to the generator can map an image to an editable W pivot code without damaging the latent space's editing behaviour.",
+ "contributions": [
+  "Pivotal Tuning Inversion: invert to a W pivot, then fine-tune the generator around the pivot",
+  "Locality regularization that keeps the tuning from disturbing distant latent codes",
+  "Multi-identity tuning of a single generator",
+  "Quantitative and qualitative gains in reconstruction and editing over SG2, SG2 W+ and e4e"
+ ],
+ "method": {
+  "summary": "Step 1 inverts the image to a pivot code w_p in StyleGAN2's W space by direct optimization (LPIPS + noise regularization) with the generator frozen. Step 2 unfreezes the generator and fine-tunes its weights so G(w_p) reproduces the image (LPIPS + L2), with a locality regularizer that keeps images from interpolated latents unchanged. Edits are then done with off-the-shelf latent editors (InterfaceGAN, GANSpace, StyleCLIP).",
+  "task": "GAN inversion and latent-based real image editing (faces)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "FFHQ",
+    "role": "pretrain",
+    "size": null,
+    "split": null,
+    "source": "used to pretrain the StyleGAN2 generator (not trained by this work)",
+    "preprocessing": null
+   },
+   {
+    "name": "CelebA-HQ",
+    "role": "eval",
+    "size": "first 1000 samples of the test set for all quantitative experiments",
+    "split": "test",
+    "source": "Karras et al. 2017; Liu et al. 2015",
+    "preprocessing": null
+   },
+   {
+    "name": "Collected web images of famous and out-of-domain faces",
+    "role": "eval",
+    "size": "a handful (no count)",
+    "split": null,
+    "source": "collected from the web",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "StyleGAN2 generator (FFHQ)",
+    "role": "base",
+    "params": null,
+    "architecture": "StyleGAN2",
+    "init_from": "pretrained FFHQ weights theta",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "PTI",
+    "role": "proposed",
+    "params": null,
+    "architecture": "W-space optimization pivot + generator fine-tuning",
+    "init_from": "pretrained StyleGAN2",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "SG2 (W optimization)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "Karras et al. direct optimization to W",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "SG2 W+",
+    "role": "baseline",
+    "params": null,
+    "architecture": "direct optimization to W+, 2100 iterations",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "e4e",
+    "role": "baseline",
+    "params": null,
+    "architecture": "encoder (Tov et al.) to W+ near W",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "Per-image generator fine-tuning: L_pt = LPIPS(x,x_p) + lambda_L2 * L2(x,x_p), plus lambda_R * L_R where L_R = LPIPS + lambda_R_L2 * L2 between original and tuned generator on w_r = w_p + alpha*(w_z-w_p)/||w_z-w_p||_2 (w_z = mapping(z)); w_p held constant. Inversion step: LPIPS + lambda_n * noise regularization over w and n.",
+   "optimizer": "Adam",
+   "lr": "5e-3 (inversion step); 3e-4 (pivotal tuning)",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": "450 iterations inversion, 350 iterations pivotal tuning",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "locality regularization: alpha = 30, lambda_R_L2 = 1, lambda_R = 0.1, N_r = 1",
+   "hardware": "single Nvidia GeForce RTX 2080",
+   "compute": "two-step inversion under 3 minutes per image",
+   "wall_clock": "W inversion ~1 min; pivotal tuning under 1 min without regularization, under 2 min with; grows linearly with number of identities; SG2 W+ 4.5 min; e4e under 1 s",
+   "seeds": null,
+   "other": {
+    "lambda_L2": "1",
+    "lambda_LPIPS": "1",
+    "lambda_n": "not stated",
+    "inversion_hyperparameters": "same as Karras et al. [19] except lr",
+    "multi_identity_eval": "12 identities tuned for regularization evaluation"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "1000 CelebA-HQ test images; seeds not stated",
+   "prompting": "StyleCLIP mapper variant uses e4e-based pivots instead of W pivots",
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "LPIPS",
+     "definition": "perceptual similarity between input and reconstruction",
+     "unit": "score",
+     "higher_is_better": false
+    },
+    {
+     "name": "MSE",
+     "definition": "pixel-wise distance",
+     "unit": "score",
+     "higher_is_better": false
+    },
+    {
+     "name": "MS-SSIM",
+     "definition": "multi-scale structural similarity",
+     "unit": "score",
+     "higher_is_better": false
+    },
+    {
+     "name": "ID similarity",
+     "definition": "similarity from a pretrained face recognition network (ArcFace)",
+     "unit": "score",
+     "higher_is_better": true
+    },
+    {
+     "name": "Edit magnitude (pose)",
+     "definition": "yaw rotation angle after a single pose edit, measured with Microsoft Face API",
+     "unit": "degrees",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "SG2",
+    "SG2 W+",
+    "e4e"
+   ],
+   "protocol": "Quantitative on first 1000 CelebA-HQ test images; ID similarity after single edits (smile, pose, age), sequential edits, and at fixed +-5 and +-10 rotation; no seeds or significance tests."
+  },
+  "availability": {
+   "code": "https://github.com/danielroich/PTI",
+   "weights": null,
+   "data": null
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.lr",
+    "quote": "except for the learning rate which is changed to 5e−3",
+    "where": "4.5"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "PTI reconstructs far better than baselines by LPIPS",
+   "kind": "measured",
+   "source": null,
+   "metric": "LPIPS",
+   "value": 0.09,
+   "unit": "score",
+   "baseline_value": 0.34,
+   "n": null,
+   "setup": "StyleGAN2 trained on FFHQ, inversion of first 1000 CelebA-HQ test images; SG2 W+ 0.34, e4e 0.4, SG2 0.4",
+   "quote": null,
+   "table": "Table 1, row LPIPS, column Ours",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "PTI has lowest pixel error",
+   "kind": "measured",
+   "source": null,
+   "metric": "MSE",
+   "value": 0.014,
+   "unit": "score",
+   "baseline_value": 0.043,
+   "n": null,
+   "setup": "StyleGAN2 trained on FFHQ, inversion of first 1000 CelebA-HQ test images; e4e 0.05, SG2 0.08, SG2 W+ 0.043",
+   "quote": null,
+   "table": "Table 1, row MSE, column Ours",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "PTI has highest ID similarity in reconstruction",
+   "kind": "measured",
+   "source": null,
+   "metric": "ID similarity",
+   "value": 0.9,
+   "unit": "score",
+   "baseline_value": 0.85,
+   "n": null,
+   "setup": "StyleGAN2 trained on FFHQ, inversion of first 1000 CelebA-HQ test images; SG2 W+ 0.85, e4e 0.75, SG2 0.8",
+   "quote": null,
+   "table": "Table 1, row ID Similarity, column Ours",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "MS-SSIM for PTI (listed with down arrow in the table)",
+   "kind": "measured",
+   "source": null,
+   "metric": "MS-SSIM",
+   "value": 0.21,
+   "unit": "score",
+   "baseline_value": 0.3,
+   "n": null,
+   "setup": "StyleGAN2 trained on FFHQ, inversion of first 1000 CelebA-HQ test images; SG2 W+ 0.3, e4e 0.38, SG2 0.38",
+   "quote": null,
+   "table": "Table 1, row MS SSIM, column Ours",
+   "note": "Table marks MS SSIM with a down arrow although MS-SSIM is normally higher-is-better; text says best on every metric.",
+   "where": "Table 1"
+  },
+  {
+   "claim": "Pose edit magnitude of PTI nearly equals W inversion, above e4e and W+",
+   "kind": "measured",
+   "source": null,
+   "metric": "pose edit magnitude",
+   "value": 14.86,
+   "unit": "degrees",
+   "baseline_value": 11.15,
+   "n": null,
+   "setup": "same latent pose edit, CelebA-HQ; SG2 15, e4e 14.6, SG2 W+ 11.15",
+   "quote": null,
+   "table": "Table 2, row Pose, column ours",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "ID similarity after single edits is highest for PTI",
+   "kind": "measured",
+   "source": null,
+   "metric": "ID similarity",
+   "value": 0.9,
+   "unit": "score",
+   "baseline_value": 0.85,
+   "n": null,
+   "setup": "smile, pose, age edits averaged; SG2 W+ 0.85, SG2 0.82, e4e 0.79",
+   "quote": null,
+   "table": "Table 2, row single edits, column ours",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "ID similarity after sequential edits is highest for PTI",
+   "kind": "measured",
+   "source": null,
+   "metric": "ID similarity",
+   "value": 0.82,
+   "unit": "score",
+   "baseline_value": 0.81,
+   "n": null,
+   "setup": "smile, pose, age applied in sequence; SG2 W+ 0.81, SG2 0.78, e4e 0.73",
+   "quote": null,
+   "table": "Table 2, row sequential edits, column ours",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "At fixed +-5 rotation PTI keeps best identity",
+   "kind": "measured",
+   "source": null,
+   "metric": "ID similarity",
+   "value": 0.84,
+   "unit": "score",
+   "baseline_value": 0.82,
+   "n": null,
+   "setup": "same rotation magnitude; SG2 W+ 0.82, SG2 0.79, e4e 0.77",
+   "quote": null,
+   "table": "Table 2, row ±5 rotation, column ours",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "At fixed +-10 rotation PTI keeps best identity",
+   "kind": "measured",
+   "source": null,
+   "metric": "ID similarity",
+   "value": 0.78,
+   "unit": "score",
+   "baseline_value": 0.77,
+   "n": null,
+   "setup": "same rotation magnitude; SG2 W+ 0.77, SG2 0.75, e4e 0.72",
+   "quote": null,
+   "table": "Table 2, row ±10 rotation, column ours",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Whole two-step inversion is fast",
+   "kind": "measured",
+   "source": null,
+   "metric": "time",
+   "value": 3,
+   "unit": "minutes",
+   "baseline_value": null,
+   "n": null,
+   "setup": "single RTX 2080, one image",
+   "quote": "Our two-step inversion takes less than 3 minutes on a single Nvidia GeForce RTX 2080.",
+   "table": null,
+   "note": null,
+   "where": "4.5"
+  },
+  {
+   "claim": "Letting the pivot move during PTI changes the image negligibly (LPIPS)",
+   "kind": "measured",
+   "source": null,
+   "metric": "LPIPS",
+   "value": 0.015,
+   "unit": "score",
+   "baseline_value": null,
+   "n": null,
+   "setup": "images from w_p and tuned w~_p through the original StyleGAN",
+   "quote": "we see negligible change: 0.015 ± 5e−6 for LPIPS",
+   "table": null,
+   "note": null,
+   "where": "4.4"
+  },
+  {
+   "claim": "Same ablation, MSE",
+   "kind": "measured",
+   "source": null,
+   "metric": "MSE",
+   "value": 0.0012,
+   "unit": "score",
+   "baseline_value": null,
+   "n": null,
+   "setup": "as above",
+   "quote": "0.0012 ± 1e−6 for MSE",
+   "table": null,
+   "note": null,
+   "where": "4.4"
+  }
+ ],
+ "limits": [
+  "Optimization per image (about 3 min) rather than a feed-forward pass; authors want a trainable mapper approximating PTI.",
+  "Only StyleGAN2 faces tested; BigGAN or other generators left as future work.",
+  "Single image per identity; a set of photos per individual is future work.",
+  "Without locality regularization, tuning many identities causes artifacts and ID shift on distant latents.",
+  "StyleCLIP needs e4e-based pivots, not W pivots.",
+  "No seeds, variance or significance tests for Tables 1-2; lambda_n not stated; web images not enumerated.",
+  "Compared only against SG2, SG2 W+ and e4e; Richardson et al. pSp excluded."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Pivotal tuning",
+   "definition": "a brief training process that preserves the editing quality of an in-domain latent region, while changing its portrayed identity and appearance",
+   "where": "Abstract"
+  },
+  {
+   "term": "distortion-editability trade-off",
+   "definition": "closer to W gives better editability but more distortion; W+ gives less distortion but weaker editability",
+   "where": "Introduction"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Analyzing and improving the image quality of StyleGAN (StyleGAN2)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "generator and W-space optimization inversion with noise regularization",
+   "quote": null
+  },
+  {
+   "work": "Designing an encoder for StyleGAN image manipulation (e4e)",
+   "year": 2021,
+   "arxiv": "2102.02766",
+   "relation": "baseline",
+   "note": "defines distortion-editability trade-off; also source of pivots for StyleCLIP",
+   "quote": null
+  },
+  {
+   "work": "Image2StyleGAN",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "W+ inversion (SG2 W+)",
+   "quote": null
+  },
+  {
+   "work": "StyleCLIP",
+   "year": 2021,
+   "arxiv": "2103.17249",
+   "relation": "uses-method",
+   "note": "text-driven editor applied downstream",
+   "quote": null
+  },
+  {
+   "work": "GANSpace",
+   "year": 2020,
+   "arxiv": "2004.02546",
+   "relation": "uses-method",
+   "note": "editing method",
+   "quote": null
+  },
+  {
+   "work": "Interpreting the latent space of GANs (InterfaceGAN)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "editing method",
+   "quote": null
+  },
+  {
+   "work": "Exploiting deep generative prior (Pan et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "related",
+   "note": "tunes BigGAN generator with optimized noise; ablated as variants D/F",
+   "quote": null
+  },
+  {
+   "work": "Semantic photo manipulation with a generative image prior (Bau et al.)",
+   "year": 2020,
+   "arxiv": "2005.07727",
+   "relation": "related",
+   "note": "generator tuning",
+   "quote": null
+  },
+  {
+   "work": "Improved StyleGAN embedding (Zhu et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "related",
+   "note": "edit magnitude measure via Face API",
+   "quote": null
+  },
+  {
+   "work": "FFHQ",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "generator pretraining",
+   "quote": null
+  },
+  {
+   "work": "CelebA-HQ",
+   "year": 2017,
+   "arxiv": "1710.10196",
+   "relation": "uses-data",
+   "note": "evaluation",
+   "quote": null
+  },
+  {
+   "work": "LPIPS (Zhang et al.)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "perceptual loss and metric",
+   "quote": null
+  },
+  {
+   "work": "ArcFace",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "ID similarity",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "An illustration of the PTI method.",
+   "page": 3,
+   "why": "Shows pivot A vs B vs C in the editability map."
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Quantitative reconstruction quality.",
+   "page": 6,
+   "why": "Headline metric comparison."
+  },
+  {
+   "figure": "Fig 14",
+   "caption": "Ablation of the Locality Regularization over random latent codes.",
+   "page": 12,
+   "why": "Shows artifacts without regularization."
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 2",
+   "snippet": "L_pt = L_LPIPS(x, x_p) + lambda_L2 * L_L2(x, x_p)",
+   "verbatim": false
+  },
+  {
+   "where": "Eq 4",
+   "snippet": "w_r = w_p + alpha * (w_z - w_p) / ||w_z - w_p||_2",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Figure-only results (Figs 15, 17) not extractable as numbers.",
+  "Table 1 MS SSIM marked with down arrow; likely a printing quirk."
+ ]
+}

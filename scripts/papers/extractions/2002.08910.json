@@ -1,19 +1,480 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2002.08910",
  "pdf": "generative-ai/02-rag-retrieval/sources/roberts-2020-how-much-knowledge-can-you.pdf",
  "bib": {
   "title": "How Much Knowledge Can You Pack Into the Parameters of a Language Model?",
+  "authors": [
+   "Adam Roberts",
+   "Colin Raffel",
+   "Noam Shazeer"
+  ],
   "first_author": "Roberts",
   "year": 2020,
-  "venue": "EMNLP (1) 2020",
+  "venue": "Proceedings of EMNLP 2020, pages 5418-5426",
   "arxiv": "2002.08910",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-04",
-  "session": "5f2f0582-f958-4d9c-8469-02f3d5079657"
+  "at": "2026-11-07",
+  "chars_read": 36978,
+  "chars_total": 36978,
+  "engine": "pymupdf",
+  "skipped": null
  },
- "legacy_report": "SOURCE: \"How Much Knowledge Can You Pack Into the Parameters of a Language Model?\", Adam Roberts*, Colin Raffel*, Noam Shazeer (Google; * equal contribution). Published in Proceedings of EMNLP 2020, pages 5418–5426, Nov 16–20, 2020 (the header is printed on page 1). arXiv 2002.08910.\n\nCOVERAGE: I read all 37,495 chars across 9 pages: abstract, sections 1–4, acknowledgments, references (skimmed for where the method comes from), Appendix A (NQ metrics) and Appendix B (\"Other Things We Tried\", which includes Fig. 2). Nothing was skipped. Page numbers below are PDF pages 1–9, which are proceedings pages 5418–5426.\n\nCLAIMS\n- claim: With no retrieval, the largest fine-tuned T5 + SSM is competitive with open-book (retrieve-then-read) systems. It reaches state of the art on WebQuestions and beats most baselines on NQ and TriviaQA.\n  number: T5.1.1-XXL + SSM gives NQ 35.2, WQ 42.8, TQA dev 51.9, TQA test 61.6. Open-book comparisons: DPR (Karpukhin et al. 2020) 41.5 / 42.4 / 57.9 / –, and REALM (Guu et al. 2020) 40.4 / 40.7 / – / –.\n  setup: Open-domain NQ (single-answer variant), WebQuestions and TriviaQA. Only the questions are used and all supplied documents are ignored. Exact match after normalisation. NQ and TQA are reported on dev sets, plus the official TQA test leaderboard (Wikipedia domain). Table 1 columns are NQ, WQ, TQA-dev, TQA-test.\n  quote: \"T5.1.1-XXL + SSM 35.2 42.8 51.9 61.6\" / \"Karpukhin et al. (2020) 41.5 42.4 57.9 –\" / \"T5.1.1- XXL with SSM ultimately achieves state-of-the-art on WebQuestions and our largest models beat most other methods on Natural Questions and TriviaQA. Importantly, all previous methods except Ling et al. (2020) and Févry et al. (2020) operate in the “open-book” setting\"\n  where: p.4, Table 1 and Results paragraph\n  Caveat for the note: DPR (open-book) still beats the best closed-book model on NQ (41.5 vs 35.2) and TQA dev (57.9 vs 51.9). Closed-book wins only on WQ (42.8 vs 42.4).\n\n- claim: Closed-book QA accuracy rises steadily with parameter count, Base (220M) through 11B.\n  number: T5 Base→Large→3B→11B on NQ goes 25.9 → 28.5 → 30.4 → 32.6. On TQA dev it goes 23.8 → 28.7 → 35.1 → 42.3.\n  setup: Original T5 checkpoints (multitask pre-trained on C4 span corruption plus supervised tasks). The T5.1.1 checkpoints are pre-trained on unlabeled data only and show the same trend (T5.1.1-Base 25.7 → XXL 32.8 on NQ).\n  quote: \"Base (220 million parameters), Large (770 million), 3B (3 billion), and 11B (11 billion)\"; \"performance on each dataset improves as the model size increases\"; \"T5-Base 25.9 27.9 23.8 29.1\" ... \"T5-11B 32.6 37.2 42.3 50.1\"\n  where: p.3 Training; p.4 Table 1\n\n- claim: Continued pre-training with salient span masking (SSM, from REALM) gives a large boost. It masks one named entity or date per Wikipedia sentence and runs 100k extra steps.\n  number: T5-11B goes from 32.6/37.2/42.3/50.1 to 34.8/40.8/51.0/60.5 with SSM.\n  setup: Guu et al.'s BERT-mined Wikipedia salient-span sentences, used to continue pre-training T5 checkpoints for 100,000 steps before fine-tuning.\n  quote: \"continue pre-training the T5 checkpoints for 100,000 additional steps before fine-tuning\"; \"T5-11B + SSM 34.8 40.8 51.0 60.5\"\n  where: p.4 SSM paragraph, Table 1\n\n- claim: The gain comes from the SSM objective, not from the dataset. Standard span corruption on the same sentences gives no significant gain.\n  number: none\n  setup: T5.1.1-XXL further pre-trained on Guu et al.'s Wikipedia sentences with SSM vs SC, fine-tuned on a mixture of the three QA tasks every 10k steps (Fig. 2).\n  quote: \"the SSM objective is clearly an important ingredient in the improved performance; we saw no significant improvement versus the baseline T5 model when using SC.\"\n  where: p.9, Appendix B\n\n- claim: Exact match undercounts a free-form generator. Of 150 NQ predictions scored wrong, only 62% were actually wrong. Adjusted accuracy is 57.8.\n  number: 62.0% true negatives, 13.3% phrasing mismatch, 13.3% incomplete annotation, 11.3% unanswerable. Counts are 20/20/17 of 150. Adjusted score is 57.8.\n  setup: Manual inspection of 150 NQ validation examples marked incorrect. The paper does not say which checkpoint was used; it says only \"our model\". The adjusted score removes unanswerable questions and applies the false-negative rate. The human-eval results are released.\n  quote: \"We found only 62% of these to be true positives.\" (Table 2 caption; the paper says \"true positives\" where it means \"true negatives\") / \"20 were marked as incorrect due to differences in phrasing, another 20 were not annotated with all correct answers, and 17 were unanswerable without appropriate context. Removing unanswerable questions from the validation set and recomputing our model’s accuracy based on this false-negative rate produces a score of 57.8.\"\n  where: p.5, Table 2 and Human Evaluation\n  The authors concede open-book systems are affected too: \"open-book question answering systems could also be impacted to a lesser extent by these issues\" (p.5).\n\n- claim: On the harder multi-answer NQ variant (official leaderboard style, recall only), closed-book T5 beats the original NQ baseline but trails oracle-context readers.\n  number: T5-11B + SSM scores 36.2 recall, against 51.9 SOTA (Pan et al. 2019) and a 33.2 baseline.\n  setup: NQ validation. The model outputs every answer delimited by \"answer:\". The comparison systems read the oracle context.\n  quote: \"T5-11B + SSM achieves a recall of 36.2 on the validation set, which lags behind the state-of-the-art score of 51.9 from Pan et al. (2019) but outperforms the best baseline published alongside the dataset (recall of 33.2\"\n  where: p.4\n\n- claim: The authors argue closed-book skips retrieval and long-document reading, which saves compute and memory. The largest models are still costly.\n  number: none\n  quote: \"most open-domain question answering systems must first do an expensive lookup step over the entire knowledge corpus and then attend to a long document to extract an answer. Our approach omits both of these steps\"\n  where: p.4\n\n- claim: Negative results. Extra span-corruption pre-training on Wikipedia had \"virtually no effect\". Pre-training from scratch on Wikipedia only (up to 1T tokens) was \"dramatically worse\", which the authors suspect is overfitting. A multitask QA mix gave +0.5 on NQ but was slightly worse on the others. Sampling a random answer had no effect.\n  number: 1 trillion tokens; +0.5 NQ\n  quote: \"We pre-trained on up to 1 trillion tokens ... this resulted in dramatically worse performance regardless of the amount of pre-training\"; \"multitask training improved performance on the Natural Questions by 0.5, it produced slightly worse results on the other tasks.\"\n  where: p.8–9, Appendix B\n\n- Training details: AdaFactor, constant LR 0.001, 10% dropout (5% for T5.1.1), batch 196,608 tokens, greedy decoding, 20,000 steps. Validation accuracy \"typically plateaued after only a few hundred steps\" (p.3–4).\n\nLIMITS (the authors concede these in the Conclusion, p.5; this is the core material for a \"why RAG\" note):\n- Cost: \"we obtained state-of-the-art results only with the largest models which had around 11 billion parameters. This model size can be prohibitively expensive in resource-constrained settings\"\n- Provenance and hallucination: \"“open-book” models typically provide some indication of what information they accessed when answering a question. This can provide a useful form of interpretability. In contrast, our model distributes knowledge in its parameters in an inexplicable way and hallucinates realistic-looking answers when it is unsure.\"\n- Update and removal: \"the maximum-likelihood objective used to train our model provides no guarantees as to whether a model will learn a fact or not. This makes it difficult to ensure that the model obtains specific knowledge over the course of pre-training and prevents us from explicitly updating or removing knowledge from a pre-trained model.\"\n- Scope: the tasks \"mainly measure “trivia”-style knowledge\", with no reasoning or multi-hop tested (they point to DROP). Footnote 2 says they \"do not directly address multi-hop inference\".\n- Time-dependence: the \"unanswerable\" category (e.g. \"latest version of microsoft office\", or the secretary of state for NI) shows that time-sensitive facts break parametric answers (p.5).\n- What I noticed, not what the authors say: the scale is 2020-era (11B max), and the strongest baseline (DPR) still beats the paper on NQ and TQA. The comparison does not control for compute or for the retriever corpus. There is no test of hallucination rates or calibration beyond the qualitative statement.\n\nBUILDS ON: Raffel et al. (2019) T5 / text-to-text; Guu et al. (2020) REALM, the source of salient span masking and its data; Petroni et al. (2019) \"Language models as knowledge bases?\"; Jiang et al. (2019); Talmor et al. (2019); Radford et al. (2019), zero-shot QA in GPT-2; Lee et al. (2019), the evaluation protocol and open-domain NQ; Shazeer and Stern (2018) Adafactor. Datasets are Kwiatkowski et al. (2019) NQ, Berant et al. (2013) WebQuestions and Joshi et al. (2017) TriviaQA. Concurrent closed-book work is Ling et al. (2020) RELIC and Févry et al. (2020) EAE. Prager (2006) is the source for the open-domain QA definition.\n\nCODE: None in the paper. It points to released code and models at https://goo.gle/t5-cbqa (p.1) and human-eval data at https://goo.gle/t5-cbqa-human-eval (p.5). The multi-answer output format is \"answer: John Lennon answer: Ringo Starr answer: George Harrison answer: Paul McCartney\" (p.8).\n\nFIGURES:\n- Figure 1 (p.1): \"T5 is pre-trained to fill in dropped-out spans of text (denoted by <M>) from documents in a large, unstructured text corpus. We fine-tune T5 to answer questions without inputting any additional information or context. This forces T5 to answer questions based on “knowledge” that it internalized during pre-training.\" This is the best candidate for the note. In one picture it shows parametric knowledge: pre-training as fill-in-the-blank, then \"When was Franklin D. Roosevelt born? → 1882\" with no context. It sets up the closed-book vs open-book contrast faster than prose.\n- Figure 2 (p.9): SSM vs SC continued pre-training curves for T5.1.1-XXL. It is narrower and only useful if the note discusses pre-training objectives.\n- Table 1 (p.4) is arguably the most useful visual for \"why RAG\". Closed-book T5 rows sit beside open-book REALM/DPR rows, and the scale trend is visible.\n\nPROBLEMS: Extraction was clean. Ligatures (ﬁ) and a few accents (F´evry) are mangled but readable. Figure 1's text is jumbled in the extraction, and I took the caption from the caption text. Table 1's \"dev test\" header applies only to the TQA columns; I inferred this from the layout, which is consistent with the text saying NQ/TQA use dev sets plus a TQA test submission. The Table 2 caption says \"true positives\" where it means true negatives; that is the authors' wording, quoted as printed. The checkpoint behind the 57.8 human-eval score is not stated. There were no embedded instructions."
+ "type": "empirical",
+ "question": "How much knowledge can a pre-trained language model store in its parameters, measured by fine-tuning it to answer open-domain questions with no external context (closed-book QA)?",
+ "hypothesis": "Larger models store more knowledge, so closed-book QA performance should scale with model size and be competitive with open-book retrieval systems.",
+ "contributions": [
+  "Define and evaluate closed-book QA with T5 up to 11B parameters",
+  "Show performance scales with size and that salient span masking pre-training gives a large boost",
+  "Human evaluation showing exact match underestimates closed-book accuracy",
+  "Release code and trained models"
+ ],
+ "method": {
+  "summary": "Fine-tune pre-trained T5 (and T5.1.1) text-to-text models to output the answer from the question alone on NQ, WebQuestions and TriviaQA, optionally after 100,000 steps of extra salient span masking pre-training. Compared with open-book retrieve-and-read systems.",
+  "task": "closed-book open-domain question answering",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Natural Questions (open-domain)",
+    "role": "both",
+    "size": null,
+    "split": "10% of train held out as validation, rest for fine-tuning; dev set reported",
+    "source": "Kwiatkowski et al. 2019",
+    "preprocessing": "Questions only; first answer only; answers over five tokens dropped; unanswerable and long answers omitted"
+   },
+   {
+    "name": "WebQuestions",
+    "role": "both",
+    "size": null,
+    "split": "10% of train held out as validation; test reported",
+    "source": "Berant et al. 2013",
+    "preprocessing": "Questions only"
+   },
+   {
+    "name": "TriviaQA",
+    "role": "both",
+    "size": null,
+    "split": "10% of train held out; dev reported, plus official test via leaderboard (Wikipedia domain, unfiltered training set)",
+    "source": "Joshi et al. 2017",
+    "preprocessing": "Questions only"
+   },
+   {
+    "name": "Wikipedia sentence dataset with salient spans (Guu et al. 2020)",
+    "role": "pretrain",
+    "size": null,
+    "split": null,
+    "source": "Guu et al. 2020, BERT-mined sentences with named entities and dates",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "T5 (Base, Large, 3B, 11B)",
+    "role": "base",
+    "params": "220M, 770M, 3B, 11B",
+    "architecture": "encoder-decoder Transformer, text-to-text",
+    "init_from": "Raffel et al. 2019 checkpoints, pre-trained on C4 span corruption plus supervised multitask mixture",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "T5.1.1 (Base, Large, XL, XXL)",
+    "role": "base",
+    "params": "XXL described as comparably-sized to 11B; others not stated",
+    "architecture": "encoder-decoder Transformer",
+    "init_from": "T5.1.1 checkpoints, pre-trained on unlabeled data only",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "maximum likelihood on literal answer text given question with task prefix; optional SSM continued pre-training",
+   "optimizer": "AdaFactor",
+   "lr": "0.001",
+   "lr_schedule": "constant",
+   "warmup": null,
+   "batch_size": "196,608 tokens (halved for WebQuestions)",
+   "steps": "20,000 fine-tuning steps; 100,000 additional SSM pre-training steps",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": "10% (doubled for WebQuestions); 5% for all three datasets with T5.1.1",
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "checkpoint_selection": "best on 10% validation split",
+    "note": "validation accuracy plateaued after a few hundred steps",
+    "multi-answer NQ format": "answers delimited by 'answer:'"
+   }
+  },
+  "inference": {
+   "decoding": "greedy (most likely token at each timestep)",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "inferred: one run per configuration, no seeds reported",
+   "prompting": "question with task-specific prefix as input, answer text as output",
+   "retrieval": "none (closed-book)",
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "exact match",
+     "definition": "prediction equals a ground-truth answer after lowercasing and stripping articles, punctuation, duplicate whitespace",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "recall (multi-answer NQ)",
+     "definition": "correct only if all answers for any one annotator are predicted",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Chen et al. 2017",
+    "Lee et al. 2019",
+    "Min et al. 2019a,b",
+    "Asai et al. 2019",
+    "Ling et al. 2020",
+    "Guu et al. 2020 (REALM)",
+    "Fevry et al. 2020",
+    "Karpukhin et al. 2020 (DPR)"
+   ],
+   "protocol": "single run; 150 NQ validation misses hand-inspected by the authors for false negatives"
+  },
+  "availability": {
+   "code": "https://goo.gle/t5-cbqa",
+   "weights": "trained models released (same link)",
+   "data": "human evaluation released at https://goo.gle/t5-cbqa-human-eval"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Largest closed-book model, T5.1.1-XXL + SSM, reaches 35.2 EM on open-domain Natural Questions dev.",
+   "kind": "measured",
+   "source": null,
+   "metric": "exact match",
+   "value": 35.2,
+   "unit": "%",
+   "baseline_value": "41.5 (Karpukhin et al. 2020, open-book DPR)",
+   "n": null,
+   "setup": "Closed-book QA, T5 fine-tuned on questions only (no documents), exact match after normalisation, greedy decoding, validation-selected checkpoint. NQ open-domain single-answer variant.",
+   "note": "Open-book DPR (41.5) and REALM (40.4) still beat it on NQ.",
+   "where": "Table 1",
+   "table": "Table 1, row T5.1.1-XXL + SSM, column NQ"
+  },
+  {
+   "claim": "T5.1.1-XXL + SSM reaches 42.8 EM on WebQuestions, state of the art in the table, vs 42.4 for open-book DPR.",
+   "kind": "measured",
+   "source": null,
+   "metric": "exact match",
+   "value": 42.8,
+   "unit": "%",
+   "baseline_value": "42.4",
+   "n": null,
+   "setup": "Closed-book QA, T5 fine-tuned on questions only (no documents), exact match after normalisation, greedy decoding, validation-selected checkpoint.",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row T5.1.1-XXL + SSM, column WQ"
+  },
+  {
+   "claim": "T5.1.1-XXL + SSM scores 51.9 on TriviaQA dev, below open-book DPR 57.9.",
+   "kind": "measured",
+   "source": null,
+   "metric": "exact match",
+   "value": 51.9,
+   "unit": "%",
+   "baseline_value": "57.9",
+   "n": null,
+   "setup": "Closed-book QA, T5 fine-tuned on questions only (no documents), exact match after normalisation, greedy decoding, validation-selected checkpoint.",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row T5.1.1-XXL + SSM, column TQA dev"
+  },
+  {
+   "claim": "T5.1.1-XXL + SSM scores 61.6 on the official TriviaQA test set (Wikipedia domain leaderboard).",
+   "kind": "measured",
+   "source": null,
+   "metric": "exact match",
+   "value": 61.6,
+   "unit": "%",
+   "baseline_value": "53.4 (Fevry et al. 2020)",
+   "n": null,
+   "setup": "Closed-book QA, T5 fine-tuned on questions only (no documents), exact match after normalisation, greedy decoding, validation-selected checkpoint. Fine-tuned on unfiltered training set.",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row T5.1.1-XXL + SSM, column TQA test"
+  },
+  {
+   "claim": "NQ accuracy rises with size for original T5: Base 25.9 to 11B 32.6.",
+   "kind": "measured",
+   "source": null,
+   "metric": "exact match",
+   "value": 32.6,
+   "unit": "%",
+   "baseline_value": "25.9 (T5-Base)",
+   "n": null,
+   "setup": "Closed-book QA, T5 fine-tuned on questions only (no documents), exact match after normalisation, greedy decoding, validation-selected checkpoint. Original T5 checkpoints, NQ.",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row T5-11B, column NQ"
+  },
+  {
+   "claim": "TriviaQA dev rises from 23.8 (Base) to 42.3 (11B).",
+   "kind": "measured",
+   "source": null,
+   "metric": "exact match",
+   "value": 42.3,
+   "unit": "%",
+   "baseline_value": "23.8 (T5-Base)",
+   "n": null,
+   "setup": "Closed-book QA, T5 fine-tuned on questions only (no documents), exact match after normalisation, greedy decoding, validation-selected checkpoint.",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row T5-11B, column TQA dev"
+  },
+  {
+   "claim": "Salient span masking adds to T5-11B: NQ 32.6 to 34.8.",
+   "kind": "measured",
+   "source": null,
+   "metric": "exact match",
+   "value": 34.8,
+   "unit": "%",
+   "baseline_value": "32.6",
+   "n": null,
+   "setup": "Closed-book QA, T5 fine-tuned on questions only (no documents), exact match after normalisation, greedy decoding, validation-selected checkpoint. 100,000 extra SSM pre-training steps.",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row T5-11B + SSM, column NQ"
+  },
+  {
+   "claim": "T5.1.1-XXL without SSM, pre-trained on unlabeled data only, scores 32.8 on NQ.",
+   "kind": "measured",
+   "source": null,
+   "metric": "exact match",
+   "value": 32.8,
+   "unit": "%",
+   "baseline_value": "35.2 with SSM",
+   "n": null,
+   "setup": "Closed-book QA, T5 fine-tuned on questions only (no documents), exact match after normalisation, greedy decoding, validation-selected checkpoint.",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row T5.1.1-XXL, column NQ"
+  },
+  {
+   "claim": "Multi-answer NQ: T5-11B + SSM recall 36.2 on validation, below state of the art 51.9, above best dataset baseline 33.2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "recall",
+   "value": 36.2,
+   "unit": "%",
+   "baseline_value": "51.9 (Pan et al. 2019, reading comprehension)",
+   "n": null,
+   "setup": "NQ validation, multi-answer variant, all answers needed for one annotator, no oracle context.",
+   "note": "Quote line-wrapped in the PDF; text normalised.",
+   "where": "Sec 3 Results",
+   "quote": "T5-11B + SSM achieves a recall of 36.2 on the validation set, which lags behind the state-of-the-art score of 51.9 from Pan et al. (2019)4 but out-performs the best baseline published alongside the dataset (recall of 33.2"
+  },
+  {
+   "claim": "Of 150 hand-inspected NQ validation misses, only 62.0% were true negatives.",
+   "kind": "measured",
+   "source": null,
+   "metric": "share true negative",
+   "value": 62.0,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "150 NQ validation examples marked incorrect by exact match; judged by the authors.",
+   "note": "Table 2 caption: 'We found only 62% of these to be true positives' (sic).",
+   "where": "Table 2",
+   "table": "Table 2, row True Negative, column Percentage"
+  },
+  {
+   "claim": "After manual false-negative adjustment and removing unanswerable questions, NQ accuracy is 57.8.",
+   "kind": "measured",
+   "source": null,
+   "metric": "exact match (adjusted)",
+   "value": 57.8,
+   "unit": "%",
+   "baseline_value": "35.2 (inferred: unadjusted best)",
+   "n": null,
+   "setup": "T5-11B + SSM (inferred: the model of the main text) on NQ validation; extrapolated from the 150-example inspection.",
+   "note": "The paper does not name the model for 57.8.",
+   "where": "Sec 3 Human Evaluation",
+   "quote": "produces a score of 57.8"
+  },
+  {
+   "claim": "Phrasing mismatch 20, incomplete annotation 20, unanswerable 17 of 150 inspected.",
+   "kind": "measured",
+   "source": null,
+   "metric": "count",
+   "value": 57,
+   "unit": "examples",
+   "baseline_value": null,
+   "n": null,
+   "setup": "150 NQ validation misses.",
+   "note": "57 is the sum 20+20+17; Table 2 percentages are 13.3, 13.3, 11.3.",
+   "where": "Sec 3 Human Evaluation",
+   "quote": "20 were marked as incorrect due to differences in phrasing, another 20 were not annotated with all correct answers, and 17 were unanswerable"
+  },
+  {
+   "claim": "Continued span-corruption pre-training on Wikipedia had virtually no effect; pre-training from scratch on Wikipedia was dramatically worse.",
+   "kind": "measured",
+   "source": null,
+   "metric": "none",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "T5 on NQ/TQA, up to 1 trillion tokens from scratch.",
+   "note": null,
+   "where": "Appendix B"
+  },
+  {
+   "claim": "Multitask fine-tuning on all three QA tasks improved NQ by 0.5, slightly worse on others.",
+   "kind": "measured",
+   "source": null,
+   "metric": "exact match gain",
+   "value": 0.5,
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "T5 multitask NQ+WQ+TQA.",
+   "note": null,
+   "where": "Appendix B",
+   "quote": "multitask training improved performance on the Natural Questions by 0.5"
+  }
+ ],
+ "limits": [
+  "Largest models (about 11B) needed for state of the art; expensive in resource-constrained settings",
+  "No indication of which information was used; knowledge distributed inexplicably; model hallucinates realistic answers when unsure",
+  "Maximum likelihood gives no guarantee a fact is learned; cannot update or remove knowledge",
+  "Tasks measure trivia-style knowledge, not reasoning (DROP suggested)",
+  "Exact match underestimates accuracy; the 57.8 adjustment comes from a 150-example inspection by the authors",
+  "Dataset sizes, hardware, compute, seeds and tokenizer not stated"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "closed-book question answering",
+   "definition": "fine-tune the model to answer questions without access to any external knowledge or context",
+   "where": "Sec 1"
+  },
+  {
+   "term": "open-book",
+   "definition": "open-domain QA systems that explicitly retrieve and use information from an external knowledge source",
+   "where": "Sec 2"
+  },
+  {
+   "term": "salient span masking (SSM)",
+   "definition": "pre-training objective masking out one named entity or date in a sentence",
+   "where": "Sec 3, App B"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Exploring the limits of transfer learning with a unified text-to-text transformer (T5)",
+   "year": 2019,
+   "arxiv": "1910.10683",
+   "relation": "extends",
+   "note": "models and fine-tuning procedure",
+   "quote": null
+  },
+  {
+   "work": "REALM: Retrieval-augmented language model pre-training",
+   "year": 2020,
+   "arxiv": "2002.08909",
+   "relation": "uses-method",
+   "note": "salient span masking and eval setup; also open-book baseline",
+   "quote": null
+  },
+  {
+   "work": "Dense passage retrieval for open-domain QA",
+   "year": 2020,
+   "arxiv": "2004.04906",
+   "relation": "baseline",
+   "note": "open-book DPR",
+   "quote": null
+  },
+  {
+   "work": "Latent retrieval for weakly supervised open domain QA",
+   "year": 2019,
+   "arxiv": "1906.00300",
+   "relation": "baseline",
+   "note": "evaluation procedure and baseline",
+   "quote": null
+  },
+  {
+   "work": "Language models as knowledge bases?",
+   "year": 2019,
+   "arxiv": "1909.01066",
+   "relation": "related",
+   "note": "prior probing of knowledge in LMs",
+   "quote": null
+  },
+  {
+   "work": "Adafactor",
+   "year": 2018,
+   "arxiv": "1804.04235",
+   "relation": "uses-method",
+   "note": "optimizer",
+   "quote": null
+  },
+  {
+   "work": "Natural Questions / WebQuestions / TriviaQA",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "questions only",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "T5 is pre-trained to fill in dropped-out spans ... We fine-tune T5 to answer questions without inputting any additional information or context.",
+   "page": 2,
+   "why": "Shows the closed-book setup"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Scores achieved by fine-tuning T5 on the open-domain NQ, WQ, TQA tasks.",
+   "page": 4,
+   "why": "Scaling and open-book comparison"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Comparing additional pre-training using either SSM or span corruption on T5.1.1-XXL.",
+   "page": 9,
+   "why": "SSM, not data, drives gains; values only in plot"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Table 1 extracted as a flat list; column order NQ, WQ, TQA dev, TQA test inferred from rows with dashes (Chen 2017 shows 20.7 as WQ)",
+  "Table 2 caption says '62% ... true positives', row label says True Negative"
+ ]
 }

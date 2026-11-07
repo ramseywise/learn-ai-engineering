@@ -1,0 +1,597 @@
+{
+ "schema": 1,
+ "key": "2006.03654",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/he-2021-deberta.pdf",
+ "bib": {
+  "title": "DEBERTA: DECODING-ENHANCED BERT WITH DISENTANGLED ATTENTION",
+  "authors": [
+   "Pengcheng He",
+   "Xiaodong Liu",
+   "Jianfeng Gao",
+   "Weizhu Chen"
+  ],
+  "first_author": "He",
+  "year": 2021,
+  "venue": "ICLR 2021 (arXiv v6)",
+  "arxiv": "2006.03654",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 67687,
+  "chars_total": 67687,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can a BERT-style encoder with disentangled content/position attention and an enhanced mask decoder pretrain more efficiently and outperform RoBERTa and similar PLMs?",
+ "hypothesis": "Attention weights depend on content and relative position, and absolute positions are better added late (before the softmax) than at the input, so both changes improve pre-training efficiency and downstream accuracy.",
+ "contributions": [
+  "Disentangled attention with separate content and relative-position vectors",
+  "Enhanced mask decoder injecting absolute positions before the output softmax",
+  "Scale-invariant fine-tuning (SiFT), virtual adversarial training on normalised embeddings",
+  "1.5B-parameter model that surpasses the human baseline on SuperGLUE"
+ ],
+ "method": {
+  "summary": "Encoder-only transformer pretrained with MLM using disentangled attention (c2c, c2p, p2c terms) and an enhanced mask decoder with absolute positions; fine-tuned with Adam, and SiFT for the 1.5B model. Evaluated on GLUE, SuperGLUE, SQuAD, RACE, ReCoRD, SWAG, NER, Wikitext-103.",
+  "task": "masked language model pretraining and NLU fine-tuning",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Pretraining corpus (base/large)",
+    "role": "pretrain",
+    "size": "about 78GB after dedup (Wikipedia 12GB, BookCorpus 6GB, OpenWebText 38GB, Stories 31GB)",
+    "split": "5% sampled as validation set",
+    "source": "public",
+    "preprocessing": "dedup (Shoeybi et al., 2019); BPE vocab of Radford et al. 2019 / Liu et al. 2019c"
+   },
+   {
+    "name": "Pretraining corpus (1.5B)",
+    "role": "pretrain",
+    "size": "160GB, similar to RoBERTa",
+    "split": "-",
+    "source": "Table 7 marks 4 sources; new 128K vocab built on it",
+    "preprocessing": null
+   },
+   {
+    "name": "Ablation corpus",
+    "role": "pretrain",
+    "size": "Wikipedia + BookCorpus (16GB)",
+    "split": "-",
+    "source": "public",
+    "preprocessing": null
+   },
+   {
+    "name": "GLUE",
+    "role": "both",
+    "size": "e.g. MNLI 393k train, 20k dev",
+    "split": "dev set reported",
+    "source": "GLUE",
+    "preprocessing": null
+   },
+   {
+    "name": "SuperGLUE",
+    "role": "both",
+    "size": "e.g. BoolQ 9,427 train",
+    "split": "test via server",
+    "source": "SuperGLUE",
+    "preprocessing": null
+   },
+   {
+    "name": "SQuAD v1.1 / v2.0, RACE, ReCoRD, SWAG, CoNLL 2003",
+    "role": "both",
+    "size": "SQuAD1.1 87.6k, v2.0 130.3k, RACE 87,866, SWAG 73.5k, CoNLL 14,987 train",
+    "split": "dev set",
+    "source": "public (Table 6)",
+    "preprocessing": null
+   },
+   {
+    "name": "Wikitext-103",
+    "role": "both",
+    "size": "not stated in paper text",
+    "split": "dev and test",
+    "source": "Merity et al. 2016",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "DeBERTa-large",
+    "role": "proposed",
+    "params": null,
+    "architecture": "encoder transformer, disentangled attention + EMD",
+    "init_from": "from scratch",
+    "tokenizer": "BPE (Radford et al. 2019)",
+    "vocab": null,
+    "layers": 24,
+    "hidden": 1024,
+    "heads": 16,
+    "context": "512 (768 for RACE, Table 11)",
+    "other": {
+     "ffn": 4096,
+     "max_relative_distance_k": 512
+    }
+   },
+   {
+    "name": "DeBERTa-base",
+    "role": "proposed",
+    "params": "134M (Table 13)",
+    "architecture": "as above",
+    "init_from": "from scratch",
+    "tokenizer": "BPE",
+    "vocab": null,
+    "layers": 12,
+    "hidden": 768,
+    "heads": 12,
+    "context": "512",
+    "other": {
+     "ffn": 3072
+    }
+   },
+   {
+    "name": "DeBERTa-1.5B",
+    "role": "proposed",
+    "params": "1.5B",
+    "architecture": "as above plus shared position/content projections, conv layer beside first layer, 128K vocab",
+    "init_from": "from scratch",
+    "tokenizer": "new 128K vocab",
+    "vocab": "128K",
+    "layers": 48,
+    "hidden": 1536,
+    "heads": 24,
+    "context": null,
+    "other": {
+     "ffn": 6144
+    }
+   },
+   {
+    "name": "RoBERTa-ReImp-base",
+    "role": "baseline",
+    "params": "120M",
+    "architecture": "RoBERTa base re-pretrained",
+    "init_from": "scratch",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": 12,
+    "hidden": 768,
+    "heads": 12,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "RoBERTa, XLNet, ELECTRA, BERT, ALBERT, Megatron, T5",
+    "role": "baseline",
+    "params": "large ~ 24 layers/1024 hidden; Megatron 336M/1.3B/3.9B; T5 11B",
+    "architecture": "various",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "MLM (15% masked, 10% unchanged, 10% random, rest [MASK]) with dynamic batching and span masking up to 3; RTD variant in A.11",
+   "optimizer": "Adam with weight decay; eps 1e-6, beta1 0.9, beta2 0.999",
+   "lr": "1.5e-4 (1.5B), 2e-4 (large), 2e-4 (base), 1e-4 (base ablation)",
+   "lr_schedule": "linear decay",
+   "warmup": "10k steps",
+   "batch_size": "2k (256 for ablation)",
+   "steps": "1M",
+   "epochs": null,
+   "tokens": "inferred: 2 billion training samples (1M steps x 2K); token count not stated",
+   "seq_len": "inferred: 512 from max relative distance k=512; not stated explicitly",
+   "precision": null,
+   "weight_decay": 0.01,
+   "dropout": 0.1,
+   "regularisation": "gradient clipping 1.0; SiFT only on 1.5B SuperGLUE",
+   "hardware": "V100 on DGX-2: 16 nodes (1.5B), 6 nodes/96 GPUs (large), 4 nodes/64 GPUs (base), 1 node/16 GPUs (ablation)",
+   "compute": null,
+   "wall_clock": "30 days (1.5B), 20 days (large), 10 days (base), 7 days (ablation)",
+   "seeds": "fine-tuning: average of five runs with different seeds",
+   "other": {
+    "fine_tune_lr": "large {5e-6,8e-6,9e-6,1e-5}; base {1.5e-5,2e-5,3e-5,4e-5}; 1.5B {1e-6,3e-6,5e-6}",
+    "fine_tune_batch": "{16,32,48,64}; 1.5B {16,32,64}",
+    "fine_tune_epochs": "max 10",
+    "fine_tune_optimizer": "Adam (RAdam not used for fairness)",
+    "EMD": "2 layers sharing weights, absolute position embedding as I"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "5 fine-tuning runs with different seeds, averaged",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {
+    "generation": "DeBERTa-MT uses triangular self-attention mask for ARLM"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Accuracy / F1 / EM / Matthews corr / Pearson corr / perplexity",
+     "definition": "task-standard (Table 6)",
+     "unit": "% or points",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "BERT",
+    "RoBERTa",
+    "XLNet",
+    "ELECTRA",
+    "ALBERT",
+    "Megatron",
+    "T5",
+    "human baseline"
+   ],
+   "protocol": "Dev sets for most tasks, model selection on dev; average of five seeds with significance test (p<0.05); SuperGLUE test via server"
+  },
+  "availability": {
+   "code": "https://github.com/microsoft/DeBERTa",
+   "weights": "released (GitHub, HuggingFace)",
+   "data": "public corpora"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Single DeBERTa-1.5B surpasses the human baseline on the SuperGLUE test set macro-average.",
+   "kind": "measured",
+   "source": null,
+   "metric": "SuperGLUE test average",
+   "value": "89.9",
+   "unit": "score",
+   "baseline_value": "89.8",
+   "n": null,
+   "setup": "DeBERTa1.5B+SiFT, SuperGLUE test set via evaluation server, results obtained 6 Jan 2021",
+   "note": null,
+   "where": "Sec 5.3",
+   "quote": "surpass the human performance on SuperGLUE for the ﬁrst time in terms of macro-average score (89.9 versus 89.8)"
+  },
+  {
+   "claim": "Ensemble DeBERTa tops SuperGLUE leaderboard above the human baseline.",
+   "kind": "measured",
+   "source": null,
+   "metric": "SuperGLUE test average",
+   "value": "90.3",
+   "unit": "score",
+   "baseline_value": "89.8",
+   "n": null,
+   "setup": "DeBERTaEnsemble, SuperGLUE test, as of 6 Jan 2021",
+   "note": null,
+   "where": "Abstract",
+   "quote": "outperforming the human baseline by a decent margin (90.3 versus 89.8)"
+  },
+  {
+   "claim": "DeBERTa-large beats RoBERTa-large on MNLI-m with half the training data.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MNLI-m accuracy",
+   "value": "91.1",
+   "unit": "%",
+   "baseline_value": "90.2",
+   "n": null,
+   "setup": "large (24 layers, 1024 hidden), dev set, pretrained on 78GB for 1M steps x 2K batch vs RoBERTa 160GB, 500K steps x 8K",
+   "note": null,
+   "where": "Abstract; Table 1",
+   "quote": "improvements on MNLI by +0.9% (90.2% vs. 91.1%)"
+  },
+  {
+   "claim": "DeBERTa-large GLUE dev average exceeds RoBERTa, XLNet and ELECTRA large.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GLUE dev average",
+   "value": "90.00",
+   "unit": "points",
+   "baseline_value": "89.46",
+   "n": null,
+   "setup": "Large models, GLUE dev, 9-task average as printed",
+   "note": null,
+   "where": "Table 1",
+   "quote": "Table 1",
+   "table": "Table 1, row DeBERTalarge, column Avg.; 90.00 vs RoBERTalarge 88.82, XLNetlarge 89.15, ELECTRAlarge 89.46"
+  },
+  {
+   "claim": "DeBERTa-large SQuAD v2.0 F1 versus RoBERTa-large.",
+   "kind": "measured",
+   "source": null,
+   "metric": "SQuAD v2.0 F1",
+   "value": "90.7",
+   "unit": "F1",
+   "baseline_value": "89.4",
+   "n": null,
+   "setup": "large, dev set",
+   "note": "Abstract prints RoBERTa as 88.4 but Table 2 prints RoBERTalarge SQuAD v2.0 F1 as 89.4 (+1.3, not +2.3); abstract is inconsistent with Table 2",
+   "where": "Abstract; Table 2",
+   "quote": "SQuAD v2.0 by +2.3%(88.4% vs. 90.7%)"
+  },
+  {
+   "claim": "DeBERTa-large RACE accuracy versus RoBERTa-large.",
+   "kind": "measured",
+   "source": null,
+   "metric": "RACE accuracy",
+   "value": "86.8",
+   "unit": "%",
+   "baseline_value": "83.2",
+   "n": null,
+   "setup": "large, dev set, sequence length 768 (Table 11)",
+   "note": null,
+   "where": "Abstract; Table 2; Table 11",
+   "quote": "RACE by +3.6% (83.2% vs. 86.8%)"
+  },
+  {
+   "claim": "DeBERTa-base MNLI-m beats RoBERTa-base and XLNet-base by larger margin than at large scale.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MNLI-m accuracy",
+   "value": "88.8",
+   "unit": "%",
+   "baseline_value": "87.6",
+   "n": null,
+   "setup": "base models, DeBERTa on 78GB vs RoBERTa/XLNet on 160GB, dev set",
+   "note": null,
+   "where": "Sec 5.1.2",
+   "quote": "DeBERTabase obtains +1.2% (88.8% vs. 87.6%) over RoBERTabase"
+  },
+  {
+   "claim": "Controlled ablation: DeBERTa-base beats re-pretrained RoBERTa-base on RACE.",
+   "kind": "measured",
+   "source": null,
+   "metric": "RACE accuracy",
+   "value": "71.7",
+   "unit": "%",
+   "baseline_value": "66.8",
+   "n": null,
+   "setup": "Wikipedia+BookCorpus, 1M steps, batch 256, base",
+   "note": null,
+   "where": "Table 4",
+   "quote": "Table 4",
+   "table": "Table 4, row DeBERTabase, column RACE; RoBERTa-ReImpbase 66.8"
+  },
+  {
+   "claim": "Removing EMD costs 1.4 points on RACE (71.7 vs 70.3).",
+   "kind": "measured",
+   "source": null,
+   "metric": "RACE accuracy drop",
+   "value": "1.4",
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Ablation, base, Wiki+Book",
+   "note": null,
+   "where": "Sec 5.2.1",
+   "quote": "removing EMD (-EMD) results in a loss of 1.4% (71.7% vs. 70.3%) on RACE"
+  },
+  {
+   "claim": "Disentangled attention adds about 30% compute versus BERT/RoBERTa and about 15% versus XLNet.",
+   "kind": "measured",
+   "source": null,
+   "metric": "extra computational cost",
+   "value": "30",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Complexity analysis, additional O(Nkd) from position-to-content and content-to-position terms; no fused kernel",
+   "note": null,
+   "where": "A.7",
+   "quote": "Compared with BERT or RoBERTa, this increases the computational cost by 30%."
+  },
+  {
+   "claim": "EMD adds about 3% compute for base and 2% for large.",
+   "kind": "measured",
+   "source": null,
+   "metric": "extra computational cost",
+   "value": "3",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "15% tokens masked, two decoder layers, base model L=12",
+   "note": null,
+   "where": "A.7",
+   "quote": "additional computational cost of only 3%"
+  },
+  {
+   "claim": "Sharing position and content projections keeps parameter count equal to RoBERTa with near-identical results (base).",
+   "kind": "measured",
+   "source": null,
+   "metric": "parameters",
+   "value": "120M",
+   "unit": "params",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 13: DeBERTabase 134M; +ShareProjection 120M with MNLI 86.3/86.3",
+   "note": null,
+   "where": "Table 13",
+   "quote": "Table 13",
+   "table": "Table 13, row + ShareProjection, column Parameters; RoBERTa-ReImpbase 120M, DeBERTabase 134M"
+  },
+  {
+   "claim": "Wikitext-103 test perplexity of DeBERTa-MT vs RoBERTa.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Test PPL",
+   "value": "19.5",
+   "unit": "perplexity",
+   "baseline_value": "21.6",
+   "n": null,
+   "setup": "Base models, DeBERTa-MT jointly MLM+ARLM, 200k steps",
+   "note": null,
+   "where": "A.4 Table 10",
+   "quote": "Table 10",
+   "table": "Table 10, row Test PPL, column DeBERTa-MT; RoBERTa 21.6"
+  },
+  {
+   "claim": "DeBERTa-1.5B GLUE dev average with SiFT.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GLUE dev average",
+   "value": "91.93",
+   "unit": "points",
+   "baseline_value": "91.17",
+   "n": null,
+   "setup": "DeBERTa1.5B+SiFT, GLUE dev",
+   "note": null,
+   "where": "Table 12",
+   "quote": "Table 12",
+   "table": "Table 12, row DeBERTa1.5B+SiFT, column Avg.; without SiFT 91.17"
+  },
+  {
+   "claim": "DeBERTa-RTD-large matches DeBERTa-1.5B at one third of the parameters (MNLI 92.0 vs 91.7).",
+   "kind": "measured",
+   "source": null,
+   "metric": "MNLI-m accuracy",
+   "value": "92.0",
+   "unit": "%",
+   "baseline_value": "91.7",
+   "n": null,
+   "setup": "RTD objective, 160GB data, large setting",
+   "note": null,
+   "where": "A.11 Table 15",
+   "quote": "Table 15",
+   "table": "Table 15, row DeBERTaRTDlarge, column MNLI(m/mm Acc); DeBERTa1.5B 91.7/91.9"
+  },
+  {
+   "claim": "Fine-tuning gains are significant: DeBERTa-base vs RoBERTa-base MNLI-m average over 5 seeds.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MNLI-m avg",
+   "value": "86.3",
+   "unit": "%",
+   "baseline_value": "84.9",
+   "n": null,
+   "setup": "Five seeds, min/max/avg, p-value 0.01 / 0.02",
+   "note": null,
+   "where": "A.10",
+   "quote": "Table 14",
+   "table": "Table 14, row DeBERTabase, column MNLI-matched; RoBERTabase avg 84.9"
+  }
+ ],
+ "limits": [
+  "Authors concede the model is far from human-level NLU, lacking compositional generalization.",
+  "SiFT only applied to DeBERTa-1.5B on SuperGLUE; fuller study deferred.",
+  "Large-model comparisons confound data size and steps (78GB vs 160GB); controlled comparison only at base scale with Wikipedia+BookCorpus.",
+  "T5 comparison is on test results not comparable with dev results.",
+  "Several settings (precision, exact seq length, total compute, token count) are not stated."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Enhanced Mask Decoder (EMD)",
+   "definition": "incorporate absolute positions right after all the Transformer layers but before the softmax layer for masked token prediction",
+   "where": "Sec 3.2"
+  },
+  {
+   "term": "SiFT",
+   "definition": "Scale-invariant-Fine-Tuning: perturbations applied to normalized word embeddings in virtual adversarial training",
+   "where": "Sec 4"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "RoBERTa",
+   "year": 2019,
+   "arxiv": "1907.11692",
+   "relation": "baseline",
+   "note": "main comparison; dynamic batching adopted",
+   "quote": null
+  },
+  {
+   "work": "BERT",
+   "year": 2019,
+   "arxiv": "1810.04805",
+   "relation": "extends",
+   "note": "pretraining setting followed",
+   "quote": null
+  },
+  {
+   "work": "XLNet",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "also uses relative position bias",
+   "quote": null
+  },
+  {
+   "work": "ELECTRA",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "RTD objective used in A.11",
+   "quote": null
+  },
+  {
+   "work": "Shaw et al. relative position representations",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "relative position bias",
+   "quote": null
+  },
+  {
+   "work": "SMART / Miyato virtual adversarial training",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "SiFT variant",
+   "quote": null
+  },
+  {
+   "work": "Megatron-LM",
+   "year": 2019,
+   "arxiv": "1909.08053",
+   "relation": "baseline",
+   "note": "336M, 1.3B, 3.9B",
+   "quote": null
+  },
+  {
+   "work": "T5",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "11B on SuperGLUE",
+   "quote": null
+  },
+  {
+   "work": "UniLM",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "NLG mask",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "Comparison of the decoding layer.",
+   "page": 20,
+   "why": "shows BERT decoding vs EMD"
+  },
+  {
+   "figure": "Fig 1",
+   "caption": "Pre-training performance curve between DeBERTa and its counterparts on the MNLI and SQuAD v2.0 development set.",
+   "page": 17,
+   "why": "pretraining efficiency"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 4",
+   "snippet": "A~_ij = Qc_i Kc_j^T + Qc_i Kr_delta(i,j)^T + Kc_j Qr_delta(j,i)^T ; Ho = softmax(A~/sqrt(3d)) Vc",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Abstract RoBERTa SQuAD v2.0 figure (88.4) differs from Table 2 (89.4 F1)."
+ ]
+}
