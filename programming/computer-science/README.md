@@ -16,7 +16,7 @@ The mental model is one question asked at every layer: what's being counted, and
 
 ## Reading order
 
-The notes follow the [full chapter standard](../../.claude/skills/pillar/references/pillar-layout.md), not the shorter format of the Python modules.
+The notes follow the [full chapter standard](https://github.com/ramseywise/librarian/blob/main/.claude/skills/pillar/references/pillar-layout.md), not the shorter format of the Python modules.
 
 **Reasoning about code**
 

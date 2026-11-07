@@ -47,7 +47,7 @@ The rules from the topic notes on one page. Each group links to the chapter that
 - **Read 50–100 traces before choosing metrics.** Open code, then axial code. Build graders for the failures you actually saw.
 - Deterministic behavior gets **unit tests**. Non-deterministic behavior gets **evals**. Never assert an exact LLM string in a unit test.
 
-**The dataset** ([03](notes/03-eval-datasets.md))
+**The dataset** ([03](notes/03-eval-datasets.md), [03b](notes/03b-splits-contamination-and-public-benchmarks.md))
 - **Start with 20–50 real failures**, hand-reviewed. Grow from production failures.
 - Include **negative and boundary cases**, or "does it more often" looks like an improvement.
 - A gate scores only rows that are **eligible** for it. Version the dataset; keep a held-out split.
@@ -58,7 +58,7 @@ The rules from the topic notes on one page. Each group links to the chapter that
 - **An uncalibrated judge never gates a release.** Calibrate against 100–200 human labels; report TPR and TNR.
 - Judge with a **different model family** from the system under test. Run pairwise judges in both orders.
 
-**Agents and RAG** ([06](notes/06-evaluating-agents.md), [07](notes/07-evaluating-rag-and-grounding.md))
+**Agents and RAG** ([06](notes/06-evaluating-agents.md), [06b](notes/06b-components-trials-and-cost.md), [06c](notes/06c-agent-suites-and-environment-hygiene.md), [07](notes/07-evaluating-rag-and-grounding.md))
 - **Grade outcome and trajectory.** Check end state, not what the agent says it did.
 - **Run each task k times.** Report pass^k for anything a user gets one try at.
 - Score retrieval and generation **separately**, and generation only where retrieval succeeded. Check grounding **claim by claim**.
@@ -145,7 +145,8 @@ Note 15 and the multi-turn section of note 06 share [practice/conversation_scori
 **Foundations**
 1. [What an eval is](notes/01-what-an-eval-is.md) — task, trial, trajectory, outcome, grader, suite; system under test vs. eval harness; test vs. eval; capability vs. regression; offline vs. online.
 2. [Defining "correct"](notes/02-defining-correct.md) — success criteria, the two-expert test, error analysis (open and axial coding), criteria drift, the failure taxonomy, positive and negative cases, dimensions.
-3. [Eval datasets](notes/03-eval-datasets.md) — size by stage, sources, synthetic data along dimensions, harvesting failures, coverage, row pools and eligibility, row schema, splits and versioning.
+3. [Eval datasets](notes/03-eval-datasets.md) — size by stage, sources, synthetic data along dimensions, harvesting failures, coverage, row pools and eligibility, row schema.
+   - 3b. [Splits, contamination and public benchmarks](notes/03b-splits-contamination-and-public-benchmarks.md) — splits and versioning, contamination and how public benchmarks fight it, lessons from public benchmarks.
 
 **Grading**
 
@@ -158,7 +159,9 @@ Read straight after 05:
 
 **Applying it**
 
-6. [Evaluating agents](notes/06-evaluating-agents.md) — outcome vs. trajectory, state checks, tool-call matching, component evals, pass@k vs. pass^k, efficiency metrics, multi-turn and simulated users.
+6. [Evaluating agents](notes/06-evaluating-agents.md) — outcome vs. trajectory, state checks, tool-call matching.
+   - 6b. [Components, trials and cost](notes/06b-components-trials-and-cost.md) — component evals, routing vs. domain evals, pass@k vs. pass^k, efficiency metrics.
+   - 6c. [Agent suites and environment hygiene](notes/06c-agent-suites-and-environment-hygiene.md) — agent-specific suites, multi-turn and simulated users, environment hygiene.
 7. [Evaluating RAG and grounding](notes/07-evaluating-rag-and-grounding.md) — per-stage metrics, retrieval metrics, claim-level faithfulness, grounding tiers, citation checks, frameworks.
 8. [Tracing and observability](notes/08-tracing-and-observability.md) — trace anatomy, the six questions, OTel GenAI conventions, tools, traces → evals → datasets, cost attribution.
 
@@ -179,7 +182,7 @@ Read straight after 05:
 
 ### Course code
 
-DeepLearning.AI's [*Evaluating AI Agents*](https://www.deeplearning.ai/short-courses/evaluating-ai-agents/) course ([runnable notebooks upstream](https://github.com/ginny100/DeepLearning.AI-Evaluating-AI-Agents), with the data and helpers they need). Lab 1 builds the sales-data agent the other labs evaluate; labs 2–5 trace it, add router and skill evals, add trajectory evals and run experiments in Phoenix. The instructive code is folded into the notes: router and skill evals and convergence in [06](notes/06-evaluating-agents.md#evaluate-the-components-then-the-whole), tracing in [08](notes/08-tracing-and-observability.md#anatomy-of-a-trace), the v1-vs-v2 experiment in [09](notes/09-reading-results.md#a-worked-example-that-needs-this).
+DeepLearning.AI's [*Evaluating AI Agents*](https://www.deeplearning.ai/short-courses/evaluating-ai-agents/) course ([runnable notebooks upstream](https://github.com/ginny100/DeepLearning.AI-Evaluating-AI-Agents), with the data and helpers they need). Lab 1 builds the sales-data agent the other labs evaluate; labs 2–5 trace it, add router and skill evals, add trajectory evals and run experiments in Phoenix. The instructive code is folded into the notes: router and skill evals and convergence in [06](notes/06b-components-trials-and-cost.md#evaluate-the-components-then-the-whole), tracing in [08](notes/08-tracing-and-observability.md#anatomy-of-a-trace), the v1-vs-v2 experiment in [09](notes/09-reading-results.md#a-worked-example-that-needs-this).
 
 Pairwise ranking (Elo and Bradley–Terry) is a worked example in [05](notes/05-llm-as-judge.md#worked-example-online-elo-vs-a-bradleyterry-fit). The full runnable lab is upstream at [ai-agent-book/chapter7/elo-leaderboard](https://github.com/bojieli/ai-agent-book/tree/main/chapter7/elo-leaderboard): run `pip install -r requirements.txt && python quickstart.py`, offline, with no API key.
 

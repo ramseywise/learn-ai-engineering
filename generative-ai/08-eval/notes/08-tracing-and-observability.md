@@ -69,7 +69,7 @@ def run_agent(messages):
         span.set_status(StatusCode.OK)
 ```
 
-Name the spans after your agent's own steps (router, tool, skill), so a grader can select them by kind and name later ([06](06-evaluating-agents.md#evaluate-the-components-then-the-whole)).
+Name the spans after your agent's own steps (router, tool, skill), so a grader can select them by kind and name later ([06](06b-components-trials-and-cost.md#evaluate-the-components-then-the-whole)).
 
 ### What each span should carry
 
@@ -151,7 +151,7 @@ production traces ──sample──▶ graders (online) ──scores on spans�
 
 Traces are where cost lives. Roll up per span → per request → per user / feature / slice:
 
-- **Cost per success**, not per call ([06](06-evaluating-agents.md#efficiency-metrics)).
+- **Cost per success**, not per call ([06](06b-components-trials-and-cost.md#efficiency-metrics)).
 - **Where tokens go.** System prompt, retrieved context, conversation history, tool results. Context bloat shows up as a rising input-token share of one category.
 - **Cache hit rate** for prompt caching. A prompt change that breaks the cacheable prefix can double cost overnight.
 - **Tail latency by step.** p95 is usually one slow tool or one long generation, not the whole pipeline.
@@ -183,7 +183,7 @@ Albada's alert examples for an agent (*Building Applications with AI Agents*, ch
 
 These are illustrations, not measured thresholds. Set yours from your own baseline variance, or the pager will fire on noise. Distribution-drift statistics for inputs (KS, PSI, embedding distance) are covered in [11](11-production-and-the-maturity-ladder.md#drift).
 
-**Failure or variation?** Albada's triage for a bad output: rerun it 3–5 times. If it fails more than 80% of the reruns, treat it as a systematic bug and send it to engineering. If it doesn't reproduce, compare it to the baseline distribution before acting. Expected variation gets logged for drift watch, not fixed. This is the per-task pass-rate distribution from [06](06-evaluating-agents.md#non-determinism-run-every-task-k-times) applied to one production trace.
+**Failure or variation?** Albada's triage for a bad output: rerun it 3–5 times. If it fails more than 80% of the reruns, treat it as a systematic bug and send it to engineering. If it doesn't reproduce, compare it to the baseline distribution before acting. Expected variation gets logged for drift watch, not fixed. This is the per-task pass-rate distribution from [06](06b-components-trials-and-cost.md#non-determinism-run-every-task-k-times) applied to one production trace.
 
 ---
 

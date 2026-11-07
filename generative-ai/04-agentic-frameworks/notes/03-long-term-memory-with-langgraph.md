@@ -54,7 +54,7 @@ graph LR;
 | Whole graph state, every step | Explicit `put` / `search` / `get` of JSON items |
 | Lost when the thread ends | Survives across threads and sessions |
 
-[Zhou et al. (2023, preprint)](https://arxiv.org/abs/2309.07870) drew the same line early: long-term memory in a vector database, short-term memory in a scratchpad. What changed since is how the agent reaches it. [Furgale et al. (2026, preprint)](https://arxiv.org/abs/2607.20709) score frameworks on whether state belongs to the developer or the model, and record LangGraph's as developer and node state: nothing is remembered unless a graph node or a tool you gave the model says so. That is the point of this chapter's code. Memory here is ordinary program logic you can read, and it fails like program logic too.
+[Zhou et al. (2023, preprint)](https://arxiv.org/abs/2309.07870) drew the same line early: long-term memory in a vector database, short-term memory in a scratchpad. What changed since is how the agent reaches it. [Furgale et al. (2026, preprint)](https://arxiv.org/abs/2607.20709) score frameworks on whether state belongs to the developer or the model, and record LangGraph's graph state, stores, reducers and checkpointers as developer and node state: it persists, but the model sees none of it unless an opt-in middleware tool such as `write_todos` exposes it. That is the point of this chapter's code. Memory here is ordinary program logic you can read, and it fails like program logic too.
 
 ---
 

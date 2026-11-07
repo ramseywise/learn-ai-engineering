@@ -19,7 +19,7 @@ The mental model is a question to ask of every box on a diagram: **what happens 
 
 ## Reading order
 
-Each chapter takes about an hour, with its exercises. The format of a chapter follows [the course's chapter standard](../../.claude/skills/pillar/references/pillar-layout.md). Lab: [`practice/`](practice/README.md).
+Each chapter takes about an hour, with its exercises. The format of a chapter follows [the course's chapter standard](https://github.com/ramseywise/librarian/blob/main/.claude/skills/pillar/references/pillar-layout.md). Lab: [`practice/`](practice/README.md).
 
 **The contract and who may use it**
 

@@ -1,0 +1,750 @@
+{
+ "schema": 1,
+ "key": "1810.04805",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/devlin-2018-bert.pdf",
+ "bib": {
+  "title": "BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding",
+  "authors": [
+   "Jacob Devlin",
+   "Ming-Wei Chang",
+   "Kenton Lee",
+   "Kristina Toutanova"
+  ],
+  "first_author": "Devlin",
+  "year": 2018,
+  "venue": "preprint (arXiv v2, 24 May 2019; Google AI Language)",
+  "arxiv": "1810.04805",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 64132,
+  "chars_total": 64132,
+  "engine": "pymupdf",
+  "skipped": "reference list skimmed only"
+ },
+ "type": "empirical",
+ "question": "Can pre-training deep bidirectional Transformer representations with a masked-LM objective, then fine-tuning with one added output layer, beat unidirectional pre-training and task-specific architectures across many NLP tasks?",
+ "hypothesis": "A deep bidirectional model is strictly more powerful than a left-to-right model or a shallow concatenation of left-to-right and right-to-left models, and scaling the pre-trained model helps even small downstream tasks.",
+ "contributions": [
+  "Demonstrate the importance of bidirectional pre-training for language representations (masked LMs, vs unidirectional LMs of Radford 2018 and shallow concatenation of Peters 2018a).",
+  "Show pre-trained representations reduce the need for heavily-engineered task-specific architectures; first fine-tuning-based representation model with SOTA on a large suite of sentence-level and token-level tasks.",
+  "Advance the state of the art for eleven NLP tasks; code and pre-trained models released."
+ ],
+ "method": {
+  "summary": "Multi-layer bidirectional Transformer encoder pre-trained on BooksCorpus + English Wikipedia with masked LM (15% of WordPiece tokens) and next sentence prediction, then fine-tuned end-to-end per task with one added output layer. Two sizes: BASE (110M) and LARGE (340M).",
+  "task": "Pre-training (MLM + NSP) then fine-tuning on GLUE, SQuAD v1.1/v2.0, SWAG; feature-based NER on CoNLL-2003",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "BooksCorpus",
+    "role": "pretrain",
+    "size": "800M words",
+    "split": null,
+    "source": "Zhu et al., 2015",
+    "preprocessing": null
+   },
+   {
+    "name": "English Wikipedia",
+    "role": "pretrain",
+    "size": "2,500M words",
+    "split": null,
+    "source": null,
+    "preprocessing": "only text passages extracted; lists, tables and headers ignored; document-level corpus used to get long contiguous sequences"
+   },
+   {
+    "name": "GLUE (MNLI, QQP, QNLI, SST-2, CoLA, STS-B, MRPC, RTE; WNLI excluded)",
+    "role": "both",
+    "size": "train examples: MNLI 392k, QQP 363k, QNLI 108k, SST-2 67k, CoLA 8.5k, STS-B 5.7k, MRPC 3.5k, RTE 2.5k",
+    "split": "Test scored by GLUE evaluation server (single submission per model); hyperparameters chosen on Dev",
+    "source": "Wang et al. 2018a",
+    "preprocessing": "WNLI excluded; majority class predicted for GLUE submission"
+   },
+   {
+    "name": "SQuAD v1.1",
+    "role": "both",
+    "size": "100k crowd-sourced question/answer pairs",
+    "split": "Dev and Test (leaderboard)",
+    "source": "Rajpurkar et al. 2016",
+    "preprocessing": null
+   },
+   {
+    "name": "TriviaQA (augmentation for SQuAD v1.1)",
+    "role": "train",
+    "size": null,
+    "split": null,
+    "source": "Joshi et al. 2017",
+    "preprocessing": "paragraphs from TriviaQA-Wiki formed of the first 400 tokens in documents that contain at least one provided possible answer; fine-tune on TriviaQA before SQuAD"
+   },
+   {
+    "name": "SQuAD v2.0",
+    "role": "both",
+    "size": null,
+    "split": "Dev and Test",
+    "source": "Rajpurkar et al. (SQuAD 2.0)",
+    "preprocessing": "no TriviaQA used"
+   },
+   {
+    "name": "SWAG",
+    "role": "both",
+    "size": "113k sentence-pair completion examples",
+    "split": "Dev and Test",
+    "source": "Zellers et al. 2018",
+    "preprocessing": null
+   },
+   {
+    "name": "CoNLL-2003 NER",
+    "role": "both",
+    "size": null,
+    "split": "Dev and Test",
+    "source": "Tjong Kim Sang and De Meulder 2003",
+    "preprocessing": "case-preserving WordPiece, maximal document context, first sub-token used for tagging, no CRF"
+   }
+  ],
+  "models": [
+   {
+    "name": "BERT-BASE",
+    "role": "proposed",
+    "params": "110M",
+    "architecture": "bidirectional Transformer encoder (Vaswani 2017, tensor2tensor); gelu activation",
+    "init_from": "random (pre-trained from scratch)",
+    "tokenizer": "WordPiece (Wu et al. 2016)",
+    "vocab": "30,000",
+    "layers": "12",
+    "hidden": "768",
+    "heads": "12",
+    "context": "512 tokens max",
+    "other": {
+     "feed_forward": "4H = 3072"
+    }
+   },
+   {
+    "name": "BERT-LARGE",
+    "role": "proposed",
+    "params": "340M",
+    "architecture": "bidirectional Transformer encoder; gelu",
+    "init_from": "random",
+    "tokenizer": "WordPiece",
+    "vocab": "30,000",
+    "layers": "24",
+    "hidden": "1024",
+    "heads": "16",
+    "context": "512 tokens max",
+    "other": {
+     "feed_forward": "4H = 4096"
+    }
+   },
+   {
+    "name": "OpenAI GPT",
+    "role": "baseline",
+    "params": "110M (same size as BERT-BASE, stated)",
+    "architecture": "left-to-right Transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "pretrain_data": "BooksCorpus 800M words",
+     "steps": "1M steps, batch 32,000 words",
+     "finetune_lr": "5e-5 for all tasks"
+    }
+   },
+   {
+    "name": "ELMo (BiLSTM+ELMo+Attn)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "concatenated independent left-to-right and right-to-left LSTMs, feature-based",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "Sum of mean masked-LM likelihood and mean next-sentence-prediction likelihood. MLM: 15% of WordPiece token positions chosen; of those 80% [MASK], 10% random token, 10% unchanged; cross entropy on original token. NSP: 50% B is the true next segment (IsNext), 50% random (NotNext), predicted from [CLS].",
+   "optimizer": "Adam, beta1=0.9, beta2=0.999",
+   "lr": "1e-4",
+   "lr_schedule": "linear decay",
+   "warmup": "10,000 steps",
+   "batch_size": "256 sequences (256 * 512 tokens = 128,000 tokens/batch)",
+   "steps": "1,000,000",
+   "epochs": "approximately 40 epochs over the 3.3 billion word corpus",
+   "tokens": "inferred: 1M steps * 128,000 tokens/batch = 128B tokens (the paper gives 128,000 tokens/batch and 1M steps)",
+   "seq_len": "combined length <=512 tokens; sequence length 128 for 90% of steps, 512 for last 10%",
+   "precision": null,
+   "weight_decay": "L2 weight decay of 0.01",
+   "dropout": "0.1 on all layers",
+   "regularisation": null,
+   "hardware": "BERT-BASE: 4 Cloud TPUs in Pod configuration (16 TPU chips); BERT-LARGE: 16 Cloud TPUs (64 TPU chips)",
+   "compute": null,
+   "wall_clock": "each pre-training took 4 days",
+   "seeds": null,
+   "other": {
+    "finetune_general": "batch size 16 or 32; Adam lr 5e-5/3e-5/2e-5; epochs 2/3/4; dropout 0.1; pick best on Dev",
+    "finetune_GLUE": "batch 32, 3 epochs, lr chosen from 5e-5,4e-5,3e-5,2e-5 on Dev; BERT-LARGE: several random restarts (same checkpoint, different shuffling and classifier init), best on Dev; single test submission each",
+    "finetune_SQuAD1.1": "3 epochs, lr 5e-5, batch 32; new start and end vectors S,E in R^H",
+    "finetune_SQuAD2.0": "2 epochs, lr 5e-5, batch 48; no-answer = span at [CLS]; predict non-null if s_hat > s_null + tau, tau tuned on dev for F1",
+    "finetune_SWAG": "3 epochs, lr 2e-5, batch 16; four sequences, one score vector dotted with C",
+    "finetune_cost": "all results replicable in at most 1 hour on a single Cloud TPU or a few hours on a GPU from the same pre-trained model; SQuAD model in about 30 minutes on a single Cloud TPU (Dev F1 91.0%)",
+    "NER_feature_based": "activations from BERT-BASE fed to randomly initialised two-layer 768-dim BiLSTM; NER results averaged over 5 random restarts",
+    "model_size_ablation": "Table 6 reports average Dev accuracy over 5 random restarts of fine-tuning"
+   }
+  },
+  "inference": {
+   "decoding": "SQuAD: maximum scoring span with j>=i, score S.Ti + E.Tj",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "SQuAD v1.1 ensemble is 7x systems with different pre-training checkpoints and fine-tuning seeds; NER averaged over 5 restarts",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "GLUE Test score",
+     "definition": "accuracy for most tasks, F1 for QQP and MRPC, Spearman for STS-B; Average excludes WNLI so differs from official GLUE score",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "SQuAD EM / F1",
+     "definition": "exact match and token-overlap F1 of predicted span",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "SWAG accuracy",
+     "definition": "choose most plausible of four continuations",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "CoNLL-2003 F1",
+     "definition": "NER F1",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "MLM held-out perplexity",
+     "definition": "masked LM perplexity of held-out training data",
+     "unit": "ppl",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "Pre-OpenAI SOTA",
+    "BiLSTM+ELMo+Attn",
+    "OpenAI GPT",
+    "SQuAD leaderboard systems (nlnet, QANet, BiDAF+ELMo, R.M. Reader)",
+    "ESIM+GloVe, ESIM+ELMo (SWAG)",
+    "ELMo, CVT, CSE (NER)"
+   ],
+   "protocol": "Single-task fine-tuning; hyperparameters picked on Dev; GLUE Test via single server submission per model; entries using BERT as a component excluded from comparisons."
+  },
+  "availability": {
+   "code": "https://github.com/google-research/bert",
+   "weights": "pre-trained models at same URL",
+   "data": "BooksCorpus and Wikipedia (public); exact Wikipedia snapshot not stated"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.batch_size",
+    "quote": "We train with batch size of 256 sequences (256 sequences * 512 tokens = 128,000 tokens/batch)",
+    "where": "Appendix A.2"
+   },
+   {
+    "field": "training.seq_len",
+    "quote": "we pre-train the model with sequence length of 128 for 90% of the steps",
+    "where": "Appendix A.2"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "BERT-LARGE reaches 80.5 GLUE leaderboard score, 7.7 points above prior SOTA.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GLUE score",
+   "value": 80.5,
+   "unit": "% GLUE score",
+   "baseline_value": 72.8,
+   "n": null,
+   "setup": "GLUE test, official leaderboard, BERT-LARGE single model, fine-tuned per task",
+   "note": "Abstract says 80.5% (7.7% point absolute); Table 1 average (excluding WNLI) is 82.1 for LARGE",
+   "where": "Abstract",
+   "quote": "pushing the GLUE score to",
+   "table": "Abstract; Sec 4.1 (OpenAI GPT 72.8 on leaderboard)"
+  },
+  {
+   "claim": "BERT-LARGE GLUE test average (excluding WNLI) vs OpenAI GPT.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GLUE avg",
+   "value": 82.1,
+   "unit": "% avg",
+   "baseline_value": 75.1,
+   "n": null,
+   "setup": "GLUE Test, single-model single-task",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row BERTLARGE, column Average"
+  },
+  {
+   "claim": "BERT-BASE GLUE test average.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GLUE avg",
+   "value": 79.6,
+   "unit": "% avg",
+   "baseline_value": 75.1,
+   "n": null,
+   "setup": "GLUE Test, single model",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row BERTBASE, column Average"
+  },
+  {
+   "claim": "BERT-LARGE MNLI-m test accuracy.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 86.7,
+   "unit": "% acc",
+   "baseline_value": 82.1,
+   "n": null,
+   "setup": "GLUE Test MNLI-m, BERT-LARGE",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row BERTLARGE, column MNLI-(m/mm)"
+  },
+  {
+   "claim": "BERT-LARGE ensemble + TriviaQA SQuAD v1.1 Test F1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 93.2,
+   "unit": "F1",
+   "baseline_value": 91.7,
+   "n": null,
+   "setup": "SQuAD v1.1 Test, 7-model ensemble, TriviaQA then SQuAD fine-tuning",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row BERTLARGE (Ens.+TriviaQA), column Test F1"
+  },
+  {
+   "claim": "BERT-LARGE single + TriviaQA SQuAD v1.1 Test F1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 91.8,
+   "unit": "F1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "SQuAD v1.1 Test, single model with TriviaQA",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row BERTLARGE (Sgl.+TriviaQA), column Test F1"
+  },
+  {
+   "claim": "Dropping TriviaQA costs only 0.1-0.4 F1 on SQuAD v1.1.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": "F1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "SQuAD v1.1",
+   "note": null,
+   "where": "Sec 4.2",
+   "quote": "we only lose 0.1-0.4 F1"
+  },
+  {
+   "claim": "BERT-LARGE single SQuAD v2.0 Test F1, +5.1 over previous best.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 83.1,
+   "unit": "F1",
+   "baseline_value": 78.0,
+   "n": null,
+   "setup": "SQuAD v2.0 Test, single model, no TriviaQA",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row BERTLARGE (Single), column Test F1"
+  },
+  {
+   "claim": "BERT-LARGE SWAG test accuracy vs OpenAI GPT.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 86.3,
+   "unit": "% acc",
+   "baseline_value": 78.0,
+   "n": null,
+   "setup": "SWAG Test",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row BERTLARGE, column Test"
+  },
+  {
+   "claim": "Removing NSP lowers QNLI Dev accuracy from 88.4 to 84.9.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 84.9,
+   "unit": "% acc",
+   "baseline_value": 88.4,
+   "n": null,
+   "setup": "BERT-BASE architecture, same data and hyperparameters, MNLI/QNLI/MRPC/SST-2/SQuAD Dev",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row No NSP, column QNLI"
+  },
+  {
+   "claim": "Left-to-right without NSP drops SQuAD F1 to 77.8 (BERT-BASE 88.5).",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 77.8,
+   "unit": "F1",
+   "baseline_value": 88.5,
+   "n": null,
+   "setup": "BERT-BASE arch, LTR LM, no NSP, Dev",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row LTR & No NSP, column SQuAD"
+  },
+  {
+   "claim": "LTR & No NSP drops MRPC accuracy to 77.5 (BERT-BASE 86.7).",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 77.5,
+   "unit": "% acc",
+   "baseline_value": 86.7,
+   "n": null,
+   "setup": "BERT-BASE arch, Dev",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row LTR & No NSP, column MRPC"
+  },
+  {
+   "claim": "Adding a randomly initialised BiLSTM to the LTR model lifts SQuAD F1 to 84.9, still below BERT-BASE.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 84.9,
+   "unit": "F1",
+   "baseline_value": 88.5,
+   "n": null,
+   "setup": "LTR & No NSP + BiLSTM, Dev",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row + BiLSTM, column SQuAD"
+  },
+  {
+   "claim": "Larger models improve MNLI-m Dev: 24L/1024H/16A gets 86.6 vs 77.9 for 3L/768H/12A.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 86.6,
+   "unit": "% acc",
+   "baseline_value": 77.9,
+   "n": null,
+   "setup": "Dev, avg of 5 fine-tuning restarts, same pre-training hyperparameters",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row 24 1024 16, column MNLI-m"
+  },
+  {
+   "claim": "Masked LM held-out perplexity falls from 5.84 (3 layers) to 3.23 (BERT-LARGE size).",
+   "kind": "measured",
+   "source": null,
+   "metric": "MLM perplexity",
+   "value": 3.23,
+   "unit": "ppl",
+   "baseline_value": 5.84,
+   "n": null,
+   "setup": "Table 6 model sizes",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row 24 1024 16, column LM (ppl)"
+  },
+  {
+   "claim": "Larger models help even MRPC with 3,600 labeled examples (87.8 vs 79.8 for the smallest).",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 87.8,
+   "unit": "% acc",
+   "baseline_value": 79.8,
+   "n": null,
+   "setup": "MRPC Dev, 24L model",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row 24 1024 16, column MRPC"
+  },
+  {
+   "claim": "Feature-based BERT-BASE NER (concat last four hidden layers) is 0.3 F1 behind fine-tuning.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 96.1,
+   "unit": "F1 Dev",
+   "baseline_value": 96.4,
+   "n": null,
+   "setup": "CoNLL-2003 NER Dev, 2-layer BiLSTM on frozen BERT-BASE features",
+   "note": null,
+   "where": "Table 7",
+   "table": "Table 7, row Concat Last Four Hidden, column Dev F1"
+  },
+  {
+   "claim": "BERT-LARGE fine-tuned CoNLL-2003 NER Test F1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 92.8,
+   "unit": "F1",
+   "baseline_value": 93.1,
+   "n": null,
+   "setup": "avg of 5 restarts",
+   "note": "Baseline is CSE (Akbik 2018) test F1",
+   "where": "Table 7",
+   "table": "Table 7, row BERTLARGE, column Test F1"
+  },
+  {
+   "claim": "Pre-training BERT-BASE for 1M rather than 500k steps gives almost 1.0% more MNLI accuracy.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": "% acc",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MNLI Dev after fine-tuning from k-step checkpoints (Fig 5)",
+   "note": null,
+   "where": "App C.1",
+   "quote": "BERTBASE achieves almost"
+  },
+  {
+   "claim": "Fine-tuning is robust to masking strategy: MNLI Dev 84.2 (80/10/10) vs 84.3 (100% MASK) vs 83.6 (100% random).",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 84.2,
+   "unit": "% acc",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BERT-BASE, MNLI Dev, Table 8",
+   "note": null,
+   "where": "Table 8",
+   "table": "Table 8, row 80% 10% 10%, column MNLI"
+  },
+  {
+   "claim": "Feature-based NER with 100% MASK gets 94.0 vs 94.9 for 80/10/10.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 94.0,
+   "unit": "F1",
+   "baseline_value": 94.9,
+   "n": null,
+   "setup": "NER Dev, concat last 4 layers",
+   "note": null,
+   "where": "Table 8",
+   "table": "Table 8, row 100% 0% 0%, column Feature-based"
+  },
+  {
+   "claim": "Final BERT achieves 97%-98% accuracy on NSP.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": "% acc",
+   "baseline_value": null,
+   "n": null,
+   "setup": "pre-trained model",
+   "note": null,
+   "where": "Footnote 5",
+   "quote": "The ﬁnal model achieves 97%-98% accuracy on NSP."
+  }
+ ],
+ "limits": [
+  "Only English; no multitask fine-tuning (footnote 14 notes it could help, e.g. RTE).",
+  "Pre-train/fine-tune mismatch from [MASK] mitigated by 80/10/10 but not eliminated; MLM converges slightly slower than LTR (App C.1).",
+  "Several differences from GPT beyond bidirectionality (data size, batch size, [CLS]/[SEP] at pre-training, per-task lr); ablation uses BERT-BASE-size models only.",
+  "BERT-LARGE fine-tuning unstable on small datasets; best of several restarts chosen on Dev.",
+  "SQuAD leaderboard comparisons are dated Dec 10th, 2018 and leaderboard systems lacked public descriptions.",
+  "Seeds, precision and total FLOPs not given; Wikipedia snapshot not stated."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Masked LM (MLM)",
+   "definition": "randomly mask some percentage of input tokens and predict the masked tokens; final hidden vectors at mask positions go to a softmax over the vocabulary",
+   "where": "Sec 3.1"
+  },
+  {
+   "term": "Next Sentence Prediction (NSP)",
+   "definition": "binarized task: 50% of the time B is the actual next sentence (IsNext), 50% a random sentence (NotNext)",
+   "where": "Sec 3.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Attention Is All You Need (Vaswani et al.)",
+   "year": 2017,
+   "arxiv": "1706.03762",
+   "relation": "extends",
+   "note": "BERT encoder follows the original Transformer implementation",
+   "quote": null
+  },
+  {
+   "work": "OpenAI GPT (Radford et al., Improving language understanding by generative pre-training)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "closest comparable left-to-right fine-tuning approach",
+   "quote": null
+  },
+  {
+   "work": "ELMo (Peters et al., Deep contextualized word representations)",
+   "year": 2018,
+   "arxiv": "1802.05365",
+   "relation": "baseline",
+   "note": "feature-based shallow bidirectional",
+   "quote": null
+  },
+  {
+   "work": "ULMFiT (Howard and Ruder)",
+   "year": 2018,
+   "arxiv": "1801.06146",
+   "relation": "related",
+   "note": "unsupervised fine-tuning approach",
+   "quote": null
+  },
+  {
+   "work": "Dai and Le, Semi-supervised sequence learning",
+   "year": 2015,
+   "arxiv": "1511.01432",
+   "relation": "related",
+   "note": "LM pre-training then fine-tuning",
+   "quote": null
+  },
+  {
+   "work": "Cloze task (Taylor)",
+   "year": 1953,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "inspiration for MLM",
+   "quote": null
+  },
+  {
+   "work": "WordPiece (Wu et al., GNMT)",
+   "year": 2016,
+   "arxiv": "1609.08144",
+   "relation": "uses-method",
+   "note": "tokenizer",
+   "quote": null
+  },
+  {
+   "work": "GELU (Hendrycks and Gimpel)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "activation",
+   "quote": null
+  },
+  {
+   "work": "BooksCorpus (Zhu et al.)",
+   "year": 2015,
+   "arxiv": "1506.06724",
+   "relation": "uses-data",
+   "note": "pre-training data",
+   "quote": null
+  },
+  {
+   "work": "GLUE (Wang et al.)",
+   "year": 2018,
+   "arxiv": "1804.07461",
+   "relation": "evaluates",
+   "note": "benchmark",
+   "quote": null
+  },
+  {
+   "work": "SQuAD v1.1 (Rajpurkar et al.)",
+   "year": 2016,
+   "arxiv": "1606.05250",
+   "relation": "evaluates",
+   "note": "benchmark",
+   "quote": null
+  },
+  {
+   "work": "SWAG (Zellers et al.)",
+   "year": 2018,
+   "arxiv": "1808.05326",
+   "relation": "evaluates",
+   "note": "benchmark",
+   "quote": null
+  },
+  {
+   "work": "Peters et al. 2018b; Melamud et al. 2016",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "contradicts",
+   "note": "earlier mixed results on scaling feature-based bi-LMs; BERT argues fine-tuning benefits from size",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Overall pre-training and fine-tuning procedures for BERT.",
+   "page": 2,
+   "why": "Shows same architecture for pre-training and fine-tuning with only output layers changing."
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "BERT input representation: sum of token, segment and position embeddings.",
+   "page": 4,
+   "why": "Shows input construction."
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Differences in pre-training model architectures (BERT, OpenAI GPT, ELMo).",
+   "page": 13,
+   "why": "Contrasts bidirectional Transformer, left-to-right Transformer and concatenated LSTMs."
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Ablation over number of training steps (MNLI Dev vs pre-training steps, MLM vs LTR).",
+   "page": 15,
+   "why": "MLM converges slightly slower but outperforms LTR almost immediately."
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 4.2",
+   "snippet": "score of span i..j = S·Ti + E·Tj, maximum with j>=i; P_i = exp(S·Ti)/sum_j exp(S·Tj)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "No embedded instructions found.",
+  "Text extraction splits tables into one value per line; table cells were checked by hand against Tables 1-8.",
+  "Abstract 80.5 GLUE score is the leaderboard score; Table 1 average (82.1) excludes WNLI."
+ ]
+}

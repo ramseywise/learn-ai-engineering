@@ -33,7 +33,7 @@ The tool interface is the part of an agent that most often decides whether the m
 
 Tool design follows **ACI principles — Agent-Computer Interface, not Application Programming Interface.** A tool is designed for a reader that has no documentation, no type hints, no autocomplete, and no ability to ask a follow-up question. It sees a name, a description, and a parameter schema.
 
-The term comes from SWE-agent ([arXiv:2405.15793](https://arxiv.org/abs/2405.15793), Yang et al., 2024-05), which measured it: the same GPT-4 Turbo resolved 18.0% of SWE-bench Lite through a purpose-built interface (a windowed file viewer, summarized search, an editor that lints every edit) against 11.0% through a plain Linux shell. Same model, same task; only the interface changed.
+The term comes from SWE-agent ([arXiv:2405.15793](https://arxiv.org/abs/2405.15793), Yang et al., 2024-05), which measured it: the same GPT-4 Turbo resolved 18.0% of SWE-bench Lite through a purpose-built interface (a windowed file viewer, summarized search, an editor that lints every edit) against 11.0% through a plain Linux shell.
 
 Consequences:
 
@@ -45,25 +45,25 @@ The debugging heuristic that follows:
 
 > When a tool is used wrongly, **check the tool description before questioning the model's capability.**
 
-Guo et al. ([arXiv:2602.20426](https://arxiv.org/abs/2602.20426) (Guo et al., 2026-02, preprint, Intuit AI Research)) measured how much this matters. Their opening case is a tool that "Fetches the year a particular scientific work was published": the agent passed "Law of Universal Gravitation" as `work_title`, and adding the words "full title" fixed it. On the multi-step queries of StableToolBench (764 solvable queries in all), with GPT-4.1 choosing the tools (teacher-forced, run count not stated), rewriting the original developer descriptions raised query-level success **from 33.5 to 41.5 with a guideline-based prompted rewrite** (the paper's D1, no execution traces, though its guidelines were tuned against agent performance) and to 44.6 with their fine-tuned 4B rewriter. On single-step queries there was almost nothing to gain (59.2 to 61.6). The rewrites kept adding the same five things, which work as a checklist: the scope, including when *not* to use the tool; dependencies on other tools; what the output contains; constraints on each parameter; and parameters that must or must not appear together. The test set is REST APIs only, the larger-catalog results are read off a figure where 90% of the extra tools are random, and the authors warn that the rewriter "may occasionally hallucinate constraints" the server doesn't enforce.
+Guo et al. ([arXiv:2602.20426](https://arxiv.org/abs/2602.20426), 2026-02, preprint, Intuit AI Research) measured how much this matters. Their opening case is a tool that "Fetches the year a particular scientific work was published": the agent passed "Law of Universal Gravitation" as `work_title`, and adding the words "full title" fixed it. On the multi-step queries of StableToolBench (764 solvable queries in all), with GPT-4.1 choosing the tools (teacher-forced, run count not stated), rewriting the original developer descriptions raised query-level success **from 33.5 to 41.5 with a guideline-based prompted rewrite** (the paper's D1, no execution traces, though its guidelines were tuned against agent performance) and to 44.6 with their fine-tuned 4B rewriter. On single-step queries there was almost nothing to gain (59.2 to 61.6). The rewrites kept adding the same five things, which work as a checklist: the scope, including when *not* to use the tool; dependencies on other tools; what the output contains; constraints on each parameter; and parameters that must or must not appear together. The test set is REST APIs only, the larger-catalog results are read off a figure where 90% of the extra tools are random, and the authors warn that the rewriter "may occasionally hallucinate constraints" the server doesn't enforce.
 
 ---
 
 ## The clarity test
 
-Anthropic's rule, and the sharpest available test for a tool set:
+Anthropic's test for a tool set:
 
 > **"If a human engineer can't definitively say which tool should be used in a given situation, an AI agent can't be expected to do better."**
 
 Hand your tool list to a colleague with no context, describe three realistic tasks, and ask which tool they'd reach for. Every hesitation is a bug in a description or an overlap that needs collapsing.
 
-Tools should be **"self-contained, robust to error, and extremely clear with respect to their intended use."** The dominant failure mode is **bloated tool sets with overlapping functionality** — and note that LangChain's Terminal Bench gain came partly from *reducing* tools. Subtraction is a legitimate optimization.
+Tools should be **"self-contained, robust to error, and extremely clear with respect to their intended use."** The dominant failure mode is **bloated tool sets with overlapping functionality**. LangChain's Terminal Bench gain came partly from *reducing* tools. Subtraction is a legitimate optimization.
 
 ---
 
 ## Capability form and granularity
 
-Before writing a description, decide what *kind* of capability this is. Li gives three calls:
+First decide what *kind* of capability this is. Li gives three calls:
 
 | Decision | Default | Exception |
 |---|---|---|
@@ -77,7 +77,7 @@ For strong current models the default has moved further toward the general execu
 
 An earlier result points the same way. OpenHands-Versa ([arXiv:2506.03011](https://arxiv.org/abs/2506.03011) (Soni et al., 2025-06, preprint, CMU / All Hands AI)) added general tools to OpenHands: API web search, visual browsing with a condenser that keeps only the latest page, and a file viewer that converts files to Markdown. It also added a periodic planning prompt. Holding claude-3.7-sonnet fixed, GAIA rose **from 37.21% to 51.16%** and TheAgentCompany from 26.29% to 30.86%, while SWE-Bench Multimodal stayed flat (31.72% vs. 31.33%). Results are pass@1 at temperature 0, and the run count isn't stated. The changes were never ablated one at a time, so the 13.9-point GAIA gain isn't attributed to any of them. What the paper does isolate is how much one tool's output quality matters. Swapping the search API from Brave's raw page snippets to Tavily's LLM-written summaries moved GAIA validation from 56.96% to 64.24%. Its comparisons against specialist multi-agent systems mix models, so they don't show that the architecture caused the gap.
 
-How well PTC works depends on how recent the model is. Patel et al. ([arXiv:2608.06370](https://arxiv.org/abs/2608.06370) (Patel et al., 2026-08, preprint, PwC)) exposed tools as typed Python stubs, had the model write one script calling them, and compared that with native JSON calls. The test was a 309-entry sample of BFCL v4 across 14 models, at temperature 0 (one pass per cell as far as the paper reports). PTC matched or beat JSON for 11 of the 14 models, including all five Anthropic models. GPT-4o, GPT-4.1 and GPT-5.4-mini fell 19.7 to 26.9 points behind, all for the same reason: they wrote a literal `\n` into multiline scripts, a syntax error the single-script setup couldn't recover from. **Averaged over all 14 models, the two were level (JSON 78.6, PTC 77.0).** Wide fan-out is where PTC helped. Claude Sonnet 5 making JSON calls fell from 100% at 70 parallel calls to 0% at 100, while one PTC script stayed at 100%. GPT-5.6-Sol held 100% under JSON, so the cliff isn't universal. Above about 26 calls, the script was also cheaper in tokens. The stubs only echo their arguments back, so the scorer checks serialization, not task success. In the authors' words, "we measure argument serialization accuracy, not end-to-end tool-use correctness".
+How well PTC works depends on how recent the model is. Patel et al. ([arXiv:2608.06370](https://arxiv.org/abs/2608.06370), 2026-08, preprint, PwC) exposed tools as typed Python stubs, had the model write one script calling them, and compared that with native JSON calls. The test was a 309-entry sample of BFCL v4 across 14 models, at temperature 0 (one pass per cell as far as the paper reports). PTC matched or beat JSON for 11 of the 14 models, including all five Anthropic models. GPT-4o, GPT-4.1 and GPT-5.4-mini fell 19.7 to 26.9 points behind, all for the same reason: they wrote a literal `\n` into multiline scripts, a syntax error the single-script setup couldn't recover from. **Averaged over all 14 models, the two were level (JSON 78.6, PTC 77.0).** Wide fan-out is where PTC helped. Claude Sonnet 5 making JSON calls fell from 100% at 70 parallel calls to 0% at 100, while one PTC script stayed at 100%. GPT-5.6-Sol held 100% under JSON, so the cliff isn't universal. Above about 26 calls, the script was also cheaper in tokens. The stubs only echo their arguments back, so the scorer checks serialization, not task success. In the authors' words, "we measure argument serialization accuracy, not end-to-end tool-use correctness".
 
 ---
 
@@ -93,7 +93,7 @@ Vercel Academy's tool description structure, which turns a one-liner into a deci
 | **DO NOT USE FOR** | Hard negatives — misuse patterns seen in practice |
 | **EXAMPLES** | Concrete invocations with realistic arguments |
 
-The two negative sections do the heavy lifting. Positive descriptions alone leave the model to infer boundaries between similar tools; explicit negatives are what disambiguate `search` from `grep` from `read`. Each entry in `DO NOT USE FOR` should be **ratchet output** — traceable to an actual observed misuse ([note 01](01-what-a-harness-is.md#the-ratchet)).
+The two negative sections do the heavy lifting: positives alone leave the model to infer boundaries, and explicit negatives disambiguate `search` from `grep` from `read`. Each entry in `DO NOT USE FOR` should be **ratchet output** — traceable to an actual observed misuse ([note 01](01-what-a-harness-is.md#the-ratchet)).
 
 Li adds three things the description must carry:
 
@@ -107,7 +107,7 @@ Structurally, separate the **contract** (schema + description) from the **execut
 
 ## The four gating questions
 
-Ask of every tool before it ships:
+Before a tool ships:
 
 1. **Reversible?** — can its effect be undone?
 2. **Idempotent?** — is calling it twice the same as once?
@@ -124,7 +124,7 @@ Ask of every tool before it ships:
 - **Side effects declared in the description**, not just implied by the name.
 - **Typed return structure** — never a bare string when the next step needs to branch on the result.
 - **Structured errors** with a stable `error_code`, plus `is_fatal` and `retry_after` where relevant. An error the agent can classify is an error it can recover from; a stringly-typed one forces guessing.
-- **Token-efficient returns.** Tools should "encourage efficient agent behavior by returning token-efficient information." Return the answer, not the raw dump — and offload the dump to disk with a path reference.
+- **Token-efficient returns.** Tools should "encourage efficient agent behavior by returning token-efficient information." Return the answer and offload the raw dump to disk with a path reference.
 
 ### Parameter fidelity
 

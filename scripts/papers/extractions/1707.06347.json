@@ -1,0 +1,149 @@
+{
+ "schema": 1,
+ "key": "1707.06347",
+ "pdf": "generative-ai/05-RL/sources/schulman-2017-proximal-policy-optimization-algorithms.pdf",
+ "bib": {
+  "title": "Proximal Policy Optimization Algorithms",
+  "authors": ["John Schulman", "Filip Wolski", "Prafulla Dhariwal", "Alec Radford", "Oleg Klimov"],
+  "first_author": "Schulman",
+  "year": 2017,
+  "venue": "preprint",
+  "arxiv": "1707.06347",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 27057,
+  "chars_total": 27057,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can a first-order policy gradient method reach the data efficiency and reliability of TRPO while allowing multiple epochs of minibatch updates on each batch of sampled data?",
+ "hypothesis": "A surrogate objective with clipped probability ratios gives a pessimistic (lower-bound) estimate of policy performance that keeps updates small enough to run several optimisation epochs per batch stably.",
+ "contributions": [
+  "A family of policy gradient methods (PPO) alternating between sampling and optimising a surrogate objective for multiple epochs of minibatch SGD",
+  "A clipped probability-ratio surrogate objective L^CLIP, plus an adaptive KL-penalty variant",
+  "Comparison of surrogate variants on 7 MuJoCo tasks, and of PPO against TRPO, CEM, vanilla PG, A2C, A2C+trust region, ACER on continuous control and Atari"
+ ],
+ "method": {
+  "summary": "PPO collects T timesteps from each of N parallel actors with the old policy, computes truncated GAE advantages, then optimises a clipped surrogate (optionally combined with value loss and entropy bonus) with minibatch SGD/Adam for K epochs. Variants with no clipping, fixed KL penalty and adaptive KL penalty are compared on 7 MuJoCo tasks; clipped PPO is then compared with other algorithms on MuJoCo, Roboschool humanoids and 49 Atari games.",
+  "task": "Deep reinforcement learning policy optimisation (continuous control and Atari)",
+  "trains": true,
+  "datasets": [
+    {"name": "OpenAI Gym MuJoCo -v1 (HalfCheetah, Hopper, InvertedDoublePendulum, InvertedPendulum, Reacher, Swimmer, Walker2d)", "role": "both", "size": "7 tasks, 1 million timesteps training each", "split": "3 random seeds per task per setting", "source": "OpenAI Gym [Bro+16], MuJoCo physics engine [TET12]", "preprocessing": null},
+    {"name": "Roboschool humanoid tasks (Humanoid-v0, HumanoidFlagrun-v0, HumanoidFlagrunHarder-v0)", "role": "both", "size": "up to 50M (Humanoid) / 100M (Flagrun tasks) timesteps, read from Fig 4 axes", "split": null, "source": "Roboschool", "preprocessing": null},
+    {"name": "Arcade Learning Environment (49 Atari games in OpenAI Gym)", "role": "both", "size": "49 games, 40M game frames (10M timesteps) each", "split": "3 seeds per game", "source": "Bellemare et al. 2015", "preprocessing": null}
+  ],
+  "models": [
+    {"name": "PPO MuJoCo policy", "role": "proposed", "params": null, "architecture": "fully-connected MLP, two hidden layers of 64 units, tanh, outputs mean of a Gaussian with variable standard deviations; separate value function (no parameter sharing)", "init_from": null, "tokenizer": null, "vocab": null, "layers": "2 hidden", "hidden": "64", "heads": null, "context": null, "other": {"entropy_bonus": "none in MuJoCo experiments", "c1": "irrelevant (no sharing)"}},
+    {"name": "PPO Atari policy", "role": "proposed", "params": null, "architecture": "same policy network architecture as Mnih et al. 2016 (A2C)", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+    {"name": "TRPO, CEM, vanilla PG (adaptive stepsize), A2C, A2C+trust region, ACER", "role": "baseline", "params": null, "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"tuning": "tuned implementations; Atari baseline hyperparameters tuned to maximise performance on the benchmark (values not given)"}}
+  ],
+  "training": {
+   "objective": "L^CLIP+VF+S = E_t[L^CLIP - c1 L^VF + c2 S[pi_theta](s_t)], with L^CLIP = E_t[min(r_t A_t, clip(r_t, 1-eps, 1+eps) A_t)], eps e.g. 0.2; L^VF = (V_theta(s_t) - V_targ_t)^2; advantages by truncated GAE",
+   "optimizer": "Adam (minibatch SGD in the algorithm statement)",
+   "lr": "MuJoCo: 3e-4 (Adam stepsize); Atari: 2.5e-4 x alpha; Roboschool: adjusted from KL target (no value)",
+   "lr_schedule": "Atari: alpha linearly annealed from 1 to 0 over learning (also scales epsilon = 0.1 x alpha); Roboschool log stdev of action distribution LinearAnneal(-0.7, -1.6)",
+   "warmup": null,
+   "batch_size": "minibatch M <= NT; MuJoCo 64; Roboschool 4096; Atari 32 x 8",
+   "steps": "MuJoCo 1M timesteps; Atari 40M frames (10M timesteps); Roboschool up to 100M timesteps (read from Fig 4)",
+   "epochs": "K epochs per batch: MuJoCo 10, Roboschool 15, Atari 3",
+   "tokens": null,
+   "seq_len": "horizon T: MuJoCo 2048, Roboschool 512, Atari 128",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "entropy bonus c2 = 0.01 (Atari only); clipping eps; optional KL penalty",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": "3 random seeds per environment (MuJoCo and Atari)",
+   "other": {
+     "gamma": "0.99 in all three tables",
+     "gae_lambda": "0.95 in all three tables",
+     "actors_N": "Roboschool 32 (locomotion), 128 (flagrun); Atari 8; MuJoCo not stated",
+     "c1_atari": "1",
+     "adaptive_kl": "if d < dtarg/1.5 then beta <- beta/2; if d > dtarg x 1.5 then beta <- beta x 2; beta initialised at 1 in Table 1 experiments; factors 1.5 and 2 chosen heuristically",
+     "hyperparameter_search": "epsilon and KL (beta, dtarg) searched over in Sec 6.1; search procedure not described"
+   }
+  },
+  "inference": {
+   "decoding": null, "temperature": null, "top_p": null, "max_tokens": null,
+   "samples": "3 seeds per env; Table 1 averages 21 runs (7 envs x 3 seeds)",
+   "prompting": null, "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "avg. normalized score (MuJoCo)", "definition": "per run, average total reward of last 100 episodes; per environment scores shifted and scaled so random policy = 0 and best result = 1; averaged over 21 runs", "unit": "normalized score", "higher_is_better": true},
+    {"name": "Atari avg episode reward over all of training", "definition": "average reward per episode over the entire training period (favours fast learning)", "unit": "game score", "higher_is_better": true},
+    {"name": "Atari avg episode reward over last 100 episodes", "definition": "average reward per episode over last 100 episodes of training (favours final performance)", "unit": "game score", "higher_is_better": true},
+    {"name": "games won", "definition": "number of games in which an algorithm has the best metric, averaged across three trials", "unit": "count of 49 games", "higher_is_better": true}
+   ],
+   "baselines": ["No clipping or penalty", "Fixed KL penalty", "Adaptive KL penalty", "TRPO", "CEM", "Vanilla policy gradient with adaptive stepsize", "A2C", "A2C with trust region", "ACER"],
+   "protocol": "3 seeds per environment; no significance test stated"
+  },
+  "availability": {"code": null, "weights": null, "data": null},
+  "prompts": [],
+  "evidence": [
+   {"field": "training.other.hyperparameter_search", "quote": "Besides the hyperparameters used for clipping (ϵ) and the KL penalty (β, dtarg), which we search over", "where": "Sec 6.1"},
+   {"field": "training.batch_size", "quote": "Minibatch size 32 × 8", "where": "Table 5"}
+  ]
+ },
+ "results": [
+  {"claim": "Clipped surrogate with eps = 0.2 gives the best average normalized score of all surrogate variants on 7 MuJoCo tasks.", "kind": "measured", "source": null, "metric": "avg. normalized score", "value": "0.82", "unit": "normalized score", "baseline_value": "0.74 (best adaptive KL, dtarg=0.01); 0.72 (best fixed KL, beta=3)", "n": "21 runs", "setup": "7 MuJoCo -v1 tasks, 1M timesteps, 3 seeds each, MLP 64x64 tanh, Table 3 hyperparameters", "table": "Table 1, row Clipping, eps = 0.2, column avg. normalized score", "note": null, "where": "Sec 6.1, Table 1"},
+  {"claim": "Clipping eps = 0.1 and 0.3 score lower than 0.2.", "kind": "measured", "source": null, "metric": "avg. normalized score", "value": "0.76 (eps 0.1); 0.70 (eps 0.3)", "unit": "normalized score", "baseline_value": null, "n": "21 runs", "setup": "as Table 1", "table": "Table 1, rows Clipping eps = 0.1 and eps = 0.3", "note": null, "where": "Table 1"},
+  {"claim": "Without clipping or penalty, the score is negative because HalfCheetah ends worse than the random policy.", "kind": "measured", "source": null, "metric": "avg. normalized score", "value": "-0.39", "unit": "normalized score", "baseline_value": null, "n": "21 runs", "setup": "as Table 1", "table": "Table 1, row No clipping or penalty", "note": null, "where": "Sec 6.1, Table 1"},
+  {"claim": "Adaptive KL penalty scores 0.68, 0.74, 0.71 for dtarg 0.003, 0.01, 0.03.", "kind": "measured", "source": null, "metric": "avg. normalized score", "value": "0.74 (dtarg=0.01, best)", "unit": "normalized score", "baseline_value": null, "n": "21 runs", "setup": "as Table 1, beta initialised at 1", "table": "Table 1, rows Adaptive KL dtarg = 0.003 / 0.01 / 0.03", "note": null, "where": "Table 1"},
+  {"claim": "Fixed KL penalty scores 0.62, 0.71, 0.72, 0.69 for beta 0.3, 1, 3, 10.", "kind": "measured", "source": null, "metric": "avg. normalized score", "value": "0.72 (beta=3, best)", "unit": "normalized score", "baseline_value": null, "n": "21 runs", "setup": "as Table 1", "table": "Table 1, rows Fixed KL, beta = 0.3 / 1. / 3. / 10.", "note": null, "where": "Table 1"},
+  {"claim": "On Atari, PPO wins more games than A2C and ACER on average reward over all of training (fast learning).", "kind": "measured", "source": null, "metric": "games won of 49", "value": "30", "unit": "games", "baseline_value": "ACER 18, A2C 1", "n": "49 games", "setup": "Atari 49 games, 40M frames, 3 trials averaged, Table 5 hyperparameters", "table": "Table 2, row (1) avg. episode reward over all of training, column PPO", "note": null, "where": "Sec 6.4, Table 2"},
+  {"claim": "On final performance (last 100 episodes) ACER wins more games than PPO.", "kind": "measured", "source": null, "metric": "games won of 49", "value": "28", "unit": "games", "baseline_value": "PPO 19, A2C 1, Tie 1", "n": "49 games", "setup": "as above", "table": "Table 2, row (2) avg. episode reward over last 100 episodes, column ACER", "note": "Value is ACER's; the abstract says PPO performs 'similarly to ACER' on Atari", "where": "Sec 6.4, Table 2"},
+  {"claim": "PPO (clipped) outperforms TRPO, CEM, vanilla PG, A2C and A2C+trust region on almost all MuJoCo environments within 1M timesteps.", "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "7 MuJoCo tasks, eps = 0.2, Table 3 hyperparameters; shown only as learning curves", "quote": null, "table": null, "note": "Curves only, no numbers in text", "where": "Sec 6.2, Fig 3"},
+  {"claim": "The first PPO policy update on Hopper-v1 has KL of about 0.02 from the initial policy, where L^CLIP is maximal.", "kind": "measured", "source": null, "metric": "KL divergence", "value": "0.02", "unit": "nats (unit not stated)", "baseline_value": null, "n": 1, "setup": "first policy update on Hopper-v1, Sec 6.1 hyperparameters, interpolation between theta_old and updated theta", "quote": "The updated policy has a KL divergence of about 0.02 from the initial policy, and this is the point at which LCLIP is maximal.", "table": null, "note": null, "where": "Fig 2 caption"},
+  {"claim": "Per-game Atari mean final scores (last 100 episodes, 40M frames) for 49 games; PPO example: Zaxxon 5008.7 vs A2C 16.3 and ACER 29.0, but Gopher PPO 2932.9 vs ACER 37802.3.", "kind": "measured", "source": null, "metric": "mean final score", "value": "5008.7", "unit": "game score", "baseline_value": "A2C 16.3; ACER 29.0", "n": "3 seeds", "setup": "Zaxxon, 40M game frames", "table": "Table 6, row Zaxxon, column PPO", "note": "Table 6 caption says 'PPO and A2C' but also includes ACER", "where": "Appendix B, Table 6"}
+ ],
+ "limits": [
+  "Clipping epsilon and KL settings were searched on only 7 MuJoCo tasks with 3 seeds each at 1M timesteps.",
+  "No significance tests; baselines are 'tuned' but their hyperparameters are not given.",
+  "On final Atari performance ACER wins more games (28 vs 19); PPO's edge is sample efficiency (fast learning).",
+  "Claims of better wall-time, simplicity and robustness are stated without timing or compute figures.",
+  "Hardware, compute, wall-clock and number of actors for MuJoCo are not stated.",
+  "Multiple-epoch updates on plain L^PG are said to cause destructively large updates, but those results are not shown."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "Probability ratio r_t(theta)", "definition": "pi_theta(a_t | s_t) / pi_theta_old(a_t | s_t), so r(theta_old) = 1", "where": "Sec 3"},
+  {"term": "L^CPI", "definition": "conservative policy iteration surrogate E_t[r_t(theta) A_t]", "where": "Sec 3"}
+ ],
+ "lineage": [
+  {"work": "Trust region policy optimization (Schulman et al. 2015)", "year": 2015, "arxiv": "1502.05477", "relation": "extends", "note": "PPO aims for TRPO reliability with first-order optimisation; also a tuned baseline", "quote": null},
+  {"work": "Approximately optimal approximate reinforcement learning (Kakade and Langford 2002)", "year": 2002, "arxiv": null, "relation": "uses-method", "note": "origin of conservative policy iteration surrogate L^CPI", "quote": null},
+  {"work": "High-dimensional continuous control using generalized advantage estimation (Schulman et al. 2015)", "year": 2015, "arxiv": "1506.02438", "relation": "uses-method", "note": "truncated GAE for advantages", "quote": null},
+  {"work": "Asynchronous methods for deep reinforcement learning (Mnih et al. 2016)", "year": 2016, "arxiv": "1602.01783", "relation": "baseline", "note": "A2C baseline, fixed-length segment style, Atari network", "quote": null},
+  {"work": "Sample Efficient Actor-Critic with Experience Replay (Wang et al. 2016)", "year": 2016, "arxiv": "1611.01224", "relation": "baseline", "note": "ACER; also A2C with trust region", "quote": null},
+  {"work": "Szita and Lorincz 2006, noisy cross-entropy method", "year": 2006, "arxiv": null, "relation": "baseline", "note": "CEM baseline", "quote": null},
+  {"work": "Benchmarking Deep Reinforcement Learning for Continuous Control (Duan et al. 2016)", "year": 2016, "arxiv": "1604.06778", "relation": "uses-method", "note": "policy parameterisation convention", "quote": null},
+  {"work": "OpenAI Gym (Brockman et al. 2016)", "year": 2016, "arxiv": "1606.01540", "relation": "uses-data", "note": "MuJoCo tasks", "quote": null},
+  {"work": "Arcade Learning Environment (Bellemare et al. 2015)", "year": 2015, "arxiv": null, "relation": "uses-data", "note": "Atari benchmark", "quote": null},
+  {"work": "Emergence of Locomotion Behaviours in Rich Environments (Heess et al. 2017)", "year": 2017, "arxiv": "1707.02286", "relation": "related", "note": "concurrent work using adaptive KL PPO", "quote": null},
+  {"work": "Adam (Kingma and Ba 2014)", "year": 2014, "arxiv": "1412.6980", "relation": "uses-method", "note": "optimizer", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 1", "caption": "Plots showing one term (i.e., a single timestep) of the surrogate function L^CLIP as a function of the probability ratio r, for positive advantages (left) and negative advantages (right).", "page": 3, "why": "Shows where the clip removes incentive for each sign of advantage."},
+  {"figure": "Fig 2", "caption": "Surrogate objectives, as we interpolate between the initial policy parameter theta_old, and the updated policy parameter, computed after one iteration of PPO.", "page": 4, "why": "Shows L^CLIP as a lower bound on L^CPI peaking at KL about 0.02."},
+  {"figure": "Fig 3", "caption": "Comparison of several algorithms on several MuJoCo environments, training for one million timesteps.", "page": 7, "why": "Learning curves behind the continuous-control claim."},
+  {"figure": "Table 1", "caption": "Results from continuous control benchmark. Average normalized scores (over 21 runs of the algorithm, on 7 environments) for each algorithm / hyperparameter setting.", "page": 6, "why": "Ablation of clip vs KL vs none."}
+ ],
+ "code": [
+  {"where": "Eq 7, Sec 3", "snippet": "LCLIP(θ) = Ê_t[ min(r_t(θ) Â_t, clip(r_t(θ), 1−ϵ, 1+ϵ) Â_t) ]", "verbatim": false},
+  {"where": "Algorithm 1, Sec 5", "snippet": "for iteration=1,2,... do: for actor=1..N: run policy πθold for T timesteps, compute advantage estimates Â_1..Â_T; optimize surrogate L wrt θ with K epochs and minibatch size M ≤ NT; θold ← θ", "verbatim": false}
+ ],
+ "problems": [
+  "Lineage arXiv ids for GAE, A2C/A3C, ACER, Duan et al., Gym, Heess et al., Adam are printed in the PDF reference list; TRPO is given as CoRR abs/1502.05477 so the arxiv field is left null per instruction to avoid filling from memory beyond what is printed (the id is in the quote).",
+  "Text extraction garbles equations and figure axes; Fig 3, 4 and 6 are curves with no extractable numbers.",
+  "Table 6 caption mentions only PPO and A2C but the table has an ACER column."
+ ]
+}

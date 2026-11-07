@@ -22,7 +22,7 @@ A multi-agent system has two failure surfaces that a single quality score can't 
 
 Strand A seeds its rows from queries that sit on routing boundaries. Strand F seeds from typical domain tasks and assumes routing is correct. Each dataset covers what the other misses.
 
-**Why this was non-obvious.** The existing evals measured retrieval (MRR, P@k) and answer quality (grounding, completeness). Neither catches *right answer, wrong tool path* or *routed to the wrong sub-agent*, so those failures were invisible to every grader the team had. This is the trajectory-vs-outcome split of [06](06-evaluating-agents.md#routing-vs-domain-evals-in-multi-agent-systems) applied to a router.
+**Why this was non-obvious.** The existing evals measured retrieval (MRR, P@k) and answer quality (grounding, completeness). Neither catches *right answer, wrong tool path* or *routed to the wrong sub-agent*, so those failures were invisible to every grader the team had. This is the trajectory-vs-outcome split of [06](06b-components-trials-and-cost.md#routing-vs-domain-evals-in-multi-agent-systems) applied to a router.
 
 A domain-eval row carries its expected trajectory and its expected structured output:
 

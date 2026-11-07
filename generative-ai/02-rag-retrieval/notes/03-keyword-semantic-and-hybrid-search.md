@@ -26,7 +26,7 @@ cleaned: 2026-11-01
 ---
 # 3 — Keyword, semantic and hybrid search
 
-A Tallybook customer pastes `X-Tally-Signature` into the help widget, and an embedding search can answer with pages that merely feel related, because an identifier carries little meaning for a model to embed. Another asks "can I get my money back?" and keyword search returns nothing useful, because the refund page never says "money" or "back". Each method fails where the other is strong. If you pick one, you get a retriever that looks fine on your favourite test queries and fails on a whole class of real ones. This chapter builds both, fuses them and measures the result, so you can see the blind spots instead of arguing about them.
+A Tallybook customer pastes `X-Tally-Signature` into the help widget, and an embedding search can answer with pages that merely feel related, because an identifier carries little meaning for a model to embed. Another asks "can I get my money back?" and keyword search returns nothing useful, because the refund page never says "money" or "back". Each method fails where the other is strong. Pick one and the retriever passes your favourite test queries and fails a whole class of real ones. This chapter builds both, fuses them and measures the blind spots.
 
 > A retriever ranks documents. Keyword search (TF-IDF, BM25) ranks by shared words, semantic search ranks by embedding distance, metadata filters cut the set without ranking, and hybrid search fuses the rankings with RRF. Precision, recall, MAP and MRR tell you which one is working.
 
@@ -40,7 +40,7 @@ A Tallybook customer pastes `X-Tally-Signature` into the help widget, and an emb
 | **Semantic search** | Meaning (embedding similarity) | Paraphrase, "something like X" | Exact identifiers, negation |
 | **Metadata filtering** | Structured fields | Hard constraints: region, tier, date | Anything fuzzy — it is not search |
 
-Production retrievers run all three. Note [01 § hybrid retrieval](01-rag-pipeline.md#hybrid-retrieval) places them in the pipeline. The theory lives in [ai-engineering 02 — retrieval](../../../ai-engineering/02-context-engineering/notes/04-retrieval.md). This note keeps the course's numbers and lab code.
+Production retrievers run all three. Note [01 § hybrid retrieval](01-rag-pipeline.md#hybrid-retrieval) places them in the pipeline; the theory is in [ai-engineering 02 — retrieval](../../../ai-engineering/02-context-engineering/notes/04-retrieval.md).
 
 ---
 
@@ -87,7 +87,7 @@ BM25 is TF-IDF with two tunable fixes, and it is still the default keyword score
 | **k1** term saturation | 1.2–2.0 | Diminishing returns on repeats. The course's slide says a doc with "pizza" 20 times scores about 1.3× one with it 10 times, not 2×. The formula below gives less than that: about 1.07× at k1=1.5 for documents of average length |
 | **b** length normalisation | 0–1 (0.75 common) | How much to penalise long docs. b = 0 ignores length |
 
-Raieli and Iuculano give the same defaults: b = 0.75 and k between 1.2 and 2 (*Building AI Agents*, ch. 5). The ranges come from experiment, not theory. BM25's authors say the model "provides no guidance" on k1 and b, and that 0.5 < b < 0.8 and 1.2 < k1 < 2 "are reasonably good in many circumstances", though the best values depend on the documents and queries. Both knobs have a model behind them. k1 shapes a curve, tf/(k1 + tf), fitted to the saturating weight that Harter's 2-Poisson model of "elite" terms predicts. b blends two views of a long document: it is verbose (normalise fully, b = 1), or it covers more topics (don't normalise, b = 0) ([Robertson & Zaragoza, *Foundations and Trends in IR* 2009](https://doi.org/10.1561/1500000019)). An edge case makes saturation clear: push k to 0 and the term-frequency factor collapses to 1, so BM25 scores only whether each query term is present.
+Raieli and Iuculano give the same defaults (*Building AI Agents*, ch. 5). The ranges come from experiment, not theory. BM25's authors say the model "provides no guidance" on k1 and b, and that 0.5 < b < 0.8 and 1.2 < k1 < 2 "are reasonably good in many circumstances", though the best values depend on the documents and queries. Both knobs have a model behind them. k1 shapes a curve, tf/(k1 + tf), fitted to the saturating weight that Harter's 2-Poisson model of "elite" terms predicts. b blends two views of a long document: it is verbose (normalise fully, b = 1), or it covers more topics (don't normalise, b = 0) ([Robertson & Zaragoza, *Foundations and Trends in IR* 2009](https://doi.org/10.1561/1500000019)). An edge case makes saturation clear: push k to 0 and the term-frequency factor collapses to 1, so BM25 scores only whether each query term is present.
 
 Why keyword search survives: it is cheap, interpretable, needs no model, and nails exact matches that embeddings blur. Huyen's example is an error code. A user searching for `EADDRNOTAVAIL (99)` wants documents containing exactly that string, and an embedding retriever may return generic networking pages instead. She also quotes Perplexity's CEO saying BM25 remains a hard baseline to beat (*AI Engineering*, ch. 6).
 
@@ -108,8 +108,6 @@ IDF(t)      = ln((N − df + 0.5) / (df + 0.5) + 1)
 ```
 
 - **The `(k1 + 1)` in the numerator** is a common variant. It multiplies every term by the same constant, so it doesn't change the ranking (Robertson & Zaragoza, 2009).
-- **`k1` saturates term frequency.** The 20th mention adds far less than the 2nd, so a long document can't win by repetition. Typical values are 1.2–2.0.
-- **`b` normalises for length.** `b=0` ignores length; `b=1` normalises fully. The usual default is 0.75.
 - **The `+ 1` inside the log** is the Lucene variant. It keeps IDF positive for terms that appear in more than half the documents. Li's worked example uses the classic form without it, so his numbers come out slightly lower.
 
 ```python
@@ -173,7 +171,7 @@ Three things to read off the output:
 - **Codes survive tokenisation.** `HTTP-403` stays one token and hits doc 1 exactly, which is what dense search tends to blur.
 - **The blind spot.** "forbidden error" never reaches doc 1, the actual 403 incident, and it matches doc 3 on "forbidden" alone: "error" ≠ "errors", with no stemming and no synonyms. That gap is what the dense half and the reranker fill.
 
-To build intuition, sweep `k1 ∈ {0.5, 1.2, 2.0}` and `b ∈ {0, 0.75, 1}` on a corpus with one very long document and watch its rank move. To see the sparse half of [contextual retrieval](../../../ai-engineering/02-context-engineering/notes/04-retrieval.md#contextual-retrieval), prefix a chunk with "ACME Corp 2025 Q2 financial report:" and query "ACME revenue". The fuller engine, with an inverted index, debug logging and tests, is upstream: Li, *AI Agents in Depth*, [Experiment 3-5 sparse-embedding](https://github.com/bojieli/ai-agent-book/tree/main/chapter3/sparse-embedding) (Apache-2.0).
+Sweep `k1 ∈ {0.5, 1.2, 2.0}` and `b ∈ {0, 0.75, 1}` on a corpus with one very long document and watch its rank move. To see the sparse half of [contextual retrieval](../../../ai-engineering/02-context-engineering/notes/04-retrieval.md#contextual-retrieval), prefix a chunk with "ACME Corp 2025 Q2 financial report:" and query "ACME revenue". The fuller engine, with an inverted index, debug logging and tests, is upstream: Li, *AI Agents in Depth*, [Experiment 3-5 sparse-embedding](https://github.com/bojieli/ai-agent-book/tree/main/chapter3/sparse-embedding) (Apache-2.0).
 
 Saturation is easy to check against the slide's claim. Holding length at the average, the term-frequency factor is `tf * (k1 + 1) / (tf + k1)`:
 
@@ -198,7 +196,7 @@ The slide's 1.3× needs a k1 near 8.6, far outside the usual range. At normal se
 
 ### A library version
 
-Use a library once you are past the idea. The course uses `bm25s`, which tokenises for you, so the corpus goes in as strings:
+Past the idea, use a library. The course uses `bm25s`, which tokenises for you, so the corpus goes in as strings:
 
 ```python
 import bm25s
@@ -230,7 +228,7 @@ reverse a sent invoice -> ['kb-09', 'kb-08', 'kb-17']
 
 ## Semantic search
 
-An **embedding model** maps text to a dense vector so that similar meanings land close together. It learns this by **contrastive training**: pull positive pairs (question, its answer) together and push negative pairs apart, over millions of examples. See [LLM embeddings as features](../../../data-science/03-nlp/notes/07-llm-embeddings-as-features.md#what-a-sentence-embedding-is) in data science for what a sentence embedding is.
+An **embedding model** maps text to a dense vector so that similar meanings land close together. It learns by **contrastive training**: pull positive pairs (a question and its answer) together and push negatives apart. See [LLM embeddings as features](../../../data-science/03-nlp/notes/07-llm-embeddings-as-features.md#what-a-sentence-embedding-is) in data science for what a sentence embedding is.
 
 ### Distance measures
 
@@ -260,9 +258,7 @@ normalised cosine=1.000  euclidean=0.0  dot=1.000
 ![Two vectors [10,10] and [100,100] on the same direction: cosine similarity 1 despite very different lengths, angle θ between direction lines](../sources/images/hasan-dlai-rag-cosine.png)
 *Image Source: Hasan, DeepLearning.AI RAG course, Module 2*
 
-A correction to one book: the *LLM Engineer's Handbook* (ch. 4) says cosine distance ranges from −1 to 1. That is the range of cosine *similarity*. Cosine distance, 1 − similarity, ranges from 0 to 2. *Prompt Engineering for GenAI* (ch. 5) makes the same slip, calling cosine similarity "a measure of distance": higher similarity means *closer*. Check which one a library returns before setting a threshold. A FAISS `IndexFlatL2`, for instance, returns squared L2 distances ([04](04-vector-databases-and-ann.md)).
-
-Rule: **only compare vectors from the same model**. Two models' spaces are unrelated, even at the same dimension.
+A correction to two books: the *LLM Engineer's Handbook* (ch. 4) gives cosine distance a range of −1 to 1, which is the range of *similarity*; distance, 1 − similarity, runs from 0 to 2. *Prompt Engineering for GenAI* (ch. 5) calls similarity "a measure of distance", though higher similarity means *closer*. Check which one a library returns before setting a threshold. A FAISS `IndexFlatL2`, for instance, returns squared L2 distances ([04](04-vector-databases-and-ann.md)).
 
 The course's version loads a corpus it ships pre-embedded:
 
@@ -289,7 +285,7 @@ A trap the assignment surfaces: **bge-base-en-v1.5 truncates at 512 tokens**. Em
 
 ### A real embedder on the same questions
 
-The toy embedder in `ragkit` is hand-built. It's fair to ask what a real model does on the same 20 questions. This block downloads `BAAI/bge-small-en-v1.5` (384 dimensions, about 64 MB) through `fastembed` on first run, and then needs no network or API key:
+The `ragkit` embedder is hand-built, so here is a real model on the same 20 questions. This block downloads `BAAI/bge-small-en-v1.5` (384 dimensions, about 64 MB) through `fastembed` on first run, and then needs no network or API key:
 
 ```python
 import numpy as np
@@ -323,8 +319,6 @@ bge-small     {'recall@3': 0.95, 'mrr': 0.91, 'ndcg@3': 0.91} {'code': 1.0, 'key
 bm25+bge rrf  {'recall@3': 0.95, 'mrr': 0.84, 'ndcg@3': 0.86} {'code': 1.0, 'keyword': 1.0, 'paraphrase': 0.9}
 ```
 
-Three things to notice, and one to distrust.
-
 - BM25 aces the codes and keywords and falls to 0.2 on paraphrase. That is its documented blind spot, reproduced.
 - The real model is far stronger than the expectation "embeddings blur codes". It found every code here. Eighteen pages is an easy haystack: nothing else on the corpus looks like `BANK-112`. In a corpus with thousands of near-identical error pages, that advantage shrinks, which is Huyen's `EADDRNOTAVAIL` point above.
 - RRF did not raise recall@3 over bge-small alone, and it lowered MRR, because the BM25 list pushes weak candidates up for paraphrase questions. Hybrid is an insurance policy against the failure you have not seen yet. It isn't a free win at every corpus size, so measure on your own labelled set.
@@ -337,12 +331,12 @@ Raieli and Iuculano cover the training side (*Building AI Agents*, ch. 5):
 - **Two ways to score.** A *cross-encoder* reads `[CLS] query [SEP] document` and scores the pair. It is accurate, but the query and document together must fit BERT's 512 tokens, and every pair is a forward pass. A *bi-encoder* embeds each side once, so document vectors can be precomputed.
 - **Training data and losses.** Bi-encoders are trained on labelled pairs; MultiNLI (433K sentence pairs) is the classic source. A cosine-similarity loss regresses on graded labels. *Multiple negatives ranking loss* (InfoNCE) uses only positive pairs and treats the other answers in the batch as negatives. Random negatives are too easy. *Hard negatives*, passages that look relevant but aren't, teach the boundary, though [how many and how hard is a measured question](../../../data-science/05-time-series-and-recommenders/notes/05-learning-a-similarity-function.md#mining-hard-negatives).
 - **Training a retriever without labelled passages.** ORQA pretrained a BERT retriever on the *inverse cloze task*. A random sentence stands in for the question, and the model must pick the passage it came from out of the other passages in the batch. The sentence is left in its passage 10% of the time. On the Natural Questions dev set, removing it always cost almost 10 exact-match points, because the model never learned that shared words are a strong signal, and never removing it performed about as well as BM25. Only the question encoder was then fine-tuned, on question–answer pairs alone, so the 13M Wikipedia blocks were encoded once with the pretrained block encoder and indexed. It beat BM25 by 6–19 exact-match points on Natural Questions, WebQuestions and CuratedTrec. It lost on TriviaQA and SQuAD, whose question writers already knew the answer, and lost badly on SQuAD's test set (20.2 vs 33.2), where they had the passage in front of them. On SQuAD dev the gap was small (26.5 vs 28.1), and the authors blame the drop partly on the dataset, whose 100k questions come from only 536 documents. The authors put the loss down to a 128-d vector, sized so the model fits on one machine, that "cannot match BM25's ability to precisely represent every word", and name a dense–sparse hybrid as future work ([arXiv:1906.00300](https://arxiv.org/abs/1906.00300), Lee et al., ACL 2019). The scores are end-to-end exact match only, with the same reader behind every retriever; no retrieval recall is reported.
-- **The result that made dense retrieval the default.** DPR trained two BERT-base encoders on question–passage pairs and searched 21M 100-word Wikipedia passages by dot product. It found a passage containing the answer in the top 20 for 78.4% of Natural Questions test questions, against 59.1% for BM25, and beat BM25 by 9–19 points at top 20 on four of five QA sets. A thousand training pairs were enough to beat BM25 on the NQ dev set. The batch did most of the work: with 127 in-batch negatives top-20 accuracy reached 73.0% on the dev set, and one extra BM25 hard negative per question raised it to 78.0%. A second BM25 negative added nothing. BM25 still won on SQuAD (68.8 vs 63.2), whose annotators wrote questions while reading the passage, so the words overlap. The paper's example shows DPR missing the name "Thoros of Myr", which keyword search catches ([arXiv:2004.04906](https://arxiv.org/abs/2004.04906), Karpukhin et al., EMNLP 2020). That is the identifier problem this chapter opened with.
-- **Why random negatives stall.** ANCE's argument is that a negative the model already ranks low gives a near-zero loss and a near-zero gradient. In-batch negatives almost never include the passages the trained model would wrongly retrieve. On TREC DL, random and in-batch negatives overlapped 0% of the model's own top-100 wrong answers, BM25 negatives 15%. ANCE retrieves its negatives from an index of the model being trained, refreshed every 10k batches. With RoBERTa-base for both, that took MS MARCO dev MRR@10 from 0.311 (BM25 plus random negatives, DPR-style) to 0.330. Started from DPR's BERT checkpoint, it raised NQ test top-20 from 78.4% to 81.9%. The cost is re-encoding the corpus at every refresh, about 10 hours for MS MARCO's documents on one V100. The argument rests on a gradient bound proved for MLPs, which the paper backs with gradient-norm plots but doesn't prove for transformers ([arXiv:2007.00808](https://arxiv.org/abs/2007.00808), Xiong et al., ICLR 2021).
+- **The result that made dense retrieval the default.** DPR trained two BERT-base encoders on question–passage pairs and searched 21M 100-word Wikipedia passages by dot product. It found a passage containing the answer in the top 20 for 78.4% of Natural Questions test questions, against 59.1% for BM25, and beat BM25 by 9–19 points at top 20 on four of five QA sets. A thousand training pairs were enough to beat BM25 on the NQ dev set. The batch did most of the work: with 127 in-batch negatives top-20 accuracy reached 73.0% on the dev set, and one extra BM25 hard negative per question raised it to 78.0%. A second BM25 negative added nothing. BM25 still won on SQuAD (68.8 vs 63.2), whose annotators wrote questions while reading the passage, so the words overlap. The paper's example shows DPR missing the name "Thoros of Myr", which keyword search catches ([arXiv:2004.04906](https://arxiv.org/abs/2004.04906), Karpukhin et al., EMNLP 2020).
+- **Why random negatives stall.** ANCE argues that a negative the model already ranks low gives a near-zero loss and a near-zero gradient. In-batch negatives almost never include the passages the trained model would wrongly retrieve. On TREC DL, random and in-batch negatives overlapped 0% of the model's own top-100 wrong answers, BM25 negatives 15%. ANCE retrieves its negatives from an index of the model being trained, refreshed every 10k batches. With RoBERTa-base for both, that took MS MARCO dev MRR@10 from 0.311 (BM25 plus random negatives, DPR-style) to 0.330. Started from DPR's BERT checkpoint, it raised NQ test top-20 from 78.4% to 81.9%. The cost is re-encoding the corpus at every refresh, about 10 hours for MS MARCO's documents on one V100. The argument rests on a gradient bound proved for MLPs, which the paper backs with gradient-norm plots but doesn't prove for transformers ([arXiv:2007.00808](https://arxiv.org/abs/2007.00808), Xiong et al., ICLR 2021).
 - **Labels from an LLM.** Promptagator replaces human query labels with generated ones. It prompts FLAN (137B) with up to 8 query–document examples from the target task, generates 8 queries for each of up to 1M documents, and then filters them by round trip. A dual encoder trained on the unfiltered pairs must rank the query's own document first, or the pair is dropped. A 110M T5 dual encoder trained on what survives averaged 47.8 nDCG@10 on 11 BEIR datasets. That beat BM25 (41.8), GTR-XXL (44.9) and SPLADE v2 (46.6), and the biggest gains came on argument retrieval, which is least like QA. On MS MARCO, the 8 examples were worth about 50k human-labelled pairs for a simple dual encoder. The filter added 2.5 points on average, but it hurt on 3 of the 11, including the two with the fewest generated queries. Poor examples hurt too: on Climate-FEVER the few-shot version scored 16.8, below zero-shot's 21.4. The paper gives no generation cost beyond the count: 58M queries, 610M words ([arXiv:2209.11755](https://arxiv.org/abs/2209.11755), Dai et al., ICLR 2023). The prompt itself is in [Prompt engineering, applications](../../../ai-engineering/01-prompt-engineering/notes/11-applications.md#pattern-4--synthetic-queries-for-retrieval-promptagator).
 - **An LLM's wrong passages are hard negatives.** Syntriever asks GPT-4o, through the API with no access to its probabilities, for passages instead of queries. For each training query it writes a positive passage, a plausible but irrelevant passage, and a chain-of-thought rewrite. A yes/no check then relabels positives that fail to answer the question as extra hard negatives. That flagged about 15% of HotpotQA's positives and a few percent elsewhere, and the relabelling lifted HotpotQA nDCG@10 from 67.4 to 70.2. A second stage has GPT-4o compare pairs from the retriever's own top 5 and trains on its preferences. On MS MARCO, fine-tuned in domain, an E5-base retriever (about 125M) reached 50.3 nDCG@10 against 42.4 for E5. On 15 BEIR datasets it was best on 8 by the paper's count (7 by a recount of its Table 2), and two of the 15, MS MARCO and NQ, are in-domain, and BM25 still beat it on FEVER, Touché and Climate-FEVER. GPT-4o also judged only 84% of the labelled positives as containing the answer, against 88% for its own (1,000 samples each, gap attributed to HotpotQA). Only 125M encoders were tested, with one seed, the API cost is not reported, and nobody checked whether GPT-4o had seen the BEIR corpora ([arXiv:2502.03824](https://arxiv.org/abs/2502.03824), Kim et al., NAACL 2025 Findings).
 - **Rogue dimensions.** In many transformer embeddings one to five dimensions have very large magnitude and dominate cosine similarity, so two texts look similar because of a few dimensions that track little meaning. Standardising each dimension (z-score over the corpus) before comparing reduces the effect.
-- **A 7B LLM as the encoder.** Llama2Vec continues pre-training LLaMA-2-7B without labels so that its last-token embedding predicts the sentence's own words and the next sentence's, then fine-tunes it on MS MARCO as RepLLaMA does. Zero-shot on 14 BEIR datasets it averaged **56.4 nDCG@10 against BM25's 42.9** and RepLLaMA's 53.9, and beat BM25 on 13 of 14. The exception was Touché, 34.2 against BM25's 44.2, so the identifier-and-overlap case above still holds. Costs: 4,096-d vectors (768-d projections fell from 43.1 to about 41 MRR@10 on MS MARCO dev), one 7B model, English only, MS MARCO training only, and no hybrid run ([arXiv:2312.15503](https://arxiv.org/abs/2312.15503), Liu et al., 2023-12, v2 2025, preprint).
+- **A 7B LLM as the encoder.** Llama2Vec continues pre-training LLaMA-2-7B without labels so that its last-token embedding predicts the sentence's own words and the next sentence's, then fine-tunes it on MS MARCO as RepLLaMA does. Zero-shot on 14 BEIR datasets it averaged **56.4 nDCG@10 against BM25's 42.9** and RepLLaMA's 53.9, and beat BM25 on 13 of 14. The exception was Touché, 34.2 against BM25's 44.2. Costs: 4,096-d vectors (768-d projections fell from 43.1 to about 41 MRR@10 on MS MARCO dev), one 7B model, English only, MS MARCO training only, and no hybrid run ([arXiv:2312.15503](https://arxiv.org/abs/2312.15503), Liu et al., 2023-12, v2 2025, preprint).
 - **Retrievers treat instructions as keywords.** FollowIR re-judged TREC narratives so that a narrower instruction turns about half the relevant documents non-relevant, then measured whether the ranking moves (p-MRR, 0 = no change). Across Robust04, News21 and Core17 reranking, BM25 (-2.1), E5-base-v2 (-3.9), OpenAI v3 Large (-2.7) and E5-Mistral (-3.5) scored below zero; the clearest positive scores came from instruction-tuned LMs used as rerankers (Mistral-7B-instruct +10.1), with a few mildly positive (MonoT5-3B +2.5, Gecko +2.3). OpenAI v3 Large's MAP of 27.2 on Robust04 did not predict this. On full-collection retrieval, appending the long instruction cut Robust04 MAP by 3.1 to 10.1 points for five of seven retrievers. A 7B model tuned on about 1,800 synthetic instances reached +12.2 p-MRR. Small sets (20 to 52 queries each), news only ([arXiv:2403.15246](https://arxiv.org/abs/2403.15246), Weller et al., 2024-03, preprint). Put constraints into filters or a reranker prompt, not into the query string.
 
 ![Four panels (XLNet, GPT-2, RoBERTa, BERT, layer 12) showing each dimension's share of cosine similarity: in each model one or a few dimensions take most of the cosine similarity, while model behaviour is spread across many dimensions](../sources/images/building-ai-agents-llms-rag-kgs-fig5-6.png)
@@ -354,7 +348,7 @@ Raieli and Iuculano cover the training side (*Building AI Agents*, ch. 5):
 
 ## Metadata filtering
 
-Filters are SQL-style constraints on fields (`region == "EU"`, `tier >= "pro"`, `date > 2024-01-01`). They are rigid: a document either passes or not, and there is no ranking. Use them for access control, subscription tiers and freshness. Never as a substitute for search.
+Filters are SQL-style constraints on fields (`region == "EU"`, `tier >= "pro"`, `date > 2024-01-01`). They pass or fail a document and rank nothing. Use them for access control, subscription tiers and freshness. Never as a substitute for search.
 
 Here the filter settles something search cannot. The current refund page and its archive are near-duplicates and both match, so ranking alone can surface the wrong one. A date filter removes the archive before scoring, and the audience filter removes the internal runbook:
 
@@ -402,7 +396,7 @@ RRF(d) = Σ over lists  1 / (k + rank(d))
 
 A **beta** weight can tilt the fusion, e.g. 0.7 semantic / 0.3 keyword.
 
-Why fuse at all: the two retrievers find different documents. In ANCE's TREC DL 2019 analysis (MS MARCO corpus), at most 25% of the dense retriever's top 100 were also in BM25's (Xiong et al., ICLR 2021). DPR's hybrid ran before RRF was common. It reranked the union of each retriever's top 2,000 by BM25 + 1.1 × dense score. That helped where the words matter, with DPR trained on each dataset separately, adding 5.4 top-20 points on TREC and 8.3 on SQuAD, and cost 1.8 points on Natural Questions, where dense alone was stronger (Karpukhin et al., EMNLP 2020). Fusion is not free accuracy, so measure it on your own queries.
+Why fuse at all: the two retrievers find different documents. In ANCE's TREC DL 2019 analysis (MS MARCO corpus), at most 25% of the dense retriever's top 100 were also in BM25's (Xiong et al., ICLR 2021). DPR's hybrid ran before RRF was common. It reranked the union of each retriever's top 2,000 by BM25 + 1.1 × dense score. That helped where the words matter, with DPR trained on each dataset separately, adding 5.4 top-20 points on TREC and 8.3 on SQuAD, and cost 1.8 points on Natural Questions, where dense alone was stronger (Karpukhin et al., EMNLP 2020).
 
 **Check which way alpha points.** Raieli and Iuculano define hybrid weight α so that α = 0 is pure vector search and α = 1 is pure keyword, with typical values of 0.4–0.5 (some recommend 0.3) (*Building AI Agents*, ch. 6). Weaviate's `hybrid(alpha=…)`, used in note [04](04-vector-databases-and-ann.md#4-query), runs the other way: α = 1 is pure vector. The same "0.3" means mostly keyword in one convention and mostly vector in the other. Read the library's definition before copying a number.
 
@@ -434,7 +428,7 @@ rrf K=0  ['kb-03', 'kb-07', 'kb-16', 'kb-06', 'kb-04']
 rrf K=60 ['kb-03', 'kb-07', 'kb-06', 'kb-16', 'kb-04']
 ```
 
-Pages found by both lists rise to the top. The K setting matters at the margin: K=0 lets `kb-16`, ranked second by BM25, climb above `kb-06`, which sits higher in the dense list and lower in the BM25 one. The assignment's output shows fusion at work on its news corpus:
+Pages found by both lists rise to the top. K matters at the margin: K=0 lets `kb-16`, ranked second by BM25, climb above `kb-06`, which sits higher in the dense list and lower in the BM25 one. The assignment's output shows fusion at work on its news corpus:
 
 | Retriever | Top 5 indices |
 |---|---|
@@ -442,11 +436,11 @@ Pages found by both lists rise to the top. The K setting matters at the margin: 
 | BM25 | 752, 673, 289, 626, 43 |
 | **RRF** | **673, 752, 626, 743, 289** |
 
-673, 752 and 626 appear in both lists, so they rise to the top. Each retriever's unique pick (743, 289) survives in lower places.
+The three in both lists lead; each retriever's unique pick (743, 289) survives lower down.
 
 ---
 
-Pyserini shows the case where fusion pays. On MS MARCO passage dev, with every system built on the same toolkit, BM25 scored 0.184 MRR@10, and tuning k1 and b moved it only to 0.187. Document expansion with doc2query-T5 kept retrieval bag-of-words and reached 0.272 at default settings, 0.282 tuned. A dense TCT-ColBERT retriever reached 0.335. A weighted interpolation of dense and BM25 scores reached 0.353, and 0.365 with expansion. HNSW lost almost nothing against an exact scan (recall@1000 0.962 vs 0.964). The dense index was 25 GB against 2.6 GB for the sparse one (which includes the text) ([SIGIR 2021](https://doi.org/10.1145/3404835.3463238), Lin et al.). The paper reports no latency and doesn't give the interpolation weight, and it tests on MS MARCO only. It also supports about three dozen test collections, with pre-built indexes for the common ones, so a BM25 baseline like the one above is reproducible with one command.
+Pyserini shows the case where fusion pays. On MS MARCO passage dev, with every system built on the same toolkit, BM25 scored 0.184 MRR@10, and tuning k1 and b moved it only to 0.187. Document expansion with doc2query-T5 kept retrieval bag-of-words and reached 0.272 at default settings, 0.282 tuned. A dense TCT-ColBERT retriever reached 0.335. A weighted interpolation of dense and BM25 scores reached 0.353, and 0.365 with expansion. HNSW lost almost nothing against an exact scan (recall@1000 0.962 vs 0.964). The dense index was 25 GB against 2.6 GB for the sparse one (which includes the text) ([SIGIR 2021](https://doi.org/10.1145/3404835.3463238), Lin et al.). The paper reports no latency or interpolation weight, and tests on MS MARCO only. Pyserini ships pre-built indexes for about three dozen test collections, so a BM25 baseline like the one above is one command.
 
 ## Evaluating a retriever
 
@@ -506,7 +500,7 @@ hybrid  {'recall@3': 0.95, 'mrr': 0.742, 'ndcg@3': 0.789}
 
 **Recall@k is the most cited** for RAG: the LLM can ignore a bad document, but it can't use one you never retrieved. Note [01 § measure each stage](01-rag-pipeline.md#measure-each-stage) puts these in the pipeline context.
 
-**Relevance to a person is not usefulness to the model.** Salemi and Zamani test how well retrieval metrics predict a RAG system's final score ([arXiv:2404.13781](https://arxiv.org/abs/2404.13781), SIGIR 2024). With T5-small using Fusion-in-Decoder over 50 BM25 documents on Natural Questions, MRR against the KILT benchmark's human provenance labels correlates with downstream exact match at only Kendall's tau 0.177. LLM-judged relevance (Mistral 7B) does worse, at 0.060. Their method, eRAG, runs the system's own LLM on each retrieved document alone, scores each output against the task's ground truth, and feeds those scores to the same metric as relevance labels. Its MRR reaches tau 0.503 on the same setup, and across datasets the gain over the best baseline is 0.168 to 0.494. It also used far less GPU memory than end-to-end evaluation in their runs (1.5 GB per document against 75 GB on NQ). Two limits: this was a small model and the correlations fell as more documents were retrieved, since the metric judges each document alone while the LLM reads them together. The takeaway is practical. Keep Recall@k for debugging, and check it still predicts your final answer quality before you optimise it for long.
+**Relevance to a person is not usefulness to the model.** Salemi and Zamani test how well retrieval metrics predict a RAG system's final score ([arXiv:2404.13781](https://arxiv.org/abs/2404.13781), SIGIR 2024). With T5-small using Fusion-in-Decoder over 50 BM25 documents on Natural Questions, MRR against the KILT benchmark's human provenance labels correlates with downstream exact match at only Kendall's tau 0.177. LLM-judged relevance (Mistral 7B) does worse, at 0.060. Their method, eRAG, runs the system's own LLM on each retrieved document alone, scores each output against the task's ground truth, and feeds those scores to the same metric as relevance labels. Its MRR reaches tau 0.503 on the same setup, and across datasets the gain over the best baseline is 0.168 to 0.494. It also used far less GPU memory than end-to-end evaluation in their runs (1.5 GB per document against 75 GB on NQ). Two limits: this was a small model and the correlations fell as more documents were retrieved, since the metric judges each document alone while the LLM reads them together. Keep Recall@k for debugging, and check it still predicts your final answer quality before you optimise it for long.
 
 ---
 
@@ -516,9 +510,7 @@ hybrid  {'recall@3': 0.95, 'mrr': 0.742, 'ndcg@3': 0.789}
 |---|---|
 | Default to hybrid (BM25 + dense + RRF) | Each covers the other's blind spot; cost is small |
 | Retrieve 20–50 per retriever before fusion | RRF needs depth to find agreement |
-| Check your embedder's token limit | Past it, text is silently ignored |
 | Filters for constraints, search for relevance | Mixing them up hides docs or leaks them |
-| Track Recall@k first | Generation can't fix a missing doc |
 
 ---
 

@@ -83,7 +83,7 @@ only true in an interview, so it goes in a round. Nothing lands in a round folde
 round.
 
 - A topic question goes in the checklist of the note that answers it. If no note answers it, it's a gap for the
-  curriculum, not a row. Authoring and wiring steps: the [`/practice` skill](../../.claude/skills/practice/SKILL.md).
+  curriculum, not a row. Authoring and wiring steps: the [`/practice` skill](https://github.com/ramseywise/librarian/blob/main/.claude/skills/practice/SKILL.md).
 - Round files carry `units:` frontmatter where the mapping to the curriculum is clear. `make crosswalk` turns those
   into [`../CROSSWALK.md`](../CROSSWALK.md).
 - New files stay local until added to the allowlist in `practice/.gitignore`, after clearing the licence and checking

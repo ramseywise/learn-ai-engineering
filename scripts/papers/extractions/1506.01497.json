@@ -1,19 +1,806 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "1506.01497",
  "pdf": "ai-engineering/08-multimodal-engineering/sources/ren-2016-faster-r-cnn.pdf",
  "bib": {
   "title": "Faster R-CNN: Towards Real-Time Object Detection with Region Proposal Networks",
+  "authors": [
+   "Shaoqing Ren",
+   "Kaiming He",
+   "Ross Girshick",
+   "Jian Sun"
+  ],
   "first_author": "Ren",
   "year": 2016,
-  "venue": "NIPS 2015",
+  "venue": "preprint (arXiv v3, 6 Jan 2016, journal-style extension of the NIPS 2015 paper [10])",
   "arxiv": "1506.01497",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-04",
-  "session": "97b4134b-decf-4866-ae85-c6872cbbba19"
+  "at": "2026-11-07",
+  "chars_read": 65210,
+  "chars_total": 65210,
+  "engine": "pymupdf",
+  "skipped": "Only detection-label clutter from Figures 5/6 and glyph codes of Figure 4 were skimmed; references skimmed for lineage."
  },
- "legacy_report": "SOURCE: \"Faster R-CNN: Towards Real-Time Object Detection with Region Proposal Networks\", Shaoqing Ren, Kaiming He, Ross Girshick, Jian Sun. This file is arXiv:1506.01497v3 (6 Jan 2016), the extended journal-style version. A NIPS conference version came first ([10]). The PDF itself does not name a TPAMI venue.\nFile: /Users/ramsey-wise/workspace/learn-ai-engineering/ai-engineering/08-multimodal-engineering/sources/ren-2016-faster-r-cnn.pdf\n\nCOVERAGE: Read all 66,022 chars. The body runs to char 56,426 and references from 56,426 to the end, which I skimmed for origins. The only text I passed over was the detection-label clutter extracted from Figures 5 and 6 and the glyph codes in Figure 4.\n\nCLAIMS\n- claim: The RPN is a 3×3 conv layer followed by sibling 1×1 cls and reg layers, run over the last shared conv map. It uses k=9 anchors per position: 3 scales times 3 ratios.\n  number: k = 9; areas 128², 256², 512²; ratios 1:1, 1:2, 2:1\n  setup: ZF (5 shared conv layers) or VGG-16 (13); single scale with shorter side 600 px; stride 16. COCO adds a fourth scale, 64².\n  quote: \"By default we use 3 scales and 3 aspect ratios, yielding k = 9 anchors at each sliding position.\"\n  where: p4\n- claim: Shared features make proposals almost free, and the whole system runs at 5 fps on VGG-16 against 0.5 fps with Selective Search.\n  number: 10 ms vs 1510 ms; 198 ms vs 1830 ms total; 5 / 17 fps\n  setup: Table 5, K40 GPU. SS runs on CPU. 300 RPN proposals.\n  quote: \"VGG RPN + Fast R-CNN 141 10 47 198 5 fps\" / \"ZF RPN + Fast R-CNN 31 3 25 59 17 fps\"; the intro gives SS as \"2 seconds per image in a CPU implementation\"\n  where: p8 (Table 5), p1\n- claim: With 300 proposals the RPN matches or beats SS at 2000, and the advantage grows on COCO, especially at stricter IoU.\n  number: VOC07 69.9 vs 66.9 (VGG); 07+12 73.2; COCO test-dev 42.1/21.5 vs 39.3/19.3 (mAP@.5 / @[.5,.95])\n  setup: VGG-16. Fast R-CNN is trained on 2000 RPN proposals and tested on 300. The COCO baseline is SS-2000 in their own implementation.\n  quote: \"Faster R-CNN has 42.1% mAP@0.5 and 21.5% mAP@[.5, .95] on the COCO test-dev set. This is 2.8% higher for mAP@0.5 and 2.2% higher\"\n  where: p8 (Table 3), p11 (Table 11)\n- claim: Ablations (Table 2) show where the gain comes from. Sharing features helps. The cls scores make the top-ranked proposals good. The reg layer matters more than the anchors themselves. NMS does not hurt accuracy.\n  number: shared 59.9 vs unshared 58.7. In the SS-trained ZF detector: 100 props 55.1, 300 props 56.8, 6000 with no NMS 55.2, no-cls at 100 props 44.6, no-reg 52.1.\n  setup: VOC07 test, ZF, Fast R-CNN detector.\n  quote: \"Using separate networks reduces the result slightly to 58.7%\"; \"when the reg layer is removed at test-time (so the proposals become anchor boxes), the mAP drops to 52.1%\"\n  where: p7–8\n- claim: More than one anchor matters, but 3 scales alone does as well as 3 scales times 3 ratios. The loss weight λ hardly matters.\n  number: 1 anchor 65.8–66.7; 3 scales × 1 ratio 69.8; 3×3 69.9; λ 1–100 within about 1%\n  setup: Table 8/9, VGG-16, VOC07 trainval → VOC07 test.\n  quote: \"If using just one anchor at each position, the mAP drops by a considerable margin of 3-4%.\"\n  where: p9\n- claim: The two-stage cascade beats a one-stage dense detector built in OverFeat style.\n  number: 58.7 vs 53.9\n  setup: Table 10. ZF, unshared. Dense \"proposals\" are 20000 windows at 3 scales and 3 ratios, with 5-scale features.\n  quote: \"the one-stage system has an mAP of 53.9%. This is lower than the two-stage system (58.7%) by 4.8%.\"\n  where: p10\n\nTwo more numbers if the note needs them:\n- COCO pretraining lifts VOC07 to 78.8: \"The extra data from the COCO set increases the mAP by 5.6%\" (p11).\n- Moving from VGG-16 to ResNet-101 raises COCO val from \"41.5%/21.2% (VGG-16) to 48.4%/27.2% (ResNet-101)\" (p11).\n\nLIMITS:\n- Every experiment uses single-scale input and stride 16. The authors concede: \"accuracy may be further improved with a smaller stride.\"\n- Training uses the 4-step alternating scheme. Approximate joint training is mentioned as \"close results\" with 25–50% less training time, but no table backs it. Exact joint training (gradients through the box coordinates) is \"beyond the scope of this paper.\"\n- The 10 ms vs 2 s comparison is GPU against CPU, which the authors call \"inequitable\" (p1).\n- The authors say recall-vs-IoU is only loosely tied to mAP.\n- Anchor hyperparameters were \"not carefully chosen\".\n- Nothing on small objects beyond adding the 64² anchor for COCO.\n- No feature pyramids. 5 fps is \"near real-time\", not real time.\n- No NMS ablation at the detector stage. NMS at IoU 0.7 is applied only to the proposals.\n- The paper never mentions vision-language region features. It cites image captioning (DenseCap [16]) only as an adopter. The bottom-up attention link has to come from another source.\n- Dated: VGG/ZF backbones, Caffe/MATLAB code.\n\nBUILDS ON:\n- R-CNN, Girshick et al., CVPR 2014: box parameterisation and fine-tuning.\n- Fast R-CNN, Girshick, ICCV 2015: detector, multi-task loss, smooth L1, RoI pooling.\n- SPPnet, He et al., ECCV 2014.\n- FCN, Long et al., CVPR 2015.\n- Selective Search, Uijlings et al., IJCV 2013.\n- OverFeat, Sermanet et al., ICLR.\n- MultiBox, Erhan et al., CVPR 2014 / Szegedy et al., arXiv 2015. Its 800 k-means anchors are not translation-invariant.\n- VGG-16, Simonyan & Zisserman.\n- ZF, Zeiler & Fergus.\n\nCODE: No snippets. The useful formula is Eq. 2 on p5: \"tx = (x−xa)/wa, t y = (y−ya)/ha, tw = log(w/wa), t h = log(h/ha)\". The loss is Eq. 1 (p5), with Ncls=256, Nreg≈2400 and λ=10.\n\nFIGURES: Figure 3 (p4) is the one to use. Caption: \"Left: Region Proposal Network (RPN). Right: Example detections using RPN proposals on PASCAL VOC 2007 test.\" It shows the sliding window, the 256-d intermediate layer, the 2k scores and 4k coordinates, and the k anchor boxes in a single diagram, so anchors are understood at a glance. Figure 1 (p2), which compares image, filter and anchor pyramids, would be a second choice.\n\nPROBLEMS: Without fontTools, pypdf printed warnings, but the text came out clean. The Figure 4 plot text is glyph codes and cannot be read. In Table 8, rows of the extraction run together (\"65.82562 1:1 66.7\" is 65.8 at 128² and 66.7 at 256²). Superscripts are flattened (\"1282\" means 128²). There were no embedded instructions."
+ "type": "empirical",
+ "question": "Can region proposals be computed by a fully convolutional network that shares convolutional features with the detector, making proposals nearly free while keeping or improving detection accuracy?",
+ "hypothesis": "Convolutional feature maps used by region-based detectors can also generate region proposals, so a learned RPN on shared features beats Selective Search in speed without losing accuracy.",
+ "contributions": [
+  "Region Proposal Network (RPN): fully convolutional, predicts boxes and objectness at each position",
+  "Anchor boxes as a pyramid of regression references, translation invariant, single-scale images and filters",
+  "4-step alternating training to share conv layers between RPN and Fast R-CNN",
+  "5 fps (VGG-16) with state of the art mAP on VOC 2007/2012 and COCO with 300 proposals"
+ ],
+ "method": {
+  "summary": "Faster R-CNN = RPN (3x3 conv, then sibling 1x1 cls and reg layers over k anchors per position) feeding a Fast R-CNN detector, with conv layers shared via 4-step alternating training. Evaluated with ZF and VGG-16 backbones on PASCAL VOC 2007/2012 and MS COCO, plus ablations on sharing, cls/reg, anchors and lambda.",
+  "task": "object detection (region proposal + detection)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "PASCAL VOC 2007",
+    "role": "both",
+    "size": "about 5k trainval images and 5k test images, 20 categories",
+    "split": "trainval train, test eval",
+    "source": "Everingham et al. [11]",
+    "preprocessing": "images rescaled so shorter side s = 600 px, single scale"
+   },
+   {
+    "name": "PASCAL VOC 2012",
+    "role": "both",
+    "size": null,
+    "split": "07++12 = VOC07 trainval+test and VOC12 trainval for training; VOC12 test for eval",
+    "source": "PASCAL VOC",
+    "preprocessing": null
+   },
+   {
+    "name": "MS COCO",
+    "role": "both",
+    "size": "80k train, 40k val, 20k test-dev images, 80 categories",
+    "split": "train / trainval to train; val and test-dev to eval",
+    "source": "Lin et al. [12]",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Faster R-CNN with ZF net",
+    "role": "proposed",
+    "params": null,
+    "architecture": "RPN + Fast R-CNN; ZF 'fast' version",
+    "init_from": "ImageNet-pretrained ZF",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "5 conv + 3 FC (5 shareable conv)",
+    "hidden": "RPN intermediate 256-d",
+    "heads": null,
+    "context": null,
+    "other": {
+     "receptive_field": "171 px"
+    }
+   },
+   {
+    "name": "Faster R-CNN with VGG-16",
+    "role": "proposed",
+    "params": null,
+    "architecture": "RPN + Fast R-CNN; VGG-16",
+    "init_from": "ImageNet-pretrained public VGG-16; conv3_1 and up tuned",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "13 conv + 3 FC",
+    "hidden": "RPN intermediate 512-d",
+    "heads": null,
+    "context": null,
+    "other": {
+     "receptive_field": "228 px",
+     "rpn_output_layer_params": "2.8e4 (512 x (4+2) x 9)",
+     "rpn_proposal_layers_with_projection": "2.4e6"
+    }
+   },
+   {
+    "name": "Fast R-CNN + Selective Search (2000)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "Fast R-CNN",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Fast R-CNN + EdgeBoxes (2000)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "Fast R-CNN",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "ResNet-101 Faster R-CNN",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "Faster R-CNN with 101-layer residual net [18]",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "101",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "Eq. 1: L = (1/Ncls) sum Lcls(pi,pi*) + lambda (1/Nreg) sum pi* Lreg(ti,ti*); Lcls log loss over 2 classes (2-way softmax), Lreg smooth L1 on box params tx=(x-xa)/wa, ty=(y-ya)/ha, tw=log(w/wa), th=log(h/ha); Ncls=256, Nreg~2,400, lambda=10",
+   "optimizer": "SGD with momentum 0.9",
+   "lr": "0.001 for first 60k mini-batches then 0.0001 for next 20k (VOC); COCO: 0.003 for 240k then 0.0003 for 80k iterations",
+   "lr_schedule": "step decay",
+   "warmup": null,
+   "batch_size": "RPN: 1 image per mini-batch with 256 sampled anchors, positive:negative up to 1:1 (pad with negatives if fewer than 128 positives); COCO 8-GPU: effective 8 for RPN (1 per GPU), 16 for Fast R-CNN (2 per GPU)",
+   "steps": "VOC: 60k + 20k mini-batches; COCO: 240k + 80k iterations, for each of RPN step and Fast R-CNN step",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": "0.0005",
+   "dropout": null,
+   "regularisation": "new layers init zero-mean Gaussian std 0.01; cross-boundary anchors ignored in training (about 6000 of about 20000 anchors remain for 1000x600 image)",
+   "hardware": "K40 GPU (timing); 8-GPU implementation for COCO",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "anchor_labels": "positive: highest IoU with a GT box, or IoU > 0.7 with any GT; negative: IoU < 0.3 for all GT; others ignored",
+    "anchors": "3 scales (128^2, 256^2, 512^2) x 3 ratios (1:1, 1:2, 2:1), k=9; COCO adds 64^2 (4 scales)",
+    "nms": "IoU 0.7 on cls scores, leaves about 2000 proposals; Fast R-CNN trained on 2000 RPN proposals, tested with top-N",
+    "four_step_alternating": "1 train RPN from ImageNet; 2 train separate Fast R-CNN on step-1 proposals; 3 init RPN from detector, fix shared conv, tune RPN-only layers; 4 fix shared conv, tune Fast R-CNN-only layers; more iterations gave negligible improvement",
+    "approximate_joint_training": "reduces training time by about 25-50%, close results (no table)",
+    "coco_negatives": "Fast R-CNN negatives defined as max IoU in [0, 0.5) instead of [0.1, 0.5)",
+    "framework": "Caffe",
+    "voc_to_coco_finetune": "COCO model replaces ImageNet init; softmax over 20 categories plus background"
+   }
+  },
+  "inference": {
+   "decoding": "RPN proposals, NMS at IoU 0.7, top-N (300 default) fed to Fast R-CNN",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single run, single scale (s = 600), no seeds stated",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "proposals_per_image": "300 (maximum; fewer may remain after NMS)",
+    "nms_iou": 0.7,
+    "cross_boundary_boxes": "clipped to image boundary at test time",
+    "test_scale": "shorter side 600",
+    "score_threshold_for_figures": 0.6
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "mAP (VOC)",
+     "definition": "detection mean Average Precision on PASCAL VOC",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "mAP@0.5 and mAP@[.5,.95] (COCO)",
+     "definition": "mAP averaged over IoU in [0.5:0.05:0.95], and at IoU 0.5",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Timing",
+     "definition": "ms per image on K40 GPU (SS on CPU), conv + proposal + region-wise",
+     "unit": "ms / fps",
+     "higher_is_better": false
+    },
+    {
+     "name": "Recall vs IoU",
+     "definition": "proposal recall at different IoU with GT, top-300/1000/2000 (Fig. 4)",
+     "unit": "recall",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Selective Search + Fast R-CNN (2000)",
+    "EdgeBoxes + Fast R-CNN (2000)",
+    "Fast R-CNN [2]",
+    "one-stage dense sliding-window Fast R-CNN (OverFeat-style)"
+   ],
+   "protocol": "Single run per configuration; no seeds, variance or significance tests stated."
+  },
+  "availability": {
+   "code": "https://github.com/shaoqingren/faster_rcnn (MATLAB), https://github.com/rbgirshick/py-faster-rcnn (Python)",
+   "weights": null,
+   "data": "public PASCAL VOC and MS COCO"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.lr",
+    "quote": "We use a learning rate of 0.001 for 60k mini-batches, and 0.0001 for the next 20k mini-batches on the PASCAL VOC dataset.",
+    "where": "3.1.3"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Faster R-CNN with VGG-16 runs at 5 fps including all steps, with 198 ms total vs 1830 ms for SS + Fast R-CNN.",
+   "kind": "measured",
+   "source": null,
+   "metric": "total time",
+   "value": 198,
+   "unit": "ms",
+   "baseline_value": 1830,
+   "n": null,
+   "setup": "Table 5, K40 GPU (SS proposals on CPU), VGG-16, 300 RPN proposals",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row VGG RPN + Fast R-CNN, column total (SS + Fast R-CNN: 1830 ms, 0.5 fps)"
+  },
+  {
+   "claim": "RPN proposal computation costs only 10 ms per image with shared features (SS: 1510 ms).",
+   "kind": "measured",
+   "source": null,
+   "metric": "proposal time",
+   "value": 10,
+   "unit": "ms",
+   "baseline_value": 1510,
+   "n": null,
+   "setup": "Table 5, VGG-16, K40",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row VGG RPN + Fast R-CNN, column proposal"
+  },
+  {
+   "claim": "ZF-net Faster R-CNN reaches 17 fps (59 ms total).",
+   "kind": "measured",
+   "source": null,
+   "metric": "frame rate",
+   "value": 17,
+   "unit": "fps",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 5, ZF, K40",
+   "note": null,
+   "where": "4.1",
+   "quote": "Our system has a frame-rate of 17 fps with the ZF net."
+  },
+  {
+   "claim": "RPN+VGG shared, 300 proposals, trained on VOC07 beats SS-2000 (66.9) on VOC07 test.",
+   "kind": "measured",
+   "source": null,
+   "metric": "mAP",
+   "value": 69.9,
+   "unit": "%",
+   "baseline_value": 66.9,
+   "n": null,
+   "setup": "VOC07 trainval -> VOC07 test, Fast R-CNN VGG-16",
+   "note": "SS baseline 66.9 was reported in [2]; with this paper's repository it is 68.1",
+   "where": "Table 3",
+   "quote": "For the feature-shared variant, the result is 69.9%"
+  },
+  {
+   "claim": "Training on VOC07+12 raises VOC07 test mAP to 73.2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "mAP",
+   "value": 73.2,
+   "unit": "%",
+   "baseline_value": 70.0,
+   "n": null,
+   "setup": "VGG-16, shared, 300 proposals",
+   "note": null,
+   "where": "Table 3",
+   "quote": "The mAP is 73.2%."
+  },
+  {
+   "claim": "COCO pretraining plus VOC07+12 gives 78.8 mAP on VOC07 test.",
+   "kind": "measured",
+   "source": null,
+   "metric": "mAP",
+   "value": 78.8,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "VGG-16, shared, 300 proposals, COCO model replaces ImageNet init",
+   "note": null,
+   "where": "4.3",
+   "quote": "Doing so leads to 78.8% mAP on the PASCAL VOC 2007 test set."
+  },
+  {
+   "claim": "COCO-trained detector evaluated directly on VOC07 test without VOC fine-tuning.",
+   "kind": "measured",
+   "source": null,
+   "metric": "mAP",
+   "value": 76.1,
+   "unit": "%",
+   "baseline_value": 73.2,
+   "n": null,
+   "setup": "COCO categories superset of VOC; softmax over 20 classes plus background",
+   "note": null,
+   "where": "4.3",
+   "quote": "The mAP under this setting is 76.1% on the PASCAL VOC 2007 test set"
+  },
+  {
+   "claim": "Extra COCO data increases VOC07 mAP by 5.6 points.",
+   "kind": "measured",
+   "source": null,
+   "metric": "mAP gain",
+   "value": 5.6,
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "78.8 vs 73.2",
+   "note": null,
+   "where": "4.3",
+   "quote": "The extra data from the COCO set increases the mAP by 5.6%."
+  },
+  {
+   "claim": "VOC 2012 test mAP 70.4 with 07++12 training.",
+   "kind": "measured",
+   "source": null,
+   "metric": "mAP",
+   "value": 70.4,
+   "unit": "%",
+   "baseline_value": 68.4,
+   "n": null,
+   "setup": "VGG-16, shared, 300 proposals",
+   "note": null,
+   "where": "Table 4",
+   "quote": "our method has an mAP of 70.4% trained on the union set of VOC 2007 trainval+test and VOC 2012 trainval"
+  },
+  {
+   "claim": "COCO+07++12 reaches 75.9 on VOC 2012 test.",
+   "kind": "measured",
+   "source": null,
+   "metric": "mAP",
+   "value": 75.9,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "VGG-16",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row RPN+VGG, shared, COCO+07++12, column mAP"
+  },
+  {
+   "claim": "On COCO test-dev, Faster R-CNN has 42.1 mAP@0.5 and 21.5 mAP@[.5,.95], beating own Fast R-CNN SS-2000 baseline (39.3 / 19.3).",
+   "kind": "measured",
+   "source": null,
+   "metric": "mAP@0.5",
+   "value": 42.1,
+   "unit": "%",
+   "baseline_value": 39.3,
+   "n": null,
+   "setup": "VGG-16, COCO train, 300 RPN proposals, single scale",
+   "note": null,
+   "where": "4.2, Table 11",
+   "quote": "Faster R-CNN has 42.1% mAP@0.5 and 21.5% mAP@[.5, .95] on the COCO test-dev set."
+  },
+  {
+   "claim": "COCO trainval training gives 42.7 / 21.9 on test-dev.",
+   "kind": "measured",
+   "source": null,
+   "metric": "mAP@0.5",
+   "value": 42.7,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "VGG-16",
+   "note": null,
+   "where": "4.2",
+   "quote": "Faster R-CNN has 42.7% mAP@0.5 and 21.9% mAP@[.5, .95] on the COCO test-dev set."
+  },
+  {
+   "claim": "Faster R-CNN is 2.8 points higher in mAP@0.5 and 2.2 higher in mAP@[.5,.95] than Fast R-CNN under the same protocol.",
+   "kind": "measured",
+   "source": null,
+   "metric": "mAP@[.5,.95] gain",
+   "value": 2.2,
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "COCO test-dev, VGG-16",
+   "note": null,
+   "where": "4.2",
+   "quote": "This is 2.8% higher for mAP@0.5 and 2.2% higher for mAP@[.5, .95]"
+  },
+  {
+   "claim": "Swapping VGG-16 for ResNet-101 raises COCO val mAP to 48.4 / 27.2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "mAP@0.5",
+   "value": 48.4,
+   "unit": "%",
+   "baseline_value": 41.5,
+   "n": null,
+   "setup": "COCO val, Faster R-CNN",
+   "note": "Text wraps 'VGG-16' across a line break with a hyphen",
+   "where": "4.2",
+   "quote": "from 41.5%/21.2% (VGG- 16) to 48.4%/27.2% (ResNet-101) on the COCO val set"
+  },
+  {
+   "claim": "Sharing conv features: shared 59.9 vs unshared 58.7 (ZF, VOC07).",
+   "kind": "measured",
+   "source": null,
+   "metric": "mAP",
+   "value": 59.9,
+   "unit": "%",
+   "baseline_value": 58.7,
+   "n": null,
+   "setup": "Table 2, ZF, Fast R-CNN, 300 proposals",
+   "note": null,
+   "where": "Table 2",
+   "quote": "RPN with Fast R-CNN achieves competitive results, with an mAP of 59.9% while using up to 300 proposals"
+  },
+  {
+   "claim": "SS-trained detector with 300 RPN proposals at test time: 56.8; 100 proposals 55.1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "mAP",
+   "value": 56.8,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 2 ablation, ZF, detector trained on SS-2000, RPN not shared",
+   "note": null,
+   "where": "4.1",
+   "quote": "Replacing SS with 300 RPN proposals at test-time leads to an mAP of 56.8%."
+  },
+  {
+   "claim": "Removing NMS and using top 6000 proposals gives 55.2, so NMS does not hurt.",
+   "kind": "measured",
+   "source": null,
+   "metric": "mAP",
+   "value": 55.2,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 2, ZF",
+   "note": null,
+   "where": "4.1",
+   "quote": "has a comparable mAP (55.2%)"
+  },
+  {
+   "claim": "Without cls scores (random proposals), mAP is 44.6 at N=100 and 55.8 at N=1000.",
+   "kind": "measured",
+   "source": null,
+   "metric": "mAP",
+   "value": 44.6,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 2, ZF, N=100",
+   "note": null,
+   "where": "4.1",
+   "quote": "degrades considerably to 44.6% when N = 100"
+  },
+  {
+   "claim": "Removing the reg layer at test time (anchors as proposals) drops mAP to 52.1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "mAP",
+   "value": 52.1,
+   "unit": "%",
+   "baseline_value": 56.8,
+   "n": null,
+   "setup": "Table 2, ZF, 300 proposals",
+   "note": null,
+   "where": "4.1",
+   "quote": "the mAP drops to 52.1%"
+  },
+  {
+   "claim": "RPN with VGG-16 improves SS-trained ZF detector from 56.8 to 59.2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "mAP",
+   "value": 59.2,
+   "unit": "%",
+   "baseline_value": 56.8,
+   "n": null,
+   "setup": "Table 2",
+   "note": null,
+   "where": "4.1",
+   "quote": "to 59.2% (using RPN+VGG)"
+  },
+  {
+   "claim": "One anchor per position drops mAP by 3-4 points (65.8 / 66.7 vs 69.9).",
+   "kind": "measured",
+   "source": null,
+   "metric": "mAP",
+   "value": 65.8,
+   "unit": "%",
+   "baseline_value": 69.9,
+   "n": null,
+   "setup": "Table 8, VGG-16, VOC07, 1 scale 128^2 1:1",
+   "note": null,
+   "where": "Table 8",
+   "table": "Table 8, row 1 scale, 1 ratio, 128^2 1:1, column mAP (256^2: 66.7)"
+  },
+  {
+   "claim": "3 scales with 1 ratio (69.8) is as good as 3 scales x 3 ratios (69.9).",
+   "kind": "measured",
+   "source": null,
+   "metric": "mAP",
+   "value": 69.8,
+   "unit": "%",
+   "baseline_value": 69.9,
+   "n": null,
+   "setup": "Table 8, VGG-16, VOC07",
+   "note": null,
+   "where": "Table 8",
+   "quote": "Using just 3 scales with 1 aspect ratio (69.8%) is as good as using 3 scales with 3 aspect ratios on this dataset"
+  },
+  {
+   "claim": "Lambda 0.1/1/10/100 gives 67.2/68.9/69.9/69.1: insensitive within about 1% for 1 to 100.",
+   "kind": "measured",
+   "source": null,
+   "metric": "mAP",
+   "value": 69.9,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 9, VGG-16, VOC07",
+   "note": null,
+   "where": "Table 9",
+   "table": "Table 9, columns lambda 0.1, 1, 10, 100: 67.2, 68.9, 69.9, 69.1"
+  },
+  {
+   "claim": "Two-stage RPN+detector (58.7) beats one-stage dense detection (53.9) by 4.8 points.",
+   "kind": "measured",
+   "source": null,
+   "metric": "mAP",
+   "value": 58.7,
+   "unit": "%",
+   "baseline_value": 53.9,
+   "n": null,
+   "setup": "Table 10, ZF, VOC07, unshared RPN; dense 20000 windows",
+   "note": "Table 10 prints 53.8 (1 scale) and 53.9 (5 scales)",
+   "where": "Table 10",
+   "quote": "the one-stage system has an mAP of 53.9%. This is lower than the two-stage system (58.7%) by 4.8%."
+  },
+  {
+   "claim": "Shared-layer approximate joint training cuts training time by about 25-50% with close results (no table).",
+   "kind": "measured",
+   "source": null,
+   "metric": "training time reduction",
+   "value": "25-50",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Approximate joint training vs alternating",
+   "note": null,
+   "where": "3.2",
+   "quote": "reduces the training time by about 25-50% comparing with alternating training"
+  },
+  {
+   "claim": "RPN output layer has 2.8e4 parameters vs 6.1e6 for MultiBox.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "parameters",
+   "value": "2.8 x 10^4",
+   "unit": "params",
+   "baseline_value": "6.1e6",
+   "n": null,
+   "setup": "VGG-16, k=9",
+   "note": "Superscript flattened in text extraction",
+   "where": "3.1.1",
+   "quote": "our output layer has 2.8 × 104 parameters"
+  },
+  {
+   "claim": "Ignoring cross-boundary anchors leaves about 6000 of about 20000 anchors per 1000x600 image; keeping them stops training from converging.",
+   "kind": "measured",
+   "source": null,
+   "metric": "anchors",
+   "value": 6000,
+   "unit": "anchors per image",
+   "baseline_value": null,
+   "n": null,
+   "setup": "training",
+   "note": null,
+   "where": "3.3",
+   "quote": "there are about 6000 anchors per image for training"
+  }
+ ],
+ "limits": [
+  "Single-scale input and stride 16 only; authors say smaller stride may improve accuracy",
+  "Anchor hyper-parameters 'not carefully chosen'; ablations only on VOC07 with VGG-16",
+  "All experiments use 4-step alternating training; approximate joint training claimed close but no numbers; exact joint training left out of scope",
+  "Speed comparison is GPU vs CPU for SS, which the authors call inequitable",
+  "Recall-vs-IoU only loosely tied to mAP",
+  "No seeds, variances or significance tests",
+  "Dated backbones (ZF, VGG-16), Caffe code"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "anchor",
+   "definition": "reference boxes centered at the sliding window, each with a scale and aspect ratio; k=9 by default",
+   "where": "3.1.1"
+  },
+  {
+   "term": "RPN",
+   "definition": "Region Proposal Network: a fully convolutional network that takes an image of any size and outputs rectangular object proposals each with an objectness score",
+   "where": "3.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Fast R-CNN (Girshick)",
+   "year": 2015,
+   "arxiv": "1504.08083",
+   "relation": "extends",
+   "note": "detector, multi-task loss, smooth L1, RoI pooling, image-centric sampling",
+   "quote": null
+  },
+  {
+   "work": "R-CNN (Girshick et al.)",
+   "year": 2014,
+   "arxiv": "1311.2524",
+   "relation": "extends",
+   "note": "box parameterisation, ImageNet-pretrain then fine-tune",
+   "quote": null
+  },
+  {
+   "work": "SPPnet (He et al.)",
+   "year": 2014,
+   "arxiv": "1406.4729",
+   "relation": "extends",
+   "note": "shared conv computation and adaptive pooling",
+   "quote": null
+  },
+  {
+   "work": "Fully convolutional networks (Long et al.)",
+   "year": 2015,
+   "arxiv": "1411.4038",
+   "relation": "uses-method",
+   "note": "RPN is an FCN",
+   "quote": null
+  },
+  {
+   "work": "Selective Search (Uijlings et al.)",
+   "year": 2013,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "main proposal baseline",
+   "quote": null
+  },
+  {
+   "work": "EdgeBoxes (Zitnick and Dollar)",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "proposal baseline",
+   "quote": null
+  },
+  {
+   "work": "OverFeat (Sermanet et al.)",
+   "year": 2014,
+   "arxiv": "1312.6229",
+   "relation": "related",
+   "note": "one-stage sliding-window detector emulated in Table 10",
+   "quote": null
+  },
+  {
+   "work": "MultiBox (Szegedy et al.; Erhan et al.)",
+   "year": 2015,
+   "arxiv": "1412.1441",
+   "relation": "related",
+   "note": "800 k-means anchors, not translation invariant",
+   "quote": null
+  },
+  {
+   "work": "VGG-16 (Simonyan and Zisserman)",
+   "year": 2015,
+   "arxiv": "1409.1556",
+   "relation": "evaluates",
+   "note": "backbone",
+   "quote": null
+  },
+  {
+   "work": "ZF net (Zeiler and Fergus)",
+   "year": 2014,
+   "arxiv": "1311.2901",
+   "relation": "evaluates",
+   "note": "backbone",
+   "quote": null
+  },
+  {
+   "work": "Deep residual learning (He et al.)",
+   "year": 2015,
+   "arxiv": "1512.03385",
+   "relation": "related",
+   "note": "ResNet-101 Faster R-CNN won COCO/ILSVRC 2015",
+   "quote": null
+  },
+  {
+   "work": "PASCAL VOC",
+   "year": 2007,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "VOC07/12",
+   "quote": null
+  },
+  {
+   "work": "Microsoft COCO (Lin et al.)",
+   "year": 2014,
+   "arxiv": "1405.0312",
+   "relation": "uses-data",
+   "note": "COCO detection",
+   "quote": null
+  },
+  {
+   "work": "R-CNN minus R (Lenc and Vedaldi)",
+   "year": 2015,
+   "arxiv": "1506.06981",
+   "relation": "related",
+   "note": "also reports ~6% drop replacing SS by sliding windows",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Different schemes for addressing multiple scales and sizes: image/feature pyramids, filter pyramids, pyramids of reference boxes.",
+   "page": 2,
+   "why": "shows why anchors avoid enumerating scales"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Faster R-CNN is a single, unified network for object detection. The RPN module serves as the 'attention'.",
+   "page": 3,
+   "why": "overall architecture"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Left: RPN. Right: example detections using RPN proposals on VOC 2007 test.",
+   "page": 4,
+   "why": "RPN head: 256-d, 2k scores, 4k coordinates"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Recall vs. IoU overlap ratio on the PASCAL VOC 2007 test set.",
+   "page": 10,
+   "why": "RPN recall degrades gracefully from 2000 to 300 proposals; plot text is garbled in extraction"
+  },
+  {
+   "figure": "Table 5",
+   "caption": "Timing (ms) on a K40 GPU, except SS proposal is evaluated in a CPU.",
+   "page": 8,
+   "why": "speed breakdown"
+  }
+ ],
+ "code": [
+  {
+   "where": "3.1.2 Eq. 1",
+   "snippet": "L({pi},{ti}) = (1/Ncls) sum_i Lcls(pi, pi*) + lambda (1/Nreg) sum_i pi* Lreg(ti, ti*)",
+   "verbatim": false
+  },
+  {
+   "where": "3.1.2 Eq. 2",
+   "snippet": "tx=(x-xa)/wa, ty=(y-ya)/ha, tw=log(w/wa), th=log(h/ha)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Tables extracted one cell per line; per-class AP columns of Tables 6 and 7 not recorded",
+  "Fig 4 plot axes garbled; Fig 5/6 label clutter",
+  "Table 10 prints 53.8 and 53.9 for the one-stage rows; text uses 53.9",
+  "No embedded instructions found"
+ ]
 }

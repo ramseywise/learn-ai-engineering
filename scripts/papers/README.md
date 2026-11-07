@@ -242,7 +242,7 @@ python3 scripts/papers/citegraph.py export --html                # reports/graph
 | `/slides` | One pillar's notes into a lecture deck, kept as `.pptx` and `.pdf`. |
 | `/weekly` | Report only: tests, reviewer decisions, signals, backlog, stale decks. Changes no content. |
 
-The standard layout every skill writes to is in [pillar-layout.md](../../.claude/skills/pillar/references/pillar-layout.md).
+The standard layout every skill writes to is in [pillar-layout.md](https://github.com/ramseywise/librarian/blob/main/.claude/skills/pillar/references/pillar-layout.md).
 
 ## Running sessions side by side
 

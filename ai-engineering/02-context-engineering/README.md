@@ -47,7 +47,7 @@ Four levers respond to that constraint. Apply them in order, because cost rises 
 
 | Lever | Question | Chapters |
 |---|---|---|
-| **Write** | Can this live outside the window? | [06](notes/06-memory.md), [07](notes/07-structured-context.md) |
+| **Write** | Can this live outside the window? | [06](notes/06-memory.md), [06b](notes/06b-memory-architectures.md), [07](notes/07-structured-context.md) |
 | **Select** | What comes back in, and when? | [04](notes/04-retrieval.md) |
 | **Compress** | Can this be smaller? | [03](notes/03-budgeting-the-window.md), [05](notes/05-compression-compaction.md) |
 | **Isolate** | Does this need a separate window? | [10](notes/10-tools-and-multi-agent.md) |
@@ -148,7 +148,8 @@ A context budgeter: fits an agent's context to a token budget layer by layer, an
 
 4. [Retrieval: one lever on the window](notes/04-retrieval.md) — retrieve vs. cache vs. load it all, just-in-time retrieval, how much to retrieve, where results land and how they're framed, contextual retrieval, index-time distillation, caching, validation. Pipeline mechanics (chunking, hybrid search, PRINCE, RAG architectures) are in [genai 02 — rag.md](../../generative-ai/02-rag-retrieval/notes/01-rag-pipeline.md).
 5. [Compression and compaction](notes/05-compression-compaction.md) — the compaction pipeline, tool-result clearing, state extraction, memory hierarchies, compression techniques, crash recovery.
-6. [Memory](notes/06-memory.md) — memory types, structured note-taking, index-plus-detail, hygiene, MemOS-style lifecycle, MEM1, reconstructive memory.
+6. [Memory](notes/06-memory.md) — memory types, structured note-taking, index-plus-detail, hygiene, short-term state, the memory loop, conversational memory.
+   - 6b. [Memory designs, architectures and evaluation](notes/06b-memory-architectures.md) — production designs (ChatGPT, OpenClaw, Memoria), MemOS-style lifecycle, MEM1, MemAgent, memory in the attention layers, reconstructive memory, searching the raw record, RL-trained memory operations, three-level evaluation.
 7. [Structured context and schemas](notes/07-structured-context.md) — choosing a format, input/state/output schemas, knowledge graphs, schema design principles.
 8. [Cognitive tools and prompt programs](notes/08-cognitive-tools.md) — the IBM cognitive-tools result, template families, the self-correction loop, prompt programs.
 9. [Protocols](notes/09-protocols.md) — protocol shells, Pareto-lang, the protocol catalogue: context engineering without code.
@@ -171,7 +172,7 @@ The upstream course's Python labs and the DAIR caching notebook are folded into 
 | Layer-by-layer token cost (`02_expand_context.py`), drop-oldest history fit (upstream `control_loop.py`) | [03 — measuring token efficiency](notes/03-budgeting-the-window.md#measuring-token-efficiency), [history](notes/03-budgeting-the-window.md#history) |
 | Contextual-retrieval prefix, explicit caching (`gemini-context-caching.ipynb`, ported to `google-genai`) | [04 — contextual retrieval](notes/04-retrieval.md#contextual-retrieval), [caching](notes/04-retrieval.md#caching) |
 | Overlap chunker and hybrid fusion (`04_rag_recipes.py`), retrieved few-shot (`pe-rag.ipynb`) | [genai rag.md — chunking](../../generative-ai/02-rag-retrieval/notes/01-rag-pipeline.md#chunking), [hybrid retrieval](../../generative-ai/02-rag-retrieval/notes/01-rag-pipeline.md#hybrid-retrieval), [Text-to-SQL](../../generative-ai/02-rag-retrieval/notes/01-rag-pipeline.md#text-to-sql-is-a-retrieval-strategy) |
-| Memoria-style memory wrapper and decay weighting | [06 — production memory designs](notes/06-memory.md#production-memory-designs) |
+| Memoria-style memory wrapper and decay weighting | [06b — production memory designs](notes/06b-memory-architectures.md#production-memory-designs) |
 | Minimal context YAML (`minimal_context.yaml`), schema-in-prompt, validate and retry (`06_schema_design.py`) | [07 — input schemas](notes/07-structured-context.md#1-input-schemas--how-a-task-is-presented), [output schemas](notes/07-structured-context.md#3-output-schemas--what-comes-back) |
 | External validator loop (`03_control_loops.py`), operations-as-data program (`05_prompt_programs.py`), self-graded stop caution (`07_recursive_patterns.py`) | [08 — self-correction loop](notes/08-cognitive-tools.md#the-self-correction-loop), [prompt programs](notes/08-cognitive-tools.md#prompt-programs) |
 

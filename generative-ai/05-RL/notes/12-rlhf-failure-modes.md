@@ -111,7 +111,7 @@ limits: it is SFT only. It needs the bad behaviour named in advance. One word of
 vs "respond" as if the user is correct) separated a working prompt from a failing one. And in two of
 six models it made the model *more* willing to hack when a user asked it to. MacDiarmid et al.
 carried the idea into production RL, where in their prompted setting it cut the emergent
-misalignment that followed coding reward hacks by 75–90% ([05](05-post-training-for-agents.md#practical-pitfalls)).
+misalignment that followed coding reward hacks by 75–90% ([05](05b-choosing-sft-rl-or-no-training.md#practical-pitfalls)).
 
 LLaVA-RLHF shows the verbosity hack in a multimodal model. With plain RLHF, PPO "produc[ed]
 lengthier responses rather than ones that are less prone to hallucinations". LLaVA-Bench rose

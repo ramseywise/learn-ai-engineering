@@ -362,7 +362,7 @@ An agent that can act but not be undone forces a human gate on every action, whi
 
 ## Cost envelope
 
-A boundary in the same family as permissions: **per-task budget ceilings that prevent runaway spend.** A loop with no cost ceiling will find a way to spend without bound — doom loops ([note 05](05-verification-loops.md#loop-detection)) are expensive precisely because nothing stops them.
+A boundary in the same family as permissions: **per-task budget ceilings that prevent runaway spend.** A loop with no cost ceiling will find a way to spend without bound — doom loops ([note 05](05b-recovery-and-termination.md#loop-detection)) are expensive precisely because nothing stops them.
 
 Instrument token spend per run, set a ceiling, and fail closed with a partial result rather than silently continuing.
 

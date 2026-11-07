@@ -16,7 +16,7 @@ The mental model has three questions. What will have to change? What must a pers
 
 ## Reading order
 
-The notes follow the [full chapter standard](../../.claude/skills/pillar/references/pillar-layout.md), not the shorter format of the Python modules.
+The notes follow the [full chapter standard](https://github.com/ramseywise/librarian/blob/main/.claude/skills/pillar/references/pillar-layout.md), not the shorter format of the Python modules.
 
 **Writing code that can change**
 

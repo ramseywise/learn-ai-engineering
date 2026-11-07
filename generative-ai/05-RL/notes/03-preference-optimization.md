@@ -419,7 +419,7 @@ They are only as sound as the checker, and these cases show it:
     ([arXiv:2504.21801](https://arxiv.org/abs/2504.21801) (Ren et al., 2025-04)).
 - **MiMo-7B.** RL from the base model "tends to hack the reward for mathematics problems".
 - **Production coding environments** have been gamed by overriding `__eq__` and by patching
-  pytest ([05](05-post-training-for-agents.md#practical-pitfalls)).
+  pytest ([05](05b-choosing-sft-rl-or-no-training.md#practical-pitfalls)).
 
 **Strengths:** No critic to train (simpler, cheaper), verifiable rewards remove the learned-RM
 loophole (though an agent can still game the verifier itself, for example by editing the

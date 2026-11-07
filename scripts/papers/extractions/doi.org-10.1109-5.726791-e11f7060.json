@@ -1,0 +1,416 @@
+{
+ "schema": 1,
+ "key": "https://doi.org/10.1109/5.726791",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/lecun-1998-gradient-based-learning-applied-document.pdf",
+ "bib": {
+  "title": "Gradient-Based Learning Applied to Document Recognition",
+  "authors": ["Yann LeCun", "Léon Bottou", "Yoshua Bengio", "Patrick Haffner"],
+  "first_author": "LeCun",
+  "year": 1998,
+  "venue": "Proceedings of the IEEE, 86(11), pp. 2278-2324",
+  "arxiv": null,
+  "doi": "10.1109/5.726791"
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 235139,
+  "chars_total": 235139,
+  "engine": "pymupdf",
+  "skipped": "Reference list and author biographies only skimmed. Figure 9 (bar chart of error rates per classifier) is an image, so only the numbers the text prints were recorded."
+ },
+ "type": "empirical",
+ "question": "Can pattern recognition systems be built by relying more on learning and less on hand-designed heuristics, both for isolated character recognition (convolutional nets on pixels) and for multi-module document systems (globally trained graph transformer networks)?",
+ "hypothesis": "Better pattern recognition systems can be built by relying more on automatic learning and less on hand-designed heuristics; convolutional nets should beat other classifiers on 2-D shapes and global training of whole systems should beat separately trained modules.",
+ "contributions": [
+  "Comparison of many classifiers on the MNIST handwritten digit task, with convolutional nets (LeNet-5, boosted LeNet-4) best",
+  "LeNet-5 architecture and its stochastic diagonal Levenberg-Marquardt training",
+  "Graph transformer networks (GTN): multi-module systems passing graphs, trained globally by gradient back-propagation",
+  "Viterbi, discriminative Viterbi, forward and discriminative forward training criteria for string-level training",
+  "Space displacement neural network (SDNN) that scans a convolutional net over the input to avoid explicit segmentation",
+  "Generalized graph composition (transduction) with check/fprop/bprop methods",
+  "Online handwriting recognizer (AMAP input + convolutional net + GTN) and a commercially deployed check reading system"
+ ],
+ "method": {
+  "summary": "LeNet-5 (7 layers, ~60 000 free parameters) is trained with stochastic diagonal Levenberg-Marquardt on the 60 000-image MNIST training set and compared with linear, k-NN, PCA+polynomial, RBF, MLP, LeNet-1/4, boosted LeNet-4, tangent distance and SVM classifiers. The second half builds GTNs trained with a discriminative forward loss for online handwriting recognition and bank check reading.",
+  "task": "handwritten digit classification (MNIST); word-level online handwriting recognition; bank check amount reading",
+  "trains": true,
+  "datasets": [
+    {
+      "name": "MNIST (modified NIST)",
+      "role": "both",
+      "size": "60 000 training patterns; 10 000 test images used (60 000 test set built, 5 000 from SD-1 and 5 000 from SD-3 used)",
+      "split": "Training: first 250 SD-1 writers (~30 000 images) plus SD-3 from pattern #0 to reach 60 000. Test: remaining 250 SD-1 writers plus SD-3 from pattern #35 000 to reach 60 000; 10 000 used",
+      "source": "NIST Special Database 3 and Special Database 1; SD-1 has 58 527 images by 500 writers",
+      "preprocessing": "Bilevel images size-normalized into a 20x20 box keeping aspect ratio (anti-aliased grey levels). Regular: centered by centre of mass in 28x28 (padded to 32x32 for LeNet-5). Deslanted: sheared by second moments, cropped to 20x20. Third version 16x16 used in early experiments. LeNet-5 input pixels scaled so background -0.1 and foreground 1.175 (mean ~0, variance ~1)."
+    },
+    {
+      "name": "MNIST with artificial distortions",
+      "role": "train",
+      "size": "60 000 original + 540 000 distorted instances",
+      "split": "test patterns not distorted",
+      "source": "generated from MNIST training set",
+      "preprocessing": "Random planar affine transforms: horizontal and vertical translation, scaling, squeezing, horizontal shearing"
+    },
+    {
+      "name": "Isolated hand-printed characters (online handwriting)",
+      "role": "train",
+      "size": "approximately 100 000 hand printed characters, 95 classes",
+      "split": "writer independent; tests on upper case 9122 patterns, lower case 8201, digits 2938, punctuation 881",
+      "source": "AT&T in-house, not named further",
+      "preprocessing": "Additional data from local affine transformations"
+    },
+    {
+      "name": "Lower-case word database (online)",
+      "role": "both",
+      "size": "3500 words for word-level training; 881 words for test",
+      "split": "writer independent",
+      "source": "not stated",
+      "preprocessing": "word normalization by fitting four flexible lines (EM); AMAP representation"
+    },
+    {
+      "name": "Check character database",
+      "role": "train",
+      "size": "500 000 character images, entire printable ASCII set, handwritten and machine printed",
+      "split": "tested on 646 machine-print business checks",
+      "source": "various origins; further characters automatically segmented from checks and manually truthed",
+      "preprocessing": "size normalized at string level; extra distorted images by random affine transforms"
+    }
+  ],
+  "models": [
+    {
+      "name": "LeNet-5",
+      "role": "proposed",
+      "params": "about 60 000 trainable free parameters; 345 308 connections",
+      "architecture": "Convolutional net, 7 layers excluding input: C1 6 maps 28x28 (5x5, 156 params, 122 304 connections); S2 6 maps 14x14 (12 params, 5880 conn); C3 16 maps 10x10 (5x5, partial connection table, 1516 params, 156 000 conn); S4 16 maps 5x5 (32 params, 2000 conn); C5 120 maps 1x1 (48 120 conn); F6 84 units (10 164 params); output 10 Euclidean RBF units with fixed +-1 7x12-bitmap target codes. Squashing f(a)=A tanh(Sa), A=1.7159. Subsampling = sum of 2x2, times trainable coefficient, plus bias, then sigmoid.",
+      "init_from": "random: uniform in [-2.4/Fi, 2.4/Fi], Fi = fan-in",
+      "tokenizer": null,
+      "vocab": null,
+      "layers": "7 (C1,S2,C3,S4,C5,F6,output)",
+      "hidden": null,
+      "heads": null,
+      "context": "32x32 input image",
+      "other": {"input": "32x32", "activation": "scaled tanh A=1.7159", "output_layer": "10 RBF units, 84 inputs each"}
+    },
+    {
+      "name": "LeNet-4",
+      "role": "baseline",
+      "params": "about 17 000 free parameters; about 260 000 connections",
+      "architecture": "4 first-level maps, 8 subsampling maps, 16 maps, 16 subsampling maps, fully connected 120 units, 10 outputs",
+      "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null,
+      "other": {}
+    },
+    {
+      "name": "LeNet-1",
+      "role": "baseline",
+      "params": "about 2600 free parameters; about 100 000 multiply/add steps",
+      "architecture": "small convolutional net on 16x16 images centered in 28x28 input",
+      "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null,
+      "other": {}
+    },
+    {
+      "name": "Boosted LeNet-4",
+      "role": "baseline",
+      "params": "three LeNet-4 nets",
+      "architecture": "Drucker et al boosting: net 2 trained on 50% patterns net 1 got right and 50% wrong; net 3 on patterns where nets 1 and 2 disagree; outputs summed at test",
+      "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null,
+      "other": {"avg_cost": "about 1.75 times a single net"}
+    },
+    {
+      "name": "Fully connected nets, linear, pairwise linear, k-NN, PCA+poly, RBF, tangent distance, SVM",
+      "role": "baseline",
+      "params": "linear 7850 (regular) / 4010 (deslanted) free parameters; PCA+2nd-degree polynomial on 40 components (821 inputs); RBF 1000 Gaussian units; MLPs 28x28-300-10, 28x28-1000-10, 28x28-300-100-10, 28x28-1000-150-10; pairwise linear 45 units",
+      "architecture": "see results",
+      "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null,
+      "other": {}
+    },
+    {
+      "name": "Online handwriting convolutional net",
+      "role": "proposed",
+      "params": "not stated",
+      "architecture": "5 layers: conv 8 kernels 3x3; 2x2 subsampling; conv 25 kernels 5x5; conv 84 kernels 4x4; 2x1 subsampling; 95 adaptive RBF output units. Input AMAP 5 planes x 20 rows x 18 columns (5-element feature vector per pixel: 4 orientations + curvature).",
+      "init_from": null, "tokenizer": null, "vocab": null, "layers": "5 plus RBF output", "hidden": null, "heads": null, "context": "AMAP 5x20x18 (HOS); width varies with word for SDNN",
+      "other": {}
+    }
+  ],
+  "training": {
+    "objective": "LeNet-5: MAP-style discriminative criterion (eq. 9) with RBF outputs (MSE criterion eq. 8 discussed); GTN systems: discriminative forward loss (constrained forward penalty minus unconstrained forward penalty)",
+    "optimizer": "Stochastic diagonal Levenberg-Marquardt: per-parameter step size eps_k = eta / (mu + h_kk), update after each single pattern, patterns in constant random order",
+    "lr": "global eta schedule 0.0005 (first 2 passes), 0.0002 (next 3), 0.0001 (next 3), 0.00005 (next 4), 0.00001 thereafter; mu = 0.02; effective rates in first pass between approx 7 x 10^-? (exponent lost in text extraction) and 0.016",
+    "lr_schedule": "piecewise constant over 20 passes (above)",
+    "warmup": null,
+    "batch_size": "1 (per-pattern stochastic update)",
+    "steps": null,
+    "epochs": "20 passes through the 60 000 training patterns per session (also stated: training set typically repeated 20 times)",
+    "tokens": null,
+    "seq_len": null,
+    "precision": null,
+    "weight_decay": null,
+    "dropout": null,
+    "regularisation": "No explicit regulariser; weight sharing; large-learning-rate SGD argued to favour broad minima; data augmentation by distortion",
+    "hardware": "Silicon Graphics Origin 2000 server, single 200 MHz R10000 processor",
+    "compute": null,
+    "wall_clock": "two-three days of CPU to train LeNet-5 (10-20 passes)",
+    "seeds": null,
+    "other": {
+      "hessian_estimate": "diagonal Gauss-Newton second derivatives re-estimated on 500 patterns before each pass and held fixed during the pass",
+      "convergence": "test error stabilises after about 10-12 passes; no overtraining observed",
+      "SDNN_training_data": "centre character plus two random side characters, gap 1-4 pixels between bounding boxes, some with no centre character (blank class), 10% salt-and-pepper noise",
+      "noise_robust_model": "MNIST training set with each pixel inverted with probability 0.1",
+      "online_handwriting_phases": "Phase 1: RBF centers fixed, net trained on isolated characters to minimise output distance of correct-class RBF. Phase 2: all weights and RBF centers trained globally with discriminative forward loss at word level, using stochastic diagonal LM",
+      "check_system": "recognizer trained on 500 000 character images, then on automatically segmented truthed images, then a small subset of parameters trained globally at field level on whole check images"
+    }
+  },
+  "inference": {
+    "decoding": "String recognition: Viterbi (min-penalty path) or beam search over interpretation graph composed with a dictionary/grammar graph; digit classification: lowest RBF penalty",
+    "temperature": null,
+    "top_p": null,
+    "max_tokens": null,
+    "samples": "single run per configuration; no seeds or repeats reported",
+    "prompting": null,
+    "retrieval": null,
+    "parameters": {"rejection_score": "difference between scores of top two classes, thresholded", "dictionary": "25 461-word dictionary (also 350-word)"},
+    "other": {}
+  },
+  "eval": {
+    "metrics": [
+      {"name": "test error rate (MNIST)", "definition": "percentage of the 10 000 test images misclassified", "unit": "%", "higher_is_better": false},
+      {"name": "rejection rate at 0.5% error", "definition": "percentage of test patterns that must be rejected to reach 0.5% error, rejecting when difference between top two class scores is below threshold", "unit": "% of test patterns", "higher_is_better": false},
+      {"name": "word / character error (online)", "definition": "word error and character error (insertions, deletions, substitutions) writer-independent", "unit": "%", "higher_is_better": false},
+      {"name": "check reading: correct/reject/error", "definition": "fractions of checks read correctly, rejected, or read wrongly; bank viability threshold 50% correct / 49% reject / 1% error", "unit": "% of checks", "higher_is_better": null},
+      {"name": "multiply-accumulates per recognition and memory (variables)", "definition": "cost to recognise one size-normalised image; stored variables", "unit": "ops; variables", "higher_is_better": false}
+    ],
+    "baselines": ["linear classifier", "pairwise linear classifier", "k-NN Euclidean", "PCA + 2nd-degree polynomial", "RBF network", "one- and two-hidden-layer MLPs", "LeNet-1", "LeNet-4", "boosted LeNet-4", "tangent distance", "SVM / V-SVM / RS-SVM (Burges and Schoelkopf; Cortes and Vapnik)", "previous check reading system", "separately trained (character-level) recognizer"],
+    "protocol": "Single fixed train/test split; uncertainty of quoted error rates is about 0.1% (Fig. 9 caption); no seeds or significance tests; SVM numbers taken from other groups (Burges and Schoelkopf, Cortes and Vapnik, personal communication)"
+  },
+  "availability": {
+    "code": "SN3.1 internal Lisp dialect with compiler to C; not released",
+    "weights": null,
+    "data": "MNIST regular database at http://www.research.att.com/~yann/ocr/mnist (60 000 train, 10 000 test, 20x20 centered in 28x28)"
+  },
+  "prompts": [],
+  "evidence": [
+    {"field": "training.lr", "quote": "0.0005 for the first two passes; 0.0002 for the next three; 0.0001 for the next three; 0.00005 for the next 4; and 0.00001 thereafter", "where": "Section III-B (printed as 0.000 05 / 0.000 01)"},
+    {"field": "models.LeNet-5.params", "quote": "The network in Fig. 2 contains 345 308 connections, but only 60 000 trainable free parameters", "where": "Section II-A"}
+  ]
+ },
+ "results": [
+  {
+   "claim": "LeNet-5 trained on undistorted MNIST reaches 0.95% test error.",
+   "kind": "measured", "source": null, "metric": "test error", "value": "0.95", "unit": "%", "baseline_value": null, "n": "10 000 test images",
+   "setup": "LeNet-5, regular MNIST, 60 000 training samples, 20 passes, stochastic diagonal LM",
+   "quote": "around ten passes through the training set at 0.95%.",
+   "table": null, "note": "Training error reaches 0.35% after 19 passes. The abstract-level summary elsewhere quotes LeNet-5 at 0.8% (with distortions).", "where": "Sec. III-B"
+  },
+  {
+   "claim": "Training LeNet-5 with 540 000 extra distorted images lowers test error to 0.8%.",
+   "kind": "measured", "source": null, "metric": "test error", "value": "0.8", "unit": "%", "baseline_value": "0.95", "n": "10 000 test images",
+   "setup": "LeNet-5, MNIST 60 000 originals plus 540 000 random affine distortions, same 20 passes of 60 000 patterns",
+   "quote": "the test error rate dropped to 0.8% (from 0.95% without",
+   "table": null, "note": null, "where": "Sec. III-B"
+  },
+  {
+   "claim": "Boosted LeNet-4 is the best single entry, at 0.7% test error.",
+   "kind": "measured", "source": null, "metric": "test error", "value": "0.7", "unit": "%", "baseline_value": "0.8 (LeNet-5)", "n": "10 000 test images",
+   "setup": "three LeNet-4 nets combined by boosting, trained with distorted images",
+   "quote": "performed best, achieving a score of 0.7%, closely followed",
+   "table": null, "note": null, "where": "Sec. III-D"
+  },
+  {
+   "claim": "Boosting costs only about 1.75 times a single net on average because later nets are skipped on confident answers.",
+   "kind": "measured", "source": null, "metric": "relative compute", "value": "1.75", "unit": "x single net", "baseline_value": "3 (naive)", "n": null,
+   "setup": "boosted LeNet-4",
+   "quote": "net produces a high confidence answer, the other nets are",
+   "table": null, "note": "Number 1.75 is on the following line: 'not called. The average computational cost is about 1.75'", "where": "Sec. III-C9"
+  },
+  {
+   "claim": "A linear classifier gets 12% test error on regular MNIST (8.4% on deslanted).",
+   "kind": "measured", "source": null, "metric": "test error", "value": "12", "unit": "%", "baseline_value": null, "n": "10 000 test images",
+   "setup": "single-layer linear net, 7850 free parameters",
+   "quote": "On the regular data, the error rate is 12%.",
+   "table": null, "note": null, "where": "Sec. III-C1"
+  },
+  {
+   "claim": "Euclidean k-NN on pixels gets 5.0% test error on regular MNIST (2.4% on deslanted).",
+   "kind": "measured", "source": null, "metric": "test error", "value": "5.0", "unit": "%", "baseline_value": null, "n": "10 000 test images",
+   "setup": "k-NN on 60 000 stored 20x20 images",
+   "quote": "rate was 5.0%. On the deslanted data",
+   "table": null, "note": null, "where": "Sec. III-C2"
+  },
+  {
+   "claim": "PCA (40 components) plus second-degree polynomial classifier gets 3.3% test error.",
+   "kind": "measured", "source": null, "metric": "test error", "value": "3.3", "unit": "%", "baseline_value": null, "n": "10 000 test images",
+   "setup": "regular MNIST",
+   "quote": "The error on the regular test set was 3.3%.",
+   "table": null, "note": null, "where": "Sec. III-C3"
+  },
+  {
+   "claim": "A 1000-unit RBF network gets 3.6% test error.",
+   "kind": "measured", "source": null, "metric": "test error", "value": "3.6", "unit": "%", "baseline_value": null, "n": "10 000 test images",
+   "setup": "1000 Gaussian RBF units (K-means), regularised pseudoinverse second layer",
+   "quote": "set was 3.6%.",
+   "table": null, "note": null, "where": "Sec. III-C4"
+  },
+  {
+   "claim": "A one-hidden-layer MLP with 300 hidden units gets 4.7% test error (4.5% with 1000).",
+   "kind": "measured", "source": null, "metric": "test error", "value": "4.7", "unit": "%", "baseline_value": null, "n": "10 000 test images",
+   "setup": "28x28-300-10, regular MNIST",
+   "quote": "Error on the regular test set was 4.7% for a",
+   "table": null, "note": "3.6% (300 hidden) / 3.8% (1000) with distortions; 1.6% on deslanted with 300 hidden", "where": "Sec. III-C5"
+  },
+  {
+   "claim": "A 28x28-300-100-10 two-hidden-layer MLP gets 3.05% test error, much better than one hidden layer.",
+   "kind": "measured", "source": null, "metric": "test error", "value": "3.05", "unit": "%", "baseline_value": "4.7", "n": "10 000 test images",
+   "setup": "regular MNIST, no distortions",
+   "quote": "300-100-10 network was 3.05%, a much better result than",
+   "table": null, "note": "28x28-1000-150-10: 2.95%; with distortions 2.50% and 2.45%", "where": "Sec. III-C6"
+  },
+  {
+   "claim": "LeNet-1 with only about 2600 free parameters reaches 1.7% test error.",
+   "kind": "measured", "source": null, "metric": "test error", "value": "1.7", "unit": "%", "baseline_value": null, "n": "10 000 test images",
+   "setup": "16x16 downsampled images",
+   "quote": "LeNet-1 achieved 1.7% test",
+   "table": null, "note": null, "where": "Sec. III-C7"
+  },
+  {
+   "claim": "LeNet-4 reaches 1.1% test error.",
+   "kind": "measured", "source": null, "metric": "test error", "value": "1.1", "unit": "%", "baseline_value": null, "n": "10 000 test images",
+   "setup": "about 17 000 free parameters, about 260 000 connections",
+   "quote": "Test error was 1.1%. In a",
+   "table": null, "note": null, "where": "Sec. III-C8"
+  },
+  {
+   "claim": "Tangent distance classifier reaches 1.1% test error.",
+   "kind": "measured", "source": null, "metric": "test error", "value": "1.1", "unit": "%", "baseline_value": null, "n": "10 000 test images",
+   "setup": "16x16 images, nearest neighbour with tangent distance",
+   "quote": "A test error rate of 1.1% was achieved using",
+   "table": null, "note": null, "where": "Sec. III-C10"
+  },
+  {
+   "claim": "A regular SVM gets 1.4% test error (Burges and Schoelkopf); RS-SVM gets 1.1% at 650 000 multiply-adds per recognition.",
+   "kind": "reported", "source": "Burges and Schoelkopf, Improving the accuracy and speed of support vector machines (NIPS 9, 1997), ref [63]", "metric": "test error", "value": "1.4", "unit": "%", "baseline_value": null, "n": "10 000 test images",
+   "setup": "regular test set; V-SVM 1.0%, Cortes-Vapnik SVM 1.1%, Schoelkopf modified V-SVM 0.8% (personal communication); regular SVM about 14 million multiply-adds",
+   "quote": "was 1.4%. Cortes and Vapnik had reported an error rate of",
+   "table": null, "note": null, "where": "Sec. III-C11"
+  },
+  {
+   "claim": "LeNet-5 training takes two to three days of CPU on a 200 MHz R10000.",
+   "kind": "measured", "source": null, "metric": "training wall-clock", "value": "2-3", "unit": "days", "baseline_value": null, "n": null,
+   "setup": "10-20 passes, SGI Origin 2000, single processor",
+   "quote": "days of CPU to train LeNet-5 on a Silicon",
+   "table": null, "note": "Printed with an en dash: 'two-three days'", "where": "Sec. III-D"
+  },
+  {
+   "claim": "Weight sharing cuts LeNet-5 from 345 308 connections to 60 000 free parameters.",
+   "kind": "measured", "source": null, "metric": "free parameters", "value": "60 000", "unit": "parameters", "baseline_value": "345 308 connections", "n": null,
+   "setup": "LeNet-5 as in Fig. 2",
+   "quote": "but only 60 000 trainable free parameters because of the",
+   "table": null, "note": null, "where": "Sec. II-A"
+  },
+  {
+   "claim": "In online handwriting with HOS and a 25 461-word dictionary, word normalization cut word/character error from 7.3%/3.5% to 4.6%/2.0%.",
+   "kind": "measured", "source": null, "metric": "word error", "value": "4.6", "unit": "%", "baseline_value": "7.3", "n": "881 words",
+   "setup": "writer-independent lower-case words, before word-level training",
+   "quote": "4.6% and 2.0% for word and character errors respectively,",
+   "table": null, "note": "Relative drop 37% and 43%", "where": "Sec. IX-D"
+  },
+  {
+   "claim": "Word-level global training of the SDNN/HMM system (no dictionary) cut word error from 38% to 26% and character error from 12.4% to 8.2%.",
+   "kind": "measured", "source": null, "metric": "word error", "value": "26", "unit": "%", "baseline_value": "38", "n": "881 words",
+   "setup": "SDNN/HMM hybrid, 3500-word training database for global training, no dictionary",
+   "quote": "to 26% and 8.2% respectively after",
+   "table": null, "note": "relative drop 32% and 34%", "where": "Sec. IX-D"
+  },
+  {
+   "claim": "With a 25 461-word dictionary, global training cut HOS system errors from 4.6%/2.0% to 3.2%/1.4% (word/character).",
+   "kind": "measured", "source": null, "metric": "word error", "value": "3.2", "unit": "%", "baseline_value": "4.6", "n": "881 words",
+   "setup": "HOS system, discriminative forward loss, 3500 training words",
+   "quote": "and 2.0% word and character errors to 3.2% and 1.4%,",
+   "table": null, "note": "Without dictionary HOS went 22.5%/8.5% to 17%/6.3%. 350-word dictionary gave 1.6% and 0.94%.", "where": "Sec. IX-D"
+  },
+  {
+   "claim": "The GTN check reader reads 82% of 646 machine-print business checks correctly at 1% error and 17% reject, versus 68%/1%/31% for the previous system.",
+   "kind": "measured", "source": null, "metric": "correctly recognized checks", "value": "82", "unit": "% of checks", "baseline_value": "68", "n": "646 checks",
+   "setup": "machine-printed business checks; only a small subset of parameters trained globally",
+   "quote": "correctly recognized checks, 1% errors, and 17% rejects.",
+   "table": null, "note": "Previous system: '68% correct, 1% errors, and 31% rejects.'", "where": "Sec. X-D"
+  },
+  {
+   "claim": "Adding 540 000 distorted images means the network effectively sees each sample only twice across 20 passes of 60 000 patterns.",
+   "kind": "claim", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null,
+   "setup": "LeNet-5 with distortions",
+   "quote": null, "table": null, "note": null, "where": "Sec. III-B"
+  },
+  {
+   "claim": "LeNet-5 misclassifies 82 of the 10 000 test patterns; some are ambiguous, others are under-represented writing styles.",
+   "kind": "measured", "source": null, "metric": "misclassified test patterns", "value": "82", "unit": "patterns", "baseline_value": null, "n": "10 000",
+   "setup": "LeNet-5 trained with distortions",
+   "quote": "Fig. 8 shows all 82",
+   "table": null, "note": null, "where": "Sec. III-B, Fig. 8"
+  },
+  {
+   "claim": "The check system was integrated by NCR and has read millions of checks per day since June 1996.",
+   "kind": "claim", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null,
+   "setup": "commercial deployment; no per-bank or accuracy data given beyond the test above",
+   "quote": null, "table": null, "note": "Abstract says 'several million checks per day'; Introduction says 'millions of checks per month'", "where": "Abstract, Sec. I, Sec. X-D"
+  }
+ ],
+ "limits": [
+  "Single train/test split, one run per configuration, no seeds, and no significance test; the authors quote about 0.1% uncertainty on error rates.",
+  "SVM and several other numbers come from other groups, partly by personal communication, and are not reproduced.",
+  "Fig. 9 (full per-classifier error chart) is an image, so only text-stated values were recorded.",
+  "Authors concede SDNN 'so far it has not yielded better results than HOS'.",
+  "Global training mattered only slightly in the check task because only a small subset of parameters was trained globally.",
+  "Authors say why gradient descent works with so many parameters is 'somewhat of a mystery'; their self-regularization and broad-minima explanations are conjectures.",
+  "Several hyperparameters of the online and check systems (network size, epochs, learning rates, check test set composition) are not stated.",
+  "Deployed check system details are limited; machine-print test only for the new system.",
+  "The 2-3 day CPU training time and 200 MHz R10000 hardware are of 1998 vintage; stochastic diagonal LM has since been displaced by plain SGD variants and adaptive optimizers.",
+  "Tanh/RBF output with fixed ASCII-bitmap codes and MSE-like loss were later replaced by softmax cross-entropy; not discussed here."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "feature map", "definition": "a set of units whose weights are constrained to be identical", "where": "Fig. 2 caption"},
+  {"term": "GTN", "definition": "Graph transformer network: a network of modules (graph transformers) that take one or more graphs as input and produce graphs whose arcs carry numerical information", "where": "Sec. I-E, IV-C"},
+  {"term": "SDNN", "definition": "Space displacement neural network, a convolutional network replicated over a wide input field", "where": "Sec. VII, Fig. 23"},
+  {"term": "HOS", "definition": "Heuristic oversegmentation: generate many candidate cuts by heuristics and choose the best combination using recognizer scores", "where": "Sec. I-D, V"},
+  {"term": "discriminative forward criterion", "definition": "loss = forward penalty of the constrained (correct-label) graph minus forward penalty of the whole interpretation graph", "where": "Sec. VI-D, eq. 17"},
+  {"term": "stochastic diagonal Levenberg-Marquardt", "definition": "per-parameter learning rate computed before each pass from a diagonal Gauss-Newton Hessian estimate, with safety constant mu", "where": "Appendix C"},
+  {"term": "AMAP", "definition": "annotated image where each pixel is a five-element feature vector (four pen-trajectory orientations plus curvature)", "where": "Sec. IX-A"}
+ ],
+ "lineage": [
+  {"work": "Backpropagation applied to handwritten zip code recognition (LeCun et al.)", "year": 1989, "arxiv": null, "relation": "extends", "note": "Earlier convolutional net; LeNet-1 lineage", "quote": null},
+  {"work": "Neocognitron (Fukushima and Miyake)", "year": 1982, "arxiv": null, "relation": "related", "note": "Convolution/subsampling combination implemented there without global supervised learning", "quote": null},
+  {"work": "Rumelhart, Hinton, Williams, Learning internal representations by error propagation", "year": 1986, "arxiv": null, "relation": "uses-method", "note": "Back-propagation", "quote": null},
+  {"work": "Vapnik, Nature of Statistical Learning Theory / structural risk minimization", "year": 1995, "arxiv": null, "relation": "related", "note": "Capacity and generalization gap framing", "quote": null},
+  {"work": "Becker and LeCun / LeCun thesis, second-order back-propagation", "year": 1988, "arxiv": null, "relation": "uses-method", "note": "Basis for stochastic diagonal Levenberg-Marquardt", "quote": null},
+  {"work": "Drucker, Schapire, Simard boosting for neural networks", "year": 1993, "arxiv": null, "relation": "baseline", "note": "Boosted LeNet-4", "quote": null},
+  {"work": "Simard, LeCun, Denker tangent distance", "year": 1993, "arxiv": null, "relation": "baseline", "note": "Tangent distance classifier", "quote": null},
+  {"work": "Burges and Schoelkopf SVM; Boser, Guyon, Vapnik; Cortes and Vapnik", "year": 1997, "arxiv": null, "relation": "baseline", "note": "SVM variants; results reported from them", "quote": null},
+  {"work": "NIST Special Database 1 and 3", "year": null, "arxiv": null, "relation": "uses-data", "note": "Source of MNIST", "quote": null},
+  {"work": "Matan et al., Multi-digit recognition using a space displacement neural network", "year": 1992, "arxiv": null, "relation": "extends", "note": "SDNN", "quote": null},
+  {"work": "Bengio, LeCun, Nohl, Burges, LeRec NN/HMM hybrid", "year": 1995, "arxiv": null, "relation": "extends", "note": "Online handwriting system and AMAP", "quote": null},
+  {"work": "Rabiner HMM tutorial; Bourlard and Morgan; Bridle alpha-nets; Haffner", "year": 1989, "arxiv": null, "relation": "related", "note": "HMM and NN/HMM hybrid training lineage for forward/Viterbi criteria", "quote": null},
+  {"work": "Pereira, Riley, Sproat weighted rational transductions", "year": 1994, "arxiv": null, "relation": "uses-method", "note": "Finite-state transducers generalized to GTN composition", "quote": null},
+  {"work": "Bottou and Gallinari, framework for cooperation of learning algorithms", "year": 1991, "arxiv": null, "relation": "uses-method", "note": "Gradient training of heterogeneous modules", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig. 2", "caption": "Architecture of LeNet-5, a convolutional NN, here used for digits recognition. Each plane is a feature map, i.e., a set of units whose weights are constrained to be identical.", "page": 7, "why": "Shows C1/S2/C3/S4/C5/F6/output sizes at a glance."},
+  {"figure": "Table 1", "caption": "Each column indicates which feature map in S2 are combined by the units in a particular feature map of C3", "page": 8, "why": "The C3 connection table (symmetry breaking)."},
+  {"figure": "Fig. 5", "caption": "Training and test error of LeNet-5 as a function of the number of passes through the 60 000 pattern training set (without distortions).", "page": 11, "why": "Shows convergence in 10-12 passes and no overtraining."},
+  {"figure": "Fig. 9", "caption": "Error rate on the test set (%) for various classification methods.", "page": 13, "why": "Bar chart comparing all classifiers; values only partly in the text."},
+  {"figure": "Fig. 10-12", "caption": "Rejection performance, multiply-accumulate counts and memory per classifier.", "page": 15, "why": "Cost comparison of NNs vs memory-based methods."},
+  {"figure": "Fig. 21", "caption": "Discriminative forward training GTN architecture for a character string recognizer based on HOS.", "page": 27, "why": "Constrained-minus-free forward score, the core GTN loss."},
+  {"figure": "Fig. 33", "caption": "A complete check amount reader implemented as a single cascade of GT modules.", "page": 38, "why": "Whole deployed pipeline in one picture."}
+ ],
+ "code": [
+  {"where": "Eq. 6, Sec. II-B", "snippet": "f(a) = A tanh(S a), A = 1.7159", "verbatim": false},
+  {"where": "Eq. 21, Appendix C", "snippet": "eps_k = eta / (mu + h_kk)  (per-parameter step; h_kk diagonal Gauss-Newton second-derivative estimate; mu = 0.02, eta schedule 0.0005 to 0.00001)", "verbatim": false},
+  {"where": "Eq. 17, Sec. VI-D", "snippet": "L = E_cor - E_free  (constrained forward penalty minus unconstrained forward penalty)", "verbatim": false}
+ ],
+ "problems": [
+  "Cache is the HAL-deposited copy (cover page added); equations and symbols were dropped by extraction, so formulae (1)-(27) are not readable from the text and only described in words.",
+  "Fig. 9 results are an image; per-classifier values not in text were not recorded.",
+  "The paper reports 'millions of checks per day' in the abstract and X-D but 'millions of checks per month' in Sec. I.",
+  "No embedded instructions found."
+ ]
+}

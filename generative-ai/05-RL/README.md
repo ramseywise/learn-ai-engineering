@@ -32,7 +32,8 @@ New to RL? Start at 00. It assumes no notation and no data-science pillar. If yo
 | 03 | [Preference optimization](notes/03-preference-optimization.md) | PPO, DPO, GRPO and GSPO; the decision framework |
 | 13 | [Preference variants](notes/13-preference-variants.md) | Read after 03. KTO, IPO, ORPO, SimPO, DiscoPOP; self-play with SPIN, SPPO, DITTO and RLHI |
 | 04 | [Constitutional AI and RLAIF](notes/04-constitutional-ai.md) | The constitution; critique and revision; RLAIF labels; red-teaming; self-improvement and scaling |
-| 05 | [Post-training for agents](notes/05-post-training-for-agents.md) | The three stages; SFT memorizes, RL generalizes; LLMs inside classic RL; learning without weights; when to pick SFT or RL |
+| 05 | [Post-training for agents](notes/05-post-training-for-agents.md) | The three stages; SFT memorizes, RL generalizes; LLMs inside classic RL |
+| 05b | [Choosing SFT, RL or no training](notes/05b-choosing-sft-rl-or-no-training.md) | What SFT is good for; learning without weights first; when to pick SFT or RL; practical pitfalls; labs |
 | 06 | [Data and environments](notes/06-data-and-environments.md) | Environments as practice fields; simulators; data quality; dataset engineering; preference data at practitioner scale |
 | 07 | [Reward design and tool calling](notes/07-reward-design-and-tool-calling.md) | Multi-turn rewards; judges as rewards; RLVP; RL for tool calling; dense signals and distillation |
 | 08 | [Reasoning RL and DeepSeek-R1](notes/08-reasoning-rl-deepseek-r1.md) | The R1 story; how little data and reward reasoning needs |

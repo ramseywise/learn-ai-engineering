@@ -1,0 +1,448 @@
+{
+ "schema": 1,
+ "key": "1512.00567",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/szegedy-2016-rethinking-inception-architecture-computer-vision.pdf",
+ "bib": {
+  "title": "Rethinking the Inception Architecture for Computer Vision",
+  "authors": [
+   "Christian Szegedy",
+   "Vincent Vanhoucke",
+   "Sergey Ioffe",
+   "Jonathon Shlens",
+   "Zbigniew Wojna"
+  ],
+  "first_author": "Szegedy",
+  "year": 2015,
+  "venue": "preprint",
+  "arxiv": "1512.00567",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 41523,
+  "chars_total": 41523,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "How can convolutional networks be scaled up so that added computation is used efficiently, via factorized convolutions and aggressive regularization?",
+ "hypothesis": "Following four design principles (avoid early bottlenecks, higher-dimensional local representations, spatial aggregation over reduced embeddings, balanced width/depth) plus factorization and regularization yields higher accuracy at modest cost; the authors call the principles speculative.",
+ "contributions": [
+  "Four general design principles for scaling conv nets",
+  "Factorizing 5x5 into two 3x3 and n x n into 1 x n + n x 1",
+  "Efficient grid size reduction module",
+  "Auxiliary classifiers reinterpreted as regularizers (batch-normalized side head)",
+  "Label-smoothing regularization (LSR)",
+  "Inception-v2/v3 with 21.2% top-1 / 5.6% top-5 single-crop on ILSVRC 2012"
+ ],
+ "method": {
+  "summary": "Redesigns the GoogLeNet/Inception architecture with factorized convolutions, efficient grid reduction, a batch-normalized auxiliary classifier and label smoothing (epsilon 0.1, uniform prior), trained with RMSProp on ImageNet; ablations are cumulative in Table 3.",
+  "task": "ImageNet ILSVRC 2012 image classification (1000 classes)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "ILSVRC 2012 classification",
+    "role": "both",
+    "size": "1000 classes; train size not stated; validation evaluated on 48238 non-blacklisted examples (of 50000)",
+    "split": "validation set for all reported numbers; test-set check promised for a later version",
+    "source": "Russakovsky et al. [16]",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Inception-v2 / Inception-v3 (last row of Table 3)",
+    "role": "proposed",
+    "params": "less than 25 million",
+    "architecture": "convolutional, Inception modules with factorized convs; 299x299x3 input",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "42 layers deep",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "cost": "5 billion multiply-adds per inference; 4.8 Bn Ops in Table 3",
+     "structure": "3 Inception at 35x35 (288 filters), 5 at 17x17 (768), 2 at 8x8 (1280 to 2048 concat); n=7 for the 17x17 grid; detailed filter sizes only in supplementary model.txt",
+     "classifier": "linear logits then softmax over 1000"
+    }
+   }
+  ],
+  "training": {
+   "objective": "cross entropy with label-smoothing regularization: q'(k)=(1-eps)delta_{k,y}+eps/K, eps=0.1, K=1000",
+   "optimizer": "RMSProp decay 0.9, epsilon 1.0 for best models; earlier experiments used momentum with decay 0.9",
+   "lr": "0.045",
+   "lr_schedule": "decayed every two epochs with exponential rate 0.94",
+   "warmup": null,
+   "batch_size": "32 (per replica)",
+   "steps": null,
+   "epochs": "100",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": "dropout layer in the auxiliary head is mentioned as helping, rate not stated",
+   "regularisation": "label smoothing eps 0.1; batch-normalized auxiliary classifier; gradient clipping threshold 2.0; evaluation uses running average of parameters",
+   "hardware": "50 replicas, each on one NVidia Kepler GPU, TensorFlow distributed",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "input_augmentation": "not stated",
+    "gradient_clipping": "threshold 2.0"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single crop (Table 3); 12 or 144 crops (Table 4); ensemble of 4 models with 144 crops (Table 5)",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Top-1 error",
+     "definition": "fraction of validation images where the top prediction is wrong",
+     "unit": "%",
+     "higher_is_better": false
+    },
+    {
+     "name": "Top-5 error",
+     "definition": "fraction where true label not in top 5",
+     "unit": "%",
+     "higher_is_better": false
+    },
+    {
+     "name": "Cost",
+     "definition": "billions of multiply-add operations (Bn Ops)",
+     "unit": "Bn Ops",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "GoogLeNet",
+    "BN-GoogLeNet",
+    "BN-Inception",
+    "VGG",
+    "PReLU (He et al.)"
+   ],
+   "protocol": "Single run, no seeds or significance tests; evaluated on 48238 non-blacklisted validation examples; all 50000 gives roughly 0.1% worse top-5 and 0.2% worse top-1."
+  },
+  "availability": {
+   "code": "model.txt in submission tar-file (supplementary), not a public link",
+   "weights": null,
+   "data": "ILSVRC 2012 public"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.lr",
+    "quote": "We used a learning rate of 0.045,",
+    "where": "Section 8"
+   },
+   {
+    "field": "inference.samples",
+    "quote": "Inception-v3 4 144 17.2% 3.58%",
+    "where": "Table 5; header order Top-1 then Top-5"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Label smoothing (eps 0.1, uniform over 1000 classes) gives about 0.2% absolute gain in both top-1 and top-5 error on ILSVRC 2012.",
+   "kind": "measured",
+   "source": null,
+   "metric": "absolute error reduction",
+   "value": "0.2",
+   "unit": "% absolute",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Inception-v2, ILSVRC 2012 validation, single crop, K=1000, u(k)=1/1000, eps=0.1",
+   "quote": "we have found a consistent improvement of about 0.2% absolute both for top-1 error and the top-5 error",
+   "table": null,
+   "note": "Table 3: RMSProp row 23.1% / 6.3 vs Label Smoothing row 22.8% / 6.1, i.e. 0.3 top-1 and 0.2 top-5 in the table.",
+   "where": "Section 7; Table 3"
+  },
+  {
+   "claim": "Final Inception-v3 single-crop top-1 error.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1 error",
+   "value": "21.2",
+   "unit": "%",
+   "baseline_value": "25.2% (BN-Inception)",
+   "n": null,
+   "setup": "ILSVRC 2012 validation (48238 examples), single crop, 4.8 Bn Ops, all changes cumulative",
+   "quote": "21.2% top-1 and 5.6% top-5 error for single frame evaluation",
+   "table": null,
+   "note": null,
+   "where": "Abstract; Table 3 last row"
+  },
+  {
+   "claim": "Final Inception-v3 single-crop top-5 error.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-5 error",
+   "value": "5.6",
+   "unit": "%",
+   "baseline_value": "7.8 (BN-Inception)",
+   "n": null,
+   "setup": "same as above",
+   "quote": "21.2% top-1 and 5.6% top-5 error for single frame evaluation",
+   "table": null,
+   "note": null,
+   "where": "Abstract"
+  },
+  {
+   "claim": "Four-model ensemble with multi-crop reaches 3.5% top-5 and 17.3% top-1 error.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-5 error",
+   "value": "3.5",
+   "unit": "%",
+   "baseline_value": null,
+   "n": 4,
+   "setup": "ensemble of 4 Inception-v3, 144 crops, ILSVRC 2012 validation",
+   "quote": "With an ensemble of 4 models and multi-crop evaluation, we report 3.5% top-5 error and 17.3% top-1 error.",
+   "table": null,
+   "note": "Table 5 prints top-1 17.2% and top-5 3.58%*; footnote says 3.46% top-5 on the validation set. Abstract says 17.3% top-1.",
+   "where": "Abstract; Table 5"
+  },
+  {
+   "claim": "Cumulative ablation: factorizing the first 7x7 conv takes top-1 from 22.8% to 21.6%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1 error",
+   "value": "21.6",
+   "unit": "%",
+   "baseline_value": "22.8",
+   "n": null,
+   "setup": "Table 3 cumulative, single crop",
+   "quote": null,
+   "table": "Table 3, row Inception-v2 Factorized 7x7, column Top-1 Error",
+   "note": "Table 3 columns are garbled in extraction; Top-5 reads 5.8.",
+   "where": "Table 3"
+  },
+  {
+   "claim": "RMSProp improves Inception-v2 top-1 from 23.4% to 23.1%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1 error",
+   "value": "23.1",
+   "unit": "%",
+   "baseline_value": "23.4",
+   "n": null,
+   "setup": "Table 3, single crop",
+   "quote": null,
+   "table": "Table 3, row Inception-v2 RMSProp, column Top-1 Error",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Batch-normalizing the auxiliary classifier gives 0.4% absolute top-1 gain.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1 accuracy gain",
+   "value": "0.4",
+   "unit": "% absolute",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Inception, ILSVRC 2012",
+   "quote": "Batch normalization[7] of the layers in the side head results in a 0.4% absolute gain in top-1 accuracy.",
+   "table": null,
+   "note": "Table 3 shows 21.6 to 21.2 for BN-auxiliary (0.4).",
+   "where": "Figure 8 caption"
+  },
+  {
+   "claim": "Replacing 5x5 by two 3x3 convs saves 28% of computation and parameters.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "compute saving",
+   "value": "28",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "alpha=1, equal filters",
+   "quote": "resulting in a relative gain of 28% by this factorization",
+   "table": null,
+   "note": null,
+   "where": "Section 3.1"
+  },
+  {
+   "claim": "3x1 then 1x3 is 33% cheaper than 3x3, versus 11% for two 2x2.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "compute saving",
+   "value": "33",
+   "unit": "%",
+   "baseline_value": "11",
+   "n": null,
+   "setup": "equal input and output filter count",
+   "quote": "the two-layer solution is 33% cheaper",
+   "table": null,
+   "note": null,
+   "where": "Section 3.2"
+  },
+  {
+   "claim": "ReLU in both factorized layers beats linear+ReLU.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1 accuracy",
+   "value": "77.2",
+   "unit": "%",
+   "baseline_value": "76.2",
+   "n": null,
+   "setup": "control experiment, two Inception models, validation",
+   "quote": "the former settles at 76.2%, while the latter reaches 77.2%",
+   "table": null,
+   "note": "Caption says 'After 3.86 million operations' (likely iterations).",
+   "where": "Figure 2 caption"
+  },
+  {
+   "claim": "At constant compute, receptive field 79x79 gives 75.2% top-1 vs 76.6% at 299x299.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1 accuracy",
+   "value": "75.2",
+   "unit": "%",
+   "baseline_value": "76.6",
+   "n": null,
+   "setup": "single frame, ILSVRC 2012 validation, trained to convergence",
+   "quote": null,
+   "table": "Table 2, row 79 x 79, column Top-1 Accuracy",
+   "note": "151x151 gives 76.4%.",
+   "where": "Table 2"
+  },
+  {
+   "claim": "Auxiliary classifiers act as regularizers rather than aiding early convergence; removing the lower one had no adverse effect.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Inception, no numbers given",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Section 4"
+  }
+ ],
+ "limits": [
+  "Authors say the design principles are speculative and need further evidence.",
+  "Results only on ILSVRC 2012 validation; test-set verification deferred.",
+  "Ablation in Table 3 is cumulative and single-run, no seeds or variance; label smoothing effect is about 0.2% so within plausible noise but none is reported.",
+  "Label smoothing compared only with u uniform and eps 0.1; negative-entropy alternative not tried; no eps sweep.",
+  "Data augmentation, training set size, and crop details not stated; filter sizes only in supplementary file.",
+  "Tables 3-5 column headers are inconsistent or garbled; Table 4 header order (Top-5 then Top-1) appears swapped relative to values.",
+  "Text calls the model Inception-v2 then v3 inconsistently."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "label-smoothing regularization (LSR)",
+   "definition": "replace the ground-truth distribution q(k|x)=delta_{k,y} with q'(k|x)=(1-eps)delta_{k,y}+eps u(k), a mixture with a fixed prior u",
+   "where": "Section 7"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Going deeper with convolutions (GoogLeNet)",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Inception architecture being rescaled; auxiliary classifier hypothesis contradicted",
+   "quote": "original the hypothesis of [20] that these branches help evolving the low-level features is most likely misplaced"
+  },
+  {
+   "work": "Batch normalization: Accelerating deep network training (Ioffe and Szegedy)",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "BN-Inception baseline, used in network and auxiliary head",
+   "quote": null
+  },
+  {
+   "work": "Delving deep into rectifiers (He et al.)",
+   "year": 2015,
+   "arxiv": "1502.01852",
+   "relation": "baseline",
+   "note": "PReLU result compared",
+   "quote": null
+  },
+  {
+   "work": "Very deep convolutional networks (Simonyan and Zisserman)",
+   "year": 2014,
+   "arxiv": "1409.1556",
+   "relation": "baseline",
+   "note": "VGG",
+   "quote": null
+  },
+  {
+   "work": "Deeply-supervised nets (Lee et al.)",
+   "year": 2014,
+   "arxiv": "1409.5185",
+   "relation": "related",
+   "note": "claims auxiliary classifiers stabilize learning",
+   "quote": null
+  },
+  {
+   "work": "On the difficulty of training recurrent neural networks (Pascanu et al.)",
+   "year": 2012,
+   "arxiv": "1211.5063",
+   "relation": "uses-method",
+   "note": "gradient clipping",
+   "quote": null
+  },
+  {
+   "work": "Tieleman and Hinton, RMSProp",
+   "year": 2012,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "optimizer",
+   "quote": null
+  },
+  {
+   "work": "ImageNet large scale visual recognition challenge",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "ILSVRC 2012",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 10",
+   "caption": "Inception module that reduces the grid-size while expands the filter banks.",
+   "page": 6,
+   "why": "Shows parallel stride-2 pool and conv branches avoiding a bottleneck cheaply."
+  },
+  {
+   "figure": "Table 3",
+   "caption": "Single crop experimental results comparing the cumulative effects on the various contributing factors.",
+   "page": 7,
+   "why": "Ablation: RMSProp, label smoothing, factorized 7x7, BN-auxiliary."
+  }
+ ],
+ "code": [
+  {
+   "where": "Section 7",
+   "snippet": "q'(k|x) = (1 - eps) delta_{k,y} + eps u(k); H(q', p) = (1-eps) H(q, p) + eps H(u, p)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "No embedded instructions found.",
+  "Table 3/4/5 column text is garbled in extraction; header/value order in Table 4 looks inconsistent.",
+  "Original arXiv version v3 dated 11 Dec 2015; year recorded as 2015 per the PDF (the file name says 2016, the CVPR publication year)."
+ ]
+}

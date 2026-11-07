@@ -18,7 +18,7 @@ each of those calls costs in latency, throughput and money.
 ([02](../02-context-engineering/README.md)) or a loop that makes ten calls where two would do
 ([04](../04-loop-engineering/README.md)) is a cost this layer can shave but not remove.
 
-**Why a pillar, not a note.** Added 2026-10-31 (see the [structure decisions](../../.claude/skills/pillar/references/pillar-layout.md#structure-decisions)).
+**Why a pillar, not a note.** Added 2026-10-31 (see the [structure decisions](https://github.com/ramseywise/librarian/blob/main/.claude/skills/pillar/references/pillar-layout.md#structure-decisions)).
 The readings backlog held a full book on AI systems performance plus Huyen's inference
 chapter and a steady stream of serving papers, and none of the five pillars could hold them
 without turning into a GPU course.

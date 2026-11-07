@@ -1,0 +1,714 @@
+{
+ "schema": 1,
+ "key": "1512.03385",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/he-2016-deep-residual-learning-image-recognition.pdf",
+ "bib": {
+  "title": "Deep Residual Learning for Image Recognition",
+  "authors": [
+   "Kaiming He",
+   "Xiangyu Zhang",
+   "Shaoqing Ren",
+   "Jian Sun"
+  ],
+  "first_author": "He",
+  "year": 2015,
+  "venue": "preprint (arXiv v1, 10 Dec 2015; Microsoft Research)",
+  "arxiv": "1512.03385",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 59436,
+  "chars_total": 59436,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Is learning better networks as easy as stacking more layers, and how can the degradation of accuracy in very deep plain networks be fixed?",
+ "hypothesis": "It is easier to optimize a residual mapping F(x)=H(x)-x than the original unreferenced mapping H(x); if identity were optimal, pushing the residual to zero is easier than fitting identity with nonlinear layers.",
+ "contributions": [
+  "A residual learning framework with parameter-free identity shortcuts that eases training of much deeper networks",
+  "Evidence on ImageNet (up to 152 layers) and CIFAR-10 (up to 1202 layers) that plain nets degrade with depth while residual nets gain accuracy",
+  "ILSVRC 2015 1st place in classification (3.57% top-5 test ensemble), ImageNet detection, ImageNet localization, COCO detection and COCO segmentation"
+ ],
+ "method": {
+  "summary": "Plain (VGG-inspired, 3x3 conv) and residual networks of matched depth, width and parameters are trained from scratch with SGD and BN on ImageNet and CIFAR-10. Residual blocks compute y=F(x,{Wi})+x with identity shortcuts (projection Ws only to match dimensions); 50/101/152-layer nets use a 1x1-3x3-1x1 bottleneck. Pretrained ResNet-50/101 are then fine-tuned in Faster R-CNN for detection and an RPN/R-CNN for localization.",
+  "task": "image classification (ImageNet 2012, CIFAR-10), with transfer to object detection (PASCAL VOC, COCO, ImageNet DET) and localization",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "ImageNet 2012 classification",
+    "role": "both",
+    "size": "1000 classes; 1.28 million training images, 50k validation images, 100k test images",
+    "split": "train 1.28M; validation 50k for comparison studies; test 100k via test server for final result",
+    "source": "Russakovsky et al. ILSVRC",
+    "preprocessing": "shorter side randomly sampled in [256, 480] (scale augmentation); 224x224 random crop or horizontal flip; per-pixel mean subtracted; standard colour augmentation of Krizhevsky et al."
+   },
+   {
+    "name": "CIFAR-10",
+    "role": "both",
+    "size": "50k training images, 10k testing images, 10 classes",
+    "split": "training 45k/5k train/val split used to set schedule; final trained on training set, evaluated on test set",
+    "source": "Krizhevsky 2009",
+    "preprocessing": "32x32 inputs, per-pixel mean subtracted; 4 pixels padded each side, random 32x32 crop or horizontal flip; test uses single original view"
+   },
+   {
+    "name": "PASCAL VOC 2007/2012",
+    "role": "both",
+    "size": "07+12: 5k VOC07 trainval + 16k VOC12 trainval; 07++12: 10k VOC07 trainval+test + 16k VOC12 trainval",
+    "split": "test on VOC07 test / VOC12 test",
+    "source": "Everingham et al. 2010",
+    "preprocessing": null
+   },
+   {
+    "name": "MS COCO",
+    "role": "both",
+    "size": "80 categories; 80k train images, 40k val images",
+    "split": "train 80k, eval on 40k val; later 80k+40k trainval for training, 20k test-dev for evaluation",
+    "source": "Lin et al. 2014",
+    "preprocessing": "shorter side s=600 pixels for single-scale"
+   },
+   {
+    "name": "ImageNet DET",
+    "role": "both",
+    "size": "200 object categories",
+    "split": "validation split into val1/val2 following Girshick et al.; fine-tune on DET train + val1, validate on val2",
+    "source": "ILSVRC",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "ResNet-18/34 (basic block, 2x 3x3)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "CNN with residual blocks",
+    "init_from": "scratch (weights init as He et al. 2015 [13])",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "18 / 34",
+    "hidden": null,
+    "heads": null,
+    "context": "224x224 input",
+    "other": {
+     "FLOPs": "1.8e9 (18), 3.6e9 (34)",
+     "downsampling": "conv3_1, conv4_1, conv5_1 stride 2",
+     "head": "global average pool, 1000-d fc, softmax"
+    }
+   },
+   {
+    "name": "ResNet-50/101/152 (bottleneck)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "CNN with 1x1-3x3-1x1 bottleneck residual blocks, option B projection shortcuts",
+    "init_from": "scratch",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "50 / 101 / 152",
+    "hidden": null,
+    "heads": null,
+    "context": "224x224 input",
+    "other": {
+     "FLOPs": "3.8e9 (50), 7.6e9 (101), 11.3e9 (152)",
+     "blocks per stage conv2_x..conv5_x": "50: 3,4,6,3; 101: 3,4,23,3; 152: 3,8,36,3",
+     "output channels per stage": "256, 512, 1024, 2048"
+    }
+   },
+   {
+    "name": "CIFAR ResNet / plain (6n+2)",
+    "role": "proposed",
+    "params": "0.27M (20), 0.46M (32), 0.66M (44), 0.85M (56), 1.7M (110), 19.4M (1202)",
+    "architecture": "first 3x3 conv, then 6n 3x3 layers on maps {32,16,8} with {16,32,64} filters, global avg pool, 10-way fc",
+    "init_from": "scratch",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "20, 32, 44, 56 (n=3,5,7,9), 110 (n=18), 1202 (n=200)",
+    "hidden": null,
+    "heads": null,
+    "context": "32x32",
+    "other": {
+     "shortcuts": "3n identity shortcuts (option A)"
+    }
+   },
+   {
+    "name": "plain-18/34",
+    "role": "baseline",
+    "params": null,
+    "architecture": "VGG-inspired plain CNN, same as ResNet without shortcuts",
+    "init_from": "scratch",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "18 / 34",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "FLOPs 34-layer": "3.6e9, 18% of VGG-19 (19.6e9)"
+    }
+   },
+   {
+    "name": "VGG-16 / VGG-19",
+    "role": "baseline",
+    "params": null,
+    "architecture": "CNN",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "16 / 19",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "FLOPs": "15.3e9 / 19.6e9",
+     "note": "VGG-16 ImageNet error in Table 3 is from the authors' own test"
+    }
+   },
+   {
+    "name": "Faster R-CNN with ResNet-101 or VGG-16",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "Faster R-CNN; conv1..conv4_x (91 conv layers in ResNet-101) shared by RPN (300 proposals) and Fast R-CNN, RoI pooling before conv5_1",
+    "init_from": "ImageNet classification models, fine-tuned on detection data",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "BN": "statistics computed on ImageNet train set then fixed during detection fine-tuning"
+    }
+   }
+  ],
+  "training": {
+   "objective": "classification softmax (implied by 1000-way fc with softmax); not named as cross-entropy",
+   "optimizer": "SGD with momentum 0.9",
+   "lr": "ImageNet: 0.1; CIFAR-10: 0.1 (0.01 warm-up for 110-layer); COCO detection: 0.001 then 0.0001",
+   "lr_schedule": "ImageNet: divided by 10 when the error plateaus. CIFAR-10: divided by 10 at 32k and 48k iterations, terminate at 64k. COCO detection: 0.001 for 240k iterations then 0.0001 for 80k iterations",
+   "warmup": "CIFAR-10 110-layer only: lr 0.01 until training error below 80% (about 400 iterations), then back to 0.1",
+   "batch_size": "ImageNet: 256; CIFAR-10: 128 on two GPUs; COCO: RPN 8 images, Fast R-CNN 16 images; localization fine-tuning 256",
+   "steps": "ImageNet: up to 60 x 10^4 iterations; CIFAR-10: 64k iterations; COCO RPN and Fast R-CNN: 240k + 80k iterations",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": "0.0001",
+   "dropout": "none",
+   "regularisation": "batch normalization right after each convolution and before activation; no dropout; no maxout",
+   "hardware": "CIFAR-10: two GPUs; COCO: 8-GPU implementation",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": "ResNet-110 on CIFAR-10 run 5 times, reported best (mean+-std); other runs not stated",
+   "other": {
+    "init": "weights initialized as in He et al. 2015 [13]",
+    "framework": "Caffe mentioned as an example of a common library",
+    "localization": "8 anchors sampled per image, positive:negative 1:1; R-CNN stage uses top 200 proposals per image, 224x224 warped crops",
+    "detection hyperparameters (VOC)": "same as Faster R-CNN [32]; not restated"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "ImageNet comparison studies: standard 10-crop testing; CIFAR-10: single view; ResNet-110 5 runs",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {
+    "best ImageNet results": "fully-convolutional form, scores averaged over multiple scales with shorter side in {224, 256, 384, 480, 640}",
+    "final ensemble": "six models of different depth, only two 152-layer ones at submission time",
+    "COCO multi-scale test": "shorter side s in {200, 400, 600, 800, 1000}, two adjacent scales merged by maxout",
+    "box refinement NMS IoU": "0.3",
+    "COCO ensemble": "3 networks"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "top-1 / top-5 error",
+     "definition": "ImageNet classification error rate; 10-crop on validation for comparison, test server for final",
+     "unit": "%",
+     "higher_is_better": false
+    },
+    {
+     "name": "CIFAR-10 test error",
+     "definition": "single-view classification error on the 10k test images",
+     "unit": "%",
+     "higher_is_better": false
+    },
+    {
+     "name": "mAP (VOC mAP@IoU 0.5; COCO mAP@[.5,.95] averaged over IoU .5:.05:.95)",
+     "definition": "detection mean average precision",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "top-5 localization error",
+     "definition": "class-and-box localization error, with predicted classes or ground-truth class (oracle)",
+     "unit": "%",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "plain nets of equal depth",
+    "VGG-16/19",
+    "GoogLeNet",
+    "PReLU-net",
+    "BN-inception",
+    "Maxout, NIN, DSN, FitNet, Highway (CIFAR-10)",
+    "OverFeat (localization)"
+   ],
+   "protocol": "Single training run per configuration apart from ResNet-110 on CIFAR-10 (5 runs); no significance test stated."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "Public datasets (ImageNet, CIFAR-10, VOC, COCO)"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.lr_schedule",
+    "quote": "The learning rate starts from 0.1 and is divided by 10 when the error plateaus",
+    "where": "Sec 3.4"
+   },
+   {
+    "field": "models[1].layers",
+    "quote": "Remarkably, although the depth is signiﬁcantly increased, the 152-layer ResNet (11.3 billion FLOPs) still",
+    "where": "Sec 4.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "A single 152-layer ResNet reaches 4.49% top-5 validation error, better than all previous ensembles.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-5 error",
+   "value": 4.49,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ImageNet 2012 validation, single model ResNet-152, option B, 10-crop",
+   "quote": null,
+   "table": "Table 4, row ResNet-152, column top-5 err. (4.49); previous best ensemble BN-inception test 4.82 in Table 5",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "An ensemble of six ResNets gets 3.57% top-5 error on the ImageNet test set and won ILSVRC 2015 classification.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-5 test error",
+   "value": 3.57,
+   "unit": "%",
+   "baseline_value": "4.82 (BN-inception)",
+   "n": null,
+   "setup": "ImageNet test set via test server, ensemble of six models of different depth (two 152-layer)",
+   "quote": "This leads to 3.57% top-5 error on the test set (Table 5).",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.1, Table 5"
+  },
+  {
+   "claim": "Plain 34-layer net has higher top-1 validation error than plain 18-layer (degradation), while ResNet-34 is better than ResNet-18.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1 error",
+   "value": 28.54,
+   "unit": "%",
+   "baseline_value": "27.94 (plain-18)",
+   "n": null,
+   "setup": "ImageNet validation, 10-crop, plain-34 vs plain-18; ResNet-34 25.03 vs ResNet-18 27.88, option A, no extra parameters",
+   "quote": null,
+   "table": "Table 2, row 34 layers, columns plain (28.54) and ResNet (25.03); row 18 layers 27.94 and 27.88",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "ResNet-34 reduces top-1 error by 3.5% over its plain counterpart.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1 error reduction",
+   "value": 3.5,
+   "unit": "% (absolute)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ImageNet validation 10-crop, 34-layer, option A (parameter-free)",
+   "quote": "ResNet reduces the top-1 error by 3.5% (Table 2)",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.1"
+  },
+  {
+   "claim": "Deeper ResNets keep improving: top-1 val error 25.03 (34-A), 22.85 (50), 21.75 (101), 21.43 (152).",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1 error",
+   "value": 21.43,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ImageNet validation 10-crop, ResNet-152 option B",
+   "quote": null,
+   "table": "Table 3, row ResNet-152, column top-1 err.; ResNet-50 22.85, ResNet-101 21.75",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Projection shortcut options differ little: ResNet-34 A 25.03, B 24.52, C 24.19 top-1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1 error",
+   "value": 24.19,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ImageNet validation 10-crop, ResNet-34, C = all shortcuts projections",
+   "quote": null,
+   "table": "Table 3, rows ResNet-34 A (25.03), B (24.52), C (24.19), column top-1 err.",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "ResNet-152 has 11.3 billion FLOPs, lower than VGG-16/19 (15.3/19.6 billion).",
+   "kind": "measured",
+   "source": null,
+   "metric": "FLOPs",
+   "value": 11.3,
+   "unit": "billion FLOPs",
+   "baseline_value": "19.6 (VGG-19)",
+   "n": null,
+   "setup": "224x224 ImageNet input, multiply-adds",
+   "quote": "the 152-layer ResNet (11.3 billion FLOPs) still",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.1"
+  },
+  {
+   "claim": "On CIFAR-10, ResNet-110 gets 6.43% test error (best of 5; mean 6.61+-0.16).",
+   "kind": "measured",
+   "source": null,
+   "metric": "test error",
+   "value": 6.43,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CIFAR-10, 110 layers, 1.7M params, augmentation, best of 5 runs",
+   "quote": null,
+   "table": "Table 6, row ResNet 110 1.7M, column error (6.43 (6.61±0.16))",
+   "note": null,
+   "where": "Table 6"
+  },
+  {
+   "claim": "The 1202-layer ResNet trains to <0.1% training error but test error is worse (7.93%) than 110-layer, attributed to overfitting.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test error",
+   "value": 7.93,
+   "unit": "%",
+   "baseline_value": "6.43 (ResNet-110)",
+   "n": null,
+   "setup": "CIFAR-10, n=200, 19.4M params, no dropout/maxout",
+   "quote": null,
+   "table": "Table 6, row ResNet 1202 19.4M, column error",
+   "note": null,
+   "where": "Table 6, Sec 4.2"
+  },
+  {
+   "claim": "Replacing VGG-16 with ResNet-101 in Faster R-CNN raises COCO mAP@[.5,.95] from 21.2 to 27.2, a 28% relative improvement.",
+   "kind": "measured",
+   "source": null,
+   "metric": "mAP@[.5,.95]",
+   "value": 27.2,
+   "unit": "%",
+   "baseline_value": "21.2 (VGG-16)",
+   "n": null,
+   "setup": "COCO val, baseline Faster R-CNN, identical detection implementation",
+   "quote": null,
+   "table": "Table 8, row ResNet-101, column mAP@[.5, .95] (27.2); VGG-16 21.2",
+   "note": null,
+   "where": "Table 8"
+  },
+  {
+   "claim": "On PASCAL VOC 2007 test, ResNet-101 gets 76.4 mAP vs 73.2 for VGG-16 with baseline Faster R-CNN.",
+   "kind": "measured",
+   "source": null,
+   "metric": "mAP",
+   "value": 76.4,
+   "unit": "%",
+   "baseline_value": "73.2",
+   "n": null,
+   "setup": "training 07+12",
+   "quote": null,
+   "table": "Table 7, row ResNet-101, column VOC 07 test",
+   "note": null,
+   "where": "Table 7"
+  },
+  {
+   "claim": "COCO test-dev single model reaches 34.9 mAP@[.5,.95] and a 3-network ensemble 37.4 (won COCO 2015 detection).",
+   "kind": "measured",
+   "source": null,
+   "metric": "mAP@[.5,.95]",
+   "value": 37.4,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "COCO test-dev, ResNet-101 Faster R-CNN with box refinement, context, multi-scale testing; ensemble of 3 networks",
+   "quote": null,
+   "table": "Table 9, row ensemble, column @[.5,.95] (37.4); +multi-scale testing 34.9",
+   "note": null,
+   "where": "Table 9"
+  },
+  {
+   "claim": "ImageNet DET ensemble of 3 models gets 62.1 mAP on the test set, 8.5 points above second place.",
+   "kind": "measured",
+   "source": null,
+   "metric": "mAP@.5",
+   "value": 62.1,
+   "unit": "%",
+   "baseline_value": "43.9 (GoogLeNet ILSVRC14)",
+   "n": null,
+   "setup": "ImageNet DET test, ResNet-101 Faster R-CNN with Table 9 improvements",
+   "quote": null,
+   "table": "Table 12, row our ensemble (ILSVRC'15), column test",
+   "note": null,
+   "where": "Table 12"
+  },
+  {
+   "claim": "ImageNet localization top-5 error is 9.0% on the test set, a 64% relative reduction from ILSVRC14 results.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-5 localization error",
+   "value": 9.0,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ImageNet LOC test, ensemble of networks for classification and localization, RPN+R-CNN",
+   "quote": null,
+   "table": "Table 14, row ours (ILSVRC'15), column test (9.0); VGG 25.3",
+   "note": null,
+   "where": "Table 14"
+  },
+  {
+   "claim": "Layer responses (std after BN, before nonlinearity) are generally smaller in ResNets than in plain nets and shrink with depth, supporting the residual-near-zero motivation.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "CIFAR-10, plain-20/56, ResNet-20/56/110, Fig 7",
+   "quote": "Fig. 7 shows that ResNets have generally smaller responses",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2, Fig 7"
+  },
+  {
+   "claim": "The degradation is not caused by vanishing gradients (BN ensures non-zero forward variances and healthy backward norms); 3x more iterations did not remove it.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "34-layer plain net on ImageNet; verification reported without numbers",
+   "quote": "We argue that this optimization difﬁculty is unlikely to",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.1, footnote 3"
+  }
+ ],
+ "limits": [
+  "Authors concede the cause of the optimisation difficulty of deep plain nets is left for future study ('conjecture ... exponentially low convergence rates').",
+  "1202-layer net overfits on CIFAR-10 (19.4M params); stronger regularisation not tried.",
+  "Seeds and variance reported only for ResNet-110 on CIFAR-10; ImageNet results are single runs with no error bars.",
+  "No code, weights or compute/wall-clock figures stated in the paper; no parameter counts for ImageNet models.",
+  "Multi-scale training not done for COCO because of limited time; multi-scale testing only for the Fast R-CNN step.",
+  "Claim that residual learning is generic to non-vision problems is an expectation, not tested here.",
+  "Identity-mapping placement (ReLU after addition) was later revised by other work; not covered in this paper."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "degradation problem",
+   "definition": "with the network depth increasing, accuracy gets saturated and then degrades rapidly; not caused by overfitting, adding layers leads to higher training error",
+   "where": "Sec 1"
+  },
+  {
+   "term": "residual function",
+   "definition": "F(x) := H(x)-x, with the original mapping recast as F(x)+x",
+   "where": "Sec 1, 3.1"
+  },
+  {
+   "term": "identity shortcut",
+   "definition": "shortcut connection that performs identity mapping, outputs added to the outputs of the stacked layers; adds neither extra parameter nor computation",
+   "where": "Sec 1, 3.2"
+  },
+  {
+   "term": "bottleneck block",
+   "definition": "three-layer residual function of 1x1, 3x3 and 1x1 convolutions where 1x1 layers reduce and restore dimensions",
+   "where": "Sec 4.1"
+  },
+  {
+   "term": "option A/B/C shortcuts",
+   "definition": "A: zero-padding for increased dimensions; B: projection for increased dimensions, others identity; C: all shortcuts projections",
+   "where": "Sec 4.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Very deep convolutional networks for large-scale image recognition (VGG)",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "plain nets follow VGG philosophy; compared on ImageNet and localization",
+   "quote": null
+  },
+  {
+   "work": "Batch normalization (Ioffe and Szegedy)",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "BN after each convolution before activation",
+   "quote": null
+  },
+  {
+   "work": "Delving deep into rectifiers (He et al.)",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "weight initialization; PReLU-net baseline; multi-scale fully-convolutional testing",
+   "quote": null
+  },
+  {
+   "work": "Highway networks / Training very deep networks (Srivastava et al.)",
+   "year": 2015,
+   "arxiv": "1505.00387",
+   "relation": "related",
+   "note": "concurrent gated shortcuts; ResNet uses parameter-free identity that is never closed",
+   "quote": null
+  },
+  {
+   "work": "Going deeper with convolutions (GoogLeNet)",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "ILSVRC14 comparison",
+   "quote": null
+  },
+  {
+   "work": "Faster R-CNN (Ren et al.)",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "detection framework with ResNet backbone",
+   "quote": null
+  },
+  {
+   "work": "Convolutional neural networks at constrained time cost (He and Sun)",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "related",
+   "note": "earlier report of degradation",
+   "quote": null
+  },
+  {
+   "work": "ImageNet / ILSVRC (Russakovsky et al.)",
+   "year": 2014,
+   "arxiv": "1409.0575",
+   "relation": "uses-data",
+   "note": "classification, DET, LOC",
+   "quote": null
+  },
+  {
+   "work": "CIFAR-10 (Krizhevsky)",
+   "year": 2009,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "small-dataset analysis",
+   "quote": null
+  },
+  {
+   "work": "Microsoft COCO; PASCAL VOC",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "detection evaluation",
+   "quote": null
+  },
+  {
+   "work": "Multigrid / hierarchical basis preconditioning (Briggs 2000; Szeliski 1990, 2006)",
+   "year": 2000,
+   "arxiv": null,
+   "relation": "related",
+   "note": "residual reformulation as preconditioning motivation",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Training error (left) and test error (right) on CIFAR-10 with 20-layer and 56-layer plain networks.",
+   "page": 1,
+   "why": "Shows degradation at a glance: deeper net has higher training error."
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Residual learning: a building block.",
+   "page": 2,
+   "why": "The F(x)+x block with identity shortcut."
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Example network architectures for ImageNet: VGG-19, 34-layer plain, 34-layer residual.",
+   "page": 4,
+   "why": "Side-by-side layout of plain vs residual with dotted dimension-increasing shortcuts."
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Training on ImageNet; plain 18/34 left, ResNets 18/34 right.",
+   "page": 5,
+   "why": "Degradation in plain nets and its removal by residual learning."
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "A deeper residual function F for ImageNet: basic block vs bottleneck.",
+   "page": 6,
+   "why": "Bottleneck 1x1-3x3-1x1 design."
+  },
+  {
+   "figure": "Fig 7",
+   "caption": "Standard deviations of layer responses on CIFAR-10.",
+   "page": 8,
+   "why": "Evidence that residual functions are small."
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Architectures for ImageNet.",
+   "page": 5,
+   "why": "Exact block counts and FLOPs for 18/34/50/101/152 layers."
+  }
+ ],
+ "code": [
+  {
+   "where": "Eqn 1",
+   "snippet": "y = F(x, {Wi}) + x",
+   "verbatim": true
+  },
+  {
+   "where": "Eqn 2",
+   "snippet": "y = F(x, {Wi}) + Ws x",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "No embedded instructions found.",
+  "Text is arXiv v1; the Fig 6 axis and figure values are not in text. Section 4.2 text says 'this 103-layer network' for the 1202-layer model (a typo in the paper); dating: ResNet-152 FLOPs and layer counts from Table 1.",
+  "Table 13 and Table 9 flattened by extraction; values assigned by row order and checked against the prose."
+ ]
+}

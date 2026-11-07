@@ -28,7 +28,8 @@ Read the notes in order. 01–08 are the harness as components; 09–10 put it i
 2. [Harness anatomy](notes/02-harness-anatomy.md) — the nine components, the five subsystems and ablation, one real harness (the Gemini Minecraft run) read through them, Deep Agents capability groups, the filesystem as foundational primitive.
 3. [Tool design as harness surface](notes/03-tool-design.md) — ACI over API, the five-section tool contract, the four gating questions, tool discovery at scale, writing a skill, MCP vs. in-process.
 4. [Execution boundaries and guardrails](notes/04-execution-boundaries.md) — the isolation ladder, shell vs. interpreter, hooks, rules vs. requests, tool allowlists, reviewers, the five protection layers, the canary pattern.
-5. [Verification and feedback loops](notes/05-verification-loops.md) — the three-layer termination check, three kinds of reflection, asymmetric QA, generator/evaluator separation and an observer agent, sprint contracts, loop detection and injected nudges, retry taxonomy.
+5. [Verification and feedback loops](notes/05-verification-loops.md) — the three-layer termination check, three kinds of reflection, asymmetric QA, generator/evaluator separation and an observer agent, sprint contracts, eval-first, trace-driven improvement, verification the user performs.
+   - 5b. [Recovery, retries and termination](notes/05b-recovery-and-termination.md) — loop detection and injected nudges, failures by layer, the retry taxonomy and its budgets, reasoning budgets.
 6. [Long-horizon execution](notes/06-long-horizon-execution.md) — state externalization, the session lifecycle (initialization, clock in, state files, handoff, clean-state exit, entropy management), compaction vs. reset, Ralph loops, a 27-hour run.
 7. [Orchestration and multi-agent harnesses](notes/07-orchestration.md) — subagents as context firewall, protocols before collaboration, role separation, ADK 2.0 graphs, handoff design, coordination without a coordinator.
 8. [Harness maturity and failure modes](notes/08-maturity-and-failure-modes.md) — the five-stage model, production reliability primitives, the quality document, five failure modes, iterative simplification, a family of harnesses and a router.
@@ -69,7 +70,7 @@ A tool server with sandboxing: file tools behind a sandbox boundary, with the at
 ```
 README.md         this file
 references.md     primary sources, upstream course, what was kept and dropped
-notes/            01–10, the course; figures and code inline
+notes/            01–10 (with 05b), the course; figures and code inline
 slides/           deck.yaml + harness-engineering.pptx
 practice/         the lab, in TypeScript and Python
 sources/          paper PDFs + images/ (figures used by notes and deck)

@@ -1,13 +1,13 @@
 # Learn AI Engineering
 
 Course repo: curriculum notes, lecture decks, practice drills and the pipeline that feeds them. Librarian
-(`../librarian`) imports this content with `make import-courses`. [CURRICULUM.md](CURRICULUM.md) describes the program.
+(`../librarian`) holds the authoring skills. [CURRICULUM.md](CURRICULUM.md) describes the program.
 
 ## Layout
 
 - `ai-engineering/`, `generative-ai/`, `data-analytics/`, `data-science/`, `data-engineering/`: pillars of
   `README.md`, `notes/`, `references.md`, `slides/`, `sources/`. Standard:
-  [pillar-layout.md](.claude/skills/pillar/references/pillar-layout.md).
+  [pillar-layout.md](https://github.com/ramseywise/librarian/blob/main/.claude/skills/pillar/references/pillar-layout.md).
 - `programming/`: modules with their own notes and decks, plus `programming/drills/`, the drill gym. The root
   `.gitignore` names the drill folders that stay local.
 - `practice/`: interview rounds and the role-to-checklist map. `practice/.gitignore` is a per-file allowlist, so nothing
@@ -20,8 +20,8 @@ Course repo: curriculum notes, lecture decks, practice drills and the pipeline t
 - **Scripts do what can be computed.** Run them through `make`; `make help` lists the targets.
 - **Agents (`.claude/agents/`) read and report.** They never edit. The one exception: `source-reader` writes its
   source's extraction JSON to `scripts/papers/extractions/`, and nothing else. Don't give a reviewer the author's reasoning.
-- **Skills (`.claude/skills/`) orchestrate, decide and edit.** Use `/papers`, `/chapter`, `/extract`, `/write-chapter`, `/slides`,
-  `/pillar`, `/curriculum`, `/readings`, `/practice`, `/review` and `/weekly`.
+- **Skills (`.claude/skills/`) orchestrate, decide and edit.** Use `/papers`, `/chapter`, `/extract`, `/curriculum` and
+  `/readings` here. `/write-chapter`, `/slides`, `/pillar`, `/practice`, `/review` and `/weekly` now live in librarian.
 - A fault that keeps recurring becomes a script check or a spec change, not a longer reviewer prompt.
 - Learner and reviewer signals produce proposals for the user. Nothing rewrites content or agent definitions on its own.
 

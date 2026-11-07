@@ -109,7 +109,7 @@ flowchart TD
 
 Decide the human handoff points **before** the first run: blockers, risky or irreversible actions, and anything that needs taste. A loop that asks at the right moment is safer than one that keeps going.
 
-Harness machinery for stall detection and retries: [harness note 05](../../03-harness-engineering/notes/05-verification-loops.md#loop-detection).
+Harness machinery for stall detection and retries: [harness note 05](../../03-harness-engineering/notes/05b-recovery-and-termination.md#loop-detection).
 
 ---
 
@@ -155,7 +155,7 @@ A judge that shares the optimizer's weights can grade itself up while some task 
 
 What a search keeps is partly fitted to its training set, and an ablation on held-out cases shows which parts. Li et al. ([arXiv:2602.16928](https://arxiv.org/abs/2602.16928) (Li et al., 2026-02, preprint)), from Google DeepMind, evolved game-solving algorithms with AlphaEvolve and Gemini 2.5 Pro, tuned and scored on 4 training games. They then removed discovered mechanisms one at a time and measured the change on the 4 training games and on 14 held-out games. Removing two secondary features hurt the training fit badly (−0.84 and −0.95 in log-exploitability IQM) but barely moved the held-out score (−0.03 and −0.20). Removing any of three structural pieces collapsed the held-out score. **A version distilled to those three pieces beat the raw discovery on held-out games (+0.12) while doing worse on training (−0.80).** It is one evolution run, most test games come from the training families, and a human did the distilling. The authors call the search "a proposal mechanism embedded in a human-in-the-loop pipeline".
 
-The third rule is the [write boundary](03-the-scorekeeper.md#the-write-boundary), extended to the release gate. Mechanics: [note 08](08-self-improving-loops.md#self-modification-as-a-release-process).
+The third rule is the [write boundary](03-the-scorekeeper.md#the-write-boundary), extended to the release gate. Mechanics: [note 08](08b-releasing-self-edits.md#self-modification-as-a-release-process).
 
 ---
 

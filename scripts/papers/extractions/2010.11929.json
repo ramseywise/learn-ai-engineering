@@ -1,19 +1,807 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2010.11929",
  "pdf": "generative-ai/01-llm-fundamentals/sources/dosovitskiy-2020-image-worth-16x16-words.pdf",
  "bib": {
   "title": "An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale",
-  "first_author": null,
-  "year": null,
+  "authors": [
+   "Alexey Dosovitskiy",
+   "Lucas Beyer",
+   "Alexander Kolesnikov",
+   "Dirk Weissenborn",
+   "Xiaohua Zhai",
+   "Thomas Unterthiner",
+   "Mostafa Dehghani",
+   "Matthias Minderer",
+   "Georg Heigold",
+   "Sylvain Gelly",
+   "Jakob Uszkoreit",
+   "Neil Houlsby"
+  ],
+  "first_author": "Dosovitskiy",
+  "year": 2021,
   "venue": "ICLR 2021",
   "arxiv": "2010.11929",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-04",
-  "session": "258b4f47-0655-4d5a-91fc-4d7f1120336b"
+  "at": "2026-11-07",
+  "chars_read": 67154,
+  "chars_total": 67154,
+  "engine": "pymupdf",
+  "skipped": "Figures not viewed as images; plotted values (Figs 3-5, 8, 9, 12, 13) unread beyond captions and text."
  },
- "legacy_report": "SOURCE: An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale, Dosovitskiy, Beyer, Kolesnikov, Weissenborn, Zhai, Unterthiner, Dehghani, Minderer, Heigold, Gelly, Uszkoreit, Houlsby. ICLR 2021 (arXiv:2010.11929v2, 3 Jun 2021).\n\nCOVERAGE: I read all 1,378 lines of the supplied extraction, /private/tmp/claude-501/-Users-ramsey-wise-workspace-learn-ai-engineering/258b4f47-0655-4d5a-91fc-4d7f1120336b/scratchpad/txt/2010.11929.txt, 68,004 bytes by `wc -c`. I did not measure a character count and did not re-extract from the PDF. That covers pp. 1-22, including all appendices and Tables 1-9; references were read for origins. I read all 663 lines of the note. Figure captions came from `figures.py captions`, which truncates long ones. I did not view the figures as images, so plotted values are unread.\n\nCLAIMS\n- claim: Pre-trained at scale, ViT matches or beats the best CNNs on image benchmarks.\n  number: 88.55% ImageNet, 77.63% VTAB\n  setup: ViT-H/14, JFT-300M pre-training, fine-tuned at 518 with Polyak averaging, mean of 3 fine-tuning runs\n  quote: \"the best model reaches the accuracy of 88.55% on ImageNet, 90.72% on ImageNet-ReaL, 94.55% on CIFAR-100, and 77.63% on the VTAB suite of 19 tasks.\"\n  where: p2; Table 2 p6\n- claim: ViT took far less pre-training compute than the CNN baselines, though the authors say schedule and optimizer may also affect this.\n  number: 2.5k and 0.68k against 9.9k and 12.3k core-days\n  setup: columns are ViT-H/14 JFT, ViT-L/16 JFT, ViT-L/16 I21k, BiT-L, Noisy Student, on TPUv3\n  quote: \"TPUv3-core-days 2.5k 0.68k 0.23k 9.9k 12.3k\"\n  where: Table 2 p6\n- claim: ViT overfits more than a ResNet of comparable cost on small datasets and overtakes it on large ones.\n  number: 9M against 90M+\n  setup: random JFT subsets, no extra regularisation, early stopping, few-shot linear accuracy; results plotted only (Fig 4)\n  quote: \"ViT-B/32 is slightly faster than ResNet50; it performs much worse on the 9M subset, but better on 90M+ subsets.\"\n  where: p7\n- claim: Larger pre-training sets raise ViT's ImageNet accuracy, most of all for larger variants.\n  number: B/16 77.91, 83.97, 84.15; L/16 76.53, 85.15, 87.12\n  setup: top-1, fine-tuned at 384, no Polyak averaging; regularisation tuned per dataset (Table 3)\n  quote: \"ImageNet 77.91 73.38 76.53 71.16 -\" / \"ImageNet 83.97 81.28 85.15 80.99 85.13\" / \"ImageNet 84.15 80.73 87.12 84.37 88.04\"\n  where: Table 5 p15\n- claim: Without strong regularisation on mid-sized data, ViT falls below comparable ResNets.\n  number: none\n  setup: ImageNet-sized training, \"ResNets of comparable size\"\n  quote: \"yield modest accuracies of a few percentage points below ResNets of comparable size\"\n  where: p1\n- claim: ViT reaches the same transfer performance as ResNets with less compute.\n  number: 2-4x\n  setup: JFT-300M pre-training, average over 5 datasets, controlled scaling study\n  quote: \"ViT uses approximately 2− 4× less compute to attain the same performance (average over 5 datasets).\"\n  where: p8\n- claim: Having a position embedding matters; its form barely does.\n  number: 0.61382 against 0.64206\n  setup: ViT-B/16, ImageNet 5-shot linear; pre-training set not stated in D.4\n  quote: \"No Pos. Emb. 0.61382 N/A N/A\" / \"1-D Pos. Emb. 0.64206 0.63964 0.64292\"\n  where: Table 8 p17\n- claim: Hybrids beat pure ViT only at small budgets.\n  number: none\n  setup: R50+ViT against ViT, JFT pre-training\n  quote: \"hybrids slightly outperform ViT at small computational budgets, but the difference vanishes for larger models.\"\n  where: p8\n- claim: The model variants scale from 86M to 632M parameters.\n  number: 86M, 307M, 632M\n  setup: Table 1 configurations, based on BERT's\n  quote: \"ViT-Base 12 768 3072 12 86M\"\n  where: Table 1 p5\n- claim: Self-supervised pre-training helps but trails supervised pre-training.\n  number: 79.9%\n  setup: ViT-B/16, masked patch prediction on JFT, 1M steps\n  quote: \"our smaller ViT-B/16 model achieves 79.9% accuracy on ImageNet\"\n  where: p9\n- claim: A class token and global average pooling work about equally once the learning rate is set for each.\n  number: none\n  setup: ImageNet linear 5-shot over training epochs (Fig 9)\n  quote: \"the difference in performance is fully explained by the requirement for a different learning-rate\"\n  where: pp16-17\n- claim: Depth is the best dimension to scale, and width helps least.\n  number: 16 layers\n  setup: base ViT of 8 layers, D=1024, patch size 32, 5-shot\n  quote: \"diminishing returns are already visible after 16 layers\"\n  where: p16\n- claim: Attention distance is variable across heads in low layers and grows with depth, and large ViTs are more memory-efficient than ResNets.\n  number: none\n  setup: ViT-L/16 attention analysis; TPUv3 core batch-size timing\n  quote: \"large ViT models have a clear advantage in terms of memory-efﬁciency over ResNet models.\"\n  where: p8, p19, p20\n\nLIMITS\n- Classification only. Detection and segmentation are named as open challenges (p9).\n- Few-shot analysis is left as future work (p7).\n- The dataset-size curve is not a pure size test: regularisation and epochs differ by dataset in Table 3 and p6.\n- Compute efficiency may depend on \"training schedule, optimizer, weight decay\" (p6).\n- JFT is in-house, so its results are not publicly reproducible on that data.\n- The paper predates DeiT, so it offers no ImageNet-only recipe matching ResNets.\n- No threshold in images is given.\n- Table 8's pre-training set is unstated.\n\nBUILDS ON: Vaswani et al. (2017), architecture; Devlin et al. (2019), class token, model sizes and masked prediction; Cordonnier et al. (2020), the closest prior model, with 2×2 patches; Kolesnikov et al. (2020), BiT baseline and transfer protocol; Wang et al. (2019) and Baevski & Auli (2019), cited with pre-norm and residual placement; Sun et al. (2017), JFT; Chen et al. (2020a), iGPT; Abnar & Zuidema (2020), attention rollout; Wu & He (2018) and Qiao et al. (2019), the BiT ResNet changes; LeCun et al. (1989), hybrid CNN input.\n\nCODE: None in the paper. Footnote 1 (p1) points to github.com/google-research/vision_transformer.\n\nFIGURES\n- Fig 1, p3, model overview: shows patches, class token and encoder at a glance.\n- Fig 3, p7, transfer to ImageNet by pre-training set: shows the crossover against the BiT band, which Table 5 cannot because it has no CNN rows.\n- Fig 4, p7, linear 5-shot against JFT subset size: the cleanest data-size comparison, with no regularisation changes.\n- Fig 5, p7, performance against pre-training compute: shows the hybrid gap vanishing.\n- Fig 7, p9, filters, position similarity and attention distance: shows position embeddings learning 2-D structure.\n- Fig 9, p17, class token against GAP: shows the learning-rate dependence.\n\nPROBLEMS\n- Extraction faults: small-caps headings are split (\"16 X16 W ORDS\"), ligatures survive (\"ﬁ\"), equations are partly garbled, and figure text is scattered. Tables are readable as flat rows. Quotes joining a line break use a single space.\n- The paper contradicts itself on ViT-H/14: Table 5 gives 88.04 ImageNet and 97.56 Pets, while Table 6 gives 88.08 and 97.11, with no explanation.\n- Other slips in the paper: Fig 13's caption says \"(left)\" twice, Fig 6 points to Appendix D.7 though attention maps are in D.8, and the subsets are 9M/30M/90M in text but the axis reads 10M/30M/100M.\n- No embedded instructions found.\n\nNOTE CHECK\nNote: /Users/ramsey-wise/workspace/learn-ai-engineering/data-science/02-deep-learning/notes/05b-transformer-encoders.md. I grepped broadly and read the whole note. No number differs. Four items need a decision: L196 \"mid-sized\", L196 \"5 labelled images per class\", L389 \"same shape\", and L605's two inferences.\n\n| Line | Statement | Paper text | Setup in paper | Verdict |\n|---|---|---|---|---|\n| 196 | ViT is an encoder over image patches | \"feed the resulting sequence of vectors to a standard Transformer encoder\" (Fig 1, p3) | Fixed-size patches, linear embedding | matches |\n| 196 | \"a linear classifier on frozen features\" | \"solving a regularized least-squares regression problem that maps the (frozen) representation of a subset of training images to{−1, 1}K target vectors\" (p5) | Closed-form least squares | matches |\n| 196 | \"with 5 labelled images per class\" | No definition of 5-shot; only \"ImageNet 5-shot linear\" (Table 8, p17) | Standard reading of the term, not stated | not in source |\n| 196 | \"its mid-sized ViT-B/16\" | \"our smaller ViT-B/16 model\" (p9); Base is the smallest row of Table 1 (p5) | The paper uses \"mid-sized\" for datasets. B/16 sits mid-range only by compute among the Table 6 ViTs (224 exaFLOPs) | not in source |\n| 196 | 0.61382 none, 0.64206 learned 1-D, 0.64001 2-D-aware | \"No Pos. Emb. 0.61382 N/A N/A\"; \"1-D Pos. Emb. 0.64206 0.63964 0.64292\"; \"2-D Pos. Emb. 0.64001 0.64046 0.64022\" (Table 8, p17) | ViT-B/16, Default/Stem column, ImageNet 5-shot linear. The note omits relative, 0.64032 | matches |\n| 196 | Most of the benefit came from having any at all | \"there is a large gap between the performances of the model with no positional embedding and models with positional embedding, there is little to no difference between different ways of encoding positional information\" (p18) | Same. The authors tie this to patch-level input (\"14× 14 as opposed to 224× 224\") | matches |\n| 313 | The title states the choice; B/16 is one token per 16×16 patch | \"ViT-L/16 means the “Large” variant with16× 16 input patch size\" (p5); \"Image patches are treated the same way as tokens (words)\" (p1) | N = HW/P²; notation extends to B/16 | matches |\n| 311-313 | Published work \"makes the same choice\" as patches over pixels | \"With quadratic cost in the number of pixels, this does not scale to realistic input sizes.\" (p2) | Reason given is cost, with no pixel-versus-patch test. Among patch sizes, finer did better: B/16 against B/32 is 77.91/73.38, and \"Decreasing the patch size ... shows surprisingly robust improvements\" (p16). That differs from the note's \"more tokens buys nothing\" result | matches on the choice; no accuracy evidence for it |\n| 389 | \"much less image-specific inductive bias than CNNs\" | \"Vision Transformer has much less image-speciﬁc inductive bias than CNNs.\" (p4) | Design statement | matches |\n| 389 | Locality, 2-D neighbourhoods and equivariance are built into each CNN layer | \"locality, two-dimensional neighborhood structure, and translation equivariance are baked into each layer throughout the whole model\" (p4) | Same | matches |\n| 389 | \"all spatial relations between the patches have to be learned from scratch\" | Identical (p4) | Follows \"the position embeddings at initialization time carry no information about the 2D positions\" | matches |\n| 389 | ImageNet (1.3M), ImageNet-21k (14M) | \"1k classes and 1.3M images\"; \"21k classes and 14M images\" (p4) | Dataset sizes | matches |\n| 389 | ViT-B/16 77.91, 83.97, 84.15, top-1 on ImageNet at 384 | \"ImageNet 77.91 ...\"; \"ImageNet 83.97 ...\"; \"ImageNet 84.15 ...\" (Table 5, p15); \"Models are ﬁne-tuned at 384 resolution.\" | B/16 is the first column. No Polyak averaging or 512 resolution. Footnote 2 (p6): ImageNet-pre-trained models are also fine-tuned on ImageNet | matches |\n| 389 | \"The published evidence has the same shape\" as the note's learning curve | \"The BiT CNNs outperform ViT on ImageNet, but with the larger datasets, ViT overtakes.\" (p7) | Table 5 has no CNN rows, and the paper shows a crossover while the note's CNN wins at every size. Size is confounded: weight decay 0.3/0.03/0.1, dropout 0.1/0.1/0.0, epochs 300/90/7 for B/16 (Table 3, p13) | setup differs |\n| 389 | \"large scale training trumps inductive bias\" | \"We ﬁnd that large scale training trumps inductive bias.\" (p2) | Image classification, 14M-300M images | matches |\n| 391, 654 | The architecture is 86M parameters with a 77.9 starting point | \"ViT-Base 12 768 3072 12 86M\" (Table 1, p5); \"ImageNet 77.91\" (Table 5, p15) | 77.91 rounds to 77.9; the 83.1 and other DeiT numbers belong to arXiv:2012.12877 and are not checked here | matches |\n| 524 | Few to mid-sized image data: a CNN, or a pre-trained ViT | \"The BiT CNNs outperform ViT on ImageNet\" (p7); \"When pre-trained on large amounts of data and transferred to multiple mid-sized or small image recognition benchmarks\" (abstract, p1) | The advice is the note's inference, supported by these. VTAB uses 1,000 examples per task | matches |\n| 605 | ViT is pre-norm | \"Layernorm (LN) is applied before every block, and residual connections after every block\" (p3) | All ViT models | matches |\n| 605 | Warms up for 10k steps | \"All models are trained with a batch size of 4096 and learning rate warmup of 10k steps.\" (Table 3, p13) | Applies to all models | matches |\n| 605 | \"Pre-norm doesn't retire warm-up in practice\" | No test without warm-up; the paper only reports using it | Practice is reported, need is not shown | not in source |\n| 605 | \"strong regularization to be key\" from scratch on ImageNet | \"We found strong regularization to be key when training models from scratch on ImageNet.\" (p13) | Weight decay 0.3, dropout 0.1, gradient clipping at 1 (Table 3). p6 calls similar settings \"(moderate) regularization\" | matches |\n| 605 | \"Regularisation can matter more than either\" | No comparison against pre-norm or warm-up | Note's inference | not in source |\n| 654 | ViTs need more data than CNNs | \"Vision Transformers overﬁt more than ResNets with comparable computational cost on smaller datasets.\" (p7) | JFT subsets, few-shot | matches |\n| 654 | Locality and translation equivariance aren't built in, so must be learned | \"Transformers lack some of the inductive biases inherent to CNNs, such as translation equivariance and locality, and therefore do not generalize well when trained on insufﬁcient amounts of data.\" (pp1-2) | Partial, not total: \"In ViT, only MLP layers are local and translationally equivariant\" (p4). The authors call the causal link \"intuition\" (p7) | matches |\n\nGrep hits with no attribution to this paper:\n- L5 is the frontmatter source URL.\n- L18 and L20 are general claims about assuming less than a CNN, with no citation.\n- L288 is the note's own `tokens` code.\n- L525 and L653 concern patched time series."
+ "type": "empirical",
+ "question": "Can a standard Transformer applied directly to sequences of image patches, with minimal image-specific inductive bias, match or beat CNNs on image classification when pre-trained at large scale?",
+ "hypothesis": "Large scale training trumps inductive bias: a pure Transformer lacking CNN locality and translation equivariance will underperform on small data but match or exceed ResNets when pre-trained on 14M-300M images.",
+ "contributions": [
+  "Vision Transformer (ViT): split image into fixed-size patches, linearly embed, add position embeddings, feed to a standard Transformer encoder with a [class] token",
+  "Show that pre-training on ImageNet-21k or JFT-300M and transferring gives state-of-the-art or near-SOTA results on ImageNet, CIFAR-100, VTAB at lower pre-training compute than BiT or Noisy Student",
+  "Controlled studies of pre-training data size, compute scaling, position embeddings, class token vs GAP, and a preliminary masked-patch self-supervision experiment"
+ ],
+ "method": {
+  "summary": "A standard BERT-style Transformer encoder (pre-norm, GELU MLP) takes flattened 16x16 or 14x14 (or 32x32) image patches linearly projected to D dims plus learnable 1D position embeddings and a prepended [class] token. Models are pre-trained supervised on ImageNet, ImageNet-21k or JFT-300M with Adam and fine-tuned with SGD on downstream tasks at higher resolution, compared against BiT ResNets and hybrids.",
+  "task": "supervised image classification pre-training and transfer",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "ImageNet (ILSVRC-2012)",
+    "role": "both",
+    "size": "1.3M images, 1k classes",
+    "split": "original validation labels and ReaL labels; fine-tuning dev split 1% of train",
+    "source": "Deng et al. 2009",
+    "preprocessing": "follows Kolesnikov et al. (2020)"
+   },
+   {
+    "name": "ImageNet-21k",
+    "role": "pretrain",
+    "size": "14M images, 21k classes",
+    "split": null,
+    "source": "Deng et al. 2009",
+    "preprocessing": "de-duplicated w.r.t. downstream test sets following Kolesnikov et al. (2020)"
+   },
+   {
+    "name": "JFT-300M",
+    "role": "pretrain",
+    "size": "303M high-resolution images, 18k classes",
+    "split": "also random subsets of 9M, 30M, 90M for Fig 4",
+    "source": "Sun et al. 2017 (in-house Google)",
+    "preprocessing": "de-duplicated w.r.t. downstream test sets"
+   },
+   {
+    "name": "CIFAR-10/100",
+    "role": "eval",
+    "size": null,
+    "split": "fine-tune dev split 2% of train",
+    "source": "Krizhevsky 2009",
+    "preprocessing": "follows Kolesnikov et al. (2020)"
+   },
+   {
+    "name": "Oxford-IIIT Pets",
+    "role": "eval",
+    "size": null,
+    "split": "fine-tune dev split 10% of train",
+    "source": "Parkhi et al. 2012",
+    "preprocessing": null
+   },
+   {
+    "name": "Oxford Flowers-102",
+    "role": "eval",
+    "size": null,
+    "split": "fine-tune dev split 10% of train",
+    "source": "Nilsback & Zisserman 2008",
+    "preprocessing": null
+   },
+   {
+    "name": "VTAB (19 tasks)",
+    "role": "eval",
+    "size": "1 000 training examples per task (VTAB-1k); 200-example validation sets for hyperparameter choice",
+    "split": "Natural 7, Specialized 4, Structured 8",
+    "source": "Zhai et al. 2019b",
+    "preprocessing": "Kolesnikov et al. (2020) pre-processing but no task-specific input resolution; 384x384 for all tasks"
+   },
+   {
+    "name": "ObjectNet",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": null,
+    "preprocessing": "evaluation setup of Kolesnikov et al. (2020)"
+   }
+  ],
+  "models": [
+   {
+    "name": "ViT-Base",
+    "role": "proposed",
+    "params": "86M",
+    "architecture": "pre-norm Transformer encoder, GELU MLP, [class] token, learnable 1D position embeddings",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": 12,
+    "hidden": 768,
+    "heads": 12,
+    "context": "inferred: N=HW/P^2 patches plus [class]; 196 patches at 224 with P=16, 49 with P=32",
+    "other": {
+     "mlp_size": 3072,
+     "variants": "B/16, B/32; adopted directly from BERT"
+    }
+   },
+   {
+    "name": "ViT-Large",
+    "role": "proposed",
+    "params": "307M",
+    "architecture": "as ViT-Base",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": 24,
+    "hidden": 1024,
+    "heads": 16,
+    "context": null,
+    "other": {
+     "mlp_size": 4096,
+     "variants": "L/16, L/32; adopted directly from BERT"
+    }
+   },
+   {
+    "name": "ViT-Huge",
+    "role": "proposed",
+    "params": "632M",
+    "architecture": "as ViT-Base",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": 32,
+    "hidden": 1280,
+    "heads": 16,
+    "context": null,
+    "other": {
+     "mlp_size": 5120,
+     "variants": "H/14; added by this paper"
+    }
+   },
+   {
+    "name": "ResNet (BiT)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "ResNet with Group Normalization instead of BatchNorm and standardized convolutions",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "sizes": "R50x1, R50x2, R101x1, R152x1, R152x2, R200x3, R152x4",
+     "source": "Kolesnikov et al. 2020"
+    }
+   },
+   {
+    "name": "Hybrid R50+ViT",
+    "role": "proposed",
+    "params": null,
+    "architecture": "ResNet50 feature maps fed to ViT with patch size 1x1; stage-4 output or extended stage 3 (4x longer sequence)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "naming": "number at end is total downsampling ratio of the ResNet backbone, not patch size"
+    }
+   },
+   {
+    "name": "Noisy Student (EfficientNet-L2)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "EfficientNet-L2",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "numbers taken from literature (Xie et al. 2020)"
+    }
+   }
+  ],
+  "training": {
+   "objective": "supervised classification (pre-training head: MLP with one tanh hidden layer; fine-tuning: single zero-initialized linear layer D x K); self-supervised variant: masked patch prediction of 3-bit mean colour (512 classes)",
+   "optimizer": "Adam beta1=0.9, beta2=0.999 for pre-training all models including ResNets; SGD momentum 0.9 for fine-tuning",
+   "lr": "pre-train base LR per Table 3: ViT-B 8e-4, ViT-L/32 6e-4, ViT-L/16 4e-4, ViT-H/14 3e-4 on JFT; 1e-3 on ImageNet-21k; 3e-3 on ImageNet. Fine-tune grid per Table 4 (e.g. ImageNet {0.003,0.01,0.03,0.06}; VTAB 0.01)",
+   "lr_schedule": "linear warmup then linear decay for JFT and ImageNet-21k; cosine for ImageNet from scratch; fine-tuning cosine decay",
+   "warmup": "10k steps",
+   "batch_size": "4096 pre-training; 512 fine-tuning",
+   "steps": "fine-tuning: ImageNet 20 000, CIFAR100 10 000, CIFAR10 10 000, Pets 500, Flowers 500, VTAB 2 500; self-supervised: 1M steps",
+   "epochs": "JFT: 7 (B, L/32, L/16 short), 14 (L/16 long, H/14); ImageNet-21k: 90 (B), 30/90 (L); ImageNet: 300",
+   "tokens": null,
+   "seq_len": "inferred: 196 patches + [class] at 224 with 16x16 patches; fine-tuning at 384 gives 576+1",
+   "precision": null,
+   "weight_decay": "0.1 on JFT (and hybrids/ResNets); 0.03 on ImageNet-21k; 0.3 on ImageNet; none in fine-tuning",
+   "dropout": "0.0 on JFT; 0.1 on ImageNet-21k and ImageNet; applied after every dense layer except qkv projections and directly after adding position to patch embeddings",
+   "regularisation": "weight decay, dropout, label smoothing tuned on smaller datasets (label smoothing value not stated); gradient clipping at global norm 1 for ImageNet pre-training and for all fine-tuning; Polyak averaging factor 0.9999 for Table 2 ImageNet",
+   "hardware": "TPUv3",
+   "compute": "pre-training cost in TPUv3-core-days (Table 2): ViT-H/14 2.5k, ViT-L/16 JFT 0.68k, ViT-L/16 I21k 0.23k, BiT-L 9.9k, Noisy Student 12.3k; exaFLOPs per model in Table 6 (ViT-H/14 14 epochs 4262)",
+   "wall_clock": "ViT-L/16 I21k: approximately 30 days on a standard cloud TPUv3 with 8 cores",
+   "seeds": "mean and std over three fine-tuning runs (Table 2); pre-training seeds not stated",
+   "other": {
+    "training_resolution": 224,
+    "fine_tune_resolution": "384 by default; 512 for ViT-L/16 and 518 for ViT-H/14 for Table 2 ImageNet",
+    "position_embedding_resize": "2D interpolation of pre-trained position embeddings when resolution increases",
+    "few_shot_probe": "regularized least-squares regression from frozen representation to {-1,1}^K targets, closed form",
+    "masked_patch_pretrain": "corrupt 50% of patch embeddings (80% [mask] embedding, 10% random patch, 10% unchanged); Adam base LR 2e-4, warmup 10k, cosine decay, batch 4096, 1M steps (~14 epochs) on JFT; 15% corruption slightly worse",
+    "pretrain_table3_note": "Table 3 lists R50x{1,2} 1e-3, R101x1 8e-4, R152x{1,2} 6e-4, R50+ViT-L/32 2e-4, hybrids otherwise as ViT counterparts"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "three fine-tuning runs per Table 2 cell",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {
+    "attention_maps": "Attention Rollout (Abnar & Zuidema 2020) on ViT-L/16, averaged over heads, multiplied across layers",
+    "attention_distance": "128 example images, 224 px width"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Fine-tuning top-1 accuracy",
+     "definition": "accuracy after fine-tuning on the downstream dataset",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Linear few-shot accuracy",
+     "definition": "closed-form regularized least-squares on frozen representations of a subset of train images; e.g. ImageNet 5-shot",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "VTAB score",
+     "definition": "mean accuracy over 19 tasks with 1 000 train examples each",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Pre-training cost",
+     "definition": "TPUv3 cores (2 per chip) times training days; also exaFLOPs",
+     "unit": "TPUv3-core-days / exaFLOPs",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "BiT-L (ResNet152x4) Kolesnikov et al. 2020",
+    "Noisy Student (EfficientNet-L2) Xie et al. 2020",
+    "VIVI-Ex-100% (R50x3)",
+    "S4L (R50x1)",
+    "ResNet (BiT) family and hybrids in scaling study",
+    "AxialResNet50"
+   ],
+   "protocol": "Fine-tune hyperparameters chosen by small grid search on held-out train sub-splits (10% Pets/Flowers, 2% CIFAR, 1% ImageNet), then retrain on full train and report test; mean +/- std of three fine-tuning runs in Table 2; early stopping with best validation accuracy in JFT subset study."
+  },
+  "availability": {
+   "code": "https://github.com/google-research/vision_transformer (fine-tuning code and pre-trained models)",
+   "weights": "pre-trained models released (footnote 1)",
+   "data": "JFT-300M is in-house and not released; ImageNet, ImageNet-21k, VTAB public"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.warmup",
+    "quote": "All models are trained with a batch size of 4096 and learning rate warmup of 10k steps.",
+    "where": "Table 3 caption"
+   },
+   {
+    "field": "models.ViT-Base.params",
+    "quote": "ViT-Base 12 768 3072 12 86M",
+    "where": "Table 1 (text order split by layout)"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Best model ViT-H/14 (JFT-300M) reaches 88.55% ImageNet top-1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ImageNet top-1",
+   "value": 88.55,
+   "unit": "%",
+   "baseline_value": 88.5,
+   "n": null,
+   "setup": "ViT-H/14, JFT-300M pre-training, fine-tuned at 518 with Polyak averaging, mean of three fine-tuning runs",
+   "note": "Baseline Noisy Student printed as 88.4/88.5* (88.5 from Touvron et al. 2020); Table 5 gives 88.04 for same model without Polyak averaging and 512 resolution.",
+   "where": "p2 Intro; Table 2",
+   "quote": "the best model reaches the accuracy of 88.55% on ImageNet"
+  },
+  {
+   "claim": "ViT-H/14 reaches 77.63% on the 19-task VTAB suite.",
+   "kind": "measured",
+   "source": null,
+   "metric": "VTAB mean accuracy",
+   "value": 77.63,
+   "unit": "%",
+   "baseline_value": 76.29,
+   "n": null,
+   "setup": "ViT-H/14 JFT, VTAB-1k, 1000 examples per task, 2500 steps lr 0.01",
+   "note": null,
+   "where": "p2; Table 2",
+   "quote": "77.63% on the VTAB suite of 19 tasks"
+  },
+  {
+   "claim": "ViT-H/14 reaches 94.55% on CIFAR-100.",
+   "kind": "measured",
+   "source": null,
+   "metric": "CIFAR-100 top-1",
+   "value": 94.55,
+   "unit": "%",
+   "baseline_value": 93.51,
+   "n": null,
+   "setup": "ViT-H/14 JFT, fine-tuned",
+   "note": null,
+   "where": "p2; Table 2",
+   "quote": "94.55% on CIFAR-100"
+  },
+  {
+   "claim": "ViT-H/14 reaches 90.72% on ImageNet-ReaL.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ImageNet ReaL",
+   "value": 90.72,
+   "unit": "%",
+   "baseline_value": 90.55,
+   "n": null,
+   "setup": "ViT-H/14 JFT",
+   "note": null,
+   "where": "p2; Table 2",
+   "quote": "90.72% on ImageNet-ReaL"
+  },
+  {
+   "claim": "ViT-L/16 pre-trained on JFT outperforms BiT-L on ImageNet at a fraction of the compute.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ImageNet top-1",
+   "value": 87.76,
+   "unit": "%",
+   "baseline_value": 87.54,
+   "n": null,
+   "setup": "ViT-L/16 JFT-300M vs BiT-L ResNet152x4, same dataset, mean of three runs",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row ImageNet, column Ours-JFT (ViT-L/16) 87.76 +/- 0.03"
+  },
+  {
+   "claim": "Pre-training cost: ViT-L/16 JFT takes 0.68k TPUv3-core-days vs 9.9k for BiT-L and 12.3k for Noisy Student.",
+   "kind": "measured",
+   "source": null,
+   "metric": "TPUv3-core-days",
+   "value": 0.68,
+   "unit": "k TPUv3-core-days",
+   "baseline_value": 9.9,
+   "n": null,
+   "setup": "Table 2 columns ViT-H/14 2.5k, ViT-L/16 JFT 0.68k, ViT-L/16 I21k 0.23k, BiT-L 9.9k, Noisy Student 12.3k",
+   "note": "Authors caution that efficiency depends also on schedule, optimizer, weight decay.",
+   "where": "Table 2",
+   "table": "Table 2, row TPUv3-core-days, column Ours-JFT (ViT-L/16) 0.68k"
+  },
+  {
+   "claim": "ViT-L/16 on ImageNet-21k reaches 85.30% ImageNet and could be trained on a cloud TPUv3 with 8 cores in about 30 days.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ImageNet top-1",
+   "value": 85.3,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ViT-L/16 ImageNet-21k pre-training, 0.23k core-days",
+   "note": null,
+   "where": "p6; Table 2",
+   "table": "Table 2, row ImageNet, column Ours-I21k (ViT-L/16) 85.30 +/- 0.02"
+  },
+  {
+   "claim": "ViT needs about 2-4x less compute than ResNets for the same average transfer performance.",
+   "kind": "measured",
+   "source": null,
+   "metric": "compute at equal accuracy",
+   "value": "2-4",
+   "unit": "x less compute",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Scaling study: JFT-300M pre-training, 7-14 epochs, average over 5 datasets, 7 ResNets, 6 ViTs, 5 hybrids",
+   "note": null,
+   "where": "Sec 4.4",
+   "quote": "ViT uses approximately 2 −4× less compute to attain the same performance (average over 5 datasets)."
+  },
+  {
+   "claim": "Hybrids slightly outperform ViT at small compute but the gap vanishes at larger sizes; ViT does not saturate in the range tried.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Scaling study, JFT-300M",
+   "note": null,
+   "where": "Sec 4.4; Fig 5",
+   "quote": "hybrids slightly outperform ViT at small computational budgets, but the difference vanishes for larger models"
+  },
+  {
+   "claim": "With ImageNet-only pre-training ViT-L underperforms ViT-B; ImageNet-21k they are similar; only JFT-300M shows the full benefit of larger models.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "ImageNet pre-training with tuned weight decay, dropout, label smoothing; fine-tuned to ImageNet",
+   "note": null,
+   "where": "Sec 4.3; Fig 3; Table 5",
+   "quote": "When pre-trained on the smallest dataset, ImageNet, ViT-Large models underperform compared to ViT-Base models"
+  },
+  {
+   "claim": "ViT-B/16 ImageNet top-1 by pre-training set: 77.91 (ImageNet), 83.97 (ImageNet-21k), 84.15 (JFT).",
+   "kind": "measured",
+   "source": null,
+   "metric": "ImageNet top-1",
+   "value": 84.15,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "fine-tuned at 384, no Polyak averaging or 512 resolution",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row ImageNet (JFT-300M block), column ViT-B/16 84.15; ImageNet block 77.91; ImageNet-21k block 83.97"
+  },
+  {
+   "claim": "ViT-L/16 ImageNet top-1 by pre-training set: 76.53, 85.15, 87.12.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ImageNet top-1",
+   "value": 87.12,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "fine-tuned at 384",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row ImageNet (JFT-300M block), column ViT-L/16 87.12; ImageNet block 76.53; ImageNet-21k block 85.15"
+  },
+  {
+   "claim": "ViT overfits more than ResNets on small JFT subsets: ViT-B/32 is much worse than ResNet50 on 9M but better on 90M+.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Random JFT subsets 9M/30M/90M/300M, no extra regularisation, early stopping, ImageNet linear 5-shot; plotted in Fig 4 only",
+   "note": null,
+   "where": "Sec 4.3",
+   "quote": "ViT-B/32 is slightly faster than ResNet50; it performs much worse on the 9M subset, but better on 90M+ subsets."
+  },
+  {
+   "claim": "Self-supervised masked patch prediction gets ViT-B/16 to 79.9% ImageNet, +2% over scratch, 4% behind supervised pre-training.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ImageNet top-1",
+   "value": 79.9,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ViT-B/16, masked patch prediction on JFT, 1M steps, fine-tuned ImageNet",
+   "note": null,
+   "where": "Sec 4.6",
+   "quote": "our smaller ViT-B/16 model achieves 79.9% accuracy on ImageNet"
+  },
+  {
+   "claim": "ViT-H/14 gets 61.7% top-1 and 82.1% top-5 on ObjectNet.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ObjectNet top-1",
+   "value": 61.7,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ViT-H/14, setup of Kolesnikov et al. 2020",
+   "note": null,
+   "where": "App D.9",
+   "quote": "resulting in 82.1% top-5 accuracy and 61.7% top-1 accuracy"
+  },
+  {
+   "claim": "Removing position embeddings costs about 2.8 points of ImageNet 5-shot; 1D, 2D and relative variants are within about 0.3 points.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ImageNet 5-shot linear",
+   "value": 0.64206,
+   "unit": "ImageNet 5-shot linear accuracy (fraction)",
+   "baseline_value": 0.61382,
+   "n": null,
+   "setup": "ViT-B/16, pre-training as in other experiments; 1-D default 0.64206 vs none 0.61382",
+   "note": "Table prints fractions not percent; 0.64292 best (1-D, Every Layer-Shared), 2-D 0.64001.",
+   "where": "App D.4",
+   "table": "Table 8, row 1-D Pos. Emb., column Default/Stem"
+  },
+  {
+   "claim": "Scaling depth gives the largest gains, width the smallest; smaller patch size improves without adding parameters.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "ViT 8 layers D=1024 D_MLP=2048 patch 32 baseline, ImageNet 5-shot (Fig 8)",
+   "note": "Diminishing returns after 16 layers per same paragraph.",
+   "where": "App D.2",
+   "quote": "scaling the depth results in the biggest improvements which are clearly visible up until 64 layers"
+  },
+  {
+   "claim": "Class token vs global average pooling perform similarly once learning rate is tuned separately.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "ImageNet linear 5-shot, lr 8e-4 vs 3e-4 (Fig 9)",
+   "note": null,
+   "where": "App D.3",
+   "quote": "the difference in performance is fully explained by the requirement for a different learning-rate"
+  },
+  {
+   "claim": "Adam pre-training beats SGD for ResNets on average, 89.33 vs 88.79 (ResNet50) and 94.01 vs 93.72 (ResNet152x2).",
+   "kind": "measured",
+   "source": null,
+   "metric": "mean top-1 over 5 datasets",
+   "value": 89.33,
+   "unit": "% average",
+   "baseline_value": 88.79,
+   "n": null,
+   "setup": "ResNet50 and ResNet152x2 pre-trained on JFT 7 epochs, fine-tuned on 5 datasets",
+   "note": null,
+   "where": "App D.1; Table 7",
+   "table": "Table 7, row Average, column ResNet50 Adam"
+  },
+  {
+   "claim": "Inductive-bias claim: large scale training trumps inductive bias.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "ViT vs ResNets across datasets 14M-300M images",
+   "note": null,
+   "where": "Sec 1",
+   "quote": "We ﬁnd that large scale training trumps inductive bias."
+  },
+  {
+   "claim": "Learned position embeddings encode 2D distance and row/column structure; some heads attend globally already in low layers and attention distance grows with depth.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "ViT-L/32 position embeddings (Fig 7), ViT-L/16 attention distance over 128 images (Fig 11)",
+   "note": null,
+   "where": "Sec 4.5; App D.7",
+   "quote": "closer patches tend to have more similar position em-"
+  }
+ ],
+ "limits": [
+  "Only image classification is evaluated; detection and segmentation are named as open challenges.",
+  "Best results depend on JFT-300M, an unreleased in-house dataset; on ImageNet alone ViT-L is below ViT-B and below same-size ResNets.",
+  "Compute-efficiency claims are caveated: the authors say pre-training efficiency may depend on schedule, optimizer and weight decay, not just architecture.",
+  "Self-supervised pre-training is preliminary and 4% behind supervised; contrastive pre-training left for future work.",
+  "Fine-tuning and linear few-shot used for different figures; the few-shot study of ViT is left as future work.",
+  "Label smoothing value, precision, hardware counts and pre-training seeds are not stated.",
+  "Axial attention variants are better in accuracy but cost more compute; AxialResNet implementation was too slow on TPUs for large-scale runs.",
+  "Dated: in 2026 ViT is the standard vision backbone; later work (not in this paper) showed it can train on ImageNet-only with stronger augmentation."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "patch embedding",
+   "definition": "the output of the trainable linear projection of flattened patches to D dimensions (Eq. 1)",
+   "where": "Sec 3.1"
+  },
+  {
+   "term": "[class] token",
+   "definition": "a learnable embedding prepended to the patch sequence whose state at the encoder output serves as the image representation",
+   "where": "Sec 3.1"
+  },
+  {
+   "term": "hybrid architecture",
+   "definition": "input sequence formed from CNN feature maps rather than raw image patches",
+   "where": "Sec 3.1"
+  },
+  {
+   "term": "attention distance",
+   "definition": "average distance in image space across which information is integrated, based on attention weights; analogous to receptive field size in CNNs",
+   "where": "Sec 4.5"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Attention is all you need",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "ViT follows the original Transformer as closely as possible",
+   "quote": "In model design we follow the original Transformer (Vaswani et al., 2017) as closely as possible."
+  },
+  {
+   "work": "BERT",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "[class] token, Base/Large configs, masked prediction self-supervision",
+   "quote": "We base ViT conﬁgurations on those used for BERT"
+  },
+  {
+   "work": "Big Transfer (BiT)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "ResNet baseline, transfer protocol, preprocessing, de-duplication",
+   "quote": null
+  },
+  {
+   "work": "Self-training with Noisy Student",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "ImageNet SOTA comparison",
+   "quote": null
+  },
+  {
+   "work": "On the relationship between self-attention and convolutional layers (Cordonnier et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "closest prior: 2x2 patches with full self-attention on small images",
+   "quote": "Most related to ours is the model of Cordonnier et al. (2020)"
+  },
+  {
+   "work": "Generative pretraining from pixels (iGPT)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Transformer on pixels, 72% ImageNet",
+   "quote": null
+  },
+  {
+   "work": "Deep residual learning for image recognition",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "ResNet backbone",
+   "quote": null
+  },
+  {
+   "work": "Revisiting unreasonable effectiveness of data in deep learning era (JFT)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "JFT-300M",
+   "quote": null
+  },
+  {
+   "work": "ImageNet / ImageNet-21k",
+   "year": 2009,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Deng et al. 2009",
+   "quote": null
+  },
+  {
+   "work": "VTAB (Zhai et al.)",
+   "year": 2019,
+   "arxiv": "1910.04867",
+   "relation": "uses-data",
+   "note": "19-task benchmark",
+   "quote": null
+  },
+  {
+   "work": "Attention Rollout (Abnar & Zuidema)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "attention maps",
+   "quote": null
+  },
+  {
+   "work": "Axial-DeepLab (Wang et al.)",
+   "year": 2020,
+   "arxiv": "2003.07853",
+   "relation": "baseline",
+   "note": "AxialResNet baseline in D.6",
+   "quote": null
+  },
+  {
+   "work": "Adam",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "pre-training optimizer",
+   "quote": null
+  },
+  {
+   "work": "Group Normalization",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "in ResNet (BiT)",
+   "quote": null
+  },
+  {
+   "work": "Sparse Transformers; Image Transformer; stand-alone self-attention",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "local/sparse attention approximations for images (Child 2019; Parmar 2018; Ramachandran 2019)",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Model overview. We split an image into fixed-size patches, linearly embed each of them, add position embeddings, and feed the resulting sequence of vectors to a standard Transformer encoder.",
+   "page": 3,
+   "why": "Shows the whole architecture in one picture."
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Transfer to ImageNet. While large ViT models perform worse than BiT ResNets when pre-trained on small datasets, they shine when pre-trained on larger datasets.",
+   "page": 7,
+   "why": "The data-scale crossover."
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Performance versus pre-training compute for different architectures: Vision Transformers, ResNets, and hybrids.",
+   "page": 7,
+   "why": "The 2-4x compute advantage."
+  },
+  {
+   "figure": "Fig 7",
+   "caption": "Left: filters of initial linear embedding. Center: similarity of position embeddings. Right: size of attended area by head and network depth.",
+   "page": 9,
+   "why": "Shows learned 2D structure and attention distance."
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 3.1, Eq 1-4",
+   "snippet": "z0 = [x_class; x_p^1 E; x_p^2 E; ... ; x_p^N E] + E_pos,  E in R^{(P^2*C) x D}, E_pos in R^{(N+1) x D}\nz'_l = MSA(LN(z_{l-1})) + z_{l-1}\nz_l = MLP(LN(z'_l)) + z'_l\ny = LN(z_L^0)",
+   "verbatim": false
+  },
+  {
+   "where": "App A, Eq 5-8",
+   "snippet": "[q,k,v] = z U_qkv;  A = softmax(q k^T / sqrt(D_h));  SA(z) = A v;  MSA(z) = [SA_1(z); ...; SA_k(z)] U_msa,  D_h = D/k",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "No embedded instructions found.",
+  "Table 1, 2, 3 and 9 are laid out one cell per line in the text; values were matched by position.",
+  "Figure 13 caption says 'inference time (left)' twice; Table 5 ImageNet pre-training column for ViT-H/14 is '-'."
+ ]
 }

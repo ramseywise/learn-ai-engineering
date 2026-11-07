@@ -34,7 +34,7 @@ ZIP downloads of other people's public repositories (hence the `-main` and `-mas
 read-reference material, not authored here. They were downloaded as ZIPs, so no nested `.git/config`
 records the upstream. Each URL was resolved by matching directory contents, not names. Verified
 2026-08-14: no third-party or hand-authored edits inside them. Each one is condensed into notes and
-then deleted, as the [definition of done](.claude/skills/pillar/references/pillar-layout.md#definition-of-done)
+then deleted, as the [definition of done](https://github.com/ramseywise/librarian/blob/main/.claude/skills/pillar/references/pillar-layout.md#definition-of-done)
 requires.
 
 None remain. Every snapshot listed on 2026-08-14 was condensed into notes and removed by 2026-10-31,

@@ -406,7 +406,7 @@ All ch. 6 labs (numbered 9-N in the book's experiment list) need API keys, GPUs 
 | DOM indexing or pure vision for Computer Use? | Index when structure exists, fall back to SoM or coordinates on canvas, and keep both paths. Pick the route per model. |
 | Action chunking versus sudden change? | Use shorter chunks near contact, re-plan on visual anomaly triggers, and blend overlapping chunks. |
 | What did SeeAct show about GUI agents? | With oracle grounding GPT-4V completed 51.1% of live-site tasks, with a large gap to real grounding. Finding the element, rather than choosing the action, was the bottleneck at that time. |
-| Is human-level OSWorld performance the end of the story? | No. Agent S3's 72.6% used 10 rollouts at a 100-step budget, roughly 10× the cost and, run in parallel, about 1.7× the wall-clock of one rollout. Measure time per task and steps per task alongside the success rate. |
+| Is human-level OSWorld performance the end of the story? | No. Agent S3's 72.6% used 10 rollouts at a 100-step budget, roughly 10× the cost and, run in parallel, about 1.7× the wall-clock of one rollout (the paper's cost and time figures are for GPT-5 alone, while the 72.6% run mixed in Opus 4.5). Measure time per task and steps per task alongside the success rate. |
 | Does "click first, look later" apply to every action? | No. It needs a gate for anything you cannot undo, and what appears on the screen is untrusted input too, since a page can carry instructions for the agent. |
 
 ---

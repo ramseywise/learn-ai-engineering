@@ -13,7 +13,7 @@ The pillar builds one research agent several times, all on the question "Why do 
 
 ## Why it matters
 
-Framework choice is one of the expensive decisions in an agent project, and the demos won't help you make it. All three builds in the lab return the identical answer. Left to run on a stuck model, one stops after 6 calls, one after 500 and one after 5,004. You find differences like that only by building the same thing more than once and measuring it, so that is how this pillar is organised. [Wang et al.](https://arxiv.org/abs/2512.01939) found that more than a third of agent failures come from logic control, which no framework takes off your hands.
+Framework choice is one of the expensive decisions in an agent project, and the demos won't help you make it. All three builds in the lab return the identical answer. Left to run on a stuck model, one stops after 6 calls, one after 500 and one after 5,004. You find differences like that only by building the same thing more than once and measuring it, so that is how this pillar is organised. [Wang et al.](https://arxiv.org/abs/2512.01939) classified 8,710 developer discussions from 1,575 GitHub agent projects and put more than a third of the reported failures down to logic control: termination, message cooling and state. Those are shares of what developers complain about, not a failure rate, and the frameworks here leave all three to you.
 
 > **Build the loop by hand once. Then a framework is a set of things you no longer write, and you can judge whether that set is worth its indirection.**
 

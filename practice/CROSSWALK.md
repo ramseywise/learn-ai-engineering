@@ -51,6 +51,8 @@ mean it is untested: fields are left out where the mapping is unclear.
 | Unit | Rounds | Drills |
 |---|---|---|
 | [`data-science/01-classical-ml`](../data-science/01-classical-ml/README.md) | [case-study/churn-prediction-takehome](interviewing/rounds/case-study/examples/ml-track/churn-prediction-takehome.md), [technical-questions](interviewing/rounds/technical-questions/README.md) | - |
+| [`data-science/01-classical-ml/notes/02-supervised-learning.md`](../data-science/01-classical-ml/notes/02-supervised-learning.md) | - | [gradient-check-numpy](../programming/drills/coding/ml-coding/gradient-check-numpy.md) |
+| [`data-science/01-classical-ml/notes/05-unsupervised-learning.md`](../data-science/01-classical-ml/notes/05-unsupervised-learning.md) | - | [low-rank-svd](../programming/drills/coding/ml-coding/low-rank-svd.md) |
 | [`data-science/01-classical-ml/notes/13-automate-review-or-reject.md`](../data-science/01-classical-ml/notes/13-automate-review-or-reject.md) | [system-design-round/part-matching](interviewing/rounds/system-design-round/examples/part-matching.md), [system-design-round/voice-agent](interviewing/rounds/system-design-round/examples/voice-agent.md) | - |
 | [`data-science/02-deep-learning`](../data-science/02-deep-learning/README.md) | [technical-questions](interviewing/rounds/technical-questions/README.md) | - |
 | [`data-science/03-nlp`](../data-science/03-nlp/README.md) | [technical-questions](interviewing/rounds/technical-questions/README.md) | - |
@@ -62,6 +64,8 @@ mean it is untested: fields are left out where the mapping is unclear.
 | Unit | Rounds | Drills |
 |---|---|---|
 | [`generative-ai/01-llm-fundamentals`](../generative-ai/01-llm-fundamentals/README.md) | [technical-questions](interviewing/rounds/technical-questions/README.md) | - |
+| [`generative-ai/01-llm-fundamentals/notes/02-attention-and-the-transformer-block.md`](../generative-ai/01-llm-fundamentals/notes/02-attention-and-the-transformer-block.md) | - | [low-rank-svd](../programming/drills/coding/ml-coding/low-rank-svd.md) |
+| [`generative-ai/01-llm-fundamentals/notes/06-pretraining-data-and-objectives.md`](../generative-ai/01-llm-fundamentals/notes/06-pretraining-data-and-objectives.md) | - | [softmax-cross-entropy-grad](../programming/drills/coding/ml-coding/softmax-cross-entropy-grad.md) |
 | [`generative-ai/02-rag-retrieval`](../generative-ai/02-rag-retrieval/README.md) | [case-study/rag-pipeline-defense](interviewing/rounds/case-study/examples/aie-track/rag-pipeline-defense.md), [coding-challenge/rag-pipeline-offline](interviewing/rounds/coding-challenge/examples/rag-pipeline-offline.md), [system-design-round/rag-system](interviewing/rounds/system-design-round/examples/rag-system.md) | - |
 | [`generative-ai/02-rag-retrieval/notes/07-rag-in-production.md`](../generative-ai/02-rag-retrieval/notes/07-rag-in-production.md) | [system-design-round](interviewing/rounds/system-design-round/README.md), [system-design-round/decision-tree](interviewing/rounds/system-design-round/decision-tree.md) | - |
 | [`generative-ai/03-agentic-foundations`](../generative-ai/03-agentic-foundations/README.md) | [system-design-round/agent-system](interviewing/rounds/system-design-round/examples/agent-system.md) | - |
@@ -77,6 +81,7 @@ mean it is untested: fields are left out where the mapping is unclear.
 | [`generative-ai/08-eval/notes/13-case-study-support-agent.md`](../generative-ai/08-eval/notes/13-case-study-support-agent.md) | [case-study/retail-support-automation](interviewing/rounds/case-study/examples/aie-track/retail-support-automation.md) | - |
 | [`generative-ai/08-eval/notes/15-calibration-against-human-labels.md`](../generative-ai/08-eval/notes/15-calibration-against-human-labels.md) | [system-design-round/voice-agent](interviewing/rounds/system-design-round/examples/voice-agent.md) | - |
 | [`generative-ai/09-llms-from-scratch`](../generative-ai/09-llms-from-scratch/README.md) | [technical-questions](interviewing/rounds/technical-questions/README.md) | - |
+| [`generative-ai/09-llms-from-scratch/notes/01-micrograd.md`](../generative-ai/09-llms-from-scratch/notes/01-micrograd.md) | - | [gradient-check-numpy](../programming/drills/coding/ml-coding/gradient-check-numpy.md) |
 
 ## programming
 
@@ -86,6 +91,7 @@ mean it is untested: fields are left out where the mapping is unclear.
 | [`programming/backend-and-system-design/notes/02-auth-sessions-jwt-oauth.md`](../programming/backend-and-system-design/notes/02-auth-sessions-jwt-oauth.md) | [coding-challenge/auth-api-endpoint](interviewing/rounds/coding-challenge/examples/auth-api-endpoint.md) | - |
 | [`programming/backend-and-system-design/notes/05-estimation-and-scaling.md`](../programming/backend-and-system-design/notes/05-estimation-and-scaling.md) | [coding-challenge/sqlite-pipeline-scaling](interviewing/rounds/coding-challenge/examples/sqlite-pipeline-scaling.md) | - |
 | [`programming/computer-science/notes/02-data-structures.md`](../programming/computer-science/notes/02-data-structures.md) | [coding-challenge/lru-cache](interviewing/rounds/coding-challenge/examples/lru-cache.md) | - |
+| [`programming/computer-science/notes/04-numbers-and-memory.md`](../programming/computer-science/notes/04-numbers-and-memory.md) | - | [softmax-cross-entropy-grad](../programming/drills/coding/ml-coding/softmax-cross-entropy-grad.md) |
 | [`programming/python`](../programming/python/README.md) | [coding-challenge](interviewing/rounds/coding-challenge/README.md) | - |
 | [`programming/sql`](../programming/sql/README.md) | [coding-challenge](interviewing/rounds/coding-challenge/README.md) | [top-orders-per-user](../programming/drills/sql/window-functions/top-orders-per-user.md) |
 | [`programming/typescript`](../programming/typescript/README.md) | [coding-challenge](interviewing/rounds/coding-challenge/README.md) | [group-by](../programming/drills/typescript/types/group-by.md) |

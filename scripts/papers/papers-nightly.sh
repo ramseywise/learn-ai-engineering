@@ -15,6 +15,7 @@
 # the usage limit, whichever pass it is in.
 # After the integration tiers, an /extract pass backfills structured extractions for PDFs read before
 # every read left one (scripts/papers/extractions/). EXTRACT=0 skips it.
+# PAPERS=0 skips the /papers and /chapter passes: PAPERS=0 STOP_HOUR=24 runs the backfill alone.
 
 set -uo pipefail
 
@@ -29,6 +30,7 @@ export CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS=0
 STOP_HOUR="${STOP_HOUR:-8}"
 read -ra TIERS <<< "${TIERS:-1 2 3 4 5 6}"  # TIERS="1 2" limits a run
 EXTRACT="${EXTRACT:-1}"
+PAPERS="${PAPERS:-1}"
 LOCK="$REPO/.claude/logs/papers-nightly.lock"
 
 cd "$REPO" || exit 1
@@ -115,8 +117,9 @@ extractions() {
 
 python3 scripts/papers/potw.py tier
 
+[ "$PAPERS" = "1" ] || TIERS=()
 first=1
-for tier in "${TIERS[@]}"; do
+for tier in ${TIERS[@]+"${TIERS[@]}"}; do
     stop_now && break
     papers "$tier"
     if [ "$first" -eq 1 ]; then  # chapters come ahead of the lower paper tiers, or those starve them

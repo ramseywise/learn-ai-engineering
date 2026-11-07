@@ -136,7 +136,7 @@ What to do:
 
 - **Graduate it.** Saturated capability tasks become the regression suite, which *should* sit near 100% ([01](01-what-an-eval-is.md)).
 - **Add harder tasks** from the discovery set, new use cases, longer horizons, adversarial variants.
-- **Raise the bar**: pass^k instead of pass@1 ([06](06-evaluating-agents.md#non-determinism-run-every-task-k-times)), stricter grounding tier, tighter efficiency budget.
+- **Raise the bar**: pass^k instead of pass@1 ([06](06b-components-trials-and-cost.md#non-determinism-run-every-task-k-times)), stricter grounding tier, tighter efficiency budget.
 
 Public benchmarks saturate the same way. A benchmark everyone scores 90%+ on can't separate models. GLUE (2018) saturated within a year and was replaced by SuperGLUE (2019); MMLU (2020) was largely replaced by MMLU-Pro (2024). In June 2024, less than a year after its previous revamp, Hugging Face replaced its leaderboard's whole benchmark set: GSM-8K gave way to MATH level 5, MMLU to MMLU-Pro, and GPQA, MuSR, BBH and IFEval were added (*AI Engineering*, ch. 3, 4). Expect those to saturate too (a 2024–25 snapshot).
 
@@ -184,7 +184,7 @@ This bites hardest in automated loops, where an optimizer runs thousands of iter
 
 Every prompt tweak you keep because it scored better on the eval set is fitting to that set. After enough iterations, dev-set gains stop transferring.
 
-- Keep a **held-out test** set; look at it rarely (per release, not per change) ([03](03-eval-datasets.md#splits-versioning-contamination)).
+- Keep a **held-out test** set; look at it rarely (per release, not per change) ([03](03b-splits-contamination-and-public-benchmarks.md#splits-versioning-contamination)).
 - If dev and test diverge, you've overfit. Freshen dev from production.
 - Small suites overfit faster: on 50 tasks, one lucky flip is 2 points.
 - Every score you report from the test set leaks some information about it. ARC Prize used the same 100 private tasks from 2020 to 2024 and disclosed roughly 10,000 scores against them, enough for teams to fit the private set ([arXiv:2505.11831](https://arxiv.org/abs/2505.11831) (Chollet et al., 2025-05)). Limit how often anyone sees test scores, and rotate the set eventually.

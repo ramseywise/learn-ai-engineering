@@ -1,19 +1,752 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2103.14030",
  "pdf": "ai-engineering/08-multimodal-engineering/sources/liu-2021-swin-transformer.pdf",
  "bib": {
   "title": "Swin Transformer: Hierarchical Vision Transformer using Shifted Windows",
+  "authors": [
+   "Ze Liu",
+   "Yutong Lin",
+   "Yue Cao",
+   "Han Hu",
+   "Yixuan Wei",
+   "Zheng Zhang",
+   "Stephen Lin",
+   "Baining Guo"
+  ],
   "first_author": "Liu",
   "year": 2021,
-  "venue": "ICCV 2021",
+  "venue": "preprint",
   "arxiv": "2103.14030",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-04",
-  "session": "97b4134b-decf-4866-ae85-c6872cbbba19"
+  "at": "2026-11-07",
+  "chars_read": 68068,
+  "chars_total": 68068,
+  "engine": "pymupdf",
+  "skipped": null
  },
- "legacy_report": "SOURCE: \"Swin Transformer: Hierarchical Vision Transformer using Shifted Windows\", Ze Liu, Yutong Lin, Yue Cao, Han Hu, Yixuan Wei, Zheng Zhang, Stephen Lin, Baining Guo (Microsoft Research Asia). The PDF is arXiv:2103.14030v2, dated 17 Aug 2021. The PDF does not print a venue, so treat it as a preprint for citation unless the venue is checked somewhere else.\n\nCOVERAGE: 67,942 of 67,942 chars read. That covers the body, Tables 1-10, appendices A1-A3 (including the Table 7 architecture spec, the Table 8 input-size results and the Table 10 Swin-Mixer results), and references [1]-[85], which I skimmed. Nothing was skipped.\n\nCLAIMS\n- claim: Global attention cost grows with the square of the patch count, while window attention cost grows linearly once the window size M is fixed.\n  number: Ω(MSA)=4hwC²+2(hw)²C; Ω(W-MSA)=4hwC²+2M²hwC; M=7\n  setup: Image of h×w patches, channel dim C, M×M patches per window. Softmax is left out of the count.\n  quote: \"Ω(MSA) = 4hwC 2 + 2(hw)2C, (1) Ω(W-MSA) = 4hwC 2 + 2M 2hwC, (2) where the former is quadratic to patch number hw, and the latter is linear whenM is ﬁxed (set to 7 by default).\" and \"3We omit SoftMax computation in determining complexity.\"\n  where: p4, Sec 3.2\n- claim: Attention inside fixed windows has no links between windows. Swin alternates regular and shifted partitions in consecutive blocks, with the shift set to half a window, so information crosses window borders.\n  number: shift of (⌊M/2⌋,⌊M/2⌋)\n  setup: Example in Fig 2: an 8×8 map split into 2×2 windows of 4×4 (M=4).\n  quote: \"the next mod- ule adopts a windowing conﬁguration that is shifted from that of the preceding layer, by displacing the windows by (⌊ M2⌋,⌊ M2⌋) pixels from the regularly partitioned windows.\"\n  where: p4\n- claim: Hierarchy works like a CNN pyramid. A 4×4 patch embedding comes first, then each patch-merging layer concatenates 2×2 neighbours and applies a linear layer, which cuts the token count by 4 and doubles the channels. The four stages output at strides 4, 8, 16 and 32.\n  number: 4×4×3=48 dims per patch; H/4 → H/8 → H/16 → H/32\n  setup: All variants. Table 7 gives Swin-T at 224² input as 56×56 → 28×28 → 14×14 → 7×7.\n  quote: \"we use a patch size of 4× 4 and thus the feature dimension of each patch is 4× 4× 3 = 48\" and \"This reduces the number of tokens by a multiple of 2× 2 = 4 (2× downsampling of resolution), and the out- put dimension is set to 2C.\"\n  where: p3, Sec 3.1; Table 7 p10\n- claim: Shifted windows beat fixed windows on all three tasks.\n  number: +1.1% top-1, +2.8 box AP / +2.2 mask AP, +2.8 mIoU\n  setup: Swin-T. ImageNet-1K top-1; COCO with Cascade Mask R-CNN; ADE20K with UperNet. Table 4 numbers: 80.2→81.3, 47.7→50.5, 43.3→46.1.\n  quote: \"Swin-T with the shifted window partitioning outperforms the coun- terpart built on a single window partitioning at each stage by +1.1% top-1 accuracy on ImageNet-1K, +2.8 box AP/+2.2 mask AP on COCO, and +2.8 mIoU on ADE20K.\"\n  where: p8, Sec 4.4, Table 4\n- claim: Relative position bias beats both no position encoding and absolute position embedding. Adding absolute embedding helps classification a little but hurts dense tasks.\n  number: +1.2%/+0.8% top-1; +1.3/+1.5 box AP; +2.3/+2.9 mIoU; abs adds +0.4% cls, -0.2 AP, -0.6 mIoU\n  setup: Swin-T, same three benchmarks as Table 4. The bias B∈R^{M²×M²} is taken from a learned table of size (2M−1)×(2M−1).\n  quote: \"Swin-T with rela- tive position bias yields +1.2%/+0.8% top-1 accuracy on ImageNet-1K, +1.3/+1.5 box AP and +1.1/+1.3 mask AP on COCO, and +2.3/+2.9 mIoU on ADE20K in relation to those without position encoding and with absolute position embedding, respectively\" and \"while the inclusion of absolute position embedding improves image classiﬁcation accuracy (+0.4%), it harms object detection and semantic segmentation (-0.2 box/mask AP on COCO and -0.6 mIoU on ADE20K).\"\n  where: p8\n- claim: ImageNet-1K top-1 with no extra pretraining data, compared with DeiT at similar compute.\n  number: Swin-T 81.3 (29M, 4.5G, 755.2 img/s); Swin-S 83.0; Swin-B 83.5 at 224² and 84.5 at 384²\n  setup: Trained on ImageNet-1K alone for 300 epochs with AdamW. Single-crop top-1. Throughput measured on a V100 with timm. Note that the prose says Swin-B is 83.3% at 224², but the Table 1 row reads 83.5. Table 8 also gives 83.3, so the paper is internally inconsistent here.\n  quote: \"+1.5% for Swin-T (81.3%) over DeiT-S (79.8%) using 224 2 input, and +1.5%/1.4% for Swin-B (83.3%/84.5%) over DeiT-B (81.8%/83.1%)\" and \"Swin-B 2242 88M 15.4G 278.1 83.5\"\n  where: p6, Table 1(a)\n- claim: Pretraining on ImageNet-22K raises top-1, and Swin-L reaches 87.3%.\n  number: Swin-B 86.4 (384², 47.0G, 84.7 img/s); Swin-L 87.3 (384², 197M, 103.9G, 42.1 img/s); ViT-B/16 84.0\n  setup: Pretrained on ImageNet-22K (14.2M images, 22K classes, 90 epochs), then fine-tuned on ImageNet-1K for 30 epochs. V100 throughput.\n  quote: \"Swin-B obtains 86.4% top-1 accuracy, which is 2.4% higher than that of ViT with similar inference throughput (84.7 vs. 85.9 images/sec) and slightly lower FLOPs (47.0G vs. 55.4G). The larger Swin-L model achieves 87.3% top-1 ac- curacy\"\n  where: p6, Table 1(b)\n- claim: Best COCO result is 58.7 box AP and 51.1 mask AP on test-dev.\n  number: 58.7 / 51.1; +2.7 box AP, +2.6 mask AP over the prior best\n  setup: Swin-L (284M) with HTC++ (instaboost, 6x schedule, soft-NMS, an extra global self-attention layer, ImageNet-22K init) and multi-scale testing. Without multi-scale testing it scores 57.7/50.2.\n  quote: \"Our best model achieves 58.7 box AP and 51.1 mask AP on COCO test-dev, surpassing the previous best results by +2.7 box AP (Copy-paste [26] without exter- nal data) and +2.6 mask AP (DetectoRS [46]).\"\n  where: p7, Table 2(c)\n- claim: With the detection framework held fixed, Swin-T beats ResNet-50 and DeiT-S as a backbone. DeiT is slower because its attention is quadratic.\n  number: +3.4∼4.2 box AP over R-50; Swin-T 50.5 AP at 15.3 FPS vs DeiT-S 48.0 at 10.4 FPS\n  setup: COCO val; Cascade Mask R-CNN, ATSS, RepPointsV2 and Sparse R-CNN; 3x schedule. DeiT-S gets deconvolution layers added to make it hierarchical.\n  quote: \"Our Swin-T architecture brings consistent +3.4∼4.2 box AP gains over ResNet-50\" and \"signiﬁcantly higher inference speed (15.3 FPS vs. 10.4 FPS). The lower inference speed of DeiT is mainly due to its quadratic complexity to input image size.\"\n  where: p7\n- claim: ADE20K segmentation reaches 53.5 mIoU on val.\n  number: 53.5 mIoU (+3.2 over SETR's 50.3); Swin-S 49.3 vs DeiT-S 44.0\n  setup: UperNet. Swin-L is pretrained on ImageNet-22K, trained at 640×640 input and tested multi-scale. It has 234M params, 3230G FLOPs and runs at 6.2 FPS.\n  quote: \"Our Swin-L model with ImageNet-22K pre-training achieves 53.5 mIoU on the val set, surpassing the previous best model by +3.2 mIoU (50.3 mIoU by SETR [81] which has a larger model size).\"\n  where: p8, Table 3\n- claim: Shifted windows run much faster than sliding-window attention for about the same accuracy. The cyclic-shift batching beats padding.\n  number: 40.8×/2.5× down to 7.6×/1.8× per stage; whole model 4.1/1.5× faster; cyclic gives a 13%/18%/18% speed-up over padding\n  setup: V100 GPU, Table 5. Sliding-window Swin-T scores 81.4 vs 81.3 for shifted (Table 6).\n  quote: \"The self-attention modules built on the proposed shifted window approach are 40.8 ×/2.5×, 20.2×/2.5×, 9.3×/2.1×, and 7.6×/1.8× more efﬁcient than those ofslid- ing windows in naive/kernel implementations on four net- work stages\" and \"Overall, it brings a 13%, 18% and 18% speed-up on Swin-T, Swin-S and Swin-B\"\n  where: p8\n- claim: Swin is slightly faster than Performer and more accurate.\n  number: +2.3% top-1 (81.3 vs 79.0)\n  setup: Swin-T on ImageNet-1K, Tables 5-6.\n  quote: \"achieving +2.3% top-1 accuracy compared to Performer on ImageNet-1K using Swin-T\"\n  where: p8\n- claim: Higher input resolution gives higher accuracy at lower throughput. This is the resolution-cost tradeoff relevant to the token-count section of the note.\n  number: Swin-T 81.3 at 755.2 img/s (224²) → 82.2 at 219.5 img/s (384²)\n  setup: ImageNet-1K, Table 8. Models at higher resolutions are fine-tuned from the 224² model.\n  quote: \"2242 81.3 755.2 83.0 436.9 83.3 278.1\" and \"3842 82.2 219.5 83.9 127.6 84.5 84.7\"\n  where: Appendix A3.1, p10\n- claim: Shifted windows naive padding would grow the window count from 2×2 to 3×3. Cyclic shift with masking keeps the window count unchanged.\n  number: 2.25×\n  setup: Shifted configuration when the regular partition has few windows.\n  quote: \"the increased computation with this naive solution is considerable (2× 2→ 3× 3, which is 2.25 times greater).\"\n  where: p5\n- claim: Applying the hierarchy and shifted windows to MLP-Mixer also helps.\n  number: 81.3% vs 76.4%; no-shift Swin-Mixer-B gets 80.3\n  setup: ImageNet-1K at 224². Swin-Mixer-B/D24 uses 10.4G FLOPs vs 12.7G.\n  quote: \"Swin-Mixer performs signiﬁcantly better than MLP-Mixer (81.3% vs. 76.4%) using slightly smaller computation budget (10.4G vs. 12.7G).\"\n  where: Appendix A3.3, p11\n\nLIMITS:\n- The authors concede the speed comparison is unfair to Swin: \"ResNe(X)t is built by highly optimized Cudnn functions, our architecture is implemented with built-in PyTorch functions that are not all well-optimized. A thorough kernel optimization is beyond the scope of this paper.\"\n- The linear-complexity claim is analytical. It leaves out softmax, and it assumes M is fixed. Throughput is measured only on one V100. There is no latency or memory sweep across image sizes that would show the linear scaling empirically. Table 8 only goes from 224² to 384².\n- The headline SOTA numbers come from heavy recipes: ImageNet-22K pretraining, HTC++ with an extra global self-attention layer, and multi-scale testing. The gaps are smaller under like-for-like setups.\n- Baselines: ResNe(X)t was retrained with AdamW instead of its default SGD (Table 9). DeiT had deconvolution layers added so it could be used for detection.\n- The paper shows no use in vision-language or LLM pipelines, despite its \"unified modeling\" motivation. NLP use is listed as future work. It also does not test whether the patch tokens are suitable for feeding a language model.\n- Dated: this is 2021 work. Its ImageNet, COCO and ADE20K SOTA claims have since been passed, and the throughput numbers are V100-era.\n\nBUILDS ON: Transformer (Vaswani et al. 2017 [64]); ViT (Dosovitskiy et al. 2021 [20]); DeiT training recipe (Touvron et al. 2020 [63]); relative position bias following [49, 1, 32, 33] (Raffel et al. 2020; Bao et al. 2020; Hu et al. 2018; Hu et al. 2019); local or sliding-window self-attention (Hu et al. 2019 [33]; Ramachandran et al. 2019 [50]); hierarchical CNN feature maps (VGG [52] 2015, ResNet [30] 2016, FPN [42] 2017, U-Net [51] 2015); concurrent PVT (Wang et al. 2021 [66]), noted as still quadratic; MLP-Mixer (Tolstikhin et al. 2021 [61]); Performer (Choromanski et al. 2021 [14]).\n\nCODE: The PDF has no code listings. These are the load-bearing equations, verbatim.\n- Eq. 3, p4: \"ˆzl = W-MSA (LN (zl−1)) + zl−1, zl = MLP (LN (ˆzl)) + ˆzl, ˆzl+1 = SW-MSA (LN (zl)) + zl, zl+1 = MLP (LN (ˆzl+1)) + ˆzl+1\"\n- Eq. 4, p5: \"Attention(Q,K,V ) = SoftMax(QK T/√d +B)V\"\n- Variants, p5: \"Swin-T: C = 96, layer numbers ={2, 2, 6, 2} • Swin-S: C = 96, layer numbers ={2, 2, 18, 2} • Swin-B: C = 128, layer numbers ={2, 2, 18, 2} • Swin-L: C = 192, layer numbers ={2, 2, 18, 2}\". Head dim d=32, MLP ratio 4, window M=7.\n- Code is at github.com/microsoft/Swin-Transformer.\n\nFIGURES:\n- Fig 1, p1: \"(a) The proposed Swin Transformer builds hierarchical feature maps by merging image patches... linear computation complexity... (b) In contrast, previous vision Transformers [20] produce feature maps of a single low resolution and have quadratic computation complexity\". This side-by-side of the Swin pyramid and ViT's flat token grid explains the token-count difference faster than prose, so it is the best fit for \"What the model actually sees\".\n- Fig 2, p2: shifted window illustration, layer l regular and layer l+1 shifted. It shows at a glance how information crosses window boundaries.\n- Fig 3, p4: Swin-T architecture with patch partition, linear embedding, 4 stages of 2/2/6/2 blocks and patch merging, plus the paired W-MSA/SW-MSA blocks. Useful for the hierarchy.\n- Fig 4, p5: cyclic shift plus masked MSA batching. Only worth showing if implementation detail matters.\n\nPROBLEMS:\n- In the extraction, subscripts and superscripts are flattened. \"H4× W4\" means H/4×W/4, \"2242\" means 224², and \"C 2\" means C². I copied the quotes as extracted.\n- Table 7 and the figure diagrams came out as interleaved text, but they could be read.\n- The paper contradicts itself on Swin-B at 224² from ImageNet-1K training: the prose and Table 8 say 83.3, Table 1(a) says 83.5.\n- The PDF contains no embedded instructions.\n- The venue is not printed in the PDF."
+ "type": "empirical",
+ "question": "Can a Transformer be built as a general-purpose vision backbone that handles scale variation and high resolution, with cost linear in image size?",
+ "hypothesis": "Hierarchical feature maps with shifted-window local self-attention give better accuracy/speed than global-attention ViT/DeiT and match or beat CNNs on classification, detection and segmentation.",
+ "contributions": [
+  "Swin Transformer: hierarchical Transformer with patch merging and linear complexity via non-overlapping windows",
+  "Shifted window partitioning between consecutive blocks with cyclic-shift masked batch computation",
+  "Relative position bias",
+  "State-of-the-art on COCO (58.7 box AP, 51.1 mask AP test-dev) and ADE20K (53.5 mIoU val), 87.3% ImageNet-1K top-1",
+  "Hierarchical design and shifted windows also help all-MLP (Swin-Mixer)"
+ ],
+ "method": {
+  "summary": "Swin Transformer splits an image into 4x4 patches, runs 4 stages of window-attention blocks (W-MSA / SW-MSA alternating) with 2x2 patch merging between stages, and is used as backbone for classification (global average pool + linear), Cascade Mask R-CNN/HTC++ detection and UperNet segmentation.",
+  "task": "image classification, object detection / instance segmentation, semantic segmentation",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "ImageNet-1K",
+    "role": "both",
+    "size": "1.28M train / 50K val images, 1000 classes",
+    "split": "train/val; top-1 single crop",
+    "source": null,
+    "preprocessing": "RandAugment, Mixup, CutMix, random erasing, stochastic depth (DeiT recipe) w/o repeated augmentation and EMA"
+   },
+   {
+    "name": "ImageNet-22K",
+    "role": "pretrain",
+    "size": "14.2M images, 22K classes",
+    "split": null,
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "COCO 2017",
+    "role": "both",
+    "size": "118K train, 5K val, 20K test-dev images",
+    "split": "ablation on val; system-level on test-dev",
+    "source": null,
+    "preprocessing": "multi-scale training, shorter side 480-800 (ablation), 400-1400 and longer side <=1600 (system)"
+   },
+   {
+    "name": "ADE20K",
+    "role": "both",
+    "size": "25K images, 150 categories: 20K train, 2K val, 3K test",
+    "split": "val for results; train+val used for training when reporting test",
+    "source": null,
+    "preprocessing": "random flip, rescale ratio [0.5,2.0], photometric distortion"
+   }
+  ],
+  "models": [
+   {
+    "name": "Swin-T",
+    "role": "proposed",
+    "params": "29M",
+    "architecture": "hierarchical shifted-window Transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "{2,2,6,2}",
+    "hidden": "C=96",
+    "heads": "3,6,12,24",
+    "context": null,
+    "other": {
+     "FLOPs": "4.5G",
+     "window": "7x7",
+     "throughput": "755.2 img/s (V100, 224)"
+    }
+   },
+   {
+    "name": "Swin-S",
+    "role": "proposed",
+    "params": "50M",
+    "architecture": "hierarchical shifted-window Transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "{2,2,18,2}",
+    "hidden": "C=96",
+    "heads": "3,6,12,24",
+    "context": null,
+    "other": {
+     "FLOPs": "8.7G",
+     "throughput": "436.9 img/s"
+    }
+   },
+   {
+    "name": "Swin-B",
+    "role": "proposed",
+    "params": "88M",
+    "architecture": "hierarchical shifted-window Transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "{2,2,18,2}",
+    "hidden": "C=128",
+    "heads": "4,8,16,32",
+    "context": null,
+    "other": {
+     "FLOPs": "15.4G (224), 47.0G (384)",
+     "throughput": "278.1 img/s (224), 84.7 (384)"
+    }
+   },
+   {
+    "name": "Swin-L",
+    "role": "proposed",
+    "params": "197M",
+    "architecture": "hierarchical shifted-window Transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "{2,2,18,2}",
+    "hidden": "C=192",
+    "heads": "6,12,24,48",
+    "context": null,
+    "other": {
+     "FLOPs": "103.9G (384)",
+     "throughput": "42.1 img/s (384)",
+     "note": "scale of the variants vs Swin-B stated ~2x; params from Table 1(b)"
+    }
+   },
+   {
+    "name": "DeiT-S/B, ViT-B/L, ResNe(X)t, RegNet, EfficientNet, ResNeSt etc.",
+    "role": "baseline",
+    "params": "see Table 1-3",
+    "architecture": "various",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": null,
+   "optimizer": "AdamW (all tasks)",
+   "lr": "ImageNet-1K scratch: 0.001; 22K pre-train: 0.001; fine-tune 1e-5 constant; COCO 0.0001; ADE20K 6e-5",
+   "lr_schedule": "IN-1K: cosine decay; IN-22K: linear decay; ADE20K: linear decay; COCO: decayed 10x at epochs 27 and 33 (3x) or 63 and 69 (6x)",
+   "warmup": "IN-1K: 20 epochs linear; IN-22K: 5 epochs linear; ADE20K: 1,500 iterations",
+   "batch_size": "IN-1K 1024; IN-22K 4096; fine-tune 1024; COCO 16; ADE20K 8 GPUs x 2 images = 16 (inferred from 8 GPUs, 2 per GPU)",
+   "steps": "ADE20K 160K iterations",
+   "epochs": "IN-1K 300; IN-22K 90 then 30 fine-tune on IN-1K; larger-res fine-tune 30; COCO 36 (3x) / 72 (6x)",
+   "tokens": null,
+   "seq_len": "224x224 default; 384x384 via fine-tuning; ADE20K 512x512 (T,S) or 640x640 (B,L)",
+   "precision": null,
+   "weight_decay": "IN-1K 0.05; IN-22K 0.01; fine-tune 1e-8; COCO 0.05; ADE20K 0.01",
+   "dropout": null,
+   "regularisation": "stochastic depth 0.2/0.3/0.5 for Swin-T/S/B on IN-1K; 0.1 for res fine-tune; 0.2 on COCO and ADE20K; gradient clipping max norm 1; RandAugment, Mixup, CutMix, random erasing",
+   "hardware": "ADE20K: 8 GPUs (type not stated); throughput measured on V100",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "classification head": "global average pooling + linear classifier",
+    "window M": 7,
+    "head query dim d": 32,
+    "MLP expansion": 4,
+    "patch": "4x4 (48-d raw)",
+    "COCO ablation frameworks": "Cascade Mask R-CNN, ATSS, RepPoints v2, Sparse RCNN (mmdetection)",
+    "system-level": "HTC++ with instaboost, soft-NMS, ImageNet-22K init, extra global self-attention layer after last stage",
+    "segmentation": "UperNet in mmsegmentation"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single crop for ImageNet top-1; single run, no seeds stated",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {
+    "ADE20K": "multi-scale test at [0.5,0.75,1.0,1.25,1.5,1.75]x training resolution",
+    "COCO": "multi-scale testing marked * in Table 2(c)",
+    "throughput": "timm repo of Wightman, V100, following DeiT"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "top-1 accuracy",
+     "definition": "single-crop ImageNet-1K val",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "AP box / AP mask",
+     "definition": "COCO average precision",
+     "unit": "AP",
+     "higher_is_better": true
+    },
+    {
+     "name": "mIoU",
+     "definition": "ADE20K mean intersection over union",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "throughput / FPS",
+     "definition": "images/s or frames/s on V100",
+     "unit": "image/s, FPS",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "ViT-B/16, ViT-L/16",
+    "DeiT-S/B",
+    "ResNet-50/101, ResNeXt101-32x4d/64x4d",
+    "RegNetY",
+    "EfficientNet B3-B7",
+    "Performer",
+    "sliding-window self-attention",
+    "COCO SOTA: Copy-paste, DetectoRS, EfficientDet-D7, etc.",
+    "ADE20K: SETR, DeepLabv3+, OCRNet, etc.",
+    "MLP-Mixer, ResMLP"
+   ],
+   "protocol": "Single runs; no seeds, variance or significance tests reported."
+  },
+  "availability": {
+   "code": "https://github.com/microsoft/Swin-Transformer",
+   "weights": "models publicly available (same URL)",
+   "data": "ImageNet, COCO, ADE20K"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "inference.other.ADE20K",
+    "quote": "a multi-scale test using resolutions that are [0.5, 0.75, 1.0, 1.25, 1.5, 1.75]× of that in training is em-",
+    "where": "A2.3"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Swin-L (ImageNet-22K pre-trained, 384 input) reaches 87.3% ImageNet-1K top-1",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1 acc",
+   "value": "87.3",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ImageNet-1K val, single crop, 22K pre-train then 1K fine-tune, 3842",
+   "note": null,
+   "where": "p6",
+   "quote": "The larger Swin-L model achieves 87.3% top-1 ac-",
+   "table": "Table 1(b), row Swin-L 3842"
+  },
+  {
+   "claim": "Swin-L (HTC++, multi-scale test) reaches 58.7 box AP on COCO test-dev",
+   "kind": "measured",
+   "source": null,
+   "metric": "APbox",
+   "value": "58.7",
+   "unit": "AP",
+   "baseline_value": "56.0 (Copy-paste)",
+   "n": null,
+   "setup": "COCO test-dev, HTC++, ImageNet-22K init, 6x schedule, multi-scale testing",
+   "note": null,
+   "where": "p7",
+   "quote": "Our best model achieves 58.7 box AP and 51.1 mask AP on COCO test-dev"
+  },
+  {
+   "claim": "Swin-L reaches 51.1 mask AP on COCO test-dev",
+   "kind": "measured",
+   "source": null,
+   "metric": "APmask",
+   "value": "51.1",
+   "unit": "AP",
+   "baseline_value": "48.5 (DetectoRS)",
+   "n": null,
+   "setup": "as above",
+   "note": null,
+   "where": "p7",
+   "quote": "Our best model achieves 58.7 box AP and 51.1 mask AP on COCO test-dev"
+  },
+  {
+   "claim": "Swin-L with UperNet reaches 53.5 mIoU on ADE20K val, +3.2 over SETR",
+   "kind": "measured",
+   "source": null,
+   "metric": "mIoU",
+   "value": "53.5",
+   "unit": "mIoU",
+   "baseline_value": "50.3 (SETR)",
+   "n": null,
+   "setup": "ADE20K val, UperNet, ImageNet-22K pre-trained, 640x640 training, multi-scale test",
+   "note": null,
+   "where": "p8",
+   "quote": "Our Swin-L model with ImageNet-22K pre-training achieves 53.5 mIoU on the val set"
+  },
+  {
+   "claim": "Swin-T beats DeiT-S by 1.5 points on ImageNet-1K at similar complexity (regular 1K training, 224)",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1 acc",
+   "value": "81.3",
+   "unit": "%",
+   "baseline_value": "79.8",
+   "n": null,
+   "setup": "ImageNet-1K from scratch, 300 epochs, 2242",
+   "note": null,
+   "where": "p6",
+   "quote": "+1.5% for Swin-T (81.3%) over"
+  },
+  {
+   "claim": "Swin-B 224 vs DeiT-B 224",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1 acc",
+   "value": "83.3",
+   "unit": "%",
+   "baseline_value": "81.8",
+   "n": null,
+   "setup": "ImageNet-1K from scratch, 2242",
+   "note": "84.5 vs 83.1 at 3842",
+   "where": "p6",
+   "quote": "Swin-B (83.3%/84.5%) over DeiT-B (81.8%/83.1%)"
+  },
+  {
+   "claim": "ImageNet-22K pre-training gives Swin-B 1.8-1.9 points over 1K-only training",
+   "kind": "measured",
+   "source": null,
+   "metric": "gain",
+   "value": "1.8~1.9",
+   "unit": "% points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Swin-B, ImageNet-1K top-1",
+   "note": null,
+   "where": "p6",
+   "quote": "ImageNet-22K pre-training brings 1.8%∼1.9% gains over training"
+  },
+  {
+   "claim": "Swin-B (22K, 384) 86.4% vs ViT-B/16 84.0 at similar throughput; paper states 2.4% higher",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1 acc",
+   "value": "86.4",
+   "unit": "%",
+   "baseline_value": "84.0 (ViT-B/16)",
+   "n": null,
+   "setup": "ImageNet-22K pre-trained, 3842, V100 throughput 84.7 vs 85.9 img/s",
+   "note": "Table 1(b) prints 84.0 for ViT-B/16 which is 2.4 below 86.4; text says 'than that of ViT'",
+   "where": "p6",
+   "quote": "Swin-B obtains 86.4% top-1 accuracy, which is 2.4% higher"
+  },
+  {
+   "claim": "Shifted windows add 1.1 top-1 on ImageNet-1K over single window partitioning (Swin-T)",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1 acc",
+   "value": "81.3",
+   "unit": "%",
+   "baseline_value": "80.2",
+   "n": null,
+   "setup": "Swin-T ablation; w/o shifting 80.2",
+   "note": null,
+   "where": "p8, Table 4",
+   "quote": "+1.1% top-1 accuracy on ImageNet-1K, +2.8 box AP/+2.2"
+  },
+  {
+   "claim": "Shifted windows add 2.8 box AP on COCO (Swin-T, Cascade Mask R-CNN)",
+   "kind": "measured",
+   "source": null,
+   "metric": "APbox",
+   "value": "50.5",
+   "unit": "AP",
+   "baseline_value": "47.7",
+   "n": null,
+   "setup": "COCO val; w/o shifting 47.7",
+   "note": null,
+   "where": "p8, Table 4",
+   "quote": "+1.1% top-1 accuracy on ImageNet-1K, +2.8 box AP/+2.2"
+  },
+  {
+   "claim": "Shifted windows add 2.8 mIoU on ADE20K (Swin-T, UperNet)",
+   "kind": "measured",
+   "source": null,
+   "metric": "mIoU",
+   "value": "46.1",
+   "unit": "mIoU",
+   "baseline_value": "43.3",
+   "n": null,
+   "setup": "ADE20K val; w/o shifting 43.3",
+   "note": null,
+   "where": "p8, Table 4",
+   "quote": "+2.8 mIoU on ADE20K"
+  },
+  {
+   "claim": "Absolute position embedding raises ImageNet accuracy by 0.4 but hurts detection (-0.2 AP) and segmentation (-0.6 mIoU)",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1 delta",
+   "value": "+0.4",
+   "unit": "% points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Swin-T, abs.+rel. vs rel. only",
+   "note": "Table 4: abs.+rel. 50.2 box AP vs rel. 50.5; 44.0 vs 46.1 mIoU",
+   "where": "p8",
+   "quote": "it harms object detection and semantic segmentation (-0.2 box/mask AP on COCO and -0.6 mIoU"
+  },
+  {
+   "claim": "Cyclic-shift implementation speeds up Swin-T/S/B by 13%, 18%, 18% over padding",
+   "kind": "measured",
+   "source": null,
+   "metric": "speed-up",
+   "value": "13%, 18% and 18%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "V100 GPU, Table 5",
+   "note": null,
+   "where": "p8",
+   "quote": "it brings a 13%, 18% and 18%"
+  },
+  {
+   "claim": "Shifted-window Swin is 4.1/1.5x faster than sliding-window naive/kernel for Swin-T",
+   "kind": "measured",
+   "source": null,
+   "metric": "speed ratio",
+   "value": "4.1/1.5",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "V100 GPU",
+   "note": "4.0/1.5 for Swin-S; 3.6/1.5 for Swin-B",
+   "where": "p8",
+   "quote": "4.1/1.5, 4.0/1.5,"
+  },
+  {
+   "claim": "Shifted window and sliding window variants are similarly accurate (Swin-T sliding 81.4 vs shifted 81.3 top-1)",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1 acc",
+   "value": "81.3",
+   "unit": "%",
+   "baseline_value": "81.4",
+   "n": null,
+   "setup": "Table 6, Swin-T",
+   "note": null,
+   "where": "p9",
+   "quote": "they are similarly accurate in visual modeling",
+   "table": "Table 6, row shifted window Swin-T, column top-1"
+  },
+  {
+   "claim": "Swin-T beats Performer by 2.3% top-1 on ImageNet-1K",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1 acc",
+   "value": "81.3",
+   "unit": "%",
+   "baseline_value": "79.0",
+   "n": null,
+   "setup": "Swin-T; Performer variant 79.0",
+   "note": null,
+   "where": "p8",
+   "quote": "+2.3% top-1 accuracy compared to Performer"
+  },
+  {
+   "claim": "Swin-T gives +3.4~4.2 box AP over ResNet-50 across four detection frameworks",
+   "kind": "measured",
+   "source": null,
+   "metric": "APbox gain",
+   "value": "3.4~4.2",
+   "unit": "AP",
+   "baseline_value": null,
+   "n": null,
+   "setup": "COCO val, Cascade Mask R-CNN, ATSS, RepPointsV2, Sparse R-CNN, 3x schedule",
+   "note": null,
+   "where": "p7",
+   "quote": "consistent +3.4∼4.2"
+  },
+  {
+   "claim": "Swin-B reaches 51.9 box AP, +3.6 over ResNeXt101-64x4d (Cascade Mask R-CNN)",
+   "kind": "measured",
+   "source": null,
+   "metric": "APbox",
+   "value": "51.9",
+   "unit": "AP",
+   "baseline_value": "48.3",
+   "n": null,
+   "setup": "COCO val, 3x schedule",
+   "note": null,
+   "where": "p7",
+   "quote": "Swin Transformer achieves a high detection accuracy of 51.9 box AP and 45.0 mask AP"
+  },
+  {
+   "claim": "Swin-T is +2.5 box AP over DeiT-S and faster (15.3 vs 10.4 FPS)",
+   "kind": "measured",
+   "source": null,
+   "metric": "FPS",
+   "value": "15.3",
+   "unit": "FPS",
+   "baseline_value": "10.4",
+   "n": null,
+   "setup": "Cascade Mask R-CNN, DeiT with deconvolution layers",
+   "note": null,
+   "where": "p7",
+   "quote": "(15.3 FPS vs. 10.4 FPS)"
+  },
+  {
+   "claim": "Swin-S beats DeiT-S by 5.3 mIoU on ADE20K at similar compute",
+   "kind": "measured",
+   "source": null,
+   "metric": "mIoU",
+   "value": "49.3",
+   "unit": "mIoU",
+   "baseline_value": "44.0",
+   "n": null,
+   "setup": "UperNet, ADE20K val",
+   "note": null,
+   "where": "p8",
+   "quote": "Swin-S is +5.3 mIoU higher (49.3 vs. 44.0) than DeiT-S"
+  },
+  {
+   "claim": "Swin-MLP-Mixer (hierarchy and shifted windows) reaches 81.3% vs MLP-Mixer 76.4%",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1 acc",
+   "value": "81.3",
+   "unit": "%",
+   "baseline_value": "76.4",
+   "n": null,
+   "setup": "ImageNet-1K, Swin-Mixer-B/D24, 2242, 10.4G vs 12.7G FLOPs",
+   "note": null,
+   "where": "p11",
+   "quote": "Swin-Mixer performs signiﬁcantly better than MLP-Mixer (81.3% vs. 76.4%)"
+  },
+  {
+   "claim": "Replacing SGD by AdamW improves ResNet-50 on Cascade Mask R-CNN (45.0 to 46.3 box AP)",
+   "kind": "measured",
+   "source": null,
+   "metric": "APbox",
+   "value": "46.3",
+   "unit": "AP",
+   "baseline_value": "45.0",
+   "n": null,
+   "setup": "COCO, R50",
+   "note": "Text claim: AdamW improves, 'particularly for smaller backbones'; X101-64x4d is better with SGD (48.8 vs 48.3)",
+   "where": "p10",
+   "quote": "we generally observe im-",
+   "table": "Table 9, row R50 AdamW, column APbox"
+  },
+  {
+   "claim": "Window attention cost is linear in patch count for fixed M (default M=7), global is quadratic",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "complexity",
+   "value": "Omega(W-MSA)=4hwC^2+2M^2hwC",
+   "unit": "formula",
+   "baseline_value": null,
+   "n": null,
+   "setup": "h x w patches, C channels, softmax omitted",
+   "note": null,
+   "where": "p4, Eq 1-2",
+   "quote": "where the former is quadratic to patch number hw, and the latter is linear when"
+  }
+ ],
+ "limits": [
+  "Speed: authors note their implementation uses built-in PyTorch functions not well-optimised, and ResNe(X)t uses highly optimised cuDNN; thorough kernel optimisation is out of scope.",
+  "No seeds, variances or significance tests; hardware for training not stated except 8 GPUs on ADE20K.",
+  "Training compute and wall-clock are not given.",
+  "Comparison tables mix 22K-pre-trained and 1K-only models and different test-time tricks (multi-scale *), so leaderboard gaps are not like for like.",
+  "DeiT-S in detection/segmentation needs deconvolution layers for hierarchical maps, which may disadvantage it.",
+  "Results are from 2021; later models have superseded the SOTA numbers."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "W-MSA / SW-MSA",
+   "definition": "multi-head self-attention modules with regular and shifted windowing configurations, respectively",
+   "where": "Fig 3 caption"
+  },
+  {
+   "term": "patch merging",
+   "definition": "concatenates the features of each group of 2x2 neighboring patches and applies a linear layer on the 4C-dimensional features, output dimension 2C",
+   "where": "Sec 3.1"
+  },
+  {
+   "term": "relative position bias",
+   "definition": "learnable bias B added to QK^T/sqrt(d) in each head, taken from a parameterised (2M-1)x(2M-1) table",
+   "where": "Sec 3.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "An Image is Worth 16x16 Words (ViT)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Most related work; global attention single resolution; baseline",
+   "quote": null
+  },
+  {
+   "work": "Training data-efficient image transformers & distillation through attention (DeiT)",
+   "year": 2020,
+   "arxiv": "2012.12877",
+   "relation": "baseline",
+   "note": "training recipe mostly followed; baseline",
+   "quote": null
+  },
+  {
+   "work": "Attention is all you need",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Transformer block",
+   "quote": null
+  },
+  {
+   "work": "Local relation networks / stand-alone self-attention (sliding window)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "sliding-window self-attention compared in speed (Table 5-6)",
+   "quote": null
+  },
+  {
+   "work": "Performer",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "efficient attention compared",
+   "quote": null
+  },
+  {
+   "work": "Pyramid vision transformer",
+   "year": 2021,
+   "arxiv": "2102.12122",
+   "relation": "related",
+   "note": "concurrent multi-resolution, quadratic complexity",
+   "quote": null
+  },
+  {
+   "work": "SETR",
+   "year": 2020,
+   "arxiv": "2012.15840",
+   "relation": "baseline",
+   "note": "prior ADE20K SOTA",
+   "quote": null
+  },
+  {
+   "work": "MLP-Mixer; ResMLP",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Swin-Mixer comparison",
+   "quote": null
+  },
+  {
+   "work": "ImageNet; COCO; ADE20K",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "benchmarks",
+   "quote": null
+  },
+  {
+   "work": "Simple copy-paste",
+   "year": 2020,
+   "arxiv": "2012.07177",
+   "relation": "baseline",
+   "note": "prior COCO box AP SOTA",
+   "quote": null
+  },
+  {
+   "work": "DetectoRS",
+   "year": 2020,
+   "arxiv": "2006.02334",
+   "relation": "baseline",
+   "note": "prior mask AP SOTA",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "hierarchical feature maps with local windows vs single-resolution global attention",
+   "page": 1,
+   "why": "shows linear vs quadratic cost visually"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "shifted window approach",
+   "page": 2,
+   "why": "how cross-window connections arise"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "efficient batch computation by cyclic shift and masking",
+   "page": 5,
+   "why": "explains cyclic-shift trick"
+  },
+  {
+   "figure": "Table 4",
+   "caption": "Ablation on shifted windows and position embeddings",
+   "page": 8,
+   "why": "main ablation evidence"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 3, p4",
+   "snippet": "z^_l = W-MSA(LN(z_{l-1})) + z_{l-1}; z_l = MLP(LN(z^_l)) + z^_l; z^_{l+1} = SW-MSA(LN(z_l)) + z_l; z_{l+1} = MLP(LN(z^_{l+1})) + z^_{l+1}",
+   "verbatim": false
+  },
+  {
+   "where": "Eq 4, p5",
+   "snippet": "Attention(Q,K,V) = SoftMax(QK^T/sqrt(d) + B)V",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Venue not printed in PDF (arXiv v2 only); recorded as preprint.",
+  "Text uses ligature glyphs and split math, so some quotes are short fragments.",
+  "Lineage arxiv ids recorded only where the reference list prints them; ViT, Performer, Mixer ids are not printed so left null.",
+  "Table cells are flattened into one value per line; row/column mapping was reconstructed from order."
+ ]
 }

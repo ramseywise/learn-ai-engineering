@@ -23,7 +23,7 @@ cleaned: 2026-11-01
 ---
 # 5 — Chunking, query parsing and reranking
 
-A Tallybook customer asks how long a refund takes. The answer is one sentence inside a 90-line page on refunds and cancellations, and the page's vector is an average of refund windows, card rules, disputes and data deletion. The search misses it, or finds it and hands the model the entire page. Even with the right chunk indexed, the question "how long will it take?" is two turns into a chat and names no subject at all, and the best match may sit at rank 14 where the model never sees it. Each of those is a different failure, and each has its own fix: what you index, what you search for, and what you keep.
+A Tallybook customer asks how long a refund takes. The answer is one sentence inside a 90-line page on refunds and cancellations, and the page's vector is an average of refund windows, card rules, disputes and data deletion. The search misses it, or finds it and hands the model the entire page. Even with the right chunk indexed, the question "how long will it take?" is two turns into a chat and names no subject at all, and the best match may sit at rank 14 where the model never sees it. Three failures, three fixes: what you index, what you search for, and what you keep.
 
 > Three production techniques around the vector database: chunking decides what one vector stands for, query parsing turns a messy prompt into a good search query, and reranking spends extra compute on the top 20–50 hits to return the best 3–10. Bi-encoders, cross-encoders and ColBERT are the three ways to score a (query, document) pair.
 
@@ -456,7 +456,7 @@ Retrieval is fast and imprecise; reranking is slow and precise. Run them in sequ
 
 The context budget is the same as without reranking; what changes is how relevant those 5–10 documents are. A banking-QA study at JPMorgan shows why recall alone is the wrong target. With the gold passage present, answer quality fell as the list grew (top-3 > top-5 > top-20), and less so when the gold passage sat near the top. Placing the gold passage first beat placing it last. The authors conclude that retrieval can't be optimised for recall alone, so "investing in a re-ranking system ... is still necessary" ([Zhao et al., NAACL 2024 Industry](https://aclanthology.org/2024.naacl-industry.23/), 2024-06). Most of their numbers are in figures only, and they assume each answer lives in one passage. The course's toy case: "What is the capital of Canada?" retrieves "Toronto is in Canada" and "Canada is the maple syrup capital of the world" alongside "Ottawa is the capital of Canada". A bi-encoder scores them close together; the cross-encoder puts Ottawa first.
 
-Both of those can be checked with small real models. The block below scores the three sentences each way, then adds the cross-encoder to the Tallybook retriever and scores the 20 labelled questions. The first run downloads about 150 MB:
+Both can be checked with small real models. The block below scores the three sentences each way, then adds the cross-encoder to the Tallybook retriever and scores the 20 labelled questions. The first run downloads about 150 MB:
 
 ```python
 import numpy as np
@@ -495,7 +495,7 @@ hybrid {'recall@3': 0.95, 'mrr': 0.742, 'ndcg@3': 0.789}
 hybrid+rerank {'recall@3': 0.9, 'mrr': 0.84, 'ndcg@3': 0.845}
 ```
 
-The bi-encoder's three scores are close and the cross-encoder pulls them apart. On the labelled questions the reranker improves rank order, which is what it is for, and in this run it pushes one correct document out of the top 3. A general web-search model hasn't seen Tallybook's error codes, so one small corpus says little about reranking in general and a lot about why you measure on your own questions. Toy-embedder caveats from [03](03-keyword-semantic-and-hybrid-search.md) apply to the first stage.
+The bi-encoder's three scores are close and the cross-encoder pulls them apart. On the labelled questions the reranker improves rank order, and in this run it pushes one correct document out of the top 3: a general web-search model hasn't seen Tallybook's error codes. That says little about reranking in general and a lot about measuring on your own questions. Toy-embedder caveats from [03](03-keyword-semantic-and-hybrid-search.md) apply to the first stage.
 
 | Reranker | Quality | Cost |
 |---|---|---|
@@ -522,7 +522,7 @@ Cheaper post-retrieval steps (*Building AI Agents*, ch. 6):
 - Drop chunks below a score threshold, or without a required keyword, metadata value or date.
 - Expand a hit with its neighbouring chunks, so a fragment arrives with its context.
 
-Raieli and Iuculano cite Wang et al.'s pipeline sweep as recommending query classification, HyDE, reranking, repacking and summarization together, and they stress that reranking was the one stage whose removal hurt clearly. Wang's own Table 11 shows the HyDE step's price (see the rules of thumb below), so take the full combination as an upper bound on quality, not a default.
+Raieli and Iuculano cite Wang et al.'s pipeline sweep as recommending query classification, HyDE, reranking, repacking and summarization together, and they stress that reranking was the one stage whose removal hurt clearly. Wang's Table 11 prices the HyDE step (rules of thumb below), so treat the full combination as an upper bound on quality, not a default.
 
 ```python
 # illustrative: needs a Weaviate collection with a reranker module, as in the lab
@@ -556,7 +556,7 @@ The house version of the reranking stage, with production numbers, is note [08 �
 
 | Rule | Why |
 |---|---|
-| Start with fixed-size or recursive chunks; test 10–20% overlap against less | Good defaults; measure before getting clever. The overlap figure is a convention: book examples range from 1% to 20%, unmeasured. Semantic chunking did not beat fixed-size on real documents in Qu et al.; a better embedder moved results more |
+| Start with fixed-size or recursive chunks; test 10–20% overlap against less | Good defaults; measure before getting clever. The overlap figure is a convention: book examples range from 1% to 20%, unmeasured. |
 | Try context-aware chunking first when recall is low | Index-time cost only; no query latency |
 | Size `top_k` to chunk size | Many small or few large, same token budget |
 | Rewrite queries with a small LLM | Cheap, large gains on conversational prompts |
@@ -577,11 +577,11 @@ The house version of the reranking stage, with production numbers, is note [08 �
 ## Pitfalls
 
 - **Chunking without checking what got dropped.** Symptom: tails of documents never come back. Count input and output words, and use a minimum length well below the maximum (the Handbook's 1,000/1,000 trap above).
-- **Choosing a chunker from a blog post.** Symptom: weeks on semantic chunking, little movement. Qu et al. found a better embedder moved results more on real documents. Evaluate first.
+- **Choosing a chunker from a blog post.** Symptom: weeks on semantic chunking, little movement. In Qu et al. it did not beat fixed-size on real documents, and a better embedder moved results more. Evaluate first.
 - **Chunks with no metadata.** Symptom: citations can't name a section, and you can't compare two chunkers in one index. Store source, position and strategy on each chunk.
 - **Pronouns in chunks.** Symptom: "They reach the customer" matches and the model can't tell what "they" means. Return a window, or prepend context at index time.
 - **Concatenating chat history forever.** Symptom: answers follow the previous topic as the conversation grows. Use a rewrite and let it say "can't resolve".
-- **Assuming HyDE helps.** Symptom: latency jumps and quality is flat or worse. Wang et al.'s sweep went from 1.5 s to 11.7 s per query and dropped medical QA from 0.750 to 0.460.
+- **Assuming HyDE helps.** Symptom: latency jumps and quality is flat or worse, as in Wang et al.'s sweep (rules above).
 - **Reranking with a model trained on a different domain.** Symptom: rank order improves on some queries and correct documents fall out of the top k. Over-retrieve, measure recall after the rerank, and consider a domain-tuned model.
 
 ---

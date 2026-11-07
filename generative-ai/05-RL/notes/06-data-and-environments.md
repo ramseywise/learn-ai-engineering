@@ -110,7 +110,7 @@ The asynchronous trainers behind both are in
 
 ### Data engineering for post-training
 
-Huyen's chapter on dataset engineering and LLMEH's curation pipeline turn the validation checks in [05](05-post-training-for-agents.md#practical-pitfalls)
+Huyen's chapter on dataset engineering and LLMEH's curation pipeline turn the validation checks in [05](05b-choosing-sft-rl-or-no-training.md#practical-pitfalls)
 into practice (*AI Engineering*, ch. 8; *LLM Engineer's Handbook*, ch. 5).
 
 **Quality and diversity both count.** In LIMA's ablation ([arXiv:2305.11206](https://arxiv.org/abs/2305.11206) (Zhou et al., NeurIPS 2023)), Zhou et al. fine-tuned a 7B LLaMA on three
@@ -204,7 +204,7 @@ The limits:
   every benchmark. Narrow imitation did work: 6k ChatGPT-written NQ-style pairs took 13B from 20
   to 27 against ChatGPT's 31. GPT-4 as judge was fooled the same way as the crowdworkers. The
   students were 13B and smaller, trained with SFT only
-  ([arXiv:2305.15717](https://arxiv.org/abs/2305.15717) (Gudibande et al., ICLR 2024)). This is the same warning as "distillation inherits errors" in [05](05-post-training-for-agents.md#what-sft-is-good-for).
+  ([arXiv:2305.15717](https://arxiv.org/abs/2305.15717) (Gudibande et al., ICLR 2024)). This is the same warning as "distillation inherits errors" in [05](05b-choosing-sft-rl-or-no-training.md#what-sft-is-good-for).
   LaMini-LM distilled 2.58M gpt-3.5-turbo responses into models from 61M to 7B. Its 248M
   Flan-T5 matched LLaMA-7B on 15 NLP benchmarks, yet human raters found the family weak at
   coding, math and reasoning. **The data source decided which evaluation moved:**

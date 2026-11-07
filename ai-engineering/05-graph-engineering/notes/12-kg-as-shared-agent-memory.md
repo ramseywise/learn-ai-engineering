@@ -232,7 +232,7 @@ Two drills test whether the graph is earning its place:
 
 ## Working reference
 
-Related: [02-context note 06](../../02-context-engineering/notes/06-memory.md) (memory types and hygiene); [its production memory designs](../../02-context-engineering/notes/06-memory.md) (ChatGPT, OpenClaw, Memoria).
+Related: [02-context note 06](../../02-context-engineering/notes/06-memory.md) (memory types and hygiene); [its production memory designs](../../02-context-engineering/notes/06b-memory-architectures.md#production-memory-designs) (ChatGPT, OpenClaw, Memoria).
 
 ---
 

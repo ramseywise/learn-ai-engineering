@@ -87,7 +87,7 @@ claimed ~90,000 GitHub stars (~48,000 two weeks post-release). The load-bearing 
 (630 lines, 700 experiments, 20 improvements, 2.02→1.80h, 5× val_bpb) all held up.
 
 Landed in the 2026-07-31 sweep:
-- [04-loop-engineering/notes/08-self-improving-loops.md](../../ai-engineering/04-loop-engineering/notes/08-self-improving-loops.md#the-worked-example-autoresearch) — the `autoresearch`
+- [04-loop-engineering/notes/08-self-improving-loops.md](../../ai-engineering/04-loop-engineering/notes/08b-releasing-self-edits.md#the-worked-example-autoresearch) — the `autoresearch`
   worked example and bilevel autoresearch, cited to
   [karpathy/autoresearch](https://github.com/karpathy/autoresearch) and
   [arXiv:2603.23420](https://arxiv.org/abs/2603.23420) rather than to MarkTechPost.
