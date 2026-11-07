@@ -1,0 +1,779 @@
+{
+ "schema": 1,
+ "key": "1909.11942",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/lan-2019-albert.pdf",
+ "bib": {
+  "title": "ALBERT: A Lite BERT for Self-supervised Learning of Language Representations",
+  "authors": [
+   "Zhenzhong Lan",
+   "Mingda Chen",
+   "Sebastian Goodman",
+   "Kevin Gimpel",
+   "Piyush Sharma",
+   "Radu Soricut"
+  ],
+  "first_author": "Lan",
+  "year": 2020,
+  "venue": "ICLR 2020",
+  "arxiv": "1909.11942",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 60151,
+  "chars_total": 60151,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can parameter-reduction techniques and a coherence-based pretraining loss let BERT-style models scale to larger hidden sizes with fewer parameters and better downstream performance?",
+ "hypothesis": "Untying embedding size from hidden size and sharing parameters across layers improves parameter efficiency, and sentence-order prediction is a more useful inter-sentence loss than next-sentence prediction.",
+ "contributions": [
+  "Factorized embedding parameterization",
+  "Cross-layer parameter sharing",
+  "Sentence-order prediction (SOP) loss replacing NSP",
+  "New state of the art on GLUE, SQuAD and RACE with fewer parameters than BERT-large"
+ ],
+ "method": {
+  "summary": "ALBERT is a BERT-style transformer encoder with factorized embeddings (V x E + E x H), all-layer parameter sharing, and an SOP loss added to MLM with n-gram masking. Models are pretrained on BooksCorpus and Wikipedia (plus extra data for final results) and fine-tuned on GLUE, SQuAD and RACE; ablations isolate each design choice.",
+  "task": "self-supervised pretraining of language representations (MLM + SOP), then fine-tuning for NLU",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "BooksCorpus + English Wikipedia",
+    "role": "pretrain",
+    "size": "around 16GB of uncompressed text",
+    "split": null,
+    "source": "Zhu et al., 2015; Devlin et al., 2019",
+    "preprocessing": "inputs '[CLS] x1 [SEP] x2 [SEP]'; max length 512, inputs shorter than 512 generated with probability 10%; SentencePiece vocab 30,000; n-gram masking up to 3"
+   },
+   {
+    "name": "Additional pretraining data (as in XLNet and RoBERTa)",
+    "role": "pretrain",
+    "size": null,
+    "split": null,
+    "source": "Liu et al. 2019; Yang et al. 2019 (sizes not restated)",
+    "preprocessing": null
+   },
+   {
+    "name": "GLUE (9 tasks)",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Wang et al., 2018",
+    "preprocessing": null
+   },
+   {
+    "name": "SQuAD v1.1",
+    "role": "both",
+    "size": "100,000 question/answer pairs",
+    "split": null,
+    "source": "Rajpurkar et al., 2016",
+    "preprocessing": null
+   },
+   {
+    "name": "SQuAD v2.0",
+    "role": "both",
+    "size": "50,000 unanswerable questions added to v1.1",
+    "split": null,
+    "source": "Rajpurkar et al., 2018",
+    "preprocessing": null
+   },
+   {
+    "name": "RACE",
+    "role": "both",
+    "size": "nearly 100,000 questions, 4 candidate answers each",
+    "split": null,
+    "source": "Lai et al., 2017",
+    "preprocessing": null
+   },
+   {
+    "name": "Intrinsic dev set",
+    "role": "dev",
+    "size": null,
+    "split": null,
+    "source": "built from SQuAD and RACE dev sets with the Sec 4.1 procedure; used only to monitor convergence",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "BERT-base",
+    "role": "baseline",
+    "params": "108M",
+    "architecture": "transformer encoder, E=H",
+    "init_from": null,
+    "tokenizer": "SentencePiece",
+    "vocab": "30,000",
+    "layers": 12,
+    "hidden": 768,
+    "heads": "inferred: H/64 = 12",
+    "context": 512,
+    "other": {
+     "embedding": 768,
+     "parameter_sharing": false
+    }
+   },
+   {
+    "name": "BERT-large",
+    "role": "baseline",
+    "params": "334M",
+    "architecture": "transformer encoder, E=H",
+    "init_from": null,
+    "tokenizer": "SentencePiece",
+    "vocab": "30,000",
+    "layers": 24,
+    "hidden": 1024,
+    "heads": "inferred: H/64 = 16",
+    "context": 512,
+    "other": {
+     "embedding": 1024,
+     "parameter_sharing": false
+    }
+   },
+   {
+    "name": "ALBERT-base",
+    "role": "proposed",
+    "params": "12M",
+    "architecture": "transformer encoder, GELU, factorized embedding, all-shared",
+    "init_from": null,
+    "tokenizer": "SentencePiece",
+    "vocab": "30,000",
+    "layers": 12,
+    "hidden": 768,
+    "heads": "inferred: H/64 = 12",
+    "context": 512,
+    "other": {
+     "embedding": 128,
+     "parameter_sharing": true,
+     "ffn_size": "4H"
+    }
+   },
+   {
+    "name": "ALBERT-large",
+    "role": "proposed",
+    "params": "18M",
+    "architecture": "as ALBERT-base",
+    "init_from": null,
+    "tokenizer": "SentencePiece",
+    "vocab": "30,000",
+    "layers": 24,
+    "hidden": 1024,
+    "heads": "inferred: H/64 = 16",
+    "context": 512,
+    "other": {
+     "embedding": 128
+    }
+   },
+   {
+    "name": "ALBERT-xlarge",
+    "role": "proposed",
+    "params": "60M",
+    "architecture": "as ALBERT-base",
+    "init_from": null,
+    "tokenizer": "SentencePiece",
+    "vocab": "30,000",
+    "layers": 24,
+    "hidden": 2048,
+    "heads": "inferred: H/64 = 32",
+    "context": 512,
+    "other": {
+     "embedding": 128
+    }
+   },
+   {
+    "name": "ALBERT-xxlarge",
+    "role": "proposed",
+    "params": "235M",
+    "architecture": "as ALBERT-base",
+    "init_from": "Appendix A.1 footnote: warm-started from a 6-layer network",
+    "tokenizer": "SentencePiece",
+    "vocab": "30,000",
+    "layers": 12,
+    "hidden": 4096,
+    "heads": "inferred: H/64 = 64",
+    "context": 512,
+    "other": {
+     "embedding": 128,
+     "note": "text Sec 3.2 says 233M; 24-layer version gives similar results"
+    }
+   }
+  ],
+  "training": {
+   "objective": "masked LM (n-gram masking, p(n) proportional to 1/n, max n=3) plus sentence-order prediction (SOP)",
+   "optimizer": "LAMB",
+   "lr": "0.00176",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "4096",
+   "steps": "125,000 unless otherwise specified; final models 1M and 1.5M steps",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "512",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": "default on; removed for the final ALBERT-xxlarge (Sec 4.8)",
+   "regularisation": "parameter sharing described as a form of regularization",
+   "hardware": "Cloud TPU V3, 64 to 512 TPUs depending on model size",
+   "compute": null,
+   "wall_clock": "ALBERT-xxlarge 125k steps = 32h; BERT-large 400k steps = 34h (Table 6)",
+   "seeds": "GLUE dev: median over 5 runs; seeds not stated",
+   "other": {
+    "downstream_hyperparameters": "Table 14: per-task LR 1.00E-05 to 5.00E-05, batch 16-128, ALBERT dropout 0 or 0.1, classifier dropout 0.1, steps 800-33112, warmup 200-1986, max seq len 512 (384 SQuAD v1.1); adapted from Liu 2019, Devlin 2019, Yang 2019",
+    "fine_tune_init": "RTE, STS, MRPC fine-tuned from an MNLI checkpoint",
+    "depth_warm_start": "Appendix A.1: deeper ALBERT-large nets fine-tuned from the shallower checkpoint"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "Dev: median of 5 runs for GLUE tasks with high variance; ensemble uses 6 to 17 candidate checkpoints",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Avg",
+     "definition": "mean of downstream task scores; SQuAD F1 and EM first averaged",
+     "unit": "points",
+     "higher_is_better": true
+    },
+    {
+     "name": "SQuAD F1/EM",
+     "definition": "span extraction F1 and exact match",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "RACE accuracy",
+     "definition": "multiple-choice accuracy, middle/high school",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "MLM/NSP/SOP accuracy",
+     "definition": "intrinsic dev-set accuracy",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "BERT-base/large (own training)",
+    "XLNet",
+    "RoBERTa",
+    "ALICE",
+    "MT-DNN",
+    "Adv-RoBERTa",
+    "UPM",
+    "DCMN+"
+   ],
+   "protocol": "Early stopping on dev sets; ablations on dev; leaderboard test for final results; GLUE dev median of 5 runs; single-task fine-tuning only"
+  },
+  "availability": {
+   "code": "https://github.com/google-research/ALBERT",
+   "weights": "pretrained models released at same URL",
+   "data": null
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.optimizer",
+    "quote": "a batch size of 4096 and a LAMB optimizer with learning rate",
+    "where": "Sec 4.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "ALBERT-xxlarge ensemble sets RACE test accuracy above prior work",
+   "kind": "measured",
+   "source": null,
+   "metric": "RACE test accuracy",
+   "value": "89.4",
+   "unit": "%",
+   "baseline_value": "83.2 (RoBERTa single)",
+   "n": null,
+   "setup": "RACE test, ensemble of ALBERT checkpoints, leaderboard Sept 23 2019",
+   "note": null,
+   "where": "Sec 1",
+   "quote": "we push the RACE accuracy to 89.4%"
+  },
+  {
+   "claim": "ALBERT ensemble GLUE test score",
+   "kind": "measured",
+   "source": null,
+   "metric": "GLUE avg",
+   "value": "89.4",
+   "unit": "score",
+   "baseline_value": "88.8 (Adv-RoBERTa)",
+   "n": null,
+   "setup": "GLUE test leaderboard, ensemble",
+   "note": null,
+   "where": "Table 9",
+   "table": "Table 9, row ALBERT (ensemble), column Avg"
+  },
+  {
+   "claim": "ALBERT ensemble SQuAD 2.0 test F1",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": "92.2",
+   "unit": "F1",
+   "baseline_value": "90.9 (XLNet + DAAF + Verifier ensemble F1/EM 90.9/88.6)",
+   "n": null,
+   "setup": "SQuAD 2.0 test, ensemble",
+   "note": null,
+   "where": "Sec 1, Table 10",
+   "quote": "the F1 score of SQuAD 2.0 to 92.2"
+  },
+  {
+   "claim": "Single ALBERT model RACE test accuracy (1.5M steps)",
+   "kind": "measured",
+   "source": null,
+   "metric": "RACE test accuracy",
+   "value": "86.5",
+   "unit": "%",
+   "baseline_value": "83.2 (RoBERTa)",
+   "n": null,
+   "setup": "ALBERT-xxlarge, MLM+SOP, no dropout, single model",
+   "note": null,
+   "where": "Table 10",
+   "table": "Table 10, row ALBERT (1.5M), column RACE test"
+  },
+  {
+   "claim": "ALBERT-large has about 18x fewer parameters than BERT-large (18M vs 334M)",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "18M",
+   "unit": "parameters",
+   "baseline_value": "334M",
+   "n": null,
+   "setup": "Table 1 configurations",
+   "note": null,
+   "where": "Sec 3.2",
+   "quote": "ALBERT-large has about 18x fewer parameters compared to BERT-large, 18M versus 334M"
+  },
+  {
+   "claim": "ALBERT-large iterates through data about 1.7x faster than BERT-large; ALBERT-xxlarge about 3x slower",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "1.7x",
+   "unit": "speedup",
+   "baseline_value": null,
+   "n": null,
+   "setup": "same number of TPUs, same training configuration, BERT-large baseline",
+   "note": "Sec 4.7 says BERT-large throughput is about 3.17x higher than ALBERT-xxlarge; Table 2 prints 0.3x",
+   "where": "Sec 4.3, Table 2",
+   "quote": "ALBERT-large is about 1.7 times faster in iterating through the data while ALBERT-xxlarge is about 3 times slower"
+  },
+  {
+   "claim": "ALBERT-xxlarge (235M) average dev score vs BERT-large (334M) after 125k steps",
+   "kind": "measured",
+   "source": null,
+   "metric": "Avg",
+   "value": "88.7",
+   "unit": "Avg dev score",
+   "baseline_value": "85.2",
+   "n": null,
+   "setup": "BooksCorpus+Wikipedia, 125k steps, dev sets of SQuAD1.1/2.0, MNLI, SST-2, RACE",
+   "note": "Parameters printed as 235M in Tables 1/2 and 233M in Sec 3.2 text",
+   "where": "Table 2",
+   "table": "Table 2, row ALBERT xxlarge, column Avg"
+  },
+  {
+   "claim": "ALBERT-xxlarge gains over BERT-large on RACE dev",
+   "kind": "measured",
+   "source": null,
+   "metric": "RACE dev accuracy",
+   "value": "8.4",
+   "unit": "% points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 2 setup, 125k steps",
+   "note": null,
+   "where": "Sec 4.3",
+   "quote": "RACE (+8.4%)"
+  },
+  {
+   "claim": "ALBERT-base with E=128 all-shared Avg",
+   "kind": "measured",
+   "source": null,
+   "metric": "Avg",
+   "value": "80.1",
+   "unit": "Avg",
+   "baseline_value": "79.0 at E=64; 79.6 at E=256; 79.8 at E=768",
+   "n": null,
+   "setup": "ALBERT-base, 12M params, all-shared, 125k steps",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, ALBERT base all-shared, E=128, column Avg"
+  },
+  {
+   "claim": "All-shared parameter sharing costs Avg at E=128 relative to not-shared",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "1.5",
+   "unit": "Avg points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ALBERT-base, E=128",
+   "note": "Table 4 prints not-shared E=128 Avg as 81.6 and all-shared as 80.1; Table 4 prints all-shared MNLI as 82.0 for E=128 whereas Tables 2/3 print 81.6",
+   "where": "Sec 4.5, Table 4",
+   "quote": "(-1.5 on Avg) compared to E = 768 (-2.5 on Avg)"
+  },
+  {
+   "claim": "Sharing only attention parameters at E=128 does not hurt",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "0.1",
+   "unit": "Avg points (gain)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ALBERT-base, E=128",
+   "note": null,
+   "where": "Sec 4.5",
+   "quote": "(+0.1 on Avg)"
+  },
+  {
+   "claim": "SOP improves downstream Avg over NSP in ALBERT-base",
+   "kind": "measured",
+   "source": null,
+   "metric": "Avg",
+   "value": "80.1",
+   "unit": "Avg",
+   "baseline_value": "79.2 (NSP), 79.0 (None)",
+   "n": null,
+   "setup": "ALBERT-base, 125k steps",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row SOP, column Avg"
+  },
+  {
+   "claim": "NSP-trained model is at chance on SOP task",
+   "kind": "measured",
+   "source": null,
+   "metric": "SOP accuracy",
+   "value": "52.0",
+   "unit": "% accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ALBERT-base intrinsic eval",
+   "note": null,
+   "where": "Sec 4.6",
+   "quote": "52.0% accuracy"
+  },
+  {
+   "claim": "SOP-trained model solves SOP task",
+   "kind": "measured",
+   "source": null,
+   "metric": "SOP accuracy",
+   "value": "86.5",
+   "unit": "% accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ALBERT-base intrinsic eval",
+   "note": null,
+   "where": "Sec 4.6",
+   "quote": "86.5% accuracy"
+  },
+  {
+   "claim": "SOP-trained model on NSP task",
+   "kind": "measured",
+   "source": null,
+   "metric": "NSP accuracy",
+   "value": "78.9",
+   "unit": "% accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ALBERT-base intrinsic eval",
+   "note": null,
+   "where": "Sec 4.6",
+   "quote": "78.9% accuracy"
+  },
+  {
+   "claim": "Equal wall-clock: ALBERT-xxlarge beats BERT-large",
+   "kind": "measured",
+   "source": null,
+   "metric": "Avg",
+   "value": "88.7",
+   "unit": "Avg",
+   "baseline_value": "87.2",
+   "n": null,
+   "setup": "ALBERT-xxlarge 125k steps/32h vs BERT-large 400k steps/34h",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row ALBERT-xxlarge, column Avg"
+  },
+  {
+   "claim": "Equal wall-clock RACE gap",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "5.2",
+   "unit": "% points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "same as Table 6",
+   "note": null,
+   "where": "Sec 4.7",
+   "quote": "with the difference on RACE as high as +5.2%"
+  },
+  {
+   "claim": "Additional data raises ALBERT-base Avg but hurts SQuAD",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "80.8",
+   "unit": "Avg",
+   "baseline_value": "80.1",
+   "n": null,
+   "setup": "ALBERT-base; extra data as in XLNet/RoBERTa",
+   "note": null,
+   "where": "Table 7",
+   "table": "Table 7, row With additional data, column Avg"
+  },
+  {
+   "claim": "Removing dropout helps ALBERT-xxlarge at ~1M steps",
+   "kind": "measured",
+   "source": null,
+   "metric": "Avg",
+   "value": "90.7",
+   "unit": "Avg",
+   "baseline_value": "90.4",
+   "n": null,
+   "setup": "ALBERT-xxlarge, ~1M steps",
+   "note": null,
+   "where": "Table 8",
+   "table": "Table 8, row Without dropout, column Avg"
+  },
+  {
+   "claim": "Depth: ALBERT-large 1 layer vs 3 layers Avg with same 18M params",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "71.2",
+   "unit": "Avg",
+   "baseline_value": "52.9 (1 layer)",
+   "n": null,
+   "setup": "ALBERT-large, 3 layers",
+   "note": null,
+   "where": "Table 11",
+   "table": "Table 11, row 3, column Avg"
+  },
+  {
+   "claim": "Depth: 24 layers best; 48 layers declines",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "82.1",
+   "unit": "Avg",
+   "baseline_value": "81.8 (48 layers); 81.5 (12 layers)",
+   "n": null,
+   "setup": "ALBERT-large, 24 layers",
+   "note": null,
+   "where": "Table 11",
+   "table": "Table 11, row 24, column Avg"
+  },
+  {
+   "claim": "Width: hidden 6144 declines vs 4096 on 3-layer ALBERT-large",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "74.0",
+   "unit": "Avg",
+   "baseline_value": "76.3 at 4096",
+   "n": null,
+   "setup": "3-layer ALBERT-large, 499M params",
+   "note": null,
+   "where": "Table 12",
+   "table": "Table 12, row 6144, column Avg"
+  },
+  {
+   "claim": "12-layer vs 24-layer ALBERT-xxlarge have same Avg",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "88.7",
+   "unit": "Avg",
+   "baseline_value": "88.7 (24 layers)",
+   "n": null,
+   "setup": "ALBERT-xxlarge",
+   "note": null,
+   "where": "Table 13",
+   "table": "Table 13, row 12, column Avg"
+  },
+  {
+   "claim": "ALBERT single model GLUE dev MNLI at 1.5M steps",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "90.8",
+   "unit": "accuracy",
+   "baseline_value": "90.2 (RoBERTa-large)",
+   "n": null,
+   "setup": "single-task single model dev, median of 5 runs",
+   "note": null,
+   "where": "Table 9",
+   "table": "Table 9, row ALBERT (1.5M), column MNLI"
+  }
+ ],
+ "limits": [
+  "ALBERT-xxlarge is more computationally expensive than BERT-large (about 3x slower per step); authors name faster training and inference as next step (Sec 5).",
+  "Authors concede dropout finding may not hold for other transformer architectures; further experimentation needed.",
+  "Warm-start depth technique does not improve downstream performance (Appendix footnote).",
+  "Ablations use 125k steps and ALBERT-base; the largest models are not ablated.",
+  "Embeddings oscillate rather than converge across layers, unlike DEQ.",
+  "No wall-clock/FLOP accounting beyond relative speedups; no seeds or variance reported for ablations; random seeds not stated.",
+  "Evaluated only on NLU benchmarks (GLUE, SQuAD, RACE); superseded by later models (inferred)."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Factorized embedding parameterization",
+   "definition": "decomposes the V x H embedding into V x E and E x H, reducing parameters from O(V x H) to O(V x E + E x H)",
+   "where": "Sec 3.1"
+  },
+  {
+   "term": "Cross-layer parameter sharing",
+   "definition": "share all parameters across layers by default",
+   "where": "Sec 3.1"
+  },
+  {
+   "term": "Sentence-order prediction (SOP)",
+   "definition": "positives are two consecutive segments from the same document; negatives are the same segments with order swapped",
+   "where": "Sec 3.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "BERT",
+   "year": 2019,
+   "arxiv": "1810.04805",
+   "relation": "extends",
+   "note": "base architecture, setup and baselines",
+   "quote": null
+  },
+  {
+   "work": "RoBERTa",
+   "year": 2019,
+   "arxiv": "1907.11692",
+   "relation": "baseline",
+   "note": "removes NSP; extra data; fine-tuning hyperparameters",
+   "quote": null
+  },
+  {
+   "work": "XLNet",
+   "year": 2019,
+   "arxiv": "1906.08237",
+   "relation": "baseline",
+   "note": "removes NSP; SentencePiece; extra data",
+   "quote": null
+  },
+  {
+   "work": "Universal Transformer (Dehghani et al.)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "contradicts",
+   "note": "UT shows sharing beats vanilla transformer; ALBERT sees a cost",
+   "quote": null
+  },
+  {
+   "work": "Deep Equilibrium Models (Bai et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "contradicts",
+   "note": "ALBERT embeddings oscillate instead of converging",
+   "quote": null
+  },
+  {
+   "work": "SpanBERT n-gram masking (Joshi et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "n-gram MLM masking",
+   "quote": null
+  },
+  {
+   "work": "LAMB (You et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "optimizer",
+   "quote": null
+  },
+  {
+   "work": "Jernite et al. sentence ordering",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "SOP loss most similar",
+   "quote": null
+  },
+  {
+   "work": "Gradient checkpointing (Chen et al.)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "related",
+   "note": "memory-saving alternative",
+   "quote": null
+  },
+  {
+   "work": "BooksCorpus (Zhu et al.)",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "pretraining",
+   "quote": null
+  },
+  {
+   "work": "GLUE / SQuAD / RACE",
+   "year": null,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "benchmarks",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Table 1",
+   "caption": "The configurations of the main BERT and ALBERT models analyzed in this paper.",
+   "page": 5,
+   "why": "parameter counts versus layers, hidden and embedding size"
+  },
+  {
+   "figure": "Table 2",
+   "caption": "Dev set results for models pretrained over BOOKCORPUS and Wikipedia for 125k steps.",
+   "page": 7,
+   "why": "head-to-head BERT vs ALBERT with speedup"
+  },
+  {
+   "figure": "Fig 1",
+   "caption": "The L2 distances and cosine similarity (in terms of degree) of the input and output embedding of each layer for BERT-large and ALBERT-large.",
+   "page": 4,
+   "why": "shows weight sharing smooths layer transitions"
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 4.1",
+   "snippet": "p(n) = (1/n) / sum_{k=1}^{N} (1/k)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text uses ligature characters (fi, fl) which affect quote matching",
+  "Parameter count of ALBERT-xxlarge printed as 235M (Tables) and 233M (Sec 3.2)",
+  "Table 4 MNLI for E=128 all-shared (82.0) differs from Tables 2/3 (81.6)"
+ ]
+}

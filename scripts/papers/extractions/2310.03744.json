@@ -1,0 +1,149 @@
+{
+ "schema": 1,
+ "key": "2310.03744",
+ "pdf": "ai-engineering/08-multimodal-engineering/sources/liu-2024-improved-baselines-visual-instruction-tuning.pdf",
+ "bib": {
+  "title": "Improved Baselines with Visual Instruction Tuning",
+  "authors": ["Haotian Liu", "Chunyuan Li", "Yuheng Li", "Yong Jae Lee"],
+  "first_author": "Liu",
+  "year": 2023,
+  "venue": "preprint",
+  "arxiv": "2310.03744",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 70316,
+  "chars_total": 70316,
+  "engine": "pymupdf",
+  "skipped": "reference list skimmed only"
+ },
+ "type": "empirical",
+ "question": "Which design choices (connector, data mix, response-format prompts, resolution, LLM) make a LLaVA-style large multimodal model strongest and most data-efficient in a controlled setting?",
+ "hypothesis": "Inferred: LLaVA's simple fully-connected connector plus academic-task VQA data with clear response-format prompts can match or beat resampler-based models trained on far more data.",
+ "contributions": [
+  "First systematic controlled study of LMM design choices under the LLaVA framework",
+  "LLaVA-1.5: CLIP-ViT-L-336px, two-layer MLP connector, academic-task VQA data with response-format prompts; SoTA on 11 benchmarks with 1.2M public samples",
+  "LLaVA-1.5-HD: grid-split high-resolution encoding with a global-context image, no extra pretraining",
+  "Early exploration of data efficiency, hallucination vs resolution, compositional capabilities"
+ ],
+ "method": {
+  "summary": "Starting from LLaVA, the authors swap the linear projector for a two-layer MLP, add academic VQA/OCR/region data with explicit response-format prompts, raise the encoder to CLIP-ViT-L-336px, add ShareGPT text and scale to 13B Vicuna-v1.5. Training is two stages: connector alignment pretraining on 558K image-text pairs, then full-LLM visual instruction tuning on a 665K mixture. LLaVA-1.5-HD splits images into 224px grids, encodes each and adds a downsampled global view.",
+  "task": "visual instruction tuning of a large multimodal model; VQA and instruction-following evaluation",
+  "trains": true,
+  "datasets": [
+   {"name": "Pretraining image-text pairs (same as LLaVA)", "role": "pretrain", "size": "558K", "split": null, "source": "Table 3 lists 558K pretrain samples; text calls it ~600K image-text pairs", "preprocessing": null},
+   {"name": "Instruction mixture (Table 7)", "role": "train", "size": "665K total: LLaVA 158K, ShareGPT 40K, VQAv2 83K, GQA 72K, OKVQA 9K, OCRVQA 80K, A-OKVQA 66K, TextCaps 22K, RefCOCO 48K, VG 86K", "split": "all splits concatenated, sampled with same probability", "source": "public datasets only", "preprocessing": "VQA pairs of one image merged into one conversation; ShareGPT filtered as in Vicuna, conversations over 2048 tokens truncated (~40K); A-OKVQA pairs augmented k times (k = choices); 80K sampled from OCRVQA; 10 annotations per VG image; RefCOCO conversations cut into segments of fewer than 10; each batch drawn from a single modality (25% faster, no effect on outcome)"},
+   {"name": "Eval benchmarks", "role": "eval", "size": "VQAv2, GQA, VizWiz (8,000 images), ScienceQA-IMG, TextVQA, POPE, MME-Perception, MMBench, MMBench-CN, SEED-Bench, LLaVA-Bench-in-the-Wild, MM-Vet", "split": null, "source": "see paper refs", "preprocessing": "SEED-Bench video: middle frame sampled; POPE F1 on random, popular, adversarial splits"}
+  ],
+  "models": [
+   {"name": "LLaVA-1.5 (7B and 13B)", "role": "proposed", "params": "7B and 13B", "architecture": "CLIP-ViT-L-336px encoder, two-layer MLP connector, Vicuna LLM", "init_from": "Vicuna v1.5 and CLIP-ViT-L-336px", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"image_res": "336x336", "ablated_llms": "Vicuna-v1.1, v1.3, v1.5, LLaMA-2-Chat"}},
+   {"name": "LLaVA-1.5-HD", "role": "proposed", "params": "13B (7B for ablation)", "architecture": "CLIP-ViT-L-14 (224) on 224px grids, merged feature map plus 224px global image, row-end tokens", "init_from": "LLaVA-1.5 recipe", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"max_resolution": "672x448 or 448x672", "grids": "up to six grids (1x1..1x6, 2x2, 2x3 and transposes)", "extra_pretraining": "none"}},
+   {"name": "InstructBLIP, Qwen-VL(-Chat), BLIP-2, IDEFICS, Shikra, original LLaVA", "role": "baseline", "params": null, "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}}
+  ],
+  "training": {
+   "objective": null,
+   "optimizer": "AdamW",
+   "lr": "pretrain 1e-3; finetune 2e-5",
+   "lr_schedule": "cosine decay",
+   "warmup": "ratio 0.03",
+   "batch_size": "pretrain 256; finetune 128",
+   "steps": null,
+   "epochs": "1 (pretrain), 1 (finetune; inferred from Table 9 row epoch = 1 spanning both columns)",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": "0",
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "8x A100",
+   "compute": "~6 hours pretraining and ~20 hours instruction tuning (13B final model reported as ~1 day on one 8-A100 node)",
+   "wall_clock": "~26 hours",
+   "seeds": null,
+   "other": {"deepspeed_stage": "2 (pretrain), 3 (finetune)", "trainable": "pretrain stage: projector; finetune stage: whole LLM and projector (stated in text as 'optimizes the whole LLM')", "lr_note": "pretraining lr halved relative to original LLaVA because of the MLP projector", "HD_training": "no extra pretraining; visual instruction tuning directly on high-res images"}
+  },
+  "inference": {
+   "decoding": "greedy",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single run; seeds not stated",
+   "prompting": "response-format prompt appended per benchmark (Table 8)",
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "VQAv2/GQA/VizWiz/ScienceQA-IMG/TextVQA accuracy", "definition": "benchmark standard accuracy", "unit": "%", "higher_is_better": true},
+    {"name": "POPE", "definition": "F1 on random, popular and adversarial COCO subsets", "unit": "F1", "higher_is_better": true},
+    {"name": "MME-Perception", "definition": "yes/no perception score", "unit": "points", "higher_is_better": true},
+    {"name": "MM-Vet and LLaVA-Bench-Wild", "definition": "GPT-4 judged correctness and helpfulness", "unit": "score", "higher_is_better": true}
+   ],
+   "baselines": ["BLIP-2", "InstructBLIP", "Shikra", "IDEFICS", "Qwen-VL", "Qwen-VL-Chat", "LLaVA", "PaLI-X-55B"],
+   "protocol": "single runs; GPT-4 judge for LLaVA-Bench and MM-Vet; no significance tests stated"
+  },
+  "availability": {"code": "stated 'Code and model will be publicly available'; project page https://llava-vl.github.io", "weights": "same statement", "data": "all public datasets"},
+  "prompts": [
+   {"purpose": "short answers (VQAv2, GQA, TextVQA, MME, POPE, VizWiz)", "text": "Answer the question using a single word or phrase.", "where": "Sec 3.2, Table 7/8"},
+   {"purpose": "multiple choice (ScienceQA, MMBench, SEED-Bench, A-OKVQA)", "text": "Answer with the option's letter from the given choices directly.", "where": "Table 7/8"},
+   {"purpose": "VizWiz unanswerable", "text": "When the provided information is insufficient, respond with 'Unanswerable'. Answer the question using a single word or phrase.", "where": "Table 8"},
+   {"purpose": "TextCaps", "text": "Provide a one-sentence caption for the provided image.", "where": "Table 7"},
+   {"purpose": "RefCOCO region description", "text": "Provide a short description for this region.", "where": "Table 7"},
+   {"purpose": "RefCOCO/VG grounding", "text": "Provide the bounding box coordinate of the region this sentence describes.", "where": "Table 7"}
+  ],
+  "evidence": [
+   {"field": "training.compute", "quote": "20 hours of visual instruction tuning", "where": "Sec 3.3 Computational cost"}
+  ]
+ },
+ "results": [
+  {"claim": "Final LLaVA-1.5 13B trains on only 1.2M public samples and finishes in about a day on one 8-A100 node.", "kind": "measured", "source": null, "metric": "training cost", "value": "1.2M", "unit": "samples", "baseline_value": null, "n": null, "setup": "LLaVA-1.5 13B; 558K pretrain + 665K instruction samples", "quote": "Our final 13B checkpoint uses merely 1.2M publicly available data,", "table": null, "note": "Table 3 sums to 558K + 665K = 1.223M", "where": "Abstract"},
+  {"claim": "Compute for LLaVA-1.5 is about 6h pretraining plus 20h instruction tuning on 8 A100s, roughly 2x original LLaVA due to 336px input.", "kind": "measured", "source": null, "metric": "training time", "value": "~20 hours", "unit": "hours", "baseline_value": null, "n": null, "setup": "8x A100; 336px input", "quote": "20 hours of visual instruction tuning", "table": null, "note": null, "where": "Sec 3.3"},
+  {"claim": "Adding VQAv2 alone raises MME from 809.6 to 1197.0; adding the format prompt gives 1323.8, above InstructBLIP's 1212.8.", "kind": "measured", "source": null, "metric": "MME", "value": "1323.8", "unit": "points", "baseline_value": "809.6", "n": null, "setup": "LLaVA 7B, 224px, subset of InstructBLIP data (Table 2 rows 0-2)", "quote": "significantly improves (1323.8 vs 809.6)", "table": null, "note": "Text says 'outperforms InstructBLIP by 111 points'", "where": "Sec 3.2, Table 2"},
+  {"claim": "Final 13B LLaVA-1.5 scores 1531.3 MME, 63.3 GQA, 36.1 MM-Vet.", "kind": "measured", "source": null, "metric": "MME", "value": "1531.3", "unit": "points", "baseline_value": "1212.8 (InstructBLIP 14B)", "n": null, "setup": "13B, 336px, full data mix (Table 2 last row)", "quote": null, "table": "Table 2, row +Scale up LLM, columns GQA 63.3, MME 1531.3, MM-Vet 36.1", "note": "GQA marked * : GQA training images seen in training", "where": "Table 2"},
+  {"claim": "LLaVA-1.5 13B VQAv2 80.0, GQA 63.3, VizWiz 53.6, SciQA-IMG 71.6, TextVQA 61.3; HD variant 81.8/64.7/57.5/71.0/62.5.", "kind": "measured", "source": null, "metric": "VQAv2", "value": "80.0", "unit": "%", "baseline_value": "78.2 (Qwen-VL-Chat)", "n": null, "setup": "Vicuna-13B, 336px, 558K+665K samples", "quote": null, "table": "Table 3, row LLaVA-1.5 Vicuna-13B, column VQAv2 (80.0*, 63.3*, 53.6, 71.6, 61.3)", "note": "* training images/annotations seen during training", "where": "Table 3"},
+  {"claim": "LLaVA-1.5-13B on instruction-following benchmarks: MMBench 67.7, MMBench-CN 63.6, SEED 61.6, LLaVA-Wild 72.5, MM-Vet 36.1, POPE 87.1/86.2/84.5.", "kind": "measured", "source": null, "metric": "MMBench", "value": "67.7", "unit": "%", "baseline_value": "60.6 (Qwen-VL-Chat)", "n": null, "setup": "LLaVA-1.5-13B, greedy decoding", "quote": null, "table": "Table 4, row LLaVA-1.5-13B, column MMBench en (67.7)", "note": null, "where": "Table 4"},
+  {"claim": "Global context in LLaVA-1.5-HD improves GQA, MME, MM-Vet.", "kind": "measured", "source": null, "metric": "MME", "value": "1497.5", "unit": "points", "baseline_value": "1425.8", "n": null, "setup": "7B HD ablation; high-res patch only vs +global context", "quote": "1497.5 (+71)", "table": null, "note": "GQA 62.9 to 63.8; MM-Vet 31.9 to 35.1", "where": "Sec 4.2"},
+  {"claim": "The response-format prompt lifts VizWiz unanswerable-question accuracy from 11.1% to 67.8%.", "kind": "measured", "source": null, "metric": "VizWiz unanswerable accuracy", "value": "67.8", "unit": "%", "baseline_value": "11.1", "n": null, "setup": "LLaVA-1.5 with Table 8 VizWiz prompt", "quote": "(11.1% →67.8% on unanswerable questions)", "table": null, "note": null, "where": "Sec 4.3"},
+  {"claim": "LLaVA-1.5 beats Qwen-VL-Chat on MMBench-CN despite no Chinese multimodal tuning.", "kind": "measured", "source": null, "metric": "MMBench-CN", "value": "63.6", "unit": "%", "baseline_value": "56.7", "n": null, "setup": "13B vs Qwen-VL-Chat", "quote": "(63.6% vs 56.7%)", "table": null, "note": null, "where": "Sec 4.3"},
+  {"claim": "Randomly keeping 50% of the instruction data retains over 98% of full-data performance.", "kind": "measured", "source": null, "metric": "relative performance", "value": "98", "unit": "% of full", "baseline_value": "100", "n": null, "setup": "random sub-sampling ratio 0.1 to 0.5 of the 665K mixture; read per Fig 4", "quote": "the model still maintains more than 98% of the full dataset", "table": null, "note": null, "where": "Sec 5.1"},
+  {"claim": "Hallucination in detailed descriptions drops significantly at 448px input; qualitative, no number.", "kind": "claim", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "LLaVA-1.5-HD vs 336px; no metric reported", "quote": null, "table": null, "note": null, "where": "Sec 5.2"},
+  {"claim": "Vicuna-v1.5 gives best overall performance among four LLM variants; LLaMA-2 based models beat LLaMA-1 based.", "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "Fig 3 relative performance, numbers not printed", "quote": null, "table": null, "note": null, "where": "Sec 4.4"}
+ ],
+ "limits": [
+  "Uses all image patches (576 at 336px), prolonging each training iteration; resamplers did not converge as efficiently on comparable data",
+  "No multiple-image understanding (no such data, context length limit)",
+  "Limited problem solving in some domains; still hallucinates, not for critical use such as medical",
+  "GQA, VQAv2 and others marked * had training images/annotations seen in training, so those cells are not zero-shot",
+  "Single runs; no seeds or significance tests; ablation numbers for data efficiency and LLM choice shown only as relative-performance plots",
+  "Hallucination-vs-resolution claim has no reported metric",
+  "Text says 11 benchmarks in abstract/Fig 1 and 12 benchmarks in Sec 4.1/4.2"
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "Response format prompt", "definition": "a single prompt clause appended to VQA questions that clearly indicates the output format, e.g. 'Answer the question using a single word or phrase.'", "where": "Sec 3.2"},
+  {"term": "LLaVA-1.5-HD", "definition": "LLaVA-1.5 scaled to higher resolution by splitting the image into grids, encoding independently, and concatenating a downsampled global image", "where": "Sec 3.4"}
+ ],
+ "lineage": [
+  {"work": "Visual Instruction Tuning (LLaVA)", "year": 2023, "arxiv": "2304.08485", "relation": "extends", "note": "baseline architecture and 158K instruction data", "quote": null},
+  {"work": "InstructBLIP", "year": 2023, "arxiv": "2305.06500", "relation": "baseline", "note": "VQA data mixing and Qformer comparison", "quote": null},
+  {"work": "Qwen-VL", "year": 2023, "arxiv": "2308.12966", "relation": "baseline", "note": "compared on 11 benchmarks", "quote": null},
+  {"work": "Visual instruction tuning with Polite Flamingo", "year": 2023, "arxiv": "2307.01003", "relation": "related", "note": "identifies VQA overfitting", "quote": null},
+  {"work": "CLIP", "year": 2021, "arxiv": "2103.00020", "relation": "uses-method", "note": "CLIP-ViT-L-336px encoder", "quote": null},
+  {"work": "Vicuna v1.5", "year": 2023, "arxiv": null, "relation": "uses-method", "note": "base LLM", "quote": null},
+  {"work": "ShareGPT", "year": 2023, "arxiv": null, "relation": "uses-data", "note": "40K text conversations", "quote": null},
+  {"work": "MMBench", "year": 2023, "arxiv": "2307.06281", "relation": "evaluates", "note": "benchmark", "quote": null},
+  {"work": "MM-Vet", "year": 2023, "arxiv": null, "relation": "evaluates", "note": "benchmark", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 1", "caption": "LLaVA-1.5 achieves SoTA on a broad range of 11 tasks (Top), with high training sample efficiency (Left) and simple modifications to LLaVA (Right)", "page": 1, "why": "Shows sample efficiency against InstructBLIP and Qwen-VL at a glance"},
+  {"figure": "Fig 2", "caption": "LLaVA-1.5-HD. Scaling LLaVA-1.5 to higher resolutions by splitting the image into grids and encoding them independently.", "page": 3, "why": "Shows the split-encode-merge plus global image pipeline"},
+  {"figure": "Table 2", "caption": "Scaling results on data, model, and resolution.", "page": 3, "why": "Row-by-row ablation from LLaVA to LLaVA-1.5"}
+ ],
+ "code": [],
+ "problems": [
+  "arXiv v2 PDF (May 2024) shows no venue; bib venue left as preprint",
+  "Table cells were read from a flattened text layout; values mapped by order"
+ ]
+}

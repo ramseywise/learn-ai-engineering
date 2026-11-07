@@ -1,0 +1,643 @@
+{
+ "schema": 1,
+ "key": "2302.04761",
+ "pdf": "generative-ai/03-agentic-foundations/sources/schick-2023-toolformer.pdf",
+ "bib": {
+  "title": "Toolformer: Language Models Can Teach Themselves to Use Tools",
+  "authors": [
+   "Timo Schick",
+   "Jane Dwivedi-Yu",
+   "Roberto Dessì",
+   "Roberta Raileanu",
+   "Maria Lomeli",
+   "Luke Zettlemoyer",
+   "Nicola Cancedda",
+   "Thomas Scialom"
+  ],
+  "first_author": "Schick",
+  "year": 2023,
+  "venue": "preprint",
+  "arxiv": "2302.04761",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 72038,
+  "chars_total": 72038,
+  "engine": "pymupdf",
+  "skipped": "Reference list skimmed only."
+ },
+ "type": "empirical",
+ "question": "Can a language model teach itself, without large human annotation, to decide which APIs to call, when, with what arguments, and how to use the results?",
+ "hypothesis": "Self-supervised finetuning on API calls kept only when they reduce future-token loss lets a small LM use tools and beat much larger models zero-shot without hurting language modeling.",
+ "contributions": [
+  "Self-supervised method: sample API calls with in-context prompting, execute, filter by loss reduction, finetune",
+  "Five tools: QA (Atlas), calculator, Wikipedia BM25 search, NLLB translation, calendar",
+  "Zero-shot gains on LAMA, math, QA, MLQA, temporal tasks with perplexity preserved"
+ ],
+ "method": {
+  "summary": "GPT-J is prompted with a few demonstrations per API to insert candidate calls into CCNet text; calls are executed and kept if they cut weighted cross-entropy on following tokens by at least tau_f; GPT-J is finetuned on the augmented text with a standard LM objective. At inference, decoding is interrupted at the arrow token, the API is called, and the result is inserted.",
+  "task": "tool-augmented language modeling, zero-shot downstream evaluation",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "CCNet subset (C)",
+    "role": "train",
+    "size": "up to 25k examples per API (training); sizes in Table 2",
+    "split": "1,000-example CCNet dev set for checkpoint PPL",
+    "source": "CCNet (Wenzek et al., 2020)",
+    "preprocessing": "Per-tool heuristics: calculator needs >=3 numbers; calendar needs URL date (~18% of docs); MT keeps non-English chunk between English text, fastText confidence > 0.8, 10-token chunks"
+   },
+   {
+    "name": "LAMA (SQuAD, Google-RE, T-REx)",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Petroni et al. 2019",
+    "preprocessing": "drop examples where mask not final"
+   },
+   {
+    "name": "ASDiv, SVAMP, MAWPS",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "WebQS, NQ, TriviaQA",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "MLQA",
+    "role": "eval",
+    "size": null,
+    "split": "Es, De, Hi, Vi, Zh, Ar",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "TEMPLAMA",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Dhingra et al. 2022",
+    "preprocessing": null
+   },
+   {
+    "name": "DATESET",
+    "role": "eval",
+    "size": "9,400 queries",
+    "split": "500 random current dates, 7 templates",
+    "source": "new, built by authors",
+    "preprocessing": null
+   },
+   {
+    "name": "WikiText and 10,000 held-out CCNet docs",
+    "role": "eval",
+    "size": "10,000 docs (CCNet)",
+    "split": null,
+    "source": null,
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT-J",
+    "role": "base",
+    "params": "6.7B",
+    "architecture": "decoder-only transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Toolformer",
+    "role": "proposed",
+    "params": "6.7B",
+    "architecture": "GPT-J finetuned on C*",
+    "init_from": "GPT-J",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "max sequence length 1,024",
+    "other": {
+     "api_tokens": "' [', ']', '->' used in place of <API>, </API>, arrow, no vocab change"
+    }
+   },
+   {
+    "name": "GPT-2 family",
+    "role": "base",
+    "params": "124M, 355M, 775M, 1.6B",
+    "architecture": "decoder-only transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "used_for": "scaling study, QA/calculator/Wikipedia search tools only"
+    }
+   },
+   {
+    "name": "OPT",
+    "role": "baseline",
+    "params": "66B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-3 davinci",
+    "role": "baseline",
+    "params": "175B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "original davinci, not instruction-finetuned"
+    }
+   },
+   {
+    "name": "Atlas-large / Atlas-xxl",
+    "role": "retriever",
+    "params": null,
+    "architecture": "retrieval-augmented LM finetuned on Natural Questions",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "large for building C*, xxl at inference"
+    }
+   },
+   {
+    "name": "NLLB",
+    "role": "evaluated",
+    "params": "600M",
+    "architecture": "MT model, 200 languages",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "standard language modeling on C*",
+   "optimizer": null,
+   "lr": "1e-5",
+   "lr_schedule": null,
+   "warmup": "linear warmup for first 10% of training",
+   "batch_size": "128 (effective)",
+   "steps": "up to 2k, evaluating PPL every 500 steps, best checkpoint kept",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "1,024",
+   "precision": "BF16",
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "DeepSpeed ZeRO-3",
+   "hardware": "8x NVIDIA A100 40GB",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "data_per_api": "up to 25k examples"
+   }
+  },
+  "inference": {
+   "decoding": "greedy, but <API> started if among top k=10 tokens; at most one API call per input",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single greedy run per item; no seeds stated",
+   "prompting": "prompted zero-shot, no in-context examples; prompts in Appendix C",
+   "retrieval": "Wikipedia BM25 over KILT dump; Atlas QA",
+   "parameters": {
+    "tau_s": "0.05 (0.0 for calculator, MT)",
+    "tau_f": "1.0 (0.5 for calculator, MT)",
+    "k_positions": "5 (20 for calculator, MT)",
+    "m_calls_per_position": "5 (10 for calculator, MT)",
+    "weights": "w_t = max(0,1-0.2t) normalised",
+    "decode_k": 10
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Lenient match accuracy",
+     "definition": "LAMA/TEMPLAMA/DATESET: correct word in first 5 words; QA: answer in first 20 words; MLQA: within 10 words; math: first number (or after '=') equals answer",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Perplexity",
+     "definition": "on WikiText and CCNet holdout, API calls disabled",
+     "unit": "ppl",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "GPT-J",
+    "GPT-J + CC",
+    "Toolformer (disabled)",
+    "OPT 66B",
+    "GPT-3 175B"
+   ],
+   "protocol": "single run per model, no significance tests; Wikipedia search disabled on LAMA, QA tool disabled on QA datasets"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": null
+  },
+  "prompts": [
+   {
+    "purpose": "QA API sampling",
+    "text": "Your task is to add calls to a Question Answering API to a piece of text. The questions should help you get information required to complete the text. You can call the API by writing \"[QA(question)]\" where \"question\" is the question you want to ask.",
+    "where": "Fig 3, Appendix A.2 (truncated; few-shot examples follow)"
+   },
+   {
+    "purpose": "LAMA zero-shot",
+    "text": "Please complete the following text so that it is factually correct: x.",
+    "where": "Appendix C.1"
+   },
+   {
+    "purpose": "math zero-shot",
+    "text": "x q The answer is",
+    "where": "Appendix C.2"
+   },
+   {
+    "purpose": "QA zero-shot",
+    "text": "Answer the following question:",
+    "where": "Appendix C.3"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training.lr",
+    "quote": "a batch size of 128 and a learning rate of 1 · 10−5 with linear warmup for the first 10% of training",
+    "where": "Sec 4.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Toolformer scores 40.4 on ASDiv with the calculator, vs 14.0 for GPT-3 175B and 14.8 with API calls disabled.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ASDiv",
+   "value": "40.4",
+   "unit": "accuracy (%)",
+   "baseline_value": "14.0",
+   "n": null,
+   "setup": "Zero-shot prompted, greedy decoding with <API> started when in top k=10 tokens, at most one API call per input; GPT-J 6.7B finetuned on CCNet subset with API calls; metric: first number in output matches answer.",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row Toolformer, column ASDiv (GPT-3 14.0; Toolformer (disabled) 14.8)"
+  },
+  {
+   "claim": "Toolformer scores 29.4 SVAMP and 44.0 MAWPS.",
+   "kind": "measured",
+   "source": null,
+   "metric": "SVAMP",
+   "value": "29.4",
+   "unit": "accuracy (%)",
+   "baseline_value": "10.0",
+   "n": null,
+   "setup": "Zero-shot prompted, greedy decoding with <API> started when in top k=10 tokens, at most one API call per input; GPT-J 6.7B finetuned on CCNet subset with API calls",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row Toolformer, columns SVAMP 29.4, MAWPS 44.0"
+  },
+  {
+   "claim": "Allowing API calls more than doubles math performance for all tasks; calculator is used on 97.9% of examples.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "97.9",
+   "unit": "% of examples calling calculator",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Zero-shot prompted, greedy decoding with <API> started when in top k=10 tokens, at most one API call per input; GPT-J 6.7B finetuned on CCNet subset with API calls",
+   "note": null,
+   "where": "Sec 4.2.2",
+   "quote": "for 97.9% of all examples the model decides to ask the calculator tool for help"
+  },
+  {
+   "claim": "Toolformer scores 53.5 on LAMA T-REx vs 39.8 for GPT-3 175B and 34.9 disabled; 33.8 SQuAD, 11.5 Google-RE.",
+   "kind": "measured",
+   "source": null,
+   "metric": "LAMA T-REx",
+   "value": "53.5",
+   "unit": "accuracy (%)",
+   "baseline_value": "39.8",
+   "n": null,
+   "setup": "Zero-shot prompted, greedy decoding with <API> started when in top k=10 tokens, at most one API call per input; GPT-J 6.7B finetuned on CCNet subset with API calls; Wikipedia Search disabled for LAMA; correct if answer within first five words; examples with non-final mask removed.",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row Toolformer, column T-REx (GPT-3 39.8; Toolformer (disabled) 34.9)"
+  },
+  {
+   "claim": "On LAMA the model asks the QA tool in almost all cases.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "98.1",
+   "unit": "% of examples using QA tool",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LAMA, same decoding",
+   "note": null,
+   "where": "Sec 4.2.1",
+   "quote": "the model independently decides to ask the question answering tool for the required information in almost all cases (98.1%)"
+  },
+  {
+   "claim": "Toolformer improves over best same-size baseline by 11.7, 5.2 and 18.6 points on SQuAD, Google-RE, T-REx.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "LAMA subsets",
+   "note": null,
+   "where": "Sec 4.2.1",
+   "quote": "improving upon the best baseline by 11.7, 5.2 and 18.6 points, respectively"
+  },
+  {
+   "claim": "On QA datasets Toolformer beats GPT-J baselines but falls short of GPT-3 175B (WebQS 26.3 vs 29.0; NQ 17.7 vs 22.6; TriviaQA 48.8 vs 65.9).",
+   "kind": "measured",
+   "source": null,
+   "metric": "WebQS",
+   "value": "26.3",
+   "unit": "accuracy (%)",
+   "baseline_value": "29.0",
+   "n": null,
+   "setup": "WebQS, NQ, TriviaQA; QA tool disabled, Wikipedia search used 99.3%; correct if answer within first 20 words.",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row Toolformer, column WebQS (GPT-3 29.0; NQ 17.7 vs 22.6; TriviaQA 48.8 vs 65.9)"
+  },
+  {
+   "claim": "Wikipedia search used on nearly all QA examples.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "99.3",
+   "unit": "% of examples",
+   "baseline_value": null,
+   "n": null,
+   "setup": "QA datasets",
+   "note": null,
+   "where": "Sec 4.2.3",
+   "quote": "mostly relying on the Wikipedia search API (99.3%)"
+  },
+  {
+   "claim": "On DATESET Toolformer reaches 27.3 vs 5.9 disabled, due to calendar tool used on 54.8% of examples; on TEMPLAMA 16.3 and calendar used on only 0.2%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "DATESET",
+   "value": "27.3",
+   "unit": "accuracy (%)",
+   "baseline_value": "0.8",
+   "n": null,
+   "setup": "DATESET (9,400 templated queries), TEMPLAMA",
+   "note": "calendar use 54.8% (DATESET), 0.2% (TEMPLAMA) in text",
+   "where": "Table 7, Sec 4.2.5",
+   "table": "Table 7, row Toolformer, columns TEMPLAMA 16.3, DATESET 27.3 (disabled 5.9; GPT-3 0.8)"
+  },
+  {
+   "claim": "Calendar tool is used for 54.8% of DATESET examples.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "54.8",
+   "unit": "% of examples",
+   "baseline_value": null,
+   "n": null,
+   "setup": "DATESET",
+   "note": null,
+   "where": "Sec 4.2.5",
+   "quote": "which it makes use of for 54.8% of all examples"
+  },
+  {
+   "claim": "MLQA: translation tool helps Toolformer in all languages but it does not consistently beat vanilla GPT-J because CCNet finetuning hurts.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MLQA Es",
+   "value": "20.6",
+   "unit": "accuracy (%)",
+   "baseline_value": "15.2",
+   "n": null,
+   "setup": "MLQA, question in foreign language, English context; correct if within first 10 words; MT tool used for 63.8% to 94.9% except Hindi 7.3%.",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row Toolformer, column Es (GPT-J 15.2; De 13.5 vs 16.5)"
+  },
+  {
+   "claim": "Finetuning on API-augmented data does not increase perplexity vs finetuning on plain CCNet (API calls disabled).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "10.3",
+   "unit": "perplexity",
+   "baseline_value": "10.3",
+   "n": null,
+   "setup": "WikiText and 10,000 held-out CCNet docs; perplexity",
+   "note": "Perplexity with API calls enabled not measured (intractable).",
+   "where": "Table 8",
+   "table": "Table 8, row Toolformer (disabled), columns WikiText 10.3, CCNet 10.5 (GPT-J 9.9, 10.6; GPT-J + CC 10.3, 10.5)"
+  },
+  {
+   "claim": "Tool use only emerges at around 775M parameters; smaller GPT-2 models gain nothing from tools, and a large gap remains for GPT-J.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-2 124M, 355M, 775M, 1.6B and GPT-J with QA, calculator, Wikipedia search only",
+   "note": null,
+   "where": "Sec 4.4, Fig 4",
+   "quote": "the ability to leverage the provided tools only emerges at around 775M parameters"
+  },
+  {
+   "claim": "Raising k from 1 to 10 raises API-call rate on T-REx from 40.3% to 98.1% and on WebQS from 8.5% to 100%; T-REx accuracy 47.8 at k=1 to 53.5 at k=10.",
+   "kind": "measured",
+   "source": null,
+   "metric": "T-REx All, k=10",
+   "value": "53.5",
+   "unit": "accuracy (%)",
+   "baseline_value": "47.8",
+   "n": null,
+   "setup": "T-REx subset of LAMA and WebQS",
+   "note": null,
+   "where": "Table 9",
+   "table": "Table 9, T-REx rows k=1 (All 47.8, % 40.3) and k=10 (All 53.5, % 98.1); WebQS k=1 (19.3, 8.5%), k=10 (26.3, 100.0%)"
+  },
+  {
+   "claim": "Number of API-call examples in C* at tau_f=1.0: QA 18,526; WikiSearch 60,974; Calculator 994; Calendar 20,587; MT 1,034.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "994",
+   "unit": "examples (calculator, tau_f=1.0)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Filtered CCNet subset",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Calculator, column tau_f = 1.0"
+  }
+ ],
+ "limits": [
+  "No chained tool use (calls generated independently)",
+  "No interactive tool use such as query reformulation or browsing results",
+  "Sensitive to input wording when deciding to call an API",
+  "Sample-inefficient: over a million documents yield only a few thousand useful calculator calls",
+  "Does not consider tool-dependent computational cost",
+  "Evaluation is lenient-match zero-shot, single run; perplexity with API calls enabled not computed"
+ ],
+ "practices": [],
+ "terms": [],
+ "lineage": [
+  {
+   "work": "GPT-J",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "base model (Wang and Komatsuzaki)",
+   "quote": null
+  },
+  {
+   "work": "TALM",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "most closely related; similar self-supervised objective but only in downstream-finetuned settings (Parisi et al.)",
+   "quote": null
+  },
+  {
+   "work": "Atlas",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "QA tool (Izacard et al.)",
+   "quote": null
+  },
+  {
+   "work": "NLLB",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "translation tool",
+   "quote": null
+  },
+  {
+   "work": "CCNet",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "language modeling data",
+   "quote": null
+  },
+  {
+   "work": "GPT-3",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "175B baseline",
+   "quote": null
+  },
+  {
+   "work": "OPT",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "66B baseline",
+   "quote": null
+  },
+  {
+   "work": "LAMA",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Petroni et al.",
+   "quote": null
+  },
+  {
+   "work": "TEMPLAMA",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Dhingra et al.",
+   "quote": null
+  },
+  {
+   "work": "Self-instruct-style dataset generation",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Schick and Schütze 2021b; Honovich et al. 2022; Wang et al. 2022",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "Key steps in our approach, illustrated for a question answering tool",
+   "page": 2,
+   "why": "sample, execute, filter pipeline at a glance"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Average performance on LAMA, math and QA benchmarks for GPT-2 sizes and GPT-J, with and without API calls",
+   "page": 7,
+   "why": "shows tool use emerging near 775M"
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 2",
+   "snippet": "L-_i - L+_i >= tau_f",
+   "verbatim": false
+  }
+ ],
+ "problems": []
+}

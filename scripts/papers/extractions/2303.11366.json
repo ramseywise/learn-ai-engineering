@@ -1,0 +1,536 @@
+{
+ "schema": 1,
+ "key": "2303.11366",
+ "pdf": "generative-ai/05-RL/sources/shinn-2023-reflexion.pdf",
+ "bib": {
+  "title": "Reflexion: Language Agents with Verbal Reinforcement Learning",
+  "authors": [
+   "Noah Shinn",
+   "Federico Cassano",
+   "Edward Berman",
+   "Ashwin Gopinath",
+   "Karthik Narasimhan",
+   "Shunyu Yao"
+  ],
+  "first_author": "Shinn",
+  "year": 2023,
+  "venue": "preprint (arXiv v4, 'Under review')",
+  "arxiv": "2303.11366",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 59413,
+  "chars_total": 59413,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can language agents learn from trial and error without weight updates by turning task feedback into verbal self-reflections stored in an episodic memory?",
+ "hypothesis": "Verbal self-reflection stored in memory acts as a semantic gradient that improves an agent over successive trials on decision-making, reasoning and coding tasks.",
+ "contributions": [
+  "Reflexion, a paradigm for verbal reinforcement that parameterizes a policy as an agent's memory encoding paired with a choice of LLM parameters",
+  "Empirical evidence that self-reflection helps learn complex tasks over a handful of trials",
+  "LeetcodeHardGym: 40 hard Leetcode questions in 19 programming languages",
+  "Improvements over strong baselines and state-of-the-art on several code generation benchmarks"
+ ],
+ "method": {
+  "summary": "Three LLM roles (Actor, Evaluator, Self-Reflection) loop over trials: the Actor acts, the Evaluator scores the trajectory (exact match, heuristic, LLM classifier or self-written unit tests), the Self-Reflection model writes a verbal lesson appended to a bounded memory that is fed to the Actor next trial. No weights are updated.",
+  "task": "Sequential decision-making (ALFWorld), multi-hop QA (HotPotQA), code generation (HumanEval, MBPP, LeetcodeHardGym)",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "ALFWorld",
+    "role": "eval",
+    "size": "134 environments, six task types",
+    "split": null,
+    "source": "Shridhar et al. 2021, TextWorld based",
+    "preprocessing": "2 domain-specific few-shot trajectories from Yao et al. (ReAct)"
+   },
+   {
+    "name": "HotPotQA",
+    "role": "eval",
+    "size": "100 questions used in experiments (dataset has 113k QA pairs)",
+    "split": null,
+    "source": "Yang et al. 2018",
+    "preprocessing": "CoT 6-shot; CoT(GT) gets ground-truth context; ReAct uses Wikipedia API"
+   },
+   {
+    "name": "HumanEval (Python, Rust)",
+    "role": "eval",
+    "size": null,
+    "split": "Rust: hardest 50 problems translated with MultiPL-E",
+    "source": "Chen et al. 2021",
+    "preprocessing": null
+   },
+   {
+    "name": "MBPP (Python, Rust)",
+    "role": "eval",
+    "size": null,
+    "split": "Rust: subset translated with MultiPL-E",
+    "source": "Austin et al. 2021",
+    "preprocessing": null
+   },
+   {
+    "name": "LeetcodeHardGym",
+    "role": "eval",
+    "size": "40 Leetcode hard questions, 19 languages",
+    "split": null,
+    "source": "new; questions released after October 8, 2022 (GPT-4 pretraining cutoff)",
+    "preprocessing": null
+   },
+   {
+    "name": "WebShop",
+    "role": "eval",
+    "size": "100 environments",
+    "split": null,
+    "source": "Yao et al.",
+    "preprocessing": "2-shot ReAct + Reflexion; stopped after 4 trials"
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT-4",
+    "role": "base",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "code generation (HumanEval, MBPP, Leetcode); Table 5 HotPotQA"
+    }
+   },
+   {
+    "name": "text-davinci-003 (GPT-3)",
+    "role": "base",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "AlfWorld ('GPT-3 for the LLM'), HotPotQA Table 5"
+    }
+   },
+   {
+    "name": "gpt-3.5-turbo",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "Table 5"
+    }
+   },
+   {
+    "name": "starchat-beta",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "Table 4, HumanEval Python"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": "0.7 (stated for HotPotQA baseline retries)",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "Trials per task until success or max trials: ALFWorld 12 consecutive trials; HotPotQA retry until 3 consecutive failed attempts; WebShop 4 trials; Table 4 averaged over 8 trials; other runs not stated",
+   "prompting": "ALFWorld: ReAct, 2 few-shot trajectories; HotPotQA: CoT 6-shot, ReAct 2-shot, self-reflection 2-shot; code: zero-shot instruction, Actor/Self-reflection prompts in Appendix C",
+   "retrieval": "Wikipedia API (HotPotQA ReAct)",
+   "parameters": {
+    "memory_size_omega": "1-3 stored reflections; ALFWorld 3, HotPotQA 3, programming 1",
+    "alfworld_reflect_trigger": "same action and same response for more than 3 cycles, or more than 30 actions in an environment",
+    "max_unit_tests_n": "6 (CoT-generated, AST-filtered syntactically valid tests)",
+    "max_trials": "not stated as a single number"
+   },
+   "other": {
+    "evaluator": "HotPotQA exact match; ALFWorld heuristic or GPT binary classification; programming self-generated unit tests"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Pass@1",
+     "definition": "fraction of coding problems solved by the final submission without access to hidden/ground-truth tests",
+     "unit": "fraction/%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Proportion of solved tasks/environments by trial",
+     "definition": "cumulative fraction solved over trials",
+     "unit": "fraction",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "ReAct only",
+    "CoT only",
+    "CoT (GT) only",
+    "CoT (GT) + episodic memory (EPM)",
+    "GPT-4 single sample",
+    "CodeT + GPT-3.5 / Codex"
+   ],
+   "protocol": "Single learning curves; no seeds or significance tests reported except std over 8 trials for starchat-beta in Table 4."
+  },
+  "availability": {
+   "code": "https://github.com/noahshinn024/reflexion",
+   "weights": null,
+   "data": "released at same repo (LeetcodeHardGym)"
+  },
+  "prompts": [
+   {
+    "purpose": "Reflexion Actor instruction (HumanEval Python)",
+    "text": "You are a Python writing assistant. You will be given your previous implementation of a function, a series of unit tests results, and your self-reflection on your previous implementation. Apply the necessary changes below by responding only with the improved body of the function. Do not include the signature in your response. The first line of your response should have 4 spaces of indentation so that it fits syntactically with the user provided signature. You will be given a few examples by the user.",
+    "where": "Appendix C.2"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Reflexion reaches 91% pass@1 on HumanEval Python vs 80% for GPT-4.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Pass@1",
+   "value": 91.0,
+   "unit": "% pass@1",
+   "baseline_value": 80.1,
+   "n": null,
+   "setup": "HumanEval Python, GPT-4 base, Reflexion with self-generated unit tests",
+   "note": "Abstract says previous SOTA 80%; Table 1 prints 80.1",
+   "where": "Abstract; Table 1",
+   "quote": "Reflexion achieves a 91% pass@1"
+  },
+  {
+   "claim": "ReAct + Reflexion solves 130 of 134 ALFWorld tasks.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 130,
+   "unit": "tasks of 134",
+   "baseline_value": null,
+   "n": 134,
+   "setup": "ALFWorld, ReAct actor, heuristic self-evaluation, 12 trials",
+   "note": null,
+   "where": "Sec 4.1",
+   "quote": "completing 130 out of 134 tasks"
+  },
+  {
+   "claim": "ReAct-only ALFWorld agent plateaus at a 22% hallucination rate.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 22,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ALFWorld failure classification, ReAct only",
+   "note": null,
+   "where": "Sec 4.1 Analysis",
+   "quote": "converging at a hallucination rate of 22%"
+  },
+  {
+   "claim": "Reflexion lifts CoT (GT) HotPotQA accuracy by 14% absolute; baseline fails on 39%.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 14,
+   "unit": "% absolute",
+   "baseline_value": null,
+   "n": null,
+   "setup": "HotPotQA 100 questions, CoT with ground-truth context, retry until 3 consecutive failures",
+   "note": null,
+   "where": "Sec 4.2 Results",
+   "quote": "improve its accuracy by 14%"
+  },
+  {
+   "claim": "Self-reflection beats the episodic-memory-only ablation by 8% absolute.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 8,
+   "unit": "% absolute",
+   "baseline_value": null,
+   "n": null,
+   "setup": "HotPotQA CoT (GT), EPM = most recent trajectory only",
+   "note": null,
+   "where": "Sec 4.2 Analysis",
+   "quote": "8% absolute boost"
+  },
+  {
+   "claim": "Reflexion gets 68.0 vs 60.0 on HumanEval Rust and 75.4 vs 70.9 on MBPP Rust.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Pass@1",
+   "value": 68.0,
+   "unit": "% pass@1",
+   "baseline_value": 60.0,
+   "n": null,
+   "setup": "HumanEval Rust (hardest 50) with GPT-4",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row HumanEval (RS), column Reflexion Pass@1"
+  },
+  {
+   "claim": "Reflexion is worse than GPT-4 on MBPP Python: 77.1 vs 80.1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Pass@1",
+   "value": 77.1,
+   "unit": "% pass@1",
+   "baseline_value": 80.1,
+   "n": null,
+   "setup": "MBPP Python, GPT-4",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row MBPP (PY), column Reflexion Pass@1"
+  },
+  {
+   "claim": "MBPP Python false-positive test rate is 16.3% vs 1.4% on HumanEval Python, explaining the MBPP shortfall.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 16.3,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "P(solution fails | self-generated tests pass), GPT-4",
+   "note": "Table 2 prints FP as 0.16 and 0.01",
+   "where": "Sec 4.3 Analysis",
+   "quote": "the false positive test execution rate for MBPP Python is 16.3% while the rate for HumanEval Python is a mere 1.4%"
+  },
+  {
+   "claim": "Ablation: omitting test generation drops HumanEval Rust (50 hardest) to 52%, omitting self-reflection gives 60% (= baseline), full Reflexion 68%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Pass@1",
+   "value": 52,
+   "unit": "% pass@1",
+   "baseline_value": 60,
+   "n": null,
+   "setup": "GPT-4, HumanEval Rust hardest 50",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row Test generation omission, column Pass@1 (Acc)"
+  },
+  {
+   "claim": "Reflexion does not help starchat-beta on HumanEval Python (0.26 baseline and 0.26 Reflexion).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Pass@1",
+   "value": 0.26,
+   "unit": "pass@1",
+   "baseline_value": 0.26,
+   "n": null,
+   "setup": "starchat-beta, avg over 8 trials",
+   "note": null,
+   "where": "Appendix A",
+   "table": "Table 4, row Reflexion, column Pass@1 accuracy"
+  },
+  {
+   "claim": "LeetcodeHardGym Python pass@1 15.0 vs 7.5 for GPT-4.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Pass@1",
+   "value": 15.0,
+   "unit": "% pass@1",
+   "baseline_value": 7.5,
+   "n": null,
+   "setup": "40 Leetcode hard questions, GPT-4",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Leetcode Hard (PY), column Reflexion Pass@1"
+  }
+ ],
+ "limits": [
+  "Relies on the LLM's self-evaluation or heuristics; no formal guarantee of success",
+  "May get stuck in local minima; WebShop showed no improvement after 4 trials (Appendix B.1)",
+  "Memory is only a sliding window of 1-3 reflections; vector or SQL memory left to future work",
+  "Unit-test self-evaluation fails for non-deterministic, impure, hardware-dependent or concurrent functions; false positives hurt MBPP Python",
+  "Self-correction is emergent in stronger models: starchat-beta shows no gain (Appendix A)",
+  "Models were GPT-3/3.5/4 API versions of 2023; no seeds, variance or compute cost reported for most results",
+  "Generated code is executed unvalidated; use isolated environments"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Reflexion",
+   "definition": "verbal reinforcement where binary or scalar feedback is converted to a textual summary added as context for the next episode",
+   "where": "Sec 1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "ReAct",
+   "year": 2023,
+   "arxiv": "2210.03629",
+   "relation": "extends",
+   "note": "Actor for AlfWorld/HotPotQA, few-shot prompts reused",
+   "quote": null
+  },
+  {
+   "work": "Chain of Thought prompting (Wei et al.)",
+   "year": 2022,
+   "arxiv": "2201.11903",
+   "relation": "uses-method",
+   "note": "Actor for reasoning, test generation",
+   "quote": null
+  },
+  {
+   "work": "Self-Refine",
+   "year": 2023,
+   "arxiv": "2303.17651",
+   "relation": "related",
+   "note": "single-generation self-refinement; Reflexion adds memory and multi-step",
+   "quote": null
+  },
+  {
+   "work": "CodeT",
+   "year": 2022,
+   "arxiv": "2207.10397",
+   "relation": "baseline",
+   "note": "prev SOTA 65.8 HumanEval",
+   "quote": null
+  },
+  {
+   "work": "Self-Debugging",
+   "year": 2023,
+   "arxiv": "2304.05128",
+   "relation": "related",
+   "note": "uses ground-truth tests, unlike Reflexion",
+   "quote": null
+  },
+  {
+   "work": "CodeRL",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "actor-critic code RL",
+   "quote": null
+  },
+  {
+   "work": "In-context policy iteration (Brooks et al.)",
+   "year": 2022,
+   "arxiv": "2210.03821",
+   "relation": "extends",
+   "note": "inspired memory component",
+   "quote": null
+  },
+  {
+   "work": "ALFWorld",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "decision-making benchmark",
+   "quote": null
+  },
+  {
+   "work": "HotPotQA",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "reasoning benchmark",
+   "quote": null
+  },
+  {
+   "work": "HumanEval (Chen et al.)",
+   "year": 2021,
+   "arxiv": "2107.03374",
+   "relation": "uses-data",
+   "note": "coding benchmark",
+   "quote": null
+  },
+  {
+   "work": "MBPP (Austin et al.)",
+   "year": 2021,
+   "arxiv": "2108.07732",
+   "relation": "uses-data",
+   "note": "coding benchmark",
+   "quote": null
+  },
+  {
+   "work": "MultiPL-E",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Rust translation",
+   "quote": null
+  },
+  {
+   "work": "GPT-4 technical report",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "main model",
+   "quote": null
+  },
+  {
+   "work": "WebShop",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "negative result",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "(a) Diagram of Reflexion. (b) Reflexion reinforcement algorithm",
+   "page": 4,
+   "why": "Actor/Evaluator/Self-reflection loop and the two memories"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "AlfWorld performance across 134 tasks ... (b) Classification of AlfWorld trajectories by reason of failure",
+   "page": 6,
+   "why": "Learning curve by trial"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "AlfWorld trajectory failing from inefficient planning, then corrected after reflection",
+   "page": 13,
+   "why": "Concrete reflection example"
+  }
+ ],
+ "code": [
+  {
+   "where": "Algorithm 1, Fig 2",
+   "snippet": "while Me not pass or t < max trials do: generate tau_t using pi_theta; evaluate tau_t using Me; generate self-reflection sr_t using Msr; append sr_t to mem; increment t",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Figure 1 text is garbled font-encoded characters in the cache",
+  "Table 1 'GPT-4 80.1' on MBPP and HumanEval baseline printed 0.80 in Table 2; abstract says 80%",
+  "Algorithm 1 loop condition 'Me not pass or t < max trials' as printed; max trials value not stated",
+  "No embedded instructions found"
+ ]
+}

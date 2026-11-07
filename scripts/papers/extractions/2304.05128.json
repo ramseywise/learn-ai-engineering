@@ -1,19 +1,700 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2304.05128",
  "pdf": "ai-engineering/04-loop-engineering/sources/chen-2023-teaching-large-language-models-self.pdf",
  "bib": {
   "title": "Teaching Large Language Models to Self-Debug",
-  "first_author": "Xinyun Chen",
-  "year": "2023",
-  "venue": "ICLR 2024",
+  "authors": [
+   "Xinyun Chen",
+   "Maxwell Lin",
+   "Nathanael Schärli",
+   "Denny Zhou"
+  ],
+  "first_author": "Chen",
+  "year": 2023,
+  "venue": "preprint",
   "arxiv": "2304.05128",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-04",
-  "session": "4958de20-cf13-4861-97b0-c95e3bf8e210"
+  "at": "2026-11-07",
+  "chars_read": 193364,
+  "chars_total": 193364,
+  "engine": "pymupdf",
+  "skipped": "Appendix few-shot exemplar bodies (E.1-E.5, F.1-F.6, G.1-G.4) skimmed by header and samples: long repetitive schemas/code; the chat prompts E.6-E.7, F.7-F.10, G.5-G.8 read in full."
  },
- "legacy_report": "SOURCE: \"Teaching Large Language Models to Self-Debug\", Xinyun Chen, Maxwell Lin, Nathanael Schärli, Denny Zhou (Google DeepMind; UC Berkeley). The PDF is arXiv:2304.05128v2, dated 5 Oct 2023. The extracted text has no ICLR line. \"ICLR 2024\" comes from the brief, not from this file.\n\nFile: /Users/ramsey-wise/workspace/learn-ai-engineering/ai-engineering/04-loop-engineering/sources/chen-2023-teaching-large-language-models-self.pdf\n\nCOVERAGE: 78 pages, 193,614 chars.\n- **Read in full:** pp. 1–14 (body and conclusion), Appendix A–D on pp. 19–22 (Tables 5–6, Figs 8–11), and every chat prompt: E.6–E.7 (p. 54), F.7–F.10 (pp. 63–65), G.5–G.8 (pp. 76–78).\n- **Skimmed:** references on pp. 14–19, for origins only. The few-shot prompts E.1–E.5, F.1–F.6 and G.1–G.4 (pp. 23–75) are long, repetitive Spider schemas and code exemplars. I read every section header plus samples of E.1, E.2, F.1 and G.2, not every exemplar.\n- **Not checked:** I did not open the target note in full. I only grepped it. It does not cite this paper yet. Its nearest related point is at line 223: \"Reflexion-style self-reflection can *propose* lessons, but reflection is not evidence.\"\n\nCLAIMS (ranked)\n\n- claim: With unit-test execution feedback, self-debugging lifts TransCoder (C++ to Python) accuracy by about 12 points for Codex and GPT-4.\n  number: Codex 80.4 → 92.5 (UT + Expl.); GPT-4 77.3 → 90.4\n  setup: TransCoder test set (560 problems, 10 unit tests each, all visible in the prompt). Debugging runs only when a unit test fails. Greedy decoding. At most 10 turns.\n  quote: \"TransCoder Codex GPT-3.5 GPT-4 StarCoder Baseline 80.4 89.1 77.3 70.0 ... UT 91.6 92.7 88.8 76.4 + Expl. 92.5 92.7 90.4 76.6\" and \"over 12% improvement on Transcoder, and 8% improvement on MBPP.\"\n  where: Table 2b, p. 9; text p. 9\n\n- claim: On MBPP (one unit test visible, two hidden), self-debugging adds about 8 points for GPT-4 and smaller gains for the other models.\n  number: GPT-4 72.8 → 80.6 (UT); Codex 61.4 → 70.8 (+Trace); StarCoder 47.2 → 53.2\n  setup: 500 MBPP test problems. The first test goes in the prompt and the other 2 are held out for scoring.\n  quote: \"MBPP Codex GPT-3.5 GPT-4 StarCoder Baseline 61.4 67.6 72.8 47.2 Simple 68.2 70.8 78.8 50.6 UT 69.4 72.2 80.6 52.2 + Expl. 69.8 74.2 80.4 52.2 + Trace. 70.8 72.8 80.2 53.2\"\n  where: Table 2c, p. 9\n\n- claim: On Spider (no unit tests), simple \"is it correct?\" feedback does nothing, because the model cannot tell right SQL from wrong. Code explanation adds about 3 points, but only for Codex.\n  number: Codex 81.3 → 84.1 (+Expl.); GPT-3.5 71.1 → 72.2; GPT-4 73.2 → 73.6; StarCoder 64.7 → 64.9\n  setup: Spider dev set. The model sees the executed SQL's returned table (first 2 rows) plus its own explanation. So execution results are present, but there is no correctness oracle.\n  quote: \"Spider Codex GPT-3.5 GPT-4 StarCoder Baseline 81.3 71.1 73.2 64.7 Simple 81.3 72.2 73.4 64.9 +Expl. 84.1 72.2 73.6 64.9\" and \"simple feedback alone does not notably improve the performance, because the model typically struggles to distinguish between correct and wrong SQL queries without explanation\"\n  where: Table 2a, p. 9; pp. 7–8\n\n- claim: Without unit-test execution, gains shrink to between about −4 and +5 points, and simple self-feedback can hurt. GPT-3.5 and GPT-4 tend to be overconfident in their first answer.\n  number: MBPP Codex Simple 61.4 → 57.6 (a drop); Codex +Trace 66.2; GPT-4 72.8 → 76.4; TransCoder GPT-3.5 89.1 under every feedback type\n  setup: TransCoder and MBPP with code execution removed. The model alone judges correctness.\n  quote: \"MBPP Codex GPT-3.5 GPT-4 Baseline 61.4 67.6 72.8 Simple 57.6 68.2 76.0 + Expl. 64.4 68.2 76.0 + Trace. 66.2 69.2 76.4\" and \"Without unit test execution, both models tend to be overconfident in their own initial predictions\" and \"code execution plays an important role in SELF -D EBUGGING ; however, sometimes LLMs can still improve their performance purely with self-generated feedback.\"\n  where: Table 3, p. 10\n\n- claim: Self-debugging is more sample-efficient than drawing more candidates and majority-voting. On Spider, debugging one greedy sample matches the 16-sample baseline, and debugging 8 samples beats the 32-sample baseline.\n  number: baseline 77.5/78.7/80.7/81.3 at 1/8/16/32 samples; with self-debugging 80.8/82.5/82.9/84.1\n  setup: Spider dev, Codex. Samples drawn at τ=0.7 and chosen by execution-based majority vote.\n  quote: \"applying SELF -D EBUGGING to predictions generated with greedy decoding matches the baseline accuracy using 16 samples, andSELF -D EBUGGING from 8 samples outperforms the baseline accuracy using 32 samples.\"\n  where: Fig. 6a, p. 10\n\n- claim: The abstract's \"matches >10× samples\" claim is backed by the TransCoder sample curve.\n  number: 10×\n  setup: TransCoder, Codex, greedy decoding plus debugging, compared with 5 and 10 samples.\n  quote: \"applying SELF -D EBUGGING to greedy decoding outperforms the baseline accuracy with 5 samples, and is close to the baseline accuracy with 10 samples.\" (abstract: \"can match or outperform baseline models that generate more than 10× candidate programs.\")\n  where: App. C.1, p. 20; abstract p. 1\n\n- claim: Most of the gain comes in the first debugging turn.\n  number: TransCoder UT+Expl. 80.4 → about 91–92 after turn 1, 92.5 by turn 3; Spider gain after turn 1 within 0.1%\n  setup: maximum 10 turns allowed\n  quote: \"We set the maximum number of debugging turns to be 10, though empirically the successful debugging processes mostly end within 3 turns.\" / \"typically one debugging turn is sufficient, and the accuracy improvement after one turn is within 0.1%.\" / \"a single debugging turn with the full feedback improves over the greedy decoding accuracy by around 12%.\"\n  where: p. 7; p. 10; p. 20 (Fig. 8a)\n\n- claim: Self-debugging helps most on hard problems.\n  number: extra-hard Spider 63.9 → 72.9 (+9); easy 90.7 → 92.3\n  setup: Spider dev, Codex\n  quote: \"on extra hard problems, SELF -DEBUGGING increases the accuracy by 9%.\"\n  where: Fig. 6b, p. 11\n\n- claim: Code explanation alone, with no debugging loop, gives 2–3 points on TransCoder.\n  number: 2–3%\n  setup: TransCoder, Codex+Expl. (the model only explains the input C++), measured across sample counts\n  quote: \"leveraging code explanation alone without SELF -D EBUGGING also provides a consistent performance gain of 2 − 3% for different numbers of samples\"\n  where: p. 20, Fig. 8b\n\n- claim: The fixed errors are mostly small near-misses: output mismatches and runtime errors in code, wrong WHERE clauses and missing DISTINCT in SQL.\n  number: Output mismatch 61.9 (TransCoder) / 69.2 (MBPP); WHERE 25.7%; DISTINCT 17.1%\n  setup: successful fixes only. Spider uses Codex, TransCoder uses GPT-3.5, MBPP uses GPT-4.\n  quote: \"60%-70% successful cases fix the output mismatch error when the initial wrong code is very close to a correct one\"\n  where: Table 4, p. 12\n\n- claim: State of the art at the time. Prompting alone beats trained rerankers on Spider and MBPP, using fewer samples.\n  number: Spider 84.1 vs LEVER 81.9 and T5-3B reranking 80.6; MBPP 75.6 (n=10) vs LEVER 68.9 (n=100); TransCoder pass@1 92.5 vs PaLM-Coder 55.1\n  quote: \"Codex 72.2 ( n = 10) Simple 73.6 UT 75.2 UT + Expl. 75.6\" ; \"LEVER 68.9 ( n = 100)\"\n  where: Table 1, p. 9; Table 6, p. 19\n\n- claim: Few-shot debugging prompts favour Codex. GPT-4 does worse than Codex on few-shot Spider, which the authors attribute to tuning for zero-shot use.\n  quote: \"One possible reason is that GPT-4 is tuned for zero-shot prompting, and thus it does not follow few-shot exemplars as well as Codex.\"\n  where: p. 9\n\nLIMITS\n- **No cost accounting.** \"Sample efficiency\" counts candidate programs, not tokens or calls. Each debugging turn adds prompts for explanation and feedback, and those tokens are never compared.\n- **Single runs.** Results are greedy single runs with no variance, seeds or confidence intervals. Many differences are 0.2–1 point.\n- **Spider still uses execution.** The \"no unit tests\" setting still feeds the executed result table to the model, so it is not a pure self-explanation test.\n- **The case without execution is weak and mixed.** Table 3 shows near-zero gains for GPT-3.5 and a 3.8-point drop for Codex with simple feedback on MBPP.\n- **The MBPP protocol limits harm.** In the chat prompts (G.5–G.7), once code passes the visible test, one \"Is the code above correct?\" round runs, and \"The new code prediction is used only if it also passes the unit test.\" The visible test therefore guards against regressions.\n- **Explanation helps less on MBPP.** The authors give three reasons: unit tests already flag errors, explanation prompts have fewer exemplars (3 vs 6) because of context length, and explanation helps little when the first code is far from correct (p. 20).\n- **Conceded by the authors:** \"model-generated feedback messages about semantic errors do not provide additional benefits on top of line-by-line code explanation\" (p. 14). They also note that GPT-3.5 and GPT-4 gain little from few-shot prompting.\n- **Dated.** The models are code-davinci-002, gpt-3.5-turbo, early GPT-4 and StarCoder-15.5B. Codex has been deprecated. The benchmarks are short-function tasks, not repo-scale or agentic coding.\n\nBUILDS ON\n- Rubber duck debugging: Hunt & Thomas, 2000.\n- Execution-based selection and majority vote: Chen et al., 2019; Li et al., 2022; Shi et al., 2022 (MBR-Exec).\n- Reranking: Zhang et al., 2022 (Coder-Reviewer); Ni et al., 2023 (LEVER).\n- Trained code repair: Gupta et al., 2020; Wang et al., 2018 (execution traces); Yasunaga & Liang, 2020/2021; Le et al., 2022.\n- Code repair from human feedback: Chen et al., 2023a, the prior finding that LLMs \"are not yet capable of correcting code when lacking external feedback\".\n- Prompted self-critique: Shinn et al., 2023 (Reflexion); Madaan et al., 2023b (Self-Refine); Kim et al., 2023 (RCI); Nair et al., 2023 (DERA); Bai et al., 2022 (Constitutional AI).\n- Chain-of-thought: Wei et al., 2022; Kojima et al., 2022.\n\nCODE\nThe simple feedback strings (p. 3): “The SQL prediction above is correct!” / “The SQL prediction above is wrong. Please fix the SQL.”\n\nThe MBPP chat loop with unit-test feedback (App. G.6, pp. 76–77), verbatim:\n```\nUser: The code above fails the given unit test:\n<insert the failed unit test and its execution result here>\nPlease fix the Python code.\n...\nUser: Is the code above correct? If not, please fix it.\nAssistant: <chatGPT Completion>\nThe new code prediction is used only if it also passes the unit test, otherwise the original code will be used for evaluation.\n```\n\nFIGURES\n- **Fig. 1, p. 2.** The loop: generation → execution → explanation → feedback. It shows the loop structure faster than prose.\n- **Fig. 5, p. 8.** The four feedback types side by side (Simple, UT, UT+Expl., UT+Trace) on one `n / i` float bug. It makes the ablation's levels concrete.\n- **Fig. 6, p. 10.** (a) Spider accuracy against number of samples, with and without self-debugging; this is the cleanest picture of debugging versus sampling more. (b) Accuracy by difficulty level.\n- **Fig. 8, p. 20.** (a) TransCoder accuracy by turn, which shows returns flattening after turn 1. (b) Accuracy by sample count, including explanation without debugging.\n- **Fig. 3, p. 6.** A worked SQL self-debug over two revisions (OR → AND → INTERSECT). Good for one illustrative example.\n- **Tables 2 and 3 (pp. 9–10) are not figures,** but together they show the main point: with execution feedback against without it.\n\nPROBLEMS\n- No embedded instructions aimed at the reader. The appendix contains the paper's own prompt templates (\"System: You are an expert programming assistant.\"), which are study material.\n- Small caps break words in the extraction (\"SELF -D EBUGGING\"). Some tables lost their column alignment; I rebuilt them from the order of headers and values.\n- Fig. 8a values are extracted out of order (80.4, 88.4, 89.3, 91.1, 91.6, 92.0, 92.5 across 3 series), so per-series values by turn are uncertain. Only 80.4 (turn 0) and 92.5 (UT+Expl. final) are certain.\n- The venue cannot be confirmed from this PDF: it is the arXiv v2 preprint."
+ "type": "empirical",
+ "question": "Can a pretrained LLM, with only few-shot prompting, debug its own generated code using execution results and self-written code explanations?",
+ "hypothesis": "Explaining code line by line (rubber duck debugging) lets the model find its own errors, and richer feedback including unit test execution helps debugging; the authors also hypothesize better code explanation yields better debugging.",
+ "contributions": [
+  "SELF-DEBUGGING: few-shot prompting that teaches an LLM to debug its predicted program with no training",
+  "Rubber duck debugging via code explanation without human feedback or error messages",
+  "State-of-the-art on Spider, TransCoder and MBPP at time of writing",
+  "Improved sample efficiency: matches or beats baselines sampling more than 10x candidates"
+ ],
+ "method": {
+  "summary": "A pretrained code LLM generates a program, the program is executed, the model explains it (or traces it) and a feedback message is formed from the explanation plus execution/unit-test results; the loop repeats until the feedback says correct or 10 turns. Evaluated with Codex, GPT-3.5, GPT-4 and StarCoder on three tasks, with no fine-tuning.",
+  "task": "code generation: text-to-SQL (Spider dev), C++-to-Python translation (TransCoder), text-to-Python (MBPP)",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "Spider (dev set)",
+    "role": "eval",
+    "size": null,
+    "split": "development set; no unit tests; prompt includes one row per table",
+    "source": "Yu et al., 2018",
+    "preprocessing": "returned table truncated to first 2 rows in the prompt"
+   },
+   {
+    "name": "TransCoder (C++ to Python)",
+    "role": "eval",
+    "size": "560 problems, 10 unit tests per problem",
+    "split": "test set; all unit tests visible in the prompt",
+    "source": "Roziere et al., 2020",
+    "preprocessing": null
+   },
+   {
+    "name": "MBPP test set",
+    "role": "eval",
+    "size": "500 problems, 3 unit tests each",
+    "split": "first unit test in the prompt, other 2 hidden for evaluation",
+    "source": "Austin et al., 2021",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "code-davinci-002 (Codex)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "gpt-3.5-turbo",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "gpt-4",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "StarCoder",
+    "role": "evaluated",
+    "params": "15.5B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "initial generation: greedy (temperature 0) from one program; multiple samples at temperature 0.7 then execution-based majority vote; all explanations, feedback and revised programs use greedy decoding",
+   "temperature": "0 (single program, and all debugging steps); 0.7 (multiple samples)",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "1 greedy program, or n samples (Spider 1/8/16/32; TransCoder 1/5/10/25; MBPP n=10 in Table 1b); no repeated runs or seeds reported",
+   "prompting": "few-shot for Codex/StarCoder (Spider baseline 5-shot, simple and explanation feedback 9-shot; TransCoder baseline 3-shot, feedback 2-shot; MBPP baseline 3-shot, simple/UT 6-shot, UT+Expl 3-shot); 0-shot chat prompts with system 'You are an expert programming assistant.' for GPT-3.5/GPT-4",
+   "retrieval": null,
+   "parameters": {
+    "max_debugging_turns": "10 (successful debugging mostly ends within 3 turns)",
+    "selection": "among samples without execution errors, pick the program with the most frequent execution result; programs failing visible unit tests are filtered first",
+    "spider_returned_rows_in_prompt": "first 2",
+    "mbpp_success_branch": "after a program passes the visible test, one extra 'Is the code above correct? If not, please fix it.' turn; the revision is used only if it also passes the visible test"
+   },
+   "other": {
+    "stopping": "terminates when feedback says the prediction is correct, or max turns",
+    "TransCoder debugging": "applied only if the Python fails the unit tests, so no model-predicted feedback",
+    "Spider GPT-3.5 zero-shot": "59.9% greedy zero-shot, 71.1% few-shot",
+    "Fig 6a read from figure": "Spider Codex baseline by samples 1/8/16/32 = 77.5/78.7/80.7/81.3; self-debugging = 80.8/82.5/82.9/84.1 (read from Fig 6a; these match the Table 2a Codex 81.3 and 84.1, so those are inferred to be the 32-sample setting)"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Spider accuracy",
+     "definition": "execution accuracy on Spider dev (not further defined in the text)",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "TransCoder pass@1",
+     "definition": "fraction of 560 problems whose Python passes all 10 unit tests",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "MBPP accuracy",
+     "definition": "fraction of 500 problems passing all 3 unit tests (1 visible, 2 hidden)",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "T5-3B + N-best Reranking (Zeng et al., 2022)",
+    "LEVER (Ni et al., 2023)",
+    "MBR-Exec (Shi et al., 2022)",
+    "Coder-Reviewer (Zhang et al., 2022)",
+    "TransCoder, PaLM, PaLM-Coder (Table 6)",
+    "same model without debugging"
+   ],
+   "protocol": "single run per cell, no seeds, intervals or significance tests reported"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "Spider, TransCoder, MBPP public; full prompts in Appendices E-G"
+  },
+  "prompts": [
+   {
+    "purpose": "Spider chat simple feedback (0-shot, GPT-3.5)",
+    "text": "System: You are an expert programming assistant.\nUser: Write the SQL query for the given question.\n<insert the database schema and the question here>\nAssistant: <chatGPT Completion>\nUser: Does the SQL match the question? If not, generate the fixed SQL.",
+    "where": "Appendix E.6, p. 54"
+   },
+   {
+    "purpose": "Spider chat explanation feedback (0-shot)",
+    "text": "System: You are an expert programming assistant.\nUser: Summarize the return type of the SQL execution.\n<insert the database schema and the SQL here>\nAssistant: <chatGPT Completion>\nUser: Infer the return type of the question.\n<insert the question here>\nAssistant: <chatGPT Completion>\nUser: Does the SQL match the question? If not, generate the fixed SQL.",
+    "where": "Appendix E.7, p. 54"
+   },
+   {
+    "purpose": "Few-shot SQL feedback messages",
+    "text": "The SQL prediction above is correct!",
+    "where": "Section 3"
+   },
+   {
+    "purpose": "TransCoder chat UT feedback (0-shot)",
+    "text": "User: Translate the C++ code into Python code. Please respond with code only (with the code inside a Markdown code block).\n<insert C++ program here>\n... User: The Python translation does not do the same thing as the C++ code. These are the results of one failed unit test that tests whether the Python translation's outputs match the C++ program's outputs:\n<insert one failed unit test and its execution result here>\nCorrect the Python translation.",
+    "where": "Appendix F.8, p. 64"
+   },
+   {
+    "purpose": "MBPP chat UT feedback (0-shot)",
+    "text": "User: Complete the following task in Python:\n<insert problem here (includes one unit test)>\n... User: The code above fails the given unit test:\n<insert the failed unit test and its execution result here>\nPlease fix the Python code.",
+    "where": "Appendix G.6, p. 76"
+   },
+   {
+    "purpose": "Chat explanation turn",
+    "text": "Explain the Python code line by line.",
+    "where": "Appendix G.7, p. 77"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "inference.temperature",
+    "quote": "All experiments for SELF-DEBUGGING use greedy decoding to generate code explanations, feedback messages and new programs. We set the maximum number of debugging turns to be 10",
+    "where": "Section 5"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Unit-test execution plus code explanation lifts Codex on TransCoder by about 12 points",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass@1",
+   "value": 92.5,
+   "unit": "%",
+   "baseline_value": 80.4,
+   "n": null,
+   "setup": "TransCoder 560 problems, Codex, greedy initial program, UT + Expl feedback, max 10 turns",
+   "note": null,
+   "where": "Table 2b p. 9",
+   "table": "Table 2b, row + Expl., column Codex"
+  },
+  {
+   "claim": "GPT-4 gains over 12 points on TransCoder and 8 on MBPP; gain on par with Codex",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass@1",
+   "value": 90.4,
+   "unit": "%",
+   "baseline_value": 77.3,
+   "n": null,
+   "setup": "TransCoder, GPT-4, UT + Expl, 0-shot chat prompts",
+   "note": null,
+   "where": "Section 5.1",
+   "quote": "its self-debugging performance gain is on par with Codex: over 12% improvement on Transcoder, and 8% improvement on MBPP",
+   "table": "Table 2b, row + Expl., column GPT-4"
+  },
+  {
+   "claim": "GPT-4 on MBPP with unit-test feedback",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 80.6,
+   "unit": "%",
+   "baseline_value": 72.8,
+   "n": null,
+   "setup": "MBPP 500 problems, 1 visible and 2 hidden tests, GPT-4, UT feedback",
+   "note": null,
+   "where": "Table 2c",
+   "table": "Table 2c, row UT, column GPT-4"
+  },
+  {
+   "claim": "On Spider (no tests) simple feedback does not help Codex; explanation feedback helps",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 84.1,
+   "unit": "%",
+   "baseline_value": 81.3,
+   "n": null,
+   "setup": "Spider dev, Codex; Simple = 81.3 equal to baseline; setting inferred to be 32 samples (Fig 6a)",
+   "note": "Table 2a does not say how many samples; Fig 6a lists 81.3 and 84.1 at 32 samples.",
+   "where": "Table 2a",
+   "table": "Table 2a, row +Expl., column Codex"
+  },
+  {
+   "claim": "Without unit-test execution, Codex on MBPP is worse with simple self-judged feedback than with no debugging",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 57.6,
+   "unit": "%",
+   "baseline_value": 61.4,
+   "n": null,
+   "setup": "MBPP, Codex, self-debugging with no code execution, simple feedback",
+   "note": null,
+   "where": "Table 3b",
+   "table": "Table 3b, row Simple, column Codex"
+  },
+  {
+   "claim": "Without execution, GPT-3.5 and GPT-4 are overconfident in their initial predictions",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 3, no unit test execution, GPT-3.5 and GPT-4",
+   "note": null,
+   "where": "Section 5.2.2",
+   "quote": "Without unit test execution, both models tend to be overconfident in their own initial predictions, while GPT-4 is better than GPT-3.5 on Python generation."
+  },
+  {
+   "claim": "Without execution, GPT-4 improves MBPP by 3.6 points and other benchmarks by about 1",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 3.6,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-4, MBPP, no unit-test execution",
+   "note": null,
+   "where": "Section 5.2.2",
+   "quote": "GPT-4 without unit test execution improves the MBPP accuracy by 3.6%"
+  },
+  {
+   "claim": "Without execution, Codex still improves by up to 5 points; trace feedback consistently beats simple",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Codex, TransCoder and MBPP without unit-test execution",
+   "note": null,
+   "where": "Section 5.2.2",
+   "quote": "With Codex, SELF-DEBUGGING still improves the performance by up to 5%, and the execution trace feedback consistently improves over the simple feedback performance."
+  },
+  {
+   "claim": "Self-debugging from greedy decoding matches 16-sample baseline on Spider; from 8 samples beats the 32-sample baseline",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Spider dev, Codex, execution-based majority vote",
+   "note": null,
+   "where": "Section 5.2.1",
+   "quote": "applying SELF-DEBUGGING to predictions generated with greedy decoding matches the baseline accuracy using 16 samples, and SELF-DEBUGGING from 8 samples outperforms the baseline accuracy using 32 samples"
+  },
+  {
+   "claim": "Improvement after the first debugging turn on Spider is within 0.1 points",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 0.1,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Spider, Codex",
+   "note": null,
+   "where": "Section 5.2.1",
+   "quote": "typically one debugging turn is sufficient, and the accuracy improvement after one turn is within 0.1%"
+  },
+  {
+   "claim": "Extra-hard Spider problems gain 9 points (63.9 to 72.9)",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 72.9,
+   "unit": "%",
+   "baseline_value": 63.9,
+   "n": null,
+   "setup": "Spider dev by hardness, Codex; read from Fig 6b",
+   "note": null,
+   "where": "Section 5.2.3, Fig 6b",
+   "quote": "on extra hard problems, SELF-DEBUGGING increases the accuracy by 9%"
+  },
+  {
+   "claim": "Codex self-debugging beats prior prompting and trained rerankers on Spider",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 84.1,
+   "unit": "%",
+   "baseline_value": 81.9,
+   "n": null,
+   "setup": "Spider dev, Codex + Expl.",
+   "note": "baseline_value is LEVER (trained verifier); Coder-Reviewer 74.5, MBR-Exec 75.2, T5-3B reranking 80.6",
+   "where": "Table 1a",
+   "table": "Table 1a, row + Expl."
+  },
+  {
+   "claim": "Codex self-debugging at n=10 samples beats MBR-Exec, Reviewer (n=25) and LEVER (n=100) on MBPP",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 75.6,
+   "unit": "%",
+   "baseline_value": 68.9,
+   "n": null,
+   "setup": "MBPP, Codex, UT + Expl., from 10 samples",
+   "note": "LEVER 68.9 at n=100; Codex without debugging 72.2 at n=10",
+   "where": "Table 1b",
+   "table": "Table 1b, row UT + Expl."
+  },
+  {
+   "claim": "StarCoder (15.5B) gains about 6 points on MBPP with trace feedback",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 53.2,
+   "unit": "%",
+   "baseline_value": 47.2,
+   "n": null,
+   "setup": "MBPP, StarCoder",
+   "note": null,
+   "where": "Section 5.1",
+   "quote": "i.e., 6% on MBPP with the execution trace feedback",
+   "table": "Table 2c, row + Trace., column StarCoder"
+  },
+  {
+   "claim": "Spider: GPT-4 is worse than Codex at initial SQL generation and self-debugging",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 73.4,
+   "unit": "%",
+   "baseline_value": 73.2,
+   "n": null,
+   "setup": "Spider dev, GPT-4 Simple feedback",
+   "note": "paper's guess: GPT-4 is tuned for zero-shot and follows few-shot exemplars less well",
+   "where": "Section 5.1",
+   "table": "Table 2a, row Simple, column GPT-4"
+  },
+  {
+   "claim": "Successful fixes on TransCoder/MBPP are mostly output mismatches",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 69.2,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MBPP with gpt-4 (Transcoder with gpt-3.5-turbo: 61.9)",
+   "note": null,
+   "where": "Table 4b",
+   "table": "Table 4b, row Output mismatch, column MBPP"
+  },
+  {
+   "claim": "Most common Spider errors fixed are wrong WHERE conditions",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 25.7,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Spider, code-davinci-002",
+   "note": null,
+   "where": "Table 4a",
+   "table": "Table 4a, row Wrong WHERE conditions"
+  },
+  {
+   "claim": "Fewer exemplars fit when explanation is added on MBPP, which weakens the explanation gain",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "MBPP UT+Expl prompt has 3 exemplars vs 6 for simple/UT",
+   "note": null,
+   "where": "Appendix C.2",
+   "quote": "prompts with both simple and unit test feedback messages include 6 exemplars, while the prompt with both the unit test execution and code explanation has 3 exemplars"
+  },
+  {
+   "claim": "Code explanation of the C++ input alone, without debugging, gives a 2-3 point gain on TransCoder",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "TransCoder, Codex, different numbers of samples",
+   "note": null,
+   "where": "Appendix C.1",
+   "quote": "leveraging code explanation alone without SELF-DEBUGGING also provides a consistent performance gain of 2 −3% for different numbers of samples"
+  },
+  {
+   "claim": "Codex baseline on TransCoder vs earlier systems (pass@1)",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 80.4,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "TransCoder, Codex w/o debugging vs TransCoder 44.5, PaLM 51.8, PaLM-Coder 55.1",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row Codex"
+  },
+  {
+   "claim": "GPT-3.5 zero-shot Spider",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 59.9,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Spider, GPT-3.5, greedy zero-shot (few-shot 71.1)",
+   "note": null,
+   "where": "Appendix A",
+   "quote": "GPT-3.5 achieves an accuracy of 59.9% with zero-shot prompting, and 71.1% with few-shot prompting"
+  }
+ ],
+ "limits": [
+  "Single run per cell, no seeds, intervals or significance tests reported.",
+  "Only 3 benchmarks of short functions; Spider, TransCoder and MBPP are not repository-scale.",
+  "Hidden-test evaluation only on MBPP (2 of 3 tests); TransCoder shows all 10 tests to the model, so debugging against them is evaluated on the same tests.",
+  "Without execution feedback gains are small and sometimes negative; GPT-3.5/GPT-4 overconfident.",
+  "GPT-4 and GPT-3.5 evaluated with 0-shot chat prompts, Codex with few-shot, so the model comparison mixes prompt styles; GPT-4 worse on Spider.",
+  "Code-davinci-002 (Codex) has been deprecated by OpenAI (not stated in the paper).",
+  "Preliminary result only: model-generated feedback about semantic errors adds nothing over line-by-line explanation.",
+  "Cost in tokens or turns is not reported; sample efficiency counts programs only."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Rubber duck debugging",
+   "definition": "explaining the code line-by-line in natural language to identify bugs without expert guidance",
+   "where": "Section 1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Shinn et al. 2023, Reflexion",
+   "year": 2023,
+   "arxiv": "2303.11366",
+   "relation": "related",
+   "note": "LLM self-reflection stored in memory",
+   "quote": null
+  },
+  {
+   "work": "Madaan et al. 2023b, Self-Refine",
+   "year": 2023,
+   "arxiv": "2303.17651",
+   "relation": "related",
+   "note": "iterative self-feedback and revision",
+   "quote": null
+  },
+  {
+   "work": "Chen et al. 2023a, code repair with human feedback",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "prior work found LLMs cannot correct code without external feedback",
+   "quote": null
+  },
+  {
+   "work": "Bai et al. 2022, Constitutional AI",
+   "year": 2022,
+   "arxiv": "2212.08073",
+   "relation": "related",
+   "note": "self-critique training",
+   "quote": null
+  },
+  {
+   "work": "Shi et al. 2022, MBR-Exec",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "execution-consensus selection",
+   "quote": null
+  },
+  {
+   "work": "Zhang et al. 2022, Coder-Reviewer",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "reranking",
+   "quote": null
+  },
+  {
+   "work": "Ni et al. 2023, LEVER",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "trained verifier; also source of 3-shot MBPP prompt",
+   "quote": null
+  },
+  {
+   "work": "Zeng et al. 2022, T5-3B N-best reranking",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "trained text-to-SQL",
+   "quote": null
+  },
+  {
+   "work": "Wei et al. 2022, chain-of-thought",
+   "year": 2022,
+   "arxiv": "2201.11903",
+   "relation": "uses-method",
+   "note": "explanation prompt is chain-of-thought in spirit",
+   "quote": null
+  },
+  {
+   "work": "Yu et al. 2018, Spider",
+   "year": 2018,
+   "arxiv": "1809.08887",
+   "relation": "uses-data",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "Roziere et al. 2020, TransCoder",
+   "year": 2020,
+   "arxiv": "2006.03511",
+   "relation": "uses-data",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "Austin et al. 2021, MBPP",
+   "year": 2021,
+   "arxiv": "2108.07732",
+   "relation": "uses-data",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "Chen et al. 2021a, Codex",
+   "year": 2021,
+   "arxiv": "2107.03374",
+   "relation": "evaluates",
+   "note": "code-davinci-002",
+   "quote": null
+  },
+  {
+   "work": "OpenAI 2023, GPT-4",
+   "year": 2023,
+   "arxiv": "2303.08774",
+   "relation": "evaluates",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "Li et al. 2023b, StarCoder",
+   "year": 2023,
+   "arxiv": "2305.06161",
+   "relation": "evaluates",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "Chowdhery et al. 2022, PaLM",
+   "year": 2022,
+   "arxiv": "2204.02311",
+   "relation": "uses-data",
+   "note": "TransCoder 3-shot prompt and C++-to-Python setup",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "SELF-DEBUGGING for iterative debugging using a large language model.",
+   "page": 2,
+   "why": "shows the generate, execute, explain, feedback loop"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "An example of SELF-DEBUGGING prompting for text-to-SQL generation.",
+   "page": 6,
+   "why": "three-step prompt with question explanation, SQL explanation and feedback"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Examples of SELF-DEBUGGING prompts for code translation.",
+   "page": 8,
+   "why": "simple, UT, Expl and Trace feedback side by side"
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "Ablation studies on the Spider development set with Codex.",
+   "page": 10,
+   "why": "sample efficiency and hardness breakdown"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Table 2a does not state the number of samples; inferred from Fig 6a that Codex 81.3/84.1 is the 32-sample setting.",
+  "Appendix bodies E.1-E.5, F.1-F.6, G.1-G.4 skimmed only.",
+  "PDF is arXiv v2; no ICLR line in the text, so venue recorded as preprint."
+ ]
 }

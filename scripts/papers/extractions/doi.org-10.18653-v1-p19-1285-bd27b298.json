@@ -1,0 +1,214 @@
+{
+ "schema": 1,
+ "key": "https://doi.org/10.18653/v1/p19-1285",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/dai-2019-transformer-xl.pdf",
+ "bib": {
+  "title": "Transformer-XL: Attentive Language Models Beyond a Fixed-Length Context",
+  "authors": ["Zihang Dai", "Zhilin Yang", "Yiming Yang", "Jaime Carbonell", "Quoc V. Le", "Ruslan Salakhutdinov"],
+  "first_author": "Dai",
+  "year": 2019,
+  "venue": "Proceedings of the 57th Annual Meeting of the Association for Computational Linguistics (ACL), pages 2978-2988",
+  "arxiv": "1901.02860",
+  "doi": "10.18653/v1/P19-1285"
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 44462,
+  "chars_total": 44462,
+  "engine": "pymupdf",
+  "skipped": "Nothing skipped. The PDF is the 11-page ACL version and contains no appendices, although the text refers to Appendices A (Table 10), B, C and E; their content (hyperparameters, RECL definition, samples) is not in the file."
+ },
+ "type": "empirical",
+ "question": "Can a self-attention language model learn dependencies beyond a fixed-length context without context fragmentation, and be faster to evaluate?",
+ "hypothesis": "Segment-level recurrence with cached hidden states, combined with relative positional encodings, captures longer dependency than RNNs and vanilla Transformers and resolves context fragmentation.",
+ "contributions": [
+  "Segment-level recurrence with state reuse in a purely self-attentive model",
+  "A relative positional encoding formulation that generalizes to attention lengths longer than seen in training",
+  "A new metric, Relative Effective Context Length (RECL)",
+  "New state-of-the-art on enwik8, text8, WikiText-103, One Billion Word and Penn Treebank (without finetuning)"
+ ],
+ "method": {
+  "summary": "Transformer-XL caches the previous segment's hidden states (stop-gradient) as memory that keys and values attend over, and replaces absolute position embeddings with a sinusoidal relative encoding plus two learned global bias vectors u and v and separate key matrices for content and position. Trained as a language model on five benchmarks, with ablations on recurrence and encoding, RECL, and evaluation speed against the vanilla Transformer of Al-Rfou et al.",
+  "task": "autoregressive language modeling (word-level and character-level)",
+  "trains": true,
+  "datasets": [
+   {"name": "WikiText-103", "role": "both", "size": "103M training tokens from 28K articles, average 3.6K tokens per article", "split": null, "source": "Merity et al., 2016", "preprocessing": null},
+   {"name": "enwik8", "role": "both", "size": "100M bytes of unprocessed Wikipedia text", "split": null, "source": "LLC, 2009", "preprocessing": null},
+   {"name": "text8", "role": "both", "size": "100M processed Wikipedia characters", "split": null, "source": "LLC, 2009", "preprocessing": "lower-cased, any character other than the 26 letters a-z and space removed"},
+   {"name": "One Billion Word", "role": "both", "size": null, "split": null, "source": "Chelba et al., 2013", "preprocessing": "sentences are shuffled, so no long-term dependency"},
+   {"name": "Penn Treebank", "role": "both", "size": "1M training tokens", "split": null, "source": "Mikolov and Zweig, 2012", "preprocessing": null}
+  ],
+  "models": [
+   {"name": "Transformer-XL Standard (WikiText-103)", "role": "proposed", "params": "151M", "architecture": "Transformer decoder with segment recurrence and relative positional encoding", "init_from": null, "tokenizer": "word-level", "vocab": null, "layers": null, "hidden": null, "heads": null, "context": "attention length 384 in training, 1600 in evaluation", "other": {"adaptive_softmax_and_inputs": "yes (Baevski and Auli 2018; Grave et al. 2016a)"}},
+   {"name": "Transformer-XL Large (WikiText-103)", "role": "proposed", "params": "257M", "architecture": "as above", "init_from": null, "tokenizer": "word-level", "vocab": null, "layers": null, "hidden": null, "heads": null, "context": "attention length 384 in training, 1600 in evaluation", "other": {}},
+   {"name": "12L Transformer-XL (enwik8)", "role": "proposed", "params": "41M", "architecture": "as above", "init_from": null, "tokenizer": "character-level", "vocab": null, "layers": "12", "hidden": null, "heads": null, "context": "inferred: attention length 784 in training and 3,800 in evaluation, stated for the 18L and 24L models", "other": {}},
+   {"name": "18L Transformer-XL (enwik8)", "role": "proposed", "params": "88M", "architecture": "as above", "init_from": null, "tokenizer": "character-level", "vocab": null, "layers": "18", "hidden": null, "heads": null, "context": "attention length 784 in training, 3,800 in evaluation", "other": {}},
+   {"name": "24L Transformer-XL (enwik8, text8)", "role": "proposed", "params": "277M", "architecture": "as above", "init_from": null, "tokenizer": "character-level", "vocab": null, "layers": "24", "hidden": null, "heads": null, "context": "attention length 784 in training, 3,800 in evaluation", "other": {"text8": "same model and hyper-parameters as enwik8, no further tuning"}},
+   {"name": "Transformer-XL Base / Large (One Billion Word)", "role": "proposed", "params": "0.46B / 0.8B", "architecture": "as above", "init_from": null, "tokenizer": "word-level", "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "Transformer-XL (Penn Treebank)", "role": "proposed", "params": "24M", "architecture": "as above, with variational dropout and weight average", "init_from": null, "tokenizer": "word-level", "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "Vanilla Transformer (Al-Rfou et al. 2018)", "role": "baseline", "params": "44M (12L), 235M (64L)", "architecture": "fixed-length-segment Transformer with auxiliary losses", "init_from": null, "tokenizer": "character-level", "vocab": null, "layers": "12 / 64", "hidden": null, "heads": null, "context": null, "other": {}}
+  ],
+  "training": {
+   "objective": "autoregressive next-token cross-entropy; no auxiliary losses (stated for enwik8). Ablations compare Full (loss on all positions) and Half (loss on the recent half of positions in the segment)",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": "400K steps for the 20-layer ~0.3B One Billion Word ablation model; not stated elsewhere",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "memory length M equals segment length during training; backpropagation length 128 in the WikiText-103 ablation",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": "variational dropout on Penn Treebank; rates not stated",
+   "regularisation": "variational dropout and weight average for Penn Treebank",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {"hyperparameters": "deferred to released code; no appendix in this PDF"}
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {"memory_length_eval": "M increased by multiple times over training at evaluation (WikiText-103 attention 1600, enwik8 3,800)"},
+   "other": {"generated_text": "samples in Appendix E, not in this PDF; generated without manual cherry picking, decoding settings not stated"}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "perplexity (PPL)", "definition": "exp of average per-token negative log-likelihood; word-level datasets", "unit": "perplexity", "higher_is_better": false},
+    {"name": "bits per character (bpc)", "definition": "average per-character negative log-likelihood in bits; enwik8, text8", "unit": "bpc", "higher_is_better": false},
+    {"name": "Relative Effective Context Length (RECL)", "definition": "defined on a model group; gain of a long context is the relative improvement over the best short-context model in the group, restricted to the top-r hard examples (full definition in Appendix C, not in this PDF)", "unit": "words", "higher_is_better": true},
+    {"name": "evaluation slowdown", "definition": "per-token evaluation time of Al-Rfou et al. relative to Transformer-XL on one GPU", "unit": "x", "higher_is_better": false}
+   ],
+   "baselines": ["LSTM, TCN, GCNN, QRNN, AWD-LSTM, MoS and other RNN/CNN LMs", "Al-Rfou et al. (2018) 12L and 64L Transformer", "Baevski and Auli (2018) Adaptive Input (contemporary)", "Shaw et al. (2018) and Vaswani et al. (2017) positional encodings in ablation"],
+   "protocol": "single reported run per setting; no seeds or significance tests stated"
+  },
+  "availability": {
+   "code": "https://github.com/kimiyoung/transformer-xl (TensorFlow and PyTorch)",
+   "weights": "pretrained models released",
+   "data": "public benchmarks"
+  },
+  "prompts": [],
+  "evidence": [
+   {"field": "models.context", "quote": "We set the attention length to 384 during training and 1600 during evaluation.", "where": "Section 4.1, WikiText-103"}
+  ]
+ },
+ "results": [
+  {
+   "claim": "Transformer-XL Large reaches 18.3 test perplexity on WikiText-103, against 20.5 for contemporary Adaptive Input.",
+   "kind": "measured", "source": null, "metric": "perplexity", "value": "18.3", "unit": "PPL", "baseline_value": "20.5", "n": null,
+   "setup": "WikiText-103, 257M-parameter Transformer-XL Large, attention length 384 train / 1600 eval; baseline Adaptive Input is 247M and is contemporary work. The 151M Standard model gets 24.0.",
+   "quote": null,
+   "table": "Table 1, row Ours - Transformer-XL Large, column PPL (18.3); row Baevski and Auli (2018) - Adaptive Input (20.5)", "note": null, "where": "Section 4.1, Table 1"
+  },
+  {
+   "claim": "A 24-layer Transformer-XL reaches 0.99 bpc on enwik8, the first below 1.0.",
+   "kind": "measured", "source": null, "metric": "bpc", "value": "0.99", "unit": "bpc", "baseline_value": "1.06", "n": null,
+   "setup": "enwik8, 24L, 277M parameters, attention length 784 train / 3,800 eval; baseline is the 64L 235M Al-Rfou Transformer at 1.06.",
+   "quote": null, "table": "Table 2, row Ours - 24L Transformer-XL, column bpc (0.99); row Al-Rfou et al. (2018) - 64L Transformer (1.06)",
+   "note": "0.99 also printed in the abstract.", "where": "Section 4.1, Table 2"
+  },
+  {
+   "claim": "A 12-layer Transformer-XL matches the 64-layer vanilla Transformer on enwik8 with 17% of the parameters.",
+   "kind": "measured", "source": null, "metric": "bpc", "value": "1.06", "unit": "bpc", "baseline_value": "1.11", "n": null,
+   "setup": "enwik8, 12L Transformer-XL (41M) vs 12L Al-Rfou (44M, 1.11) and 64L Al-Rfou (235M, 1.06).",
+   "quote": null, "table": "Table 2, row Ours - 12L Transformer-XL, column bpc (1.06); row Al-Rfou et al. (2018) - 12L Transformer (1.11)",
+   "note": "Text says it uses only 17% of the parameter budget of the 64L network.", "where": "Section 4.1, Table 2"
+  },
+  {
+   "claim": "24-layer Transformer-XL reaches 1.08 bpc on text8, with enwik8 hyper-parameters and no tuning.",
+   "kind": "measured", "source": null, "metric": "bpc", "value": "1.08", "unit": "bpc", "baseline_value": "1.13", "n": null,
+   "setup": "text8, 24L 277M; baseline 64L Al-Rfou 235M.",
+   "quote": null, "table": "Table 3, row Ours - 24L Transformer-XL, column bpc (1.08); row Al-Rfou et al. (2018) - 64L Transformer (1.13)", "note": null, "where": "Table 3"
+  },
+  {
+   "claim": "On One Billion Word, which has no long-term dependency, Transformer-XL Large improves the single-model state of the art from 23.7 to 21.8.",
+   "kind": "measured", "source": null, "metric": "perplexity", "value": "21.8", "unit": "PPL", "baseline_value": "23.7", "n": null,
+   "setup": "One Billion Word, Transformer-XL Large 0.8B; Base 0.46B gets 23.5; baseline Adaptive Input 1.0B (contemporary).",
+   "quote": null, "table": "Table 4, row Ours - Transformer-XL Large, column PPL (21.8); row Adaptive Input 1.0B (23.7)",
+   "note": "Table 4 also lists Shazeer et al. 2018 Mesh Tensorflow at 24.0.", "where": "Section 4.1, Table 4"
+  },
+  {
+   "claim": "Transformer-XL gets 54.52 perplexity on Penn Treebank among models without two-step finetuning.",
+   "kind": "measured", "source": null, "metric": "perplexity", "value": "54.52", "unit": "PPL", "baseline_value": "55.3", "n": null,
+   "setup": "Penn Treebank, 24M parameters, variational dropout and weight average; MoS+Finetune gets 54.44 with two-step finetuning.",
+   "quote": null, "table": "Table 5, row Ours - Transformer-XL, column PPL (54.52); row Melis et al. (2018) - Dropout tuning (55.3)",
+   "note": "Abstract prints 54.5.", "where": "Table 5"
+  },
+  {
+   "claim": "Ablation on One Billion Word: removing recurrence raises perplexity from 25.2 to 27.1, and Shaw et al. encodings give 25.7.",
+   "kind": "measured", "source": null, "metric": "perplexity", "value": "27.1", "unit": "PPL", "baseline_value": "25.2", "n": null,
+   "setup": "One Billion Word, 20-layer Transformer-XL of about 0.3B parameters, 400K steps.",
+   "quote": null, "table": "Table 7, row Without recurrence, column PPL (27.1); row Ours (25.2)", "note": null, "where": "Section 4.2, Table 7"
+  },
+  {
+   "claim": "WikiText-103 ablation: with recurrence and the proposed encoding (128M), perplexity falls from 27.02 at training length to 26.77 at attention length 500; without recurrence, Shaw or absolute encodings gain nothing from longer attention.",
+   "kind": "measured", "source": null, "metric": "perplexity", "value": "26.77", "unit": "PPL", "baseline_value": "27.02", "n": null,
+   "setup": "WikiText-103, 128M model, backpropagation length 128, full loss.",
+   "quote": null, "table": "Table 6, first row (Recurrence yes, Ours, Full), columns PPL init 27.02, PPL best 26.77, Attn Len 500", "note": null, "where": "Table 6"
+  },
+  {
+   "claim": "In the standard 151M setting, WikiText-103 perplexity decreases as attention length grows to 640 at test time though backpropagation length is 128.",
+   "kind": "measured", "source": null, "metric": "perplexity", "value": "23.09", "unit": "PPL", "baseline_value": "23.43", "n": null,
+   "setup": "WikiText-103, 151M, Ours encoding, Full loss, attention length 640 vs training length.",
+   "quote": null, "table": "Table 6, row Transformer-XL (151M), columns PPL init 23.43 and PPL best 23.09", "note": "Same row lists 23.16 at 450 and 23.35 at 300.", "where": "Table 6"
+  },
+  {
+   "claim": "RECL: Transformer-XL 151M models dependency of 900 words at r = 0.1, 80% longer than recurrent networks and 450% longer than Transformer.",
+   "kind": "measured", "source": null, "metric": "RECL (r = 0.1)", "value": "900", "unit": "words", "baseline_value": "400", "n": null,
+   "setup": "Compared within parameter-matched model groups; LSTM 400, QRNN 500 and vanilla Transformer 128 at r = 0.1. Group of 128M models: Transformer-XL 700, Shaw 400, no recurrence 300.",
+   "quote": null, "table": "Table 8, row Transformer-XL 151M, column r = 0.1 (900); row LSTM (400)",
+   "note": "Text gives 80% and 450%; the pairing behind them is not spelled out (900 vs QRNN 500 is 80%).", "where": "Section 4.3, Table 8"
+  },
+  {
+   "claim": "Evaluation is up to 1,874 times faster than the vanilla Transformer of Al-Rfou et al. at attention length 3,800; 363x at 800.",
+   "kind": "measured", "source": null, "metric": "slowdown of Al-Rfou et al.", "value": "1,874", "unit": "x", "baseline_value": null, "n": null,
+   "setup": "Per-token evaluation time on one GPU, at attention lengths 800 to 3,800.",
+   "quote": "Transformer-XL achieves an up to 1,874 times speedup during evaluation.", "table": null,
+   "note": "Abstract and Section 3.2 say 1,800+ times.", "where": "Section 4.5, Table 9"
+  }
+ ],
+ "limits": [
+  "The PDF has no appendices: optimizer, learning rate, batch size, layers/width for most models, training steps, hardware and the RECL definition are not in it.",
+  "Single runs, no seeds or significance tests.",
+  "Adaptive Input baselines are contemporary work; Transformer-XL Large models are larger than most baselines.",
+  "R is a fixed sinusoid with no learnable parameters; no clipping of relative distance is described.",
+  "Word-level Transformer-XL results use adaptive softmax and inputs; the effect is not ablated."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "context fragmentation", "definition": "fixed-length segments are created by selecting a consecutive chunk of symbols without respecting the sentence or any other semantic boundary, so the model lacks context for the first few symbols", "where": "Section 1"},
+  {"term": "segment-level recurrence", "definition": "hidden states computed for the previous segment are fixed and cached to be reused as an extended context for the next segment, with the gradient staying within a segment", "where": "Section 3.2"},
+  {"term": "Relative Effective Context Length (RECL)", "definition": "defined on a model group; the gain of a long context is measured by relative improvement over the best short context model, constrained to the top-r hard examples", "where": "Section 4.3"}
+ ],
+ "lineage": [
+  {"work": "Character-level language modeling with deeper self-attention", "year": 2018, "arxiv": "1808.04444", "relation": "baseline", "note": "The vanilla fixed-segment Transformer LM that Transformer-XL improves on", "quote": null},
+  {"work": "Self-attention with relative position representations", "year": 2018, "arxiv": "1803.02155", "relation": "extends", "note": "Relative positions; Transformer-XL adds bias terms u, v and sinusoidal R", "quote": null},
+  {"work": "Attention is all you need", "year": 2017, "arxiv": "1706.03762", "relation": "extends", "note": "Base Transformer and sinusoid encoding", "quote": null},
+  {"work": "Adaptive input representations for neural language modeling", "year": 2018, "arxiv": "1809.10853", "relation": "baseline", "note": "Contemporary baseline; adaptive inputs used", "quote": null},
+  {"work": "Sharp nearby, fuzzy far away", "year": 2018, "arxiv": "1805.04623", "relation": "extends", "note": "Effective context length, which RECL refines", "quote": null},
+  {"work": "Efficient softmax approximation for GPUs", "year": 2016, "arxiv": "1609.04309", "relation": "uses-method", "note": "Adaptive softmax", "quote": null},
+  {"work": "Regularizing and optimizing LSTM language models", "year": 2017, "arxiv": "1708.02182", "relation": "uses-method", "note": "Variational dropout and weight average for PTB", "quote": null},
+  {"work": "Pointer sentinel mixture models (WikiText-103)", "year": 2016, "arxiv": "1609.07843", "relation": "uses-data", "note": "Dataset", "quote": null},
+  {"work": "One billion word benchmark", "year": 2013, "arxiv": "1312.3005", "relation": "uses-data", "note": "Dataset", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 1", "caption": "Illustration of the vanilla model with a segment length 4.", "page": 3, "why": "Shows training without cross-segment flow and the one-step-shift evaluation that is costly"},
+  {"figure": "Fig 2", "caption": "Illustration of the Transformer-XL model with a segment length 4.", "page": 4, "why": "Shows cached no-grad states and how dependency length grows O(N x L) with depth"}
+ ],
+ "code": [
+  {"where": "Section 3.3, relative attention score", "snippet": "A_rel(i,j) = E_xi^T Wq^T Wk,E E_xj + E_xi^T Wq^T Wk,R R_(i-j) + u^T Wk,E E_xj + v^T Wk,R R_(i-j)", "verbatim": false}
+ ],
+ "problems": [
+  "PDF lacks the appendices (A-E) it refers to; hyperparameters are not recoverable from it.",
+  "Table cells are linearised in the text cache; Table 6 and 8 rows were reconstructed from reading order."
+ ]
+}

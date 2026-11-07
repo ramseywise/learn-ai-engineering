@@ -1,0 +1,328 @@
+{
+ "schema": 1,
+ "key": "1804.08771",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/post-2018-call-clarity-reporting-bleu-scores.pdf",
+ "bib": {
+  "title": "A Call for Clarity in Reporting BLEU Scores",
+  "authors": [
+   "Matt Post"
+  ],
+  "first_author": "Post",
+  "year": 2018,
+  "venue": "Proceedings of the Third Conference on Machine Translation (WMT), Volume 1: Research Papers",
+  "arxiv": "1804.08771",
+  "doi": "10.18653/v1/W18-64019"
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 25004,
+  "chars_total": 25004,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "How much do undisclosed BLEU parameters and reference preprocessing change reported scores, and how should MT papers report BLEU so scores are comparable?",
+ "hypothesis": "User-supplied reference tokenization is the main cause of incomparable BLEU scores across papers.",
+ "contributions": [
+  "Quantifies BLEU variation from reference tokenization and case on WMT'17",
+  "Shows influential papers' BLEU configurations are often not recoverable",
+  "Proposes metric-internal (WMT 13a) reference processing as the standard",
+  "Releases SacreBLEU, which downloads references and emits a version string"
+ ],
+ "method": {
+  "summary": "Scores a single WMT'17 system (online-B) and its references under four tokenization schemes, cased and uncased, per language arc, and tabulates the spread. Audits seven well-cited papers for which BLEU configuration they used, and releases SacreBLEU.",
+  "task": "machine translation evaluation (BLEU reporting)",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "WMT 2017 news test sets (en<->cs, de, fi, lv, ru, tr)",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "WMT17 (Bojar et al., 2017)",
+    "preprocessing": "basic: Moses tokenizer; split: compound splitting; unk: words under 2 occurrences in WMT training target side mapped to UNK; metric: mteval-v13a.pl internal tokenization"
+   },
+   {
+    "name": "WMT14 en-de",
+    "role": "eval",
+    "size": "2,737 sentences (evaluation release) vs 3,004 sentences (post-evaluation full release)",
+    "split": null,
+    "source": "WMT14",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "online-B (WMT17 submitted system)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "one system output per arc, one score per configuration; no repeats",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "moses_tokenizer_args": "-q -no-escape -protected basic-protected-patterns -l LANG",
+    "sacrebleu_example_version_string": "BLEU+c.mixed+l.en-de+#.1+s.exp+t.wmt14+tok.13a+v.1.2.10"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "BLEU",
+     "definition": "corpus-level n-gram precision metric (max n-gram 4 virtually always), with length penalty, smoothing for zero counts, number of references as parameters",
+     "unit": "BLEU points",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "basic",
+    "split",
+    "unk",
+    "metric (WMT mteval-v13a)"
+   ],
+   "protocol": "range row = largest minus smallest score across configurations, excluding unk; cased and lowercased (lc) variants"
+  },
+  "availability": {
+   "code": "https://github.com/awslabs/sockeye/tree/master/contrib/sacrebleu (Apache 2.0)",
+   "weights": null,
+   "data": "SacreBLEU downloads WMT 2008-2018 and IWSLT 2017 test sets"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Reference tokenization changes BLEU by up to 1.8 on one language arc",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": "1.8",
+   "unit": "BLEU points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "WMT 2017 system online-B and its references, 12 language arcs, scored under basic/split/unk/metric tokenization",
+   "quote": "I quantify this variation, ﬁnding differences as high as 1.8 between commonly used conﬁgu-",
+   "table": "Table 1, column de-en, row range",
+   "note": null,
+   "where": "Abstract; Table 1"
+  },
+  {
+   "claim": "Average spread across arcs is about 1.0",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": "1.0",
+   "unit": "BLEU points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "WMT 2017 system online-B and its references, 12 language arcs, scored under basic/split/unk/metric tokenization",
+   "quote": "The changes in each column show the effect these different schemes have, as high as 1.8 for one arc, and averaging around 1.0.",
+   "table": null,
+   "note": null,
+   "where": "Sec 2.2"
+  },
+  {
+   "claim": "English-Finnish WMT17 online-B BLEU with one reference",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": "22.04",
+   "unit": "BLEU",
+   "baseline_value": null,
+   "n": null,
+   "setup": "WMT17 en-fi online-B, one reference",
+   "quote": "Scoring the online-B sys-",
+   "table": "Sec 2.1",
+   "note": null,
+   "where": "Sec 2.1"
+  },
+  {
+   "claim": "Same system with two references",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": "25.25",
+   "unit": "BLEU",
+   "baseline_value": null,
+   "n": null,
+   "setup": "WMT17 en-fi online-B, two references",
+   "quote": "tem with one reference produces a BLEU score of\n22.04, and with two, 25.25.",
+   "table": null,
+   "note": null,
+   "where": "Sec 2.1"
+  },
+  {
+   "claim": "de-en cased: basic vs metric",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": "31.2 vs 33.0",
+   "unit": "BLEU",
+   "baseline_value": null,
+   "n": null,
+   "setup": "WMT17 de-en online-B, cased",
+   "quote": null,
+   "table": "Table 1, column de-en, rows basic and metric",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "de-en uncased range",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": "1.7",
+   "unit": "BLEU",
+   "baseline_value": null,
+   "n": null,
+   "setup": "WMT17 de-en online-B, lowercased",
+   "quote": null,
+   "table": "Table 1, column de-en, row rangelc",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Two versions of WMT14 en-de test set exist, sizes 2,737 and 3,004 sentences",
+   "kind": "measured",
+   "source": null,
+   "metric": "test set size",
+   "value": "2,737 vs 3,004",
+   "unit": "sentences",
+   "baseline_value": null,
+   "n": null,
+   "setup": "WMT14 en-de",
+   "quote": "One of them,\nreleased for the evaluation, has only 2,737 sen-\ntences",
+   "table": null,
+   "note": null,
+   "where": "Sec 2.4"
+  },
+  {
+   "claim": "An earlier research workflow that preprocessed the reference shifted scores by half a point",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": "half a point",
+   "unit": "BLEU",
+   "baseline_value": null,
+   "n": null,
+   "setup": "author's own pipeline",
+   "quote": "which applied pre-\nprocessing to the reference, affecting scores by half a point.",
+   "table": null,
+   "note": null,
+   "where": "footnote 8"
+  }
+ ],
+ "limits": [
+  "Variation measured on one system (online-B) only, WMT17 only, no significance testing",
+  "Does not address BLEU's validity as a proxy for human judgment (explicitly out of scope)",
+  "Table 2 attributions of which configuration each paper used are the author's reading and many are marked unclear",
+  "SacreBLEU version 1.2.10 is early; later versions added more tokenizers and signatures"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "user-supplied vs metric-supplied tokenization",
+   "definition": "whether reference preprocessing is done by the user or internally by the code implementing the metric",
+   "where": "Sec 2.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "BLEU (Papineni et al., 2002)",
+   "year": 2002,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "the metric studied",
+   "quote": null
+  },
+  {
+   "work": "WMT17 findings (Bojar et al., 2017)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "test sets and system outputs; metric scheme mteval-v13a",
+   "quote": null
+  },
+  {
+   "work": "PARSEVAL/evalb (Black et al., 1991)",
+   "year": 1991,
+   "arxiv": null,
+   "relation": "related",
+   "note": "parsing community's standard evaluation held up as the model",
+   "quote": null
+  },
+  {
+   "work": "Attention is all you need (Vaswani et al., 2017)",
+   "year": 2017,
+   "arxiv": "1706.03762",
+   "relation": "related",
+   "note": "audited for BLEU configuration; unclear",
+   "quote": null
+  },
+  {
+   "work": "Google's NMT system (Wu et al., 2016)",
+   "year": 2016,
+   "arxiv": "1609.08144",
+   "relation": "related",
+   "note": "audited; unclear",
+   "quote": null
+  },
+  {
+   "work": "Bahdanau et al. 2014",
+   "year": 2014,
+   "arxiv": "1409.0473",
+   "relation": "related",
+   "note": "audited; unclear",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Table 1",
+   "caption": "BLEU score variation across WMT'17 language arcs for cased (top) and uncased (bottom) BLEU.",
+   "page": 3,
+   "why": "Shows spread per arc under four tokenizations"
+  },
+  {
+   "figure": "Table 2",
+   "caption": "Benchmarks set by well-cited papers use different BLEU configurations (Table 1). Which one was used is often difficult to determine.",
+   "page": 3,
+   "why": "Shows the reporting gap in influential papers"
+  },
+  {
+   "figure": "Fig 1",
+   "caption": "The proper pipeline for computing reported BLEU scores.",
+   "page": 4,
+   "why": "Shows user touches only system output, not reference"
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 3.3",
+   "snippet": "cat output.detok | sacrebleu -t wmt14 -l en-de",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Table 1 and Table 2 extracted as flat cell lists; values read by column order",
+  "No embedded instructions found"
+ ]
+}

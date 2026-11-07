@@ -1,0 +1,462 @@
+{
+ "schema": 1,
+ "key": "2006.11239",
+ "pdf": "ai-engineering/08-multimodal-engineering/sources/ho-2020-denoising-diffusion-probabilistic-models.pdf",
+ "bib": {
+  "title": "Denoising Diffusion Probabilistic Models",
+  "authors": [
+   "Jonathan Ho",
+   "Ajay Jain",
+   "Pieter Abbeel"
+  ],
+  "first_author": "Ho",
+  "year": 2020,
+  "venue": "NeurIPS 2020 (34th Conference on Neural Information Processing Systems)",
+  "arxiv": "2006.11239",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 54042,
+  "chars_total": 54042,
+  "engine": "pymupdf",
+  "skipped": "reference list skimmed only"
+ },
+ "type": "empirical",
+ "question": "Can diffusion probabilistic models generate high-quality images, and which parameterization and objective make them work best?",
+ "hypothesis": "A parameterization that predicts the noise epsilon, trained with an unweighted simplified bound, links diffusion models to denoising score matching and gives better sample quality.",
+ "contributions": [
+  "Show diffusion models can generate high-quality samples (CIFAR10 FID 3.17, LSUN 256x256 comparable to ProgressiveGAN)",
+  "Equivalence of epsilon-prediction diffusion training to denoising score matching over multiple noise levels and sampling to annealed Langevin dynamics",
+  "Simplified weighted-bound objective Lsimple",
+  "Progressive lossy compression and autoregressive-decoding interpretation"
+ ],
+ "method": {
+  "summary": "A U-Net predicts the noise added to an image at a random timestep t (T=1000, linear beta schedule); training minimises the mean squared error of the noise (Lsimple), and sampling iterates the learned reverse Gaussian chain from pure noise.",
+  "task": "unconditional image generation",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "CIFAR10",
+    "role": "both",
+    "size": null,
+    "split": "standard from prior generative-modelling papers; FID vs training set (5.24 vs test set)",
+    "source": "TensorFlow Datasets",
+    "preprocessing": "integers 0-255 scaled linearly to [-1,1]; random horizontal flips"
+   },
+   {
+    "name": "CelebA-HQ 256x256",
+    "role": "both",
+    "size": null,
+    "split": "standard",
+    "source": "TensorFlow Datasets",
+    "preprocessing": "random horizontal flips"
+   },
+   {
+    "name": "LSUN Bedroom, Church, Cat 256x256",
+    "role": "both",
+    "size": null,
+    "split": "standard",
+    "source": "prepared with StyleGAN code",
+    "preprocessing": "random horizontal flips except LSUN Bedroom"
+   }
+  ],
+  "models": [
+   {
+    "name": "DDPM U-Net (CIFAR10)",
+    "role": "proposed",
+    "params": "35.7 million",
+    "architecture": "PixelCNN++-style Wide ResNet U-Net, group norm, self-attention at 16x16, sinusoidal time embedding in each residual block",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "four feature map resolutions (32x32 to 4x4), two conv residual blocks per level",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "DDPM U-Net (256x256)",
+    "role": "proposed",
+    "params": "114 million",
+    "architecture": "same, six resolutions",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "six feature map resolutions, two residual blocks per level",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "large LSUN Bedroom": "approximately 256 million parameters, more filters"
+    }
+   }
+  ],
+  "training": {
+   "objective": "Lsimple = E ||eps - eps_theta(sqrt(abar_t) x0 + sqrt(1-abar_t) eps, t)||^2, t uniform in 1..T; reverse variance fixed sigma_t^2 = beta_t (or beta-tilde_t, similar)",
+   "optimizer": "Adam, standard hyperparameters (chosen over RMSProp)",
+   "lr": "2e-4 (2e-5 for 256x256)",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "128 for CIFAR10, 64 for larger images",
+   "steps": "CIFAR10 800k; CelebA-HQ 0.5M; LSUN Bedroom 2.4M; Cat 1.8M; Church 1.2M; large Bedroom 1.15M",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": "0.1 on CIFAR10 (swept 0.1-0.4); 0 on other datasets",
+   "regularisation": "EMA of parameters, decay 0.9999; random horizontal flips",
+   "hardware": "TPU v3-8 (similar to 8 V100 GPUs)",
+   "compute": null,
+   "wall_clock": "CIFAR10 10.6 hours for 800k steps at 21 steps/s; 256x256 models 2.2 steps/s at batch 64",
+   "seeds": "inferred: single run (trained once and evaluated throughout training)",
+   "other": {
+    "T": "1000",
+    "beta schedule": "linear from 1e-4 to 0.02, chosen from constant/linear/quadratic",
+    "checkpoint selection": "minimum FID over the course of training"
+   }
+  },
+  "inference": {
+   "decoding": "ancestral sampling, Algorithm 2: x_{t-1} = (x_t - (1-alpha_t)/sqrt(1-abar_t) eps_theta)/sqrt(alpha_t) + sigma_t z",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "50000 samples for FID/IS",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "T": "1000",
+    "sigma_t": "sqrt(beta_t)",
+    "final output": "mu_theta(x1,1) displayed noiselessly"
+   },
+   "other": {
+    "sampling cost": "CIFAR10 batch 256 in 17 s; 256x256 batch 128 in 300 s"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "FID",
+     "definition": "Frechet Inception distance, TTUR code on CIFAR10, StyleGAN2 code on LSUN, 50000 samples",
+     "unit": "FID",
+     "higher_is_better": false
+    },
+    {
+     "name": "Inception score",
+     "definition": "OpenAI code, 50000 samples",
+     "unit": "IS",
+     "higher_is_better": true
+    },
+    {
+     "name": "NLL",
+     "definition": "lossless codelength from the variational bound",
+     "unit": "bits/dim",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "EBM",
+    "JEM",
+    "BigGAN",
+    "StyleGAN2 + ADA",
+    "Gated PixelCNN",
+    "Sparse Transformer",
+    "PixelIQN",
+    "NCSN",
+    "SNGAN",
+    "SNGAN-DDLS",
+    "ProgressiveGAN",
+    "StyleGAN",
+    "StyleGAN2"
+   ],
+   "protocol": "single training run, best (minimum) FID over training reported; no confidence intervals other than IS std"
+  },
+  "availability": {
+   "code": "https://github.com/hojonathanho/diffusion",
+   "weights": null,
+   "data": "public datasets"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.lr",
+    "quote": "We set the learning rate to\n2 × 10−4 without any sweeping, and we lowered it to 2 × 10−5 for the 256 × 256 images",
+    "where": "Appendix B"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Unconditional CIFAR10 FID of 3.17 with Inception score 9.46, beating most published models including class-conditional ones.",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": "3.17",
+   "unit": "FID",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Unconditional CIFAR10, 32x32, Lsimple model, T=1000, FID vs training set, 50000 samples",
+   "where": "Abstract; Table 1",
+   "note": "StyleGAN2 + ADA (v1) unconditional has FID 3.26 in Table 1, so 'state-of-the-art' holds narrowly; its conditional FID is 2.67",
+   "quote": "we obtain an Inception score of 9.46 and a state-of-the-art FID score of 3.17"
+  },
+  {
+   "claim": "Against the test set the CIFAR10 FID is 5.24.",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID (test set reference)",
+   "value": "5.24",
+   "unit": "FID",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Unconditional CIFAR10, 32x32, Lsimple model, T=1000, FID vs training set, 50000 samples",
+   "where": "Sec 4.1",
+   "note": null,
+   "quote": "the score is 5.24"
+  },
+  {
+   "claim": "Predicting epsilon with the simplified loss beats mu-tilde prediction with the true bound (FID 3.17 vs 13.22).",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": "3.17",
+   "unit": "FID",
+   "baseline_value": "13.22",
+   "n": null,
+   "setup": "Table 2 ablation, unconditional CIFAR10, fixed isotropic Sigma baseline row",
+   "where": "Table 2",
+   "note": null,
+   "table": "Table 2, row epsilon prediction ||eps - eps_theta||^2 (Lsimple), column FID"
+  },
+  {
+   "claim": "Learning the reverse-process variances (learned diagonal Sigma) gave worse FID (23.69) with mu-tilde prediction and was unstable with epsilon prediction.",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": "23.69",
+   "unit": "FID",
+   "baseline_value": "13.22",
+   "n": null,
+   "setup": "Table 2, mu-tilde prediction, L with learned diagonal Sigma",
+   "where": "Table 2; Sec 4.2",
+   "note": "Blank entries for eps prediction with learned Sigma and for mu-tilde with unweighted MSE were unstable",
+   "table": "Table 2, row L, learned diagonal Sigma (mu prediction), column FID"
+  },
+  {
+   "claim": "Training on the true bound gives better codelength than Lsimple (3.70 vs 3.75 bits/dim test) but worse samples (FID 13.51 vs 3.17).",
+   "kind": "measured",
+   "source": null,
+   "metric": "NLL test",
+   "value": "<=3.75",
+   "unit": "bits/dim",
+   "baseline_value": "<=3.70",
+   "n": null,
+   "setup": "CIFAR10, Lsimple; true-bound model with fixed isotropic Sigma has <=3.70",
+   "where": "Table 1",
+   "note": null,
+   "table": "Table 1, row Ours (Lsimple), column NLL Test (Train)"
+  },
+  {
+   "claim": "Rate-distortion split of the best CIFAR10 model: rate 1.78 bits/dim, distortion 1.97 bits/dim (RMSE 0.95 on 0-255); more than half the codelength describes imperceptible detail.",
+   "kind": "measured",
+   "source": null,
+   "metric": "rate",
+   "value": "1.78",
+   "unit": "bits/dim",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CIFAR10 model with highest-quality samples; rate = L1+...+LT, distortion = L0",
+   "where": "Sec 4.3",
+   "note": null,
+   "quote": "has a rate of 1.78 bits/dim and a distortion of 1.97 bits/dim, which amounts to a root mean squared error of 0.95"
+  },
+  {
+   "claim": "Train-test codelength gap is at most 0.03 bits/dim, so no overfitting.",
+   "kind": "measured",
+   "source": null,
+   "metric": "gap",
+   "value": "0.03",
+   "unit": "bits/dim",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CIFAR10 diffusion models",
+   "where": "Sec 4.3",
+   "note": null,
+   "quote": "The gap between train and test is at most 0.03 bits per dimension"
+  },
+  {
+   "claim": "LSUN Bedroom 256x256 FID 6.36 (small) and 4.90 (256M-parameter large); Church 7.89; Cat 19.75, roughly ProgressiveGAN level but behind StyleGAN/StyleGAN2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": "6.36",
+   "unit": "FID",
+   "baseline_value": "8.34",
+   "n": null,
+   "setup": "LSUN 256x256, 50000 samples, Lsimple",
+   "where": "Table 3",
+   "note": "Other cells: Church 7.89, Cat 19.75, large Bedroom 4.90; ProgressiveGAN Bedroom baseline 8.34, StyleGAN 2.65",
+   "table": "Table 3, row Ours (Lsimple), column LSUN Bedroom"
+  },
+  {
+   "claim": "CIFAR10 model has 35.7M parameters and trains in 10.6 hours (800k steps) on a TPU v3-8; LSUN/CelebA-HQ models have 114M parameters.",
+   "kind": "measured",
+   "source": null,
+   "metric": "parameters",
+   "value": "35.7",
+   "unit": "million",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CIFAR10 U-Net",
+   "where": "Appendix B",
+   "note": null,
+   "quote": "Our CIFAR10 model has 35.7 million parameters, and our LSUN and CelebA-HQ models have 114 million parameters."
+  },
+  {
+   "claim": "Sampling a batch of 256 CIFAR10 images takes 17 seconds, and a batch of 128 256x256 images takes 300 seconds (T=1000 network evaluations).",
+   "kind": "measured",
+   "source": null,
+   "metric": "sampling time",
+   "value": "17",
+   "unit": "seconds",
+   "baseline_value": null,
+   "n": null,
+   "setup": "TPU v3-8, CIFAR10 batch 256",
+   "where": "Appendix B",
+   "note": null,
+   "quote": "sampling\na batch of 256 images takes 17 seconds"
+  }
+ ],
+ "limits": [
+  "Log likelihoods are not competitive with other likelihood-based models (Sec 1, 4.3)",
+  "LSUN Cat FID 19.75 and Church 7.89 trail StyleGAN/StyleGAN2",
+  "Sampling needs T=1000 sequential network evaluations (slow)",
+  "Progressive compression is only a proof of concept; minimal random coding is intractable for high dimensional data (Appendix)",
+  "Hyperparameters tuned on CIFAR10 and transferred; only unconditional generation shown; single run",
+  "x0-prediction parameterization was dropped early, not reported"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "diffusion model",
+   "definition": "a parameterized Markov chain trained using variational inference to produce samples matching the data after finite time",
+   "where": "Sec 1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Deep unsupervised learning using nonequilibrium thermodynamics (Sohl-Dickstein et al.)",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "original diffusion probabilistic model",
+   "quote": null
+  },
+  {
+   "work": "Generative modeling by estimating gradients of the data distribution (NCSN, Song and Ermon)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "denoising score matching / Langevin; connection shown, differences in Appendix C",
+   "quote": null
+  },
+  {
+   "work": "Improved techniques for training score-based generative models",
+   "year": 2020,
+   "arxiv": "2006.09011",
+   "relation": "baseline",
+   "note": "NCSNv2",
+   "quote": null
+  },
+  {
+   "work": "PixelCNN++ (Salimans et al.)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "U-Net backbone",
+   "quote": null
+  },
+  {
+   "work": "U-Net (Ronneberger et al.)",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "backbone",
+   "quote": null
+  },
+  {
+   "work": "Attention is all you need",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "sinusoidal time embedding, self-attention",
+   "quote": null
+  },
+  {
+   "work": "Group normalization",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "replaces weight norm",
+   "quote": null
+  },
+  {
+   "work": "Adam",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "optimizer",
+   "quote": null
+  },
+  {
+   "work": "CIFAR10, CelebA-HQ, LSUN",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "LSUN arXiv:1506.03365",
+   "quote": null
+  },
+  {
+   "work": "Progressive growing of GANs; StyleGAN; StyleGAN2; StyleGAN2+ADA; BigGAN",
+   "year": null,
+   "arxiv": "2006.06676",
+   "relation": "baseline",
+   "note": "GAN comparisons",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "The directed graphical model considered in this work.",
+   "page": 2,
+   "why": "shows forward q and reverse p_theta chain"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Unconditional CIFAR10 test set rate-distortion vs. time.",
+   "page": 7,
+   "why": "shows most bits go to imperceptible detail"
+  },
+  {
+   "figure": "Table 2",
+   "caption": "Unconditional CIFAR10 reverse process parameterization and training objective ablation.",
+   "page": 5,
+   "why": "isolates epsilon-prediction and Lsimple effect"
+  }
+ ],
+ "code": [
+  {
+   "where": "Algorithm 1 and 2, p4",
+   "snippet": "Training: x0~q(x0); t~Uniform({1..T}); eps~N(0,I); gradient step on ||eps - eps_theta(sqrt(abar_t) x0 + sqrt(1-abar_t) eps, t)||^2.  Sampling: xT~N(0,I); for t=T..1: z~N(0,I) if t>1 else 0; x_{t-1} = 1/sqrt(alpha_t) (x_t - (1-alpha_t)/sqrt(1-abar_t) eps_theta(x_t,t)) + sigma_t z",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "PDF text has ligatures and broken math layout; algorithm snippet reconstructed, not verbatim",
+  "No embedded instructions found"
+ ]
+}

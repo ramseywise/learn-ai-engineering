@@ -1,0 +1,612 @@
+{
+ "schema": 1,
+ "key": "2305.18290",
+ "pdf": "generative-ai/05-RL/sources/rafailov-2023-dpo.pdf",
+ "bib": {
+  "title": "Direct Preference Optimization: Your Language Model is Secretly a Reward Model",
+  "authors": [
+   "Rafael Rafailov",
+   "Archit Sharma",
+   "Eric Mitchell",
+   "Stefano Ermon",
+   "Christopher D. Manning",
+   "Chelsea Finn"
+  ],
+  "first_author": "Rafailov",
+  "year": 2023,
+  "venue": "NeurIPS 2023 (37th Conference on Neural Information Processing Systems)",
+  "arxiv": "2305.18290",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 93220,
+  "chars_total": 93220,
+  "engine": "pymupdf",
+  "skipped": "References skimmed only; Appendix proof text (A.1 steps, A.5 lemma proofs) read for structure, volunteer name list and sample-output tables not recorded"
+ },
+ "type": "empirical",
+ "question": "Can a language model be fit directly to human preference data with a simple classification loss, optimizing the same KL-constrained reward objective as RLHF without a reward model or RL loop?",
+ "hypothesis": "A change of variables from reward to optimal policy lets the Bradley-Terry preference loss be written over the policy directly, so DPO should match or beat PPO-based RLHF while being simpler and more stable.",
+ "contributions": [
+  "Direct Preference Optimization (DPO), a simple RL-free algorithm for training language models from preferences",
+  "Theory: the reparameterization r = beta log(pi/pi_ref) loses no generality over reward classes (Theorem 1) and the gradient weights examples by implicit-reward error",
+  "Experiments on sentiment, TL;DR summarization and Anthropic-HH dialogue up to 6B parameters, plus a human study validating GPT-4 as judge"
+ ],
+ "method": {
+  "summary": "DPO minimizes -log sigma(beta log pi_theta(yw|x)/pi_ref(yw|x) - beta log pi_theta(yl|x)/pi_ref(yl|x)) over a fixed offline preference dataset, with pi_ref the SFT model. It is compared with PPO RLHF, Best-of-N, preferred-FT, unlikelihood and prompting on IMDb sentiment (GPT-2-large), TL;DR summarization (GPT-J 6B SFT) and Anthropic-HH dialogue (Pythia-2.8B), judged by GPT-4 win rate.",
+  "task": "preference optimisation / RLHF alternative",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "IMDb (controlled sentiment)",
+    "role": "both",
+    "size": "prompts are 2-8 token review prefixes; 4 completions sampled for 25000 prefixes, 6 preference pairs per prefix",
+    "split": "SFT on train split subset for 1 epoch",
+    "source": "IMDb [Maas et al.]; ground-truth reward siebert/sentiment-roberta-large-english",
+    "preprocessing": "Preference pairs built with the sentiment classifier so p(positive|x,yw) > p(positive|x,yl)"
+   },
+   {
+    "name": "Reddit TL;DR summarization + Stiennon et al. preferences",
+    "role": "both",
+    "size": null,
+    "split": "test split used for evaluation",
+    "source": "Reddit TL;DR [Voelske et al.] with human preferences from Stiennon et al.",
+    "preprocessing": "Preferences were gathered on samples from a different, similarly-trained SFT model"
+   },
+   {
+    "name": "Anthropic Helpful and Harmless (HH)",
+    "role": "both",
+    "size": "170k dialogues",
+    "split": "subset of test split with one human-assistant step used for eval",
+    "source": "Bai et al. 2022",
+    "preprocessing": "No SFT model available, so Pythia-2.8B is fine-tuned on preferred completions only"
+   },
+   {
+    "name": "CNN/DailyMail",
+    "role": "eval",
+    "size": null,
+    "split": "test split",
+    "source": "[26]",
+    "preprocessing": "Same GPT-4 (C) prompt with 'forum post' replaced by 'news article'"
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT-2-large",
+    "role": "base",
+    "params": null,
+    "architecture": "decoder-only transformer",
+    "init_from": "gpt2-large",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "sentiment policy and RLHF reward model init"
+    }
+   },
+   {
+    "name": "GPT-J SFT (CarperAI/openai_summarize_tldr_sft)",
+    "role": "base",
+    "params": "6B",
+    "architecture": "decoder-only transformer",
+    "init_from": "SFT on human-written forum summaries",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Pythia-2.8B",
+    "role": "base",
+    "params": "2.8B",
+    "architecture": "decoder-only transformer",
+    "init_from": "Preferred-FT on chosen completions gives pi_ref",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "gpt-4-0314",
+    "role": "judge",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "order": "order of the two candidates randomised per evaluation"
+    }
+   },
+   {
+    "name": "siebert/sentiment-roberta-large-english",
+    "role": "reward",
+    "params": null,
+    "architecture": "RoBERTa-large classifier",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "ground-truth reward in sentiment task"
+    }
+   }
+  ],
+  "training": {
+   "objective": "L_DPO = -E[log sigma(beta log pi_theta(yw|x)/pi_ref(yw|x) - beta log pi_theta(yl|x)/pi_ref(yl|x))]; pi_ref = pi_SFT, or max-likelihood on preferred completions if SFT unavailable",
+   "optimizer": "RMSprop",
+   "lr": "1e-6",
+   "lr_schedule": "linear warmup from 0 to 1e-6, then constant (inferred: no decay stated)",
+   "warmup": "150 steps",
+   "batch_size": "64",
+   "steps": "evaluated every 100 steps until convergence; dialogue curve runs to about 3300 steps (read from Fig 3)",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "beta KL strength: 0.1 default, 0.5 for TL;DR",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": "random seeds varied only for Preferred-FT in the sentiment sweep; otherwise not stated",
+   "other": {
+    "beta_default": "0.1",
+    "beta_tldr": "0.5",
+    "beta_sweep_sentiment": "{0.05, 0.1, 1, 5}",
+    "ppo_target_kl_sweep": "{3, 6, 9, 12}",
+    "unlikelihood_alpha_sweep": "{0.05, 0.1, 0.5, 1}",
+    "sentiment_sweep_total_runs": "22",
+    "ppo_batch_sentiment": "1024 samples per PPO step in own implementation",
+    "rlhf_reward_model": "initialised from gpt2-large, 3 epochs, best validation-accuracy checkpoint",
+    "beta_tuning": "authors say they did not meaningfully tune beta"
+   }
+  },
+  "inference": {
+   "decoding": "sampling at varied temperature",
+   "temperature": "TL;DR: swept 0.0 to 1.0, DPO best at 0.25 in human study; dialogue: 0.7 and 1.0 shown in Fig 3",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "Best of N baseline with N up to 128 (dialogue) and 256 (TL;DR); other sample counts per prompt not stated",
+   "prompting": "GPT-J zero-shot on TL;DR; Pythia-2.8B 2-shot on dialogue",
+   "retrieval": null,
+   "parameters": {
+    "beta": "0.1 (0.5 TL;DR)"
+   },
+   "other": {
+    "max_generation": "samples in Tables 7 and 9 end with [maximum generation length reached]; limit not stated"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Reward vs KL frontier",
+     "definition": "Average true sentiment reward against average sequence-level KL(pi||pi_ref) (sum of per-timestep KLs) on test prompts",
+     "unit": "reward, nats",
+     "higher_is_better": true
+    },
+    {
+     "name": "GPT-4 win rate",
+     "definition": "Fraction of test prompts where GPT-4 prefers the method's output over the baseline (reference summary for TL;DR, chosen response for HH)",
+     "unit": "fraction or %",
+     "higher_is_better": true
+    },
+    {
+     "name": "Human-GPT-4 agreement",
+     "definition": "Raw agreement percentage per judgment, ties (about 1%) ignored",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "PPO (learned reward, own tuned implementation with reward normalisation)",
+    "PPO-GT (oracle reward; own and TRL versions)",
+    "Preferred-FT",
+    "Unlikelihood",
+    "SFT",
+    "Best of N (128 for HH, up to 256 for TL;DR)",
+    "GPT-J zero-shot",
+    "Pythia-2.8B 2-shot",
+    "public PPO HH model reciprocate/ppo_hh_pythia-6B"
+   ],
+   "protocol": "Sentiment: 22-run sweep, evaluated every 100 steps. Summarization and dialogue: GPT-4 win rate across temperatures; human study with 25 volunteer raters, 25 comparisons each (150 DPO-vs-PPO, 100 PPO-1-vs-PPO-0 with two humans each, 125 SFT with one human). No significance tests or multiple training seeds reported."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "public datasets; SFT checkpoint huggingface CarperAI/openai_summarize_tldr_sft"
+  },
+  "prompts": [
+   {
+    "purpose": "GPT-4 summarization win rate (S)",
+    "text": "Which of the following summaries does a better job of summarizing the most important points in the given forum post?\nPost:\n<post>\nSummary A:\n<Summary A>\nSummary B:\n<Summary B>\nFIRST provide a one-sentence comparison of the two summaries, explaining which you prefer and why. SECOND, on a new line, state only \"A\" or \"B\" to indicate your choice. Your response should use the format:\nComparison: <one-sentence comparison and explanation>\nPreferred: <\"A\" or \"B\">",
+    "where": "Appendix C.2"
+   },
+   {
+    "purpose": "GPT-4 summarization win rate (C), used for main results",
+    "text": "Which of the following summaries does a better job of summarizing the most important points in the given forum post, without including unimportant or irrelevant details? A good summary is both precise and concise.\nPost:\n<post>\nSummary A:\n<Summary A>\nSummary B:\n<Summary B>\nFIRST provide a one-sentence comparison of the two summaries, explaining which you prefer and why. SECOND, on a new line, state only \"A\" or \"B\" to indicate your choice. Your response should use the format:\nComparison: <one-sentence comparison and explanation>\nPreferred: <\"A\" or \"B\">",
+    "where": "Appendix C.2"
+   },
+   {
+    "purpose": "GPT-4 dialogue win rate",
+    "text": "For the following query to a chatbot, which response is more helpful?\nQuery: <the user query>\nResponse A:\n<either the test method or baseline>\nResponse B:\n<the other response>\nFIRST provide a one-sentence comparison of the two responses and explain which you feel is more helpful. SECOND, on a new line, state only \"A\" or \"B\" to indicate which response is more helpful. Your response should use the format:\nComparison: <one-sentence comparison and explanation>\nMore helpful: <\"A\" or \"B\">",
+    "where": "Appendix C.2"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training.other.beta_default",
+    "quote": "For TL;DR summarization, we use β = 0.5, while rest of the parameters remain the same.",
+    "where": "Appendix B"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "DPO reaches about 61% GPT-4 win rate against reference summaries on TL;DR at temperature 0.0.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GPT-4 win rate",
+   "value": "61",
+   "unit": "%",
+   "baseline_value": "57",
+   "n": null,
+   "setup": "TL;DR test split, GPT-J 6B SFT, GPT-4 (C) prompt, DPO beta 0.5",
+   "quote": "We find that DPO has a win rate of approximately 61% at a",
+   "table": null,
+   "note": "Read from Fig 2 right; stated as approximate",
+   "where": "Section 6.2"
+  },
+  {
+   "claim": "PPO reaches 57% win rate at its best sampling temperature 0.0.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GPT-4 win rate",
+   "value": "57",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "TL;DR test split, same GPT-J SFT, PPO with learned reward",
+   "quote": "exceeding the performance of PPO at 57% at its optimal sampling temperature of 0.0.",
+   "table": null,
+   "note": null,
+   "where": "Section 6.2"
+  },
+  {
+   "claim": "In a head-to-head human evaluation DPO (temp 0.25) samples were preferred over PPO (temp 0) samples.",
+   "kind": "measured",
+   "source": null,
+   "metric": "human preference rate",
+   "value": "58",
+   "unit": "%",
+   "baseline_value": null,
+   "n": "272 respondents (Table 2)",
+   "setup": "TL;DR, DPO temp 0.25 vs PPO temp 0",
+   "quote": "preferred 58% times over PPO samples at temperature 0.",
+   "table": "Table 2, row Human win %, column DPO",
+   "note": null,
+   "where": "Section 6.2, Table 2"
+  },
+  {
+   "claim": "On the sentiment task DPO gives the most efficient reward-KL frontier, beating PPO even when PPO has ground-truth reward.",
+   "kind": "measured",
+   "source": null,
+   "metric": "reward vs KL frontier",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": "22 runs",
+   "setup": "IMDb, GPT-2-large, 22-run hyperparameter sweep, true reward from sentiment classifier",
+   "quote": "This sweep includes 22 runs in total.",
+   "table": null,
+   "note": "Frontier is a plot (Fig 2 left); no numeric value in text",
+   "where": "Section 6.1"
+  },
+  {
+   "claim": "DPO out-of-distribution on CNN/DailyMail beats PPO: win rate vs ground-truth summaries at temp 0.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GPT-4 win rate",
+   "value": "0.36",
+   "unit": "fraction",
+   "baseline_value": "0.26",
+   "n": null,
+   "setup": "Policies trained on Reddit TL;DR, evaluated on CNN/DailyMail test, GPT-4 (C) prompt",
+   "quote": null,
+   "table": "Table 1, row DPO column Temp 0 (0.36; Temp 0.25 0.31) vs row PPO (0.26; 0.23)",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "GPT-4 (C) win rate for DPO vs greedy PPO is 54% against 58% for humans; GPT-4 agrees with humans about as often as humans agree with each other (DPO comparison: GPT-4(C)-human 67, human-human 65).",
+   "kind": "measured",
+   "source": null,
+   "metric": "win rate and agreement",
+   "value": "54",
+   "unit": "%",
+   "baseline_value": "58",
+   "n": "272 respondents",
+   "setup": "TL;DR, DPO temp 0.25 vs PPO temp 0",
+   "quote": null,
+   "table": "Table 2, row GPT-4 (C) win %, column DPO (54); Human win % (58); GPT-4 (C)-H agree (67); H-H agree (65)",
+   "note": "Table 2 other columns: SFT 32/43 (C/human), PPO-1 12/17",
+   "where": "Table 2"
+  },
+  {
+   "claim": "On Anthropic-HH dialogue DPO is the only computationally efficient method that improves over the dataset's preferred completions; Best of N plateaus at roughly 64-128 samples.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Best of N plateau",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Pythia-2.8B, HH one-step test subset, GPT-4 win rate vs chosen",
+   "quote": "Performance plateaus after roughly 64-128 samples.",
+   "table": null,
+   "note": "Win rates are shown only in Fig 3",
+   "where": "Section 6.2, Fig 4"
+  },
+  {
+   "claim": "A public PPO-trained HH model gave no prompt or temperature better than base Pythia-2.8B.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "reciprocate/ppo_hh_pythia-6B on Anthropic-HH",
+   "quote": null,
+   "table": null,
+   "note": "Authors therefore treat Best of 128 as a rough proxy for PPO-level performance",
+   "where": "Section 6.2"
+  },
+  {
+   "claim": "Unlikelihood training produces meaningless text on summarization and dialogue (repeated tokens), so it is only a sentiment baseline.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "TL;DR samples at temperature 1.0",
+   "quote": "unlikelihood fails to generate meaningful responses for more complex problems such as summarization and dialogue.",
+   "table": null,
+   "note": null,
+   "where": "Appendix C.3, Table 3"
+  },
+  {
+   "claim": "A naive objective without the per-example weight degenerates the model; the gradient weights examples by how wrongly the implicit reward orders the pair.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Section 4 gradient analysis",
+   "quote": "a naïve version of this method without the weighting coefficient can cause the language model to degenerate (Appendix Table 3)",
+   "table": null,
+   "note": "Evidence is the unlikelihood samples, not a separate ablation",
+   "where": "Section 4"
+  },
+  {
+   "claim": "DPO samples can be verbose and hallucinate; GPT-4 sometimes judges wrongly (7 plus 2 example).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Anthropic-HH examples, Tables 9 and 10",
+   "quote": null,
+   "table": null,
+   "note": "Qualitative",
+   "where": "Appendix D.2"
+  }
+ ],
+ "limits": [
+  "Models only up to 6B parameters; scaling to much larger models untested",
+  "Out-of-distribution generalisation evidence is initial (one CNN/DailyMail test)",
+  "Whether reward over-optimisation occurs under DPO is open; the slight decline in Fig 3 right may be an instance",
+  "GPT-4 win rates depend on the prompt (S prefers longer summaries than humans)",
+  "DPO beta barely tuned (authors say results may underestimate DPO)",
+  "No multiple seeds or significance tests; compute and hardware not stated",
+  "PPO baselines on TL;DR/HH rely on authors' tuning and a public checkpoint, so baseline strength is uncertain",
+  "Preference data assumed sampled from pi_SFT; otherwise pi_ref is approximated by max-likelihood on preferred completions"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Bradley-Terry model",
+   "definition": "p*(y1 > y2|x) = exp(r*(x,y1)) / (exp(r*(x,y1)) + exp(r*(x,y2)))",
+   "where": "Section 3, Eq 1"
+  },
+  {
+   "term": "implicit reward",
+   "definition": "r_hat_theta(x,y) = beta log pi_theta(y|x)/pi_ref(y|x), the reward implicitly defined by the language model and reference model",
+   "where": "Section 4"
+  },
+  {
+   "term": "reward equivalence class",
+   "definition": "Two reward functions are equivalent iff r(x,y) - r'(x,y) = f(x) for some function f",
+   "where": "Section 5.1, Definition 1"
+  },
+  {
+   "term": "Best of N",
+   "definition": "Sample N responses from the SFT (or Preferred-FT) model and return the highest-scoring under a learned reward function",
+   "where": "Section 6"
+  },
+  {
+   "term": "Preferred-FT",
+   "definition": "A model fine-tuned with supervised learning on the chosen completion yw",
+   "where": "Section 6"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Fine-tuning language models from human preferences",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Ziegler et al.; RLHF pipeline DPO replaces",
+   "quote": null
+  },
+  {
+   "work": "Learning to summarize from human feedback",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Stiennon et al.; TL;DR preferences and PPO pipeline",
+   "quote": null
+  },
+  {
+   "work": "Training a helpful and harmless assistant with RLHF",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Bai et al.; Anthropic-HH",
+   "quote": null
+  },
+  {
+   "work": "Training language models to follow instructions with human feedback",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Ouyang et al.; PPO RLHF",
+   "quote": null
+  },
+  {
+   "work": "Proximal policy optimization algorithms",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "PPO",
+   "quote": null
+  },
+  {
+   "work": "Rank analysis of incomplete block designs (Bradley-Terry)",
+   "year": 1952,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Preference model",
+   "quote": null
+  },
+  {
+   "work": "Generalized results for the existence and consistency of the MLE in the Bradley-Terry-Luce model",
+   "year": 2022,
+   "arxiv": "2110.11487",
+   "relation": "uses-method",
+   "note": "Consistency of BT MLE",
+   "quote": null
+  },
+  {
+   "work": "Advantage-weighted regression",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Peng et al.; closed-form KL-constrained optimum",
+   "quote": null
+  },
+  {
+   "work": "Unlikelihood training",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Welleck et al. [46]",
+   "quote": null
+  },
+  {
+   "work": "Deep reinforcement learning from human preferences",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Christiano et al.",
+   "quote": null
+  },
+  {
+   "work": "Constitutional AI",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Bai et al.; RLAIF",
+   "quote": null
+  },
+  {
+   "work": "Pythia",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "Pythia-2.8B base",
+   "quote": null
+  },
+  {
+   "work": "GPT-J-6B",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "Wang and Komatsuzaki",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "DPO optimizes for human preferences while avoiding reinforcement learning.",
+   "page": 2,
+   "why": "Side-by-side of RLHF (reward model then RL) versus DPO (single classification loss)"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Left: frontier of expected reward vs KL to the reference policy. Right: TL;DR summarization win rates vs human-written summaries, GPT-4 evaluator.",
+   "page": 7,
+   "why": "Main evidence: DPO frontier dominates and is robust to sampling temperature"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Left: GPT-4 win rates for Anthropic-HH one-step dialogue. Right: win rates across sampling temperatures over training.",
+   "page": 8,
+   "why": "Shows DPO beats chosen responses and converges quickly"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Best of N baseline for N = {1, 4, 16, 64, 128}. Performance plateaus after roughly 64-128 samples.",
+   "page": 23,
+   "why": "Justifies Best of 128 as the comparison"
+  }
+ ],
+ "code": [
+  {
+   "where": "Appendix B",
+   "snippet": "losses = -F.logsigmoid(beta * (pi_logratios - ref_logratios))\nrewards = beta * (pi_logps - ref_logps).detach()",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "No embedded instructions found.",
+  "Layout garbling in the code listing and equations; math read from structure",
+  "Appendix B code docstring says pi_logps shape (B,) etc.; 'ref_yw_logps' lines split by extraction"
+ ]
+}

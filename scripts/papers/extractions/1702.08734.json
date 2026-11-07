@@ -1,19 +1,560 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "1702.08734",
  "pdf": "generative-ai/02-rag-retrieval/sources/johnson-2019-billion-scale-similarity-search-gpus.pdf",
  "bib": {
-  "title": "Billion-Scale Similarity Search with GPUs",
+  "title": "Billion-scale similarity search with GPUs",
+  "authors": [
+   "Jeff Johnson",
+   "Matthijs Douze",
+   "Hervé Jégou"
+  ],
   "first_author": "Johnson",
-  "year": 2019,
-  "venue": "IEEE Trans. Big Data 2021",
+  "year": 2017,
+  "venue": "preprint (arXiv:1702.08734v1 [cs.CV], 28 Feb 2017); published as IEEE Trans. Big Data 2021",
   "arxiv": "1702.08734",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-04",
-  "session": "5f2f0582-f958-4d9c-8469-02f3d5079657"
+  "at": "2026-11-07",
+  "chars_read": 66186,
+  "chars_total": 66186,
+  "engine": "pymupdf",
+  "skipped": null
  },
- "legacy_report": "SOURCE: \"Billion-scale similarity search with GPUs\", Jeff Johnson, Matthijs Douze, Hervé Jégou (Facebook AI Research). The PDF file is arXiv 1702.08734v1 [cs.CV], dated 28 Feb 2017. It is not the IEEE Trans. Big Data 2021 version. The filename says 2019. Cite it as the arXiv v1 text, or check that the journal version has the same numbers.\n\nCOVERAGE: I read all 65,938 of 65,938 characters across pages 1–12. That covers the body, Sections 1–7, the references and the Appendix (the WarpSelect complexity derivation). I skipped nothing. I skimmed the references only for where methods come from.\n\nCLAIMS\n- claim: IVFADC is a two-level quantization. A coarse quantizer q1 assigns each vector to one inverted list, and a fine product quantizer q2 encodes the residual. At search time, only the τ lists closest to the query are scanned.\n  number: none\n  setup: the indexing structure used throughout the paper (from Jégou et al. 2011)\n  quote: \"y≈q(y) =q1(y) +q2(y−q1(y))\" ... \"The multi-probe parameter τ is the number of coarse-level centroids we consider.\" ... \"boils down to linearly scanning τ inverted lists.\"\n  where: p2, about chars 7,500–9,500\n- claim: Rule of thumb for list count: the number of coarse centroids is about the square root of the database size, trained with k-means. PQ codes shorter than the stored ID make no sense.\n  number: |C1|≈√ℓ; ID 4 or 8 bytes\n  setup: general design guidance\n  quote: \"We typically use |C1|≈ √𝓁, trained via k-means.\" / \"The ID of the vector (a 4- or 8-byte integer) is also stored in the inverted lists, so it makes no sense to have shorter codes than that\"\n  where: p2\n- claim: A product quantizer splits a vector into b sub-vectors, each quantized to one of 256 centroids. The result is a b-byte code with 256^b reproduction values.\n  number: 256 per sub-quantizer; b bytes\n  setup: general\n  quote: \"The sub-quantizers typically have 256 reproduction values, to fit in one byte.\" ... \"the product quantizer generates b-byte codes with |C2| = 256 b reproduction values.\"\n  where: p2–3. The extraction drops the superscript, so \"256 b\" means 256^b.\n- claim: PQ is fast because of lookup tables. You precompute 256 distances per sub-quantizer, and each database distance then becomes b lookups and adds instead of d multiply-adds.\n  number: 256×d multiply-adds + n×b lookup-adds vs n×d\n  setup: per query, per inverted list\n  quote: \"Explicit computation: n×d mutiply-adds; • With lookup tables: 256 ×d multiply-adds and n×b lookup-adds. This is the key to the efficiency of the product quantizer.\"\n  where: p6, Section 5.2\n- claim: Speed/recall on SIFT1M: at the same time budget as the prior GPU method, FAISS gets much higher recall.\n  number: R@1 0.80 vs 0.51; R@100 0.95 vs 0.86; 0.02 ms/query\n  setup: SIFT1M, Titan X, compared with Wieschollek et al. 2016\n  quote: \"They obtain a nearest neighbor recall at 1 (fraction of queries where the true nearest neighbor is in the top 1 result) of R@1 = 0.51, and R@100 = 0.86 in 0.02 ms per query on a Titan X. For the same time budget, our implementation obtains R@1 = 0.80 and R@100 = 0.95.\"\n  where: p9, Section 6.4\n- claim: At billion scale with 8-byte codes, it is slightly more accurate and 8.5× faster than the prior GPU state of the art.\n  number: R@10 0.376 at 17.7 µs vs 0.35 at 150 µs; 8.5×\n  setup: SIFT1B, nq=10^4, one GPU, m=8 bytes/vector, matched memory\n  quote: \"On a single GPU, with m = 8 bytes per vector, R@10 = 0.376 in 17.7µs per query vector, versus their reported R@10 = 0.35 in 150 µs per query vector. Thus, our implementation is more accurate at a speed 8.5× faster.\"\n  where: p9\n- claim: On Deep1B, OPQ plus IVFPQ sharded across 4 GPUs matches a CPU baseline's recall about 1,500× faster per query. The hardware differs.\n  number: R@1 0.4517 in 0.0133 ms vs 0.45 in 20 ms; 20 GB\n  setup: Deep1B, m=20, d=80 via OPQ, |C1|=2^18, 4 GPUs S=2 R=2; baseline is a 1-thread CPU\n  quote: \"R@1 = 0.45 in 20 ms search time per vector. We use a PQ encoding of m = 20, with d = 80 via OPQ [17], and|C1| = 218, which uses a comparable dataset storage as the original paper (20 GB).\" ... \"We obtain a R@1 = 0.4517 in 0.0133 ms per vector. While the hardware platforms are different\"\n  where: p9. \"218\" is 2^18, flattened in extraction.\n- claim: τ (nprobe) is the speed/quality knob. The authors sweep it from 1 to 256 for each code size.\n  number: τ 1–256; m = 16/32/64 (YFCC), 20/40 (Deep1B)\n  setup: k-NN graph construction, YFCC100M 95M images at d=128, |C1|=2^16; Deep1B with OPQ to d=120, |C1|=2^18\n  quote: \"For a given encoding, we vary τ from 1 to 256, to obtain trade-offs between efficiency and quality, as seen in Figure 5.\"\n  where: p9\n- claim: End-to-end k-NN graph build times.\n  number: >0.8 accuracy in 35 min (95M); 6 h low quality / about half a day high quality (1B)\n  setup: 10-NN, 4 Titan X (YFCC S=1 R=4); time includes indexing\n  quote: \"An accuracy of more than 0.8 is obtained in 35 minutes. For Deep1B, a lower-quality graph can be built in 6 hours, with higher quality in about half a day.\"\n  where: p10\n- claim: Adding GPUs gives less than linear speedup.\n  number: ~1.6× (m=20), ~1.7× (m=40) going from 4 to 8 GPUs\n  setup: Deep1B, 8 M40s\n  quote: \"Performance is improved sub-linearly (∼ 1.6× for m = 20,∼ 1.7× for m = 40).\"\n  where: p10\n- claim: Replication splits queries across GPUs. Sharding splits the database across GPUs and needs an extra k-selection merge, so it is usually slower than replication.\n  number: none\n  setup: multi-GPU\n  quote: \"sharding will yield a speedup ... but is usually less than pure replication due to fixed overhead and cost of subsequent k-selection.\"\n  where: p7, Section 5.4\n- claim: k-selection (WarpSelect) is the core contribution. It reaches 55% of peak memory bandwidth at k=100 but only 16% at k=1000.\n  number: 55% / 16%; 1.62× and 2.01× vs fgknn\n  setup: one Titan X, nq=10000, ℓ=128000, random floats\n  quote: \"W arpSelectis 1.62× faster atk = 100, 2.01× atk = 1000.\" / \"W arpSelectoperates at 55% of peak at k = 100 but only 16% of peak at k = 1000.\"\n  where: p8\n- claim: Exact brute-force search is a GEMM followed by a fused k-select. Fusing matters.\n  number: 85% of peak; ≥25% slower unfused; full sort >10× slower\n  setup: SIFT1M exact, 1 Titan X\n  quote: \"our method, which has 85 % of the peak possible performance\" / \"Our same exact algorithm without fusion (requiring an additional pass through D′) is at least 25% slower.\"\n  where: p8–9\n- claim: Exact GPU k-means is more than 2× faster than BIDMach and close to linear across 4 GPUs.\n  number: 140 s vs 320 s (256 centroids); 316 s vs 735 s (4096); 3.16× on 4 GPUs\n  setup: MNIST8m, 8.1M×784-d, 20 iterations\n  quote: \"Ours 1 140 s 316 s\" / \"(3.16× for 4 GPUs with 4096 centroids)\"\n  where: p8, Table 1\n- claim: The shared-memory lookup tables cap the number of PQ sub-quantizers.\n  number: b ≤ 48 (fp32) or 96 (fp16); b a multiple of 4 up to 64\n  setup: GPU architectures of the time\n  quote: \"This limits b to at most 48 (32-bit floating point) or 96 (16-bit floating point) with current architectures.\"\n  where: p6\n\nLIMITS\n- The paper is about GPUs and IVFADC only. It covers no graph indexes (HNSW is never mentioned), no LSH or binary-code baselines beyond prose dismissal, and no filtering, deletes or updates.\n- The authors say IMI, LOPQ and polysemous codes are \"too complex to be implemented efficiently on GPUs\". OPQ is used only as preprocessing.\n- The Deep1B comparison is GPU against 1-thread CPU: \"While the hardware platforms are different\".\n- The k-means benchmark is \"somewhat unrealistic, as one would typically sub-sample\".\n- WarpSelect falls to 16% of peak at large k. The fused IVF kernel helped \"at most 15%\" and was not adopted.\n- There is no full recall-vs-nprobe table. Figure 5 is a curve that the extraction does not preserve.\n- What has dated: Maxwell Titan X, CUDA 8.0, register and shared-memory limits from 2017, and k ≤ 1024.\n\nBUILDS ON: Jégou, Douze, Schmid 2011, product quantization / IVFADC [25]. Ge et al. 2014, OPQ [17]. Babenko & Lempitsky 2012, inverted multi-index [4]; 2014, bilayer PQ / table decomposition [5]; 2016, Deep1B [6]. Jégou et al. 2011, SIFT1B [26]. Batcher 1968, bitonic sorting [8]. Tang et al. 2015, fgknn merge queue [41]. Wieschollek et al. 2016, prior GPU ANN [47]. André et al. 2015, PQ fast scan [2]. Dong et al. 2011, NN-Descent [15].\n\nCODE: none. There are only pseudocode algorithms. Algorithm 4 \"IVFPQ batch search routine\" (p7) is the most useful for \"FAISS by hand\": coarse τ-argmin, then per-list distance tables, then lookup-sum, then k-select.\n\nFIGURES\n- Fig 5, p9: speed/accuracy trade-off of 10-NN graph construction for YFCC100M and DEEP1B. Shows recall against time as τ and code size vary, which explains the nprobe trade-off faster than prose. Axis text did not extract.\n- Fig 3, p8: k-selection runtimes against array length, compared with peak bandwidth.\n- Fig 4, p9: exact SIFT1M k-NN time against k, split into GEMM and k-select cost.\n- Figs 1, 2 (p4–5): sorting network and WarpSelect structure. These are GPU internals and of low value for the note.\n\nPROBLEMS\n- The file is arXiv v1 from 2017, not the 2019/2021 version named in the brief.\n- Extraction flattens superscripts: \"218\" is 2^18, \"216\" is 2^16, \"256 b\" is 256^b, \"106/104\" is 10^6/10^4.\n- All axis labels and data in Figures 3–5 came out as garbled glyphs, so I quoted no numbers from the plots.\n- There were no embedded instructions.\n- Path: /Users/ramsey-wise/workspace/learn-ai-engineering/generative-ai/02-rag-retrieval/sources/johnson-2019-billion-scale-similarity-search-gpus.pdf"
+ "type": "system",
+ "question": "How can similarity search (exact, IVFADC product-quantization, k-NN graph building) be made to use GPUs near peak throughput at billion-vector scale?",
+ "hypothesis": "Prior GPU approaches are bottlenecked by k-min selection and poor memory-hierarchy use; a register-resident k-selection fused with distance kernels removes this.",
+ "contributions": [
+  "a GPU k-selection algorithm, operating in fast register memory and flexible enough to be fusable with other kernels, for which we provide a complexity analysis",
+  "a near-optimal algorithmic layout for exact and approximate k-nearest neighbor search on GPU",
+  "a range of experiments that show that these improvements outperform previous art by a large margin on mid- to large-scale nearest-neighbor search tasks, in single or multi-GPU configurations"
+ ],
+ "method": {
+  "summary": "WarpSelect keeps k-selection state in GPU registers using odd-size merge/sort networks, fused with a cuBLAS GEMM-based L2 distance kernel for exact search. IVFADC (coarse k-means quantizer plus product quantizer on residuals) is implemented with PQ lookup tables in shared memory, multi-pass k-selection, and replication/sharding over GPUs. Evaluated on k-selection, k-means, exact and billion-scale approximate search, and k-NN graph construction.",
+  "task": "k-nearest-neighbour search under L2 distance on GPUs",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "MNIST8m",
+    "role": "eval",
+    "size": "8.1M images, 784-d",
+    "split": null,
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "Sift1M",
+    "role": "eval",
+    "size": "l=10^6, d=128, nq=10^4",
+    "split": null,
+    "source": "Jégou et al. 2011",
+    "preprocessing": null
+   },
+   {
+    "name": "Sift1B",
+    "role": "eval",
+    "size": "1 billion SIFT features, nq=10^4",
+    "split": null,
+    "source": "Jégou et al. 2011 (ICASSP)",
+    "preprocessing": null
+   },
+   {
+    "name": "Deep1B",
+    "role": "eval",
+    "size": "1 billion CNN image representations, nq=10^4",
+    "split": null,
+    "source": "Babenko and Lempitsky 2016",
+    "preprocessing": "OPQ to d=80 (search) or d=120 (graph)"
+   },
+   {
+    "name": "YFCC100M subset",
+    "role": "eval",
+    "size": "95 million images",
+    "split": "10,000 sampled images with exact neighbours for quality",
+    "source": "Thomee et al. 2016",
+    "preprocessing": "one-before-last layer of a ResNet, PCA to d=128"
+   }
+  ],
+  "models": [
+   {
+    "name": "WarpSelect + IVFADC GPU implementation (Faiss)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "IVFADC: |C1|~sqrt(l) coarse centroids by k-means; PQ with 256 centroids per sub-quantizer; b a multiple of 4 up to 64 in GPU implementation",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Wieschollek et al. GPU PQ",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "fgknn, TBiS, BIDMach",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "not stated: single timing runs reported, no repeats or variance",
+   "prompting": null,
+   "retrieval": "IVFADC multi-probe tau from 1 to 256 in graph experiments; Sift1B m=8 bytes; Deep1B m=20, |C1|=2^18, d=80 via OPQ; YFCC100M |C1|=2^16 and m=16,32,64; Deep1B graph |C1|=2^18, m=20,40, d=120; k-selection k<=1024",
+   "parameters": {
+    "WarpSelect thread queue t": "t=2 (k<=32), 3 (k<=128), 4 (k<=256), 8 (k<=1024)",
+    "multi-GPU": "Deep1B S=2,R=2; YFCC100M S=1,R=4; also 8 Maxwell M40",
+    "k-selection benchmark": "nq=10000, k=100 and 1000, l from 1000 to 128000, 32-bit floats",
+    "k-means": "20 iterations",
+    "tau for Sift1B/Sift1M": null
+   },
+   "other": {
+    "hardware": "2x2.8GHz Intel Xeon E5-2680v2 with 4 Maxwell Titan X GPUs, CUDA 8.0",
+    "limits_on_b": "b limited to at most 48 (fp32) or 96 (fp16) by shared memory for lookup tables"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "R@1 / R@10 / R@100",
+     "definition": "fraction of queries where the true nearest neighbor is in the top 1 (resp. 10, 100) results",
+     "unit": "fraction",
+     "higher_is_better": true
+    },
+    {
+     "name": "time per query",
+     "definition": "search time per query vector",
+     "unit": "us or ms",
+     "higher_is_better": false
+    },
+    {
+     "name": "k-NN graph accuracy",
+     "definition": "fraction of the 10 found nearest neighbors within the ground-truth 10 nearest neighbors, on 10,000 sampled images",
+     "unit": "fraction",
+     "higher_is_better": true
+    },
+    {
+     "name": "fraction of peak",
+     "definition": "measured throughput vs memory-bandwidth limit of the Titan X",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Wieschollek et al. 2016 (GPU PQ)",
+    "fgknn (Tang et al. 2015)",
+    "Truncated Bitonic Sort (Sismanis et al. 2012)",
+    "BIDMach k-means",
+    "Avrithis et al. 2015 CPU clustering",
+    "Babenko and Lempitsky 2016 CPU result on Deep1B"
+   ],
+   "protocol": "Single timing per configuration; Wieschollek and Deep1B CPU numbers are as reported by their authors, on different hardware. No seeds or variance."
+  },
+  "availability": {
+   "code": "https://github.com/facebookresearch/faiss",
+   "weights": null,
+   "data": "public datasets"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "On SIFT1B with 8-byte codes, recall R@10 is 0.376 at 17.7 us per query on one GPU.",
+   "kind": "measured",
+   "source": null,
+   "metric": "R@10",
+   "value": "0.376",
+   "unit": "R@10",
+   "baseline_value": "0.35 (Wieschollek et al., 150 us per query)",
+   "n": null,
+   "setup": "Sift1B (1 billion SIFT features), nq=10^4 queries, 1 Maxwell Titan X GPU, IVFADC with m=8 bytes per vector; baseline is Wieschollek et al. as reported, matched on memory",
+   "note": null,
+   "where": "Sec 6.4",
+   "quote": "R@10 = 0.376 in 17.7 µs per query vector"
+  },
+  {
+   "claim": "Same SIFT1B setting: 8.5x faster than Wieschollek et al. at higher recall.",
+   "kind": "measured",
+   "source": null,
+   "metric": "speed",
+   "value": "8.5",
+   "unit": "x speedup",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Sift1B (1 billion SIFT features), nq=10^4 queries, 1 Maxwell Titan X GPU, IVFADC with m=8 bytes per vector; baseline is Wieschollek et al. as reported, matched on memory",
+   "note": "Abstract states '8.5× faster than prior GPU state of the art'; 150/17.7 = 8.5.",
+   "where": "Sec 6.4",
+   "quote": "more accurate at a speed 8.5× faster"
+  },
+  {
+   "claim": "On SIFT1M at the same time budget (0.02 ms per query, Titan X), R@1 is 0.80 vs 0.51 for Wieschollek et al.",
+   "kind": "measured",
+   "source": null,
+   "metric": "R@1",
+   "value": "0.80",
+   "unit": "R@1",
+   "baseline_value": "0.51 (R@100 0.86)",
+   "n": null,
+   "setup": "Sift1M, Titan X, 0.02 ms per query; R@1 = fraction of queries whose true NN is in the top 1",
+   "note": null,
+   "where": "Sec 6.4",
+   "quote": "our implementation obtains R@1 = 0.80 and R@100 = 0.95"
+  },
+  {
+   "claim": "On Deep1B, IVFADC on 4 GPUs reaches R@1 0.4517 in 0.0133 ms per vector, vs a CPU result of 0.45 in 20 ms.",
+   "kind": "measured",
+   "source": null,
+   "metric": "R@1",
+   "value": "0.4517",
+   "unit": "R@1",
+   "baseline_value": "0.45 at 20 ms (CPU, 1 thread)",
+   "n": null,
+   "setup": "Deep1B (1B CNN vectors), nq=10^4, PQ m=20 with d=80 via OPQ, |C1|=2^18, 20 GB, 4 GPUs with S=2, R=2; CPU baseline is 1 thread from the dataset paper, different hardware",
+   "note": null,
+   "where": "Sec 6.4",
+   "quote": "We obtain a R@1 = 0.4517 in 0.0133 ms per vector"
+  },
+  {
+   "claim": "WarpSelect runs at 55% of peak memory-bandwidth performance at k=100 but 16% at k=1000.",
+   "kind": "measured",
+   "source": null,
+   "metric": "fraction of peak",
+   "value": "55",
+   "unit": "% of peak",
+   "baseline_value": null,
+   "n": null,
+   "setup": "k-selection on random 32-bit floats, nq=10000 arrays, l=128000, one Titan X",
+   "note": null,
+   "where": "Sec 6.1",
+   "quote": "WarpSelect operates at 55% of peak at k = 100 but only 16% of peak at k = 1000"
+  },
+  {
+   "claim": "WarpSelect is 1.62x faster than the best compared k-selection at k=100 and 2.01x at k=1000.",
+   "kind": "measured",
+   "source": null,
+   "metric": "runtime ratio",
+   "value": "1.62",
+   "unit": "x speedup (k=100); 2.01 at k=1000",
+   "baseline_value": null,
+   "n": null,
+   "setup": "l=128000, nq=10000, Titan X; compared with fgknn (Tang et al.) and TBiS (Sismanis et al.)",
+   "note": "Text says 'relative performance of WarpSelect over fgknn', so the baseline is fgknn.",
+   "where": "Sec 6.1",
+   "quote": "WarpSelect is 1.62× faster at k = 100, 2.01× at k = 1000"
+  },
+  {
+   "claim": "Exact k-means on MNIST8m (256 centroids, 20 iterations) takes 140 s on one GPU vs 320 s for BIDMach.",
+   "kind": "measured",
+   "source": null,
+   "metric": "k-means time",
+   "value": "140",
+   "unit": "s",
+   "baseline_value": "320 s (BIDMach, 1 GPU)",
+   "n": null,
+   "setup": "MNIST8m, 8.1M x 784-d, 20 iterations, 1 Titan X; 4 GPUs: 84 s (256) and 100 s (4096 centroids)",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Ours 1 GPU, column 256 centroids"
+  },
+  {
+   "claim": "Replicating over 4 GPUs gives 3.16x speedup for k-means with 4096 centroids.",
+   "kind": "measured",
+   "source": null,
+   "metric": "speedup",
+   "value": "3.16",
+   "unit": "x speedup",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MNIST8m k-means, 4096 centroids",
+   "note": null,
+   "where": "Sec 6.2",
+   "quote": "3.16× for 4 GPUs with 4096 centroids"
+  },
+  {
+   "claim": "Exact search on SIFT1M reaches 85% of peak possible performance; removing the fused L2/k-selection kernel is at least 25% slower.",
+   "kind": "measured",
+   "source": null,
+   "metric": "fraction of peak",
+   "value": "85",
+   "unit": "% of peak",
+   "baseline_value": null,
+   "n": null,
+   "setup": "SIFT1M, l=10^6, d=128, nq=10^4, 1 Titan X, varying k",
+   "note": "The 25% slowdown without fusion is stated as 'at least 25% slower'.",
+   "where": "Sec 6.3",
+   "quote": "which has 85 % of the peak possible"
+  },
+  {
+   "claim": "A k-NN graph (k=10) on 95M YFCC100M images with accuracy above 0.8 is built in 35 minutes on 4 Titan X GPUs.",
+   "kind": "measured",
+   "source": null,
+   "metric": "graph build time",
+   "value": "35",
+   "unit": "minutes",
+   "baseline_value": null,
+   "n": null,
+   "setup": "YFCC100M 95M images, ResNet descriptors PCA to d=128, |C1|=2^16, S=1 R=4; end-to-end including index build; accuracy = fraction of 10 found NN within true 10 NN on 10,000 sampled images",
+   "note": null,
+   "where": "Sec 6.5",
+   "quote": "An accuracy of more than 0.8 is obtained in 35 minutes"
+  },
+  {
+   "claim": "A Deep1B k-NN graph takes about 6 hours at lower quality and about half a day at higher quality.",
+   "kind": "measured",
+   "source": null,
+   "metric": "graph build time",
+   "value": "6",
+   "unit": "hours",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Deep1B, d=120 via OPQ, |C1|=2^18, m=20 or 40, 4 GPUs",
+   "note": null,
+   "where": "Sec 6.5",
+   "quote": "a lower-quality graph can be built in 6 hours"
+  },
+  {
+   "claim": "Exact k-means of 10^8 128-d vectors to 85k centroids takes 52 minutes on 4 GPUs, against 46 min plus at least 56 min preprocessing for an approximate CPU method.",
+   "kind": "measured",
+   "source": null,
+   "metric": "time",
+   "value": "52",
+   "unit": "minutes",
+   "baseline_value": "46 min + >=56 min preprocessing (CPU, approximate)",
+   "n": null,
+   "setup": "vs Avrithis et al. [3]",
+   "note": null,
+   "where": "Sec 6.2",
+   "quote": "Our method performs exact k-means on 4 GPUs in 52 minutes"
+  },
+  {
+   "claim": "Fused distance-and-scan kernel for IVFADC improves timing by at most 15%, so the authors do not use it.",
+   "kind": "measured",
+   "source": null,
+   "metric": "timing improvement",
+   "value": "15",
+   "unit": "% at most",
+   "baseline_value": null,
+   "n": null,
+   "setup": "IVFADC list scanning design choice",
+   "note": null,
+   "where": "Sec 5.3",
+   "quote": "Timing for the fused kernel is improved by at most 15%"
+  },
+  {
+   "claim": "Thread queue length t is chosen by experiment: t=2 for k<=32, 3 for k<=128, 4 for k<=256, 8 for k<=1024.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "WarpSelect, all irrespective of l",
+   "note": null,
+   "where": "Sec 4.3",
+   "quote": "k ≤1024 uses t = 8"
+  },
+  {
+   "claim": "Rule of thumb: number of coarse centroids |C1| is about sqrt(l), trained by k-means.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "design guidance, IVFADC",
+   "note": null,
+   "where": "Sec 2",
+   "quote": "trained via k-means"
+  }
+ ],
+ "limits": [
+  "Compared numbers for Wieschollek et al. and the Deep1B CPU baseline are taken from those papers' reports, on different hardware.",
+  "No variance, repeats or seeds are reported.",
+  "Only exact search and IVFADC are covered; graph indexes, filtering, updates and deletes are not tested.",
+  "Authors concede GWarpSelect efficiency drops at large k (16% of peak at k=1000) and that the k-means benchmark is somewhat unrealistic.",
+  "The PDF is the arXiv v1 text (2017), not the 2021 journal version; Maxwell-era GPUs and CUDA 8 are dated.",
+  "IVFADC parameters for Sift1B (|C1|, tau) are not stated."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "IVFADC",
+   "definition": "Two-level quantization: coarse quantizer q1 plus product quantizer q2 on the residual, with search over tau inverted lists",
+   "where": "Sec 2"
+  },
+  {
+   "term": "multi-probe parameter tau",
+   "definition": "the number of coarse-level centroids we consider",
+   "where": "Sec 2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Product quantization for nearest neighbor search (Jégou, Douze, Schmid)",
+   "year": 2011,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "IVFADC indexing implemented on GPU",
+   "quote": null
+  },
+  {
+   "work": "Efficient large-scale approximate nearest neighbor search on the GPU (Wieschollek et al.)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "prior GPU state of the art",
+   "quote": null
+  },
+  {
+   "work": "Efficient selection algorithm for fast k-NN search on GPUs (Tang et al., fgknn)",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "k-selection baseline and inspiration for parallel merges",
+   "quote": null
+  },
+  {
+   "work": "Parallel search of k-nearest neighbors with synchronous operations (Sismanis et al.)",
+   "year": 2012,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "TBiS",
+   "quote": null
+  },
+  {
+   "work": "BIDMach (Canny and Zhao)",
+   "year": 2013,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "GPU k-means",
+   "quote": null
+  },
+  {
+   "work": "Optimized product quantization (Ge et al.)",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "OPQ preprocessing on Deep1B",
+   "quote": null
+  },
+  {
+   "work": "Batcher, Sorting networks",
+   "year": 1968,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "bitonic sort variant",
+   "quote": null
+  },
+  {
+   "work": "Babenko and Lempitsky, Improving bilayer product quantization",
+   "year": 2014,
+   "arxiv": "1404.1831",
+   "relation": "uses-method",
+   "note": "lookup table decomposition",
+   "quote": null
+  },
+  {
+   "work": "NN-Descent (Dong et al.)",
+   "year": 2011,
+   "arxiv": null,
+   "relation": "related",
+   "note": "CPU k-NN graph method with large memory overhead",
+   "quote": null
+  },
+  {
+   "work": "Deep1B (Babenko and Lempitsky)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "Sift1M/Sift1B (Jégou et al.)",
+   "year": 2011,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "YFCC100M (Thomee et al.)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "MNIST8m",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "Overview of WarpSelect. The input values stream in on the left, and the warp queue on the right holds the output result.",
+   "page": 5,
+   "why": "shows thread queues, merging network and warp queue"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Runtimes for different k-selection methods, as a function of array length l. nq = 10000. k = 100 full lines, k = 1000 dashed.",
+   "page": 8,
+   "why": "k-selection comparison against peak"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Speed/accuracy trade-off of brute-force 10-NN graph construction for the YFCC100M and DEEP1B datasets.",
+   "page": 9,
+   "why": "tau sweep trade-off by code size"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 7-11, Sec 5.2",
+   "snippet": "Explicit computation: n x d multiply-adds; with lookup tables: 256 x d multiply-adds and n x b lookup-adds.",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Superscripts (e.g. 256^b, 2^18) are flattened by text extraction.",
+  "Figure and plot contents are not in the text; Fig 3-5 values are not recorded."
+ ]
 }

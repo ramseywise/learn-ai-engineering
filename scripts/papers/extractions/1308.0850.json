@@ -1,0 +1,507 @@
+{
+ "schema": 1,
+ "key": "1308.0850",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/graves-2013-generating-sequences-recurrent-neural-networks.pdf",
+ "bib": {
+  "title": "Generating Sequences With Recurrent Neural Networks",
+  "authors": [
+   "Alex Graves"
+  ],
+  "first_author": "Graves",
+  "year": 2013,
+  "venue": "preprint (arXiv:1308.0850v5, 5 Jun 2014)",
+  "arxiv": "1308.0850",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 91711,
+  "chars_total": 91711,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can stacked LSTM networks generate complex sequences with long-range structure, for discrete text and real-valued handwriting, by next-step prediction, and be conditioned on a text string whose alignment is unknown?",
+ "hypothesis": "A better memory (LSTM) is a more effective route to stable, long-range-coherent sequence generation than injecting noise into predictions.",
+ "contributions": [
+  "Deep stacked LSTM prediction network with skip connections, trained for next-step prediction on text (word and character level) and handwriting",
+  "Mixture density output layer for real-valued pen traces",
+  "A soft-window convolutional mechanism letting a recurrent network condition on a character string with unknown alignment (handwriting synthesis)",
+  "Probability-biased sampling and primed sampling for legibility and style mimicry"
+ ],
+ "method": {
+  "summary": "Stacked LSTM RNN with input-to-hidden and hidden-to-output skip connections trained by BPTT to predict the next input. Softmax outputs for text, mixture-of-bivariate-Gaussians plus Bernoulli outputs for pen offsets. For synthesis a Gaussian-mixture soft window over the one-hot text is output by hidden layer 1 and fed back to all layers.",
+  "task": "next-step sequence prediction and generation (text, online handwriting), conditional handwriting synthesis",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Penn Treebank (WSJ)",
+    "role": "both",
+    "size": "930,000 train / 74,000 validation / 82,000 test words",
+    "split": "standard",
+    "source": "Marcus et al. 1993",
+    "preprocessing": "vocabulary limited to 10,000 words, rest mapped to unknown token; end-of-sentence token included in input and loss; start-of-sentence ignored"
+   },
+   {
+    "name": "Hutter Prize Wikipedia (enwik8)",
+    "role": "both",
+    "size": "first 100 million bytes; 96M train, 4M validation",
+    "split": "first 96M bytes split into sequences of 100 bytes; remaining 4M validation",
+    "source": "English Wikipedia, 3 March 2006",
+    "preprocessing": "205 one-byte symbols, predicted one byte at a time; sequences not shuffled"
+   },
+   {
+    "name": "IAM-OnDB",
+    "role": "both",
+    "size": "5364 / 1438 / 1518 / 3859 lines (train / val1 / val2 / test) from 775 / 192 / 216 / 544 forms",
+    "split": "train + test + larger validation set used for training; smaller validation set for early stopping; no independent test set",
+    "source": "Liwicki and Bunke 2005",
+    "preprocessing": "each line one sequence; x,y offsets normalised to mean 0 std 1; inputs size 3 (dx, dy, end-of-stroke); synthesis uses 57 characters (80 reduced, digits and most punctuation mapped to non-letter)"
+   }
+  ],
+  "models": [
+   {
+    "name": "Char LSTM, Penn",
+    "role": "proposed",
+    "params": "approx 4.3M weights",
+    "architecture": "1 hidden layer LSTM",
+    "init_from": null,
+    "tokenizer": "characters",
+    "vocab": "49",
+    "layers": "1",
+    "hidden": "1000 LSTM units",
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Word LSTM, Penn",
+    "role": "proposed",
+    "params": "around 54M weights",
+    "architecture": "1 hidden layer LSTM",
+    "init_from": null,
+    "tokenizer": "words",
+    "vocab": "10,000",
+    "layers": "1",
+    "hidden": "1000 LSTM units",
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Byte LSTM, Wikipedia",
+    "role": "proposed",
+    "params": "approx 21.3M weights",
+    "architecture": "stacked LSTM",
+    "init_from": null,
+    "tokenizer": "bytes",
+    "vocab": "205",
+    "layers": "7",
+    "hidden": "700 LSTM cells per layer",
+    "heads": null,
+    "context": "state reset every 100 sequences (up to 10K characters of history); gradient truncated to 100 bytes",
+    "other": {}
+   },
+   {
+    "name": "Handwriting prediction net",
+    "role": "proposed",
+    "params": "approx 3.4M weights",
+    "architecture": "stacked LSTM + 20-component bivariate Gaussian mixture density output",
+    "init_from": "3-layer retrained with adaptive weight noise (std init 0.075)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "3 x 400 LSTM (or 1 x 900 compared)",
+    "hidden": "400",
+    "heads": null,
+    "context": "lines average about 700 timesteps",
+    "other": {
+     "output_layer": "121 (20 weights, 40 means, 40 std devs, 20 correlations, 1 end-of-stroke)",
+     "input_layer": "3"
+    }
+   },
+   {
+    "name": "Handwriting synthesis net",
+    "role": "proposed",
+    "params": "approx 3.7M weights",
+    "architecture": "3-layer LSTM with soft window layer",
+    "init_from": null,
+    "tokenizer": "one-hot over 57 characters",
+    "vocab": "57",
+    "layers": "3",
+    "hidden": "400 LSTM cells each",
+    "heads": null,
+    "context": null,
+    "other": {
+     "window": "10 Gaussians, size 30 parameter vector, window vector size 57",
+     "mixture": "20 bivariate Gaussians"
+    }
+   }
+  ],
+  "training": {
+   "objective": "negative log likelihood of next input, L(x) = -sum log Pr(x_{t+1}|y_t); BPTT",
+   "optimizer": "Penn and Wikipedia: SGD with momentum (0.99 Penn, 0.9 Wikipedia); handwriting: rmsprop variant (decay 0.95, momentum 0.9, lr 0.0001, epsilon 0.0001)",
+   "lr": "0.0001 (all)",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": "Penn char 9 (none) / 25 (weight noise) / 26 (adaptive); word 11 / 14; Wikipedia: four epochs to converge",
+   "tokens": null,
+   "seq_len": "Wikipedia 100 bytes; handwriting full lines",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "Penn: weight noise std 0.075 per training sequence, or adaptive weight noise (Graves 2011), each initialised from the previous less regularised network; handwriting: adaptive weight noise init std 0.075 (fixed-variance weight noise ineffective)",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "gradient_clipping": "Penn/Wikipedia: LSTM derivatives clipped to [-1,1]; handwriting: output derivatives [-100,100], LSTM derivatives [-10,10]",
+    "dynamic_evaluation": "weights adapt while the test data is predicted, seen once",
+    "rmsprop_eq": "Eqs 38-41 with decay 0.95, momentum 0.9, lr 0.0001, epsilon 0.0001"
+   }
+  },
+  "inference": {
+   "decoding": "ancestral sampling from the output distribution, fed back as next input; optional probability-biased sampling",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": "samples 700 timesteps for prediction network (Fig 11); synthesis stops when phi(t,U+1) > phi(t,u) for all u<=U",
+   "samples": null,
+   "prompting": "primed sampling: clamp inputs to a real sequence for first T steps with character string c'=c+s",
+   "retrieval": null,
+   "parameters": {
+    "probability_bias_b": "sigma=exp(sigma_hat - b), pi proportional to exp(pi_hat (1+b)); b=0 is unbiased; 0.15 'slight bias'; 1 used with priming (Figs 20-21)"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "bits-per-character",
+     "definition": "average -log2 Pr(x_{t+1}|y_t) over the test set",
+     "unit": "bits",
+     "higher_is_better": false
+    },
+    {
+     "name": "perplexity",
+     "definition": "2 to the power of the average bits per word; approx 25.6^BPC for Penn",
+     "unit": "perplexity",
+     "higher_is_better": false
+    },
+    {
+     "name": "Log-Loss",
+     "definition": "mean of L(x) per sequence for handwriting",
+     "unit": "nats",
+     "higher_is_better": false
+    },
+    {
+     "name": "SSE",
+     "definition": "mean sum-squared-error per data point",
+     "unit": "squared error",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "5-gram Keyser-Ney, feedforward NN, PAQ8, dynamically evaluated word RNN and ensembles (Mikolov 2012 thesis numbers)",
+    "Hutter Prize winner (PAQ-8 variant) 1.28 BPC",
+    "zip"
+   ],
+   "protocol": "validation set only for handwriting, no independent test set; single runs, no seeds or significance tests stated; informal human blind tests for handwriting realism"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "IAM-OnDB, Penn Treebank, Hutter Prize data are existing public datasets"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Wikipedia byte-level 7x700 LSTM reaches 1.33 BPC on validation with dynamic evaluation, against 1.67 static.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BPC (validation, dynamic)",
+   "value": 1.33,
+   "unit": "bits-per-character",
+   "baseline_value": 1.67,
+   "n": null,
+   "setup": "Hutter Prize first 100M bytes, 96M train / 4M val, 7 layers x 700 LSTM, SGD lr 0.0001 mom 0.9",
+   "quote": null,
+   "table": "Table 2, columns Validation (static) 1.67 and Validation (dynamic) 1.33",
+   "note": null,
+   "where": "Sec 3.2, Table 2"
+  },
+  {
+   "claim": "Hutter Prize winner (PAQ-8 variant) gets 1.28 BPC including decompressor code, so the LSTM does not beat it.",
+   "kind": "reported",
+   "source": null,
+   "metric": "BPC",
+   "value": 1.28,
+   "unit": "bits-per-character",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Same Wikipedia data, reported comparison",
+   "quote": "achieves 1.28 BPC on the same",
+   "table": null,
+   "note": "source is Knoll and de Freitas 2011",
+   "where": "Sec 3.2"
+  },
+  {
+   "claim": "On Penn Treebank the best char-level LSTM (weight noise, dynamic eval) reaches 1.24 BPC, perplexity 124.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BPC",
+   "value": 1.24,
+   "unit": "bits-per-character",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Penn Treebank test set, 1x1000 LSTM, weight noise 0.075, dynamic evaluation",
+   "quote": null,
+   "table": "Table 1, row char weight noise dynamic yes, column BPC 1.24, Perplexity 124",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Best word-level LSTM on Penn (weight noise, dynamic eval) reaches perplexity 117.",
+   "kind": "measured",
+   "source": null,
+   "metric": "perplexity",
+   "value": 117,
+   "unit": "perplexity",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Penn Treebank test, 1x1000 LSTM word level, 10,000 vocab",
+   "quote": null,
+   "table": "Table 1, row word weight noise dynamic yes, column Perplexity 117",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Dynamic evaluation helped LSTM far more than Mikolov reports for RNNs (124.7 to 123.2).",
+   "kind": "reported",
+   "source": null,
+   "metric": "perplexity",
+   "value": 123.2,
+   "unit": "perplexity",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Mikolov thesis word-level RNN with dynamic evaluation",
+   "quote": "he records a perplexity improvement from 124.7 to 123.2 with word-level RNNs",
+   "table": null,
+   "note": "source is Mikolov 2012 thesis",
+   "where": "Sec 3.1"
+  },
+  {
+   "claim": "Three-layer handwriting prediction net with adaptive weight noise has validation log-loss -1057.7 nats.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Log-Loss",
+   "value": -1057.7,
+   "unit": "nats",
+   "baseline_value": -1025.7,
+   "n": null,
+   "setup": "IAM-OnDB validation, 3x400 LSTM, 20 mixture components, rmsprop",
+   "quote": null,
+   "table": "Table 3, row 3 layer adaptive weight noise, column Log-Loss",
+   "note": "baseline is 1 layer no regularisation",
+   "where": "Table 3"
+  },
+  {
+   "claim": "Synthesis network with adaptive weight noise reaches log-loss -1128.2 and SSE 0.23, SSE 44% lower than the best prediction network.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Log-Loss",
+   "value": -1128.2,
+   "unit": "nats",
+   "baseline_value": -1096.9,
+   "n": null,
+   "setup": "IAM-OnDB validation, 3x400 LSTM, 10-Gaussian soft window, 57 characters",
+   "quote": null,
+   "table": "Table 4, row adaptive weight noise, column Log-Loss",
+   "note": null,
+   "where": "Table 4, Sec 5.2"
+  },
+  {
+   "claim": "Synthesis soft window uses offsets kappa_t = kappa_{t-1} + exp(kappa_hat), which made alignment possible.",
+   "kind": "claim",
+   "source": null,
+   "metric": "none",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Handwriting synthesis, soft window of 10 Gaussians",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Sec 5.1 Eq 51"
+  },
+  {
+   "claim": "Fixed-variance weight noise was ineffective for the handwriting mixture density net.",
+   "kind": "claim",
+   "source": null,
+   "metric": "none",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Handwriting prediction, 3-layer net",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2"
+  },
+  {
+   "claim": "Priming and probability bias 0.15 give a balance between diversity and legibility.",
+   "kind": "measured",
+   "source": null,
+   "metric": "bias b",
+   "value": 0.15,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Handwriting synthesis samples, Fig 17",
+   "quote": "probability bias of 0.15",
+   "table": null,
+   "note": "qualitative judgement, no metric",
+   "where": "Fig 17"
+  }
+ ],
+ "limits": [
+  "No independent test set for handwriting; validation results may be overfit (authors concede).",
+  "No benchmark results exist for IAM-OnDB, so no baselines for handwriting; realism judged by eye and informal blind tests by the author.",
+  "Penn word vs char comparison unfair: 54M vs 4.3M weights.",
+  "Wikipedia: LSTM at 1.33 BPC does not beat the Hutter Prize winner 1.28; gradient truncated to 100 bytes so approximate.",
+  "Samples do not make sense beyond short phrases (Wikipedia).",
+  "Batch size, seeds, hardware, compute and code not stated.",
+  "Forward-only monotone window (kappa offsets > 0) cannot reorder; unsuited to tasks needing reordering (inferred from Eq 51)."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "dynamic evaluation",
+   "definition": "allow the network to adapt its weights as it is being evaluated (so long as it only sees the test data once)",
+   "where": "Sec 3.1"
+  },
+  {
+   "term": "soft window",
+   "definition": "discrete convolution of the character sequence with a mixture of K Gaussians whose parameters are output by the network",
+   "where": "Sec 5.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Long Short-Term Memory (Hochreiter and Schmidhuber)",
+   "year": 1997,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "LSTM cell variant from Gers et al. 2002 with peepholes",
+   "quote": null
+  },
+  {
+   "work": "Mixture density networks (Bishop)",
+   "year": 1994,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "output layer for real-valued data",
+   "quote": null
+  },
+  {
+   "work": "Practical variational inference for neural networks (Graves)",
+   "year": 2011,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "adaptive weight noise",
+   "quote": null
+  },
+  {
+   "work": "RNN transducer (Graves, Sequence transduction with recurrent neural networks)",
+   "year": 2012,
+   "arxiv": "1211.3711",
+   "relation": "related",
+   "note": "alternative alignment model, preliminary experiments not encouraging",
+   "quote": null
+  },
+  {
+   "work": "rmsprop (Tieleman and Hinton)",
+   "year": 2012,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "lecture 6.5",
+   "quote": null
+  },
+  {
+   "work": "Mikolov, Statistical Language Models based on Neural Networks",
+   "year": 2012,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Penn Treebank baselines and dynamic evaluation",
+   "quote": null
+  },
+  {
+   "work": "Sutskever, Martens, Hinton, Generating text with recurrent neural networks",
+   "year": 2011,
+   "arxiv": null,
+   "relation": "related",
+   "note": "character-level text generation",
+   "quote": null
+  },
+  {
+   "work": "Penn Treebank",
+   "year": 1993,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "IAM-OnDB (Liwicki and Bunke)",
+   "year": 2005,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "Hutter Prize Wikipedia data",
+   "year": 2006,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Deep recurrent neural network prediction architecture.",
+   "page": 3,
+   "why": "Shows skip connections from inputs to all hidden layers and all hidden layers to outputs."
+  },
+  {
+   "figure": "Fig 12",
+   "caption": "Synthesis Network Architecture",
+   "page": 27,
+   "why": "Shows the window layer feeding hidden layers 2,3 at t and layer 1 at t+1."
+  },
+  {
+   "figure": "Fig 13",
+   "caption": "Window weights during a handwriting synthesis sequence",
+   "page": 28,
+   "why": "Shows the monotone character-to-pen alignment."
+  }
+ ],
+ "code": [
+  {
+   "where": "Eqs 46-47, p26",
+   "snippet": "phi(t,u)=sum_k alpha_t^k exp(-beta_t^k (kappa_t^k - u)^2); w_t=sum_u phi(t,u) c_u; kappa_t = kappa_{t-1} + exp(kappa_hat_t)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Cached text has ligatures (fi, ff) and some NUL bytes; equations are garbled but readable. No embedded instructions found."
+ ]
+}

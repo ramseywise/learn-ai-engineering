@@ -1,0 +1,685 @@
+{
+ "schema": 1,
+ "key": "2205.11487",
+ "pdf": "ai-engineering/08-multimodal-engineering/sources/saharia-2022-photorealistic-text-image-diffusion-models.pdf",
+ "bib": {
+  "title": "Photorealistic Text-to-Image Diffusion Models with Deep Language Understanding",
+  "authors": [
+   "Chitwan Saharia",
+   "William Chan",
+   "Saurabh Saxena",
+   "Lala Li",
+   "Jay Whang",
+   "Emily Denton",
+   "Seyed Kamyar Seyed Ghasemipour",
+   "Burcu Karagol Ayan",
+   "S. Sara Mahdavi",
+   "Rapha Gontijo Lopes",
+   "Tim Salimans",
+   "Jonathan Ho",
+   "David J Fleet",
+   "Mohammad Norouzi"
+  ],
+  "first_author": "Saharia",
+  "year": 2022,
+  "venue": "preprint",
+  "arxiv": "2205.11487",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 89741,
+  "chars_total": 89741,
+  "engine": "pymupdf",
+  "skipped": "Appendix qualitative figure pages (A.1-A.4, A.17-A.30) are images; reference list skimmed"
+ },
+ "type": "empirical",
+ "question": "Can generic frozen text-only language models serve as text encoders for a cascaded text-to-image diffusion model, and how does that compare with scaling the image model?",
+ "hypothesis": "Large frozen LMs pretrained on text only encode text for image synthesis better than image-text encoders, and scaling the text encoder helps more than scaling the U-Net (stated as a finding).",
+ "contributions": [
+  "Frozen text-only LMs are very effective text encoders; scaling the text encoder improves quality more than scaling the diffusion U-Net",
+  "Dynamic thresholding for large classifier-free guidance weights",
+  "Efficient U-Net",
+  "COCO zero-shot FID 7.27; human raters find Imagen on par with reference images for image-text alignment",
+  "DrawBench benchmark"
+ ],
+ "method": {
+  "summary": "Imagen: a frozen T5-XXL encoder feeds a 64x64 text-conditional diffusion model, followed by two text-conditional super-resolution diffusion models (256, 1024), all with classifier-free guidance, dynamic thresholding and noise conditioning augmentation for the super-resolution models.",
+  "task": "text-to-image generation",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Internal image-text data",
+    "role": "train",
+    "size": "~460M image-text pairs",
+    "split": null,
+    "source": "internal",
+    "preprocessing": "A subset filtered for pornographic imagery and toxic language"
+   },
+   {
+    "name": "LAION-400M",
+    "role": "train",
+    "size": "~400M image-text pairs",
+    "split": null,
+    "source": "public (LAION)",
+    "preprocessing": null
+   },
+   {
+    "name": "MS-COCO validation",
+    "role": "eval",
+    "size": "30K prompts for FID-30K; 200 caption-image pairs for human evaluation",
+    "split": "validation",
+    "source": "Lin et al. 2014",
+    "preprocessing": "Second human-eval set removes prompts containing person words (man, woman, people, child, etc.)"
+   },
+   {
+    "name": "DrawBench",
+    "role": "eval",
+    "size": "200 prompts, 11 categories",
+    "split": null,
+    "source": "introduced here; includes prompts from DALL-E, Marcus et al., Reddit",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Imagen base 64x64",
+    "role": "proposed",
+    "params": "2B",
+    "architecture": "U-Net adapted from Nichol & Dhariwal; text cross-attention at [32,16,8] plus attention-pooled text embedding; layer norm on text embeddings",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "embed_dim": 512,
+     "channel_mult": [
+      1,
+      2,
+      3,
+      4
+     ],
+     "num_res_blocks": 3,
+     "per_head_channels": 64,
+     "dropout": 0,
+     "attn_resolutions": [
+      32,
+      16,
+      8
+     ]
+    }
+   },
+   {
+    "name": "Imagen SR 64->256",
+    "role": "proposed",
+    "params": "600M",
+    "architecture": "Efficient U-Net with self-attention and text cross-attention at lowest resolution",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": 8,
+    "context": null,
+    "other": {
+     "channels": [
+      128,
+      256,
+      512,
+      1024
+     ],
+     "num_res_blocks": [
+      2,
+      4,
+      8,
+      8
+     ]
+    }
+   },
+   {
+    "name": "Imagen SR 256->1024",
+    "role": "proposed",
+    "params": "400M",
+    "architecture": "Efficient U-Net, no self-attention, text cross-attention kept; trained on 64->256 crops of 1024 images",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": 8,
+    "context": null,
+    "other": {
+     "channels": [
+      128,
+      256,
+      512,
+      1024
+     ],
+     "num_res_blocks": [
+      2,
+      4,
+      8,
+      8
+     ]
+    }
+   },
+   {
+    "name": "T5-XXL encoder",
+    "role": "base",
+    "params": "4.6B",
+    "architecture": "T5 encoder, frozen",
+    "init_from": "off-the-shelf T5 (C4 text corpus ~800GB)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "ablated": "BERT base/large, T5 small/base/large/XL/XXL, CLIP ViT-L/14 penultimate layer (all frozen)"
+    }
+   },
+   {
+    "name": "DALL-E 2, GLIDE, Latent Diffusion, VQ-GAN+CLIP",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "DrawBench comparisons; DALL-E 2 public version"
+    }
+   }
+  ],
+  "training": {
+   "objective": "epsilon-prediction squared error, weighted denoising loss; classifier-free guidance by zeroing text embeddings with 10% probability; super-resolution models trained with noise conditioning augmentation, aug_level uniform in [0,1]",
+   "optimizer": "Adafactor (base 64x64, default optax params); Adam b1=0.9 b2=0.999 eps=1e-8 (both super-resolution models)",
+   "lr": "1e-4",
+   "lr_schedule": "warmup_cosine_decay_schedule, peak 1e-4, decay_steps 2500000 (listing); cosine noise schedule for 64x64 and 64->256, 1000-step linear schedule (1e-4 to 0.02) for 256->1024",
+   "warmup": "10000 steps",
+   "batch_size": "2048",
+   "steps": "2.5M for all models (400K steps for the model-size ablation)",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": "0",
+   "dropout": "0 (listing)",
+   "regularisation": null,
+   "hardware": "256 TPU-v4 chips (base), 128 TPU-v4 chips (each super-resolution model)",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "continuous_time": "t ~ U(0,1)",
+    "overfitting": "authors report no over-fitting"
+   }
+  },
+  "inference": {
+   "decoding": "ancestral sampler; DDIM for certain models; classifier-free guidance with dynamic thresholding",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "Fair random samples, no post-processing or re-ranking; DrawBench uses 8 samples per model per prompt",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "guidance_weight_coco": "1.35 (64x64), 8.0 (super-resolution)",
+    "dynamic_threshold_percentile": "p = 99.5 (Fig A.10)",
+    "aug_level_inference": "0.1-0.3 for best samples; swept",
+    "sampling_steps": null,
+    "guidance_sweep_ablation": "[1,1.25,1.5,1.75,2,3,4,5,6,7,8,9,10]"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "FID-30K (zero-shot)",
+     "definition": "30K random COCO validation prompts, generated samples vs full validation reference images",
+     "unit": "FID",
+     "higher_is_better": false
+    },
+    {
+     "name": "CLIP score",
+     "definition": "image-text alignment via CLIP",
+     "unit": "score",
+     "higher_is_better": true
+    },
+    {
+     "name": "Photorealism preference rate",
+     "definition": "Percent of times raters pick model image over reference for 'Which image is more photorealistic (looks more real)?'",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Caption alignment",
+     "definition": "'Does the caption accurately describe the above image?' yes/somewhat/no scored 100/50/0",
+     "unit": "0-100",
+     "higher_is_better": true
+    },
+    {
+     "name": "DrawBench pairwise preference",
+     "definition": "Raters compare 8-sample sets from models A and B on fidelity and alignment: prefer A, indifferent, prefer B",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "AttnGAN",
+    "DM-GAN",
+    "DF-GAN",
+    "DM-GAN+CL",
+    "XMC-GAN",
+    "LAFITE",
+    "Make-A-Scene",
+    "DALL-E",
+    "GLIDE",
+    "DALL-E 2",
+    "Latent Diffusion",
+    "VQ-GAN+CLIP"
+   ],
+   "protocol": "COCO human eval: 200 image-caption pairs, batches of 50, interleaved control trials, only raters with at least 80% control accuracy kept, giving 73 (quality) and 51 (alignment) ratings per image. DrawBench: 25 raters per category (275 total), no rater filtering. 95% confidence intervals in Fig 3."
+  },
+  "availability": {
+   "code": "not released",
+   "weights": "not released",
+   "data": "DrawBench samples released (Appendix C); training data internal"
+  },
+  "prompts": [
+   {
+    "purpose": "DrawBench fidelity question",
+    "text": "Which set of images is of higher quality?",
+    "where": "Appendix C"
+   },
+   {
+    "purpose": "DrawBench alignment question",
+    "text": "Which set of images better represents the text caption : {Text Caption}?",
+    "where": "Appendix C"
+   },
+   {
+    "purpose": "COCO photorealism question",
+    "text": "Which image is more photorealistic (looks more real)?",
+    "where": "Sec 3"
+   },
+   {
+    "purpose": "COCO alignment question",
+    "text": "Does the caption accurately describe the above image?",
+    "where": "Sec 3"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training.steps",
+    "quote": "We use a batch size of 2048 and 2.5M training steps for all models.",
+    "where": "Sec 4.1"
+   },
+   {
+    "field": "models.params",
+    "quote": "we train a 2B parameter model for the 64 × 64 text-to-image synthesis, and 600M and 400M parameter models",
+    "where": "Sec 4.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Imagen reaches zero-shot COCO FID-30K 7.27, ahead of DALL-E 2 (10.39) and GLIDE (12.24) and Make-A-Scene trained on COCO (7.55).",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID-30K",
+   "value": 7.27,
+   "unit": "FID",
+   "baseline_value": 10.39,
+   "n": 30000,
+   "setup": "MS-COCO 2014 validation, 256x256, 30K random prompts vs full validation reference images, zero-shot (no COCO training), guidance 1.35 for 64x64 model and 8.0 for super-resolution",
+   "quote": "Imagen outperforms other methods on COCO [36] with zero-shot FID-30K of 7.27",
+   "table": null,
+   "note": "Intro prints rounded 12.4, 10.4 and 7.6; Table 1 prints 12.24, 10.39, 7.55",
+   "where": "Sec 1, Table 1"
+  },
+  {
+   "claim": "Raters prefer Imagen over real COCO images 39.5% of the time (text says 39.2%).",
+   "kind": "measured",
+   "source": null,
+   "metric": "photorealism preference",
+   "value": 39.5,
+   "unit": "%",
+   "baseline_value": 50.0,
+   "n": null,
+   "setup": "200 COCO validation pairs, 73 ratings per image; Imagen vs original, photorealism",
+   "quote": "Imagen 39.5 ± 0.75%",
+   "table": "Table 2, row Imagen, column Photorealism",
+   "note": "Section 4.2 prints 39.2% and 43.6%; Table 2 prints 39.5 and 43.9 (no-people)",
+   "where": "Table 2"
+  },
+  {
+   "claim": "On COCO prompts without people the photorealism preference rises to 43.9% (text: 43.6%).",
+   "kind": "measured",
+   "source": null,
+   "metric": "photorealism preference",
+   "value": 43.9,
+   "unit": "%",
+   "baseline_value": 50.0,
+   "n": null,
+   "setup": "COCO subset with prompts containing person words removed",
+   "quote": "43.9 ± 1.01%",
+   "table": "Table 2, row No people / Imagen, column Photorealism",
+   "note": "Section 4.2 prints 43.6%",
+   "where": "Table 2"
+  },
+  {
+   "claim": "Caption alignment of Imagen is on par with original images (91.4 vs 91.9).",
+   "kind": "measured",
+   "source": null,
+   "metric": "alignment",
+   "value": 91.4,
+   "unit": "0-100",
+   "baseline_value": 91.9,
+   "n": null,
+   "setup": "COCO 200 pairs, 51 ratings per image, yes/somewhat/no scored 100/50/0",
+   "quote": "91.4 ± 0.44",
+   "table": "Table 2, row Imagen, column Alignment",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Scaling the frozen text encoder improves quality more than scaling the U-Net.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "64x64 model, CLIP vs FID-10K pareto curves over guidance weights; U-Net 300M to 2B, T5 small to XXL",
+   "quote": "scaling the text encoder size to be signiﬁcantly more impactful than the U-Net size",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.4, Fig 4a/4b, App D.3"
+  },
+  {
+   "claim": "T5-XXL and CLIP encoders perform similarly on COCO but raters prefer T5-XXL on DrawBench in all 11 categories for alignment.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "64x64 1B models with frozen T5-XXL vs CLIP; 300M models underperformed on DrawBench so 1B used",
+   "quote": "human raters prefer T5-XXL over CLIP on DrawBench across all 11 categories",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.4, App D.1, Fig A.5b, A.7"
+  },
+  {
+   "claim": "Dynamic thresholding gives better CLIP and comparable or better FID than static thresholding, especially at large guidance weights.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "64x64 base model, guidance sweep 1-10, FID-10K",
+   "quote": "dynamic thresholding results in samples with signiﬁcantly better photorealism and alignment with text",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.4, Fig 4c, A.8"
+  },
+  {
+   "claim": "Cross-attention over the text embedding sequence beats mean or attention pooling.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "64x64 base model, CLIP-FID pareto",
+   "quote": "conditioning over the sequence of text embeddings with cross attention signiﬁcantly outperforms simple mean or attention based pooling",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.4, App D.3.1, Fig A.13a"
+  },
+  {
+   "claim": "Efficient U-Net is 2-3x faster at sampling and converges faster than the standard U-Net.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "64->256 super-resolution, FID-2K vs TPU training days (Fig A.14)",
+   "quote": "Our Efﬁcient U-Net is also ×2 −3 faster at sampling.",
+   "table": null,
+   "note": null,
+   "where": "App D.3.2"
+  },
+  {
+   "claim": "Noise conditioning augmentation is critical for super-resolution quality.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "64->256 model, FID-10K, guidance sweep [1..18]; best samples use aug_level in [0.1, 0.3]",
+   "quote": "Training with no noise augmentation generally results in worse CLIP and FID scores",
+   "table": null,
+   "note": null,
+   "where": "App D.2, Fig A.11"
+  },
+  {
+   "claim": "DrawBench: raters prefer Imagen over DALL-E 2 in 7 of 11 categories for alignment and all 11 for fidelity.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "DrawBench 200 prompts, 25 raters per category, 8 samples per set",
+   "quote": "they prefer Imagen over DALL-E 2 in all 11 categories",
+   "table": null,
+   "note": null,
+   "where": "App E, Fig A.15"
+  },
+  {
+   "claim": "Imagen beats GLIDE on 8 of 11 categories for alignment and 10 of 11 for fidelity.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "DrawBench, same protocol",
+   "quote": "Imagen outperforms GLIDE on 8 out of 11 categories on image-text alignment, and 10 out of 11 categories on image ﬁdelity.",
+   "table": null,
+   "note": null,
+   "where": "App E, Fig A.16"
+  },
+  {
+   "claim": "Human evaluation shows Imagen weaker on images of people, and internal checks found bias toward lighter skin tones and Western gender stereotypes for professions.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Small-scale internal assessments; basis for not releasing code or demo",
+   "quote": "an overall bias towards generating images of people with lighter skin tones and a tendency for images portraying different professions to align with Western gender stereotypes",
+   "table": null,
+   "note": null,
+   "where": "Sec 6"
+  }
+ ],
+ "limits": [
+  "Code, weights and demo withheld because of bias, people-generation weakness and LAION-400M content audit",
+  "Weaker photorealism on images of people (39.5% vs 43.9% without people)",
+  "FID not fully aligned with perceptual quality, CLIP ineffective at counting",
+  "Bias analysis is preliminary and small scale",
+  "Ablations run on smaller 300M-2B base models with FID-10K, not the final configuration",
+  "DrawBench is only 200 prompts and no rater filtering; no seeds or significance tests besides 95% CIs",
+  "No total compute or wall-clock reported; sampling steps not stated"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "dynamic thresholding",
+   "definition": "At each sampling step set s to a certain percentile absolute pixel value in the x-prediction; if s > 1, threshold to [-s, s] and divide by s",
+   "where": "Sec 2.3"
+  },
+  {
+   "term": "static thresholding",
+   "definition": "Elementwise clipping the x-prediction to [-1, 1]",
+   "where": "Sec 2.3"
+  },
+  {
+   "term": "noise conditioning augmentation",
+   "definition": "Corrupt the low-resolution conditioning image with noise at aug_level and condition the model on aug_level; random in training, swept at inference",
+   "where": "Sec 2.4"
+  },
+  {
+   "term": "DrawBench",
+   "definition": "11-category, 200-prompt benchmark for text-to-image models",
+   "where": "Sec 3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Classifier-free diffusion guidance (Ho & Salimans)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "core conditioning technique",
+   "quote": null
+  },
+  {
+   "work": "Cascaded diffusion models for high fidelity image generation (Ho et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "cascade and noise conditioning augmentation",
+   "quote": null
+  },
+  {
+   "work": "Improved DDPM (Nichol & Dhariwal)",
+   "year": 2021,
+   "arxiv": "2102.09672",
+   "relation": "uses-method",
+   "note": "U-Net and cosine schedule",
+   "quote": null
+  },
+  {
+   "work": "DDPM (Ho et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "ancestral sampler, static clipping",
+   "quote": null
+  },
+  {
+   "work": "T5 (Raffel et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "frozen text encoder",
+   "quote": null
+  },
+  {
+   "work": "GLIDE",
+   "year": 2021,
+   "arxiv": "2112.10741",
+   "relation": "baseline",
+   "note": "also cascaded diffusion; trained own text encoder",
+   "quote": null
+  },
+  {
+   "work": "DALL-E 2",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "concurrent; CLIP latent prior",
+   "quote": null
+  },
+  {
+   "work": "Latent Diffusion (Rombach et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "DrawBench comparison",
+   "quote": null
+  },
+  {
+   "work": "FID (Heusel et al.)",
+   "year": 2017,
+   "arxiv": "1706.08500",
+   "relation": "uses-method",
+   "note": "metric",
+   "quote": null
+  },
+  {
+   "work": "MS-COCO",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "evaluation",
+   "quote": null
+  },
+  {
+   "work": "LAION-400M",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "training",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 4",
+   "caption": "Summary of some of the critical findings of Imagen with pareto curves sweeping over different guidance values.",
+   "page": 8,
+   "why": "Shows encoder size beats U-Net size and dynamic beats static thresholding"
+  },
+  {
+   "figure": "Fig A.31",
+   "caption": "Pseudo code implementation comparing static thresholding and dynamic thresholding.",
+   "page": null,
+   "why": "Exact algorithm"
+  },
+  {
+   "figure": "Fig A.4",
+   "caption": "Imagen pipeline: text encoder, 64x64 base, two super-resolution models",
+   "page": null,
+   "why": "Architecture overview"
+  }
+ ],
+ "code": [
+  {
+   "where": "Fig A.31(b)",
+   "snippet": "s = jnp.percentile(jnp.abs(x0_t), p, axis=tuple(range(1, x0_t.ndim)))\ns = jnp.max(s, 1.0)\nx0_t = jnp.clip(x0_t, -s, s) / s",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Pseudo-code listing shows decay end_value=2500000, an apparent typo in the paper",
+  "Section 4.2 text (39.2%, 43.6%) disagrees with Table 2 (39.5%, 43.9%)",
+  "Intro rounds baseline FIDs differently from Table 1",
+  "No embedded instructions found"
+ ]
+}

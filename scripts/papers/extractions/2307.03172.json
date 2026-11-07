@@ -1,0 +1,122 @@
+{
+ "schema": 1,
+ "key": "2307.03172",
+ "pdf": "ai-engineering/02-context-engineering/sources/liu-2023-lost-middle.pdf",
+ "bib": {
+  "title": "Lost in the Middle: How Language Models Use Long Contexts",
+  "authors": ["Nelson F. Liu", "Kevin Lin", "John Hewitt", "Ashwin Paranjape", "Michele Bevilacqua", "Fabio Petroni", "Percy Liang"],
+  "first_author": "Liu",
+  "year": 2023,
+  "venue": "TACL (arXiv v3, 20 Nov 2023)",
+  "arxiv": "2307.03172",
+  "doi": null
+ },
+ "read": {"by": "source-reader", "at": "2026-11-07", "chars_read": 65434, "chars_total": 65434, "engine": "pymupdf", "skipped": null},
+ "type": "empirical",
+ "question": "How well do language models use information placed at different positions in long input contexts?",
+ "hypothesis": "If models robustly use long contexts, performance should be minimally affected by the position of the relevant information.",
+ "contributions": [
+  "Controlled multi-document QA and synthetic key-value retrieval experiments varying context length and position of relevant information, showing a U-shaped curve",
+  "Preliminary study of architecture, query-aware contextualization and instruction fine-tuning",
+  "Open-domain QA case study showing reader accuracy saturates before retriever recall",
+  "New evaluation protocol: minimal gap between best- and worst-case position"
+ ],
+ "method": {
+  "summary": "Six LLMs are prompted (no training) with k NaturalQuestions-Open passages, exactly one containing the answer, whose position is varied; a synthetic UUID key-value retrieval task is used likewise. Accuracy is whether a gold answer appears in the output.",
+  "task": "multi-document QA, key-value retrieval, open-domain QA (retriever-reader)",
+  "trains": false,
+  "datasets": [
+   {"name": "NaturalQuestions-Open (multi-document QA)", "role": "eval", "size": "2655 queries (long answer is a paragraph)", "split": "queries whose annotated long answer is a paragraph", "source": "Lee et al. 2019; Kwiatkowski et al. 2019; Wikipedia dump from late 2018, passages of at most 100 tokens", "preprocessing": "Answer doc = NQ annotated paragraph; k-1 distractors = top Contriever (MS-MARCO fine-tuned) chunks not containing any annotated answer, ordered by decreasing relevance"},
+   {"name": "Synthetic key-value retrieval", "role": "eval", "size": "500 examples per setting; 75, 140 and 300 key-value pairs", "split": null, "source": "JSON of random 128-bit UUID keys and values", "preprocessing": "position of the queried key varied"}
+  ],
+  "models": [
+   {"name": "GPT-3.5-Turbo (0613)", "role": "evaluated", "params": null, "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": "4K", "other": {}},
+   {"name": "GPT-3.5-Turbo (16K, 0613)", "role": "evaluated", "params": null, "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": "16K", "other": {}},
+   {"name": "Claude-1.3", "role": "evaluated", "params": null, "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": "8K", "other": {}},
+   {"name": "Claude-1.3 (100K)", "role": "evaluated", "params": null, "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": "100K", "other": {}},
+   {"name": "MPT-30B-Instruct", "role": "evaluated", "params": "30B", "architecture": "decoder-only, ALiBi", "init_from": "MPT-30B, pre-trained on 1T tokens at 2048 then 50B tokens at 8192", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": "8192 tokens", "other": {}},
+   {"name": "LongChat-13B (16K)", "role": "evaluated", "params": "13B", "architecture": "decoder-only, condensed rotary embeddings", "init_from": "LLaMA-13B", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": "16384 tokens", "other": {}},
+   {"name": "Flan-T5-XXL, Flan-UL2", "role": "evaluated", "params": null, "architecture": "encoder-decoder", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": "trained at 512 / 2048 tokens (encoder)", "other": {}},
+   {"name": "Llama-2 7B/13B/70B, base and chat", "role": "evaluated", "params": "7B, 13B, 70B", "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": "4096 tokens", "other": {}},
+   {"name": "GPT-4 (8K, 0613)", "role": "evaluated", "params": null, "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": "8K", "other": {"subset": "500 random examples, 20 docs"}},
+   {"name": "Contriever (MS-MARCO fine-tuned)", "role": "retriever", "params": null, "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}}
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "greedy",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "one greedy output per item; no seeds or repeats stated",
+   "prompting": "zero-shot instruction prompt, same standard prompt for each model (Fig 2); query after the documents; query-aware variant puts query before and after",
+   "retrieval": "Contriever top-k for open-domain QA, k from 5 to 50; 10, 20, 30 documents in controlled task",
+   "parameters": {"total_documents": "10, 20, 30", "key_value_pairs": "75, 140, 300"},
+   "other": {"llama2_discarded": "20 of 2655 examples exceed 4096 tokens"}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "accuracy", "definition": "any correct annotated answer appears in the predicted output", "unit": "%", "higher_is_better": true},
+    {"name": "retriever recall", "definition": "fraction of questions where retrieved docs contain an answer (as plotted)", "unit": "%", "higher_is_better": true}
+   ],
+   "baselines": ["closed-book (no documents)", "oracle (only the answer document)"],
+   "protocol": "accuracy per answer position; no significance tests or repeats stated"
+  },
+  "availability": {"code": "nelsonliu.me/papers/lost-in-the-middle (code and evaluation data released)", "weights": null, "data": "released at same URL"},
+  "prompts": [
+   {"purpose": "multi-document QA", "text": "Write a high-quality answer for the given question using only the provided search results (some of which might be irrelevant).\nDocument [1](Title: ...) ...\nQuestion: who got the first nobel prize in physics\nAnswer:", "where": "Fig 2, p.3"},
+   {"purpose": "randomized-order ablation", "text": "Write a high-quality answer for the given question using only the provided search results (some of which might be irrelevant). The search results are ordered randomly.", "where": "Appendix C"},
+   {"purpose": "key-value retrieval", "text": "Extract the value corresponding to the specified key in the JSON object below.\nJSON data:\n{...}\nKey: \"...\"\nCorresponding value:", "where": "Fig 6"}
+  ],
+  "evidence": [
+   {"field": "eval.metrics", "quote": "judging whether any of the correct answers (as taken from the NaturalQuestions annotations) appear in the predicted output", "where": "2.1"}
+  ]
+ },
+ "results": [
+  {"claim": "GPT-3.5-Turbo with 20 documents scores 75.8% when the answer is first but 53.8% at index 9, below its closed-book 56.1%", "kind": "measured", "source": null, "metric": "accuracy", "value": 53.8, "unit": "%", "baseline_value": 56.1, "n": 2655, "setup": "multi-document QA, 20 total documents (~4K tokens), GPT-3.5-Turbo-0613, answer doc at index 9 (10th), retrieved distractors", "quote": null, "table": "Table 6, row GPT-3.5-Turbo, column Index 9", "note": "Index 0 is 75.8, index 19 is 63.2 in same row; closed-book 56.1 from Table 1", "where": "Table 6, Sec 2.3"},
+  {"claim": "GPT-3.5-Turbo closed-book accuracy, the bar the middle position falls below", "kind": "measured", "source": null, "metric": "accuracy", "value": 56.1, "unit": "%", "baseline_value": null, "n": 2655, "setup": "multi-document QA, no documents given", "quote": "lower than its perfor-\nmance when predicting without any documents (i.e.,\nthe closed-book setting; 56.1%)", "table": null, "note": null, "where": "Sec 1, Table 1"},
+  {"claim": "GPT-3.5-Turbo accuracy can drop by more than 20% depending on answer position", "kind": "measured", "source": null, "metric": "accuracy drop", "value": 20, "unit": "%", "baseline_value": null, "n": 2655, "setup": "multi-document QA, best vs worst position", "quote": "GPT-3.5-\nTurbo’s multi-document QA performance can drop\nby more than 20%", "table": null, "note": "'20%' is as printed; Tables 5-7 show it is absolute points", "where": "Sec 2.3"},
+  {"claim": "At 30 documents GPT-3.5-Turbo (16K) goes from 73.4% first to 50.5% at index 9", "kind": "measured", "source": null, "metric": "accuracy", "value": 50.5, "unit": "%", "baseline_value": 73.4, "n": 2655, "setup": "30 documents (~6K tokens), GPT-3.5-Turbo (16K)", "quote": null, "table": "Table 7, row GPT-3.5-Turbo (16K), column Index 9", "note": "Table 7 has no plain GPT-3.5-Turbo row", "where": "Table 7"},
+  {"claim": "Extended-context models perform nearly identically to base versions when input fits both windows", "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "10 and 20 documents, GPT-3.5-Turbo vs 16K", "quote": "performance between them is nearly identical", "table": null, "note": null, "where": "Sec 2.3"},
+  {"claim": "Flan-UL2 within its 2048-token training window has only a small best-worst gap", "kind": "measured", "source": null, "metric": "best-worst gap", "value": 1.9, "unit": "% absolute", "baseline_value": null, "n": 2655, "setup": "multi-document QA, 10 docs, Flan-UL2; degrades beyond 2048 tokens", "quote": "1.9% absolute difference between\nbest- and worst-case performance", "table": null, "note": null, "where": "Sec 4.1"},
+  {"claim": "Query-aware contextualization lets GPT-3.5-Turbo (16K) solve 300-pair key-value retrieval perfectly, versus worst case 45.6% without it", "kind": "measured", "source": null, "metric": "accuracy", "value": 45.6, "unit": "%", "baseline_value": null, "n": 500, "setup": "key-value retrieval, 300 pairs, GPT-3.5-Turbo (16K), no query-aware context (worst position)", "quote": "without query-aware contextualiza-\ntion, the worst-case performance is 45.6% (Fig-\nure 7)", "table": null, "note": "Query-aware context barely changes multi-document QA", "where": "Sec 4.2"},
+  {"claim": "Instruction tuning shrinks MPT-30B worst-case position gap from nearly 10% to about 4%", "kind": "measured", "source": null, "metric": "best-worst gap", "value": 4, "unit": "%", "baseline_value": 10, "n": 2655, "setup": "20 documents, MPT-30B vs MPT-30B-Instruct", "quote": "from nearly 10% between the base model best- and\nworst-case performance to around 4%", "table": null, "note": null, "where": "Sec 4.3"},
+  {"claim": "Llama-2 7B models are only recency-biased; 13B and 70B show a U shape", "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "20 documents, Llama-2 7B/13B/70B base and chat", "quote": "the smallest Llama-\n2 models (7B) are solely recency-biased", "table": null, "note": null, "where": "Appendix E"},
+  {"claim": "Llama-2-13B base shows a 20-point best-worst gap", "kind": "measured", "source": null, "metric": "best-worst gap", "value": 20, "unit": "points", "baseline_value": null, "n": 2635, "setup": "20 documents, Llama-2-13B base; 2635 = 2655 minus 20 discarded", "quote": "there is a\n20-point accuracy disparity between the best- and\nworst-case performance", "table": null, "note": "n derived", "where": "Appendix E"},
+  {"claim": "Going from 20 to 50 retrieved documents adds only about 1.5% for GPT-3.5-Turbo", "kind": "measured", "source": null, "metric": "accuracy gain", "value": 1.5, "unit": "%", "baseline_value": null, "n": null, "setup": "open-domain QA, Contriever retrieval on NQ-Open, GPT-3.5-Turbo", "quote": "using\n50 documents instead of 20 retrieved documents\nonly marginally improves performance (∼1.5% for\nGPT-3.5-Turbo and ∼1% for claude-1.3)", "table": null, "note": "Sec 5 says 'more than 20'", "where": "Sec 1, Sec 5"},
+  {"claim": "Claude-1.3 and 100K variants do nearly perfectly on key-value retrieval at all lengths", "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": 500, "setup": "75, 140, 300 key-value pairs", "quote": "Claude-1.3 and Claude-1.3 (100K) do\nnearly perfectly on all evaluated input context\nlengths", "table": null, "note": null, "where": "Sec 3.2"},
+  {"claim": "With random distractors accuracy is higher but the position effect persists", "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "20 documents, random Wikipedia distractors", "quote": "they surprisingly still struggle to reason\nover their entire input context", "table": null, "note": null, "where": "Appendix B"}
+ ],
+ "limits": [
+  "Only NaturalQuestions-Open and a synthetic UUID task; exactly one relevant document, unlike real retrieval",
+  "Greedy decoding only; other decoding left to future work",
+  "Architecture, query-aware and instruction-tuning analyses are described as preliminary",
+  "GPT-4 evaluated only on a 500-example subset at 20 documents because the full run would cost upwards of $6000",
+  "Closed API models (0613 versions, Claude-1.3) are no longer current; no repeats or significance tests",
+  "Prompt-based, no training; mechanisms are hypothesized, not tested"
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "primacy bias", "definition": "better use of relevant information at the very beginning of the input context", "where": "Fig 1"},
+  {"term": "recency bias", "definition": "better use of relevant information at the very end of the input context", "where": "Fig 1"},
+  {"term": "query-aware contextualization", "definition": "placing the query before and after the documents or key-value pairs", "where": "Sec 4.2"}
+ ],
+ "lineage": [
+  {"work": "Ivgi et al. 2023, Efficient long-text understanding with short-text models", "year": 2023, "arxiv": null, "relation": "extends", "note": "needle-in-a-haystack setup; this paper studies finer position changes", "quote": null},
+  {"work": "Khandelwal et al. 2018, Sharp nearby, fuzzy far away", "year": 2018, "arxiv": null, "relation": "related", "note": "recency bias in small LMs; paper hypothesizes they missed primacy because models were under 1B", "quote": null},
+  {"work": "Sun et al. 2021, Do long-range language models actually use long-range context?", "year": 2021, "arxiv": null, "relation": "related", "note": "long context helps few tokens", "quote": null},
+  {"work": "Papailiopoulos et al. 2023, Little Retrieval Test", "year": 2023, "arxiv": null, "relation": "related", "note": "similar retrieval task", "quote": null},
+  {"work": "Li et al. 2023, How long can open-source LLMs truly promise on context length?", "year": 2023, "arxiv": null, "relation": "related", "note": "LongChat and line retrieval task", "quote": null},
+  {"work": "NaturalQuestions-Open", "year": 2019, "arxiv": null, "relation": "uses-data", "note": "Lee et al. 2019; Kwiatkowski et al. 2019", "quote": null},
+  {"work": "Contriever", "year": 2021, "arxiv": "2112.09118", "relation": "uses-method", "note": "retriever for distractors", "quote": null},
+  {"work": "Llama 2", "year": 2023, "arxiv": "2307.09288", "relation": "evaluates", "note": "Appendix E", "quote": null},
+  {"work": "AmbigQA (Min et al. 2020)", "year": 2020, "arxiv": null, "relation": "uses-data", "note": "unambiguous subset", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 1", "caption": "Changing the location of relevant information within the input context results in a U-shaped performance curve", "page": 1, "why": "Shows the headline U-curve with closed-book line"},
+  {"figure": "Fig 5", "caption": "The effect of changing the position of relevant information on multi-document question answering performance", "page": 4, "why": "All models at 10, 20, 30 documents"},
+  {"figure": "Fig 7", "caption": "Effect of input length and position on key-value retrieval", "page": 5, "why": "Shows the effect on a trivial retrieval task"},
+  {"figure": "Fig 11", "caption": "Retriever recall and model performance vs number of retrieved documents", "page": 8, "why": "Reader saturates before retriever"}
+ ],
+ "code": [],
+ "problems": ["Table 7 has no plain GPT-3.5-Turbo row (only the 16K variant)", "Figure data (curves) not in text; only Tables 5-7 give numbers"]
+}

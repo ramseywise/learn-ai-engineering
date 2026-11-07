@@ -1,0 +1,486 @@
+{
+ "schema": 1,
+ "key": "2305.16291",
+ "pdf": "ai-engineering/04-loop-engineering/sources/wang-2023-voyager.pdf",
+ "bib": {
+  "title": "VOYAGER: An Open-Ended Embodied Agent with Large Language Models",
+  "authors": [
+   "Guanzhi Wang",
+   "Yuqi Xie",
+   "Yunfan Jiang",
+   "Ajay Mandlekar",
+   "Chaowei Xiao",
+   "Yuke Zhu",
+   "Linxi “Jim” Fan",
+   "Anima Anandkumar"
+  ],
+  "first_author": "Wang",
+  "year": 2023,
+  "venue": "preprint (arXiv v2, 19 Oct 2023)",
+  "arxiv": "2305.16291",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 118780,
+  "chars_total": 118780,
+  "engine": "pymupdf",
+  "skipped": "Appendix A prompt bodies (A.3.4-A.5) and skill-library code examples skimmed for structure, not read line by line; item lists in B.4.1 skimmed."
+ },
+ "type": "system",
+ "question": "Can an LLM agent learn continually in an open-ended world, accumulating reusable skills without any parameter updates?",
+ "hypothesis": "An automatic curriculum, a growing library of verified code skills and iterative prompting with feedback let a blackbox LLM agent explore and learn lifelong without fine-tuning.",
+ "contributions": [
+  "Voyager, the first LLM-powered embodied lifelong learning agent in Minecraft",
+  "Automatic curriculum, skill library of executable code and iterative prompting with environment feedback, execution errors and self-verification",
+  "Gains over ReAct, Reflexion and AutoGPT in items, tech tree speed and distance, and zero-shot transfer"
+ ],
+ "method": {
+  "summary": "GPT-4 acts through code in Minecraft (MineDojo plus Mineflayer). A curriculum prompt proposes tasks, GPT-4 writes code refined up to 4 rounds with environment feedback, execution errors and a GPT-4 critic, and verified programs are stored in an embedding-indexed skill library.",
+  "task": "open-ended embodied lifelong learning in Minecraft",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "Minecraft (MineDojo simulation)",
+    "role": "eval",
+    "size": null,
+    "split": "3 trials per method; zero-shot tests in a newly instantiated world",
+    "source": "MineDojo, Mineflayer JS APIs",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "gpt-4-0314",
+    "role": "proposed",
+    "params": null,
+    "architecture": "blackbox LLM via API",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "uses": "curriculum, code generation, self-verification"
+    }
+   },
+   {
+    "name": "gpt-3.5-turbo-0301",
+    "role": "proposed",
+    "params": null,
+    "architecture": "blackbox LLM via API",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "uses": "self-ask questions, skill descriptions, query suggestion"
+    }
+   },
+   {
+    "name": "text-embedding-ada-002",
+    "role": "retriever",
+    "params": null,
+    "architecture": "embedding API",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": "0 for all calls except automatic curriculum at 0.1",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "3 trials per method; 160 prompting iterations (exploration and tech tree), 50 iterations (zero-shot)",
+   "prompting": "System plus user prompt concatenated per call; chain-of-thought; at most 4 code-generation rounds per task before the curriculum is asked for another task",
+   "retrieval": "Skill library as vector DB keyed by embedding of GPT-3.5 description; query is GPT-3.5 plan plus environment feedback; top-5 skills put in prompt",
+   "parameters": {
+    "max_rounds_per_task": 4,
+    "skills_in_prompt": 5,
+    "curriculum_warmup": "info added as tasks completed (Table A.1: nearby entities after 5, full inventory 7, biome/blocks 10, health/hunger/time/context 15)",
+    "nearby_radius": "32 blocks"
+   },
+   "other": {
+    "cost": "GPT-4 is 15x more expensive than GPT-3.5",
+    "seeds": null
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "unique items",
+     "definition": "distinct items obtained within 160 prompting iterations",
+     "unit": "items",
+     "higher_is_better": true
+    },
+    {
+     "name": "tech tree milestone",
+     "definition": "mean prompting iterations to unlock wooden/stone/iron/diamond tool, with successful trials out of 3",
+     "unit": "iterations",
+     "higher_is_better": false
+    },
+    {
+     "name": "map coverage",
+     "definition": "smallest circle enclosing the agent trajectory",
+     "unit": "distance ratio",
+     "higher_is_better": true
+    },
+    {
+     "name": "zero-shot task completion",
+     "definition": "iterations to solve unseen task in new world, max 50",
+     "unit": "iterations",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "ReAct",
+    "Reflexion",
+    "AutoGPT (re-implemented)",
+    "AutoGPT w/ Voyager skill library",
+    "Voyager ablations"
+   ],
+   "protocol": "Three trials per method; no significance test; baselines re-interpreted for MineDojo with the task 'explore the world and get as many items as possible'."
+  },
+  "availability": {
+   "code": "https://voyager.minedojo.org (project page; codebase referenced)",
+   "weights": null,
+   "data": null
+  },
+  "prompts": [
+   {
+    "purpose": "automatic curriculum system prompt (excerpt)",
+    "text": "You are a helpful assistant that tells me the next immediate task to do in Minecraft. My ultimate goal is to discover as many diverse things as possible, accomplish as many diverse tasks as possible and become the best Minecraft player in the world.",
+    "where": "App A.3.4 Prompt 1"
+   },
+   {
+    "purpose": "code-generation guideline (excerpt)",
+    "text": "Your function will be reused for building more complex functions. Therefore, you should make it generic and reusable.",
+    "where": "Sec 2.2"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "inference.temperature",
+    "quote": "We set all temperatures to\n0 except for the automatic curriculum, which uses temperature = 0.1",
+    "where": "Sec 3.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Voyager discovers 3.3x more unique items than the best baseline in 160 prompting iterations.",
+   "kind": "measured",
+   "source": null,
+   "metric": "unique items",
+   "value": 63,
+   "unit": "items",
+   "baseline_value": null,
+   "n": 3,
+   "setup": "Minecraft via MineDojo/Mineflayer, GPT-4 (gpt-4-0314), 160 prompting iterations, 3 trials per method",
+   "quote": "discovering 63\nunique items within 160 prompting iterations, 3.3× many novel items compared to its counterparts",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.3"
+  },
+  {
+   "claim": "Voyager unlocks the wooden tool level 15.3x faster than baselines.",
+   "kind": "measured",
+   "source": null,
+   "metric": "speedup vs baseline (iterations)",
+   "value": 15.3,
+   "unit": "x",
+   "baseline_value": "AutoGPT 92 ± 72",
+   "n": 3,
+   "setup": "Minecraft via MineDojo/Mineflayer, GPT-4 (gpt-4-0314), 160 prompting iterations, 3 trials per method; Table 1 iterations: Voyager 6±2 vs AutoGPT 92±72",
+   "quote": "VOYAGER unlocks the wooden level 15.3× faster",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.3, Table 1"
+  },
+  {
+   "claim": "Voyager unlocks the iron level 6.4x faster than baselines.",
+   "kind": "measured",
+   "source": null,
+   "metric": "speedup vs baseline (iterations)",
+   "value": 6.4,
+   "unit": "x",
+   "baseline_value": null,
+   "n": 3,
+   "setup": "Minecraft via MineDojo/Mineflayer, GPT-4 (gpt-4-0314), 160 prompting iterations, 3 trials per method",
+   "quote": "the iron level 6.4× faster",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.3, Table 1"
+  },
+  {
+   "claim": "Voyager is the only method to reach the diamond tool, and only in 1 of 3 trials.",
+   "kind": "measured",
+   "source": null,
+   "metric": "diamond tool unlocked (iterations, trials succeeded)",
+   "value": "102 (1/3)",
+   "unit": null,
+   "baseline_value": "N/A (0/3) for all others",
+   "n": 3,
+   "setup": "Minecraft via MineDojo/Mineflayer, GPT-4 (gpt-4-0314), 160 prompting iterations, 3 trials per method; max 160 iterations",
+   "quote": null,
+   "table": "Table 1, row VOYAGER (Ours), column Diamond Tool",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Voyager travels 2.3x longer distances than baselines.",
+   "kind": "measured",
+   "source": null,
+   "metric": "map distance ratio",
+   "value": 2.3,
+   "unit": "x",
+   "baseline_value": null,
+   "n": 3,
+   "setup": "Minecraft via MineDojo/Mineflayer, GPT-4 (gpt-4-0314), 160 prompting iterations, 3 trials per method; distance is the smallest circle enclosing each trajectory (Fig 7 from Fig A.2)",
+   "quote": "VOYAGER is able to navigate distances 2.3× longer compared to baselines",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.3"
+  },
+  {
+   "claim": "Replacing the automatic curriculum with a random one cuts discovered items by 93%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "change in discovered item count",
+   "value": -93,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Ablation, exploration setting of Fig 9; random curriculum picks from 101 items Voyager obtained",
+   "quote": "The discovered item\n   count drops by 93% if the curriculum is replaced with a random one",
+   "table": null,
+   "note": "Quote line breaks differ; see text of Sec 3.4",
+   "where": "Sec 3.4"
+  },
+  {
+   "claim": "Removing self-verification cuts discovered items by 73%, the largest drop among feedback types.",
+   "kind": "measured",
+   "source": null,
+   "metric": "change in discovered item count",
+   "value": -73,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Ablation, Fig 9 right; w/o self-verification runs 3 refinement rounds per task",
+   "quote": "Removing the\n   module leads to a significant drop (−73%) in the discovered item count",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.4"
+  },
+  {
+   "claim": "GPT-4 gives 5.7x more unique items than GPT-3.5 for code generation.",
+   "kind": "measured",
+   "source": null,
+   "metric": "unique items ratio",
+   "value": 5.7,
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Ablation: GPT-3.5 for code generation, GPT-4 kept for curriculum and verifier",
+   "quote": "obtains 5.7× more\n     unique items",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.4"
+  },
+  {
+   "claim": "Without the skill library Voyager plateaus in later stages (qualitative; Fig 9).",
+   "kind": "measured",
+   "source": null,
+   "metric": "claim",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Ablation, exploration setting",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Sec 3.4"
+  },
+  {
+   "claim": "Zero-shot to unseen tasks in a new world: Voyager solves all four tasks in 3/3 trials within 50 iterations; ReAct, Reflexion, AutoGPT solve none.",
+   "kind": "measured",
+   "source": null,
+   "metric": "tasks solved",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": 3,
+   "setup": "New world, cleared inventory, tasks Diamond Pickaxe/Golden Sword/Lava Bucket/Compass, max 50 iterations, 3 trials",
+   "quote": null,
+   "table": "Table 2, row VOYAGER (Ours), columns Diamond Pickaxe 19 ± 3 (3/3), Golden Sword 18 ± 7 (3/3), Lava Bucket 21 ± 5 (3/3), Compass 18 ± 2 (3/3)",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Voyager's skill library given to AutoGPT lets it solve some unseen tasks (Diamond Pickaxe 39 (1/3), Golden Sword 30 (1/3), Compass 30 (2/3), Lava Bucket 0/3) while plain AutoGPT solves none.",
+   "kind": "measured",
+   "source": null,
+   "metric": "iterations (successes)",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": 3,
+   "setup": "Zero-shot generalisation, max 50 iterations",
+   "quote": null,
+   "table": "Table 2, row AutoGPT w/ Our Skill Library, column Diamond Pickaxe: 39 (1/3)",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Without the skill library Voyager is slower on tech tree iron tool (29 ± 11 vs 21 ± 7) and never reaches diamond.",
+   "kind": "measured",
+   "source": null,
+   "metric": "iterations to iron tool",
+   "value": 29,
+   "unit": "iterations",
+   "baseline_value": "21 ± 7",
+   "n": 3,
+   "setup": "Minecraft via MineDojo/Mineflayer, GPT-4 (gpt-4-0314), 160 prompting iterations, 3 trials per method",
+   "quote": null,
+   "table": "Table 1, row VOYAGER w/o Skill Library, column Iron Tool: 29 ± 11 (3/3)",
+   "note": "Voyager's Stone Tool 11 ± 2 is slower than w/o skill library 9 ± 4",
+   "where": "Table 1"
+  },
+  {
+   "claim": "Top-5 skill retrieval accuracy is 96.5%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-5 retrieval accuracy",
+   "value": 96.5,
+   "unit": "%",
+   "baseline_value": null,
+   "n": 309,
+   "setup": "309 retrieval samples",
+   "quote": "The top-5 accuracy standing at 96.5%",
+   "table": "Table A.4, column Top-5 Acc: 96.5 ± 0.3; Top-1 80.2 ± 3.0",
+   "note": null,
+   "where": "App B.4.4, Table A.4"
+  },
+  {
+   "claim": "Performance with gpt-4-0613 is roughly the same as with gpt-4-0314.",
+   "kind": "measured",
+   "source": null,
+   "metric": "claim",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig A.4",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "App B.4.5"
+  }
+ ],
+ "limits": [
+  "Authors: GPT-4 API is costly (15x GPT-3.5) and GPT-3.5 or open-source LLMs cannot match its code quality",
+  "Authors: agent can get stuck; self-verification can miss success (spider string); curriculum and code hallucinate (copper sword, cobblestone fuel)",
+  "Only 3 trials per method, no variance tests; baselines are re-implementations adapted by the authors, not tuned originals",
+  "Uses high-level Mineflayer API, so no perception or motor control; text-only GPT-4 at time of writing",
+  "Model snapshots (gpt-4-0314) are deprecated; a gpt-4-0613 rerun is reported as similar"
+ ],
+ "practices": [],
+ "terms": [],
+ "lineage": [
+  {
+   "work": "ReAct",
+   "year": 2022,
+   "arxiv": "2210.03629",
+   "relation": "baseline",
+   "note": "re-interpreted for Minecraft",
+   "quote": null
+  },
+  {
+   "work": "Reflexion",
+   "year": 2023,
+   "arxiv": "2303.11366",
+   "relation": "baseline",
+   "note": "Voyager's self-verification is said to be more comprehensive than self-reflection",
+   "quote": null
+  },
+  {
+   "work": "AutoGPT",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "re-implemented with GPT-4 task decomposition",
+   "quote": null
+  },
+  {
+   "work": "MineDojo",
+   "year": 2022,
+   "arxiv": "2206.08853",
+   "relation": "uses-data",
+   "note": "simulation environment and wiki knowledge base",
+   "quote": null
+  },
+  {
+   "work": "Code as Policies",
+   "year": 2022,
+   "arxiv": "2209.07753",
+   "relation": "uses-method",
+   "note": "code as action space",
+   "quote": null
+  },
+  {
+   "work": "ProgPrompt",
+   "year": 2022,
+   "arxiv": "2209.11302",
+   "relation": "related",
+   "note": "LLM-generated robot programs",
+   "quote": null
+  },
+  {
+   "work": "Volum et al. (Codex Minecraft policies)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Mineflayer low-level controller following this work",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "VOYAGER consists of three key components: an automatic curriculum for open-ended exploration, a skill library for increasingly complex behaviors, and an iterative prompting mechanism that uses code as action space.",
+   "page": 2,
+   "why": "Shows the whole loop in one diagram"
+  },
+  {
+   "figure": "Fig 9",
+   "caption": "Ablation studies for curriculum, skill library, GPT-4 and for the iterative prompting mechanism.",
+   "page": 9,
+   "why": "Shows each component's contribution over iterations"
+  }
+ ],
+ "code": [
+  {
+   "where": "App A.1 Pseudocode 1",
+   "snippet": "for i in range (4): skills = skill_manager.retrieve_skills(task, environment_feedback); code = action_agent.generate_code(task, code, environment_feedback, execution_errors, critique, skills); ...; success, critique = critic_agent.check_task_success(task, agent_state); if success: break",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text extraction splits some sentences across lines; quotes keep the line breaks.",
+  "Quote values of ablation percentages are read from text; Fig 9 numbers not extracted (figure only)."
+ ]
+}

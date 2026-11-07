@@ -1,0 +1,442 @@
+{
+ "schema": 1,
+ "key": "1907.05600",
+ "pdf": "ai-engineering/08-multimodal-engineering/sources/song-2019-generative-modeling-estimating-gradients-data.pdf",
+ "bib": {
+  "title": "Generative Modeling by Estimating Gradients of the Data Distribution",
+  "authors": [
+   "Yang Song",
+   "Stefano Ermon"
+  ],
+  "first_author": "Song",
+  "year": 2019,
+  "venue": "NeurIPS 2019 (33rd Conference on Neural Information Processing Systems); arXiv v3 Oct 2020",
+  "arxiv": "1907.05600",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 55007,
+  "chars_total": 55007,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can a generative model be built by estimating the score of the data density with score matching and sampling with Langevin dynamics, despite manifold and low-density-region problems?",
+ "hypothesis": "Perturbing data with multiple Gaussian noise levels, jointly estimating scores for all levels, and sampling with annealed Langevin dynamics fixes poor score estimation and slow mixing.",
+ "contributions": [
+  "Noise Conditional Score Networks (NCSN) jointly estimating scores at L noise levels",
+  "Annealed Langevin dynamics sampling",
+  "Denoising score matching objective with lambda(sigma)=sigma^2, usable for model comparison",
+  "Inception 8.87 on CIFAR-10 and inpainting by a modified sampler"
+ ],
+ "method": {
+  "summary": "A RefineNet-style U-Net with dilated convolutions and CondInstanceNorm++ takes (x, sigma) and is trained with weighted denoising score matching over 10 geometric noise levels. Images are sampled by annealed Langevin dynamics, T steps per level with step size proportional to sigma^2.",
+  "task": "unconditional image generation (MNIST, CelebA, CIFAR-10) and inpainting",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "MNIST",
+    "role": "train",
+    "size": null,
+    "split": null,
+    "source": null,
+    "preprocessing": "pixels in [0,1]"
+   },
+   {
+    "name": "CelebA",
+    "role": "train",
+    "size": null,
+    "split": null,
+    "source": null,
+    "preprocessing": "center-crop 140x140, resize 32x32, pixels in [0,1], random flip"
+   },
+   {
+    "name": "CIFAR-10",
+    "role": "both",
+    "size": null,
+    "split": null,
+    "source": null,
+    "preprocessing": "pixels in [0,1], random flip"
+   }
+  ],
+  "models": [
+   {
+    "name": "NCSN",
+    "role": "proposed",
+    "params": null,
+    "architecture": "4-cascaded RefineNet (U-Net variant), pre-activation residual blocks, ELU, dilated convolutions replacing subsampling except the first, CondInstanceNorm++ replacing batch norm, average pooling",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "filters": "128 in first cascade then doubled per cascade for CelebA and CIFAR-10; halved for MNIST",
+     "dilation": "doubled per cascade"
+    }
+   },
+   {
+    "name": "NCSN baseline (single sigma=0.01)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "same score network conditioned on one noise level",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "weighted sum over sigma_i of denoising score matching, lambda(sigma)=sigma^2, noise N(x, sigma^2 I)",
+   "optimizer": "Adam",
+   "lr": "0.001",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "128",
+   "steps": "200000 iterations",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "random horizontal flip on CelebA and CIFAR-10",
+   "hardware": "1 Titan XP GPU for MNIST; 2 Titan XP GPUs for CelebA and CIFAR-10",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "noise_levels": "L=10 geometric, sigma_1=1 to sigma_10=0.01",
+    "checkpointing": "every 5000 iterations; MNIST uses last checkpoint; CIFAR-10/CelebA pick lowest FID on 1000 generated images"
+   }
+  },
+  "inference": {
+   "decoding": "annealed Langevin dynamics (Alg 1), uniform noise init",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "50000 samples for Inception/FID in Table 1; single run, no seeds reported",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "T": "100 steps per noise level",
+    "eps": "2e-5",
+    "step_size": "alpha_i = eps * sigma_i^2 / sigma_L^2",
+    "baseline_sampling": "eps=2e-5, T=1000 vanilla Langevin",
+    "toy_gaussian_mixture": "L=10, sigma 20 to 1 (Fig 3); L=10, sigma 10 to 0.1 in Sec 4.3 text; eps=0.1, T=100",
+    "inpainting": "Alg 2, same hyperparameters as generation"
+   },
+   "other": {
+    "note": "Total network evaluations per image inferred 1000 (L*T)"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Inception score",
+     "definition": "official OpenAI improved-gan code",
+     "unit": "score",
+     "higher_is_better": true
+    },
+    {
+     "name": "FID",
+     "definition": "official TTUR code",
+     "unit": "FID",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "PixelCNN",
+    "PixelIQN",
+    "EBM",
+    "WGAN-GP",
+    "MoLM",
+    "SNGAN",
+    "ProgressiveGAN",
+    "BigGAN (conditional)",
+    "single-noise-level Langevin"
+   ],
+   "protocol": "50000 samples; numbers for MNIST and CelebA omitted as not comparable; model selection on FID of 1000 images"
+  },
+  "availability": {
+   "code": "https://github.com/ermongroup/ncsn",
+   "weights": "checkpoints available at the same URL",
+   "data": "public datasets"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "NCSN reaches inception score 8.87 on CIFAR-10, called state of the art for unconditional models at the time.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Inception score",
+   "value": "8.87",
+   "unit": "score",
+   "baseline_value": null,
+   "n": null,
+   "setup": "NCSN, CIFAR-10 unconditional, 50000 samples for scores, checkpoint chosen by FID on 1000 images",
+   "note": null,
+   "where": "Sec 5 / Table 1",
+   "quote": "As an unconditional model, we achieve the state-of-the-art inception score of 8.87"
+  },
+  {
+   "claim": "NCSN FID on CIFAR-10 is 25.32, comparable to SNGAN.",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": "25.32",
+   "unit": "FID",
+   "baseline_value": null,
+   "n": null,
+   "setup": "NCSN, CIFAR-10 unconditional, 50000 samples for scores, checkpoint chosen by FID on 1000 images",
+   "note": null,
+   "where": "Sec 5 / Table 1",
+   "quote": "Our FID score 25.32 on CIFAR-10"
+  },
+  {
+   "claim": "SNGAN unconditional baseline gets FID 21.7 and WGAN-GP 36.4 in the same table (so NCSN FID is worse than SNGAN, MoLM and BigGAN).",
+   "kind": "reported",
+   "source": null,
+   "metric": "FID",
+   "value": "21.7",
+   "unit": "FID",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 1 CIFAR-10 unconditional",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row SNGAN [36], column FID"
+  },
+  {
+   "claim": "BigGAN class-conditional gets FID 14.73 and Inception 9.22, better than NCSN.",
+   "kind": "reported",
+   "source": null,
+   "metric": "FID",
+   "value": "14.73",
+   "unit": "FID",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 1 CIFAR-10 conditional",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row BigGAN [6], column FID"
+  },
+  {
+   "claim": "Sliced score matching loss on raw CIFAR-10 fluctuates irregularly, but converges when data is perturbed by N(0, 0.0001).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "ResNet autoencoder, sliced score matching, 50000 iterations (Fig 1)",
+   "note": null,
+   "where": "Sec 3.1",
+   "quote": "Gaussian noise N(0, 0.0001) we impose is very small"
+  },
+  {
+   "claim": "Baseline with a single noise level sigma=0.01 and vanilla Langevin fails to generate reasonable images.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Same score network conditioned on one sigma, eps=2e-5, T=1000; samples shown qualitatively (Fig 7), no FID reported",
+   "note": null,
+   "where": "Sec 5 / App B.2",
+   "quote": "this baseline fails to generate reasonable images"
+  },
+  {
+   "claim": "Annealed Langevin recovers the 1/5 vs 4/5 mode weights of a two-Gaussian mixture; vanilla Langevin does not.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Toy mixture 1/5 N((-5,-5),I)+4/5 N((5,5),I), exact scores, 1280 samples, L=10, sigma 20 to 1 (App B.1)",
+   "note": null,
+   "where": "Fig 3",
+   "quote": "Langevin dynamics estimate the relative weights between the two modes incorrectly, while annealed Langevin dynamics recover the relative weights faithfully"
+  },
+  {
+   "claim": "Image sampling hyperparameters: T=100 steps per noise level, eps=2e-5, robust for eps in 5e-6 to 5e-5, uniform noise init.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "MNIST, CelebA 32x32, CIFAR-10; L=10, sigma 1 to 0.01 geometric",
+   "note": null,
+   "where": "Sec 5 Setup",
+   "quote": "We found the results are robust w.r.t. the choice of T, and ϵ between 5 × 10−6 and 5 × 10−5 generally works ﬁne"
+  },
+  {
+   "claim": "Sliced score matching needs about four times more computation than denoising score matching, due to forward-mode autodiff.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Sec 2.1 statement",
+   "note": null,
+   "where": "Sec 2.1",
+   "quote": "requires around four times more computations due to the forward mode auto-differentiation"
+  },
+  {
+   "claim": "Weighting lambda(sigma)=sigma^2 keeps each noise level's loss on a similar scale, since ||s|| is roughly proportional to 1/sigma at optimum.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Empirical observation at optimum",
+   "note": null,
+   "where": "Sec 4.2",
+   "quote": "This inspires us to choose λ(σ) = σ2"
+  }
+ ],
+ "limits": [
+  "Only 32x32 images; only evaluated quantitatively on CIFAR-10.",
+  "FID 25.32 is worse than SNGAN conditional/unconditional entries in Table 1 (21.7) and BigGAN (14.73); only Inception is state of the art.",
+  "Ignores the Metropolis-Hastings correction: 'we assume this error is negligible'.",
+  "Sampling needs L*T = 1000 sequential network evaluations (inferred).",
+  "No seeds, wall-clock, parameter count or dataset sizes reported; checkpoint selected using FID on 1000 images.",
+  "Architecture design for other domains left as future work."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Noise Conditional Score Network (NCSN)",
+   "definition": "sθ(x, σ) approximating ∇x log qσ(x) for all σ in a geometric sequence",
+   "where": "Sec 4.1"
+  },
+  {
+   "term": "Annealed Langevin dynamics",
+   "definition": "Langevin sampling run at decreasing noise levels, each initialised from the previous level's final samples, with step size αi = ε σi²/σL²",
+   "where": "Sec 4.3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Estimation of non-normalized statistical models by score matching (Hyvarinen)",
+   "year": 2005,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "score matching",
+   "quote": null
+  },
+  {
+   "work": "A connection between score matching and denoising autoencoders (Vincent)",
+   "year": 2011,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "denoising score matching objective",
+   "quote": null
+  },
+  {
+   "work": "Sliced score matching (Song et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "used in toy experiments",
+   "quote": null
+  },
+  {
+   "work": "Deep unsupervised learning using nonequilibrium thermodynamics (Sohl-Dickstein et al.)",
+   "year": 2015,
+   "arxiv": "1503.03585",
+   "relation": "related",
+   "note": "NET needs thousands of chain steps at training time; trained via ELBO",
+   "quote": null
+  },
+  {
+   "work": "RefineNet (Lin et al.)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "score network architecture",
+   "quote": null
+  },
+  {
+   "work": "Conditional instance normalization (Dumoulin et al.)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "extended to CondInstanceNorm++",
+   "quote": null
+  },
+  {
+   "work": "Implicit generation and generalization in energy-based models (Du and Mordatch)",
+   "year": 2019,
+   "arxiv": "1903.08689",
+   "relation": "baseline",
+   "note": "EBM row in Table 1",
+   "quote": null
+  },
+  {
+   "work": "SNGAN, BigGAN, ProgressiveGAN, WGAN-GP",
+   "year": null,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Table 1",
+   "quote": null
+  },
+  {
+   "work": "CIFAR-10, CelebA, MNIST",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 3",
+   "caption": "Samples from a mixture of Gaussian with different methods. (a) Exact sampling. (b) Langevin with exact scores. (c) Annealed Langevin with exact scores.",
+   "page": 5,
+   "why": "Shows why annealing fixes mode weights"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Intermediate samples of annealed Langevin dynamics.",
+   "page": 7,
+   "why": "Shows noise to image trajectory"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Inception and FID scores for CIFAR-10",
+   "page": 7,
+   "why": "Comparison with GANs"
+  }
+ ],
+ "code": [
+  {
+   "where": "Alg 1",
+   "snippet": "alpha_i = eps * sigma_i^2 / sigma_L^2; x_t = x_{t-1} + alpha_i/2 * s_theta(x_{t-1}, sigma_i) + sqrt(alpha_i) * z_t",
+   "verbatim": false
+  }
+ ],
+ "problems": []
+}

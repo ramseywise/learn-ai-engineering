@@ -1,0 +1,496 @@
+{
+ "schema": 1,
+ "key": "1706.08500",
+ "pdf": "ai-engineering/08-multimodal-engineering/sources/heusel-2017-gans-trained-two-time-scale.pdf",
+ "bib": {
+  "title": "GANs Trained by a Two Time-Scale Update Rule Converge to a Local Nash Equilibrium",
+  "authors": [
+   "Martin Heusel",
+   "Hubert Ramsauer",
+   "Thomas Unterthiner",
+   "Bernhard Nessler",
+   "Sepp Hochreiter"
+  ],
+  "first_author": "Heusel",
+  "year": 2017,
+  "venue": "NIPS 2017",
+  "arxiv": "1706.08500",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 99951,
+  "chars_total": 99951,
+  "engine": "pymupdf",
+  "skipped": "Appendix A2/A3 convergence proofs (math) only skimmed by heading; main text, FID appendix, experiments appendix, A5, A6 read in full"
+ },
+ "type": "empirical",
+ "question": "Can GANs be proven to converge to a local Nash equilibrium with separate discriminator and generator learning rates, and does this improve training and how should image GANs be evaluated?",
+ "hypothesis": "A two time-scale update rule (discriminator learns faster in theory) stabilises GAN training and yields better FID than equal learning rates.",
+ "contributions": [
+  "The two time-scale update rule for GANs",
+  "Proof that GANs trained with TTUR converge to a stationary local Nash equilibrium",
+  "Description of Adam as heavy ball with friction and its second order differential equation",
+  "Convergence of GANs trained with TTUR and Adam",
+  "The Frechet Inception Distance (FID), more consistent than the Inception Score"
+ ],
+ "method": {
+  "summary": "Separate learning rates b (discriminator) and a (generator) are used with Adam on DCGAN, WGAN-GP (image and char-level language) and BEGAN, compared against equal-rate training; evaluation uses the newly introduced FID (images) or JSD (text).",
+  "task": "image and text generation with GANs; GAN evaluation",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "CelebA (aligned, cropped)",
+    "role": "both",
+    "size": null,
+    "split": "all images for real statistics",
+    "source": "Liu et al. 2015",
+    "preprocessing": null
+   },
+   {
+    "name": "CIFAR-10 train",
+    "role": "both",
+    "size": null,
+    "split": "train set",
+    "source": "Krizhevsky et al.",
+    "preprocessing": null
+   },
+   {
+    "name": "SVHN train",
+    "role": "both",
+    "size": null,
+    "split": "train set",
+    "source": "Netzer et al. 2011",
+    "preprocessing": null
+   },
+   {
+    "name": "LSUN Bedrooms train",
+    "role": "both",
+    "size": null,
+    "split": "bedroom category train",
+    "source": "Yu et al. 2015",
+    "preprocessing": null
+   },
+   {
+    "name": "One Billion Word Benchmark",
+    "role": "both",
+    "size": null,
+    "split": null,
+    "source": "Chelba et al. 2013",
+    "preprocessing": "character level, one-hot of 32 characters"
+   }
+  ],
+  "models": [
+   {
+    "name": "DCGAN",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "deep convolutional GAN, carpedm20 TF implementation",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "WGAN-GP image (gan_64x64.py)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "Improved Wasserstein GAN",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "WGAN-GP language (gan_language.py)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "1D CNN generator and 1D CNN discriminator over one-hot 32-char sequences",
+    "init_from": null,
+    "tokenizer": "character",
+    "vocab": "32",
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "BEGAN",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "Boundary equilibrium GAN",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Inception-v3 (pretrained, inception-2015-12-05)",
+    "role": "judge",
+    "params": null,
+    "architecture": "CNN; last pooling layer used as coding layer for FID",
+    "init_from": "ImageNet",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "Original GAN loss (DCGAN), Wasserstein with gradient penalty (WGAN-GP), BEGAN",
+   "optimizer": "Adam",
+   "lr": "per experiment (b discriminator, a generator): DCGAN CelebA 1e-5/5e-4, CIFAR-10 1e-4/5e-4, SVHN 1e-5/1e-4, LSUN 1e-5/1e-4; WGAN-GP image and language 3e-4/1e-4; orig equal rates 1e-4 to 5e-4",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": "stopped when FID/JSD no longer decreasing; best at e.g. 225k (CelebA DCGAN), 168k iter (WGAN-GP CIFAR-10)",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "weight decay suggested in theory (A4, A5), not reported in experiments",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": "WGAN-GP: 700 to 2010 min per run to best point",
+   "seeds": "8 runs (image), 10 runs (language) per learning-rate setting; fixed random seeds removed from reference code",
+   "other": {
+    "orig WGAN-GP critic steps": "5 (image) and 10 (language) per generator step; TTUR uses 1",
+    "learning rates": "chosen as large as possible while FID or JSD keeps decreasing",
+    "FID evaluation frequency": "every 1,000 DCGAN mini-batches, every 5,000 WGAN-GP outer iterations (images), every 100 (language)",
+    "software": "TensorFlow 1.3, Python 3.6"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "50,000 generated images per FID evaluation",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "FID",
+     "definition": "Frechet distance between Gaussians fitted to Inception-v3 pool features of real and generated images: ||m-mw||^2 + Tr(C+Cw-2(C Cw)^1/2)",
+     "unit": "FID",
+     "higher_is_better": false
+    },
+    {
+     "name": "normalized JSD",
+     "definition": "Jensen-Shannon divergence between model and real n-gram statistics (4-gram, 6-gram)",
+     "unit": "JSD",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "Same GAN with one time-scale (equal learning rates), 'orig'"
+   ],
+   "protocol": "Mean, min and max over 8 (images) or 10 (language) runs per setting; best FID at tuned number of updates; no significance test"
+  },
+  "availability": {
+   "code": "https://github.com/bioinf-jku/TTUR",
+   "weights": null,
+   "data": "public datasets"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.other",
+    "quote": "For TTUR however, the discriminator is updated only once per iteration.",
+    "where": "Experiments"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "TTUR gives lower FID than one time-scale training for DCGAN on CelebA (12.5 vs 21.4).",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": "12.5",
+   "unit": "FID",
+   "baseline_value": "21.4",
+   "n": null,
+   "setup": "DCGAN, CelebA, TTUR b=1e-5 a=5e-4 at 225k updates vs orig 5e-4 at 70k; best over updates; 8 runs per setting",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, DCGAN CelebA, TTUR vs orig, column FID"
+  },
+  {
+   "claim": "TTUR improves WGAN-GP FID on LSUN Bedrooms from 20.5 to 9.5.",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": "9.5",
+   "unit": "FID",
+   "baseline_value": "20.5",
+   "n": null,
+   "setup": "WGAN-GP image model, LSUN Bedrooms, TTUR b=3e-4 a=1e-4, 1900 min vs orig 1e-4, 2010 min",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, WGAN-GP Image LSUN, column FID"
+  },
+  {
+   "claim": "TTUR improves WGAN-GP FID on CIFAR-10 from 29.3 to 24.8.",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": "24.8",
+   "unit": "FID",
+   "baseline_value": "29.3",
+   "n": null,
+   "setup": "WGAN-GP image, CIFAR-10, TTUR 3e-4/1e-4 at 700 min (168k iter) vs orig 1e-4 at 800 min (53k iter)",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, WGAN-GP Image CIFAR-10, column FID"
+  },
+  {
+   "claim": "TTUR improves DCGAN FID on LSUN Bedrooms from 70.4 to 57.5.",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": "57.5",
+   "unit": "FID",
+   "baseline_value": "70.4",
+   "n": null,
+   "setup": "DCGAN, LSUN Bedrooms, TTUR 1e-5/1e-4 at 340k vs orig 5e-5 at 70k",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, DCGAN LSUN, column FID"
+  },
+  {
+   "claim": "On DCGAN CIFAR-10 TTUR gains only 0.8 FID (36.9 vs 37.7).",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": "36.9",
+   "unit": "FID",
+   "baseline_value": "37.7",
+   "n": null,
+   "setup": "DCGAN, CIFAR-10, TTUR 1e-4/5e-4 at 75k vs orig 1e-4 at 100k",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, DCGAN CIFAR-10, column FID"
+  },
+  {
+   "claim": "On the One Billion Word benchmark TTUR lowers normalized JSD slightly: 4-gram 0.35 vs 0.38, 6-gram 0.74 vs 0.77.",
+   "kind": "measured",
+   "source": null,
+   "metric": "normalized JSD",
+   "value": "0.35",
+   "unit": "JSD",
+   "baseline_value": "0.38",
+   "n": null,
+   "setup": "WGAN-GP char-level language model, TTUR 3e-4/1e-4, 10 runs",
+   "note": null,
+   "where": "Table 1, Table A4",
+   "table": "Table 1, WGAN-GP Language 4-gram, column JSD"
+  },
+  {
+   "claim": "FID is computed from 50,000 generated images through Inception-v3 pool layer and Gaussian Frechet distance.",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "FID definition, Eq. 6",
+   "note": null,
+   "where": "Experiments",
+   "quote": "To approximate these moments for the model distribution, we generate 50,000 images, propagate them through the Inception-v3 model, and then compute the mean m and the covariance matrix C."
+  },
+  {
+   "claim": "FID increases monotonically with disturbance level while Inception Score fluctuates, stays flat or decreases.",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "CelebA with six disturbance types (noise, blur, rectangles, swirl, salt and pepper, ImageNet contamination)",
+   "note": null,
+   "where": "Fig A8",
+   "quote": "The FID captures the disturbance level very well by monotonically increasing whereas the Inception Score ﬂuctuates,"
+  },
+  {
+   "claim": "TTUR with Adam converges to a stationary local Nash equilibrium under assumptions A1-A5 (Borkar 1997); Adam follows a heavy ball with friction ODE.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Theory; requires Lipschitz gradients (not ReLU), a(n)=o(b(n)), stationary second moments for Adam",
+   "note": null,
+   "where": "Sec 2",
+   "quote": "Theorem 2. If Adam is used with β1 = 1 −a(n + 1)r(n), β2 = 1 −αa(n + 1)r(n)"
+  },
+  {
+   "claim": "TTUR gives no gain for BEGAN since its equilibrium term ties the two gradients.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "BEGAN on CelebA and LSUN Bedrooms, 8 runs",
+   "note": null,
+   "where": "Fig A13",
+   "quote": "For BEGAN we cannot ensure TTUR by adjusting learning rates."
+  }
+ ],
+ "limits": [
+  "Convergence proof needs Lipschitz gradients (excludes ReLU) and stationary second moments of the gradient for Adam.",
+  "Learning rates must be found per experiment; best-over-training FID reported without significance tests.",
+  "TTUR gives no gain for BEGAN.",
+  "Theory suggests discriminator faster, yet DCGAN uses larger generator rate; authors argue not contradictory (A5).",
+  "FID assumes Gaussian Inception features and uses ImageNet Inception-v3.",
+  "Dataset sizes, batch sizes and architectures not stated in the paper."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Frechet Inception Distance",
+   "definition": "Frechet distance between Gaussians (mean, covariance) fitted to Inception coding-layer activations of real and generated images",
+   "where": "Experiments"
+  },
+  {
+   "term": "TTUR",
+   "definition": "two time-scale update rule: individual learning rate for discriminator and generator",
+   "where": "Abstract"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Generative adversarial nets (Goodfellow et al.)",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "original GAN loss",
+   "quote": null
+  },
+  {
+   "work": "Improved techniques for training GANs (Salimans et al.)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Inception Score that FID improves on",
+   "quote": null
+  },
+  {
+   "work": "Improved training of Wasserstein GANs",
+   "year": 2017,
+   "arxiv": "1704.00028",
+   "relation": "baseline",
+   "note": "WGAN-GP evaluated",
+   "quote": null
+  },
+  {
+   "work": "DCGAN (Radford et al.)",
+   "year": 2016,
+   "arxiv": "1511.06434",
+   "relation": "baseline",
+   "note": "evaluated",
+   "quote": null
+  },
+  {
+   "work": "BEGAN",
+   "year": 2017,
+   "arxiv": "1703.10717",
+   "relation": "evaluates",
+   "note": "no TTUR gain",
+   "quote": null
+  },
+  {
+   "work": "Borkar, Stochastic approximation with two time scales",
+   "year": 1997,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "convergence theorem",
+   "quote": null
+  },
+  {
+   "work": "Prasad et al., two-timescale algorithms for Nash equilibria",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "actor-critic TTUR analysis",
+   "quote": null
+  },
+  {
+   "work": "Adam (Kingma and Ba)",
+   "year": 2015,
+   "arxiv": "1412.6980",
+   "relation": "uses-method",
+   "note": "optimizer analysed as HBF",
+   "quote": null
+  },
+  {
+   "work": "Nagarajan and Kolter, GD GAN optimization locally stable",
+   "year": 2017,
+   "arxiv": "1706.04156",
+   "relation": "related",
+   "note": "local stability",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 3",
+   "caption": "FID evaluated for Gaussian noise, blur, black rectangles, swirl, salt and pepper, and ImageNet contamination",
+   "page": 6,
+   "why": "shows FID rises monotonically with distortion"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Mean FID with min/max over 8 runs for DCGAN on CelebA, CIFAR-10, SVHN, LSUN",
+   "page": 8,
+   "why": "TTUR lower variance and better FID"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Toy saddle point f(x,y)=(1+x^2)(100-y^2) with equal and two time-scale rates",
+   "page": 7,
+   "why": "minimal demonstration of TTUR"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq. 6",
+   "snippet": "d2((m, C), (mw, Cw)) = ||m - mw||_2^2 + Tr(C + Cw - 2 (C Cw)^(1/2))",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text cache contains NUL bytes; Read still worked.",
+  "Fig 6 caption mentions CelebA/SVHN though only CIFAR-10 and LSUN are shown (paper inconsistency).",
+  "Table A4 caption says 'consistently a better FID' for JSD results."
+ ]
+}

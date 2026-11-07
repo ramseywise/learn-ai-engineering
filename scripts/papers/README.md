@@ -123,6 +123,10 @@ Training work is scored on the 11 training fields, work with `trains: false` on 
 The PDF text cache, `.textcache/`, is gitignored.
 
 The backlog is filled by `/extract` (reads and records, never edits notes) and by the nightly run's last pass.
+Its scope is tier 1, tier 2 and book chapters (`next` and `status` without `--all`); the nightly pass moves on to
+paper tiers 3-6 only once that core is empty. Nothing is read twice: `/papers` and `/chapter` leave an extraction
+behind, `next` skips every reading with a full one, and a `source-reader` handed a PDF whose full extraction
+passes `check` reports from that file instead of reading the PDF again.
 `check_ledger.py` reports `no-extraction` (information only) until it is cleared; then it becomes gated and
 `mark integrated` refuses a reading without one. Today `mark integrated` warns.
 

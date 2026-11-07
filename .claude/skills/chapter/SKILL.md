@@ -42,7 +42,7 @@ carry the chapter, the verdict is **verified**. Mark it `integrated` either way.
 Dispatch one `source-reader` with the chapter PDF and the triage's `note`. It reads the whole chapter, writes the
 chapter's extraction to `scripts/papers/extractions/<key>.json` (type `book-chapter`; a method block only if the chapter
 runs an experiment) and returns claims, numbers, setups, verbatim quotes, code and figure candidates, so the raw chapter
-stays out of this session. Check `COVERAGE` in its report, and that its `EXTRACTION` line says the check passed. If the agent is unavailable, or a quote looks wrong, extract the text yourself. Chapter PDFs saved from the
+stays out of this session. Check `COVERAGE` in its report (`reused extraction` means a full read already made the file), and that its `EXTRACTION` line says the check passed. If the agent is unavailable, or a quote looks wrong, extract the text yourself. Chapter PDFs saved from the
 O'Reilly reader are often one very tall page, so read by character range, not by page:
 
 ```bash

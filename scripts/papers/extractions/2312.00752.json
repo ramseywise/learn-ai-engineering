@@ -1,0 +1,651 @@
+{
+ "schema": 1,
+ "key": "2312.00752",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/gu-2023-mamba.pdf",
+ "bib": {
+  "title": "Mamba: Linear-Time Sequence Modeling with Selective State Spaces",
+  "authors": [
+   "Albert Gu",
+   "Tri Dao"
+  ],
+  "first_author": "Gu",
+  "year": 2023,
+  "venue": "preprint",
+  "arxiv": "2312.00752",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 135041,
+  "chars_total": 135041,
+  "engine": "pymupdf",
+  "skipped": "Reference list (offsets ~63319-88592) skimmed only."
+ },
+ "type": "empirical",
+ "question": "Can a sequence model scale linearly in length yet match Transformer quality on dense modalities such as language?",
+ "hypothesis": "Making SSM parameters input-dependent (selection) lets the model filter and remember content, closing the quality gap that time-invariant SSMs have on discrete data.",
+ "contributions": [
+  "Selection mechanism: Delta, B, C as functions of the input",
+  "Hardware-aware selective scan via kernel fusion, parallel scan and recomputation",
+  "Simplified attention-free Mamba architecture",
+  "Empirical results across language, DNA, audio, synthetics"
+ ],
+ "method": {
+  "summary": "Mamba makes SSM parameters (Delta, B, C) functions of the input (selection), computes the resulting time-varying recurrence with a fused hardware-aware parallel scan that keeps the expanded state in SRAM, and stacks a single homogeneous gated block (H3 + MLP merged) with no attention or MLP. Evaluated on synthetics, Pile language modeling (125M-2.8B), HG38 DNA, and audio (YouTubeMix, SC09).",
+  "task": "autoregressive sequence modeling across language, DNA, audio; synthetic copying and induction heads",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Pile",
+    "role": "pretrain",
+    "size": "300B tokens for downstream models; Chinchilla token counts (2.5B-26B) for scaling laws",
+    "split": "validation split for perplexity",
+    "source": "L. Gao, Biderman et al. 2020",
+    "preprocessing": "GPT2 tokenizer for scaling laws; GPT-NeoX tokenizer for 300B-token models"
+   },
+   {
+    "name": "HG38 human genome",
+    "role": "pretrain",
+    "size": "about 4.5 billion tokens (DNA base pairs)",
+    "split": "Enformer splits; 34021 training segments of length 2^17",
+    "source": "HyenaDNA / Enformer setup",
+    "preprocessing": null
+   },
+   {
+    "name": "Great Apes species classification",
+    "role": "eval",
+    "size": "5 species, random contiguous segments, 10 epochs x 1024 steps x batch 64",
+    "split": null,
+    "source": "adapted from HyenaDNA",
+    "preprocessing": null
+   },
+   {
+    "name": "YouTubeMix",
+    "role": "pretrain",
+    "size": "4 hours of solo piano, 16000 Hz, clips up to 1 minute",
+    "split": null,
+    "source": "DeepSound 2017",
+    "preprocessing": "mu-law 8 bit, vocab 256"
+   },
+   {
+    "name": "SC09",
+    "role": "both",
+    "size": "1-second clips at 16000 Hz of digits zero to nine",
+    "split": null,
+    "source": "Warden 2018; Donahue et al. 2019",
+    "preprocessing": null
+   },
+   {
+    "name": "Selective Copying / Induction Heads",
+    "role": "both",
+    "size": "randomly generated each step",
+    "split": "fixed random validation sets",
+    "source": "synthetic",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Mamba (125M, 350M, 760M, 1.3B scaling set)",
+    "role": "proposed",
+    "params": "125M/350M/760M/1.3B",
+    "architecture": "homogeneous Mamba blocks, selective SSM, expansion E=2, SiLU, optional LayerNorm",
+    "init_from": null,
+    "tokenizer": "GPT2 (scaling laws), GPT-NeoX (300B-token models)",
+    "vocab": null,
+    "layers": "12/24/24/24 (Table 12, for Transformer; Mamba uses 2 blocks per Transformer layer, inferred from Sec 3.4)",
+    "hidden": "768/1024/1536/2048 (Table 12)",
+    "heads": null,
+    "context": "2048 (and 8192 in scaling)",
+    "other": {
+     "state_dim_N": "16",
+     "Delta_init": "inverse softplus of Uniform([0.001, 0.1])",
+     "A_init": "S4D-Real, A_n = -(n+1)"
+    }
+   },
+   {
+    "name": "Mamba-130M/370M/790M/1.4B/2.8B",
+    "role": "proposed",
+    "params": "up to 2.8B",
+    "architecture": "as above",
+    "init_from": null,
+    "tokenizer": "GPT-NeoX",
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "2048",
+    "other": {
+     "note": "layer/width for these sizes not tabulated; mirror GPT3 sizes per Sec 4.2"
+    }
+   },
+   {
+    "name": "Transformer / Transformer++",
+    "role": "baseline",
+    "params": "125M-1.3B",
+    "architecture": "GPT3 / PaLM-LLaMa recipe (RoPE, SwiGLU, RMSNorm, no bias)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Hyena, H3++, RWKV, RetNet",
+    "role": "baseline",
+    "params": null,
+    "architecture": "subquadratic baselines",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Pythia, GPT-Neo, OPT, GPT-J, Hybrid H3, RWKV (open checkpoints)",
+    "role": "evaluated",
+    "params": "130M-7.4B",
+    "architecture": "various",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "RWKV trained at 1024, Pythia at 2048",
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "next-token prediction (NLL); bits per byte for audio (log 2 factor of NLL)",
+   "optimizer": "AdamW, beta=(0.9,0.95) for improved recipe; Adam no weight decay for induction heads",
+   "lr": "125M 6e-4, 350M 3e-4, 760M 2.5e-4, 1.3B 2e-4 (GPT3 peak); improved recipe 5x GPT3 value; DNA 8e-3 (Mamba), 2e-3 (Transformer++, HyenaDNA); audio 0.002; SC09 0.002; selective copying 1e-4",
+   "lr_schedule": "linear warmup then cosine decay to 1e-5 (LM); DNA cosine with warmup 10% of steps",
+   "warmup": "10% of total steps (DNA, SC09, audio); LM warmup length not stated",
+   "batch_size": "0.5M tokens (LM scaling); 1M tokens for 1.3B 300B-token run; DNA 1024 seqs (~1M tokens) size sweep, 2^24 tokens/step context sweep; selective copying 64; induction heads 8; SC09 16",
+   "steps": "LM 4800/13500/29000/50000; DNA 10K (size), 20K (context); audio 200K; SC09 200000; selective copying 400K",
+   "epochs": null,
+   "tokens": "2.5B/7B/15B/26B (scaling); 300B (downstream); DNA 10B and ~330B",
+   "seq_len": "2048 and 8192 (LM); 1024 to 2^20 (DNA); 2^13 to 2^20 (audio)",
+   "precision": "BF16 inputs in scan benchmark; training precision not stated",
+   "weight_decay": "0.1",
+   "dropout": "none",
+   "regularisation": "gradient clip 1.0 (LM), 0.1 (SC09)",
+   "hardware": "A100 80GB (benchmarks); training hardware not stated",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "seq_len_warmup": "DNA: 2 epochs per power-of-two length from 1024",
+    "great_apes_finetune_lr": "Mamba 1e-4, Hyena 4e-5; 5 epochs linear warmup, 5 cosine to 1e-6; batch 64",
+    "audio_model": "3 blocks per stage, pooling 16, D=64, ~3.5M params",
+    "SC09_large": "15 layers per stage, D=96, pooling 4, 24.3M params; 8 layers D=64 for 6M"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": "generation length 128 in throughput benchmark",
+   "samples": "throughput averaged over 3 repeats",
+   "prompting": "zero-shot via EleutherAI lm-evaluation-harness; prompt length 2048 in throughput benchmark",
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Pile perplexity",
+     "definition": "validation split, same tokenizer only",
+     "unit": "ppl",
+     "higher_is_better": false
+    },
+    {
+     "name": "zero-shot accuracy",
+     "definition": "accuracy for LAMBADA, WinoGrande, PIQA, ARC-easy; length-normalized for HellaSwag, ARC-challenge",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "bits per byte",
+     "definition": "constant factor log(2) of NLL",
+     "unit": "BPB",
+     "higher_is_better": false
+    },
+    {
+     "name": "FID/IS/mIS/AM",
+     "definition": "automated generated-speech metrics on SC09",
+     "unit": "various",
+     "higher_is_better": null
+    }
+   ],
+   "baselines": [
+    "Transformer",
+    "Transformer++",
+    "Hyena",
+    "H3++",
+    "RWKV",
+    "RetNet",
+    "Pythia",
+    "HyenaDNA",
+    "SaShiMi",
+    "DiffWave",
+    "WaveGAN"
+   ],
+   "protocol": "single runs; no seeds or confidence intervals stated"
+  },
+  "availability": {
+   "code": "https://github.com/state-spaces/mamba",
+   "weights": "pre-trained checkpoints open-sourced",
+   "data": "public datasets"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Mamba-2.8B beats Pythia-2.8B and RWKV-3B on average zero-shot accuracy over six tasks",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg acc",
+   "value": "63.3",
+   "unit": "%",
+   "baseline_value": "59.1",
+   "n": null,
+   "setup": "Pile-trained, GPT-NeoX tokenizer, 300B tokens, ctx 2048, lm-eval-harness zero-shot",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row Mamba-2.8B, column Average (Pythia-2.8B 59.1, RWKV-3B 59.6)"
+  },
+  {
+   "claim": "Mamba-2.8B matches or exceeds Pythia-6.9B (61.7) and GPT-J-6B (63.0) on average",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg acc",
+   "value": "63.3",
+   "unit": "%",
+   "baseline_value": "61.7",
+   "n": null,
+   "setup": "As above; Pythia-6.9B 61.7, GPT-J-6B 63.0",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, rows Mamba-2.8B, Pythia-6.9B, GPT-J-6B, column Average"
+  },
+  {
+   "claim": "Mamba-2.8B Pile validation perplexity",
+   "kind": "measured",
+   "source": null,
+   "metric": "ppl",
+   "value": "6.22",
+   "unit": "ppl",
+   "baseline_value": "6.73",
+   "n": null,
+   "setup": "Same as Table 3; Pythia-2.8B 6.73",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row Mamba-2.8B, column Pile ppl"
+  },
+  {
+   "claim": "Selective Copying: Mamba block with S6 layer reaches near-perfect accuracy; S4 in same block only 56.4",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "99.8",
+   "unit": "%",
+   "baseline_value": "56.4",
+   "n": null,
+   "setup": "Seq len 4096, vocab 16, 16 data tokens, 2 layers, D=64, 400K steps, lr 1e-4, batch 64",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Mamba/Mamba/S6, column Acc."
+  },
+  {
+   "claim": "Induction heads: Mamba trained at length 256 generalizes to million-length, 4000x longer, while no other method exceeds 2x",
+   "kind": "measured",
+   "source": null,
+   "metric": "extrapolation factor",
+   "value": "4000",
+   "unit": "x train length",
+   "baseline_value": null,
+   "n": null,
+   "setup": "2-layer models, vocab 16, train length 256, test 64 to 1048576",
+   "note": null,
+   "where": "Sec 4.1.2",
+   "quote": "It generalizes\nperfectly to million-length sequences, or 4000× longer than it saw during training, while no other method goes\nbeyond 2×."
+  },
+  {
+   "claim": "Mamba achieves higher inference throughput than similar-size Transformers",
+   "kind": "measured",
+   "source": null,
+   "metric": "throughput ratio",
+   "value": "5",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "A100 80GB, prompt 2048, generate 128 tokens, batch up to 128, mean of 3 runs, HF Transformer baseline",
+   "note": null,
+   "where": "Sec 4.5",
+   "quote": "Mamba achieves 4-5× higher inference throughput than a Transformer of similar size"
+  },
+  {
+   "claim": "Fused selective scan is faster than FlashAttention-2 beyond 2K length and up to 20-40x faster than a PyTorch scan",
+   "kind": "measured",
+   "source": null,
+   "metric": "speedup",
+   "value": "20-40",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "A100 80GB PCIe, N=16, D=1024, batch 1, BF16",
+   "note": null,
+   "where": "Sec 4.5",
+   "quote": "up to 20-40× faster than a standard scan implementation\nin PyTorch"
+  },
+  {
+   "claim": "Scaling laws: Mamba matches Transformer++ (first attention-free model to do so) from ~125M to ~1.3B params",
+   "kind": "measured",
+   "source": null,
+   "metric": "relative ppl",
+   "value": "n/a",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Pile, GPT2 tokenizer, Chinchilla token counts, ctx 2048 and 8192",
+   "note": null,
+   "where": "Sec 4.2.1",
+   "quote": "Mamba is the first attention-free model to match the performance of a very strong Transformer\nrecipe (Transformer++) that has now become standard, particularly as the sequence length grows."
+  },
+  {
+   "claim": "Ablation: replacing LTI SSM with S6 in Mamba block cuts perplexity from 10.56 (S4 real) to 8.69",
+   "kind": "measured",
+   "source": null,
+   "metric": "perplexity",
+   "value": "8.69",
+   "unit": "ppl",
+   "baseline_value": "10.56",
+   "n": null,
+   "setup": "~350M models at Chinchilla tokens on Pile",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row Mamba/Mamba/S6, column Perplexity"
+  },
+  {
+   "claim": "Ablation: selective Delta alone gives 9.81 vs 10.93 with no selectivity; all three selective gives 8.71",
+   "kind": "measured",
+   "source": null,
+   "metric": "perplexity",
+   "value": "8.71",
+   "unit": "ppl",
+   "baseline_value": "10.93",
+   "n": null,
+   "setup": "~350M, Pile",
+   "note": null,
+   "where": "Table 7",
+   "table": "Table 7, last row"
+  },
+  {
+   "claim": "Increasing SSM state N from 1 to 16 with selective B,C improves perplexity from 9.73 to 8.71 for 1% more params",
+   "kind": "measured",
+   "source": null,
+   "metric": "perplexity",
+   "value": "8.71",
+   "unit": "ppl",
+   "baseline_value": "9.73",
+   "n": null,
+   "setup": "~350M, Delta proj 64; with constant B,C perplexity stays 9.88 to 9.81",
+   "note": null,
+   "where": "Table 10",
+   "quote": "with over a 1.0\nperplexity improvement for a cost of only 1% additional parameters",
+   "table": "Table 10"
+  },
+  {
+   "claim": "A real-valued S4D-Real init (A_n=-(n+1)) gives 8.71 vs complex S4D-Lin 9.16 under selective SSM",
+   "kind": "measured",
+   "source": null,
+   "metric": "perplexity",
+   "value": "8.71",
+   "unit": "ppl",
+   "baseline_value": "9.16",
+   "n": null,
+   "setup": "~350M, Pile",
+   "note": null,
+   "where": "Table 8",
+   "table": "Table 8, row A_n=-(n+1)"
+  },
+  {
+   "claim": "DNA scaling: Mamba matches Transformer++ and HyenaDNA with roughly 3x to 4x fewer parameters at ~40M",
+   "kind": "measured",
+   "source": null,
+   "metric": "param efficiency",
+   "value": "3-4",
+   "unit": "x fewer params",
+   "baseline_value": null,
+   "n": null,
+   "setup": "HG38, ctx 1024, 200K to 40M params, 10K steps, 10B tokens",
+   "note": null,
+   "where": "Sec 4.3.1",
+   "quote": "Mamba can match the Transformer++ and HyenaDNA models with roughly 3× to 4× fewer\nparameters"
+  },
+  {
+   "claim": "Great apes classification at 1M length: Mamba 7M reaches 81.31% vs HyenaDNA 1.4M 54.87%",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "81.31",
+   "unit": "%",
+   "baseline_value": "54.87",
+   "n": null,
+   "setup": "5-class, fine-tuned at length 2^20; random is 20%",
+   "note": null,
+   "where": "Table 13",
+   "table": "Table 13, row Mamba 7M, column 2^20"
+  },
+  {
+   "claim": "SC09 speech: small Mamba (6.1M) gets FID 0.94 vs SaShiMi 1.99; larger (24.3M) FID 0.67 vs DiffWave+SaShiMi 1.42",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": "0.94",
+   "unit": "FID",
+   "baseline_value": "1.99",
+   "n": null,
+   "setup": "SC09 unconditional generation, 1s clips at 16 kHz",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row Mamba 6.1M, column FID"
+  },
+  {
+   "claim": "Audio: complex S4 (LTI) beats selective S6 on YouTubeMix; selection hampers continuous-signal pretraining",
+   "kind": "measured",
+   "source": null,
+   "metric": "direction",
+   "value": "n/a",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "8 layers D=64 6M params, length 2048 to 262144, 100K steps",
+   "note": null,
+   "where": "App E.4.1",
+   "quote": "On long-form\naudio waveforms, it in fact significantly hampers performance"
+  },
+  {
+   "claim": "Mamba training memory is comparable to FlashAttention-2 Transformer: 38.2GB vs 34.5GB at batch 32",
+   "kind": "measured",
+   "source": null,
+   "metric": "memory",
+   "value": "38.2",
+   "unit": "GB",
+   "baseline_value": "34.5",
+   "n": null,
+   "setup": "125M models, 1 A100 80GB, seq 2048",
+   "note": null,
+   "where": "Table 15",
+   "table": "Table 15, row 32, column Mamba"
+  }
+ ],
+ "limits": [
+  "Evaluation limited to sizes below 7B; authors say it remains to assess larger sizes.",
+  "Selection hurts continuous modalities such as audio waveforms (complex LTI S4 better).",
+  "Downstream affordances (fine-tuning, in-context learning, instruction tuning, RLHF, quantization) not studied.",
+  "No seeds, error bars or training hardware/compute reported.",
+  "Mamba-MHA hybrid only slightly better than pure Mamba at the scales tested."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "selection mechanism",
+   "definition": "the context-aware ability to focus on or filter out inputs into a sequential state",
+   "where": "Sec 3.1"
+  },
+  {
+   "term": "LTI",
+   "definition": "linear time invariance: (Delta, A, B, C) fixed for all time-steps",
+   "where": "Sec 2"
+  },
+  {
+   "term": "S6",
+   "definition": "S4 models with a selection mechanism and computed with a scan",
+   "where": "Remark 3.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "S4: Efficiently Modeling Long Sequences with Structured State Spaces",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "structured SSM base (Gu, Goel, Re 2022)",
+   "quote": null
+  },
+  {
+   "work": "H3 (Dao, Fu, Saab et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "block design Mamba simplifies",
+   "quote": null
+  },
+  {
+   "work": "Gated attention unit (Hua et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "inspiration for merging blocks",
+   "quote": null
+  },
+  {
+   "work": "Hyena (Poli et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "RWKV (B. Peng et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "RetNet (Y. Sun et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "Pythia (Biderman et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "downstream baseline",
+   "quote": null
+  },
+  {
+   "work": "LLaMA (Touvron et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Transformer++ recipe",
+   "quote": null
+  },
+  {
+   "work": "Chinchilla (Hoffmann et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "scaling protocol",
+   "quote": null
+  },
+  {
+   "work": "HyenaDNA (Nguyen, Poli et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "DNA setup; contradicts Poli et al on H3 vs Hyena similarity",
+   "quote": null
+  },
+  {
+   "work": "Pile (Gao et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": null,
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Overview of selective SSM with hardware-aware state expansion",
+   "page": 3,
+   "why": "shows state kept in SRAM, not HBM"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Architecture: H3, Gated MLP, Mamba",
+   "page": 8,
+   "why": "how the block merges H3 and MLP"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Scaling laws on the Pile",
+   "page": 11,
+   "why": "Mamba vs Transformer++ curves"
+  },
+  {
+   "figure": "Fig 8",
+   "caption": "Efficiency benchmarks",
+   "page": 15,
+   "why": "scan and throughput speedups"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 4",
+   "snippet": "A = exp(ΔA); B = (ΔA)^-1 (exp(ΔA) - I) · ΔB",
+   "verbatim": true
+  },
+  {
+   "where": "Theorem 1 (Eq 5)",
+   "snippet": "g_t = σ(Linear(x_t)); h_t = (1 - g_t) h_{t-1} + g_t x_t",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Table 3 and Fig 8 are flattened into one value per line by extraction; assignment read in order.",
+  "Section 4.2.1 compared models (Transformer 125M-1.3B) have no tabulated Mamba layer/width in text."
+ ]
+}

@@ -1,19 +1,532 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "1602.07332",
  "pdf": "ai-engineering/08-multimodal-engineering/sources/krishna-2017-visual-genome.pdf",
  "bib": {
   "title": "Visual Genome: Connecting Language and Vision Using Crowdsourced Dense Image Annotations",
+  "authors": [
+   "Ranjay Krishna",
+   "Yuke Zhu",
+   "Oliver Groth",
+   "Justin Johnson",
+   "Kenji Hata",
+   "Joshua Kravitz",
+   "Stephanie Chen",
+   "Yannis Kalantidis",
+   "Li-Jia Li",
+   "David A. Shamma",
+   "Michael S. Bernstein",
+   "Li Fei-Fei"
+  ],
   "first_author": "Krishna",
   "year": 2017,
-  "venue": "Int. J. Comput. Vis. 2017",
+  "venue": "Int J Comput Vis 123:32-73",
   "arxiv": "1602.07332",
-  "doi": null
+  "doi": "10.1007/s11263-016-0981-7"
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-04",
-  "session": "97b4134b-decf-4866-ae85-c6872cbbba19"
+  "at": "2026-11-07",
+  "chars_read": 139698,
+  "chars_total": 141277,
+  "engine": "pymupdf",
+  "skipped": "Reference list after the first entries only skimmed; no appendices exist."
  },
- "legacy_report": "SOURCE: Krishna, Zhu, Groth, Johnson, Hata, Kravitz, Chen, Kalantidis, Li, Shamma, Bernstein, Fei-Fei, \"Visual Genome: Connecting Language and Vision Using Crowdsourced Dense Image Annotations\", Int J Comput Vis 123:32–73, 2017 (open access, CC BY 4.0).\n\nCOVERAGE: I read all 42 PDF pages, about 124K of 142K extracted chars, in full: body, every table, Sections 1–8, and the start of the references. The rest of the reference list I only skimmed. The paper has no appendices.\n\nCLAIMS\n- claim: Visual Genome's size and density. Table 1, PDF p9, lists 108,077 images, 50 descriptions per image, 3,843,636 objects across 33,877 categories (35 per image), 68,111 attribute categories (26 per image), 42,374 relationship categories (21 per image) and 1,773,258 QA pairs. Text gives 2.8M total attributes and 2,347,187 relationships. Section 6.3 counts 5,406,939 region descriptions.\n  setup: First release. Category counts are taken after lower-casing and stemming the names.\n  quote: \"Visual Genome 108,077 50 3,843,636 33,877 35 68,111 26 42,374 21 1,773,258\" (p9); \"Our dataset contains 2.8 million total attributes with 68 ,111 unique attributes\" (p21); \"We have 5,406,939 region descriptions in total.\" (p36)\n- claim: Every image is also a COCO image. The set is the Creative Commons intersection of MS-COCO and YFCC100M, so it overlaps COCO completely. The images are skewed toward people and sports.\n  setup: Flickr photos, non-iconic, 72–1280 px wide (mean width 500).\n  quote: \"all 108 ,077 creative commons images from the intersection of MS-COCO's ( Lin et al. 2014 ) 328 , 000 images and YFCC100M's\" (p16); \"we have twice as many annotations for men than we do of women\" (p21)\n- claim: Collection pipeline. Workers wrote region descriptions as boxes plus phrases, up to 50 per image. A BLEU threshold of 0.7 against earlier descriptions blocked repeats. Other workers then extracted objects and drew tight boxes (4 px tolerance), and others added attributes and relationships. Boxes with IoU 0.9 were merged into one object after a worker confirmed the match. All of it was done on AMT by more than 33,000 workers.\n  setup: About 800K HITs over 6 months, after 15 months of iteration; 93.02% of workers were in the US.\n  quote: \"This process is repeated until we have collected 50 region descriptions for each image.\" (p13); \"BLEU score thresholds set to 0 .7\" (p13); \"a total of over 33, 000 unique workers contributed\" (p12)\n- claim: Verification. Three workers vote on each annotation and it is kept if at least two accept it. Objects are the exception: they were checked with \"rapid judgments\" instead. The paper reports no inter-annotator agreement statistic such as kappa. The only measured quality figures are for WordNet canonicalization (Table 5: objects P 88.0 / R 98.5, attributes 85.7 / 95.9, relationships 92.9 / 88.5), each checked on a hand-labelled sample of 200.\n  setup: The canonicalization figures come from samples of 200 hand-mapped items.\n  quote: \"An annotation is added to our dataset if at least two (a majority) out of the three workers verify that it is correct.\" (p15); \"Objects 88.0 98.5\" (p31)\n- claim: Baselines are weak. VGG-16 fine-tuned on crops scored 18.97% top-1 on attribute prediction (top 100 attributes) and 43.17% top-1 when predicting object and attribute jointly. Predicate prediction scored 8.74% top-1, and the joint subject/relation/object task 25.83% top-1.\n  setup: About 50K attribute instances, 43K object-attribute instances and 27K triples, split 80/10/10 by image.\n  quote: \"18 .97% top-one accuracy and 43.11% top-ﬁve accuracy\" (p34); \"8 .74% top-one accuracy and 29 .69% top-ﬁve accuracy\" (p35)\n- claim: Region captioning and QA. NeuralTalk trained on VG beat the same model trained on Flickr: crowd-judged correctness was 43.03% vs 1.6%, CIDEr 0.30 vs 0.05. On QA, simply answering with the most frequent answers covers 41.1% of test answers at top-100, against 0.966 for humans. \"Why\" questions reach only 3.4% at top-100. Binary yes/no questions were excluded; VQA has 38.37% of them.\n  setup: Region captions were scored on ground-truth crops. QA was split 60/40 by image, and the human figure is a 10-way multiple-choice score.\n  quote: \"we got 1.6 and 43.03% for models trained on Flickr30K and on Visual Genome, respectively\" (p36); \"Overall 0.411 0.573 0.641 0.966\" (p38)\n\nLIMITS: The authors concede that annotations are not exhaustive: \"it is not feasible to collect an exhaustive set of attributes and relationships for every object\". Their example is a correct \"white\" prediction that was marked wrong (p34, p38). The image set is biased toward people and sports. Synsets are not standardized. The paper does not test grounding, phrase localization or referring expressions, and has no dense-captioning model; it lists dense captioning only as future work. Object detection and scene-graph retrieval were deliberately left out. The baselines are 2015-era models (VGG-16, NeuralTalk, frequency-based QA). The paper has no train/test benchmark split and no measure of how COCO overlap could contaminate evaluations. It reports no agreement statistic.\n\nBUILDS ON: Johnson et al. 2015 (scene graphs for image retrieval, CVPR). Lin et al. 2014 (MS-COCO, ECCV). Thomee et al. 2016 (YFCC100M). Antol et al. 2015 (VQA, ICCV). Miller 1995 (WordNet). Snow et al. 2008 (majority voting). Krishna et al. 2016 (rapid judgments). Karpathy and Fei-Fei 2015 (NeuralTalk). Sadeghi and Farhadi 2011 (Visual Phrases). Papineni et al. 2002 (BLEU).\n\nCODE: none.\n\nFIGURES: Fig. 4, p6. Caption: \"A representation of the Visual Genome dataset. Each image contains region descriptions that describe a localized portion of the image. We collect two types of question answer pairs (QAs): freeform QAs and region-based QAs. Each region is converted to a region graph representation of objects, attributes, and pairwise relationships. Finally, each of these region graphs are combined to form a scene graph with all the objects grounded to the image.\" One picture shows the region → box → graph data shape that grounding models train on. A second option is Fig. 14, p17: 50 region boxes on one image.\n\nPROBLEMS: Some numbers in the source contradict each other.\n- Table 7 gives relationship top-5 as 26.69, while the text says 29.69.\n- Table 8 labels its baseline row \"Flickr8K\", while the text says Flickr30K.\n- Description length is stated as max 12 words in the text and 16 in Fig. 16; p7 also says 16.\n- Relationships per region graph are \"21\" in the text but 0.43 in Table 4.\n- The total is written \"2,347,187 million\".\n- Relationships per image are given as 19 in one place and 21 elsewhere.\n\nThe Fig. 30 labels came out garbled in extraction. Some font-encoding warnings appeared, but the body text read cleanly. The PDF contains no embedded instructions. File: /Users/ramsey-wise/workspace/learn-ai-engineering/ai-engineering/08-multimodal-engineering/sources/krishna-2017-visual-genome.pdf"
+ "type": "benchmark",
+ "question": "Can a dataset of densely crowdsourced region descriptions, objects, attributes, relationships and QA pairs support cognitive image-understanding tasks beyond object recognition?",
+ "hypothesis": "Models need to understand relationships between objects, so training data should annotate them densely rather than only label objects or give one caption per image.",
+ "contributions": [
+  "Dense annotation of 108,077 images: region descriptions, objects, attributes, relationships, region graphs, scene graphs and QA pairs",
+  "Canonicalization of objects, attributes, relationships and noun phrases to WordNet synsets",
+  "A crowdsourcing pipeline with verification",
+  "Baseline experiments on attribute prediction, relationship prediction, region captioning and QA"
+ ],
+ "method": {
+  "summary": "Crowd workers on Amazon Mechanical Turk wrote region descriptions with boxes, then extracted objects, attributes and relationships and wrote QA pairs, with verification and WordNet canonicalization. Baselines: fine-tuned VGG-16 plus SVMs for attributes and relationships, NeuralTalk for region captioning, an answer-frequency baseline for QA.",
+  "task": "dataset construction plus baseline attribute, relationship, region-captioning and QA experiments",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Visual Genome",
+    "role": "both",
+    "size": "108,077 images; 5,406,939 region descriptions; 3,843,636 objects; 1,773,258 QA pairs",
+    "split": "attributes/relationships: 80/10/10 by image; region captioning: 3,784,857 train, 811,040 val, 811,040 test, split by image; QA: 60% train / 40% test, split by image",
+    "source": "Creative Commons intersection of MS-COCO (328,000) and YFCC100M (100 million) images; open access CC BY 4.0 paper",
+    "preprocessing": "Attribute and relationship experiments: lowercase, lemmatize, strip whitespace, top 100 attributes or relationships, at most 500 samples per class. Region captions: strip non-alphanumerics, lowercase."
+   },
+   {
+    "name": "Flickr30K",
+    "role": "train",
+    "size": null,
+    "split": null,
+    "source": "Young et al. 2014",
+    "preprocessing": "Baseline captioner for comparison; Table 8 labels this row Flickr8K"
+   }
+  ],
+  "models": [
+   {
+    "name": "VGG 16-layer (fine-tuned)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "CNN, 16 layers, ImageNet pretrained, SVM head (100 SVMs)",
+    "init_from": "ImageNet",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "16",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "input": "crop of object box (attributes) or union box of subject and object (relationships)"
+    }
+   },
+   {
+    "name": "NeuralTalk (Karpathy and Fei-Fei 2015)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "LSTM on 4096-d VGG-16 features",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Answer-frequency baseline",
+    "role": "baseline",
+    "params": null,
+    "architecture": "predicts top-k most frequent training answers (k = 100, 500, 1000)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": null,
+   "optimizer": "VGG fine-tune: not named, momentum 0.9; NeuralTalk: rmsprop",
+   "lr": "VGG: 0.001 base, final FC layer 10x; NeuralTalk: 0.001",
+   "lr_schedule": "VGG: scaled by 0.1 every 200 iterations",
+   "warmup": null,
+   "batch_size": null,
+   "steps": "attribute: converges after around 700 iterations; object-attribute: around 400; relationship: around 800; relationship+objects: around 450",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": "0.0005",
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": "NeuralTalk region model converges after four days",
+   "seeds": null,
+   "other": {
+    "convergence": "measured on the validation set",
+    "svm": "100 individual SVMs on fine-tuned features, one per attribute"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single run per experiment; no seeds stated",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "qa_k": "100, 500, 1000"
+   },
+   "other": {
+    "region_caption_eval": "ground-truth region boxes cropped, 4096-d VGG features fed to NeuralTalk; outputs converted to full sentences with templates (Hou et al. 2002)"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Top-1 / Top-5 accuracy",
+     "definition": "correct label among top 1 or 5 predictions (attribute, relationship)",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "BLEU-1..4, CIDEr, METEOR",
+     "definition": "generated description against ground-truth description",
+     "unit": "score",
+     "higher_is_better": true
+    },
+    {
+     "name": "Human correctness",
+     "definition": "crowd workers judge whether a generated description is correct",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "QA top-k accuracy",
+     "definition": "correct if one of k frequent-answer predictions exactly matches the ground-truth answer",
+     "unit": "fraction",
+     "higher_is_better": true
+    },
+    {
+     "name": "Human QA",
+     "definition": "image, question and 10 multiple-choice answers (1 true, 9 random)",
+     "unit": "fraction",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "NeuralTalk trained on Flickr30K vs Visual Genome",
+    "answer-frequency baseline vs human"
+   ],
+   "protocol": "No seeds or significance tests for the baselines; a t-test is reported only for semantic cluster diversity (t = -240, p < 0.01)."
+  },
+  "availability": {
+   "code": "API at visualgenome.org",
+   "weights": null,
+   "data": "https://visualgenome.org"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "datasets[0].size",
+    "quote": null,
+    "where": "Table 1, row Visual Genome"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Dataset scale and density per image.",
+   "kind": "measured",
+   "source": null,
+   "metric": "images",
+   "value": "108,077",
+   "unit": "images",
+   "baseline_value": null,
+   "n": null,
+   "setup": "First release; all Creative Commons images in the intersection of MS-COCO and YFCC100M. Per image: 50 descriptions, 35 objects, 26 attributes, 21 relationships; category counts after lowercasing and stemming.",
+   "quote": null,
+   "table": "Table 1, row Visual Genome, column Images",
+   "note": "Text says 19 relationships per image in Sect 5.5 but 21 in Table 1, Table 4 and the abstract.",
+   "where": "Table 1"
+  },
+  {
+   "claim": "Total region descriptions.",
+   "kind": "measured",
+   "source": null,
+   "metric": "region descriptions",
+   "value": "5,406,939",
+   "unit": "descriptions",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Whole dataset, Sect 6.3 setup.",
+   "quote": "5,406,939 region descriptions in total.",
+   "table": null,
+   "note": null,
+   "where": "Sect 6.3"
+  },
+  {
+   "claim": "Total objects and distinct object categories.",
+   "kind": "measured",
+   "source": null,
+   "metric": "objects",
+   "value": "3,843,636",
+   "unit": "objects",
+   "baseline_value": null,
+   "n": null,
+   "setup": "33,877 object categories; 113.45 objects per category.",
+   "quote": null,
+   "table": "Table 3, row Total objects, column Visual Genome",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Total relationships.",
+   "kind": "measured",
+   "source": null,
+   "metric": "relationships",
+   "value": "2,347,187",
+   "unit": "relationships",
+   "baseline_value": null,
+   "n": null,
+   "setup": "42,374 unique relationships.",
+   "quote": "42,374 unique relationships, with",
+   "table": null,
+   "note": "Text prints 'over 2,347,187 million total relationships'; Sect 6.2 says more than 2.3 million.",
+   "where": "Sect 5.5"
+  },
+  {
+   "claim": "Total QA pairs, about 17 per image.",
+   "kind": "measured",
+   "source": null,
+   "metric": "QA pairs",
+   "value": "1,773,258",
+   "unit": "QA pairs",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Six Ws question types, binary questions ruled out; VQA has 614,163.",
+   "quote": "We collected 1,773,258 question answering (QA) pairs",
+   "table": null,
+   "note": null,
+   "where": "Sect 5.7"
+  },
+  {
+   "claim": "Relationship prediction is hard: top-1 accuracy of fine-tuned VGG-16 plus SVMs.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1 accuracy",
+   "value": "8.74",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Top 100 relationships, about 34,000 relationship types and 27,000 subject-relationship-object triples, 80/10/10 split by image, input is the union box of subject and object, VGG-16 fine-tuned.",
+   "quote": null,
+   "table": "Table 7, row Relationship, column Top-1 accuracy (%)",
+   "note": "Table 7 prints top-5 as 26.69 while the text says 29.69.",
+   "where": "Table 7, Sect 6.2"
+  },
+  {
+   "claim": "Joint subject/relationship/object classification top-1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1 accuracy",
+   "value": "25.83",
+   "unit": "%",
+   "baseline_value": "8.74",
+   "n": null,
+   "setup": "Same data and model as relationship prediction, also predicting both object classes.",
+   "quote": null,
+   "table": "Table 7, row Sub./Rel./Obj., column Top-1 accuracy (%)",
+   "note": null,
+   "where": "Table 7"
+  },
+  {
+   "claim": "Attribute prediction top-1 accuracy from an object crop.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1 accuracy",
+   "value": "18.97",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "100 most common attributes, 500 samples per class max, about 50,000 instances, VGG-16 fine-tuned plus 100 SVMs.",
+   "quote": null,
+   "table": "Table 6, row Attribute, column Top-1 accuracy (%)",
+   "note": null,
+   "where": "Table 6"
+  },
+  {
+   "claim": "Predicting the object class jointly raises attribute top-1 accuracy.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1 accuracy",
+   "value": "43.17",
+   "unit": "%",
+   "baseline_value": "18.97",
+   "n": null,
+   "setup": "About 43,000 object-attribute pair instances.",
+   "quote": null,
+   "table": "Table 6, row Object-attribute, column Top-1 accuracy (%)",
+   "note": null,
+   "where": "Table 6"
+  },
+  {
+   "claim": "Human-judged correctness of region captions: model trained on Visual Genome.",
+   "kind": "measured",
+   "source": null,
+   "metric": "human correctness",
+   "value": "43.03",
+   "unit": "%",
+   "baseline_value": "1.6",
+   "n": null,
+   "setup": "NeuralTalk, ground-truth region boxes, VGG-16 features; baseline is NeuralTalk trained on Flickr30K whole-image sentences; Table 8 labels that row Flickr8K.",
+   "quote": "we got 1.6 and 43.03% for models",
+   "table": null,
+   "note": "Text says Flickr30K, Table 8 says Flickr8K.",
+   "where": "Sect 6.3, Table 8"
+  },
+  {
+   "claim": "Overall human accuracy on the QA multiple-choice test.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "96.6",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "10 choices (1 true, 9 random), image shown.",
+   "quote": "accuracy of 96.6%.",
+   "table": null,
+   "note": null,
+   "where": "Sect 6.4"
+  },
+  {
+   "claim": "Frequency baseline overall QA top-100 accuracy.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-100 accuracy",
+   "value": "0.411",
+   "unit": "fraction",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Predict k most frequent training answers; exact match; 60/40 split by image.",
+   "quote": null,
+   "table": "Table 9, row Overall, column Top-100",
+   "note": null,
+   "where": "Table 9"
+  },
+  {
+   "claim": "Why questions are hardest for the frequency baseline.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-100 accuracy",
+   "value": "0.034",
+   "unit": "fraction",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Top-100 answers, why questions.",
+   "quote": null,
+   "table": "Table 9, row Why, column Top-100",
+   "note": null,
+   "where": "Table 9"
+  },
+  {
+   "claim": "Canonicalization object precision (mapping accuracy).",
+   "kind": "measured",
+   "source": null,
+   "metric": "precision",
+   "value": "88.0",
+   "unit": "%",
+   "baseline_value": null,
+   "n": "200 sampled items",
+   "setup": "Hand ground-truth mappings, 200 sampled items per type; attributes 85.7 precision, 95.9 recall; relationships 92.9 precision, 88.5 recall.",
+   "quote": null,
+   "table": "Table 5, row Objects, column Precision",
+   "note": "Text calls it 'mapping accuracy'.",
+   "where": "Table 5"
+  },
+  {
+   "claim": "Visual Genome region descriptions are more semantically diverse than MS-COCO captions: about 17 clusters of 71 per image (4 vs 2 with 5 sampled descriptions, t = -240, p < 0.01).",
+   "kind": "measured",
+   "source": null,
+   "metric": "clusters per image",
+   "value": null,
+   "unit": "clusters",
+   "baseline_value": null,
+   "n": null,
+   "setup": "word2vec 300-d averaged vectors, hierarchical agglomerative clustering into 71 clusters; all 50 descriptions. With 5 random descriptions: 4 clusters vs 2 for COCO (t = -240, p < 0.01).",
+   "quote": null,
+   "table": null,
+   "note": "Value left null: the 17 appears across a line break in the text.",
+   "where": "Sect 5.2"
+  }
+ ],
+ "limits": [
+  "Annotations are not exhaustive: correct predictions can be scored wrong because the ground truth lacks valid attributes (Sect 6.1, Sect 7).",
+  "Images are biased toward people and sports; twice as many annotations for men as for women.",
+  "93.02% of crowd workers were in the US.",
+  "Baselines are 2015-era (VGG-16 plus SVMs, NeuralTalk, frequency counting) and are not tuned or run with seeds.",
+  "The QA exact-match metric works poorly for long answers."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "scene graph",
+   "definition": "the union of all region graphs: objects with attributes, connected by relationships",
+   "where": "Sect 2.6"
+  },
+  {
+   "term": "region graph",
+   "definition": "a directed graph of objects, attributes and relationships for one region description",
+   "where": "Sect 2.5"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Microsoft COCO",
+   "year": 2014,
+   "arxiv": "1405.0312",
+   "relation": "uses-data",
+   "note": "All images are also COCO images",
+   "quote": null
+  },
+  {
+   "work": "YFCC100M",
+   "year": 2016,
+   "arxiv": "1503.01817",
+   "relation": "uses-data",
+   "note": "Image source",
+   "quote": null
+  },
+  {
+   "work": "VQA",
+   "year": 2015,
+   "arxiv": "1505.00468",
+   "relation": "related",
+   "note": "Inspired QA collection; compared on answer length and yes/no share",
+   "quote": null
+  },
+  {
+   "work": "Image retrieval using scene graphs (Johnson et al.)",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Scene graph representation",
+   "quote": null
+  },
+  {
+   "work": "NeuralTalk (Karpathy and Fei-Fei)",
+   "year": 2015,
+   "arxiv": "1412.2306",
+   "relation": "baseline",
+   "note": "Region captioning baseline",
+   "quote": null
+  },
+  {
+   "work": "VGG (Simonyan and Zisserman)",
+   "year": 2014,
+   "arxiv": "1409.1556",
+   "relation": "evaluates",
+   "note": "Feature extractor / fine-tuned classifier",
+   "quote": null
+  },
+  {
+   "work": "WordNet (Miller)",
+   "year": 1995,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Canonicalization",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 4",
+   "caption": "A representation of the Visual Genome dataset",
+   "page": 37,
+   "why": "Shows how region descriptions, region graphs, scene graphs and QA relate for one image."
+  },
+  {
+   "figure": "Table 1",
+   "caption": "A comparison of existing datasets with Visual Genome",
+   "page": 40,
+   "why": "Puts per-image density and category counts next to COCO, VQA, ImageNet."
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Relationships per image: 19 (Sect 5.5) vs 21 (Table 1, Table 4).",
+  "Table 7 top-5 26.69 vs text 29.69.",
+  "Description length max 12 words (Sect 5.2 text) vs 16 words (Sect 2.1, Fig 16 caption).",
+  "Table 8 row labelled Flickr8K while text says Flickr30K.",
+  "Table 4 prints region-graph relationships as 0.43 while the text says 21 for region graphs.",
+  "Fig 30 axis text is garbled in extraction."
+ ]
 }

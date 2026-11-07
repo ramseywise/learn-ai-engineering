@@ -1,0 +1,535 @@
+{
+ "schema": 1,
+ "key": "2102.12092",
+ "pdf": "ai-engineering/08-multimodal-engineering/sources/ramesh-2021-zero-shot-text-image-generation.pdf",
+ "bib": {
+  "title": "Zero-Shot Text-to-Image Generation",
+  "authors": [
+   "Aditya Ramesh",
+   "Mikhail Pavlov",
+   "Gabriel Goh",
+   "Scott Gray",
+   "Chelsea Voss",
+   "Alec Radford",
+   "Mark Chen",
+   "Ilya Sutskever"
+  ],
+  "first_author": "Ramesh",
+  "year": 2021,
+  "venue": "preprint",
+  "arxiv": "2102.12092",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 70841,
+  "chars_total": 70841,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can scaling data and model size of a single autoregressive transformer over text and image tokens give competitive zero-shot text-to-image generation?",
+ "hypothesis": "Dataset size and model size may be the limiting factor of current text-to-image approaches.",
+ "contributions": [
+  "Two-stage approach: dVAE image tokens plus a 12B autoregressive transformer over text and image tokens as one stream",
+  "250M text-image pair dataset",
+  "Mixed-precision (per-resblock gradient scaling) and PowerSGD gradient compression recipes for 12B training",
+  "Zero-shot MS-COCO results vs AttnGAN, DM-GAN, DF-GAN, plus emergent zero-shot image-to-image translation"
+ ],
+ "method": {
+  "summary": "Stage 1 trains a dVAE compressing each 256x256 image to a 32x32 grid of 8192-way tokens. Stage 2 trains a 12B sparse decoder-only transformer on up to 256 BPE text tokens concatenated with 1024 image tokens. Samples are reranked with a pretrained contrastive model (CLIP).",
+  "task": "text-to-image generation (zero-shot evaluation on MS-COCO and CUB)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Internet text-image pairs (250M)",
+    "role": "train",
+    "size": "250 million text-image pairs",
+    "split": "about 606,000 images reserved for validation",
+    "source": "Conceptual Captions, Wikipedia text-image pairs, filtered subset of YFCC100M; excludes MS-COCO (but includes some of its val images, not captions)",
+    "preprocessing": "Filters from Sharma et al. 2018 subset: drop short captions, non-English (cld3), boilerplate; drop aspect ratios outside [1/2, 2]; lowercased captions, 10% BPE dropout; random crop augmentation (Listings 1, 2)"
+   },
+   {
+    "name": "Conceptual Captions",
+    "role": "pretrain",
+    "size": "3.3 million text-image pairs",
+    "split": null,
+    "source": "Sharma et al. 2018",
+    "preprocessing": "Preliminary experiments for models up to 1.2B parameters"
+   },
+   {
+    "name": "MS-COCO",
+    "role": "eval",
+    "size": "subset of 30,000 captions sampled from the validation set",
+    "split": "validation",
+    "source": "Lin et al. 2014",
+    "preprocessing": "FID/IS with DM-GAN code; about 21% of val images overlap training data via YFCC100M, results with and without them"
+   },
+   {
+    "name": "CUB-200",
+    "role": "eval",
+    "size": "all unique captions in the test set",
+    "split": "test",
+    "source": "Welinder et al. 2010",
+    "preprocessing": "about 12% overlap rate"
+   }
+  ],
+  "models": [
+   {
+    "name": "dVAE",
+    "role": "proposed",
+    "params": null,
+    "architecture": "convolutional ResNet encoder/decoder with bottleneck resblocks; 7x7 first conv, 1x1 last encoder conv (32x32x8192 logits); max-pool down, nearest-neighbour up; logit-Laplace likelihood",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": "8192 image tokens",
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "downsampling": "factor 8, 256x256 -> 32x32 tokens",
+     "context_reduction": "192x"
+    }
+   },
+   {
+    "name": "DALL-E transformer",
+    "role": "proposed",
+    "params": "12B (12.0e9, d_model=3968)",
+    "architecture": "decoder-only sparse transformer (Child et al. 2019) with row, column and 11x11 convolutional attention masks",
+    "init_from": null,
+    "tokenizer": "BPE, lowercased captions",
+    "vocab": "16,384 text, 8192 image",
+    "layers": "64 attention layers",
+    "hidden": "3968",
+    "heads": "62 heads, per-head state 64",
+    "context": "up to 256 text tokens + 1024 image tokens",
+    "other": {
+     "text_padding": "learned padding token per each of 256 text positions",
+     "attention_pattern": "row, column, row, row for first four layers; column if (i-2) mod 4 = 0 else row; convolutional mask only in last layer",
+     "resblocks": "128 (one gradient scale each)"
+    }
+   },
+   {
+    "name": "Contrastive reranker (CLIP)",
+    "role": "judge",
+    "params": null,
+    "architecture": "pretrained contrastive text-image model (Radford et al. 2021)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "AttnGAN / DM-GAN / DF-GAN",
+    "role": "baseline",
+    "params": null,
+    "architecture": "GAN text-to-image models",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "Stage 1: relaxed ELB (gumbel-softmax, logit-Laplace reconstruction, KL weight beta=6.6). Stage 2: cross-entropy over text and image tokens, text weighted 1/8 and image 7/8, each normalised by token count",
+   "optimizer": "AdamW; dVAE b1=0.9 b2=0.999 eps=1e-8; transformer b1=0.9 b2=0.96 eps=1e-8; exponentially weighted iterate averaging (0.999 dVAE, 0.99 transformer)",
+   "lr": "dVAE 1e-4 annealed to 1.25e-6 (cosine, 1,200,000 updates); transformer peak 4.5e-4",
+   "lr_schedule": "transformer: linear ramp then halved at each loss plateau, five times, final 32x smaller; dVAE: cosine; beta 0 to 6.6 over 5000 updates; tau 1 to 1/16 over 150,000 updates",
+   "warmup": "5000 updates (transformer)",
+   "batch_size": "dVAE 512 (8 per GPU x 64); transformer 1024",
+   "steps": "dVAE 3,000,000 updates; transformer 430,000 updates",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "inferred: up to 256 text tokens + 1024 image tokens",
+   "precision": "16-bit parameters, Adam moments and activations (moments 1-6-9 mean, 0-6-10 variance); gains, biases, embeddings, unembeddings and logits in 32-bit; per-resblock gradient scaling; dVAE uses global loss scaling",
+   "weight_decay": "dVAE 1e-4; transformer 4.5e-2",
+   "dropout": null,
+   "regularisation": "10% BPE dropout; gradient clip by norm 4 (transformer); running variance clipped to 5",
+   "hardware": "dVAE 64 x 16GB V100; transformer 1024 x 16GB V100 (128 machines of 8 GPUs)",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "gradient_compression": "PowerSGD total rank 896 (112 per GPU), compression rate about 86%, Q fixed to random gaussian",
+    "parameter_sharding": "across 8 GPUs per machine",
+    "skipped_updates": "about 5% of updates skipped from nonfinite gradient",
+    "grad_scale_init": "M*2^13, clamp [M*2^7, M*2^24], x 2^(1/1000) per update, /sqrt2 on nonfinite",
+    "two_stage_note": "joint ELB training on ImageNet did not beat two-stage"
+   }
+  },
+  "inference": {
+   "decoding": "autoregressive sampling of image tokens, then rerank N samples with contrastive model",
+   "temperature": "t=1 (no reduction) except Figure 2",
+   "top_p": null,
+   "max_tokens": "1024 image tokens",
+   "samples": "N=512 for reranking unless stated; best of 512 in Fig 3; human eval 1 sample per caption per model",
+   "prompting": "caption text; image-to-image by supplying top 15x32 part of the image token grid with caption",
+   "retrieval": null,
+   "parameters": {
+    "rerank_N": "512 default; FID/IS improve up to N=32 then diminishing (Fig 9c)"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "FID",
+     "definition": "Frechet Inception Distance on MS-COCO / CUB samples vs validation images, DM-GAN code, also after Gaussian blur of varying radius",
+     "unit": "points",
+     "higher_is_better": false
+    },
+    {
+     "name": "Inception Score",
+     "definition": "IS computed with DM-GAN code",
+     "unit": "score",
+     "higher_is_better": true
+    },
+    {
+     "name": "Human preference",
+     "definition": "Mechanical Turk best-of-five vote on more realistic and better caption match vs DF-GAN",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "AttnGAN",
+    "DM-GAN",
+    "DF-GAN"
+   ],
+   "protocol": "1000 captions, one sample per model, 1000 comparison tasks each answered by five MTurk workers; one worker disqualified; zero-shot (no training on MS-COCO captions); no seeds reported"
+  },
+  "availability": {
+   "code": "https://github.com/openai/DALL-E (dVAE code release)",
+   "weights": "dVAE only (inferred from code release; transformer weights not stated)",
+   "data": null
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.batch_size",
+    "quote": "with a per-GPU batch size of 8, resulting in a total batch size of 512",
+    "where": "Appendix A.2"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Human raters prefer the model's sample over DF-GAN as more realistic",
+   "kind": "measured",
+   "source": null,
+   "metric": "realism preference",
+   "value": "90.0",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MS-COCO captions, 1000 captions, five MTurk votes, zero-shot, t=1, best of 512 reranking (inferred from default)",
+   "quote": "our model’s sample was chosen as the most realistic 90.0% of the time",
+   "table": null,
+   "note": null,
+   "where": "Fig 7"
+  },
+  {
+   "claim": "Human raters prefer the model's sample over DF-GAN as better matching the caption",
+   "kind": "measured",
+   "source": null,
+   "metric": "caption match preference",
+   "value": "93.3",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "same as above",
+   "quote": "chosen as the image best matching a shared caption 93.3% of the time",
+   "table": null,
+   "note": null,
+   "where": "Fig 7"
+  },
+  {
+   "claim": "Zero-shot FID on MS-COCO is within 2 points of the best prior approach",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID gap",
+   "value": "2",
+   "unit": "FID points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MS-COCO 30,000 val captions, no training on captions",
+   "quote": "within 2 points of the best prior approach",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.1"
+  },
+  {
+   "claim": "With slight blur radius 1 the model has best FID by a margin",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID margin",
+   "value": "6",
+   "unit": "FID points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MS-COCO, Gaussian blur radius 1 applied to val images and samples",
+   "quote": "best FID by a margin of about 6 points with a slight blur of radius 1",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.1"
+  },
+  {
+   "claim": "On CUB the model trails the leading prior approach badly in FID",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID gap",
+   "value": "40",
+   "unit": "FID points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CUB, zero-shot, no fine-tuning",
+   "quote": "nearly 40-point gap in FID",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.1"
+  },
+  {
+   "claim": "Training data includes a share of MS-COCO validation images; removing them does not change results",
+   "kind": "measured",
+   "source": null,
+   "metric": "overlap",
+   "value": "21",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "YFCC100M subset overlap with MS-COCO val, via dedup procedure",
+   "quote": "includes about 21% of the images in the",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.1"
+  },
+  {
+   "claim": "Reranking sample size gains in FID/IS continue up to 32 then diminish",
+   "kind": "measured",
+   "source": null,
+   "metric": "rerank N",
+   "value": "32",
+   "unit": "samples",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MS-COCO, contrastive reranking",
+   "quote": "This trend continues up to a sample size of 32",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.1, Fig 9c"
+  },
+  {
+   "claim": "dVAE reduces transformer context by a factor of 192",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "192",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "256x256 RGB to 32x32 tokens of 8192 values",
+   "quote": "reduces the context size of the transformer by a factor of 192",
+   "table": null,
+   "note": null,
+   "where": "Sec 2"
+  },
+  {
+   "claim": "Gradient compression rate for the 12B model with rank 896",
+   "kind": "measured",
+   "source": null,
+   "metric": "compression rate",
+   "value": "86",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "PowerSGD, d_model=3968, 8 GPUs per machine",
+   "quote": "results in a compression rate of about 86%",
+   "table": null,
+   "note": null,
+   "where": "Appendix B.2, Table 1"
+  },
+  {
+   "claim": "Training used 1024 V100 GPUs for 430,000 updates at batch size 1024",
+   "kind": "measured",
+   "source": null,
+   "metric": "updates",
+   "value": "430,000",
+   "unit": "updates",
+   "baseline_value": null,
+   "n": null,
+   "setup": "12B transformer",
+   "quote": "for a total of 430,000 updates",
+   "table": null,
+   "note": null,
+   "where": "Appendix B.2"
+  }
+ ],
+ "limits": [
+  "Heavy dVAE compression cannot produce high-frequency details (authors).",
+  "CUB, a specialised distribution, is much worse than prior work; fine-tuning left to future work.",
+  "Variable binding is inconsistent (e.g. both animals in sweaters).",
+  "Image-to-image translation works only 'to a limited degree of reliability'.",
+  "Training data overlaps MS-COCO validation images; training data, transformer weights and compute (GPU-days) not released or stated.",
+  "Single run, no seeds or error bars; FID/IS from curves in figures, exact baseline values not in text.",
+  "Human eval compares only against DF-GAN."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "dVAE",
+   "definition": "discrete variational autoencoder compressing a 256x256 image into 32x32 tokens of 8192 possible values",
+   "where": "Sec 2"
+  },
+  {
+   "term": "per-resblock gradient scaling",
+   "definition": "a separate gradient scale for each resblock to avoid underflow in 16-bit gradients",
+   "where": "Sec 2.4"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Neural discrete representation learning (VQ-VAE)",
+   "year": 2017,
+   "arxiv": "1711.00937",
+   "relation": "extends",
+   "note": "two-stage procedure",
+   "quote": null
+  },
+  {
+   "work": "Generating diverse high-fidelity images with VQ-VAE-2",
+   "year": 2019,
+   "arxiv": "1906.00446",
+   "relation": "extends",
+   "note": "two-stage procedure; reranking",
+   "quote": null
+  },
+  {
+   "work": "Generating long sequences with sparse transformers",
+   "year": 2019,
+   "arxiv": "1904.10509",
+   "relation": "uses-method",
+   "note": "transformer architecture and attention masks",
+   "quote": null
+  },
+  {
+   "work": "Learning transferable visual models from natural language supervision (CLIP)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "contrastive reranker and dedup procedure",
+   "quote": null
+  },
+  {
+   "work": "PowerSGD",
+   "year": 2019,
+   "arxiv": "1905.13727",
+   "relation": "uses-method",
+   "note": "gradient compression",
+   "quote": null
+  },
+  {
+   "work": "ZeRO",
+   "year": 2019,
+   "arxiv": "1910.02054",
+   "relation": "uses-method",
+   "note": "parameter sharding",
+   "quote": null
+  },
+  {
+   "work": "Categorical reparameterization with gumbel-softmax",
+   "year": 2016,
+   "arxiv": "1611.01144",
+   "relation": "uses-method",
+   "note": "relaxation for dVAE",
+   "quote": null
+  },
+  {
+   "work": "AttnGAN",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Xu et al. 2018",
+   "quote": null
+  },
+  {
+   "work": "DM-GAN",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Zhu et al. 2019",
+   "quote": null
+  },
+  {
+   "work": "DF-GAN",
+   "year": 2020,
+   "arxiv": "2008.05865",
+   "relation": "baseline",
+   "note": "best prior FID/IS on MS-COCO",
+   "quote": null
+  },
+  {
+   "work": "Conceptual Captions",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Sharma et al.",
+   "quote": null
+  },
+  {
+   "work": "YFCC100M",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Thomee et al.",
+   "quote": null
+  },
+  {
+   "work": "MS-COCO",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "zero-shot eval",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Comparison of original images (top) and reconstructions from the discrete VAE (bottom).",
+   "page": 1,
+   "why": "shows what 32x32x8192 token compression loses"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Comparison of samples from our model to those from prior approaches on captions from MS-COCO; best of 512 ranked by the contrastive model.",
+   "page": 3,
+   "why": "qualitative comparison"
+  },
+  {
+   "figure": "Fig 9",
+   "caption": "Quantitative results on MS-COCO and CUB: FID/IS vs blur radius and vs reranking sample size.",
+   "page": 7,
+   "why": "main quantitative evidence"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 1",
+   "snippet": "ln p(x,y) >= E_{z~q(z|x)}[ ln p_theta(x|y,z) - beta D_KL(q_phi(y,z|x), p_psi(y,z)) ]",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Cached text contains NUL bytes; read fine. Equations garbled by extraction."
+ ]
+}

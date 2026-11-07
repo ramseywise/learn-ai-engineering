@@ -1,19 +1,459 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2106.07447",
  "pdf": "ai-engineering/08-multimodal-engineering/sources/hsu-2021-hubert.pdf",
  "bib": {
   "title": "HuBERT: Self-Supervised Speech Representation Learning by Masked Prediction of Hidden Units",
+  "authors": [
+   "Wei-Ning Hsu",
+   "Benjamin Bolte",
+   "Yao-Hung Hubert Tsai",
+   "Kushal Lakhotia",
+   "Ruslan Salakhutdinov",
+   "Abdelrahman Mohamed"
+  ],
   "first_author": "Hsu",
   "year": 2021,
-  "venue": "IEEE ACM Trans. Audio Speech Lang. Process. 2021",
+  "venue": "preprint",
   "arxiv": "2106.07447",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-04",
-  "session": "97b4134b-decf-4866-ae85-c6872cbbba19"
+  "at": "2026-11-07",
+  "chars_read": 52560,
+  "chars_total": 52560,
+  "engine": "pymupdf",
+  "skipped": null
  },
- "legacy_report": "SOURCE: \"HuBERT: Self-Supervised Speech Representation Learning by Masked Prediction of Hidden Units\", by Hsu, Bolte, Tsai, Lakhotia, Salakhutdinov and Mohamed. The PDF is arXiv:2106.07447v1 (14 Jun 2021), a preprint. It does not carry the IEEE/ACM TASLP venue, so the course should cite it as TASLP 2021 only if you confirm that from somewhere else.\n\nCOVERAGE: I read all 52,633 characters across all 10 pages, which is the full body plus Tables I–VII and the conclusion. The paper has no appendix. I skimmed the references for origins only.\n\nCLAIMS\n- claim: The hidden units are made by k-means clustering. Iteration 1 clusters MFCC features. Later iterations cluster the intermediate transformer-layer features of the previous HuBERT model.\n  number: 100 clusters on MFCC, then 500 clusters\n  setup: k-means on 39-dim MFCC (13 coefficients plus first- and second-order derivatives) over LibriSpeech 960h. Later iterations fit on a 10% sample using scikit-learn MiniBatchKMeans (mini-batch of 10,000 frames, k-means++ with 20 starts).\n  quote: \"we run k-means clustering with 100 clusters on 39-dimensional MFCC features\" / \"we run k-means clustering with 500 clusters on the latent features extracted from the HuBERT model pre-trained in the previous iteration (not fine-tuned) at some intermediate transformer layer\"\n  where: p.4\n- claim: The schedule runs through three generations. BASE iteration 1 trains on MFCC labels. BASE iteration 2 trains on labels from layer 6 of iteration 1. LARGE and X-LARGE train once on labels from layer 9 of BASE iteration 2, so they count as third-iteration models.\n  number: 250k + 400k steps (BASE, 32 GPUs); 400k steps (LARGE on 128 GPUs, X-LARGE on 256 GPUs)\n  setup: BASE pretrains on LibriSpeech 960h. LARGE and X-LARGE pretrain on Libri-Light 60,000h.\n  quote: \"we extract features from the 9-th transformer layer of the second iteration BASE HuBERT for clustering ... these two models can also be seen as the third iteration models.\"\n  where: p.4\n- claim: The loss is computed on masked frames only (α=1). This choice is what makes the method tolerate poor targets: with MFCC k-means units, putting the loss on unmasked frames causes training to fail.\n  number: 17.86 vs 29.57 vs 96.37 dev-other WER (C=100, α=1.0/0.5/0.0)\n  setup: Ablation pretrained for 100k steps and fine-tuned on 10h, reporting dev-other with an n-gram LM. Masking selects p=8% of frames as span starts with span length l=10, following SpanBERT and wav2vec 2.0.\n  quote: \"mask span is set to l = 10, and p = 8% of the waveform encoder output frames are randomly selected as mask start\"; Table V row \"100 0.243 17.86 29.57 96.37\"\n  where: p.4, p.8\n- claim: Clustering on learned features gives far better units than clustering on MFCC, measured by phone-normalized mutual information (PNMI), the share of phone-label uncertainty that the cluster label removes. Better units give lower WER.\n  number: PNMI 0.276 to 0.637 to 0.704; WER 18.40 to 11.91 to 10.75 (C=500)\n  setup: Same ablation setup as the previous claim (Table V).\n  quote: \"K-means on BASE-it1-layer6 500 0.637 11.91\" / \"K-means on BASE-it2-layer9 500 0.704 10.75\"\n  where: p.8\n- claim: There are three model sizes, all at a 20 ms frame rate (320x downsampling of 16 kHz audio). The text calls them 90M, 300M and 1B parameters, while Table I lists the exact counts.\n  number: 95M / 317M / 964M\n  setup: Architecture follows wav2vec 2.0, with 12, 24 and 48 transformer layers.\n  quote: \"Num. of Params 95M 317M 964M\"\n  where: p.3\n- claim: HuBERT matches or beats wav2vec 2.0 on every fine-tuning split, with two exceptions at 100h, each 0.1 WER worse. The test-other figures below are HuBERT LARGE (Transformer LM) vs wav2vec 2.0 LARGE, both pretrained on Libri-Light 60k, with X-LARGE in brackets.\n  number: 10min 7.6 vs 8.2 [6.8]; 1h 5.4 vs 5.8 [4.8]; 10h 4.6 vs 4.9 [4.0]; 100h 3.9 vs 4.0 [3.5]; 960h 3.3 vs 3.3 [2.9]\n  setup: CTC fine-tuning with the CNN encoder frozen, decoded with a Transformer LM.\n  quote: \"the HuBERT LARGE model can achieve a WER of 4.7% on the test-clean set and 7.6% on the test-other set, which is 0.1% and 0.6% WER lower, respectively than the state-of-the-art wav2vec 2.0 LARGE model\"; Table III \"HUBERT X-LARGE LL-60k Transformer 1.5 2.5 1.8 2.9\"\n  where: p.5–7\n\nLIMITS:\n- At 960h, HuBERT only ties the best pretraining results (Table III, p.6). It \"lags behind methods combining pre-training with self-training\" (2.9 test-other vs 2.6 for Conformer XXL + Noisy Student). The claim that it would close the gap with self-training is a hope the paper does not test.\n- Training takes multiple phases, which the authors concede when they \"plan to improve the HuBERT training procedure to consist of a single phase.\"\n- The only downstream task is English read-audiobook ASR (LibriSpeech and Libri-Light). The paper does not evaluate other languages, noisy or conversational speech, or speaker and emotion tasks.\n- It also does not use the units for generation or as tokens for a speech LM. That is listed as future work only (\"downstream recognition and generation tasks beyond ASR\"). This matters for your \"audio as tokens\" section: the paper does not show that the units work as generation tokens.\n- k-means on high-dimensional features does not fit in memory, so it is fit on a 10% sample. Ablations run at 100k steps with fixed hyperparameters.\n\nBUILDS ON:\n- DeepCluster [23]. Its reference entry did not extract cleanly, so I give no year.\n- wav2vec 2.0 (Baevski et al., arXiv 2006.11477, 2020), the architecture and baseline.\n- DiscreteBERT (Baevski, Auli, Mohamed, arXiv 1911.03912, 2019), the closest prior work.\n- vq-wav2vec (Baevski et al., 2019).\n- SpanBERT (Joshi et al., TACL 2020), the masking scheme.\n- BERT (Devlin et al., 2018).\n- Iterative pseudo-labeling (Xu et al., 2020).\n- k-means (Lloyd, IEEE Trans. Inf. Theory, 1982).\n- LibriSpeech (Panayotov et al., ICASSP 2015) and Libri-Light (Kahn et al., ICASSP 2020).\n\nFIGURES:\n- Fig. 1, p.2: \"The HuBERT approach predicts hidden cluster assignments of the masked frames (y2, y3, y4 in the figure) generated by one or more iterations of k-means clustering.\" It is the best candidate: one picture shows that the targets are offline k-means IDs and that the loss applies only under the mask, which helps contrast semantic units with codec tokens.\n- Fig. 2, p.7: unit quality per layer. Iteration 1 peaks around layer 6 and its last layers degrade.\n\nPROBLEMS:\n- The PDF has no embedded instructions.\n- Two-row cells in Table IV and Table VII extracted merged (e.g. \"0.251± 0.001 0.253 ± 0.001 0.253 ± 0.001500 0.283…\"), so I did not quote them.\n- The DeepCluster reference [23] did not extract cleanly.\n- I could not verify the TASLP venue from the PDF."
+ "type": "empirical",
+ "question": "How can speech representations be learned self-supervised given multiple sounds per utterance, no sound-unit lexicon and no segmentation?",
+ "hypothesis": "A masked-only prediction loss over offline cluster targets is resilient to poor cluster quality, and consistency of targets matters more than correctness.",
+ "contributions": [
+  "HuBERT: BERT-like masked prediction of offline k-means cluster labels over continuous input",
+  "Loss on masked frames only",
+  "Cluster ensembles and iterative refinement of targets",
+  "Matches or beats wav2vec 2.0 on 10min to 960h fine-tuning; scales to 1B parameters"
+ ],
+ "method": {
+  "summary": "Offline k-means (MFCC first, then intermediate HuBERT layer features) gives frame labels; a wav2vec 2.0-style CNN+transformer predicts the labels of masked frames with a cosine-similarity softmax. Pretrained models are fine-tuned with CTC for ASR.",
+  "task": "self-supervised speech pretraining, ASR fine-tuning",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "LibriSpeech 960h",
+    "role": "pretrain",
+    "size": "960 hours",
+    "split": "full training set",
+    "source": "LibriVox audiobooks",
+    "preprocessing": "39-dim MFCC (13 coef + first and second derivatives) for iteration-1 k-means"
+   },
+   {
+    "name": "Libri-light",
+    "role": "pretrain",
+    "size": "60,000 hours",
+    "split": null,
+    "source": "LibriVox audiobooks",
+    "preprocessing": null
+   },
+   {
+    "name": "Libri-light 10-min, 1h, 10h; LibriSpeech 100h, 960h",
+    "role": "train",
+    "size": "10 min, 1 h, 10 h, 100 h, 960 h",
+    "split": "fine-tuning; Libri-light splits are half train-clean-*, half train-other-500; dev/test-clean/other for eval",
+    "source": "LibriSpeech/Libri-light",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "HuBERT BASE",
+    "role": "proposed",
+    "params": "95M",
+    "architecture": "CNN encoder + transformer (wav2vec 2.0)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": "CTC: 26 letters, space, apostrophe, blank",
+    "layers": "12",
+    "hidden": "768",
+    "heads": "8",
+    "context": null,
+    "other": {
+     "ffn": 3072,
+     "layerdrop": 0.05,
+     "projection": 256
+    }
+   },
+   {
+    "name": "HuBERT LARGE",
+    "role": "proposed",
+    "params": "317M",
+    "architecture": "CNN encoder + transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "24",
+    "hidden": "1024",
+    "heads": "16",
+    "context": null,
+    "other": {
+     "ffn": 4096,
+     "layerdrop": 0,
+     "projection": 768
+    }
+   },
+   {
+    "name": "HuBERT X-LARGE",
+    "role": "proposed",
+    "params": "964M",
+    "architecture": "CNN encoder + transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "48",
+    "hidden": "1280",
+    "heads": "16",
+    "context": null,
+    "other": {
+     "ffn": 5120,
+     "layerdrop": 0,
+     "projection": 1024
+    }
+   },
+   {
+    "name": "wav2vec 2.0, DiscreteBERT, DeCoAR 2.0, IPL, slimIPL, Noisy Student, Conformer",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "cross-entropy on cluster labels, L = alpha*Lm + (1-alpha)*Lu, alpha=1 default; logits are cosine similarity / tau, tau=0.1; fine-tune with CTC",
+   "optimizer": "Adam, betas (0.9, 0.98)",
+   "lr": "peak 5e-4 / 1.5e-3 / 3e-3 for BASE / LARGE / X-LARGE; fine-tune peak swept in [1e-5, 1e-4]",
+   "lr_schedule": "linear ramp up then linear decay to zero",
+   "warmup": "first 8% of training steps",
+   "batch_size": "at most 87.5 s audio per GPU (BASE, 32 GPUs), 56.25 s (LARGE, 128 GPUs), 22.5 s (X-LARGE, 256 GPUs); fine-tune at most 200/80/40 s per GPU on 8 GPUs",
+   "steps": "BASE it1 250k, it2 400k; LARGE and X-LARGE 400k; ablations 100k",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "layerdrop 0.05 (BASE); mask span l=10, p=8% of frames as starts; conv encoder frozen in fine-tuning; freeze-step for transformer",
+   "hardware": "32 / 128 / 256 GPUs for BASE / LARGE / X-LARGE pretraining; 8 GPUs fine-tuning (GPU type not stated)",
+   "compute": null,
+   "wall_clock": "100k steps about 9.5 hours (BASE)",
+   "seeds": null,
+   "other": {
+    "kmeans": "iter1 k-means C=100 on MFCC; later C=500 on 10% sample of layer features, scikit-learn MiniBatchKMeans, mini-batch 10,000 frames, k-means++ 20 starts",
+    "schedule": "BASE it2 labels from layer 6 of it1; LARGE/X-LARGE labels from layer 9 of BASE it2 (third iteration)",
+    "finetune_sweep": "peak lr, schedule, steps, freeze step, encoder output masking prob, chosen on dev-other WER"
+   }
+  },
+  "inference": {
+   "decoding": "wav2letter++ beam search in Fairseq: log pCTC + w1 log PLM + w2|Y|; w1, w2 searched with Ax Bayesian optimisation",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "ablations: one run per cell; k-means stability 10 trials",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "tau": 0.1,
+    "LM": "n-gram and transformer LMs on official LibriSpeech LM data",
+    "decoding_values": null
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "WER",
+     "definition": "word error rate on dev/test clean/other",
+     "unit": "%",
+     "higher_is_better": false
+    },
+    {
+     "name": "PNMI",
+     "definition": "I(y;z)/H(y), phone-normalised mutual information of k-means labels vs forced-aligned phones",
+     "unit": "fraction",
+     "higher_is_better": true
+    },
+    {
+     "name": "phone purity / cluster purity",
+     "definition": "expected conditional probability of the most likely phone given cluster / of most likely cluster given phone",
+     "unit": "fraction",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "wav2vec 2.0 BASE/LARGE",
+    "DiscreteBERT",
+    "DeCoAR 2.0",
+    "IPL",
+    "slimIPL",
+    "Noisy Student",
+    "Conformer L",
+    "Conformer XXL"
+   ],
+   "protocol": "WER on LibriSpeech dev/test; ablations use dev-other with n-gram LM, fixed hyperparameters, 100k pretrain steps, 10h fine-tune; no significance tests; single runs"
+  },
+  "availability": {
+   "code": "https://github.com/pytorch/fairseq/tree/master/examples/hubert",
+   "weights": "pre-trained and fine-tuned models at the same fairseq URL",
+   "data": "LibriSpeech, Libri-light public"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Masked-only loss (alpha=1) with MFCC k-means C=100 units gives 17.86 dev-other WER; loss on unmasked frames only (alpha=0) fails at 96.37.",
+   "kind": "measured",
+   "source": null,
+   "metric": "dev-other WER",
+   "value": "17.86",
+   "unit": "%",
+   "baseline_value": "96.37",
+   "n": null,
+   "setup": "100k-step BASE pretraining, 10h Libri-light fine-tune, n-gram LM, MFCC k-means C=100; alpha=1.0 vs 0.0",
+   "table": "Table V, row K-means on MFCC C=100, columns alpha=1.0 and alpha=0.0",
+   "note": "alpha=0.5 gives 29.57",
+   "where": "Table V"
+  },
+  {
+   "claim": "Iterating the teacher improves cluster quality (PNMI 0.276 -> 0.637 -> 0.704 at C=500) and ablation WER (18.40 -> 11.91 -> 10.75).",
+   "kind": "measured",
+   "source": null,
+   "metric": "dev-other WER (alpha=1)",
+   "value": "10.75",
+   "unit": "%",
+   "baseline_value": "18.40",
+   "n": null,
+   "setup": "100k-step BASE, 10h fine-tune, n-gram LM, K-means C=500 on MFCC vs BASE-it1-layer6 (11.91) vs BASE-it2-layer9",
+   "table": "Table V, row K-means on BASE-it2-layer9, column alpha = 1.0",
+   "note": "PNMI 0.704 for it2-layer9, 0.637 for it1-layer6, 0.276 for MFCC",
+   "where": "Table V"
+  },
+  {
+   "claim": "HuBERT X-LARGE gets 1.8 / 2.9 test-clean / test-other WER on full 960h fine-tuning with a Transformer LM.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test-other WER",
+   "value": "2.9",
+   "unit": "%",
+   "baseline_value": "3.3",
+   "n": null,
+   "setup": "Libri-light 60k pretraining, 960h LibriSpeech fine-tune, Transformer LM; baseline wav2vec 2.0 LARGE",
+   "table": "Table III, row HUBERT X-LARGE, column test-other",
+   "note": "LARGE gives 1.9/3.3",
+   "where": "Table III"
+  },
+  {
+   "claim": "With 10 min labels, HuBERT X-LARGE reaches 4.6 / 6.8 test-clean / test-other, and LARGE 4.7 / 7.6, versus wav2vec 2.0 LARGE 4.8 / 8.2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test-other WER",
+   "value": "6.8",
+   "unit": "%",
+   "baseline_value": "8.2",
+   "n": null,
+   "setup": "10-minute labeled split, Libri-light 60k pretraining, Transformer LM",
+   "quote": "the HuBERT X-LARGE model can further reduce the WER to 4.6% and 6.8% on test-clean and test-other",
+   "note": null,
+   "where": "Sec V-A, Table II"
+  },
+  {
+   "claim": "The 1B model gives up to 19% and 13% relative WER reduction on dev-other and test-other over LARGE.",
+   "kind": "measured",
+   "source": null,
+   "metric": "relative WER reduction",
+   "value": "19",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Libri-light 60k pretraining, X-LARGE vs LARGE",
+   "quote": "shows up to 19% and 13% relative WER reduction on the more",
+   "note": "Abstract and intro word it as 'from LARGE models' in intro, and 'wav2vec 2.0' comparison is implied in abstract",
+   "where": "Abstract"
+  },
+  {
+   "claim": "Cluster ensembles help: product k-means {0,1,2}-100 gives 16.73 WER versus 17.86 for a single C=100 k-means.",
+   "kind": "measured",
+   "source": null,
+   "metric": "dev-other WER",
+   "value": "16.73",
+   "unit": "%",
+   "baseline_value": "17.86",
+   "n": null,
+   "setup": "100k-step BASE ablation, 10h fine-tune, n-gram LM",
+   "table": "Table VI, row Product K-means-{0,1,2}-100, column WER",
+   "note": null,
+   "where": "Table VI"
+  },
+  {
+   "claim": "Longer pretraining helps: C=100 MFCC k-means goes from 17.86 (100k steps) to 11.68 (800k steps), vs DiscreteBERT 26.6.",
+   "kind": "measured",
+   "source": null,
+   "metric": "dev-other WER",
+   "value": "11.68",
+   "unit": "%",
+   "baseline_value": "17.86",
+   "n": null,
+   "setup": "BASE, 10h fine-tune, n-gram LM, p=6.5%",
+   "table": "Table VII, row K-means C=100, column steps=800k",
+   "note": null,
+   "where": "Table VII"
+  },
+  {
+   "claim": "K-means is stable: PNMI std across 10 trials is at most 0.012 and extra fitting data adds at most 0.012.",
+   "kind": "measured",
+   "source": null,
+   "metric": "PNMI std",
+   "value": "0.012",
+   "unit": "PNMI",
+   "baseline_value": null,
+   "n": "10 trials",
+   "setup": "K in {100,500}, 1/10/100h fit data, MFCC and BASE-it1-L6 features",
+   "table": "Table IV, row BASE-it1-L6 C=100, column 1h",
+   "note": null,
+   "where": "Table IV"
+  },
+  {
+   "claim": "MFCC k-means baseline cluster quality: (cluster purity, phone purity, PNMI) = (0.099, 0.335, 0.255) for K=100.",
+   "kind": "measured",
+   "source": null,
+   "metric": "PNMI",
+   "value": "0.255",
+   "unit": "PNMI",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MFCC, K=100, 100h fit set",
+   "quote": "MFCC achieves (cluster purity, phone purity, PNMI) = (0.099, 0.335, 0.255) for K = 100",
+   "note": "Table V prints 0.243 for the same MFCC C=100 teacher (different fit set)",
+   "where": "Sec V-C"
+  },
+  {
+   "claim": "Training time: 100k steps takes about 9.5 hours for BASE on 32 GPUs.",
+   "kind": "measured",
+   "source": null,
+   "metric": "wall clock",
+   "value": "9.5",
+   "unit": "hours",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BASE, 32 GPUs, batch at most 87.5 s audio per GPU",
+   "quote": "Training for 100k steps takes about 9.5 hours.",
+   "note": null,
+   "where": "Sec IV-C"
+  }
+ ],
+ "limits": [
+  "Evaluated on English ASR only; generation tasks listed as future work.",
+  "Training needs a multi-phase pipeline (k-means then re-cluster), which authors plan to replace with a single phase.",
+  "Lags methods combining pre-training with self-training (Table III).",
+  "Ablations are single runs at 100k steps; no seeds or significance tests; GPU type, precision, weight decay not stated.",
+  "Decoding hyperparameter values not reported."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "PNMI",
+   "definition": "phone-normalized mutual information: percentage of uncertainty about the phone label eliminated after observing the k-means label",
+   "where": "Sec IV-E"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "wav2vec 2.0",
+   "year": 2020,
+   "arxiv": "2006.11477",
+   "relation": "extends",
+   "note": "architecture and masking follow wav2vec 2.0; main baseline",
+   "quote": null
+  },
+  {
+   "work": "DiscreteBERT",
+   "year": 2019,
+   "arxiv": "1911.03912",
+   "relation": "baseline",
+   "note": "most related; predicts discrete units but takes quantised input",
+   "quote": null
+  },
+  {
+   "work": "SpanBERT",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "mask span strategy",
+   "quote": null
+  },
+  {
+   "work": "DeepCluster",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "inspiration for cluster-based targets",
+   "quote": null
+  },
+  {
+   "work": "Iterative pseudo-labeling",
+   "year": 2020,
+   "arxiv": "2005.09267",
+   "relation": "related",
+   "note": "iterative refinement idea extended to self-supervised setting",
+   "quote": null
+  },
+  {
+   "work": "BERT",
+   "year": 2018,
+   "arxiv": "1810.04805",
+   "relation": "extends",
+   "note": "masked prediction",
+   "quote": null
+  },
+  {
+   "work": "LibriSpeech / Libri-light",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "pretraining and fine-tuning data",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "The HuBERT approach predicts hidden cluster assignments of the masked frames (y2, y3, y4 in the figure) generated by one or more iterations of k-means clustering.",
+   "page": 2,
+   "why": "shows the whole pipeline"
+  },
+  {
+   "figure": "Table V",
+   "caption": "The effect of the training objective and clustering quality on performance.",
+   "page": 8,
+   "why": "alpha vs teacher quality in one grid"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 1 and 3",
+   "snippet": "L = alpha*Lm + (1 - alpha)*Lu",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text contains no embedded instructions.",
+  "Table cells flattened one value per line in cache; Table I-VII read by position."
+ ]
 }

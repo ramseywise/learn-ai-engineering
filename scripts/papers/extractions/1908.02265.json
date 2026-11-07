@@ -1,19 +1,535 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "1908.02265",
  "pdf": "ai-engineering/08-multimodal-engineering/sources/lu-2019-vilbert.pdf",
  "bib": {
   "title": "ViLBERT: Pretraining Task-Agnostic Visiolinguistic Representations for Vision-and-Language Tasks",
+  "authors": [
+   "Jiasen Lu",
+   "Dhruv Batra",
+   "Devi Parikh",
+   "Stefan Lee"
+  ],
   "first_author": "Lu",
   "year": 2019,
-  "venue": "NeurIPS 2019",
+  "venue": "preprint (arXiv:1908.02265v1, 'Preprint. Under review.')",
   "arxiv": "1908.02265",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-04",
-  "session": "97b4134b-decf-4866-ae85-c6872cbbba19"
+  "at": "2026-11-07",
+  "chars_read": 45283,
+  "chars_total": 45283,
+  "engine": "pymupdf",
+  "skipped": null
  },
- "legacy_report": "SOURCE: ViLBERT: Pretraining Task-Agnostic Visiolinguistic Representations for Vision-and-Language Tasks. Jiasen Lu, Dhruv Batra, Devi Parikh, Stefan Lee. This file is **arXiv:1908.02265v1 (6 Aug 2019), marked \"Preprint. Under review.\"** It is not the NeurIPS 2019 camera-ready, and numbers may differ from the published version.\n\nCOVERAGE: Read all 45,954 of 45,954 chars, all 11 pages. There is no appendix. I skimmed the references only for where the method comes from.\n\nCLAIMS\n- claim: The design is two streams, one per modality, joined by co-attention layers that swap keys and values between them. Text gets more processing before fusion, because region features are already high-level.\n  number: none\n  setup: Text stream is BERT-base. Visual stream has hidden size 1024 and 8 heads. Interaction happens only at Co-TRM layers.\n  quote: \"the keys and values from each modality are passed as input to the other modality's multi-headed attention block\"; \"the text stream has signiﬁcantly more processing before interacting with visual features\" (p.4)\n  where: p.4, Fig. 2b\n- claim: The image goes in as 10 to 36 detector region features: Faster R-CNN with a ResNet-101 backbone, pretrained on Visual Genome. Each region also gets a 5-d spatial vector, and an IMG token stands for the whole image.\n  number: 10–36 regions\n  setup: Regions kept above a confidence threshold. Each feature is the mean-pooled conv feature of its region. The 5-d vector (normalised box corners plus fraction of image area) is projected and summed with it.\n  quote: \"We use Faster R-CNN [31] (with ResNet-101 [11] backbone) pretrained on the Visual Genome dataset [16] ... keep between 10 to 36 high-scoring boxes.\" (p.5); \"constructing a 5-d vector from region position (normalized top-left and bottom-right coordinates) and the fraction of image area covered\" (p.4)\n  where: p.4–5\n- claim: Pretraining uses about 3.1M Conceptual Captions pairs (3.3M nominal, minus broken links) and two tasks. The first masks words and regions, and a masked region is trained to match the detector's class distribution (KL loss) rather than to rebuild its features. The second predicts whether an image and caption are aligned, with negatives made by swapping one side.\n  number: ~15% masking; 3.1M pairs\n  setup: 8 TitanX GPUs, batch size 512, 10 epochs, Adam at 1e-4, the two losses weighted equally.\n  quote: \"masking approximately 15% of both words and image region inputs\"; \"our model is trained with around 3.1 million image-caption pairs\" (p.4–5)\n  where: p.4–5\n- claim: Fine-tuning with a single added head beats the task-specific SOTA on all four tasks.\n  number: VQA 70.55 test-dev vs DFAF 70.22. VCR Q→AR 54.04 vs R2C 43.1. RefCOCO+ val 72.34 vs MAttNet 65.33. Flickr30k R1 58.20 vs SCAN 48.60.\n  setup: Table 1. For VQA and VCR the comparison uses ViLBERT's val/test-dev figures. RefCOCO+ reranks Mask R-CNN proposals. Retrieval is trained 4-way multiple choice on Flickr30k.\n  quote: \"We set state-of-the-art for VCR, RefCOCO+ and image retrieval by signiﬁcant margins (7-10 percentage points improvement)\" (p.7)\n  where: p.7, Table 1\n- claim: Two streams beat one shared BERT stack, both with and without pretraining. Pretraining itself adds 2–13%.\n  number: VQA 68.85 for single-stream vs 70.55 for ViLBERT. VQA 68.93 for ViLBERT without pretraining (ViLBERT†).\n  setup: The single-stream baseline is initialised from BERT-base and trained identically. It was not tested on retrieval because of compute cost.\n  quote: \"Our models further improve by between 2% and 13% across tasks when using a ViLBERT model that has been pretrained\" (p.7)\n  where: p.7\n- claim: Results improve steadily with pretraining data, and zero-shot retrieval beats the fine-tuned prior SOTA on R1. The best number of Co-TRM→TRM blocks depends on the task.\n  number: Zero-shot R1 is 0.00 at 0%, 20.40 at 25%, 26.76 at 50% and 31.86 at 100% of the data. VQA goes from 68.93 to 70.55 over the same range.\n  setup: Random 25% and 50% subsets of Conceptual Captions (Table 3). Zero-shot means no Flickr30k fine-tuning. On depth, VQA and retrieval peak around 6 blocks, while VCR and RefCOCO+ prefer shallower models (Table 2).\n  quote: \"accuracy grows monotonically as the amount of data increases\"; \"31.86 vs 48.60 R1 for prior SOTA\" (p.7–8)\n  where: p.7–8, Tables 2–3\n\nLIMITS\n- Each configuration is a single run. There are no variance figures or significance tests.\n- Test-server results (VQA, VCR) are reported only for the full model.\n- The detector and its region features stay frozen; the image is never processed end to end. The paper does not ablate how many regions are kept or which detector is used.\n- The paper concedes several gaps:\n  - It uses BERT-base, not large, because of training time.\n  - It does not cover generation, dialog, embodied or video tasks.\n  - \"it is unclear how to effectively decode output text from our bidirectional model\".\n  - Conceptual Captions captions are noisy and editorialised.\n- The data-scaling evidence covers only 25%, 50% and 100%, so it says nothing beyond 3.1M pairs.\n- Dated: the fusion-encoder approach of frozen detector regions plus cross-attention was later replaced by grid/ViT patch features, contrastive encoders (CLIP) and decoder LLMs (LLaVA). Nothing here is compared with those.\n\nBUILDS ON\n- BERT (Devlin et al., arXiv 2018)\n- Transformer (Vaswani et al., NeurIPS 2017)\n- Bottom-up/top-down region features (Anderson et al., CVPR 2018)\n- Faster R-CNN (Ren et al., NeurIPS 2015)\n- Visual Genome (Krishna et al., arXiv 2016)\n- Conceptual Captions (Sharma et al., ACL 2018)\n- VideoBERT (Sun et al., arXiv 2019), named as concurrent work in the single-stream style\n\nCODE: none in the paper.\n\nFIGURES: Fig. 2, \"We introduce a novel co-attention mechanism based on the transformer architecture. By exchanging key-value pairs in multi-headed attention...\" (p.3). A standard encoder block drawn next to the co-attention block shows the Q/K/V swap at a glance. Fig. 1 (p.2, the two-stream overview with regions and an IMG token) is a backup choice. I took both captions from the text extraction and did not run figures.py.\n\nPROBLEMS\n- Citation numbers are wrong in places:\n  - Co-attention is said to be \"ﬁrst proposed in [31]\", but [31] is Faster R-CNN.\n  - The concurrent co-attention transformers are cited as \"[32,33]\", which are ReferIt and MAttNet.\n  - RefCOCO+ is cited as [32], which is a duplicate ReferIt entry.\n\n  Don't take an origin for co-attention from this paper.\n- BERT-base's hidden size is printed as \"762\". It should be 768.\n- The extraction of figure text is garbled, but body text and tables came out clean.\n- There were no embedded instructions."
+ "type": "empirical",
+ "question": "Can visual grounding be pretrained as a task-agnostic capability on paired image-text data and transferred to several vision-and-language tasks with only minor architecture additions?",
+ "hypothesis": "A two-stream BERT with co-attentional layers, pretrained with masked multi-modal modelling and alignment prediction on Conceptual Captions, beats single-stream models and task-specific SOTA.",
+ "contributions": [
+  "ViLBERT: two-stream BERT-style model over image regions and text with co-attentional transformer layers",
+  "Two proxy pretraining tasks (masked multi-modal modelling, multi-modal alignment prediction) on Conceptual Captions",
+  "Transfer to VQA, VCR, RefCOCO+ and caption-based image retrieval (plus zero-shot retrieval) with only a classifier added, SOTA on all four"
+ ],
+ "method": {
+  "summary": "Two parallel BERT-style streams (text initialised from BERT-BASE, vision over Faster R-CNN region features) interact via co-attention layers where keys/values are swapped across streams. Pretrained on ~3.1M Conceptual Captions pairs with masked multi-modal modelling (KL to detector class distribution for regions) and alignment prediction, then fine-tuned end-to-end per task.",
+  "task": "vision-and-language pretraining and transfer (VQA, VCR, referring expressions, caption-based image retrieval)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Conceptual Captions",
+    "role": "pretrain",
+    "size": "~3.1 million image-caption pairs (3.3M released; some links broken)",
+    "split": "random 25% and 50% subsets used for data-size ablation",
+    "source": "Sharma et al. 2018, alt-text web images",
+    "preprocessing": "Alignment negatives: randomly replace image or caption with another"
+   },
+   {
+    "name": "VQA 2.0",
+    "role": "both",
+    "size": "1.1 million questions about COCO images, 10 answers each; 3,129 answer classes",
+    "split": "train; test-dev (test-std for full model)",
+    "source": "Antol et al. 2015",
+    "preprocessing": null
+   },
+   {
+    "name": "VCR",
+    "role": "both",
+    "size": "290k multiple-choice QA problems from 110k movie scenes",
+    "split": "private test set; test numbers only for full model",
+    "source": "Zellers et al. 2019",
+    "preprocessing": null
+   },
+   {
+    "name": "RefCOCO+",
+    "role": "both",
+    "size": "not stated",
+    "split": "val, testA, testB",
+    "source": "Kazemzadeh et al. 2014; proposals from MAttNet (Mask R-CNN pretrained on COCO)",
+    "preprocessing": null
+   },
+   {
+    "name": "Flickr30k",
+    "role": "both",
+    "size": "31,000 images, five captions each",
+    "split": "1,000 images validation, 1,000 test, rest train (splits of Lee et al. 2018)",
+    "source": "Young et al. 2014",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "ViLBERT",
+    "role": "proposed",
+    "params": null,
+    "architecture": "two-stream transformer with Co-TRM layers",
+    "init_from": "linguistic stream from BERT-BASE (BookCorpus + English Wikipedia); visual stream not stated",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "linguistic stream 12 transformer layers base; ablated 2/4/6/8 CO-TRM->TRM blocks (6 for main model, inferred from Table 1 = 6-layer row)",
+    "hidden": "1024 visual stream; 762 linguistic (as printed; likely a typo)",
+    "heads": "8 visual; 12 linguistic",
+    "context": null,
+    "other": {
+     "regions": "10 to 36 boxes per image above a confidence threshold (threshold value not stated)",
+     "region_feature": "mean-pooled conv feature, Faster R-CNN ResNet-101 pretrained on Visual Genome",
+     "spatial": "5-d vector (normalised top-left, bottom-right, area fraction) projected and summed",
+     "IMG token": "mean-pooled features with whole-image box"
+    }
+   },
+   {
+    "name": "Single-Stream",
+    "role": "baseline",
+    "params": null,
+    "architecture": "single BERT over both modalities",
+    "init_from": "BERT-BASE",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "ViLBERT-dagger / Single-Stream-dagger",
+    "role": "baseline",
+    "params": null,
+    "architecture": "no Conceptual Captions pretraining; BERT init for text stream",
+    "init_from": "BERT-BASE",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Faster R-CNN ResNet-101",
+    "role": "base",
+    "params": null,
+    "architecture": "object detector",
+    "init_from": "pretrained on Visual Genome",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "Pretraining: masked multi-modal modelling (~15% words and regions masked; words as BERT; regions zeroed 90%/unaltered 10%; KL divergence to detector class distribution) + alignment prediction (binary, linear layer on elementwise product of h_IMG and h_CLS); two losses weighted equally",
+   "optimizer": "Adam",
+   "lr": "1e-4 initial (pretraining)",
+   "lr_schedule": "linear decay with warm up",
+   "warmup": "warm up used, length not stated",
+   "batch_size": "512 total",
+   "steps": null,
+   "epochs": "10",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "8 TitanX GPUs",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "finetune VQA": "two-layer MLP on elementwise product, BCE on soft targets, batch 256, max 20 epochs, Adam lr 4e-5",
+    "finetune VCR": "linear layer, four question+answer inputs, softmax, CE, 20 epochs, batch 64, lr 2e-5",
+    "finetune RefCOCO+": "linear layer per region, BCE, IoU threshold 0.5, max 20 epochs, batch 256, lr 4e-5",
+    "finetune retrieval": "4-way multiple choice (random caption, random image, hard negative from 100 nearest neighbours), CE, 20 epochs, batch 64, lr 2e-5; linguistic stream cached before first Co-TRM",
+    "finetune scope": "entire model end-to-end"
+   }
+  },
+  "inference": {
+   "decoding": "VQA softmax; RefCOCO+ highest scoring region; retrieval: score all pairs and sort; text sampling (Fig 5) by MCMC resampling from all-MASK per Wang and Cho 2019",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "VQA accuracy",
+     "definition": "VQA 2.0 test-dev (test-std) accuracy",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "VCR Q->A, QA->R, Q->AR",
+     "definition": "multiple-choice accuracy; Q->AR requires both correct",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "RefCOCO+ accuracy",
+     "definition": "highest scoring proposal correct, val/testA/testB",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Image retrieval R1/R5/R10",
+     "definition": "recall at k on Flickr30k 1,000-image test pool",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "DFAF (VQA)",
+    "R2C (VCR)",
+    "MAttNet (RefCOCO+)",
+    "SCAN (retrieval)",
+    "Single-Stream",
+    "Single-Stream-dagger",
+    "ViLBERT-dagger"
+   ],
+   "protocol": "Single runs per cell; no seeds, error bars or significance tests reported."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": null
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "models.hidden",
+    "quote": "hidden state size of 762 and 12 attention heads",
+    "where": "Sec 3.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "ViLBERT beats the VQA SOTA DFAF on test-dev",
+   "kind": "measured",
+   "source": null,
+   "metric": "VQA test-dev accuracy",
+   "value": 70.55,
+   "unit": "%",
+   "baseline_value": 70.22,
+   "n": null,
+   "setup": "VQA 2.0, full ViLBERT, 6-layer, CC-pretrained",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row ViLBERT, column VQA test-dev"
+  },
+  {
+   "claim": "Pretraining gains VQA over the same architecture without it",
+   "kind": "measured",
+   "source": null,
+   "metric": "VQA test-dev accuracy",
+   "value": 70.55,
+   "unit": "%",
+   "baseline_value": 68.93,
+   "n": null,
+   "setup": "ViLBERT vs ViLBERT-dagger",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row ViLBERT-dagger, column VQA test-dev"
+  },
+  {
+   "claim": "Pretrained single-stream scores below pretrained ViLBERT on VQA",
+   "kind": "measured",
+   "source": null,
+   "metric": "VQA test-dev accuracy",
+   "value": 68.85,
+   "unit": "%",
+   "baseline_value": 70.55,
+   "n": null,
+   "setup": "Single-Stream with CC pretraining",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Single-Stream, column VQA test-dev"
+  },
+  {
+   "claim": "ViLBERT sets VCR Q->AR SOTA over R2C",
+   "kind": "measured",
+   "source": null,
+   "metric": "VCR Q->AR accuracy",
+   "value": 54.04,
+   "unit": "%",
+   "baseline_value": 43.1,
+   "n": null,
+   "setup": "VCR val, full ViLBERT",
+   "note": "Test 54.8 vs R2C test 44.0 in parentheses",
+   "where": "Table 1",
+   "table": "Table 1, row ViLBERT, column Q->AR"
+  },
+  {
+   "claim": "ViLBERT sets RefCOCO+ SOTA over MAttNet",
+   "kind": "measured",
+   "source": null,
+   "metric": "RefCOCO+ val accuracy",
+   "value": 72.34,
+   "unit": "%",
+   "baseline_value": 65.33,
+   "n": null,
+   "setup": "full ViLBERT",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row ViLBERT, column val"
+  },
+  {
+   "claim": "ViLBERT sets image retrieval R1 SOTA over SCAN",
+   "kind": "measured",
+   "source": null,
+   "metric": "Flickr30k R1",
+   "value": 58.2,
+   "unit": "%",
+   "baseline_value": 48.6,
+   "n": null,
+   "setup": "fine-tuned ViLBERT, 1,000-image test",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row ViLBERT, column R1"
+  },
+  {
+   "claim": "Zero-shot retrieval without Flickr30k fine-tuning still beats prior fine-tuned SOTA R1",
+   "kind": "measured",
+   "source": null,
+   "metric": "Flickr30k zero-shot R1",
+   "value": 31.86,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "pretrained ViLBERT, alignment score",
+   "note": "Paper's own wording is 'performs reasonably'; 31.86 is below the prior SOTA 48.60 (fine-tuned), not above",
+   "where": "Sec 4",
+   "quote": "(31.86 vs 58.20 R1) it performs reasonably without having seen a Flickr30k image or caption (31.86 vs 48.60 R1 for prior SOTA)"
+  },
+  {
+   "claim": "Zero-shot R1 grows with pretraining set size",
+   "kind": "measured",
+   "source": null,
+   "metric": "Flickr30k zero-shot R1",
+   "value": 20.4,
+   "unit": "%",
+   "baseline_value": 31.86,
+   "n": null,
+   "setup": "25% of CC, vs 31.86 at 100%",
+   "note": "baseline_value is the 100% result",
+   "where": "Table 3",
+   "table": "Table 3, row ViLBERT (25 %), column ZS R1"
+  },
+  {
+   "claim": "VQA grows monotonically with pretraining data",
+   "kind": "measured",
+   "source": null,
+   "metric": "VQA test-dev",
+   "value": 69.82,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "25% CC; 50% 70.30; 100% 70.55",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row ViLBERT (25 %), column VQA test-dev"
+  },
+  {
+   "claim": "Deeper visual stream helps retrieval: 8-layer zero-shot R1",
+   "kind": "measured",
+   "source": null,
+   "metric": "ZS R1",
+   "value": 32.8,
+   "unit": "%",
+   "baseline_value": 31.86,
+   "n": null,
+   "setup": "8 Co-TRM->TRM blocks",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row ViLBERT (8-layer), column ZS R1"
+  },
+  {
+   "claim": "VCR and RefCOCO+ prefer shallower models",
+   "kind": "measured",
+   "source": null,
+   "metric": "VCR Q->AR",
+   "value": 54.4,
+   "unit": "%",
+   "baseline_value": 54.04,
+   "n": null,
+   "setup": "2-layer vs 6-layer 54.04",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row ViLBERT (2-layer), column Q->AR"
+  },
+  {
+   "claim": "Pretraining improves across tasks by 2 to 13 percent",
+   "kind": "measured",
+   "source": null,
+   "metric": "improvement range",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "ViLBERT vs ViLBERT-dagger",
+   "note": null,
+   "where": "Sec 4",
+   "quote": "Our models further improve by between 2% and 13% across tasks when using a ViLBERT model that has been pretrained under our proxy tasks"
+  }
+ ],
+ "limits": [
+  "No seeds, variance or significance tests reported.",
+  "Text generation unsolved: authors say it is unclear how to decode from the bidirectional model; captioning, dialog, embodied tasks and long sequences not addressed.",
+  "Single-Stream not evaluated on retrieval or zero-shot retrieval because it cannot cache representations (high cost).",
+  "Authors use BERT-BASE for training-time concerns; BERT-LARGE might help.",
+  "Fixed external detector features; detector cost not reported; confidence threshold, warmup length and VCR/RefCOCO+ details unspecified.",
+  "Pretrained-model captions are editorialised due to alt-text data."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Co-TRM",
+   "definition": "co-attentional transformer layer: keys and values from each modality are passed to the other modality's multi-headed attention block",
+   "where": "Sec 2.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "BERT",
+   "year": 2018,
+   "arxiv": "1810.04805",
+   "relation": "extends",
+   "note": "base architecture and init",
+   "quote": null
+  },
+  {
+   "work": "VideoBERT",
+   "year": 2019,
+   "arxiv": "1904.01766",
+   "relation": "related",
+   "note": "concurrent single-stream video-language model",
+   "quote": null
+  },
+  {
+   "work": "Conceptual Captions",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "pretraining data",
+   "quote": null
+  },
+  {
+   "work": "Visual Genome",
+   "year": 2016,
+   "arxiv": "1602.07332",
+   "relation": "uses-data",
+   "note": "detector pretraining",
+   "quote": null
+  },
+  {
+   "work": "Bottom-up and top-down attention",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "region features and VQA setup",
+   "quote": null
+  },
+  {
+   "work": "Faster R-CNN",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "region detector",
+   "quote": null
+  },
+  {
+   "work": "DFAF",
+   "year": 2018,
+   "arxiv": "1812.05252",
+   "relation": "baseline",
+   "note": "VQA",
+   "quote": null
+  },
+  {
+   "work": "R2C",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "VCR",
+   "quote": null
+  },
+  {
+   "work": "MAttNet",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "RefCOCO+",
+   "quote": null
+  },
+  {
+   "work": "SCAN",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "retrieval",
+   "quote": null
+  },
+  {
+   "work": "BERT has a mouth",
+   "year": 2019,
+   "arxiv": "1902.04094",
+   "relation": "uses-method",
+   "note": "MCMC text sampling",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Our ViLBERT model consists of two parallel streams for visual and linguistic processing that interact through novel co-attentional transformer layers.",
+   "page": 2,
+   "why": "shows the two-stream layout and repeated Co-TRM blocks"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Co-attention mechanism: exchanging key-value pairs in multi-headed attention.",
+   "page": 3,
+   "why": "contrasts standard block with Co-TRM"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Transfer task results vs SOTA and ablations.",
+   "page": 7,
+   "why": "main results"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Text cache table cells are flattened one per line; Table 1 values were mapped by column order.",
+  "Hidden size printed as 762 (probably 768 typo)."
+ ]
 }

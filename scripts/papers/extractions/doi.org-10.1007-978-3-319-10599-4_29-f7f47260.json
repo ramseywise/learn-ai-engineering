@@ -1,19 +1,370 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "https://doi.org/10.1007/978-3-319-10599-4_29",
  "pdf": "ai-engineering/08-multimodal-engineering/sources/bossard-2014-food-101-mining-discriminative-components.pdf",
  "bib": {
   "title": "Food-101 – Mining Discriminative Components with Random Forests",
+  "authors": ["Lukas Bossard", "Matthieu Guillaumin", "Luc Van Gool"],
   "first_author": "Bossard",
   "year": 2014,
-  "venue": "ECCV (6) 2014",
+  "venue": "ECCV 2014 (venue not printed in the PDF text; from the ledger)",
   "arxiv": null,
-  "doi": null
+  "doi": "10.1007/978-3-319-10599-4_29"
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-04",
-  "session": "97b4134b-decf-4866-ae85-c6872cbbba19"
+  "at": "2026-11-07",
+  "chars_read": 40895,
+  "chars_total": 40895,
+  "engine": "pymupdf",
+  "skipped": null
  },
- "legacy_report": "SOURCE: \"Food-101 – Mining Discriminative Components with Random Forests\", Lukas Bossard, Matthieu Guillaumin, Luc Van Gool (ETH Zürich; K.U. Leuven). The extracted text names no venue. ECCV 2014 comes from the caller's brief, not from the PDF text. 16 pages, with no appendix.\n\nCOVERAGE: I read all 40,847 of 40,847 characters, pages 1–16, including all three results tables, the MIT-Indoor section, the conclusion and the full reference list (refs 1–40). There is no appendix and no separate limitations section. Figure captions came from figures.py (Figs 1–8). I skipped nothing.\n\nPLAIN ANSWER FIRST: **The paper never measures or reports the noise level of the training set.** It says the training images \"still contain some amount of noise\" from \"intense colors and sometimes wrong labels\". It gives no percentage, no audit, and no description of how the test images were cleaned (who did it, what the criteria were, or how many images were removed). If a note says \"Food-101's training set has X% label noise\", this paper cannot support the X. The paper supports two narrower points. First, the dataset was designed on purpose so that training data is noisy and test data is clean. Second, the authors' stated reason was that real-world systems should cope with weakly labelled data. For a modern multimodal-engineering note, this is a sharpens-level citation at most, for \"Reading public benchmarks\". Use it to cite where Food-101's train/test asymmetry comes from, and to show that a benchmark's split design is something a reader should check. It does not change or evidence any claim about current VLM or multimodal performance. Its accuracy numbers (pre-2014 AlexNet at 56.40%) are long dated. Part (b), RF component mining, is of historical interest only. Its one durable result is that the CNN beat every hand-built pipeline, including the authors' own.\n\nCLAIMS\n\n- claim: The dataset was built from foodspotting.com user uploads. It covers the top 101 popular, consistently named dishes, with 750 randomly sampled training images and 250 manually cleaned test images per class. Training images were deliberately left uncleaned.\n  number: 101 classes; 750 train / 250 test per class\n  setup: Images were scraped from a user-photo site where users annotate place and dish type.\n  quote: \"We chose the top 101 most popular and consistently named dishes and randomly sampled 750 training images. Additionally, 250 test images were collected for each class, and were manually cleaned. On purpose, the training images were not cleaned, and thus still contain some amount of noise. This comes mostly in the form of intense colors and sometimes wrong labels.\"\n  where: p.4, Sect. 3\n\n- claim: The authors' reason for leaving the training labels noisy is that systems should scale with class count while using weakly labelled data.\n  number: none\n  setup: This is a design rationale. They give no experiment on noise.\n  quote: \"We believe that real-world computer vision algorithms should be able to cope with such weakly labeled data if they are meant to scale well with the number of classes to recognise.\"\n  where: p.4, Sect. 3\n\n- claim: Images were rescaled to a maximum side of 512 px, and smaller images were excluded, giving 101,000 images in total.\n  number: 512 px; 101'000 images\n  setup: The 101,000 total equals 101 × 1000, so excluded images must have been replaced or the count is nominal. The paper does not say which.\n  quote: \"All images were rescaled to have a maximum side length of 512 pixels and smaller ones were excluded from the whole process. This leaves us with a dataset of 101'000 real-world images in total\"\n  where: p.4–5, Sect. 3\n\n- claim: The paper presents Food-101 as the first public real-world food dataset. The only earlier public set (PFID) is lab-shot fast food.\n  number: PFID has 101 classes, 3 instances per class, 8 images per instance\n  setup: This is a comparison with prior food datasets.\n  quote: \"The Pittsburgh food dataset [5] contains 101 classes, but with only 3 instances per class and 8 images per instance.\"\n  where: p.3, Sect. 2\n\n- claim: A CNN (AlexNet architecture, trained from scratch in Caffe) was the best method on Food-101 at 56.40%, beating the paper's own RFDC by 5.64 points. The cost was six days of training on a single GPU.\n  number: CNN 56.40%; margin 5.64%; 450,000 iterations; 6 days on a Tesla K20X\n  setup: Food-101, 750 train / 250 test per class, metric is average accuracy (the fraction of test images classified correctly).\n  quote: \"Also on this dataset, cnn set the state of the art and rfdc are outperformed by a margin of 5.64%. This is paid by a considerably longer training time of six days on a nvidia Tesla K20X.\" / \"we train a deep cnn on our dataset using the architecture of [23] as provided by the Caffe [16] library until it converged (450'000 iterations).\"\n  where: p.12, Sect. 5.3; Table 2 p.10\n\n- claim: Full results on Food-101 (Table 2) are BOW 28.51, IFV 38.88, CNN 56.40, RF 32.72, RCF 28.46, MLDS 42.63, RFDC 50.76.\n  number: as listed\n  setup: All component-mining methods use 20 components per class. RFDC used 30 trees, max depth 5, and 500 positives per component.\n  quote: \"Global bow [24] 28.51 ifv [32] 38.88 cnn [23] 56.40 Local rf [3] 32.72 rcf [29] 28.46 mlds (≈ [34]) 42.63 rfdc (this paper) 50.76\"\n  where: Table 2, p.10\n\n- claim: RFDC beats the MLDS part-mining method and IFV by 8.13 and 11.88 points.\n  number: 50.76%; +8.13; +11.88\n  setup: Food-101 as above.\n  quote: \"we measure an accuracy of 50.76%, an improvement of 8.13% and 11.88% compared to mlds and ifv, respectively.\"\n  where: p.12\n\n- claim: Feature choice matters a great deal for RFDC. Combining IFV SURF and colour reaches 49.40%, while HOG reaches only 8.85%.\n  number: HOG 8.85; BoW SURF 33.47; BoW SURF+Color 38.83; IFV SURF 44.79; IFV Color 14.24; IFV SURF+Color 49.40\n  setup: RFDC with default settings (30 trees, depth 7, top 20 components per class, 100 positives).\n  quote: \"ifv surf @64 + Color@64 49.40\"; \"- hog 8.85\"\n  where: Table 1, p.10\n\n- claim: RFDC is robust to its forest hyperparameters. Accuracy plateaus beyond about 4 levels of depth, above 200 positives per model, and above about 20 components per class. Moving from 20 to 50 components raises feature dimensionality from 42,420 to 106,050.\n  number: 42'420 → 106'050\n  setup: Food-101, varying one parameter at a time (Fig. 5).\n  quote: \"from 42'420 for 20 components, the dimensionality reaches 106'050 for 50 components and thus heavily impacts memory usage and speed.\"\n  where: p.10\n\n- claim: On MIT-Indoor, RFDC gets 54.40% with the restricted training set and 58.36% with the full training set. That is below DMS (64.03) and below IFV (60.77).\n  number: 54.40 / 58.36 vs DMS 64.03, IFV 60.77, IFV+DMS 66.87\n  setup: 50 components per class, horizontally flipped training images, about 80 train / 20 test images per class.\n  quote: \"using 50 components per class our method yields 54.40% and 58.36% average accuracy for the restricted and full training set, respectively.\"\n  where: p.13, Table 3 p.14\n\n- claim: Compute costs are about 250 CPU hours to train and about 0.8 s per image to classify on 8 cores.\n  number: 250 CPU h; 0.8 s; 55% of training time spent on the forest; 70% of inference time spent on encoding\n  setup: Full pipeline, reported in the MIT-Indoor section.\n  quote: \"our full pipeline uses around 250 cpu hours\" / \"the full classification time (including feature extraction and Fisher encoding) of one image is around 0.8 seconds using 8 cores, where 70% of the time is spent on encoding\"\n  where: p.14\n\n- claim: The authors argue that Food-101 has a bias unlike other benchmarks, because part-based RFDC beats IFV on it.\n  number: none\n  setup: An interpretive claim, not tested.\n  quote: \"Our Food-101 dataset (where rfdc outperforms ifv) therefore presents a bias significantly different from available sets, highlighting its interest as a novel benchmark.\"\n  where: p.14\n\n- claim: The errors they report come from visual similarity, clutter and ambiguity.\n  number: none\n  setup: Qualitative, from Fig. 8.\n  quote: \"Confusions are often because of visual similarity (onion rings vs. french fries, carrot cake vs. chocolate cake), clutter (prime rib vs. spring roll) or ambiguous examples (steak vs. risotto).\"\n  where: p.13\n\nLIMITS:\n- The training-set noise is never quantified. There is no estimate of the label-error rate and no audit sample.\n- The test-set cleaning procedure is not described: no annotators, criteria, or count of images removed.\n- There is no experiment on how training-label noise affects accuracy, for example clean versus noisy training data.\n- There is no validation split for Food-101. A 200,000-superpixel validation set is carved out of the training superpixels for mining only.\n- There are no error bars and no repeated runs. Each figure comes from a single run.\n- The CNN baseline was AlexNet trained from scratch, with no ImageNet pretraining mentioned and no tuning reported.\n- The authors concede the CNN beats them, and that the MIT-Indoor results trail DMS and IFV.\n- Dated: every number predates pretrained CNNs and transfer learning. The accuracy figures do not describe current multimodal systems.\n\nBUILDS ON: Random forests, Ho (1995) and Breiman (2001). RF with linear-split image classification, Bosch, Zisserman, Munoz (2007). Improved Fisher Vectors, Sánchez et al. (2013). Mid-level discriminative patches, Singh, Gupta, Efros (2012), which is the MLDS baseline. Doersch, Gupta, Efros (2013). Juneja et al., Blocks That Shout (2013). Randomized clustering forests, Moosmann, Nowak, Jurie (2008). Graph-based superpixels, Felzenszwalb & Huttenlocher (2004). SURF, Bay et al. (2006). Spatial pyramids, Lazebnik et al. (2006). The CNN, Krizhevsky et al. (2012), run in Caffe (Jia 2013). Cutting-plane structural SVMs, Joachims et al. (2009), run in DLib (King 2009). PFID, Chen et al. (2009). MIT-Indoor, Quattoni & Torralba (2009).\n\nCODE: none. The paper includes only equations: information gain (Eq. 1), the SVM split (Eq. 2), leaf-averaged class confidence (Eq. 3), and leaf distinctiveness (Eq. 4), on pp.6–7. The dataset URL is printed on p.5: http://www.vision.ee.ethz.ch/datasets/food-101/\n\nFIGURES:\n- Fig. 2 (p.4), \"one example for 100 out of the 101 classes… Note the high variance in food type, color, exposure and level of detail, but also visually and semantically similar food types.\" In one glance it shows how varied the classes are and how close some of them look.\n- Fig. 6 (p.11), per-class accuracy for IFV versus RFDC across the best, worst, most improved and degraded classes. It shows that a single aggregate accuracy figure hides a wide per-class spread, which could help a benchmark-reading note.\n- Fig. 8 (p.13), confidence heat maps for correct and confused pairs. It shows the confusion types faster than prose does.\n- Figs 3 and 4 (pp.5, 8) are pipeline diagrams, useful only if the method itself is taught.\n\nPROBLEMS: pypdf raised repeated \"Multiple definitions in dictionary … /ExtGState\" warnings, which did not affect the text. Small ligature and diacritic artefacts appear (Z¨ urich, Sánchez rendered as S´ anchez). Table 2 and Table 3 were flattened into running text, and I re-associated the values by order. The flattened text of Table 3 interleaves two columns, but the values match the prose. There were no embedded instructions. The venue is not stated anywhere in the extracted text.\n\nFile: /Users/ramsey-wise/workspace/learn-ai-engineering/ai-engineering/08-multimodal-engineering/sources/bossard-2014-food-101-mining-discriminative-components.pdf"
+ "type": "benchmark",
+ "question": "How can pictured dishes be recognised automatically, and how does a Random Forest based discriminative component mining method perform on a new 101-class food dataset?",
+ "hypothesis": "Mining discriminative image components (superpixel-aligned) jointly for all classes with Random Forests beats global classifiers and prior part-mining methods for food, where local components matter.",
+ "contributions": [
+  "A novel discriminative part mining method based on Random Forests.",
+  "A superpixel-based patch sampling strategy that prevents running many detectors on sliding windows.",
+  "A novel, large scale and publicly available dataset for food recognition (Food-101).",
+  "Experiments showing the approach outperforms Improved Fisher Vectors and the part-based mining approach of [34] on Food-101."
+ ],
+ "method": {
+  "summary": "Food-101 is 101'000 foodspotting.com images in 101 dish classes (750 uncleaned train, 250 hand-cleaned test per class). The proposed RFDC method trains a Random Forest on superpixel features, selects distinctive leaves as components, trains a linear SVM per component, and classifies with spatially pooled component scores and a multi-class SVM. It is compared with BOW, IFV, RF, RCF, MLDS and a CNN.",
+  "task": "food image classification (101 classes); also scene classification on MIT-Indoor",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Food-101",
+    "role": "both",
+    "size": "101'000 images, 101 classes (750 + 250 per class)",
+    "split": "750 train and 250 test images per class",
+    "source": "downloaded from foodspotting.com; top 101 most popular and consistently named dishes; publicly downloadable at vision.ee.ethz.ch/datasets/food-101/; licence not stated",
+    "preprocessing": "Rescaled to maximum side length 512 pixels; smaller images excluded. Test images manually cleaned; training images deliberately not cleaned, so they contain some noise (intense colors, sometimes wrong labels). Noise rate not measured."
+   },
+   {
+    "name": "MIT-Indoor",
+    "role": "both",
+    "size": "approx. 80 train and 20 test images per class (restricted train set); also full train set",
+    "split": "original protocol of Quattoni and Torralba; restricted train set and full train set, original test set",
+    "source": "Quattoni and Torralba, CVPR 2009",
+    "preprocessing": "Training images horizontally flipped to produce more samples; 100'000 samples per bag"
+   }
+  ],
+  "models": [
+   {
+    "name": "RFDC (Random Forest Discriminant Components)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "Random Forest of SVM-split trees on superpixels, linear SVM per mined component, structured-output multi-class SVM on spatially pooled component scores",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "trees": "30 (comparison on Food-101: max depth 5; default in parameter study: mined at depth 7)",
+     "components_per_class": "20 on Food-101 (feature dimension 42'420); 50 on MIT-Indoor",
+     "positives_per_component": "100 in parameter study; 500 in the Food-101 comparison",
+     "superpixels": "graph-based superpixels of Felzenszwalb and Huttenlocher, sigma=0.1, k=300, min size 1% of image area; about 30 per image, about 2.4 million in training set",
+     "features": "dense SURF (signed square-rooted) plus L*a*b color, also extracted in the superpixel bounding box; Improved Fisher Vectors with 64-mode GMM, PCA-whitened, concatenated into 8'576 values",
+     "spatial_pooling": "spatial pyramid with 3 levels, each superpixel fully contributes to each region it is part of, scores averaged"
+    }
+   },
+   {
+    "name": "CNN (architecture of Krizhevsky et al. 2012, Caffe)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "AlexNet-style deep CNN",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {"training": "trained on Food-101 until converged (450'000 iterations); six days on an NVIDIA Tesla K20X; initialisation not stated"}
+   },
+   {
+    "name": "BOW, IFV, RF, RCF, MLDS",
+    "role": "baseline",
+    "params": null,
+    "architecture": "BOW: dense SURF, 1024 k-means clusters, 3-level spatial pyramid; IFV: Improved Fisher Vectors with spatial pyramid, parameters as in [19]; RF: forest used directly for classification; RCF: Randomized Clustering Forests of [29]; MLDS: re-implementation of [34] with superpixels instead of sliding HOG patches",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {"MLDS": "negative set 500'000 random superpixels; discovery set one class (about 22'500); k-means clusters/samples ratio 1/3; at most 10 iterations; each SVM trained on top 10 members; 20 components per class"}
+   }
+  ],
+  "training": {
+   "objective": "Random Forest node splits maximise information gain I(S,phi)=H(S)-(|Sl|/|S| H(Sl)+|Sr|/|S| H(Sr)) with class entropy; component models are linear binary SVMs with iterative hard-negative mining; final classifier is a structured-output multi-class SVM (optimized cutting plane algorithm, DLib)",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": "CNN: 450'000 iterations",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "CNN: NVIDIA Tesla K20X; RFDC: CPU, 8 cores at test time",
+   "compute": "RFDC full pipeline about 250 cpu hours (including vocabulary training, i/o etc.); about 55% on forest, 15% on component models, 20% on final classifier; CNN six days on one K20X",
+   "wall_clock": "CNN: six days",
+   "seeds": null,
+   "other": {
+    "forest_sampling": "200'000 of the 2.4M superpixels held out as validation set; each tree grown on 200'000 random superpixels from the remaining 2.2M",
+    "node_splits": "100 random binary class partitions per node, one SVM per partition, the one maximising Eq. 1 kept; SVM trained on at most 20'000 superpixels; splitting stops if a node has fewer than 25 samples",
+    "component_selection": "distinctiveness(l|y)=sum_s delta(l,s) p(y|s); non-maxima suppression drops leaves sharing more than half the same superpixels with a better leaf; top N leaves per class",
+    "negatives": "a large repository of samples"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single run; no repeats or seeds reported",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {"classification_time": "about 0.8 seconds per image on 8 cores (MIT-Indoor settings), 70% encoding, 25% evaluating part models"}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Average accuracy",
+     "definition": "fraction of test images that are correctly classified",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": ["BOW", "IFV", "CNN", "RF", "RCF", "MLDS (approx. Singh et al. 2012)", "MIT-Indoor part-based and global methods from the literature"],
+   "protocol": "Food-101: 750 train / 250 test per class, one accuracy per method, no confidence intervals or repeats. Parameter study varies one dimension at a time from defaults. MIT-Indoor: original protocol."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "Food-101 downloadable at http://www.vision.ee.ethz.ch/datasets/food-101/"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "datasets[Food-101].preprocessing",
+    "quote": "On purpose, the training images were not cleaned, and thus still contain some amount of noise.",
+    "where": "Sect. 3"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "RFDC reaches 50.76% average accuracy on Food-101, ahead of IFV and MLDS but behind the CNN.",
+   "kind": "measured",
+   "source": null,
+   "metric": "average accuracy",
+   "value": "50.76",
+   "unit": "%",
+   "baseline_value": "56.40 (CNN)",
+   "n": "25'250 test images (250 x 101)",
+   "setup": "Food-101, 750 train / 250 test per class, 30 trees, max depth 5, 500 positives per component, 20 components per class",
+   "quote": null,
+   "table": "Table 2, row rfdc (this paper), column Avg. Acc. [%]",
+   "note": "Abstract also says 50.76%.",
+   "where": "Table 2"
+  },
+  {
+   "claim": "The CNN outperforms RFDC by 5.64 points, at the cost of six days of training on a Tesla K20X.",
+   "kind": "measured",
+   "source": null,
+   "metric": "average accuracy",
+   "value": "56.40",
+   "unit": "%",
+   "baseline_value": "50.76 (RFDC)",
+   "n": null,
+   "setup": "Food-101, AlexNet-style CNN (Krizhevsky et al.) trained in Caffe until converged (450'000 iterations)",
+   "quote": "cnn set the state of the art and rfdc are outperformed by a margin of 5.64%. This is paid by a considerably longer training time of six days on a nvidia Tesla K20X.",
+   "table": null,
+   "note": "Table 2 prints 56.40.",
+   "where": "Sect. 5.3"
+  },
+  {
+   "claim": "IFV, the best global non-CNN classifier, scores 38.88% on Food-101; BOW scores 28.51%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "average accuracy",
+   "value": "38.88",
+   "unit": "%",
+   "baseline_value": "28.51 (BOW)",
+   "n": null,
+   "setup": "Food-101, same split, spatial pyramid, multi-class SVM",
+   "quote": null,
+   "table": "Table 2, row ifv [32], column Avg. Acc. [%]",
+   "note": "Text says IFV beats BOW by 10%.",
+   "where": "Table 2"
+  },
+  {
+   "claim": "MLDS (re-implementation of Singh et al. with superpixels) scores 42.63%, 3.75 points above IFV.",
+   "kind": "measured",
+   "source": null,
+   "metric": "average accuracy",
+   "value": "42.63",
+   "unit": "%",
+   "baseline_value": "38.88 (IFV)",
+   "n": null,
+   "setup": "Food-101, 20 components per class",
+   "quote": null,
+   "table": "Table 2, row mlds, column Avg. Acc. [%]",
+   "note": "Text: improvement of 3.75% with respect to ifv.",
+   "where": "Table 2, Sect. 5.3"
+  },
+  {
+   "claim": "Using the Random Forest directly for classification (RF) gives 32.72% and Randomized Clustering Forests 28.46%, no better than BOW, so mining plus component SVMs matter.",
+   "kind": "measured",
+   "source": null,
+   "metric": "average accuracy",
+   "value": "32.72",
+   "unit": "%",
+   "baseline_value": "28.46 (RCF)",
+   "n": null,
+   "setup": "Food-101, same forest as RFDC",
+   "quote": null,
+   "table": "Table 2, row rf [3], column Avg. Acc. [%]",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "RFDC gains 8.13 points over MLDS and 11.88 points over IFV.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy gain",
+   "value": "11.88",
+   "unit": "points",
+   "baseline_value": "8.13 (over MLDS)",
+   "n": null,
+   "setup": "Food-101, RFDC 50.76 versus IFV 38.88 and MLDS 42.63",
+   "quote": "we measure an accuracy of 50.76%, an improvement of 8.13% and 11.88% com-\npared to mlds and ifv, respectively.",
+   "table": null,
+   "note": "Percentages are absolute point differences.",
+   "where": "Sect. 5.3"
+  },
+  {
+   "claim": "On the full classifier, IFV SURF@64 plus Color@64 features give RFDC 49.40% under the default parameter-study settings; HOG gives only 8.85%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "average accuracy",
+   "value": "49.40",
+   "unit": "%",
+   "baseline_value": "8.85 (HOG)",
+   "n": null,
+   "setup": "Food-101, RFDC with default settings (30 trees, depth 7, top 20 components, 100 positives), varying the feature encoding",
+   "quote": null,
+   "table": "Table 1, row ifv surf@64 + Color@64, column Avg. Acc. [%]",
+   "note": "Table 1 prints 49.40 for this configuration, whereas Table 2 prints 50.76 for the comparison settings (depth 5, 500 positives); the paper does not explain the 1.36 point gap.",
+   "where": "Table 1"
+  },
+  {
+   "claim": "Accuracy saturates with components per class: going from 20 to 50 components raises feature dimension from 42'420 to 106'050 for a modest gain.",
+   "kind": "measured",
+   "source": null,
+   "metric": "feature dimensionality",
+   "value": "106'050",
+   "unit": "dimensions",
+   "baseline_value": "42'420 (20 components)",
+   "n": null,
+   "setup": "Food-101 parameter study, Fig. 5d",
+   "quote": "from 42’420 for 20 components, the dimensionality reaches 106’050 for 50\ncomponents",
+   "table": null,
+   "note": null,
+   "where": "Sect. 5.2"
+  },
+  {
+   "claim": "On MIT-Indoor RFDC reaches 54.40% with the restricted train set and 58.36% with the full train set, below IFV (60.77) and DMS (64.03).",
+   "kind": "measured",
+   "source": null,
+   "metric": "average accuracy",
+   "value": "58.36",
+   "unit": "%",
+   "baseline_value": "64.03 (DMS), 60.77 (IFV)",
+   "n": null,
+   "setup": "MIT-Indoor, 50 components per class, 100'000 samples per bag, flipped training images",
+   "quote": "our method yields\n54.40% and 58.36% average accuracy for the restricted and full training set",
+   "table": null,
+   "note": "Table 3 lists the same.",
+   "where": "Sect. 5.4, Table 3"
+  },
+  {
+   "claim": "Full RFDC training takes around 250 CPU hours and classifying one image takes about 0.8 seconds on 8 cores.",
+   "kind": "measured",
+   "source": null,
+   "metric": "training compute",
+   "value": "250",
+   "unit": "cpu hours",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MIT-Indoor settings, full pipeline including vocabulary training and i/o",
+   "quote": "our full pipeline uses around\n250 cpu hours",
+   "table": null,
+   "note": null,
+   "where": "Sect. 5.4"
+  },
+  {
+   "claim": "Food-101 training images are deliberately uncleaned and contain some label noise, but the noise rate is not measured; only the 250 test images per class were manually cleaned.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Food-101 construction, Sect. 3",
+   "quote": null,
+   "table": null,
+   "note": "No percentage, audit, annotator count or cleaning criteria are given.",
+   "where": "Sect. 3"
+  }
+ ],
+ "limits": [
+  "Training-set noise (wrong labels, intense colors) is acknowledged but never quantified; test cleaning procedure (who, criteria, number removed) is not described.",
+  "Single run per method with no seeds, repeats or significance test; the CNN baseline is an AlexNet-era model trained from scratch (initialisation not stated), a strong 2012 baseline that has since been far surpassed.",
+  "No code or weights released; only the dataset.",
+  "On MIT-Indoor the method does not match DMS (restricted train set) and is below IFV."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "component",
+   "definition": "a discriminative image region (superpixel-aligned patch) that helps distinguish each type of dish from the others",
+   "where": "Sect. 1"
+  }
+ ],
+ "lineage": [
+  {"work": "Random forests (Breiman 2001; Ho 1995)", "year": 2001, "arxiv": null, "relation": "uses-method", "note": "mining framework built on Random Forests", "quote": null},
+  {"work": "Unsupervised discovery of mid-level discriminative patches (Singh, Gupta, Efros)", "year": 2012, "arxiv": null, "relation": "baseline", "note": "re-implemented as MLDS with superpixels", "quote": null},
+  {"work": "Improved Fisher Vectors (Sanchez et al.)", "year": 2013, "arxiv": null, "relation": "baseline", "note": "global classifier baseline and feature encoding", "quote": null},
+  {"work": "ImageNet classification with deep CNNs (Krizhevsky et al.)", "year": 2012, "arxiv": null, "relation": "baseline", "note": "CNN baseline trained in Caffe", "quote": null},
+  {"work": "Image classification using Random Forests and Ferns (Bosch et al.)", "year": 2007, "arxiv": null, "relation": "baseline", "note": "RF baseline", "quote": null},
+  {"work": "Randomized clustering forests (Moosmann et al.)", "year": 2008, "arxiv": null, "relation": "baseline", "note": "RCF baseline", "quote": null},
+  {"work": "PFID: Pittsburgh fast-food image dataset (Chen et al.)", "year": 2009, "arxiv": null, "relation": "related", "note": "only prior public food dataset: 101 classes, 3 instances per class, 8 images per instance, lab conditions", "quote": null},
+  {"work": "Recognizing indoor scenes (Quattoni and Torralba)", "year": 2009, "arxiv": null, "relation": "uses-data", "note": "MIT-Indoor evaluation", "quote": null},
+  {"work": "Mid-level visual element discovery as discriminative mode seeking (Doersch et al.)", "year": 2013, "arxiv": null, "relation": "baseline", "note": "DMS, best part-based MIT-Indoor result in Table 3", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig. 3", "caption": "Overview of our component mining. A Random Forest is used to hierarchically cluster superpixels of the training set. Then, discriminative clusters of superpixels in the leaves are selected and used to train the component models. After mining, the rf is not used anymore.", "page": 5, "why": "Shows the three-stage pipeline in one picture."},
+  {"figure": "Table 2", "caption": "Classification performance measured for the evaluated methods. All component mining approaches use 20 components per class.", "page": 10, "why": "Main Food-101 comparison."},
+  {"figure": "Fig. 2", "caption": "One example for 100 out of the 101 classes in our dataset.", "page": 4, "why": "Shows the variation and look-alike classes in the dataset."}
+ ],
+ "code": [],
+ "problems": [
+  "No instructions embedded in the text.",
+  "The PDF text does not print the venue; ECCV 2014 comes from the ledger.",
+  "Table 1 (49.40 at default settings) and Table 2 (50.76 at comparison settings) differ for what looks like the same method; settings differ (depth 7 vs 5, 100 vs 500 positives)."
+ ]
 }

@@ -1,0 +1,149 @@
+{
+ "schema": 1,
+ "key": "2305.15334",
+ "pdf": "generative-ai/03-agentic-foundations/sources/patil-2023-gorilla.pdf",
+ "bib": {
+  "title": "Gorilla: Large Language Model Connected with Massive APIs",
+  "authors": ["Shishir G. Patil", "Tianjun Zhang", "Xin Wang", "Joseph E. Gonzalez"],
+  "first_author": "Patil",
+  "year": 2023,
+  "venue": "preprint (arXiv v1, 'Preprint. Under review.')",
+  "arxiv": "2305.15334",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 61063,
+  "chars_total": 61063,
+  "engine": "pymupdf",
+  "skipped": "References skimmed; figure-axis number dumps (Figs 5, 10, 11) not read line by line."
+ },
+ "type": "empirical",
+ "question": "Can a fine-tuned LLM select and write correct API calls from a large, overlapping, changing set of ML APIs, and how does retrieval interact with that?",
+ "hypothesis": "Retriever-aware fine-tuning of LLaMA-7B on API documentation beats prompting GPT-4 on API-call accuracy, cuts hallucination and lets the model adapt to test-time documentation changes.",
+ "contributions": [
+  "APIBench: 1,645 API calls from TorchHub, TensorFlow Hub and HuggingFace with synthetic Self-Instruct instructions",
+  "Gorilla, a retrieve-aware fine-tuned LLaMA-7B for API calls",
+  "AST sub-tree matching to score functional correctness and to define hallucination",
+  "Evidence that the model adapts to test-time API documentation changes and reasons about constraints"
+ ],
+ "method": {
+  "summary": "Scrape model cards from three ML hubs, have GPT-4 write 10 instructions per API via Self-Instruct, fine-tune LLaMA-7B on instruction-API pairs with or without a retrieved API document appended to the prompt, and score outputs by AST sub-tree match against the API database.",
+  "task": "API call generation (single call) from a natural language request",
+  "trains": true,
+  "datasets": [
+   {"name": "APIBench: Torch Hub", "role": "both", "size": "94 API calls in Sec 1 and Fig 3 (95 in Sec 3.1 and App 8.1)", "split": "80% train / 20% test", "source": "all PyTorch Hub model cards (exhaustive)", "preprocessing": "model cards converted to JSON with fields domain, framework, functionality, api_name, api_call, api_arguments, environment_requirements, example_code, performance, description"},
+   {"name": "APIBench: TensorFlow Hub", "role": "both", "size": "626 API calls after filtering v2's 801 models (Sec 3.1, Fig 3); 696 in Sec 1 and App 8.1", "split": "80% train / 20% test", "source": "TensorFlow Hub v2 model cards, filtered for models with little or no card information", "preprocessing": null},
+   {"name": "APIBench: HuggingFace", "role": "both", "size": "925 models: top 20 per domain from about 203,681 hosted models", "split": "90% train / 10% test", "source": "HuggingFace Model Hub model cards, top 20 most downloaded per task category", "preprocessing": "domains: 7 multimodal, 8 CV, 12 NLP, 5 audio, 2 tabular, 2 RL"},
+   {"name": "Self-Instruct instruction-API pairs", "role": "both", "size": "16,450 pairs (10 per API x 1,645); the Limitations section says over 11,000 instruction-API pairs are released", "split": "pairs divided into train and held-out test sets as above", "source": "GPT-4 with 3 in-context examples sampled from 6 hand-written per hub (18 hand-written total) plus the API doc; told not to use API names or hints", "preprocessing": "converted to one-round user-agent chat conversations"}
+  ],
+  "models": [
+   {"name": "Gorilla", "role": "proposed", "params": "7B", "architecture": "LLaMA-7B decoder-only, instruction fine-tuned", "init_from": "LLaMA-7B base", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": "inferred: max seq length 2048 in training (Table 4)", "other": {}},
+   {"name": "GPT-4", "role": "baseline", "params": null, "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"checkpoint": "gpt-4-0314"}},
+   {"name": "GPT-3.5-turbo", "role": "baseline", "params": null, "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"checkpoint": "gpt-3.5-turbo-0301"}},
+   {"name": "Claude", "role": "baseline", "params": null, "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"checkpoint": "claude-v1"}},
+   {"name": "LLaMA-7B", "role": "baseline", "params": "7B", "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "text-davinci-003 (GPT-Index retriever)", "role": "retriever", "params": null, "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}}
+  ],
+  "training": {
+   "objective": "standard instruction fine-tuning on user-agent chat conversations; retriever-aware variant appends 'Use this API documentation for reference: <retrieved_API_doc_JSON>' to the user prompt",
+   "optimizer": null,
+   "lr": "2e-5",
+   "lr_schedule": "cosine decay",
+   "warmup": "0.03 warmup ratio",
+   "batch_size": "64",
+   "steps": null,
+   "epochs": "5",
+   "tokens": null,
+   "seq_len": "2048",
+   "precision": null,
+   "weight_decay": "0",
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "8x A100 40GB",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {"retriever_aware_training_doc": "the golden-truth (oracle) API document, with the output generated by GPT-4 (Sec 4.1 'Finetuning with Retrieval')"}
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "not stated; single output per test item implied, no seeds or repeats reported",
+   "prompting": "zero-shot: natural language request only, no prompt tuning. With retriever: '<user_prompt> Use this API documentation for reference: <retrieved_API_doc_JSON>'",
+   "retrieval": "BM25 and GPT-Index (text-davinci-003), each API one document, top-1 retrieved; Oracle returns the ground-truth API doc",
+   "parameters": {},
+   "other": {"hf_baseline_scoring": "for HuggingFace, all models except Gorilla are only checked on whether they give the correct domain name (a multiple-choice reduction)"}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "AST accuracy (overall)", "definition": "generated call parsed to an AST; correct if it is a sub-tree of the reference API, matching only the arguments defined per API (Torch Hub: repo_or_dir, model; TensorFlow Hub: hub.KerasLayer / hub.load with handle; HuggingFace: pretrained_model_name_or_path except for pipeline)", "unit": "%", "higher_is_better": true},
+    {"name": "hallu", "definition": "API call that is not a sub-tree of any API in the database (an imagined tool)", "unit": "%", "higher_is_better": false},
+    {"name": "err", "definition": "API invoked incorrectly (a real API but wrong one); distinct from hallucination", "unit": "%", "higher_is_better": false}
+   ],
+   "baselines": ["GPT-4", "GPT-3.5-turbo", "Claude v1", "LLaMA-7B"],
+   "protocol": "Held-out test split of instruction-API pairs; each model run with 0-shot, BM25, GPT-Index and Oracle retrieval; no seeds, confidence intervals or significance tests reported."
+  },
+  "availability": {
+   "code": "https://gorilla.cs.berkeley.edu",
+   "weights": "https://gorilla.cs.berkeley.edu",
+   "data": "https://gorilla.cs.berkeley.edu"
+  },
+  "prompts": [
+   {"purpose": "retrieval-augmented query", "text": "<user_prompt> Use this API documentation for reference: <retrieved_API_doc_JSON>", "where": "Sec 4 Retrievers"}
+  ],
+  "evidence": [
+   {"field": "datasets.Torch Hub.size", "quote": "we get 95 models from Torch Hub", "where": "Sec 3.1; Sec 1 and Fig 3 say 94"},
+   {"field": "inference.other.hf_baseline_scoring", "quote": "for all the models except Gorilla, we only check if they can provide the correct domain names", "where": "Sec 4.1"}
+  ]
+ },
+ "results": [
+  {"claim": "Gorilla zero-shot beats GPT-4 on HuggingFace AST accuracy by a wide margin.", "kind": "measured", "source": null, "metric": "AST overall accuracy", "value": "71.68", "unit": "%", "baseline_value": "19.80 (GPT-4 0-shot)", "n": null, "setup": "HuggingFace held-out 10% split, no retriever; non-Gorilla models scored only on domain name", "quote": null, "table": "Table 1, rows Gorilla (0-shot) and GPT-4 (0-shot), column HuggingFace overall", "note": null, "where": "Table 1"},
+  {"claim": "Gorilla zero-shot beats GPT-4 on Torch Hub.", "kind": "measured", "source": null, "metric": "AST overall accuracy", "value": "59.13", "unit": "%", "baseline_value": "38.70 (GPT-4 0-shot)", "n": null, "setup": "Torch Hub held-out 20% split, no retriever", "quote": null, "table": "Table 1, rows Gorilla (0-shot) and GPT-4 (0-shot), column TorchHub overall", "note": null, "where": "Table 1"},
+  {"claim": "Gorilla zero-shot beats GPT-4 on TensorFlow Hub.", "kind": "measured", "source": null, "metric": "AST overall accuracy", "value": "83.79", "unit": "%", "baseline_value": "18.20 (GPT-4 0-shot)", "n": null, "setup": "TensorFlow Hub held-out 20% split, no retriever", "quote": null, "table": "Table 1, rows Gorilla (0-shot) and GPT-4 (0-shot), column TensorFlow Hub overall", "note": null, "where": "Table 1"},
+  {"claim": "Authors state Gorilla is 20.43% better than GPT-4 zero-shot.", "kind": "measured", "source": null, "metric": "relative gain over GPT-4", "value": "20.43", "unit": "%", "baseline_value": null, "n": null, "setup": "Torch Hub zero-shot (59.13 - 38.70 = 20.43 points); the text calls it percent", "quote": "20.43% better than GPT-4 and 10.75% better than ChatGPT", "table": null, "note": "Percentage points on Torch Hub, not relative percent", "where": "Sec 4.1 Finetuning without Retrieval"},
+  {"claim": "GPT-4 zero-shot hallucinates on 37.16% of HuggingFace calls; Gorilla 10.95%.", "kind": "measured", "source": null, "metric": "hallu", "value": "37.16", "unit": "%", "baseline_value": "10.95 (Gorilla 0-shot)", "n": null, "setup": "HuggingFace 0-shot", "quote": null, "table": "Table 1, row GPT-4 (0-shot), column HuggingFace hallu", "note": "GPT-4 wrong-API err on the same column is 43.03, larger than hallu 37.16", "where": "Table 1"},
+  {"claim": "An imperfect retriever at test time degrades a Gorilla trained without retriever; BM25 drops HuggingFace accuracy from 71.68 to 17.04.", "kind": "measured", "source": null, "metric": "AST overall accuracy", "value": "17.04", "unit": "%", "baseline_value": "71.68 (zero-shot)", "n": null, "setup": "Gorilla trained without retriever, HuggingFace, BM25 top-1", "quote": null, "table": "Table 2, column BM25 (Gorilla without Retriever), row HuggingFace (overall)", "note": "Table 1 row Gorilla (BM-25) prints 17.03 for the same cell; Table 2 prints 11.28 under the no-retriever BM25 column and 17.04 under the with-oracle BM25 column, so the columns look transposed", "where": "Table 1, Table 2"},
+  {"claim": "With the oracle document, GPT-3.5 reaches 89.71 and Gorilla 91.26 on HuggingFace.", "kind": "measured", "source": null, "metric": "AST overall accuracy", "value": "89.71", "unit": "%", "baseline_value": "91.26 (Gorilla Oracle)", "n": null, "setup": "HuggingFace, Oracle retriever, GPT-3.5", "quote": null, "table": "Table 1, row GPT-3.5 (Oracle), column HuggingFace overall", "note": null, "where": "Table 1"},
+  {"claim": "Training with the oracle retriever gains 12.37% on Torch Hub and 23.46% on HuggingFace over training without, when tested with the oracle.", "kind": "measured", "source": null, "metric": "gain from retriever-aware training", "value": "23.46", "unit": "%", "baseline_value": null, "n": null, "setup": "HuggingFace, oracle at evaluation", "quote": "12.37% better than training without retriever in Torch Hub and 23.46% better in HuggingFace", "table": null, "note": null, "where": "Sec 4.1 Finetuning with Retrieval"},
+  {"claim": "At evaluation, GPT-Index degrades the retriever-trained model by 29.20% and BM25 by 52.27%.", "kind": "measured", "source": null, "metric": "accuracy degradation vs oracle", "value": "52.27", "unit": "%", "baseline_value": "29.20 (GPT-Index)", "n": null, "setup": "Gorilla trained with oracle retriever, tested with real retrievers", "quote": "using GPT-Index at evaluation results in 29.20% accuracy degradation, and using BM25 results in a 52.27% accuracy degradation", "table": null, "note": null, "where": "Sec 4.1"},
+  {"claim": "GPT-3.5 hallucinates less than GPT-4 on all three hubs, which the authors attribute tentatively to RLHF.", "kind": "measured", "source": null, "metric": "hallu 0-shot Torch Hub", "value": "18.81", "unit": "%", "baseline_value": "36.55 (GPT-4)", "n": null, "setup": "Torch Hub 0-shot", "quote": null, "table": "Table 1, row GPT-3.5 (0-shot), column TorchHub hallu", "note": null, "where": "Table 1; Sec 4.1 Hallucination with LLM"},
+  {"claim": "With accuracy constraints, Gorilla has the highest zero-shot accuracy and ties GPT-3.5 with retrieval.", "kind": "measured", "source": null, "metric": "constraint-aware accuracy", "value": "47.88", "unit": "%", "baseline_value": "43.66 (GPT-3.5 and GPT-4 0-shot)", "n": null, "setup": "Torch Hub subset with accuracy in the model card (65.26% of Torch Hub), 0-shot", "quote": null, "table": "Table 3, row Accuracy const, column Gorilla 0-shot", "note": "Claude 0-shot is 17.25; Oracle is higher for GPT-3.5 (69.01)", "where": "Table 3"},
+  {"claim": "Constraint subset covers 65.26% of Torch Hub.", "kind": "measured", "source": null, "metric": "subset share", "value": "65.26", "unit": "%", "baseline_value": null, "n": null, "setup": "Torch Hub models with accuracy defined for at least one dataset", "quote": "65.26% of TorchHub dataset in Table 1", "table": null, "note": null, "where": "Sec 4.3"},
+  {"claim": "Test-time doc change (FCN ResNet-50 to ResNet-101; registry pytorch/vision to NVIDIA) is followed in two qualitative examples.", "kind": "claim", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "Fig 6, qualitative, no quantitative evaluation", "quote": null, "table": null, "note": null, "where": "Sec 4.2, Fig 6"}
+ ],
+ "limits": [
+  "HuggingFace comparison is not like-for-like: baselines are scored only on domain name, Gorilla on full API match.",
+  "Test sets are held-out instruction splits of the same Self-Instruct data used for training, so in-distribution.",
+  "Test-time documentation change is shown with two qualitative examples, no measurement.",
+  "No seeds, repeats, confidence intervals, decoding settings or optimizer reported.",
+  "Only ML model-hub APIs; authors concede this and the bias risk of ML APIs.",
+  "Example code in the dataset is not executed; execution is not evaluated.",
+  "Dataset counts are inconsistent (94/95 Torch Hub, 626/696 TF Hub; 16,450 vs over 11,000 pairs); Table 2 column headings appear transposed against Table 1.",
+  "Closed baselines are 2023 checkpoints (gpt-4-0314, gpt-3.5-turbo-0301, claude-v1)."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "hallucination", "definition": "an API call that is not a sub-tree of any API in the database, invoking an entirely imagined tool; distinct from invoking an API incorrectly, which is an error", "where": "Sec 3.3"},
+  {"term": "retriever-aware training", "definition": "instruction tuning data with 'Use this API documentation for reference: <retrieved_API_doc_JSON>' appended to the user prompt", "where": "Sec 3.2"}
+ ],
+ "lineage": [
+  {"work": "Self-Instruct", "year": 2022, "arxiv": "2212.10560", "relation": "uses-method", "note": "instruction generation with GPT-4", "quote": null},
+  {"work": "LLaMA", "year": 2023, "arxiv": "2302.13971", "relation": "extends", "note": "base model fine-tuned", "quote": null},
+  {"work": "Toolformer", "year": 2023, "arxiv": "2302.04761", "relation": "related", "note": "tool use by LLMs, small tool sets", "quote": null},
+  {"work": "ReAct", "year": 2022, "arxiv": "2210.03629", "relation": "related", "note": "cited among prior work integrating small tool sets in prompts (Yao et al. 2022)", "quote": null},
+  {"work": "GPT-4", "year": 2023, "arxiv": null, "relation": "baseline", "note": "gpt-4-0314", "quote": null},
+  {"work": "Claude", "year": 2022, "arxiv": null, "relation": "baseline", "note": "claude-v1", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 1", "caption": "Examples of API calls generated by GPT-4, Claude and Gorilla for the same prompt", "page": 2, "why": "Shows hallucination vs wrong library vs correct call"},
+  {"figure": "Fig 3", "caption": "Gorilla: A system for enabling LLMs to interact with APIs", "page": 4, "why": "Training and inference pipeline"},
+  {"figure": "Fig 4", "caption": "AST Sub-Tree Matching to evaluate API calls", "page": 6, "why": "How correctness is scored"},
+  {"figure": "Table 1", "caption": "Evaluating LLMs on Torch Hub, HuggingFace, and Tensorflow Hub APIs", "page": 7, "why": "Main results across retrievers"}
+ ],
+ "code": [],
+ "problems": ["Text extraction of Table 2 header order may not match column values; flagged in results note."]
+}

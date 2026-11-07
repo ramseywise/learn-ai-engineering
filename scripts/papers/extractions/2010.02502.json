@@ -1,0 +1,91 @@
+{
+ "schema": 1,
+ "key": "2010.02502",
+ "pdf": "ai-engineering/08-multimodal-engineering/sources/song-2020-denoising-diffusion-implicit-models.pdf",
+ "bib": {"title": "Denoising Diffusion Implicit Models", "authors": ["Jiaming Song", "Chenlin Meng", "Stefano Ermon"], "first_author": "Song", "year": 2021, "venue": "ICLR 2021", "arxiv": "2010.02502", "doi": null},
+ "read": {"by": "source-reader", "at": "2026-11-07", "chars_read": 54666, "chars_total": 54666, "engine": "pymupdf", "skipped": "Appendix proofs (B, C) and the discrete case (A) skimmed by heading only; equations garbled in extraction."},
+ "type": "empirical",
+ "question": "Can a DDPM-trained model be sampled in far fewer steps, with comparable quality, by changing the generative process rather than retraining?",
+ "hypothesis": "A family of non-Markovian forward processes shares the DDPM training objective, so a pretrained DDPM can be sampled with a deterministic, shorter trajectory without retraining.",
+ "contributions": [
+  "Generalise DDPMs to non-Markovian forward processes that share the same L1 training objective (Theorem 1)",
+  "DDIM: the sigma=0 deterministic case, an implicit model usable with pretrained DDPMs",
+  "Accelerated sampling over a sub-sequence tau of timesteps, 10x to 50x faster",
+  "Consistency, latent interpolation and low-error reconstruction from x_T"
+ ],
+ "method": {
+  "summary": "Defines a family of inference processes q_sigma with the same marginals as DDPM, giving generative updates indexed by sigma (eta). Sets sigma=0 for deterministic DDIM and samples over a sub-sequence of the 1000 timesteps, using existing DDPM checkpoints (and one self-trained CelebA model).",
+  "task": "unconditional image generation (sampler change for diffusion models)",
+  "trains": false,
+  "datasets": [
+   {"name": "CIFAR10", "role": "eval", "size": null, "split": "32x32, unconditional; reconstruction on test set", "source": null, "preprocessing": null},
+   {"name": "CelebA", "role": "both", "size": null, "split": "64x64, original CelebA not CelebA-HQ", "source": null, "preprocessing": "StyleGAN repository pre-processing"},
+   {"name": "LSUN Bedroom", "role": "eval", "size": null, "split": "256x256", "source": null, "preprocessing": null},
+   {"name": "LSUN Church", "role": "eval", "size": null, "split": "256x256", "source": null, "preprocessing": null}
+  ],
+  "models": [
+   {"name": "DDPM U-Net eps_theta", "role": "base", "params": null, "architecture": "U-Net based on Wide ResNet, as Ho et al. 2020", "init_from": "pretrained DDPM checkpoints for CIFAR10, Bedroom, Church", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"T": "1000", "CelebA": "own model trained with L1; five feature map resolutions from 64x64 to 4x4", "alpha schedule": "heuristic of Ho et al. 2020"}}
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "DDIM update (Eq. 12) with sigma_tau_i(eta) = eta*sqrt((1-a_{i-1})/(1-a_i))*sqrt(1-a_i/a_{i-1}); eta=0 is DDIM, eta=1 is DDPM; sigma-hat is DDPM with larger noise std",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "FID sample count not stated; one trained model per dataset, no seeds stated",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {"eta": "0.0, 0.2, 0.5, 1.0", "dim(tau) / S": "10, 20, 50, 100, 1000 (Tables 1); 10,20,50,100 (Table 3); 10..1000 (Table 2)", "tau selection": "quadratic tau_i=floor(c*i^2) for CIFAR10, linear tau_i=floor(c*i) for the rest", "interpolation": "spherical linear interpolation of two x_T, DDIM dim(tau)=50"},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "FID", "definition": "Frechet Inception Distance (Heusel et al., 2017)", "unit": "FID", "higher_is_better": false},
+    {"name": "Reconstruction error", "definition": "per-dimension mean squared error, scaled to [0,1], encode x0 to xT then decode with S steps, CIFAR-10 test set", "unit": "MSE", "higher_is_better": false},
+    {"name": "Sampling time", "definition": "hours to sample 50k images on one Nvidia 2080 Ti", "unit": "hours", "higher_is_better": false}
+   ],
+   "baselines": ["DDPM (eta=1)", "DDPM sigma-hat (Ho et al. 2020)"],
+   "protocol": "Single table per setting; no seeds, intervals or significance tests stated."
+  },
+  "availability": {"code": null, "weights": null, "data": null},
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {"claim": "DDIM (eta=0) at 50 steps nearly matches 1000 steps on CIFAR10.", "kind": "measured", "source": null, "metric": "FID", "value": "4.67", "unit": "FID", "baseline_value": "4.04", "n": null, "setup": "CIFAR10 32x32, pretrained DDPM, DDIM eta=0, S=50 vs S=1000", "quote": null, "table": "Table 1, row eta=0.0, columns CIFAR10 S=50 (4.67) and S=1000 (4.04)", "note": null, "where": "Table 1"},
+  {"claim": "DDIM at 10 steps on CIFAR10 reaches FID 13.36.", "kind": "measured", "source": null, "metric": "FID", "value": "13.36", "unit": "FID", "baseline_value": null, "n": null, "setup": "CIFAR10, eta=0, S=10", "quote": null, "table": "Table 1, row eta=0.0, column CIFAR10 S=10", "note": null, "where": "Table 1"},
+  {"claim": "At 50 steps on CIFAR10 the DDPM with sigma-hat noise scores 32.72, while DDPM with eta=1 scores 8.01.", "kind": "measured", "source": null, "metric": "FID", "value": "32.72", "unit": "FID", "baseline_value": "8.01", "n": null, "setup": "CIFAR10, S=50; sigma-hat is the Ho et al. implementation's larger variance, eta=1.0 the true-variance DDPM", "quote": null, "table": "Table 1, row sigma-hat column CIFAR10 S=50 (32.72); row eta=1.0 same column (8.01)", "note": null, "where": "Table 1"},
+  {"claim": "DDIM gives 10x to 50x speed-up at comparable quality to 1000-step models.", "kind": "measured", "source": null, "metric": "speed-up", "value": "10x to 50x", "unit": "x", "baseline_value": null, "n": null, "setup": "DDIM at 20 to 100 steps vs 1000-step DDPM, sampling time scales linearly with steps (Fig 4)", "quote": "Notably, DDIM is able to produce\nsamples with quality comparable to 1000 step models within 20 to 100 steps, which is a 10× to\n50× speed up compared to the original DDPM.", "table": null, "note": null, "where": "Sec 5.1"},
+  {"claim": "DDPM sampling cost motivating the work: about 20 hours for 50k 32x32 images versus under a minute for a GAN.", "kind": "reported", "source": "intro, on Nvidia 2080 Ti", "metric": "hours", "value": "20", "unit": "hours", "baseline_value": null, "n": 50000, "setup": "DDPM, 50k 32x32 images, Nvidia 2080 Ti", "quote": "it takes around 20\nhours to sample 50k images of size 32 × 32 from a DDPM", "table": null, "note": "Nearly 1000 hours for 50k 256x256 images.", "where": "Sec 1"},
+  {"claim": "Same x_T with different step counts yields similar high-level features; 20 steps already resemble 1000.", "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "DDIM, CIFAR10 and CelebA, qualitative (Fig 5, 9)", "quote": null, "table": null, "note": "claim: qualitative; text: samples generated with only 20 steps are already very similar to ones generated with 1000 steps in terms of high-level features", "where": "Sec 5.2"},
+  {"claim": "DDIM encode-decode reconstruction error on CIFAR-10 falls to 0.0001 at S=500 and 1000.", "kind": "measured", "source": null, "metric": "MSE per dimension", "value": "0.0001", "unit": "MSE", "baseline_value": "0.014", "n": null, "setup": "CIFAR-10 test set, S steps for encode and decode, baseline is S=10", "quote": null, "table": "Table 2, columns S=500, 1000 (0.0001), S=10 (0.014)", "note": null, "where": "Table 2"},
+  {"claim": "On LSUN Bedroom at 100 steps DDIM scores 6.62 versus DDPM eta=1 6.81; at 10 steps 16.95 versus 42.78.", "kind": "measured", "source": null, "metric": "FID", "value": "16.95", "unit": "FID", "baseline_value": "42.78", "n": null, "setup": "LSUN Bedroom 256x256, dim(tau)=10, linear tau", "quote": null, "table": "Table 3, row DDIM (eta=0.0) column Bedroom 10 (16.95); DDPM (eta=1.0) 42.78", "note": "1000-step DDPM FID 6.36 Bedroom, 7.89 Church.", "where": "Table 3"},
+  {"claim": "On CelebA at 1000 steps the eta=0 DDIM scores 3.51 and the 100-step DDPM (eta=1) 13.93, similar to 20-step DDIM 13.73.", "kind": "measured", "source": null, "metric": "FID", "value": "13.73", "unit": "FID", "baseline_value": "13.93", "n": null, "setup": "CelebA 64x64, eta=0 S=20 vs eta=1 S=100", "quote": null, "table": "Table 1, CelebA row eta=0.0 S=20 (13.73), row eta=1.0 S=100 (13.93)", "note": null, "where": "Table 1, Sec 5.1"},
+  {"claim": "At S=1000 sigma-hat DDPM (3.17) is marginally better than DDIM (4.04) on CIFAR10.", "kind": "measured", "source": null, "metric": "FID", "value": "3.17", "unit": "FID", "baseline_value": "4.04", "n": null, "setup": "CIFAR10, S=1000", "quote": null, "table": "Table 1, row sigma-hat column CIFAR10 S=1000 (3.17)", "note": null, "where": "Table 1"}
+ ],
+ "limits": [
+  "Experiments are on small, unconditional image datasets; no text conditioning or guidance.",
+  "Discrete (multinomial) case left without empirical evaluation (Appendix A).",
+  "Training with more steps or continuous time left as future work.",
+  "No seeds, FID sample counts or intervals reported."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "DDIM", "definition": "implicit probabilistic model trained with the DDPM objective (sigma_t = 0 for all t), with a deterministic generative process", "where": "Sec 4.1"},
+  {"term": "eta", "definition": "hyperparameter interpolating between deterministic DDIM (0) and DDPM (1)", "where": "Sec 5, Eq 16"}
+ ],
+ "lineage": [
+  {"work": "Denoising Diffusion Probabilistic Models (Ho et al.)", "year": 2020, "arxiv": "2006.11239", "relation": "extends", "note": "Same objective and pretrained checkpoints", "quote": null},
+  {"work": "Deep unsupervised learning using nonequilibrium thermodynamics (Sohl-Dickstein et al.)", "year": 2015, "arxiv": null, "relation": "extends", "note": "original diffusion formulation", "quote": null},
+  {"work": "Noise conditional score networks (Song & Ermon)", "year": 2019, "arxiv": null, "relation": "related", "note": "score matching counterpart", "quote": null},
+  {"work": "Score-based generative modeling through SDEs (Song et al.)", "year": 2020, "arxiv": "2011.13456", "relation": "related", "note": "probability flow ODE; Proposition 1 shows equivalence to VE case", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 4", "caption": "Hours to sample 50k images with one Nvidia 2080 Ti GPU and samples at different steps.", "page": 8, "why": "Shows sampling time linear in step count."},
+  {"figure": "Fig 5", "caption": "Samples from DDIM with the same random xT and different number of steps.", "page": 8, "why": "Shows consistency across step counts."}
+ ],
+ "code": [
+  {"where": "Eq 12", "snippet": "x_{t-1} = sqrt(a_{t-1}) * (x_t - sqrt(1-a_t) eps(x_t)) / sqrt(a_t) + sqrt(1-a_{t-1}-sigma_t^2) * eps(x_t) + sigma_t * eps_t", "verbatim": false}
+ ],
+ "problems": ["Equations garbled in text extraction; appendix proofs not checked line by line."]
+}

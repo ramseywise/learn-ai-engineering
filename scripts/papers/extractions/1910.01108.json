@@ -1,0 +1,493 @@
+{
+ "schema": 1,
+ "key": "1910.01108",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/sanh-2019-distilbert-distilled-version-bert.pdf",
+ "bib": {
+  "title": "DistilBERT, a distilled version of BERT: smaller, faster, cheaper and lighter",
+  "authors": [
+   "Victor SANH",
+   "Lysandre DEBUT",
+   "Julien CHAUMOND",
+   "Thomas WOLF"
+  ],
+  "first_author": "Sanh",
+  "year": 2019,
+  "venue": "preprint (EMC^2: 5th Edition Co-located with NeurIPS'19 per footer; arXiv v4, 1 Mar 2020)",
+  "arxiv": "1910.01108",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 18528,
+  "chars_total": 18528,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can a smaller general-purpose BERT-like model be pre-trained with knowledge distillation so that it keeps most of BERT's language understanding while being smaller and faster?",
+ "hypothesis": "Distillation during pre-training, with a triple loss and teacher-based initialisation, yields a student that fine-tunes well on many tasks at lower size and latency.",
+ "contributions": [
+  "Pre-training-phase knowledge distillation for a general-purpose student (40% smaller, 60% faster, 97% of GLUE performance)",
+  "Triple loss combining masked LM, distillation and cosine-distance losses",
+  "Proof-of-concept on-device question answering app and comparative on-device study"
+ ],
+ "method": {
+  "summary": "A 6-layer student with BERT's architecture (token-type embeddings and pooler removed) is initialised from every second teacher layer and pre-trained on the BERT corpus with a linear combination of soft-target distillation, masked LM and cosine embedding losses. It is then fine-tuned on GLUE, IMDb and SQuAD v1.1.",
+  "task": "pre-training distillation of a masked language model, then fine-tuning for GLUE, IMDb, SQuAD",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "English Wikipedia + Toronto Book Corpus",
+    "role": "pretrain",
+    "size": null,
+    "split": null,
+    "source": "same corpus as original BERT (Zhu et al. 2015)",
+    "preprocessing": "dynamic masking, no next sentence prediction"
+   },
+   {
+    "name": "GLUE (9 tasks)",
+    "role": "dev",
+    "size": null,
+    "split": "dev sets",
+    "source": "Wang et al. 2018",
+    "preprocessing": null
+   },
+   {
+    "name": "IMDb",
+    "role": "eval",
+    "size": null,
+    "split": "test accuracy",
+    "source": "Maas et al. 2011",
+    "preprocessing": null
+   },
+   {
+    "name": "SQuAD v1.1",
+    "role": "eval",
+    "size": null,
+    "split": "dev EM/F1",
+    "source": "Rajpurkar et al. 2016",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "BERT-base",
+    "role": "teacher",
+    "params": "110M",
+    "architecture": "Transformer encoder",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "DistilBERT",
+    "role": "proposed",
+    "params": "66M",
+    "architecture": "BERT architecture, token-type embeddings and pooler removed, layers reduced by a factor of 2",
+    "init_from": "teacher, taking one layer out of two",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "inferred: half of BERT-base's layers (the paper says 'reduced by a factor of 2'; no number printed)",
+    "hidden": "same as teacher (inferred from 'common dimensionality')",
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "ELMo + two BiLSTMs",
+    "role": "baseline",
+    "params": "180M",
+    "architecture": "GLUE baseline",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "GLUE results as reported by the authors; baseline computed with jiant"
+    }
+   }
+  ],
+  "training": {
+   "objective": "linear combination of Lce (soft-target distillation, sum_i t_i*log(s_i), softmax temperature T on teacher and student, T=1 at inference), Lmlm (masked LM) and Lcos (cosine embedding loss aligning student and teacher hidden states)",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "up to 4K examples per batch via gradient accumulation",
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "8 16GB V100 GPUs",
+   "compute": null,
+   "wall_clock": "approximately 90 hours",
+   "seeds": "5 seeds for fine-tuned GLUE results (medians)",
+   "other": {
+    "temperature_T": null,
+    "loss_weights": null,
+    "recipe": "best practices from Liu et al. 2019 (RoBERTa): large batches, dynamic masking, no NSP",
+    "fine_tuning_hparams": null,
+    "second_distillation_step": "DistilBERT (D): fine-tuned on SQuAD with an extra distillation term from a BERT fine-tuned on SQuAD"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": "T=1 at inference",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {
+    "cpu": "Intel Xeon E5-2690 v3 Haswell @2.9GHz, batch size 1, full pass over STS-B dev set",
+    "phone": "iPhone 7 Plus, QA app, excluding tokenization"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "GLUE macro-score",
+     "definition": "average of individual task scores on dev sets",
+     "unit": "points",
+     "higher_is_better": true
+    },
+    {
+     "name": "IMDb accuracy",
+     "definition": "test accuracy",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "SQuAD EM/F1",
+     "definition": "dev set exact match / F1",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Inference time",
+     "definition": "seconds for a full pass of STS-B dev on CPU, batch size 1",
+     "unit": "seconds",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "ELMo + BiLSTMs",
+    "BERT-base"
+   ],
+   "protocol": "GLUE: medians of 5 runs with different seeds; no ensembling or multi-task. Other tables do not state runs."
+  },
+  "availability": {
+   "code": "Transformers library (github.com/huggingface/transformers); swift-coreml-transformers for the app",
+   "weights": "in the Transformers library",
+   "data": "public corpora"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.hardware",
+    "quote": "DistilBERT was trained on 8 16GB V100 GPUs for approximately 90 hours.",
+    "where": "Section 3"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "DistilBERT retains 97% of BERT's GLUE performance with 40% fewer parameters.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GLUE macro-score",
+   "value": 77.0,
+   "unit": "points",
+   "baseline_value": 79.5,
+   "n": null,
+   "setup": "GLUE dev sets, DistilBERT vs BERT-base, medians of 5 seeds, no ensembling or multi-task",
+   "note": "97% as stated in text; 77.0/79.5 = 96.9%",
+   "where": "Table 1",
+   "table": "Table 1, row DistilBERT, column Score"
+  },
+  {
+   "claim": "DistilBERT is 60% faster than BERT-base on CPU at batch size 1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "inference speed-up",
+   "value": 60,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "STS-B dev full pass, Xeon E5-2690 v3, batch 1",
+   "note": "Table 3 times 410 s vs 668 s give 1.63x speed (38.6% less time)",
+   "where": "Sec 4.1",
+   "quote": "DistilBERT has 40% fewer parameters than BERT and is 60% faster than BERT."
+  },
+  {
+   "claim": "Removing Lce and Lcos (MLM only) costs 2.96 GLUE points.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GLUE macro-score delta",
+   "value": -2.96,
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Ablation relative to full triple loss with teacher init",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row Lmlm only, Variation on GLUE macro-score"
+  },
+  {
+   "claim": "Random weight initialisation instead of teacher layers costs 3.69 GLUE points.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GLUE macro-score delta",
+   "value": -3.69,
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Triple loss with random init, relative to full",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row Triple loss + random weights initialization"
+  },
+  {
+   "claim": "Removing Lmlm costs 0.31 points.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GLUE macro-score delta",
+   "value": -0.31,
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Lce + Lcos without Lmlm",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row Lce - Lcos - empty"
+  },
+  {
+   "claim": "DistilBERT is 0.6 points behind BERT on IMDb.",
+   "kind": "measured",
+   "source": null,
+   "metric": "IMDb test accuracy",
+   "value": 92.82,
+   "unit": "%",
+   "baseline_value": 93.46,
+   "n": null,
+   "setup": "IMDb test",
+   "note": null,
+   "where": "Table 2",
+   "quote": "DistilBERT is only 0.6% point behind BERT in test accuracy on the IMDb",
+   "table": "Table 2, row DistilBERT, column IMDb"
+  },
+  {
+   "claim": "DistilBERT SQuAD v1.1 dev EM/F1 is 77.7/85.8 against 81.2/88.5 for BERT-base.",
+   "kind": "measured",
+   "source": null,
+   "metric": "SQuAD F1",
+   "value": 85.8,
+   "unit": "F1",
+   "baseline_value": 88.5,
+   "n": null,
+   "setup": "SQuAD v1.1 dev",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row DistilBERT, column SQuAD (EM/F1)"
+  },
+  {
+   "claim": "A second distillation step during SQuAD fine-tuning gives 79.1/86.9 in the table.",
+   "kind": "measured",
+   "source": null,
+   "metric": "SQuAD F1",
+   "value": 86.9,
+   "unit": "F1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "DistilBERT (D)",
+   "note": "Text says 79.8 F1 and 70.4 EM for the same setting, which disagrees with Table 2",
+   "where": "Table 2 vs Sec 4.1",
+   "table": "Table 2, row DistilBERT (D), column SQuAD (EM/F1)"
+  },
+  {
+   "claim": "Parameters: DistilBERT 66M vs BERT-base 110M and ELMo 180M; STS-B inference 410 s vs 668 s and 895 s.",
+   "kind": "measured",
+   "source": null,
+   "metric": "inference time",
+   "value": 410,
+   "unit": "seconds",
+   "baseline_value": 668,
+   "n": null,
+   "setup": "STS-B dev, CPU, batch size 1",
+   "note": "Table 3 caption calls STS-B 'sentiment analysis'; it is a sentence similarity task",
+   "where": "Table 3",
+   "table": "Table 3, row DistilBERT, column Inf. time"
+  },
+  {
+   "claim": "On an iPhone 7 Plus QA app DistilBERT is 71% faster than BERT (excluding tokenization) and the model weighs 207 MB.",
+   "kind": "measured",
+   "source": null,
+   "metric": "on-device speed-up",
+   "value": 71,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "iPhone 7 Plus, QA model, one device",
+   "note": null,
+   "where": "Sec 4.1",
+   "quote": "DistilBERT is 71% faster than BERT, and the whole model weighs 207 MB"
+  },
+  {
+   "claim": "Training used 8 16GB V100 for about 90 hours versus RoBERTa 1 day on 1024 32GB V100.",
+   "kind": "measured",
+   "source": null,
+   "metric": "training time",
+   "value": 90,
+   "unit": "hours",
+   "baseline_value": null,
+   "n": null,
+   "setup": "8 16GB V100",
+   "note": null,
+   "where": "Sec 3",
+   "quote": "DistilBERT was trained on 8 16GB V100 GPUs for approximately 90 hours."
+  },
+  {
+   "claim": "Fine-tuned BERT-base vs DistilBERT on GLUE tasks: RTE 69.3 vs 59.9, MNLI 86.7 vs 82.2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "RTE accuracy",
+   "value": 59.9,
+   "unit": "%",
+   "baseline_value": 69.3,
+   "n": null,
+   "setup": "GLUE dev sets, DistilBERT vs BERT-base, medians of 5 seeds, no ensembling or multi-task",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row DistilBERT, column RTE"
+  }
+ ],
+ "limits": [
+  "Pre-training hyperparameters (optimizer, learning rate, steps, temperature T, loss weights, sequence length) and fine-tuning settings are not given.",
+  "Speed measured on one CPU at batch size 1 and one phone; seeds reported only for GLUE.",
+  "Per-task drops are uneven (RTE -9.4, CoLA -5.0) but the headline is the average.",
+  "Ablation reports GLUE macro-score only, one configuration each, no seed spread.",
+  "Text and Table 2 disagree on the SQuAD figure for the second-distillation variant (79.8/70.4 vs 79.1/86.9).",
+  "Pruning and quantization are not combined; stated as orthogonal."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "knowledge distillation",
+   "definition": "a compression technique in which a compact model - the student - is trained to reproduce the behaviour of a larger model - the teacher - or an ensemble of models",
+   "where": "Sec 2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Distilling the knowledge in a neural network",
+   "year": 2015,
+   "arxiv": "1503.02531",
+   "relation": "uses-method",
+   "note": "softmax temperature and soft-target loss",
+   "quote": "Following Hinton et al. [2015] we used a softmax-temperature"
+  },
+  {
+   "work": "BERT",
+   "year": 2018,
+   "arxiv": "1810.04805",
+   "relation": "extends",
+   "note": "teacher and architecture",
+   "quote": null
+  },
+  {
+   "work": "RoBERTa",
+   "year": 2019,
+   "arxiv": "1907.11692",
+   "relation": "uses-method",
+   "note": "large batches, dynamic masking, no NSP",
+   "quote": "We applied best practices for training BERT model recently proposed in Liu et al. [2019]."
+  },
+  {
+   "work": "Well-read students learn better (Turc et al.)",
+   "year": 2019,
+   "arxiv": "1908.08962",
+   "relation": "related",
+   "note": "pretrains small students with the original objective then distils at fine-tuning; paper claims added distillation signal helps",
+   "quote": null
+  },
+  {
+   "work": "Tang et al. 2019",
+   "year": 2019,
+   "arxiv": "1903.12136",
+   "relation": "related",
+   "note": "task-specific BERT to LSTM distillation",
+   "quote": null
+  },
+  {
+   "work": "Chatterjee 2019",
+   "year": 2019,
+   "arxiv": "1904.00796",
+   "relation": "related",
+   "note": "task-specific SQuAD distillation",
+   "quote": null
+  },
+  {
+   "work": "Tsai et al. 2019",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "related",
+   "note": "multilingual BERT via distillation only",
+   "quote": null
+  },
+  {
+   "work": "GLUE",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "evaluation benchmark",
+   "quote": null
+  },
+  {
+   "work": "Michel et al. 2019 (Are sixteen heads really better than one?)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "related",
+   "note": "head pruning, orthogonal",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Table 4",
+   "caption": "Ablation study. Variations are relative to the model trained with triple loss and teacher weights initialization.",
+   "page": 4,
+   "why": "Shows teacher init and distillation losses account for most of the quality"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "DistilBERT retains 97% of BERT performance.",
+   "page": 3,
+   "why": "Per-task GLUE spread"
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 2",
+   "snippet": "p_i = exp(z_i/T) / sum_j exp(z_j/T)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Table cells are split one per line in the cached text; row alignment inferred from order.",
+  "Text SQuAD figure for the (D) variant disagrees with Table 2."
+ ]
+}

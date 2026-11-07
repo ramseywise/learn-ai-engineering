@@ -1,0 +1,342 @@
+{
+ "schema": 1,
+ "key": "2001.08361",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/a-2020-scaling-laws-neural-language-models.pdf",
+ "bib": {
+  "title": "Scaling Laws for Neural Language Models",
+  "authors": ["Jared Kaplan", "Sam McCandlish", "Tom Henighan", "Tom B. Brown", "Benjamin Chess", "Rewon Child", "Scott Gray", "Alec Radford", "Jeffrey Wu", "Dario Amodei"],
+  "first_author": "Kaplan",
+  "year": 2020,
+  "venue": "preprint",
+  "arxiv": "2001.08361",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 88788,
+  "chars_total": 88788,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "How does Transformer language-model cross-entropy loss depend on model size, dataset size, training compute and architecture, and how should a fixed compute budget be allocated?",
+ "hypothesis": "Loss follows smooth power laws in N, D and C that are largely independent of architectural shape, so that compute-optimal training favours very large models trained on modest data and stopped short of convergence.",
+ "contributions": [
+  "Performance depends strongly on scale (N, D, C) and weakly on model shape",
+  "Smooth power laws in N, D, C over many orders of magnitude",
+  "Universality of overfitting: penalty depends on N^0.74/D",
+  "Universality of training: learning curves are power laws with parameters roughly independent of model size",
+  "Transfer to other distributions improves with in-distribution loss at a constant offset",
+  "Large models are more sample efficient; compute-efficient training stops far short of convergence",
+  "Optimal batch size is a power of the loss only, about 1-2 million tokens at convergence for the largest models"
+ ],
+ "method": {
+  "summary": "Train many decoder-only Transformers (and some LSTMs and Universal Transformers) on WebText2 with varied size, shape, data subset size, context and batch size; fit power laws to test loss, and derive compute-optimal allocation using the critical batch size of McCandlish et al. 2018.",
+  "task": "autoregressive next-token language modelling (cross-entropy in nats)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "WebText2",
+    "role": "pretrain",
+    "size": "20.3M documents, 96 GB text, 1.62e10 words, 2.29e10 tokens",
+    "split": "6.6e8 tokens reserved as test set; dataset-size experiments use fixed subsets from 22 million to 23 billion tokens",
+    "source": "Reddit outbound links with at least 3 karma, through Oct 2018; text extracted with Newspaper3k",
+    "preprocessing": "reversible tokenizer of Radford et al. 2019, BPE, vocab 50257"
+   },
+   {
+    "name": "Books Corpus, Common Crawl, English Wikipedia, Internet Books",
+    "role": "eval",
+    "size": null,
+    "split": "similarly prepared samples; models trained only on WebText2",
+    "source": "Zhu et al. 2015; Common Crawl Foundation; public Internet books",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "decoder-only Transformer",
+    "role": "proposed",
+    "params": "768 to 1.5 billion non-embedding parameters",
+    "architecture": "decoder-only Transformer, N ~ 12 n_layer d_model^2 with d_attn = d_ff/4 = d_model",
+    "init_from": null,
+    "tokenizer": "BPE",
+    "vocab": "50257",
+    "layers": "shapes from (n_layer, d_model) = (2, 128) up to (6, 4288) through (207, 768); (48, 1600) is the GPT-2 shape",
+    "hidden": null,
+    "heads": null,
+    "context": "1024 tokens (n_ctx) for most runs; n_ctx = 8 for some",
+    "other": {"dataset-size runs": "(n_layer, n_embd) = (36, 1280)"}
+   },
+   {
+    "name": "LSTM",
+    "role": "baseline",
+    "params": null,
+    "architecture": "LSTM, 1/2/4 layers, same data and context",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "1024",
+    "other": {}
+   },
+   {
+    "name": "Universal (recurrent) Transformer",
+    "role": "baseline",
+    "params": null,
+    "architecture": "parameter re-use of 2x, 4x, 8x",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "autoregressive log-likelihood (cross-entropy) averaged over a 1024-token context",
+   "optimizer": "Adam; Adafactor for largest models (more than 1B parameters) because of memory",
+   "lr": "rule of thumb LR(N) ~ 0.003239 - 0.0001395 log(N) for most runs (Eq D.1); breaks down for N > 1e10",
+   "lr_schedule": "3000 step linear warmup then cosine decay to zero",
+   "warmup": "3000 steps",
+   "batch_size": "512 sequences of 1024 tokens (2^19 tokens) for most runs; varied to measure critical batch size",
+   "steps": "2.5e5 fixed unless otherwise noted",
+   "epochs": null,
+   "tokens": "inferred: 2.5e5 steps x 2^19 tokens = about 1.3e11 tokens per standard run",
+   "seq_len": "1024",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": "10% dropout in the L(N, D) overfitting experiments",
+   "regularisation": "early stopping when test loss stops decreasing (dataset-size experiments); regularisation not otherwise tuned",
+   "hardware": null,
+   "compute": "C ~ 6NBS non-embedding FLOPs, quoted in PF-days (1 PF-day = 8.64e19 FLOPs); runs span about eight orders of magnitude in Cmin",
+   "wall_clock": null,
+   "seeds": "run-to-run loss variation roughly 0.02 (Sec 4.2) or 0.05 (Fig 22 caption); multiple runs averaged for smaller differences",
+   "other": {"critical batch size fit": "Bcrit(L) = B*/L^(1/alpha_B), B* ~ 2.1e8 tokens, alpha_B ~ 0.21", "excluded from fits": "1-layer models; largest models not trained to convergence"}
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "test cross-entropy loss", "definition": "nats per token averaged over a 1024-token context on WebText2 test (6.6e8 tokens) and other text distributions", "unit": "nats/token", "higher_is_better": false}
+   ],
+   "baselines": ["LSTMs", "recurrent Transformers"],
+   "protocol": "Fit power laws to early-stopped or converged test loss over a grid of N, D, S; compare fits against logarithmic alternatives; no significance tests."
+  },
+  "availability": {"code": null, "weights": null, "data": null},
+  "prompts": [],
+  "evidence": [
+   {"field": "training.batch_size", "quote": "a batch size of 512 sequences of 1024 tokens", "where": "Sec 2.2"},
+   {"field": "training.dropout", "quote": "We regularize all our models with 10% dropout", "where": "Sec 4.2"}
+  ]
+ },
+ "results": [
+  {
+   "claim": "Loss as a power law in non-embedding parameters N (trained to convergence on a large dataset).",
+   "kind": "measured", "source": null, "metric": "alpha_N", "value": "0.076", "unit": null, "baseline_value": null, "n": null,
+   "setup": "WebText2, 1024-token context, models up to 1.5B non-embedding parameters trained to near convergence; Nc ~ 8.8e13 (tokenization-dependent)",
+   "quote": "αN ∼0.076,",
+   "table": null, "note": "Table 2 joint fit to L(N, D) gives alpha_N = 0.076, Table 3 L(N, S) gives 0.077.", "where": "Eq 1.1, Sec 1.2"
+  },
+  {
+   "claim": "Loss as a power law in dataset size D with early stopping.",
+   "kind": "measured", "source": null, "metric": "alpha_D", "value": "0.095", "unit": null, "baseline_value": null, "n": null,
+   "setup": "36-layer, 1280-wide model on fixed WebText2 subsets, stopped when test loss ceased to decrease; Dc ~ 5.4e13 tokens",
+   "quote": "αD ∼0.095,",
+   "table": null, "note": "The joint L(N, D) fit (Table 2) gives alpha_D = 0.103.", "where": "Eq 1.2, Sec 3.3"
+  },
+  {
+   "claim": "Loss as a power law in optimally allocated compute Cmin.",
+   "kind": "measured", "source": null, "metric": "alpha_C^min", "value": "0.050", "unit": null, "baseline_value": null, "n": null,
+   "setup": "large dataset, optimally sized model, batch size far below critical; Cmin_c ~ 3.1e8 PF-days",
+   "quote": "αmin",
+   "table": "Table 5, row alpha_C^min, value 0.050", "note": "Theory from L(N, Smin) predicts 0.054 (Eq 6.4) and 0.052 (Eq B.7); fixed-batch compute fit gives alpha_C = 0.057 (Table 5).", "where": "Eq 1.3, Table 5"
+  },
+  {
+   "claim": "Doubling parameters shrinks loss by a factor of about 0.95.",
+   "kind": "measured", "source": null, "metric": "loss factor per 2x N", "value": "0.95", "unit": null, "baseline_value": null, "n": null,
+   "setup": "from alpha_N = 0.076 under the L(N) law",
+   "quote": "doubling the number of parameters yields a loss that\nis smaller by a factor 2−αN = 0.95",
+   "table": null, "note": null, "where": "Sec 1.2"
+  },
+  {
+   "claim": "Compute-optimal model size grows as Cmin^0.73.",
+   "kind": "measured", "source": null, "metric": "exponent of N(Cmin)", "value": "0.73", "unit": null, "baseline_value": null, "n": null,
+   "setup": "fit to Fig 14, batch-adjusted Cmin (training at critical batch size); N_opt = 1.3e9 * Cmin^0.73 params with Cmin in PF-days. Fixed-batch C gives 0.88.",
+   "quote": "N(Cmin) ∝(Cmin)0.73.",
+   "table": null, "note": "Theory predicts 0.71 (Eq 6.5).", "where": "Eq 6.1, Fig 14"
+  },
+  {
+   "claim": "Each 10x of compute should give about 5x model size and only about 2x data examples.",
+   "kind": "measured", "source": null, "metric": "growth per 10x compute", "value": "5x model size, 2x data", "unit": null, "baseline_value": null, "n": null,
+   "setup": "compute-efficient frontier, Fig 14",
+   "quote": "increasing by 5x for each 10x increase in compute",
+   "table": null, "note": "Exponents 0.73 (model) and 0.27 (data) give 10^0.73 = 5.4x and 10^0.27 = 1.9x.", "where": "Fig 14 caption"
+  },
+  {
+   "claim": "Batch size and serial steps for compute-efficient training grow as Cmin^0.24 and Cmin^0.03.",
+   "kind": "measured", "source": null, "metric": "exponents", "value": "B ~ Cmin^0.24, S ~ Cmin^0.03", "unit": null, "baseline_value": null, "n": null,
+   "setup": "empirically optimal values; the measured step exponent may be consistent with zero",
+   "quote": "N ∝C0.73\nmin , B ∝C0.24\nmin , and S ∝C0.03",
+   "table": null, "note": "quote spans a line break in the text; see also Eq 6.2.", "where": "Sec 1.2, Eq 6.2"
+  },
+  {
+   "claim": "Data needed to avoid overfitting grows sublinearly in model size; D >~ 5e3 N^0.74.",
+   "kind": "measured", "source": null, "metric": "data requirement", "value": "D >~ (5 x 10^3) N^0.74", "unit": "tokens", "baseline_value": null, "n": null,
+   "setup": "to stay within 0.02 of converged loss (seed variation), 10% dropout, early stopping, WebText2",
+   "quote": "D ≳(5 × 103) N 0.74",
+   "table": null, "note": null, "where": "Eq 4.4"
+  },
+  {
+   "claim": "Increasing model size 8x needs only about 5x more data to avoid overfitting penalty.",
+   "kind": "measured", "source": null, "metric": "data multiple for 8x model", "value": "5x", "unit": null, "baseline_value": null, "n": null,
+   "setup": "penalty depends on N^0.74/D",
+   "quote": "every time we increase the\nmodel size 8x, we only need to increase the data by roughly 5x to avoid a penalty",
+   "table": null, "note": null, "where": "Sec 1.1"
+  },
+  {
+   "claim": "Joint fit to L(N, D) parameters.",
+   "kind": "measured", "source": null, "metric": "alpha_N, alpha_D, Nc, Dc", "value": "0.076, 0.103, 6.4e13, 1.8e13", "unit": null, "baseline_value": null, "n": null,
+   "setup": "early-stopped, 10% dropout; poor fit for datasets reduced by 1024x (about 2e7 tokens, 40 updates per epoch)",
+   "quote": "Value\n0.076\n0.103\n6.4 × 1013\n1.8 × 1013",
+   "table": "Table 2, row Value", "note": null, "where": "Table 2"
+  },
+  {
+   "claim": "L(N, S) fit parameters for learning curves in the infinite data limit.",
+   "kind": "measured", "source": null, "metric": "alpha_N, alpha_S, Nc, Sc", "value": "0.077, 0.76, 6.5e13, 2.1e3", "unit": null, "baseline_value": null, "n": null,
+   "setup": "stable Adam-trained runs, all steps after warmup, Smin adjusted to large batch",
+   "quote": "αS ≈0.76",
+   "table": "Table 3, row Value", "note": null, "where": "Table 3, Eq 1.6"
+  },
+  {
+   "claim": "Critical batch size is a power law in the loss and about doubles for every 13% decrease in loss.",
+   "kind": "measured", "source": null, "metric": "B_crit", "value": "B* ~ 2e8 tokens, alpha_B ~ 0.21", "unit": "tokens", "baseline_value": null, "n": null,
+   "setup": "measured on 3M and 85M parameter models; independent of model size except through loss",
+   "quote": "B∗∼2 · 108 tokens, αB ∼0.21",
+   "table": null, "note": "Appendix prints B* = 2.1e8 tokens; Fig 10 caption: doubling per 13% loss decrease.", "where": "Eq 1.4, Fig 10"
+  },
+  {
+   "claim": "Compute-efficient training stops about 10% above the converged loss.",
+   "kind": "measured", "source": null, "metric": "convergence factor f = alpha_N/alpha_S", "value": "10%", "unit": null, "baseline_value": null, "n": null,
+   "setup": "derived from the L(N, S) fit (Appendix B.2)",
+   "quote": "we should train to a ﬁxed percentage αN\nαS ≈10% above\nthe converged loss",
+   "table": null, "note": "Derived, not directly measured.", "where": "App B.2"
+  },
+  {
+   "claim": "Compared with training to 2% of convergence, compute-efficient training uses 7.7x fewer updates, 2.7x more parameters and 65% less compute for the same loss.",
+   "kind": "worked-example", "source": null, "metric": "compute saving", "value": "65%", "unit": null, "baseline_value": null, "n": null,
+   "setup": "model prediction using f = 10% vs f' = 2%",
+   "quote": "7.7x fewer parameter updates, 2.7x more parameters, and 65% less\ncompute to reach the same loss",
+   "table": null, "note": null, "where": "App B.3"
+  },
+  {
+   "claim": "Models 0.6x to 2.2x the optimal size can be trained with only 20% more compute.",
+   "kind": "measured", "source": null, "metric": "compute penalty", "value": "20%", "unit": null, "baseline_value": null, "n": null,
+   "setup": "from Eq B.16",
+   "quote": "Models between 0.6x and 2.2x the optimal size can be used with only a\n20% increase in compute budget",
+   "table": null, "note": "A 2.2x larger model needs 45% fewer steps at 20% more compute.", "where": "App B.4"
+  },
+  {
+   "claim": "Loss depends only weakly on model shape: aspect ratio can vary by 40x while loss changes only a few percent.",
+   "kind": "measured", "source": null, "metric": "loss increase", "value": "within 3%", "unit": null, "baseline_value": null, "n": null,
+   "setup": "fixed N (25M and 50M parameter models); (6, 4288) vs the (48, 1600) model of GPT-2",
+   "quote": "an (nlayer, dmodel) = (6, 4288) reaches a\nloss within 3% of the (48, 1600) model",
+   "table": null, "note": "Fig 5 text: 22% additional compute compensates for 1% loss increase.", "where": "Fig 5 caption"
+  },
+  {
+   "claim": "Extrapolated scaling laws collide: compute-efficient L(Cmin) meets the data-limited L(D) at roughly 1e4 PF-days, 1e12 parameters, 1e12 tokens, 1.7 nats/token.",
+   "kind": "claim", "source": null, "metric": "intersection point", "value": "C* ~ 1e4 PF-days; N* ~ 1e12; D* ~ 1e12; L* ~ 1.7 nats/token", "unit": null, "baseline_value": null, "n": null,
+   "setup": "extrapolation; authors say numbers vary by an order of magnitude in either direction",
+   "quote": "L∗∼1.7 nats/token",
+   "table": null, "note": "Conjecture only: authors suggest L* might estimate the entropy per token of natural language.", "where": "Eq 6.8"
+  },
+  {
+   "claim": "Data use for single-epoch compute-efficient training grows as Cmin^0.26-0.27.",
+   "kind": "measured", "source": null, "metric": "D(Cmin)", "value": "(4e10 tokens)(Cmin/PF-day)^0.26", "unit": "tokens", "baseline_value": null, "n": null,
+   "setup": "training at critical batch size, never re-using data",
+   "quote": "D ∝N 0.74 ∝C0.54",
+   "table": null, "note": "Eq 6.7 prints 0.26; Table 6 prints pD = 0.27 and De = 2e10; Sec 1.1 says D ~ C^0.27. Quote here is Eq 6.6, the overfitting-safe requirement of Cmin^0.54.", "where": "Eqs 6.6-6.7, Table 6"
+  },
+  {
+   "claim": "Learning rate rule: larger models need smaller LR.",
+   "kind": "measured", "source": null, "metric": "LR(N)", "value": "0.003239 - 0.0001395 log(N)", "unit": null, "baseline_value": null, "n": null,
+   "setup": "used for most runs; fails for N > 1e10",
+   "quote": "LR(N) ≈0.003239 + −0.0001395 log(N)",
+   "table": null, "note": null, "where": "Eq D.1"
+  },
+  {
+   "claim": "Estimated seed-to-seed loss variation.",
+   "kind": "measured", "source": null, "metric": "loss std", "value": "0.02", "unit": "nats", "baseline_value": null, "n": null,
+   "setup": "Section 4.2 estimate; Fig 22 caption says run-to-run variation at the 0.05 level for a 3M model",
+   "quote": "the loss with different random seeds is roughly 0.02",
+   "table": null, "note": "Two figures in the paper: 0.02 (Sec 4.2) and 0.05 (Fig 22).", "where": "Sec 4.2"
+  },
+  {
+   "claim": "Tokenization stats of WebText2.",
+   "kind": "measured", "source": null, "metric": "tokens per word", "value": "1.4", "unit": "tokens/word", "baseline_value": null, "n": null,
+   "setup": "words defined with wc",
+   "quote": "the WebText2 dataset has 1.4 tokens per word and 4.3 characters per token",
+   "table": null, "note": null, "where": "Footnote 7"
+  }
+ ],
+ "limits": [
+  "No theoretical understanding of any of the scaling laws (App C).",
+  "Bcrit(L) not trusted far outside the explored loss range.",
+  "Small-data regime not studied; L(N, D) fits poor at the smallest D; regularization and data augmentation not tuned.",
+  "Compute estimate 6NBS omits n_ctx terms, so confounded when n_ctx >~ 12 d_model.",
+  "Some hyperparameters (initialization scale, momentum) may not have been tuned; LR not tuned for short runs.",
+  "Only loss measured, not downstream task performance; authors note smooth loss may hide qualitative capability changes.",
+  "Fits are specific to WebText2 and its tokenization; Nc, Dc, Cc have no fundamental meaning.",
+  "Appendix B.4 text refers to 'Figure X' and 'Figure Y' (unresolved cross-references).",
+  "Dated: later work (Hoffmann et al. 2022) found a different compute-optimal ratio; this paper does not use Chinchilla-style per-run schedules."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "Critical batch size", "definition": "Bcrit(L) = Emin/Smin; batch size at which training makes a roughly optimal time/compute tradeoff", "where": "Eq 5.2"},
+  {"term": "Cmin", "definition": "an estimate of the minimum amount of non-embedding compute to reach a given value of the loss, as if trained at a batch size much less than the critical batch size", "where": "Sec 1.3"},
+  {"term": "Smin", "definition": "an estimate of the minimal number of training steps needed to reach a given value of the loss", "where": "Sec 1.3"},
+  {"term": "N", "definition": "number of model parameters, excluding all vocabulary and positional embeddings", "where": "Sec 1.3"},
+  {"term": "PF-day", "definition": "1015 x 24 x 3600 = 8.64 x 10^19 floating point operations", "where": "Sec 1.3"}
+ ],
+ "lineage": [
+  {"work": "An Empirical Model of Large-Batch Training (McCandlish et al.)", "year": 2018, "arxiv": "1812.06162", "relation": "uses-method", "note": "critical batch size and gradient noise scale used to define Smin and Cmin", "quote": null},
+  {"work": "Language Models are Unsupervised Multitask Learners (GPT-2, Radford et al.)", "year": 2019, "arxiv": null, "relation": "uses-data", "note": "WebText extended to WebText2; tokenizer reused", "quote": null},
+  {"work": "Attention is all you need (Vaswani et al.)", "year": 2017, "arxiv": "1706.03762", "relation": "uses-method", "note": "Transformer architecture", "quote": null},
+  {"work": "Deep Learning Scaling is Predictable, Empirically (Hestness et al.)", "year": 2017, "arxiv": "1712.00409", "relation": "contradicts", "note": "found super-linear dataset scaling with model size; this paper finds sub-linear", "quote": null},
+  {"work": "Universal Transformers (Dehghani et al.)", "year": 2018, "arxiv": "1807.03819", "relation": "baseline", "note": "recurrent Transformer comparison", "quote": null},
+  {"work": "A constructive prediction of the generalization error across scales (Rosenfeld et al.)", "year": 2019, "arxiv": "1909.12673", "relation": "related", "note": "similar ansatz, appeared concurrently", "quote": null},
+  {"work": "One epoch is all you need (Komatsuzaki)", "year": 2019, "arxiv": "1906.06669", "relation": "related", "note": "parallels on compute allocation", "quote": null},
+  {"work": "Adam (Kingma and Ba)", "year": 2014, "arxiv": "1412.6980", "relation": "uses-method", "note": "optimizer", "quote": null},
+  {"work": "Adafactor (Shazeer and Stern)", "year": 2018, "arxiv": "1804.04235", "relation": "uses-method", "note": "optimizer for models above 1B parameters", "quote": null},
+  {"work": "Books Corpus (Zhu et al.)", "year": 2015, "arxiv": null, "relation": "uses-data", "note": "generalization test set", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 1", "caption": "Language modeling performance improves smoothly as we increase the model size, datasetset size, and amount of compute used for training.", "page": 3, "why": "Three straight power-law lines summarise the whole paper."},
+  {"figure": "Fig 3", "caption": "As more compute becomes available, we can choose how much to allocate towards training larger models, using larger batches, and training for more steps.", "page": 4, "why": "Shows for a billion-fold compute increase: >1,000,000x model size, 100x batch size, <10x serial steps."},
+  {"figure": "Fig 4", "caption": "Left: early-stopped test loss L(N, D). Right: learning curves fit with Eq 1.6.", "page": 5, "why": "Shows the two joint fits."},
+  {"figure": "Fig 14", "caption": "Optimal model size and serial steps versus compute budget.", "page": 16, "why": "Source of N ~ Cmin^0.73."}
+ ],
+ "code": [
+  {"where": "Eq 1.5", "snippet": "L(N, D) = [ (Nc/N)^(alpha_N/alpha_D) + Dc/D ]^alpha_D", "verbatim": false},
+  {"where": "Eq 1.6", "snippet": "L(N, S) = (Nc/N)^alpha_N + (Sc/Smin(S))^alpha_S", "verbatim": false}
+ ],
+ "problems": [
+  "pymupdf text has ligature characters and broken equation layout; figure data is not in the text.",
+  "Result values for table-derived rows were located by number in the text; some quotes span line breaks.",
+  "Paper prints D(Cmin) exponent as 0.26 (Eq 6.7) and 0.27 (Sec 1.1, Table 6); alpha_D as 0.095 and 0.103; alpha_C^min as 0.050, 0.054 and 0.052.",
+  "No embedded instructions found."
+ ]
+}

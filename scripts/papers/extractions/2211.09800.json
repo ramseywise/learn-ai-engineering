@@ -1,0 +1,458 @@
+{
+ "schema": 1,
+ "key": "2211.09800",
+ "pdf": "ai-engineering/08-multimodal-engineering/sources/brooks-2023-instructpix2pix.pdf",
+ "bib": {
+  "title": "InstructPix2Pix: Learning to Follow Image Editing Instructions",
+  "authors": [
+   "Tim Brooks",
+   "Aleksander Holynski",
+   "Alexei A. Efros"
+  ],
+  "first_author": "Brooks",
+  "year": 2023,
+  "venue": "preprint (arXiv v2, 18 Jan 2023)",
+  "arxiv": "2211.09800",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 52716,
+  "chars_total": 52716,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can a diffusion model be trained to edit a real image from a written instruction in one forward pass, using only synthetic training data?",
+ "hypothesis": "Combining GPT-3 and Stable Diffusion to generate paired editing data lets a conditional diffusion model generalise zero-shot to real images and human-written instructions.",
+ "contributions": [
+  "A method to generate a paired image-editing dataset from GPT-3 and Stable Diffusion with Prompt-to-Prompt",
+  "InstructPix2Pix, a conditional diffusion model trained on it that edits in the forward pass without per-example inversion or fine-tuning",
+  "Classifier-free guidance over two conditionings (image and instruction) with separate scales sI and sT"
+ ],
+ "method": {
+  "summary": "Fine-tune GPT-3 Davinci on 700 hand-written (caption, instruction, edited caption) triplets, generate 454,445 triplets from LAION captions, render before/after image pairs with Stable Diffusion plus Prompt-to-Prompt, filter with CLIP, then fine-tune Stable Diffusion v1.5 with the input image concatenated as extra input channels and the instruction as text conditioning.",
+  "task": "instruction-based image editing (conditional latent diffusion)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Human-written editing triplets",
+    "role": "train",
+    "size": "700 edits",
+    "split": null,
+    "source": "input captions sampled from LAION-Aesthetics V2 6.5+; instructions and output captions written by hand",
+    "preprocessing": null
+   },
+   {
+    "name": "GPT-3 generated triplets",
+    "role": "train",
+    "size": "454,445 examples (>450,000 edits)",
+    "split": null,
+    "source": "fine-tuned GPT-3 on real LAION-Aesthetics captions, duplicate captions and duplicate image URLs excluded",
+    "preprocessing": "exclude generations where input and output captions are the same"
+   },
+   {
+    "name": "Generated image pairs",
+    "role": "train",
+    "size": "100 pairs per caption pair generated; up to 4 kept per caption pair after filtering; final image-pair count not stated",
+    "split": null,
+    "source": "Stable Diffusion v1.5 + Prompt-to-Prompt",
+    "preprocessing": "CLIP filters: image-image similarity 0.75, image-caption 0.2, directional CLIP similarity 0.2; sort by directional similarity, keep up to 4"
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT-3 Davinci (fine-tuned)",
+    "role": "base",
+    "params": null,
+    "architecture": "language model",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "finetune": "1 epoch, default training parameters"
+    }
+   },
+   {
+    "name": "Stable Diffusion v1.5 (EMA weights, ft-MSE autoencoder) + Prompt-to-Prompt",
+    "role": "base",
+    "params": null,
+    "architecture": "latent diffusion",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "InstructPix2Pix",
+    "role": "proposed",
+    "params": null,
+    "architecture": "latent diffusion U-Net with extra input channels on the first conv layer (zt concatenated with E(cI)), new-channel weights zero-initialised",
+    "init_from": "EMA weights of Stable Diffusion v1.5 checkpoint",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "SDEdit",
+    "role": "baseline",
+    "params": null,
+    "architecture": "public Stable Diffusion implementation",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Text2Live",
+    "role": "baseline",
+    "params": null,
+    "architecture": "public author implementation (qualitative only)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "latent diffusion noise-prediction L2 loss conditioned on image latent and text instruction (Eq. 1)",
+   "optimizer": null,
+   "lr": "10^-4",
+   "lr_schedule": null,
+   "warmup": "none",
+   "batch_size": "1024 (total)",
+   "steps": "10,000",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "conditioning dropout: only cI null 5%, only cT null 5%, both null 5%; random horizontal flip; random resize 256-288 then crop 256",
+   "hardware": "8x 40GB NVIDIA A100",
+   "compute": null,
+   "wall_clock": "25.5 hours",
+   "seeds": null,
+   "other": {
+    "resolution": "256x256 training; other settings from public Stable Diffusion code base",
+    "image_pair_gen": "100 denoising steps, Euler ancestral sampler, Karras variance schedule, same latent noise for both images, Prompt-to-Prompt self-attention replacement for first p fraction of steps, p~U(0.1,0.9)"
+   }
+  },
+  "inference": {
+   "decoding": "Euler ancestral sampler, 100 denoising steps, 512x512",
+   "temperature": "0.7 (GPT-3 data generation only)",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "Fig 12 varies latent noise for multiple edits; number of samples per item for quantitative plots not stated",
+   "prompting": "GPT-3 fine-tune prompt: input caption + '\\n##\\n'; completion: instruction + '\\n%%\\n' + edited caption + '\\nEND'",
+   "retrieval": null,
+   "parameters": {
+    "sT": "typically 5-10 (7.5 fixed in Fig 8)",
+    "sI": "typically 1-1.5; swept 1.0-2.2 in Figs 8 and 10",
+    "gpt3_frequency_penalty": "0.1",
+    "edit_time": "roughly 9 seconds on an A100"
+   },
+   "other": {
+    "note": "guidance weights were tuned per example for the figures shown"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "CLIP image similarity",
+     "definition": "cosine similarity of CLIP image embeddings of input and edited image (consistency)",
+     "unit": "cosine",
+     "higher_is_better": true
+    },
+    {
+     "name": "CLIP text-image direction similarity",
+     "definition": "directional CLIP similarity (Gal et al.): agreement of the change in captions with the change in images",
+     "unit": "cosine",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "SDEdit (caption and instruction variants)",
+    "Text2Live (qualitative)"
+   ],
+   "protocol": "Trade-off curves: Fig 8 fixes text guidance at 7.5 and varies sI in [1.0,2.2] and SDEdit strength in [0.3,0.9]. Number of evaluation images, test set and seeds not stated. No human study."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": null
+  },
+  "prompts": [
+   {
+    "purpose": "GPT-3 fine-tuning format",
+    "text": "prompt = input caption + \"\\n##\\n\"; completion = instruction + \"\\n%%\\n\" + edited caption + \"\\nEND\"",
+    "where": "Appendix A.1"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Training set of generated instruction/caption triplets size.",
+   "kind": "measured",
+   "source": null,
+   "metric": "examples",
+   "value": "454,445",
+   "unit": "examples",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-3 Davinci fine-tuned on 700 human-written triplets, input captions from LAION-Aesthetics V2 6.5+",
+   "quote": "Our ﬁnal corpus of generated instructions and captions consists of 454, 445 examples.",
+   "table": null,
+   "note": "Fig 2 caption says 'over 450,000 training examples'; Table 1 says '>450,000 edits'",
+   "where": "Sec 3.1.1"
+  },
+  {
+   "claim": "Editing takes about 9 seconds per image at 512 resolution on one A100.",
+   "kind": "measured",
+   "source": null,
+   "metric": "latency",
+   "value": "9",
+   "unit": "seconds",
+   "baseline_value": null,
+   "n": null,
+   "setup": "512x512, 100 denoising steps, Euler ancestral sampler, A100",
+   "quote": "Editing an image with our model takes roughly 9 seconds on an A100 GPU.",
+   "table": null,
+   "note": null,
+   "where": "Appendix A.3"
+  },
+  {
+   "claim": "Training cost: 10,000 steps in 25.5 hours on 8 A100 40GB.",
+   "kind": "measured",
+   "source": null,
+   "metric": "wall clock",
+   "value": "25.5",
+   "unit": "hours",
+   "baseline_value": null,
+   "n": null,
+   "setup": "256x256, batch 1024, lr 10^-4, init from SD v1.5",
+   "quote": "We train our image editing model for 10,000 steps on",
+   "table": null,
+   "note": "8x 40GB NVIDIA A100 GPUs over 25.5 hours",
+   "where": "Appendix A.3"
+  },
+  {
+   "claim": "Ours has higher CLIP image consistency than SDEdit at the same directional similarity.",
+   "kind": "measured",
+   "source": null,
+   "metric": "CLIP image similarity vs directional similarity",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 8 curves, text guidance 7.5, sI in [1.0,2.2], SDEdit strength 0.3-0.9; evaluation set size not stated; no numeric values given",
+   "quote": "our results have notably higher image consistency (CLIP image simi-",
+   "table": null,
+   "note": "qualitative reading of a plot; no numbers in text",
+   "where": "Sec 4.1, Fig 8"
+  },
+  {
+   "claim": "Smaller training sets reduce ability to make larger edits; removing CLIP filtering lowers consistency with the input.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 10 ablations (10% and 1% of data, no CLIP filter), sI swept 1.0-2.2; no numeric values in text",
+   "quote": "Removing the CLIP ﬁltering from our dataset",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2, Fig 10"
+  },
+  {
+   "claim": "Best-working guidance scale ranges.",
+   "kind": "measured",
+   "source": null,
+   "metric": "guidance scales",
+   "value": "sT 5-10; sI 1-1.5",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "typical best; authors tune per example for the paper's figures",
+   "quote": "values of sT in the range 5−10 and values of sI in the range",
+   "table": null,
+   "note": "text continues '1−1.5 typically produce the best results'",
+   "where": "Sec 4.2"
+  },
+  {
+   "claim": "Training data filter thresholds.",
+   "kind": "measured",
+   "source": null,
+   "metric": "CLIP thresholds",
+   "value": "0.75 / 0.2 / 0.2",
+   "unit": "cosine",
+   "baseline_value": null,
+   "n": null,
+   "setup": "image-image / image-caption / directional; up to 4 examples kept per caption pair from 100 generated pairs",
+   "quote": "CLIP threshold of 0.75 to ensure images are not too different",
+   "table": null,
+   "note": null,
+   "where": "Appendix A.2"
+  }
+ ],
+ "limits": [
+  "Quantitative evaluation is two CLIP-based trade-off plots against SDEdit only; no numeric values, no human study, no test-set size",
+  "Limited by Stable Diffusion image quality, GPT-3 and the 700 hand-written examples, and Prompt-to-Prompt",
+  "Struggles with counting and spatial reasoning (move to left, swap positions); cannot change viewpoint; can over-edit or fail to isolate the object (Fig 13)",
+  "Inherits biases from data and models (Fig 14)",
+  "Guidance weights were adjusted per example for the shown results",
+  "Open questions the authors list: spatial instructions, other conditioning, how to evaluate instruction-based editing, human feedback / RL"
+ ],
+ "practices": [],
+ "terms": [],
+ "lineage": [
+  {
+   "work": "Stable Diffusion / latent diffusion (Rombach et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "initial weights and data generator",
+   "quote": null
+  },
+  {
+   "work": "Prompt-to-Prompt image editing with cross attention control (Hertz et al.)",
+   "year": 2022,
+   "arxiv": "2208.01626",
+   "relation": "uses-method",
+   "note": "used to make paired images similar",
+   "quote": null
+  },
+  {
+   "work": "GPT-3 / Language models are few-shot learners (Brown et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "fine-tuned to write instructions and edited captions",
+   "quote": null
+  },
+  {
+   "work": "SDEdit (Meng et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "quantitative and qualitative baseline",
+   "quote": null
+  },
+  {
+   "work": "Text2Live (Bar-Tal et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "qualitative baseline",
+   "quote": null
+  },
+  {
+   "work": "Classifier-free diffusion guidance (Ho and Salimans)",
+   "year": 2022,
+   "arxiv": "2207.12598",
+   "relation": "uses-method",
+   "note": "extended to two conditionings",
+   "quote": null
+  },
+  {
+   "work": "Composable diffusion models (Liu et al.)",
+   "year": 2022,
+   "arxiv": "2206.01714",
+   "relation": "uses-method",
+   "note": "composing scores over multiple conditions",
+   "quote": null
+  },
+  {
+   "work": "StyleGAN-NADA (Gal et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "directional CLIP similarity metric and filter",
+   "quote": null
+  },
+  {
+   "work": "Pretraining is all you need for image-to-image translation (Wang et al.)",
+   "year": 2022,
+   "arxiv": "2205.12952",
+   "relation": "related",
+   "note": "motivates fine-tuning pretrained diffusion over training from scratch",
+   "quote": null
+  },
+  {
+   "work": "LAION-5B / LAION-Aesthetics",
+   "year": 2022,
+   "arxiv": "2210.08402",
+   "relation": "uses-data",
+   "note": "source of input captions",
+   "quote": null
+  },
+  {
+   "work": "Imagic (Kawar et al.)",
+   "year": 2022,
+   "arxiv": "2210.09276",
+   "relation": "related",
+   "note": "per-image inversion and fine-tuning editing",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "Our method consists of two parts: generating an image editing dataset, and training a diffusion model on that dataset.",
+   "page": 3,
+   "why": "Whole pipeline in one picture"
+  },
+  {
+   "figure": "Fig 8",
+   "caption": "We plot the trade-off between consistency with the input image (Y-axis) and consistency with the edit (X-axis).",
+   "page": 7,
+   "why": "Only quantitative comparison with SDEdit"
+  },
+  {
+   "figure": "Fig 10",
+   "caption": "We compare ablated variants of our model (smaller training dataset, no CLIP filtering).",
+   "page": 7,
+   "why": "Ablation of data size and filtering"
+  },
+  {
+   "figure": "Fig 13",
+   "caption": "Failure cases.",
+   "page": 8,
+   "why": "Shows viewpoint, swap and isolation failures"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 3",
+   "snippet": "e~(zt,cI,cT) = e(zt,∅,∅) + sI·(e(zt,cI,∅) − e(zt,∅,∅)) + sT·(e(zt,cI,cT) − e(zt,cI,∅))",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "No instructions embedded. Fig 9 caption says SDEdit configurations (OP) and (E) while panel labels read OC and E."
+ ]
+}

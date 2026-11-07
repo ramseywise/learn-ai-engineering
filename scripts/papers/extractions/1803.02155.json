@@ -1,0 +1,409 @@
+{
+ "schema": 1,
+ "key": "1803.02155",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/shaw-2018-self-attention-relative-position-representations.pdf",
+ "bib": {
+  "title": "Self-Attention with Relative Position Representations",
+  "authors": [
+   "Peter Shaw",
+   "Jakob Uszkoreit",
+   "Ashish Vaswani"
+  ],
+  "first_author": "Shaw",
+  "year": 2018,
+  "venue": "Proceedings of NAACL-HLT 2018, pages 464-468",
+  "arxiv": "1803.02155",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 18595,
+  "chars_total": 18595,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can the Transformer's self-attention use relative position representations instead of absolute position encodings to improve translation?",
+ "hypothesis": "Precise relative position information is not useful beyond a certain distance, so clipping the distance should not hurt and should allow generalisation to unseen sequence lengths.",
+ "contributions": [
+  "Relative position representations added inside self-attention (to keys and values), shared across heads",
+  "Efficient implementation splitting e_ij into two terms",
+  "Framing as relation-aware self-attention over labeled directed graphs"
+ ],
+ "method": {
+  "summary": "Adds learned vectors per clipped relative offset to the keys (compatibility) and values (output) in each self-attention layer of the Transformer, replacing sinusoidal absolute encodings. Trained on WMT14 EN-DE and EN-FR with tensor2tensor, base and big configs.",
+  "task": "machine translation (WMT 2014 EN-DE, EN-FR)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "WMT 2014 English-German",
+    "role": "both",
+    "size": "approximately 4.5M sentence pairs",
+    "split": "test newstest2014; dev newstest2013 for ablations",
+    "source": "WMT 2014",
+    "preprocessing": "32,768 word-piece vocabulary; batched by approximate length"
+   },
+   {
+    "name": "WMT 2014 English-French",
+    "role": "both",
+    "size": "approximately 36M sentence pairs",
+    "split": "test newstest2014",
+    "source": "WMT 2014",
+    "preprocessing": "32,768 word-piece vocabulary"
+   }
+  ],
+  "models": [
+   {
+    "name": "Transformer base + relative position representations",
+    "role": "proposed",
+    "params": null,
+    "architecture": "encoder-decoder Transformer",
+    "init_from": null,
+    "tokenizer": "word-piece (Wu et al., 2016)",
+    "vocab": "32,768",
+    "layers": "6 encoder and 6 decoder",
+    "hidden": "d_x=512, feed-forward inner 1024",
+    "heads": 8,
+    "context": null,
+    "other": {
+     "d_z": 64,
+     "clipping k": 16,
+     "edge representations": "unique per layer and head",
+     "dropout": 0.1
+    }
+   },
+   {
+    "name": "Transformer big + relative position representations",
+    "role": "proposed",
+    "params": null,
+    "architecture": "encoder-decoder Transformer",
+    "init_from": null,
+    "tokenizer": "word-piece",
+    "vocab": "32,768",
+    "layers": "6 encoder and 6 decoder",
+    "hidden": "d_x=1024, feed-forward inner 4096",
+    "heads": 16,
+    "context": null,
+    "other": {
+     "d_z": 64,
+     "clipping k": 8,
+     "edge representations": "unique per layer (shared across heads)",
+     "dropout": "0.3 EN-DE, 0.1 EN-FR"
+    }
+   },
+   {
+    "name": "Transformer base/big with sinusoidal absolute positions",
+    "role": "baseline",
+    "params": null,
+    "architecture": "Transformer (Vaswani et al., 2017)",
+    "init_from": null,
+    "tokenizer": "word-piece",
+    "vocab": "32,768",
+    "layers": "6+6",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "baselines regenerated in the same library to isolate the effect"
+    }
+   }
+  ],
+  "training": {
+   "objective": "cross-entropy with label smoothing (translation)",
+   "optimizer": "Adam, beta1=0.9, beta2=0.98, eps=1e-9",
+   "lr": null,
+   "lr_schedule": "same warmup and decay as Vaswani et al. (2017)",
+   "warmup": "4,000 steps",
+   "batch_size": "up to 4096 input and output tokens per GPU; approximately 25,000 source and 25,000 target tokens per batch",
+   "steps": "100,000 (base); 300,000 (big)",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": "0.1 base; big 0.3 EN-DE, 0.1 EN-FR",
+   "regularisation": "label smoothing 0.1",
+   "hardware": "8 K40 GPUs (base); 8 P100 GPUs (big)",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "checkpoint averaging": "none for base; last 20 checkpoints saved at 10 minute intervals for big",
+    "throughput": "7% decrease in steps per second vs baseline"
+   }
+  },
+  "inference": {
+   "decoding": "beam search, beam size 4, length penalty alpha=0.6",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single run per config; not stated",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "BLEU",
+     "definition": "BLEU on newstest2014 (test) and newstest2013 (dev ablations); tokenisation/script not stated",
+     "unit": "BLEU points",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Transformer with sinusoidal absolute position encodings, re-run in same library"
+   ],
+   "protocol": "single scores; no seeds, variance or significance test reported"
+  },
+  "availability": {
+   "code": "tensor2tensor library (github.com/tensorflow/tensor2tensor); the paper does not say the relative-position code is released",
+   "weights": null,
+   "data": "WMT 2014"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Big Transformer with relative positions beats absolute on EN-DE by 1.3 BLEU",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": 29.2,
+   "unit": "BLEU",
+   "baseline_value": 27.9,
+   "n": null,
+   "setup": "WMT14 EN-DE, newstest2014, big config, relative only (no sinusoids)",
+   "quote": null,
+   "table": "Table 1, row Transformer (big) Relative Position Representations, column EN-DE BLEU",
+   "note": "Abstract and 4.2 say 1.3 BLEU on EN-DE",
+   "where": "Table 1"
+  },
+  {
+   "claim": "Base Transformer relative vs absolute on EN-DE",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": 26.8,
+   "unit": "BLEU",
+   "baseline_value": 26.5,
+   "n": null,
+   "setup": "WMT14 EN-DE, newstest2014, base config",
+   "quote": null,
+   "table": "Table 1, row Transformer (base) Relative Position Representations, column EN-DE BLEU",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Base Transformer relative vs absolute on EN-FR",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": 38.7,
+   "unit": "BLEU",
+   "baseline_value": 38.2,
+   "n": null,
+   "setup": "WMT14 EN-FR, newstest2014, base config",
+   "quote": null,
+   "table": "Table 1, row Transformer (base) Relative Position Representations, column EN-FR BLEU",
+   "note": "Abstract says 0.3 BLEU on EN-FR improvement while 4.2 says 0.5 base and 0.3 big",
+   "where": "Table 1"
+  },
+  {
+   "claim": "Big Transformer relative vs absolute on EN-FR",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": 41.5,
+   "unit": "BLEU",
+   "baseline_value": 41.2,
+   "n": null,
+   "setup": "WMT14 EN-FR, newstest2014, big config",
+   "quote": null,
+   "table": "Table 1, row Transformer (big) Relative Position Representations, column EN-FR BLEU",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Relative position implementation costs 7% steps per second",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 7,
+   "unit": "% decrease in steps/s",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Machine translation experiments, P100 GPUs, same model and batch sizes as Vaswani et al.",
+   "quote": "the re-\nsult was a modest 7% decrease in steps per sec-\nond",
+   "table": null,
+   "note": null,
+   "where": "3.3"
+  },
+  {
+   "claim": "Adding sinusoidal encodings on top of relative gave no benefit",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Both WMT14 tasks",
+   "quote": "In our experiments we did not ob-\nserve any beneﬁt from including sinusoidal posi-\ntion encodings in addition to relative position rep-\nresentations.",
+   "table": null,
+   "note": null,
+   "where": "4.2"
+  },
+  {
+   "claim": "Without any relative positions (k=0, no absolute) BLEU collapses to 12.5; k=1 gives 25.5",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": 12.5,
+   "unit": "BLEU",
+   "baseline_value": null,
+   "n": null,
+   "setup": "base config, no absolute positions, newstest2013 dev, EN-DE",
+   "quote": null,
+   "table": "Table 2, row k=0, column EN-DE BLEU",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "BLEU is flat for clipping k>=2 (25.8 at k=2, 25.9 at k=4 and 64)",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": 25.9,
+   "unit": "BLEU",
+   "baseline_value": null,
+   "n": null,
+   "setup": "base config, no absolute positions, newstest2013 dev, EN-DE",
+   "quote": null,
+   "table": "Table 2, row k=4, column EN-DE BLEU",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Dropping a^V (keeping a^K) costs nothing",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": 25.8,
+   "unit": "BLEU",
+   "baseline_value": 25.8,
+   "n": null,
+   "setup": "base, newstest2013, EN-DE",
+   "quote": null,
+   "table": "Table 3, row aV No, aK Yes, column EN-DE BLEU",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Dropping a^K (keeping a^V) costs 0.5 BLEU",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": 25.3,
+   "unit": "BLEU",
+   "baseline_value": 25.8,
+   "n": null,
+   "setup": "base, newstest2013, EN-DE",
+   "quote": null,
+   "table": "Table 3, row aV Yes, aK No, column EN-DE BLEU",
+   "note": null,
+   "where": "Table 3"
+  }
+ ],
+ "limits": [
+  "Only machine translation tested; authors say a^V-free may not hold for other tasks ('further work is needed')",
+  "Generalisation to unseen sequence lengths is hypothesised but not tested",
+  "Single runs, no variance or significance reported; BLEU details not given",
+  "Learning rate value not stated; relative gains differ (1.3 vs 0.3 BLEU) without explanation",
+  "Only encoder-decoder with fixed config; clipping k differs between base (16) and big (8)"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "relation-aware self-attention",
+   "definition": "extension to self-attention to consider the pairwise relationships between input elements, modelling the input as a labeled, directed, fully-connected graph",
+   "where": "3.1"
+  },
+  {
+   "term": "clipping distance k",
+   "definition": "maximum relative position considered, clipped to a maximum absolute value of k, giving 2k+1 unique edge labels",
+   "where": "3.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Attention is all you need",
+   "year": 2017,
+   "arxiv": "1706.03762",
+   "relation": "extends",
+   "note": "Transformer with sinusoidal encodings is the baseline",
+   "quote": null
+  },
+  {
+   "work": "Google's neural machine translation system",
+   "year": 2016,
+   "arxiv": "1609.08144",
+   "relation": "uses-method",
+   "note": "word-piece vocabulary and beam search length penalty",
+   "quote": null
+  },
+  {
+   "work": "Graph attention networks (Velickovic et al.)",
+   "year": 2017,
+   "arxiv": "1710.10903",
+   "relation": "related",
+   "note": "space complexity concerns of edges",
+   "quote": null
+  },
+  {
+   "work": "Parikh et al. decomposable attention",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "related",
+   "note": "biased attention weights by distance",
+   "quote": null
+  },
+  {
+   "work": "Adam (Kingma and Ba)",
+   "year": 2014,
+   "arxiv": "1412.6980",
+   "relation": "uses-method",
+   "note": "optimizer",
+   "quote": null
+  },
+  {
+   "work": "WMT 2014 EN-DE and EN-FR",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "training and test data",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Figure 1",
+   "caption": "Example edges representing relative positions, or the distance between elements. We learn representations for each relative position within a clipping distance k.",
+   "page": 3,
+   "why": "shows how offsets beyond k share one vector"
+  }
+ ],
+ "code": [
+  {
+   "where": "3.1, eq. 3-4",
+   "snippet": "z_i = sum_j alpha_ij (x_j W^V + a^V_ij); e_ij = x_i W^Q (x_j W^K + a^K_ij)^T / sqrt(d_z); a_ij = w_clip(j-i,k); clip(x,k)=max(-k,min(k,x))",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Quotes with line breaks may need normalisation; no embedded instructions found"
+ ]
+}

@@ -1,0 +1,553 @@
+{
+ "schema": 1,
+ "key": "2104.09864",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/su-2023-roformer.pdf",
+ "bib": {
+  "title": "RoFormer: Enhanced Transformer with Rotary Position Embedding",
+  "authors": [
+   "Jianlin Su",
+   "Yu Lu",
+   "Shengfeng Pan",
+   "Ahmed Murtadha",
+   "Bo Wen",
+   "Yunfeng Liu"
+  ],
+  "first_author": "Su",
+  "year": 2023,
+  "venue": "preprint",
+  "arxiv": "2104.09864",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 44975,
+  "chars_total": 44975,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "How can positional information be injected into transformer self-attention so that it is relative, flexible in sequence length, decays with distance, and works with linear attention?",
+ "hypothesis": "Encoding absolute position with a rotation matrix makes the query-key inner product depend only on relative position, which should improve on additive position encodings and converge faster.",
+ "contributions": [
+  "Rotary Position Embedding (RoPE): multiply query/key by a position-dependent rotation matrix, with a theoretical derivation",
+  "Show RoPE's inner product decays with relative distance and that it can be combined with linear attention",
+  "Evaluate RoFormer on translation, BERT-style pre-training, GLUE, Performer language modeling and Chinese long-text matching"
+ ],
+ "method": {
+  "summary": "RoPE rotates each 2D pair of the query and key vectors by an angle m*theta_i (m = position), so q_m^T k_n depends on n-m. It replaces the position encoding in a transformer (translation), BERT (MLM pre-training), Performer and WoBERT (Chinese), and is compared to the original position encodings.",
+  "task": "position encoding for transformers: MT, MLM pre-training, GLUE fine-tuning, char-level LM, Chinese pre-training and similar-case matching",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "WMT 2014 English-German",
+    "role": "both",
+    "size": "approximately 4.5 million sentence pairs",
+    "split": "test set for BLEU",
+    "source": "Bojar et al. 2014",
+    "preprocessing": "joint source/target BPE, vocab 37k"
+   },
+   {
+    "name": "BookCorpus + Wikipedia (Huggingface Datasets)",
+    "role": "pretrain",
+    "size": null,
+    "split": "train/validation 8:2",
+    "source": "Zhu et al. 2015; Wikimedia dumps; Apache 2.0 library",
+    "preprocessing": null
+   },
+   {
+    "name": "GLUE: MRPC, SST-2, QNLI, STS-B, QQP, MNLI",
+    "role": "eval",
+    "size": null,
+    "split": "best-averaged results on validation set",
+    "source": "GLUE",
+    "preprocessing": null
+   },
+   {
+    "name": "Enwik8",
+    "role": "pretrain",
+    "size": null,
+    "split": null,
+    "source": "Mahoney 2006",
+    "preprocessing": null
+   },
+   {
+    "name": "Chinese pre-training corpus (Wikipedia, news, forums)",
+    "role": "pretrain",
+    "size": "approximately 34GB",
+    "split": null,
+    "source": "collected by authors, not stated as released",
+    "preprocessing": null
+   },
+   {
+    "name": "CAIL2019-SCM",
+    "role": "eval",
+    "size": "8964 triplets",
+    "split": "train/val/test 6:2:2",
+    "source": "Xiao et al. 2019, Supreme People's Court of China",
+    "preprocessing": "documents mostly longer than 512 characters"
+   }
+  ],
+  "models": [
+   {
+    "name": "RoFormer (Transformer-base with RoPE, MT)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "Transformer-base encoder-decoder with RoPE in self-attention",
+    "init_from": null,
+    "tokenizer": "joint BPE",
+    "vocab": "37k",
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "RoFormer (BERT-base with RoPE)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "bert-base-uncased with sinusoidal/absolute position replaced by RoPE",
+    "init_from": "inferred: trained from scratch (pre-training from BookCorpus+Wikipedia)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "512",
+    "other": {}
+   },
+   {
+    "name": "PerFormer with RoPE",
+    "role": "proposed",
+    "params": null,
+    "architecture": "char-based linear-attention PerFormer",
+    "init_from": null,
+    "tokenizer": "char",
+    "vocab": null,
+    "layers": "12",
+    "hidden": "768",
+    "heads": "12",
+    "context": "1024",
+    "other": {}
+   },
+   {
+    "name": "RoFormer (Chinese, from WoBERT)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "WoBERT with absolute position embedding replaced by RoPE",
+    "init_from": "WoBERT modified; pre-trained on 34GB Chinese data",
+    "tokenizer": "word level",
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "up to 1536 in pre-training; 1024 in CAIL fine-tuning",
+    "other": {}
+   },
+   {
+    "name": "Transformer-base",
+    "role": "baseline",
+    "params": null,
+    "architecture": "Vaswani et al. 2017",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "BERT (bert-base-uncased)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "BERT base",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "512",
+    "other": {}
+   },
+   {
+    "name": "WoBERT",
+    "role": "baseline",
+    "params": null,
+    "architecture": "word-level Chinese BERT, absolute position",
+    "init_from": null,
+    "tokenizer": "word",
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "MT: cross-entropy with label smoothing 0.1 (inferred); BERT/RoFormer: masked language modeling; PerFormer: LM loss",
+   "optimizer": "MT: Adam b1=0.9 b2=0.98; BERT-style pre-training: AdamW",
+   "lr": "MT: 1e-7 up to 5e-4; BERT-style pre-training 1e-5; Performer 1e-4; GLUE fine-tune 2,3,4,5e-5",
+   "lr_schedule": "MT: linear increase from 1e-7 to 5e-4 then inverse square root decay",
+   "warmup": "MT: linear increase from 1e-7 to 5e-4 (length in steps not stated)",
+   "batch_size": "MT: N/A; BERT/RoFormer pre-train 64; Performer 128; GLUE 32; Chinese pre-train 256 or 512 by stage (Table 4)",
+   "steps": "BERT vs RoFormer: 100k; Chinese pre-training stages 200k, 12.5k, 120k, 80k, 10k, 30k (Table 4)",
+   "epochs": "GLUE fine-tune: 3",
+   "tokens": null,
+   "seq_len": "BERT vs RoFormer 512; GLUE 512; Performer 1024; Chinese 512/1536/256/128/1536/512 by stage",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "label smoothing 0.1 (MT)",
+   "hardware": "two cloud servers with 4 x V100 GPUs",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "MT_steps": null,
+    "Chinese_pretraining_stages": "Table 4: 6 stages, loss 1.73->1.58, accuracy 65.0%->67.4%",
+    "framework": "PyTorch, fairseq (MT); Huggingface Transformers (GLUE); lucidrains performer-pytorch (Performer)",
+    "MT_checkpoint_averaging": "last 5 checkpoints"
+   }
+  },
+  "inference": {
+   "decoding": "MT: beam search, beam 4, length penalty 0.6",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single run reported; no seeds or variance stated",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "theta_i": "10000^(-2(i-1)/d) in Eq. 15; 10000^(-2i/d) in Sec 3.3 (inconsistent indexing)"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "BLEU",
+     "definition": "Papineni et al. 2002, on WMT14 En-De test set",
+     "unit": "BLEU",
+     "higher_is_better": true
+    },
+    {
+     "name": "MLM loss",
+     "definition": "masked LM training loss during pre-training",
+     "unit": "loss",
+     "higher_is_better": false
+    },
+    {
+     "name": "GLUE metrics",
+     "definition": "F1 for MRPC and QQP, Spearman correlation for STS-B, accuracy for the rest",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "CAIL2019-SCM accuracy",
+     "definition": "predict whether (A,B) is closer than (A,C)",
+     "unit": "% accuracy",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Transformer-base (Vaswani 2017)",
+    "BERT",
+    "PerFormer without RoPE",
+    "WoBERT",
+    "BERT (Chinese)"
+   ],
+   "protocol": "Single runs; no significance tests or seeds reported. GLUE reports best-averaged validation results over learning rates."
+  },
+  "availability": {
+   "code": "https://github.com/ZhuiyiTechnology/roformer; integrated into Huggingface",
+   "weights": "some pre-trained experiments on GitHub",
+   "data": null
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.lr",
+    "quote": "learning rate is increased linearly from 1e -7 to 5e -4 and then decayed proportionally to the inverse square root of the step number",
+    "where": "Sec 4.1.2"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "RoFormer slightly beats Transformer-base on WMT14 En-De BLEU.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": 27.5,
+   "unit": "BLEU",
+   "baseline_value": 27.3,
+   "n": null,
+   "setup": "WMT 2014 En-De, same settings, single run",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row RoFormer, column BLEU"
+  },
+  {
+   "claim": "RoFormer does not beat BERT on all GLUE tasks: it wins MRPC, STS-B, QQP but loses SST-2, QNLI, MNLI.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MRPC F1",
+   "value": 89.5,
+   "unit": "F1",
+   "baseline_value": 88.9,
+   "n": null,
+   "setup": "GLUE validation, fine-tune 3 epochs, bs 32, lr 2-5e-5",
+   "note": "Text says RoFormer 'can significantly outperform BERT in three out of six datasets'; table also shows lower RoFormer scores on SST-2 (90.7 vs 93.5), QNLI (88.0 vs 90.5), MNLI (80.2/79.8 vs 84.6/83.4).",
+   "where": "Table 2",
+   "table": "Table 2, row RoFormer, column MRPC"
+  },
+  {
+   "claim": "RoFormer QQP F1 far above BERT in the paper's table.",
+   "kind": "measured",
+   "source": null,
+   "metric": "QQP F1",
+   "value": 86.4,
+   "unit": "F1",
+   "baseline_value": 71.2,
+   "n": null,
+   "setup": "GLUE validation, as above",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row RoFormer, column QQP"
+  },
+  {
+   "claim": "RoFormer-1024 beats RoFormer-512 on CAIL2019-SCM test.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 69.79,
+   "unit": "%",
+   "baseline_value": 68.29,
+   "n": null,
+   "setup": "CAIL2019-SCM test, max input 1024 chars, Chinese RoFormer pre-trained on ~34GB",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row RoFormer-1024, column Test"
+  },
+  {
+   "claim": "At 1024 characters RoFormer outperforms WoBERT by an absolute 1.5%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "absolute accuracy gain vs WoBERT",
+   "value": 1.5,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CAIL2019-SCM; WoBERT is capped at 512 in the table",
+   "note": "Table 5 has WoBERT-512 test 68.10 vs RoFormer-1024 69.79 = 1.69; validation 66.07-64.07 = 2.0; text 1.5 matches neither.",
+   "where": "Sec 4.5.4",
+   "quote": "RoFormer outperforms WoBERT by an absolute improvement of 1.5%"
+  },
+  {
+   "claim": "At 512 cut-off RoFormer is comparable to WoBERT and BERT on CAIL2019-SCM test.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 68.29,
+   "unit": "%",
+   "baseline_value": 68.1,
+   "n": null,
+   "setup": "CAIL2019-SCM test, max 512",
+   "note": "BERT-512 test 67.77",
+   "where": "Table 5",
+   "table": "Table 5, row RoFormer-512, column Test"
+  },
+  {
+   "claim": "RoFormer converges faster than BERT in MLM pre-training (qualitative, from Fig 3 left).",
+   "kind": "measured",
+   "source": null,
+   "metric": "MLM loss",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "BookCorpus+Wikipedia, bs 64, seq 512, 100k steps, AdamW lr 1e-5",
+   "note": "No numeric value in text; Fig 3 x-axis runs to 250K steps while text says 100k steps.",
+   "where": "Sec 4.2.3, Fig 3"
+  },
+  {
+   "claim": "RoPE in Performer gives faster convergence and lower loss on Enwik8 (qualitative, Fig 3 right).",
+   "kind": "measured",
+   "source": null,
+   "metric": "LM loss",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "12-layer char Performer, 768 dim, 12 heads, lr 1e-4, bs 128, seq 1024",
+   "note": null,
+   "where": "Sec 4.4.2, Fig 3"
+  },
+  {
+   "claim": "Chinese RoFormer pre-training accuracy rises to 67.4% with max seq length 1536.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MLM accuracy",
+   "value": 67.4,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "6-stage pre-training, stage 5 (1536 tokens, batch 256, 10k steps)",
+   "note": "Stage 2 (1536) 66.8%; shorter lengths 256/128 give 64.6%/63.4%; stages differ in batch size and steps so not a controlled comparison.",
+   "where": "Table 4",
+   "table": "Table 4, stage 5, column Accuracy"
+  }
+ ],
+ "limits": [
+  "Authors concede no thorough explanation of why RoFormer converges faster than other position encodings",
+  "Authors concede no faithful explanation of the superior long-text performance despite long-term decay being shared with other methods",
+  "Requires pre-training hardware",
+  "Single-run results, no variance; GLUE results are mixed (loses 3 of 6 to BERT)",
+  "No extrapolation-beyond-trained-length test; long-text claim rests on one Chinese dataset where RoFormer-1024 is compared only to 512 baselines",
+  "Long-term decay shown only numerically (Fig 2), the proof sketch bounds a sum, not monotone decay",
+  "Applied to encoder/MT and Performer, no decoder-only LLM experiments"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Rotary Position Embedding (RoPE)",
+   "definition": "encodes the absolute position with a rotation matrix and meanwhile incorporates the explicit relative position dependency in self-attention formulation",
+   "where": "Abstract"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Attention is all you need",
+   "year": 2017,
+   "arxiv": "1706.03762",
+   "relation": "baseline",
+   "note": "Transformer-base baseline and sinusoidal encoding it builds from",
+   "quote": null
+  },
+  {
+   "work": "BERT",
+   "year": 2019,
+   "arxiv": "1810.04805",
+   "relation": "baseline",
+   "note": "pre-training and GLUE baseline",
+   "quote": null
+  },
+  {
+   "work": "Shaw et al. Self-attention with relative position representations",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "related",
+   "note": "clipped relative position embeddings",
+   "quote": null
+  },
+  {
+   "work": "Transformer-XL",
+   "year": 2019,
+   "arxiv": "1901.02860",
+   "relation": "related",
+   "note": "decomposed relative attention",
+   "quote": null
+  },
+  {
+   "work": "T5 (Raffel et al.)",
+   "year": 2020,
+   "arxiv": "1910.10683",
+   "relation": "related",
+   "note": "trainable relative bias",
+   "quote": null
+  },
+  {
+   "work": "DeBERTa",
+   "year": 2020,
+   "arxiv": "2006.03654",
+   "relation": "related",
+   "note": "relative position embeddings",
+   "quote": null
+  },
+  {
+   "work": "Katharopoulos et al. Transformers are RNNs",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "linear attention that RoPE is combined with",
+   "quote": null
+  },
+  {
+   "work": "Performer (Choromanski et al.)",
+   "year": 2020,
+   "arxiv": "2009.14794",
+   "relation": "uses-method",
+   "note": "RoPE added to Performer",
+   "quote": null
+  },
+  {
+   "work": "BookCorpus (Zhu et al.)",
+   "year": 2015,
+   "arxiv": "1506.06724",
+   "relation": "uses-data",
+   "note": "pre-training data",
+   "quote": null
+  },
+  {
+   "work": "WoBERT (Su)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Chinese base model modified with RoPE",
+   "quote": null
+  },
+  {
+   "work": "NEZHA",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Chinese relative-position model, listed in Table 3 only",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Implementation of Rotary Position Embedding(RoPE).",
+   "page": 5,
+   "why": "shows rotating each 2D pair of q/k by m*theta_i"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Long-term decay of RoPE.",
+   "page": 8,
+   "why": "the average |S_i| bound falls as relative distance grows"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Evaluation of RoPE in language modeling pre-training. Left: training loss for BERT and RoFormer. Right: training loss for PerFormer with and without RoPE.",
+   "page": 10,
+   "why": "only evidence of faster convergence"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq. 34",
+   "snippet": "R^d_{Theta,m} x = (x1,x2,...,xd) (x) (cos m th1, cos m th1, ..., cos m th_{d/2}, cos m th_{d/2}) + (-x2,x1,...,-xd,x_{d-1}) (x) (sin m th1, sin m th1, ..., sin m th_{d/2}, sin m th_{d/2})",
+   "verbatim": false
+  },
+  {
+   "where": "Eq. 14-16",
+   "snippet": "f_{q,k}(x_m,m)=R^d_{Theta,m} W_{q,k} x_m ; Theta={theta_i=10000^{-2(i-1)/d}, i in [1..d/2]} ; q_m^T k_n = x^T W_q R^d_{Theta,n-m} W_k x",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Math equations garbled in text extraction",
+  "Theta indexing inconsistent (Eq. 15 uses -2(i-1)/d, Sec 3.3 uses -2i/d); Eq. 4 uses k where i is meant",
+  "Table 2 caption says GLEU for GLUE",
+  "Fig 3 left axis runs to 250K steps though text says 100k",
+  "Results table is in 'Table 5' text: 1.5% claim does not match table",
+  "No embedded instructions found"
+ ]
+}

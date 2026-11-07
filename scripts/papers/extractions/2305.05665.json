@@ -1,0 +1,651 @@
+{
+ "schema": 1,
+ "key": "2305.05665",
+ "pdf": "ai-engineering/08-multimodal-engineering/sources/girdhar-2023-imagebind-one-embedding-space-bind.pdf",
+ "bib": {
+  "title": "IMAGEBIND: One Embedding Space To Bind Them All",
+  "authors": [
+   "Rohit Girdhar",
+   "Alaaeldin El-Nouby",
+   "Zhuang Liu",
+   "Mannat Singh",
+   "Kalyan Vasudev Alwala",
+   "Armand Joulin",
+   "Ishan Misra"
+  ],
+  "first_author": "Girdhar",
+  "year": 2023,
+  "venue": "preprint (arXiv v2)",
+  "arxiv": "2305.05665",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 72896,
+  "chars_total": 72896,
+  "engine": "pymupdf",
+  "skipped": "reference list skimmed only"
+ },
+ "type": "empirical",
+ "question": "Can one joint embedding space across six modalities be learned using only image-paired data, so that unpaired modality pairs align without direct training?",
+ "hypothesis": "Aligning each modality only to image embeddings leads to emergent alignment between all modalities, and this improves with a stronger image encoder.",
+ "contributions": [
+  "IMAGEBIND: joint embedding of six modalities (image/video, text, audio, depth, thermal, IMU) trained with image-paired data only",
+  "Emergent zero-shot classification and retrieval across modalities, and few-shot results",
+  "Applications: embedding arithmetic, audio-prompted detection (Detic) and audio-to-image generation (DALLE-2), and use as an evaluation tool for vision models"
+ ],
+ "method": {
+  "summary": "Modality-specific Transformer encoders for audio, depth, thermal and IMU are trained with a symmetric InfoNCE loss to match frozen OpenCLIP ViT-H image and text embeddings, one (image, M) pair type at a time. Text-to-modality alignment emerges without any (modality, text) pairs.",
+  "task": "multimodal contrastive embedding; emergent zero-shot classification and cross-modal retrieval",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "AudioSet (unbalanced train)",
+    "role": "train",
+    "size": "about 2M videos (10s), labels unused",
+    "split": "unbalanced train; test 18K videos",
+    "source": "YouTube; (video, audio) pairs",
+    "preprocessing": "2s clips, 16kHz, 128-bin log mel spectrogram, 25ms Hamming window, 10ms hop"
+   },
+   {
+    "name": "SUN RGB-D",
+    "role": "train",
+    "size": "~5K (image, depth) pairs",
+    "split": "train set; replicated 50x",
+    "source": "SUN RGB-D",
+    "preprocessing": "in-filled depth converted to disparity"
+   },
+   {
+    "name": "LLVIP",
+    "role": "train",
+    "size": "12025 RGB-thermal pairs",
+    "split": "train; val 3463 pairs",
+    "source": "LLVIP",
+    "preprocessing": "single-channel thermal; replicated 50x per main text, 25 per Table 9"
+   },
+   {
+    "name": "Ego4D",
+    "role": "train",
+    "size": "510,142 training clips",
+    "split": "68,865 test clips; 7,485 single-scenario videos of 9,645",
+    "source": "Ego4D (video, IMU)",
+    "preprocessing": "5s clips, 6x2000 IMU; only frames and IMU used"
+   },
+   {
+    "name": "Web image-text (via OpenCLIP)",
+    "role": "pretrain",
+    "size": "billions of pairs",
+    "split": null,
+    "source": "OpenCLIP ViT-H and text encoder, used pretrained and frozen",
+    "preprocessing": null
+   },
+   {
+    "name": "Eval: AS-A, ESC-50, Clotho, AudioCaps, VGGSound, SUN-D, NYU-D, LLVIP, Ego4D, IN1K, P365, K400, MSR-VTT 1k-A",
+    "role": "eval",
+    "size": "test sizes in Table 1 (e.g. ESC 400, Clotho 1045, AudioCaps 796, VGGS 14073, SUN-D 4660, NYU-D 653, LLVIP 15809, Ego4D 68865)",
+    "split": "ESC 5-fold average; ablations ESC fold-1",
+    "source": null,
+    "preprocessing": "CLIP default templates for all modalities"
+   }
+  ],
+  "models": [
+   {
+    "name": "ImageBind image encoder",
+    "role": "base",
+    "params": "630M (ViT-H)",
+    "architecture": "ViT-H, frozen",
+    "init_from": "OpenCLIP",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "ImageBind text encoder",
+    "role": "base",
+    "params": "302M",
+    "architecture": "CLIP text transformer, frozen",
+    "init_from": "OpenCLIP",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "ImageBind audio encoder",
+    "role": "proposed",
+    "params": null,
+    "architecture": "ViT-B, patch 16 stride 10 on spectrogram",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "12",
+    "hidden": "768",
+    "heads": "12",
+    "context": null,
+    "other": {
+     "table9": "AS column"
+    }
+   },
+   {
+    "name": "ImageBind depth encoder",
+    "role": "proposed",
+    "params": null,
+    "architecture": "ViT-S, 1-channel disparity",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "12",
+    "hidden": "384",
+    "heads": "8",
+    "context": null,
+    "other": {
+     "table9": "SUN column"
+    }
+   },
+   {
+    "name": "ImageBind thermal encoder",
+    "role": "proposed",
+    "params": null,
+    "architecture": "ViT-S, 1-channel",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "12",
+    "hidden": "768",
+    "heads": "12",
+    "context": null,
+    "other": {
+     "note": "main text says ViT-B for audio and ViT-S for thermal/depth; Table 9 LLVIP column shows 768/12 heads, inconsistent with ViT-S"
+    }
+   },
+   {
+    "name": "ImageBind IMU encoder",
+    "role": "proposed",
+    "params": null,
+    "architecture": "1D conv kernel 8 then Transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "6",
+    "hidden": "512",
+    "heads": "8",
+    "context": "5s clip, 2K time steps",
+    "other": {}
+   },
+   {
+    "name": "AudioCLIP",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "AVFIC",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "symmetric InfoNCE L_{I,M}+L_{M,I}, in-batch negatives, fixed temperature; one modality pair per minibatch",
+   "optimizer": "AdamW, beta1=0.9, beta2=0.95",
+   "lr": "peak 1.6e-3 (AS, SUN), 5e-4 (LLVIP, Ego4D)",
+   "lr_schedule": null,
+   "warmup": "2 epochs",
+   "batch_size": "2048 (AS), 512 (SUN, LLVIP, Ego4D)",
+   "steps": null,
+   "epochs": "64 (AS, SUN, LLVIP), 8 (Ego4D); main text says 32 epochs",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": "0.2 (AS, SUN), 0.05 (LLVIP), 0.5 (Ego4D)",
+   "dropout": null,
+   "regularisation": "stochastic depth 0.1/0.0/0.0/0.7; gradient clipping 1.0/1.0/5.0/1.0; RandomErase p=0.25; RandAugment 9/0.5; color jitter 0.4; freq masking 12",
+   "hardware": "32GB V100 or 40GB A100 GPUs (count not stated)",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "temperature": "0.05 AS, 0.2 SUN, 0.1 LLVIP, 0.2 Ego4D",
+    "sample_replication": "1.25 AS, 50 SUN, 25 LLVIP, 1.0 Ego4D",
+    "crop": "RandomResizedCrop 224px bilinear, flip p=0.5",
+    "ablation_setup": "ViT-B everywhere, 16 epochs, ESC fold-1"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single run; no seeds or variance reported",
+   "prompting": "default CLIP prompt templates for all modalities",
+   "retrieval": "cosine similarity on temperature-scaled embeddings; multiple 2s clips uniformly sampled at inference (ceil(5/2)=3 for ESC)",
+   "parameters": {
+    "arithmetic": "l2-normalize then sum after scaling each by 0.5",
+    "audio+video combination (Table 4)": "0.95 video, 0.05 audio",
+    "Detic score threshold": "0.9"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "top-1 accuracy",
+     "definition": "zero-shot classification by similarity to class-name text embeddings",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "mAP",
+     "definition": "AudioSet audio-only",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Recall@K",
+     "definition": "text-to-audio/video retrieval; ground truth in top K",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "CLIP/OpenCLIP on depth as grayscale",
+    "AudioCLIP",
+    "AVFIC",
+    "MIL-NCE",
+    "SupportSet",
+    "FIT",
+    "ARNLQ",
+    "AudioMAE",
+    "MultiMAE"
+   ],
+   "protocol": "Emergent zero-shot; few-shot uses linear classifiers on frozen features (AdamW; ESC lr 1.6e-3 wd 0.05 50 epochs; SUN lr 1e-2 no wd 60 epochs), k in {1,2,4,8}, same samples for all methods. No seeds or significance tests."
+  },
+  "availability": {
+   "code": "https://facebookresearch.github.io/ImageBind",
+   "weights": null,
+   "data": "public datasets"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.epochs",
+    "quote": "Total epochs",
+    "where": "Table 9 (64/64/64/8) vs section 5 text saying 32 epochs in section 4"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Emergent zero-shot ESC-50 audio classification reaches 66.9 top-1 with no audio-text training, comparable to AudioCLIP 68.6 which uses text supervision.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1",
+   "value": 66.9,
+   "unit": "%",
+   "baseline_value": 68.6,
+   "n": null,
+   "setup": "ESC-50 5-fold average, ImageBind ViT-H image encoder, CLIP templates",
+   "quote": null,
+   "table": "Table 3, row IMAGEBIND, column ESC Top-1 (66.9); AudioCLIP 68.6",
+   "note": "AudioCLIP uses AudioSet class names so is not strictly zero-shot",
+   "where": "Tables 2 and 3"
+  },
+  {
+   "claim": "On Clotho text-to-audio retrieval R@1 is 6.0, double AVFIC's 3.0.",
+   "kind": "measured",
+   "source": null,
+   "metric": "R@1",
+   "value": 6.0,
+   "unit": "%",
+   "baseline_value": 3.0,
+   "n": null,
+   "setup": "Clotho test, 1045 clips, emergent zero-shot",
+   "quote": "On the Clotho dataset, IM-",
+   "table": "Table 3, row IMAGEBIND, Clotho R@1 6.0; AVFIC 3.0",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "AudioCaps R@1 9.3 and R@10 42.3 versus AVFIC 8.7 and 37.7.",
+   "kind": "measured",
+   "source": null,
+   "metric": "R@1",
+   "value": 9.3,
+   "unit": "%",
+   "baseline_value": 8.7,
+   "n": null,
+   "setup": "AudioCaps 796 test clips, emergent zero-shot",
+   "quote": null,
+   "table": "Table 3, row IMAGEBIND, AudioCaps R@1 9.3, R@10 42.3",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Text-to-video MSR-VTT 1k-A R@1 is 36.1 using the frozen OpenCLIP encoders.",
+   "kind": "measured",
+   "source": null,
+   "metric": "R@1",
+   "value": 36.1,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MSR-VTT 1k-A zero-shot",
+   "quote": "The text to video performance for our model is",
+   "table": "Table 2, column MSR-VTT, row IMAGEBIND (36.1)",
+   "note": "Text printed '(36.1% R@1 in Table 2)'",
+   "where": "Sec 4.2"
+  },
+  {
+   "claim": "Audio-only emergent text retrieval on MSR-VTT gets R@1 6.8; combining audio and video gets 36.8 R@1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "R@1",
+   "value": 36.8,
+   "unit": "%",
+   "baseline_value": 19.4,
+   "n": null,
+   "setup": "MSR-VTT 1K-A, audio+video weights 0.95/0.05; baseline AVFIC A+V",
+   "quote": null,
+   "table": "Table 4, row IMAGEBIND A+V, column R@1 36.8 (audio only 6.8)",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "Emergent zero-shot depth scene classification: NYU-D 54.0, SUN-D 35.1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1",
+   "value": 54.0,
+   "unit": "%",
+   "baseline_value": 41.9,
+   "n": null,
+   "setup": "NYU-D and SUN-D; baseline OpenCLIP ViT-H on depth rendered as grayscale (41.9 and 25.4)",
+   "quote": null,
+   "table": "Table 2, row IMAGEBIND column NYU-D 54.0; Text Paired 41.9",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Emergent zero-shot IMU Ego4D scenario classification gets 25.0 against random 0.9.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1",
+   "value": 25.0,
+   "unit": "%",
+   "baseline_value": 0.9,
+   "n": null,
+   "setup": "Ego4D 108 scenarios, 68,865 test clips",
+   "quote": null,
+   "table": "Table 2, row IMAGEBIND column Ego4D 25.0; Random 0.9",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Thermal LLVIP person/background classification gets 63.4 (random 50.0).",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1",
+   "value": 63.4,
+   "unit": "%",
+   "baseline_value": 50.0,
+   "n": null,
+   "setup": "LLVIP binary, 15809 boxes",
+   "quote": null,
+   "table": "Table 2, row IMAGEBIND column LLVIP 63.4",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Using ViT-H instead of ViT-B image encoder gives gains of about 7% on depth and 4% on audio zero-shot classification.",
+   "kind": "measured",
+   "source": null,
+   "metric": "gain",
+   "value": 7,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Ablation, ViT-B other encoders, 16 epochs",
+   "quote": "provides a gain of 7% and 4% respectively",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.1"
+  },
+  {
+   "claim": "A learnable temperature gives ESC 54.8 and SUN-D 24.1, below the fixed value used (fixed 0.05 gives 56.7 by column order).",
+   "kind": "measured",
+   "source": null,
+   "metric": "ESC top-1",
+   "value": 54.8,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ablation, ESC fold-1",
+   "quote": null,
+   "table": "Table 5a, column Learn, row ESC (54.8)",
+   "note": "Column header alignment ambiguous in the extracted text",
+   "where": "Table 5a"
+  },
+  {
+   "claim": "Linear projection head beats MLP head on ESC (56.7 vs 51.0).",
+   "kind": "measured",
+   "source": null,
+   "metric": "ESC top-1",
+   "value": 56.7,
+   "unit": "%",
+   "baseline_value": 51.0,
+   "n": null,
+   "setup": "ablation",
+   "quote": null,
+   "table": "Table 5b, row ESC, Linear 56.7, MLP 51.0",
+   "note": null,
+   "where": "Table 5b"
+  },
+  {
+   "claim": "Strong image augmentation drops ESC from 56.7 to 22.6 (a 34% drop).",
+   "kind": "measured",
+   "source": null,
+   "metric": "ESC top-1",
+   "value": 22.6,
+   "unit": "%",
+   "baseline_value": 56.7,
+   "n": null,
+   "setup": "ablation",
+   "quote": "leading to a significant drop of 34% on ESC",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.2, Table 5d"
+  },
+  {
+   "claim": "Optimal batch size differs by modality: ESC best at 2k (56.7), NYU-D best at 512 (47.3).",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1",
+   "value": 56.7,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ablation",
+   "quote": null,
+   "table": "Table 7, row ESC, column 2k (56.7); row NYU-D column 512 (47.3)",
+   "note": null,
+   "where": "Table 7"
+  },
+  {
+   "claim": "Few-shot audio: IMAGEBIND beats self-supervised AudioMAE by about 40% top-1 at 4 shots or fewer.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1 gain",
+   "value": null,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ESC fold-1, linear probe on frozen ViT-B audio encoders",
+   "quote": null,
+   "table": null,
+   "note": "value read from text; figure not tabulated",
+   "where": "Sec 4.3, Fig 3"
+  },
+  {
+   "claim": "A frozen DINO image encoder gives better emergent audio/depth zero-shot than DeiT despite lower IN1K (ESC 44.7 vs 25.0).",
+   "kind": "measured",
+   "source": null,
+   "metric": "ESC top-1",
+   "value": 44.7,
+   "unit": "%",
+   "baseline_value": 25.0,
+   "n": null,
+   "setup": "Table 8",
+   "quote": null,
+   "table": "Table 8, row DINO column ESC 44.7; DeiT 25.0",
+   "note": null,
+   "where": "Table 8"
+  },
+  {
+   "claim": "Training batch sizes (2K, 512) are smaller than the >32K used in prior work.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Appendix C.1",
+   "quote": "These batch sizes are smaller than",
+   "table": null,
+   "note": null,
+   "where": "App C.1"
+  }
+ ],
+ "limits": [
+  "Embeddings are general purpose and lag specialist models; the authors say more research is needed to adapt them per task.",
+  "Authors call the model a research prototype not ready for real-world applications.",
+  "Joint embeddings limited to concepts in training data: thermal data is outdoor street scenes, depth indoor scenes.",
+  "Possible unintentional associations and inherited web biases (App F).",
+  "Detection, audio-to-image and arithmetic results are qualitative only.",
+  "No seeds, variance, GPU count, compute or wall-clock reported; text says 32 epochs but Table 9 lists 64 (8 for Ego4D).",
+  "No fair baseline exists for emergent zero-shot; AudioCLIP baseline is not strictly zero-shot."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "emergent zero-shot classification",
+   "definition": "classification of a modality using text prompts without training on that modality paired with text",
+   "where": "Sec 4"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "CLIP",
+   "year": 2021,
+   "arxiv": "2103.00020",
+   "relation": "extends",
+   "note": "prompt templates and zero-shot protocol",
+   "quote": null
+  },
+  {
+   "work": "OpenCLIP",
+   "year": 2023,
+   "arxiv": "2212.07143",
+   "relation": "uses-method",
+   "note": "frozen ViT-H and text encoder",
+   "quote": null
+  },
+  {
+   "work": "AudioCLIP",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "audio-text supervised baseline",
+   "quote": null
+  },
+  {
+   "work": "AVFIC (Nagrani et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "mined audio-text pairs",
+   "quote": null
+  },
+  {
+   "work": "Omnivore",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "depth as disparity, data replication",
+   "quote": null
+  },
+  {
+   "work": "DALLE-2",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "audio embeddings replace CLIP text embeddings",
+   "quote": null
+  },
+  {
+   "work": "Detic",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "audio embeddings as classifier",
+   "quote": null
+  },
+  {
+   "work": "AudioSet / SUN RGB-D / LLVIP / Ego4D",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "paired training data",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "IMAGEBIND overview",
+   "page": 3,
+   "why": "shows image as the binding hub with emergent alignment between unpaired modalities"
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "Scaling the image encoder size",
+   "page": 6,
+   "why": "stronger image encoder lifts emergent zero-shot on all modalities"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 1",
+   "snippet": "L_{I,M} = -log( exp(q_i^T k_i/tau) / ( exp(q_i^T k_i/tau) + sum_{j!=i} exp(q_i^T k_j/tau) ) )",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Table cells flattened in text; column alignment of Table 5a inferred.",
+  "Epoch count inconsistent between text and Table 9; thermal encoder size inconsistent with Table 9."
+ ]
+}

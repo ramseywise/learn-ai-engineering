@@ -1,0 +1,495 @@
+{
+ "schema": 1,
+ "key": "https://doi.org/10.18653/v1/d13-1160",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/berant-2013-semantic-parsing-freebase-question-answer.pdf",
+ "bib": {
+  "title": "Semantic Parsing on Freebase from Question-Answer Pairs",
+  "authors": [
+   "Jonathan Berant",
+   "Andrew Chou",
+   "Roy Frostig",
+   "Percy Liang"
+  ],
+  "first_author": "Berant",
+  "year": 2013,
+  "venue": "Proceedings of the 2013 Conference on Empirical Methods in Natural Language Processing (EMNLP), pages 1533-1544",
+  "arxiv": null,
+  "doi": "10.18653/v1/d13-1160"
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 48706,
+  "chars_total": 48706,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can a semantic parser that scales to Freebase's thousands of predicates be trained from question-answer pairs alone, without annotated logical forms?",
+ "hypothesis": "Coarse alignment of text to the KB plus a bridging operation that generates predicates from neighbouring predicates narrows the predicate space enough to learn from denotations.",
+ "contributions": [
+  "A coarse phrase-to-predicate lexicon built by aligning ReVerb/ClueWeb09 triples to Freebase",
+  "A bridging operation generating binary predicates from neighbouring unaries or event variables",
+  "Log-linear model with POS, rule-count and denotation-size features that soft-encode composition rules",
+  "WEBQUESTIONS, a new question-answer dataset from Google Suggest and Amazon Mechanical Turk, plus SEMPRE code release"
+ ],
+ "method": {
+  "summary": "A beam-based bottom-up semantic parser (SEMPRE) builds derivations over lambda-DCS logical forms using an alignment lexicon and bridging, scored by a log-linear model trained to maximise the log-likelihood of derivations whose denotation equals the gold answer. Evaluated on FREE917 (Cai and Yates 2013) and the new WEBQUESTIONS.",
+  "task": "semantic parsing / question answering over Freebase from question-answer pairs",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Freebase (2013-06-09 dump)",
+    "role": "eval",
+    "size": "41M non-numeric entities, 19K properties, 596M assertions",
+    "split": null,
+    "source": "Google 2013 data dump; copy queried with Virtuoso via SPARQL",
+    "preprocessing": "Properties from domains user and base filtered for alignment"
+   },
+   {
+    "name": "Aligned ReVerb triples from ClueWeb09",
+    "role": "pretrain",
+    "size": "15M triples; 55,081 typed binary phrases (9,456 untyped), 6,299 unary phrases; lexicon graph 109K binary edges, 294K unary edges",
+    "split": null,
+    "source": "Lin et al. 2012 subset with subject entities linked to KB; objects linked by string matching",
+    "preprocessing": "Lemmatised, typed with Freebase types, dates normalised with SUTime"
+   },
+   {
+    "name": "FREE917",
+    "role": "both",
+    "size": "917 questions, 635 Freebase relations; 2,036 word types",
+    "split": "30% held out for test; remaining 70% for development, of which 512 train / 129 validation (80/20), dev numbers averaged over 3 random splits",
+    "source": "Cai and Yates (2013)",
+    "preprocessing": "Logical forms converted to simple lambda-DCS and executed to get answers; manual 1,100-entry entity lexicon used"
+   },
+   {
+    "name": "WEBQUESTIONS",
+    "role": "both",
+    "size": "5,810 examples; 4,525 word types (from 1M questions visited, 100K sent to AMT, 6,642 annotated identically by at least two workers)",
+    "split": "35% random subset held out for test; remaining 65% divided 80/20 into train and validation",
+    "source": "Google Suggest breadth-first search from 'Where was Barack Obama born?'; answers from Amazon Mechanical Turk at $0.03 per question; released at nlp.stanford.edu/software/sempre/",
+    "preprocessing": "Entities mapped with a Lucene index over 41M Freebase entities; wh-word questions with exactly one entity; each query yields 5 candidate questions"
+   }
+  ],
+  "models": [
+   {
+    "name": "SEMPRE parser (alignment + bridging)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "log-linear model over derivations, beam-based bottom-up parser, simple lambda-DCS",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "beam_k": "500 on FREE917, 200 on WEBQUESTIONS",
+     "avg_root_beam": "197 derivations on WEBQUESTIONS",
+     "hand_written_rules": "17 rules mapping question words to logical forms"
+    }
+   },
+   {
+    "name": "Cai and Yates (2013)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "CCG semantic parser trained on full logical forms",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Ablated baseline (no bridging, no denotation features, no alignment features)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "same parser",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "maximise log-likelihood of derivations with correct denotation, summed over latent derivations: O(theta)=sum_i log sum_{d: [[d.z]]=y_i} p(d|x_i), approximated on the beam",
+   "optimizer": "AdaGrad (stochastic gradient ascent, per-feature step size)",
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": "6 passes over the training examples",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": "about 600,000 SPARQL queries for a full run over WEBQUESTIONS training examples",
+   "wall_clock": null,
+   "seeds": "dev numbers averaged over 3 random splits; no seed values",
+   "other": {
+    "init": "theta_0 initialised to 0",
+    "lexicalized_features": "added on WEBQUESTIONS test run, omitted on FREE917 test run (overfitting)"
+   }
+  },
+  "inference": {
+   "decoding": "answer predicted from the derivation with highest probability on the beam",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single prediction per question; dev averaged over 3 random splits",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "beam_k": "500 FREE917, 200 WEBQUESTIONS"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "accuracy (FREE917)",
+     "definition": "fraction of examples where predicted answer exactly matched the correct answer",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "accuracy (WEBQUESTIONS)",
+     "definition": "F1 between predicted and annotated entity sets, giving partial credit",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "oracle score",
+     "definition": "fraction of examples for which the beam contains any derivation with the correct denotation",
+     "unit": "fraction",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Cai and Yates (2013) on FREE917",
+    "Ablated system without bridging, denotation and alignment features on WEBQUESTIONS"
+   ],
+   "protocol": "Held-out test sets (30% FREE917, 35% WEBQUESTIONS); ablations on development over 3 random splits; no significance test stated beyond the word 'significant'"
+  },
+  "availability": {
+   "code": "SEMPRE, http://nlp.stanford.edu/software/sempre/",
+   "weights": null,
+   "data": "Both datasets released at the same URL"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "eval.metrics[1]",
+    "quote": "We therefore allow partial credit and score an answer using the F1 measure, comparing the predicted set of entities to the annotated set of entities.",
+    "where": "Sec 4.1.2 Results"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "On FREE917 the system trained on answers only beats Cai and Yates, who trained on logical forms.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 62,
+   "unit": "%",
+   "baseline_value": 59,
+   "n": null,
+   "setup": "FREE917 test set (30% held out), entity lexicon of 1,100 manual entries given",
+   "quote": "obtained 62% accuracy on the test set, outperforming the 59% accuracy reported by Cai and Yates (2013), who trained on full logical forms",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.1.1"
+  },
+  {
+   "claim": "On WEBQUESTIONS the full system reaches 31.4% on the test set.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy (F1)",
+   "value": 31.4,
+   "unit": "%",
+   "baseline_value": 26.9,
+   "n": null,
+   "setup": "WEBQUESTIONS test (35% held out), full system with lexicalized features, k=200",
+   "quote": "whereas our full system obtains 31.4%, a significant improvement",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.1.2"
+  },
+  {
+   "claim": "Baseline without bridging, denotation and alignment features scores 26.9% on the WEBQUESTIONS test set.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy (F1)",
+   "value": 26.9,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Same setup, three main contributions removed",
+   "quote": "The accuracy on the test set of this system is 26.9%",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.1.2"
+  },
+  {
+   "claim": "Alignment alone gives 30.6% on WEBQUESTIONS dev; bridging alone 21.2%; combined 32.9%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 32.9,
+   "unit": "%",
+   "baseline_value": 30.6,
+   "n": null,
+   "setup": "Development set, avg of 3 random splits",
+   "quote": null,
+   "table": "Table 4, row ALIGNMENT+BRIDGING, column WebQ.",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "On FREE917 dev, bridging alone (66.9) beats alignment alone (38.0); combined 71.3.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 71.3,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Development set, avg of 3 splits",
+   "quote": null,
+   "table": "Table 4, row ALIGNMENT+BRIDGING, column FREE917",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "Removing denotation features drops WEBQUESTIONS dev accuracy from 32.9 to 28.0 and FREE917 from 71.3 to 58.6.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 28.0,
+   "unit": "%",
+   "baseline_value": 32.9,
+   "n": null,
+   "setup": "Development set, avg of 3 splits",
+   "quote": null,
+   "table": "Table 5, row -DENOTATION, column WebQ.",
+   "note": null,
+   "where": "Table 5"
+  },
+  {
+   "claim": "Removing POS features drops WEBQUESTIONS dev accuracy to 28.9.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 28.9,
+   "unit": "%",
+   "baseline_value": 32.9,
+   "n": null,
+   "setup": "Development set, avg of 3 splits",
+   "quote": null,
+   "table": "Table 5, row -POS, column WebQ.",
+   "note": null,
+   "where": "Table 5"
+  },
+  {
+   "claim": "Lexicalized plus alignment features give the best WEBQUESTIONS dev accuracy, 36.4, but overfit on small FREE917.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 36.4,
+   "unit": "%",
+   "baseline_value": 32.9,
+   "n": null,
+   "setup": "Development set, avg of 3 splits",
+   "quote": null,
+   "table": "Table 6, row LEXICALIZED+ALIGNMENT, column WebQ.",
+   "note": null,
+   "where": "Table 6"
+  },
+  {
+   "claim": "100K Google Suggest questions were sent to AMT and 6,642 were annotated identically by at least two workers.",
+   "kind": "measured",
+   "source": null,
+   "metric": "questions kept",
+   "value": "6,642",
+   "unit": "questions",
+   "baseline_value": null,
+   "n": null,
+   "setup": "WEBQUESTIONS collection, $0.03 per question",
+   "quote": "Out of 100K questions, 6,642 were annotated identically by at least two AMT workers.",
+   "table": null,
+   "note": "Table 3 lists 5,810 examples; the paper does not explain the gap between 6,642 and 5,810.",
+   "where": "Sec 4.1.2"
+  },
+  {
+   "claim": "WEBQUESTIONS has 5,810 examples and 4,525 word types.",
+   "kind": "measured",
+   "source": null,
+   "metric": "examples",
+   "value": "5,810",
+   "unit": "examples",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 3 dataset statistics",
+   "quote": null,
+   "table": "Table 3, row WEBQUESTIONS, column # examples",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Freebase used has 41M non-numeric entities, 19K properties, 596M assertions.",
+   "kind": "measured",
+   "source": null,
+   "metric": "assertions",
+   "value": "596M",
+   "unit": "assertions",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Freebase 2013-06-09 dump",
+   "quote": "which has 41M non-numeric entities, 19K properties, and 596M assertions",
+   "table": null,
+   "note": null,
+   "where": "Sec 2.1"
+  },
+  {
+   "claim": "Raising beam size gives tapering accuracy gains and a widening gap to oracle score.",
+   "kind": "measured",
+   "source": null,
+   "metric": "none",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 5, both datasets, k up to 500 (FREE917) and ~200 (WebQ)",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Fig 5, Sec 4.2"
+  }
+ ],
+ "limits": [
+  "WEBQUESTIONS answers are restricted to the entity's Freebase page, so some gold answers are only roughly accurate (e.g. 'President of the United States' for James Madison) and partial answers occur.",
+  "WEBQUESTIONS accuracy (31.4%) is far below FREE917 (62%); authors attribute it to entity disambiguation over 41M entities, bridging failures when many binaries fit, and verbs drawn from subordinate clauses.",
+  "FREE917 uses a manual entity lexicon that simplifies entity disambiguation.",
+  "Questions are structurally simple (mostly one unary, one binary, one entity).",
+  "Learning rate, AdaGrad step size, regularisation and hardware not stated.",
+  "Gap between 6,642 agreed answers and 5,810 released examples is not explained."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "bridging",
+   "definition": "an operation that generates a binary predicate based on adjacent predicates rather than on words",
+   "where": "Sec 1, 3.2"
+  },
+  {
+   "term": "denotation",
+   "definition": "the set of entities or entity pairs a logical form evaluates to against the KB",
+   "where": "Sec 2.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Large-scale semantic parsing via schema matching and lexicon extension",
+   "year": 2013,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Cai and Yates; FREE917 dataset and 59% baseline",
+   "quote": null
+  },
+  {
+   "work": "Learning dependency-based compositional semantics",
+   "year": 2011,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Liang et al.; log-linear model and DCS",
+   "quote": null
+  },
+  {
+   "work": "Lambda dependency-based compositional semantics",
+   "year": 2013,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Liang; lambda-DCS logical language",
+   "quote": null
+  },
+  {
+   "work": "Entity linking at web scale",
+   "year": 2012,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Lin et al.; ReVerb triples linked to Freebase",
+   "quote": null
+  },
+  {
+   "work": "Identifying relations for open information extraction (ReVerb)",
+   "year": 2011,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Fader et al.; triple extraction from ClueWeb09",
+   "quote": null
+  },
+  {
+   "work": "Adaptive subgradient methods (AdaGrad)",
+   "year": 2010,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Duchi et al.; optimiser",
+   "quote": null
+  },
+  {
+   "work": "Freebase",
+   "year": 2013,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Google data dump 2013-06-09",
+   "quote": null
+  },
+  {
+   "work": "Weakly supervised training of semantic parsers",
+   "year": 2012,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Krishnamurthy and Mitchell; distant supervision for Freebase parsing",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Our task is to map questions to answers via latent logical forms.",
+   "page": 2,
+   "why": "Shows alignment and bridging on one question"
+  },
+  {
+   "figure": "Table 4",
+   "caption": "Accuracies on the development set under different schemes of binary predicate generation.",
+   "page": 8,
+   "why": "Shows alignment and bridging are complementary across datasets"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 1, Sec 2.3",
+   "snippet": "O(theta) = sum_i log sum_{d in D(x): [[d.z]]_K = y_i} p_theta(d | x_i)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text contains no embedded instructions.",
+  "Abstract and intro call the WEBQUESTIONS metric 'accuracy' while Sec 4.1.2 defines it as F1 with partial credit.",
+  "The Fig 5 result has no printed number; only a qualitative description."
+ ]
+}

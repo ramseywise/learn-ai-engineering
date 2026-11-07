@@ -1,0 +1,663 @@
+{
+ "schema": 1,
+ "key": "2204.06125",
+ "pdf": "ai-engineering/08-multimodal-engineering/sources/ramesh-2022-hierarchical-text-conditional-image-generation.pdf",
+ "bib": {
+  "title": "Hierarchical Text-Conditional Image Generation with CLIP Latents",
+  "authors": [
+   "Aditya Ramesh",
+   "Prafulla Dhariwal",
+   "Alex Nichol",
+   "Casey Chu",
+   "Mark Chen"
+  ],
+  "first_author": "Ramesh",
+  "year": 2022,
+  "venue": "preprint",
+  "arxiv": "2204.06125",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 56403,
+  "chars_total": 56403,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can generating a CLIP image embedding from a caption (prior) and then decoding it with a diffusion model improve text-to-image diversity without losing photorealism or caption similarity?",
+ "hypothesis": "Explicitly generating CLIP image representations improves image diversity with minimal loss in photorealism and caption similarity (abstract).",
+ "contributions": [
+  "Two-stage unCLIP: prior generating a CLIP image embedding from a caption plus a diffusion decoder inverting the CLIP image encoder",
+  "Diffusion prior in latent space matching or beating an autoregressive prior at lower compute",
+  "Language-guided zero-shot image manipulations (variations, interpolations, text diffs) via the bipartite latent (z_i, x_T)",
+  "Human-evaluation protocol for diversity (two 4x4 grids)"
+ ],
+ "method": {
+  "summary": "unCLIP stacks a prior P(z_i|y) (AR or diffusion) that maps a caption to a CLIP image embedding with a GLIDE-style diffusion decoder P(x|z_i,y) at 64x64, then two diffusion upsamplers to 256 and 1024. CLIP is frozen while the prior and decoder train. Compared to GLIDE by human evaluation, FID on MS-COCO and an aesthetic probe.",
+  "task": "text-conditional image generation",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "CLIP dataset + DALL-E dataset (CLIP encoder training)",
+    "role": "pretrain",
+    "size": "approximately 650M images in total",
+    "split": "sampled with equal probability from the two datasets",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "DALL-E dataset (decoder, upsamplers, prior)",
+    "role": "train",
+    "size": "approximately 250M images",
+    "split": null,
+    "source": "Ramesh et al. 2021 dataset",
+    "preprocessing": "noisier CLIP dataset excluded from generative stack because it hurt sample quality"
+   },
+   {
+    "name": "MS-COCO validation",
+    "role": "eval",
+    "size": null,
+    "split": "validation set, zero-shot (not trained on COCO train); 256x256 FID; 1,000 captions for diversity grids",
+    "source": "Lin et al. 2014",
+    "preprocessing": null
+   },
+   {
+    "name": "AVA",
+    "role": "train",
+    "size": null,
+    "split": "images and mean ratings for aesthetic linear probe",
+    "source": "Murray et al. 2012",
+    "preprocessing": null
+   },
+   {
+    "name": "Pairwise human comparisons (proxy probe)",
+    "role": "train",
+    "size": "15,000 pairwise image comparisons",
+    "split": null,
+    "source": "all earlier human evaluations",
+    "preprocessing": null
+   },
+   {
+    "name": "GPT-3 generated artistic captions",
+    "role": "eval",
+    "size": "512 captions",
+    "split": null,
+    "source": "GPT-3 prompted with captions of existing artwork (real and AI generated)",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "unCLIP decoder",
+    "role": "proposed",
+    "params": "3.5B",
+    "architecture": "GLIDE diffusion model with CLIP embedding projected and added to timestep embedding plus 4 extra context tokens",
+    "init_from": null,
+    "tokenizer": "BPE",
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "256 text encoder context",
+    "other": {
+     "channels": "512",
+     "depth": "3",
+     "channel multiple": "1,2,3,4",
+     "head channels": "64",
+     "attention resolution": "32,16,8",
+     "diffusion steps": "1000",
+     "noise schedule": "cosine",
+     "sampling": "250 strided steps, learned sigma",
+     "guidance": "CLIP embedding zeroed 10% and caption dropped 50% in training; Section 5.1 says CLIP image embedding dropped 5% of the time"
+    }
+   },
+   {
+    "name": "Upsampler 64->256",
+    "role": "proposed",
+    "params": "700M",
+    "architecture": "ADMNet, no attention, unconditional",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "channels": "320",
+     "depth": "3 resblocks per resolution",
+     "noise schedule": "cosine",
+     "corruption": "gaussian blur kernel 3 sigma 0.6",
+     "sampling": "DDIM 27 steps",
+     "crop fraction": "0.25"
+    }
+   },
+   {
+    "name": "Upsampler 256->1024",
+    "role": "proposed",
+    "params": "300M",
+    "architecture": "ADMNet, no attention, unconditional",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "channels": "192",
+     "depth": "2",
+     "noise schedule": "linear",
+     "corruption": "BSR degradation",
+     "sampling": "DDIM 15 steps",
+     "crop fraction": "0.25"
+    }
+   },
+   {
+    "name": "AR prior",
+    "role": "proposed",
+    "params": "1B",
+    "architecture": "Transformer text encoder (width 2048, 24 blocks, 32 heads, context 256) and causal decoder (width 1664, 24 blocks, 26 heads, context 384); CLIP embedding PCA to 319 of 1,024 dims, each quantised into 1,024 buckets",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "24",
+    "hidden": "1664",
+    "heads": "26",
+    "context": "384",
+    "other": {
+     "conditioning": "caption, CLIP text embedding, quantised z_i.z_t token (sampled from top half of distribution; percentiles 50%, 70%, 85%, 95% swept, 50 best)",
+     "guidance": "text dropped 10% for guidance"
+    }
+   },
+   {
+    "name": "Diffusion prior",
+    "role": "proposed",
+    "params": "1B",
+    "architecture": "decoder-only Transformer with causal mask, width 2048, 24 blocks, 32 heads, text context 256; predicts unnoised z_i directly with MSE",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "24",
+    "hidden": "2048",
+    "heads": "32",
+    "context": "256",
+    "other": {
+     "sampling": "Analytic DPM, 64 strided steps; 1000 diffusion steps; cosine schedule",
+     "input scaling": "CLIP embedding inputs scaled by 17.2",
+     "sample selection": "2 samples of z_i, keep higher dot product with z_t"
+    }
+   },
+   {
+    "name": "CLIP (paper's own)",
+    "role": "base",
+    "params": null,
+    "architecture": "ViT-H/16 image encoder at 256x256, width 1280, 32 blocks; text Transformer width 1024, 24 blocks, causal mask",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "32 (image), 24 (text)",
+    "hidden": "1280 (image), 1024 (text)",
+    "heads": null,
+    "context": null,
+    "other": {
+     "training": "lr 3e-4, SAM rho 0.1, per-replica batch 64, rest as Radford et al. 2021",
+     "embedding dim": "1,024"
+    }
+   },
+   {
+    "name": "GLIDE",
+    "role": "baseline",
+    "params": null,
+    "architecture": "text-guided diffusion",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "Prior: MSE on predicted unnoised z_i, L = E ||f(z_i^(t), t, y) - z_i||^2 (diffusion prior); autoregressive likelihood over quantised PCA codes (AR prior); standard diffusion loss for decoder with learned sigma",
+   "optimizer": "Adam with corrected (decoupled) weight decay, beta1 0.9; beta2 0.91 (AR prior), 0.96 (diffusion prior), 0.999 (decoder, upsamplers)",
+   "lr": "1.6e-4 (AR prior), 1.1e-4 (diffusion prior), 1.2e-4 (decoder), 1.2e-4 (64->256), 1.0e-4 (256->1024)",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "4096 (AR prior), 4096 (diffusion prior), 2048 (decoder), 1024 (64->256), 512 (256->1024)",
+   "steps": "1M (AR prior), 600K (diffusion prior), 800K (decoder), 1M (64->256), 1M (256->1024)",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": "4.0e-2 (AR prior), 6.0e-2 (diffusion prior)",
+   "dropout": "0.1 (decoder and 64->256 upsampler)",
+   "regularisation": "EMA decay 0.999 (AR prior), 0.9999 (all others); Adam epsilon 1.0e-10, 1.0e-6, 1.0e-8; random crops at one-fourth target size for upsamplers",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "production model": "a larger-data, longer-trained production version exists; its hyperparameters are not reported",
+    "prior guidance dropout": "text conditioning dropped 10%"
+   }
+  },
+  "inference": {
+   "decoding": "prior sample then decoder diffusion (250 strided steps) then DDIM upsamplers (27 and 15 steps)",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "four images per prompt for aesthetic eval (2048 images over 512 prompts); 4x4 sample grids for diversity eval; 2 prior samples per caption for diffusion prior",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "decoder guidance scale": "1.25 for FID in Table 2",
+    "prior guidance": "guiding prior hurt aesthetic results; only decoder guided in that eval",
+    "text-diff theta": "max typically in [0.25, 0.50]",
+    "variation DDIM eta": "eta>0; eta=0 deterministic"
+   },
+   "other": {
+    "hyperparameter sweeps": "sampling hyperparameters swept per model using a CLIP linear probe proxy for photorealism, fixed across three human evaluations"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Human preference (photorealism, caption similarity, diversity)",
+     "definition": "probability unCLIP beats GLIDE in pairwise (or grid-pair) comparison with a 'Not sure' option; 95% normal-approximation CI",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "FID on MS-COCO 256x256",
+     "definition": "zero-shot FID on validation set",
+     "unit": "FID",
+     "higher_is_better": false
+    },
+    {
+     "name": "Mean AVA prediction",
+     "definition": "CLIP linear regression on AVA mean ratings, averaged over images",
+     "unit": "score",
+     "higher_is_better": true
+    },
+    {
+     "name": "Recall",
+     "definition": "computed with respect to the training dataset",
+     "unit": "fraction",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "GLIDE",
+    "DALL-E",
+    "Make-A-Scene",
+    "LAFITE",
+    "XMC-GAN",
+    "DF-GAN",
+    "DM-GAN",
+    "AttnGAN",
+    "text-embedding decoder"
+   ],
+   "protocol": "Human evaluations n = 1,000 comparisons with 95% normal-approximation intervals; diversity uses 1,000 MS-COCO validation captions. Evaluator count and payment not stated."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "DALL-E and CLIP datasets are not released in the paper"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.dropout",
+    "quote": "Dropout",
+    "where": "Table 3 (only decoder and 64->256 columns have 0.1)"
+   },
+   {
+    "field": "models.decoder.other.guidance",
+    "quote": "randomly setting the CLIP embeddings to zero (or a learned embedding) 10% of the time, and randomly dropping the text caption 50% of the time",
+    "where": "Section 2.1; Section 5.1 says the CLIP image embedding is dropped 5% of the time"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "unCLIP with diffusion prior sets the best zero-shot MS-COCO FID among compared zero-shot models",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": 10.39,
+   "unit": "FID",
+   "baseline_value": 12.24,
+   "n": null,
+   "setup": "MS-COCO val 256x256, zero-shot, decoder guidance 1.25, diffusion prior",
+   "note": "GLIDE 12.24, Make-A-Scene 11.84, AR prior 10.63 (Table 2)",
+   "where": "Section 5.4, Table 2",
+   "quote": "We ﬁnd that, compared to these other zero-shot models, unCLIP achieves a new state-of-the-art FID of 10.39 when sampling with the diffusion prior."
+  },
+  {
+   "claim": "Humans prefer GLIDE slightly for photorealism over unCLIP (diffusion prior)",
+   "kind": "measured",
+   "source": null,
+   "metric": "win rate vs GLIDE (photorealism)",
+   "value": "48.9% ± 3.1%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Pairwise human eval, n=1000, sampling hyperparameters swept with proxy",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Diffusion, column Photorealism"
+  },
+  {
+   "claim": "unCLIP diffusion prior is strongly preferred over GLIDE for diversity",
+   "kind": "measured",
+   "source": null,
+   "metric": "win rate vs GLIDE (diversity)",
+   "value": "70.5% ± 2.8%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Two 4x4 grids per caption, 1,000 MS-COCO val captions",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Diffusion, column Diversity"
+  },
+  {
+   "claim": "unCLIP diffusion prior loses to GLIDE on caption similarity",
+   "kind": "measured",
+   "source": null,
+   "metric": "win rate vs GLIDE (caption similarity)",
+   "value": "45.3% ± 3.0%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Pairwise human eval",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Diffusion, column Caption Similarity"
+  },
+  {
+   "claim": "AR prior win rates vs GLIDE are lower than diffusion prior",
+   "kind": "measured",
+   "source": null,
+   "metric": "win rate vs GLIDE (photorealism/caption/diversity)",
+   "value": "47.1% / 41.1% / 62.6%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Pairwise human eval",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row AR, column Photorealism"
+  },
+  {
+   "claim": "Feeding the unCLIP decoder a prior-generated image embedding beats using a text embedding or caption only on FID",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": 7.99,
+   "unit": "FID",
+   "baseline_value": null,
+   "n": null,
+   "setup": "small models: small unCLIP stack (diffusion prior + decoder) FID 7.99",
+   "note": "Order is inferred: 'text-embedding decoder, unCLIP stack, text embeddings fed zero-shot to the unCLIP decoder' per preceding sentence, so 9.16 is text-embedding decoder, 7.99 is unCLIP stack, 16.55 is zero-shot text embedding.",
+   "where": "Section 5.1",
+   "quote": "We ﬁnd that these approaches respectively score FIDs of 9.16, 7.99, and 16.55 on a test set"
+  },
+  {
+   "claim": "Humans prefer full unCLIP stack over text-embedding decoder for photorealism",
+   "kind": "measured",
+   "source": null,
+   "metric": "preference",
+   "value": "57.0% ± 3.1%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "small models, human eval",
+   "note": null,
+   "where": "Section 5.1",
+   "quote": "We ﬁnd that humans prefer the full unCLIP stack 57.0% ± 3.1% of the time for photorealism and 53.1% ± 3.1% of the time for caption similarity."
+  },
+  {
+   "claim": "GLIDE at guidance scale 2.0 is close to unCLIP in photorealism and caption similarity but less diverse",
+   "kind": "measured",
+   "source": null,
+   "metric": "guidance scale",
+   "value": "2.0",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "human eval across GLIDE guidance scales (Fig 10)",
+   "note": null,
+   "where": "Section 5.3",
+   "quote": "We ﬁnd that GLIDE at guidance scale 2.0 is very close to the photorealism and caption similarity of unCLIP, while still producing less diverse samples."
+  },
+  {
+   "claim": "Diffusion prior outperforms AR prior at comparable size with less training compute",
+   "kind": "claim",
+   "source": null,
+   "metric": "claim",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "all experiments in Sections 5.2, 5.4, 5.5",
+   "note": null,
+   "where": "Section 5.1"
+  },
+  {
+   "claim": "PCA keeps 319 of 1,024 CLIP dimensions with under 1% mean-squared reconstruction error, cutting AR tokens threefold",
+   "kind": "measured",
+   "source": null,
+   "metric": "components kept",
+   "value": 319,
+   "unit": "dims",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CLIP image embeddings, CLIP trained with SAM",
+   "note": null,
+   "where": "Section 2.2",
+   "quote": "We are able to preserve nearly all of the information2 by retaining only 319 principal components out of the original 1,024."
+  },
+  {
+   "claim": "Training dataset for decoder, upsamplers and prior",
+   "kind": "claim",
+   "source": null,
+   "metric": "images",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "DALL-E dataset only",
+   "note": null,
+   "where": "Appendix C",
+   "quote": "When training the decoder, upsamplers, and prior, we use only the DALL-E dataset [40] (approximately 250M images)."
+  },
+  {
+   "claim": "unCLIP binds attributes to objects worse than GLIDE and struggles to render coherent text",
+   "kind": "claim",
+   "source": null,
+   "metric": "claim",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "qualitative, Figures 14-16; no number",
+   "note": null,
+   "where": "Section 7"
+  },
+  {
+   "claim": "Guiding unCLIP raises aesthetic score without lowering recall; guiding the prior hurts",
+   "kind": "claim",
+   "source": null,
+   "metric": "claim",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "512 GPT-3 artistic prompts, 4 images each, 2048 images; AVA linear probe",
+   "note": null,
+   "where": "Section 5.5, Fig 13"
+  }
+ ],
+ "limits": [
+  "Worse than GLIDE at binding attributes to objects (Fig 14, 15) and at producing coherent text (Fig 16), hypothesised to follow from CLIP embedding and BPE",
+  "Weak detail in complex scenes, blamed on 64x64 base resolution (Fig 17)",
+  "Humans still slightly prefer GLIDE for photorealism and caption similarity",
+  "Hardware, compute, wall-clock, seeds, LR schedule and warmup not stated; datasets not released",
+  "Production model differs (more data filtered for aesthetics/safety, inpainting) and its hyperparameters are not given",
+  "Raises risk profile over GLIDE; bias behaviour of the architecture needs more research",
+  "Human-evaluation sweeps use a proxy probe trained on earlier human comparisons"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "unCLIP",
+   "definition": "full text-conditional stack that generates images by inverting the CLIP image encoder",
+   "where": "Section 1"
+  },
+  {
+   "term": "bipartite latent",
+   "definition": "(z_i, x_T): CLIP image embedding plus DDIM-inverted residual latent",
+   "where": "Section 3"
+  },
+  {
+   "term": "text diff",
+   "definition": "normalised difference of CLIP text embeddings used to rotate an image embedding via slerp",
+   "where": "Section 3.3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "GLIDE",
+   "year": 2021,
+   "arxiv": "2112.10741",
+   "relation": "baseline",
+   "note": "decoder architecture and main comparison",
+   "quote": null
+  },
+  {
+   "work": "CLIP",
+   "year": 2021,
+   "arxiv": "2103.00020",
+   "relation": "extends",
+   "note": "frozen representation inverted by the decoder",
+   "quote": null
+  },
+  {
+   "work": "DALL-E",
+   "year": 2021,
+   "arxiv": "2102.12092",
+   "relation": "baseline",
+   "note": "FID baseline and training dataset",
+   "quote": null
+  },
+  {
+   "work": "Diffusion Models Beat GANs",
+   "year": 2021,
+   "arxiv": "2105.05233",
+   "relation": "uses-method",
+   "note": "ADMNet, classifier guidance, DDIM inversion",
+   "quote": null
+  },
+  {
+   "work": "Classifier-Free Diffusion Guidance",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "guidance via dropped conditioning",
+   "quote": null
+  },
+  {
+   "work": "Denoising Diffusion Probabilistic Models",
+   "year": 2020,
+   "arxiv": "2006.11239",
+   "relation": "uses-method",
+   "note": "diffusion framework",
+   "quote": null
+  },
+  {
+   "work": "Latent Diffusion Models (Rombach)",
+   "year": 2021,
+   "arxiv": "2112.10752",
+   "relation": "uses-method",
+   "note": "BSR degradation, random crops",
+   "quote": null
+  },
+  {
+   "work": "Make-A-Scene",
+   "year": 2022,
+   "arxiv": "2203.13131",
+   "relation": "baseline",
+   "note": "COCO FID comparison",
+   "quote": null
+  },
+  {
+   "work": "Analytic-DPM",
+   "year": 2022,
+   "arxiv": "2201.06503",
+   "relation": "uses-method",
+   "note": "diffusion prior sampler",
+   "quote": null
+  },
+  {
+   "work": "SAM",
+   "year": 2020,
+   "arxiv": "2010.01412",
+   "relation": "uses-method",
+   "note": "CLIP training",
+   "quote": null
+  },
+  {
+   "work": "MS-COCO",
+   "year": 2014,
+   "arxiv": "1405.0312",
+   "relation": "uses-data",
+   "note": "FID evaluation",
+   "quote": null
+  },
+  {
+   "work": "AVA",
+   "year": 2012,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "aesthetic probe",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "A high-level overview of unCLIP.",
+   "page": 4,
+   "why": "Shows CLIP training above and prior plus decoder generation below"
+  },
+  {
+   "figure": "Fig 9",
+   "caption": "Samples when increasing guidance scale for both unCLIP and GLIDE.",
+   "page": 11,
+   "why": "Shows GLIDE semantics collapsing with guidance while unCLIP content stays fixed"
+  },
+  {
+   "figure": "Table 3",
+   "caption": "Hyperparameters for the models",
+   "page": 24,
+   "why": "All training hyperparameters in one table"
+  }
+ ],
+ "code": [
+  {
+   "where": "Section 2",
+   "snippet": "P(x|y) = P(x, zi|y) = P(x|zi, y)P(zi|y)",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Table 3 flattened by extraction; columns reconstructed in order AR prior, Diffusion prior, decoder 64, 64->256, 256->1024",
+  "Section 2.1 says CLIP embedding dropped 10% in decoder training; Section 5.1 and Fig 8 say 5%"
+ ]
+}

@@ -1,19 +1,686 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2102.05918",
  "pdf": "ai-engineering/08-multimodal-engineering/sources/jia-2021-scaling-up-visual-vision-language.pdf",
  "bib": {
   "title": "Scaling Up Visual and Vision-Language Representation Learning With Noisy Text Supervision",
+  "authors": [
+   "Chao Jia",
+   "Yinfei Yang",
+   "Ye Xia",
+   "Yi-Ting Chen",
+   "Zarana Parekh",
+   "Hieu Pham",
+   "Quoc V. Le",
+   "Yunhsuan Sung",
+   "Zhen Li",
+   "Tom Duerig"
+  ],
   "first_author": "Jia",
   "year": 2021,
-  "venue": "ICML 2021",
+  "venue": "ICML 2021 (PMLR 139)",
   "arxiv": "2102.05918",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-04",
-  "session": "97b4134b-decf-4866-ae85-c6872cbbba19"
+  "at": "2026-11-07",
+  "chars_read": 61238,
+  "chars_total": 61238,
+  "engine": "pymupdf",
+  "skipped": null
  },
- "legacy_report": "SOURCE: Jia, Yang, Xia, Chen, Parekh, Pham, Le, Sung, Li, Duerig (Google Research), \"Scaling Up Visual and Vision-Language Representation Learning With Noisy Text Supervision\" (ALIGN), ICML 2021 (PMLR 139). arXiv:2102.05918v2.\nFile: /Users/ramsey-wise/workspace/learn-ai-engineering/ai-engineering/08-multimodal-engineering/sources/jia-2021-scaling-up-visual-vision-language.pdf\n\nCOVERAGE: All 14 pages and all 61,259 chars read, including Appendix A (near-duplicate removal) and Appendix B (SimLex-999). I only skimmed the references.\n\nCLAIMS (most important first)\n1. The dataset is 1.8B English alt-text pairs. It went through only light frequency-based filtering, not the full Conceptual Captions cleaning pipeline. Text filters: drop alt-texts shared by more than 10 images, alt-texts with rare tokens, and alt-texts under 3 or over 20 unigrams. Image filters: drop porn, keep shorter side >200px and aspect ratio <3, drop near-duplicates of test images.\n   quote: \"we trade quality for scale by relaxing most of the cleaning steps... a much larger (1.8B image-text pairs) but noisier dataset\" (p3)\n2. The model is a dual encoder: EfficientNet-L2 (global pooling) for images and BERT-Large ([CLS] plus a linear projection) for text, both trained from scratch. The loss is symmetric normalized-softmax contrastive with in-batch negatives gathered across all cores. Batch 16,384 on 1,024 TPUv3 cores, 289px images, about 12 epochs, label smoothing 0.1, learnable temperature initialized at 1.0.\n   quote: \"We train the model on 1024 Cloud TPUv3 cores with 16 positive pairs on each core. Therefore the total effective batch size is 16384.\" (p4)\n3. Retrieval vs CLIP (Table 1, Flickr30K 1K test, MSCOCO 5K test). Zero-shot R@1, ALIGN vs CLIP: Flickr image→text 88.6 vs 88.0; text→image 75.7 vs 68.7; COCO image→text 58.6 vs 58.4; text→image 45.6 vs 37.8. So the gain sits in text→image; image→text is about even. Fine-tuned ALIGN: Flickr 95.3 / 84.9 and COCO 77.0 / 59.9, ahead of cross-attention models such as UNITER and Oscar.\n   quote: \"CLIP 88.0 98.7 99.4 68.7 90.6 95.2 58.4 81.5 88.1 37.8 62.4 72.2 / ALIGN 88.6 98.7 99.7 75.7 93.8 96.8 58.6 83.0 89.7 45.6 69.8 78.6\" (p5)\n4. Zero-shot ImageNet top-1 is 76.4 vs CLIP's 76.2, using CLIP's prompt ensembling, which itself adds 2.9 points. ImageNet-R 92.2 vs 88.9, ImageNet-A 75.8 vs 77.2, ImageNet-V2 70.1 for both.\n   quote: \"CLIP 76.2 88.9 77.2 70.1 / ALIGN 76.4 92.2 75.8 70.1\" (p5)\n5. Size vs noise ablation (EfficientNet-B7 + BERT-base, zero-shot MSCOCO, Table 10). At equal size, noisy data loses to clean data: ALIGN-3M gets image→text R@1 8.1 vs 18.9 for clean CC-3M. ALIGN-12M (4x the size) beats CC-3M at 23.8. Also from Table 9: full ALIGN data gives 55.4 vs 18.9 for CC-3M, and the small B3+BERT-mini model nearly saturates at 10% of the data.\n   quote: \"Despite being noisy, ALIGN data outperforms Conceptual Captions with only 4x size.\" (p7)\n6. Embedding dim, negatives and temperature (EfficientNet-B5 + BERT-base, Table 8). Larger embedding dims help: 640→80 drops COCO image→text R@1 from 51.7 to 42.0. L2 uses 1376. Keeping only 50% or 25% of in-batch negatives hurts. The learned temperature converges to about 1/64. Fixed 1/64 and 1/128 are slightly better (52.2), while 1/32 collapses to 39.6.\n   quote: \"the baseline model that learns the temperature parameter (converged to about 1/64), some hand-selected, fixed temperatures could be slightly better\" (p7)\n\nSmaller points: frozen-feature ImageNet 85.5 and fine-tuned 88.64 (p6). Image+text embedding arithmetic works with a 2:1 text:image scale (p8). A multilingual version covers 100+ languages on 1.8B pairs (p9).\n\nLIMITS\n- The authors concede intra-modal retrieval is weaker. Text→text and image→image gains on CxC are small, and STS/SIS score below VSE++/DEI2T. They put this down to the cross-modal-only objective (p5).\n- No released model or data. There is no audit of what is in the data, only a Social Impacts section noting harmful text, stereotypes and surveillance misuse, and saying analysis and balancing are \"required\" before production use (p9).\n- The comparison with CLIP mixes changes: different architecture and different data curation, so the data effect is not isolated. Zero-shot image→text is roughly a tie with CLIP.\n- No compute or latency cost comparisons beyond \"44% FLOPS\" vs NoisyStudent at test time. No study of what the remaining noise does once you are past 12M samples. The size-vs-noise ablation uses one model pair.\n- Dated: it predates LAION and SigLIP. The \"SOTA\" claims are 2021-era.\n\nBUILDS ON: Conceptual Captions pipeline (Sharma et al., 2018); visual-semantic embeddings (Frome et al., 2013; Faghri et al., 2018); normalized softmax loss (Zhai & Wu, 2019); contrastive SimCLR (Chen et al., 2020b); CLIP (Radford et al., 2021) as the closest prior work; EfficientNet and BERT (Devlin et al., 2019); LAMB optimizer (You et al., 2020).\n\nCODE: none in the paper. The loss is Eq. 1–2 on p3: L_i2t = -1/N Σ log exp(x_i·y_i/σ)/Σ_j exp(x_i·y_j/σ), plus the symmetric t2i term.\n\nFIGURES\n- Figure 1, p2: \"A summary of our method, ALIGN... Without any fine-tuning, ALIGN powers zero-shot visual classification and cross-modal search including image-to-text search, text-to-image search and even search with joint image+text queries.\" It shows the dual-encoder setup and the three query types in one view, which suits the multimodal-RAG paragraph.\n- Alternative, Figure 5, p8: image±text query arithmetic (\"+ beige\", \"- cars\").\n- Table 10, p8, is the clearest single display of size beating noise, but it is a table, not a figure.\n\nPROBLEMS: Text extraction was clean. Figure text came out as stray labels, which I ignored. The Table 1 rows are flattened but readable. No embedded instructions. Typos in the source tables (\"ImangeNet\") are reproduced in the quotes as printed. Page numbers come from PDF page index (1-based)."
+ "type": "empirical",
+ "question": "Can a simple dual-encoder trained with a contrastive loss on over a billion noisy alt-text image pairs, with minimal filtering, yield state-of-the-art visual and vision-language representations?",
+ "hypothesis": "Scale of the corpus can make up for its noise, so heavy curation is not needed.",
+ "contributions": [
+  "ALIGN: dual-encoder (EfficientNet + BERT) trained with a normalized-softmax contrastive loss on 1.8B noisy alt-text pairs",
+  "SOTA zero-shot and fine-tuned image-text retrieval on Flickr30K, MSCOCO and CxC",
+  "Zero-shot ImageNet classification and strong image-encoder transfer (ImageNet, VTAB, fine-grained)",
+  "Cross-modal and image+text query search; multilingual variant"
+ ],
+ "method": {
+  "summary": "A pair of encoders (EfficientNet-L2 image, BERT-Large text, [CLS] embedding plus linear layer) is trained from scratch with symmetric in-batch normalized softmax loss and a learned temperature on 1.8B alt-text pairs filtered only by frequency and size. It is evaluated zero-shot and fine-tuned on retrieval, zero-shot and transfer on classification.",
+  "task": "contrastive image-text pre-training; cross-modal retrieval; image classification transfer",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "ALIGN noisy alt-text corpus (English)",
+    "role": "pretrain",
+    "size": "1.8B image-text pairs",
+    "split": null,
+    "source": "raw English alt-text following Conceptual Captions pipeline; not released",
+    "preprocessing": "Remove porn, keep images with shorter side >200 px and aspect ratio <3, drop images with >1000 alt-texts; drop alt-texts shared by >10 images, with tokens outside the 100M most frequent uni/bigrams, or <3 or >20 unigrams; near-duplicates of test images removed (Appendix A: k-means 4K clusters, top-10 clusters, cosine >0.975)"
+   },
+   {
+    "name": "ALIGN multilingual corpus",
+    "role": "pretrain",
+    "size": "1.8B image-text pairs, 100+ languages",
+    "split": null,
+    "source": "same pipeline without language constraint",
+    "preprocessing": "250k multilingual wordpiece vocab"
+   },
+   {
+    "name": "Flickr30K",
+    "role": "both",
+    "size": "30k train images",
+    "split": "Karpathy split; 1K test",
+    "source": "Plummer et al. 2015",
+    "preprocessing": null
+   },
+   {
+    "name": "MSCOCO",
+    "role": "both",
+    "size": "82K train + 30K extra val images",
+    "split": "Karpathy split; 5K test",
+    "source": "Chen et al. 2015",
+    "preprocessing": null
+   },
+   {
+    "name": "Crisscrossed Captions (CxC)",
+    "role": "eval",
+    "size": null,
+    "split": "MSCOCO fine-tuned model evaluated directly",
+    "source": "Parekh et al. 2021",
+    "preprocessing": null
+   },
+   {
+    "name": "ImageNet ILSVRC-2012 and variants R, A, V2",
+    "role": "both",
+    "size": null,
+    "split": null,
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "VTAB (19 tasks)",
+    "role": "eval",
+    "size": "1000 train images per task (800 train, 200 val for sweep)",
+    "split": null,
+    "source": "Zhai et al. 2019",
+    "preprocessing": null
+   },
+   {
+    "name": "Oxford Flowers-102, Oxford-IIIT Pets, Stanford Cars, Food101",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "Multi30K",
+    "role": "eval",
+    "size": "31,783 images, 5 captions/image en,de; 1 caption fr,cs",
+    "split": "Young et al. 2014 splits",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "CC-3M",
+    "role": "pretrain",
+    "size": "~3M images",
+    "split": null,
+    "source": "Sharma et al. 2018",
+    "preprocessing": "ablation baseline, 1/10 default steps"
+   }
+  ],
+  "models": [
+   {
+    "name": "ALIGN (EfficientNet-L2 + BERT-Large)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "dual encoder, cosine similarity; EfficientNet with global pooling (1x1 conv of classification head not trained) and BERT [CLS] + linear layer",
+    "init_from": "scratch",
+    "tokenizer": "wordpiece",
+    "vocab": "100k (English), 250k (multilingual)",
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "64 wordpiece tokens max",
+    "other": {
+     "embedding_dim": "1376 for L2 (640 for B7 and baseline ablation)",
+     "image_resolution": "289x289 train (resize 346 then random crop + flip), central crop eval"
+    }
+   },
+   {
+    "name": "CLIP",
+    "role": "baseline",
+    "params": null,
+    "architecture": "dual encoder",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "sum of image-to-text and text-to-image normalized softmax losses over in-batch negatives, label smoothing 0.1, embeddings gathered across all cores, learnable temperature shared (init 1.0)",
+   "optimizer": "LAMB (tried SGD momentum and Adam, LAMB better)",
+   "lr": "1e-3",
+   "lr_schedule": "linear warmup then linear decay to zero",
+   "warmup": "10k steps linear from zero",
+   "batch_size": "16384 (1024 TPUv3 cores x 16 pairs)",
+   "steps": "1.2M",
+   "epochs": "~12",
+   "tokens": null,
+   "seq_len": "64 wordpieces max",
+   "precision": null,
+   "weight_decay": "1e-5",
+   "dropout": null,
+   "regularisation": "label smoothing 0.1",
+   "hardware": "1024 Cloud TPUv3 cores",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "finetune_retrieval": "global batch 2048, initial lr 1e-5, 3K steps (Flickr30K) and 6K steps (MSCOCO), linear decay, other hyperparameters as pre-training",
+    "ablation_steps": "1M steps",
+    "imagenet_transfer": "batch 1024, SGD momentum 0.9, lr decay x0.2 every 30 epochs, 100 epochs, wd 0, lr 0.1 frozen / 0.01 finetune with 10x smaller on backbone; train/eval res 289/360 frozen, 475/600 finetune",
+    "finegrained_transfer": "batch 256, wd 1e-5, lr 1e-2 then 1e-3, cosine decay over 20k steps, res 289/360, BN stats frozen",
+    "vtab": "50-trial sweep per task, mean of three runs"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": "learned, converged to about 1/64",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "Fine-grained and VTAB: average of three runs; other tables single-run, no seeds stated",
+   "prompting": "zero-shot classification uses CLIP's prompt templates (e.g. 'A photo of a {classname}'), embeddings averaged then L2-normalized; ensembling gives +2.9% ImageNet top-1",
+   "retrieval": "cosine similarity of normalized embeddings; demo index of 160M CC-BY images; image+text query adds normalized embeddings with text weight 2, image weight 1",
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Recall@K",
+     "definition": "fraction of queries with the ground truth in top K, image->text and text->image",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Top-1 / Top-5 accuracy",
+     "definition": "classification accuracy",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Spearman R x100 (STS, SIS, SITS)",
+     "definition": "correlation with human similarity judgments, bootstrap",
+     "unit": "x100",
+     "higher_is_better": true
+    },
+    {
+     "name": "mean Recall (mR)",
+     "definition": "average of R@1, R@5, R@10 over image->text and text->image",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "ImageNet KNN R@1",
+     "definition": "for each validation image, retrieve nearest training images; hit if label appears in top K",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "ImageBERT",
+    "UNITER",
+    "CLIP",
+    "GPO",
+    "ERNIE-ViL",
+    "VILLA",
+    "Oscar",
+    "VSE++",
+    "VSRN",
+    "DEI2T",
+    "DET2T+I2T",
+    "BiT-L",
+    "NoisyStudent",
+    "ViT-H/14",
+    "Meta Pseudo Labels",
+    "WSL",
+    "SAM",
+    "M3P",
+    "UC2",
+    "GloVe",
+    "Picturebook"
+   ],
+   "protocol": "Mostly single runs; VTAB and fine-grained report three runs; CxC Spearman has bootstrap std; ablations at 1M steps on MSCOCO zero-shot and ImageNet KNN."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "not released; dataset built from raw alt-text, not obtainable from paper"
+  },
+  "prompts": [
+   {
+    "purpose": "zero-shot ImageNet class prompt (one of CLIP's templates)",
+    "text": "A photo of a {classname}",
+    "where": "Sec 5.2"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training.batch_size",
+    "quote": "We train the model on 1024 Cloud TPUv3 cores with 16 positive pairs on each core. Therefore the total effective batch size is 16384.",
+    "where": "Sec 5"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Zero-shot ImageNet top-1 of ALIGN, on par with CLIP",
+   "kind": "measured",
+   "source": null,
+   "metric": "ImageNet zero-shot top-1",
+   "value": "76.4",
+   "unit": "%",
+   "baseline_value": "76.2",
+   "n": null,
+   "setup": "ALIGN EfficientNet-L2 + BERT-Large, class names fed to text encoder with CLIP prompt ensembling",
+   "note": null,
+   "where": "Sec 1; Table 4",
+   "quote": "achieving 76.4% top-1 accuracy in ImageNet without using any of its training samples"
+  },
+  {
+   "claim": "Zero-shot Flickr30K text-to-image R@1 beats CLIP by 7 points",
+   "kind": "measured",
+   "source": null,
+   "metric": "Flickr30K text->image R@1",
+   "value": "75.7",
+   "unit": "%",
+   "baseline_value": "68.7",
+   "n": null,
+   "setup": "Zero-shot, Flickr30K 1K test, ALIGN vs CLIP",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, Flickr30K zero-shot, row ALIGN, text->image R@1 (75.7) vs CLIP (68.7)"
+  },
+  {
+   "claim": "Zero-shot Flickr30K image-to-text R@1 is 88.6 vs CLIP 88.0, a small edge",
+   "kind": "measured",
+   "source": null,
+   "metric": "Flickr30K image->text R@1",
+   "value": "88.6",
+   "unit": "%",
+   "baseline_value": "88.0",
+   "n": null,
+   "setup": "Zero-shot, Flickr30K 1K test",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, Flickr30K zero-shot, row ALIGN, image->text R@1 (88.6) vs CLIP (88.0)"
+  },
+  {
+   "claim": "Zero-shot MSCOCO 5K image-to-text R@1 is 58.6 vs CLIP 58.4; text-to-image 45.6 vs 37.8",
+   "kind": "measured",
+   "source": null,
+   "metric": "MSCOCO image->text R@1",
+   "value": "58.6",
+   "unit": "%",
+   "baseline_value": "58.4",
+   "n": null,
+   "setup": "Zero-shot, MSCOCO 5K test",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, MSCOCO zero-shot, row ALIGN, image->text R@1 (58.6) and text->image R@1 (45.6); CLIP 58.4 and 37.8"
+  },
+  {
+   "claim": "Fine-tuned Flickr30K image-to-text R@1 of ALIGN",
+   "kind": "measured",
+   "source": null,
+   "metric": "Flickr30K image->text R@1",
+   "value": "95.3",
+   "unit": "%",
+   "baseline_value": "88.7",
+   "n": null,
+   "setup": "Fine-tuned on Flickr30K 30k train, 1K test",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, Flickr30K fine-tuned, row ALIGN, image->text R@1 (95.3), text->image R@1 (84.9)"
+  },
+  {
+   "claim": "Fine-tuned MSCOCO image-to-text R@1 77.0, text-to-image 59.9",
+   "kind": "measured",
+   "source": null,
+   "metric": "MSCOCO image->text R@1",
+   "value": "77.0",
+   "unit": "%",
+   "baseline_value": "73.5",
+   "n": null,
+   "setup": "Fine-tuned on MSCOCO 82K train + 30K val, 5K test",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, MSCOCO fine-tuned, row ALIGN, image->text R@1 (77.0), text->image R@1 (59.9)"
+  },
+  {
+   "claim": "Dataset size of 1.8B noisy alt-text pairs with only frequency filtering",
+   "kind": "measured",
+   "source": null,
+   "metric": "pairs",
+   "value": "1.8B",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "ALIGN training set, English",
+   "note": null,
+   "where": "Sec 3",
+   "quote": "The result is a much larger (1.8B image-text pairs) but noisier dataset."
+  },
+  {
+   "claim": "ImageNet top-1 with frozen features 85.5, fine-tuned 88.64",
+   "kind": "measured",
+   "source": null,
+   "metric": "ImageNet top-1 fine-tuned",
+   "value": "88.64",
+   "unit": "%",
+   "baseline_value": "90.2 (Meta-Pseudo-Labels)",
+   "n": null,
+   "setup": "ALIGN EfficientNet-L2 image encoder; frozen features then full fine-tune, 475/600 train/eval resolution fine-tuning",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row ALIGN (EfficientNet-L2), columns Acc@1 w/ frozen features and Acc@1 (85.5, 88.64)"
+  },
+  {
+   "claim": "VTAB 19 tasks mean accuracy 79.99 vs BiT-L 78.72",
+   "kind": "measured",
+   "source": null,
+   "metric": "VTAB mean accuracy",
+   "value": "79.99",
+   "unit": "%",
+   "baseline_value": "78.72",
+   "n": null,
+   "setup": "1000 training images per task, 50-trial sweep, mean of three fine-tuning runs",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row ALIGN, column All tasks (79.99±0.15); Bit-L 78.72"
+  },
+  {
+   "claim": "CxC image-to-text R@1 78.1 vs 55.9 for best prior (+22.2)",
+   "kind": "measured",
+   "source": null,
+   "metric": "CxC image->text R@1",
+   "value": "78.1",
+   "unit": "%",
+   "baseline_value": "55.9",
+   "n": null,
+   "setup": "MSCOCO fine-tuned ALIGN evaluated on Crisscrossed Captions",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row ALIGN, column image->text R@1 (78.1); DET2T+I2T 55.9"
+  },
+  {
+   "claim": "Same-modality CxC retrieval improves less: text-to-text R@1 45.4 vs 42.4, image-to-image 49.4 vs 44.2",
+   "kind": "measured",
+   "source": null,
+   "metric": "CxC text->text R@1",
+   "value": "45.4",
+   "unit": "%",
+   "baseline_value": "42.4",
+   "n": null,
+   "setup": "MSCOCO fine-tuned ALIGN on CxC",
+   "note": null,
+   "where": "Table 2; Sec 5.1",
+   "table": "Table 2, row ALIGN, columns text->text R@1 (45.4) and image->image R@1 (49.4)"
+  },
+  {
+   "claim": "On CxC semantic similarity, ALIGN is worse than VSE++ on STS and than DEI2T on SIS, but best on SITS and mean",
+   "kind": "measured",
+   "source": null,
+   "metric": "SITS Spearman R x100",
+   "value": "67.6",
+   "unit": null,
+   "baseline_value": "61.9",
+   "n": null,
+   "setup": "Spearman x100, bootstrap",
+   "note": "Text says STS and SIS are 'slightly worse than VSE++ and DEI2T', but Table 3 shows SIS 77.2 above VSE++ 73.3 and DET2T+I2T 74.5; only DEI2T (81.3) is higher for SIS, and STS 72.9 trails VSE++ 74.4 and DET2T+I2T 74.2.",
+   "where": "Sec 5.1; Table 3",
+   "quote": "Table 3 shows that ALIGN also outperforms the previous SOTA on SITS task with an improvement of 5.7%."
+  },
+  {
+   "claim": "Authors attribute weaker intra-modal results to the cross-modal-only training objective",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Conjecture, not tested",
+   "note": null,
+   "where": "Sec 5.1",
+   "quote": "We suspect it is because the training objective of ALIGN focuses on cross-modal (image-text) matching instead of intra-modal matching."
+  },
+  {
+   "claim": "With 3M noisy ALIGN pairs, MSCOCO zero-shot image-to-text R@1 is 8.1 vs 18.9 for cleaned CC-3M; 12M noisy pairs reach 23.8",
+   "kind": "measured",
+   "source": null,
+   "metric": "MSCOCO zero-shot I2T R@1",
+   "value": "8.1",
+   "unit": "%",
+   "baseline_value": "18.9",
+   "n": null,
+   "setup": "B7 + BERT-base trained from scratch; subsets randomly sampled from ALIGN data",
+   "note": "Text says ALIGN outperforms CC 'with only 4x size': 12M vs 3M.",
+   "where": "Table 10; Sec 6.2",
+   "table": "Table 10, rows ALIGN 3M data (8.1), CC-3M data (18.9), ALIGN 12M data (23.8), column I2T R@1"
+  },
+  {
+   "claim": "Full ALIGN data vs CC-3M on B7+BERT-base: MSCOCO I2T R@1 55.4 vs 18.9",
+   "kind": "measured",
+   "source": null,
+   "metric": "MSCOCO I2T R@1",
+   "value": "55.4",
+   "unit": "%",
+   "baseline_value": "18.9",
+   "n": null,
+   "setup": "Zero-shot MSCOCO retrieval; CC-3M trained with 1/10 of default steps",
+   "note": null,
+   "where": "Table 9",
+   "table": "Table 9, row B7 + BERT-base + ALIGN full data vs + CC-3M data, column I2T R@1"
+  },
+  {
+   "claim": "10% of ALIGN data nearly saturates the small B3+BERT-mini model but not B7+BERT-base",
+   "kind": "measured",
+   "source": null,
+   "metric": "MSCOCO I2T R@1",
+   "value": "36.7",
+   "unit": "%",
+   "baseline_value": "37.4",
+   "n": null,
+   "setup": "Table 9 ablation",
+   "note": null,
+   "where": "Table 9",
+   "table": "Table 9, B3 + BERT-mini ALIGN full data 37.4 vs 10% 36.7; B7+BERT-base 55.4 vs 52.0 (I2T R@1)"
+  },
+  {
+   "claim": "Fewer in-batch negatives degrade quality: 25% negatives gives I2T R@1 48.7 vs 51.7",
+   "kind": "measured",
+   "source": null,
+   "metric": "MSCOCO I2T R@1",
+   "value": "48.7",
+   "unit": "%",
+   "baseline_value": "51.7",
+   "n": null,
+   "setup": "B5 + BERT-base, 1M steps",
+   "note": null,
+   "where": "Table 8",
+   "table": "Table 8, rows B5 + BERT-base (51.7) and w/ 25% in-batch negs (48.7), column I2T R@1"
+  },
+  {
+   "claim": "Learned temperature converged to about 1/64; fixed 1/32 is much worse (I2T R@1 39.6)",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "B5 + BERT-base ablation",
+   "note": null,
+   "where": "Sec 6.1; Table 8",
+   "quote": "Compared to the baseline model that learns the temperature parameter (converged to about 1/64), some hand-selected, ﬁxed temperatures could be slightly better."
+  },
+  {
+   "claim": "Embedding dimension 80 drops I2T R@1 to 42.0 vs 51.7 at 640",
+   "kind": "measured",
+   "source": null,
+   "metric": "MSCOCO I2T R@1",
+   "value": "42.0",
+   "unit": "%",
+   "baseline_value": "51.7",
+   "n": null,
+   "setup": "B5 + BERT-base",
+   "note": null,
+   "where": "Table 8",
+   "table": "Table 8, row w/ embedding dim=80, column I2T R@1"
+  },
+  {
+   "claim": "Multilingual ALIGN zero-shot Multi30K mean recall: de 84.1, fr 84.9, cs 63.2, en 90.2 (English-only model 92.2)",
+   "kind": "measured",
+   "source": null,
+   "metric": "Multi30K fr mean recall",
+   "value": "84.9",
+   "unit": "%",
+   "baseline_value": "27.1 (M3P)",
+   "n": null,
+   "setup": "Zero-shot, 1.8B multilingual pairs, 250k wordpiece vocab",
+   "note": null,
+   "where": "Table 11",
+   "table": "Table 11, row ALIGNmling, columns en/de/fr/cs (90.2, 84.1, 84.9, 63.2); M3P zero-shot 57.9, 36.8, 27.1, 20.4"
+  },
+  {
+   "claim": "Image+text queries by adding embeddings enable multimodal search",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Qualitative, 160M CC-BY image index, text embedding weight 2 and image weight 1 (1:1 also works)",
+   "note": "No quantitative evaluation; figure examples only.",
+   "where": "Sec 7; Fig 5"
+  }
+ ],
+ "limits": [
+  "Dataset is not released and its filtering thresholds are given but the crawl is not reproducible",
+  "No training compute, wall-clock, or parameter counts are given",
+  "Most results are single runs without variance",
+  "Authors note intra-modal (text-text, image-image) performance is weaker and suspect the cross-modal-only objective; multitask training left to future work",
+  "Social impact section: harmful alt-text, stereotypes, no fairness analysis done; further analysis needed before production use",
+  "Ablations use a smaller B5+BERT-base or B7+BERT-base at reduced steps; the noisy-vs-clean comparison is on COCO zero-shot only",
+  "ImageNet fine-tuned accuracy trails Meta-Pseudo-Labels (90.2)"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "ALIGN",
+   "definition": "A Large-scale ImaGe and Noisy-text embedding",
+   "where": "Sec 1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "CLIP (Radford et al.)",
+   "year": 2021,
+   "arxiv": "2103.00020",
+   "relation": "baseline",
+   "note": "closest contemporaneous work; ALIGN uses unfiltered alt-text vs CLIP's allowlist curation",
+   "quote": null
+  },
+  {
+   "work": "Conceptual Captions (Sharma et al.)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "pipeline followed but with filtering relaxed",
+   "quote": null
+  },
+  {
+   "work": "Zhai & Wu, Classification is a strong baseline for deep metric learning",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "normalized softmax loss",
+   "quote": null
+  },
+  {
+   "work": "VSE++ (Faghri et al.)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "visual-semantic embedding form",
+   "quote": null
+  },
+  {
+   "work": "EfficientNet; BERT",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "image and text encoders",
+   "quote": null
+  },
+  {
+   "work": "LAMB (You et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "optimizer",
+   "quote": null
+  },
+  {
+   "work": "Crisscrossed Captions (Parekh et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "eval set",
+   "quote": null
+  },
+  {
+   "work": "BiT, ViT, NoisyStudent, Meta Pseudo Labels",
+   "year": null,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "ImageNet comparisons",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "A summary of our method, ALIGN.",
+   "page": 2,
+   "why": "shows pipeline and three retrieval modes"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Zero-shot image-text retrieval and ImageNet KNN accuracy@1 with different image and text encoder sizes.",
+   "page": 7,
+   "why": "scaling across encoder pairs"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Image retrieval with image±text queries.",
+   "page": 8,
+   "why": "embedding arithmetic examples"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 1",
+   "snippet": "L_i2t = -1/N sum_i log( exp(x_i^T y_i / sigma) / sum_{j=1..N} exp(x_i^T y_j / sigma) )",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text/Table 3 inconsistency noted in results (SIS vs VSE++)",
+  "Replaced schema-0 salvaged file; legacy report used only as map"
+ ]
 }

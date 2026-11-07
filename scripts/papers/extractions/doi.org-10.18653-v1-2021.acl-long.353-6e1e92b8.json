@@ -1,0 +1,581 @@
+{
+ "schema": 1,
+ "key": "https://doi.org/10.18653/v1/2021.acl-long.353",
+ "pdf": "generative-ai/05-RL/sources/li-2021-prefix-tuning.pdf",
+ "bib": {
+  "title": "Prefix-Tuning: Optimizing Continuous Prompts for Generation",
+  "authors": [
+   "Xiang Lisa Li",
+   "Percy Liang"
+  ],
+  "first_author": "Li",
+  "year": 2021,
+  "venue": "Proceedings of ACL-IJCNLP 2021 (59th ACL / 11th IJCNLP), pages 4582-4597",
+  "arxiv": "2101.00190",
+  "doi": "10.18653/v1/2021.acl-long.353"
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 66419,
+  "chars_total": 66419,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can a small continuous task-specific prefix, with the language model frozen, replace full fine-tuning for natural language generation tasks?",
+ "hypothesis": "Optimizing continuous prefix activations at every layer, with the LM frozen, gives performance comparable to fine-tuning with far fewer parameters, and helps most in low-data and extrapolation settings.",
+ "contributions": [
+  "Propose prefix-tuning, a lightweight alternative to fine-tuning for NLG that optimizes a continuous prefix and keeps LM parameters frozen",
+  "Apply it to GPT-2 table-to-text and BART summarization with 0.1% of the parameters",
+  "Show better low-data and unseen-topic extrapolation than fine-tuning"
+ ],
+ "method": {
+  "summary": "A trainable matrix P_theta of |P_idx| x dim(h_i) free activations is prepended to the input (and to both encoder and decoder for BART); all LM weights are frozen and only the prefix is trained with the usual log-likelihood. P_theta is reparametrized through an MLP from a smaller matrix during training and dropped after training.",
+  "task": "table-to-text generation (E2E, WebNLG, DART) with GPT-2; abstractive summarization (XSUM) with BART",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "E2E",
+    "role": "both",
+    "size": "50K examples (Table 1); input 28.5 / output 27.8 BPE tokens",
+    "split": "full; low-data subsamples of 50, 100, 200, 500; data-efficiency 10%-80%",
+    "source": "Novikova et al., 2017",
+    "preprocessing": "table linearized as 'field A : value A | field B : value B'"
+   },
+   {
+    "name": "WebNLG",
+    "role": "both",
+    "size": "22K examples; input 49.6 / output 30.7 BPE tokens",
+    "split": "9 seen DBpedia categories in train/dev; test has seen half and 5 unseen categories (S, U, A)",
+    "source": "Gardent et al., 2017",
+    "preprocessing": "triples linearized as 'entity1.1 : relation1 : entity1.2 | ...'"
+   },
+   {
+    "name": "DART",
+    "role": "both",
+    "size": "82K examples; input 38.8 / output 27.3 BPE tokens",
+    "split": null,
+    "source": "Radev et al., 2020 (WikiSQL, WikiTableQuestions, E2E, WebNLG, converted)",
+    "preprocessing": "same triple linearization as WebNLG"
+   },
+   {
+    "name": "XSUM",
+    "role": "both",
+    "size": "225K examples; input 473.3 / output 28.1 BPE tokens",
+    "split": "full; low-data 50-500; extrapolation splits news-to-sports and within-news (train on world, UK, business)",
+    "source": "Narayan et al., 2018 (BBC)",
+    "preprocessing": "articles truncated to 512 BPE tokens; topic identified from URL for extrapolation splits"
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT-2 Medium",
+    "role": "base",
+    "params": "345M",
+    "architecture": "decoder-only transformer",
+    "init_from": "pretrained GPT-2 (Radford et al., 2019)",
+    "tokenizer": "BPE",
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "key/value dim": "1024 (footnote 1)"
+    }
+   },
+   {
+    "name": "GPT-2 Large",
+    "role": "base",
+    "params": "774M (intro)",
+    "architecture": "decoder-only transformer",
+    "init_from": "pretrained GPT-2",
+    "tokenizer": "BPE",
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "BART Large",
+    "role": "base",
+    "params": null,
+    "architecture": "encoder-decoder transformer",
+    "init_from": "pretrained BART (Lewis et al., 2020)",
+    "tokenizer": "BPE",
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Prefix-tuning",
+    "role": "proposed",
+    "params": "250K (E2E, WebNLG), 500K (DART) vs 345M GPT-2 Medium, i.e. 0.1%; XSUM 2% and 0.1% variants",
+    "architecture": "prefix activations P_theta (|P_idx| x dim(h_i)) via MLP from P'_theta of width k",
+    "init_from": "random (uniform (0,1)) or activations of real words (low-data)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "k": "512 table-to-text, 800 summarization",
+     "prefix length default": "10"
+    }
+   },
+   {
+    "name": "FT-FULL / FT-TOP2 / ADAPTER (3%, 0.1%)",
+    "role": "baseline",
+    "params": "100% / top 2 layers / 3.0% / 0.1%",
+    "architecture": "adapter implementation same as Lin et al. (2020)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "max log p_phi(y|x) = sum over Y_idx of log p(z_i | h_<i), only prefix parameters theta trainable",
+   "optimizer": "AdamW",
+   "lr": "default 5e-5; searched {1e-5, 5e-5, 8e-5}; per-dataset in Table 6 (prefix: E2E 8e-5, WebNLG 5e-5, DART 5e-5, XSUM 5e-5)",
+   "lr_schedule": "linear (Hugging Face default)",
+   "warmup": "100 steps (summarization low-data only); otherwise null",
+   "batch_size": "default 5; Table 6 prefix: E2E 10, WebNLG 5, DART 5, XSUM 14; low-data table-to-text 10; low-data summarization 5 (prefix) / 6 (fine-tune)",
+   "steps": "low-data table-to-text max steps {100,200,400,600} (Table 8: prefix 200,200,200,400)",
+   "epochs": "default 10; Table 6 prefix: E2E 5, WebNLG 5, DART 10, XSUM 30; search {5,10} table-to-text, {5,25,30} summarization",
+   "tokens": null,
+   "seq_len": "XSUM articles truncated to 512 BPE tokens",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "early stopping on validation (low-data; dev = 30% of training size)",
+   "hardware": "table-to-text: TITAN Xp or GeForce GTX TITAN X; summarization: Tesla V100",
+   "compute": "table-to-text 0.2 h/epoch on 22K examples (fine-tuning ~0.3 h); XSUM 1.25 h/epoch",
+   "wall_clock": null,
+   "seeds": "low-data: 5 sampled datasets x 2 training seeds = 10 models per setting",
+   "other": {
+    "prefix length search table-to-text": "{1,5,10,20,40}",
+    "prefix length search summarization": "{1,10,20,50,80,100,200,300}",
+    "prefix length Table 6": "E2E 5, WebNLG 5, DART 10, XSUM 100",
+    "low-data prefix length": "6 for table-to-text (init 'table-to-text:'), 1 for summarization (init 'summarize')",
+    "extrapolation XSUM": "within-news prefix lr 5e-5, 30 epochs, batch 36, prefix len 80; news-to-sports 5e-5, 15 epochs, batch 36, len 40",
+    "memory": "prefix-tuning batch size 1 takes 18% of GPU memory, fine-tuning 50%",
+    "speed": "prefix-tuning around 30% faster than fine-tuning",
+    "model selection": "perplexity and automatic generation metrics on validation set; batch size = largest that fits, not tuned"
+   }
+  },
+  "inference": {
+   "decoding": "beam search: beam 5 table-to-text; beam 6 with length normalization 0.8 summarization",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "not stated for full-data runs (single run implied); low-data averaged over 10 models",
+   "prompting": "none; prefix of free parameters",
+   "retrieval": null,
+   "parameters": {
+    "prefix length": "see training.other"
+   },
+   "other": {
+    "decode time": "1.2 s per sentence (no batching) table-to-text; 2.6 s per batch of 10 summarization"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "BLEU, NIST, METEOR, ROUGE-L, CIDEr (E2E)",
+     "definition": "official e2e-metrics script",
+     "unit": "points as printed",
+     "higher_is_better": true
+    },
+    {
+     "name": "BLEU, METEOR, TER (WebNLG S/U/A)",
+     "definition": "official script",
+     "unit": "as printed",
+     "higher_is_better": true
+    },
+    {
+     "name": "BLEU, METEOR, TER, MoverScore, BERTScore, BLEURT (DART)",
+     "definition": "official DART script",
+     "unit": "as printed",
+     "higher_is_better": true
+    },
+    {
+     "name": "ROUGE-1/2/L (XSUM)",
+     "definition": "python package rouge-score",
+     "unit": "points",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "FT-FULL",
+    "FT-TOP2",
+    "ADAPTER (3%, 0.1%) (Lin et al. 2020 implementation)",
+    "SOTA: Shen et al. 2019 (E2E), Kale 2020 T5-large (WebNLG)",
+    "BART fine-tuning (Lewis et al. 2020) for XSUM"
+   ],
+   "protocol": "Test numbers in main tables; validation numbers in Tables 7, 9. No significance tests stated. Full-data runs: seed count not stated. DART SOTA unavailable."
+  },
+  "availability": {
+   "code": "https://github.com/XiangLi1999/PrefixTuning",
+   "weights": null,
+   "data": "CodaLab worksheet 0x16e0c8e7ab1f4b22aaccddc8b586541f"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.lr",
+    "quote": "The default setting is 10 epochs, batch size 5, learning rate 5·10−5 and preﬁx length 10.",
+    "where": "Section 5.3"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Prefix-tuning (0.1% params) is comparable to full fine-tuning on E2E table-to-text with GPT-2 Medium",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": 70.3,
+   "unit": "BLEU",
+   "baseline_value": 68.8,
+   "n": null,
+   "setup": "GPT-2 Medium, E2E test, prefix 0.1% vs FT-FULL 68.8, ADAPTER(0.1%) 66.3",
+   "quote": null,
+   "table": "Table 2, row PREFIX(0.1%), column E2E BLEU",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "With 0.1% params prefix-tuning beats ADAPTER (0.1%) by 4.1 BLEU per dataset on average",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU gain",
+   "value": 4.1,
+   "unit": "BLEU",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-2 Medium, E2E/WebNLG/DART, parameter budget matched at 0.1%",
+   "quote": "attaining 4.1 BLEU improve-\nment per dataset on average",
+   "table": null,
+   "note": null,
+   "where": "Sec 6.1"
+  },
+  {
+   "claim": "Prefix-tuning updates 30x fewer parameters than adapter-tuning (3.6%) at about 0.1%",
+   "kind": "measured",
+   "source": null,
+   "metric": "param reduction",
+   "value": 30,
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "table-to-text; adapter line tunes around 3.6% of LM params",
+   "quote": "our method\nobtains a further 30x reduction in task-speciﬁc parameters",
+   "table": null,
+   "note": "Section 2 says 3.6% for adapters; Table 2 uses 3.0% adapter",
+   "where": "Sec 2"
+  },
+  {
+   "claim": "Prefix-tuning on XSUM with 2% params slightly trails fine-tuning",
+   "kind": "measured",
+   "source": null,
+   "metric": "ROUGE-L",
+   "value": 36.05,
+   "unit": "ROUGE-L",
+   "baseline_value": 37.25,
+   "n": null,
+   "setup": "BART Large, XSUM full data",
+   "quote": "slightly lower performance than ﬁne-\ntuning (36.05 vs. 37.25 in ROUGE-L)",
+   "table": null,
+   "note": null,
+   "where": "Sec 6.2"
+  },
+  {
+   "claim": "With 0.1% params prefix-tuning on XSUM underperforms full fine-tuning",
+   "kind": "measured",
+   "source": null,
+   "metric": "ROUGE-L",
+   "value": 35.05,
+   "unit": "ROUGE-L",
+   "baseline_value": 37.25,
+   "n": null,
+   "setup": "BART Large, XSUM full data, 0.1% params",
+   "quote": "(35.05 vs. 37.25)",
+   "table": null,
+   "note": null,
+   "where": "Sec 6.2"
+  },
+  {
+   "claim": "In low-data settings (50-500 examples) prefix-tuning outperforms fine-tuning on average; gap narrows with more data",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU gain",
+   "value": 2.9,
+   "unit": "BLEU",
+   "baseline_value": null,
+   "n": null,
+   "setup": "E2E table-to-text, sizes 50/100/200/500, 5 sampled datasets x 2 seeds = 10 models per size (Figure 3 right is read from plots)",
+   "quote": "outperforms ﬁne-tuning in low-data regimes by 2.9 BLEU\non average",
+   "table": null,
+   "note": null,
+   "where": "Sec 6.3"
+  },
+  {
+   "claim": "On XSUM news-to-sports extrapolation prefix-tuning beats fine-tuning",
+   "kind": "measured",
+   "source": null,
+   "metric": "ROUGE-1",
+   "value": 39.23,
+   "unit": "ROUGE-1",
+   "baseline_value": 38.15,
+   "n": null,
+   "setup": "BART Large, train news test sports",
+   "quote": null,
+   "table": "Table 4, row PREFIX, column news-to-sports R-1",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "On WebNLG unseen categories prefix-tuning (GPT-2 Medium) beats FT-FULL",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU (U)",
+   "value": 45.3,
+   "unit": "BLEU",
+   "baseline_value": 26.7,
+   "n": null,
+   "setup": "GPT-2 Medium, WebNLG test unseen; ADAPTER(3%) gets 47.9 and is higher",
+   "quote": null,
+   "table": "Table 2, row PREFIX(0.1%), column WebNLG BLEU U",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Peak prefix length: performance rises to 200 for summarization and 10 for table-to-text, then slightly drops (overfitting)",
+   "kind": "measured",
+   "source": null,
+   "metric": "prefix length",
+   "value": 200,
+   "unit": "tokens",
+   "baseline_value": null,
+   "n": null,
+   "setup": "XSUM (200), DART (10); read from Fig 4",
+   "quote": "(200 for sum-\nmarization, 10 for table-to-text)",
+   "table": null,
+   "note": null,
+   "where": "Sec 7.1"
+  },
+  {
+   "claim": "Embedding-only tuning (EMB-10) is much worse than full prefix on E2E",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": 62.2,
+   "unit": "BLEU",
+   "baseline_value": 70.3,
+   "n": null,
+   "setup": "E2E, GPT-2 Medium, embedding-layer only, length 10 vs PREFIX 70.3",
+   "quote": null,
+   "table": "Table 5, row EMB-10, column BLEU",
+   "note": null,
+   "where": "Table 5"
+  },
+  {
+   "claim": "Infix-tuning slightly underperforms prefix-tuning on E2E",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": 67.2,
+   "unit": "BLEU",
+   "baseline_value": 70.3,
+   "n": null,
+   "setup": "E2E, INFIX-10 vs PREFIX 70.3",
+   "quote": null,
+   "table": "Table 5, row INFIX-10, column BLEU",
+   "note": null,
+   "where": "Table 5"
+  },
+  {
+   "claim": "Prefix-tuning takes about 30% less time than fine-tuning and 18% vs 50% of GPU memory at batch size 1",
+   "kind": "measured",
+   "source": null,
+   "metric": "GPU memory share",
+   "value": 18,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "table-to-text, batch size 1; fine-tuning 50%",
+   "quote": "preﬁx-\ntuning with batchsize 1 takes 18% of the total GPU\nmemory, whereas ﬁne-tuning takes 50%",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.3"
+  },
+  {
+   "claim": "Prefix-tuning stores 1000x fewer parameters than full fine-tuning",
+   "kind": "measured",
+   "source": null,
+   "metric": "storage reduction",
+   "value": 1000,
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "claim in intro, table-to-text",
+   "quote": "preﬁx-tuning\nstores 1000x fewer parameters than full ﬁne-tuning",
+   "table": null,
+   "note": null,
+   "where": "Sec 1"
+  },
+  {
+   "claim": "Real-word prefix initialization beats random in low-data; no effect with full data",
+   "kind": "measured",
+   "source": null,
+   "metric": "qualitative",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "E2E low-data (100 examples), Fig 5/8; random init is uniform (0,1)",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Sec 7.4"
+  }
+ ],
+ "limits": [
+  "Directly optimizing the prefix is unstable and sensitive to initialization (footnote 3); MLP reparametrization needed in training",
+  "Prefix-tuning underperforms fine-tuning on XSUM full data; authors hypothesize more data, longer inputs and task complexity",
+  "Why it extrapolates better is stated to be an open question",
+  "Seed counts for full-data runs, BART/GPT-2 layer counts and precision are not given",
+  "Only GPT-2 up to 774M and BART Large tested; scaling to GPT-3 is suggested not shown",
+  "Low-data and extrapolation results are small-sample averages without significance tests",
+  "SOTA DART baseline missing"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "prefix-tuning",
+   "definition": "prepends a sequence of continuous task-specific vectors (free parameters, activations at all layers) to the input, freezing the LM",
+   "where": "Sec 1, 4"
+  },
+  {
+   "term": "p*-tuning",
+   "definition": "class of methods optimizing a continuous prefix or prompt (prefix-tuning, p-tuning, prompt-tuning)",
+   "where": "Sec 2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Parameter-efficient transfer learning for NLP (Houlsby et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "adapter-tuning",
+   "quote": null
+  },
+  {
+   "work": "Exploring versatile generative language model via parameter-efficient transfer learning (Lin et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "adapter implementation used",
+   "quote": null
+  },
+  {
+   "work": "Language Models are Few-Shot Learners (Brown et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "related",
+   "note": "in-context prompting inspiration",
+   "quote": null
+  },
+  {
+   "work": "GPT-2 (Radford et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "base for table-to-text",
+   "quote": null
+  },
+  {
+   "work": "BART (Lewis et al.)",
+   "year": 2020,
+   "arxiv": "1910.13461",
+   "relation": "evaluates",
+   "note": "base for summarization; fine-tuned baseline",
+   "quote": null
+  },
+  {
+   "work": "AutoPrompt (Shin et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "related",
+   "note": "discrete prompt search; embedding-only upper bounds it",
+   "quote": null
+  },
+  {
+   "work": "The Power of Scale for Parameter-Efficient Prompt Tuning (Lester et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "related",
+   "note": "followup simplifying the approach for T5",
+   "quote": null
+  },
+  {
+   "work": "Intrinsic dimensionality explains the effectiveness of LM fine-tuning (Aghajanyan et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "related",
+   "note": "echoed",
+   "quote": null
+  },
+  {
+   "work": "E2E, WebNLG, DART, XSUM",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Novikova 2017, Gardent 2017, Radev 2020, Narayan 2018",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Fine-tuning (top) updates all LM parameters... prefix-tuning (bottom) freezes the LM parameters and only optimizes the prefix.",
+   "page": 2,
+   "why": "shows storage difference per task"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "An annotated example of prefix-tuning using an autoregressive LM (top) and an encoder-decoder model (bottom).",
+   "page": 4,
+   "why": "shows where prefix activations sit"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "qualitative examples in low-data settings; prefix-tuning outperforms fine-tuning in low-data regimes.",
+   "page": 7,
+   "why": "low-data curves"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 3, Sec 4.2",
+   "snippet": "h_i = P_theta[i,:] if i in P_idx else LM_phi(z_i, h_<i)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "No embedded instructions found. Table 2 and Fig 3 data are scrambled in text extraction; table values were matched by order."
+ ]
+}

@@ -1,0 +1,480 @@
+{
+ "schema": 1,
+ "key": "1606.03498",
+ "pdf": "ai-engineering/08-multimodal-engineering/sources/salimans-2016-improved-techniques-training-gans.pdf",
+ "bib": {
+  "title": "Improved Techniques for Training GANs",
+  "authors": [
+   "Tim Salimans",
+   "Ian Goodfellow",
+   "Wojciech Zaremba",
+   "Vicki Cheung",
+   "Alec Radford",
+   "Xi Chen"
+  ],
+  "first_author": "Salimans",
+  "year": 2016,
+  "venue": "preprint",
+  "arxiv": "1606.03498",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 32745,
+  "chars_total": 32745,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "How can GAN training be made more stable and GAN samples and semi-supervised classifiers better, and how can sample quality be scored without human raters?",
+ "hypothesis": "Heuristic techniques that encourage convergence of the GAN game (feature matching, minibatch discrimination, historical averaging, one-sided label smoothing, virtual batch norm) improve semi-supervised accuracy and sample quality.",
+ "contributions": [
+  "Five training techniques: feature matching, minibatch discrimination, historical averaging, one-sided label smoothing, virtual batch normalization",
+  "Inception score as an automatic image-quality metric",
+  "Semi-supervised GAN with K+1 classifier, state of the art on MNIST, CIFAR-10, SVHN",
+  "ImageNet 128x128, 1000-class GAN samples"
+ ],
+ "method": {
+  "summary": "Techniques added to DCGAN-style generator/discriminator pairs. For semi-supervised learning the discriminator is a K+1 class classifier trained with supervised cross-entropy plus the GAN game loss, with the generator trained by feature matching. Evaluated on MNIST, CIFAR-10, SVHN and ImageNet, with MTurk and Inception score.",
+  "task": "semi-supervised classification and image generation with GANs",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "MNIST (permutation invariant)",
+    "role": "both",
+    "size": "60,000 labeled images",
+    "split": "20, 50, 100 or 200 labeled examples (balanced per class), rest unlabeled; 10 random subsets",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "CIFAR-10",
+    "role": "both",
+    "size": "32x32 images",
+    "split": "1000, 2000, 4000 or 8000 labels; 10 data splits",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "SVHN",
+    "role": "both",
+    "size": null,
+    "split": "500, 1000 or 2000 labels",
+    "source": null,
+    "preprocessing": "same architecture and setup as CIFAR-10"
+   },
+   {
+    "name": "ImageNet ILSVRC2012",
+    "role": "train",
+    "size": "128x128 images, 1,000 categories",
+    "split": null,
+    "source": null,
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "MNIST GAN",
+    "role": "proposed",
+    "params": null,
+    "architecture": "networks with 5 hidden layers each; weight normalization; Gaussian noise added to output of each discriminator layer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "5 hidden",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "CIFAR-10 / SVHN GAN",
+    "role": "proposed",
+    "params": null,
+    "architecture": "discriminator: 9 layer CNN with dropout and weight normalization; generator: 4 layer CNN with batch normalization",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "D 9, G 4",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "ImageNet GAN",
+    "role": "proposed",
+    "params": null,
+    "architecture": "modified public DCGAN TensorFlow implementation, multi-GPU",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Inception model (pretrained 2015-12-05)",
+    "role": "judge",
+    "params": null,
+    "architecture": "Inception",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "L = L_supervised + L_unsupervised (K+1 class cross-entropy; unsupervised part is the GAN game value); generator by feature matching ||E f(x) - E f(G(z))||^2 for semi-supervised, minibatch discrimination for samples",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": "used in CIFAR-10 discriminator, rate not stated",
+   "regularisation": "one-sided label smoothing (positive targets alpha, value not stated; examples .9), historical averaging, weight normalization, Gaussian noise on D layers (MNIST)",
+   "hardware": "multi-GPU for ImageNet, number not stated",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": "10 random label subsets/splits per semi-supervised result",
+   "other": {
+    "paper_defers": "All code and hyperparameters at github.com/openai/improved_gan"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "Inception score on 50,000 generated images",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Test errors (MNIST)",
+     "definition": "number of incorrectly classified test examples",
+     "unit": "count",
+     "higher_is_better": false
+    },
+    {
+     "name": "Test error rate (CIFAR-10, SVHN)",
+     "definition": "percentage incorrectly predicted",
+     "unit": "%",
+     "higher_is_better": false
+    },
+    {
+     "name": "Inception score",
+     "definition": "exp(E_x KL(p(y|x) || p(y))) using pretrained Inception",
+     "unit": "score",
+     "higher_is_better": true
+    },
+    {
+     "name": "MTurk human error rate",
+     "definition": "fraction of real/generated judgments annotators got wrong or right",
+     "unit": "%",
+     "higher_is_better": null
+    }
+   ],
+   "baselines": [
+    "DGN",
+    "Virtual Adversarial",
+    "CatGAN",
+    "Skip Deep Generative Model",
+    "Ladder network",
+    "Auxiliary Deep Generative Model",
+    "DCGAN (ImageNet)"
+   ],
+   "protocol": "Semi-supervised results mean and std over 10 seeds/splits; ablations scored by Inception score on 50k samples; MTurk votes via web interface."
+  },
+  "availability": {
+   "code": "https://github.com/openai/improved_gan",
+   "weights": null,
+   "data": "public datasets"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Feature-matching semi-supervised model gets 90 +/- 4.2 test errors on MNIST with 200 labels (single model).",
+   "kind": "measured",
+   "source": null,
+   "metric": "test errors",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Permutation-invariant MNIST, 200 labels, 10 seeds",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Our model, column 200 (90 +/- 4.2; ensemble of 10: 81 +/- 4.3)"
+  },
+  {
+   "claim": "With 100 labels, a single model makes 93 +/- 6.5 errors, ensemble of 10 makes 86 +/- 5.6, versus Auxiliary Deep Generative Model 96 +/- 2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test errors",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Permutation-invariant MNIST, 100 labels",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Our model, column 100 (93 +/- 6.5)"
+  },
+  {
+   "claim": "CIFAR-10 with 4000 labels: 18.63% error single, 15.59% ensemble of 10; 8000 labels: 17.72% single.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test error %",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "CIFAR-10, 10 splits, 9-layer CNN D",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Our model, column 4000 (18.63+/-2.32); ensemble 15.59+/-0.47"
+  },
+  {
+   "claim": "SVHN with 2000 labels: 6.16 +/- 0.58 % error single model; ensemble of 10 gets 5.88 +/- 1.0.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test error %",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "SVHN, same setup as CIFAR-10",
+   "note": null,
+   "where": "Sec 6.3 table",
+   "table": "SVHN table (Fig 5 left), row Our model, column 2000"
+  },
+  {
+   "claim": "Inception score: real CIFAR-10 data 11.24, full method 8.09, no minibatch features 3.87.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Inception score",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "CIFAR-10 ablations, 50,000 samples",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row Score +/- std., columns Real data 11.24, Our methods 8.09, -MBF 3.87"
+  },
+  {
+   "claim": "Ablation scores: -VBN+BN 7.54, -L+HA 6.86, -LS 6.83, -L 4.36; removing minibatch features hurts more than removing labels.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Inception score",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "CIFAR-10 ablations, 50,000 samples",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row Score +/- std., columns -VBN+BN 7.54, -L+HA 6.86, -LS 6.83, -L 4.36"
+  },
+  {
+   "claim": "MTurk annotators distinguished minibatch-discrimination MNIST samples from real in 52.4% of cases.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "52.4",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MNIST, 2000 votes, chance 50%",
+   "note": null,
+   "where": "Sec 6.1",
+   "quote": "distinguish samples in 52.4% of cases (2000 votes total)"
+  },
+  {
+   "claim": "MTurk users correctly categorized 78.7% of CIFAR-10 images from best model; falls to 71.4% on the top 1% by Inception score.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "78.7",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CIFAR-10, 50% real 50% fake; authors themselves >95% accuracy",
+   "note": null,
+   "where": "Sec 6.2",
+   "quote": "MTurk users correctly categorized 78.7% of images correctly"
+  },
+  {
+   "claim": "Inception score should be evaluated on large sample counts (50k) because part measures diversity.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "50k",
+   "unit": "samples",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Inception score definition",
+   "note": null,
+   "where": "Sec 4",
+   "quote": "number of samples (i.e. 50k)"
+  }
+ ],
+ "limits": [
+  "Inception score is a rough guide; directly optimizing it yields adversarial examples (authors).",
+  "Techniques are heuristic with no convergence guarantee; interaction between G and the classifier in semi-supervised learning not fully understood.",
+  "MTurk results depend on annotator motivation and feedback; authors beat MTurk with >95% accuracy.",
+  "ImageNet samples have incorrect anatomy; no quantitative ImageNet result.",
+  "Optimizer, learning rates, batch size, steps not given in the paper (deferred to code).",
+  "Inception score later criticised by other work (not in this paper)."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "minibatch discrimination",
+   "definition": "discriminator looks at multiple examples in combination, via a tensor T and L1 distances across the minibatch",
+   "where": "Sec 3.2"
+  },
+  {
+   "term": "virtual batch normalization",
+   "definition": "each example normalized with statistics from a fixed reference batch chosen at the start of training and itself",
+   "where": "Sec 3.5"
+  },
+  {
+   "term": "Inception score",
+   "definition": "exp(E_x KL(p(y|x)||p(y)))",
+   "where": "Sec 4"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Goodfellow et al., Generative adversarial nets",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "GAN framework",
+   "quote": null
+  },
+  {
+   "work": "Radford et al., DCGAN",
+   "year": 2015,
+   "arxiv": "1511.06434",
+   "relation": "extends",
+   "note": "architecture basis and ImageNet baseline",
+   "quote": null
+  },
+  {
+   "work": "Springenberg, CatGAN",
+   "year": 2015,
+   "arxiv": "1511.06390",
+   "relation": "baseline",
+   "note": "semi-supervised baseline; Inception score related to its objective",
+   "quote": null
+  },
+  {
+   "work": "Ioffe & Szegedy, Batch normalization",
+   "year": 2015,
+   "arxiv": "1502.03167",
+   "relation": "extends",
+   "note": "basis for VBN and minibatch features",
+   "quote": null
+  },
+  {
+   "work": "Szegedy et al., Rethinking Inception",
+   "year": 2015,
+   "arxiv": "1512.00567",
+   "relation": "uses-method",
+   "note": "Inception model and label smoothing",
+   "quote": null
+  },
+  {
+   "work": "Salimans & Kingma, Weight normalization",
+   "year": 2016,
+   "arxiv": "1602.07868",
+   "relation": "uses-method",
+   "note": "used in discriminators",
+   "quote": null
+  },
+  {
+   "work": "Rasmus et al., Ladder networks",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "semi-supervised baseline",
+   "quote": null
+  },
+  {
+   "work": "Maaloe et al., Auxiliary deep generative models",
+   "year": 2016,
+   "arxiv": "1602.05473",
+   "relation": "baseline",
+   "note": "semi-supervised baseline",
+   "quote": null
+  },
+  {
+   "work": "Sutskever et al., Towards principled unsupervised learning",
+   "year": 2015,
+   "arxiv": "1511.06440",
+   "relation": "related",
+   "note": "consistency of unsupervised and supervised loss",
+   "quote": null
+  },
+  {
+   "work": "MNIST, CIFAR-10, SVHN, ILSVRC2012",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "datasets",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Sketch of how minibatch discrimination works",
+   "page": 3,
+   "why": "shows tensor T and cross-sample distance"
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "ImageNet samples, DCGAN left, proposed right",
+   "page": 8,
+   "why": "qualitative gain at 128x128"
+  },
+  {
+   "figure": "Table 3",
+   "caption": "Inception scores for ablations",
+   "page": 8,
+   "why": "ablation ranking in one row"
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 4",
+   "snippet": "exp(ExKL(p(y|x)||p(y)))",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "PDF text flattened table columns: Table 1/2 cells and SVHN numbers rely on column order; no embedded instructions found."
+ ]
+}

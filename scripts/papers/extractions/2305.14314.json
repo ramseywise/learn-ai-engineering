@@ -1,0 +1,252 @@
+{
+ "schema": 1,
+ "key": "2305.14314",
+ "pdf": "generative-ai/05-RL/sources/dettmers-2023-qlora.pdf",
+ "bib": {
+  "title": "QLORA: Efficient Finetuning of Quantized LLMs",
+  "authors": ["Tim Dettmers", "Artidoro Pagnoni", "Ari Holtzman", "Luke Zettlemoyer"],
+  "first_author": "Dettmers",
+  "year": 2023,
+  "venue": "preprint",
+  "arxiv": "2305.14314",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 87820,
+  "chars_total": 87820,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can a frozen 4-bit quantized LLM be finetuned through LoRA adapters without losing 16-bit finetuning quality, and how good a chatbot does that make at 7B to 65B scale?",
+ "hypothesis": "Performance lost to 4-bit quantization can be recovered by adapter finetuning, so 4-bit QLoRA with NF4 matches 16-bit full finetuning and 16-bit LoRA.",
+ "contributions": [
+  "4-bit NormalFloat (NF4), a data type information theoretically optimal for normally distributed weights",
+  "Double Quantization, quantizing the quantization constants",
+  "Paged Optimizers using NVIDIA unified memory to manage memory spikes",
+  "Guanaco model family and a study of 1,000+ finetuned models across 8 instruction datasets, with human and GPT-4 chatbot evaluation"
+ ],
+ "method": {
+  "summary": "A pretrained model is quantized to 4-bit NF4 with double quantization and frozen; LoRA adapters on all linear layers are trained in BF16 by backpropagating through the dequantized weights, with paged optimizer states. Evaluated against 16-bit LoRA and full finetuning (RoBERTa, T5, LLaMA) and used to finetune LLaMA 7B-65B on eight instruction datasets, judged by MMLU, GPT-4 and human raters.",
+  "task": "instruction finetuning / parameter-efficient finetuning of quantized LLMs; chatbot evaluation",
+  "trains": true,
+  "datasets": [
+   {"name": "OASST1", "role": "train", "size": "9,209 examples (top reply per level; 161,443 messages, 66,497 conversations)", "split": "full conversation incl. user queries; validation set used as OA benchmark", "source": "OpenAssistant, crowd-sourced, 35 languages", "preprocessing": "only the top reply at each level of the conversation tree"},
+   {"name": "HH-RLHF", "role": "train", "size": "160,800 examples", "split": null, "source": "Anthropic human preference data", "preprocessing": "helpfulness and harmlessness combined, only the preferred reply kept"},
+   {"name": "FLAN v2", "role": "train", "size": "over 15M examples (1836 tasks)", "split": null, "source": "Longpre et al. 2023", "preprocessing": "same task mixtures as the authors except some datasets not freely available; subsampled in ablations"},
+   {"name": "Alpaca", "role": "train", "size": "51,942 examples", "split": null, "source": "distilled from GPT-3 Instruct and ChatGPT", "preprocessing": null},
+   {"name": "Self-Instruct", "role": "train", "size": "82,612 examples", "split": null, "source": "model distillation", "preprocessing": null},
+   {"name": "Unnatural Instructions", "role": "train", "size": "240,670 examples", "split": null, "source": "model distillation", "preprocessing": null},
+   {"name": "Longform", "role": "train", "size": "23,700 examples", "split": null, "source": "C4, Wikipedia, Stack Exchange, WikiHow plus LLM-generated instructions", "preprocessing": null},
+   {"name": "Chip2 (OIG LAION)", "role": "train", "size": "210,289 examples", "split": null, "source": "LAION OIG", "preprocessing": null},
+   {"name": "GLUE", "role": "eval", "size": null, "split": null, "source": "Wang et al. 2018", "preprocessing": null},
+   {"name": "Super-NaturalInstructions", "role": "both", "size": null, "split": "training data split into training and validation for tuning and early stopping", "source": "Wang et al. 2022", "preprocessing": "same preprocessing as Wang et al. [60]"},
+   {"name": "MMLU", "role": "eval", "size": "57 tasks", "split": "5-shot test accuracy; 5-shot dev set used for validation and hyperparameter tuning", "source": "Hendrycks et al.", "preprocessing": null},
+   {"name": "Vicuna prompts", "role": "eval", "size": "80 prompts", "split": null, "source": "Chiang et al. 2023", "preprocessing": "used without modification"},
+   {"name": "OA benchmark (OASST1 validation)", "role": "eval", "size": "953 unique user queries", "split": "all user messages in validation set, previous turns in prompt", "source": "OASST1", "preprocessing": null}
+  ],
+  "models": [
+   {"name": "LLaMA 7B/13B/33B/65B", "role": "base", "params": "7B, 13B, 33B, 65B", "architecture": "decoder-only transformer", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "Guanaco", "role": "proposed", "params": "7B, 13B, 33B, 65B", "architecture": "LLaMA + QLoRA adapters finetuned on OASST1", "init_from": "LLaMA", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"memory": "5 GB, 10 GB, 21 GB, 41 GB (Table 6)"}},
+   {"name": "RoBERTa-large; T5 80M-11B", "role": "base", "params": "RoBERTa-large; T5 80M to 11B", "architecture": "encoder; encoder-decoder", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "GPT-4", "role": "judge", "params": null, "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "Vicuna 13B, Open Assistant 33B, GPT-3.5-turbo, Bard, GPT-4", "role": "baseline", "params": null, "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}}
+  ],
+  "training": {
+   "objective": "cross-entropy loss (supervised), response only where instruction/response are separate; no RL",
+   "optimizer": "Adam with beta2 0.999, paged optimizer states",
+   "lr": "2e-4 for 7B and 13B; 1e-4 for 33B and 65B",
+   "lr_schedule": "constant",
+   "warmup": null,
+   "batch_size": "16 for 7B/13B; 32 or 16 for 33B; 64, 16 or 32 for 65B (Table 9, depends on dataset)",
+   "steps": "7B/13B: 10000 (All, HH-RLHF), 1875 (OASST1), 4000 (Longform); 33B: 5000, 1875, 2343; 65B: 2500, 1875, 2343 (Table 9)",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "source 384 / target 128 (All); OASST1 target 512; HH-RLHF target 768; Longform source 512 / target 1024",
+   "precision": "NF4 storage with double quantization, bf16 computation datatype",
+   "weight_decay": null,
+   "dropout": "LoRA dropout 0.1 for models up to 13B and 0.05 for 33B and 65B",
+   "regularisation": "max grad norm of 0.3; group-by-length batching",
+   "hardware": "single 24 GB consumer GPU (33B) or single 48 GB professional GPU (65B); Hyak supercomputer at University of Washington",
+   "compute": "33B Guanaco in less than 12 hours on a 24 GB GPU; 65B in 24 hours on one professional GPU; more than 1,000 models trained",
+   "wall_clock": "under 12 h (second best Guanaco), 24 h (65B)",
+   "seeds": "Fig 2: one run per random seed; Fig 4: 3 random seeds per hyperparameter combination",
+   "other": {
+    "lora": "r = 64, alpha = 16, LoRA on all linear layers (chatbot runs); for Super-NaturalInstructions r = 16 (small/medium/large T5) or 64 (xl/xxl), alpha = 64, no dropout",
+    "nf4_blocksize": "blocksize 64 for weights W, 256 for second-level constants c2 (FP8)",
+    "lora_search": "dropout {0.0, 0.05, 0.1}; r {8,16,32,64,128,256}; layers {key+query, all attention, all FFN, all, attention+FFN output}; LoRA alpha fixed, learning rate searched",
+    "full_finetune_baseline_search": "learning rates 1e-6 to 5e-5 and batch sizes 8 to 128",
+    "scaling": "all 7B hyperparameters generalize to 13B/33B except learning rate and batch size; learning rate halved and batch size doubled for 33B and 65B"
+   }
+  },
+  "inference": {
+   "decoding": "nucleus sampling",
+   "temperature": "0.7",
+   "top_p": "0.9",
+   "max_tokens": null,
+   "samples": "GPT-4 scoring reported as mean over both response orders; Elo averaged over 10,000 random orderings",
+   "prompting": "MMLU 5-shot; Vicuna benchmark GPT-4 scores both responses out of ten with explanation; pairwise GPT-4 picks best or tie",
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "MMLU 5-shot accuracy", "definition": "multiple-choice accuracy over 57 tasks", "unit": "%", "higher_is_better": true},
+    {"name": "Vicuna benchmark score relative to ChatGPT", "definition": "GPT-4 scores both responses out of ten; model score as percentage of ChatGPT's, mean over both orders", "unit": "%", "higher_is_better": true},
+    {"name": "Elo", "definition": "tournament of pairwise human or GPT-4 judgments, start 1000, K = 32, 10,000 random orderings", "unit": "Elo points", "higher_is_better": true},
+    {"name": "RougeL", "definition": "Super-NaturalInstructions and Alpaca RougeL", "unit": "RougeL", "higher_is_better": true},
+    {"name": "Mean zero-shot accuracy / Pile Common Crawl PPL", "definition": "quantization data type comparison over OPT, BLOOM, LLaMA, Pythia 125M-13B", "unit": "% / perplexity", "higher_is_better": true}
+   ],
+   "baselines": ["16-bit full finetuning", "16-bit LoRA", "Int8 and FP4 QLoRA", "Vicuna 13B", "Open Assistant 33B", "GPT-4", "ChatGPT", "Bard"],
+   "protocol": "Human raters on Amazon Mechanical Turk (2 annotators vs ChatGPT, 3 for pairwise) plus GPT-4 judge; no significance test reported beyond 95% CIs"
+  },
+  "availability": {
+   "code": "https://github.com/artidoro/qlora and https://github.com/TimDettmers/bitsandbytes",
+   "weights": "adapters for 7/13/33/65B trained on 8 datasets (32 models) released",
+   "data": "model generations with human and GPT-4 annotations released"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Guanaco 65B reaches 99.3% of ChatGPT's Vicuna-benchmark score with 24 hours of finetuning on one professional GPU.",
+   "kind": "measured", "source": null, "metric": "Vicuna score relative to ChatGPT", "value": "99.3", "unit": "%", "baseline_value": null, "n": 80,
+   "setup": "Guanaco 65B (4-bit, OASST1), GPT-4 judge, 80 Vicuna prompts, mean over both orders, 95% CI 4.4%",
+   "quote": "achieve 99.3% with our largest model, essentially", "table": null,
+   "note": "Table 6 gives 99.3% with 95% CI 4.4%; confidence intervals overlap with many models.", "where": "Introduction, Table 6"
+  },
+  {
+   "claim": "Regular 16-bit finetuning of LLaMA 65B needs more than 780 GB GPU memory; QLoRA brings it under 48 GB.",
+   "kind": "measured", "source": null, "metric": "GPU memory", "value": "780", "unit": "GB", "baseline_value": null, "n": null,
+   "setup": "LLaMA 65B, 16-bit full finetuning vs QLoRA (<48GB)",
+   "quote": "requires more than 780 GB of GPU memory", "table": null, "note": null, "where": "Introduction"
+  },
+  {
+   "claim": "Double Quantization saves about 0.373 bits per parameter (about 3 GB at 65B).",
+   "kind": "worked-example", "source": null, "metric": "bits per parameter saved", "value": "0.373", "unit": "bits/param", "baseline_value": null, "n": null,
+   "setup": "blocksize 64 for weights, 32-bit constants quantized to FP8 with blocksize 256",
+   "quote": "a reduction of 0.373 bits", "table": null, "note": "Introduction rounds it to about 0.37 bits", "where": "Section 3"
+  },
+  {
+   "claim": "On LLaMA 7B-65B finetuned on Alpaca and FLAN v2, NF4+DQ matches BF16 LoRA on mean MMLU while FP4 is about a point behind.",
+   "kind": "measured", "source": null, "metric": "mean 5-shot MMLU", "value": "53.1", "unit": "%", "baseline_value": "53.0", "n": 8,
+   "setup": "LLaMA 7B/13B/33B/65B x Alpaca/FLAN v2, adapters; BF16 53.0, Float4 52.2, NFloat4+DQ 53.1",
+   "quote": null, "table": "Table 4, row NFloat4 + DQ, column Mean", "note": null, "where": "Table 4"
+  },
+  {
+   "claim": "Mean Pile Common Crawl perplexity is lowest for NFloat4+DQ, versus Int4.",
+   "kind": "measured", "source": null, "metric": "mean perplexity", "value": "27.41", "unit": "PPL", "baseline_value": "34.34", "n": null,
+   "setup": "OPT, BLOOM, LLaMA, Pythia 125M-13B; Float4 E2M1 31.07, E3M0 29.48",
+   "quote": null, "table": "Table 2, row NFloat4 + DQ, column Mean PPL", "note": null, "where": "Table 2"
+  },
+  {
+   "claim": "RoBERTa-large on GLUE: QLoRA FP4 matches the 16-bit baseline.",
+   "kind": "measured", "source": null, "metric": "GLUE accuracy", "value": "88.6", "unit": "acc", "baseline_value": "88.6", "n": null,
+   "setup": "RoBERTa-large; LoRA BF16 88.8, QLoRA Int8 88.8",
+   "quote": null, "table": "Table 3, row QLORA FP4, column RoBERTa-large", "note": null, "where": "Table 3"
+  },
+  {
+   "claim": "Applying LoRA to all linear layers is critical to match 16-bit performance; rank r does not matter.",
+   "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null,
+   "setup": "LLaMA 7B on Alpaca, RougeL, Fig 2 and Fig 4 (r in 8-64, 3 seeds per combination)",
+   "quote": null, "table": null, "note": null, "where": "Section 4, Fig 2, Fig 4"
+  },
+  {
+   "claim": "Guanaco 33B scores 97.8% of ChatGPT on the Vicuna benchmark at 21 GB.",
+   "kind": "measured", "source": null, "metric": "Vicuna score relative to ChatGPT", "value": "97.8", "unit": "%", "baseline_value": null, "n": 80,
+   "setup": "Guanaco 33B 4-bit, GPT-4 judge, mean over both orders, 95% CI 4.4%",
+   "quote": null, "table": "Table 6, row Guanaco 33B, column Mean", "note": null, "where": "Table 6"
+  },
+  {
+   "claim": "A 9k-sample dataset (OASST1) beat a 450k-sample FLAN v2 subsample on chatbot performance.",
+   "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null,
+   "setup": "Vicuna and OA chatbot benchmarks; quality over size",
+   "quote": "a 9k sample dataset (OASST1) outperformed a 450k sample dataset", "table": null, "note": null, "where": "Introduction"
+  },
+  {
+   "claim": "Guanaco 65B has an Elo of 1022 under GPT-4 judging on the Vicuna benchmark, second to GPT-4 (1348).",
+   "kind": "measured", "source": null, "metric": "Elo", "value": "1022", "unit": "Elo", "baseline_value": "966", "n": 80,
+   "setup": "GPT-4 judge, 10,000 random orderings; ChatGPT 966; human-rater Elo for Guanaco 65B is 1023 and ChatGPT 916",
+   "quote": null, "table": "Table 1, row Guanaco 65B, column Elo", "note": null, "where": "Table 1, Table 7"
+  },
+  {
+   "claim": "Agreement between GPT-4 and human majority vote at the example level is weak.",
+   "kind": "measured", "source": null, "metric": "Fleiss kappa", "value": "0.25", "unit": "kappa", "baseline_value": null, "n": null,
+   "setup": "Vicuna benchmark, GPT-4 vs human annotators; system-level Kendall tau 0.43, Spearman 0.55; human-human kappa 0.42",
+   "quote": "Fleiss κ = 0.25", "table": null, "note": null, "where": "Section 5.3, 6.2"
+  },
+  {
+   "claim": "FLAN v2 does best on MMLU but worst on the Vicuna benchmark, so MMLU and chatbot quality are only partly related.",
+   "kind": "measured", "source": null, "metric": "MMLU 5-shot", "value": "63.9", "unit": "%", "baseline_value": "63.4", "n": null,
+   "setup": "LLaMA 65B finetuned on FLAN v2 with QLoRA; LLaMA 65B no tuning 63.4",
+   "quote": null, "table": "Table 5, row FLAN v2, column 65B", "note": null, "where": "Table 5, Table 6"
+  },
+  {
+   "claim": "Training on the target only beats training on source and target for MMLU.",
+   "kind": "measured", "source": null, "metric": "mean 5-shot MMLU", "value": "38.6", "unit": "%", "baseline_value": "37.5", "n": null,
+   "setup": "7B, 52,000 examples, four datasets",
+   "quote": null, "table": "Table 10, row Train on target, column Mean", "note": null, "where": "Appendix B.3"
+  },
+  {
+   "claim": "Paged optimizers give the same training speed as regular optimizers for a 65B model on 48 GB at batch size 16.",
+   "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null,
+   "setup": "65B, 48GB GPU, batch size 16; no hard measurements otherwise provided",
+   "quote": "paged optimizers provide the same training speed", "table": null, "note": null, "where": "Section 4"
+  },
+  {
+   "claim": "Guanaco 65B has a lower CrowS bias score than LLaMA-65B.",
+   "kind": "measured", "source": null, "metric": "CrowS average", "value": "43.5", "unit": "score", "baseline_value": "66.6", "n": null,
+   "setup": "lower is less biased; GPT-3 67.2, OPT-175B 69.5",
+   "quote": null, "table": "Table 8, row Average, column Guanaco-65B", "note": null, "where": "Table 8"
+  },
+  {
+   "claim": "7.5% of 7B LLaMA hidden units fail the Shapiro-Wilk normality test at the 5% level.",
+   "kind": "measured", "source": null, "metric": "non-normal neurons", "value": "7.5", "unit": "%", "baseline_value": "5", "n": null,
+   "setup": "Shapiro-Wilk per hidden unit of LLaMA 7B weights; about 2.5% above expected false-positive rate",
+   "quote": "we find that 7.5% of", "table": null, "note": null, "where": "Appendix F"
+  }
+ ],
+ "limits": [
+  "The authors did not establish that QLoRA matches full 16-bit finetuning at 33B and 65B scales (Section 8).",
+  "Only MMLU, Vicuna and OA benchmarks were used; not BigBench, RAFT or HELM.",
+  "Chatbot benchmarks are called not trustworthy; Vicuna Table 6 has wide, overlapping confidence intervals and GPT-4 shows order effects and self-preference.",
+  "Only limited responsible-AI evaluation (CrowS); no other bit-precisions or adapter methods tested.",
+  "Paged optimizers not measured beyond one speed check.",
+  "Warmup, weight decay, epochs and token counts are not stated; Guanaco compared against baselines trained on proprietary data."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "NormalFloat (NF4)", "definition": "a k-bit quantile quantization data type for zero-centered normal data, with an exact zero", "where": "Section 3"},
+  {"term": "Double Quantization", "definition": "the process of quantizing the quantization constants for additional memory savings", "where": "Section 3"},
+  {"term": "Paged Optimizers", "definition": "optimizer states in NVIDIA unified memory, evicted to CPU RAM when the GPU runs out of memory", "where": "Section 3"}
+ ],
+ "lineage": [
+  {"work": "LoRA: Low-rank adaptation of large language models", "year": 2021, "arxiv": "2106.09685", "relation": "extends", "note": "adapter method used on the quantized base", "quote": null},
+  {"work": "The case for 4-bit precision: k-bit inference scaling laws", "year": 2022, "arxiv": "2212.09720", "relation": "extends", "note": "quantization setup for data type comparison", "quote": null},
+  {"work": "LLaMA", "year": 2023, "arxiv": "2302.13971", "relation": "evaluates", "note": "base models 7B-65B", "quote": null},
+  {"work": "Vicuna", "year": 2023, "arxiv": null, "relation": "baseline", "note": "Vicuna benchmark and GPT-4 scoring protocol", "quote": null},
+  {"work": "OpenAssistant Conversations", "year": 2023, "arxiv": "2304.07327", "relation": "uses-data", "note": "OASST1 trains Guanaco", "quote": null},
+  {"work": "Measuring massive multitask language understanding", "year": 2020, "arxiv": null, "relation": "uses-data", "note": "MMLU", "quote": null},
+  {"work": "Scaling instruction-finetuned language models (FLAN v2)", "year": 2022, "arxiv": "2210.11416", "relation": "uses-data", "note": "FLAN v2 mixture", "quote": null},
+  {"work": "8-bit optimizers via block-wise quantization", "year": 2022, "arxiv": null, "relation": "uses-method", "note": "quantile quantization", "quote": null},
+  {"work": "Stable and low-precision training for large-scale vision-language models (SwitchBack)", "year": 2023, "arxiv": "2304.13013", "relation": "related", "note": "only other work on backprop through quantized weights beyond 1B", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Figure 1", "caption": "Different finetuning methods and their memory requirements. QLORA improves over LoRA by quantizing the transformer model to 4-bit precision and using paged optimizers to handle memory spikes.", "page": 3, "why": "Shows full finetuning vs LoRA vs QLoRA memory at a glance."},
+  {"figure": "Figure 2", "caption": "RougeL for LLaMA 7B models on the Alpaca dataset. Each point represents a run with a different random seed.", "page": 6, "why": "Shows LoRA on all layers is needed to match 16-bit."},
+  {"figure": "Figure 3", "caption": "Mean zero-shot accuracy over Winogrande, HellaSwag, PiQA, Arc-Easy, and Arc-Challenge using LLaMA models with different 4-bit data types.", "page": 6, "why": "Shows NF4 beats FP4 bit for bit."}
+ ],
+ "code": [
+  {"where": "Equation 5, p4", "snippet": "Y_BF16 = X_BF16 doubleDequant(c1_FP32, c2_k-bit, W_NF4) + X_BF16 L1_BF16 L2_BF16", "verbatim": false},
+  {"where": "Appendix E", "snippet": "NF4 = [-1.0, -0.6961928009986877, -0.5250730514526367, -0.39491748809814453, -0.28444138169288635, -0.18477343022823334, -0.09105003625154495, 0.0, 0.07958029955625534, 0.16093020141124725, 0.24611230194568634, 0.33791524171829224, 0.44070982933044434, 0.5626170039176941, 0.7229568362236023, 1.0]", "verbatim": true}
+ ],
+ "problems": [
+  "No embedded instructions found.",
+  "Venue printed is 'Preprint. Under review.'; NeurIPS 2023 is not stated in the PDF.",
+  "Table 5 and Table 4 give different MMLU values for the same models (e.g. 7B Alpaca 38.8 vs 38.4/39.0) because they are different runs (adapter data types vs QLoRA), not reconciled in the text."
+ ]
+}

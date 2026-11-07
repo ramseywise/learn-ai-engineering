@@ -1,19 +1,747 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2201.12086",
  "pdf": "ai-engineering/08-multimodal-engineering/sources/li-2022-blip.pdf",
  "bib": {
   "title": "BLIP: Bootstrapping Language-Image Pre-training for Unified Vision-Language Understanding and Generation",
+  "authors": [
+   "Junnan Li",
+   "Dongxu Li",
+   "Caiming Xiong",
+   "Steven Hoi"
+  ],
   "first_author": "Li",
   "year": 2022,
-  "venue": "ICML 2022",
+  "venue": "preprint",
   "arxiv": "2201.12086",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-04",
-  "session": "97b4134b-decf-4866-ae85-c6872cbbba19"
+  "at": "2026-11-07",
+  "chars_read": 51997,
+  "chars_total": 51997,
+  "engine": "pymupdf",
+  "skipped": null
  },
- "legacy_report": "SOURCE: \"BLIP: Bootstrapping Language-Image Pre-training for Unified Vision-Language Understanding and Generation\", Junnan Li, Dongxu Li, Caiming Xiong, Steven Hoi (Salesforce Research). The PDF names no venue. It is stamped \"arXiv:2201.12086v2 [cs.CV] 15 Feb 2022\", so cite it as a preprint, 2022. The PDF does not state the ICML 2022 venue, and I did not use it.\n\nCOVERAGE: I read all 51,990 of 51,990 chars: the body, Tables 1–15, Appendices A–C (finetuning details, the Figure 6 examples, dataset statistics) and every reference. Nothing was skipped. I also pulled the figure captions with figures.py.\n\nCLAIMS\n- claim: CapFilt (captioner plus filter, applied together) improves every downstream metric over training on the raw web text, at the same 14M images and ViT-B/16 backbone.\n  number: COCO-FT TR@1 78.4→80.6, IR@1 60.7→63.1; Flickr-ZS TR@1 93.9→94.8, IR@1 82.1→84.9; COCO caption CIDEr 127.8→129.7; NoCaps-ZS CIDEr 102.2→105.1\n  setup: Pre-trained on COCO+VG+CC+SBU (14M images), ViT-B/16, with a ViT-B captioner and filter. Retrieval is finetuned on COCO and zero-shot on Flickr. Captioning is finetuned on COCO and zero-shot on NoCaps.\n  quote: Table 1 rows \"78.4 60.7 93.9 82.1 38.0 127.8 102.2 13.9\" (no bootstrap) and \"B B 80.6 63.1 94.8 84.9 38.6 129.7 105.1 14.4\"\n  where: p5 (Table 1), chars ~22,000\n- claim: The captioner alone and the filter alone each help, and the two effects add up. The extraction drops the checkmarks, so you cannot tell which single-module row is which (see PROBLEMS).\n  number: single-module rows give TR@1 79.1 / 79.7 and NoCaps CIDEr 102.7 / 103.4\n  setup: 14M images, ViT-B\n  quote: \"  B 79.1 61.5 94.1 82.8 38.1 128.2 102.7 14.0\" / \"B  79.7 62.0 94.4 83.6 38.4 128.9 103.4 14.2\"; text: \"When only the captioner or the filter is applied to the dataset with 14M images, performance improvement can be observed. When applied together, their effects compliment each other\"\n  where: p5 (Table 1 and Section 4.2)\n- claim: CapFilt still helps at 129M images, when LAION's 115M images are added. A ViT-L captioner and filter also improve a ViT-B student.\n  number: 129M with no bootstrap: TR@1 79.6, CIDEr 130.1, NoCaps 105.4. With ViT-B CapFilt: 81.9 / 131.4 / 106.3. With ViT-L CapFilt (ViT-B student): 81.2 / 133.3 / 109.6\n  setup: COCO+VG+CC+SBU+LAION (129M images), ViT-B/16 student\n  quote: \"79.6 62.0 94.3 83.6 38.8 130.1 105.4 14.2\", \"B B 81.9 64.3 96.0 85.0 39.4 131.4 106.3 14.3\", \"L L 81.2 64.1 96.0 85.5 39.7 133.3 109.6 14.7\"\n  where: p5 (Table 1)\n- claim: Nucleus sampling gives better synthetic captions than beam search, even though the filter flags more of them as noisy. The authors put this down to diversity: beam search produces \"safe captions that are common in the dataset.\"\n  number: noise ratio 19% for beam vs 25% for nucleus; TR@1 79.6 vs 80.6; NoCaps CIDEr 103.5 vs 105.1; nucleus uses p = 0.9\n  setup: 14M images, one synthetic caption per image\n  quote: \"Beam 19% 79.6 61.9 94.1 83.1 38.4 128.9 103.5 14.2 / Nucleus 25% 80.6 63.1 94.8 84.9 38.6 129.7 105.1 14.4\"; \"(p = 0.9 in our experiments)\"; \"Nucleus sampling leads to evidently better performance, despite being more noisy as suggested by a higher noise ratio from the filter.\"\n  where: p5–6 (Table 2, Section 4.3)\n- claim: The captioner and filter must be finetuned separately. When they share parameters, the filter passes the captioner's own noisy captions (\"confirmation bias\") and downstream scores drop.\n  number: noise ratio 8% when shared vs 25% when decoupled; TR@1 79.8 vs 80.6\n  setup: 14M images\n  quote: \"Share parameters 8% 79.8 62.2 94.3 83.7 38.4 129.0 103.5 14.2 / Decoupled 25% 80.6 63.1 94.8 84.9 38.6 129.7 105.1 14.4\"; \"as indicated by the lower noise ratio (8% compared to 25%)\"\n  where: p6 (Table 4)\n- claim: The gain is not explained by longer training. Copying the web texts up to the bootstrapped dataset's size does not help.\n  number: 15.3M texts without CapFilt: TR@1 78.4. 24.7M replicated texts without CapFilt: 78.3. 24.7M texts with CapFilt: 80.6\n  setup: 14M images\n  quote: \"No 15.3M 78.4 ... No 24.7M 78.3 ... Yes 24.7M 80.6 63.1 94.8 84.9 38.6 129.7 105.1 14.4\"\n  where: p9 (Table 12)\n- claim: The bootstrapped data should train a fresh model. Continuing training from the old checkpoint does not help, which the authors liken to knowledge distillation, where the student is not initialised from the teacher.\n  number: continued training: NoCaps CIDEr 104.5; fresh model: 105.1\n  setup: 14M images\n  quote: \"Yes 80.6 63.0 94.5 84.6 38.5 129.9 104.5 14.2 / No 80.6 63.1 94.8 84.9 38.6 129.7 105.1 14.4\"\n  where: p9 (Table 13)\n- claim: MED is one model with three modes: a unimodal encoder trained with ITC, an image-grounded text encoder that adds cross-attention and is trained with ITM, and an image-grounded decoder that uses causal self-attention and is trained with LM. The encoder and decoder share every parameter except the self-attention layers. Each pair needs one ViT pass and three text-transformer passes.\n  number: sharing all layers except SA gives 252M parameters and TR@1 78.4. Sharing all layers gives 224M and 77.3. Sharing none gives 361M and 78.3\n  setup: 14M images with web texts, ViT-B\n  quote: \"All 224M 77.3 ... All except SA 252M 78.4 60.7 ... None 361M 78.3\"; \"the text encoder and text decoder share all parameters except for the SA layers\"\n  where: p3 (Section 3.1–3.2), p5 (Table 3)\n- claim: Headline retrieval: on the same 14M images, BLIP beats ALBEF on COCO.\n  number: \"+2.7% in average recall@1\"; COCO TR@1 80.6 vs 77.6 and IR@1 63.1 vs 60.7. The best result is ViT-L at 129M: TR@1 82.4, IR@1 65.1\n  setup: Finetuned on COCO, 5K test set. Candidates are picked by feature similarity and reranked by ITM, with k=256 for COCO and k=128 for Flickr\n  quote: \"BLIP outperforms the previous best model ALBEF by +2.7% in average recall@1 on COCO\"; \"BLIPViT-L 129M 82.4 95.4 97.9 65.1\"\n  where: p6 (Table 5, Section 5.1)\n- claim: Zero-shot Flickr30K retrieval, using the model finetuned on COCO.\n  number: BLIP 14M: TR@1 94.8 / IR@1 84.9. ViT-L: 96.7 / 86.7. CLIP (400M images): 88.0 / 68.7\n  setup: Flickr30K 1K test set\n  quote: \"BLIP 14M 94.8 99.7 100.0 84.9\"; \"CLIP 400M 88.0 98.7 99.4 68.7\"\n  where: p6 (Table 6)\n- claim: Captioning: BLIP ViT-L at 129M images roughly matches LEMON-large at 200M, without an object detector and at 384×384 input instead of 800×1333.\n  number: NoCaps overall CIDEr 113.2 vs 113.4; COCO CIDEr 136.7 vs 135.7. SimVLM-huge (1.8B images) reaches COCO CIDEr 143.3\n  setup: Finetuned on COCO Karpathy with cross-entropy loss and the prompt \"a picture of\". Beam size 3, max length 20\n  quote: \"BLIPViT-L 129M 114.9 15.2 112.1 14.9 115.3 14.4 113.2 14.8 40.4 136.7\"; \"LEMONlarge† ... 200M ... 113.4 15.0 40.6 135.7\"\n  where: p7 (Table 7), Appendix A\n- claim: VQA is framed as answer generation. At inference the decoder ranks 3,128 candidate answers. BLIP beats ALBEF at 14M images, and at 129M it beats SimVLM-base, which used 1.8B images.\n  number: test-std 77.62 at 14M vs ALBEF 76.04. At 129M: 78.17 (78.32 with CapFilt-L) vs SimVLM-base 78.14\n  setup: VQA2.0 with train+val plus VG, 480×480 images\n  quote: \"BLIP 14M 77.54 77.62\"; \"ALBEF 14M 75.84 76.04\"; \"SimVLMbase† 1.8B 77.87 78.14\"; \"BLIPCapFilt-L 129M 78.25 78.32\"\n  where: p7 (Table 8), Appendix A\n- claim: Zero-shot transfer to video works even though temporal order is ignored (frames are simply concatenated). Zero-shot BLIP beats finetuned video models on MSRVTT retrieval.\n  number: R@1 43.3 zero-shot vs 30.9 for finetuned VideoCLIP (\"+12.4%\")\n  setup: MSRVTT 1k test, 8 frames per video, model finetuned on COCO retrieval\n  quote: \"BLIP 43.3 65.6 74.7 2\"; \"zero-shot BLIP even outperforms models finetuned on the target video dataset by +12.4% in recall@1\"\n  where: p8 (Table 10)\n- claim: Compute and recipe. Pre-training ran on two 16-GPU nodes for 20 epochs, initialised from an ImageNet ViT and BERT-base.\n  number: batch size 2880 (ViT-B) / 2400 (ViT-L); LR 3e-4 / 2e-4; images 224² in pre-training and 384² in finetuning\n  setup: Section 4.1. No GPU type or wall-clock time is given\n  quote: \"pre-trained on two 16-GPU nodes\"; \"We pre-train the model for 20 epochs using a batch size of 2880 (ViT-B) / 2400 (ViT-L)\"\n  where: p4\n- claim: Pre-training data sizes.\n  number: 14M images (COCO 113K, VG 100K, SBU 860K, CC3M 3M, CC12M 10M) plus LAION 115M, giving 129M. Only 1/5 of LAION is used per epoch\n  setup: Table 15, footnote 1\n  quote: \"COCO VG SBU CC3M CC12M LAION # image 113K 100K 860K 3M 10M 115M\"; \"we only use 1/5 of it each epoch during pre-training\"\n  where: p4, p12\n\nLIMITS\n- NLVR2 gains little from extra web images. The authors say this is \"possibly due to the domain gap\", and ALBEF beats them on NLVR2 test-P (83.14 vs 82.30 at 14M).\n- The video results ignore temporal information.\n- Only one synthetic caption is made per image, and bootstrapping runs only once. The conclusion lists multiple rounds, multiple captions and captioner/filter ensembles as future work.\n- No compute or wall-clock cost is reported for CapFilt itself. Running the captioner and filter over 129M images goes unmeasured.\n- The filter's \"noise ratio\" is the filter's own verdict, not a human audit. No human check of caption quality is reported.\n- The authors give no error bars or seed variance. Many gains are 0.5–2 points.\n- The captioner and filter are finetuned on COCO, which is also the evaluation domain, so some of the gain may be COCO-style captions leaking in. The paper does not test this.\n- SNLI-VE is omitted because its test data is noisy.\n- What has dated: this is the 2022 state of the art with BERT-base text towers. The SimVLM-huge comparison (COCO CIDEr 143.3) already exceeds BLIP.\n\nBUILDS ON: ALBEF (Li et al., 2021a): ITC with a momentum encoder and soft labels, ITM hard-negative mining, the 14M dataset, retrieval rerank, and VQA as generation. Also ViT (Dosovitskiy et al., 2021), BERT (Devlin et al., 2019), nucleus sampling (Holtzman et al., 2020), knowledge distillation (Hinton et al., 2015), noisy-student self-training (Xie et al., 2020), CLIP (Radford et al., 2021), SimVLM (Wang et al., 2021) for the \"a picture of\" prompt and 480px VQA, the unified VLP encoder-decoder (Zhou et al., 2020), UNITER (Chen et al., 2020), LAION-400M (Schuhmann et al., 2021) and Conceptual Captions/CC12M (Sharma et al., 2018; Changpinyo et al., 2021).\n\nCODE: The paper contains no code snippets. The repo link printed on p1 is https://github.com/salesforce/BLIP\n\nFIGURES\n- Fig 2, p2: \"Pre-training model architecture and objectives of BLIP (same parameters have the same color)\". One picture shows the three MED modes and their losses (ITC, ITM, LM) and which layers are shared. This is faster than the prose for \"What the model actually sees\".\n- Fig 3, p4: \"Learning framework of BLIP. We introduce a captioner to produce synthetic captions for web images, and a filter to remove noisy image-text pairs.\" The full CapFilt loop (pre-train → finetune Cap/Filt on COCO → bootstrap → pre-train new model) on one page. Best fit for the data-quality section.\n- Fig 4, p5 and Fig 6, p12: \"Examples of the web text Tw and the synthetic text Ts. Green texts are accepted by the filter, whereas red texts are rejected.\" Concrete alt-text noise, e.g. \"the current castle was built in 1180...\" vs \"a large building with a lot of windows on it\".\n- Fig 1, p1: a minimal Cap/Filt cartoon.\n\nPROBLEMS\n- In Table 1 the C/F checkmark columns came out of extraction as spaces or \"B\". The rows \"  B 79.1...\" and \"B  79.7...\" are each a single module, but I cannot tell which is captioner-only and which is filter-only. Check the PDF page 5 visually before attributing them.\n- Table 1's last two rows are merged (\"ViT-L/16 80.6 64.1 95.1 85.5 40.3 135.5 112.5 14.7L L 82.4 ...\"). Read as: ViT-L backbone with no bootstrap gives 80.6/64.1/95.1/85.5/40.3/135.5/112.5/14.7, and with an L/L CapFilt gives 82.4/65.1/96.7/86.7/40.4/136.7/113.2/14.8.\n- Figure-internal text (diagram labels, LaTeX symbols such as 𝑇!, 𝑇\") is garbled but not needed.\n- The PDF contains no embedded instructions.\n\nPDF path: /Users/ramsey-wise/workspace/learn-ai-engineering/ai-engineering/08-multimodal-engineering/sources/li-2022-blip.pdf"
+ "type": "empirical",
+ "question": "Can one vision-language model serve both understanding and generation tasks, and can noisy web image-text pairs be cleaned by bootstrapping synthetic captions and filtering?",
+ "hypothesis": "Noisy web text is a suboptimal supervision source; a captioner producing diverse synthetic captions plus a filter removing noisy ones yields a better pre-training corpus.",
+ "contributions": [
+  "Multimodal mixture of Encoder-Decoder (MED): unimodal encoder, image-grounded text encoder, image-grounded text decoder, jointly pre-trained with ITC, ITM and LM losses",
+  "CapFilt: captioner and filter finetuned from the same pre-trained MED on COCO to bootstrap web data",
+  "State-of-the-art on retrieval, captioning, VQA, NLVR2, VisDial and zero-shot transfer to video-language tasks"
+ ],
+ "method": {
+  "summary": "A ViT image encoder with a BERT-style text transformer is pre-trained with ITC, ITM and LM losses (MED). The pre-trained model is finetuned on COCO into a captioner (LM) and a filter (ITC+ITM); the captioner writes one nucleus-sampled caption per web image, the filter drops mismatched web and synthetic texts, and a new model is pre-trained on the cleaned set plus human-annotated pairs.",
+  "task": "vision-language pre-training; image-text retrieval, captioning, VQA, NLVR2, VisDial, zero-shot video retrieval and QA",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "COCO",
+    "role": "pretrain",
+    "size": "113K images / 567K texts",
+    "split": null,
+    "source": "human-annotated",
+    "preprocessing": null
+   },
+   {
+    "name": "Visual Genome",
+    "role": "pretrain",
+    "size": "100K images / 769K texts",
+    "split": null,
+    "source": "human-annotated",
+    "preprocessing": null
+   },
+   {
+    "name": "SBU",
+    "role": "pretrain",
+    "size": "860K images / 860K texts",
+    "split": null,
+    "source": "web",
+    "preprocessing": null
+   },
+   {
+    "name": "Conceptual Captions 3M",
+    "role": "pretrain",
+    "size": "3M images / 3M texts",
+    "split": null,
+    "source": "web",
+    "preprocessing": null
+   },
+   {
+    "name": "Conceptual 12M",
+    "role": "pretrain",
+    "size": "10M images / 10M texts",
+    "split": null,
+    "source": "web",
+    "preprocessing": "Table 15 gives 10M"
+   },
+   {
+    "name": "LAION",
+    "role": "pretrain",
+    "size": "115M images / 115M texts",
+    "split": null,
+    "source": "web (LAION400M subset)",
+    "preprocessing": "only images with shorter edge > 256 px; 1/5 of it used each epoch"
+   },
+   {
+    "name": "COCO Karpathy split (retrieval, captioning)",
+    "role": "both",
+    "size": "113K/5K/5K images train/val/test",
+    "split": null,
+    "source": "Karpathy & Li 2015",
+    "preprocessing": null
+   },
+   {
+    "name": "Flickr30K (retrieval)",
+    "role": "both",
+    "size": "29K/1K/1K images",
+    "split": null,
+    "source": "Karpathy split",
+    "preprocessing": null
+   },
+   {
+    "name": "NoCaps",
+    "role": "eval",
+    "size": "validation",
+    "split": null,
+    "source": "zero-shot from COCO-finetuned captioner",
+    "preprocessing": null
+   },
+   {
+    "name": "VQA2.0",
+    "role": "both",
+    "size": "83K/41K/81K images train/val/test",
+    "split": null,
+    "source": "train+val used for training plus Visual Genome samples",
+    "preprocessing": null
+   },
+   {
+    "name": "NLVR2",
+    "role": "both",
+    "size": null,
+    "split": null,
+    "source": "official split",
+    "preprocessing": null
+   },
+   {
+    "name": "VisDial v1.0",
+    "role": "both",
+    "size": null,
+    "split": null,
+    "source": "train; evaluated on validation",
+    "preprocessing": null
+   },
+   {
+    "name": "MSRVTT / MSVD",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "zero-shot video; MSRVTT retrieval 1k test split",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "BLIP ViT-B",
+    "role": "proposed",
+    "params": null,
+    "architecture": "ViT-B/16 image encoder + BERT-base text transformer with cross-attention, encoder/decoder share all except self-attention",
+    "init_from": "ViT pre-trained on ImageNet (Touvron et al. 2020; Dosovitskiy et al. 2021); BERT-base",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "param_counts_read_from_Table3": "224M all shared, 252M all except SA/CA, 361M none shared (14M-image web-text models)"
+    }
+   },
+   {
+    "name": "BLIP ViT-L",
+    "role": "proposed",
+    "params": null,
+    "architecture": "ViT-L/16 image encoder",
+    "init_from": "ImageNet ViT-L",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Captioner",
+    "role": "proposed",
+    "params": null,
+    "architecture": "image-grounded text decoder",
+    "init_from": "pre-trained MED",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Filter",
+    "role": "proposed",
+    "params": null,
+    "architecture": "image-grounded text encoder with ITM head",
+    "init_from": "pre-trained MED",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "ITC (momentum encoder, soft labels, as ALBEF) + ITM (hard negative mining) + LM (label smoothing 0.1)",
+   "optimizer": "AdamW",
+   "lr": "3e-4 (ViT-B) / 2e-4 (ViT-L) peak",
+   "lr_schedule": "warm-up then linear decay with a rate of 0.85 (as printed)",
+   "warmup": null,
+   "batch_size": "2880 (ViT-B) / 2400 (ViT-L)",
+   "steps": null,
+   "epochs": "20",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": "0.05",
+   "dropout": null,
+   "regularisation": "label smoothing 0.1",
+   "hardware": "two 16-GPU nodes",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "image_resolution": "random crops 224x224 pre-training, 384x384 finetuning (480x480 for VQA)",
+    "finetune_hparams": "AdamW wd 0.05, cosine schedule. Table 14 init LR (ViT-L), batch, epochs: retrieval 1e-5 (5e-6), 256, 6; captioning 1e-5 (2e-6), 256, 5; VQA 2e-5, 256, 10; NLVR2 3e-5, 256, 15; VisDial 2e-5, 240, 20",
+    "capfilt_finetune": "captioner and filter each finetuned on COCO; details beyond 'lightweight' not given",
+    "retrieval_rerank": "top k by feature similarity then ITM rerank: k=256 COCO, k=128 Flickr30K",
+    "NLVR2": "two cross-attention layers per block, average pooling in first 6 layers, concat + linear in layers 6-12",
+    "video": "n=8 frames retrieval, n=16 QA, frame features concatenated"
+   }
+  },
+  "inference": {
+   "decoding": "CapFilt synthetic captions: nucleus sampling p=0.9, one caption per web image; captioning eval: beam search, beam size 3",
+   "temperature": null,
+   "top_p": "0.9",
+   "max_tokens": "20 (captioning)",
+   "samples": "one synthetic caption per web image; single runs, no seeds reported",
+   "prompting": "captioning: prompt 'a picture of' prepended to each caption",
+   "retrieval": null,
+   "parameters": {
+    "filter_rule": "text noisy if ITM head predicts unmatched",
+    "VQA": "decoder ranks 3,128 candidate answers"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Recall@K (TR/IR)",
+     "definition": "text/image retrieval recall at K",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "CIDEr, SPICE, BLEU@4",
+     "definition": "caption metrics",
+     "unit": "score",
+     "higher_is_better": true
+    },
+    {
+     "name": "VQA score",
+     "definition": "VQA accuracy",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "MRR",
+     "definition": "VisDial rank metric",
+     "unit": "MRR",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "ALBEF",
+    "SimVLM",
+    "LEMON",
+    "VinVL",
+    "UNITER",
+    "OSCAR",
+    "ALIGN",
+    "CLIP",
+    "VD-ViLBERT",
+    "FiT",
+    "VideoCLIP"
+   ],
+   "protocol": "Single runs; no seeds or significance tests stated. Noise ratio = share rejected by filter."
+  },
+  "availability": {
+   "code": "https://github.com/salesforce/BLIP",
+   "weights": "released (per abstract)",
+   "data": "bootstrapped dataset released (per abstract and conclusion)"
+  },
+  "prompts": [
+   {
+    "purpose": "captioning prefix",
+    "text": "a picture of",
+    "where": "Sec 5.2"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training.lr_schedule",
+    "quote": "decayed linearly with a rate of 0.85",
+    "where": "Sec 4.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "CapFilt (captioner + filter) raises COCO fine-tuned text-retrieval recall@1 over raw web text at 14M images",
+   "kind": "measured",
+   "source": null,
+   "metric": "TR@1 (COCO FT)",
+   "value": "80.6",
+   "unit": "%",
+   "baseline_value": "78.4",
+   "n": null,
+   "setup": "Pre-trained on COCO+VG+CC+CC12M+SBU (14M images), ViT-B/16, one run, no seeds stated",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row 14M B/B, column Retrieval-FT TR@1"
+  },
+  {
+   "claim": "CapFilt raises zero-shot NoCaps CIDEr at 14M images",
+   "kind": "measured",
+   "source": null,
+   "metric": "CIDEr (NoCaps ZS)",
+   "value": "105.1",
+   "unit": "CIDEr",
+   "baseline_value": "102.2",
+   "n": null,
+   "setup": "Same as above; captioner finetuned on COCO, no NoCaps training",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row 14M B/B, column Caption-ZS CIDEr"
+  },
+  {
+   "claim": "CapFilt raises COCO caption CIDEr at 14M images",
+   "kind": "measured",
+   "source": null,
+   "metric": "CIDEr (COCO FT)",
+   "value": "129.7",
+   "unit": "CIDEr",
+   "baseline_value": "127.8",
+   "n": null,
+   "setup": "Pre-trained on COCO+VG+CC+CC12M+SBU (14M images), ViT-B/16, one run, no seeds stated",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row 14M B/B, column Caption-FT CIDEr"
+  },
+  {
+   "claim": "CapFilt still helps at 129M images (adds LAION 115M), ViT-B student with ViT-B captioner and filter: COCO TR@1",
+   "kind": "measured",
+   "source": null,
+   "metric": "TR@1 (COCO FT)",
+   "value": "81.9",
+   "unit": "%",
+   "baseline_value": "79.6",
+   "n": null,
+   "setup": "COCO+VG+CC+SBU+LAION (129M images), ViT-B/16",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row 129M B/B, column Retrieval-FT TR@1"
+  },
+  {
+   "claim": "A ViT-L captioner and filter improve a ViT-B student further: NoCaps CIDEr",
+   "kind": "measured",
+   "source": null,
+   "metric": "CIDEr (NoCaps ZS)",
+   "value": "109.6",
+   "unit": "CIDEr",
+   "baseline_value": "105.4",
+   "n": null,
+   "setup": "129M images, ViT-B student, ViT-L captioner and filter (BLIP CapFilt-L)",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row 129M L/L (ViT-B), column Caption-ZS CIDEr"
+  },
+  {
+   "claim": "Captioner alone and filter alone each give a gain at 14M and the effects are complementary (single-module TR@1 79.1 and 79.7)",
+   "kind": "measured",
+   "source": null,
+   "metric": "TR@1 (COCO FT)",
+   "value": "79.7",
+   "unit": "%",
+   "baseline_value": "78.4",
+   "n": null,
+   "setup": "Pre-trained on COCO+VG+CC+CC12M+SBU (14M images), ViT-B/16, one run, no seeds stated",
+   "note": "Checkmarks lost in text extraction; which single-module row is captioner-only vs filter-only (79.1 vs 79.7) is not recoverable from the text",
+   "where": "Table 1; Sec 4.2",
+   "quote": "When only the captioner or the ﬁlter is applied to the dataset with 14M images, performance improvement can be observed.",
+   "table": "Table 1, row filter only (B), column Retrieval-FT TR@1"
+  },
+  {
+   "claim": "Nucleus sampling (p=0.9) beats beam search for synthetic captions, COCO TR@1",
+   "kind": "measured",
+   "source": null,
+   "metric": "TR@1 (COCO FT)",
+   "value": "80.6",
+   "unit": "%",
+   "baseline_value": "79.6",
+   "n": null,
+   "setup": "14M images; beam: noise ratio 19%, nucleus: 25%",
+   "note": null,
+   "where": "Table 2; Sec 4.3",
+   "quote": "Nucleus sampling leads to evidently better performance, despite being more noisy as suggested by a higher noise ratio from the ﬁlter.",
+   "table": "Table 2, row Nucleus, column TR@1"
+  },
+  {
+   "claim": "Noise ratio (share rejected by the filter) for nucleus sampling",
+   "kind": "measured",
+   "source": null,
+   "metric": "noise ratio",
+   "value": "25",
+   "unit": "%",
+   "baseline_value": "19",
+   "n": null,
+   "setup": "14M images, nucleus p=0.9",
+   "note": "No human audit of the filter",
+   "where": "Table 2",
+   "table": "Table 2, row Nucleus, column Noise ratio"
+  },
+  {
+   "claim": "Sharing all text-encoder/decoder layers except self-attention is best and smallest-but-one (252M); sharing SA hurts",
+   "kind": "measured",
+   "source": null,
+   "metric": "TR@1 (COCO FT)",
+   "value": "78.4",
+   "unit": "%",
+   "baseline_value": "77.3",
+   "n": null,
+   "setup": "14M images, web texts only, no CapFilt; All shared 224M: 77.3, all except CA 252M: 77.5, none 361M: 78.3",
+   "note": null,
+   "where": "Table 3; Sec 4.4",
+   "table": "Table 3, row All except SA, column TR@1"
+  },
+  {
+   "claim": "Sharing parameters between captioner and filter lowers the noise ratio and downstream scores (confirmation bias)",
+   "kind": "measured",
+   "source": null,
+   "metric": "TR@1 (COCO FT)",
+   "value": "79.8",
+   "unit": "%",
+   "baseline_value": "80.6",
+   "n": null,
+   "setup": "14M images; shared noise ratio 8% vs decoupled 25%",
+   "note": null,
+   "where": "Table 4; Sec 4.4",
+   "quote": "The performance on the downstream tasks decreases, which we mainly attribute to conﬁrmation bias.",
+   "table": "Table 4, row Share parameters, column TR@1"
+  },
+  {
+   "claim": "Replicating web text to match samples per epoch (longer training) does not match CapFilt",
+   "kind": "measured",
+   "source": null,
+   "metric": "TR@1 (COCO FT)",
+   "value": "78.3",
+   "unit": "%",
+   "baseline_value": "78.4",
+   "n": null,
+   "setup": "14M images; 24.7M replicated web texts, no CapFilt",
+   "note": "CapFilt row with 24.7M texts: 80.6",
+   "where": "Table 12",
+   "table": "Table 12, row No 24.7M, column TR@1"
+  },
+  {
+   "claim": "Continuing training the pre-trained model on the bootstrapped data does not beat training a new model",
+   "kind": "measured",
+   "source": null,
+   "metric": "NoCaps CIDEr",
+   "value": "104.5",
+   "unit": "CIDEr",
+   "baseline_value": "105.1",
+   "n": null,
+   "setup": "14M images; continue-training vs new model (105.1)",
+   "note": null,
+   "where": "Table 13",
+   "table": "Table 13, row Continue Yes, column Caption-ZS CIDEr"
+  },
+  {
+   "claim": "BLIP 14M beats ALBEF on COCO retrieval in average recall@1",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg recall@1 gain",
+   "value": "2.7",
+   "unit": "% points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "COCO 5K test, fine-tuned, both 14M images",
+   "note": null,
+   "where": "Sec 5.1",
+   "quote": "BLIP outperforms the pre- vious best model ALBEF by +2.7% in average recall@1 on COCO."
+  },
+  {
+   "claim": "Zero-shot Flickr30K image retrieval IR@1, BLIP 14M",
+   "kind": "measured",
+   "source": null,
+   "metric": "IR@1 (Flickr ZS)",
+   "value": "84.9",
+   "unit": "%",
+   "baseline_value": "82.8",
+   "n": null,
+   "setup": "Model fine-tuned on COCO, tested on Flickr30K 1K",
+   "note": "Base is ALBEF 14M",
+   "where": "Table 6",
+   "table": "Table 6, row BLIP 14M, column IR R@1"
+  },
+  {
+   "claim": "BLIP ViT-L 129M COCO caption CIDEr (Karpathy test), fine-tuned with cross-entropy",
+   "kind": "measured",
+   "source": null,
+   "metric": "CIDEr (COCO)",
+   "value": "136.7",
+   "unit": "CIDEr",
+   "baseline_value": "143.3",
+   "n": null,
+   "setup": "129M images, ViT-L, beam 3, max length 20, prompt 'a picture of'",
+   "note": "Baseline is SimVLM huge (1.8B images)",
+   "where": "Table 7",
+   "table": "Table 7, row BLIP ViT-L, column COCO Caption C"
+  },
+  {
+   "claim": "BLIP 129M VQA test-dev",
+   "kind": "measured",
+   "source": null,
+   "metric": "VQA score",
+   "value": "78.24",
+   "unit": "%",
+   "baseline_value": "75.84",
+   "n": null,
+   "setup": "VQA2.0, answer generation decoder ranking 3,128 candidates, 480x480 images",
+   "note": "Base is ALBEF 14M; abstract/Sec 5.3 gives +1.64% for BLIP 14M over ALBEF on test",
+   "where": "Table 8",
+   "table": "Table 8, row BLIP 129M, column test-dev"
+  },
+  {
+   "claim": "BLIP VQA gain over ALBEF at 14M images on the test set",
+   "kind": "measured",
+   "source": null,
+   "metric": "VQA score gain",
+   "value": "1.64",
+   "unit": "% points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "VQA test-std, 14M images",
+   "note": "Table 8: 77.62 vs 76.04",
+   "where": "Sec 5.3",
+   "quote": "Using 14M images, BLIP outperforms ALBEF by +1.64% on the test set."
+  },
+  {
+   "claim": "NLVR2 does not benefit much from extra web images",
+   "kind": "measured",
+   "source": null,
+   "metric": "NLVR2 test-P",
+   "value": "83.08",
+   "unit": "%",
+   "baseline_value": "82.30",
+   "n": null,
+   "setup": "129M BLIP vs 14M BLIP 82.30",
+   "note": null,
+   "where": "Table 8; Sec 5.4",
+   "table": "Table 8, row BLIP 129M, column NLVR2 test-P"
+  },
+  {
+   "claim": "VisDial v1.0 validation MRR",
+   "kind": "measured",
+   "source": null,
+   "metric": "MRR",
+   "value": "69.41",
+   "unit": "MRR",
+   "baseline_value": "69.10",
+   "n": null,
+   "setup": "Discriminative setting, validation",
+   "note": "Base is VD-ViLBERT",
+   "where": "Table 9",
+   "table": "Table 9, row BLIP, column MRR"
+  },
+  {
+   "claim": "Zero-shot text-to-video retrieval on MSRVTT 1k, 8 frames, no temporal modelling",
+   "kind": "measured",
+   "source": null,
+   "metric": "R@1",
+   "value": "43.3",
+   "unit": "%",
+   "baseline_value": "18.7",
+   "n": null,
+   "setup": "COCO-retrieval fine-tuned model applied directly",
+   "note": "Base is zero-shot FiT; fine-tuned VideoCLIP 30.9",
+   "where": "Table 10",
+   "table": "Table 10, row zero-shot BLIP, column R1"
+  },
+  {
+   "claim": "Zero-shot MSRVTT-QA, 16 frames",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1 accuracy",
+   "value": "19.2",
+   "unit": "%",
+   "baseline_value": "2.9",
+   "n": null,
+   "setup": "VQA-fine-tuned model applied directly",
+   "note": "Base is VQA-T zero-shot; MSVD-QA 35.2 vs 7.5",
+   "where": "Table 11",
+   "table": "Table 11, row zero-shot BLIP, column MSRVTT-QA"
+  }
+ ],
+ "limits": [
+  "Captioner and filter are finetuned only on COCO, the domain of the COCO scores",
+  "No seeds or variance reported; single runs",
+  "Noise ratio is whatever the filter rejects, no human audit; diversity explanation for nucleus sampling is a hypothesis, not measured",
+  "Authors suggest untested next steps: multiple bootstrapping rounds, multiple captions per image, ensembles of captioners and filters",
+  "NLVR2 gains little from extra web images, attributed to a domain gap",
+  "Video transfer ignores temporal information",
+  "SNLI-VE omitted because its test data is reported noisy"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "CapFilt",
+   "definition": "Captioning and Filtering: a dataset bootstrapping method with a captioner generating synthetic captions and a filter removing noisy ones",
+   "where": "Sec 3.3"
+  },
+  {
+   "term": "MED",
+   "definition": "Multimodal mixture of Encoder-Decoder: a model operating as unimodal encoder, image-grounded text encoder or image-grounded text decoder",
+   "where": "Sec 3.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Align before fuse (ALBEF)",
+   "year": 2021,
+   "arxiv": "2107.07651",
+   "relation": "extends",
+   "note": "ITC with momentum encoder, hard negative mining, retrieval rerank, same 14M pre-training set; main baseline",
+   "quote": null
+  },
+  {
+   "work": "SimVLM",
+   "year": 2021,
+   "arxiv": "2108.10904",
+   "relation": "baseline",
+   "note": "1.8B images; prompt 'a picture of' and 480x480 VQA follow it",
+   "quote": null
+  },
+  {
+   "work": "LEMON",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Hu et al. 2021, captioning with object detector",
+   "quote": null
+  },
+  {
+   "work": "BERT",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "text transformer init (BERT-base)",
+   "quote": null
+  },
+  {
+   "work": "ViT",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "image encoder",
+   "quote": null
+  },
+  {
+   "work": "CLIP",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "zero-shot Flickr retrieval comparison",
+   "quote": null
+  },
+  {
+   "work": "ALIGN",
+   "year": 2021,
+   "arxiv": "2102.05918",
+   "relation": "baseline",
+   "note": "retrieval comparison",
+   "quote": null
+  },
+  {
+   "work": "The curious case of neural text degeneration (nucleus sampling)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "decoding for synthetic captions",
+   "quote": null
+  },
+  {
+   "work": "Distilling the knowledge in a neural network",
+   "year": 2015,
+   "arxiv": "1503.02531",
+   "relation": "related",
+   "note": "CapFilt framed as a form of knowledge distillation",
+   "quote": null
+  },
+  {
+   "work": "LAION-400M",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "115M extra web images",
+   "quote": null
+  },
+  {
+   "work": "COCO; Visual Genome; CC3M; CC12M; SBU",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "14M-image pre-training set",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "Pre-training model architecture and objectives of BLIP",
+   "page": 2,
+   "why": "Shows which layers are shared and the three modes of MED"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Learning framework of BLIP",
+   "page": 4,
+   "why": "Shows CapFilt data flow from pre-trained model to a new pre-trained model"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Evaluation of the effect of the captioner (C) and filter (F) for dataset bootstrapping",
+   "page": 5,
+   "why": "Core ablation across data and backbone sizes"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Table 1 checkmarks lost in text extraction, so captioner-only vs filter-only rows cannot be told apart",
+  "Table cells are one number per line; table references located by row/column from layout",
+  "PDF is arXiv v2, no venue printed; venue recorded as preprint",
+  "Warmup length, parameter counts, layers/heads, precision, GPU type, wall clock and seeds are not stated"
+ ]
 }

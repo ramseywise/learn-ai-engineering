@@ -1,0 +1,690 @@
+{
+ "schema": 1,
+ "key": "2402.03300",
+ "pdf": "generative-ai/05-RL/sources/shao-2024-deepseekmath.pdf",
+ "bib": {
+  "title": "DeepSeekMath: Pushing the Limits of Mathematical Reasoning in Open Language Models",
+  "authors": [
+   "Zhihong Shao",
+   "Peiyi Wang",
+   "Qihao Zhu",
+   "Runxin Xu",
+   "Junxiao Song",
+   "Xiao Bi",
+   "Haowei Zhang",
+   "Mingchuan Zhang",
+   "Y.K. Li",
+   "Y. Wu",
+   "Daya Guo"
+  ],
+  "first_author": "Shao",
+  "year": 2024,
+  "venue": "preprint",
+  "arxiv": "2402.03300",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 81353,
+  "chars_total": 81353,
+  "engine": "pymupdf",
+  "skipped": "References (lines 1611-1822) skimmed only for lineage."
+ },
+ "type": "empirical",
+ "question": "Can a 7B open model reach near-GPT-4 competition math accuracy via web-mined math pre-training plus a memory-light RL algorithm (GRPO)?",
+ "hypothesis": "Code training and high-quality web math data improve math reasoning, and critic-free group-relative RL improves an instruction-tuned model.",
+ "contributions": [
+  "DeepSeekMath Corpus: 120B math tokens from Common Crawl via iterative fastText selection",
+  "DeepSeekMath-Base/Instruct/RL 7B; RL model exceeds 50% on MATH among open models",
+  "Group Relative Policy Optimization (GRPO), PPO variant without a critic",
+  "Unified paradigm (data source, reward function, gradient coefficient) covering SFT, RFT, DPO, PPO, GRPO",
+  "Findings: code training helps math, arXiv does not"
+ ],
+ "method": {
+  "summary": "Continue pretraining DeepSeek-Coder-Base-v1.5 7B on 500B tokens (56% DeepSeekMath Corpus), SFT on 776K math instructions, then RL with GRPO, which samples G outputs per question and uses group-normalised rewards as advantages instead of a value model, with KL added to the loss.",
+  "task": "math pretraining, SFT and RL for mathematical reasoning",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "DeepSeekMath Corpus",
+    "role": "pretrain",
+    "size": "120B tokens, 35.5M web pages (89B-token version from iteration 2 used in Sec 5.1 ablations)",
+    "split": null,
+    "source": "Common Crawl, 40B deduplicated HTML pages; seed OpenWebMath; fastText with 500K positive and 500K negative, dim 256, lr 0.1, wordNgrams 3, minCount 3, 3 epochs",
+    "preprocessing": "URL dedup and near-dedup; 10-gram exact match decontamination against GSM8K, MATH, CMATH, AGIEval; exact match for benchmark texts of 3 to 9 grams"
+   },
+   {
+    "name": "Math SFT data",
+    "role": "train",
+    "size": "776K examples",
+    "split": null,
+    "source": "GSM8K/MATH annotated with tool-integrated solutions, MathInstruct subset, Lila-OOD train, Chinese K-12 problems over 76 sub-topics",
+    "preprocessing": "CoT, PoT and tool-integrated formats; examples randomly concatenated to 4K tokens"
+   },
+   {
+    "name": "RL questions",
+    "role": "train",
+    "size": "~144K questions",
+    "split": null,
+    "source": "CoT-format GSM8K and MATH related questions from the SFT data",
+    "preprocessing": "other SFT questions excluded"
+   },
+   {
+    "name": "GSM8K, MATH, OCW, SAT, MMLU-STEM, MGSM-zh, CMATH, Gaokao-MathCloze, Gaokao-MathQA, miniF2F, MMLU, BBH, HumanEval, MBPP",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "public benchmarks",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "DeepSeekMath-Base 7B",
+    "role": "base",
+    "params": "7B",
+    "architecture": "decoder-only (DeepSeek-Coder-Base-v1.5)",
+    "init_from": "DeepSeek-Coder-Base-v1.5 7B",
+    "tokenizer": null,
+    "vocab": "100K (tokenizer used for corpus sizes)",
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "4K tokens (training)",
+    "other": {}
+   },
+   {
+    "name": "DeepSeekMath-Instruct 7B",
+    "role": "base",
+    "params": "7B",
+    "architecture": "same",
+    "init_from": "DeepSeekMath-Base 7B",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "4K",
+    "other": {}
+   },
+   {
+    "name": "DeepSeekMath-RL 7B",
+    "role": "proposed",
+    "params": "7B",
+    "architecture": "same",
+    "init_from": "DeepSeekMath-Instruct 7B",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "DeepSeek-LLM 1.3B",
+    "role": "base",
+    "params": "1.3B",
+    "architecture": "DeepSeek LLM framework",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "4K",
+    "other": {
+     "use": "corpus and code/arXiv ablations; also 1.3B Instruct for Fig 5"
+    }
+   },
+   {
+    "name": "Reward model",
+    "role": "reward",
+    "params": "7B",
+    "architecture": null,
+    "init_from": "DeepSeekMath-Base 7B",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "lr": "2e-5",
+     "data": "constructed following Wang et al. 2023b (Math-Shepherd); replay with 10% historical data in iterative RL"
+    }
+   }
+  ],
+  "training": {
+   "objective": "Pretraining: next token. SFT: next token on 776K. RL: GRPO objective (Eq 3) with clipped ratio, group-normalised advantage A_i = (r_i - mean(r))/std(r), KL to reference via unbiased estimator added to the loss",
+   "optimizer": "AdamW beta1=0.9 beta2=0.95 (pretraining)",
+   "lr": "Pretraining 1.3B: 5.3e-4 peak; Base 7B: 4.2e-4 peak; SFT: 5e-5 constant; reward model: 2e-5; RL policy: 1e-6",
+   "lr_schedule": "multi-step: peak after 2,000 warmup steps, 31.6% of peak after 80% of training, 10.0% after 90%",
+   "warmup": "2,000 steps",
+   "batch_size": "1.3B pretraining: 4M tokens; 7B Base: 10M tokens; SFT: 256; RL: 1024",
+   "steps": "SFT: 500 steps; RL steps not stated (Fig 5 axis to ~8000 for 1.3B, Fig 6 to ~5300)",
+   "epochs": null,
+   "tokens": "1.3B ablations: 150B per corpus (code ablation: 400B code/general then 150B math); Base 7B: 500B (56% DeepSeekMath Corpus, 4% AlgebraicStack, 10% arXiv, 20% GitHub code, 10% Common Crawl natural language EN/ZH); arXiv ablation: 7B 40B tokens",
+   "seq_len": "4K context (pretraining, SFT); RL max length 1024",
+   "precision": null,
+   "weight_decay": "0.1",
+   "dropout": null,
+   "regularisation": "KL coefficient beta 0.04 to reference; clip epsilon not stated",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "framework": "HAI-LLM",
+    "rl_group_size_G": "64",
+    "rl_updates_per_exploration": "single update (mu=1), so old policy equals current",
+    "iterative_rl": "reference model reset to current policy each iteration; reward model retrained with 10% replay; two iterations in Fig 6",
+    "clip_epsilon": null
+   }
+  },
+  "inference": {
+   "decoding": "temperature 0.7 for Maj@K/Pass@K (Fig 7); nucleus sampling in RL (naive)",
+   "temperature": "0.7 (Fig 7)",
+   "top_p": null,
+   "max_tokens": "1024 during RL sampling",
+   "samples": "RL: 64 outputs per question; Table 5 grey: majority vote over 32 candidates; Fig 7: K from 1 to 64; abstract: 64 samples self-consistency",
+   "prompting": "few-shot CoT (math, MMLU, BBH), few-shot program-of-thought with Python (math and sympy), few-shot Isabelle proof sketches + Sledgehammer for miniF2F; HumanEval zero-shot, MBPP few-shot; shot counts not stated",
+   "retrieval": null,
+   "parameters": {
+    "group_size_G": "64",
+    "kl_beta": "0.04"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Top1 accuracy",
+     "definition": "accuracy of single greedy/default answer",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Maj@K",
+     "definition": "majority vote over K sampled answers",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Pass@K",
+     "definition": "at least one of K samples correct",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Minerva 7B/62B/540B",
+    "Mistral 7B",
+    "Llemma 7B/34B",
+    "CodeLlama",
+    "GPT-4",
+    "Gemini Ultra/Pro",
+    "WizardMath",
+    "MetaMath",
+    "ToRA",
+    "MAmmoTH",
+    "InternLM2-Math",
+    "Math-Shepherd-Mistral",
+    "DeepSeek-LLM-Chat 67B",
+    "Qwen 72B"
+   ],
+   "protocol": "Single runs; no seeds or significance tests stated; benchmark contamination filtered by n-gram match."
+  },
+  "availability": {
+   "code": "https://github.com/deepseek-ai/DeepSeek-Math",
+   "weights": null,
+   "data": null
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.other.rl_updates_per_exploration",
+    "quote": "The policy model only has a single update following each exploration stage.",
+    "where": "Sec 4.2"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "GRPO RL lifts DeepSeekMath-Instruct 7B on MATH from 46.8% to 51.7% (CoT, no tools, Top1), using only GSM8K/MATH-related CoT SFT questions.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MATH accuracy",
+   "value": "51.7",
+   "unit": "%",
+   "baseline_value": "46.8",
+   "n": null,
+   "setup": "DeepSeekMath-Instruct 7B to RL, chain-of-thought, Top1, no tools; RL data ~144K GSM8K/MATH-related CoT questions",
+   "note": null,
+   "where": "Sec 1; Table 5",
+   "quote": "MATH: 46.8% →51.7%"
+  },
+  {
+   "claim": "GRPO lifts GSM8K from 82.9% to 88.2%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GSM8K accuracy",
+   "value": "88.2",
+   "unit": "%",
+   "baseline_value": "82.9",
+   "n": null,
+   "setup": "DeepSeekMath-Instruct 7B to RL, chain-of-thought, Top1, no tools",
+   "note": null,
+   "where": "Sec 1; Table 5",
+   "quote": "GSM8K: 82.9% →88.2%"
+  },
+  {
+   "claim": "Out-of-domain gain: CMATH improves from 84.6% to 88.8% after RL on English GSM8K/MATH-style data only.",
+   "kind": "measured",
+   "source": null,
+   "metric": "CMATH accuracy",
+   "value": "88.8",
+   "unit": "%",
+   "baseline_value": "84.6",
+   "n": null,
+   "setup": "CoT, Top1, Chinese CMATH, out-of-domain",
+   "note": null,
+   "where": "Sec 1; Table 5",
+   "quote": "CMATH: 84.6% →88.8%"
+  },
+  {
+   "claim": "DeepSeekMath-RL 7B with tool-integrated reasoning reaches 58.8% on MATH (Instruct 57.4%).",
+   "kind": "measured",
+   "source": null,
+   "metric": "MATH accuracy",
+   "value": "58.8",
+   "unit": "%",
+   "baseline_value": "57.4",
+   "n": null,
+   "setup": "Tool-integrated reasoning, Top1 (Table 5 grey scores are majority vote of 32)",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, Tool-Integrated Reasoning, row DeepSeekMath-RL 7B, column MATH"
+  },
+  {
+   "claim": "DeepSeekMath-RL 7B on MGSM-zh CoT: 79.6% vs Instruct 73.2%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MGSM-zh accuracy",
+   "value": "79.6",
+   "unit": "%",
+   "baseline_value": "73.2",
+   "n": null,
+   "setup": "CoT, Top1",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, CoT, row DeepSeekMath-RL 7B, column MGSM-zh"
+  },
+  {
+   "claim": "Self-consistency over 64 samples from DeepSeekMath 7B gives 60.9% on MATH.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MATH maj@64",
+   "value": "60.9",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "DeepSeekMath-RL 7B, 64 samples, majority vote, MATH",
+   "note": null,
+   "where": "Abstract",
+   "quote": "Self-consistency over 64 samples from DeepSeekMath 7B achieves 60.9% on MATH."
+  },
+  {
+   "claim": "RL improves Maj@K but not Pass@K: RL sharpens the output distribution rather than adding fundamental capability.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Instruct vs RL 7B, GSM8K and MATH, temperature 0.7, K in 1..64 (read from Fig 7)",
+   "note": null,
+   "where": "Sec 5.2.2, Fig 7",
+   "quote": "RL enhances Maj@K’s performance but not Pass@K."
+  },
+  {
+   "claim": "Online RFT beats offline RFT in later training; GRPO beats Online RFT; GRPO with process supervision beats outcome supervision (qualitative, from curves).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "DeepSeekMath-Instruct 1.3B, GSM8K and MATH, up to ~8000 steps (Fig 5)",
+   "note": null,
+   "where": "Sec 5.2.1, Fig 5",
+   "quote": "GRPO+PS shows superior performance compared to GRPO+OS"
+  },
+  {
+   "claim": "Iterative RL (two rounds) significantly improves performance, especially at the first iteration.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "DeepSeekMath-Instruct 7B, GSM8K and MATH (Fig 6)",
+   "note": null,
+   "where": "Sec 5.2.1, Fig 6",
+   "quote": "the iterative RL significantly improves the performance, especially at the first iteration"
+  },
+  {
+   "claim": "DeepSeekMath-Base 7B gets 36.2% on MATH (few-shot CoT), above Minerva 540B (33.6%), and 64.2% on GSM8K.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MATH accuracy",
+   "value": "36.2",
+   "unit": "%",
+   "baseline_value": "33.6",
+   "n": null,
+   "setup": "Base model, few-shot CoT, no tools",
+   "note": "Text says Base outperforms Minerva 540B; Minerva GSM8K 58.8%, DeepSeekMath-Base 64.2%.",
+   "where": "Table 2",
+   "table": "Table 2, row DeepSeekMath-Base 7B, column MATH"
+  },
+  {
+   "claim": "DeepSeekMath-Instruct 7B reaches 46.8% on MATH CoT, beating all open-source models by at least 9% absolute in the paper's words.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MATH accuracy",
+   "value": "46.8",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "SFT on 776K examples, CoT, no tools",
+   "note": null,
+   "where": "Table 5; Sec 3.2",
+   "table": "Table 5, CoT, row DeepSeekMath-Instruct 7B, column MATH"
+  },
+  {
+   "claim": "DeepSeekMath Corpus is 120B tokens from 35.5M web pages after four iterations.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "120B",
+   "unit": "tokens",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Common Crawl, 40B deduplicated HTML pages, fastText iterative selection",
+   "note": null,
+   "where": "Sec 2.1",
+   "quote": "we end up with 35.5M mathematical web pages, totaling 120B tokens"
+  },
+  {
+   "claim": "1.3B model trained 150B tokens on DeepSeekMath Corpus scores GSM8K 23.8%, MATH 13.6% vs OpenWebMath 11.5%/8.9% and Proof-Pile-2 14.3%/11.2%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GSM8K accuracy",
+   "value": "23.8",
+   "unit": "%",
+   "baseline_value": "14.3 (Proof-Pile-2)",
+   "n": null,
+   "setup": "DeepSeek-LLM 1.3B, 150B tokens per corpus, few-shot CoT",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row DeepSeekMath Corpus, column GSM8K"
+  },
+  {
+   "claim": "Code training before math training helps: Code then Math gives GSM8K+Python 17.4% and MATH+Python 9.4% vs General then Math 14.3% and 6.7%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GSM8K+Python accuracy",
+   "value": "17.4",
+   "unit": "%",
+   "baseline_value": "14.3",
+   "n": null,
+   "setup": "DeepSeek-LLM 1.3B, 400B code or general tokens then 150B math",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, Stage 2 Math Training after Code Training, column GSM8K+Python"
+  },
+  {
+   "claim": "Mixing 400B code and 150B math tokens in one stage gives GSM8K+Python 19.7% and MATH+Python 13.5% but lower no-tool GSM8K (17.6%) than code-then-math (21.9%).",
+   "kind": "measured",
+   "source": null,
+   "metric": "GSM8K+Python accuracy",
+   "value": "19.7",
+   "unit": "%",
+   "baseline_value": "17.4 (two-stage code then math)",
+   "n": null,
+   "setup": "DeepSeek-LLM 1.3B",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row Code & Math Mixed Training, column GSM8K+Python"
+  },
+  {
+   "claim": "arXiv-only training gives no notable gain or hurts: DeepSeek-Coder-Base-v1.5 7B GSM8K 29.0% without math training vs 28.1% with ArXiv-RedPajama.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GSM8K accuracy",
+   "value": "28.1",
+   "unit": "%",
+   "baseline_value": "29.0",
+   "n": null,
+   "setup": "DeepSeek-Coder-Base-v1.5 7B, 40B arXiv tokens, few-shot CoT",
+   "note": null,
+   "where": "Table 8",
+   "table": "Table 8, row DeepSeek-Coder-Base-v1.5 7B ArXiv-RedPajama, column GSM8K"
+  },
+  {
+   "claim": "RL hyperparameters: policy lr 1e-6, KL coefficient 0.04, 64 outputs per question, max length 1024, batch size 1024.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "64",
+   "unit": "outputs per question",
+   "baseline_value": null,
+   "n": null,
+   "setup": "DeepSeekMath-RL 7B",
+   "note": null,
+   "where": "Sec 4.2",
+   "quote": "For each question, we sample 64 outputs."
+  },
+  {
+   "claim": "Math training raises MMLU from 49.1% to 54.9% and BBH from 55.2% to 59.5%; HumanEval 43.2% to 40.9%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MMLU accuracy",
+   "value": "54.9",
+   "unit": "%",
+   "baseline_value": "49.1",
+   "n": null,
+   "setup": "DeepSeekMath-Base 7B vs DeepSeek-Coder-Base-v1.5 7B",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row DeepSeekMath-Base 7B, column MMLU"
+  }
+ ],
+ "limits": [
+  "Authors: geometry and theorem-proof weaker than closed models; fails on triangles and ellipses, suggesting data selection bias.",
+  "Authors: few-shot performance does not improve over zero-shot, unlike GPT-4.",
+  "Authors: arXiv conclusion not tested on other tasks, in combination with other data, or at larger scale.",
+  "RL gains appear to come from boosting correct answers into top-K (Maj@K up, Pass@K flat); RL used only SFT questions and naive nucleus sampling.",
+  "Code-math one-stage mixture hurts no-tool math at 1.3B; authors conjecture limited capacity.",
+  "No hardware, compute, seeds, precision or clip epsilon reported; RL step count not stated; reward model details deferred to Wang et al. 2023b.",
+  "DPO and RFT are only analysed in the unified framework; Fig 5 compares RFT, Online RFT, GRPO (no DPO run is reported)."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "GRPO",
+   "definition": "Group Relative Policy Optimization: samples a group of outputs per question and uses the average group reward as the baseline, removing the value model",
+   "where": "Sec 4.1.1"
+  },
+  {
+   "term": "Unified paradigm",
+   "definition": "gradient of a training method = E over Data Source of (1/|o|) sum_t GradientCoefficient(q,o,t,reward) * grad log pi(o_t|q,o_<t); components: data source, reward function, algorithm",
+   "where": "Sec 5.2.1, Eq 5"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Proximal Policy Optimization Algorithms",
+   "year": 2017,
+   "arxiv": "1707.06347",
+   "relation": "extends",
+   "note": "GRPO is a PPO variant without value model",
+   "quote": null
+  },
+  {
+   "work": "Direct Preference Optimization",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Analysed in the unified paradigm (Appendix A.1.4); gradient coefficient Eq 14",
+   "quote": null
+  },
+  {
+   "work": "Scaling relationship on learning mathematical reasoning (RFT)",
+   "year": 2023,
+   "arxiv": "2308.01825",
+   "relation": "related",
+   "note": "Rejection sampling fine-tuning compared",
+   "quote": null
+  },
+  {
+   "work": "Math-Shepherd",
+   "year": 2023,
+   "arxiv": "2312.08935",
+   "relation": "uses-method",
+   "note": "Reward model data construction and process supervision",
+   "quote": null
+  },
+  {
+   "work": "Training language models to follow instructions with human feedback",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Per-token KL-in-reward PPO",
+   "quote": null
+  },
+  {
+   "work": "GAE (Schulman et al.)",
+   "year": 2015,
+   "arxiv": "1506.02438",
+   "relation": "related",
+   "note": "PPO advantage",
+   "quote": null
+  },
+  {
+   "work": "Approximating KL divergence (Schulman)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Unbiased KL estimator Eq 4",
+   "quote": null
+  },
+  {
+   "work": "DeepSeek-Coder",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Init checkpoint DeepSeek-Coder-Base-v1.5 7B",
+   "quote": null
+  },
+  {
+   "work": "OpenWebMath",
+   "year": 2023,
+   "arxiv": "2310.06786",
+   "relation": "uses-data",
+   "note": "Seed corpus",
+   "quote": null
+  },
+  {
+   "work": "Minerva",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "540B closed baseline",
+   "quote": null
+  },
+  {
+   "work": "Llemma",
+   "year": 2023,
+   "arxiv": "2310.10631",
+   "relation": "baseline",
+   "note": "Math-trained open baseline",
+   "quote": null
+  },
+  {
+   "work": "Let's verify step by step (PRM800K)",
+   "year": 2023,
+   "arxiv": "2305.20050",
+   "relation": "related",
+   "note": "Process supervision; ~20% annotation errors noted",
+   "quote": null
+  },
+  {
+   "work": "MathPile",
+   "year": 2023,
+   "arxiv": "2312.17120",
+   "relation": "uses-data",
+   "note": "Corpus comparison",
+   "quote": null
+  },
+  {
+   "work": "Proof-Pile-2",
+   "year": 2023,
+   "arxiv": "2310.10631",
+   "relation": "uses-data",
+   "note": "Corpus comparison",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Figure 4",
+   "caption": "Demonstration of PPO and our GRPO. GRPO foregoes the value model, instead estimating the baseline from group scores, significantly reducing training resources.",
+   "page": 13,
+   "why": "Shows the architecture difference: no value model, group computation"
+  },
+  {
+   "figure": "Figure 7",
+   "caption": "The Maj@K and Pass@K of SFT and RL DeepSeekMath 7B on GSM8K and MATH (temperature 0.7). It was noted that RL enhances Maj@K but not Pass@K.",
+   "page": 21,
+   "why": "Core evidence for the sharpening-not-new-capability interpretation"
+  },
+  {
+   "figure": "Figure 5",
+   "caption": "Performance of the DeepSeekMath-Instruct 1.3B model, which was further trained using various methods, on two benchmarks.",
+   "page": 19,
+   "why": "RFT vs Online RFT vs GRPO outcome vs process supervision"
+  },
+  {
+   "figure": "Table 10",
+   "caption": "The data source and gradient coefficient of different methods.",
+   "page": 19,
+   "why": "Unified paradigm in one table"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 4, Sec 4.1.1",
+   "snippet": "D_KL(pi_theta||pi_ref) = pi_ref(o_i,t|q,o_i,<t)/pi_theta(o_i,t|q,o_i,<t) - log( pi_ref/pi_theta ) - 1",
+   "verbatim": false
+  },
+  {
+   "where": "Sec 4.1.2",
+   "snippet": "A_hat_i,t = r~_i = (r_i - mean(r)) / std(r)",
+   "verbatim": false
+  },
+  {
+   "where": "Eq 14",
+   "snippet": "GC_DPO = sigma( beta log pi_theta(o-_t)/pi_ref(o-_t) - beta log pi_theta(o+_t)/pi_ref(o+_t) )",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Equation text garbled by extraction; code snippets reconstructed, verbatim=false.",
+  "Figure values (Figs 3,5,6,7) not readable from text."
+ ]
+}

@@ -1,0 +1,405 @@
+{
+ "schema": 1,
+ "key": "2303.15056",
+ "pdf": "generative-ai/08-eval/sources/gilardi-2023-chatgpt-outperforms-crowd-workers-text.pdf",
+ "bib": {
+  "title": "ChatGPT outperforms crowd-workers for text-annotation tasks",
+  "authors": [
+   "Fabrizio Gilardi",
+   "Meysam Alizadeh",
+   "Maël Kubli"
+  ],
+  "first_author": "Gilardi",
+  "year": 2023,
+  "venue": "Proceedings of the National Academy of Sciences",
+  "arxiv": "2303.15056",
+  "doi": "10.1073/pnas.2305016120"
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 36460,
+  "chars_total": 36460,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can zero-shot ChatGPT match or beat MTurk crowd-workers (and trained annotators on agreement) for text-annotation tasks, and at what cost?",
+ "hypothesis": null,
+ "contributions": [
+  "First systematic evaluation of ChatGPT zero-shot for text annotation across relevance, stance, topic and frame tasks",
+  "Comparison of accuracy and intercoder agreement against MTurk and trained annotators, plus per-annotation cost"
+ ],
+ "method": {
+  "summary": "Same codebooks given to three trained annotators, MTurk Masters and gpt-3.5-turbo (zero-shot, one chat session per tweet). Accuracy is agreement with trained-annotator gold labels; intercoder agreement is percent same label between two annotators or two ChatGPT runs.",
+  "task": "text annotation: relevance, stance, topic, problem/solution frames, 14 policy frames",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "Content moderation tweets 2020-2021",
+    "role": "eval",
+    "size": "2,382 tweets (random sample from 2.6 million)",
+    "split": null,
+    "source": "Alizadeh et al. 2022",
+    "preprocessing": null
+   },
+   {
+    "name": "US Congress tweets 2017-2022",
+    "role": "eval",
+    "size": "1,856 tweets (random sample from 20 million)",
+    "split": null,
+    "source": "Alizadeh et al. 2022",
+    "preprocessing": null
+   },
+   {
+    "name": "Content moderation news articles 2020-2021",
+    "role": "eval",
+    "size": "1,606 articles (from 980k via LexisNexis)",
+    "split": null,
+    "source": "Alizadeh et al. 2022",
+    "preprocessing": null
+   },
+   {
+    "name": "Content moderation tweets Jan 2023",
+    "role": "eval",
+    "size": "500 tweets, 339 in English (from 1.3 million)",
+    "split": null,
+    "source": "new sample, to address memorization concern",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "gpt-3.5-turbo (ChatGPT API)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": "1 (default) and 0.2",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "2 responses per tweet per temperature, 4 per tweet in total; new chat session per tweet",
+   "prompting": "Zero-shot, codebook instruction text identical to MTurk; tweets fed one by one with 'Here's the tweet I picked, please label it as [Task Specific Instruction]'; no ChatGPT-specific prompting",
+   "retrieval": null,
+   "parameters": {},
+   "other": {
+    "dates": "annotations run March 9-20 and April 27-May 4, 2023"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Accuracy",
+     "definition": "correctly classified instances over total, trained annotations as gold, only texts both trained annotators agreed on",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Intercoder agreement",
+     "definition": "percent of instances where both annotators in a group (or two ChatGPT runs) report the same class",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Cost per annotation",
+     "definition": "API/MTurk cost per label",
+     "unit": "$",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "MTurk crowd-workers (Masters, US, approval >90% with >=50 approved HITs, max 20% of tweets per worker, 2 workers per tweet)",
+    "Trained annotators (three political science students)"
+   ],
+   "protocol": "No significance tests stated; Pearson correlations across tasks reported"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "Harvard Dataverse https://doi.org/10.7910/DVN/PQYF6M"
+  },
+  "prompts": [
+   {
+    "purpose": "per-tweet annotation prompt",
+    "text": "Here’s the tweet I picked, please label it as [Task Specific Instruction (e.g. ‘one of the topics in the instruction’)].",
+    "where": "Sec 4.5"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "ChatGPT zero-shot accuracy exceeds MTurk by about 25 points on average",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy gap",
+   "value": 25,
+   "unit": "percentage points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Four datasets (n=6,183), gpt-3.5-turbo zero-shot, MTurk Masters in US, trained annotators as gold standard",
+   "quote": "On average, ChatGPT’s accuracy exceeds that of MTurk by about 25 percentage points.",
+   "table": null,
+   "note": null,
+   "where": "Sec 2"
+  },
+  {
+   "claim": "Mean intercoder agreement for MTurk",
+   "kind": "measured",
+   "source": null,
+   "metric": "intercoder agreement",
+   "value": 56,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Four datasets (n=6,183), gpt-3.5-turbo zero-shot, MTurk Masters in US, trained annotators as gold standard",
+   "quote": "intercoder agreement is about 56% for MTurk, 79% for trained annotators, 91% for ChatGPT with temperature = 1, and 97% for ChatGPT with temperature = 0.2",
+   "table": null,
+   "note": null,
+   "where": "Sec 2"
+  },
+  {
+   "claim": "Mean intercoder agreement for trained annotators",
+   "kind": "measured",
+   "source": null,
+   "metric": "intercoder agreement",
+   "value": 79,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Four datasets (n=6,183), gpt-3.5-turbo zero-shot, MTurk Masters in US, trained annotators as gold standard",
+   "quote": "intercoder agreement is about 56% for MTurk, 79% for trained annotators, 91% for ChatGPT with temperature = 1, and 97% for ChatGPT with temperature = 0.2",
+   "table": null,
+   "note": null,
+   "where": "Sec 2"
+  },
+  {
+   "claim": "Mean ChatGPT self-agreement at temperature 1",
+   "kind": "measured",
+   "source": null,
+   "metric": "intercoder agreement",
+   "value": 91,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Four datasets (n=6,183), gpt-3.5-turbo zero-shot, MTurk Masters in US, trained annotators as gold standard",
+   "quote": "intercoder agreement is about 56% for MTurk, 79% for trained annotators, 91% for ChatGPT with temperature = 1, and 97% for ChatGPT with temperature = 0.2",
+   "table": null,
+   "note": null,
+   "where": "Sec 2"
+  },
+  {
+   "claim": "Mean ChatGPT self-agreement at temperature 0.2",
+   "kind": "measured",
+   "source": null,
+   "metric": "intercoder agreement",
+   "value": 97,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Four datasets (n=6,183), gpt-3.5-turbo zero-shot, MTurk Masters in US, trained annotators as gold standard",
+   "quote": "intercoder agreement is about 56% for MTurk, 79% for trained annotators, 91% for ChatGPT with temperature = 1, and 97% for ChatGPT with temperature = 0.2",
+   "table": null,
+   "note": null,
+   "where": "Sec 2"
+  },
+  {
+   "claim": "ChatGPT cost per annotation under $0.003, about thirty times cheaper than MTurk",
+   "kind": "measured",
+   "source": null,
+   "metric": "cost",
+   "value": 0.003,
+   "unit": "$",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Abstract",
+   "quote": "the per-annotation cost of ChatGPT is less than $0.003—about thirty times cheaper than MTurk",
+   "table": null,
+   "note": null,
+   "where": "Abstract"
+  },
+  {
+   "claim": "Correlation between intercoder agreement and accuracy is positive but weak",
+   "kind": "measured",
+   "source": null,
+   "metric": "Pearson r",
+   "value": 0.36,
+   "unit": "Pearson r",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Four datasets (n=6,183), gpt-3.5-turbo zero-shot, MTurk Masters in US, trained annotators as gold standard",
+   "quote": "The correlation between intercoder agreement and accuracy is positive (Pearson’s r = 0.36).",
+   "table": null,
+   "note": null,
+   "where": "Sec 2"
+  },
+  {
+   "claim": "ChatGPT accuracy correlates with trained-annotator agreement (easier tasks better)",
+   "kind": "measured",
+   "source": null,
+   "metric": "Pearson r",
+   "value": 0.46,
+   "unit": "Pearson r",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Four datasets (n=6,183), gpt-3.5-turbo zero-shot, MTurk Masters in US, trained annotators as gold standard",
+   "quote": "ChatGPT’s accuracy is positively correlated with the intercoder agreement of trained annotators (Pearson’s r = 0.46)",
+   "table": null,
+   "note": null,
+   "where": "Sec 2"
+  },
+  {
+   "claim": "ChatGPT outperformance of MTurk correlates negatively with trained-annotator agreement (bigger gain on harder tasks)",
+   "kind": "measured",
+   "source": null,
+   "metric": "Pearson r",
+   "value": -0.37,
+   "unit": "Pearson r",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Four datasets (n=6,183), gpt-3.5-turbo zero-shot, MTurk Masters in US, trained annotators as gold standard",
+   "quote": "Pearson’s r = −0.37",
+   "table": null,
+   "note": null,
+   "where": "Sec 2"
+  },
+  {
+   "claim": "Accuracy on relevance, content moderation tweets 2020-21",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 70,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "gpt-3.5-turbo, binary relevance, content moderation tweets",
+   "quote": "Accuracy rates for relevance tasks, with two classes (relevant/irrelevant) are 70% for content",
+   "table": null,
+   "note": null,
+   "where": "Sec 2"
+  },
+  {
+   "claim": "Accuracy on relevance, news articles",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 81,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "gpt-3.5-turbo, binary relevance, content moderation news articles",
+   "quote": "moderation tweets, 81% for content moderation news articles, 83% for US Congress tweets, and",
+   "table": null,
+   "note": null,
+   "where": "Sec 2 p3-4"
+  },
+  {
+   "claim": "Accuracy on relevance, US Congress tweets",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 83,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "gpt-3.5-turbo, binary political relevance",
+   "quote": "moderation tweets, 81% for content moderation news articles, 83% for US Congress tweets, and",
+   "table": null,
+   "note": null,
+   "where": "Sec 2 p3-4"
+  },
+  {
+   "claim": "Accuracy on relevance, 2023 content moderation tweets",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 59,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "gpt-3.5-turbo, binary relevance, 2023 sample",
+   "quote": "59% for 2023 content moderation tweets",
+   "table": null,
+   "note": "Authors attribute the low value to misclassifying tweets about user suspensions for lack of prompt examples; per-task other accuracies only in Fig 1 (not numerically printed)",
+   "where": "Sec 2 p4"
+  }
+ ],
+ "limits": [
+  "Gold standard is trained annotators (research assistants), and accuracy counts only texts both agreed on",
+  "Per-task accuracy values are only in Figure 1, text prints just the relevance accuracies",
+  "Only gpt-3.5-turbo, English-focused, zero-shot, one topic area (content moderation) plus Congress tweets",
+  "Authors say further research needed: multilingual, few-shot, chain of thought, other LLMs",
+  "Relevance 2023 accuracy only 59%, prompt lacked examples",
+  "No significance tests reported",
+  "Outperformance claimed vs MTurk, not vs trained annotators on accuracy",
+  "Cost figure per annotation stated without derivation"
+ ],
+ "practices": [],
+ "terms": [],
+ "lineage": [
+  {
+   "work": "Content Moderation As a Political Issue (Alizadeh et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "datasets and gold labels come from this earlier study",
+   "quote": null
+  },
+  {
+   "work": "Card et al., The media frames corpus",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "14 policy frames",
+   "quote": null
+  },
+  {
+   "work": "Huang, Kwak and An, Is ChatGPT better than Human Annotators?",
+   "year": 2023,
+   "arxiv": "2302.07736",
+   "relation": "related",
+   "note": "early suggestion ChatGPT can annotate",
+   "quote": null
+  },
+  {
+   "work": "Kuzman et al., ChatGPT: Beginning of an End of Manual Linguistic Data Annotation?",
+   "year": 2023,
+   "arxiv": "2303.17466",
+   "relation": "related",
+   "note": "genre identification annotation",
+   "quote": null
+  },
+  {
+   "work": "Kojima et al., Large language models are zero-shot reasoners",
+   "year": 2022,
+   "arxiv": "2205.11916",
+   "relation": "related",
+   "note": "future work on CoT",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "ChatGPT zero-shot text annotation performance in four datasets, compared to MTurk and trained annotators.",
+   "page": 3,
+   "why": "Per-task accuracy and agreement bars for all four annotator groups"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Text extraction fine; no embedded instructions found. Figure 1 values are not in text. Codebook appendix (S1) read; prompts for tasks are the codebook text."
+ ]
+}

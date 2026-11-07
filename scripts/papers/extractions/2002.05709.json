@@ -1,0 +1,734 @@
+{
+ "schema": 1,
+ "key": "2002.05709",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/chen-2020-simple-framework-contrastive-learning-visual.pdf",
+ "bib": {
+  "title": "A Simple Framework for Contrastive Learning of Visual Representations",
+  "authors": [
+   "Ting Chen",
+   "Simon Kornblith",
+   "Mohammad Norouzi",
+   "Geoffrey Hinton"
+  ],
+  "first_author": "Chen",
+  "year": 2020,
+  "venue": "Proceedings of the 37th International Conference on Machine Learning (ICML), PMLR 119",
+  "arxiv": "2002.05709",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 78308,
+  "chars_total": 78308,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "What components of a contrastive self-supervised framework (augmentation, projection head, loss, batch size, training length) make learned visual representations good, and how far can a simple version go without specialised architectures or a memory bank?",
+ "hypothesis": "Composition of augmentations, a nonlinear projection head, a normalized temperature-scaled loss and large batches/long training together make a simple contrastive framework outperform prior self-supervised methods (stated as findings; the paper does not phrase them as a prior hypothesis).",
+ "contributions": [
+  "Composition of data augmentations (esp. random crop + color distortion) is crucial, and contrastive learning needs stronger augmentation than supervised learning",
+  "A learnable nonlinear projection head between representation and loss substantially improves representation quality",
+  "NT-Xent loss with l2 normalization and tuned temperature beats logistic and margin losses",
+  "Contrastive learning benefits from larger batch sizes, longer training and bigger networks more than supervised learning",
+  "New state of the art in self-supervised, semi-supervised and transfer learning on ImageNet at the time"
+ ],
+ "method": {
+  "summary": "SimCLR: two random augmentations of each image go through a shared ResNet encoder f and a 2-layer MLP projection head g; the NT-Xent loss treats the other 2(N-1) in-batch views as negatives. The head is discarded after pretraining and the encoder representation h is evaluated by linear probe, fine-tuning on 1%/10% labels and transfer to 12 datasets.",
+  "task": "self-supervised visual representation learning (ImageNet pretraining, linear evaluation, semi-supervised, transfer)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "ImageNet ILSVRC-2012",
+    "role": "both",
+    "size": null,
+    "split": "unlabeled pretraining on train set; linear eval and fine-tuning on labels; 1% (~12.8 img/class) and 10% (~128 img/class) class-balanced label subsets (Zhai et al., 2019 / tfds imagenet2012_subset); inference: resize to 256x256, single center crop 224x224",
+    "source": "Russakovsky et al., 2015",
+    "preprocessing": "Inception-style random crop (area uniform 0.08-1.0, aspect 3/4-4/3) resized to 224x224, flip p=0.5, color distortion (jitter p=0.8, drop p=0.2, strength 1 default), Gaussian blur p=0.5 (sigma in [0.1,2.0], kernel 10% of image size)"
+   },
+   {
+    "name": "CIFAR-10",
+    "role": "both",
+    "size": null,
+    "split": null,
+    "source": "Krizhevsky & Hinton, 2009",
+    "preprocessing": "first 7x7 stride-2 conv replaced by 3x3 stride-1, first max-pool removed; Inception crop resized to 32x32, color distortion strength 0.5, no blur"
+   },
+   {
+    "name": "12 transfer datasets (Food-101, CIFAR-10, CIFAR-100, Birdsnap, SUN397, Stanford Cars, FGVC Aircraft, VOC2007, DTD, Pets, Caltech-101, Flowers)",
+    "role": "eval",
+    "size": null,
+    "split": "creator-specified validation sets where given, otherwise held-out subset of train for hyperparameter tuning, then retrain on train+val; DTD and SUN397 first split only; Caltech-101 30 images/class train, rest test",
+    "source": "as cited in Appendix B.8",
+    "preprocessing": "resize shorter side to 224 (bicubic) and center crop 224 for linear eval; 256 shorter side then 224 center crop at fine-tune test time"
+   }
+  ],
+  "models": [
+   {
+    "name": "SimCLR ResNet-50 (1x,2x,4x)",
+    "role": "proposed",
+    "params": "24M (1x), 94M (2x), 375M (4x)",
+    "architecture": "ResNet-50 encoder, h = output of average pooling (2048-d at 1x); projection head z = W2 ReLU(W1 h), output 128-d by default",
+    "init_from": "random",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "50",
+    "hidden": "2048 (1x representation)",
+    "heads": null,
+    "context": null,
+    "other": {
+     "depth_width_sweep": "ResNet-18/34/50/101/152 at 1x,2x,4x (Fig 7, B.6)",
+     "global_BN": "BN mean/variance aggregated over all devices",
+     "projection_dims_tested": "32 to 2048 (Fig 8)"
+    }
+   },
+   {
+    "name": "Supervised ResNet baselines",
+    "role": "baseline",
+    "params": null,
+    "architecture": "same ResNets, cross-entropy",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "epochs": "90 for main comparison; 1000 with same strong augmentation for transfer baselines"
+    }
+   }
+  ],
+  "training": {
+   "objective": "NT-Xent: l(i,j) = -log exp(sim(zi,zj)/tau) / sum_{k!=i} exp(sim(zi,zk)/tau), averaged over both (i,j) and (j,i) pairs in batch",
+   "optimizer": "LARS (all batch sizes)",
+   "lr": "4.8 (= 0.3 x BatchSize/256) at batch 4096; square-root scaling 0.075 x sqrt(BatchSize) also studied",
+   "lr_schedule": "linear warmup then cosine decay without restarts",
+   "warmup": "10 epochs",
+   "batch_size": "4096 default (256 to 8192 main sweep; up to 32768 in Fig B.2)",
+   "steps": null,
+   "epochs": "100 default for ablations; 1000 for state-of-the-art models; up to 3200 in Fig B.2",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": "1e-6",
+   "dropout": null,
+   "regularisation": "none beyond weight decay",
+   "hardware": "Cloud TPUs, 32 to 128 cores depending on batch size",
+   "compute": "With 128 TPU v3 cores, ~1.5 hours for ResNet-50 at batch 4096 for 100 epochs",
+   "wall_clock": "~1.5 hours (ResNet-50, batch 4096, 100 epochs, 128 TPU v3 cores)",
+   "seeds": "Fig 9 and B.1: each bar a single run; Fig B.7: averaged over 3 runs with different learning rates",
+   "other": {
+    "temperature": "0.5 best on CIFAR-10 among {0.1,0.5,1.0}; Table 5 on ImageNet: 0.1 gives 64.4 top-1",
+    "negatives": "2(N-1) per positive pair; batch 8192 gives 16382 (printed 16382 in text)",
+    "cifar10_grid": "lr {0.5,1.0,1.5}, temperature {0.1,0.5,1.0}, batch {256..4096}",
+    "other_loss_tuning": "lr {0.01,0.1,0.3,0.5,1.0}; margin {0,0.4,0.8,1.6}; logistic temperature {0.1,0.2,0.5,1.0}; negatives from one view only",
+    "linear_eval": "Nesterov momentum, batch 4096, lr 1.6 (0.1 x BatchSize/256), 90 epochs, no warmup, random crop+flip only, no weight decay",
+    "finetune_semi": "Nesterov momentum 0.9, batch 4096, lr 0.8 (0.05 x BatchSize/256), no warmup, no regularization, 60 epochs for 1% labels, 30 epochs for 10%",
+    "finetune_transfer": "20,000 steps, batch 256, SGD Nesterov 0.9, lr grid 7 log-spaced in [1e-4,0.1], weight decay grid 7 log-spaced in [1e-6,1e-3] plus none; random-init baselines 40,000 steps",
+    "transfer_linear": "l2-regularized multinomial logistic regression, L-BFGS, 45 log-spaced l2 values in [1e-6,1e5]"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single run per configuration in most figures; no seeds reported for tables",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Linear evaluation top-1/top-5",
+     "definition": "linear classifier on frozen encoder h, ImageNet validation accuracy",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Semi-supervised top-1/top-5",
+     "definition": "fine-tune whole network on 1% or 10% labels",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Transfer accuracy",
+     "definition": "top-1, mean per-class accuracy or 11-point mAP (VOC2007) per dataset protocol; significance by permutation test (100,000 samples)",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "InstDisc",
+    "Rotation",
+    "BigBiGAN",
+    "Local Aggregation",
+    "CPC v2",
+    "CMC",
+    "AMDIM",
+    "MoCo",
+    "PIRL",
+    "supervised ResNet",
+    "Pseudo-label",
+    "VAT+Entropy Min.",
+    "UDA",
+    "FixMatch",
+    "S4L"
+   ],
+   "protocol": "Linear evaluation protocol; single runs; permutation test (p>0.05 not significantly worse) for transfer, which ignores run-to-run training variability"
+  },
+  "availability": {
+   "code": "https://github.com/google-research/simclr",
+   "weights": null,
+   "data": "ImageNet and public datasets"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.lr",
+    "quote": "LARS with learning rate of 4.8 (= 0.3 × BatchSize/256) and weight decay of",
+    "where": "Sec 2.3"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "SimCLR ResNet-50 (4x) reaches 76.5% top-1 linear evaluation on ImageNet, matching supervised ResNet-50.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1",
+   "value": "76.5",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ImageNet, ResNet-50 4x, 1000 epochs, batch 4096, linear eval",
+   "quote": "A linear classiﬁer trained on self-supervised representations learned by Sim-",
+   "table": null,
+   "note": "Abstract; Table 6, SimCLR ResNet-50 (4x) row Top 1 is 76.5, previous best CPC v2 71.5",
+   "where": "Abstract"
+  },
+  {
+   "claim": "SimCLR ResNet-50 (4x) top-1 in Table 6.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1",
+   "value": "76.5",
+   "unit": "%",
+   "baseline_value": "71.5",
+   "n": null,
+   "setup": "ImageNet linear eval, 1000 epochs",
+   "quote": null,
+   "table": "Table 6, row SimCLR (ours) ResNet-50 (4x), column Top 1",
+   "note": null,
+   "where": "Table 6"
+  },
+  {
+   "claim": "SimCLR ResNet-50 (1x) top-1 linear eval vs CPC v2 63.8, PIRL 63.6, MoCo 60.6.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1",
+   "value": "69.3",
+   "unit": "%",
+   "baseline_value": "63.8",
+   "n": null,
+   "setup": "ImageNet, ResNet-50, 24M params, 1000 epochs",
+   "quote": null,
+   "table": "Table 6, row SimCLR (ours) ResNet-50, column Top 1",
+   "note": null,
+   "where": "Table 6"
+  },
+  {
+   "claim": "SimCLR ResNet-50 (2x) top-1 linear eval.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1",
+   "value": "74.2",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ImageNet, 94M params",
+   "quote": null,
+   "table": "Table 6, row SimCLR (ours) ResNet-50 (2x), column Top 1",
+   "note": null,
+   "where": "Table 6"
+  },
+  {
+   "claim": "Fine-tuned on 1% of labels, ResNet-50 (4x) reaches 85.8% top-5 (supervised baseline 48.4).",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-5",
+   "value": "85.8",
+   "unit": "%",
+   "baseline_value": "48.4",
+   "n": null,
+   "setup": "ImageNet 1% labels (~12.8 img/class), ResNet-50 4x",
+   "quote": null,
+   "table": "Table 7, row SimCLR (ours) ResNet-50 (4x), column 1% Top 5",
+   "note": null,
+   "where": "Table 7"
+  },
+  {
+   "claim": "With 10% labels ResNet-50 (4x) reaches 92.6% top-5 (supervised 80.4).",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-5",
+   "value": "92.6",
+   "unit": "%",
+   "baseline_value": "80.4",
+   "n": null,
+   "setup": "ImageNet 10% labels",
+   "quote": null,
+   "table": "Table 7, row SimCLR (ours) ResNet-50 (4x), column 10% Top 5",
+   "note": null,
+   "where": "Table 7"
+  },
+  {
+   "claim": "1% label top-1 for ResNet-50 (4x) vs supervised 25.4.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1",
+   "value": "63.0",
+   "unit": "%",
+   "baseline_value": "25.4",
+   "n": null,
+   "setup": "ImageNet 1% labels",
+   "quote": null,
+   "table": "Table B.4, row SimCLR (ours) ResNet-50 (4x), column 1% Top 1",
+   "note": null,
+   "where": "Table B.4"
+  },
+  {
+   "claim": "Nonlinear projection head beats linear by about 3% and no projection by more than 10%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1 gap",
+   "value": "10",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ImageNet, ResNet-50, 100 epochs, linear eval on h",
+   "quote": "We observe that a nonlinear projection is better than a linear projection (+3%),",
+   "table": null,
+   "note": "Gap to no projection is '>10%', so value is a lower bound",
+   "where": "Sec 4.2, Fig 8"
+  },
+  {
+   "claim": "The representation h before the projection head is >10% better than z=g(h) even with nonlinear head.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1 gap",
+   "value": "10",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ImageNet, ResNet-50",
+   "quote": "is still much better (>10%) than the layer after, z = g(h),",
+   "table": null,
+   "note": "lower bound",
+   "where": "Sec 4.2"
+  },
+  {
+   "claim": "h retains transformation information that g(h) loses: rotation prediction 67.6% from h vs 25.6% from g(h).",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "67.6",
+   "unit": "%",
+   "baseline_value": "25.6",
+   "n": null,
+   "setup": "additional MLPs predicting applied transformation; chance 25%",
+   "quote": null,
+   "table": "Table 3, row Rotation, column h",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "NT-Xent (63.9) beats margin, logistic and semi-hard variants (best other 57.9).",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1",
+   "value": "63.9",
+   "unit": "%",
+   "baseline_value": "57.9",
+   "n": null,
+   "setup": "ImageNet ResNet-50 100 epochs, losses tuned",
+   "quote": null,
+   "table": "Table 4, column NT-Xent",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "Temperature 0.1 with l2 norm gives best ImageNet top-1 (64.4); without l2 norm 57.2 / 57.0.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1",
+   "value": "64.4",
+   "unit": "%",
+   "baseline_value": "59.7 (tau 0.05)",
+   "n": null,
+   "setup": "ImageNet, NT-Xent, 4096 examples contrastive distribution",
+   "quote": null,
+   "table": "Table 5, row Yes tau 0.1, column Top 1",
+   "note": null,
+   "where": "Table 5"
+  },
+  {
+   "claim": "Color distortion strength 1 with blur gives 64.5% vs 59.6% at strength 1/8, while supervised drops from 77.0 to 75.4.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1",
+   "value": "64.5",
+   "unit": "%",
+   "baseline_value": "59.6",
+   "n": null,
+   "setup": "ImageNet ResNet-50 100 epochs linear eval",
+   "quote": null,
+   "table": "Table 1, row SimCLR, column 1 (+Blur)",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "AutoAugment gives 61.1 vs 64.5 for default simple crop + color + blur.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1",
+   "value": "61.1",
+   "unit": "%",
+   "baseline_value": "64.5",
+   "n": null,
+   "setup": "ImageNet ResNet-50 100 epochs",
+   "quote": null,
+   "table": "Table 1, row SimCLR, column AutoAug",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Removing random flip drops 100-epoch top-1 from 64.5% to 63.4%; removing blur drops 64.5 to 63.2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1",
+   "value": "63.4",
+   "unit": "%",
+   "baseline_value": "64.5",
+   "n": null,
+   "setup": "ImageNet ResNet-50 100 epochs",
+   "quote": "the top-1 linear evaluation drops from 64.5% to 63.4% for our ResNet-50 model trained in 100 epochs.",
+   "table": null,
+   "note": null,
+   "where": "App A"
+  },
+  {
+   "claim": "Fine-tuned ResNet-50 (4x) on full ImageNet reaches 80.4% top-1, vs 78.4% from scratch.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1",
+   "value": "80.4",
+   "unit": "%",
+   "baseline_value": "78.4",
+   "n": null,
+   "setup": "ImageNet 100% labels, broader augmentations in pretraining",
+   "quote": "achieves 80.4% top-1 / 95.4% top-5 13, which is signiﬁcantly better than that (78.4% top-1 / 94.2% top-5) of training from",
+   "table": null,
+   "note": "footnote 13 gives 80.1% top-1 without broader augmentations",
+   "where": "App B.2"
+  },
+  {
+   "claim": "Broader augmentations (Sobel, equalize, solarize, motion blur) raise linear eval to 70.0/74.4/76.8 for 1x/2x/4x.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1",
+   "value": "76.8",
+   "unit": "%",
+   "baseline_value": "76.5",
+   "n": null,
+   "setup": "ImageNet",
+   "quote": "achieve 70.0 (+0.7), 74.4",
+   "table": null,
+   "note": null,
+   "where": "App B.2"
+  },
+  {
+   "claim": "Training with 100 epochs: batch 256 gives 57.5 (linear LR scaling) vs 64.6 at 4096; gaps shrink with longer training (800 epochs 66.6 vs 68.9).",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1",
+   "value": "57.5",
+   "unit": "%",
+   "baseline_value": "64.6",
+   "n": null,
+   "setup": "ImageNet ResNet-50, linear LR scaling",
+   "quote": null,
+   "table": "Table B.1, row 256, column 100",
+   "note": "square root LR scaling gives 62.8 at batch 256, 100 epochs",
+   "where": "Table B.1"
+  },
+  {
+   "claim": "SimCLR-style CIFAR-10 linear eval 94.0% vs 95.1% supervised, batch 1024.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1",
+   "value": "94.0",
+   "unit": "%",
+   "baseline_value": "95.1",
+   "n": null,
+   "setup": "CIFAR-10 pretraining, ResNet-50 with adjusted stem",
+   "quote": "Our best model trained with batch size 1024 can achieve a linear evaluation accuracy of 94.0%, compared to 95.1% from the",
+   "table": null,
+   "note": null,
+   "where": "App B.9"
+  },
+  {
+   "claim": "Fine-tuned transfer: SimCLR ResNet-50 (4x) significantly beats supervised on 5 of 12 datasets, loses on 2 (Pets, Flowers).",
+   "kind": "measured",
+   "source": null,
+   "metric": "datasets",
+   "value": "5",
+   "unit": "of 12",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ResNet-50 4x fine-tuned, permutation test",
+   "quote": "our self-supervised model signiﬁcantly outperforms the su-",
+   "table": null,
+   "note": "Count of 5 appears in text 'on 5 datasets'",
+   "where": "Sec 6"
+  },
+  {
+   "claim": "Standard ResNet-50 supervised beats SimCLR on all 12 datasets in linear evaluation and 10 of 12 fine-tuned; gap on ImageNet is 6.8 points for 1x vs 1.8 for 4x.",
+   "kind": "measured",
+   "source": null,
+   "metric": "gap",
+   "value": "6.8",
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ImageNet top-1, ResNet-50 1x",
+   "quote": "The self-supervised ResNet gets 69.3% top-1 accuracy, 6.8% worse than the supervised model in absolute terms,",
+   "table": null,
+   "note": null,
+   "where": "App B.8.2"
+  },
+  {
+   "claim": "Training 100 epochs, 4096 batch, 128 TPU v3 cores takes about 1.5 hours.",
+   "kind": "measured",
+   "source": null,
+   "metric": "wall-clock",
+   "value": "1.5",
+   "unit": "hours",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ResNet-50, batch 4096, 100 epochs, 128 TPU v3 cores",
+   "quote": "it takes ∼1.5 hours to train our",
+   "table": null,
+   "note": null,
+   "where": "Footnote 2"
+  },
+  {
+   "claim": "Longer training of supervised ResNets gives no significant benefit (ResNet-50 76.5 at 90 epochs, 75.8 to 76.4 at 1000).",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1",
+   "value": "76.5",
+   "unit": "%",
+   "baseline_value": "76.2 (500 epochs)",
+   "n": null,
+   "setup": "ImageNet supervised, same augmentation",
+   "quote": null,
+   "table": "Table B.3, row ResNet-50 90, column Crop",
+   "note": null,
+   "where": "Table B.3"
+  }
+ ],
+ "limits": [
+  "Authors concede max performance not reached in 100 epochs; ablations use 100 epochs, which may not transfer to full convergence (footnote 3)",
+  "Fig 9 and B.1 bars are single runs; no variance for ImageNet results",
+  "Permutation test ignores run-to-run training variability (App B.8.1)",
+  "Need large batches (up to 8192) and many TPU cores; compute costly",
+  "Gap to supervised remains for narrow ResNet-50 (69.3 vs 76.3 on ImageNet) and on all 12 transfer datasets with linear eval",
+  "Hypotheses for why the projection head and color distortion help are conjectures, supported by Table 3 and Fig 6 only",
+  "Comparison table rows from other methods differ in architecture, epochs and augmentation (Table C.1)",
+  "Results are for ImageNet-era ResNets; later methods are not covered"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "NT-Xent",
+   "definition": "the normalized temperature-scaled cross entropy loss",
+   "where": "Sec 2.1"
+  },
+  {
+   "term": "Linear evaluation protocol",
+   "definition": "a linear classifier is trained on top of the frozen base network, and test accuracy is used as a proxy for representation quality",
+   "where": "Sec 2.3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Chen et al. 2017, On sampling strategies for neural network-based collaborative filtering",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "in-batch negatives",
+   "quote": null
+  },
+  {
+   "work": "Sohn 2016 N-pair loss; Wu et al. 2018; Oord et al. 2018 (CPC)",
+   "year": 2018,
+   "arxiv": "1807.03748",
+   "relation": "uses-method",
+   "note": "loss used in previous work, termed NT-Xent",
+   "quote": null
+  },
+  {
+   "work": "You et al. 2017 LARS",
+   "year": 2017,
+   "arxiv": "1708.03888",
+   "relation": "uses-method",
+   "note": "optimizer for large batches",
+   "quote": null
+  },
+  {
+   "work": "Goyal et al. 2017 large minibatch SGD",
+   "year": 2017,
+   "arxiv": "1706.02677",
+   "relation": "related",
+   "note": "linear LR scaling and warmup",
+   "quote": null
+  },
+  {
+   "work": "He et al. 2016 ResNet",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "base encoder",
+   "quote": null
+  },
+  {
+   "work": "Loshchilov & Hutter 2016 SGDR",
+   "year": 2016,
+   "arxiv": "1608.03983",
+   "relation": "uses-method",
+   "note": "cosine decay",
+   "quote": null
+  },
+  {
+   "work": "Ioffe & Szegedy 2015 batch normalization",
+   "year": 2015,
+   "arxiv": "1502.03167",
+   "relation": "uses-method",
+   "note": "global BN",
+   "quote": null
+  },
+  {
+   "work": "MoCo (He et al. 2019)",
+   "year": 2019,
+   "arxiv": "1911.05722",
+   "relation": "baseline",
+   "note": "memory-bank method",
+   "quote": null
+  },
+  {
+   "work": "CPC v2 (Hénaff et al. 2019)",
+   "year": 2019,
+   "arxiv": "1905.09272",
+   "relation": "baseline",
+   "note": "prior state of the art",
+   "quote": null
+  },
+  {
+   "work": "AMDIM (Bachman et al. 2019); CMC (Tian et al. 2019); PIRL (Misra & van der Maaten 2019); InstDisc (Wu et al. 2018)",
+   "year": 2019,
+   "arxiv": "1912.01991",
+   "relation": "baseline",
+   "note": "contrastive baselines",
+   "quote": null
+  },
+  {
+   "work": "Kornblith et al. 2019 Do better ImageNet models transfer better?",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "transfer protocol and supervised baseline",
+   "quote": null
+  },
+  {
+   "work": "Zhai et al. 2019 S4L",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "1%/10% label subsets and supervised baseline",
+   "quote": null
+  },
+  {
+   "work": "ImageNet ILSVRC-2012 (Russakovsky et al. 2015)",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "pretraining data",
+   "quote": null
+  },
+  {
+   "work": "Becker & Hinton 1992",
+   "year": 1992,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "agreement between representations under small transformations",
+   "quote": null
+  },
+  {
+   "work": "Cubuk et al. 2019 AutoAugment",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "augmentation policy compared in Table 1",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "A simple framework for contrastive learning of visual representations.",
+   "page": 2,
+   "why": "shows encoder f, head g, and which layer is kept"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Linear evaluation under individual or composition of data augmentations, applied only to one branch.",
+   "page": 4,
+   "why": "matrix showing crop+color stands out"
+  },
+  {
+   "figure": "Fig 9",
+   "caption": "Linear evaluation models (ResNet-50) trained with different batch size and epochs.",
+   "page": 6,
+   "why": "batch size advantage fades with longer training"
+  },
+  {
+   "figure": "Table 6",
+   "caption": "ImageNet accuracies of linear classifiers trained on representations learned with different self-supervised methods.",
+   "page": 6,
+   "why": "headline comparison"
+  }
+ ],
+ "code": [
+  {
+   "where": "Algorithm 1 / Eq 1",
+   "snippet": "l_ij = -log( exp(sim(z_i,z_j)/tau) / sum_{k=1..2N, k!=i} exp(sim(z_i,z_k)/tau) )",
+   "verbatim": false
+  },
+  {
+   "where": "Appendix A",
+   "snippet": "color_jitter = transforms.ColorJitter(0.8*s, 0.8*s, 0.8*s, 0.2*s)\nrnd_color_jitter = transforms.RandomApply([color_jitter], p=0.8)\nrnd_gray = transforms.RandomGrayscale(p=0.2)",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Text extraction of figure and table data is flattened into one value per line; table cells were reassembled by hand",
+  "Paper text says 16382 negatives for batch 8192 (2*(8192-1)=16382, text prints 16382)",
+  "Sec 6 text says 'Table 1 shows more numerical comparisons' while the table is Table 6",
+  "No embedded instructions found"
+ ]
+}

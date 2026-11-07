@@ -1,0 +1,540 @@
+{
+ "schema": 1,
+ "key": "1904.09675",
+ "pdf": "generative-ai/08-eval/sources/zhang-2019-bertscore.pdf",
+ "bib": {
+  "title": "BERTSCORE: EVALUATING TEXT GENERATION WITH BERT",
+  "authors": [
+   "Tianyi Zhang",
+   "Varsha Kishore",
+   "Felix Wu",
+   "Kilian Q. Weinberger",
+   "Yoav Artzi"
+  ],
+  "first_author": "Zhang",
+  "year": 2020,
+  "venue": "ICLR 2020 (arXiv v3, 24 Feb 2020)",
+  "arxiv": "1904.09675",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 129626,
+  "chars_total": 129626,
+  "engine": "pymupdf",
+  "skipped": "Tables 12-28 (per-language appendix correlation tables) skimmed only by heading; Tables 29-30 read."
+ },
+ "type": "empirical",
+ "question": "Can a metric built from pre-trained contextual token embeddings and greedy matching correlate better with human judgments of generated text than n-gram and other existing metrics?",
+ "hypothesis": "Contextual-embedding similarity handles paraphrase and word order better than n-gram overlap, so it correlates better with human judgments and is more robust to adversarial paraphrases.",
+ "contributions": [
+  "BERTScore: token-level cosine matching of contextual embeddings with optional idf weighting and baseline rescaling",
+  "Evaluation on 363 MT and captioning systems (WMT16-18, COCO 2015) for correlation and model selection",
+  "Adversarial paraphrase robustness test on PAWS-QQP",
+  "Layer selection per embedding model on WMT16 and an ablation against MoverScore"
+ ],
+ "method": {
+  "summary": "BERTScore embeds reference and candidate tokens with a pre-trained encoder (no training or fine-tuning), computes pairwise cosine similarity, greedily matches each token to its most similar counterpart, and averages to recall, precision and F1, optionally idf-weighted. It is compared to BLEU, ITER, RUSE, YiSi-1 and others on WMT segment/system-level human judgments, COCO captioning, and PAWS-QQP paraphrase detection.",
+  "task": "automatic evaluation of text generation against references (MT, captioning, paraphrase detection)",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "WMT18 metrics task",
+    "role": "eval",
+    "size": "149 systems (main text; 159 in appendix F), 14 language pairs",
+    "split": "segment-level and system-level human judgments",
+    "source": "Ma et al., 2018",
+    "preprocessing": null
+   },
+   {
+    "name": "WMT18 hybrid systems",
+    "role": "eval",
+    "size": "10K hybrid systems per language pair",
+    "split": "each reference sentence gets a candidate sampled from one of the systems; human score = mean of segment-level scores",
+    "source": "Graham & Liu 2016 procedure",
+    "preprocessing": null
+   },
+   {
+    "name": "WMT16 to-English segment-level",
+    "role": "dev",
+    "size": "560 pairs per language pair, 50 systems, 6 language pairs",
+    "split": "used to pick the layer per model; WMT17 en-zh for Chinese BERT",
+    "source": "Bojar et al., 2016",
+    "preprocessing": null
+   },
+   {
+    "name": "WMT17",
+    "role": "eval",
+    "size": "152 systems, 14 language pairs",
+    "split": "segment and system level; fi-en excluded from segment level due to a data error",
+    "source": "Bojar et al., 2017",
+    "preprocessing": null
+   },
+   {
+    "name": "COCO 2015 Captioning Challenge",
+    "role": "eval",
+    "size": "12 submitted systems, about 5 reference captions per image",
+    "split": "COCO validation set",
+    "source": "Lin et al., 2014; human judgments M1, M2 from Cui et al., 2018",
+    "preprocessing": "multiple references: score against each, keep highest"
+   },
+   {
+    "name": "QQP",
+    "role": "eval",
+    "size": "first 5,000 sentences of the training set",
+    "split": "train set used because test labels unavailable",
+    "source": "Iyer et al., 2017",
+    "preprocessing": "first sentence is reference, second is candidate"
+   },
+   {
+    "name": "PAWS-QQP",
+    "role": "eval",
+    "size": "667 sentences (dev set)",
+    "split": "dev",
+    "source": "Zhang et al., 2019 (PAWS)",
+    "preprocessing": null
+   },
+   {
+    "name": "MSR Abstractive Text Compression",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Toutanova et al., 2016",
+    "preprocessing": null
+   },
+   {
+    "name": "Common Crawl monolingual",
+    "role": "dev",
+    "size": "1M random sentence pairs per language and model",
+    "split": "baseline b for rescaling",
+    "source": "commoncrawl.org",
+    "preprocessing": "two random sentences grouped as candidate-reference"
+   }
+  ],
+  "models": [
+   {
+    "name": "RoBERTa-large",
+    "role": "proposed",
+    "params": null,
+    "architecture": "24-layer Transformer encoder",
+    "init_from": null,
+    "tokenizer": "provided with each model",
+    "vocab": null,
+    "layers": "24 (layer 17 used, Table 8)",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "English tasks"
+    }
+   },
+   {
+    "name": "BERT-chinese",
+    "role": "proposed",
+    "params": null,
+    "architecture": "12-layer Transformer encoder",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "12 (layer 8)",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "Chinese"
+    }
+   },
+   {
+    "name": "BERT-multilingual-cased",
+    "role": "proposed",
+    "params": null,
+    "architecture": "12-layer Transformer encoder",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "12 (layer 9)",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "other languages"
+    }
+   },
+   {
+    "name": "Other embedding models (BERT base/large, MRPC, RoBERTa base/MNLI, XLNet, XLM)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "Transformer encoders",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "see Table 8 for best layers",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "twelve_models_total": true
+    }
+   },
+   {
+    "name": "BLEU, SentBLEU, ITER, RUSE, YiSi-1, METEOR, ROUGE-L, CIDEr, SPICE, LEIC, BEER, EED, chrF++, CHARACTER",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "Model selection: 100 of 10K hybrid systems ranked, repeated 100K times; otherwise single deterministic scoring",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "matching": "greedy (max over other sentence tokens), not optimal assignment",
+    "vectors": "pre-normalized, cosine = inner product",
+    "idf": "idf(w) = -log (1/M) sum I[w in x(i)] computed on test-set references, plus-one smoothing",
+    "rescaling": "(R - b)/(1 - b), b from 1M random Common Crawl pairs; does not change ranking",
+    "layer_per_model": "Table 8: roberta-large 17/24, bert-base-uncased 9/12, bert-large-uncased 18/24, multilingual-cased 9/12, bert-base-chinese 8/12, roberta-large-mnli 19/24, xlnet-base 5/12, xlnet-large 7/24",
+    "default_config": "no idf after main results ('We continue without idf weighting'), F1 recommended"
+   },
+   "other": {
+    "speed": "192.5 pairs/s on GTX-1080Ti; WMT18 en-de test (2,998 sentences) 15.6 s vs 5.4 s SacreBLEU"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Absolute Pearson |rho|",
+     "definition": "system-level correlation with human judgments; significance by Williams test",
+     "unit": "correlation",
+     "higher_is_better": true
+    },
+    {
+     "name": "Kendall tau",
+     "definition": "segment-level rank correlation with human judgments; bootstrap resampling significance",
+     "unit": "correlation",
+     "higher_is_better": true
+    },
+    {
+     "name": "Hits@1",
+     "definition": "percent of 100K draws of 100 hybrid systems where the metric's top system equals the human top system",
+     "unit": "fraction",
+     "higher_is_better": true
+    },
+    {
+     "name": "MRR and Diff",
+     "definition": "reciprocal rank of metric's top system in human ranking; human score gap between human-best and metric-best system",
+     "unit": "rank / x100 score",
+     "higher_is_better": true
+    },
+    {
+     "name": "Pearson on COCO M1, M2",
+     "definition": "M1 = percent of captions better or equal to human; M2 = percent indistinguishable from human",
+     "unit": "correlation",
+     "higher_is_better": true
+    },
+    {
+     "name": "AUC",
+     "definition": "ROC area for paraphrase detection using the score as classifier",
+     "unit": "AUC",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "BLEU",
+    "ITER",
+    "RUSE",
+    "YiSi-1",
+    "METEOR",
+    "ROUGE-L",
+    "CIDEr",
+    "SPICE",
+    "LEIC",
+    "BEER",
+    "EED",
+    "chrF++",
+    "CHARACTER",
+    "DecAtt",
+    "DIIN",
+    "fine-tuned BERT"
+   ],
+   "protocol": "Layer chosen on WMT16 then fixed; 0.95 CI below 1e-3 for Hits@1; no seeds for BERTScore itself (deterministic)."
+  },
+  "availability": {
+   "code": "https://github.com/Tiiiger/bert_score",
+   "weights": "HuggingFace pytorch-transformers models",
+   "data": "WMT, COCO, QQP, PAWS public"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "inference.parameters.layer_per_model",
+    "quote": "Table 8: Recommended layer of representation to use for BERTSCORE. The layers are chosen based on a held-out validation set (WMT16).",
+    "where": "Appendix B"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "BERTScore F1 beats sentence BLEU at segment level on WMT18 de-en (RoBERTa-large).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Kendall tau",
+   "value": 0.55,
+   "unit": "tau",
+   "baseline_value": 0.415,
+   "n": null,
+   "setup": "WMT18 segment-level, 78k German-to-English pairs, F_BERT (no idf and idf both 0.550); BLEU 0.415",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row FBERT, column en-de (to-English)"
+  },
+  {
+   "claim": "BERTScore F1 on PAWS-QQP AUC vs BLEU, near chance for BLEU.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AUC",
+   "value": 0.685,
+   "unit": "AUC",
+   "baseline_value": 0.527,
+   "n": null,
+   "setup": "PAWS-QQP dev (667 sentences), RoBERTa-large F_BERT without idf; idf variant 0.693; BLEU 0.527",
+   "table": "Table 6, row FBERT, column PAWSQQP",
+   "note": "Idf variant 0.693 is the bolded cell",
+   "where": "Table 6"
+  },
+  {
+   "claim": "R_BERT with idf correlates with COCO M1 human judgments, below LEIC but above SPICE.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Pearson",
+   "value": 0.917,
+   "unit": "r",
+   "baseline_value": 0.759,
+   "n": null,
+   "setup": "COCO 2015, 12 systems, RoBERTa-large, idf",
+   "table": "Table 5, row RBERT (idf), column M1",
+   "note": "SPICE 0.759, LEIC 0.939; BLEU -0.019",
+   "where": "Table 5"
+  },
+  {
+   "claim": "Precision-based P_BERT is negatively correlated with COCO M1, F1 only 0.322.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Pearson",
+   "value": -0.105,
+   "unit": "r",
+   "baseline_value": null,
+   "n": null,
+   "setup": "COCO 2015 M1, RoBERTa-large",
+   "table": "Table 5, row PBERT, column M1",
+   "note": "F_BERT 0.322",
+   "where": "Table 5"
+  },
+  {
+   "claim": "Hits@1 model selection on WMT18 en-de to-English: F_BERT 0.824 vs BLEU 0.803.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Hits@1",
+   "value": 0.824,
+   "unit": "fraction",
+   "baseline_value": 0.803,
+   "n": null,
+   "setup": "10K hybrid systems, 100 sampled 100K times, RoBERTa-large",
+   "table": "Table 3, row FBERT, column en-de",
+   "note": "BLEU 0.803 to-English",
+   "where": "Table 3"
+  },
+  {
+   "claim": "BERTScore is fast enough for validation.",
+   "kind": "measured",
+   "source": null,
+   "metric": "throughput",
+   "value": 192.5,
+   "unit": "pairs/s",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GTX-1080Ti, WMT18 en-de 2,998 sentences 15.6 s vs 5.4 s SacreBLEU",
+   "quote": "We are able to process 192.5 candidate-reference pairs/second using a GTX-1080Ti GPU.",
+   "note": null,
+   "where": "Sec 5"
+  },
+  {
+   "claim": "Best layer for RoBERTa-large is 17 of 24; correlation drops sharply in final layers.",
+   "kind": "measured",
+   "source": null,
+   "metric": "layer",
+   "value": 17,
+   "unit": "layer index",
+   "baseline_value": null,
+   "n": null,
+   "setup": "WMT16 to-English segment-level validation",
+   "table": "Table 8, row roberta-large",
+   "note": "Fig 3 caption: 'correlation drops significantly in the final layers'",
+   "where": "Appendix B"
+  },
+  {
+   "claim": "Replacing greedy matching with WMD does not consistently improve BERTScore.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Pearson",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "WMT17 to-English segment-level, 12-layer uncased BERT, Table 9",
+   "note": "No single number; see Table 9",
+   "where": "Appendix C"
+  },
+  {
+   "claim": "BERTScore recall correlates with MSR compression meaning judgments.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Pearson",
+   "value": 0.64,
+   "unit": "r",
+   "baseline_value": 0.46,
+   "n": null,
+   "setup": "MSR Abstractive Text Compression, meaning scores; BLEU 0.46",
+   "table": "Table 10, row RBERT, column Meaning",
+   "note": null,
+   "where": "Appendix D"
+  }
+ ],
+ "limits": [
+  "No single configuration wins everywhere; the authors say users must weigh model, language and domain.",
+  "Fails on factual errors (English for German, Tuesday for Monday) and unit equivalences like 5ft 11in vs 1.80 metres (Appendix A).",
+  "idf weighting helps only at times; the authors defer when to future work.",
+  "Less stable on low-resource languages with multilingual BERT.",
+  "Needs a reference; evidence is MT, captioning, paraphrase detection and one compression set, not open-ended generation.",
+  "Precision and F1 are poor for COCO captioning; recall is best.",
+  "Layer was tuned on WMT16, the same data family as the test years."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Baseline rescaling",
+   "definition": "rescale BERTScore with respect to its empirical lower bound b: (R-b)/(1-b)",
+   "where": "Section 3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "BERT",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Devlin et al., contextual embeddings",
+   "quote": null
+  },
+  {
+   "work": "RoBERTa",
+   "year": 2019,
+   "arxiv": "1907.11692",
+   "relation": "uses-method",
+   "note": "main English model",
+   "quote": null
+  },
+  {
+   "work": "MoverScore",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Zhao et al., EMD-based concurrent work; ablated in Appendix C",
+   "quote": null
+  },
+  {
+   "work": "BLEU",
+   "year": 2002,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Papineni et al.",
+   "quote": null
+  },
+  {
+   "work": "METEOR",
+   "year": 2005,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Banerjee & Lavie",
+   "quote": null
+  },
+  {
+   "work": "RUSE",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Shimanaka et al., supervised",
+   "quote": null
+  },
+  {
+   "work": "YiSi-1",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Lo et al.; inspired greedy matching and idf",
+   "quote": null
+  },
+  {
+   "work": "WMT16/17/18 metrics shared task",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Bojar 2016, 2017; Ma 2018",
+   "quote": null
+  },
+  {
+   "work": "PAWS",
+   "year": 2019,
+   "arxiv": "1904.01130",
+   "relation": "uses-data",
+   "note": "adversarial paraphrases",
+   "quote": null
+  },
+  {
+   "work": "Learning to evaluate image captioning",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Cui et al.; COCO M1/M2 and LEIC",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Illustration of the computation of the recall metric R_BERT.",
+   "page": 4,
+   "why": "Shows embedding, pairwise cosine, greedy max and idf weighting in one picture."
+  },
+  {
+   "figure": "Table 8",
+   "caption": "Recommended layer of representation to use for BERTSCORE.",
+   "page": 17,
+   "why": "Layer per model needed to reproduce scores."
+  }
+ ],
+ "code": [
+  {
+   "where": "Section 3",
+   "snippet": "R_BERT = 1/|x| sum_{xi in x} max_{xj^ in x^} xi^T xj^ ; P_BERT = 1/|x^| sum_{xj^} max_{xi} xi^T xj^ ; F_BERT = 2 P R / (P + R)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text mentions 149 WMT18 systems in Section 4 and 159 in Appendix F; Section 5 says 351 systems total.",
+  "Figure text not extracted; Tables 12-28 not individually read."
+ ]
+}

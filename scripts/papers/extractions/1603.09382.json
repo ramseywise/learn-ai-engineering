@@ -1,19 +1,580 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "1603.09382",
  "pdf": "ai-engineering/08-multimodal-engineering/sources/huang-2016-deep-networks-stochastic-depth.pdf",
  "bib": {
   "title": "Deep Networks with Stochastic Depth",
+  "authors": [
+   "Gao Huang",
+   "Yu Sun",
+   "Zhuang Liu",
+   "Daniel Sedra",
+   "Kilian Q. Weinberger"
+  ],
   "first_author": "Huang",
   "year": 2016,
-  "venue": "ECCV (4) 2016",
+  "venue": "ECCV 2016 (arXiv v3 preprint)",
   "arxiv": "1603.09382",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-04",
-  "session": "97b4134b-decf-4866-ae85-c6872cbbba19"
+  "at": "2026-11-07",
+  "chars_read": 42666,
+  "chars_total": 42666,
+  "engine": "pymupdf",
+  "skipped": null
  },
- "legacy_report": "SOURCE: Deep Networks with Stochastic Depth. Gao Huang, Yu Sun, Zhuang Liu, Daniel Sedra, Kilian Q. Weinberger (Cornell and Tsinghua). ECCV 2016. The file is arXiv:1603.09382v3, dated 28 Jul 2016.\n\nCOVERAGE: I read all 42,848 of 42,848 chars, which is pages 1–16. That covers the body, both tables, Figs 1–8 and the references. The paper has no appendix. I did not run figures.py, because the captions came through in the text extraction.\n\nCLAIMS\n- claim: The method drops whole ResBlocks at random for each mini-batch during training. The survival probability falls linearly from 1 at the input to p_L=0.5 at the last block. At test time every block is active and its output is multiplied by p_l.\n  number: p_L = 0.5; E(L~) ≈ 3L/4\n  setup: Applies to all experiments. For the 110-layer ResNet with L=54 blocks, the expected depth is about 40 blocks.\n  quote: \"p𝓁 = 1− 𝓁/L(1− pL)\" … \"E(˜L) = (3L− 1)/4, or E(˜L)≈ 3L/4\" … \"H Test𝓁 = ReLU(p𝓁f𝓁(H Test𝓁−1 ; W𝓁) + H Test𝓁−1 )\"\n  where: pp. 5–7\n- claim: Stochastic depth lowers test error against the same ResNet trained at constant depth, using identical optimisation settings.\n  number: CIFAR-10+ 6.41→5.25; CIFAR-100+ 27.76→24.98; SVHN 1.80→1.75\n  setup: 110-layer ResNet on CIFAR with flip and translate augmentation, SGD for 500 epochs, batch 128. SVHN uses a 152-layer ResNet for 50 epochs with no augmentation. Each reported error is from the epoch with the lowest validation error.\n  quote: \"ResNet with constant depth 6.41 27.76 1.80 21.78 / ResNet with stochastic depth 5.25 24.98 1.75 21.98\"; \"relative improvement of 18%\"\n  where: Table 1, p. 7; p. 8\n  The gain also holds without augmentation: \"13.63% and 44.74% … resulting in test errors of 11.66% and 37.8%\" (p. 9).\n- claim: Training wall-clock time drops by about 25%, which matches the expected-depth calculation. Setting p_L lower saves more time.\n  number: 25%; 40% at p_L=0.2\n  setup: Same runs as Table 1. At p_L=0.2 the 110-layer CIFAR-10 model ties the baseline.\n  quote: \"Constant Depth 20h 42m 20h 51m 33h 43m / Stochastic Depth 15h 7m 15h 20m 25h 33m\"; \"Stochastic depth consistently gives a 25% speedup\"; \"with pL = 0.2 … same test error as its constant depth counterpart on CIFAR-10 but gives a 40% speedup\"\n  where: Table 2, p. 10; p. 6\n- claim: With stochastic depth, a 1202-layer ResNet beats the 110-layer one. Trained at constant depth, the 1202-layer net does worse than the 110-layer net.\n  number: 6.67% (constant) vs 4.91% (stochastic), a 27% relative gain\n  setup: CIFAR-10+, 300 epochs, warm-up at LR 0.01 for 10 epochs, then 0.1, divided by 10 at epochs 150 and 225. This result is not included in Table 1.\n  quote: \"training with stochastic depth leads to a 27% relative improvement\" … \"from 110 layers to 1202 yields a further improvement on the previous record-low 5.25%, to a 4.91% test error without sign of overfitting\"\n  where: pp. 10–11\n- claim: The linear decay rule beats the uniform rule at every p_L tested, and it holds up when p_L is anywhere from 0.4 to 0.8. A network needs enough depth before the method helps.\n  number: p_L 0.4–0.8\n  setup: 110-layer ResNet on CIFAR-10, with p_L swept from 0.1 to 1.0 (Fig. 8). A heatmap crosses p_L with depths of 20–110 layers.\n  quote: \"the linear decay rule outperforms the uniform rule consistently; 3) the linear decay rule is relatively robust to fluctuations in pL and obtains competitive results when pL ranges from 0.4 to 0.8\"\n  where: p. 13\n- claim: Against Dropout, the authors report that Dropout barely helps a ResNet that uses BatchNorm, while stochastic depth still regularises.\n  number: none\n  setup: 110-layer ResNet with BN on CIFAR-10. The Dropout rates are not reported.\n  quote: \"Dropout gives practically no improvement when used on 110-layer ResNets with Batch Normalization\"\n  where: p. 4\n\nLIMITS\n- ImageNet shows no gain. With a 152-layer ResNet, error at 90 epochs is 23.38% against the baseline's 23.06%. At 120 epochs it is 21.98% against 21.78%. The authors concede \"no immediate benefit … on this particular architecture\" (pp. 11–12).\n- Every result is a single run, with no seeds or error bars.\n- The SVHN gain is small: 1.80 vs 1.75.\n- The authors note \"slightly higher fluctuations\" in test error (p. 9).\n- The vanishing-gradient evidence is one plot: gradient magnitude at the first conv layer (Fig. 7).\n- Ensemble interpretation: the paper offers it as an explanation and never tests it.\n- Shallow networks: they need less aggressive skipping.\n- Dated: state-of-the-art claims are as of March 2016, and the authors footnote that later work has improved on them.\n\nBUILDS ON: He et al., ResNet (arXiv 2015) [8], with Identity Mappings (2016) [35]. Srivastava et al., Dropout (JMLR 2014) [16]. Ioffe and Szegedy, Batch Normalization (2015) [14]. Srivastava, Greff and Schmidhuber, Highway Networks (2015) [15, 29]. DropConnect, Wan et al. (ICML 2013) [20]. DropIn, Smith et al. (CVPR 2016) [22]. Bengio et al. on vanishing gradients (1994) [11]. The code base is fb.resnet.torch, Gross and Wilber (2016) [34].\n\nCODE: The paper prints no code. It gives a Torch 7 repository: github.com/yueatsprograms/Stochastic_Depth (p. 8).\n\nFIGURES: Fig. 2, p. 5: \"The linear decay of p𝓁 illustrated on a ResNet with stochastic depth for p0 =1 and pL = 0.5.\" It shows on one diagram that whole blocks are skipped and how p_l falls with depth. Second choice: Fig. 8 (left), p. 13, which compares linear and uniform rules against the constant-depth baseline across p_L and is the ablation in one plot.\n\nPROBLEMS: The CIFAR-100 constant-depth baseline is reported three ways. Table 1 gives 27.76, the text on p. 9 says \"test error of 27.22%\", and the Fig. 3 label reads 27.88%. Please cite the Table 1 value, or flag the mismatch. The Fig. 8 data labels came out as a jumbled list of numbers, so I could not tie them to points and have not quoted them. The PDF contains no embedded instructions."
+ "type": "empirical",
+ "question": "Can very deep ResNets be trained faster and with lower test error by randomly skipping residual blocks during training while keeping full depth at test time?",
+ "hypothesis": "Shortening the expected depth during training strengthens gradients in early layers and acts as an implicit ensemble/regulariser, improving error and speed.",
+ "contributions": [
+  "Stochastic depth: randomly drop whole ResBlocks per mini-batch with linearly decaying survival probability",
+  "About 25% training speedup at p_L=0.5",
+  "Lower test error on CIFAR-10/100 and SVHN, and a 1202-layer ResNet at 4.91% on CIFAR-10",
+  "Gradient-magnitude and p_L sensitivity analyses"
+ ],
+ "method": {
+  "summary": "Each residual block l is multiplied by a Bernoulli b_l with survival probability p_l = 1 - (l/L)(1-p_L), dropping it to identity for the mini-batch. At test time all blocks are active and f_l output is scaled by p_l. Compared against constant-depth ResNets (He et al.) with identical optimiser settings.",
+  "task": "image classification (CIFAR-10, CIFAR-100, SVHN, ImageNet)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "CIFAR-10",
+    "role": "both",
+    "size": "50,000 train, 10,000 test",
+    "split": "5,000 held out as validation, 45,000 train",
+    "source": "Krizhevsky & Hinton 2009",
+    "preprocessing": "horizontal flip and 4-pixel translation"
+   },
+   {
+    "name": "CIFAR-100",
+    "role": "both",
+    "size": "same train/test split as CIFAR-10",
+    "split": "same as CIFAR-10 (inferred from 'same train-test split')",
+    "source": "Krizhevsky & Hinton 2009",
+    "preprocessing": "same augmentation as CIFAR-10; also run without augmentation"
+   },
+   {
+    "name": "SVHN",
+    "role": "both",
+    "size": "73,257 train, 26,032 test, 531,131 additional",
+    "split": "validation 6,000: 400 per class from train plus 200 per class from additional",
+    "source": "Netzer et al. 2011",
+    "preprocessing": "mean subtraction, divide by std; no augmentation; all training samples used"
+   },
+   {
+    "name": "ImageNet ILSVRC 2012",
+    "role": "both",
+    "size": "1.2 million train, 50,000 val, 100,000 test, 1000 classes",
+    "split": "validation errors reported",
+    "source": "Deng et al. 2009",
+    "preprocessing": "fb.resnet.torch defaults (not detailed)"
+   }
+  ],
+  "models": [
+   {
+    "name": "ResNet-110 with stochastic depth",
+    "role": "proposed",
+    "params": null,
+    "architecture": "3 groups of 18 ResBlocks (Conv-BN-ReLU-Conv-BN), 16/32/64 filters; L=54",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "110",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "p_L": "0.5",
+     "p_0": "1"
+    }
+   },
+   {
+    "name": "ResNet-1202 with stochastic depth",
+    "role": "proposed",
+    "params": null,
+    "architecture": "same block design, deeper",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "1202",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "ResNet-152 (SVHN)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "residual blocks as for CIFAR",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "152",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "ResNet-152 (ImageNet)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "50 bottleneck blocks, learned linear projection on mismatched shortcuts",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "152",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Constant-depth ResNet",
+    "role": "baseline",
+    "params": null,
+    "architecture": "same architecture, no block dropping",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "inferred: softmax cross-entropy classification",
+   "optimizer": "SGD, momentum 0.9, Nesterov, 0 dampening",
+   "lr": "0.1 (CIFAR, SVHN, ImageNet via fb.resnet.torch)",
+   "lr_schedule": "CIFAR: divide by 10 after epochs 250 and 375; 1202-layer: 0.01 for first 10 epochs then 0.1, divide by 10 at 150 and 225; SVHN: divide by 10 after epochs 30 and 35; ImageNet: fb.resnet.torch settings, lr 1e-4 after epoch 90 for the 120-epoch run",
+   "warmup": "1202-layer only: lr 0.01 for first 10 epochs",
+   "batch_size": "128 (CIFAR, SVHN, ImageNet; ImageNet reduced from 256)",
+   "steps": null,
+   "epochs": "CIFAR 500; 1202-layer 300; SVHN 50; ImageNet 90 (baseline, also 120 for both)",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": "1e-4 (CIFAR)",
+   "dropout": null,
+   "regularisation": "stochastic depth itself, p_L=0.5 linear decay",
+   "hardware": "ImageNet: 4 GPUs (model unstated)",
+   "compute": null,
+   "wall_clock": "Table 2: CIFAR10+ 20h 42m vs 15h 7m; CIFAR100+ 20h 51m vs 15h 20m; SVHN 33h 43m vs 25h 33m (constant vs stochastic)",
+   "seeds": null,
+   "other": {
+    "reporting": "test error from the epoch with lowest validation error",
+    "svhn_depth_selection": "depth and lr schedule chosen by optimising baseline validation error",
+    "weight_decay_other_datasets": "SVHN and ImageNet weight decay not stated beyond 'same as' fb.resnet.torch"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single run per configuration (inferred: no repeats mentioned)",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "test_time_rule": "H_test_l = ReLU(p_l f_l(H_test_{l-1}) + H_test_{l-1})"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "test error",
+     "definition": "top-1 classification error at epoch of lowest validation error",
+     "unit": "%",
+     "higher_is_better": false
+    },
+    {
+     "name": "training time",
+     "definition": "wall clock",
+     "unit": "hours/minutes",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "Constant-depth ResNet (authors' reproduction of He et al.)",
+    "Maxout",
+    "DropConnect",
+    "Network in Network",
+    "Deeply Supervised",
+    "Fractional pooling",
+    "All-CNN",
+    "Learning Activation",
+    "R-CNN",
+    "Scalable BO",
+    "Highway Network",
+    "Generalized pooling"
+   ],
+   "protocol": "Single training runs; no seeds, confidence intervals or significance tests reported."
+  },
+  "availability": {
+   "code": "https://github.com/yueatsprograms/Stochastic_Depth (Torch 7)",
+   "weights": null,
+   "data": "public benchmarks"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "eval.baselines CIFAR-100",
+    "quote": "27.88%",
+    "where": "Fig 3 annotation; Table 1 prints 27.76, text 27.22"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Stochastic depth lowers CIFAR-10+ test error of the 110-layer ResNet from 6.41% to 5.25%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test error",
+   "value": "5.25",
+   "unit": "% test error",
+   "baseline_value": "6.41",
+   "n": null,
+   "setup": "110-layer ResNet (L=54), CIFAR-10 with standard augmentation, linear decay p_L=0.5, 500 epochs, SGD",
+   "note": null,
+   "where": "Sec 4 CIFAR-10",
+   "quote": "ResNets trained with stochastic depth\nyield a further relative improvement of 18% and result in 5.25% test error."
+  },
+  {
+   "claim": "A 1202-layer ResNet with stochastic depth reaches 4.91% on CIFAR-10+, versus 6.67% with constant depth.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test error",
+   "value": "4.91",
+   "unit": "% test error",
+   "baseline_value": "6.67",
+   "n": null,
+   "setup": "1202-layer ResNet, CIFAR-10+, 300 epochs, p_L=0.5",
+   "note": null,
+   "where": "Sec 4 1202-layer",
+   "quote": "to a 4.91% test error without sign of overﬁtting"
+  },
+  {
+   "claim": "The constant-depth 1202-layer ResNet is worse than the 110-layer one (6.67% vs 6.41%).",
+   "kind": "measured",
+   "source": null,
+   "metric": "test error",
+   "value": "6.67",
+   "unit": "% test error",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CIFAR-10+, constant depth",
+   "note": null,
+   "where": "Sec 4",
+   "quote": "yields a test error of\n6.67%, which is worse than the 110-layer constant depth ResNet"
+  },
+  {
+   "claim": "Stochastic depth gives a 27% relative improvement over constant depth at 1202 layers.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "27",
+   "unit": "% relative",
+   "baseline_value": null,
+   "n": null,
+   "setup": "1202-layer ResNet, CIFAR-10+",
+   "note": null,
+   "where": "Sec 4",
+   "quote": "leads to a 27% relative improvement"
+  },
+  {
+   "claim": "CIFAR-100+ test error falls to 24.98% with stochastic depth.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test error",
+   "value": "24.98",
+   "unit": "% test error",
+   "baseline_value": "27.76",
+   "n": null,
+   "setup": "110-layer ResNet with 100-way softmax, CIFAR-100+, same settings as CIFAR-10",
+   "note": "Constant-depth baseline is printed 27.76 in Table 1, 27.22 in the CIFAR-100 text, and 27.88 in Fig 3.",
+   "where": "Sec 4 CIFAR-100",
+   "quote": "Adding stochastic depth drastically reduces the error to 24.98%"
+  },
+  {
+   "claim": "Constant-depth CIFAR-100+ baseline is printed differently in three places.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test error",
+   "value": "27.22",
+   "unit": "% test error",
+   "baseline_value": null,
+   "n": null,
+   "setup": "110-layer ResNet, CIFAR-100+",
+   "note": "Table 1 prints 27.76; Fig 3 annotates 27.88%.",
+   "where": "Sec 4 CIFAR-100",
+   "quote": "The constant depth ResNet yields a test error of 27.22%"
+  },
+  {
+   "claim": "Stochastic depth cuts training time by about 25% on CIFAR (20h42m to 15h7m on CIFAR-10+).",
+   "kind": "measured",
+   "source": null,
+   "metric": "training time",
+   "value": "25",
+   "unit": "% speedup",
+   "baseline_value": null,
+   "n": null,
+   "setup": "110-layer ResNet, linear decay p_L=0.5; CIFAR10+ 20h 42m vs 15h 7m",
+   "note": null,
+   "where": "Sec 4 Training time comparison, Table 2",
+   "quote": "Stochastic depth consistently gives a 25% speedup"
+  },
+  {
+   "claim": "Expected number of active blocks under linear decay with p_L=0.5 is (3L-1)/4, about 40 of 54 for the 110-layer net.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": "40",
+   "unit": "blocks",
+   "baseline_value": null,
+   "n": null,
+   "setup": "L=54, p_L=0.5",
+   "note": null,
+   "where": "Sec 3",
+   "quote": "E(˜L) = (3L −1)/4, or E(˜L) ≈3L/4 when L is large."
+  },
+  {
+   "claim": "Without augmentation, stochastic depth improves CIFAR-10 from 13.63% to 11.66%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test error",
+   "value": "11.66",
+   "unit": "% test error",
+   "baseline_value": "13.63",
+   "n": null,
+   "setup": "110-layer ResNet, CIFAR-10 no augmentation",
+   "note": null,
+   "where": "Sec 4 CIFAR-100",
+   "quote": "resulting in test errors of 11.66% and\n37.8% respectively"
+  },
+  {
+   "claim": "Without augmentation, stochastic depth improves CIFAR-100 from 44.74% to 37.8%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test error",
+   "value": "37.8",
+   "unit": "% test error",
+   "baseline_value": "44.74",
+   "n": null,
+   "setup": "110-layer ResNet, CIFAR-100 no augmentation",
+   "note": "Quote locates baseline 44.74; 37.8 is in the following sentence.",
+   "where": "Sec 4 CIFAR-100",
+   "quote": "44.74% on CIFAR-10\nand CIFAR-100 respectively"
+  },
+  {
+   "claim": "SVHN: 1.75% with stochastic depth versus 1.80% for the 152-layer baseline.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test error",
+   "value": "1.75",
+   "unit": "% test error",
+   "baseline_value": "1.80",
+   "n": null,
+   "setup": "152-layer ResNet, SVHN, 50 epochs, lr 0.1 divided by 10 after epochs 30 and 35, no augmentation",
+   "note": null,
+   "where": "Sec 4 SVHN",
+   "quote": "With stochastic depth, the error improves to 1.75%"
+  },
+  {
+   "claim": "ImageNet: stochastic depth does not help the 152-layer ResNet; 21.98% (120 epochs) vs 21.78% baseline (120 epochs) validation error.",
+   "kind": "measured",
+   "source": null,
+   "metric": "validation error",
+   "value": "21.98",
+   "unit": "% val error",
+   "baseline_value": "21.78",
+   "n": null,
+   "setup": "152-layer ResNet (50 bottleneck blocks), ILSVRC 2012, batch 128 over 4 GPUs, 120 epochs for stochastic depth",
+   "note": null,
+   "where": "Sec 4 ImageNet",
+   "quote": "This reaches a ﬁnal error of 21.98%. We have also kept the baseline running for\n30 more epochs. This reaches a ﬁnal error of 21.78%."
+  },
+  {
+   "claim": "At 90 epochs on ImageNet, stochastic depth is slightly worse (23.38%) than the baseline (23.06%).",
+   "kind": "measured",
+   "source": null,
+   "metric": "validation error",
+   "value": "23.38",
+   "unit": "% val error",
+   "baseline_value": "23.06",
+   "n": null,
+   "setup": "152-layer ResNet, ILSVRC 2012, 90 epochs",
+   "note": null,
+   "where": "Sec 4 ImageNet",
+   "quote": "we obtain an error of 23.38% at epoch 90, which is slightly\nhigher"
+  },
+  {
+   "claim": "With p_L=0.2 and linear decay, test error matches constant depth on CIFAR-10 with a 40% speedup.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "40",
+   "unit": "% training time reduction",
+   "baseline_value": null,
+   "n": null,
+   "setup": "110-layer ResNet, CIFAR-10, p_L=0.2",
+   "note": null,
+   "where": "Sec 3",
+   "quote": "Fig. 8 shows that with pL = 0.2, the\nResNet with stochastic depth obtains the same test error as its constant depth\ncounterpart on CIFAR-10 but gives a 40% speedup"
+  },
+  {
+   "claim": "Linear decay beats uniform survival probability and is robust for p_L in 0.4 to 0.8.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "0.4 to 0.8",
+   "unit": "p_L range",
+   "baseline_value": null,
+   "n": null,
+   "setup": "110-layer ResNet, CIFAR-10",
+   "note": null,
+   "where": "Sec 5 Hyper-parameter sensitivity",
+   "quote": "obtains competitive results when pL ranges from 0.4 to 0.8"
+  },
+  {
+   "claim": "Gradient magnitude at the first conv layer is larger with stochastic depth throughout training (read from Fig 7 only; no number).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "CIFAR-10, first conv layer of first ResBlock",
+   "note": "Qualitative; supports the vanishing-gradient explanation but no ablation isolates it.",
+   "where": "Sec 5, Fig 7"
+  },
+  {
+   "claim": "Dropout gives practically no improvement on 110-layer ResNets with batch norm (authors' own experiments, numbers not given).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "CIFAR-10, various dropout rates",
+   "note": null,
+   "where": "Sec 2"
+  }
+ ],
+ "limits": [
+  "No gain on ImageNet ResNet-152 (21.98% vs 21.78%); authors say the model is probably too small",
+  "Single runs, no variance or seeds",
+  "Gradient evidence is one layer's mean magnitude, not a causal test",
+  "Authors note later work had lowered CIFAR-10 error since submission",
+  "Baseline CIFAR-100 error printed three ways (27.76, 27.22, 27.88)",
+  "1202-layer result reported on CIFAR-10 only, excluded from Table 1"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "stochastic depth",
+   "definition": "randomly dropping entire ResBlocks per mini-batch, bypassing them with identity, and keeping full depth at test time",
+   "where": "Sec 3"
+  },
+  {
+   "term": "survival probability",
+   "definition": "p_l = Pr(b_l = 1), the probability ResBlock l is active",
+   "where": "Sec 3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Deep residual learning for image recognition (He et al.)",
+   "year": 2015,
+   "arxiv": "1512.03385",
+   "relation": "extends",
+   "note": "architecture and settings follow it",
+   "quote": null
+  },
+  {
+   "work": "Dropout (Srivastava et al.)",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "related",
+   "note": "analogy; makes network shorter not thinner",
+   "quote": null
+  },
+  {
+   "work": "Batch Normalization",
+   "year": 2015,
+   "arxiv": "1502.03167",
+   "relation": "uses-method",
+   "note": "used inside ResBlocks",
+   "quote": null
+  },
+  {
+   "work": "Highway networks",
+   "year": 2015,
+   "arxiv": "1505.00387",
+   "relation": "related",
+   "note": "skip connections",
+   "quote": null
+  },
+  {
+   "work": "Generalizing pooling functions in CNNs (Lee et al.)",
+   "year": 2015,
+   "arxiv": "1509.08985",
+   "relation": "baseline",
+   "note": "prior best single model 6.05% on CIFAR-10",
+   "quote": null
+  },
+  {
+   "work": "fb.resnet.torch (Gross & Wilber)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "ImageNet implementation",
+   "quote": null
+  },
+  {
+   "work": "CIFAR, SVHN, ImageNet",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "benchmarks",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "The linear decay of p_l illustrated on a ResNet with stochastic depth for p0 =1 and pL = 0.5.",
+   "page": 5,
+   "why": "shows which blocks are active per mini-batch"
+  },
+  {
+   "figure": "Fig 8",
+   "caption": "Left: Test error (%) on CIFAR-10 with respect to the pL with uniform and decaying assignments of pl. Right: heatmap over pL and network depth.",
+   "page": 13,
+   "why": "shows sensitivity to p_L and depth"
+  },
+  {
+   "figure": "Table 2",
+   "caption": "Training time comparison on benchmark datasets.",
+   "page": 10,
+   "why": "the 25% speedup"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 2 and 5",
+   "snippet": "H_l = ReLU(b_l f_l(H_{l-1}) + id(H_{l-1})); p_l = 1 - (l/L)(1 - p_L); test: H_l = ReLU(p_l f_l(H_{l-1}) + H_{l-1})",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Ligatures and equation glyphs are garbled in the text extraction"
+ ]
 }

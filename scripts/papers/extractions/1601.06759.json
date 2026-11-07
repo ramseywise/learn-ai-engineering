@@ -1,0 +1,515 @@
+{
+ "schema": 1,
+ "key": "1601.06759",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/oord-2016-pixel-recurrent-neural-networks.pdf",
+ "bib": {
+  "title": "Pixel Recurrent Neural Networks",
+  "authors": [
+   "Aäron van den Oord",
+   "Nal Kalchbrenner",
+   "Koray Kavukcuoglu"
+  ],
+  "first_author": "van den Oord",
+  "year": 2016,
+  "venue": "Proceedings of the 33rd International Conference on Machine Learning (ICML), New York, NY, USA, 2016 (arXiv v3)",
+  "arxiv": "1601.06759",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 40918,
+  "chars_total": 40918,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can a deep autoregressive network over discrete raw pixel values give an expressive, tractable and scalable model of natural image distributions?",
+ "hypothesis": "Larger receptive fields, deeper recurrent stacks with residual connections and a discrete softmax output improve image log-likelihood.",
+ "contributions": [
+  "Row LSTM and Diagonal BiLSTM layers, plus the fully convolutional PixelCNN and a Multi-Scale PixelRNN",
+  "Discrete softmax over 256 pixel values and residual connections for LSTM layers up to 12 deep",
+  "Log-likelihood better than previous results on MNIST and CIFAR-10",
+  "First likelihood benchmarks on ImageNet at 32x32 and 64x64"
+ ],
+ "method": {
+  "summary": "Images are factorised pixel by pixel in raster order and RGB channel by channel; each conditional is a 256-way softmax predicted by a stack of masked convolutions and 2D LSTM layers (Row LSTM, Diagonal BiLSTM) or a masked-convolution PixelCNN. Trained by maximum likelihood on MNIST, CIFAR-10 and downsampled ImageNet.",
+  "task": "autoregressive generative image modelling (density estimation)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "MNIST (binary version)",
+    "role": "both",
+    "size": null,
+    "split": "test set reported",
+    "source": "LeCun et al. 1998; binarised per Salakhutdinov & Murray 2008",
+    "preprocessing": "sigmoid output instead of 256-way softmax"
+   },
+   {
+    "name": "CIFAR-10",
+    "role": "both",
+    "size": null,
+    "split": "validation set for ablations, test set for Table 5",
+    "source": "Krizhevsky 2009",
+    "preprocessing": "scaling and centering only; no data augmentation"
+   },
+   {
+    "name": "ImageNet (ILSVRC) downsampled to 32x32 and 64x64",
+    "role": "both",
+    "size": null,
+    "split": "validation (and train) NLL reported",
+    "source": "Russakovsky et al. 2015; downsampled images released at image-net.org/small/download.php",
+    "preprocessing": "scaling and centering only; no data augmentation"
+   }
+  ],
+  "models": [
+   {
+    "name": "PixelRNN Row LSTM",
+    "role": "proposed",
+    "params": null,
+    "architecture": "7x7 mask-A conv, residual Row LSTM layers (i-s 3x1 mask B, s-s 3x1 unmasked), two ReLU+1x1 mask-B conv layers, 256-way softmax per RGB colour",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": "256 values per colour channel",
+    "layers": "12 (CIFAR-10, ImageNet 32x32); 4 (ImageNet 64x64)",
+    "hidden": "h=128 (CIFAR-10); h=384 (ImageNet 32x32); h=512 (ImageNet 64x64)",
+    "heads": null,
+    "context": "triangular receptive field above the pixel",
+    "other": {
+     "ImageNet 64x64 model uses no residual connections": true,
+     "top 1x1 conv layers": "1024 feature maps for CIFAR-10 and ImageNet, 32 for MNIST",
+     "learned initial recurrent state": true
+    }
+   },
+   {
+    "name": "PixelRNN Diagonal BiLSTM",
+    "role": "proposed",
+    "params": null,
+    "architecture": "as Row LSTM but i-s 1x1 mask B and s-s 2x1 unmasked kernels on skewed diagonals",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": "256 (sigmoid for MNIST)",
+    "layers": "12 (CIFAR-10); 7 (MNIST)",
+    "hidden": "h=128 (CIFAR-10); h=16 (MNIST)",
+    "heads": null,
+    "context": "full available context (global receptive field)",
+    "other": {
+     "MNIST Table 4 also lists a 1-layer h=32 variant": true
+    }
+   },
+   {
+    "name": "PixelCNN",
+    "role": "proposed",
+    "params": null,
+    "architecture": "fully convolutional, 3x3 mask-B convs with residual blocks, no pooling",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": "256",
+    "layers": "15",
+    "hidden": "h=128",
+    "heads": null,
+    "context": "bounded receptive field",
+    "other": {}
+   },
+   {
+    "name": "Multi-Scale PixelRNN",
+    "role": "proposed",
+    "params": null,
+    "architecture": "unconditional PixelRNN generates s x s subsampled image; conditional PixelRNN biased by deconvolution-upsampled map generates n x n image",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "s": null,
+     "used for ImageNet 64x64 samples (Fig 8)": true
+    }
+   }
+  ],
+  "training": {
+   "objective": "negative log-likelihood of discrete (multinomial/softmax) pixel distribution; sigmoid for binary MNIST",
+   "optimizer": "RMSProp",
+   "lr": null,
+   "lr_schedule": "set manually per dataset to the highest values that allowed fast convergence (values not given)",
+   "warmup": null,
+   "batch_size": "16 images (MNIST, CIFAR-10); 64 (ImageNet 32x32); 32 (ImageNet 64x64)",
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "n*n*3 values per image (e.g. 3072 for 32x32x3)",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "small batch size of 16 'seems to regularize the models'; no augmentation",
+   "hardware": "GPUs (type and count not given), Torch toolbox",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "initial recurrent state": "learned",
+    "masks": "zeroing weights after each update",
+    "preprocessing": "scaling and centering of inputs only"
+   }
+  },
+  "inference": {
+   "decoding": "sequential ancestral sampling, pixel by pixel in raster order, RGB in order; each sampled pixel fed back into the network",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": "image completions by conditioning on the unoccluded pixels (Fig 1, Fig 9)",
+   "retrieval": null,
+   "parameters": {},
+   "other": {
+    "parallelism": "training and test-set likelihood evaluation are parallel over positions; generation is sequential for both PixelRNN and PixelCNN"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "negative log-likelihood (bits/dim)",
+     "definition": "total discrete log-likelihood normalised by image dimensionality (e.g. 32x32x3=3072 for CIFAR-10); comparable to continuous models via uniform dequantisation",
+     "unit": "bits/dim",
+     "higher_is_better": false
+    },
+    {
+     "name": "negative log-likelihood (nats), MNIST",
+     "definition": "NLL of binary MNIST image",
+     "unit": "nats",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "DBM, DBN, NADE, EoNADE, DLGM, DARN, MADE, DRAW (MNIST)",
+    "Uniform, Multivariate Gaussian, NICE, Deep Diffusion, Deep GMMs, RIDE (CIFAR-10)",
+    "MCGSM output vs softmax ablation"
+   ],
+   "protocol": "single reported number per model; no seeds, error bars or significance tests; qualitative sample inspection"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "downsampled ImageNet released at http://image-net.org/small/download.php"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.batch_size",
+    "quote": "For smaller datasets such as MNIST and CIFAR-10 we use smaller batch sizes of 16 images as this seems to regularize the models.",
+    "where": "5.2"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Diagonal BiLSTM reaches 3.00 bits/dim test NLL on CIFAR-10, best of the three proposed networks.",
+   "kind": "measured",
+   "source": null,
+   "metric": "NLL",
+   "value": 3.0,
+   "unit": "bits/dim",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CIFAR-10 test set, 12 layers h=128, no augmentation",
+   "quote": null,
+   "table": "Table 5, row Diagonal BiLSTM, column NLL Test (Train)",
+   "note": "Train NLL 2.93; Row LSTM 3.07 (3.00); PixelCNN 3.14 (3.08); RIDE 3.47",
+   "where": "Table 5"
+  },
+  {
+   "claim": "Row LSTM test NLL on CIFAR-10.",
+   "kind": "measured",
+   "source": null,
+   "metric": "NLL",
+   "value": 3.07,
+   "unit": "bits/dim",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CIFAR-10 test, 12 layers h=128",
+   "quote": null,
+   "table": "Table 5, row Row LSTM, column NLL Test (Train)",
+   "note": null,
+   "where": "Table 5"
+  },
+  {
+   "claim": "PixelCNN test NLL on CIFAR-10.",
+   "kind": "measured",
+   "source": null,
+   "metric": "NLL",
+   "value": 3.14,
+   "unit": "bits/dim",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CIFAR-10 test, 15 layers h=128",
+   "quote": null,
+   "table": "Table 5, row PixelCNN, column NLL Test (Train)",
+   "note": null,
+   "where": "Table 5"
+  },
+  {
+   "claim": "Previous best CIFAR-10 result in the table (RIDE).",
+   "kind": "reported",
+   "source": null,
+   "metric": "NLL",
+   "value": 3.47,
+   "unit": "bits/dim",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CIFAR-10 test; RIDE figure from personal communication (Theis & Bethge 2015)",
+   "quote": null,
+   "table": "Table 5, row RIDE, column NLL Test",
+   "note": null,
+   "where": "Table 5"
+  },
+  {
+   "claim": "Diagonal BiLSTM (7 layers, h=16) gets 79.20 nats on binary MNIST, best reported.",
+   "kind": "measured",
+   "source": null,
+   "metric": "NLL",
+   "value": 79.2,
+   "unit": "nats",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MNIST test, binary version",
+   "quote": null,
+   "table": "Table 4, row Diagonal BiLSTM (7 layers, h = 16), column NLL Test",
+   "note": "DRAW <=80.97; PixelCNN 81.30; Row LSTM 80.54",
+   "where": "Table 4"
+  },
+  {
+   "claim": "Receptive field size tracks performance: Diagonal BiLSTM > Row LSTM > PixelCNN.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "CIFAR-10",
+   "quote": "the Diagonal BiLSTM has the best performance, followed by the Row LSTM and the Pixel-\nCNN",
+   "table": null,
+   "note": null,
+   "where": "5.6"
+  },
+  {
+   "claim": "Softmax over discrete values beats a mixture-density (MCGSM) output.",
+   "kind": "measured",
+   "source": null,
+   "metric": "NLL",
+   "value": 3.06,
+   "unit": "bits/dim",
+   "baseline_value": 3.22,
+   "n": null,
+   "setup": "Row LSTM, CIFAR-10 validation set",
+   "quote": "For the Row LSTM model with a softmax output distribution we obtain 3.06 bits/dim on the CIFAR-\n10 validation set.",
+   "table": null,
+   "note": "MCGSM gives 3.22 bits/dim",
+   "where": "5.3"
+  },
+  {
+   "claim": "Residual and skip connections each recover most of the gap; both together are best.",
+   "kind": "measured",
+   "source": null,
+   "metric": "NLL",
+   "value": 3.06,
+   "unit": "bits/dim",
+   "baseline_value": 3.22,
+   "n": null,
+   "setup": "12-layer Row LSTM, CIFAR-10 validation, bits/dim",
+   "quote": null,
+   "table": "Table 2, row Residual, column Skip",
+   "note": "No residual/no skip 3.22; no residual+skip 3.09; residual only 3.07",
+   "where": "Table 2"
+  },
+  {
+   "claim": "Depth helps Row LSTM: 1 layer 3.30 to 12 layers 3.06 bits/dim.",
+   "kind": "measured",
+   "source": null,
+   "metric": "NLL",
+   "value": 3.06,
+   "unit": "bits/dim",
+   "baseline_value": 3.3,
+   "n": null,
+   "setup": "Row LSTM with residual and skip, CIFAR-10 validation",
+   "quote": null,
+   "table": "Table 3, columns 1 and 12 layers, row NLL",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "ImageNet 32x32 validation NLL.",
+   "kind": "measured",
+   "source": null,
+   "metric": "NLL",
+   "value": 3.86,
+   "unit": "bits/dim",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ImageNet 32x32, 12-layer Row LSTM h=384, no augmentation",
+   "quote": null,
+   "table": "Table 6, row 32x32, column NLL Validation (Train)",
+   "note": "train 3.83",
+   "where": "Table 6"
+  },
+  {
+   "claim": "ImageNet 64x64 validation NLL.",
+   "kind": "measured",
+   "source": null,
+   "metric": "NLL",
+   "value": 3.63,
+   "unit": "bits/dim",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ImageNet 64x64, 4-layer Row LSTM h=512, no residual connections",
+   "quote": null,
+   "table": "Table 6, row 64x64, column NLL Validation (Train)",
+   "note": "train 3.57",
+   "where": "Table 6"
+  },
+  {
+   "claim": "Parallelism of PixelCNN over PixelRNN exists only in training/test evaluation; generation is sequential for both.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "any",
+   "quote": "The image generation process is sequential for both kinds of\nnetworks, as each sampled pixel needs to be given as input\nback into the network.",
+   "table": null,
+   "note": null,
+   "where": "3.5"
+  },
+  {
+   "claim": "Multi-scale model has similar log-likelihood but more globally coherent samples than single-scale 64x64.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "ImageNet 64x64 samples, qualitative",
+   "quote": "Although these models get similar performance in log-likelihood, the samples on the right do seem globally more coherent.",
+   "table": null,
+   "note": null,
+   "where": "Fig 8"
+  }
+ ],
+ "limits": [
+  "No ImageNet baselines exist, so Table 6 is only a benchmark.",
+  "Learning rates, step counts, epochs, compute, parameter counts and seeds are not stated; single runs, no error bars.",
+  "RIDE result is by personal communication.",
+  "Authors say model size is constrained by computation time and GPU memory.",
+  "ImageNet 64x64 model differs from others (4 layers, no residual) so is not an ablation of scale.",
+  "Sample quality assessed qualitatively only; CIFAR-10 images likely resized differently from ImageNet ones, so cross-dataset NLL is not directly comparable."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Mask A / Mask B",
+   "definition": "Mask A, used only on the first conv layer, blocks a colour's connection to itself; mask B, used in later layers, also allows the connection from a colour to itself.",
+   "where": "3.4"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Generative image modeling using spatial LSTMs (Theis & Bethge)",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "2D LSTM image model it advances to large scale; MCGSM ablation",
+   "quote": "A two-dimensional RNN has produced very promising results in modeling grayscale images and textures (Theis & Bethge, 2015)."
+  },
+  {
+   "work": "Deep residual learning for image recognition",
+   "year": 2015,
+   "arxiv": "1512.03385",
+   "relation": "uses-method",
+   "note": "residual connections around LSTM layers",
+   "quote": null
+  },
+  {
+   "work": "Long short-term memory",
+   "year": 1997,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "LSTM units",
+   "quote": null
+  },
+  {
+   "work": "MADE",
+   "year": 2015,
+   "arxiv": "1502.03509",
+   "relation": "uses-method",
+   "note": "masking idea",
+   "quote": null
+  },
+  {
+   "work": "NADE",
+   "year": 2011,
+   "arxiv": null,
+   "relation": "related",
+   "note": "autoregressive factorisation",
+   "quote": null
+  },
+  {
+   "work": "Grid LSTM",
+   "year": 2015,
+   "arxiv": "1507.01526",
+   "relation": "related",
+   "note": "depth gating",
+   "quote": null
+  },
+  {
+   "work": "DRAW",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "MNIST baseline",
+   "quote": null
+  },
+  {
+   "work": "CIFAR-10; MNIST; ILSVRC ImageNet",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "datasets",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "Left: conditioning on pixels left and above; Center: multi-scale; Right: masked convolution connectivity",
+   "page": 3,
+   "why": "shows raster-order causal conditioning and mask A/B"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Input-to-state and state-to-state mappings for PixelCNN, Row LSTM, Diagonal BiLSTM",
+   "page": 4,
+   "why": "receptive field shapes"
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "Example softmax activations from the model",
+   "page": 6,
+   "why": "256-way per-pixel distributions are multimodal"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 1",
+   "snippet": "p(x) = prod_{i=1}^{n^2} p(x_i | x_1, ..., x_{i-1})",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "No embedded instructions found."
+ ]
+}

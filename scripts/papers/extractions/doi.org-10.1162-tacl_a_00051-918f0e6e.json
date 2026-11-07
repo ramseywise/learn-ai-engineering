@@ -1,0 +1,204 @@
+{
+ "schema": 1,
+ "key": "https://doi.org/10.1162/tacl_a_00051",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/bojanowski-2017-enriching-word-vectors-subword-information.pdf",
+ "bib": {
+  "title": "Enriching Word Vectors with Subword Information",
+  "authors": ["Piotr Bojanowski", "Edouard Grave", "Armand Joulin", "Tomas Mikolov"],
+  "first_author": "Bojanowski",
+  "year": 2017,
+  "venue": "Transactions of the Association for Computational Linguistics, vol. 5, pp. 135-146",
+  "arxiv": null,
+  "doi": "10.1162/tacl_a_00051"
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 43481,
+  "chars_total": 43481,
+  "engine": "pymupdf",
+  "skipped": "References skimmed for lineage only. Figures 1-2 are plots; their values are not in the text."
+ },
+ "type": "empirical",
+ "question": "Can word vectors that represent each word as a sum of character n-gram vectors capture morphology and give vectors for unseen words better than one-vector-per-word models?",
+ "hypothesis": "Using character n-gram information improves vectors for rare words and morphologically rich languages, and makes the model more robust to small training sets.",
+ "contributions": [
+  "An extension of the continuous skipgram model that takes subword information into account (words as sums of character n-gram vectors)",
+  "Evaluation on nine languages with different morphologies"
+ ],
+ "method": {
+  "summary": "Skipgram with negative sampling where the word score is the sum of vectors of the word's hashed character n-grams (n from 3 to 6, plus the whole word), dotted with the context vector. Trained on Wikipedia in nine languages and compared with word2vec skipgram and cbow on similarity, analogy and language modelling.",
+  "task": "word embedding pretraining (skipgram with negative sampling plus subword n-grams)",
+  "trains": true,
+  "datasets": [
+   {"name": "Wikipedia dumps (Arabic, Czech, German, English, Spanish, French, Italian, Romanian, Russian)", "role": "pretrain", "size": null, "split": "5 passes over shuffled data; for the data-size study the first 1, 2, 5, 10, 20, 50 percent (nested subsets, not reshuffled)", "source": "dumps.wikimedia.org", "preprocessing": "Matt Mahoney's pre-processing perl script; keep words that appear at least 5 times"},
+   {"name": "English Wikipedia of Shaoul and Westbury (2010); WMT 2013 news crawl (DE, ES, FR); Europarl and news commentary (for Botha and Blunsom comparison)", "role": "pretrain", "size": null, "split": null, "source": "same corpora as the compared methods", "preprocessing": null},
+   {"name": "Word similarity sets: GUR65, GUR350, ZG222 (DE), WS353 and RW (EN), RG65 (FR), Hassan and Mihalcea 2009 sets (ES, AR, RO), HJ (RU)", "role": "eval", "size": null, "split": null, "source": "see paper references", "preprocessing": "words absent from training get null vectors (sisg-) or n-gram sums (sisg)"},
+   {"name": "Analogy sets (Mikolov 2013a EN; Svoboda and Brychcin 2016 CS; Koper 2015 DE; Berardi 2015 IT)", "role": "eval", "size": null, "split": null, "source": "see paper references", "preprocessing": "questions containing words not in the training corpus excluded"},
+   {"name": "Language modelling data of Botha and Blunsom (2014): CS, DE, ES, FR, RU", "role": "both", "size": "roughly one million training tokens each; vocab 46k CS, 37k DE, 27k ES, 25k FR, 63k RU", "split": "same preprocessing and splits as Botha and Blunsom (2014)", "source": "Botha and Blunsom 2014", "preprocessing": null}
+  ],
+  "models": [
+   {"name": "sisg (Subword Information Skip Gram)", "role": "proposed", "params": null, "architecture": "skipgram with negative sampling, word = sum of character n-gram vectors, dim 300", "init_from": null, "tokenizer": "character n-grams n=3..6 with < and > boundary symbols plus the whole word", "vocab": "n-grams hashed into K = 2.10^6 buckets (FNV-1a)", "layers": null, "hidden": "300", "heads": null, "context": "window size c sampled uniformly from 1 to 5", "other": {}},
+   {"name": "word2vec skipgram (sg) and cbow", "role": "baseline", "params": null, "architecture": "C implementation from word2vec package, dim 300", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": "300", "heads": null, "context": null, "other": {}},
+   {"name": "LSTM language model", "role": "evaluated", "params": null, "architecture": "recurrent network with 650 LSTM units; lookup table initialised with pre-trained vectors", "init_from": "sg or sisg vectors trained on the LM training set", "tokenizer": null, "vocab": null, "layers": null, "hidden": "650", "heads": null, "context": null, "other": {}}
+  ],
+  "training": {
+   "objective": "binary logistic loss with negative sampling; score s(w,c) = sum over n-grams g in G_w of z_g^T v_c",
+   "optimizer": "SGD with linear decay of step size gamma0(1 - t/(TP)), Hogwild asynchronous parallel updates",
+   "lr": "gamma0 = 0.025 (skipgram baseline); 0.05 (sisg and cbow baseline). LM: Adagrad lr 0.1",
+   "lr_schedule": "linear decay to zero over T*P steps",
+   "warmup": null,
+   "batch_size": "LM: 20",
+   "steps": null,
+   "epochs": "5 passes over the data",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": "LM: 1e-5",
+   "dropout": "LM: 0.5",
+   "regularisation": "subsampling of frequent words with rejection threshold 1e-4; 5 negatives per positive sampled proportional to square root of unigram frequency; LM gradient clipping at norm 1.0; LM weights initialised in [-0.05, 0.05]",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {"speed": "105k words/second/thread for sisg vs 145k for skipgram on English (about 1.5x slower)", "n-gram_range_choice": "3-6 called arbitrary; no proper validation procedure used"}
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single run per setting; no seeds or variance reported",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {"oov_vector": "sum of the word's n-gram vectors (Sec 5.1); Sec 6.3 says 'average'", "similarity": "cosine"},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "Spearman rank correlation", "definition": "between human similarity judgement and cosine similarity of vectors", "unit": "correlation x100 as printed", "higher_is_better": true},
+    {"name": "Analogy accuracy", "definition": "A is to B as C is to D, predict D; semantic and syntactic reported separately", "unit": "%", "higher_is_better": true},
+    {"name": "Test perplexity", "definition": "LSTM language model test perplexity", "unit": "perplexity", "higher_is_better": false}
+   ],
+   "baselines": ["word2vec skipgram", "word2vec cbow", "Luong et al. 2013", "Qiu et al. 2014", "Soricut and Och 2015", "Botha and Blunsom 2014 (CLBL)", "Kim et al. 2016 (CANLM)", "plain LSTM"],
+   "protocol": "No significance tests, seeds or confidence intervals. Results are single numbers rounded to integers."
+  },
+  "availability": {
+   "code": "https://github.com/facebookresearch/fastText (C++ implementation)",
+   "weights": null,
+   "data": "public Wikipedia dumps and cited evaluation sets"
+  },
+  "prompts": [],
+  "evidence": [
+   {"field": "training.lr", "quote": "The step size γ0 is set to 0.025 for the skipgram baseline and to 0.05 for both our model and the cbow baseline.", "where": "Sec 4.3"}
+  ]
+ },
+ "results": [
+  {
+   "claim": "sisg beats skipgram and cbow on all word-similarity sets except English WS353, and OOV vectors are never worse than null vectors.",
+   "kind": "measured", "source": null, "metric": "Spearman x100", "value": "70", "unit": "Spearman x100", "baseline_value": "61 (sg), 62 (cbow)", "n": null,
+   "setup": "German GUR350, Wikipedia dump, 300-d, 5 passes; sisg uses n-gram sums for OOV words",
+   "quote": null, "table": "Table 1, row DE GUR350, columns sg 61, cbow 62, sisg- 64, sisg 70",
+   "note": null, "where": "Table 1, Sec 5.1"
+  },
+  {
+   "claim": "On English rare words (RW) sisg beats both baselines, while on English WS353 (common words) it does not.",
+   "kind": "measured", "source": null, "metric": "Spearman x100", "value": "47", "unit": "Spearman x100", "baseline_value": "43 (sg and cbow)", "n": null,
+   "setup": "English Wikipedia, RW dataset; on WS353 sisg 71 vs cbow 73",
+   "quote": null, "table": "Table 1, row EN RW, columns sg 43, cbow 43, sisg- 46, sisg 47",
+   "note": null, "where": "Table 1, Sec 5.1"
+  },
+  {
+   "claim": "Subword information strongly improves syntactic analogies; Czech syntactic accuracy rises from 55.0 (cbow) to 77.8.",
+   "kind": "measured", "source": null, "metric": "analogy accuracy", "value": "77.8", "unit": "%", "baseline_value": "52.8 (sg), 55.0 (cbow)", "n": null,
+   "setup": "Czech analogy set, Wikipedia-trained vectors",
+   "quote": null, "table": "Table 2, row CS Syntactic, columns sg 52.8, cbow 55.0, sisg 77.8",
+   "note": null, "where": "Table 2, Sec 5.2"
+  },
+  {
+   "claim": "Subword information does not help semantic analogies and degrades German (66.5/66.8 to 62.3) and Italian semantic accuracy.",
+   "kind": "measured", "source": null, "metric": "analogy accuracy", "value": "62.3", "unit": "%", "baseline_value": "66.5 (sg), 66.8 (cbow)", "n": null,
+   "setup": "German semantic analogies; n-gram range 3-6",
+   "quote": null, "table": "Table 2, row DE Semantic, columns sg 66.5, cbow 66.8, sisg 62.3",
+   "note": "Authors say the effect is tied to n-gram length and degrades less with an optimal choice (Sec 5.5).", "where": "Table 2, Sec 5.2"
+  },
+  {
+   "claim": "With the same training data as the compared methods, sisg beats the morphology-based methods on most sets, for example German GUR350 73 vs 64 (Soricut and Och).",
+   "kind": "measured", "source": null, "metric": "Spearman x100", "value": "73", "unit": "Spearman x100", "baseline_value": "64", "n": null,
+   "setup": "German news crawl data (WMT 2013), GUR350; Soricut and Och 2015 baseline",
+   "quote": null, "table": "Table 3, row Soricut and Och (2015) vs next sisg row, column DE GUR350 (64 vs 73)",
+   "note": "The paper says the large German gain is because the baseline does not model noun compounding.", "where": "Table 3, Sec 5.3"
+  },
+  {
+   "claim": "A model trained on 5% of Wikipedia beats cbow trained on all of it on German GUR350.",
+   "kind": "measured", "source": null, "metric": "Spearman x100", "value": "66", "unit": "Spearman x100", "baseline_value": "62", "n": null,
+   "setup": "sisg on 5% of German Wikipedia vs cbow on 100%, GUR350",
+   "quote": "our model (sisg) trained on 5% of the data achieves better performance (66) than the cbow baseline trained on the full dataset (62)",
+   "table": null, "note": null, "where": "Sec 5.4"
+  },
+  {
+   "claim": "On English RW, 1% of Wikipedia gives sisg 45 against 43 for cbow on the full data.",
+   "kind": "measured", "source": null, "metric": "Spearman x100", "value": "45", "unit": "Spearman x100", "baseline_value": "43", "n": null,
+   "setup": "English RW, sisg on 1% of Wikipedia vs cbow on 100%",
+   "quote": "using 1% of the Wikipedia corpus we achieve a correlation coefficient of 45 which is better than the performance of cbow trained on the full dataset (43)",
+   "table": null, "note": null, "where": "Sec 5.4"
+  },
+  {
+   "claim": "Pre-training with sisg vectors lowers LSTM perplexity versus skipgram vectors most for Russian and Czech.",
+   "kind": "measured", "source": null, "metric": "test perplexity", "value": "206", "unit": "perplexity", "baseline_value": "237 (sg), 262 (LSTM)", "n": null,
+   "setup": "Russian LM, about 1M training tokens, 650-unit LSTM, lookup initialised from vectors",
+   "quote": "Czech (8% reduction of perplexity over sg) and Russian (13% reduction)",
+   "table": "Table 5, row sisg, column RU 206",
+   "note": null, "where": "Table 5, Sec 5.6"
+  },
+  {
+   "claim": "Training is about 1.5x slower than the skipgram baseline.",
+   "kind": "measured", "source": null, "metric": "words/second/thread", "value": "105k", "unit": "words/second/thread", "baseline_value": "145k", "n": null,
+   "setup": "English data, C++ implementation",
+   "quote": "we process 105k words/second/thread versus 145k words/second/thread for the baseline",
+   "table": null, "note": null, "where": "Sec 4.3"
+  },
+  {
+   "claim": "Including n-grams longer than 2 matters; 3-6 works reasonably across languages but was chosen arbitrarily without validation.",
+   "kind": "measured", "source": null, "metric": "Spearman x100", "value": "48", "unit": "Spearman x100", "baseline_value": null, "n": null,
+   "setup": "English RW, n-gram range 3-6 gives 48 vs 41 for range 2-2",
+   "quote": null, "table": "Table 4(d) EN-RW, row i=2 column j=2 is 41; row i=3, column j=6 is 48",
+   "note": null, "where": "Table 4, Sec 5.5"
+  }
+ ],
+ "limits": [
+  "Authors concede no proper validation procedure for n-gram ranges due to scarcity of test data; 3-6 was arbitrary (Sec 5.5).",
+  "No seeds, variance or significance tests; numbers are integers from single runs.",
+  "Subword vectors hurt semantic analogies for German and Italian (Sec 5.2).",
+  "Corpus token counts, hardware and total training time are not stated.",
+  "Qualitative analyses (Tables 6, 7, Fig 2) use hand-picked examples.",
+  "Static word vectors; no context-dependent representations, superseded by contextual models."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "sisg", "definition": "Subword Information Skip Gram: the proposed model; sisg- uses null vectors for OOV words, sisg sums n-gram vectors", "where": "Sec 5.1"}
+ ],
+ "lineage": [
+  {"work": "Distributed representations of words and phrases and their compositionality (skipgram with negative sampling)", "year": 2013, "arxiv": null, "relation": "extends", "note": "Model is derived from continuous skipgram", "quote": null},
+  {"work": "Efficient estimation of word representations in vector space", "year": 2013, "arxiv": "1301.3781", "relation": "uses-data", "note": "English analogy dataset", "quote": null},
+  {"work": "word2vec skipgram and cbow", "year": 2013, "arxiv": null, "relation": "baseline", "note": "C implementation used as baseline", "quote": null},
+  {"work": "Schutze, Word space", "year": 1993, "arxiv": null, "relation": "related", "note": "Closest earlier idea: summed character four-gram vectors from SVD", "quote": null},
+  {"work": "Botha and Blunsom, Compositional morphology for word representations and language modelling", "year": 2014, "arxiv": null, "relation": "baseline", "note": "Similarity and LM baseline and LM data", "quote": null},
+  {"work": "Soricut and Och, Unsupervised morphology induction using word embeddings", "year": 2015, "arxiv": null, "relation": "baseline", "note": "Compared in Table 3", "quote": null},
+  {"work": "Kim et al., Character-aware neural language models", "year": 2016, "arxiv": null, "relation": "baseline", "note": "CANLM baseline in Table 5", "quote": null},
+  {"work": "Luong et al. 2013; Qiu et al. 2014", "year": 2013, "arxiv": null, "relation": "baseline", "note": "Morphology-based vectors compared in Table 3", "quote": null},
+  {"work": "Wieting et al., CHARAGRAM", "year": 2016, "arxiv": null, "relation": "related", "note": "Character n-gram counts but trained on paraphrase pairs", "quote": null},
+  {"work": "Hogwild", "year": 2011, "arxiv": null, "relation": "uses-method", "note": "Asynchronous parallel SGD (Recht et al.)", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 1", "caption": "Influence of size of the training data on performance (DE-GUR350 and EN-RW, cbow vs sisg- vs sisg)", "page": 6, "why": "Shows sisg saturates early and beats cbow at small data sizes"},
+  {"figure": "Fig 2", "caption": "Illustration of the similarity between character n-grams in out-of-vocabulary words", "page": 10, "why": "Shows which n-grams of an OOV word match its partner (micro/circuit, -ness/-ity)"}
+ ],
+ "code": [
+  {"where": "Sec 3.2", "snippet": "s(w, c) = sum_{g in G_w} z_g^T v_c", "verbatim": false}
+ ],
+ "problems": [
+  "Tables are flattened in the text; cell positions were inferred from row and column order.",
+  "Sec 3.2 and 5.1 say OOV vectors are sums of n-gram vectors, Sec 6.3 says averages."
+ ]
+}

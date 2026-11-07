@@ -1,0 +1,183 @@
+{
+ "schema": 1,
+ "key": "2004.05150",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/beltagy-2020-longformer.pdf",
+ "bib": {
+  "title": "Longformer: The Long-Document Transformer",
+  "authors": ["Iz Beltagy", "Matthew E. Peters", "Arman Cohan"],
+  "first_author": "Beltagy",
+  "year": 2020,
+  "venue": "preprint",
+  "arxiv": "2004.05150",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 70594,
+  "chars_total": 70594,
+  "engine": "pymupdf",
+  "skipped": "reference list skimmed for lineage only"
+ },
+ "type": "empirical",
+ "question": "Can a transformer whose attention cost grows linearly with length process long documents, and serve as a drop-in replacement for self-attention in pretrained models on document-level tasks?",
+ "hypothesis": "A combination of sliding-window local attention and task-motivated global attention, continued-pretrained from RoBERTa, will beat chunked RoBERTa baselines on long-document tasks.",
+ "contributions": [
+  "Longformer attention: sliding window, dilated sliding window and task-motivated global attention, linear in sequence length",
+  "State-of-the-art character-level LM on text8 and enwik8 (small models)",
+  "Pretrained Longformer (continued from RoBERTa, 4,096 tokens) that beats RoBERTa on long-document tasks and sets SOTA on WikiHop and TriviaQA",
+  "Longformer-Encoder-Decoder (LED) for long-document seq2seq, evaluated on arXiv summarization"
+ ],
+ "method": {
+  "summary": "Self-attention is sparsified to a fixed-size sliding window (optionally dilated on some heads) plus symmetric global attention on a few task-chosen tokens, with separate Q/K/V projections for global attention. Evaluated by training character-level LMs from scratch with a staged window/length schedule, by continuing MLM pretraining from RoBERTa with copied position embeddings to 4,096 tokens then finetuning on six tasks, and by LED initialised from BART with 16K positions.",
+  "task": "character-level autoregressive LM; MLM continued pretraining; QA, coreference, document classification; long-document summarization",
+  "trains": true,
+  "datasets": [
+   {"name": "text8", "role": "both", "size": "100M characters", "split": "90M/5M/5M train/dev/test", "source": "Wikipedia (Mahoney, 2009)", "preprocessing": null},
+   {"name": "enwik8", "role": "both", "size": "100M characters", "split": "90M/5M/5M train/dev/test", "source": "Wikipedia (Mahoney, 2009)", "preprocessing": null},
+   {"name": "Longformer pretraining corpus (Books, English Wikipedia, Realnews subset, Stories)", "role": "pretrain", "size": "0.5B + 2.1B + 1.8B + 2.1B tokens", "split": "dev split used to report MLM BPC", "source": "Books (Zhu et al., 2015); Realnews docs longer than 1,200 tokens, one third of the subset; one third of Stories", "preprocessing": null},
+   {"name": "WikiHop", "role": "both", "size": null, "split": "official train/dev/test", "source": "Welbl et al., 2018", "preprocessing": "question, candidates and contexts tokenized with RoBERTa wordpieces; special tokens [q] [/q] [ent] [/ent] added"},
+   {"name": "TriviaQA (Wikipedia setting, full version)", "role": "both", "size": "more than 100K training triplets", "split": "official", "source": "Joshi et al., 2017", "preprocessing": "document truncated at 4,096 wordpieces; answer spans found by text matching"},
+   {"name": "HotpotQA (distractor, full version)", "role": "both", "size": null, "split": "official", "source": "Yang et al., 2018", "preprocessing": "question plus 10 paragraphs in one sequence with special tokens; stage 2 keeps up to 5 paragraphs scoring above -3.0"},
+   {"name": "OntoNotes", "role": "both", "size": null, "split": "official", "source": "Pradhan et al., 2012", "preprocessing": null},
+   {"name": "IMDB", "role": "both", "size": null, "split": "official", "source": "Maas et al., 2011", "preprocessing": null},
+   {"name": "Hyperpartisan news", "role": "both", "size": "645 documents", "split": "random 80/10/10 train/dev/test", "source": "Kiesel et al., 2019", "preprocessing": null},
+   {"name": "arXiv summarization", "role": "both", "size": "90th percentile of document length 14.5K tokens", "split": null, "source": "Cohan et al., 2018", "preprocessing": null}
+  ],
+  "models": [
+   {"name": "Longformer char-LM small", "role": "proposed", "params": "41M", "architecture": "decoder transformer, Transformer-XL code with memory disabled, relative sinusoidal position embeddings, pre-layernorm, GeLU, dilated sliding window", "init_from": null, "tokenizer": "characters", "vocab": null, "layers": 12, "hidden": 512, "heads": 8, "context": "2,048 (phase 1) to 23,040 (phase 5) training; 32,256 evaluation", "other": {}},
+   {"name": "Longformer char-LM large", "role": "proposed", "params": "102M", "architecture": "as small", "init_from": null, "tokenizer": "characters", "vocab": null, "layers": 30, "hidden": 512, "heads": 8, "context": "as small", "other": {}},
+   {"name": "Longformer-base / Longformer-large", "role": "proposed", "params": null, "architecture": "RoBERTa with sliding-window attention, window 512, plus global attention with extra projections", "init_from": "RoBERTa released checkpoint, position embeddings copied 8 times from 512 to 4,096", "tokenizer": "RoBERTa wordpiece", "vocab": null, "layers": null, "hidden": null, "heads": null, "context": "4,096 tokens", "other": {"dilation": "not used in pretrained model; footnote 6 says it hurt performance"}},
+   {"name": "RoBERTa-base / large", "role": "baseline", "params": null, "architecture": "full self-attention; long inputs split into longest possible 512 segments, activations concatenated", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": "512 tokens", "other": {}},
+   {"name": "LED-base / LED-large", "role": "proposed", "params": null, "architecture": "BART encoder-decoder, encoder uses Longformer local+global attention, decoder full attention", "init_from": "BART, position embeddings copied 16 times from 1K to 16K", "tokenizer": null, "vocab": null, "layers": "6 (base) and 12 (large) in both encoder and decoder", "hidden": "as BART", "heads": null, "context": "16K tokens", "other": {"encoder_window": "1,024", "global_attention": "first <s> token"}}
+  ],
+  "training": {
+   "objective": "MLM continued from RoBERTa (main pretraining); autoregressive char LM for text8/enwik8; task losses for finetuning; teacher forcing for LED",
+   "optimizer": "MLM pretraining: not stated beyond 'rest same as RoBERTa'; char-LM AdamW; finetuning Adam",
+   "lr": "MLM pretraining max 3e-5",
+   "lr_schedule": "MLM pretraining: linear warmup then power 3 polynomial decay",
+   "warmup": "500 steps (MLM pretraining)",
+   "batch_size": "64 (2^18 tokens) for MLM pretraining",
+   "steps": "65K gradient updates (MLM pretraining)",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "4,096 (MLM pretraining)",
+   "precision": "char-LM mixed precision fp16/fp32 with apex, attention kept in fp32",
+   "weight_decay": "0.01 (char-LM)",
+   "dropout": "0.2 small, 0.4 large (char-LM)",
+   "regularisation": "gradient clipping 0.25 (char-LM)",
+   "hardware": "char-LM: 48GB RTX8000; MLM pretraining hardware not stated",
+   "compute": "char-LM small 4 RTX8000 for 16 days; large 8 RTX8000 for 13 days",
+   "wall_clock": null,
+   "seeds": "Hyperpartisan: mean F1 across five seeds; otherwise not stated",
+   "other": {
+    "char_lm_phases": "5 phases; window and sequence length doubled and LR halved each phase; seq len 2,048 to 23,040; phase 1 windows 32 (bottom) to 8,192 (top), phase 5 bottom window 512; phase 1 LR 0.00025; batch per phase 32,32,16,16,16; steps per phase small 430K,50k,50k,35k,5k and large 350K,25k,10k,5k,5k; warmup 10% of phase steps max 10K; constant LR within a phase",
+    "char_lm_dilation": "small: 0 (layers 0-5), 1 (6-7), 2 (8-9), 3 (10-11); large: 0 (0-14), 1 (15-19), 2 (20-24), 3 (25-29); only 2 heads dilated",
+    "frozen_variant": "pretraining with all RoBERTa weights frozen and only new position embeddings trained gave MLM BPC 1.850 (base)",
+    "wikihop_finetune": "Adam, 15 epochs, LR 3e-5, warmup 200, batch 32; dev accuracy checked every 250 updates, max reported; single RTX8000, about a day for 5 epochs of base",
+    "triviaqa_finetune": "Adam, 5 epochs, LR 3e-5, warmup 1000, batch 32; 32GB V100, small 1 day on 4 GPUs, large 1 day on 8 GPUs",
+    "hotpotqa_finetune": "Adam, 5 epochs, LR 5e-5 (Table 14; text says 3e-5 and 5 epochs best), warmup 1000, batch 32; RTX8000, about half a day per epoch on 4 GPUs",
+    "coref_finetune": "RoBERTa LR 1e-5, task LR 1e-4 for Longformer-base; sequence length 384 for RoBERTa-base and 4,096 for Longformer-base; about 10 hours on one GPU",
+    "classification_finetune": "Adam, batch 32, LR 3e-5, 15 epochs, warmup 0.1 of steps; single RTX8000",
+    "hyperparameter_search": "grid searches kept small and identical for RoBERTa-base and Longformer-base"
+   }
+  },
+  "inference": {
+   "decoding": "LED: beam search (width not stated); HotpotQA evidence: constrained decoding so evidence sentences come from exactly two paragraphs",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single run per config except Hyperpartisan (five seeds); Longformer-large TriviaQA trained once",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {"char_lm_eval": "sequences of 32,256 with step 512, report BPC on last 512 tokens"}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "BPC", "definition": "bits per character on text8/enwik8 and MLM on pretraining dev set", "unit": "bits per character", "higher_is_better": false},
+    {"name": "Accuracy", "definition": "WikiHop and IMDB", "unit": "%", "higher_is_better": true},
+    {"name": "F1", "definition": "TriviaQA, Hyperpartisan, HotpotQA joint F1, OntoNotes average F1", "unit": "F1", "higher_is_better": true},
+    {"name": "ROUGE-1/2/L", "definition": "arXiv summarization", "unit": "points", "higher_is_better": true}
+   ],
+   "baselines": ["RoBERTa-base with 512 segments", "Transformer-XL", "Adaptive Span", "Sparse Transformer", "Compressive Transformer", "Routing Transformer", "BP-Transformer", "Reformer", "HGN", "BigBird", "Pegasus"],
+   "protocol": "Dev sets for base comparisons (Table 7), leaderboard test for large (Tables 8 and 9); ablations at 150K steps of phase 1 on small text8 model, dev BPC"
+  },
+  "availability": {
+   "code": "https://github.com/allenai/longformer",
+   "weights": "inferred: released ('we release two model sizes' for LED; Longformer repo)",
+   "data": null
+  },
+  "prompts": [],
+  "evidence": [
+   {"field": "training.batch_size", "quote": "batch size 64 (218 tokens)", "where": "Section 5, MLM pretraining; 218 is 2^18 with the superscript lost"}
+  ]
+ },
+ "results": [
+  {"claim": "Small Longformer sets state of the art on enwik8 test BPC.", "kind": "measured", "source": null, "metric": "test BPC", "value": 1.00, "unit": "BPC", "baseline_value": "1.02 (Adaptive Span and BP-Transformer)", "n": null, "setup": "enwik8, 41M parameter 12-layer char LM, sequences of 32,256", "table": "Table 2, row Our Longformer (enwik8), column Test", "note": null, "where": "Table 2"},
+  {"claim": "Small Longformer sets state of the art on text8 test BPC.", "kind": "measured", "source": null, "metric": "test BPC", "value": 1.10, "unit": "BPC", "baseline_value": "1.11 (Adaptive Span, BP-Transformer)", "n": null, "setup": "text8, 41M parameter char LM", "table": "Table 2, row Our Longformer (text8), column Test", "note": null, "where": "Table 2"},
+  {"claim": "Large Longformer matches the Sparse Transformer on enwik8 with about the same parameters.", "kind": "measured", "source": null, "metric": "test BPC", "value": 0.99, "unit": "BPC", "baseline_value": "0.99 (Sparse, about 100M); 0.97 Compressive (277M)", "n": null, "setup": "enwik8, 102M parameters, 30 layers", "table": "Table 3, row Our Longformer, column Test BPC", "note": null, "where": "Table 3"},
+  {"claim": "Increasing window size with depth beats decreasing it.", "kind": "measured", "source": null, "metric": "dev BPC", "value": 1.21, "unit": "BPC", "baseline_value": "1.24 (decreasing w from 512 to 32)", "n": null, "setup": "small model on text8, 150K steps with phase 1 config", "table": "Table 4, row Increasing w (from 32 to 512), column Dev BPC", "note": null, "where": "Table 4"},
+  {"claim": "Dilation on 2 heads gives a small BPC gain over none.", "kind": "measured", "source": null, "metric": "dev BPC", "value": 1.20, "unit": "BPC", "baseline_value": "1.21 (no dilation)", "n": null, "setup": "small model on text8, 150K steps phase 1", "table": "Table 4, row Dilation on 2 heads, column Dev BPC", "note": null, "where": "Table 4"},
+  {"claim": "Copying RoBERTa position embeddings is essential: BPC without it is 10.299 versus 1.957 with it (base).", "kind": "measured", "source": null, "metric": "MLM BPC", "value": 1.957, "unit": "BPC", "baseline_value": "10.299 (Longformer 4,096 before copying)", "n": null, "setup": "Longformer-base, seqlen 4,096, dev set of own pretraining corpus", "table": "Table 5, row + copy position embeddings, column base", "note": null, "where": "Table 5"},
+  {"claim": "Continued MLM pretraining for 65K updates lowers BPC to near RoBERTa's.", "kind": "measured", "source": null, "metric": "MLM BPC", "value": 1.705, "unit": "BPC", "baseline_value": "1.846 (RoBERTa seqlen 512)", "n": null, "setup": "Longformer-base after 65K updates", "table": "Table 5, row + 65K gradient updates, column base", "note": null, "where": "Table 5"},
+  {"claim": "Freezing RoBERTa weights and training only new position embeddings reaches 1.850 BPC, worse than full training.", "kind": "measured", "source": null, "metric": "MLM BPC", "value": 1.850, "unit": "BPC", "baseline_value": "1.705 (all weights trainable)", "n": null, "setup": "Longformer-base", "table": "Table 5, row Longformer (train extra pos. embed. only), column base", "note": null, "where": "Table 5"},
+  {"claim": "Longformer-base beats RoBERTa-base on WikiHop dev by 2.6 points.", "kind": "measured", "source": null, "metric": "accuracy", "value": 75.0, "unit": "%", "baseline_value": 72.4, "n": null, "setup": "dev set, base models, Longformer seqlen 4,096 vs RoBERTa 512", "table": "Table 7, row Longformer-base, column WikiHop", "note": null, "where": "Table 7"},
+  {"claim": "Longformer-base beats RoBERTa-base on Hyperpartisan by 7.4 F1.", "kind": "measured", "source": null, "metric": "F1", "value": 94.8, "unit": "F1", "baseline_value": 87.4, "n": 5, "setup": "dev set, 645 documents, mean over five seeds, global attention on [CLS]", "table": "Table 7, row Longformer-base, column Hyperpartisan", "note": null, "where": "Table 7"},
+  {"claim": "Gains on TriviaQA are modest.", "kind": "measured", "source": null, "metric": "F1", "value": 75.2, "unit": "F1", "baseline_value": 74.3, "n": null, "setup": "dev set, base models", "table": "Table 7, row Longformer-base, column TriviaQA", "note": null, "where": "Table 7"},
+  {"claim": "Longformer-base on HotpotQA dev joint F1.", "kind": "measured", "source": null, "metric": "joint F1", "value": 64.4, "unit": "F1", "baseline_value": 63.5, "n": null, "setup": "dev set, base models", "table": "Table 7, row Longformer-base, column HotpotQA", "note": null, "where": "Table 7"},
+  {"claim": "Coreference (OntoNotes) gain is tiny because mentions are close together.", "kind": "measured", "source": null, "metric": "average F1", "value": 78.6, "unit": "F1", "baseline_value": 78.4, "n": null, "setup": "dev set, no global attention", "table": "Table 7, row Longformer-base, column OntoNotes", "note": null, "where": "Table 7"},
+  {"claim": "IMDB gain is small because most reviews are short.", "kind": "measured", "source": null, "metric": "accuracy", "value": 95.7, "unit": "%", "baseline_value": 95.3, "n": null, "setup": "dev set; about 13.6% of documents exceed 512 wordpieces", "table": "Table 7, row Longformer-base, column IMDB", "note": null, "where": "Table 7"},
+  {"claim": "Longformer-large sets new leaderboard state of the art on WikiHop.", "kind": "measured", "source": null, "metric": "accuracy", "value": 81.9, "unit": "%", "baseline_value": 78.3, "n": 1, "setup": "test leaderboard, May 2020, single model, first 4,096 tokens only", "table": "Table 8, row Longformer-large, column WikiHop", "note": "Table 8 caption says all numbers are F1 scores although WikiHop is accuracy", "where": "Table 8"},
+  {"claim": "Longformer-large sets new state of the art on TriviaQA.", "kind": "measured", "source": null, "metric": "F1", "value": 77.3, "unit": "F1", "baseline_value": 73.3, "n": 1, "setup": "test leaderboard, May 2020, trained once", "table": "Table 8, row Longformer-large, column TriviaQA", "note": null, "where": "Table 8"},
+  {"claim": "Longformer-large is a point below HGN on HotpotQA joint F1.", "kind": "measured", "source": null, "metric": "joint F1", "value": 73.2, "unit": "F1", "baseline_value": 74.2, "n": null, "setup": "distractor setting test set", "table": "Table 9, row Longformer-large, column joint", "note": null, "where": "Table 9"},
+  {"claim": "Removing global attention and its separate projections costs 8.3 points on WikiHop.", "kind": "measured", "source": null, "metric": "dev accuracy", "value": 65.5, "unit": "%", "baseline_value": 73.8, "n": null, "setup": "Longformer-base, five epochs, seqlen 4,096", "table": "Table 10, row Longformer (no linear proj. no global atten.)", "note": null, "where": "Table 10"},
+  {"claim": "Longformer configured like RoBERTa-base (512, full attention) is slightly worse than RoBERTa, so gains are not from extra pretraining.", "kind": "measured", "source": null, "metric": "dev accuracy", "value": 71.7, "unit": "%", "baseline_value": 72.4, "n": null, "setup": "WikiHop dev, base", "table": "Table 10, row Longformer (seqlen: 512, attention: n2)", "note": null, "where": "Table 10"},
+  {"claim": "LED-large with 16K input matches BigBird ROUGE-1 and exceeds it on R-2 and R-L, with no extra pretraining.", "kind": "measured", "source": null, "metric": "ROUGE-1", "value": 46.63, "unit": "points", "baseline_value": "46.63 (BigBird, 4K)", "n": null, "setup": "arXiv summarization test, LED-large initialised from BART", "table": "Table 11, row LED-large (seqlen: 16,384) (ours), column R-1", "note": "R-2 19.62 vs 19.02, R-L 41.83 vs 41.77", "where": "Table 11"},
+  {"claim": "LED at 4,096 input scores lower than at 16,384.", "kind": "measured", "source": null, "metric": "ROUGE-2", "value": 17.94, "unit": "points", "baseline_value": 19.62, "n": null, "setup": "LED-large seqlen 4,096 vs 16,384", "table": "Table 11, row LED-large (seqlen: 4,096) (ours), column R-2", "note": null, "where": "Table 11"},
+  {"claim": "Longformer's pretraining corpus BPC under RoBERTa-base is close to the RoBERTa paper's figure.", "kind": "measured", "source": null, "metric": "BPC", "value": 1.846, "unit": "BPC", "baseline_value": 1.880, "n": null, "setup": "RoBERTa-base on own dev corpus vs RoBERTa paper corpus", "table": "Table 5, row RoBERTa (seqlen: 512), column base", "note": "1.880 is quoted from the RoBERTa paper", "where": "Section 5"}
+ ],
+ "limits": [
+  "Authors concede BigBird later improved leaderboard results, with a possible confound of 16x more pretraining compute.",
+  "Dilation is used only in the char-LM; it hurt in the pretrained RoBERTa-based model (footnote 6).",
+  "Ablation ordering at 150K steps may not match end-of-training ordering (footnote 4).",
+  "Global attention locations are task-specific and hand-chosen.",
+  "Longformer-large WikiHop sees only the first 4,096 tokens due to memory.",
+  "Hyperparameter searches were minimal; the large-model results are single runs.",
+  "Pretraining hardware and total compute for the MLM stage are not stated.",
+  "LED not pretrained; authors expect gains from pretraining.",
+  "Table 14 lists HotpotQA LR 5e-5 while the text says 3e-5 worked best."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "Sliding window attention", "definition": "Given a fixed window size w, each token attends to 1/2 w tokens on each side; cost O(n x w).", "where": "Section 3.1"},
+  {"term": "Dilated sliding window", "definition": "The window has gaps of size dilation d; receptive field is l x d x w.", "where": "Section 3.1"},
+  {"term": "Global attention", "definition": "A token with global attention attends to all tokens and all tokens attend to it, applied to a few pre-selected locations.", "where": "Section 3.1"}
+ ],
+ "lineage": [
+  {"work": "Attention Is All You Need (Vaswani et al.)", "year": 2017, "arxiv": "1706.03762", "relation": "extends", "note": "replaces full self-attention", "quote": null},
+  {"work": "RoBERTa (Liu et al.)", "year": 2019, "arxiv": "1907.11692", "relation": "extends", "note": "continued pretraining from its checkpoint; main baseline", "quote": null},
+  {"work": "BART (Lewis et al.)", "year": 2020, "arxiv": null, "relation": "extends", "note": "LED is initialised from BART", "quote": null},
+  {"work": "Transformer-XL (Dai et al.)", "year": 2019, "arxiv": null, "relation": "baseline", "note": "char-LM codebase and eval protocol", "quote": null},
+  {"work": "Adaptive Span (Sukhbaatar et al.)", "year": 2019, "arxiv": null, "relation": "baseline", "note": "per-layer window sizes", "quote": null},
+  {"work": "Sparse Transformer (Child et al.)", "year": 2019, "arxiv": "1904.10509", "relation": "baseline", "note": "most similar attention pattern; 30-layer large config", "quote": null},
+  {"work": "ETC (Ainslie et al.)", "year": 2020, "arxiv": null, "relation": "related", "note": "contemporaneous local+global attention", "quote": null},
+  {"work": "BigBird (Zaheer et al.)", "year": 2020, "arxiv": null, "relation": "baseline", "note": "extension of ETC; compared on summarization and QA", "quote": null},
+  {"work": "Compressive Transformer (Rae et al.)", "year": 2020, "arxiv": null, "relation": "baseline", "note": "enwik8 large", "quote": null},
+  {"work": "Reformer (Kitaev et al.)", "year": 2020, "arxiv": null, "relation": "baseline", "note": "enwik8", "quote": null},
+  {"work": "TVM (Chen et al.)", "year": 2018, "arxiv": null, "relation": "uses-method", "note": "custom CUDA kernel", "quote": null},
+  {"work": "WikiHop, TriviaQA, HotpotQA, OntoNotes, IMDB, Hyperpartisan, arXiv summarization", "year": null, "arxiv": null, "relation": "uses-data", "note": "finetuning and evaluation datasets", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 1", "caption": "Runtime and memory of full self-attention and different implementations of Longformer's self-attention", "page": 1, "why": "Shows linear versus quadratic memory growth and the three implementations."},
+  {"figure": "Fig 2", "caption": "Comparing the full self-attention pattern and the configuration of attention patterns in our Longformer.", "page": 3, "why": "Shows the four attention masks at a glance."},
+  {"figure": "Fig 3", "caption": "ROUGE-1 and ROUGE-2 of LED when varying the input size (arXiv validation set).", "page": 10, "why": "Longer input improves summarization."}
+ ],
+ "code": [
+  {"where": "Eqn 1, Section 3.1", "snippet": "Attention(Q, K, V) = softmax(QK^T / sqrt(d_k)) V", "verbatim": false}
+ ],
+ "problems": [
+  "Text extraction drops superscripts: '218 tokens' is 2^18, and Table 12 phase 5 LR prints as '000015625' and phase 5 top window is missing.",
+  "Table 7 and others are flattened to one value per line."
+ ]
+}

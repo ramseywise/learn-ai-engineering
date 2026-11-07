@@ -1,0 +1,642 @@
+{
+ "schema": 1,
+ "key": "1903.07291",
+ "pdf": "ai-engineering/08-multimodal-engineering/sources/park-2019-semantic-image-synthesis-spatially-adaptive.pdf",
+ "bib": {
+  "title": "Semantic Image Synthesis with Spatially-Adaptive Normalization",
+  "authors": [
+   "Taesung Park",
+   "Ming-Yu Liu",
+   "Ting-Chun Wang",
+   "Jun-Yan Zhu"
+  ],
+  "first_author": "Park",
+  "year": 2019,
+  "venue": "preprint (arXiv:1903.07291v2, cs.CV)",
+  "arxiv": "1903.07291",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 48464,
+  "chars_total": 48464,
+  "engine": "pymupdf",
+  "skipped": "References skimmed only"
+ },
+ "type": "empirical",
+ "question": "Can a generator synthesize photorealistic images from semantic segmentation masks better if the mask modulates the normalization layers instead of being fed in as the input?",
+ "hypothesis": "Normalization layers wash away semantic information from the input mask; injecting the mask through learned spatially-varying scale and bias preserves it.",
+ "contributions": [
+  "Spatially-adaptive normalization (SPADE) layer",
+  "A lighter decoder-style generator without an encoder, built from SPADE ResBlks",
+  "State-of-the-art results on COCO-Stuff, ADE20K, ADE20K-outdoor, Cityscapes",
+  "Multi-modal and style-guided synthesis via an image encoder (VAE)"
+ ],
+ "method": {
+  "summary": "A GAN generator made of SPADE residual blocks with nearest-neighbour upsampling; each normalization layer is parameter-free BatchNorm followed by per-pixel gamma and beta predicted from the resized segmentation mask by a two-layer conv net. Trained with the pix2pixHD multi-scale discriminator and loss but hinge GAN loss; optional VAE image encoder for style.",
+  "task": "semantic image synthesis (segmentation mask to photo)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "COCO-Stuff",
+    "role": "both",
+    "size": "118,000 train / 5,000 val images, 182 classes",
+    "split": "train/val",
+    "source": "derived from COCO",
+    "preprocessing": "256x256"
+   },
+   {
+    "name": "ADE20K",
+    "role": "both",
+    "size": "20,210 train / 2,000 val images, 150 classes",
+    "split": "train/val",
+    "source": "Zhou et al. 2017",
+    "preprocessing": "256x256"
+   },
+   {
+    "name": "ADE20K-outdoor",
+    "role": "both",
+    "size": null,
+    "split": null,
+    "source": "outdoor subset of ADE20K, as in Qi et al. (SIMS)",
+    "preprocessing": "inferred: 256x256"
+   },
+   {
+    "name": "Cityscapes",
+    "role": "both",
+    "size": "3,000 train / 500 val",
+    "split": "train/val",
+    "source": "Cordts et al. 2016",
+    "preprocessing": "512x256"
+   },
+   {
+    "name": "Flickr Landscapes",
+    "role": "both",
+    "size": "41,000 photos, 1,000 for validation",
+    "split": "1,000 val",
+    "source": "collected from Flickr",
+    "preprocessing": "masks computed with a DeepLabV2 model; 256x256"
+   }
+  ],
+  "models": [
+   {
+    "name": "SPADE generator (decoder w/ SPADE)",
+    "role": "proposed",
+    "params": "96M",
+    "architecture": "Linear(256,16384), reshape to 1024x4x4, 7 SPADE ResBlk with Upsample(2) (1024,1024,1024,512,256,128,64), 3x3Conv-3 Tanh; SPADE = sync BatchNorm then 3x3-Conv-128 ReLU then two 3x3-Conv-k for gamma, beta",
+    "init_from": "Glorot initialization",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "compact_variant": "61M",
+     "larger_variant": "141M (Table 4)",
+     "spectral_norm": "all conv layers in G and D"
+    }
+   },
+   {
+    "name": "Image encoder",
+    "role": "proposed",
+    "params": null,
+    "architecture": "6 stride-2 3x3 convs (64,128,256,512,512,512) with IN, LReLU, then two linear layers (256) giving mean and variance",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "6 conv + 2 linear",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Discriminator",
+    "role": "base",
+    "params": null,
+    "architecture": "pix2pixHD multi-scale PatchGAN with InstanceNorm, input is concat of mask and image, spectral norm added",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "pix2pixHD",
+    "role": "baseline",
+    "params": "183M",
+    "architecture": "encoder-decoder conditional GAN",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "CRN",
+    "role": "baseline",
+    "params": null,
+    "architecture": "cascaded refinement network",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "SIMS",
+    "role": "baseline",
+    "params": null,
+    "architecture": "semi-parametric, composites real segments; author-provided results used where available",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "pix2pixHD++",
+    "role": "baseline",
+    "params": "183M",
+    "architecture": "pix2pixHD plus sync BatchNorm, spectral norm, TTUR, hinge loss, large batch, Glorot init",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "DeepLabV2 / UperNet101 / DRN-D-105",
+    "role": "judge",
+    "params": null,
+    "architecture": "segmentation networks used to score synthesized images (COCO-Stuff / ADE20K / Cityscapes)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "pix2pixHD objective (multi-scale GAN, feature matching, perceptual) with hinge GAN loss in place of LSGAN; same loss weights as pix2pixHD; plus KL loss (weight 0.05) when the image encoder is used",
+   "optimizer": "Adam, beta1=0, beta2=0.999",
+   "lr": "0.0001 generator, 0.0004 discriminator (TTUR)",
+   "lr_schedule": "linear decay to 0 from epoch 100 to 200 (Cityscapes, ADE20K)",
+   "warmup": null,
+   "batch_size": "32",
+   "steps": null,
+   "epochs": "200 (Cityscapes, ADE20K), 100 (COCO-Stuff), 50 (Flickr Landscapes)",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "spectral norm on all layers in G and D; synchronized BatchNorm",
+   "hardware": "NVIDIA DGX1, 8x 32GB V100",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "image_size": "256x256, Cityscapes 512x256",
+    "init": "Glorot"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "one output per mask; multi-modal figures sample different z from a standard Gaussian",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {
+    "style_guidance": "replace noise input with the image encoder's embedding of a style image"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "mIoU",
+     "definition": "mean intersection-over-union of a pretrained segmentation network's prediction on the synthesized image against the input mask",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "accu",
+     "definition": "pixel accuracy of the same prediction",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "FID",
+     "definition": "Frechet Inception Distance between synthesized and real image distributions",
+     "unit": "FID",
+     "higher_is_better": false
+    },
+    {
+     "name": "User preference",
+     "definition": "percentage of AMT votes favouring ours over a competitor",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "CRN",
+    "SIMS",
+    "pix2pixHD",
+    "pix2pixHD++"
+   ],
+   "protocol": "Competing methods trained on the same training set, scored on the same validation set. AMT: 500 random questions per dataset, 5 workers each, unlimited time, workers with >98% approval. No seeds or repeated runs stated."
+  },
+  "availability": {
+   "code": "https://github.com/NVlabs/SPADE",
+   "weights": null,
+   "data": "public datasets; Flickr Landscapes collected by authors, release not stated"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "results Table 1 vs text",
+    "quote": "our method achieves an mIoU score of 35.2",
+    "where": "Sec 4 Quantitative comparisons"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "SPADE reaches higher COCO-Stuff mIoU than pix2pixHD and CRN",
+   "kind": "measured",
+   "source": null,
+   "metric": "mIoU",
+   "value": 37.4,
+   "unit": "mIoU %",
+   "baseline_value": 23.7,
+   "n": null,
+   "setup": "Table 1, COCO-Stuff, 256x256",
+   "quote": null,
+   "table": "Table 1, row Ours, column COCO-Stuff mIoU",
+   "note": "Text says 35.2 (and Table 3 prints 35.2) while Table 1 prints 37.4 for the same cell; baseline value is CRN 23.7, pix2pixHD 14.6.",
+   "where": "Table 1"
+  },
+  {
+   "claim": "SPADE COCO-Stuff FID",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": 22.6,
+   "unit": "FID",
+   "baseline_value": 70.4,
+   "n": null,
+   "setup": "Table 1, COCO-Stuff",
+   "quote": null,
+   "table": "Table 1, row Ours, column COCO-Stuff FID",
+   "note": "CRN 70.4 is the best baseline; text says 'FID is also 2.2 times better', but 70.4/22.6 is about 3.1.",
+   "where": "Table 1"
+  },
+  {
+   "claim": "SPADE ADE20K mIoU",
+   "kind": "measured",
+   "source": null,
+   "metric": "mIoU",
+   "value": 38.5,
+   "unit": "mIoU %",
+   "baseline_value": 22.4,
+   "n": null,
+   "setup": "Table 1, ADE20K",
+   "quote": null,
+   "table": "Table 1, row Ours, column ADE20K mIoU",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "SPADE ADE20K FID",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": 33.9,
+   "unit": "FID",
+   "baseline_value": 73.3,
+   "n": null,
+   "setup": "Table 1, ADE20K",
+   "quote": null,
+   "table": "Table 1, row Ours, column ADE20K FID",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "SPADE Cityscapes mIoU",
+   "kind": "measured",
+   "source": null,
+   "metric": "mIoU",
+   "value": 62.3,
+   "unit": "mIoU %",
+   "baseline_value": 58.3,
+   "n": null,
+   "setup": "Table 1, Cityscapes",
+   "quote": null,
+   "table": "Table 1, row Ours, column Cityscapes mIoU",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "SIMS has lower FID than SPADE on Cityscapes but worse segmentation",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": 49.7,
+   "unit": "FID",
+   "baseline_value": 71.8,
+   "n": null,
+   "setup": "Table 1, Cityscapes; SIMS FID 49.7 vs ours 71.8",
+   "quote": "We note that the SIMS model produces a lower FID score",
+   "table": "Table 1, row SIMS, column Cityscapes FID",
+   "note": "SIMS is better on FID here; paper explains it stitches real patches.",
+   "where": "Sec 4"
+  },
+  {
+   "claim": "Users prefer SPADE over pix2pixHD on COCO-Stuff",
+   "kind": "measured",
+   "source": null,
+   "metric": "preference",
+   "value": 86.64,
+   "unit": "% of votes",
+   "baseline_value": null,
+   "n": null,
+   "setup": "AMT, 500 questions x 5 workers",
+   "quote": null,
+   "table": "Table 2, row COCO-Stuff, column Ours vs. pix2pixHD",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Users prefer SPADE over CRN on COCO-Stuff",
+   "kind": "measured",
+   "source": null,
+   "metric": "preference",
+   "value": 79.76,
+   "unit": "% of votes",
+   "baseline_value": null,
+   "n": null,
+   "setup": "AMT",
+   "quote": null,
+   "table": "Table 2, row COCO-Stuff, column Ours vs. CRN",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Cityscapes preference over SIMS is near chance",
+   "kind": "measured",
+   "source": null,
+   "metric": "preference",
+   "value": 51.52,
+   "unit": "% of votes",
+   "baseline_value": null,
+   "n": null,
+   "setup": "AMT",
+   "quote": null,
+   "table": "Table 2, row Cityscapes, column Ours vs. SIMS",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Concatenating the mask at every layer is worse than SPADE (decoder), COCO-Stuff",
+   "kind": "measured",
+   "source": null,
+   "metric": "mIoU",
+   "value": 31.9,
+   "unit": "mIoU %",
+   "baseline_value": 35.2,
+   "n": null,
+   "setup": "Table 3, decoder w/ Concat 79M vs decoder w/ SPADE 35.2",
+   "quote": null,
+   "table": "Table 3, row decoder w/ Concat, column COCO.",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "pix2pixHD++ without SPADE on COCO-Stuff",
+   "kind": "measured",
+   "source": null,
+   "metric": "mIoU",
+   "value": 32.7,
+   "unit": "mIoU %",
+   "baseline_value": 34.4,
+   "n": null,
+   "setup": "Table 3, 183M; with SPADE 34.4 (237M)",
+   "quote": null,
+   "table": "Table 3, row pix2pixHD++, column COCO.",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Compact SPADE decoder matches full one with fewer parameters",
+   "kind": "measured",
+   "source": null,
+   "metric": "mIoU",
+   "value": 35.2,
+   "unit": "mIoU %",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 3, compact decoder w/ SPADE 61M, COCO-Stuff",
+   "quote": null,
+   "table": "Table 3, row compact decoder w/ SPADE, column COCO.",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "A 1x1 kernel on the label map hurts COCO-Stuff mIoU",
+   "kind": "measured",
+   "source": null,
+   "metric": "mIoU",
+   "value": 32.7,
+   "unit": "mIoU %",
+   "baseline_value": 35.2,
+   "n": null,
+   "setup": "Table 4, 1x1 vs 3x3 (35.2)",
+   "quote": null,
+   "table": "Table 4, row kernelsize 1x1, column COCO",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "Removing the perceptual loss drops COCO-Stuff mIoU",
+   "kind": "measured",
+   "source": null,
+   "metric": "mIoU",
+   "value": 24.7,
+   "unit": "mIoU %",
+   "baseline_value": 35.2,
+   "n": null,
+   "setup": "Table 5, vs 35.2 for full model",
+   "quote": null,
+   "table": "Table 5, row Ours w/o Perceptual loss, column COCO.",
+   "note": null,
+   "where": "Table 5"
+  },
+  {
+   "claim": "Removing sync BatchNorm from pix2pixHD++ drops COCO-Stuff mIoU",
+   "kind": "measured",
+   "source": null,
+   "metric": "mIoU",
+   "value": 27.4,
+   "unit": "mIoU %",
+   "baseline_value": 32.7,
+   "n": null,
+   "setup": "Table 5, vs 32.7 for pix2pixHD++",
+   "quote": null,
+   "table": "Table 5, row pix2pixHD++ w/o Sync BatchNorm, column COCO.",
+   "note": null,
+   "where": "Table 5"
+  },
+  {
+   "claim": "Uniform masks: InstanceNorm after conv makes activations all zeros regardless of label",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Analytical argument plus Fig 3 for pix2pixHD",
+   "quote": "the normalized activation will become all zeros no matter what the input semantic label is given",
+   "table": null,
+   "note": null,
+   "where": "Sec 3"
+  }
+ ],
+ "limits": [
+  "Evaluation relies on pretrained segmentation networks, which only check layout agreement, plus FID and a human study with no repeated runs or seeds.",
+  "Text and Table 1 disagree on COCO-Stuff mIoU (35.2 vs 37.4).",
+  "Resolutions are small (256x256; Cityscapes 512x256).",
+  "SIMS results taken from authors where available, not retrained on large datasets.",
+  "Flickr Landscapes masks are machine-predicted, not human annotated.",
+  "Quantitative comparison is GAN-era; no diffusion models."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "SPADE",
+   "definition": "SPatially-Adaptive (DE)normalization: a conditional normalization layer whose scale and bias are tensors with spatial dimensions computed from the input segmentation mask",
+   "where": "Sec 3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "High-resolution image synthesis and semantic manipulation with conditional GANs (pix2pixHD)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Same discriminator and loss except hinge replaces LSGAN; main baseline",
+   "quote": null
+  },
+  {
+   "work": "Image-to-image translation with conditional adversarial networks (pix2pix)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "related",
+   "note": "conventional encoder-decoder architecture",
+   "quote": null
+  },
+  {
+   "work": "Photographic image synthesis with cascaded refinement networks (CRN)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "Semi-parametric image synthesis (SIMS)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "Conditional BatchNorm (Dumoulin et al.) and AdaIN (Huang and Belongie)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "SPADE generalizes both to spatially varying modulation",
+   "quote": null
+  },
+  {
+   "work": "Recovering realistic texture in image super-resolution by deep spatial feature transform",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "related",
+   "note": "closely related spatial modulation",
+   "quote": null
+  },
+  {
+   "work": "Spectral normalization; TTUR (Heusel et al.); Auto-encoding variational Bayes",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "training components",
+   "quote": null
+  },
+  {
+   "work": "COCO-Stuff, ADE20K, Cityscapes",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": null,
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "In the SPADE, the mask is first projected onto an embedding space and then convolved to produce the modulation parameters gamma and beta.",
+   "page": 3,
+   "why": "shows the layer design"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Comparing results given uniform segmentation maps",
+   "page": 3,
+   "why": "shows pix2pixHD losing label information"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "SPADE generator residual block and overall structure",
+   "page": 4,
+   "why": "architecture overview"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 1",
+   "snippet": "gamma^i_{c,y,x}(m) * (h^i_{n,c,y,x} - mu^i_c) / sigma^i_c + beta^i_{c,y,x}(m)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text and Table 1 disagree: COCO-Stuff mIoU 35.2 in text and Table 3, 37.4 in Table 1.",
+  "Text says COCO-Stuff FID is 2.2 times better but Table 1 gives 70.4 vs 22.6 (about 3.1x).",
+  "No embedded instructions found."
+ ]
+}

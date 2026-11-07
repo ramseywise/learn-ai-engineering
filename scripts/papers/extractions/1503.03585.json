@@ -1,0 +1,450 @@
+{
+ "schema": 1,
+ "key": "1503.03585",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/sohldickstein-2015-deep-unsupervised-learning-using-nonequilibrium.pdf",
+ "bib": {
+  "title": "Deep Unsupervised Learning using Nonequilibrium Thermodynamics",
+  "authors": [
+   "Jascha Sohl-Dickstein",
+   "Eric A. Weiss",
+   "Niru Maheswaranathan",
+   "Surya Ganguli"
+  ],
+  "first_author": "Sohl-Dickstein",
+  "year": 2015,
+  "venue": "Proceedings of the 32nd International Conference on Machine Learning (ICML), Lille, France, 2015 (arXiv v8)",
+  "arxiv": "1503.03585",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 54465,
+  "chars_total": 54465,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can a generative model be both flexible and tractable by learning the reversal of a slow forward diffusion that destroys data structure?",
+ "hypothesis": "Estimating small perturbations to a diffusion process is more tractable than describing the full distribution with a single non-normalizable potential, and a diffusion process exists for any smooth target distribution.",
+ "contributions": [
+  "Diffusion probabilistic models: extreme flexibility, exact sampling, easy multiplication with other distributions (posteriors), cheap log likelihood evaluation",
+  "Training of models with thousands of layers/time steps",
+  "Upper and lower bounds on entropy production per step",
+  "Open source reference implementation"
+ ],
+ "method": {
+  "summary": "A fixed Markov forward chain gradually turns data into an identity-covariance Gaussian (or independent binomial). A reverse chain with learned mean/covariance (or bit-flip probability) per step, parameterised by MLPs or multi-scale conv nets, is trained by maximising a variational lower bound K on log likelihood. Sampling runs the reverse chain from noise; inpainting/denoising multiplies a function r(x) into each step.",
+  "task": "density estimation / generative modelling, sampling, inpainting and denoising",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "2-d swiss roll",
+    "role": "both",
+    "size": null,
+    "split": null,
+    "source": null,
+    "preprocessing": "scaled to variance 1"
+   },
+   {
+    "name": "Binary heartbeat",
+    "role": "both",
+    "size": "sequences of length 20, a 1 every 5th bin",
+    "split": null,
+    "source": "synthetic",
+    "preprocessing": "not scaled"
+   },
+   {
+    "name": "MNIST",
+    "role": "both",
+    "size": null,
+    "split": null,
+    "source": "LeCun & Cortes 1998",
+    "preprocessing": null
+   },
+   {
+    "name": "CIFAR-10",
+    "role": "both",
+    "size": null,
+    "split": "training images fit; holdout used for K",
+    "source": "Krizhevsky & Hinton 2009",
+    "preprocessing": "uniform noise added to remove 8-bit quantization (per Theis et al. 2015); scaled to variance 1"
+   },
+   {
+    "name": "Dead leaves",
+    "role": "both",
+    "size": null,
+    "split": "identical train/test as Theis et al. 2012",
+    "source": "Jeulin 1997; Lee et al. 2001",
+    "preprocessing": "scaled to variance 1"
+   },
+   {
+    "name": "Bark textures (T01-T04)",
+    "role": "both",
+    "size": null,
+    "split": null,
+    "source": "Lazebnik et al. 2005",
+    "preprocessing": "scaled to variance 1"
+   }
+  ],
+  "models": [
+   {
+    "name": "Swiss roll model",
+    "role": "proposed",
+    "params": null,
+    "architecture": "normalized RBF network, 1 hidden layer of 16 units; readout layer per time step, other weights shared across steps and both functions; fSigma diagonal, sigmoid-bounded",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "1 hidden",
+    "hidden": "16",
+    "heads": null,
+    "context": null,
+    "other": {
+     "T": "40 time steps Gaussian diffusion"
+    }
+   },
+   {
+    "name": "Binary heartbeat model",
+    "role": "proposed",
+    "params": null,
+    "architecture": "MLP with sigmoid nonlinearities, 20 input units, three hidden layers of 50 units; readout per time step, rest shared",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "3 hidden",
+    "hidden": "50",
+    "heads": null,
+    "context": null,
+    "other": {
+     "T": "2000 time steps binomial diffusion",
+     "p(x_T)": "0.2 independent binomial"
+    }
+   },
+   {
+    "name": "Image models (CIFAR-10, MNIST, dead leaves, bark)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "multi-scale convolution layers (mean-pool to powers-of-two scales, conv per scale, upsample and sum, softplus), then 1x1 conv dense layers (tanh), linear readout of 2J coefficients per pixel, time-dependent Gaussian bump readout; diagonal Sigma. CIFAR-10 adds a parallel dense pathway; MNIST uses dense pathway only",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "T": "1000 time steps, bark 500",
+     "J (bump functions)": null,
+     "layer counts and widths": "not stated (\"several layers\")"
+    }
+   }
+  ],
+  "training": {
+   "objective": "maximise lower bound K on log likelihood (Eq 13-15); KL between forward posterior q(x_{t-1}|x_t,x_0) and learned reverse step plus entropy terms",
+   "optimizer": "SFO (Sum-of-Functions Optimizer) for all but CIFAR-10; RMSprop for CIFAR-10",
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "first-step variance beta_1 fixed to a small constant to prevent overfitting",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "beta schedule": "Gaussian: beta_2..T learned by gradient ascent on K with frozen noise (footnote: fixed schedule as for binomial is just as effective); binomial: beta_t = (T-t+1)^-1",
+    "framework": "Theano",
+    "reverse final step": "p(x0|x1) set equal to forward step to remove edge effect",
+    "r(x_t)": "constant r(x0) in the experiments"
+   }
+  },
+  "inference": {
+   "decoding": "ancestral sampling of the reverse chain from pi(x_T)",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "inpainting": "r(x0) set to delta function for known data, constant for missing; bark central 100x100 region replaced by Gaussian noise",
+    "denoising": "CIFAR-10 holdout corrupted with Gaussian noise variance 1 (SNR = 1)"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "K lower bound on log likelihood",
+     "definition": "Eq 12/14 on holdout set; variance-1 scaled data except binary heartbeat",
+     "unit": "bits, bits/seq., bits/pixel",
+     "higher_is_better": true
+    },
+    {
+     "name": "MNIST Parzen-window log likelihood",
+     "definition": "Parzen-window estimate from model samples using Goodfellow et al. 2014 code",
+     "unit": "bits",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "MCGSM (Theis et al. 2012) on dead leaves",
+    "Stacked CAE, DBN, Deep GSN, Adversarial net on MNIST",
+    "isotropic Gaussian / independent binomial null model"
+   ],
+   "protocol": "Single reported value per dataset; +/- given for CIFAR-10 and MNIST, without stated definition of the interval."
+  },
+  "availability": {
+   "code": "https://github.com/Sohl-Dickstein/Diffusion-Probabilistic-Models (Blocks-based reference implementation)",
+   "weights": null,
+   "data": null
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.optimizer",
+    "quote": "CIFAR-10 results used the",
+    "where": "Sec 3 (continues: open source implementation of the algorithm, and RMSprop for optimization)"
+   },
+   {
+    "field": "datasets[CIFAR-10].preprocessing",
+    "quote": "These were the result of the model learning the 8-bit quantization of pixel values in the CIFAR-10",
+    "where": "footnote 3"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Diffusion model beats the previous state of the art (MCGSM) on dead leaves log likelihood.",
+   "kind": "measured",
+   "source": null,
+   "metric": "log likelihood",
+   "value": "1.489",
+   "unit": "bits/pixel",
+   "baseline_value": "1.244",
+   "n": null,
+   "setup": "Dead leaves, train/test identical to Theis et al. 2012; baseline MCGSM",
+   "quote": null,
+   "table": "Table 2, rows Dead Leaves MCGSM 1.244 bits/pixel, Diffusion 1.489 bits/pixel",
+   "note": "Table 1 K for dead leaves is also 1.489 bits/pixel (a lower bound).",
+   "where": "Table 2"
+  },
+  {
+   "claim": "On MNIST the diffusion model scores 317 bits by Parzen-window estimate, between Deep GSN and the adversarial net.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Parzen log likelihood",
+   "value": "317",
+   "unit": "bits",
+   "baseline_value": "309 (Deep GSN); 325 (Adversarial net)",
+   "n": null,
+   "setup": "MNIST, Parzen-window code of Goodfellow et al. 2014 on model samples; not the lower bound K",
+   "quote": null,
+   "table": "Table 2, MNIST rows Deep GSN 309 +/- 1.6, Diffusion 317 +/- 2.7, Adversarial net 325 +/- 2.9, Perfect model 349 +/- 3.3",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "CIFAR-10 lower bound K on holdout data.",
+   "kind": "measured",
+   "source": null,
+   "metric": "K",
+   "value": "5.4 ± 0.2",
+   "unit": "bits/pixel",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CIFAR-10 with uniform dequantization noise, data scaled to variance 1; improvement over isotropic Gaussian 11.5 ± 0.2 bits/pixel",
+   "quote": null,
+   "table": "Table 1, row CIFAR-10, column K",
+   "note": "An earlier arXiv version reported higher bounds caused by learning 8-bit quantization (footnote 3).",
+   "where": "Table 1"
+  },
+  {
+   "claim": "Heartbeat binary sequence learning nearly perfect: K -2.414 bits/seq vs true -2.322.",
+   "kind": "measured",
+   "source": null,
+   "metric": "K",
+   "value": "-2.414",
+   "unit": "bits/seq.",
+   "baseline_value": "-2.322",
+   "n": null,
+   "setup": "binary sequences length 20, 2000 binomial diffusion steps",
+   "quote": "= −2.322 bits per sequence",
+   "table": null,
+   "note": "K from Table 1 row Binary Heartbeat",
+   "where": "Sec 3.1.2, Table 1"
+  },
+  {
+   "claim": "Other Table 1 bounds: swiss roll 2.35 bits, bark -0.55 bits/pixel, dead leaves 1.489 bits/pixel.",
+   "kind": "measured",
+   "source": null,
+   "metric": "K",
+   "value": "-0.55",
+   "unit": "bits/pixel",
+   "baseline_value": null,
+   "n": null,
+   "setup": "bark texture, holdout, data scaled to variance 1, T=500",
+   "quote": null,
+   "table": "Table 1, row Bark, column K",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Reverse chains use T=1000 steps for images (500 for bark), 40 for swiss roll and 2000 for binary data.",
+   "kind": "measured",
+   "source": null,
+   "metric": "time steps T",
+   "value": "1000",
+   "unit": "steps",
+   "baseline_value": null,
+   "n": null,
+   "setup": "all image experiments except bark",
+   "quote": "timesteps T = 1000",
+   "table": null,
+   "note": null,
+   "where": "App D.2.1"
+  },
+  {
+   "claim": "Posterior sampling lets the model inpaint a large missing region in a bark image with long-range structure.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "bark texture model, central 100x100 pixel region replaced with noise",
+   "quote": null,
+   "table": null,
+   "note": "qualitative (Fig 5)",
+   "where": "Fig 5"
+  },
+  {
+   "claim": "The earlier version's higher CIFAR-10 bounds were an artefact of learning 8-bit quantization.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "CIFAR-10",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "footnote 3"
+  }
+ ],
+ "limits": [
+  "No sample-quality metrics; only log-likelihood bounds and qualitative samples.",
+  "MNIST comparison uses Parzen-window estimates, which the authors note differ from their own consistent lower bound.",
+  "Training hyperparameters (learning rate, batch size, steps, layer widths, compute, seeds) are not stated; the text refers to the released code.",
+  "Footnote 2 says recent experiments suggest a fixed beta schedule is as effective as learning it."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "diffusion probabilistic model",
+   "definition": "Generative model defined as the endpoint of a Markov chain that reverses a gradual forward diffusion converting data to a simple known distribution.",
+   "where": "Sec 1.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Auto-Encoding Variational Bayes (Kingma & Welling)",
+   "year": 2013,
+   "arxiv": "1312.6114",
+   "relation": "related",
+   "note": "similar variational bound; frozen-noise trick",
+   "quote": null
+  },
+  {
+   "work": "Annealed importance sampling (Neal)",
+   "year": 2001,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "basis for trajectory probability estimate",
+   "quote": null
+  },
+  {
+   "work": "Jarzynski equality",
+   "year": 1997,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "nonequilibrium physics basis",
+   "quote": null
+  },
+  {
+   "work": "Generative Adversarial Nets (Goodfellow et al.)",
+   "year": 2014,
+   "arxiv": "1406.2661",
+   "relation": "baseline",
+   "note": "MNIST comparison, Parzen code",
+   "quote": null
+  },
+  {
+   "work": "MCGSM (Theis et al.)",
+   "year": 2012,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "dead leaves baseline",
+   "quote": null
+  },
+  {
+   "work": "Deep GSN (Bengio & Thibodeau-Laufer)",
+   "year": 2013,
+   "arxiv": "1306.1091",
+   "relation": "baseline",
+   "note": "MNIST",
+   "quote": null
+  },
+  {
+   "work": "SFO (Sohl-Dickstein et al.)",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "optimizer",
+   "quote": null
+  },
+  {
+   "work": "CIFAR-10, MNIST, dead leaves, bark",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "datasets",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Proposed framework trained on 2-d swiss roll: forward trajectory, learned reverse trajectory, drift term.",
+   "page": 3,
+   "why": "Shows the forward-destroy and reverse-restore idea at a glance."
+  },
+  {
+   "figure": "Table 2",
+   "caption": "Log likelihood comparisons to other algorithms.",
+   "page": 6,
+   "why": "Main quantitative comparison."
+  }
+ ],
+ "code": [
+  {
+   "where": "Table App.1",
+   "snippet": "q(x(t)|x(t-1)) = N(x(t); x(t-1) sqrt(1-beta_t), I beta_t)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Equations garbled by text extraction; no instructions embedded in the PDF."
+ ]
+}

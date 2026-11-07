@@ -1,0 +1,395 @@
+{
+ "schema": 1,
+ "key": "1806.03822",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/rajpurkar-2018-know-what-you-dont-know.pdf",
+ "bib": {
+  "title": "Know What You Don’t Know: Unanswerable Questions for SQuAD",
+  "authors": [
+   "Pranav Rajpurkar",
+   "Robin Jia",
+   "Percy Liang"
+  ],
+  "first_author": "Rajpurkar",
+  "year": 2018,
+  "venue": "Proceedings of the 56th Annual Meeting of the Association for Computational Linguistics (Short Papers)",
+  "arxiv": "1806.03822",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 24856,
+  "chars_total": 24856,
+  "engine": "pymupdf",
+  "skipped": "Appendices A.1 and A.2 are referenced but not in the PDF"
+ },
+ "type": "benchmark",
+ "question": "Can a reading comprehension dataset with adversarially written unanswerable questions force extractive models to know when no answer is supported?",
+ "hypothesis": "Crowdworker-written unanswerable questions with plausible answers are harder than automatically generated negatives and expose a large human-machine gap.",
+ "contributions": [
+  "SQuAD 2.0 (SQuADRUn): SQuAD plus 53,775 adversarial unanswerable questions",
+  "Analysis of negative-example types and human accuracy",
+  "Comparison against TFIDF and RULEBASED automatic negatives"
+ ],
+ "method": {
+  "summary": "Crowdworkers wrote unanswerable questions for SQuAD paragraphs that look relevant and have a plausible answer span; the result was merged with SQuAD splits. Three existing no-answer models were trained and tested, with an abstention threshold tuned on dev.",
+  "task": "extractive reading comprehension with unanswerable questions",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "SQuADRUn (SQuAD 2.0)",
+    "role": "both",
+    "size": "train 130,319 (43,498 negative); dev 11,873 (5,945 negative); test 8,862 (4,332 negative)",
+    "split": "same article partition as SQuAD",
+    "source": "SQuAD plus 53,775 crowdworker-written unanswerable questions (Daemo); CC BY-SA 4.0",
+    "preprocessing": "Removed questions from workers who wrote 25 or fewer questions on an article, applied to new and existing SQuAD questions; dev/test articles without collected unanswerable questions removed"
+   },
+   {
+    "name": "SQuAD + TFIDF",
+    "role": "both",
+    "size": null,
+    "split": "train negatives only for the 285 articles with SQuADRUn negatives; test on SQuADRUn dev articles with roughly 1:1 negatives",
+    "source": "Clark and Gardner (2017) TF-IDF paragraph pairing",
+    "preprocessing": null
+   },
+   {
+    "name": "SQuAD + RULEBASED",
+    "role": "both",
+    "size": null,
+    "split": "as for TFIDF",
+    "source": "Jia and Liang (2017) rule-based edits",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "BiDAF-No-Answer (BNA)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "BiDAF with no-answer probability (Levy et al. 2017)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "DocumentQA No-Answer (DocQA)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "Clark and Gardner (2017)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "DocQA + ELMo",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "DocQA with ELMo (Peters et al. 2018)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "inferred: answer span distribution plus predicted probability that the question is unanswerable",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "note": "hyperparameters not given; code on Codalab"
+   }
+  },
+  "inference": {
+   "decoding": "abstain when predicted unanswerable probability exceeds a threshold",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "threshold": "tuned per model on dev; test uses the threshold maximizing dev F1"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Exact Match",
+     "definition": "average EM following Rajpurkar et al. 2016; for negative examples abstaining scores 1, any other response 0",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "F1",
+     "definition": "average token F1; abstaining on negatives scores 1, else 0",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "always-abstain",
+    "BNA",
+    "DocQA",
+    "SQuAD+TFIDF",
+    "SQuAD+RULEBASED",
+    "human"
+   ],
+   "protocol": "Human accuracy: extra crowdworkers answered all dev and test questions, 4.8 answers per question on average, majority vote with ties favouring answering and shorter answers. Single run per model; no seeds or significance test stated."
+  },
+  "availability": {
+   "code": "Codalab https://bit.ly/2rDHBgY",
+   "weights": null,
+   "data": "released as SQuAD 2.0 on the SQuAD leaderboard, CC BY-SA 4.0"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Best model gets only 66.3 F1 on SQuADRUn test, 23.2 below humans.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 66.3,
+   "unit": "F1 %",
+   "baseline_value": 89.5,
+   "n": null,
+   "setup": "DocQA + ELMo, trained and tested on SQuADRUn, test set",
+   "quote": "The best model, DocQA + ELMo, achieves only 66.3 F1 on the test set, 23.2",
+   "note": null,
+   "where": "5.2"
+  },
+  {
+   "claim": "Human F1 on SQuADRUn test is 89.5.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 89.5,
+   "unit": "F1 %",
+   "baseline_value": null,
+   "n": null,
+   "setup": "majority vote over 4.8 answers per question, test set",
+   "quote": "whereas human accuracy is 89.5% F1",
+   "note": null,
+   "where": "1"
+  },
+  {
+   "claim": "Always-abstain baseline gets 48.9 test F1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 48.9,
+   "unit": "F1 %",
+   "baseline_value": null,
+   "n": null,
+   "setup": "SQuADRUn test, always abstain",
+   "quote": "a baseline that always abstains gets 48.9",
+   "note": null,
+   "where": "5.2"
+  },
+  {
+   "claim": "Same architecture trained on SQuAD gets 85.8 F1, only 5.4 below humans.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 85.8,
+   "unit": "F1 %",
+   "baseline_value": null,
+   "n": null,
+   "setup": "DocQA + ELMo on SQuAD test (reported SQuAD numbers for analogous architecture), gap to human 91.2",
+   "quote": "The same model architecture trained on SQuAD gets 85.8%",
+   "note": "Intro says 5.4 points worse than humans; Table 3 gap 5.4 (91.2-85.8)",
+   "where": "1"
+  },
+  {
+   "claim": "Automatic negatives are easier: best SQuADRUn dev F1 is 15.4 below best score on either other dataset.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1 gap",
+   "value": 15.4,
+   "unit": "F1 points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "DocQA + ELMo, dev set: SQuADRUn 67.6 vs TFIDF 83.0 vs RULEBASED 89.6",
+   "quote": "The highest score on SQuADRUn is 15.4 F1 points lower than the highest score on either of the other two datasets",
+   "note": "Arithmetic from Table 4: 83.0-67.6=15.4 for TFIDF but 89.6-67.6=22.0 for RULEBASED, so the text's 'either' only holds as 'at least' 15.4",
+   "where": "5.3"
+  },
+  {
+   "claim": "RULEBASED dev F1 for DocQA + ELMo is 89.6.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 89.6,
+   "unit": "F1 %",
+   "baseline_value": null,
+   "n": null,
+   "setup": "SQuAD + RULEBASED, dev articles",
+   "table": "Table 4, row DocQA + ELMo, column SQuAD + RULEBASED F1",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "TFIDF dev F1 for DocQA + ELMo is 83.0.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 83.0,
+   "unit": "F1 %",
+   "baseline_value": null,
+   "n": null,
+   "setup": "SQuAD + TFIDF, dev articles",
+   "table": "Table 4, row DocQA + ELMo, column SQuAD + TFIDF F1",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "53,775 unanswerable questions were added.",
+   "kind": "measured",
+   "source": null,
+   "metric": "count",
+   "value": 53775,
+   "unit": "questions",
+   "baseline_value": null,
+   "n": null,
+   "setup": "new questions about SQuAD paragraphs",
+   "quote": "new, unanswerable ques",
+   "note": null,
+   "where": "1"
+  },
+  {
+   "claim": "Of 100 sampled negatives, 93% are truly unanswerable.",
+   "kind": "measured",
+   "source": null,
+   "metric": "share",
+   "value": 93,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "100 random dev negatives, manual inspection",
+   "quote": "We also found that 93% of the sampled neg",
+   "note": null,
+   "where": "4.3"
+  },
+  {
+   "claim": "Roughly half of wrong answers on unanswerable questions matched the plausible answers, for models and humans.",
+   "kind": "claim",
+   "source": null,
+   "metric": "share",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "all systems and humans",
+   "quote": "For both computer systems and humans, roughly half of all wrong answers on unanswerable questions exactly matched the plau",
+   "note": "detail in Appendix A.2, not in PDF",
+   "where": "5.4"
+  }
+ ],
+ "limits": [
+  "Appendix A.2 distractor results not in the PDF",
+  "No training hyperparameters or seeds reported",
+  "Only three extractive models of 2017-2018 evaluated",
+  "Human accuracy is majority of 4.8 answers, unlike SQuAD 1.1's single human, so gaps are not strictly comparable",
+  "Test thresholds tuned on dev"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "negative example",
+   "definition": "a context passage paired with an unanswerable question",
+   "where": "3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "SQuAD: 100,000+ questions",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "SQuAD 1.1 base data and EM/F1 metrics",
+   "quote": null
+  },
+  {
+   "work": "Clark and Gardner, Simple and effective multi-paragraph reading comprehension",
+   "year": 2017,
+   "arxiv": "1710.10723",
+   "relation": "baseline",
+   "note": "DocQA models and TFIDF negatives",
+   "quote": null
+  },
+  {
+   "work": "Levy et al., Zero-shot relation extraction via reading comprehension",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "BiDAF-No-Answer",
+   "quote": null
+  },
+  {
+   "work": "Jia and Liang, Adversarial examples for evaluating reading comprehension systems",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "RULEBASED negatives",
+   "quote": null
+  },
+  {
+   "work": "Peters et al., Deep contextualized word representations",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "ELMo",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Table 3",
+   "caption": "Exact Match (EM) and F1 scores on SQUADRUN and SQuAD.",
+   "page": 5,
+   "why": "human-machine gap 5.4 vs 23.2 F1"
+  },
+  {
+   "figure": "Table 4",
+   "caption": "EM and F1 on SQUADRUN dev compared with SQuAD with two types of automatically generated negative examples.",
+   "page": 5,
+   "why": "shows automatic negatives are easier"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Venue is ACL 2018 short paper",
+  "Appendices A.1/A.2 absent from PDF"
+ ]
+}

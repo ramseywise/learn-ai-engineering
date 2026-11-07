@@ -1,0 +1,634 @@
+{
+ "schema": 1,
+ "key": "2011.13456",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/song-2020-score-based-generative-modeling-through.pdf",
+ "bib": {
+  "title": "Score-Based Generative Modeling through Stochastic Differential Equations",
+  "authors": [
+   "Yang Song",
+   "Jascha Sohl-Dickstein",
+   "Diederik P. Kingma",
+   "Abhishek Kumar",
+   "Stefano Ermon",
+   "Ben Poole"
+  ],
+  "first_author": "Song",
+  "year": 2021,
+  "venue": "ICLR 2021",
+  "arxiv": "2011.13456",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 93246,
+  "chars_total": 93246,
+  "engine": "pymupdf",
+  "skipped": "Appendix derivations of B, D.1, E-F math (lines 976-1110, 1170-1457, 1588-1835) only skimmed for hyperparameters; figure-only pages not readable as text"
+ },
+ "type": "empirical",
+ "question": "Can score-based generative models (SMLD) and diffusion models (DDPM) be unified as discretizations of a continuous-time SDE and its reverse-time SDE, enabling new samplers, exact likelihood and controllable generation?",
+ "hypothesis": "Generalising noise scales to a continuum via SDEs lets score-based models gain better samplers (predictor-corrector, probability flow ODE) and match or beat DDPM quality.",
+ "contributions": [
+  "Flexible sampling and likelihood computation: general SDE solvers, Predictor-Corrector samplers and deterministic probability flow ODE samplers with exact likelihood",
+  "Controllable generation: class-conditional, inpainting, colorization from a single unconditional score model",
+  "Unified framework: SMLD and DDPM as VE and VP SDE discretizations; new sub-VP SDE; new architectures NCSN++ and DDPM++"
+ ],
+ "method": {
+  "summary": "Data is diffused to a prior by a forward SDE (VE, VP, sub-VP); a time-dependent score network s_theta(x,t) is trained by denoising score matching (Eq. 7) and used in the reverse-time SDE, with PC samplers or a probability flow ODE for sampling and likelihood. Architectures NCSN++ and DDPM++ (DDPM U-Net plus FIR resampling, rescaled skips, BigGAN blocks, more blocks) set CIFAR-10 records.",
+  "task": "unconditional and conditional image generation (CIFAR-10, CelebA, LSUN, CelebA-HQ)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "CIFAR-10",
+    "role": "both",
+    "size": "32x32 images (size not stated in paper)",
+    "split": null,
+    "source": "Krizhevsky et al. 2009",
+    "preprocessing": "SMLD models normalise inputs to [0,1]; likelihoods on uniformly dequantized data"
+   },
+   {
+    "name": "CelebA",
+    "role": "train",
+    "size": "64x64",
+    "split": null,
+    "source": "Liu et al. 2015",
+    "preprocessing": "pre-processed following Song & Ermon (2020)"
+   },
+   {
+    "name": "LSUN bedroom, church outdoor",
+    "role": "train",
+    "size": "256x256",
+    "split": null,
+    "source": "Yu et al. 2015",
+    "preprocessing": null
+   },
+   {
+    "name": "CelebA-HQ",
+    "role": "train",
+    "size": "1024x1024 (256x256 for Fig 3 DDPM model)",
+    "split": null,
+    "source": "Karras et al. 2018",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "NCSN++ / NCSN++ cont. / cont. (deep), VE SDE",
+    "role": "proposed",
+    "params": null,
+    "architecture": "DDPM U-Net with FIR up/downsampling, skip rescale 1/sqrt2, BigGAN residual blocks, 4 res blocks per resolution (deep doubles it), progressive 'residual' input",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "time conditioning (cont.)": "random Fourier features, scale 16",
+     "EMA": "0.999 for VE"
+    }
+   },
+   {
+    "name": "DDPM++ / cont. / cont. (deep), VP and sub-VP",
+    "role": "proposed",
+    "params": null,
+    "architecture": "as NCSN++ but no FIR resampling and no progressive growing; ranked best of 144 configs for VP",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "EMA": "0.9999 for VP"
+    }
+   },
+   {
+    "name": "Wide-ResNet-28-10 time-dependent classifier",
+    "role": "proposed",
+    "params": null,
+    "architecture": "WRN-28-10, conditioned on log sigma_i via random Fourier features",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "DDPM (Ho et al. 2020)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "U-Net, discrete 1000 steps",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "Eq. 7 continuous denoising score matching, lambda(t) proportional to 1/E||grad log p0t||^2, t~U[0,T]; or discrete Eq. 1 (SMLD) / Eq. 3 (DDPM), N=1000 noise scales",
+   "optimizer": "inferred: as Ho et al. (2020); paper says 'follow Ho et al. (2020) for optimization, including the learning rate, gradient clipping, and learning rate warm-up schedules' (values not given)",
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "128 on CIFAR-10; 64 on LSUN; 8 on 1024x1024 CelebA-HQ",
+   "steps": "1.3M iterations (architecture exploration, checkpoint every 50k); 0.95M for cont. models; ~2.4M for CelebA-HQ 1024",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "EMA rate 0.999 (VE) / 0.9999 (VP); 0.9999 for CelebA-HQ 1024; fewer iterations (0.95M) to suppress overfitting",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "VE SDE": "sigma_min=0.01, sigma_max by Technique 1 of Song&Ermon 2020 (value not given), geometric; epsilon=1e-5",
+    "VP SDE": "beta_min=0.1, beta_max=20, linear; epsilon 1e-3 for sampling, 1e-5 for training/likelihood",
+    "sub-VP": "Eq. 12 with same beta(t)"
+   }
+  },
+  "inference": {
+   "decoding": "PC sampler: reverse diffusion predictor (Euler-Maruyama for cont. models) + annealed Langevin corrector; or RK45 probability flow ODE (scipy solve_ivp, atol=rtol=1e-5)",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "Table 1/4: mean and std over five sampling runs; FIDs on 50k samples; NLL averaged over five runs; sampling batch 1024 on CIFAR-10, 8 on LSUN",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "snr r (CIFAR-10)": "grid search step 0.01; best values in Table 5 (e.g. 0.16 VE reverse-diffusion PC1000, 0.01 VP)",
+    "snr r (LSUN)": "0.075",
+    "snr r (CelebA-HQ 1024)": "0.15",
+    "corrector steps": "1 per noise scale for PC; 2 for corrector-only on CIFAR-10",
+    "discretisation": "1000 steps (CIFAR-10), 2000 steps (class-conditional, CelebA-HQ 1024)",
+    "denoising": "single Tweedie denoising step at end of sampling"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "FID",
+     "definition": "computed on 50k samples with tensorflow_gan",
+     "unit": "FID",
+     "higher_is_better": false
+    },
+    {
+     "name": "Inception score",
+     "definition": "standard IS",
+     "unit": "IS",
+     "higher_is_better": true
+    },
+    {
+     "name": "NLL",
+     "definition": "bits/dim on uniformly dequantized CIFAR-10 test set via probability flow ODE and Skilling-Hutchinson trace estimator",
+     "unit": "bits/dim",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "DDPM (Ho et al. 2020)",
+    "NCSN, NCSNv2",
+    "StyleGAN2-ADA",
+    "BigGAN",
+    "RealNVP, iResNet, Glow, MintNet, Residual Flow, FFJORD, Flow++"
+   ],
+   "protocol": "Table 3: checkpoint with smallest FID over training, PC samplers. Table 2: last checkpoint, black-box ODE solver. Likelihoods compared only to models evaluated on uniform dequantization (DDPM L/Lsimple are ELBOs on discrete data)."
+  },
+  "availability": {
+   "code": "https://github.com/yang-song/score_sde",
+   "weights": "checkpoints open-sourced (same repo)",
+   "data": "public datasets"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.batch_size",
+    "quote": "The batch size is ﬁxed to 128 on CIFAR-10 and 64 on LSUN.",
+    "where": "Appendix G"
+   },
+   {
+    "field": "training.steps",
+    "quote": "we also reduce the number of training iterations to 0.95M to suppress overﬁtting",
+    "where": "Appendix H.2"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "NCSN++ cont. (deep, VE) sets new FID on unconditional CIFAR-10",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": 2.2,
+   "unit": "FID",
+   "baseline_value": "StyleGAN2-ADA 2.92 (unconditional)",
+   "n": null,
+   "setup": "CIFAR-10 unconditional, PC sampler, best checkpoint",
+   "quote": "with an Inception score of 9.89 and FID of 2.20",
+   "table": null,
+   "note": null,
+   "where": "Abstract; Table 3"
+  },
+  {
+   "claim": "Same model Inception score",
+   "kind": "measured",
+   "source": null,
+   "metric": "IS",
+   "value": 9.89,
+   "unit": "IS",
+   "baseline_value": null,
+   "n": null,
+   "setup": "as above",
+   "quote": "Inception score of 9.89",
+   "table": null,
+   "note": null,
+   "where": "Abstract; Table 3"
+  },
+  {
+   "claim": "Best likelihood on uniformly dequantized CIFAR-10, DDPM++ cont. (deep, sub-VP)",
+   "kind": "measured",
+   "source": null,
+   "metric": "NLL",
+   "value": 2.99,
+   "unit": "bits/dim",
+   "baseline_value": "Residual Flow 3.28",
+   "n": null,
+   "setup": "CIFAR-10 test, probability flow ODE, last checkpoint",
+   "quote": "a competitive likelihood of 2.99 bits/dim",
+   "table": null,
+   "note": null,
+   "where": "Abstract; Table 2"
+  },
+  {
+   "claim": "FID of the NLL-best model with ODE sampling",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": 2.92,
+   "unit": "FID",
+   "baseline_value": null,
+   "n": null,
+   "setup": "DDPM++ cont. (deep, sub-VP), RK45 ODE, last checkpoint",
+   "quote": null,
+   "table": "Table 2, row DDPM++ cont. (deep, sub-VP), column FID",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "PC1000 beats P2000 and P1000 on VE SDE with reverse diffusion",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": 3.21,
+   "unit": "FID",
+   "baseline_value": "P2000 4.74",
+   "n": null,
+   "setup": "CIFAR-10 SMLD model, 1000 predictor + 1000 corrector steps, mean of 5 runs",
+   "quote": null,
+   "table": "Table 1, row reverse diffusion, column PC1000 (VE)",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Predictor-only reverse diffusion P1000 (VE)",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": 4.79,
+   "unit": "FID",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CIFAR-10 SMLD, 5 runs",
+   "quote": null,
+   "table": "Table 1, row reverse diffusion, column P1000 (VE)",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Ancestral sampling P1000 (VE)",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": 4.98,
+   "unit": "FID",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CIFAR-10 SMLD, 5 runs",
+   "quote": null,
+   "table": "Table 1, row ancestral sampling, column P1000 (VE)",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Probability flow predictor P1000 on VE is much worse",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": 15.41,
+   "unit": "FID",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CIFAR-10 SMLD, 5 runs",
+   "quote": null,
+   "table": "Table 1, row probability flow, column P1000 (VE)",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Adaptive ODE solver cuts function evaluations by over 90% without visible quality loss",
+   "kind": "measured",
+   "source": null,
+   "metric": "NFE reduction",
+   "value": 90,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "DDPM on 256x256 CelebA-HQ, larger error tolerance",
+   "quote": "the number of function evaluations can be reduced by over 90% without affecting the visual quality of samples",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.3, Fig 3"
+  },
+  {
+   "claim": "NCSN++ (discrete objective, VE) FID",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": 2.45,
+   "unit": "FID",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CIFAR-10, PC sampler, lowest FID over training",
+   "quote": "achieves an FID of 2.45 on CIFAR-10 with PC samplers",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.4"
+  },
+  {
+   "claim": "DDPM++ (discrete objective, VP) FID",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": 2.78,
+   "unit": "FID",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CIFAR-10, PC",
+   "quote": "achieves 2.78",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.4"
+  },
+  {
+   "claim": "DDPM++ cont. (VP) FID",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": 2.55,
+   "unit": "FID",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CIFAR-10",
+   "quote": null,
+   "table": "Table 3, row DDPM++ cont. (VP)",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Original DDPM FID (Lsimple)",
+   "kind": "reported",
+   "source": null,
+   "metric": "FID",
+   "value": 3.17,
+   "unit": "FID",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CIFAR-10 as reported by Ho et al. 2020",
+   "quote": null,
+   "table": "Table 3, row DDPM",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Sub-VP gives better likelihood than VP, DDPM++ cont.",
+   "kind": "measured",
+   "source": null,
+   "metric": "NLL",
+   "value": 3.02,
+   "unit": "bits/dim",
+   "baseline_value": "3.16",
+   "n": null,
+   "setup": "DDPM++ cont. (sub-VP) vs 3.16 for VP",
+   "quote": null,
+   "table": "Table 2, row DDPM++ cont. (sub-VP), column NLL Test",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "DDPM ELBO bound vs exact likelihood of same DDPM model",
+   "kind": "measured",
+   "source": null,
+   "metric": "NLL",
+   "value": 3.28,
+   "unit": "bits/dim",
+   "baseline_value": null,
+   "n": null,
+   "setup": "same DDPM model as Ho et al.; ELBO <=3.75 (Lsimple)",
+   "quote": null,
+   "table": "Table 2, row DDPM, column NLL Test",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Lowest FID over the course of training vs last checkpoint: VP models FID rises after 0.5M iterations",
+   "kind": "measured",
+   "source": null,
+   "metric": "iterations",
+   "value": 0.5,
+   "unit": "M",
+   "baseline_value": null,
+   "n": null,
+   "setup": "VP SDE CIFAR-10",
+   "quote": "because FIDs turn to increase after 0.5M iterations for VP SDEs",
+   "table": null,
+   "note": null,
+   "where": "Appendix H.1"
+  },
+  {
+   "claim": "Best signal-to-noise ratio for VE PC1000 with reverse diffusion",
+   "kind": "measured",
+   "source": null,
+   "metric": "r",
+   "value": 0.16,
+   "unit": "ratio",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CIFAR-10 grid step 0.01",
+   "quote": null,
+   "table": "Table 5, row reverse diffusion, column PC1000 (VE)",
+   "note": null,
+   "where": "Table 5"
+  }
+ ],
+ "limits": [
+  "Sampling remains slower than GANs; authors call for combining stable learning with fast sampling (Sec 6)",
+  "Many sampler hyper-parameters (r, steps, corrector count) need tuning; no method to select them automatically",
+  "VE gives better sample quality but worse likelihood than VP/sub-VP; practitioners must try SDEs per domain",
+  "1024x1024 CelebA-HQ samples have visible flaws such as facial asymmetry",
+  "Compute, hardware, training lr and parameter counts not stated; seeds not stated for training",
+  "Probability flow ODE samplers give worse FID than SDE solvers without a corrector, especially for VE"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "VE SDE",
+   "definition": "Variance Exploding SDE, continuous limit of SMLD noise perturbation (Eq. 9)",
+   "where": "Sec 3.4"
+  },
+  {
+   "term": "VP SDE",
+   "definition": "Variance Preserving SDE, continuous limit of DDPM (Eq. 11)",
+   "where": "Sec 3.4"
+  },
+  {
+   "term": "sub-VP SDE",
+   "definition": "new SDE (Eq. 12) whose variance is always bounded by the VP SDE's",
+   "where": "Sec 3.4"
+  },
+  {
+   "term": "Predictor-Corrector sampler",
+   "definition": "numerical reverse-SDE step as predictor, then score-based MCMC (Langevin) as corrector",
+   "where": "Sec 4.2"
+  },
+  {
+   "term": "probability flow ODE",
+   "definition": "deterministic process whose trajectories share the same marginals as the SDE (Eq. 13)",
+   "where": "Sec 4.3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Generative modeling by estimating gradients of the data distribution (NCSN)",
+   "year": 2019,
+   "arxiv": "1907.05600",
+   "relation": "extends",
+   "note": "SMLD, recast as VE SDE",
+   "quote": null
+  },
+  {
+   "work": "Improved techniques for training score-based generative models (NCSNv2)",
+   "year": 2020,
+   "arxiv": "2006.09011",
+   "relation": "baseline",
+   "note": "sigma_max technique, baseline",
+   "quote": null
+  },
+  {
+   "work": "Denoising diffusion probabilistic models",
+   "year": 2020,
+   "arxiv": "2006.11239",
+   "relation": "extends",
+   "note": "DDPM recast as VP SDE; architecture basis",
+   "quote": null
+  },
+  {
+   "work": "Deep unsupervised learning using nonequilibrium thermodynamics",
+   "year": 2015,
+   "arxiv": "1503.03585",
+   "relation": "extends",
+   "note": "original diffusion models",
+   "quote": null
+  },
+  {
+   "work": "Anderson, Reverse-time diffusion equation models",
+   "year": 1982,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "reverse-time SDE",
+   "quote": null
+  },
+  {
+   "work": "Neural ordinary differential equations",
+   "year": 2018,
+   "arxiv": "1806.07366",
+   "relation": "uses-method",
+   "note": "likelihood via instantaneous change of variables",
+   "quote": null
+  },
+  {
+   "work": "FFJORD",
+   "year": 2018,
+   "arxiv": "1810.01367",
+   "relation": "uses-method",
+   "note": "Hutchinson trace estimator and ODE tolerances",
+   "quote": null
+  },
+  {
+   "work": "StyleGAN2 / StyleGAN2-ADA",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "architecture components and FID baseline",
+   "quote": null
+  },
+  {
+   "work": "CIFAR-10",
+   "year": 2009,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "main benchmark",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Solving a reverse-time SDE yields a score-based generative model.",
+   "page": 2,
+   "why": "Shows the core idea: forward SDE data to noise, reverse SDE using the score"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Probability flow ODE enables fast sampling with adaptive stepsizes as the numerical precision is varied (left), and reduces NFE without harming quality (middle). Interpolations (right).",
+   "page": 8,
+   "why": "NFE vs precision trade-off"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Comparing different reverse-time SDE solvers on CIFAR-10",
+   "page": 6,
+   "why": "Predictor vs corrector vs PC at equal compute"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq. 6",
+   "snippet": "dx = [f(x,t) - g(t)^2 grad_x log p_t(x)] dt + g(t) dw_bar",
+   "verbatim": false
+  },
+  {
+   "where": "Eq. 13",
+   "snippet": "dx = [f(x,t) - 1/2 g(t)^2 grad_x log p_t(x)] dt",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Math symbols garbled in text (Table 1 columns misaligned); Table 1 cells read by order",
+  "Paper never states parameter counts, lr, hardware or compute",
+  "Pages of math in appendices B, D.1, E, F skimmed not read line by line"
+ ]
+}

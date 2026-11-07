@@ -1,0 +1,522 @@
+{
+ "schema": 1,
+ "key": "1612.00837",
+ "pdf": "ai-engineering/08-multimodal-engineering/sources/goyal-2017-making-v-vqa-matter.pdf",
+ "bib": {
+  "title": "Making the V in VQA Matter: Elevating the Role of Image Understanding in Visual Question Answering",
+  "authors": [
+   "Yash Goyal",
+   "Tejas Khot",
+   "Douglas Summers-Stay",
+   "Dhruv Batra",
+   "Devi Parikh"
+  ],
+  "first_author": "Goyal",
+  "year": 2017,
+  "venue": "preprint (arXiv v3, 15 May 2017)",
+  "arxiv": "1612.00837",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 49243,
+  "chars_total": 49243,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "benchmark",
+ "question": "Do VQA models exploit language priors rather than the image, and can a balanced dataset with complementary image pairs force them to use vision?",
+ "hypothesis": "A balanced dataset in which each question has two similar images with different answers will force VQA models to focus on visual information.",
+ "contributions": [
+  "Balance the VQA dataset by collecting complementary images so each question has a pair of similar images with different answers (about twice the size).",
+  "Benchmark state-of-art VQA models trained on the unbalanced set on the balanced set, showing they exploit language priors.",
+  "A counter-example explanation model that answers and retrieves a similar image it believes has a different answer."
+ ],
+ "method": {
+  "summary": "AMT workers pick, from the 24 fc7-nearest-neighbour COCO images, one image where the question makes sense but the answer differs; 10 new answers are collected for it. Three existing VQA models plus Prior and Language-only baselines are trained and tested on unbalanced and balanced splits; a two-head model adds counter-example retrieval trained with a pairwise hinge ranking loss.",
+  "task": "visual question answering (open-ended) and counter-example explanation retrieval",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "VQA v1 real images (Antol et al.)",
+    "role": "both",
+    "size": "just over 204K COCO images, 614K questions (3 per image), over 6 million answers (10 per question)",
+    "split": "train/val/test",
+    "source": "COCO; Antol et al. 2015",
+    "preprocessing": null
+   },
+   {
+    "name": "Balanced VQA / VQA v2.0 (this work)",
+    "role": "both",
+    "size": "about 1.1 million (image, question) pairs, about 13 million answers, about 200k images; more than 443K train, 214K val, 453K test pairs; about 195K / 93K / 191K complementary images for train/val/test; about 18K extra test pairs",
+    "split": "test split into test-dev, test-standard, test-challenge, test-reserve; Bhalf = balanced train subset of similar size to original; Table 2 uses train+val",
+    "source": "AMT annotation on COCO; public at visualqa.org",
+    "preprocessing": "24 nearest neighbours by l2 distance on VGGNet fc7; 'not possible' option chosen for about 135K questions (22% of questions)"
+   }
+  ],
+  "models": [
+   {
+    "name": "d-LSTM+n-I (Deeper LSTM Question + norm Image)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "CNN image embedding x LSTM question embedding (point-wise product), MLP over 1000 most frequent answers; VGGNet features",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": "1000 answers",
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "HieCoAtt",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "hierarchical co-attention (word, phrase, question level), 1000 answers; VGGNet features",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": "1000 answers",
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "MCB",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "multimodal compact bilinear pooling with attention, 3000 answers; ResNet features",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": "3000 answers",
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Language-only",
+    "role": "baseline",
+    "params": null,
+    "architecture": "d-LSTM+n-I with question input only",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Counter-example explanation model",
+    "role": "proposed",
+    "params": null,
+    "architecture": "shared trunk (image CNN x question LSTM, point-wise product) with answering head (FC + softmax) and explaining head (inner product of linear embeddings of QI and answer, FC to K scores); 25 images through trunk",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "K": "24 candidate neighbours"
+    }
+   }
+  ],
+  "training": {
+   "objective": "L = -log P(A|I,Q) + lambda * sum_i max(0, M - (S(I') - S(I_i))) (explanation model); benchmarked models use their own published objectives",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "M_and_lambda": "hyperparameters, values not stated"
+   }
+  },
+  "inference": {
+   "decoding": "classification over top-1000/3000 answers",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single run per cell; no seeds or variance reported",
+   "prompting": null,
+   "retrieval": "counter-example chosen from K=24 nearest neighbours of I; ranked by learned score",
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "VQA accuracy",
+     "definition": "public VQA evaluation script using 10 ground-truth answers per question",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Recall@5 (explanation)",
+     "definition": "how often the human-picked I' is among the top-5 of the sorted 24 neighbours",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Prior (most common answer, 'yes')",
+    "Language-only",
+    "Random",
+    "Distance",
+    "VQA model P(A|Q,Ii)"
+   ],
+   "protocol": "Train/test on unbalanced (U) or balanced (B) sets: UU, UB, BhalfB, BB; v2.0 test-standard after train+val. No significance tests."
+  },
+  "availability": {
+   "code": "benchmarked models use public code; no code for the new model stated",
+   "weights": null,
+   "data": "http://visualqa.org/"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "datasets.Balanced",
+    "quote": "Hence, our complete balanced dataset contains more than",
+    "where": "Section 3"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Yes/No accuracy of MCB drops from UU to UB (trained unbalanced, tested balanced val).",
+   "kind": "measured",
+   "source": null,
+   "metric": "VQA accuracy",
+   "value": 70.4,
+   "unit": "%",
+   "baseline_value": 81.2,
+   "n": null,
+   "setup": "MCB, Yes/No answer type, train unbalanced, test balanced val",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row MCB Yes/No, column UB"
+  },
+  {
+   "claim": "Yes/No accuracy of HieCoAtt drops from UU to UB.",
+   "kind": "measured",
+   "source": null,
+   "metric": "VQA accuracy",
+   "value": 67.62,
+   "unit": "%",
+   "baseline_value": 79.99,
+   "n": null,
+   "setup": "HieCoAtt, Yes/No, train unbalanced, test balanced val",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row HieCoAtt Yes/No, column UB"
+  },
+  {
+   "claim": "Authors quote the yes/no drop UU to UB as about 10.8% (MCB) and 12.4% (HieCoAtt), absolute points.",
+   "kind": "measured",
+   "source": null,
+   "metric": "yes/no accuracy drop",
+   "value": 10.8,
+   "unit": "points (printed as %)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 3 differences: 81.20-70.40 and 79.99-67.62",
+   "note": null,
+   "where": "Section 4, answer-type analysis",
+   "quote": "(\u223c10.8% for MCB and"
+  },
+  {
+   "claim": "MCB overall accuracy falls from 60.36 (UU) to 54.22 (UB).",
+   "kind": "measured",
+   "source": null,
+   "metric": "VQA accuracy",
+   "value": 54.22,
+   "unit": "%",
+   "baseline_value": 60.36,
+   "n": null,
+   "setup": "MCB, train unbalanced, test balanced val",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row MCB, column UB"
+  },
+  {
+   "claim": "Language-only baseline falls from 48.21 (UU) to 41.40 (UB).",
+   "kind": "measured",
+   "source": null,
+   "metric": "VQA accuracy",
+   "value": 41.4,
+   "unit": "%",
+   "baseline_value": 48.21,
+   "n": null,
+   "setup": "Language-only, train unbalanced, test balanced",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Language-only, column UB"
+  },
+  {
+   "claim": "Training on the full balanced set gives MCB 59.14 on balanced val.",
+   "kind": "measured",
+   "source": null,
+   "metric": "VQA accuracy",
+   "value": 59.14,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MCB, BB",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row MCB, column BB"
+  },
+  {
+   "claim": "Training on Bhalf (size matched to original) improves MCB from 54.22 (UB) to 56.08.",
+   "kind": "measured",
+   "source": null,
+   "metric": "VQA accuracy",
+   "value": 56.08,
+   "unit": "%",
+   "baseline_value": 54.22,
+   "n": null,
+   "setup": "MCB, BhalfB",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row MCB, column BhalfB"
+  },
+  {
+   "claim": "Full balanced training improves accuracy 2-3% over Bhalf, suggesting models are data starved.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 1, BhalfB to BB",
+   "note": "text spans a page break; numbers in Table 1: MCB 56.08 to 59.14, HieCoAtt 51.88 to 54.57, d-LSTM 49.23 to 51.62",
+   "where": "Section 4"
+  },
+  {
+   "claim": "Prior baseline (always 'yes') scores 24.04 on balanced val.",
+   "kind": "measured",
+   "source": null,
+   "metric": "VQA accuracy",
+   "value": 24.04,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "train unbalanced or balanced, test balanced val",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Prior, column UB"
+  },
+  {
+   "claim": "MCB on VQA v2.0 test-standard after train+val training.",
+   "kind": "measured",
+   "source": null,
+   "metric": "VQA accuracy",
+   "value": 62.27,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MCB, v2.0 train+val, test-standard, All",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row MCB, column All"
+  },
+  {
+   "claim": "Language-only on VQA v2.0 test-standard.",
+   "kind": "measured",
+   "source": null,
+   "metric": "VQA accuracy",
+   "value": 44.26,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "v2.0 train+val, test-standard, All",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Language-only, column All"
+  },
+  {
+   "claim": "HieCoAtt answers 17.7% of complementary pairs correctly when trained balanced, vs 13.5% unbalanced.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 17.7,
+   "unit": "% of pairs",
+   "baseline_value": 13.5,
+   "n": null,
+   "setup": "HieCoAtt, pairs (I,I') both correct",
+   "note": "text says 4.2% increase",
+   "where": "Section 4",
+   "quote": "answered 17.7% of the pairs correctly"
+  },
+  {
+   "claim": "Entropy of answer distributions (averaged over question types, frequency-weighted) increases 56% after balancing.",
+   "kind": "measured",
+   "source": null,
+   "metric": "answer entropy",
+   "value": 56,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "balanced vs original VQA",
+   "note": null,
+   "where": "Section 3",
+   "quote": "increases by 56% after balancing"
+  },
+  {
+   "claim": "In the original VQA, blindly answering 'yes' to 'Do you see a ...' questions gives 87% accuracy.",
+   "kind": "reported",
+   "source": null,
+   "metric": null,
+   "value": 87,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "original VQA dataset",
+   "note": null,
+   "where": "Section 1",
+   "quote": "a VQA accuracy of 87%!"
+  },
+  {
+   "claim": "About 9% of questions have A' equal to A after majority vote of 10 new answers.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 9,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "balanced dataset",
+   "note": null,
+   "where": "Section 3",
+   "quote": "for about 9% of our questions."
+  },
+  {
+   "claim": "Counter-example explanation Recall@5 of the proposed model is 43.39, vs Distance 42.84, VQA 21.65, Random 20.79.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Recall@5",
+   "value": 43.39,
+   "unit": "%",
+   "baseline_value": 42.84,
+   "n": null,
+   "setup": "K=24 candidates, human-picked I' as target",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, column Ours, row Recall@5"
+  }
+ ],
+ "limits": [
+  "Balancing is not perfect: authors say the dataset is 'not perfectly balanced'.",
+  "'Not possible' selections cover 22% of questions (about 135K), so some questions get no complementary image.",
+  "About 9% of pairs end with the same majority answer.",
+  "Human-picked counter-example is not unique or 'best'; Recall@5 is an approximation.",
+  "No hyperparameters, optimisers, seeds or variance reported for any model.",
+  "Distance baseline (42.84) nearly matches the proposed explanation model (43.39)."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "UU / UB / BhalfB / BB",
+   "definition": "train set then test set: U unbalanced, B balanced, Bhalf balanced train of similar size to original; UB is trained on Unbalanced train and tested on Balanced val",
+   "where": "Table 1 caption"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "VQA: Visual Question Answering (Antol et al.)",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "balances this dataset",
+   "quote": null
+  },
+  {
+   "work": "Yin and Yang: Balancing and Answering Binary Visual Questions (Zhang et al.)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "clipart yes/no balancing, extended to real images and all questions",
+   "quote": null
+  },
+  {
+   "work": "Deeper LSTM and normalized CNN VQA",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "d-LSTM+n-I",
+   "quote": null
+  },
+  {
+   "work": "Hierarchical Question-Image Co-Attention (Lu et al.)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "HieCoAtt",
+   "quote": null
+  },
+  {
+   "work": "Multimodal Compact Bilinear Pooling (Fukui et al.)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "MCB, VQA Challenge 2016 winner",
+   "quote": null
+  },
+  {
+   "work": "Microsoft COCO (Lin et al.)",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "images",
+   "quote": null
+  },
+  {
+   "work": "Focused evaluation for image description with binary forced-choice tasks (Hodosh and Hockenmaier)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "related",
+   "note": "similar hard-negative evaluation for captioning",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Table 3",
+   "caption": "Accuracy breakdown over answer types for MCB and HieCoAtt, UU/UB/BhalfB/BB",
+   "page": 7,
+   "why": "Shows the yes/no collapse under balanced test."
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "AMT interface to collect complementary images",
+   "page": 4,
+   "why": "Shows the collection protocol."
+  }
+ ],
+ "code": [],
+ "problems": [
+  "No embedded instructions found.",
+  "Text extraction splits some quotes across lines, so some results use table references."
+ ]
+}

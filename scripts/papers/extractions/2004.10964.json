@@ -1,0 +1,550 @@
+{
+ "schema": 1,
+ "key": "2004.10964",
+ "pdf": "generative-ai/05-RL/sources/gururangan-2020-dont-stop-pretraining.pdf",
+ "bib": {
+  "title": "Don't Stop Pretraining: Adapt Language Models to Domains and Tasks",
+  "authors": [
+   "Suchin Gururangan",
+   "Ana Marasović",
+   "Swabha Swayamdipta",
+   "Kyle Lo",
+   "Iz Beltagy",
+   "Doug Downey",
+   "Noah A. Smith"
+  ],
+  "first_author": "Gururangan",
+  "year": 2020,
+  "venue": "Proceedings of the 58th Annual Meeting of the Association for Computational Linguistics (ACL 2020), pages 8342-8360",
+  "arxiv": "2004.10964",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 69487,
+  "chars_total": 69487,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Is it still helpful to tailor a broadly pretrained language model (RoBERTa) to the domain or the unlabeled data of a target task by continuing pretraining?",
+ "hypothesis": "Where the task data is a narrowly defined subset of a broader domain, pretraining on the task dataset itself or data relevant to it may be helpful; the more dissimilar the domain from RoBERTa's, the higher the potential for DAPT.",
+ "contributions": [
+  "a thorough analysis of domain- and task-adaptive pretraining across four domains and eight tasks, spanning low- and high-resource settings",
+  "an investigation into the transferability of adapted LMs across domains and tasks",
+  "a study highlighting the importance of pretraining on human-curated datasets, and a simple data selection strategy to automatically approach this performance"
+ ],
+ "method": {
+  "summary": "Continue masked-LM pretraining of RoBERTa-base on large unlabeled domain corpora (DAPT, 12.5K steps), on the task's unlabeled training text (TAPT, 100 epochs), or both in sequence, then fine-tune a classifier on each of eight tasks. Also tests curated extra task text (Curated-TAPT) and VAMPIRE-embedding kNN retrieval of domain sentences (kNN-TAPT).",
+  "task": "continued (adaptive) pretraining followed by text classification fine-tuning",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "BioMed S2ORC",
+    "role": "pretrain",
+    "size": "2.68M full-text papers, 7.55B tokens, 47GB",
+    "split": null,
+    "source": "S2ORC (Lo et al., 2020), internal version incl. papers not releasable",
+    "preprocessing": "sentence splitting with scispaCy"
+   },
+   {
+    "name": "CS S2ORC",
+    "role": "pretrain",
+    "size": "2.22M full-text papers, 8.10B tokens, 48GB",
+    "split": null,
+    "source": "S2ORC (Lo et al., 2020), internal version",
+    "preprocessing": "scispaCy sentence splitting"
+   },
+   {
+    "name": "News (REALNEWS)",
+    "role": "pretrain",
+    "size": "11.90M articles, 6.66B tokens, 39GB",
+    "split": null,
+    "source": "Zellers et al., 2019",
+    "preprocessing": "summaries and full text, spaCy sentence splitting"
+   },
+   {
+    "name": "Reviews (Amazon)",
+    "role": "pretrain",
+    "size": "24.75M reviews, 2.11B tokens, 11GB",
+    "split": null,
+    "source": "He and McAuley, 2016",
+    "preprocessing": "entire review body, spaCy sentence splitting"
+   },
+   {
+    "name": "CHEMPROT",
+    "role": "both",
+    "size": "4169 train",
+    "split": "2427 dev / 3469 test, 13 classes",
+    "source": "Kringelum et al., 2016",
+    "preprocessing": null
+   },
+   {
+    "name": "RCT",
+    "role": "both",
+    "size": "18040 train (high-resource)",
+    "split": "30212 dev / 30135 test, 5 classes",
+    "source": "Dernoncourt and Lee, 2017",
+    "preprocessing": "all sentences of an abstract in one long sequence for simultaneous prediction"
+   },
+   {
+    "name": "ACL-ARC",
+    "role": "both",
+    "size": "1688 train",
+    "split": "114 dev / 139 test, 6 classes",
+    "source": "Jurgens et al., 2018",
+    "preprocessing": null
+   },
+   {
+    "name": "SCIERC",
+    "role": "both",
+    "size": "3219 train",
+    "split": "455 dev / 974 test, 7 classes",
+    "source": "Luan et al., 2018",
+    "preprocessing": null
+   },
+   {
+    "name": "HYPERPARTISAN",
+    "role": "both",
+    "size": "515 train, 5000 unlabeled",
+    "split": "65 dev / 65 test, 2 classes",
+    "source": "Kiesel et al., 2019; splits from Beltagy et al. (2020)",
+    "preprocessing": null
+   },
+   {
+    "name": "AGNEWS",
+    "role": "both",
+    "size": "115000 train (high-resource)",
+    "split": "5000 dev / 7600 test, 4 classes",
+    "source": "Zhang et al., 2015",
+    "preprocessing": null
+   },
+   {
+    "name": "HELPFULNESS",
+    "role": "both",
+    "size": "115251 train (high-resource)",
+    "split": "5000 dev / 25000 test, 2 classes",
+    "source": "McAuley et al., 2015",
+    "preprocessing": null
+   },
+   {
+    "name": "IMDB",
+    "role": "both",
+    "size": "20000 train, 50000 unlabeled (high-resource)",
+    "split": "5000 dev / 25000 test, 2 classes",
+    "source": "Maas et al., 2011",
+    "preprocessing": null
+   },
+   {
+    "name": "RCT-500",
+    "role": "train",
+    "size": "500 labeled examples (of 180K), rest treated as unlabeled",
+    "split": null,
+    "source": "downsampled RCT",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "RoBERTa-base",
+    "role": "base",
+    "params": null,
+    "architecture": "transformer encoder, masked LM",
+    "init_from": "off-the-shelf RoBERTa (Liu et al., 2019), pretrained on 160GB text",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "called 'off-the-shelf ROBERTA-base model' for the baseline; size not otherwise stated"
+    }
+   },
+   {
+    "name": "DAPT / TAPT / DAPT+TAPT RoBERTa",
+    "role": "proposed",
+    "params": null,
+    "architecture": "RoBERTa-base with continued MLM pretraining",
+    "init_from": "RoBERTa-base",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "VAMPIRE",
+    "role": "retriever",
+    "params": null,
+    "architecture": "lightweight bag-of-words LM",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "pretrained_on": "deduplicated sample of 1M domain sentences",
+     "index": "flat FAISS index, cosine similarity"
+    }
+   }
+  ],
+  "training": {
+   "objective": "masked LM (cross-entropy on randomly masked tokens), masking probability 0.15",
+   "optimizer": "Adam, epsilon 1e-6, betas 0.9, 0.98",
+   "lr": "0.0005 (batch 2048), 0.0001 (batch 256)",
+   "lr_schedule": "linear decay (Table 13 lists scheduler 'None or warmup linear')",
+   "warmup": "6% proportion",
+   "batch_size": "2048 effective via gradient accumulation (DAPT); 256 for tasks with <5K examples (TAPT). Table 13 prints '256 or 2058' for the large one.",
+   "steps": "12.5K steps (DAPT, one pass over each domain dataset)",
+   "epochs": "100 epochs (TAPT), masks resampled each epoch",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": "0.01",
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "single Google Cloud v3-8 TPU per adaptive pretraining experiment",
+   "compute": "Table 9 (RCT-500): TAPT 0.2K steps, DAPT 12.5K steps; TAPT nearly 60 times faster than DAPT",
+   "wall_clock": null,
+   "seeds": "five random seeds for fine-tuning; degenerate HYPERPARTISAN seeds discarded and resampled",
+   "other": {
+    "classifier_finetune": "final-layer [CLS] -> 1 feedforward layer, tanh, dropout 0.1, batch 16, lr 2e-5, 3 or 10 epochs, patience 3, Quadro RTX 8000 GPU, AllenNLP (Table 14)",
+    "implementation": "HuggingFace transformers + PyTorch XLA",
+    "kNN-TAPT": "k = 50, 150 and 500 (Table 8) neighbors per task sentence; RAND-TAPT uses 50 random candidates",
+    "dapt_corpus_note": "corpora sized so each domain sees same data in 12.5K steps"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "five random seeds per fine-tuning run, mean and std reported",
+   "prompting": null,
+   "retrieval": "kNN-TAPT: VAMPIRE embeddings, k nearest domain sentences per task sentence, flat FAISS index with cosine similarity",
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "macro-F1",
+     "definition": "test macro-F1 (all tasks except CHEMPROT, RCT)",
+     "unit": "F1 points",
+     "higher_is_better": true
+    },
+    {
+     "name": "micro-F1",
+     "definition": "test micro-F1 for CHEMPROT and RCT, following Beltagy et al. 2019",
+     "unit": "F1 points",
+     "higher_is_better": true
+    },
+    {
+     "name": "masked LM loss",
+     "definition": "RoBERTa MLM loss on 50K held-out docs per domain (Table 1)",
+     "unit": "nats (not stated)",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "off-the-shelf RoBERTa fine-tuned directly",
+    "adaptation to an irrelevant domain (not-DAPT)",
+    "RAND-TAPT",
+    "state of the art per task (Table 5 caption)"
+   ],
+   "protocol": "Mean over five seeds with standard deviation; test results in main text, dev results in Appendix C (Tables 15-19); no significance test beyond std comparison."
+  },
+  "availability": {
+   "code": "https://github.com/allenai/dont-stop-pretraining ; https://github.com/allenai/tpu_pretrain",
+   "weights": "pretrained models for multiple domains and tasks said to be publicly available",
+   "data": "BioMed and CS use an internal S2ORC version that cannot be fully released"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.batch_size",
+    "quote": "batch size\n256 or 2058",
+    "where": "Table 13 (text elsewhere says effective batch size of 2048)"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "DAPT raises ACL-ARC macro-F1 over RoBERTa by 12.4 points",
+   "kind": "measured",
+   "source": null,
+   "metric": "macro-F1",
+   "value": "75.4",
+   "unit": "F1",
+   "baseline_value": "63.0",
+   "n": "5 seeds",
+   "setup": "RoBERTa-base, test set, mean over five seeds. CS domain DAPT, 12.5K steps",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row ACL-ARC, columns ROBERTA 63.0 and DAPT 75.4"
+  },
+  {
+   "claim": "DAPT raises CHEMPROT micro-F1",
+   "kind": "measured",
+   "source": null,
+   "metric": "micro-F1",
+   "value": "84.2",
+   "unit": "F1",
+   "baseline_value": "81.9",
+   "n": "5 seeds",
+   "setup": "RoBERTa-base, test set, mean over five seeds. BioMed DAPT",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row CHEMPROT, columns ROBERTA 81.9 and DAPT 84.2"
+  },
+  {
+   "claim": "DAPT does not improve AGNEWS (news domain already in RoBERTa pretraining)",
+   "kind": "measured",
+   "source": null,
+   "metric": "macro-F1",
+   "value": "93.9",
+   "unit": "F1",
+   "baseline_value": "93.9",
+   "n": "5 seeds",
+   "setup": "RoBERTa-base, test set, mean over five seeds. News DAPT",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row AGNEWS, columns ROBERTA 93.9 and DAPT 93.9"
+  },
+  {
+   "claim": "Adapting to an irrelevant domain (not-DAPT) lowers HYPERPARTISAN well below RoBERTa",
+   "kind": "measured",
+   "source": null,
+   "metric": "macro-F1",
+   "value": "76.4",
+   "unit": "F1",
+   "baseline_value": "86.6",
+   "n": "5 seeds",
+   "setup": "RoBERTa-base, test set, mean over five seeds. CS LM for NEWS task",
+   "note": "Not-DAPT marginally improved SCIERC (79.2 vs 77.3) and ACL-ARC (66.4 vs 63.0).",
+   "where": "Table 3, Sec 3.3",
+   "table": "Table 3, row HYP., column not-DAPT 76.4 vs ROBERTA 86.6"
+  },
+  {
+   "claim": "TAPT improves HYPERPARTISAN over RoBERTa and exceeds DAPT",
+   "kind": "measured",
+   "source": null,
+   "metric": "macro-F1",
+   "value": "90.4",
+   "unit": "F1",
+   "baseline_value": "86.6",
+   "n": "5 seeds",
+   "setup": "RoBERTa-base, test set, mean over five seeds. TAPT 100 epochs on unlabeled task training set",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row HYPERPARTISAN, column TAPT 90.4; ROBERTA 86.6; DAPT 88.2"
+  },
+  {
+   "claim": "DAPT + TAPT gives best score on ACL-ARC",
+   "kind": "measured",
+   "source": null,
+   "metric": "macro-F1",
+   "value": "75.6",
+   "unit": "F1",
+   "baseline_value": "63.0",
+   "n": "5 seeds",
+   "setup": "RoBERTa-base, test set, mean over five seeds. DAPT then TAPT",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row ACL-ARC, column DAPT + TAPT 75.6"
+  },
+  {
+   "claim": "TAPT on a different task in same domain hurts (Transfer-TAPT), e.g. HYPERPARTISAN drops 7.7",
+   "kind": "measured",
+   "source": null,
+   "metric": "macro-F1",
+   "value": "82.2",
+   "unit": "F1",
+   "baseline_value": "89.9",
+   "n": "5 seeds",
+   "setup": "RoBERTa-base, test set, mean over five seeds. TAPT using AGNEWS unlabeled data, fine-tuned on HYPERPARTISAN",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row Transfer-TAPT, HYPERPARTISAN 82.2 (down 7.7) vs TAPT 89.9"
+  },
+  {
+   "claim": "Curated-TAPT on RCT-500 reaches 83.4 micro-F1 vs 79.8 for TAPT",
+   "kind": "measured",
+   "source": null,
+   "metric": "micro-F1",
+   "value": "83.4",
+   "unit": "F1",
+   "baseline_value": "79.8",
+   "n": "5 seeds",
+   "setup": "RoBERTa-base, test set, mean over five seeds. RCT-500 (500 labeled), extra unlabeled RCT text",
+   "note": null,
+   "where": "Table 7",
+   "table": "Table 7, row Curated-TAPT, column RCT-500 83.4; TAPT 79.8"
+  },
+  {
+   "claim": "Curated-TAPT achieves 95% of DAPT+TAPT with fully labeled RCT using 0.3% of the labeled data",
+   "kind": "measured",
+   "source": null,
+   "metric": "ratio",
+   "value": "95",
+   "unit": "%",
+   "baseline_value": null,
+   "n": "5 seeds",
+   "setup": "RCT-500 vs full RCT",
+   "note": null,
+   "where": "Sec 5.1",
+   "quote": "95% of the performance of DAPT + TAPT with the fully labeled RCT corpus (Table 5) with only 0.3% of the labeled data."
+  },
+  {
+   "claim": "500NN-TAPT on ACL-ARC approaches DAPT",
+   "kind": "measured",
+   "source": null,
+   "metric": "macro-F1",
+   "value": "75.5",
+   "unit": "F1",
+   "baseline_value": "75.4",
+   "n": "5 seeds",
+   "setup": "RoBERTa-base, test set, mean over five seeds. kNN selection from CS domain; baseline value is DAPT",
+   "note": null,
+   "where": "Table 8",
+   "table": "Table 8, row 500NN-TAPT, column ACL-ARC 75.5; DAPT 75.4; TAPT 67.4"
+  },
+  {
+   "claim": "TAPT is nearly 60 times faster to train than DAPT on one v3-8 TPU; DAPT storage is 5.8M times TAPT",
+   "kind": "measured",
+   "source": null,
+   "metric": "speedup",
+   "value": "60",
+   "unit": "x",
+   "baseline_value": null,
+   "n": "5 seeds",
+   "setup": "RCT-500, BioMed",
+   "note": null,
+   "where": "Sec 5.3",
+   "quote": "TAPT is nearly 60 times faster to train than DAPT on a single v3-8 TPU and storage requirements for DAPT on this task are 5.8M times that of TAPT."
+  }
+ ],
+ "limits": [
+  "Only RoBERTa-base and only text classification tasks; authors say approaches should apply to any pretrained LM but do not test it.",
+  "BioMed and CS corpora use an internal S2ORC version not fully releasable.",
+  "Domain boundaries are fuzzy (40% unigram overlap REVIEWS-NEWS); cross-domain MLM loss is a noisy predictor of domain similarity.",
+  "HYPERPARTISAN has 65 test examples and high seed variance; degenerate seeds were discarded and resampled.",
+  "TAPT then DAPT order, and more sophisticated curricula, are not tested.",
+  "Compute in Table 9 is for RCT-500 only; the cost of curating data for Curated-TAPT is not counted.",
+  "DAPT/TAPT results do not beat SOTA on several tasks (Table 5 caption: e.g. RCT 92.9, HYPERPARTISAN 94.8)."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "DAPT",
+   "definition": "domain-adaptive pretraining: continued pretraining of RoBERTa on a large corpus of unlabeled domain-specific text",
+   "where": "Sec 3"
+  },
+  {
+   "term": "TAPT",
+   "definition": "task-adaptive pretraining: pretraining on the unlabeled training set for a given task",
+   "where": "Sec 4"
+  },
+  {
+   "term": "Curated-TAPT",
+   "definition": "TAPT using a larger human-curated pool of unlabeled task-distribution data",
+   "where": "Sec 5.1"
+  },
+  {
+   "term": "kNN-TAPT",
+   "definition": "TAPT on task data plus k nearest domain sentences retrieved by VAMPIRE embeddings",
+   "where": "Sec 5.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "RoBERTa: A Robustly Optimized BERT Pretraining Approach",
+   "year": 2019,
+   "arxiv": "1907.11692",
+   "relation": "extends",
+   "note": "base model and training recipe",
+   "quote": null
+  },
+  {
+   "work": "Universal Language Model Fine-tuning for Text Classification (Howard and Ruder)",
+   "year": 2018,
+   "arxiv": "1801.06146",
+   "relation": "extends",
+   "note": "prior TAPT-style adaptation",
+   "quote": null
+  },
+  {
+   "work": "BioBERT (Lee et al., 2019)",
+   "year": 2019,
+   "arxiv": "1901.08746",
+   "relation": "extends",
+   "note": "single-domain continued pretraining",
+   "quote": null
+  },
+  {
+   "work": "SciBERT (Beltagy et al., 2019)",
+   "year": 2019,
+   "arxiv": "1903.10676",
+   "relation": "baseline",
+   "note": "SOTA on ACL-ARC; metric format",
+   "quote": null
+  },
+  {
+   "work": "S2ORC (Lo et al., 2020)",
+   "year": 2020,
+   "arxiv": "1911.02782",
+   "relation": "uses-data",
+   "note": "BioMed and CS corpora",
+   "quote": null
+  },
+  {
+   "work": "VAMPIRE (Gururangan et al., 2019)",
+   "year": 2019,
+   "arxiv": "1906.02242",
+   "relation": "uses-method",
+   "note": "embedding for kNN selection",
+   "quote": null
+  },
+  {
+   "work": "Peters et al. (2019) MultiNLI JSD finding",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "contradicts",
+   "note": "found term-distribution divergence does not predict performance; authors call it possibly isolated",
+   "quote": null
+  },
+  {
+   "work": "Longformer (Beltagy et al., 2020)",
+   "year": 2020,
+   "arxiv": "2004.05150",
+   "relation": "baseline",
+   "note": "SOTA on HYPERPARTISAN, splits",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "Vocabulary overlap (%) between domains (top 10K words)",
+   "page": 4,
+   "why": "Predicts which domains benefit from DAPT"
+  },
+  {
+   "figure": "Table 9",
+   "caption": "Computational requirements for adapting to RCT-500",
+   "page": 9,
+   "why": "Steps, docs, storage and F1 for each adaptation strategy side by side"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Table 13 prints batch size '2058' where text says 2048; Table 13 scheduler 'None or warmup linear'.",
+  "Model size of RoBERTa-base not stated as numbers in paper."
+ ]
+}

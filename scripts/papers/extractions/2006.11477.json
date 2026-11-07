@@ -1,0 +1,558 @@
+{
+ "schema": 1,
+ "key": "2006.11477",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/baevski-2020-wav2vec-2-0.pdf",
+ "bib": {
+  "title": "wav2vec 2.0: A Framework for Self-Supervised Learning of Speech Representations",
+  "authors": [
+   "Alexei Baevski",
+   "Henry Zhou",
+   "Abdelrahman Mohamed",
+   "Michael Auli"
+  ],
+  "first_author": "Baevski",
+  "year": 2020,
+  "venue": "preprint (arXiv v3, Under review)",
+  "arxiv": "2006.11477",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 55392,
+  "chars_total": 55392,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can representations learned from unlabeled speech audio alone, then fine-tuned on little transcribed data, match or beat semi-supervised ASR?",
+ "hypothesis": "If a pre-trained model captures the structure of speech, it should need few labeled examples to fine-tune for speech recognition.",
+ "contributions": [
+  "Framework masking latent speech representations with a jointly learned quantizer and contrastive task",
+  "State of the art on TIMIT and Librispeech 100h clean; 1.8/3.3 WER on full Librispeech",
+  "Ultra-low resource ASR with 10 minutes of labels"
+ ],
+ "method": {
+  "summary": "CNN feature encoder maps raw audio to latents; spans are masked and a Transformer builds contexts; a contrastive loss identifies the true Gumbel-softmax product-quantized latent among 100 distractors, plus a diversity loss. The model is then fine-tuned with CTC on labeled data.",
+  "task": "self-supervised speech pretraining, then CTC ASR and TIMIT phoneme recognition",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Librispeech LS-960 (unlabeled)",
+    "role": "pretrain",
+    "size": "960 hours",
+    "split": "audio only",
+    "source": "Panayotov 2015",
+    "preprocessing": null
+   },
+   {
+    "name": "LibriVox LV-60k (unlabeled)",
+    "role": "pretrain",
+    "size": "53.2k hours",
+    "split": "audio only",
+    "source": "LibriVox, preprocessing of Libri-light [27]",
+    "preprocessing": "follows Libri-light preprocessing"
+   },
+   {
+    "name": "Librispeech labeled (960h, train-clean-100)",
+    "role": "train",
+    "size": "960h; 100h",
+    "split": "dev-clean/other, test-clean/other",
+    "source": "Librispeech",
+    "preprocessing": null
+   },
+   {
+    "name": "Libri-light limited-resource train-10h/1h/10min",
+    "role": "train",
+    "size": "10h, 1h, 10 min (48 recordings, avg 12.5 s)",
+    "split": "Libri-light protocol; Librispeech dev/test",
+    "source": "Kahn 2020",
+    "preprocessing": null
+   },
+   {
+    "name": "TIMIT",
+    "role": "both",
+    "size": "5 hours; train 3696 utterances avg 13.6 s",
+    "split": "standard train/dev/test",
+    "source": "Garofolo 1993",
+    "preprocessing": "phone labels collapsed to 39 classes"
+   }
+  ],
+  "models": [
+   {
+    "name": "wav2vec 2.0 BASE",
+    "role": "proposed",
+    "params": "95m",
+    "architecture": "7-block conv feature encoder (512 ch, strides 5,2,2,2,2,2,2, kernels 10,3,3,3,3,2,2) + Transformer, conv relative position (kernel 128, 16 groups), product quantizer",
+    "init_from": null,
+    "tokenizer": "characters (29 tokens + word boundary)",
+    "vocab": null,
+    "layers": "12 transformer blocks",
+    "hidden": "768",
+    "heads": "8",
+    "context": "crops of 250k samples (15.6 s)",
+    "other": {
+     "ffn": "3072",
+     "quantizer": "G=2, V=320, entries d/G=128",
+     "encoder_output": "49 Hz, 20 ms stride, 25 ms receptive field"
+    }
+   },
+   {
+    "name": "wav2vec 2.0 LARGE",
+    "role": "proposed",
+    "params": "317m",
+    "architecture": "same encoder; 24-block Transformer",
+    "init_from": null,
+    "tokenizer": "characters",
+    "vocab": null,
+    "layers": "24 transformer blocks",
+    "hidden": "1024",
+    "heads": "16",
+    "context": "crops of 320k samples (20 s)",
+    "other": {
+     "ffn": "4096",
+     "quantizer": "G=2, V=320, entries d/G=384"
+    }
+   },
+   {
+    "name": "Transformer LM (decoding)",
+    "role": "base",
+    "params": null,
+    "architecture": "20 blocks, dim 1280, FFN 6144, 16 heads, identical to [51]",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "20",
+    "hidden": "1280",
+    "heads": "16",
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "L = Lm + alpha*Ld; contrastive loss over K=100 distractors (kappa=0.1) plus codebook diversity loss; fine-tune with CTC",
+   "optimizer": "Adam",
+   "lr": "pretrain peak 5e-4 BASE, 3e-4 LARGE; fine-tune 2e-5 or 3e-5 (1e-4 BASE 960h)",
+   "lr_schedule": "pretrain: warmup then linear decay; fine-tune: tri-state (10% warmup, 40% constant, linear decay)",
+   "warmup": "pretrain first 8% of updates; fine-tune first 10%",
+   "batch_size": "pretrain BASE 1.6h total (1.4m samples/GPU), LARGE 2.7h (1.2m samples/GPU); fine-tune BASE 1600 sec, LARGE 1920 sec",
+   "steps": "pretrain 400k BASE, 250k LARGE, 600k LARGE LV-60k; fine-tune 12k/13k/20k/50k/320k (10min/1h/10h/100h/960h), TIMIT 40k",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "250k samples BASE, 320k LARGE",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": "0.1 in Transformer, feature encoder output and quantizer input; LayerDrop 0.05 BASE, 0.2 LARGE pretrain (none on LV-60k); fine-tune LayerDrop 0.05 BASE, 0.1 LARGE",
+   "regularisation": "fine-tune SpecAugment-like masking (span 10 time steps, 64-channel spans); Librispeech pretraining: L2 on last encoder layer activations, encoder gradient scaled by 0.1",
+   "hardware": "64 V100 BASE; 128 V100 LARGE; fine-tune 8 GPUs BASE, 24 GPUs LARGE",
+   "compute": null,
+   "wall_clock": "BASE 1.6 days; LARGE 2.3 days LS-960, 5.2 days LV-60k",
+   "seeds": "fine-tuning 3 seeds x 2 learning rates (Libri-light)",
+   "other": {
+    "masking": "p=0.065, M=10, ~49% masked, mean span 14.7 (299 ms)",
+    "gumbel_tau": "2 annealed to min 0.5 BASE / 0.1 LARGE, factor 0.999995 per update",
+    "alpha": 0.1,
+    "checkpoint": "lowest Lm on validation",
+    "finetune_first_10k_updates": "only output classifier trained; feature encoder frozen",
+    "finetune_masks": "Table 6: timestep/channel mask prob 10min 0.075/0.008, 1h 0.075/0.004, 10h 0.065/0.004, 100h 0.05/0.008, 960h 0.05/0.0016, TIMIT 0.065/0.012",
+    "ablation_setup": "BASE LS-960 250k updates, p=0.075, fine-tune train-10h 60k updates 1 GPU 640k samples/batch"
+   }
+  },
+  "inference": {
+   "decoding": "beam search (wav2letter++ decoder [44])",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "deterministic decode; 3 fine-tuning seeds in ablations",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "LM weight search": "Bayesian optimization (Ax), 128 trials, LM weight in [0,5], word insertion in [-5,5], tuned on dev-other",
+    "beam_tuning": "500 (4-gram), 50 (Transformer LM)",
+    "beam_test": "1500 (4-gram), 500 (Transformer LM)",
+    "finetune_selection_decode": "4-gram, beam 50, LM weight 2, insertion -1",
+    "Table 7/8": "per-subset tuned weights listed"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "WER",
+     "definition": "word error rate on Librispeech dev/test clean/other",
+     "unit": "%",
+     "higher_is_better": false
+    },
+    {
+     "name": "PER",
+     "definition": "phoneme error rate on TIMIT, 39 classes",
+     "unit": "%",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "Discrete BERT",
+    "iterative pseudo-labeling",
+    "noisy student",
+    "hybrid DNN/HMM",
+    "TTS augmentation",
+    "supervised CTC/S2S Transformer, ContextNet, Conformer",
+    "wav2vec",
+    "vq-wav2vec"
+   ],
+   "protocol": "Libri-light protocol for low-resource splits; ablations average 3 fine-tuning seeds on combined dev-clean/other"
+  },
+  "availability": {
+   "code": "https://github.com/pytorch/fairseq",
+   "weights": "models available at fairseq",
+   "data": "Librispeech, Libri-light, LibriVox, TIMIT"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.other.masking",
+    "quote": "we sample p = 0.065 of all time-steps to be starting indices and mask the subsequent M = 10 time-steps",
+    "where": "Sec 4.2"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Full 960h labeled Librispeech: LARGE LV-60k with Transformer LM reaches test-clean/other WER 1.8/3.3.",
+   "kind": "measured",
+   "source": null,
+   "metric": "WER",
+   "value": "1.8/3.3",
+   "unit": "WER %",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LARGE pretrained on LV-60k, CTC fine-tune on 960h, Transformer LM",
+   "note": null,
+   "where": "Sec 5.2",
+   "quote": "Table 2 shows that our approach achieves WER 1.8/3.3 on test-clean/other on the full Librispeech benchmark."
+  },
+  {
+   "claim": "10 minutes of labeled data with LARGE LV-60k and Transformer LM gives test-clean/other WER 4.8/8.2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "WER",
+   "value": "4.8/8.2",
+   "unit": "WER %",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LARGE, LV-60k pretraining, 10 min labeled (48 recordings), Transformer LM",
+   "note": "Sec 5.1 text says 5.2/8.6 for the same setting; Table 1 and Table 9 print 4.8/8.2.",
+   "where": "Abstract; Table 1",
+   "quote": "Using just ten minutes of labeled data and pre-training on 53k hours of unlabeled data still achieves 4.8/8.2 WER."
+  },
+  {
+   "claim": "Same 10 min model decoded with no LM scores test-clean 40.2 and test-other 38.7.",
+   "kind": "measured",
+   "source": null,
+   "metric": "WER",
+   "value": "40.2/38.7",
+   "unit": "WER %",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LARGE LV-60k, 10 min labeled, no LM",
+   "note": null,
+   "where": "Table 9",
+   "table": "Table 9, row 10 min LARGE LV-60k None, columns test clean/other (40.2, 38.7)"
+  },
+  {
+   "claim": "100h labeled: LARGE LV-60k gets test-clean/other 2.0/4.0 vs noisy student 4.2/8.6 (LS-860).",
+   "kind": "measured",
+   "source": null,
+   "metric": "WER",
+   "value": "2.0/4.0",
+   "unit": "WER %",
+   "baseline_value": "4.2/8.6",
+   "n": null,
+   "setup": "100h labeled, Transformer LM; noisy student (LSTM LM)",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, 100h labeled, row LARGE LV-60k Transf. (2.0, 4.0); Noisy student (4.2, 8.6)"
+  },
+  {
+   "claim": "Like-for-like (LS-960) LARGE on 100h: 2.3/5.0, a 45%/42% relative reduction over iterative self-training.",
+   "kind": "measured",
+   "source": null,
+   "metric": "relative WER reduction",
+   "value": "45%/42%",
+   "unit": "relative WER reduction",
+   "baseline_value": null,
+   "n": null,
+   "setup": "100h labeled, LARGE LS-960, Transformer LM vs noisy student 4.2/8.6",
+   "note": null,
+   "where": "Sec 5.1",
+   "quote": "WER 2.3/5.0 with the LARGE model in a like for like setup, a relative WER reduction of 45%/42%."
+  },
+  {
+   "claim": "1 hour labeled LARGE (LS-960) gets 3.9/7.6, improving on noisy student 100h by 7%/12% with 100x less labeled data.",
+   "kind": "measured",
+   "source": null,
+   "metric": "relative WER reduction",
+   "value": "7%/12%",
+   "unit": "relative WER reduction",
+   "baseline_value": null,
+   "n": null,
+   "setup": "1h labeled, LARGE LS-960, Transformer LM",
+   "note": null,
+   "where": "Sec 5.1",
+   "quote": "Using only a single hour of labeled data, the same model achieves WER 3.9/7.6 which improves on both test-clean and test-other by 7%/12%"
+  },
+  {
+   "claim": "10h labeled LARGE LS-960 gets 3.2/6.1, 24%/29% relative error reduction vs iterative self-training.",
+   "kind": "measured",
+   "source": null,
+   "metric": "relative WER reduction",
+   "value": "24%/29%",
+   "unit": "relative WER reduction",
+   "baseline_value": null,
+   "n": null,
+   "setup": "10h labeled, LARGE LS-960, Transformer LM",
+   "note": null,
+   "where": "Sec 5.1",
+   "quote": "it still achieves WER 3.2/6.1, an error reduction of 24%/29% relative to iterative self-training."
+  },
+  {
+   "claim": "Quantizing only the targets (continuous inputs) is best: dev avg WER 7.97, vs 12.18 when both quantized.",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg WER",
+   "value": "7.97",
+   "unit": "avg WER % (dev-clean/other)",
+   "baseline_value": "12.18",
+   "n": null,
+   "setup": "BASE, LS-960, 250k updates, p=0.075, fine-tune train-10h 60k updates single GPU, 3 seeds",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row Baseline, column avg. WER (7.97); Quantized inputs, quantized targets 12.18"
+  },
+  {
+   "claim": "Continuous targets give 8.58 avg WER and raise pretraining accuracy from 62% to 78.0%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg WER",
+   "value": "8.58",
+   "unit": "avg WER %",
+   "baseline_value": null,
+   "n": null,
+   "setup": "same ablation setup as Table 4",
+   "note": "Table 4: continuous inputs continuous targets 8.58; quantized inputs continuous targets 11.18.",
+   "where": "Sec 5.4",
+   "quote": "The training accuracy of identifying the correct latent audio representation increases from 62% to 78.0% when switching from quantized to continuous targets."
+  },
+  {
+   "claim": "TIMIT: LARGE LS-960 no LM gets PER 7.4 dev / 8.3 test, 23%/29% relative over vq-wav2vec.",
+   "kind": "measured",
+   "source": null,
+   "metric": "PER",
+   "value": "8.3",
+   "unit": "test PER %",
+   "baseline_value": "11.6",
+   "n": null,
+   "setup": "TIMIT, 39 collapsed classes, fine-tuned as 10h Libri-light, no LM",
+   "note": null,
+   "where": "Table 3, Sec 5.3",
+   "table": "Table 3, row LARGE (LS-960), columns dev PER 7.4, test PER 8.3; vq-wav2vec 9.6/11.6"
+  },
+  {
+   "claim": "Supervised from-scratch LARGE with the same architecture gets 2.1/4.6 on 960h, vs pretrained 1.8/3.3.",
+   "kind": "measured",
+   "source": null,
+   "metric": "WER",
+   "value": "2.1/4.6",
+   "unit": "WER %",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LARGE from scratch, 960h, Transformer LM",
+   "note": null,
+   "where": "Sec 5.2",
+   "quote": "supervised training of our architecture achieves WER 2.1/4.6 (LARGE - from scratch)"
+  },
+  {
+   "claim": "Full 960h: semi-supervised noisy student (LSTM LM) still scores 1.7/3.4, better than wav2vec 2.0 on test-clean.",
+   "kind": "measured",
+   "source": null,
+   "metric": "WER",
+   "value": "1.7/3.4",
+   "unit": "WER %",
+   "baseline_value": "1.8/3.3",
+   "n": null,
+   "setup": "960h labeled, Table 2",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Noisy student [42], columns test clean/other (1.7, 3.4)"
+  },
+  {
+   "claim": "LARGE LV-60k with 10 min labeled data and 4-gram LM: dev/test others 9.8/10.3 vs Transformer LM 7.9/8.2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "WER",
+   "value": "10.3",
+   "unit": "test-other WER %",
+   "baseline_value": null,
+   "n": null,
+   "setup": "10 min labeled, 4-gram LM",
+   "note": null,
+   "where": "Table 9",
+   "table": "Table 9, 10 min LARGE LV-60k 4-gram test other 10.3; Transf. 8.2"
+  },
+  {
+   "claim": "Joint learning of discrete units cuts WER by about a third vs discrete BERT with separate quantization.",
+   "kind": "measured",
+   "source": null,
+   "metric": "WER",
+   "value": "about a third",
+   "unit": "WER reduction",
+   "baseline_value": null,
+   "n": null,
+   "setup": "10min-100h setups vs Discrete BERT [4]",
+   "note": null,
+   "where": "Sec 5.1",
+   "quote": "reducing WER by a about a third."
+  }
+ ],
+ "limits": [
+  "Uses character CTC with a word-level LM, which the authors say delays LM feedback; they expect gains from seq2seq and word pieces",
+  "Not combined with self-training; authors say the two are likely complementary",
+  "Ablations use a reduced setup (BASE, 250k updates, train-10h)",
+  "English only (Librispeech/LibriVox, TIMIT); multilingual claim is hope in Broader Impact",
+  "Section 5.1 text gives 5.2/8.6 for the 10 min LARGE LV-60k model while Table 1 gives 4.8/8.2",
+  "Ablation text says p=0.065 baseline in Table 5 label p=0.075; Sec 4.2 main models use p=0.065"
+ ],
+ "practices": [],
+ "terms": [],
+ "lineage": [
+  {
+   "work": "Effectiveness of self-supervised pre-training for speech recognition (Discrete BERT)",
+   "year": 2019,
+   "arxiv": "1911.03912",
+   "relation": "baseline",
+   "note": "two-step quantize then contextualize; wav2vec 2.0 cuts WER by about a third",
+   "quote": null
+  },
+  {
+   "work": "vq-wav2vec",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "quantization and product quantizer design; here learned end-to-end",
+   "quote": null
+  },
+  {
+   "work": "wav2vec",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "predecessor CPC-style speech pretraining",
+   "quote": null
+  },
+  {
+   "work": "BERT",
+   "year": 2018,
+   "arxiv": "1810.04805",
+   "relation": "uses-method",
+   "note": "masked prediction",
+   "quote": null
+  },
+  {
+   "work": "CPC",
+   "year": 2018,
+   "arxiv": "1807.03748",
+   "relation": "uses-method",
+   "note": "contrastive task",
+   "quote": null
+  },
+  {
+   "work": "Improved noisy student training for ASR",
+   "year": 2020,
+   "arxiv": "2005.09629",
+   "relation": "baseline",
+   "note": "previous SOTA on 100h clean",
+   "quote": null
+  },
+  {
+   "work": "Iterative pseudo-labeling",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "semi-supervised baseline",
+   "quote": null
+  },
+  {
+   "work": "Libri-light",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "low-resource splits and LV-60k preprocessing",
+   "quote": null
+  },
+  {
+   "work": "Librispeech",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "corpus",
+   "quote": null
+  },
+  {
+   "work": "TIMIT",
+   "year": 1993,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "phoneme recognition",
+   "quote": null
+  },
+  {
+   "work": "Gumbel softmax (Jang et al.)",
+   "year": 2016,
+   "arxiv": "1611.01144",
+   "relation": "uses-method",
+   "note": "quantizer",
+   "quote": null
+  },
+  {
+   "work": "SimCLR",
+   "year": 2020,
+   "arxiv": "2002.05709",
+   "relation": "related",
+   "note": "cosine similarity with temperature in contrastive loss",
+   "quote": null
+  },
+  {
+   "work": "SpecAugment",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "modified for fine-tuning masking",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Illustration of our framework which jointly learns contextualized speech representations and an inventory of discretized speech units.",
+   "page": 2,
+   "why": "shows CNN, masking, Transformer and quantized targets in one picture"
+  },
+  {
+   "figure": "Table 4",
+   "caption": "Average WER and standard deviation on combined dev-clean/other of Librispeech for three training seeds. We ablate quantizing the context network input and the targets in the contrastive loss.",
+   "page": 7,
+   "why": "core design choice: quantize targets only"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 2-3",
+   "snippet": "L = Lm + alpha*Ld ; Lm = -log( exp(sim(c_t,q_t)/kappa) / sum_{q~Q_t} exp(sim(c_t,q~)/kappa) )",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Section 5.1 text (5.2/8.6) conflicts with Table 1 (4.8/8.2) for 10 min LARGE LV-60k",
+  "Sec 5.4 says 'dev PER' for WER; Table 5 baseline p=0.075 vs main p=0.065"
+ ]
+}

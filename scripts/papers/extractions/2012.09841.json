@@ -1,0 +1,508 @@
+{
+ "schema": 1,
+ "key": "2012.09841",
+ "pdf": "ai-engineering/08-multimodal-engineering/sources/esser-2021-taming-transformers-high-resolution-image.pdf",
+ "bib": {
+  "title": "Taming Transformers for High-Resolution Image Synthesis",
+  "authors": [
+   "Patrick Esser",
+   "Robin Rombach",
+   "Björn Ommer"
+  ],
+  "first_author": "Esser",
+  "year": 2021,
+  "venue": "preprint (arXiv v3, 23 Jun 2021)",
+  "arxiv": "2012.09841",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 84125,
+  "chars_total": 84125,
+  "engine": "pymupdf",
+  "skipped": "Reference list and figure-only pages skimmed"
+ },
+ "type": "empirical",
+ "question": "Can transformers synthesize high-resolution images if a CNN first learns a compact, context-rich discrete codebook of image constituents?",
+ "hypothesis": "Low-level image structure is well described by local (convolutional) connectivity while global composition needs transformers, so combining a CNN codebook with a transformer is efficient and expressive.",
+ "contributions": [
+  "VQGAN: a convolutional VQVAE variant with perceptual and patch-adversarial losses giving a context-rich codebook at high compression",
+  "Autoregressive transformer over codebook indices with sliding-window sampling for megapixel images",
+  "A single approach for conditional synthesis (class, segmentation, depth, edges, pose, super-resolution)",
+  "State of the art among autoregressive models on class-conditional ImageNet"
+ ],
+ "method": {
+  "summary": "A VQGAN (conv encoder/decoder, learned codebook, perceptual + patch-GAN loss) compresses a 256x256 image to a 16x16 grid of indices; a GPT-2-style transformer models the index sequence autoregressively. Larger images are sampled with a sliding attention window.",
+  "task": "autoregressive image synthesis (unconditional and conditional)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "ImageNet (IN) / Restricted ImageNet (RIN)",
+    "role": "both",
+    "size": null,
+    "split": "class-cond. FID against full training split, 50k samples",
+    "source": "Deng et al.; RIN = animal subset (Santurkar et al.)",
+    "preprocessing": "largest center-crop, bilinear resize with anti-aliasing to 256x256 (Pillow)"
+   },
+   {
+    "name": "CelebA-HQ, FFHQ, FacesHQ (union)",
+    "role": "both",
+    "size": null,
+    "split": null,
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "LSUN Churches and Towers",
+    "role": "train",
+    "size": null,
+    "split": null,
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "ADE20K, COCO-Stuff, S-FLCKR (Flickr landscapes with semantic layouts), DeepFashion, CIFAR-10",
+    "role": "both",
+    "size": null,
+    "split": null,
+    "source": null,
+    "preprocessing": "semantic layouts: first stage trained with cross-entropy reconstruction loss"
+   }
+  ],
+  "models": [
+   {
+    "name": "VQGAN",
+    "role": "proposed",
+    "params": null,
+    "architecture": "conv encoder/decoder (ResNet blocks, GroupNorm, Swish, non-local/attention block at lowest resolution, no skip connections), patch discriminator",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": "|Z|=1024 usually; 16384 for class-cond. ImageNet (973 used); 8192 COCO-Stuff; 4096 ADE20K",
+    "layers": null,
+    "hidden": "nz=256 (64 for RIN)",
+    "heads": null,
+    "context": null,
+    "other": {
+     "downsampling steps m": "1-5 by experiment, f=2^m; m=4 (f=16) default",
+     "delta": "1e-6"
+    }
+   },
+   {
+    "name": "Transformer (GPT-2 architecture)",
+    "role": "proposed",
+    "params": "85M to 1400M; 307M typical (GPT2-medium)",
+    "architecture": "decoder-only GPT-2, nh=16 heads",
+    "init_from": null,
+    "tokenizer": "VQGAN codebook indices",
+    "vocab": null,
+    "layers": "12 to 48 (24 typical)",
+    "hidden": "ne 768-1664 (1024 typical; 1536 for c-IN big)",
+    "heads": "16",
+    "context": "sequence length 256 typical (16x16); 512 or 257 (class token) in some",
+    "other": {
+     "c-IN (big)": "48 layers, 1400M, |Z|=16384, ne=1536, 257 length",
+     "COCO-Stuff": "32 layers, 651M",
+     "ADE20K": "28 layers, 405M, dropout 0.1",
+     "FFHQ/CelebA-HQ f=16": "28 layers, 355M",
+     "big face models": "801M"
+    }
+   },
+   {
+    "name": "PixelSNAIL",
+    "role": "baseline",
+    "params": "85M-310M, layers matched to transformer",
+    "architecture": "PixelCNN-family",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "VQGAN: perceptual reconstruction + codebook + commitment (beta=1.0, effective) + lambda*GAN with adaptive lambda = grad_L[Lrec]/(grad_L[LGAN]+delta); transformer: next-index negative log-likelihood",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": "lambda (GAN weight) set to 0 in a warm-up phase; rule of thumb at least one epoch",
+   "batch_size": "c-IN final model: 16 accumulated over 8 batches; others at least 2 per 12GB GPU",
+   "steps": "c-IN final model 2.4 million steps (previous version 1.0 million)",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "256 (16x16) default",
+   "precision": "16-bit training enabled if hardware permits",
+   "weight_decay": null,
+   "dropout": "0.0 except ADE20K 0.1",
+   "regularisation": null,
+   "hardware": "generally 2-4 GPUs with 48GB accumulated VRAM; final c-IN model on a single A100",
+   "compute": "final c-IN model 45.8 days on a single A100 GPU",
+   "wall_clock": "45.8 days (c-IN final)",
+   "seeds": null,
+   "other": {
+    "commitment loss": "paper v2 stated beta=0.25 but a bug meant beta=1.0 was used for all models; beta removed from Eq. 4",
+    "crop": "transformer inputs cropped to 16x16 codes (16f x 16f pixels)"
+   }
+  },
+  "inference": {
+   "decoding": "top-k sampling (k=100 default, higher for larger codebooks); top-p and classifier rejection sampling for class-cond. ImageNet",
+   "temperature": "t=1.0",
+   "top_p": "1.0 except 0.88 / 0.96 / 0.84 in ablations",
+   "max_tokens": null,
+   "samples": "50k samples for ImageNet FID",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "face FID k": "k in {100,200,300,400,500}; best k=400 CelebA-HQ, k=300 FFHQ",
+    "rejection": "ResNet-101 classifier keeps best m of n samples, acceptance rate m/n",
+    "sliding window": "transformer applied over 16x16 code windows to sample beyond 256x256"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "FID",
+     "definition": "Frechet Inception Distance, computed with torch-fidelity",
+     "unit": "points",
+     "higher_is_better": false
+    },
+    {
+     "name": "Inception Score",
+     "definition": "IS",
+     "unit": "points",
+     "higher_is_better": true
+    },
+    {
+     "name": "NLL",
+     "definition": "transformer negative log-likelihood of index sequence",
+     "unit": "nats",
+     "higher_is_better": false
+    },
+    {
+     "name": "LPIPS",
+     "definition": "reconstruction error",
+     "unit": "LPIPS",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "PixelSNAIL",
+    "VQVAE-2",
+    "DALL-E dVAE",
+    "BigGAN",
+    "IDDPM",
+    "DCTransformer",
+    "ADM",
+    "SPADE",
+    "Pix2PixHD",
+    "CRN",
+    "StyleGAN2",
+    "ImageGPT"
+   ],
+   "protocol": "Single reported numbers, no seeds or confidence intervals stated (IS has +- values)."
+  },
+  "availability": {
+   "code": "https://git.io/JnyvK",
+   "weights": "pretrained models released (same link)",
+   "data": null
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.compute",
+    "quote": "The new model has been trained for 2.4 million steps with a batch size of 16 accumulated over 8 batches, which took 45.8 days on a single A100 GPU.",
+    "where": "Appendix A"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Transformer beats PixelSNAIL in NLL on D-RIN at matched steps",
+   "kind": "measured",
+   "source": null,
+   "metric": "NLL",
+   "value": 4.7,
+   "unit": "nats",
+   "baseline_value": 4.78,
+   "n": null,
+   "setup": "D-RIN, 180M params, VQGAN m=4, vs PixelSNAIL at same steps",
+   "table": "Table 1, row D-RIN / 180 M, column Transformer vs P-SNAIL steps",
+   "quote": null,
+   "note": "PixelSNAIL at fixed time is 4.88",
+   "where": "Table 1"
+  },
+  {
+   "claim": "Transformer on VQGAN f=2 latent vs pixel-level transformer on CIFAR-10 improves FID",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID improvement",
+   "value": 18.63,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CIFAR-10, same transformer, fixed compute, f=2 VQGAN vs 512-colour k-means pixels",
+   "quote": "We observe improvements of 18.63% for FIDs and 14.08× faster sampling of images.",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.3"
+  },
+  {
+   "claim": "Sampling speedup of f=16 vs f=1 (pixel) on faces",
+   "kind": "measured",
+   "source": null,
+   "metric": "speed-up",
+   "value": 280.68,
+   "unit": "x",
+   "baseline_value": 1.0,
+   "n": null,
+   "setup": "FacesHQ, |s|=256, f1 takes 7258 s per sample on GTX Titan X",
+   "table": "Fig 7, f16 speed-up",
+   "quote": "takes\n7258 seconds to produce a sample on a NVIDIA GeForce GTX Titan X",
+   "note": "read from Fig 7 values 1.0/3.86/65.81/280.68",
+   "where": "Fig 7"
+  },
+  {
+   "claim": "Class-conditional ImageNet FID, no rejection (mixed k)",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": 17.04,
+   "unit": "FID",
+   "baseline_value": null,
+   "n": 50000,
+   "setup": "256x256 ImageNet, 50k samples vs training split, acceptance 1.0",
+   "table": "Table 4, row mixed k, p = 1.0, acceptance rate 1.0, column FID",
+   "quote": null,
+   "note": "BigGAN-deep 6.84, VQVAE-2 ~31, DCTransformer 36.5",
+   "where": "Table 4"
+  },
+  {
+   "claim": "Class-conditional ImageNet FID with classifier rejection at acceptance 0.05, k=600",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": 5.2,
+   "unit": "FID",
+   "baseline_value": null,
+   "n": 50000,
+   "setup": "ResNet-101 rejection, k=600, p=1.0",
+   "table": "Table 4, row k = 600, p = 1.0, column FID",
+   "quote": null,
+   "note": "IS 280.3",
+   "where": "Table 4"
+  },
+  {
+   "claim": "Best FID on CelebA-HQ 256 unconditional",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": 10.2,
+   "unit": "FID",
+   "baseline_value": null,
+   "n": null,
+   "setup": "k=400 top-k; StyleGAN2 is better (3.8 on FFHQ)",
+   "table": "Table 3, row ours (k=400)",
+   "quote": null,
+   "note": "FFHQ 9.6 at k=300",
+   "where": "Table 3"
+  },
+  {
+   "claim": "Semantic synthesis FID on COCO-Stuff",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": 22.4,
+   "unit": "FID",
+   "baseline_value": 22.6,
+   "n": null,
+   "setup": "256x256; SPADE 22.6 (23.9 recalculated with their protocol)",
+   "table": "Table 2, row COCO-Stuff, column ours",
+   "quote": null,
+   "note": "ADE20K ours 35.5 vs SPADE 33.9/35.7",
+   "where": "Table 2"
+  },
+  {
+   "claim": "VQGAN reconstruction FID on ImageNet val, 16x16 code, 16384 codebook",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID/val",
+   "value": 4.98,
+   "unit": "FID",
+   "baseline_value": 32.01,
+   "n": null,
+   "setup": "DALL-E 32x32/8192 gets 32.01, 1024 tokens vs 256",
+   "table": "Table 5, row VQGAN 16x16 16384, column FID/val",
+   "quote": null,
+   "note": "1024-codebook VQGAN 7.94",
+   "where": "Table 5"
+  },
+  {
+   "claim": "Training the final class-conditional ImageNet model took 45.8 days on one A100",
+   "kind": "measured",
+   "source": null,
+   "metric": "compute",
+   "value": 45.8,
+   "unit": "days (1x A100)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "2.4M steps, batch 16 x 8 accumulation",
+   "quote": "which took 45.8 days on a single A100 GPU",
+   "table": null,
+   "note": null,
+   "where": "Appendix A"
+  },
+  {
+   "claim": "Best-validation-NLL face checkpoints have FID 10.2 / 9.6 while best-train-NLL checkpoints have 3.86 / 2.68, so FID misses overfitting",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": 3.86,
+   "unit": "FID",
+   "baseline_value": 10.2,
+   "n": null,
+   "setup": "large face models, CelebA-HQ",
+   "quote": "the best train NLL checkpoints achieve\nFID scores of 3.86 on CelebA-HQ and 2.68 on FFHQ",
+   "table": null,
+   "note": null,
+   "where": "Appendix E"
+  },
+  {
+   "claim": "Raster (row-major) order gives best NLL among six orderings",
+   "kind": "measured",
+   "source": null,
+   "metric": "NLL",
+   "value": 4.767,
+   "unit": "nats",
+   "baseline_value": 5.015,
+   "n": null,
+   "setup": "ImageNet VQGAN, fixed init and budget; subsample worst",
+   "quote": "with\nﬁnal values given by (i) 4.767",
+   "table": null,
+   "note": null,
+   "where": "Appendix F"
+  },
+  {
+   "claim": "Model uses about 10x fewer parameters than VQVAE-2 (estimated 13.5B)",
+   "kind": "reported",
+   "source": "estimate based on [67]",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "class-conditional ImageNet",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Sec 4.4"
+  }
+ ],
+ "limits": [
+  "Some task-specialised GANs report better FID (e.g. StyleGAN2 3.8 on FFHQ).",
+  "Sliding window assumes approximately spatially invariant statistics or spatial conditioning; unconditional aligned data needs coordinate conditioning.",
+  "Reconstruction quality bounds sample quality; f beyond a critical value (16 on faces) degrades.",
+  "Face model overfits the dataset; FID cannot detect it.",
+  "Comparisons in Table 4 use numbers from the papers, not re-evaluated, except BigGAN.",
+  "Optimizer, learning rate and schedule are not stated in the paper."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "VQGAN",
+   "definition": "a variant of the original VQVAE using a perceptual loss and a patch-based adversarial discriminator",
+   "where": "Sec 3.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Neural discrete representation learning (VQVAE)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "VQGAN replaces L2 loss by perceptual and adversarial",
+   "quote": null
+  },
+  {
+   "work": "Generating diverse high-fidelity images with VQ-VAE-2",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "prior AR state of the art on ImageNet",
+   "quote": null
+  },
+  {
+   "work": "Generative pretraining from pixels (ImageGPT)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "related",
+   "note": "pixel-space transformer, up to 192x192",
+   "quote": null
+  },
+  {
+   "work": "DALL-E (Zero-shot text-to-image generation)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "reconstruction FID comparison in Table 5",
+   "quote": null
+  },
+  {
+   "work": "PixelSNAIL",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Table 1",
+   "quote": null
+  },
+  {
+   "work": "GPT-2",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "transformer architecture",
+   "quote": null
+  },
+  {
+   "work": "BigGAN",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Table 4",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "Our approach uses a convolutional VQGAN to learn a codebook of context-rich visual parts, whose composition is subsequently modeled with an autoregressive transformer architecture.",
+   "page": 3,
+   "why": "Two-stage pipeline in one picture"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Sliding attention window.",
+   "page": 5,
+   "why": "How megapixel sampling works"
+  },
+  {
+   "figure": "Fig 11",
+   "caption": "Trade-off between negative log-likelihood and reconstruction error.",
+   "page": 15,
+   "why": "Why compression f has a sweet spot"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 7",
+   "snippet": "lambda = grad_GL[Lrec] / (grad_GL[LGAN] + delta), delta = 1e-6",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Table cells are flattened by text extraction; row alignment read by position. No embedded instructions found."
+ ]
+}

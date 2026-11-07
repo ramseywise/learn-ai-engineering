@@ -1,0 +1,417 @@
+{
+ "schema": 1,
+ "key": "https://doi.org/10.18653/v1/d13-1170",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/socher-2013-recursive-deep-models-semantic-compositionality.pdf",
+ "bib": {
+  "title": "Recursive Deep Models for Semantic Compositionality Over a Sentiment Treebank",
+  "authors": [
+   "Richard Socher",
+   "Alex Perelygin",
+   "Jean Y. Wu",
+   "Jason Chuang",
+   "Christopher D. Manning",
+   "Andrew Y. Ng",
+   "Christopher Potts"
+  ],
+  "first_author": "Socher",
+  "year": 2013,
+  "venue": "Proceedings of EMNLP 2013, pages 1631-1642",
+  "arxiv": null,
+  "doi": "10.18653/v1/d13-1170"
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 42404,
+  "chars_total": 42404,
+  "engine": "pymupdf",
+  "skipped": "Supplementary material (dataset collection details) is referenced but not in the PDF."
+ },
+ "type": "empirical",
+ "question": "Can a richer phrase-level sentiment resource plus a tensor-based recursive composition function capture compositional sentiment effects such as negation better than bag-of-words and earlier recursive models?",
+ "hypothesis": "A single, more powerful multiplicative (tensor) composition function with a fixed number of parameters composes meaning more accurately than many input-specific ones (MV-RNN) or a plain RNN.",
+ "contributions": [
+  "Stanford Sentiment Treebank: fine-grained sentiment labels for 215,154 phrases in parse trees of 11,855 sentences",
+  "Recursive Neural Tensor Network (RNTN)",
+  "Analyses of negation, contrastive conjunction and most positive/negative phrases"
+ ],
+ "method": {
+  "summary": "Movie-review sentences from Pang and Lee were parsed, every phrase was labeled by Mechanical Turk workers on a slider, and recursive neural models (RNN, MV-RNN, RNTN) were trained with a softmax at every tree node. Hyperparameters were cross-validated on the dev set.",
+  "task": "Sentiment classification (5-class fine-grained and binary) at every node of a parse tree",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Stanford Sentiment Treebank",
+    "role": "both",
+    "size": "11,855 sentences, 215,154 phrases, each annotated by 3 human judges",
+    "split": "train 8544 / dev 1101 / test 2210 sentences; positive/negative-only: 6920/872/1821 sentences (neutral filtered, about 20% of data)",
+    "source": "Pang and Lee (2005) rottentomatoes.com excerpts (10,662 sentences, half positive, half negative); parsed with Stanford parser; labelled on Amazon Mechanical Turk",
+    "preprocessing": "Lowercased text mapped back to original capitalized text; leftover HTML tags and non-English sentences deleted; parser splits about 1,100 snippets into multiple sentences; 25-value slider merged into 5 classes"
+   }
+  ],
+  "models": [
+   {
+    "name": "RNTN",
+    "role": "proposed",
+    "params": null,
+    "architecture": "Recursive tensor network, p=f([b;c]^T V[1:d] [b;c] + W[b;c]), shared across nodes, softmax per node, f=tanh",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": "inferred: word vector size d between 25 and 35 (best range for all models)",
+    "heads": null,
+    "context": "variable-length phrase via binary parse tree",
+    "other": {
+     "word_vectors": "random U(-r,r), r=0.0001, trained jointly",
+     "tensor": "V in R^{2d x 2d x d}"
+    }
+   },
+   {
+    "name": "RNN",
+    "role": "baseline",
+    "params": null,
+    "architecture": "p=tanh(W[b;c]), W in R^{d x 2d}; no reconstruction loss",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "MV-RNN",
+    "role": "baseline",
+    "params": "orders of magnitude more parameters than other models (not stated numerically)",
+    "architecture": "vector and matrix per word; matrices initialized as d x d identity plus Gaussian noise",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "NB, SVM, BiNB, VecAvg",
+    "role": "baseline",
+    "params": null,
+    "architecture": "bag of words NB; SVM; bag of bigrams NB; average of neural word vectors",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "Cross-entropy summed over all tree nodes plus L2 penalty lambda*||theta||^2, theta=(V,W,Ws,L)",
+   "optimizer": "AdaGrad",
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "between 20 and 30 (best range, cross-validated)",
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "L2 weight regularization, strength cross-validated (value not stated)",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": "converges in less than 3 hours to a local optimum; best dev performance usually after 3 - 5 hours",
+   "seeds": null,
+   "other": {
+    "tuning": "dev set cross-validation over regularization, word vector size, learning rate, minibatch size",
+    "nonlinearity": "no nonlinearity dropped accuracy by over 5%; tanh used in all experiments"
+   }
+  },
+  "inference": {
+   "decoding": "argmax of softmax at each node",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Accuracy (5-class fine-grained, all nodes and root)",
+     "definition": "fraction of nodes (or sentence roots) with correct class",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Accuracy (binary positive/negative, all nodes and root)",
+     "definition": "as above with neutral sentences removed",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Negation reversal accuracy",
+     "definition": "Negated positive: correct sentiment inversion; negated negative: increase in positive activation",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "X but Y accuracy",
+     "definition": "correct only if X, Y and the lowest node dominating 'but' and Y all have correct sentiment (strict, X and Y differ)",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "NB",
+    "SVM",
+    "BiNB",
+    "VecAvg",
+    "RNN",
+    "MV-RNN"
+   ],
+   "protocol": "Single test split; no seeds, runs or significance tests stated."
+  },
+  "availability": {
+   "code": "http://nlp.stanford.edu/sentiment (training and testing code, live demo)",
+   "weights": null,
+   "data": "http://nlp.stanford.edu/sentiment (treebank and splits)"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "eval.metrics",
+    "quote": "Table 1: Accuracy for ﬁne grained (5-class) and binary",
+    "where": "Table 1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "RNTN gets 85.4% on full-sentence binary sentiment, up from the previous best under 80%",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 85.4,
+   "unit": "%",
+   "baseline_value": 80,
+   "n": null,
+   "setup": "SST test set, binary, root (sentence) level",
+   "quote": null,
+   "table": "Table 1, row RNTN, column Positive/Negative Root",
+   "note": "Text: previous state of the art below 80%",
+   "where": "Sec 5.2; abstract"
+  },
+  {
+   "claim": "RNTN 5-class fine-grained accuracy over all phrases",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 80.7,
+   "unit": "%",
+   "baseline_value": 71.0,
+   "n": null,
+   "setup": "SST test, all nodes, 5-class; abstract says +9.7% over bag-of-features baselines",
+   "quote": null,
+   "table": "Table 1, row RNTN, column Fine-grained All",
+   "note": "Best bag-of-features baseline BiNB is 71.0; VecAvg 73.3 is higher",
+   "where": "Abstract; Table 1"
+  },
+  {
+   "claim": "RNTN fine-grained accuracy at sentence root",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 45.7,
+   "unit": "%",
+   "baseline_value": 44.4,
+   "n": null,
+   "setup": "SST test, 5-class, root",
+   "quote": null,
+   "table": "Table 1, row RNTN, column Fine-grained Root",
+   "note": "baseline is MV-RNN 44.4",
+   "where": "Table 1"
+  },
+  {
+   "claim": "RNTN binary accuracy over all nodes",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 87.6,
+   "unit": "%",
+   "baseline_value": 86.8,
+   "n": null,
+   "setup": "SST test, binary, all nodes",
+   "quote": null,
+   "table": "Table 1, row RNTN, column Positive/Negative All",
+   "note": "baseline is MV-RNN 86.8",
+   "where": "Table 1"
+  },
+  {
+   "claim": "NB fine-grained accuracy at sentence root is about 41%",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 41.0,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "NB on SST test, 5-class root",
+   "quote": null,
+   "table": "Table 1, row NB, column Fine-grained Root",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "RNTN correctly reverses sentiment on negated positive sentences",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 71.4,
+   "unit": "%",
+   "baseline_value": 19.0,
+   "n": 21,
+   "setup": "21 positive sentences and their negations",
+   "quote": null,
+   "table": "Table 2, row RNTN, column Negated Positive",
+   "note": "baseline biNB 19.0; MV-RNN 52.4; RNN 33.3",
+   "where": "Table 2"
+  },
+  {
+   "claim": "RNTN increases positive activation on negated negative sentences",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 81.8,
+   "unit": "%",
+   "baseline_value": 27.3,
+   "n": null,
+   "setup": "Negated negative sentences",
+   "quote": null,
+   "table": "Table 2, row RNTN, column Negated Negative",
+   "note": "Text says over 81%; table 81.8. biNB 27.3, MV-RNN 54.6, RNN 45.5",
+   "where": "Table 2"
+  },
+  {
+   "claim": "RNTN on strict X but Y cases",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 41,
+   "unit": "%",
+   "baseline_value": 27,
+   "n": 131,
+   "setup": "131 test sentences with X but Y, X and Y of different sentiment",
+   "quote": "the RNTN obtains an accuracy of 41% compared to",
+   "table": null,
+   "note": "MV-RNN 37, RNN 36, biNB 27",
+   "where": "Sec 5.3"
+  }
+ ],
+ "limits": [
+  "Models are trained and tested on one corpus (movie review sentences) with one split; no seeds, variance or significance tests reported.",
+  "Needs parse trees and phrase-level labels; negation test sets are tiny (21 positive sentences, 131 X-but-Y cases).",
+  "Learning rate, regularization value and exact parameter counts are not stated; dataset collection details are in unseen supplementary material.",
+  "Fine-grained root accuracy remains under 46%; neutral class is hard.",
+  "Dated: recursive parse-tree models have been superseded by sequence and transformer models; SST remains an evaluation set."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Fine-grained sentiment classification",
+   "definition": "5-class classification into very negative, negative, neutral, positive, very positive for phrases of all lengths",
+   "where": "Sec 3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Pang and Lee 2005, Seeing stars",
+   "year": 2005,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "source of 10,662 review sentences",
+   "quote": null
+  },
+  {
+   "work": "Socher et al. 2011b, Semi-supervised recursive autoencoders",
+   "year": 2011,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "RNN baseline, same composition function without reconstruction loss",
+   "quote": null
+  },
+  {
+   "work": "Socher et al. 2012, Semantic compositionality through recursive matrix-vector spaces",
+   "year": 2012,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "MV-RNN",
+   "quote": null
+  },
+  {
+   "work": "Duchi et al. 2011, AdaGrad",
+   "year": 2011,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "optimizer",
+   "quote": null
+  },
+  {
+   "work": "Klein and Manning 2003, Stanford parser",
+   "year": 2003,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "parse trees",
+   "quote": null
+  },
+  {
+   "work": "Goller and Kuchler 1996, backprop through structure",
+   "year": 1996,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "training algorithm basis",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Example of the Recursive Neural Tensor Network accurately predicting 5 sentiment classes at every node of a parse tree and capturing the negation and its scope",
+   "page": 1,
+   "why": "Shows node-level labels on a tree"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Accuracy for fine grained (5-class) and binary predictions at the sentence level (root) and for all nodes",
+   "page": 6,
+   "why": "Main results"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "The labeling interface",
+   "page": 3,
+   "why": "Annotation protocol with 25-value slider"
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 4.3",
+   "snippet": "p1 = f([b;c]^T V[1:d] [b;c] + W [b;c])",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Figure text is garbled in extraction (Fig 6, 8, 10 axes); curve values not read.",
+  "Table 1 column mapping inferred from cell order and the abstract (RNTN 80.7 all-nodes fine-grained, 85.4 binary root)."
+ ]
+}

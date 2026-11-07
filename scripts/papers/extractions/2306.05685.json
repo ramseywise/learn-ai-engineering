@@ -1,0 +1,679 @@
+{
+ "schema": 1,
+ "key": "2306.05685",
+ "pdf": "generative-ai/05-RL/sources/zheng-2023-judging-llm-as-judge-mt.pdf",
+ "bib": {
+  "title": "Judging LLM-as-a-Judge with MT-Bench and Chatbot Arena",
+  "authors": [
+   "Lianmin Zheng",
+   "Wei-Lin Chiang",
+   "Ying Sheng",
+   "Siyuan Zhuang",
+   "Zhanghao Wu",
+   "Yonghao Zhuang",
+   "Zi Lin",
+   "Zhuohan Li",
+   "Dacheng Li",
+   "Eric P. Xing",
+   "Hao Zhang",
+   "Joseph E. Gonzalez",
+   "Ion Stoica"
+  ],
+  "first_author": "Zheng",
+  "year": 2023,
+  "venue": "NeurIPS 2023 Track on Datasets and Benchmarks (arXiv v4, 24 Dec 2023)",
+  "arxiv": "2306.05685",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 87509,
+  "chars_total": 87509,
+  "engine": "pymupdf",
+  "skipped": "Reference list skimmed; appendix B case-study chat transcripts (Figs 11-16) skimmed, not read line by line."
+ },
+ "type": "benchmark",
+ "question": "Can strong LLMs act as judges that match human preferences when evaluating open-ended, multi-turn chat assistants, and what biases limit them?",
+ "hypothesis": "Strong LLMs such as GPT-4, being RLHF-trained, already align with humans, so their judgments can match human-human agreement once position, verbosity and reasoning limits are mitigated.",
+ "contributions": [
+  "A systematic study of LLM-as-a-judge",
+  "Human preference datasets with high-quality questions and diverse user interactions from MT-bench and Chatbot Arena (80 MT-bench questions, 3K expert votes, 30K conversations with human preferences)"
+ ],
+ "method": {
+  "summary": "Builds MT-bench (80 two-turn questions, 8 categories) and Chatbot Arena (crowdsourced anonymous battles), collects human votes, and measures agreement of GPT-4, GPT-3.5 and Claude-v1 judges (pairwise, single-answer, reference-guided) with humans. Probes position, verbosity and self-enhancement biases and math grading, and evaluates Vicuna/LLaMA/Alpaca variants with MMLU, TruthfulQA and MT-bench.",
+  "task": "LLM-as-a-judge evaluation of chat assistants against human preference",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "MT-bench",
+    "role": "eval",
+    "size": "80 questions (8 categories x 10 two-turn questions); about 3K expert votes",
+    "split": null,
+    "source": "Manually designed by the authors; categories writing, roleplay, extraction, reasoning, math, coding, knowledge I (STEM), knowledge II (humanities/social science)",
+    "preprocessing": "Answers generated for all 80 questions by 6 models; each of 58 expert labelers judged at least 20 random multi-turn questions"
+   },
+   {
+    "name": "Chatbot Arena",
+    "role": "eval",
+    "size": "about 30K votes after one month; 3K single-turn votes randomly sampled for agreement",
+    "split": null,
+    "source": "Crowdsourced anonymous battles, 2114 unique IPs in the 3K sample; users accepted terms allowing release",
+    "preprocessing": "PII to be cleaned and toxic conversations tagged with OpenAI moderation API before release"
+   },
+   {
+    "name": "ShareGPT conversations (Vicuna training data)",
+    "role": "train",
+    "size": "125K conversations after cleaning; All 370M tokens / 257K sequences; Single 184M tokens / 257K; Selected 4.8M tokens / 3K sequences",
+    "split": null,
+    "source": "ShareGPT.com public API",
+    "preprocessing": "HTML to markdown, drop low-quality samples, split long conversations to fit context; Selected = centroids of 3K clusters of sequences with at least 3 GPT-4 turns"
+   },
+   {
+    "name": "Arena votes for judge fine-tuning (Appendix F)",
+    "role": "train",
+    "size": "22K single-turn votes: 20K train, 2K validation",
+    "split": "20K/2K; tested on the same 3K Arena set as the main body",
+    "source": "Chatbot Arena, 15 models",
+    "preprocessing": "Three-way labels A, B, tie (tie includes both-bad)"
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT-4 (gpt-4-0314 in case studies)",
+    "role": "judge",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-3.5",
+    "role": "judge",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Claude-v1",
+    "role": "judge",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Vicuna-7B/13B",
+    "role": "proposed",
+    "params": "7B, 13B",
+    "architecture": "LLaMA fine-tuned",
+    "init_from": "LLaMA base",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "2048 (seq length)",
+    "other": {}
+   },
+   {
+    "name": "Vicuna-13B judge (Arena fine-tuned)",
+    "role": "judge",
+    "params": "13B",
+    "architecture": "3-way sequence classification",
+    "init_from": "Vicuna-13B",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "LLaMA-13B, Alpaca-13B, Koala-13B, Dolly-12B",
+    "role": "evaluated",
+    "params": "13B / 13B / 13B / 12B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "Vicuna: supervised fine-tuning on ShareGPT conversations (inferred: standard SFT, code built on Alpaca code with multi-turn handling). Judge: 3-way sequence classification (A, B, tie).",
+   "optimizer": null,
+   "lr": "2e-5 (Vicuna); 2e-5 maximum (judge)",
+   "lr_schedule": "cosine for the fine-tuned judge; not stated for Vicuna",
+   "warmup": null,
+   "batch_size": "128 (global)",
+   "steps": null,
+   "epochs": "3 (Vicuna), 5 for Selected; 3 for judge",
+   "tokens": "Vicuna-7B Selected 4.8M, Single 184M, All 370M training tokens (Table 8/14)",
+   "seq_len": "2048",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "8x A100 GPUs, SkyPilot managed spot instances, FlashAttention",
+   "compute": null,
+   "wall_clock": "longest single training run around 2 days",
+   "seeds": null,
+   "other": {
+    "judge_training_validation": "2K validation used to choose hyper-parameters"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": "0.7 when generating the two similar answers per first-turn question for the position-bias test; judge temperature not stated",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "Each question answered by 6 models (MT-bench); position test uses one pair of GPT-3.5 answers per first-turn question; swap-order judge called twice; number of judge runs/seeds not stated",
+   "prompting": "Zero-shot default; pairwise, single-answer (1-10), reference-guided and CoT variants; multi-turn shows full conversations in one prompt; few-shot (3 examples) tested but not default",
+   "retrieval": null,
+   "parameters": {
+    "swap_rule": "declare a win only when the answer is preferred in both orders, otherwise tie",
+    "few_shot_examples": "3 (A better, B better, tie), made with GPT-3.5 and Vicuna answers and GPT-4 judgments; makes API calls 4x more expensive",
+    "single_answer_scoring": "score each turn on scale of 10, average over 160 = 80x2 turns"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Agreement",
+     "definition": "probability that randomly selected (non-identical) individuals of each judge type agree on a randomly selected question; S1 counts ties and inconsistent as tie (random 33%), S2 non-tie only (random 50%)",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Consistency (position bias)",
+     "definition": "percentage of cases where a judge gives consistent results when swapping the order of two assistants",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Average win rate",
+     "definition": "average of win rates against all other players, with or without ties",
+     "unit": "fraction",
+     "higher_is_better": true
+    },
+    {
+     "name": "MT-bench score",
+     "definition": "GPT-4 single-answer score on 1-10 scale, averaged over 160 turns",
+     "unit": "points /10",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "human-human agreement",
+    "random judge",
+    "human-majority"
+   ],
+   "protocol": "58 expert human labelers (graduate students) on MT-bench; crowd votes on Arena; LLM judges evaluate all pairs; no seeds or significance tests stated."
+  },
+  "availability": {
+   "code": "https://github.com/lm-sys/FastChat/tree/main/fastchat/llm_judge",
+   "weights": null,
+   "data": "MT-bench questions, 3K expert votes, 30K conversations with human preferences, same repo"
+  },
+  "prompts": [
+   {
+    "purpose": "Default pairwise comparison",
+    "text": "[System]\nPlease act as an impartial judge and evaluate the quality of the responses provided by two AI assistants to the user question displayed below. You should choose the assistant that follows the user’s instructions and answers the user’s question better. Your evaluation should consider factors such as the helpfulness, relevance, accuracy, depth, creativity, and level of detail of their responses. Begin your evaluation by comparing the two responses and provide a short explanation. Avoid any position biases and ensure that the order in which the responses were presented does not influence your decision. Do not allow the length of the responses to influence your evaluation. Do not favor certain names of the assistants. Be as objective as possible. After providing your explanation, output your final verdict by strictly following this format: \"[[A]]\" if assistant A is better, \"[[B]]\" if assistant B is better, and \"[[C]]\" for a tie.\n[User Question]\n{question}\n[The Start of Assistant A’s Answer]\n{answer_a}\n[The End of Assistant A’s Answer]\n[The Start of Assistant B’s Answer]\n{answer_b}\n[The End of Assistant B’s Answer]",
+    "where": "Figure 5, Appendix A"
+   },
+   {
+    "purpose": "Default single-answer grading",
+    "text": "[System]\nPlease act as an impartial judge and evaluate the quality of the response provided by an AI assistant to the user question displayed below. Your evaluation should consider factors such as the helpfulness, relevance, accuracy, depth, creativity, and level of detail of the response. Begin your evaluation by providing a short explanation. Be as objective as possible. After providing your explanation, please rate the response on a scale of 1 to 10 by strictly following this format: \"[[rating]]\", for example: \"Rating: [[5]]\".\n[Question]\n{question}\n[The Start of Assistant’s Answer]\n{answer}\n[The End of Assistant’s Answer]",
+    "where": "Figure 6, Appendix A"
+   },
+   {
+    "purpose": "Chain-of-thought judge for math and reasoning",
+    "text": "You should independently solve the user question step-by-step first. Then compare both assistants’ answers with your answer. Identify and correct any mistakes. (rest as Figure 5; full text in Figure 7)",
+    "where": "Figure 7, Appendix A"
+   },
+   {
+    "purpose": "Reference-guided pairwise comparison",
+    "text": "You will be given a reference answer, assistant A’s answer, and assistant B’s answer. (full text in Figure 8; reference answer inserted as [The Start of Reference Answer] {answer_ref})",
+    "where": "Figure 8, Appendix A"
+   },
+   {
+    "purpose": "Multi-turn pairwise and reference-guided single-answer prompts",
+    "text": "<|The Start of Assistant A’s Conversation with User|> ### User: {question 1} ### Assistant A: {answer 1} ### User: {question 2} ### Assistant A: {answer 2} (full text Figures 9 and 10)",
+    "where": "Figures 9, 10, Appendix A"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training.lr",
+    "quote": "global batch size=128,",
+    "where": "Appendix E"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "GPT-4 pairwise judge agrees with human experts on non-tie MT-bench first-turn votes at 85%, above the 81% human-human agreement.",
+   "kind": "measured",
+   "source": null,
+   "metric": "agreement S2",
+   "value": "85",
+   "unit": "%",
+   "baseline_value": "81",
+   "n": "859 votes (G4-Pair vs human); 479 (human-human)",
+   "setup": "MT-bench, 6 models, 58 expert labelers, setup S2 non-tie votes, first turn, GPT-4 default zero-shot pairwise prompt",
+   "quote": "The agreement under setup S2 (w/o tie) between GPT-4 and humans reaches 85%, which is even higher than the agreement among humans (81%).",
+   "table": null,
+   "note": "Intro text cites this as Table 4, but the agreement table is Table 5.",
+   "where": "Section 4.2, Table 5"
+  },
+  {
+   "claim": "Under setup S1 (ties and inconsistent counted as ties), GPT-4 pairwise agrees with humans only 66%, vs 63% human-human.",
+   "kind": "measured",
+   "source": null,
+   "metric": "agreement S1",
+   "value": "66",
+   "unit": "%",
+   "baseline_value": "63",
+   "n": "1343 votes",
+   "setup": "MT-bench first turn, random baseline 33%",
+   "quote": null,
+   "table": "Table 5(a), row G4-Pair, column S1 Human (66%, 1343 votes); row Human, column S1 Human (63%, 721)",
+   "note": null,
+   "where": "Table 5a"
+  },
+  {
+   "claim": "Chatbot Arena: GPT-4 pairwise agrees with crowd humans at 87% on non-tie votes (64% S1).",
+   "kind": "measured",
+   "source": null,
+   "metric": "agreement S2",
+   "value": "87",
+   "unit": "%",
+   "baseline_value": "50",
+   "n": "1944 votes",
+   "setup": "3K single-turn Arena votes, 2114 unique IPs, S2 non-tie",
+   "quote": null,
+   "table": "Table 6, row G4, column S2 H (87%, 1944)",
+   "note": null,
+   "where": "Table 6"
+  },
+  {
+   "claim": "Humans deemed GPT-4's judgments reasonable in 75% of disagreement cases and changed their choice in 34%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "human acceptance of GPT-4 judgment",
+   "value": "75",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MT-bench data collection, shown only when human differed from GPT-4",
+   "quote": "humans deemed GPT-4’s judgments reasonable in 75% of cases and are even willing to change their choices in 34% of cases.",
+   "table": null,
+   "note": null,
+   "where": "Section 4.2"
+  },
+  {
+   "claim": "Position bias is strong: only GPT-4 is consistent in more than 60% of swapped cases; Claude-v1 is 23.8% consistent with default prompt.",
+   "kind": "measured",
+   "source": null,
+   "metric": "consistency",
+   "value": "65.0",
+   "unit": "%",
+   "baseline_value": "23.8 (Claude-v1), 46.2 (GPT-3.5)",
+   "n": "inferred: 80 pairs from the 80 MT-bench first-turn questions",
+   "setup": "Two near-identical GPT-3.5 answers (temperature 0.7) per first-turn MT-bench question, default prompt",
+   "quote": null,
+   "table": "Table 2, row GPT-4 default, column Consistency",
+   "note": "Claude-v1 biased toward first 75.0%, GPT-3.5 50.0%, GPT-4 30.0%; Claude-v1 shows a name bias toward 'Assistant A' under the rename prompt.",
+   "where": "Table 2"
+  },
+  {
+   "claim": "Verbosity attack ('repetitive list') fools Claude-v1 and GPT-3.5 91.3% of the time but GPT-4 only 8.7%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "failure rate",
+   "value": "8.7",
+   "unit": "%",
+   "baseline_value": "91.3",
+   "n": "23 answers",
+   "setup": "23 MT-bench answers with numbered lists, list rephrased by GPT-4 and prepended; success if judge prefers the padded answer",
+   "quote": null,
+   "table": "Table 3, column GPT-4, row Failure rate",
+   "note": "Claude-v1 and GPT-3.5 both 91.3%.",
+   "where": "Table 3"
+  },
+  {
+   "claim": "Reference-guided judging cuts GPT-4 math grading failure from 14/20 (default) to 3/20.",
+   "kind": "measured",
+   "source": null,
+   "metric": "failure rate",
+   "value": "3/20",
+   "unit": "count of 20",
+   "baseline_value": "14/20",
+   "n": "10 math questions x 2 position orders = 20",
+   "setup": "LLaMA-13B vs Vicuna-13B on 10 math questions with positions swapped; failure = GPT-4 says an incorrect answer is correct",
+   "quote": "In Table 4, we see a significant improvement in failure rate (from 70% to 15%) over the default prompt.",
+   "table": "Table 4, columns Default 14/20, CoT 6/20, Reference 3/20",
+   "note": null,
+   "where": "Section 3.4, Table 4"
+  },
+  {
+   "claim": "Few-shot judge raises GPT-4 consistency from 65.0% to 77.5% but makes API calls 4x more expensive.",
+   "kind": "measured",
+   "source": null,
+   "metric": "consistency",
+   "value": "77.5",
+   "unit": "%",
+   "baseline_value": "65.0",
+   "n": null,
+   "setup": "Position-bias benchmark, 3 few-shot examples",
+   "quote": "the few-shot judge can significantly increase the consistency of GPT-4 from 65.0% to 77.5%.",
+   "table": null,
+   "note": "Few-shot GPT-4 agreement with humans on MT-bench is similar to zero-shot (Appendix D.2).",
+   "where": "Section 3.4, Table 12"
+  },
+  {
+   "claim": "Self-enhancement bias is suggestive but not established: GPT-4 favours itself with a 10% higher win rate, Claude-v1 25%, GPT-3.5 does not favour itself.",
+   "kind": "measured",
+   "source": null,
+   "metric": "win rate vs human",
+   "value": "10",
+   "unit": "% higher win rate",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Six models on MT-bench, win rate w/o tie, judges vs humans (Fig 3b)",
+   "quote": "GPT-4 favors itself with a 10% higher win rate; Claude-v1 favors itself with a 25% higher win rate.",
+   "table": null,
+   "note": "Authors state their study cannot determine whether self-enhancement bias exists.",
+   "where": "Section 3.3"
+  },
+  {
+   "claim": "Agreement between GPT-4 and humans rises with the win-rate gap between the two models, from 70% to nearly 100%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "agreement",
+   "value": "70",
+   "unit": "% (lower end)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Per model pair, non-tie votes, MT-bench (Fig 2)",
+   "quote": "the agreement between GPT-4 and human progressively increases in line with the performance disparity of the model pairs (i.e., larger win rate difference), from 70% to nearly 100%.",
+   "table": null,
+   "note": null,
+   "where": "Section 4.2, Fig 2"
+  },
+  {
+   "claim": "Position bias is larger for close model pairs and nearly vanishes for distant pairs (GPT-3.5 vs LLaMA-13B 98.8% consistent).",
+   "kind": "measured",
+   "source": null,
+   "metric": "consistency",
+   "value": "98.8",
+   "unit": "%",
+   "baseline_value": "67.5 (GPT-3.5 vs Claude-V1)",
+   "n": null,
+   "setup": "GPT-4 default prompt on three model pairs",
+   "quote": null,
+   "table": "Table 11, row GPT-3.5 vs LLaMA-13B, column Consistent",
+   "note": null,
+   "where": "Appendix D.1, Table 11"
+  },
+  {
+   "claim": "Position bias is highest on writing, STEM and humanities and lowest on math and coding (86.0% consistent).",
+   "kind": "measured",
+   "source": null,
+   "metric": "consistency",
+   "value": "36.0",
+   "unit": "%",
+   "baseline_value": "86.0 (math)",
+   "n": null,
+   "setup": "GPT-4 default prompt by MT-bench category",
+   "quote": null,
+   "table": "Table 10, row humanities, column Consistent",
+   "note": null,
+   "where": "Table 10"
+  },
+  {
+   "claim": "Fine-tuning Vicuna-13B on Arena votes as a 3-way classifier lifts position consistency from 16.2% to 65.0% and gives 85.5% non-tie agreement (56.8% with ties).",
+   "kind": "measured",
+   "source": null,
+   "metric": "non-tie accuracy",
+   "value": "85.5",
+   "unit": "%",
+   "baseline_value": "87 (GPT-4)",
+   "n": "3K Arena test set",
+   "setup": "20K train votes, 3 epochs, cosine schedule, 2e-5 max lr; 2K validation",
+   "quote": "It achieves 56.8% when including all three labels, and 85.5% when excluding tie predictions and labels",
+   "table": null,
+   "note": "Zero-shot Vicuna-13B has consistency 11.2-16.2% and error rate 22.5-78.8%.",
+   "where": "Appendix F.2"
+  },
+  {
+   "claim": "Vicuna-13B (all) scores 6.39 on MT-bench vs GPT-3.5 7.94 and GPT-4 8.99, and 52.1 on MMLU 5-shot vs 70.0 and 86.4.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MT-Bench score (GPT-4)",
+   "value": "6.39",
+   "unit": "points /10",
+   "baseline_value": "8.99 (GPT-4)",
+   "n": "160 turn scores",
+   "setup": "GPT-4 single-answer grading, average over 80 questions x 2 turns",
+   "quote": null,
+   "table": "Table 8, row Vicuna-13B (all), column MT-Bench Score (GPT-4)",
+   "note": "LLaMA-13B 2.61, Alpaca-13B 4.53, Vicuna-7B (selected) 5.95.",
+   "where": "Table 8"
+  },
+  {
+   "claim": "A 3K-conversation (4.8M-token) SFT set teaches GPT-4-preferred style (MT-bench 5.95) without improving MMLU (37.3 vs LLaMA-7B 35.2), so one benchmark cannot determine model quality.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MT-Bench score",
+   "value": "5.95",
+   "unit": "points /10",
+   "baseline_value": "2.74 (LLaMA-7B)",
+   "n": null,
+   "setup": "Vicuna-7B (selected), 5 epochs",
+   "quote": null,
+   "table": "Table 8, row Vicuna-7B (selected), column MT-Bench Score (GPT-4)",
+   "note": null,
+   "where": "Section 5, Table 8"
+  },
+  {
+   "claim": "GPT-4 single-answer grading matches pairwise GPT-4 and humans well (84-85% S2 with humans) while being more scalable, but gives more ties.",
+   "kind": "measured",
+   "source": null,
+   "metric": "agreement S2",
+   "value": "85",
+   "unit": "%",
+   "baseline_value": null,
+   "n": "739 votes (first turn)",
+   "setup": "MT-bench first turn, G4-Single vs Human, S2",
+   "quote": null,
+   "table": "Table 5(a), row G4-Single, column S2 Human (85%, 739)",
+   "note": "Second turn: 84%, 776 votes.",
+   "where": "Table 5"
+  }
+ ],
+ "limits": [
+  "Authors: the paper emphasizes helpfulness but largely neglects safety (honesty and harmlessness).",
+  "Authors: multiple helpfulness dimensions (accuracy, relevance, creativity) are collapsed into a single metric.",
+  "Authors: due to limited data and small differences, the study cannot determine whether self-enhancement bias exists; controlled study is hard.",
+  "Authors: high consistency from few-shot examples may not imply accuracy, and few-shot may introduce new biases.",
+  "Authors: case studies use gpt-4-0314 and may not be reproducible with future GPT-4 versions.",
+  "Position-bias, verbosity (23 answers) and math (10 questions, 20 trials) tests are small samples; no confidence intervals or significance tests reported.",
+  "Agreement is for GPT-4 only at 80+%; Claude-v1 and GPT-3.5 are weaker, and the reported rates depend on tie handling (S1 66% vs S2 85%).",
+  "MT-bench has only 80 questions; judge model versions and decoding temperature for judging are not stated.",
+  "Closed-source judges (GPT-4, Claude-v1, GPT-3.5) have since been superseded; results are from early-2023 models."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "LLM-as-a-judge",
+   "definition": "using strong LLMs, such as GPT-4, as a surrogate for humans to evaluate chat assistants",
+   "where": "Section 1"
+  },
+  {
+   "term": "Position bias",
+   "definition": "when an LLM exhibits a propensity to favor certain positions over others",
+   "where": "Section 3.3"
+  },
+  {
+   "term": "Verbosity bias",
+   "definition": "when an LLM judge favors longer, verbose responses, even if they are not as clear, high-quality, or accurate as shorter alternatives",
+   "where": "Section 3.3"
+  },
+  {
+   "term": "Self-enhancement bias",
+   "definition": "the effect that LLM judges may favor the answers generated by themselves",
+   "where": "Section 3.3"
+  },
+  {
+   "term": "Agreement",
+   "definition": "the probability of randomly selected (but not identical) individuals of each type agreeing on a randomly selected question",
+   "where": "Section 4.1, Appendix D.3"
+  },
+  {
+   "term": "Reference-guided grading",
+   "definition": "the judge first answers independently, then that answer is shown as a reference answer in the judge prompt",
+   "where": "Section 3.4"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Vicuna blog post (Chiang et al., 2023)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "This paper is an extended version of the earlier blog post",
+   "quote": "This paper is an extended version of our earlier blog post [8]."
+  },
+  {
+   "work": "LLaMA (Touvron et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "Base for Vicuna; LLaMA-13B evaluated",
+   "quote": null
+  },
+  {
+   "work": "Alpaca (Taori et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Alpaca-7B/13B and its dataset compared; training code built on Alpaca code",
+   "quote": null
+  },
+  {
+   "work": "MMLU (Hendrycks et al.)",
+   "year": 2020,
+   "arxiv": "2009.03300",
+   "relation": "uses-data",
+   "note": "Standardized benchmark compared with MT-bench",
+   "quote": null
+  },
+  {
+   "work": "TruthfulQA (Lin et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "MC1 evaluation in Table 8",
+   "quote": null
+  },
+  {
+   "work": "Chain-of-thought (Wei et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "CoT judge prompt",
+   "quote": null
+  },
+  {
+   "work": "ShareGPT",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Vicuna fine-tuning data",
+   "quote": null
+  },
+  {
+   "work": "Training a helpful and harmless assistant with RLHF (Bai et al.)",
+   "year": 2022,
+   "arxiv": "2204.05862",
+   "relation": "related",
+   "note": "Helpfulness and harmlessness framing",
+   "quote": null
+  },
+  {
+   "work": "AlpacaFarm (Dubois et al.)",
+   "year": 2023,
+   "arxiv": "2305.14387",
+   "relation": "related",
+   "note": "Concurrent work using LLM judges",
+   "quote": null
+  },
+  {
+   "work": "FlashAttention (Dao et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Memory optimization for Vicuna training",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Multi-turn dialogues between a user and two AI assistants LLaMA-13B (Assistant A) and Vicuna-13B (Assistant B) initiated by a question from the MMLU benchmark and a follow-up instruction. GPT-4 is then presented with the context to determine which assistant answers better.",
+   "page": 2,
+   "why": "Shows why base models score fine on MMLU yet lose open-ended judgments"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Agreement and win rate difference. Each point corresponds to a model pair and counts only the non-tie votes between the two models.",
+   "page": 8,
+   "why": "Agreement grows with the quality gap"
+  },
+  {
+   "figure": "Table 2",
+   "caption": "Position bias of different LLM judges.",
+   "page": 5,
+   "why": "Shows the swap-consistency numbers per judge and prompt"
+  },
+  {
+   "figure": "Table 5",
+   "caption": "Agreement between two types of judges on MT-bench.",
+   "page": 8,
+   "why": "Core agreement result with S1/S2 setups"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Intro cites agreement as Table 4 but it is Table 5.",
+  "Table cells for agreement/votes are flattened by text extraction; values were matched by position.",
+  "Case-study chat transcripts (Appendix B) skimmed only."
+ ]
+}

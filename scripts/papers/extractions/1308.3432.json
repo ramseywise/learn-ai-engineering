@@ -1,0 +1,400 @@
+{
+ "schema": 1,
+ "key": "1308.3432",
+ "pdf": "ai-engineering/07-inference-engineering/sources/bengio-2013-estimating-or-propagating-gradients-through.pdf",
+ "bib": {
+  "title": "Estimating or Propagating Gradients Through Stochastic Neurons for Conditional Computation",
+  "authors": [
+   "Yoshua Bengio",
+   "Nicholas Léonard",
+   "Aaron Courville"
+  ],
+  "first_author": "Bengio",
+  "year": 2013,
+  "venue": "preprint",
+  "arxiv": "1308.3432",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 40153,
+  "chars_total": 40153,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "How can the gradient of a loss be estimated or propagated through stochastic or hard-threshold neurons, so that sparse gating units can be trained for conditional computation?",
+ "hypothesis": "Noise-injected and estimator-based stochastic units can be trained well enough to gate computation, giving sparse activations at little cost in accuracy.",
+ "contributions": [
+  "Compare four families of gradient estimators for stochastic/non-smooth neurons",
+  "Introduce the STS (stochastic times smooth) unit",
+  "Prove an unbiased minimum-variance estimator for stochastic binary neurons (REINFORCE special case)",
+  "Name and test the straight-through estimator",
+  "Small-scale conditional computation experiment on MNIST"
+ ],
+ "method": {
+  "summary": "Four estimators (noisy rectifier, STS, unbiased stochastic-binary-neuron estimator, straight-through) are used to train a gater network that multiplies a 2000-unit linear expert layer, with 10% target sparsity, on MNIST. Compared with rectifier and sigmoid baselines.",
+  "task": "MNIST classification with a conditional computation (gated) hidden layer",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "MNIST",
+    "role": "both",
+    "size": null,
+    "split": null,
+    "source": "vectorized 28x28 images, 10 classes",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Gater + expert conditional layer",
+    "role": "proposed",
+    "params": null,
+    "architecture": "4 affine transforms; gater: input -> 400 tanh hidden -> 2000 gating units; expert: linear 2000 hidden units; elementwise product; affine + softmax over 10 classes",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "4 affine transforms",
+    "hidden": "400 gater hidden, 2000 gater output, 2000 expert",
+    "heads": null,
+    "context": null,
+    "other": {
+     "gating nonlinearities": "Noisy Rectifier, STS, Stochastic Binary Neuron, Straight-through, non-noisy rectifier",
+     "target sparsity": "10% (about 200 of 2000 units)"
+    }
+   },
+   {
+    "name": "Baseline Sigmoid / Sigmoid+Noise",
+    "role": "baseline",
+    "params": null,
+    "architecture": "gater sigmoid output, tanh hidden, no sparsity constraint, 200 output units for gater and main part; Sigmoid+Noise adds Gaussian noise in training",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Baseline Rectifier",
+    "role": "baseline",
+    "params": null,
+    "architecture": "noisy rectifier with 0 noise, 10% sparsity",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "classification loss plus sparsity penalty: KL(s||p) with lambda for sigmoids (mini-batch mean activation, s=0.1), L1 with adaptive lambda for rectifiers",
+   "optimizer": "inferred: SGD with momentum (momentum used for STS; little/no effect for ST and Noisy Rectifier, negative for SBN)",
+   "lr": "0.1 throughout; 0.001 for the SBN gater",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "inferred: 32 (sparsity statistics computed over mini-batch of 32 propagations)",
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "max-norm 2 on incoming weights (best in most cases); sparsity penalty; Beta noise at sigmoid input for STS",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "noisy rectifier noise": "Gaussian, std 1.0",
+    "STS Beta noise": "beta ~40.1 best, tried 1.1, 2.6, 5.1, 10.1, 20.1, 40.1, 80.1, 160.1; alpha set so mode = 0.1; mean replaces noise at test",
+    "lambda adaptation": "increase when effective sparsity > s+0.01, reduce when < s-0.01",
+    "test-time": "deterministic; threshold optimised to give 10% ones"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "validation/test classification error",
+     "definition": "error on MNIST valid/test; stochastic models evaluated with deterministic counterpart and optimised threshold",
+     "unit": "%",
+     "higher_is_better": false
+    },
+    {
+     "name": "training criterion",
+     "definition": "train column of Figure 2 table",
+     "unit": "criterion value",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "Baseline Rectifier",
+    "Baseline Sigmoid",
+    "Baseline Sigmoid+Noise"
+   ],
+   "protocol": "single reported run per method; no seeds or variance given; MNIST split sizes not stated"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": null
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "results table",
+    "quote": "Experiments are performed with a gater of 400 hidden units and 2000 output units.",
+    "where": "Section 5"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Straight-through gater gave the best validation error among all gaters.",
+   "kind": "measured",
+   "source": null,
+   "metric": "validation error",
+   "value": "1.42",
+   "unit": "%",
+   "baseline_value": "1.66 (Baseline Rectifier)",
+   "n": null,
+   "setup": "MNIST, 400-hidden/2000-output gater, 2000 expert units, 10% sparsity",
+   "quote": null,
+   "table": "Figure 2 table, row Straight-through, column valid",
+   "note": "Table text-extracted; column order train, valid, test",
+   "where": "Fig 2"
+  },
+  {
+   "claim": "Straight-through gater gave the best test error.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test error",
+   "value": "1.39",
+   "unit": "%",
+   "baseline_value": "1.60 (Baseline Rectifier)",
+   "n": null,
+   "setup": "same as above",
+   "quote": "Another surprise is the good performance of the straight-through units, which provided the best validation and test error, and are very simple to implement.",
+   "table": "Figure 2 table, row Straight-through, column test",
+   "note": null,
+   "where": "Fig 2, Conclusion"
+  },
+  {
+   "claim": "Noisy rectifier gater test error.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test error",
+   "value": "1.87",
+   "unit": "%",
+   "baseline_value": "1.60 (Baseline Rectifier)",
+   "n": null,
+   "setup": "same",
+   "quote": null,
+   "table": "Figure 2 table, row Noisy Rectifier, column test",
+   "note": "Valid 1.52 vs baseline rectifier 1.66; test is worse than baseline though the text says noisy gater gave better results",
+   "where": "Fig 2"
+  },
+  {
+   "claim": "Stochastic binary neuron test error (unbiased estimator, no backprop into gater).",
+   "kind": "measured",
+   "source": null,
+   "metric": "test error",
+   "value": "1.89",
+   "unit": "%",
+   "baseline_value": "1.92 (Baseline Sigmoid)",
+   "n": null,
+   "setup": "same",
+   "quote": null,
+   "table": "Figure 2 table, row Stoch. Binary Neuron, column test",
+   "note": null,
+   "where": "Fig 2"
+  },
+  {
+   "claim": "STS unit test error.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test error",
+   "value": "1.96",
+   "unit": "%",
+   "baseline_value": "1.92 (Baseline Sigmoid)",
+   "n": null,
+   "setup": "same",
+   "quote": null,
+   "table": "Figure 2 table, row Smooth Times Stoch., column test",
+   "note": null,
+   "where": "Fig 2"
+  },
+  {
+   "claim": "Gater with 10% sparsity cuts main-path cost from O(N^2) to O(alpha N^2), gater costs O(MN).",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "bottleneck size M << N",
+   "quote": "the gater's bottleneck layer has size M ≪N, then computing the gater output is O(MN), which can reduce the main path computations from O(N 2) to O(αN 2).",
+   "table": null,
+   "note": "theoretical; no measured speedup",
+   "where": "Section 5"
+  },
+  {
+   "claim": "Unbiased estimator for stochastic binary neurons: (h - sigm(a)) * L, with centred minimum-variance baseline.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Theorem 1, Corollary 1 (proof)",
+   "quote": null,
+   "table": null,
+   "note": "theory",
+   "where": "Section 3"
+  },
+  {
+   "claim": "Straight-through estimator is biased but has the right sign for a single layer; works better without multiplying by sigmoid derivative.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Section 4",
+   "quote": "It is clearly a biased estimator, but when considering a single layer of neurons, it has the right sign (this is not guaranteed anymore when back-propagating through more hidden layers).",
+   "table": null,
+   "note": null,
+   "where": "Section 4"
+  }
+ ],
+ "limits": [
+  "Small-scale: one MNIST architecture, one conditional layer, stacking not attempted",
+  "No actual runtime savings measured, only expected from sparsity",
+  "Single-run numbers, no variance, MNIST splits and epochs not given",
+  "STE is a heuristic, biased; sign guarantee fails across multiple layers",
+  "Noisy rectifier test error (1.87) is worse than non-noisy baseline rectifier (1.60) despite the conclusion's claim"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "straight-through estimator",
+   "definition": "back-propagate through the hard threshold function as if it had been the identity function",
+   "where": "Section 4"
+  },
+  {
+   "term": "STS unit",
+   "definition": "Stochastic Times Smooth: p=sigm(a), b~Binomial(sqrt p), h=b/sqrt p",
+   "where": "Section 2.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Williams 1992 REINFORCE",
+   "year": 1992,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "unbiased estimator is a special case",
+   "quote": null
+  },
+  {
+   "work": "Hinton 2012 Coursera lecture 15b",
+   "year": 2012,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "source of straight-through idea",
+   "quote": null
+  },
+  {
+   "work": "Spall 1992 SPSA",
+   "year": 1992,
+   "arxiv": null,
+   "relation": "related",
+   "note": "perturbation estimator, biased unless perturbations small",
+   "quote": null
+  },
+  {
+   "work": "Bengio 2013 Deep learning of representations: looking forward",
+   "year": 2013,
+   "arxiv": "1305.0445",
+   "relation": "extends",
+   "note": "conditional computation motivation",
+   "quote": null
+  },
+  {
+   "work": "Salakhutdinov & Hinton 2009 Semantic hashing",
+   "year": 2009,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "noise before sigmoid",
+   "quote": null
+  },
+  {
+   "work": "Hinton et al. 2012 dropout",
+   "year": 2012,
+   "arxiv": "1207.0580",
+   "relation": "related",
+   "note": "noise injection",
+   "quote": null
+  },
+  {
+   "work": "MNIST",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "evaluation data",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Figure 1",
+   "caption": "Conditional computation architecture: gater path on the left produces sparse outputs hi which are multiplied elementwise by the expert outputs, hidden units Hi.",
+   "page": 8,
+   "why": "shows gater/expert structure"
+  },
+  {
+   "figure": "Figure 2",
+   "caption": "Left: Learning curves for the various stochastic approaches applied to the MNIST dataset. Right: Comparison of training criteria and valid/test classification error (%) for stochastic (top) and baseline (bottom) gaters.",
+   "page": 8,
+   "why": "all results"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 13",
+   "snippet": "g_i = dL/dh_i",
+   "verbatim": true
+  },
+  {
+   "where": "Theorem 1",
+   "snippet": "ĝ_i = (h_i − sigm(a_i)) × L",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Figure 2 table extracted as flat text; columns train/valid/test inferred from header order",
+  "Table quotes for Fig 2 values rely on numbers appearing in text"
+ ]
+}

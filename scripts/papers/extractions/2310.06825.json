@@ -1,0 +1,71 @@
+{
+ "schema": 1,
+ "key": "2310.06825",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/jiang-2023-mistral-7b.pdf",
+ "bib": {"title": "Mistral 7B", "authors": ["Albert Q. Jiang","Alexandre Sablayrolles","Arthur Mensch","Chris Bamford","Devendra Singh Chaplot","Diego de las Casas","Florian Bressand","Gianna Lengyel","Guillaume Lample","Lucile Saulnier","Lélio Renard Lavaud","Marie-Anne Lachaux","Pierre Stock","Teven Le Scao","Thibaut Lavril","Thomas Wang","Timothée Lacroix","William El Sayed"], "first_author": "Jiang", "year": 2023, "venue": "preprint", "arxiv": "2310.06825", "doi": null},
+ "read": {"by": "source-reader", "at": "2026-11-07", "chars_read": 24837, "chars_total": 24837, "engine": "pymupdf", "skipped": null},
+ "type": "system",
+ "question": "Can a 7B model with efficient attention match or beat larger open models (Llama 2 13B, Llama 1 34B) at lower inference cost?",
+ "hypothesis": "A carefully designed small model can deliver high performance with efficient inference; models may compress knowledge more than previously thought.",
+ "contributions": ["Mistral 7B base model using grouped-query attention and sliding window attention with rolling buffer cache and pre-fill/chunking", "Mistral 7B - Instruct, fine-tuned on public instruction data", "Guardrail system prompt and self-reflection content moderation demonstration", "Release under Apache 2.0 with reference implementation"],
+ "method": {
+  "summary": "A decoder transformer with GQA (8 KV heads) and sliding window attention (W=4096) with a rolling buffer KV cache. Base model is compared with Llama models on a re-run benchmark suite; an instruct variant is fine-tuned on public Hugging Face instruction datasets.",
+  "task": "next-token language modelling; instruction following",
+  "trains": true,
+  "datasets": [
+   {"name": "pretraining data", "role": "pretrain", "size": null, "split": null, "source": null, "preprocessing": null},
+   {"name": "public instruction datasets on Hugging Face (Instruct model)", "role": "train", "size": null, "split": null, "source": "Hugging Face repository; no proprietary data", "preprocessing": null},
+   {"name": "commonsense, knowledge, reading, math, code, aggregate benchmarks", "role": "eval", "size": null, "split": null, "source": "Hellaswag, Winogrande, PIQA, SIQA, OpenbookQA, ARC-E/C, CommonsenseQA, NQ, TriviaQA, BoolQ, QuAC, GSM8K, MATH, HumanEval, MBPP, MMLU, BBH, AGI Eval", "preprocessing": "MBPP uses hand-verified subset; TriviaQA without Wikipedia contexts"},
+   {"name": "175 unsafe prompts", "role": "eval", "size": "175 prompts", "split": null, "source": null, "preprocessing": null},
+   {"name": "manually curated balanced adversarial/standard prompt set (moderation)", "role": "eval", "size": null, "split": null, "source": null, "preprocessing": null}
+  ],
+  "models": [
+   {"name": "Mistral 7B", "role": "proposed", "params": "7B", "architecture": "transformer with GQA and sliding window attention", "init_from": null, "tokenizer": null, "vocab": "32000", "layers": "32", "hidden": "dim 4096; hidden_dim 14336", "heads": "32 (n_kv_heads 8, head_dim 128)", "context": "8192 (context_len); window_size 4096", "other": {"theoretical attention span": "approx 131K tokens at last layer with W=4096"}},
+   {"name": "Mistral 7B - Instruct", "role": "proposed", "params": "7B", "architecture": "as base", "init_from": "Mistral 7B", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "Llama 2 7B / 13B, Llama 1 34B, Code-Llama 7B", "role": "baseline", "params": "7B/13B/34B/7B", "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}}
+  ],
+  "training": {"objective": null, "optimizer": null, "lr": null, "lr_schedule": null, "warmup": null, "batch_size": null, "steps": null, "epochs": null, "tokens": null, "seq_len": null, "precision": null, "weight_decay": null, "dropout": null, "regularisation": null, "hardware": null, "compute": null, "wall_clock": null, "seeds": null, "other": {"note": "no pretraining or fine-tuning hyperparameters, data or token count disclosed"}},
+  "inference": {"decoding": null, "temperature": null, "top_p": null, "max_tokens": null, "samples": "MT-Bench score is mean over 10 iterations; GSM8K maj@8, MATH maj@4", "prompting": "Commonsense 0-shot; world knowledge 5-shot; reading comprehension 0-shot; GSM8K 8-shot; MATH 4-shot; HumanEval 0-shot; MBPP 3-shot; MMLU 5-shot; BBH 3-shot; AGI Eval 3-5-shot English multiple choice", "retrieval": null, "parameters": {"sliding window W": "4096", "rolling buffer cache size": "W; position i stored at i mod W", "prefill chunk size": "window size suggested"}, "other": {}},
+  "eval": {"metrics": [{"name": "benchmark accuracy / pass rate", "definition": "as per each benchmark, re-run with authors' own pipeline", "unit": "%", "higher_is_better": true}, {"name": "MT-Bench", "definition": "official MT Bench score", "unit": "score", "higher_is_better": true}, {"name": "Chatbot Arena ELO", "definition": "ELO rating", "unit": "ELO", "higher_is_better": true}, {"name": "precision/recall of self-reflection moderation", "definition": "acceptable prompts treated as positives", "unit": "%", "higher_is_better": true}], "baselines": ["Llama 2 7B", "Llama 2 13B", "Llama 1 34B", "Code-Llama 7B", "Llama 2 13B Chat", "Vicuna", "WizardLM", "Alpaca"], "protocol": "All Llama baselines re-evaluated with the authors' pipeline; human preference on llmboxing.com; MT-Bench mean over 10 iterations"},
+  "availability": {"code": "https://github.com/mistralai/mistral-src", "weights": "Apache 2.0 release (Hugging Face)", "data": null},
+  "prompts": [{"purpose": "guardrail system prompt", "text": "Always assist with care, respect, and truth. Respond with utmost utility yet securely. Avoid harmful, unethical, prejudiced, or negative content. Ensure replies promote fairness and positivity.", "where": "Section 5.1"}],
+  "evidence": []
+ },
+ "results": [
+  {"claim": "Mistral 7B scores higher MMLU than Llama 2 13B", "kind": "measured", "source": null, "metric": "MMLU 5-shot", "value": "60.1", "unit": "%", "baseline_value": "55.6", "n": null, "setup": "Pretrained models, authors' re-run pipeline", "table": "Table 2, row Mistral 7B, column MMLU (Llama 2 13B 55.6%)", "note": null, "where": "Table 2"},
+  {"claim": "On NQ Mistral 7B is slightly below Llama 2 13B despite the caption saying it outperforms on all metrics", "kind": "measured", "source": null, "metric": "NaturalQuestions 5-shot", "value": "28.8", "unit": "%", "baseline_value": "29.0", "n": null, "setup": "Table 2 pretrained models", "table": "Table 2, row Mistral 7B, column NQ (28.8%) vs LLaMA 2 13B (29.0%)", "note": "Caption: 'Mistral 7B outperforms Llama 2 13B on all metrics'; Fig 5 caption says 'on par' on knowledge", "where": "Table 2"},
+  {"claim": "Mistral 7B on HumanEval", "kind": "measured", "source": null, "metric": "HumanEval 0-shot", "value": "30.5", "unit": "%", "baseline_value": "18.9", "n": null, "setup": "vs Llama 2 13B; Code-Llama 7B 31.1", "table": "Table 2, row Mistral 7B, column HumanEval", "note": null, "where": "Table 2"},
+  {"claim": "Mistral 7B on GSM8K (maj@8)", "kind": "measured", "source": null, "metric": "GSM8K 8-shot maj@8", "value": "52.2", "unit": "%", "baseline_value": "34.3", "n": null, "setup": "vs Llama 2 13B", "table": "Table 2, row Mistral 7B, column GSM8K", "note": null, "where": "Table 2"},
+  {"claim": "Equivalent Llama 2 size more than 3x on reasoning, comprehension, MMLU", "kind": "measured", "source": null, "metric": "equivalent model size ratio", "value": "3x", "unit": "x", "baseline_value": null, "n": null, "setup": "Llama 2 family equivalent sizes, Fig 5", "quote": "Mistral 7B mirrored performance that one might expect from a Llama 2 model with more than 3x its size", "note": null, "where": "Section 3"},
+  {"claim": "On knowledge benchmarks compression factor is only 1.9x", "kind": "measured", "source": null, "metric": "equivalent model size ratio", "value": "1.9x", "unit": "x", "baseline_value": null, "n": null, "setup": "Knowledge benchmarks", "quote": "Mistral 7B’s performance achieves a lower compression rate of 1.9x", "note": null, "where": "Section 3"},
+  {"claim": "Rolling buffer cache cuts cache memory 8x at 32k tokens, no supporting numbers", "kind": "claim", "source": null, "metric": "cache memory", "value": "8x", "unit": "x", "baseline_value": null, "n": null, "setup": "Sequence length 32k, W=4096", "quote": "On a sequence length of 32k tokens, this reduces the cache memory usage by 8x, without impacting the model quality.", "note": null, "where": "Section 2"},
+  {"claim": "2x speed over vanilla attention at 16K sequence", "kind": "measured", "source": null, "metric": "speedup", "value": "2x", "unit": "x", "baseline_value": null, "n": null, "setup": "Sequence length 16K, W=4096, modified FlashAttention and xFormers", "quote": "yield a 2x\nspeed improvement over a vanilla attention baseline", "note": null, "where": "Section 2"},
+  {"claim": "Mistral 7B Instruct MT-Bench vs Llama 2 13B Chat", "kind": "measured", "source": null, "metric": "MT-Bench", "value": "6.84", "unit": "score", "baseline_value": "6.65", "n": null, "setup": "No system prompt; Chatbot Arena ELO 1031 vs 1012", "table": "Table 3, row Mistral 7B Instruct, column MT Bench", "note": null, "where": "Table 3"},
+  {"claim": "Mistral system prompt lowers MT-Bench to 6.58; Llama 2 prompt to 6.38", "kind": "measured", "source": null, "metric": "MT-Bench", "value": "6.58", "unit": "score", "baseline_value": "6.84", "n": 10, "setup": "Mistral 7B Instruct, mean over 10 iterations", "table": "Table 4, row Mistral system prompt", "note": null, "where": "Table 4"},
+  {"claim": "Human preference vs Llama 2 13B", "kind": "measured", "source": null, "metric": "preference count", "value": "5020", "unit": "votes", "baseline_value": "4143", "n": null, "setup": "llmboxing.com as of October 6, 2023 (Mistral 7B outputs vs Llama 2 13B)", "quote": "preferred 5020 times, compared to 4143\ntimes for Llama 2 13B", "note": null, "where": "Section 4"},
+  {"claim": "Guardrail prompt declines all harmful questions", "kind": "measured", "source": null, "metric": "decline rate", "value": "100", "unit": "%", "baseline_value": null, "n": 175, "setup": "175 unsafe prompts, recommended system prompt, Instruct model", "quote": "the model properly\ndeclines to answer 100% of the harmful questions", "note": null, "where": "Section 5.1"},
+  {"claim": "Self-reflection moderation precision", "kind": "measured", "source": null, "metric": "precision", "value": "99.4", "unit": "%", "baseline_value": null, "n": null, "setup": "Curated balanced adversarial and standard prompts; acceptable = positive; recall 95.6%", "quote": "a precision of 99.4% for a recall of 95.6%", "note": null, "where": "Section 5.2"}
+ ],
+ "limits": ["Pretraining data, token count, hyperparameters and compute undisclosed", "Instruct model called a simple, preliminary demonstration; fine-tuning data and recipe unspecified", "Knowledge capacity limited by parameter count (authors' explanation, untested)", "Rolling-cache 8x memory claim has no quality numbers", "Evaluation differs from Llama 2 paper (MBPP hand-verified subset; TriviaQA without Wikipedia contexts)", "Moderation dataset is not described or released"],
+ "practices": [],
+ "terms": [{"term": "sliding window attention", "definition": "each token attends to at most W tokens from the previous layer; after k layers information moves up to k x W tokens", "where": "Section 2, Fig 1"}, {"term": "rolling buffer cache", "definition": "fixed-size cache of W; keys and values for timestep i stored at position i mod W", "where": "Section 2"}],
+ "lineage": [
+  {"work": "GQA", "year": 2023, "arxiv": "2305.13245", "relation": "uses-method", "note": "grouped-query attention", "quote": null},
+  {"work": "Longformer", "year": 2020, "arxiv": "2004.05150", "relation": "uses-method", "note": "sliding window attention", "quote": null},
+  {"work": "Generating long sequences with sparse transformers", "year": 2019, "arxiv": "1904.10509", "relation": "uses-method", "note": "sliding window attention", "quote": null},
+  {"work": "Llama 2", "year": 2023, "arxiv": "2307.09288", "relation": "baseline", "note": "main comparison", "quote": null},
+  {"work": "LLaMA", "year": 2023, "arxiv": "2302.13971", "relation": "baseline", "note": "Llama 1 34B comparison", "quote": null},
+  {"work": "Code Llama", "year": 2023, "arxiv": "2308.12950", "relation": "baseline", "note": "code comparison", "quote": null},
+  {"work": "FlashAttention", "year": 2022, "arxiv": "2205.14135", "relation": "uses-method", "note": "modified for SWA", "quote": null},
+  {"work": "Chinchilla (Hoffmann et al.)", "year": 2022, "arxiv": "2203.15556", "relation": "related", "note": "2-D scaling laws the conclusion argues are incomplete", "quote": null},
+  {"work": "vLLM", "year": 2023, "arxiv": null, "relation": "related", "note": "deployment", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 1", "caption": "Sliding Window Attention", "page": 2, "why": "shows information propagating k x W tokens through layers"},
+  {"figure": "Fig 2", "caption": "Rolling buffer cache", "page": 3, "why": "i mod W overwrite illustrated"},
+  {"figure": "Table 2", "caption": "Comparison of Mistral 7B with Llama", "page": 4, "why": "full benchmark numbers"},
+  {"figure": "Fig 5", "caption": "Results on MMLU, commonsense reasoning, world knowledge and reading comprehension for Mistral 7B and Llama 2 (7B/13B/70B)", "page": 5, "why": "basis for equivalent-size claims"}
+ ],
+ "code": [],
+ "problems": ["Table 2 text extraction column-misaligned; values read by row order (Mistral MBPP 47.5, MATH 13.1)", "Table 2 caption says Mistral beats Llama 2 13B on all metrics but NQ is 28.8 vs 29.0"]
+}

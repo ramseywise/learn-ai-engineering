@@ -1,0 +1,109 @@
+{
+ "schema": 1,
+ "key": "2005.08100",
+ "pdf": "ai-engineering/08-multimodal-engineering/sources/gulati-2020-conformer.pdf",
+ "bib": {"title": "Conformer: Convolution-augmented Transformer for Speech Recognition", "authors": ["Anmol Gulati","James Qin","Chung-Cheng Chiu","Niki Parmar","Yu Zhang","Jiahui Yu","Wei Han","Shibo Wang","Zhengdong Zhang","Yonghui Wu","Ruoming Pang"], "first_author": "Gulati", "year": 2020, "venue": "preprint", "arxiv": "2005.08100", "doi": null},
+ "read": {"by": "source-reader", "at": "2026-11-07", "chars_read": 27956, "chars_total": 27956, "engine": "pymupdf", "skipped": null},
+ "type": "empirical",
+ "question": "How can convolution and self-attention be combined in an ASR encoder to model local and global dependencies parameter-efficiently?",
+ "hypothesis": "Both global and local interactions are important for parameter efficiency, so combining self-attention and convolution in one block beats either alone.",
+ "contributions": ["Conformer block: macaron half-step FFN pair sandwiching MHSA (relative positional encoding) and a convolution module", "State-of-the-art LibriSpeech WER at three sizes (10M, 30M, 118M)", "Ablations of convolution, macaron FFN, activation, attention heads, kernel size, and conv placement"],
+ "method": {
+  "summary": "A Conformer encoder (conv subsampling then N Conformer blocks) with a single-LSTM-layer transducer decoder is trained on LibriSpeech 960h in three sizes and compared with published ASR models, with ablations done on the large model.",
+  "task": "end-to-end speech recognition (RNN-T / transducer)",
+  "trains": true,
+  "datasets": [
+   {"name": "LibriSpeech", "role": "both", "size": "970 hours labeled speech; additional 800M word-token text-only corpus for LM", "split": "dev-clean, dev-other, test-clean, test-other", "source": "Panayotov et al. 2015", "preprocessing": "80-channel filterbanks, 25ms window, 10ms stride; SpecAugment F=27, ten time masks, max time-mask ratio pS=0.05"}
+  ],
+  "models": [
+   {"name": "Conformer(S)", "role": "proposed", "params": "10.3M", "architecture": "Conformer encoder + 1-layer LSTM decoder", "init_from": null, "tokenizer": null, "vocab": null, "layers": "16 encoder", "hidden": "144 encoder dim; decoder dim 320", "heads": "4", "context": null, "other": {"conv_kernel": 32, "decoder_layers": 1}},
+   {"name": "Conformer(M)", "role": "proposed", "params": "30.7M", "architecture": "Conformer encoder + 1-layer LSTM decoder", "init_from": null, "tokenizer": null, "vocab": null, "layers": "16 encoder", "hidden": "256 encoder dim; decoder dim 640", "heads": "4", "context": null, "other": {"conv_kernel": 32, "decoder_layers": 1}},
+   {"name": "Conformer(L)", "role": "proposed", "params": "118.8M", "architecture": "Conformer encoder + 1-layer LSTM decoder", "init_from": null, "tokenizer": null, "vocab": null, "layers": "17 encoder", "hidden": "512 encoder dim; decoder dim 640", "heads": "8", "context": null, "other": {"conv_kernel": 32, "decoder_layers": 1}},
+   {"name": "LSTM LM", "role": "base", "params": null, "architecture": "3-layer LSTM, width 4096, shallow fusion", "init_from": null, "tokenizer": "1k WPM built from LibriSpeech 960h", "vocab": "1k", "layers": "3", "hidden": "4096", "heads": null, "context": null, "other": {"dev perplexity": "63.9 word-level", "trained on": "LibriSpeech LM corpus plus 960h transcripts"}},
+   {"name": "ContextNet, Transformer Transducer, QuartzNet, LAS Transformer, LSTM, Hybrid Transformer", "role": "baseline", "params": "see Table 2", "architecture": "various", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}}
+  ],
+  "training": {
+   "objective": "inferred: transducer loss (model is called Conformer Transducer; loss not named)",
+   "optimizer": "Adam, beta1=0.9, beta2=0.98, eps=1e-9",
+   "lr": "peak 0.05/sqrt(d), d = encoder model dimension",
+   "lr_schedule": "transformer learning rate schedule",
+   "warmup": "10k steps",
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": "l2 regularization 1e-6 on all trainable weights",
+   "dropout": "0.1 in each residual unit",
+   "regularisation": "variational noise; SpecAugment; l2 1e-6",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {"toolkit": "Lingvo", "tokenizer for acoustic model": null}
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single run per model; no seeds or variance reported",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {"LM shallow fusion weight lambda": "tuned on dev set via grid search; value not given"},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [{"name": "WER", "definition": "word error rate on LibriSpeech, results rounded to 1 decimal", "unit": "%", "higher_is_better": false}],
+   "baselines": ["ContextNet S/M/L", "Transformer Transducer (139M)", "QuartzNet", "LAS Transformer", "LSTM LAS", "Hybrid Transformer"],
+   "protocol": "WER on test-clean/test-other with and without external LM; ablations on large model without LM; single run, no significance test"
+  },
+  "availability": {"code": null, "weights": null, "data": "LibriSpeech (public)"},
+  "prompts": [],
+  "evidence": [
+   {"field": "results", "quote": "All our evaluation results round up to 1 digit after decimal point.", "where": "3.3"}
+  ]
+ },
+ "results": [
+  {"claim": "Conformer(L) reaches 2.1% test-clean WER without LM.", "kind": "measured", "source": null, "metric": "WER test-clean", "value": "2.1", "unit": "%", "baseline_value": null, "n": null, "setup": "LibriSpeech, Conformer(L) 118.8M, no LM", "quote": "our model achieves WER of 2.1%/4.3% without using a language model and 1.9%/3.9% with an external language model on test/testother", "table": null, "note": null, "where": "Abstract"},
+  {"claim": "Conformer(L) reaches 3.9% test-other WER with external LM.", "kind": "measured", "source": null, "metric": "WER test-other", "value": "3.9", "unit": "%", "baseline_value": "4.1 (ContextNet(L), with LM)", "n": null, "setup": "LibriSpeech, Conformer(L) 118.8M, 3-layer LSTM LM shallow fusion", "quote": "achieves a new state-of-the-art performance at 1.9%/3.9% for test/testother", "table": null, "note": null, "where": "Conclusion"},
+  {"claim": "Conformer(S), 10M params, gets 2.7%/6.3% test/testother without LM.", "kind": "measured", "source": null, "metric": "WER test-clean/test-other", "value": "2.7/6.3", "unit": "%", "baseline_value": "2.9/7.0 (ContextNet(S), 10.8M)", "n": null, "setup": "LibriSpeech, no LM", "quote": "with a small model of only 10M parameters", "table": "Table 2, row Conformer(S), columns WER Without LM testclean/testother (2.7, 6.3)", "note": "Abstract writes 2.7%/6.3% for the small model; Table 2 shows 2.1/5.0 with LM.", "where": "Abstract, Table 2"},
+  {"claim": "Conformer(M), 30.7M params, beats the 139M Transformer Transducer (no LM 2.3/5.0 vs 2.4/5.6).", "kind": "measured", "source": null, "metric": "WER test-clean/test-other", "value": "2.3/5.0", "unit": "%", "baseline_value": "2.4/5.6", "n": null, "setup": "LibriSpeech, no LM", "quote": "competitive results of 2.3/5.0", "table": "Table 2, row Conformer(M) and Transformer [7], columns Without LM", "note": null, "where": "3.3, Table 2"},
+  {"claim": "15% relative improvement on testother with LM over Transformer Transducer.", "kind": "measured", "source": null, "metric": "relative WER reduction test-other", "value": "15", "unit": "% relative", "baseline_value": null, "n": null, "setup": "with external LM, Conformer(L) vs Transformer Transducer (4.6 -> 3.9)", "quote": "outperforming the previous best published Transformer Transducer [7] by 15% relative improve-", "table": null, "note": null, "where": "Intro"},
+  {"claim": "Removing the convolution block hurts test-other from 4.3 to 4.9 (no LM), the largest single loss except relative pos. emb.", "kind": "measured", "source": null, "metric": "WER test-other", "value": "4.9", "unit": "%", "baseline_value": "4.3", "n": null, "setup": "large model, no LM", "quote": "convolution sub-block is the most", "table": "Table 3, row - Convolution Block, column test other", "note": null, "where": "3.4.1"},
+  {"claim": "Removing relative positional embedding gives test-other 5.6 vs 4.3.", "kind": "measured", "source": null, "metric": "WER test-other", "value": "5.6", "unit": "%", "baseline_value": "4.3", "n": null, "setup": "large model, no LM", "quote": null, "table": "Table 3, row - Relative Pos. Emb., column test other", "note": null, "where": "Table 3"},
+  {"claim": "Replacing macaron FFN pair with a single FFN: test-other 5.0 vs 4.3 in Table 3, but 4.5 in Table 5.", "kind": "measured", "source": null, "metric": "WER test-other", "value": "5.0", "unit": "%", "baseline_value": "4.3", "n": null, "setup": "large model, no LM; Table 3 removes macaron FFN while keeping parameters fixed", "quote": null, "table": "Table 3, row - Macaron FFN, column test other", "note": "Table 5 Single FFN gives 4.5 test-other, differing from Table 3 (5.0); setups differ and are not explained.", "where": "Tables 3, 5"},
+  {"claim": "Increasing attention heads up to 16 improves accuracy, especially on dev-other; kernel size 32 best on dev WER.", "kind": "measured", "source": null, "metric": "dev-other WER", "value": "4.3", "unit": "%", "baseline_value": "4.6 (4 heads)", "n": null, "setup": "large model, no LM, 16 heads", "quote": "We ﬁnd that increasing attention heads up to 16", "table": "Table 6, row 16 heads, column dev other", "note": "Test-other at 16 heads is 4.4, worse than 8 heads (4.3). Kernel size: 32 gives dev clean 1.83 (Table 7).", "where": "3.4.4, 3.4.5"}
+ ],
+ "limits": [
+  "Only LibriSpeech (read audiobook speech); no noisy, accented or conversational evaluation.",
+  "Single runs; no seeds, variance or significance tests; WER rounded to one decimal so many ablation gaps are 0.1.",
+  "Batch size, steps, hardware, compute and LM weight lambda are not stated; no code or weights released.",
+  "Ablations run only on the large model; Table 3 and Table 5 give different single-FFN numbers.",
+  "Evaluated as full-context offline model; streaming not studied."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "Conformer block", "definition": "Two feed-forward modules sandwiching the multi-headed self-attention module and the convolution module, with half-step residuals and a final layernorm", "where": "Sec 2.4"}
+ ],
+ "lineage": [
+  {"work": "Transformer Transducer (Zhang et al. 2020)", "year": 2020, "arxiv": null, "relation": "baseline", "note": "139M-param prior SOTA; Conformer(M) outperforms it", "quote": null},
+  {"work": "ContextNet (Han et al. 2020)", "year": 2020, "arxiv": "2005.03191", "relation": "baseline", "note": "Contemporary convolutional model at similar sizes", "quote": null},
+  {"work": "QuartzNet (Kriman et al. 2019)", "year": 2019, "arxiv": "1910.10261", "relation": "baseline", "note": "CTC conv baseline", "quote": null},
+  {"work": "Lite Transformer with long-short range attention (Wu et al. 2020)", "year": 2020, "arxiv": "2004.11886", "relation": "extends", "note": "Inspiration for conv module gating and parallel-branch ablation", "quote": null},
+  {"work": "Macaron-Net (Lu et al. 2019)", "year": 2019, "arxiv": "1906.02762", "relation": "uses-method", "note": "Half-step FFN pair", "quote": null},
+  {"work": "Transformer-XL (Dai et al. 2019)", "year": 2019, "arxiv": null, "relation": "uses-method", "note": "Relative sinusoidal positional encoding", "quote": null},
+  {"work": "SpecAugment (Park et al. 2019)", "year": 2019, "arxiv": "1904.08779", "relation": "uses-method", "note": "Data augmentation", "quote": null},
+  {"work": "LibriSpeech (Panayotov et al. 2015)", "year": 2015, "arxiv": null, "relation": "uses-data", "note": "Train and eval data", "quote": null},
+  {"work": "Attention is all you need (Vaswani et al. 2017)", "year": 2017, "arxiv": null, "relation": "extends", "note": "Transformer blocks replaced by Conformer blocks; LR schedule", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Figure 1", "caption": "Conformer encoder model architecture.", "page": 1, "why": "Shows the block layout: half-FFN, MHSA, conv, half-FFN, layernorm"},
+  {"figure": "Table 2", "caption": "Comparison of Conformer with recent published models.", "page": 3, "why": "All WER and parameter comparisons in one place"}
+ ],
+ "code": [
+  {"where": "Eq. 1", "snippet": "x~ = x + 1/2 FFN(x); x' = x~ + MHSA(x~); x'' = x' + Conv(x'); y = Layernorm(x'' + 1/2 FFN(x''))", "verbatim": false}
+ ],
+ "problems": ["Figure text interleaved in cached text; no embedded instructions found."]
+}

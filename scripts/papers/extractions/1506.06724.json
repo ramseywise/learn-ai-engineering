@@ -1,0 +1,462 @@
+{
+ "schema": 1,
+ "key": "1506.06724",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/zhu-2015-aligning-books-movies.pdf",
+ "bib": {
+  "title": "Aligning Books and Movies: Towards Story-like Visual Explanations by Watching Movies and Reading Books",
+  "authors": [
+   "Yukun Zhu",
+   "Ryan Kiros",
+   "Richard Zemel",
+   "Ruslan Salakhutdinov",
+   "Raquel Urtasun",
+   "Antonio Torralba",
+   "Sanja Fidler"
+  ],
+  "first_author": "Zhu",
+  "year": 2015,
+  "venue": "preprint",
+  "arxiv": "1506.06724",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 60152,
+  "chars_total": 60152,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can books be aligned to their movie releases at shot and sentence level using learned sentence and video-text embeddings?",
+ "hypothesis": "Learned neural similarities combined by a context-aware CNN and a CRF timeline prior align movies and books better than hand-designed measures or a uniform timeline.",
+ "contributions": [
+  "MovieBook dataset: 11 movie/book pairs with 2,070 annotated correspondences",
+  "BookCorpus: 11,038 books for training a sentence embedding",
+  "Context-aware CNN combining multiple similarity measures plus a CRF for global alignment",
+  "Applications: book retrieval, captioning movies and COCO images with book passages"
+ ],
+ "method": {
+  "summary": "A GRU encoder-decoder sentence embedding (skip-thought) is trained on BookCorpus; an LSTM/CNN video-text embedding is trained on DVS clips; nine similarity measures are stacked and fed to a 3-layer context CNN whose output is the unary term of a chain CRF. CNN and CRF are trained on one movie (Gone Girl) and tested on the other 10.",
+  "task": "movie/book alignment (shot-to-paragraph, subtitle-to-sentence); sentence embedding by unsupervised next/previous-sentence reconstruction",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "BookCorpus",
+    "role": "pretrain",
+    "size": "11,038 books; 74,004,228 sentences; 984,846,357 words; 1,316,420 unique words; mean 13 and median 11 words per sentence",
+    "split": "held-out books used for qualitative neighbours (no sizes given)",
+    "source": "free books from the web written by yet unpublished authors; only books with more than 20K words kept; 16 genres (Romance 2,865, Fantasy 1,479, Science fiction 786, Teen 430)",
+    "preprocessing": "books over 20K words only"
+   },
+   {
+    "name": "MovieBook",
+    "role": "both",
+    "size": "11 movie/book pairs; 85,238 book sentences; 2,070 annotated correspondences (1,449 dialog, 621 visual); 90 annotator hours",
+    "split": "train CNN and CRF on Gone Girl, test on remaining 10 movies",
+    "source": "movies with subtitle files and their books, collected by the authors",
+    "preprocessing": "books parsed into sentences, paragraphs (indentation) and chapters; subtitles into time-stamped sentences"
+   },
+   {
+    "name": "Movie Description dataset (DVS)",
+    "role": "train",
+    "size": "94 movies, 54,000 described clips",
+    "split": null,
+    "source": "Rohrbach et al. 2015",
+    "preprocessing": "names replaced by a someone token; clip = mean-pooled frame features (GoogLeNet and hybrid-CNN)"
+   }
+  ],
+  "models": [
+   {
+    "name": "Skip-thought sentence encoder (GRU)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "GRU encoder, two GRU decoders (previous and next sentence) sharing vocabulary matrix V",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "three consecutive sentences",
+    "other": {}
+   },
+   {
+    "name": "Video-text embedding",
+    "role": "proposed",
+    "params": null,
+    "architecture": "LSTM sentence encoder, linear map of mean-pooled CNN clip features, cosine score",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Context-aware CNN",
+    "role": "proposed",
+    "params": null,
+    "architecture": "3 conv layers with ReLU and dropout, sigmoid on top, over tensor S(i,j,m) with M=9 measures",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "3",
+    "hidden": null,
+    "heads": null,
+    "context": "fixed window I in subtitles and J in book (sizes not stated)",
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "Sentence model: sum of log-probabilities of previous and next sentences given encoder state. Video-text: bidirectional pairwise ranking loss with margin alpha. Context CNN: cross-entropy. CRF weights learned with latent variables (Schwing et al. 2012).",
+   "optimizer": "Adam for sentence model and CNN; SGD without momentum for video-text model",
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": "used in CNN, rate not stated",
+   "regularisation": "dropout in context CNN",
+   "hardware": null,
+   "compute": "video-text model watches 1,440 movies per day; sentence model reads 870 books per day",
+   "wall_clock": "per movie/book pair: CNN training 2h, CRF training 5h (Table 5)",
+   "seeds": null,
+   "other": {
+    "margin_alpha": "not stated",
+    "CRF_sigma2": "not stated",
+    "state_pruning": "states farther than 1/3 of book length from uniform alignment pruned"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "one run per movie, no seeds reported",
+   "prompting": null,
+   "retrieval": "CoCoBook: caption from Kiros et al. image-text model used as query; top 10 nearest sentences from a few hundred thousand BookCorpus sentences re-ranked by 1-gram precision of non-stop words; return best plus 2 sentences before and after",
+   "parameters": {
+    "M": "9 similarities: visual, sentence embedding, BLEU1-5, tf-idf, uniform prior",
+    "chain_CRF_exact_inference": "dynamic programming"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Recall",
+     "definition": "for shots with a GT correspondence, GT paragraph is recalled if prediction is at most 3 paragraphs away and shot at most 5 subtitle sentences away",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "AP",
+     "definition": "average precision from recall and precision at multiple alignment thresholds (noisier measure)",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "UNI uniform timeline",
+    "SVM linear combination of similarities as CRF unary",
+    "1-layer CNN with leave-one-feature-out ablations"
+   ],
+   "protocol": "train on Gone Girl, test on 10 other movies; precision not evaluated because ground truth is not exhaustive"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": null
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "datasets.BookCorpus.size",
+    "quote": null,
+    "where": "Table 2"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "CRF model reaches the highest mean recall over the 10 test movies",
+   "kind": "measured",
+   "source": null,
+   "metric": "Recall",
+   "value": 69.1,
+   "unit": "%",
+   "baseline_value": 3.88,
+   "n": null,
+   "setup": "MovieBook, train Gone Girl, test 10 movies, full model with CRF",
+   "quote": null,
+   "table": "Table 4, row Mean Recall, column CRF",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "Uniform timeline baseline mean recall",
+   "kind": "measured",
+   "source": null,
+   "metric": "Recall",
+   "value": 3.88,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MovieBook 10 test movies",
+   "quote": null,
+   "table": "Table 4, row Mean Recall, column UNI",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "Linear SVM combination mean recall",
+   "kind": "measured",
+   "source": null,
+   "metric": "Recall",
+   "value": 38.01,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MovieBook 10 test movies",
+   "quote": null,
+   "table": "Table 4, row Mean Recall, column SVM",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "3-layer CNN without CRF mean recall",
+   "kind": "measured",
+   "source": null,
+   "metric": "Recall",
+   "value": 66.77,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MovieBook 10 test movies",
+   "quote": null,
+   "table": "Table 4, row Mean Recall, column CNN-3",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "Mean AP of full CRF model",
+   "kind": "measured",
+   "source": null,
+   "metric": "AP",
+   "value": 23.17,
+   "unit": "%",
+   "baseline_value": 22.51,
+   "n": null,
+   "setup": "MovieBook 10 test movies",
+   "quote": null,
+   "table": "Table 4, row AP, column CRF",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "Sentence embedding (BOOK) feature helps recall by about 4%",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "leave-one-feature-out, 1-layer CNN",
+   "quote": "Our sentence embedding (BOOK) helps by 4%, while nois-",
+   "table": null,
+   "note": null,
+   "where": "5.1"
+  },
+  {
+   "claim": "CNN contextual model beats SVM baseline in recall",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "MovieBook",
+   "quote": "outperforms the SVM baseline by 30% in recall, and dou-",
+   "table": null,
+   "note": null,
+   "where": "5.1"
+  },
+  {
+   "claim": "BookCorpus has 11,038 books and about 985M words",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "11,038",
+   "unit": "books",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BookCorpus",
+   "quote": "we collected a corpus of 11,038 books",
+   "table": null,
+   "note": null,
+   "where": "Sec 3"
+  },
+  {
+   "claim": "BookCorpus word count",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "984,846,357",
+   "unit": "words",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BookCorpus",
+   "quote": null,
+   "table": "Table 2, column # of words",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Annotation effort: 90 hours for 2,070 correspondences",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "2,070",
+   "unit": "correspondences",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MovieBook, 11 pairs",
+   "quote": "spent 90 hours labeling 11 movie/book pairs,",
+   "table": null,
+   "note": null,
+   "where": "Sec 3"
+  },
+  {
+   "claim": "Book retrieval: correct book retrieved for each of 10 test movies",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "alignment energy of CRF, 10 test books",
+   "quote": "retrieves the correct book for each movie.",
+   "table": null,
+   "note": null,
+   "where": "5.3"
+  },
+  {
+   "claim": "Visual and scene feature extraction takes about 80% of run time",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "per movie/book pair",
+   "quote": "takes most of the time (about 80% of the total time).",
+   "table": null,
+   "note": null,
+   "where": "5.1"
+  }
+ ],
+ "limits": [
+  "Trained on a single movie (Gone Girl); test is 10 movies, one run, no variance reported.",
+  "Ground truth not exhaustive (about 200 correspondences per movie), so precision is not evaluated.",
+  "Paper says nothing on licensing, consent or duplicates of BookCorpus.",
+  "Many hyperparameters (lr, sizes, margins, window sizes) not stated; sentence model details deferred to Kiros et al. 2015.",
+  "CRF does not help for all movies (e.g. Green Mile, Harry Potter recall/AP lower than CNN-3 on AP)."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Skip-thought vectors",
+   "definition": "encode sentence s_i to a fixed vector and reconstruct s_(i-1) and s_(i+1)",
+   "where": "Sec 4.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Skip-Thought Vectors (Kiros et al.)",
+   "year": 2015,
+   "arxiv": "1506.06726",
+   "relation": "uses-method",
+   "note": "sentence embedding, described in detail there",
+   "quote": null
+  },
+  {
+   "work": "Unifying visual-semantic embeddings with multimodal neural language models (Kiros et al.)",
+   "year": 2014,
+   "arxiv": "1411.2539",
+   "relation": "extends",
+   "note": "image-sentence ranking extended to video",
+   "quote": null
+  },
+  {
+   "work": "A dataset for movie description (Rohrbach et al.)",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "DVS clips for video-text embedding",
+   "quote": null
+  },
+  {
+   "work": "Aligning plot synopses to videos (Tapaswi et al.)",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "related",
+   "note": "closest prior work",
+   "quote": null
+  },
+  {
+   "work": "Empirical evaluation of gated recurrent neural networks (Chung et al.)",
+   "year": 2014,
+   "arxiv": "1412.3555",
+   "relation": "uses-method",
+   "note": "GRU",
+   "quote": null
+  },
+  {
+   "work": "Adam (Kingma and Ba)",
+   "year": 2014,
+   "arxiv": "1412.6980",
+   "relation": "uses-method",
+   "note": "optimizer",
+   "quote": null
+  },
+  {
+   "work": "Efficient estimation of word representations in vector space (Mikolov et al.)",
+   "year": 2013,
+   "arxiv": "1301.3781",
+   "relation": "related",
+   "note": "skip-gram inspiration",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Table 2",
+   "caption": "Summary statistics of our BookCorpus dataset. We use this corpus to train the sentence embedding model.",
+   "page": 4,
+   "why": "Gives the corpus size figures."
+  },
+  {
+   "figure": "Table 4",
+   "caption": "Performance of our model for the movies in our dataset under different settings and metrics.",
+   "page": 7,
+   "why": "Ablation of features and CNN depth against baselines."
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Table 4 is flattened in the text; column order inferred as UNI, SVM, 1-layer CNN with all features, then leave-out BLEU, TF-IDF, BOOK, VIS, SCENE, PRIOR, CNN-3, CRF.",
+  "Extractor shows arXiv v1; ICCV 2015 venue not printed in PDF, so venue is preprint."
+ ]
+}

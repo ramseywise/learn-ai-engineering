@@ -1,19 +1,803 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2308.03688",
  "pdf": "generative-ai/08-eval/sources/liu-2023-agentbench.pdf",
  "bib": {
-  "title": "AgentBench: Evaluating LLMs as Agents",
-  "first_author": "Xiao Liu",
-  "year": "2023",
-  "venue": "ICLR 2024",
+  "title": "AGENTBENCH: EVALUATING LLMS AS AGENTS",
+  "authors": [
+   "Xiao Liu",
+   "Hao Yu",
+   "Hanchen Zhang",
+   "Yifan Xu",
+   "Xuanyu Lei",
+   "Hanyu Lai",
+   "Yu Gu",
+   "Hangliang Ding",
+   "Kaiwen Men",
+   "Kejuan Yang",
+   "Shudan Zhang",
+   "Xiang Deng",
+   "Aohan Zeng",
+   "Zhengxiao Du",
+   "Chenhui Zhang",
+   "Sheng Shen",
+   "Tianjun Zhang",
+   "Yu Su",
+   "Huan Sun",
+   "Minlie Huang",
+   "Yuxiao Dong",
+   "Jie Tang"
+  ],
+  "first_author": "Liu",
+  "year": 2023,
+  "venue": "ICLR 2024 (arXiv v3, 4 Oct 2025)",
   "arxiv": "2308.03688",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-03",
-  "session": "9d482f42-66b5-42d0-8570-406871585b30"
+  "at": "2026-11-07",
+  "chars_read": 176928,
+  "chars_total": 176928,
+  "engine": "pymupdf",
+  "skipped": "References (pp10-16) skimmed only for lineage"
  },
- "legacy_report": "SOURCE: \"AgentBench: Evaluating LLMs as Agents\", Xiao Liu, Hao Yu, Hanchen Zhang et al. (Tsinghua, OSU, UC Berkeley). ICLR 2024. Extracted file is arXiv 2308.03688v3, dated 4 Oct 2025. This version adds claude-3 (opus) and glm-4, both scored after the task weights were fixed.\n\nCOVERAGE: 58 of 58 pages, all 177,248 chars. I read pages 1–9 and 17–58 in full, including appendices A–J (framework, per-environment grading, failure analysis). I skimmed the references (pp. 10–16) only for origins. Text extraction was clean.\n\nCLAIMS\n- claim: The best API models do far better than open models of 70B or less on the weighted overall score.\n  number: API average 2.32 vs OSS average 0.51; gpt-4 4.01; best OSS codellama-34b 0.96\n  setup: 29 LLMs, 8 environments, test split, CoT prompting, temperature 0, one run each. Only OSS models of 70B or less were tested.\n  quote: \"Generally, most OSS LLMs perform far poorer than API-based LLMs in AGENTBENCH(Avg. 0.51 v.s. 2.32). The most capable OSS LLM ≤ 70B within the evaluation scope rounds out to be codellama-34b, achieving an overall score of 0.96\"\n  where: p.8\n- claim: The most common way to fail is running out of turns (Task Limit Exceeded), not breaking the format or picking a bad action.\n  number: TLE share averaged across all models: OS 23.9, DB 8.0, KG 67.9, DCG 0.0, LTP 82.5, HH 22.1, WS 27.8, WB 35.0 (%). Invalid Format: DB 53.3, DCG 38.5, WS 17.2. Invalid Action: HH 64.1, DCG 10.2, WB 8.4. CLE is 3.5% at most.\n  setup: Table 4, outcome shares for each environment averaged over all models\n  quote: \"The predominant failure cause in AGENTBENCHtasks isTask Limit Exceeded, revealing weak reasoning and decision-making abilities in LLMs.\"\n  where: p.8 (Table 4 and §4.3)\n- claim: Open models produce more format and action errors than API models, and they complete fewer tasks.\n  number: Completed 61.5% vs 39.1%; IF 6.0% vs 10.4%; IA 4.6% vs 13.6%; TLE 24.9% vs 36.9%; CLE 3.0% vs 0.0%\n  setup: Table 6, outcome distribution pooled by model type over all environments\n  quote: \"10.4% of the Open-Sourced model outcomes were marked as Invalid Format, in comparison to the 6.0% from Commercial API-based models. Similarly, Invalid Actions were seen more in Open-Sourced models (13.6%) than in Commercial API-based models (4.6%).\"\n  where: p.46\n- claim: Most runs that hit the turn limit are stuck in a loop repeating themselves.\n  number: >90% of TLE trajectories contain two responses with Rouge-L of at least 0.8 within the last 10 rounds. TLE trajectories average 25.5 rounds.\n  setup: TLE trajectories truncated to their longest prefix under 3500 tokens. The repeat metric is P(n,t).\n  quote: \"more than 90% of the trajectories experiencing Task Limit Exceeded (TLE) demonstrate a significant level of repetition... at least two responses within the last 10 rounds sharing a Rouge-L score of 0.8 or higher\"; \"the TLE results contain a trajectory with 25.5 rounds on average\"\n  where: p.55\n- claim: Completed runs are short.\n  number: median 6 rounds, mean 7.95; median 1850 tokens, mean 2220.1\n  setup: all completed trajectories\n  quote: \"the rounds distribution indicates a median of 6.0 and an average of 7.95, with the medium 50% of tasks ranging from 4.0 to 9.0\"\n  where: p.54\n- claim: gpt-4 is best on 6 of the 8 environments and reaches 78% success on House-Holding.\n  number: 78% HH SR; OA 4.01\n  setup: ALFWorld, 1-shot ReAct-style prompting, gpt-4-0613\n  quote: \"gpt-4 presents the best performance on 6 out of 8 datasets in AGENTBENCH; on House Holding, it achieves a success rate of 78%\"\n  where: p.7\n- claim: Every API model scores above 1.00 overall.\n  number: >1.00\n  setup: Table 3\n  quote: \"All API-based LLMs have an AGENTBENCHoverall score above 1.00.\"\n  where: p.7\n- claim: Code tuning helps on procedural tasks and hurts on strategic ones. Training on high-quality alignment data helps.\n  number: none in the prose. Per-environment comparisons are in Table 3, e.g. WS codellama-34b 52.1 vs llama-2-70b 5.6.\n  setup: codellama vs llama-2 on WS, DCG and OS; vicuna-13b vs llama-2-13b, which share a base model\n  quote: none quoted for a number\n  where: p.8, App. J.2.5 p.56\n- claim: llama-2-13b and llama-2-70b score about the same, and the result held when the authors re-ran it.\n  number: OA 0.77 vs 0.78\n  setup: Table 3\n  quote: \"we were surprised to find that llama-2-13b and llama-2-70b perform similarly despite the significant gap between their sizes. After carefully checking and re-running experiments, the results are unchanged.\"\n  where: p.8\n\nHow each environment is graded:\n- OS: state or execution check. The task runs in a Docker container with init and start scripts. The checking pipeline is a chain of scripts: \"The result is correct if and only if all the scripts exit with code0.\" In operation tasks the checker inspects system state, and the agent does not have to answer. 144 test samples, 8-round limit \"by default\". (pp.21–22)\n- DB: state check for writes. Each sample's answer is \"the hash code of the correctly modified table\" for insert or update, and an exact answer-set match for select, ignoring order and normalising numbers. SR is a macro average over the three operation types. Runs in a MySQL Docker container. (pp.24–25)\n- KG: answer-set F1 against gold entities (Freebase via Virtuoso). The authors also report exact match on the answer set and \"Executability\". The prompt allows at most 15 actions. (p.27)\n- DCG: reward = 0.7×win rate + 0.3×damage rate against a scripted opponent. The agent gets five tries to produce legal format, then loses. (p.30)\n- LTP: an LLM judge. gpt-3.5-turbo acts as host and checks which key points the agent hit (Game Progress). The authors admit the automatic judge \"sometimes more tolerate for the agent\", especially for OSS models. (p.35)\n- HH: the ALFWorld simulator reports whether the goal is complete, giving SR. Invalid output is BLEU-mapped to the closest valid action. Three identical outputs in a row count as a failure. (p.39)\n- WS: WebShop attribute, option and price matching reward on the purchased item, range 0–1. (p.40)\n- WB: Mind2Web Step Success Rate, which compares each step with the reference action. This is a trajectory match, not an outcome. Each step is framed as multiple choice over top-10 candidates chosen by a small LM. Task SR was dropped because \"even the best LLMs now can only achieve single-digit task success percentages.\" (p.43)\n\nHow the overall score is built: each task is rescaled so its mean across all evaluated models equals 1, then the rescaled scores are averaged. The reciprocal means become fixed weights for future scoring. Quote: \"we produce the overall score by first resizing each task's average score to 1 across all the models we evaluate and then averaging the scores across all tasks for each model\" (p.7). Weight⁻¹ (mean score): OS 10.8, DB 13.0, KG 13.9, DCG 12.0, LTP 3.5, HH 13.0, WS 30.7, WB 11.6 (Table 2, p.6). The stated reason is that a plain average \"is heavily impacted by tasks that generally yield higher scores (e.g., Web Shopping\".\n\nHarness hygiene: each environment runs in its own Docker container and isolated task worker. Model, task and client servers talk over HTTP. Evaluation can resume after an interruption, and work is scheduled with Edmonds–Karp max-flow (pp.6, 20). Decoding: \"we set temperature=0 (i.e., greedy decoding) in the inference on all tasks\" (p.7). History is truncated to 3500 tokens, with an inserted \"[NOTICE] 2r messages are omitted.\" (p.6). Splits: Dev 269 and Test 1,014 samples, about 11k inference calls for the test split (p.6).\n\nLIMITS:\n- Each model was run once, greedily, with no variance, no confidence intervals and no repeats. The authors reason that \"Without multiple trials, repeated generations\" CoT is the cheapest way to deploy agents. Nothing in the paper speaks to non-determinism.\n- Only plain CoT/ReAct was tested, not reflection or search. OSS models were limited to 70B or less.\n- The overall-score weights depend on the original model pool. claude-3 and glm-4 were scored after the weights were fixed.\n- Two environments do not grade outcomes. WB is step-level matching against a reference path, and LTP uses an LLM judge that the authors call lenient.\n- The HH BLEU fallback and the DCG five retries soften Invalid Format, so IF rates are not comparable across environments.\n- The DB data was augmented with gpt-3.5-turbo. A bias check re-annotated a small batch with Claude-2 and tested only two models (Table 5, p.26).\n- The model list is dated (text-davinci, claude v1.3). CLE occurs only for 2,048-context models.\n\nBUILDS ON: ReAct (Yao et al., 2023b) prompt format; CoT (Wei et al., 2022b); ALFWorld (Shridhar et al., 2020b) and TextWorld (Côté et al., 2019); WebShop (Yao et al., 2022); Mind2Web (Deng et al., 2023); KBQA as tool learning (Anonymous, 2023; Gu et al., 2023), Freebase (Bollacker et al., 2008), GrailQA (Gu et al., 2021); functional-correctness evaluation from HumanEval (Chen et al., 2021), APPS (Hendrycks et al., 2021a) and MBPP (Austin et al., 2021); Docker (Merkel et al., 2014). The DB data reuses WikiSQL (Zhong et al., 2017), WikiTableQuestions (Pasupat & Liang, 2015), SQA (Iyyer et al., 2017), HybridQA (Chen et al., 2020) and FeTaQA (Nan et al., 2021). The paper names InterCode (Yang et al., 2023) as concurrent work.\n\nCODE:\n- DCG reward, p.30: `reward= 0.7×metric winrate + 0.3×metric damagerate`\n- Repetition metric, p.55: `P(n, t) = #{(r1..rm)∈T | ∃i,j (m−n < i < j ≤ m ∧ RougeL(ri, rj) ≥ t)} / #T`\n- OS checker rule, p.22: `ok = fk(o0, o1, ..., ok−1)`; correct only if every script exits 0.\n\nFIGURES:\n- Recommended: Table 4, p.8, \"Portions of different types of execution outcomes in 8 tasks averaged across all models.\" One grid shows that failure modes depend on the environment: Invalid Format dominates DB, Invalid Action dominates HH, TLE dominates KG and LTP. That makes the case for logging finish reasons per environment faster than prose can. figures.py did not list it because it is a table.\n- Alternative: Figure 9, p.55, \"P(n, t), percentage among all TLE trajectories that there exists a pair of responses whose Rouge-L score is not less than t in the last n rounds\". It shows that turn-limit failures are mostly loops.\n- Figure 6, p.47, has an outcome pie chart for each model. It is busy.\n\nPROBLEMS:\n- Sample counts disagree within the paper. Table 2 gives KG test as 150 and WS test as 200, but App. D and H say \"first 500 tasks/entries\". HH uses \"134 solvable problems\" against Table 2's 50.\n- The text says solving rounds \"range from 5 to 50\", but Table 2's largest value is 35.\n- The Figure 6 caption says \"Text Limit Exceeded\" and J.2.4 says \"Time Limit Exceeded\"; both mean Task Limit Exceeded.\n- Table 6's API CLE of 3.0% comes only from the text-davinci models.\n- The bar values in Figure 1 (p.1) extracted without a caption pairing. I quoted the averages from the p.8 prose instead.\n- The text contains no embedded instructions.\n- Working file: /tmp/ab.txt. Source: /Users/ramsey-wise/workspace/learn-ai-engineering/generative-ai/08-eval/sources/liu-2023-agentbench.pdf"
+ "type": "benchmark",
+ "question": "How well do LLMs act as agents across diverse interactive environments, and why do they fail?",
+ "hypothesis": null,
+ "contributions": [
+  "Introduce evaluating LLMs as agents and AgentBench: 8 environments in 3 grounding types",
+  "Evaluate 29 LLMs, finding a large gap between API-based and OSS models <=70B, and analyse failure reasons",
+  "Release an integrated server-client evaluation toolkit with datasets and environments"
+ ],
+ "method": {
+  "summary": "Eight interactive environments (OS, DB, KG, DCG, LTP, HH, WS, WB) wrapped in a server-client toolkit; 29 LLMs prompted with CoT at temperature 0 and scored per task, then combined into a weighted overall score.",
+  "task": "multi-round LLM-as-agent evaluation",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "Operating System (OS)",
+    "role": "eval",
+    "size": "144 test / 26 dev (1200 / 240 expected rounds)",
+    "split": "Table 2",
+    "source": "about half human-written from 6000 Stack Overflow bash problems, half gpt-4 generated and unit-test filtered; 8 annotators, ~2h each",
+    "preprocessing": "round limit 8; 1-shot CoT"
+   },
+   {
+    "name": "Database (DB)",
+    "role": "eval",
+    "size": "300 test / 60 dev",
+    "split": "Table 2; final dataset 300 entries",
+    "source": "WikiSQL, WikiTableQuestions, SQA, HybridaQA, FeTaQA; gpt-3.5-turbo augmented (10 new rows, 5 SQL each, rephrased)",
+    "preprocessing": "select/insert/update; unit-test filtered"
+   },
+   {
+    "name": "Knowledge Graph (KG)",
+    "role": "eval",
+    "size": "150 test / 20 dev (Table 2); 1,663 questions compiled",
+    "split": "App D says first 500 tasks used for evaluation",
+    "source": "GrailQA, ComplexWebQuestions, GraphQuestions on Freebase via Virtuoso; questions needing >=5 tool calls",
+    "preprocessing": "no entity linking; max 15 actions"
+   },
+   {
+    "name": "Digital Card Game (DCG, Aquawar)",
+    "role": "eval",
+    "size": "20 test / 12 dev",
+    "split": "Table 2",
+    "source": "2021 THU Agent Competition Aquawar; opponent is algorithmic (random / greedy baselines)",
+    "preprocessing": "two stages (without / with assertions), averaged; 5 chances for legal format"
+   },
+   {
+    "name": "Lateral Thinking Puzzles (LTP)",
+    "role": "eval",
+    "size": "50 test / 20 dev",
+    "split": "Table 2",
+    "source": "web puzzles, four difficulty levels; key points summarised by gpt-3.5-turbo",
+    "preprocessing": "host is an LLM system (gpt-3.5-turbo); max round e.g. 25"
+   },
+   {
+    "name": "House Holding (ALFWorld)",
+    "role": "eval",
+    "size": "50 test / 20 dev (Table 2); 134 solvable problems from eval out-of-distribution split (App G)",
+    "split": "see size",
+    "source": "ALFWorld",
+    "preprocessing": "1-shot per category, BLEU fallback for invalid output, 3 identical outputs = failure"
+   },
+   {
+    "name": "Web Shopping (WebShop)",
+    "role": "eval",
+    "size": "200 test / 80 dev (Table 2); first 500 of 12,087 instructions (App H)",
+    "split": "see size",
+    "source": "WebShop, ~1M amazon.com products",
+    "preprocessing": "1-shot"
+   },
+   {
+    "name": "Web Browsing (Mind2Web)",
+    "role": "eval",
+    "size": "100 test / 31 dev (Table 2); Cross Domain set 912 tasks, 73 websites (App I)",
+    "split": "see size",
+    "source": "Mind2Web",
+    "preprocessing": "DeBERTa-style ranker picks top-k; top-10 candidates, 5 shown per round, 3-example CoT"
+   }
+  ],
+  "models": [
+   {
+    "name": "API: gpt-4 0613, gpt-3.5-turbo 0613, text-davinci-003, text-davinci-002 (2,048 context), claude-3 opus, claude-2, claude v1.3, claude-instant v1.1, chat-bison-001, glm-4",
+    "role": "evaluated",
+    "params": "N/A",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "2,048 for text-davinci-002/003; others not stated",
+    "other": {}
+   },
+   {
+    "name": "OSS: llama2-70b/13b/7b chat; guanaco-65b/33b; vicuna-33b v1.3, 13b/7b v1.5; wizardlm-30b/13b; codellama-34b/13b/7b instruct; openchat-13b v3.2; koala-13b; oasst-12b sft-4; dolly-12b v2; chatglm-6b v1.1; codegeex2-6b",
+    "role": "evaluated",
+    "params": "6B to 70B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "count": "19 OSS models listed in Table 1"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "greedy",
+   "temperature": "0",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "one run per model per item; no repeated generations or multiple trials",
+   "prompting": "Thought + Action in one round (ReAct-style format), usually 1-shot CoT demonstration in task instruction; chat models get user/agent alternating turns; completion models get 'USER:'/'AGENT:' prefixes and a trailing 'AGENT:'",
+   "retrieval": null,
+   "parameters": {
+    "history_token_cap": "3500 tokens; minimum r chosen so (u0, ar, ur+1..uk) <=3500, then '[NOTICE] 2r messages are omitted.' appended to u0",
+    "token_estimate": "word of length n = ceil(n/6) tokens; non-blank character = 1 token",
+    "round_limits": "Avg rounds Table 2: OS 8, DB 5, KG 15, DCG 30, LTP 25, HH 35, WS 5, WB 10; OS default round limit 8; KG at most 15 actions"
+   },
+   "other": {
+    "overall_score": "per-task average across models rescaled to 1 (fixed reciprocal weights from Table 2 Weight-1: 10.8, 13.0, 13.9, 12.0, 3.5, 13.0, 30.7, 11.6; a ninth value 4.1 is printed), then averaged across tasks",
+    "toolkit": "HTTP server-client, Docker per task, max-flow (Edmonds-Karp) scheduler"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Success Rate (OS, DB, HH)",
+     "definition": "fraction of items solved (OS exit code 0 for all checking scripts; DB exact match or table hash; HH goal reached)",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Answer F1 (KG)",
+     "definition": "F1 of predicted vs gold answer set",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Reward (DCG)",
+     "definition": "0.7 x win rate + 0.3 x damage rate",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Game Progress (LTP)",
+     "definition": "proportion of ground-truth key points reached",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Reward (WS)",
+     "definition": "WebShop attribute/option/price match reward times r_type",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Step Success Rate (WB)",
+     "definition": "selected element correct and operation matches at the step",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Overall Score (OA)",
+     "definition": "weighted average of task scores using fixed reciprocal-mean weights",
+     "unit": "score",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "random and greedy strategies in Aquawar",
+    "no baseline for other tasks beyond other LLMs"
+   ],
+   "protocol": "single run, greedy decoding, five outcome categories (Completed, CLE, IF, IA, TLE); LTP host and judge are gpt-3.5-turbo (human validation found auto eval more lenient on SGA/QR, esp. OSS models)"
+  },
+  "availability": {
+   "code": "https://github.com/THUDM/AgentBench",
+   "weights": null,
+   "data": "released with the repo"
+  },
+  "prompts": [
+   {
+    "purpose": "OS system instruction",
+    "text": "You are an assistant that will act like a person, I'will play the role of linux(ubuntu) operating system. Your goal is to implement the operations required by me or answer to the question proposed by me. For each of your turn, you should first think what you should do, and then take exact one of the three actions: \"bash\", \"finish\" or \"answer\".",
+    "where": "App B.3, p22"
+   },
+   {
+    "purpose": "DB instruction",
+    "text": "I will ask you a question, then you should help me operate a MySQL database with SQL to answer the question. You have to explain the problem and your solution to me and write down your thoughts. ... Action: Operation ```sql SELECT * FROM table WHERE condition; ``` ... Action: Answer Final Answer: [\"ANSWER1\", \"ANSWER2\", ...]",
+    "where": "App C.3, p25"
+   },
+   {
+    "purpose": "KG tool-use instruction (7 tools, 1 demo, at most 15 actions)",
+    "text": "You are an agent that answers questions based on the knowledge stored in a knowledge base. To achieve this, you can use the following tools to query the KB. ... You can take at most 15 actions to find the answer to the question.",
+    "where": "App D.2, p27"
+   },
+   {
+    "purpose": "Aquawar action prompt",
+    "text": "This is a two-player battle game with four pet fish on each team. ... return your move with following JSON format: {'pick_fish': ..., 'action': 'choose from [normal, active]', 'target_position': \"... you must choose from [0,3]\"}",
+    "where": "App E.3, p31"
+   },
+   {
+    "purpose": "LTP player",
+    "text": "You are a game player, and you are playing Lateral Thinking Puzzle, also known as Situation Puzzle.",
+    "where": "App F.4, p35"
+   },
+   {
+    "purpose": "HH instruction",
+    "text": "Interact with a household to solve a task. Imagine you are an intelligent agent in a household environment and your target is to perform actions to complete the task goal.",
+    "where": "App G.2, p39"
+   },
+   {
+    "purpose": "WebShop instruction",
+    "text": "You are web shopping. I will give you instructions about what to do. You have to follow the instructions.",
+    "where": "App H.2, p40"
+   },
+   {
+    "purpose": "Mind2Web 3-example CoT prompt",
+    "text": "Based on the HTML webpage above, try to complete the following task: ... What should be the next action? Please select from the following choices (If the correct action is not in the page above, please select A. 'None of the above')",
+    "where": "App I.2, p43"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "inference.temperature",
+    "quote": "we set temperature=0 (i.e., greedy decoding) in the inference on all tasks",
+    "where": "Sec 4.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "API-based LLMs average far above OSS LLMs on the overall score.",
+   "kind": "measured",
+   "source": null,
+   "metric": "overall score (OA)",
+   "value": "0.51 OSS vs 2.32 API",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Test split, 29 LLMs, 8 environments, CoT prompting (Thought+Action, 1-shot), temperature 0, one run per model. OSS models all <=70B.",
+   "where": "Sec 4.2, p8",
+   "note": null,
+   "quote": "(Avg. 0.51 v.s. 2.32)"
+  },
+  {
+   "claim": "Best OSS model of <=70B is codellama-34b, still below gpt-3.5-turbo.",
+   "kind": "measured",
+   "source": null,
+   "metric": "OA",
+   "value": "0.96",
+   "unit": null,
+   "baseline_value": "2.32 (gpt-3.5-turbo)",
+   "n": null,
+   "setup": "Test split, 29 LLMs, 8 environments, CoT prompting (Thought+Action, 1-shot), temperature 0, one run per model.",
+   "where": "Sec 4.2, p8",
+   "note": null,
+   "quote": "achieving an overall score of 0.96 but still presents a"
+  },
+  {
+   "claim": "gpt-4 (0613) has the top overall AgentBench score.",
+   "kind": "measured",
+   "source": null,
+   "metric": "OA",
+   "value": "4.01",
+   "unit": null,
+   "baseline_value": "3.11 (claude-3 opus)",
+   "n": null,
+   "setup": "Test split, 29 LLMs, 8 environments, CoT prompting (Thought+Action, 1-shot), temperature 0, one run per model.",
+   "where": "Table 3, p7",
+   "note": "claude-3 and glm-4 were evaluated after task weights were fixed.",
+   "table": "Table 3, row gpt-4, column OA"
+  },
+  {
+   "claim": "gpt-4 reaches 78% success on House Holding.",
+   "kind": "measured",
+   "source": null,
+   "metric": "SR",
+   "value": "78",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Test split, 29 LLMs, 8 environments, CoT prompting (Thought+Action, 1-shot), temperature 0, one run per model.",
+   "where": "Sec 4.2",
+   "note": null,
+   "quote": "78%, indicating its practical usability in this scenario"
+  },
+  {
+   "claim": "gpt-4 is best on 6 of 8 datasets.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "6 of 8",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 3, original wording counts gpt-4 best on OS, KG, DCG, LTP, HH, WB; DB best is claude-3 (51.7), WS best is gpt-3.5-turbo (64.1).",
+   "where": "Sec 4.2",
+   "note": "Quote is a fragment of 'gpt-4 presents the best performance on 6 out of 8 datasets'.",
+   "quote": "gpt-4 presents the best"
+  },
+  {
+   "claim": "gpt-3.5-turbo Web Shopping reward exceeds gpt-4.",
+   "kind": "measured",
+   "source": null,
+   "metric": "reward",
+   "value": "64.1",
+   "unit": null,
+   "baseline_value": "61.1 (gpt-4)",
+   "n": null,
+   "setup": "Test split, 29 LLMs, 8 environments, CoT prompting (Thought+Action, 1-shot), temperature 0, one run per model.",
+   "where": "Table 3",
+   "note": null,
+   "table": "Table 3, row gpt-3.5-turbo, column Web Shopping"
+  },
+  {
+   "claim": "Task Limit Exceeded is the predominant failure cause.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 4, shares averaged over all models per environment.",
+   "where": "Sec 4.3, p8",
+   "note": null,
+   "quote": "The predominant failure cause in AGENTBENCH tasks is Task Limit Exceeded"
+  },
+  {
+   "claim": "TLE share is highest in Lateral Thinking Puzzles.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "82.5",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 4 averaged over all models.",
+   "where": "Table 4",
+   "note": "KG 67.9, WB 35.0, WS 27.8, OS 23.9, HH 22.1, DB 8.0, DCG 0.0.",
+   "table": "Table 4, row TLE, column Lateral Thinking Puzzle"
+  },
+  {
+   "claim": "Invalid Format dominates in Database.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "53.3",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 4 averaged over all models.",
+   "where": "Table 4",
+   "note": "DCG 38.5, WS 17.2. Invalid Action: HH 64.1, DCG 10.2, WB 8.4. CLE max 3.5.",
+   "table": "Table 4, row Invalid Format, column Database"
+  },
+  {
+   "claim": "OSS models complete fewer tasks than API models.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "39.1",
+   "unit": "%",
+   "baseline_value": "61.5 (API)",
+   "n": null,
+   "setup": "Table 6, outcomes pooled by model type over all environments.",
+   "where": "App J.2.1, p46",
+   "note": null,
+   "table": "Table 6, row Open-Sourced Models, column Completed"
+  },
+  {
+   "claim": "OSS models have more Invalid Format outcomes than API models.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "10.4",
+   "unit": "%",
+   "baseline_value": "6.0 (API)",
+   "n": null,
+   "setup": "Table 6.",
+   "where": "App J.2.1",
+   "note": null,
+   "quote": "10.4% of the Open-Sourced model outcomes were marked as Invalid Format"
+  },
+  {
+   "claim": "OSS models have more Invalid Action outcomes than API models.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "13.6",
+   "unit": "%",
+   "baseline_value": "4.6 (API)",
+   "n": null,
+   "setup": "Table 6.",
+   "where": "App J.2.1",
+   "note": null,
+   "quote": "Invalid Actions were seen more in Open-Sourced models (13.6%) than in Commercial API-based models (4.6%)"
+  },
+  {
+   "claim": "Task Limit Exceeded is 36.9% for OSS vs 24.9% for API models.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "36.9",
+   "unit": "%",
+   "baseline_value": "24.9 (API)",
+   "n": null,
+   "setup": "Table 6.",
+   "where": "App J.2.1",
+   "note": null,
+   "table": "Table 6, row Open-Sourced Models, column Task Limit Exceeded"
+  },
+  {
+   "claim": "Most TLE trajectories contain repeated responses.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": ">90",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "TLE trajectories truncated to 3500 tokens; repeat = two responses in last 10 rounds with Rouge-L >= 0.8.",
+   "where": "App J.2.4, Fig 9, p55",
+   "note": null,
+   "quote": "more than 90% of the trajectories experiencing Task Limit Exceeded (TLE)"
+  },
+  {
+   "claim": "TLE trajectories are much longer than completed ones.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "25.5",
+   "unit": "rounds",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Average over TLE trajectories.",
+   "where": "App J.2.4",
+   "note": null,
+   "quote": "trajectory with 25.5 rounds on average, far larger than that in completed trajectories"
+  },
+  {
+   "claim": "Completed trajectories are short: median 6 rounds.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "6.0",
+   "unit": "rounds (median)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Completed trajectories, all tasks.",
+   "where": "App J.2.3, Fig 8",
+   "note": "Average 7.95; IQR 4.0 to 9.0.",
+   "quote": "the median is 6.0 and the average is 7.95, with the middle 50% ranging from"
+  },
+  {
+   "claim": "Completed trajectories use about 1850 tokens median.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "1850.0",
+   "unit": "tokens (median)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Completed trajectories, all tasks.",
+   "where": "App J.2.3, Fig 8",
+   "note": null,
+   "quote": "the median is 1850.0 and the average is 2220.1,"
+  },
+  {
+   "claim": "Code tuning helps Web Shopping: codellama-34b far above llama-2-70b.",
+   "kind": "measured",
+   "source": null,
+   "metric": "reward",
+   "value": "52.1",
+   "unit": null,
+   "baseline_value": "5.6 (llama-2-70b)",
+   "n": null,
+   "setup": "Test split, 29 LLMs, 8 environments, CoT prompting (Thought+Action, 1-shot), temperature 0, one run per model.",
+   "where": "Table 3, Sec 4.3",
+   "note": null,
+   "table": "Table 3, row codellama-34b, column Web Shopping"
+  },
+  {
+   "claim": "Code tuning hurts Digital Card Game: codellama-34b below llama-2-70b.",
+   "kind": "measured",
+   "source": null,
+   "metric": "reward",
+   "value": "8.4",
+   "unit": null,
+   "baseline_value": "21.3 (llama-2-70b)",
+   "n": null,
+   "setup": "Test split, 29 LLMs, 8 environments, CoT prompting (Thought+Action, 1-shot), temperature 0, one run per model.",
+   "where": "Table 3, Sec 4.3",
+   "note": null,
+   "table": "Table 3, row codellama-34b, column Digital Card Game"
+  },
+  {
+   "claim": "vicuna-13b (ShareGPT alignment) beats llama-2-13b, same base.",
+   "kind": "measured",
+   "source": null,
+   "metric": "OA",
+   "value": "0.93",
+   "unit": null,
+   "baseline_value": "0.77 (llama-2-13b)",
+   "n": null,
+   "setup": "Test split, 29 LLMs, 8 environments, CoT prompting (Thought+Action, 1-shot), temperature 0, one run per model.",
+   "where": "Table 3, Sec 4.3",
+   "note": null,
+   "table": "Table 3, row vicuna-13b, column OA"
+  },
+  {
+   "claim": "llama-2-13b and llama-2-70b score about the same.",
+   "kind": "measured",
+   "source": null,
+   "metric": "OA",
+   "value": "0.77",
+   "unit": null,
+   "baseline_value": "0.78 (llama-2-70b)",
+   "n": null,
+   "setup": "Test split, 29 LLMs, 8 environments, CoT prompting (Thought+Action, 1-shot), temperature 0, one run per model. Authors re-ran and results unchanged.",
+   "where": "Table 3, Sec 4.3",
+   "note": null,
+   "table": "Table 3, row llama-2-13b, column OA"
+  },
+  {
+   "claim": "Benchmark size is 269 dev and 1,014 test items.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "1,014 test / 269 dev",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 2 totals.",
+   "where": "Sec 4.1",
+   "note": null,
+   "quote": "1,014, respectively, resulting in around 3k and 11k calls for inference"
+  },
+  {
+   "claim": "Re-annotation with Claude-2 shows similar score pattern for gpt-4 and gpt-3.5-turbo on DB.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "0.66",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Small re-annotated batch, Table 5.",
+   "where": "App C.4",
+   "note": "Table 5 prints SELECT original 0.32 / INSERT 0.32 / UPDATE 0.32 for gpt-4 original; new SELECT is '-'.",
+   "table": "Table 5, row gpt-4 new, column UPDATE"
+  }
+ ],
+ "limits": [
+  "Single run per model at temperature 0, no variance reported",
+  "Only simple CoT; ensembles, reflection and search not tested",
+  "OSS models limited to <=70B for compute reasons",
+  "LTP automatic host/judge is more lenient than humans; authors plan a dedicated host model",
+  "Dataset sizes are small (e.g. DCG 20 test items, LTP 50), and Table 2 test sizes differ from the appendix counts (KG 500 vs 150, WS 500 vs 200, WB 912 vs 100, HH 134 vs 50)",
+  "claude-3 and glm-4 scored after task weights fixed",
+  "Models are mid-2023 versions; since dated"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Context Limit Exceeded (CLE)",
+   "definition": "the length of interaction history exceeds the LLM's maximum context length",
+   "where": "Sec 2"
+  },
+  {
+   "term": "Invalid Format (IF)",
+   "definition": "the agent does not follow the format instruction",
+   "where": "Sec 2"
+  },
+  {
+   "term": "Invalid Action (IA)",
+   "definition": "the agent follows the format instruction, but its selected action is invalid",
+   "where": "Sec 2"
+  },
+  {
+   "term": "Task Limit Exceeded (TLE)",
+   "definition": "the agent does not solve the problem after reaching the predefined maximum interaction rounds or begins to do repeated generations",
+   "where": "Sec 2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "ReAct (Yao et al., 2023b)",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Thought+Action prompt format adopted",
+   "quote": null
+  },
+  {
+   "work": "Chain-of-Thought (Wei et al., 2022b)",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "CoT prompting and temperature 0 follow it",
+   "quote": null
+  },
+  {
+   "work": "WebShop (Yao et al., 2022)",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Web Shopping environment",
+   "quote": null
+  },
+  {
+   "work": "Mind2Web (Deng et al., 2023)",
+   "year": null,
+   "arxiv": "2306.06070",
+   "relation": "uses-data",
+   "note": "Web Browsing environment",
+   "quote": null
+  },
+  {
+   "work": "ALFWorld (Shridhar et al., 2020b)",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "House Holding environment",
+   "quote": null
+  },
+  {
+   "work": "InterCode (Yang et al., 2023)",
+   "year": null,
+   "arxiv": "2306.14898",
+   "relation": "related",
+   "note": "concurrent work with Bash/SQL interactive eval",
+   "quote": null
+  },
+  {
+   "work": "Aquawar / THUAC 2021",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Digital Card Game",
+   "quote": null
+  },
+  {
+   "work": "WikiSQL, WikiTableQuestions, SQA, HybridaQA, FeTaQA",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "DB source tables",
+   "quote": null
+  },
+  {
+   "work": "GrailQA, ComplexWebQuestions, GraphQuestions",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "KG source questions",
+   "quote": null
+  },
+  {
+   "work": "Llama 2 (Touvron et al., 2023)",
+   "year": null,
+   "arxiv": "2307.09288",
+   "relation": "evaluates",
+   "note": "llama2 7B/13B/70B chat",
+   "quote": null
+  },
+  {
+   "work": "Code Llama (Rozière et al., 2023)",
+   "year": null,
+   "arxiv": "2308.12950",
+   "relation": "evaluates",
+   "note": "codellama 7B/13B/34B",
+   "quote": null
+  },
+  {
+   "work": "GPT-4 (OpenAI, 2023)",
+   "year": null,
+   "arxiv": "2303.08774",
+   "relation": "evaluates",
+   "note": "top model",
+   "quote": null
+  },
+  {
+   "work": "Vicuna, Guanaco (Dettmers et al., 2023), WizardLM, Koala, etc.",
+   "year": null,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "OSS models",
+   "quote": null
+  },
+  {
+   "work": "Hoffmann et al., 2022 (compute-optimal)",
+   "year": null,
+   "arxiv": "2203.15556",
+   "relation": "related",
+   "note": "cited to explain llama-2-70b under-training",
+   "quote": null
+  },
+  {
+   "work": "MMLU (Hendrycks et al., 2021b)",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "call-count comparison",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "An overview of LLMs on AGENTBENCH",
+   "page": 1,
+   "why": "Overall scores 4.01 down to 0.03 with API vs OSS averages"
+  },
+  {
+   "figure": "Table 3",
+   "caption": "Test set (standard) results of AGENTBENCH",
+   "page": 7,
+   "why": "Per-model per-environment scores"
+  },
+  {
+   "figure": "Table 4",
+   "caption": "Portions of different types of execution outcomes in 8 tasks averaged across all models",
+   "page": 8,
+   "why": "Shows TLE dominates failures"
+  },
+  {
+   "figure": "Fig 9",
+   "caption": "P(n, t) repetition percentage among TLE trajectories",
+   "page": 55,
+   "why": "Repetition drives TLE"
+  }
+ ],
+ "code": [
+  {
+   "where": "App J.2.4 Eq 5",
+   "snippet": "P(n, t) = #{(r1..rm) in T | exists i,j (m-n < i < j <= m and RougeL(ri, rj) >= t)} / #T",
+   "verbatim": false
+  },
+  {
+   "where": "App E.1",
+   "snippet": "reward = 0.7 x metric_winrate + 0.3 x metric_damagerate",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Table 2 'Weight-1' row prints nine numbers for eight tasks (10.8, 13.0, 13.9, 12.0, 3.5, 13.0, 30.7, 11.6, 4.1); alignment uncertain",
+  "App F.1 says 'two self created metrics' then lists four (SGA, RE, QR, GP)",
+  "Table 2 sizes vs appendix dataset sizes differ",
+  "No embedded instructions found",
+  "Two prompt texts are abridged/normalised (curly apostrophe, line wraps), so check warns they are not found verbatim"
+ ]
 }

@@ -1,19 +1,788 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "1603.09320",
  "pdf": "generative-ai/02-rag-retrieval/sources/malkov-2018-efficient-robust-approximate-nearest-neighbor.pdf",
  "bib": {
-  "title": "Efficient and Robust Approximate Nearest Neighbor Search Using Hierarchical Navigable Small World Graphs",
+  "title": "Efficient and robust approximate nearest neighbor search using Hierarchical Navigable Small World graphs",
+  "authors": [
+   "Yu. A. Malkov",
+   "D. A. Yashunin"
+  ],
   "first_author": "Malkov",
   "year": 2018,
-  "venue": "IEEE Trans. Pattern Anal. Mach. Intell. 2020",
+  "venue": "preprint (arXiv manuscript headed 'submitted to the IEEE'; published IEEE TPAMI 2020)",
   "arxiv": "1603.09320",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-04",
-  "session": "5f2f0582-f958-4d9c-8469-02f3d5079657"
+  "at": "2026-11-07",
+  "chars_read": 69983,
+  "chars_total": 69983,
+  "engine": "pymupdf",
+  "skipped": null
  },
- "legacy_report": "SOURCE: \"Efficient and robust approximate nearest neighbor search using Hierarchical Navigable Small World graphs\", Yu. A. Malkov, D. A. Yashunin. arXiv 1603.09320. The PDF is the arXiv manuscript, headed \"This work has been submitted to the IEEE for possible publication\". It is not the typeset IEEE TPAMI 2020 version.\n\nCOVERAGE: 70,413 of 70,413 chars, read in full: body, Algorithms 1 to 5, Tables 1 to 3, the text of the figure axes and legends, the discussion, the references and the bios. I skimmed the references for origins only. I did not run the figures script. The captions below come from the extracted text.\n\nCLAIMS (ranked)\n- claim: Search complexity is O(log N). The proof assumes exact Delaunay graphs and a node degree capped by a constant. The approximate graph is supported only by simulations on low-dimensional data.\n  number: O(log(N)); at most 1/(1-exp(-mL)) steps per layer\n  setup: theory. The degree cap \"is the case for random Euclid data [48], but can be in principle violated in exotic spaces\"\n  quote: \"since the expectation of the maximum layer index by the construction scales as O(log(N)), the overall complexity scaling is O(log(N)), in agreement with the simulations on low dimensional datasets.\" / \"the expected number of steps in a layer is bounded by a sum of geometric progression S =1/(1-exp(-mL)), which is independent of the dataset size.\"\n  where: p.7, Section 4.2.1\n- claim: Construction time scales as N log N, at least for low-dimensional data.\n  number: O(N∙log(N))\n  setup: relatively low-dimensional datasets\n  quote: \"at least for relatively low dimensional datasets the construction time scales as O(N∙log(N)).\"\n  where: p.7, Section 4.2.2\n- claim: NSW has polylogarithmic complexity because both the hop count and the hub degree grow logarithmically. HNSW splits links into layers by length scale, which caps the work per layer.\n  number: none\n  setup: analysis of the routing process\n  quote: \"the overall number of distance computations is roughly proportional to a product of the average number of greedy algorithm hops by the average degree of the nodes on the greedy path.\"\n  where: p.3, Section 3\n- claim: M is the only meaningful construction parameter left to the user. The reasonable range is 5 to 48. Small M suits low recall or low dimensions, and large M suits high recall or high dimensions. Memory grows in proportion to M.\n  number: 5 to 48\n  setup: Fig. 8, 5M SIFT, Core i5 2400\n  quote: \"The only meaningful construction parameter left for the user is M. A reasonable range of M is from 5 to 48.\" / \"memory consumption of the algorithm (which is proportional to M)\"\n  where: p.6\n- claim: The level normaliser mL defaults to 1/ln(M), which is the skip-list analogue p=1/M.\n  number: mL = 1/ln(M)\n  setup: Fig. 3: 10M random d=4 vectors, Core i7 5930K. Also Figs. 4 and 5 (d=1024, 5M SIFT)\n  quote: \"A simple choice for the optimal mL is 1/ln(M), this corresponds to the skip list parameter p=1/M with an average single element overlap between the layers.\"\n  where: p.5, Section 4.1\n- claim: Mmax0 (the maximum number of links on layer 0) should be 2·M. Setting it to M costs a lot at high recall. Setting it higher degrades performance and wastes memory.\n  number: 2∙M\n  setup: Fig. 6, 5M SIFT, M=20, Core i5 2400\n  quote: \"Simulations also suggest that 2∙M is a good choice for Mmax0: setting the parameter higher leads to performance degradation and excessive memory usage.\"\n  where: p.6\n- claim: efConstruction should be large enough that recall during construction is close to 1. Going higher adds little.\n  number: 0.95 recall; efConstruction=100 builds 10M SIFT in 3 minutes\n  setup: 10M SIFT, M=16, 4X 10-core Xeon E5-4650 v2, multithreaded\n  quote: \"it has to be large enough to produce K-ANNS recall close to unity during the construction process (0.95 is enough for the most use-cases)\" / \"a reasonable quality index can be constructed for efConstruction=100 on a 4X 2.4 GHz 10-core Xeon E5-4650 v2 CPU server in just 3 minutes.\"\n  where: p.6-7\n- claim: At query time, search quality is set by ef, the size of the dynamic candidate list on layer 0. The upper layers run with ef=1. The paper gives no recommended value for ef. Fig. 11 shows that the ef needed for a fixed recall saturates as N grows, for d=4.\n  number: none\n  setup: Algorithm 5; Fig. 11, random d=4, M=6\n  quote: \"The quality of the search is controlled by the ef parameter (corresponding to efConstruction in the construction algorithm).\"\n  where: p.5, p.7\n- claim: The index (graph links, excluding the vectors) costs about 60 to 450 bytes per element, using 4-byte link IDs.\n  number: (Mmax0+mL∙Mmax)∙bytes_per_link; 60 to 450 bytes per object\n  setup: M from 6 to 48, fewer than about 4 billion elements\n  quote: \"the average memory consumption per element is (Mmax0+mL ∙Mmax)∙bytes_per_link\" / \"the typical memory requirements for the index (excluding the size of the data) are about 60-450 bytes per object\"\n  where: p.8, Section 4.2.3\n- claim: In the 200M-SIFT comparison against Faiss PQ, HNSW used about twice the peak RAM but built far faster and gave higher accuracy and speed.\n  number: HNSW 64 Gb, 5.6 h (efC=500) or 42 min (efC=40); Faiss 30 Gb, 12 h and 23.5 Gb, 11 h\n  setup: 200M subset of 1B SIFT, 4X Xeon E5-4650 v2, 128 GB, Faiss May 2017 build, M=16\n  quote: \"Hierarchical NSW 5.6 hours 64 Gb M=16, efConstruction=500 (1) Hierarchical NSW 42 minutes 64 Gb M=16, efConstruction=40 (2) Faiss 12 hours 30 Gb OPQ64, IMI2x14, PQ64 (1) Faiss 11 hours 23.5 Gb OPQ32, IMI2x14, PQ32 (2)\" / \"Even though Hierarchical NSW requires significantly more RAM, it can achieve much higher accuracy, while offering a massive advance in search speed and much faster index construction.\"\n  where: p.10-11, Table 3\n- claim: On the ann-benchmark vector datasets, HNSW beats NSW, FLANN, Annoy, VP-tree and FALCONN by a large margin. On d=4 data it is only slightly faster than Annoy, and only at high recall. The results are curves; the paper gives no speedup figure.\n  number: datasets: SIFT 1M/d128, GloVe 1.2M/d100, CoPhIR 2M/d272, random 30M/d4, DEEP 1M/d96, MNIST 60k/d784\n  setup: single thread, 10-NN, 1,000 queries, best parameters per recall range, GCC -Ofast\n  quote: \"For SIFT, GloVE, DEEP and CoPhIR datasets Hierarchical NSW clearly outperforms the rivals by a large margin. For low dimensional data (d=4) Hierarchical NSW is slightly faster at high recall compared to the Annoy while strongly outperforms the other algorithms.\"\n  where: p.8-9, Table 1, Fig. 13\n- claim: In general (non-metric) spaces, HNSW leads on every dataset tested. Its largest gain over NSW, nearly 1,000x in distance computations, is on wiki-8 with JS divergence.\n  number: \"almost by 3 orders of magnitude\"\n  setup: nmslib tests from Naidan et al. [34]; Wiki-sparse, Wiki-8, Wiki-128, ImageNet SQFD, DNA Levenshtein; no custom distance functions\n  quote: \"The strongest enhancement over NSW, almost by 3 orders of magnitude is observed for the dataset with the lowest dimensionality, the wiki-8 with JS-divergence.\"\n  where: p.10, Fig. 14\n- claim: The diversity heuristic for choosing neighbours (Alg. 4) is never worse than taking the nearest neighbours (Alg. 3). Its gain is largest on low-dimensional data, at high recall, and on clustered data. Without it, search on clustered data gets stuck at cluster boundaries.\n  number: none\n  setup: Fig. 7, 10M d=10 random vectors with 100 clusters, M=16\n  quote: \"When using the closest neighbors as connections for the proximity graph, the Hierarchical NSW algorithm fails to achieve a high recall for clustered data because the search stucks at the clusters boundaries.\"\n  where: p.6\n- claim: NSW is the special case mL=0. HNSW search scales no worse than logarithmically and beats NSW at every dataset size tested.\n  number: none\n  setup: random hypercube data, d=8, 10-NN, recall 0.95\n  quote: \"Setting mL to zero and Mmax0 to infinity leads to production of NSW graphs with polylogarithmic complexity\" / \"Hierarchical NSW has a complexity scaling for this setting not worse than logarithmic and outperforms NSW at any dataset size.\"\n  where: p.5, p.8\n\nLIMITS\n- The O(log N) proof needs an exact Delaunay graph. The authors concede that the real graph is approximate, that backtracking fills the gap, and that the evidence for this is empirical and only at d=4. Quote: \"Further analitical evidence is required to confirm whether the resilience of Delaunay graph aproximations generalizes to higher dimensional spaces.\"\n- On 200M SIFT the measured query time does not follow a pure logarithm. Quote: \"the scaling deviates from the pure logarithm, possibly due to relatively high dimensionality of the dataset.\"\n- The paper does not support deleting or updating elements. Quote: \"add support for element updates and removal\" (future work).\n- Distributed search is lost compared with NSW. Quote: \"One of the apparent shortcomings of the proposed approach compared to the basic NSW is the loss of the possibility of distributed search.\"\n- The memory cost is high: twice the RAM of Faiss PQ in Table 3. The per-element estimate excludes the vectors themselves.\n- The paper does not show:\n  - a recommended value for ef at query time\n  - results on full billion-scale data (1B SIFT or DEEP is left as future work)\n  - GPU baselines\n  - Filtered or hybrid search\n  - a quantised or compressed HNSW\n- Dated:\n  - The baselines are 2016-17 builds: Annoy 02.02.2016, FLANN 1.8.4, FALCONN 1.2, Faiss May 2017.\n  - A footnote says \"From 2018 Faiss library has its own implementation of Hierarchical NSW.\"\n\nBUILDS ON\n- NSW: Malkov, Ponomarenko, Logvinov, Krylov 2012 and 2014 [25, 26], and Ponomarenko et al. 2011 [30]\n- Skip list: Pugh 1990 [27]\n- Navigable small worlds: Kleinberg 2000 [31, 41], and Boguna, Krioukov, Claffy 2009 [32]\n- Spatial approximation tree, the source of the heuristic: Navarro 2002 [4]\n- Relative neighbourhood graph: Toussaint 1980 [46]\n- Sparse neighbourhood graphs: Arya and Mount 1993 [18]\n- Concurrent heuristic: FANNG, Harwood and Drummond 2016 [47]\n- k-NN graph construction: Dong, Moses, Li 2011 [29], NNDescent\n- Implementation in nmslib: Boytsov and Naidan 2013 [49]\n\nCODE\n- Algorithm 1, line 4, random level: \"l ← ⌊-ln(unif(0..1))∙mL⌋  // new element's level\" (p.4)\n- Algorithm 4, core rule of the heuristic: \"if e is closer to q compared to any element from R / R ← R ⋃ e / else / Wd ← Wd ⋃ e\" (p.5)\n- Algorithm 5, search: \"for lc ← L … 1 / W ← SEARCH-LAYER(q, ep, ef=1, lc) / ep ← get nearest element from W to q / W ← SEARCH-LAYER(q, ep, ef, lc =0) / return K nearest elements from W to q\" (p.5)\n- Algorithm 2, stop rule: \"if distance(c, q) > distance(f, q) break // all elements in W are evaluated\" (p.4)\n- Reference implementations: https://github.com/nmslib/hnsw and nmslib\n\nFIGURES\n- Fig. 1, p.3: \"Illustration of the Hierarchical NSW idea. The search starts from an element from the top layer...\" It shows the layered greedy descent at a glance, so it fits the note's HNSW section.\n- Fig. 2, p.3: the heuristic keeps a link to the other cluster (e2). It shows why taking only the nearest neighbours breaks connectivity.\n- Fig. 8, p.6: recall error vs query time for M from 2 to 40 on 5M SIFT. It shows the trade-off in choosing M.\n- Fig. 10, p.7: query time vs build time, which is the efConstruction trade-off.\n- Fig. 12, p.8: distance computations for NSW vs HNSW as dataset size grows. It shows polylogarithmic vs logarithmic scaling.\n- Fig. 13, p.9: recall vs query time against Annoy, FLANN, VP-tree and FALCONN. This is the direct source for the note's \"HNSW vs. ANNOY\" comparison.\n- Fig. 15, p.10: HNSW vs Faiss on 200M SIFT.\n\nPROBLEMS\n- The extraction inserts hyphenation splits such as \"co n-nections\" and \"Hiera r-chical\". I repaired these in the quotes only where a word was split. I kept the source's own spellings (\"stucks\", \"cognestion\").\n- The plot axes come out as loose numbers, so values cannot be read off the curves. The comparison claims are therefore qualitative.\n- The PDF is the arXiv preprint, not the TPAMI 2020 version, so cite page numbers carefully.\n- The PDF contains no embedded instructions.\n\nFile: /Users/ramsey-wise/workspace/learn-ai-engineering/generative-ai/02-rag-retrieval/sources/malkov-2018-efficient-robust-approximate-nearest-neighbor.pdf"
+ "type": "system",
+ "question": "Can a fully graph-based multilayer proximity-graph index give logarithmic-complexity approximate K-nearest-neighbour search that is robust on low-dimensional and clustered data, where NSW degrades?",
+ "hypothesis": "Separating links by length scale into layers (random exponentially decaying level per element) plus a diversity heuristic for neighbour selection removes NSW's polylogarithmic scaling and its failures on low-dimensional or clustered data.",
+ "contributions": [
+  "explicit selection of the graph's enter-point node",
+  "separation of links by different scales",
+  "use of an advanced heuristic to select the neighbors"
+ ],
+ "method": {
+  "summary": "HNSW builds a multilayer proximity graph by incremental insertion; each element gets a random max layer l = floor(-ln(unif(0,1))*mL), is linked to M neighbours per layer chosen by a diversity heuristic, and search descends greedily from the top layer with ef=1 then does beam search with ef at layer 0. Implemented in C++ in nmslib and compared on ann-benchmarks vector sets, nmslib general-space sets, and 200M SIFT against Faiss PQ.",
+  "task": "approximate K-nearest-neighbour search (index build + query)",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "SIFT",
+    "role": "eval",
+    "size": "1M, d=128 (5M learn subset and 10M used in parameter and build-time studies; 200M subset of 1B SIFT for Faiss comparison)",
+    "split": "1000 queries randomly extracted from the dataset",
+    "source": "Jegou et al. 2011 [13]",
+    "preprocessing": "L2"
+   },
+   {
+    "name": "GloVe",
+    "role": "eval",
+    "size": "1.2M, d=100",
+    "split": "1000 queries",
+    "source": "word embeddings trained on tweets [52]",
+    "preprocessing": "cosine (equivalent to L2 after normalisation)"
+   },
+   {
+    "name": "CoPhIR",
+    "role": "eval",
+    "size": "2M, d=272",
+    "split": "1000 queries",
+    "source": "MPEG-7 features [53]",
+    "preprocessing": "L2"
+   },
+   {
+    "name": "Random vectors (hypercube)",
+    "role": "eval",
+    "size": "30M d=4 in benchmark; 10M d=4, 100k d=1024, random d=8, 10M d=10 in parameter studies",
+    "split": "1000 queries",
+    "source": "synthetic",
+    "preprocessing": "L2"
+   },
+   {
+    "name": "DEEP",
+    "role": "eval",
+    "size": "1M subset of billion deep image features, d=96",
+    "split": "1000 queries",
+    "source": "[14]",
+    "preprocessing": "L2"
+   },
+   {
+    "name": "MNIST",
+    "role": "eval",
+    "size": "60k, d=784",
+    "split": "1000 queries",
+    "source": "[54]",
+    "preprocessing": "L2"
+   },
+   {
+    "name": "Wiki-sparse",
+    "role": "eval",
+    "size": "4M, d=105",
+    "split": null,
+    "source": "TF-IDF via GENSIM",
+    "preprocessing": "sparse cosine"
+   },
+   {
+    "name": "Wiki-8",
+    "role": "eval",
+    "size": "2M, d=8",
+    "split": null,
+    "source": "topic histograms from wiki-sparse",
+    "preprocessing": "JS divergence"
+   },
+   {
+    "name": "Wiki-128",
+    "role": "eval",
+    "size": "2M, d=128",
+    "split": null,
+    "source": "topic histograms from wiki-sparse",
+    "preprocessing": "JS divergence"
+   },
+   {
+    "name": "ImageNet signatures",
+    "role": "eval",
+    "size": "1M, d=272",
+    "split": null,
+    "source": "LSVRC-2014, SQFD distance",
+    "preprocessing": null
+   },
+   {
+    "name": "DNA",
+    "role": "eval",
+    "size": "1M",
+    "split": null,
+    "source": "Human Genome 5 sample [34]",
+    "preprocessing": "Levenshtein"
+   }
+  ],
+  "models": [
+   {
+    "name": "Hierarchical NSW (HNSW)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "multilayer proximity graph index; alg 1-5",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "random per element, E[l]=1/mL-ish geometric; expected layers per element constant",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "M": "5 to 48 reasonable; 16 in most real-data runs, 6 for d=4/d=8 random, 20 for d=1024",
+     "Mmax0": "2*M suggested",
+     "mL": "1/ln(M) suggested",
+     "efConstruction": "100 for 10M SIFT build study; 500 and 40 for 200M SIFT; ~0.95 recall during construction suggested",
+     "extendCandidates": "false by default",
+     "keepPrunedConnections": "flag, default not stated"
+    }
+   },
+   {
+    "name": "NSW (sw-graph nmslib 1.1)",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "FLANN 1.8.4",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "tuning": "built-in auto-tuning with several reruns"
+    }
+   },
+   {
+    "name": "Annoy (02.02.2016 build)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "random projection tree forest",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "VP-tree (nmslib 1.1)",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "FALCONN 1.2",
+    "role": "baseline",
+    "params": null,
+    "architecture": "LSH for cosine",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "NAPP, brute-force filtering, NNDescent graphs",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "general-space tests, from Naidan et al. 2015 [34]"
+    }
+   },
+   {
+    "name": "Faiss PQ (May 2017 build, OpenBLAS)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "OPQ + IMI2x14 + PQ",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "settings": "OPQ64,IMI2x14,PQ64 and OPQ32,IMI2x14,PQ32 from Faiss wiki"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "1000 queries per dataset, one thread; recall and average single-search time recorded per parameter setting; no repeated runs or seeds stated",
+   "prompting": null,
+   "retrieval": "K-NN-SEARCH: ef=1 greedy descent from top layer to layer 1, then SEARCH-LAYER with ef at layer 0; 10-NN in most tests, 1-NN for 200M SIFT",
+   "parameters": {
+    "M": "5-48",
+    "Mmax0": "2*M",
+    "mL": "1/ln(M)",
+    "efConstruction": "~0.95 recall during build; 100 / 500 / 40 in tests",
+    "ef": "query-time dial, swept; no default"
+   },
+   "other": {
+    "threads": "single thread for benchmarks",
+    "compiler": "GCC 5.3 -Ofast",
+    "machines": "4X Xeon E5-4650 v2 (128 GB RAM, Debian) for main comparison; Core i5 2400 and Core i7 5930K for parameter studies; Core i7-6850K in Fig 9"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "recall",
+     "definition": "ratio between the number of found true nearest neighbors and K",
+     "unit": "fraction",
+     "higher_is_better": true
+    },
+    {
+     "name": "query time",
+     "definition": "average time of a single search",
+     "unit": "ms",
+     "higher_is_better": false
+    },
+    {
+     "name": "distance computations",
+     "definition": "number of distance evaluations per search (used for complexity)",
+     "unit": "count",
+     "higher_is_better": false
+    },
+    {
+     "name": "build time / peak memory",
+     "definition": "construction time; peak memory via linux time -v after construction",
+     "unit": "minutes/hours; Gb",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "NSW (sw-graph)",
+    "FLANN",
+    "Annoy",
+    "VP-tree",
+    "FALCONN",
+    "NAPP",
+    "NNDescent graphs",
+    "Faiss PQ"
+   ],
+   "protocol": "Best result chosen per recall range for each algorithm, starting from testbed defaults; ann-benchmark testbed for vector data, nmslib scripts for general spaces, Faiss built-in scripts for 200M SIFT. No seeds, repeats or significance tests stated."
+  },
+  "availability": {
+   "code": "https://github.com/searchivarius/nmslib and https://github.com/nmslib/hnsw",
+   "weights": null,
+   "data": "public benchmark datasets"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "HNSW search complexity is O(log N) under an exact Delaunay graph with degree capped by a constant.",
+   "kind": "claim",
+   "source": null,
+   "metric": "search complexity",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Theory assuming exact Delaunay graphs; simulations on low-dimensional (d=4) data only",
+   "quote": "And since the expectation of the maximum layer index by the construction scales as O(log(N)), the overall complexity scaling is O(log(N)), in agreement with the simulations on low dimensional datasets.",
+   "table": null,
+   "note": null,
+   "where": "Section 4.2.1"
+  },
+  {
+   "claim": "Expected steps per layer are bounded independent of dataset size.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "exact Delaunay assumption",
+   "quote": "the expected number of steps in a layer is bounded by a sum of geometric progression S =1/(1-exp(-mL)), which is independent of the dataset size.",
+   "table": null,
+   "note": null,
+   "where": "Section 4.2.1"
+  },
+  {
+   "claim": "The authors concede the approximate-graph resilience is unproven for high dimensions.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "d=128 empirical check infeasible since Delaunay degree grows exponentially with dimension",
+   "quote": "Further analitical evidence is required to confirm whether the resilience of Delaunay graph aproximations generalizes to higher dimensional spaces.",
+   "table": null,
+   "note": null,
+   "where": "Section 4.2.1"
+  },
+  {
+   "claim": "Construction time scales as N log N for low-dimensional data.",
+   "kind": "claim",
+   "source": null,
+   "metric": "construction complexity",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "low-dimensional data",
+   "quote": "at least for relatively low dimensional datasets the construction time scales as O(N∙log(N)).",
+   "table": null,
+   "note": null,
+   "where": "Section 4.2.2"
+  },
+  {
+   "claim": "On 200M SIFT query time deviates from pure logarithmic scaling.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "200M SIFT 1-NN, Fig 15 inset",
+   "quote": "Note that the scaling deviates from the pure logarithm, possibly due to relatively high dimensionality of the dataset.",
+   "table": null,
+   "note": null,
+   "where": "Section 5.4"
+  },
+  {
+   "claim": "Suggested mL is 1/ln(M), matching skip list p=1/M.",
+   "kind": "measured",
+   "source": null,
+   "metric": "mL",
+   "value": "1/ln(M)",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "simulations on 10M random d=4, 100k random d=1024, 5M SIFT (Figs 3-5)",
+   "quote": "A simple choice for the optimal mL is 1/ln(M), this corresponds to the skip list parameter p=1/M with an average single element overlap between the layers.",
+   "table": null,
+   "note": null,
+   "where": "Section 4.1"
+  },
+  {
+   "claim": "Mmax0 = 2*M is a good choice; Mmax0 = M gives a very strong penalty at high recall.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Mmax0",
+   "value": "2*M",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "5M SIFT, M=20, mL=0.33, 10-NN, Core i5 2400 (Fig 6)",
+   "quote": "Simulations also suggest that 2∙M is a good choice for Mmax0: setting the parameter higher leads to performance degradation and excessive memory usage.",
+   "table": null,
+   "note": null,
+   "where": "Section 4.1"
+  },
+  {
+   "claim": "M is the only meaningful construction parameter; reasonable range 5 to 48.",
+   "kind": "measured",
+   "source": null,
+   "metric": "M range",
+   "value": "5 to 48",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "5M SIFT, Core i5 2400 (Fig 8)",
+   "quote": "The only meaningful construction parameter left for the user is M. A reasonable range of M is from 5 to 48.",
+   "table": null,
+   "note": null,
+   "where": "Section 4.1"
+  },
+  {
+   "claim": "efConstruction should give construction-time recall near unity; 0.95 enough for most use cases.",
+   "kind": "measured",
+   "source": null,
+   "metric": "construction recall",
+   "value": 0.95,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "following Malkov 2014 [26]",
+   "quote": "(0.95 is enough for the most use-cases)",
+   "table": null,
+   "note": null,
+   "where": "Section 4.1"
+  },
+  {
+   "claim": "10M SIFT index builds in 3 minutes at efConstruction=100.",
+   "kind": "measured",
+   "source": null,
+   "metric": "build time",
+   "value": 3,
+   "unit": "minutes",
+   "baseline_value": null,
+   "n": null,
+   "setup": "10M SIFT d=128, M=16, 40 cores (Fig 9-10)",
+   "quote": "a reasonable quality index can be constructed for efConstruction=100 on a 4X 2.4 GHz 10-core Xeon E5-4650 v2 CPU server in just 3 minutes.",
+   "table": null,
+   "note": null,
+   "where": "Section 4.1"
+  },
+  {
+   "claim": "Index memory is about 60-450 bytes per object excluding data.",
+   "kind": "measured",
+   "source": null,
+   "metric": "index memory per object",
+   "value": "60-450",
+   "unit": "bytes",
+   "baseline_value": null,
+   "n": null,
+   "setup": "M between 6 and 48, 4-byte link ids, up to ~4 billion elements",
+   "quote": "This means that the typical memory requirements for the index (excluding the size of the data) are about 60-450 bytes per object, which is in a good agreement with the simulations.",
+   "table": null,
+   "note": null,
+   "where": "Section 4.2.3"
+  },
+  {
+   "claim": "Per-element memory formula.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "average over elements",
+   "quote": "(Mmax0+mL ∙Mmax)∙bytes_per_link",
+   "table": null,
+   "note": null,
+   "where": "Section 4.2.3"
+  },
+  {
+   "claim": "HNSW outperforms rivals by a large margin on SIFT, GloVe, DEEP and CoPhIR; only slightly faster than Annoy at high recall on d=4.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "ann-benchmarks, 10-NN, 1000 queries, single thread, curves in Fig 13",
+   "quote": "For SIFT, GloVE, DEEP and CoPhIR datasets Hierarchical NSW clearly outperforms the rivals by a large margin.",
+   "table": null,
+   "note": null,
+   "where": "Section 5.2"
+  },
+  {
+   "claim": "Improvement over NSW is almost 3 orders of magnitude on Wiki-8 (JS divergence).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "2M Wiki-8, 10-NN, measured in distance computations (Fig 14)",
+   "quote": "The strongest enhancement over NSW, almost by 3 orders of magnitude is observed for the dataset with the lowest dimensionality, the wiki-8 with JS-divergence.",
+   "table": null,
+   "note": null,
+   "where": "Section 5.3"
+  },
+  {
+   "claim": "HNSW build on 200M SIFT: 5.6 hours, 64 Gb peak memory with M=16, efConstruction=500.",
+   "kind": "measured",
+   "source": null,
+   "metric": "build time",
+   "value": 5.6,
+   "unit": "hours",
+   "baseline_value": null,
+   "n": null,
+   "setup": "200M SIFT subset, 1-NN, 4X Xeon E5-4650 v2, 128 GB RAM",
+   "quote": "",
+   "table": "Table 3, row Hierarchical NSW (1), column Build time",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "HNSW build with efConstruction=40 takes 42 minutes, 64 Gb.",
+   "kind": "measured",
+   "source": null,
+   "metric": "build time",
+   "value": 42,
+   "unit": "minutes",
+   "baseline_value": null,
+   "n": null,
+   "setup": "same, M=16, efConstruction=40",
+   "quote": "",
+   "table": "Table 3, row Hierarchical NSW (2), column Build time",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Faiss OPQ64,IMI2x14,PQ64 builds in 12 hours with 30 Gb peak memory.",
+   "kind": "measured",
+   "source": null,
+   "metric": "build time",
+   "value": 12,
+   "unit": "hours",
+   "baseline_value": null,
+   "n": null,
+   "setup": "200M SIFT",
+   "quote": "",
+   "table": "Table 3, row Faiss (1), column Build time",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Faiss OPQ32,IMI2x14,PQ32 builds in 11 hours with 23.5 Gb peak memory.",
+   "kind": "measured",
+   "source": null,
+   "metric": "build time",
+   "value": 11,
+   "unit": "hours",
+   "baseline_value": null,
+   "n": null,
+   "setup": "200M SIFT",
+   "quote": "",
+   "table": "Table 3, row Faiss (2), column Build time",
+   "note": "peak memory 23.5 Gb",
+   "where": "Table 3"
+  },
+  {
+   "claim": "HNSW needs significantly more RAM than Faiss PQ but gets higher accuracy, much faster search and construction.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "200M SIFT vs Faiss May 2017 build (CPU)",
+   "quote": "Even though Hierarchical NSW requires significantly more RAM, it can achieve much higher accuracy, while offering a massive advance in search speed and much faster index construction.",
+   "table": null,
+   "note": null,
+   "where": "Section 5.4"
+  },
+  {
+   "claim": "Heuristic neighbour selection fixes failure on clustered data; closest-neighbour linking sticks at cluster boundaries.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "10M random d=10, 100 isolated clusters, Fig 7",
+   "quote": "the Hierarchical NSW algorithm fails to achieve a high recall for clustered data because the search stucks at the clusters boundaries.",
+   "table": null,
+   "note": null,
+   "where": "Section 4.1"
+  },
+  {
+   "claim": "Brute-force time on SIFT 1M is 94 ms.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BF time",
+   "value": 94,
+   "unit": "ms",
+   "baseline_value": null,
+   "n": null,
+   "setup": "1M SIFT d=128",
+   "quote": "",
+   "table": "Table 1, row SIFT, column BF time",
+   "note": null,
+   "where": "Table 1"
+  }
+ ],
+ "limits": [
+  "Complexity proof assumes exact Delaunay graphs and bounded degree; approximate graph supported only by low-dimensional simulations (d=4, d=8).",
+  "Authors concede analytical evidence is needed for higher-dimensional resilience (Section 4.2.1).",
+  "Baselines are open-source implementations from 2016-2017; Faiss comparison is a May 2017 CPU build, and Faiss has had its own HNSW since 2018.",
+  "Loses NSW's distributed-search property: search always starts at the top layer (Discussion).",
+  "No support for element updates and removal; full 1B SIFT/DEEP not tested.",
+  "No repeats, seeds or error bars; best result per recall range chosen per algorithm.",
+  "HNSW 200M SIFT build used a special non-vectorized small-footprint build outside nmslib, so it is not the same code as other tests.",
+  "General-space tests used no custom distance functions for HNSW, causing some performance loss."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "recall",
+   "definition": "the ratio between the number of found true nearest neighbors and K",
+   "where": "Section 1"
+  },
+  {
+   "term": "Navigable small world networks",
+   "definition": "Networks with logarithmic or polylogarithmic scaling of the greedy graph routing",
+   "where": "Section 2.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Approximate nearest neighbor algorithm based on navigable small world graphs (Malkov et al. 2014)",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "NSW, the single-layer baseline; Alg 2 is an updated version of its search",
+   "quote": null
+  },
+  {
+   "work": "Skip lists: a probabilistic alternative to balanced trees (Pugh 1990)",
+   "year": 1990,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "HNSW seen as skip list with proximity graphs instead of linked lists",
+   "quote": null
+  },
+  {
+   "work": "Searching in metric spaces by spatial approximation (Navarro 2002)",
+   "year": 2002,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "similar neighbour-selection heuristic used for tree children",
+   "quote": null
+  },
+  {
+   "work": "Arya and Mount 1993 sparse neighborhood graphs",
+   "year": 1993,
+   "arxiv": null,
+   "relation": "related",
+   "note": "base variant of HNSW proximity graphs",
+   "quote": null
+  },
+  {
+   "work": "FANNG (Harwood and Drummond 2016)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "related",
+   "note": "similar heuristic, published after first versions of this manuscript",
+   "quote": null
+  },
+  {
+   "work": "Permutation search methods are efficient, yet faster search is possible (Naidan et al. 2015)",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "replicates",
+   "note": "subset of general-space tests rerun where NSW failed",
+   "quote": null
+  },
+  {
+   "work": "ann-benchmarks (Bernhardsson)",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "testbed for Euclid-space comparison",
+   "quote": null
+  },
+  {
+   "work": "Faiss (Johnson, Douze, Jegou)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "PQ baseline on 200M SIFT",
+   "quote": null
+  },
+  {
+   "work": "Annoy, FLANN (Muja and Lowe 2014), VP-tree, FALCONN (Andoni and Razenshteyn 2015)",
+   "year": null,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "vector-space baselines",
+   "quote": null
+  },
+  {
+   "work": "Product quantization for nearest neighbor search (Jegou et al. 2011)",
+   "year": 2011,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "SIFT 1B dataset source",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Illustration of the Hierarchical NSW idea. The search starts from an element from the top layer (shown red).",
+   "page": 3,
+   "why": "shows layered descent"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Illustration of the heuristic used to select the graph neighbors for two isolated clusters.",
+   "page": 3,
+   "why": "why diversity beats nearest-only linking"
+  },
+  {
+   "figure": "Fig 13",
+   "caption": "Results of the comparison of Hierarchical NSW with open source implementations of K-ANNS algorithms on five datasets for 10-NN searches.",
+   "page": 9,
+   "why": "main recall vs time comparison"
+  },
+  {
+   "figure": "Fig 15",
+   "caption": "Results of comparison with Faiss library on the 200M SIFT dataset from [13].",
+   "page": 10,
+   "why": "HNSW vs PQ trade-off and scaling inset"
+  }
+ ],
+ "code": [
+  {
+   "where": "Algorithm 1 line 4",
+   "snippet": "l ← ⌊-ln(unif(0..1))∙mL⌋  // new element’s level",
+   "verbatim": true
+  },
+  {
+   "where": "Section 4.2.3",
+   "snippet": "(Mmax0+mL ∙Mmax)∙bytes_per_link",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Figure axes extracted as numbers only; captions taken from body text.",
+  "Equation (1) garbled in extraction.",
+  "No embedded instructions found."
+ ]
 }

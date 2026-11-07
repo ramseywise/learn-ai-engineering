@@ -1,0 +1,213 @@
+{
+ "schema": 1,
+ "key": "2102.09672",
+ "pdf": "ai-engineering/08-multimodal-engineering/sources/nichol-2021-improved-denoising-diffusion-probabilistic-models.pdf",
+ "bib": {
+  "title": "Improved Denoising Diffusion Probabilistic Models",
+  "authors": ["Alex Nichol", "Prafulla Dhariwal"],
+  "first_author": "Nichol",
+  "year": 2021,
+  "venue": "preprint",
+  "arxiv": "2102.09672",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 53571,
+  "chars_total": 53571,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can DDPMs reach competitive log-likelihoods, sample with far fewer steps, cover the data distribution better than GANs, and scale with compute?",
+ "hypothesis": "Learning the reverse-process variances, a better noise schedule and a hybrid objective improve log-likelihood and allow fast sampling without hurting sample quality.",
+ "contributions": [
+  "Learned reverse variances (interpolation between beta_t and tilde-beta_t) with a hybrid objective L_simple + lambda L_vlb",
+  "Cosine noise schedule",
+  "Importance sampling of diffusion step to reduce gradient noise of L_vlb",
+  "Sampling with a strided subsequence of steps (50-100 steps instead of 4000)",
+  "Precision/recall comparison with BigGAN-deep",
+  "Scaling of FID and NLL with training compute"
+ ],
+ "method": {
+  "summary": "A UNet DDPM trained on CIFAR-10 and ImageNet 64x64 (also LSUN bedroom, ImageNet 256x256) with T=4000 steps, a cosine noise schedule, learned variances Sigma = exp(v log beta + (1-v) log tilde-beta) and L_hybrid = L_simple + 0.001 L_vlb with stop-gradient on the mean. Sampling uses K evenly spaced steps from the training schedule.",
+  "task": "unconditional and class-conditional image generation with diffusion models",
+  "trains": true,
+  "datasets": [
+   {"name": "ImageNet 64x64", "role": "both", "size": null, "split": "unconditional uses official ImageNet-64; FID reference stats from full training set", "source": "van den Oord et al. 2016", "preprocessing": "class-conditional 64x64 and 256x256: center crop and area downsample"},
+   {"name": "CIFAR-10", "role": "both", "size": null, "split": "FID reference stats from full training set", "source": "Krizhevsky 2009", "preprocessing": null},
+   {"name": "LSUN bedroom 256x256", "role": "both", "size": "153.6M examples seen (2.4M iterations at batch 64)", "split": "FID reference 50K training samples", "source": "Yu et al. 2015", "preprocessing": null},
+   {"name": "ImageNet 256x256 (class-conditional)", "role": "both", "size": null, "split": null, "source": null, "preprocessing": "center crop and area downsample"}
+  ],
+  "models": [
+   {"name": "Improved DDPM UNet, ImageNet 64x64, C=128", "role": "proposed", "params": "120M", "architecture": "UNet, four downsampling steps with three residual blocks each, channels [C,2C,3C,4C], multi-head attention (4 heads) at 16x16 and 8x8, timestep conditioning GroupNorm(h)(w+1)+b", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": 4, "context": null, "other": {"forward_flops": "roughly 39 billion", "diffusion_steps_T": "4000"}},
+   {"name": "Improved DDPM UNet, CIFAR-10", "role": "proposed", "params": null, "architecture": "UNet, three resblocks per downsampling stage, widths [C,2C,2C,2C], C=128", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": 4, "context": null, "other": {}},
+   {"name": "Class-conditional small", "role": "proposed", "params": "100M", "architecture": "class embedding added to timestep embedding", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"training": "1.7M steps, L_hybrid, 250 sampling steps"}},
+   {"name": "Class-conditional large", "role": "proposed", "params": "270 million", "architecture": "as above", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"training": "250K iterations, batch 2048"}},
+   {"name": "BigGAN-deep", "role": "baseline", "params": "100M across the generator and discriminator", "architecture": "GAN", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"training": "125K iterations, no truncation"}},
+   {"name": "Scaling models", "role": "proposed", "params": "30M, 68M, 120M, 270M", "architecture": "first-layer channels 64, 96, 128, 192", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}}
+  ],
+  "training": {
+   "objective": "L_hybrid = L_simple + lambda L_vlb, lambda = 0.001, stop-gradient on mu output in L_vlb term; L_vlb with importance sampling p_t proportional to sqrt(E[L_t^2]) as an ablation",
+   "optimizer": "Adam",
+   "lr": "10^-4 (scaled by 1/sqrt(channel multiplier) for scaling runs; LSUN also 2e-5 at batch 64)",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "128 for most experiments; 2048 for larger class-conditional ImageNet 64x64; 64 or 128 for LSUN",
+   "steps": "200K and 1.5M (ImageNet 64x64 ablations), 500K (CIFAR-10), 1.7M and 250K (class-conditional)",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": "CIFAR-10 swept {0.1,0.2,0.3}: 0.1 best for linear, 0.3 for cosine; ImageNet 64 dropout 0 / 0.1 / 0.3 tried in sweep",
+   "regularisation": "EMA over parameters rate 0.9999; early stopping because of overfitting on CIFAR-10 and ImageNet 64",
+   "hardware": null,
+   "compute": "theoretical FLOPs on x-axis of Fig 10 (1e17 to 1e20), assumes full hardware utilization",
+   "wall_clock": "sampling a single image takes several minutes on a modern GPU with 4000 steps",
+   "seeds": null,
+   "other": {"linear_schedule": "beta_1 = 0.0001/4 to beta_4000 = 0.02/4", "cosine_schedule": "alpha_bar_t = f(t)/f(0), f(t)=cos^2(((t/T+s)/(1+s)) pi/2), s=0.008, beta_t clipped to 0.999", "T": "4000 (1000 for baseline)", "importance_sampling_history": "previous 10 values per loss term, uniform sampling until 10 draws for every t"}
+  },
+  "inference": {
+   "decoding": "ancestral sampling over a strided subsequence of K steps: K evenly spaced reals in [1,T] rounded to nearest integer; Sigma rescaled automatically",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "FID from 50K samples, except unconditional ImageNet 64x64 which uses 10K (biases FID higher; 50K lowers FID about 2 points)",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {"sampling_steps_tested": "25, 50, 100, 200, 400, 1000, 4000", "class_conditional_sampling_steps": "250", "ddim_stride": "constant stride with final timestep T - T/K + 1"},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "NLL", "definition": "negative log-likelihood from the VLB", "unit": "bits/dim", "higher_is_better": false},
+    {"name": "FID", "definition": "Frechet inception distance", "unit": "points", "higher_is_better": false},
+    {"name": "Precision / Recall", "definition": "Kynkaanniemi et al. 2019 improved precision and recall, Inception-V3 features, K=5", "unit": "fraction", "higher_is_better": true}
+   ],
+   "baselines": ["DDPM Ho et al. 2020", "DDIM Song et al. 2020a", "BigGAN-deep", "Glow", "Flow++", "PixelCNN", "Sparse Transformer", "VQ-VAE-2"],
+   "protocol": "single runs reported; no seeds or confidence intervals stated"
+  },
+  "availability": {"code": "https://github.com/openai/improved-diffusion", "weights": null, "data": null},
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Learned variances let the model produce good samples with as few as 50 forward passes versus hundreds for DDPM.",
+   "kind": "measured", "source": null, "metric": "sampling steps", "value": "50", "unit": "forward passes", "baseline_value": null, "n": null,
+   "setup": "L_hybrid models trained with T=4000, ImageNet 64x64 and CIFAR-10, strided sampling without fine-tuning",
+   "quote": "samples with as few as 50 forward passes",
+   "table": null, "note": "Section 4 says 100 steps is sufficient for near-optimal FID.", "where": "Section 1"
+  },
+  {
+   "claim": "100 sampling steps are enough for near-optimal FID on fully trained L_hybrid models.",
+   "kind": "measured", "source": null, "metric": "sampling steps", "value": "100", "unit": "steps", "baseline_value": null, "n": null,
+   "setup": "L_hybrid, T=4000, ImageNet 64x64 and CIFAR-10, Fig 8",
+   "quote": "near-optimal FIDs for our fully",
+   "table": null, "note": null, "where": "Section 4"
+  },
+  {
+   "claim": "DDIM gives better samples than the learned-variance sampler with fewer than 50 steps, worse with 50 or more.",
+   "kind": "measured", "source": null, "metric": "sampling steps crossover", "value": "50", "unit": "steps", "baseline_value": null, "n": null,
+   "setup": "Fig 8, ImageNet 64x64 and CIFAR-10, DDIM with constant striding",
+   "quote": "duces better samples with fewer than 50 sampling steps, but",
+   "table": null, "note": null, "where": "Section 4"
+  },
+  {
+   "claim": "Baseline Ho et al. setup (T=1K, linear, L_simple) on ImageNet 64x64 at 200K iterations.",
+   "kind": "measured", "source": null, "metric": "NLL", "value": "3.99", "unit": "bits/dim", "baseline_value": null, "n": null,
+   "setup": "ImageNet 64x64 unconditional, 200K iterations, FID 32.5 from 10K samples",
+   "quote": null, "table": "Table 1, row 200K/1K/linear/Lsimple, column NLL (3.99) and FID (32.5)", "note": null, "where": "Table 1"
+  },
+  {
+   "claim": "Cosine schedule with L_hybrid at 200K iterations reaches NLL 3.62 and FID 28.0.",
+   "kind": "measured", "source": null, "metric": "NLL", "value": "3.62", "unit": "bits/dim", "baseline_value": "3.99", "n": null,
+   "setup": "ImageNet 64x64, T=4K, 200K iterations",
+   "quote": null, "table": "Table 1, row 200K/4K/cosine/Lhybrid, columns NLL 3.62, FID 28.0", "note": null, "where": "Table 1"
+  },
+  {
+   "claim": "Optimizing L_vlb with cosine schedule gives the best NLL but much worse FID at 200K iterations.",
+   "kind": "measured", "source": null, "metric": "FID", "value": "56.7", "unit": "points", "baseline_value": "28.0", "n": null,
+   "setup": "ImageNet 64x64, T=4K, cosine, L_vlb, 200K iterations, NLL 3.57",
+   "quote": null, "table": "Table 1, row 200K/4K/cosine/Lvlb, column FID", "note": null, "where": "Table 1"
+  },
+  {
+   "claim": "At 1.5M iterations, L_hybrid reaches FID 19.2 and L_vlb reaches NLL 3.53 with FID 40.1.",
+   "kind": "measured", "source": null, "metric": "FID", "value": "19.2", "unit": "points", "baseline_value": "40.1", "n": null,
+   "setup": "ImageNet 64x64 unconditional, T=4K, cosine, 1.5M iterations (Lhybrid NLL 3.57, Lvlb FID 40.1)",
+   "quote": null, "table": "Table 1, rows 1.5M/4K/cosine, columns NLL, FID", "note": null, "where": "Table 1"
+  },
+  {
+   "claim": "On CIFAR-10, L_vlb with cosine reaches NLL 2.94 but FID 11.47; L_hybrid gives NLL 3.17, FID 3.19.",
+   "kind": "measured", "source": null, "metric": "NLL", "value": "2.94", "unit": "bits/dim", "baseline_value": "3.73", "n": null,
+   "setup": "CIFAR-10, T=4K, cosine, 500K iterations; baseline row linear/Lsimple/T=1K NLL 3.73 FID 3.29",
+   "quote": null, "table": "Table 2, row 500K/4K/cosine/Lvlb, columns NLL 2.94, FID 11.47", "note": null, "where": "Table 2"
+  },
+  {
+   "claim": "Improved DDPM NLL competitive with best convolutional models: 3.53 ImageNet 64x64, 2.94 CIFAR-10 vs DDPM 3.77 and 3.70.",
+   "kind": "measured", "source": null, "metric": "NLL", "value": "3.53", "unit": "bits/dim", "baseline_value": "3.77", "n": null,
+   "setup": "unconditional ImageNet 64x64; CIFAR-10 2.94 vs DDPM 3.70",
+   "quote": null, "table": "Table 3, row Improved DDPM (ours), columns ImageNet 3.53, CIFAR 2.94; row DDPM (Ho et al., 2020) 3.77, 3.70", "note": "Worse than fully transformer-based architectures (Sparse Transformer 3.44, 2.80).", "where": "Table 3"
+  },
+  {
+   "claim": "Diffusion has much higher recall than BigGAN-deep at similar FID on class-conditional ImageNet 64x64.",
+   "kind": "measured", "source": null, "metric": "Recall", "value": "0.71", "unit": "fraction", "baseline_value": "0.59", "n": null,
+   "setup": "class-conditional ImageNet 64x64, 50K samples, 250 steps, Improved Diffusion (large, 270M) FID 2.92 prec 0.82; BigGAN-deep (no truncation) FID 4.06 prec 0.86 recall 0.59; small model FID 6.92 prec 0.77 recall 0.72",
+   "quote": null, "table": "Table 4, rows Improved Diffusion (large) and BigGAN-deep, column Recall", "note": null, "where": "Table 4"
+  },
+  {
+   "claim": "Two-stage ImageNet 256x256 diffusion reaches FID 12.3, versus 31.5 single-stage and 7.0 for BigGAN-deep.",
+   "kind": "measured", "source": null, "metric": "FID", "value": "12.3", "unit": "points", "baseline_value": "7.0", "n": null,
+   "setup": "class-conditional ImageNet 256x256, linear schedule, 250 sampling steps",
+   "quote": null, "table": "Table 5, rows Improved Diffusion (ours, two-stage) 12.3, single-stage 31.5, BigGAN-deep 7.0", "note": null, "where": "Table 5, Appendix C"
+  },
+  {
+   "claim": "FID follows an approximate power law in training compute.",
+   "kind": "measured", "source": null, "metric": "FID fit", "value": null, "unit": null, "baseline_value": null, "n": null,
+   "setup": "four ImageNet 64x64 L_hybrid models, 30M to 270M params; fit 4.00 + (2.500e-25*C)^-0.22; NLL fit 3.40 + (3.000e-15*C)^-0.17 fits less cleanly",
+   "quote": "4.00 + (2.500e-25*C)^-0.22", "table": null, "note": "Authors call the results preliminary.", "where": "Section 6, Fig 10"
+  },
+  {
+   "claim": "Ensembling theta_hybrid in the middle with theta_vlb at the first and last 100 steps gives FID 19.9 and NLL 3.52.",
+   "kind": "measured", "source": null, "metric": "NLL", "value": "3.52", "unit": "bits/dim", "baseline_value": null, "n": null,
+   "setup": "ImageNet 64x64 unconditional",
+   "quote": "FID of 19.9 and an NLL of 3.52 bits/dim", "table": null, "note": null, "where": "Appendix D"
+  }
+ ],
+ "limits": [
+  "Scaling results are called preliminary; NLL does not fit a power law cleanly.",
+  "Models overfit on CIFAR-10 and class-conditional ImageNet 64x64; early stopping needed.",
+  "Unconditional ImageNet 64x64 FID uses 10K samples, biasing FID higher by about 2 points relative to 50K.",
+  "Likelihood is worse than fully transformer-based models.",
+  "Hardware, seeds and wall-clock for training are not stated; single runs.",
+  "BigGAN-deep still beats the small diffusion model on FID and remains better on 256x256 (7.0 vs 12.3)."
+ ],
+ "practices": [],
+ "terms": [],
+ "lineage": [
+  {"work": "Denoising diffusion probabilistic models (Ho et al.)", "year": 2020, "arxiv": "2006.11239", "relation": "extends", "note": "Base formulation, L_simple, UNet", "quote": null},
+  {"work": "Deep unsupervised learning using nonequilibrium thermodynamics (Sohl-Dickstein et al.)", "year": 2015, "arxiv": "1503.03585", "relation": "extends", "note": "Original diffusion models", "quote": null},
+  {"work": "Denoising diffusion implicit models (Song et al.)", "year": 2020, "arxiv": "2010.02502", "relation": "baseline", "note": "Parallel fast-sampling method compared in Fig 8", "quote": null},
+  {"work": "Large scale GAN training (BigGAN)", "year": 2018, "arxiv": "1809.11096", "relation": "baseline", "note": "GAN comparison", "quote": null},
+  {"work": "Improved precision and recall metric (Kynkaanniemi et al.)", "year": 2019, "arxiv": null, "relation": "uses-method", "note": "Recall metric", "quote": null},
+  {"work": "Scaling laws for autoregressive generative modeling (Henighan et al.)", "year": 2020, "arxiv": null, "relation": "related", "note": "Scaling analysis style", "quote": null},
+  {"work": "ImageNet 64x64 (van den Oord et al.)", "year": 2016, "arxiv": null, "relation": "uses-data", "note": "Main dataset", "quote": null},
+  {"work": "CIFAR-10 (Krizhevsky)", "year": 2009, "arxiv": null, "relation": "uses-data", "note": "Dataset", "quote": null},
+  {"work": "LSUN (Yu et al.)", "year": 2015, "arxiv": null, "relation": "uses-data", "note": "Dataset", "quote": null},
+  {"work": "Empirical model of large-batch training (McCandlish et al.)", "year": 2018, "arxiv": null, "relation": "uses-method", "note": "Gradient noise scale", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 5", "caption": "alpha_bar_t throughout diffusion in the linear schedule and our proposed cosine schedule.", "page": 4, "why": "Shows linear schedule destroys information faster than needed."},
+  {"figure": "Fig 8", "caption": "FID versus number of sampling steps, for models trained on ImageNet 64 x 64 (top) and CIFAR-10 (bottom). All models were trained with 4000 diffusion steps.", "page": 6, "why": "Key result: learned variances keep FID at few sampling steps."},
+  {"figure": "Fig 10", "caption": "FID and validation NLL throughout training on ImageNet 64 x 64 for different model sizes.", "page": 8, "why": "Compute scaling fit."}
+ ],
+ "code": [
+  {"where": "Eq 15", "snippet": "Sigma_theta(x_t, t) = exp(v log beta_t + (1 - v) log tilde-beta_t)", "verbatim": false},
+  {"where": "Eq 16", "snippet": "L_hybrid = L_simple + lambda L_vlb, lambda = 0.001", "verbatim": false}
+ ],
+ "problems": [
+  "No embedded instructions found. Figure text is interleaved with body text in the cached extraction; dataset sizes are not stated in the paper."
+ ]
+}

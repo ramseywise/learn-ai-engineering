@@ -1,0 +1,177 @@
+{
+ "schema": 1,
+ "key": "2305.06500",
+ "pdf": "ai-engineering/08-multimodal-engineering/sources/dai-2023-instructblip.pdf",
+ "bib": {
+  "title": "InstructBLIP: Towards General-purpose Vision-Language Models with Instruction Tuning",
+  "authors": ["Wenliang Dai", "Junnan Li", "Dongxu Li", "Anthony Meng Huat Tiong", "Junqi Zhao", "Weisheng Wang", "Boyang Li", "Pascale Fung", "Steven Hoi"],
+  "first_author": "Dai",
+  "year": 2023,
+  "venue": "preprint (Under review; arXiv v2, 15 Jun 2023)",
+  "arxiv": "2305.06500",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 60007,
+  "chars_total": 60007,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Does instruction tuning a BLIP-2 model on many instruction-formatted vision-language datasets produce a general-purpose model that generalises zero-shot to unseen datasets and tasks?",
+ "hypothesis": "Instruction tuning, plus letting the Q-Former see the instruction, improves zero-shot generalisation over BLIP-2 and over plain multitask training.",
+ "contributions": [
+  "A systematic study of vision-language instruction tuning: 26 datasets in 11 task categories, 13 held-in for tuning and 13 held-out for zero-shot evaluation, with four task categories held out entirely",
+  "Instruction-aware visual feature extraction (the instruction is also fed to the Q-Former) and a square-root-size balanced dataset sampling strategy",
+  "An open-sourced suite of InstructBLIP models on FlanT5 and Vicuna, with state-of-the-art zero-shot and finetuned results"
+ ],
+ "method": {
+  "summary": "Start from pretrained BLIP-2 (ViT-g/14 image encoder, Q-Former, frozen LLM) and instruction-tune only the Q-Former on 13 held-in datasets turned into instruction templates. The instruction text is fed to the Q-Former as well as the LLM, so the visual features depend on the instruction. Evaluate zero-shot on 13 held-out datasets and finetune on four downstream datasets.",
+  "task": "vision-language instruction tuning (captioning, VQA, video QA, classification, visual dialog)",
+  "trains": true,
+  "datasets": [
+   {"name": "13 held-in datasets (COCO Caption, Web CapFilt, TextCaps, VQAv2, OKVQA, A-OKVQA, OCR-VQA, LLaVA-Instruct-150K, plus held-in image question generation built from QA sets)", "role": "train", "size": "COCO 82K train images; Web CapFilt 14M image-text pairs; TextCaps 21K train images; VQAv2 82K train; OKVQA 9K train; A-OKVQA 17K train questions; OCR-VQA 800K train; LLaVA-Instruct-150K 23K detailed caption + 77K reasoning + 58K conversation. Per-dataset sampling counts and the exact list of 13 are not given in text", "split": "training sets for tuning; validation or test sets for held-in evaluation", "source": "public datasets; see Table 4", "preprocessing": "Each task gets 10 to 15 hand-written instruction templates sampled uniformly; 'short'/'briefly' added to some templates; no templates for LLaVA-Instruct-150K; OCR tokens added after the image query embeddings for scene-text datasets"},
+   {"name": "13 held-out datasets (NoCaps, Flickr30K, GQA, VSR, IconQA, TextVQA, Visual Dialog, HatefulMemes, VizWiz, ScienceQA-IMG, MSVD-QA, MSRVTT-QA, iVQA)", "role": "eval", "size": "e.g. NoCaps 15,100 images; Flickr30K test 1K images; Visual Dialog val 2,064 images x 10 rounds; MSVD-QA test 13K QA pairs; MSRVTT-QA test 72K; iVQA 2K test", "split": "NoCaps val, Flickr30K test, GQA test-dev, VSR test, IconQA test, TextVQA val, Visdial val, HM val, VizWiz test-dev, ScienceQA test, MSVD test, MSRVTT test, iVQA test", "source": "public datasets; see Table 4", "preprocessing": "ScienceQA restricted to image-context questions; four task categories held out entirely (visual reasoning, video QA, visual conversational QA, image classification)"},
+   {"name": "ScienceQA IMG, OCR-VQA, OKVQA, A-OKVQA", "role": "both", "size": "OCR-VQA 800K/100K/100K train/val/test; OKVQA 9K/5K; A-OKVQA 17K/1K/6K", "split": "train for finetuning; ScienceQA test, OCR-VQA test, OKVQA test, A-OKVQA val and test (Table 3)", "source": "public", "preprocessing": "image resolution kept at 224x224 during finetuning"}
+  ],
+  "models": [
+   {"name": "InstructBLIP (FlanT5-XL)", "role": "proposed", "params": "3B LLM (4B total as stated in Sec 3.1)", "architecture": "ViT-g/14 image encoder + Q-Former + frozen encoder-decoder FlanT5 LLM", "init_from": "pretrained BLIP-2 FlanT5-XL checkpoint", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"trainable": "Q-Former only; image encoder and LLM frozen", "num_queries_K": "not stated"}},
+   {"name": "InstructBLIP (FlanT5-XXL)", "role": "proposed", "params": "11B LLM", "architecture": "ViT-g/14 + Q-Former + frozen FlanT5-XXL", "init_from": "pretrained BLIP-2 FlanT5-XXL checkpoint", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "InstructBLIP (Vicuna-7B)", "role": "proposed", "params": "7B LLM", "architecture": "ViT-g/14 + Q-Former + frozen decoder-only Vicuna-7B (instruction-tuned LLaMA)", "init_from": "BLIP-2 pretrained by the authors with Vicuna using the same procedure as BLIP-2 (no official checkpoint existed)", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "InstructBLIP (Vicuna-13B)", "role": "proposed", "params": "13B LLM", "architecture": "ViT-g/14 + Q-Former + frozen Vicuna-13B", "init_from": "BLIP-2 pretrained by the authors with Vicuna", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "BLIP-2 (FlanT5-XL, FlanT5-XXL, Vicuna-7B, Vicuna-13B)", "role": "baseline", "params": "as LLM", "architecture": "instruction-agnostic Q-Former", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "Flamingo-3B / 9B / 80B", "role": "baseline", "params": "3B/9B/80B", "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"note": "numbers taken from Alayrac et al. 2022"}}
+  ],
+  "training": {
+   "objective": "standard language modeling loss to generate the response given the instruction",
+   "optimizer": "AdamW, beta1 = 0.9, beta2 = 0.999",
+   "lr": "peak 1e-5 (linear warmup from 1e-8)",
+   "lr_schedule": "linear warmup then cosine decay to minimum learning rate 0",
+   "warmup": "1,000 steps",
+   "batch_size": "192 (3B), 128 (7B), 64 (11B/13B)",
+   "steps": "maximum 60K steps; validate every 3K steps; one optimal checkpoint selected per model and used for all datasets",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": "0.05",
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "16 Nvidia A100 (40G) GPUs",
+   "compute": null,
+   "wall_clock": "within 1.5 days",
+   "seeds": null,
+   "other": {
+    "sampling": "dataset d sampled with p_d = sqrt(S_d) / sum_i sqrt(S_i), with manual weight adjustments: A-OKVQA lowered, OKVQA raised (amounts not given)",
+    "frozen": "image encoder and LLM",
+    "trainable_params_finetuning": "188M (versus 1.2B when the visual encoder is also finetuned, as in BLIP-2/Flamingo)",
+    "library": "LAVIS",
+    "finetuning_hyperparameters": "not stated for the downstream finetuning of Table 3"
+   }
+  },
+  "inference": {
+   "decoding": "direct generation for captioning and open-ended VQA; vocabulary ranking (restrict to candidate list, pick highest log-likelihood) for ScienceQA, IconQA, A-OKVQA multiple-choice, HatefulMemes, Visual Dialog, MSVD, MSRVTT",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single run per model; no seeds or variance reported",
+   "prompting": "zero-shot instruction per dataset (Appendix E); options listed as (a) blue (b) yellow ...; binary classification expands labels into verbalizer sets (yes/true, no/false)",
+   "retrieval": null,
+   "parameters": {"video_frames": "4 uniformly sampled frames per video, each through image encoder and Q-Former, features concatenated before the LLM"},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "CIDEr", "definition": "caption consensus score", "unit": "points", "higher_is_better": true},
+    {"name": "Top-1 accuracy", "definition": "used for all datasets except NoCaps, Flickr30K, iVQA, HatefulMemes, Visual Dialog", "unit": "%", "higher_is_better": true},
+    {"name": "iVQA accuracy", "definition": "iVQA accuracy", "unit": "%", "higher_is_better": true},
+    {"name": "AUC", "definition": "HatefulMemes", "unit": "%", "higher_is_better": true},
+    {"name": "MRR", "definition": "Mean Reciprocal Rank for Visual Dialog, chosen over NDCG because NDCG favours generic, uncertain answers", "unit": "points", "higher_is_better": true}
+   ],
+   "baselines": ["BLIP-2 (FlanT5-XL, FlanT5-XXL, Vicuna-7B, Vicuna-13B)", "Flamingo-3B/9B/80B", "multitask training (plain input; dataset-name identifier)", "Previous SOTA finetuned: LLaVA, GIT, PaLM-E (562B), PromptCap, Shao et al. 2023"],
+   "protocol": "zero-shot on held-out sets; ablations on FlanT5-XL and Vicuna-7B; multitask comparison on FlanT5-XL under identical training settings; held-out average for the multitask comparison over GQA, TextVQA, VSR, HatefulMemes, IconQA, ScienceQA, iVQA, VizWiz. No seeds or significance tests."
+  },
+  "availability": {
+   "code": "https://github.com/salesforce/LAVIS/tree/main/projects/instructblip",
+   "weights": "All InstructBLIP models are open-sourced",
+   "data": "public datasets; instruction templates in Appendix D and E"
+  },
+  "prompts": [
+   {"purpose": "caption zero-shot (NoCaps, Flickr30k)", "text": "<Image> A short image description:", "where": "Appendix E"},
+   {"purpose": "short-answer VQA zero-shot (GQA, VizWiz, iVQA, MSVD, MSRVTT)", "text": "<Image> Question: {} Short answer:", "where": "Appendix E"},
+   {"purpose": "TextVQA zero-shot", "text": "<Image> OCR tokens: {}. Question: {} Short answer:", "where": "Appendix E"},
+   {"purpose": "IconQA zero-shot", "text": "<Image> Question: {} Options: {}. Short answer:", "where": "Appendix E"},
+   {"purpose": "ScienceQA zero-shot", "text": "<Image> Context: {} Question: {} Options: {}. Answer:", "where": "Appendix E"},
+   {"purpose": "HatefulMemes zero-shot", "text": "<Image> This is an image with: \"{}\" written on it. Is it hateful? Answer:", "where": "Appendix E"},
+   {"purpose": "VSR zero-shot", "text": "<Image> Based on the image, is this statement true or false? \"{}\" Answer:", "where": "Appendix E"},
+   {"purpose": "Visual Dialog zero-shot", "text": "<Image> Dialog history: {}\\n Question: {} Short answer:", "where": "Appendix E"},
+   {"purpose": "training template examples (VQA)", "text": "<Image>Question: {Question} Short answer:", "where": "Table 5, Appendix D"},
+   {"purpose": "training template example (question generation)", "text": "<Image>Given the image, generate a question whose answer is: {Answer}. Question:", "where": "Table 5, Appendix D"}
+  ],
+  "evidence": [
+   {"field": "training.lr", "quote": "increasing from 10−8 to 10−5", "where": "Sec 2.6"}
+  ]
+ },
+ "results": [
+  {"claim": "InstructBLIP FlanT5-XL gives a 15.0% average relative improvement over BLIP-2 FlanT5-XL on the held-out datasets.", "kind": "measured", "source": null, "metric": "average relative improvement", "value": "15.0", "unit": "%", "baseline_value": null, "n": null, "setup": "13 held-out datasets, zero-shot, FlanT5-XL backbone", "quote": "FlanT5XL yields an average relative improvement of 15.0% when compared to BLIP-2 FlanT5XL", "table": null, "note": null, "where": "Sec 3.1"},
+  {"claim": "InstructBLIP FlanT5-XL (4B parameters) beats Flamingo-80B on all six shared datasets, by 24.8% average relative improvement.", "kind": "measured", "source": null, "metric": "average relative improvement vs Flamingo-80B", "value": "24.8", "unit": "%", "baseline_value": null, "n": 6, "setup": "zero-shot, six datasets shared with Flamingo-80B", "quote": "outperforms Flamingo-80B on all six shared evaluation", "table": null, "note": "Text then reads 'datasets with an average relative improvement of 24.8%' after a line break.", "where": "Sec 3.1"},
+  {"claim": "InstructBLIP reaches up to 47.1% relative improvement on MSRVTT-QA over the previous SOTA despite never seeing temporal video data in training.", "kind": "measured", "source": null, "metric": "relative improvement on MSRVTT-QA", "value": "47.1", "unit": "%", "baseline_value": null, "n": null, "setup": "zero-shot, held-out task category video QA", "quote": "InstructBLIP achieves up to 47.1% relative improvement on MSRVTT-QA over the", "table": null, "note": null, "where": "Sec 3.1"},
+  {"claim": "Removing instruction-aware visual features lowers ScienceQA-IMG accuracy by 7.0 points on FlanT5-XL.", "kind": "measured", "source": null, "metric": "ScienceQA accuracy drop", "value": "63.4", "unit": "%", "baseline_value": "70.4", "n": null, "setup": "InstructBLIP FlanT5-XL, held-out ScienceQA image-context, ablation", "quote": null, "table": "Table 2, row w/o Instruction-aware Visual Features (FlanT5XL), column ScienceQA: 63.4 (↓7.0) vs 70.4", "note": null, "where": "Table 2"},
+  {"claim": "Removing instruction-aware features drops iVQA from 52.2 to 36.8 (15.4 points) on Vicuna-7B, the largest ablation effect.", "kind": "measured", "source": null, "metric": "iVQA accuracy", "value": "36.8", "unit": "%", "baseline_value": "52.2", "n": null, "setup": "InstructBLIP Vicuna-7B, ablation", "quote": null, "table": "Table 2, row w/o Instruction-aware Visual Features (Vicuna-7B), column iVQA: 36.8 (↓15.4) vs 52.2", "note": null, "where": "Table 2"},
+  {"claim": "Held-in average falls from 94.1 to 89.8 without instruction-aware features, and to 92.6 without data balancing (FlanT5-XL).", "kind": "measured", "source": null, "metric": "held-in average", "value": "89.8", "unit": "points", "baseline_value": "94.1", "n": 4, "setup": "FlanT5-XL; average of COCO Caption, OKVQA, A-OKVQA, TextCaps", "quote": null, "table": "Table 2, rows w/o Instruction-aware Visual Features (89.8) and w/o Data Balancing (92.6), column Held-in Avg., baseline 94.1", "note": null, "where": "Table 2"},
+  {"claim": "Instruction tuning beats multitask training on held-out average (52.9 vs 45.5 to 46.8) while the two tie on held-in (about 93.7-93.8 vs 89.0-93.7); multitask training stays at BLIP-2 zero-shot level.", "kind": "measured", "source": null, "metric": "held-out average", "value": "52.9", "unit": "points", "baseline_value": "46.8", "n": 8, "setup": "BLIP-2 FlanT5-XL backbone, identical training; held-out avg over GQA, TextVQA, VSR, HM, IconQA, ScienceQA, iVQA, VizWiz", "quote": null, "table": "Fig 4 (values read from figure labels: held-out 46.1, 46.3, 45.5, 46.8, 52.9; held-in 67.8, 92.5, 89.0, 93.7, 93.8)", "note": "Read from Fig 4 labels; the mapping of bars to labels is inferred from the legend order (BLIP-2 zero-shot, plain input, dataset name, dataset name eval, InstructBLIP). Sec 1 refers to this result as 'Table 4' but it is Figure 4.", "where": "Sec 3.4, Fig 4"},
+  {"claim": "InstructBLIP FlanT5-XXL finetuned reaches 90.7 on ScienceQA-IMG, versus 89.5 for BLIP-2 and 89.0 for LLaVA.", "kind": "measured", "source": null, "metric": "ScienceQA IMG accuracy", "value": "90.7", "unit": "%", "baseline_value": "89.5", "n": null, "setup": "finetuned on downstream dataset, 224x224 resolution, frozen visual encoder", "quote": "90.7% accuracy on ScienceQA questions with image contexts", "table": null, "note": null, "where": "Abstract; Table 3"},
+  {"claim": "Finetuning cuts trainable parameters from 1.2B to 188M by keeping the visual encoder frozen at 224x224.", "kind": "measured", "source": null, "metric": "trainable parameters", "value": "188M", "unit": null, "baseline_value": "1.2B", "n": null, "setup": "downstream finetuning versus BLIP-2/Flamingo-style approach", "quote": "reduces the number of trainable parameters from 1.2B to 188M", "table": null, "note": "Text line-breaks 'significantly reduces the number of trainable parameters from 1.2B to 188M'.", "where": "Sec 3.5"},
+  {"claim": "Zero-shot, InstructBLIP Vicuna-7B reaches 123.1 CIDEr on NoCaps against 107.5 for BLIP-2 Vicuna-7B.", "kind": "measured", "source": null, "metric": "NoCaps CIDEr", "value": "123.1", "unit": "points", "baseline_value": "107.5", "n": null, "setup": "zero-shot, held-out", "quote": null, "table": "Table 1, row InstructBLIP (Vicuna-7B), column NoCaps", "note": null, "where": "Table 1"},
+  {"claim": "Zero-shot on MSRVTT-QA, InstructBLIP FlanT5-XXL gets 25.6 against Flamingo-80B at 17.4 and BLIP-2 FlanT5-XXL at 17.4.", "kind": "measured", "source": null, "metric": "MSRVTT-QA accuracy", "value": "25.6", "unit": "%", "baseline_value": "17.4", "n": null, "setup": "zero-shot, 4 frames", "quote": null, "table": "Table 1, row InstructBLIP (FlanT5XXL), column MSRVTT QA", "note": null, "where": "Table 1"},
+  {"claim": "FlanT5-based InstructBLIP is better at multiple-choice tasks, Vicuna-based at open-ended generation, which the authors attribute to the frozen LLM.", "kind": "claim", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "downstream finetuning, Table 3; explanation not tested", "quote": null, "table": null, "note": null, "where": "Sec 3.5"}
+ ],
+ "limits": [
+  "Authors state the model inherits hallucination and bias from the frozen LLMs and do not recommend downstream use without safety and fairness assessment (Appendix A).",
+  "No seeds, variance or significance tests; one checkpoint chosen by validation per model.",
+  "Qualitative comparison with GPT-4, LLaVA and MiniGPT-4 uses few hand-picked examples, with responses taken from their papers or demos.",
+  "Ablations only on FlanT5-XL and Vicuna-7B and only five held-out datasets; the manual sampling-weight adjustments are not quantified.",
+  "The FlanT5 vs Vicuna explanation for multi-choice vs open-ended finetuning differences is asserted, not tested.",
+  "Held-out sets were chosen to avoid contamination but the LLM and image encoder pretraining data are not audited.",
+  "Dated: Flamingo, LLaVA, MiniGPT-4 and GPT-4 comparisons are from early 2023."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "instruction-aware visual feature extraction", "definition": "the textual instruction is given not only to the frozen LLM, but also to the Q-Former, so that it can extract instruction-aware visual features from the frozen image encoder", "where": "Sec 1, 2.3"},
+  {"term": "held-in / held-out datasets", "definition": "held-in datasets are used for instruction tuning; held-out datasets are for zero-shot evaluation, either seen tasks on unseen datasets or entirely unseen tasks", "where": "Sec 2.2"},
+  {"term": "vocabulary ranking", "definition": "restrict the model's vocabulary to a list of candidates, compute log-likelihood for each and select the highest", "where": "Sec 2.5"}
+ ],
+ "lineage": [
+  {"work": "BLIP-2: Bootstrapping language-image pre-training with frozen image encoders and large language models", "year": 2023, "arxiv": "2301.12597", "relation": "extends", "note": "Initialises from BLIP-2 and adds instruction-aware Q-Former", "quote": null},
+  {"work": "Flamingo", "year": 2022, "arxiv": "2204.14198", "relation": "baseline", "note": "Zero-shot comparison, 3B/9B/80B", "quote": null},
+  {"work": "Finetuned language models are zero-shot learners (FLAN)", "year": 2022, "arxiv": "2109.01652", "relation": "uses-method", "note": "Instruction tuning protocol, multitask comparison and vocabulary ranking", "quote": null},
+  {"work": "Scaling instruction-finetuned language models (FlanT5)", "year": 2022, "arxiv": "2210.11416", "relation": "uses-method", "note": "Frozen LLM backbone", "quote": null},
+  {"work": "Vicuna", "year": 2023, "arxiv": null, "relation": "uses-method", "note": "Frozen LLM backbone", "quote": null},
+  {"work": "LLaMA", "year": 2023, "arxiv": "2302.13971", "relation": "related", "note": "Vicuna base", "quote": null},
+  {"work": "Visual instruction tuning (LLaVA)", "year": 2023, "arxiv": "2304.08485", "relation": "baseline", "note": "Compared qualitatively and in Table 3; LLaVA-Instruct-150K used as training data", "quote": null},
+  {"work": "MiniGPT-4", "year": 2023, "arxiv": "2304.10592", "relation": "baseline", "note": "Qualitative comparison", "quote": null},
+  {"work": "GPT-4 technical report", "year": 2023, "arxiv": "2303.08774", "relation": "baseline", "note": "Qualitative comparison", "quote": null},
+  {"work": "PaLM-E", "year": 2023, "arxiv": "2303.03378", "relation": "baseline", "note": "Beats InstructBLIP on OKVQA finetuned", "quote": null},
+  {"work": "LAVIS library", "year": 2022, "arxiv": "2209.09019", "relation": "uses-method", "note": "Implementation", "quote": null},
+  {"work": "mPLUG-owl; MultiInstruct", "year": 2023, "arxiv": null, "relation": "related", "note": "Concurrent vision-language instruction tuning", "quote": null},
+  {"work": "Multi-task learning approaches (Cho et al. 2021; Lu et al. 2020)", "year": 2021, "arxiv": "2102.02779", "relation": "related", "note": "Prior approach said not to generalise to unseen datasets", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 2", "caption": "Tasks and their corresponding datasets used for vision-language instruction tuning. The held-in datasets are indicated by yellow and the held-out datasets by white.", "page": 4, "why": "Shows the held-in / held-out split across 11 task categories."},
+  {"figure": "Fig 3", "caption": "Model architecture of InstructBLIP. The Q-Former extracts instruction-aware visual features from the output embeddings of the frozen image encoder, and feeds the visual features as soft prompt input to the frozen LLM.", "page": 5, "why": "Shows where the instruction enters the Q-Former self-attention."},
+  {"figure": "Fig 4", "caption": "Comparison of instruction tuning and multitask training based on BLIP-2 FlanT5XL backbone.", "page": 8, "why": "Held-in ties, held-out 52.9 vs about 46: the evidence that instruction format drives generalisation."},
+  {"figure": "Table 1", "caption": "Zero-shot results on the held-out datasets.", "page": 6, "why": "Main result table against BLIP-2 and Flamingo."}
+ ],
+ "code": [
+  {"where": "Sec 2.4", "snippet": "p_d = sqrt(S_d) / sum_{i=1..D} sqrt(S_i)", "verbatim": false}
+ ],
+ "problems": [
+  "PDF text is clean; table cells are extracted one per line, so table rows were mapped to columns by order.",
+  "Intro cites 'Table 4' for the multitask-without-instructions result, but it is Figure 4 (Table 4 lists datasets).",
+  "Sec 3.1 says FlanT5-XL has '4B parameters' while Sec 2.6 lists it as 3B (the LLM alone).",
+  "Number of Q-Former queries, max generation length, decoding settings, downstream finetuning hyperparameters and seeds are not stated.",
+  "No embedded instructions found."
+ ]
+}

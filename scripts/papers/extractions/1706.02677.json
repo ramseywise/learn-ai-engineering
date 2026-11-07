@@ -1,0 +1,603 @@
+{
+ "schema": 1,
+ "key": "1706.02677",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/goyal-2017-accurate-large-minibatch-sgd.pdf",
+ "bib": {
+  "title": "Accurate, Large Minibatch SGD: Training ImageNet in 1 Hour",
+  "authors": [
+   "Priya Goyal",
+   "Piotr Dollár",
+   "Ross Girshick",
+   "Pieter Noordhuis",
+   "Lukasz Wesolowski",
+   "Aapo Kyrola",
+   "Andrew Tulloch",
+   "Yangqing Jia",
+   "Kaiming He"
+  ],
+  "first_author": "Goyal",
+  "year": 2017,
+  "venue": "preprint",
+  "arxiv": "1706.02677",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 59953,
+  "chars_total": 59953,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can synchronous SGD with very large minibatches (up to 8192) train ImageNet ResNet-50 without losing accuracy, and how must the learning rate and early training be handled?",
+ "hypothesis": "Large-minibatch difficulty is an optimization problem, not a generalization problem; a linear learning-rate scaling rule plus warmup should fix it.",
+ "contributions": [
+  "Hyper-parameter-free linear scaling rule for learning rate vs minibatch size",
+  "Gradual warmup scheme",
+  "Practical pitfalls of distributed SGD (weight decay, momentum correction, loss normalisation, shuffling)",
+  "Caffe2 system training ResNet-50 with minibatch 8192 on 256 GPUs in one hour at ~90% scaling efficiency",
+  "Transfer to COCO detection/segmentation with Mask R-CNN"
+ ],
+ "method": {
+  "summary": "Distributed synchronous momentum SGD on ResNet-50/ImageNet with lr = 0.1*kn/256 and a 5-epoch linear warmup from 0.1, keeping all other hyper-parameters fixed. Minibatch sizes 64 to 64k are compared over 5 runs each, plus ResNet-101, ImageNet-5k and Mask R-CNN transfer, with an allreduce implementation (Gloo) on Big Basin servers.",
+  "task": "image classification (ImageNet-1k), large-batch SGD training",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "ImageNet-1k",
+    "role": "both",
+    "size": "~1.28 million training images, 50,000 validation images",
+    "split": "standard train/val",
+    "source": "Russakovsky et al. 2015",
+    "preprocessing": "scale and aspect ratio augmentation as in fb.resnet.torch; 224x224 random crop or horizontal flip; per-colour mean/std normalisation"
+   },
+   {
+    "name": "ImageNet-5k",
+    "role": "both",
+    "size": "6.8 million images (4k extra categories from ImageNet-22k)",
+    "split": "1k-way error on original ImageNet-1k validation set",
+    "source": "Xie et al. 2017",
+    "preprocessing": null
+   },
+   {
+    "name": "COCO",
+    "role": "eval",
+    "size": "trainval35k train; 5k-image minival",
+    "split": "trainval35k / minival",
+    "source": "Lin et al. 2014",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "ResNet-50 (fb.resnet.torch variant, stride-2 on 3x3 layers)",
+    "role": "proposed",
+    "params": "approximately 25 million",
+    "architecture": "ResNet-50",
+    "init_from": "from scratch; He et al. 2015 init for convs, FC weights zero-mean Gaussian std 0.01, BN gamma=1 except last BN of each residual block gamma=0",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": 50,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "ResNet-101",
+    "role": "proposed",
+    "params": null,
+    "architecture": "ResNet-101",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": 101,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Mask R-CNN",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "Mask R-CNN with ResNet-50 backbone",
+    "init_from": "ImageNet-pretrained ResNet-50 at each minibatch size",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "hyperparameters": "as in He et al. [14]"
+    }
+   }
+  ],
+  "training": {
+   "objective": "cross-entropy classification loss plus L2 weight decay",
+   "optimizer": "Nesterov momentum SGD, m=0.9 (standard momentum equally effective)",
+   "lr": "0.1*kn/256 (reference lr; 3.2 at kn=8k)",
+   "lr_schedule": "reference lr divided by 10 at epochs 30, 60 and 80",
+   "warmup": "gradual: start at 0.1, increase linearly each iteration to kn-scaled lr over 5 epochs (results robust to duration)",
+   "batch_size": "kn = k workers x n=32 per worker; 8192 main (256 GPUs); 64 to 65536 swept",
+   "steps": null,
+   "epochs": "90",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": "0.0001, not applied to BN gamma and beta",
+   "dropout": null,
+   "regularisation": "BN statistics computed per worker with n=32, running average momentum 0.9",
+   "hardware": "Big Basin servers, 8 NVIDIA Tesla P100 GPUs each with NVLink, 3.2TB NVMe, Mellanox ConnectX-4 50Gbit Ethernet; 256 GPUs for 8k, up to 352 GPUs in timing",
+   "compute": null,
+   "wall_clock": "1 hour for ResNet-50 at kn=8k on 256 GPUs; 92.5 minutes for ResNet-101 at 8k on 256 P100; baseline 29 hours on 8 P100",
+   "seeds": "5 independent runs per config; error = median of final 5 epochs, mean and std over runs",
+   "other": {
+    "large batch simulation": "kn>=12k simulated on a single server with gradient accumulation (footnote 5)",
+    "reduction": "allreduce: NCCL intra-server for buffers >=256KB, halving/doubling inter-server (3x faster than ring on 32 servers), Gloo library",
+    "data shuffling": "one random shuffle per epoch partitioned over k workers",
+    "Mask R-CNN": "per GPU 2 images, 512 RoIs per image; 5 pretrained models per size, 35 models total"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "5 runs per configuration",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "linear scaling rule": "multiply lr by k when minibatch is multiplied by k",
+    "warmup length": "5 epochs"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "top-1 validation error",
+     "definition": "median of final 5 epochs, mean and std over 5 runs",
+     "unit": "%",
+     "higher_is_better": false
+    },
+    {
+     "name": "box AP / mask AP",
+     "definition": "COCO minival, mean over 5 trials",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "scaling efficiency",
+     "definition": "throughput relative to perfectly efficient extrapolation of the 8-GPU baseline",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "kn=256, lr 0.1, 8 GPUs (He et al. 2016)",
+    "no warmup",
+    "constant warmup",
+    "fixed lr 0.1 and sqrt scaling at 8k"
+   ],
+   "protocol": "5 independent runs per config, mean and std reported"
+  },
+  "availability": {
+   "code": "Caffe2 (open source) and Gloo; this paper's training code not linked",
+   "weights": null,
+   "data": "ImageNet, COCO public"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.lr",
+    "quote": "use a learning rate of η = 0.1 · kn",
+    "where": "5.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Gradual warmup with linear scaling at kn=8k matches the kn=256 baseline top-1 error.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1 error",
+   "value": 23.74,
+   "unit": "% top-1 error",
+   "baseline_value": 23.6,
+   "n": 5,
+   "setup": "ResNet-50 on ImageNet-1k, 90 epochs, gradual warmup 5 epochs, linear scaling, mean+-std of 5 runs; kn=8192, lr 3.2",
+   "quote": null,
+   "table": "Table 1, row gradual warmup, column top-1 error",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Without warmup the 8k run is worse than baseline.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1 error",
+   "value": 24.84,
+   "unit": "% top-1 error",
+   "baseline_value": 23.6,
+   "n": 5,
+   "setup": "ResNet-50 ImageNet, kn=8192, lr 3.2, no warmup, 5 runs",
+   "quote": null,
+   "table": "Table 1, row no warmup, column top-1 error",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Constant warmup is worse than no warmup at 8k.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1 error",
+   "value": 25.88,
+   "unit": "% top-1 error",
+   "baseline_value": 23.6,
+   "n": 5,
+   "setup": "ResNet-50 ImageNet, kn=8192, lr 3.2, constant warmup lr 0.1 for 5 epochs, 5 runs",
+   "quote": null,
+   "table": "Table 1, row constant warmup, column top-1 error",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Baseline kn=256 error.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 23.6,
+   "unit": "% top-1 error",
+   "baseline_value": null,
+   "n": 5,
+   "setup": "ResNet-50 ImageNet, 8 GPUs, n=32, lr 0.1, 90 epochs, 5 runs",
+   "quote": "Our baseline has a top-1 validation error of 23.60% ±0.12.",
+   "table": null,
+   "note": null,
+   "where": "5.1"
+  },
+  {
+   "claim": "Training ResNet-50 at minibatch 8192 on 256 GPUs took one hour.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 1,
+   "unit": "hour",
+   "baseline_value": null,
+   "n": 5,
+   "setup": "ResNet-50 ImageNet 90 epochs, 256 P100 GPUs, Caffe2",
+   "quote": "we can train ResNet-50 in 1 hour using 256 GPUs while maintaining",
+   "table": null,
+   "note": null,
+   "where": "Intro"
+  },
+  {
+   "claim": "Scaling efficiency from 8 to 256 GPUs.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 90,
+   "unit": "% efficiency",
+   "baseline_value": null,
+   "n": 5,
+   "setup": "Big Basin, 50Gbit Ethernet, vs perfectly efficient extrapolation of 8-GPU baseline",
+   "quote": "our implementation achieves ∼90% scaling efficiency.",
+   "table": null,
+   "note": null,
+   "where": "5.5"
+  },
+  {
+   "claim": "Error is stable from 64 to 8k and rises beyond; 16k error.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1 error",
+   "value": 24.79,
+   "unit": "% top-1 error",
+   "baseline_value": 23.6,
+   "n": 5,
+   "setup": "ResNet-50 ImageNet, kn=16k, lr 6.4, gradual warmup, 5 runs",
+   "quote": null,
+   "table": "Figure 3 legend, kn=16k, lr 6.4",
+   "note": null,
+   "where": "Fig 3 (legend)"
+  },
+  {
+   "claim": "32k error.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1 error",
+   "value": 27.55,
+   "unit": "% top-1 error",
+   "baseline_value": 23.6,
+   "n": 5,
+   "setup": "ResNet-50 ImageNet, kn=32k, lr 12.8, gradual warmup, 5 runs; 32k simulated by gradient accumulation",
+   "quote": null,
+   "table": "Figure 3 legend, kn=32k, lr 12.8",
+   "note": null,
+   "where": "Fig 3 (legend)"
+  },
+  {
+   "claim": "64k error; beyond 64k training diverges with linear scaling.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1 error",
+   "value": 33.96,
+   "unit": "% top-1 error",
+   "baseline_value": 23.6,
+   "n": 5,
+   "setup": "ResNet-50 ImageNet, kn=64k, lr 25.6, gradual warmup, 5 runs; simulated by gradient accumulation",
+   "quote": null,
+   "table": "Figure 3 legend, kn=64k, lr 25.6",
+   "note": null,
+   "where": "Fig 3 (legend)"
+  },
+  {
+   "claim": "Fixed lr 0.1 at 8k is far worse than linear scaling.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1 error",
+   "value": 41.67,
+   "unit": "% top-1 error",
+   "baseline_value": 23.74,
+   "n": 5,
+   "setup": "ResNet-50 ImageNet kn=8k",
+   "quote": null,
+   "table": "Table 2a, row 8k lr 0.10, column top-1 error",
+   "note": null,
+   "where": "Table 2a"
+  },
+  {
+   "claim": "Square-root scaling at 8k is worse than linear scaling.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1 error",
+   "value": 26.22,
+   "unit": "% top-1 error",
+   "baseline_value": 23.74,
+   "n": 5,
+   "setup": "ResNet-50 ImageNet kn=8k, lr 0.1*sqrt(32), gradual warmup",
+   "quote": null,
+   "table": "Table 2a, row 8k 0.10*sqrt32, column top-1 error",
+   "note": null,
+   "where": "Table 2a"
+  },
+  {
+   "claim": "Zero-initialising the last BN gamma in each residual block helps 8k more than 256.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1 error",
+   "value": 24.11,
+   "unit": "% top-1 error with gamma=1 at 8k",
+   "baseline_value": 23.74,
+   "n": 5,
+   "setup": "ResNet-50 ImageNet kn=8k lr 3.2; gamma=0 gives 23.74",
+   "quote": null,
+   "table": "Table 2b, row 8k 3.2 gamma 1.0, column top-1 error",
+   "note": null,
+   "where": "Table 2b"
+  },
+  {
+   "claim": "ResNet-101 at 8k loses little accuracy.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1 error",
+   "value": 22.36,
+   "unit": "% top-1 error",
+   "baseline_value": 22.08,
+   "n": 5,
+   "setup": "ResNet-101 ImageNet kn=8k lr 3.2, 5 runs",
+   "quote": null,
+   "table": "Table 2c, row ResNet-101 8k, column top-1 error",
+   "note": null,
+   "where": "Table 2c"
+  },
+  {
+   "claim": "ResNet-101 training time at 8k.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 92.5,
+   "unit": "minutes",
+   "baseline_value": null,
+   "n": 5,
+   "setup": "ResNet-101, 256 Tesla P100, kn=8k",
+   "quote": "The training time of ResNet-101 is 92.5 minutes in our implementation",
+   "table": null,
+   "note": null,
+   "where": "5.3"
+  },
+  {
+   "claim": "ImageNet-5k: 8k minibatch raises error by 0.26 points over 256.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1 error",
+   "value": 26.09,
+   "unit": "% top-1 error (1k-way)",
+   "baseline_value": 25.83,
+   "n": 5,
+   "setup": "ImageNet-5k pretrain, kn=8k; 256 gives 25.83",
+   "quote": "increases the validation error by 0.26% from 25.83% for a",
+   "table": null,
+   "note": "26.09 appears on the next line of the text",
+   "where": "5.3"
+  },
+  {
+   "claim": "Mask R-CNN box AP with ResNet-50 pretrained at 8k equals the 256 baseline.",
+   "kind": "measured",
+   "source": null,
+   "metric": "box AP",
+   "value": 35.8,
+   "unit": "box AP %",
+   "baseline_value": 35.9,
+   "n": 5,
+   "setup": "COCO minival, Mask R-CNN, ResNet-50 pretrained on ImageNet at kn=8k, mean of 5",
+   "quote": null,
+   "table": "Table 3a, row 8k, column box AP",
+   "note": null,
+   "where": "Table 3a"
+  },
+  {
+   "claim": "Pretraining at 16k degrades COCO box AP.",
+   "kind": "measured",
+   "source": null,
+   "metric": "box AP",
+   "value": 35.1,
+   "unit": "box AP %",
+   "baseline_value": 35.9,
+   "n": 5,
+   "setup": "COCO minival, Mask R-CNN, ResNet-50 pretrained at kn=16k",
+   "quote": null,
+   "table": "Table 3a, row 16k, column box AP",
+   "note": null,
+   "where": "Table 3a"
+  },
+  {
+   "claim": "Time per iteration rises only 12% when minibatch grows 44x; epoch time falls from over 16 minutes to 30 seconds.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 12,
+   "unit": "% increase in time per iteration",
+   "baseline_value": null,
+   "n": 5,
+   "setup": "kn 256 to 11264, up to 352 GPUs",
+   "quote": "the time per itera-",
+   "table": null,
+   "note": "quote spans line break; see text 'time per iteration increases only 12% while scaling the minibatch size by 44×'",
+   "where": "5.5"
+  }
+ ],
+ "limits": [
+  "Evidence is ResNet-50/101 on ImageNet with SGD momentum; batch-size limit (~8k) is empirical and depends on setup",
+  "Beyond about 8k accuracy degrades and training diverges beyond 64k with linear scaling",
+  "Results at 8k are more sensitive to lr than at 256; authors suggest staying away from the breaking point",
+  "Very large (>=12k) batches were simulated with gradient accumulation, not distributed",
+  "Linear scaling rule justified only informally; assumes gradient changes little over k steps",
+  "Optimization difficulty claimed rather than generalization problem 'at least on ImageNet'",
+  "5x larger dataset does not change the maximum effective batch",
+  "No cost in dollars or total FLOPs given"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Linear Scaling Rule",
+   "definition": "When the minibatch size is multiplied by k, multiply the learning rate by k.",
+   "where": "2.1"
+  },
+  {
+   "term": "Gradual warmup",
+   "definition": "start from a learning rate of η and increment it by a constant amount at each iteration such that it reaches η̂ = kη after 5 epochs",
+   "where": "2.2"
+  },
+  {
+   "term": "Momentum correction",
+   "definition": "scale v by the factor ηt+1/ηt when the learning rate changes in the variant that absorbs η into the update tensor",
+   "where": "3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Deep residual learning for image recognition (He et al.)",
+   "year": 2016,
+   "arxiv": "1512.03385",
+   "relation": "baseline",
+   "note": "ResNet-50 baseline and warmup origin",
+   "quote": null
+  },
+  {
+   "work": "Krizhevsky, One weird trick for parallelizing convolutional neural networks",
+   "year": 2014,
+   "arxiv": "1404.5997",
+   "relation": "extends",
+   "note": "linear scaling rule adopted there; reported 1% error rise 128 to 1024; also sqrt rule",
+   "quote": null
+  },
+  {
+   "work": "Bottou, Curtis, Nocedal, Optimization methods for large-scale machine learning",
+   "year": 2016,
+   "arxiv": "1606.04838",
+   "relation": "uses-method",
+   "note": "theory of minibatching tested empirically",
+   "quote": null
+  },
+  {
+   "work": "Keskar et al., On large-batch training",
+   "year": 2017,
+   "arxiv": "1609.04836",
+   "relation": "contradicts",
+   "note": "paper finds optimization, not generalization, is the issue",
+   "quote": null
+  },
+  {
+   "work": "Chen et al., Revisiting Distributed Synchronous SGD",
+   "year": 2016,
+   "arxiv": "1604.00981",
+   "relation": "related",
+   "note": "no small-minibatch baseline",
+   "quote": null
+  },
+  {
+   "work": "Mask R-CNN (He et al.)",
+   "year": 2017,
+   "arxiv": "1703.06870",
+   "relation": "evaluates",
+   "note": "transfer test",
+   "quote": null
+  },
+  {
+   "work": "ImageNet (Russakovsky et al.)",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "main benchmark",
+   "quote": null
+  },
+  {
+   "work": "Batch normalization (Ioffe, Szegedy)",
+   "year": 2015,
+   "arxiv": "1502.03167",
+   "relation": "uses-method",
+   "note": "per-worker n=32",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "ImageNet top-1 validation error vs. minibatch size.",
+   "page": 1,
+   "why": "shows flat error 64 to 8k then rise"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Validation error on ImageNet using ResNet-50 for warmup strategies",
+   "page": 7,
+   "why": "warmup ablation"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Training error vs. minibatch size",
+   "page": 8,
+   "why": "training curves match to 8k"
+  },
+  {
+   "figure": "Fig 8",
+   "caption": "Distributed synchronous SGD throughput",
+   "page": 11,
+   "why": "90% efficiency"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq. 2 and 9-10, Sec 2-3",
+   "snippet": "v_{t+1} = m (eta_{t+1}/eta_t) v_t + eta_{t+1} (1/n) sum grad l(x, w_t)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text extraction of figure legends is fragmented; Fig 3 values come from legend text."
+ ]
+}

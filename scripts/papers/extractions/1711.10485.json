@@ -1,0 +1,422 @@
+{
+ "schema": 1,
+ "key": "1711.10485",
+ "pdf": "ai-engineering/08-multimodal-engineering/sources/xu-2018-attngan.pdf",
+ "bib": {
+  "title": "AttnGAN: Fine-Grained Text to Image Generation with Attentional Generative Adversarial Networks",
+  "authors": [
+   "Tao Xu",
+   "Pengchuan Zhang",
+   "Qiuyuan Huang",
+   "Han Zhang",
+   "Zhe Gan",
+   "Xiaolei Huang",
+   "Xiaodong He"
+  ],
+  "first_author": "Xu",
+  "year": 2017,
+  "venue": "preprint",
+  "arxiv": "1711.10485",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 40176,
+  "chars_total": 40176,
+  "engine": "pymupdf",
+  "skipped": "Supplementary material is not in the PDF (only a link)."
+ },
+ "type": "empirical",
+ "question": "Can word-level attention in a multi-stage text-to-image GAN, plus a fine-grained image-text matching loss, give better and better-conditioned images than conditioning on a single sentence vector?",
+ "hypothesis": "Conditioning only on a global sentence vector lacks word-level detail; attending to relevant words per image sub-region and adding a word-level matching loss should improve quality, especially on complex scenes.",
+ "contributions": [
+  "An Attentional Generative Adversarial Network with two components: the attentional generative network and the DAMSM.",
+  "A comprehensive empirical study showing it significantly outperforms previous state-of-the-art GAN models.",
+  "A detailed analysis visualising the attention layers, showing the layered conditional GAN attends to relevant words."
+ ],
+ "method": {
+  "summary": "A 3-stage generator (64, 128, 256 px) where stages after the first query word vectors with an attention layer per image sub-region. A pretrained DAMSM (BiLSTM text encoder + Inception-v3 image encoder) gives a word-level matching loss added to the GAN loss with weight lambda.",
+  "task": "text-to-image synthesis",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "CUB",
+    "role": "both",
+    "size": "8,855 train / 2,933 test samples, 10 captions/image",
+    "split": "train 8,855, test 2,933",
+    "source": "Wah et al. 2011, preprocessed as in StackGAN [31]",
+    "preprocessing": "preprocessed according to the method in [31]"
+   },
+   {
+    "name": "COCO",
+    "role": "both",
+    "size": "80k train / 40k test samples, 5 captions/image",
+    "split": "train 80k, test 40k",
+    "source": "Lin et al. 2014",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "AttnGAN1",
+    "role": "proposed",
+    "params": null,
+    "architecture": "one attention model, two generators (64 and 128 px)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "AttnGAN2",
+    "role": "proposed",
+    "params": null,
+    "architecture": "two attention models stacked with three generators (64, 128, 256 px), one discriminator per scale",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "final_models": "AttnGAN2 lambda=5 (CUB), lambda=50 (COCO)"
+    }
+   },
+   {
+    "name": "DAMSM text encoder",
+    "role": "proposed",
+    "params": null,
+    "architecture": "bi-directional LSTM; word vector is concatenation of two directions' hidden states; sentence vector is concatenated last hidden states",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "DAMSM image encoder",
+    "role": "proposed",
+    "params": null,
+    "architecture": "Inception-v3 up to mixed_6e (local 768x289 from 768x17x17) and last avg pool (global 2048), plus a new perceptron layer into the common space",
+    "init_from": "Inception-v3 pretrained on ImageNet, layers fixed",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "input": "images rescaled to 299x299"
+    }
+   }
+  ],
+  "training": {
+   "objective": "L = sum_i L_Gi + lambda * L_DAMSM; per-stage adversarial loss with unconditional and conditional terms; discriminators trained with cross-entropy; DAMSM loss = word-level plus sentence-level matching losses in both directions, pretrained separately on real image-text pairs",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": "curves in Fig 3 run to about 550 epochs (CUB) and 150 (COCO); read from Fig 3",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "lambda": "0.1, 1, 5, 10 searched on CUB; 0.1, 1, 10, 50, 100 on COCO; chosen by raising lambda until validation inception score starts to drop",
+    "DAMSM_hyperparameters": "gamma1=5, gamma2=5, gamma3=10, M=50 (set on a held-out validation set)",
+    "DAMSM_batch_M": "M = 50 image-sentence pairs per batch",
+    "DAMSM_applied_to": "output of last generator only; applying on all resolutions did not help and cost more compute",
+    "DAMSM_pretraining": "on real 299x299 images; finetuning it with the whole network did not improve performance",
+    "not_tried": "three attention models, due to GPU memory constraints"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "30,000 images generated from randomly selected unseen text descriptions per model for inception score and R-precision",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "inception score",
+     "definition": "Salimans et al. 2016 measure, following StackGAN",
+     "unit": "score",
+     "higher_is_better": true
+    },
+    {
+     "name": "R-precision",
+     "definition": "generated image queries 100 candidate descriptions (1 ground truth, R=1, plus 99 random mismatches); cosine similarity of global vectors from the pretrained DAMSM encoders; r/R",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "GAN-INT-CLS",
+    "GAWWN",
+    "StackGAN",
+    "StackGAN-v2",
+    "PPGN"
+   ],
+   "protocol": "Inception score on 30,000 generated images with +- as printed; R-precision uses the paper's own DAMSM encoders, which are also used in training the proposed model. Lambda chosen on a held-out validation set. Seeds and number of runs not stated. Qualitative attention visualisation."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "CUB and COCO public"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "AttnGAN raises the best reported COCO inception score from 9.58 to 25.89.",
+   "kind": "measured",
+   "source": null,
+   "metric": "inception score",
+   "value": 25.89,
+   "unit": "score",
+   "baseline_value": 9.58,
+   "n": 30000,
+   "setup": "COCO test set, AttnGAN2 lambda=50, 256x256, vs PPGN",
+   "quote": "our AttnGAN boosts the best reported inception score on the COCO dataset from 9.58 to 25.89, a 170.25% improvement relatively.",
+   "table": null,
+   "note": "Table 3 prints 25.89 \u00b1 .47; the best baseline in the comparison is PPGN (9.58 \u00b1 .21); StackGAN is 8.45",
+   "where": "Sec 4.2, Table 3"
+  },
+  {
+   "claim": "AttnGAN reaches inception score 4.36 on CUB, above the previous best 3.82.",
+   "kind": "measured",
+   "source": null,
+   "metric": "inception score",
+   "value": 4.36,
+   "unit": "score",
+   "baseline_value": 3.82,
+   "n": 30000,
+   "setup": "CUB test set, AttnGAN2 lambda=5, vs StackGAN-v2",
+   "quote": "our AttnGAN achieves 4.36 inception score, which signif-\nicantly outperforms the previous best inception score of\n3.82.",
+   "table": null,
+   "note": "abstract and conclusion print the relative gain as 14.14%",
+   "where": "Sec 4.2, Table 3"
+  },
+  {
+   "claim": "Removing the DAMSM (using the text encoder of Reed et al.) drops CUB R-precision to 10.37% and inception score to 3.98.",
+   "kind": "measured",
+   "source": null,
+   "metric": "R-precision",
+   "value": 10.37,
+   "unit": "%",
+   "baseline_value": 67.82,
+   "n": 30000,
+   "setup": "CUB, AttnGAN1 without DAMSM vs AttnGAN2 lambda=5 (67.82)",
+   "quote": "the\ninception score and R-precision drops to 3.98 and 10.37%,\nrespectively",
+   "table": null,
+   "note": "R-precision std printed as 5.88 for this row; no-DAMSM row is AttnGAN1 and the baseline_value row is AttnGAN2, so not a like-for-like pair",
+   "where": "Sec 4.1, Table 2"
+  },
+  {
+   "claim": "On CUB, raising lambda from 0.1 to 5 raises AttnGAN1 R-precision from 16.55% to 58.65%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "R-precision",
+   "value": 58.65,
+   "unit": "%",
+   "baseline_value": 16.55,
+   "n": 30000,
+   "setup": "CUB, AttnGAN1, lambda 0.1 vs 5",
+   "quote": "the inception score of the AttnGAN1 is improved from 4.19 to 4.35\nand the corresponding R-precision rate is increased from\n16.55% to 58.65%",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.1, Table 2"
+  },
+  {
+   "claim": "Final COCO model reaches R-precision 85.47% at lambda=50.",
+   "kind": "measured",
+   "source": null,
+   "metric": "R-precision",
+   "value": 85.47,
+   "unit": "%",
+   "baseline_value": null,
+   "n": 30000,
+   "setup": "COCO, AttnGAN2 lambda=50, 100 candidate texts",
+   "quote": null,
+   "table": "Table 2, row AttnGAN2 lambda = 50 (COCO), column R-precision(%)",
+   "note": "R-precision is computed with the DAMSM encoders trained with the model's own loss, so it favours models trained with that loss",
+   "where": "Table 2"
+  },
+  {
+   "claim": "Stacking a second attention model (128 to 256 px) gives slightly higher inception score on CUB (4.35 to 4.36 at best lambda) and higher R-precision (63.87 to 67.82 at lambda 10 vs 5).",
+   "kind": "measured",
+   "source": null,
+   "metric": "inception score",
+   "value": 4.36,
+   "unit": "score",
+   "baseline_value": 4.35,
+   "n": 30000,
+   "setup": "CUB, AttnGAN2 lambda=5 vs AttnGAN1 lambda=5",
+   "quote": null,
+   "table": "Table 2, row AttnGAN2, lambda = 5, column inception score",
+   "note": "difference 0.01 is within the printed \u00b1 .03 to .04",
+   "where": "Table 2"
+  }
+ ],
+ "limits": [
+  "The model sometimes generates sharp, detailed but unrealistic images (birds with multiple heads, eyes or tails); global coherent structure is not captured.",
+  "COCO images are not as photo-realistic as CUB.",
+  "Three attention models not tried because of GPU memory.",
+  "Optimizer, learning rate, batch size, epochs and hardware are not stated; supplementary material is only a link.",
+  "R-precision uses the authors' own DAMSM encoders, also used in training; no human evaluation; evidence for attention is qualitative visualisation.",
+  "Inception score is the headline metric; the authors concede it does not show whether an image matches the text."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "DAMSM",
+   "definition": "Deep Attentional Multimodal Similarity Model: learns to map image sub-regions and words into a common space to compute a fine-grained image-text matching loss",
+   "where": "Sec 3.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "StackGAN",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "stacked multi-stage GAN conditioned on a global sentence vector; Conditioning Augmentation and data preprocessing reused",
+   "quote": null
+  },
+  {
+   "work": "StackGAN++",
+   "year": 2017,
+   "arxiv": "1710.10916",
+   "relation": "baseline",
+   "note": "joint conditional/unconditional loss and structurally disjoint discriminators",
+   "quote": null
+  },
+  {
+   "work": "GAN-INT-CLS (Reed et al., Generative adversarial text-to-image synthesis)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "first conditional GAN text-to-image",
+   "quote": null
+  },
+  {
+   "work": "GAWWN (Reed et al., Learning what and where to draw)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "PPGN (Nguyen et al.)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "best prior COCO inception score 9.58",
+   "quote": null
+  },
+  {
+   "work": "alignDRAW (Mansimov et al.)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "related",
+   "note": "earlier text-to-image model that attended to words (via DRAW) and used LAPGAN only as post-processing without attention",
+   "quote": "the GAN in their framework was only utilized as a\npost-processing step without attention"
+  },
+  {
+   "work": "Show, attend and tell (Xu et al.)",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "related",
+   "note": "attention in image captioning",
+   "quote": null
+  },
+  {
+   "work": "Inception-v3 (Szegedy et al.)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "image encoder of DAMSM",
+   "quote": null
+  },
+  {
+   "work": "Improved techniques for training GANs (Salimans et al.)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "inception score",
+   "quote": null
+  },
+  {
+   "work": "CUB-200-2011",
+   "year": 2011,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "Microsoft COCO",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": null,
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "The architecture of the proposed AttnGAN.",
+   "page": 3,
+   "why": "Shows the three generator stages, attention models and DAMSM in one view."
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Intermediate results of our AttnGAN on CUB (top) and COCO (bottom) test sets.",
+   "page": 6,
+   "why": "Shows 64/128/256 px outputs with the top-5 attended words per stage."
+  },
+  {
+   "figure": "Table 2",
+   "caption": "The best inception score and the corresponding R-precision rate of each AttnGAN model on CUB and COCO test sets.",
+   "page": 5,
+   "why": "Lambda ablation."
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 1-3",
+   "snippet": "h0 = F0(z, Fca(e)); hi = Fi(h_{i-1}, Fattn_i(e, h_{i-1})); x_i = Gi(hi); L = L_G + lambda * L_DAMSM",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Supplementary material not in the PDF.",
+  "Venue not printed in the PDF (arXiv v1 only); published at CVPR 2018."
+ ]
+}

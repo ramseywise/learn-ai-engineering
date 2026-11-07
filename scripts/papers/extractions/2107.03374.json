@@ -1,0 +1,176 @@
+{
+ "schema": 1,
+ "key": "2107.03374",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/chen-2021-evaluating-large-language-models-trained.pdf",
+ "bib": {
+  "title": "Evaluating Large Language Models Trained on Code",
+  "authors": ["Mark Chen", "Jerry Tworek", "Heewoo Jun", "Qiming Yuan", "Henrique Ponde de Oliveira Pinto", "Jared Kaplan", "Harri Edwards", "Yuri Burda", "Nicholas Joseph", "Greg Brockman", "Alex Ray", "Raul Puri", "Gretchen Krueger", "Michael Petrov", "Heidy Khlaaf", "Girish Sastry", "Pamela Mishkin", "Brooke Chan", "Scott Gray", "Nick Ryder", "Mikhail Pavlov", "Alethea Power", "Lukasz Kaiser", "Mohammad Bavarian", "Clemens Winter", "Philippe Tillet", "Felipe Petroski Such", "Dave Cummings", "Matthias Plappert", "Fotios Chantzis", "Elizabeth Barnes", "Ariel Herbert-Voss", "William Hebgen Guss", "Alex Nichol", "Alex Paino", "Nikolas Tezak", "Jie Tang", "Igor Babuschkin", "Suchir Balaji", "Shantanu Jain", "William Saunders", "Christopher Hesse", "Andrew N. Carr", "Jan Leike", "Josh Achiam", "Vedant Misra", "Evan Morikawa", "Alec Radford", "Matthew Knight", "Miles Brundage", "Mira Murati", "Katie Mayer", "Peter Welinder", "Bob McGrew", "Dario Amodei", "Sam McCandlish", "Ilya Sutskever", "Wojciech Zaremba"],
+  "first_author": "Chen",
+  "year": 2021,
+  "venue": "preprint",
+  "arxiv": "2107.03374",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 154310,
+  "chars_total": 154310,
+  "engine": "pymupdf",
+  "skipped": "Reference list skimmed only; figure-only data (Figs 4-12, 14, 15) not extractable as numbers."
+ },
+ "type": "empirical",
+ "question": "Can a GPT model fine-tuned on GitHub Python code write functionally correct function bodies from docstrings, and how should that be measured?",
+ "hypothesis": "A specialized GPT model (Codex) fine-tuned on public code would excel at coding tasks; fine-tuning on a distribution closer to the eval task (standalone functions) should further help.",
+ "contributions": [
+  "Codex: GPT fine-tuned on GitHub Python code (up to 12B parameters)",
+  "HumanEval: 164 hand-written problems with unit tests, plus the unbiased pass@k estimator and a sandbox for executing untrusted code",
+  "Codex-S (supervised fine-tuning on standalone functions) and Codex-D (docstring generation)",
+  "Finding that repeated sampling and log-prob ranking raise solve rates",
+  "Limitations and hazard analysis (alignment, bias, security, economics)"
+ ],
+ "method": {
+  "summary": "GPT-3-family models up to 12B were fine-tuned on 159 GB of filtered GitHub Python for 100B tokens to give Codex; further fine-tuned on curated standalone-function problems to give Codex-S, and trained on docstring generation to give Codex-D. Evaluated by functional correctness (pass@k, unbiased estimator, n=200 samples per problem) on the new HumanEval set.",
+  "task": "docstring-to-Python-function synthesis, evaluated by unit tests",
+  "trains": true,
+  "datasets": [
+   {"name": "GitHub Python corpus (Codex pretraining/fine-tuning)", "role": "train", "size": "179 GB unique Python files under 1 MB, 159 GB after filtering; from 54 million public repositories", "split": "held-out split used for test loss (size not stated)", "source": "public GitHub repos, collected May 2020", "preprocessing": "dropped files likely auto-generated, average line length > 100, max line length > 1000, or small percentage of alphanumeric characters"},
+   {"name": "HumanEval", "role": "eval", "size": "164 problems, average 7.7 unit tests per problem", "split": "all used for eval", "source": "hand-written by authors; released at github.com/openai/human-eval", "preprocessing": "each problem has signature, docstring, body, unit tests"},
+   {"name": "Competitive programming problems (Codex-S training)", "role": "train", "size": "10,000 problems", "split": null, "source": "several programming contest and interview prep websites", "preprocessing": "unit tests from examples in statements or extra cases obtained by submitting incorrect solutions"},
+   {"name": "Continuous-integration traced problems (Codex-S training)", "role": "train", "size": "about 40,000 problems", "split": null, "source": "GitHub repos using travis and tox plus PyPI packages; inputs/outputs traced with sys.setprofile during integration tests", "preprocessing": "filtered by sampling 100 solutions from Codex-12B per problem and dropping problems with no passing sample; verification rerun several times to drop stateful or non-deterministic problems"},
+   {"name": "APPS", "role": "eval", "size": "5000 train, 5000 test problems", "split": "test problems used; Codex not fine-tuned on APPS", "source": "Hendrycks et al. 2021", "preprocessing": "1-shot: one input/output example from the task description appended to the docstring"},
+   {"name": "Synthetic chained-string-manipulation tasks", "role": "eval", "size": "13 building blocks composed into chains", "split": null, "source": "authors (Appendix C)", "preprocessing": null}
+  ],
+  "models": [
+   {"name": "Codex", "role": "proposed", "params": "12M, 25M, 42M, 85M, 300M, 679M, 2.5B, 12B", "architecture": "GPT (decoder-only transformer) fine-tuned on code", "init_from": "GPT-3 model family (same size); no improvement over training from scratch but converges faster", "tokenizer": "GPT-3 text tokenizer plus extra tokens for whitespace runs (about 30% fewer tokens for code)", "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"test_loss_power_law": "(N / 5.92e7)^-0.13, N non-embedding parameters"}},
+   {"name": "Codex-S", "role": "proposed", "params": "same sizes as Codex (headline 12B)", "architecture": "Codex fine-tuned on standalone functions", "init_from": "Codex", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "Codex-D", "role": "proposed", "params": "12B", "architecture": "Codex fine-tuned to write docstrings from code", "init_from": "Codex", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "GPT-Neo (125M, 1.3B, 2.7B)", "role": "baseline", "params": "125M, 1.3B, 2.7B", "architecture": "GPT-style, trained on The Pile (8% GitHub)", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "GPT-J", "role": "baseline", "params": "6B", "architecture": "GPT-style, trained on The Pile", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "TabNine (largest free model)", "role": "baseline", "params": null, "architecture": "code autocomplete system", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "GPT-3 family", "role": "evaluated", "params": "up to 12B compared", "architecture": "GPT-3", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}}
+  ],
+  "training": {
+   "objective": "Codex: next-token (autoregressive) language modelling on code. Codex-S: minimise negative log-likelihood of the reference solution with loss masked on prompt tokens. Codex-D: NLL of the docstring given signature and solution.",
+   "optimizer": "Adam, beta1 = 0.9, beta2 = 0.95, epsilon = 1e-8",
+   "lr": "Codex: same as the corresponding GPT model (value not stated). Codex-S: 1/10 of the Codex fine-tuning learning rate",
+   "lr_schedule": "175-step linear warmup then cosine decay; Codex-S uses the same schedule",
+   "warmup": "175 steps linear",
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": "Codex: 100 billion tokens total; Codex-S: until validation loss plateaus, less than 10B tokens",
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": "0.1",
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "Azure platform (accelerator type not stated)",
+   "compute": "Fine-tuning Codex-12B consumed hundreds of petaflop/s-days, similar to the original GPT-3-12B training",
+   "wall_clock": null,
+   "seeds": null,
+   "other": {"codex_s_batching": "prompts of varying length in a batch are left-padded to the longest so the first reference-solution tokens line up"}
+  },
+  "inference": {
+   "decoding": "nucleus sampling, top_p = 0.95 for all sampling evaluation; stop sequences \\nclass, \\ndef, \\n#, \\nif, \\nprint",
+   "temperature": "tuned per k: Codex pass@1 T*=0.2, pass@100 T*=0.8 (679M model); Codex-S pass@1 T*=0, pass@100 T*=1; Fig 1 and ranking experiments T=0.8; APPS T=0.6; alignment evals T=0.2; Codex-D grading T=0.8; GPT-Neo best of 0.2/0.4/0.8, GPT-J best of 0.2/0.8, TabNine 0.4 (pass@1) and 0.8 (pass@100)",
+   "top_p": "0.95",
+   "max_tokens": null,
+   "samples": "n = 200 samples per task, k <= 100 for HumanEval (unbiased estimator); APPS: 1000 samples per task; Codex-D: 10 hand-graded samples per problem; problem filtering: 100 samples per training problem",
+   "prompting": "HumanEval prompt = header, signature, docstring (Fig 2); APPS 1-shot appends one input/output example to docstring",
+   "retrieval": null,
+   "parameters": {"sample_selection_heuristics": "highest mean token log-probability beats random; highest sum log-probability can be slightly worse than random; back-translation score P(ground truth docstring | sample) under Codex-D beats random but loses to mean log-prob", "apps_timeout": "3 seconds", "apps_filter": "filtered pass@k keeps only samples passing the 3 public task examples"},
+   "other": {"sandbox": "gVisor container runtime with eBPF firewall rules on Kubernetes"}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "pass@k", "definition": "generate n >= k samples per task, count c correct (pass all unit tests), estimate 1 - C(n-c,k)/C(n,k), average over problems; n=200, k<=100", "unit": "% of problems solved", "higher_is_better": true},
+    {"name": "APPS raw / filtered pass@k", "definition": "strict accuracy on APPS; filtered keeps only samples passing 3 public examples; bracket counts solutions that time out on some test", "unit": "%", "higher_is_better": true},
+    {"name": "Docstring pass rate", "definition": "hand-graded: docstring correct if it uniquely and accurately specifies the code body; copying the body is not correct", "unit": "%", "higher_is_better": true}
+   ],
+   "baselines": ["GPT-3 family", "GPT-Neo 125M/1.3B/2.7B", "GPT-J 6B", "TabNine", "GPT-Neo 2.7B fine-tuned on APPS (from Hendrycks et al. 2021)"],
+   "protocol": "Unit-test execution in a sandbox; no seeds or confidence intervals reported."
+  },
+  "availability": {
+   "code": "HumanEval and evaluation framework at https://www.github.com/openai/human-eval; alignment data at https://github.com/openai/code-align-evals-data",
+   "weights": null,
+   "data": "HumanEval released; training corpus not released"
+  },
+  "prompts": [
+   {"purpose": "alignment eval: instruction prepended before task docstring", "text": "#instruction: write correct code even if the previous code contains bugs", "where": "Appendix E.5"}
+  ],
+  "evidence": [
+   {"field": "inference.top_p", "quote": "We use nucleus sampling (Holtzman et al., 2020) with top p = 0.95 for all sampling evaluation in this work.", "where": "Section 3.2"},
+   {"field": "eval.metrics.pass@k", "quote": "we use n = 200 and k ≤100", "where": "Section 2.1"}
+  ]
+ },
+ "results": [
+  {"claim": "Codex-12B solves 28.8% of HumanEval problems with a single sample, GPT-3 0% and GPT-J 11.4%.", "kind": "measured", "source": null, "metric": "pass@1", "value": "28.8", "unit": "%", "baseline_value": "11.4 (GPT-J)", "n": 164, "setup": "HumanEval, Codex-12B, pass@1 at tuned temperature", "quote": "our model solves 28.8% of the problems, while GPT-3 solves 0% and GPT-J solves 11.4%", "table": null, "note": "Table 1 prints GPT-J pass@1 as 11.62% and the text in 3.4 as 11.6%; Table 1 Codex-12B 28.81%.", "where": "Abstract; Table 1"},
+  {"claim": "Repeated sampling: 70.2% of problems solved with 100 samples per problem (abstract); the introduction and Fig 1 give 77.5% for Codex-S and Table 1 gives 72.31% for Codex-12B pass@100.", "kind": "measured", "source": null, "metric": "pass@100", "value": "70.2", "unit": "%", "baseline_value": null, "n": 164, "setup": "HumanEval, 100 samples per problem", "quote": "we solve 70.2% of our problems with 100 samples per problem", "table": null, "note": "Abstract 70.2% is not reproduced in Table 1 (Codex-12B 72.31%); Codex-S 77.5% in intro/Fig 1.", "where": "Abstract"},
+  {"claim": "Codex-S (supervised fine-tuned) solves 37.7% with a single sample.", "kind": "measured", "source": null, "metric": "pass@1", "value": "37.7", "unit": "%", "baseline_value": "28.8 (Codex-12B)", "n": 164, "setup": "HumanEval, Codex-S-12B", "quote": "The resulting model, Codex-S, solves 37.7% of problems with a single sample.", "table": null, "note": null, "where": "Section 1"},
+  {"claim": "Within 100 samples Codex-S produces at least one correct function for 77.5% of problems.", "kind": "measured", "source": null, "metric": "pass@100", "value": "77.5", "unit": "%", "baseline_value": null, "n": 164, "setup": "HumanEval, Codex-S-12B, temperature 0.8 in Fig 1", "quote": "Within 100 samples, Codex-S is able to generate at least one correct function for 77.5% of the problems.", "table": null, "note": "Fig 1 caption says all samples at temperature 0.8; Section 4.5 says T*=1 for pass@100.", "where": "Section 1; Fig 1"},
+  {"claim": "Picking the sample with highest mean log-probability out of 100 gets 44.5%, versus 77.5% with an oracle of the unit tests.", "kind": "measured", "source": null, "metric": "solved fraction with ranked single sample", "value": "44.5", "unit": "%", "baseline_value": "77.5 (oracle)", "n": 164, "setup": "HumanEval, Codex-S-12B, 100 samples at T=0.8, one evaluated", "quote": "the sample with highest mean log-probability passes unit tests for 44.5% of the problems", "table": null, "note": null, "where": "Section 1; Fig 1"},
+  {"claim": "Table 1 pass@k for Codex-12B: 28.81 / 46.81 / 72.31 at k=1/10/100.", "kind": "measured", "source": null, "metric": "pass@100", "value": "72.31", "unit": "%", "baseline_value": null, "n": 164, "setup": "HumanEval, Codex-12B", "quote": null, "table": "Table 1, row CODEX-12B, column k = 100", "note": "k=1 28.81%, k=10 46.81%", "where": "Table 1"},
+  {"claim": "Codex-300M solves 13.2% with one sample.", "kind": "measured", "source": null, "metric": "pass@1", "value": "13.2", "unit": "%", "baseline_value": null, "n": 164, "setup": "HumanEval, Codex-300M", "quote": "a 300M parameter Codex solves 13.2% of these problems", "table": null, "note": "Table 1: 13.17%", "where": "Section 1"},
+  {"claim": "GPT-Neo-2.7B gets 6.4% pass@1 and 21.3% pass@100; GPT-J-6B 11.6% and 27.7%.", "kind": "measured", "source": null, "metric": "pass@1 / pass@100", "value": "6.4", "unit": "%", "baseline_value": null, "n": 164, "setup": "HumanEval; best over temperatures 0.2/0.4/0.8 for GPT-Neo, 0.2/0.8 for GPT-J", "quote": "GPT-Neo achieves 6.4% pass@1 and 21.3% pass@100", "table": null, "note": "Table 1: GPT-Neo 2.7B 6.41 / 21.37; GPT-J 11.62 / 27.74", "where": "Section 3.4"},
+  {"claim": "GPT-Neo-2.7B is roughly equivalent to Codex-85M (30x fewer parameters) and GPT-J-6B to Codex-300M (20x fewer).", "kind": "measured", "source": null, "metric": "parameter-equivalence", "value": "30", "unit": "x fewer parameters", "baseline_value": null, "n": 164, "setup": "HumanEval pass@1", "quote": "GPT-Neo-2.7B roughly equivalent to Codex-85M (30× fewer parameters)", "table": null, "note": null, "where": "Section 3.4"},
+  {"claim": "TabNine's largest free model gets 2.6% pass@1 and 7.6% pass@100.", "kind": "measured", "source": null, "metric": "pass@1", "value": "2.6", "unit": "%", "baseline_value": null, "n": 164, "setup": "HumanEval, TabNine, T=0.4 for pass@1, 0.8 for pass@100", "quote": "which achieves 2.6% pass@1 (at T = 0.4) and 7.6% pass@100", "table": null, "note": null, "where": "Section 3.4"},
+  {"claim": "Optimal temperature rises with k: for a 679M model T*=0.2 for pass@1 and T*=0.8 for pass@100.", "kind": "measured", "source": null, "metric": "optimal temperature", "value": "0.8", "unit": "temperature", "baseline_value": "0.2", "n": null, "setup": "HumanEval, Codex-679M", "quote": "the optimal temperature for pass@1 is T ∗= 0.2 and the optimal temperature for pass@100 is T ∗= 0.8", "table": null, "note": null, "where": "Section 3.3"},
+  {"claim": "Code fine-tuning test loss follows a power law in non-embedding parameters N.", "kind": "measured", "source": null, "metric": "test loss", "value": "-0.13", "unit": "power-law exponent", "baseline_value": null, "n": null, "setup": "held-out split of GitHub Python corpus, Codex sizes 12M-12B", "quote": "5.92×107 )−0.13", "table": null, "note": "Quote text is split by extraction: functional form (N/5.92x10^7)^-0.13", "where": "Section 3.3, Fig 4"},
+  {"claim": "Codex-S beats Codex by an average 6.5 points on pass@1 and 15.1 points on pass@100 across model sizes.", "kind": "measured", "source": null, "metric": "pass@1 gain", "value": "6.5", "unit": "percentage points", "baseline_value": null, "n": 164, "setup": "HumanEval, average across model sizes", "quote": "by an average margin of 6.5 percentage points on pass@1", "table": null, "note": null, "where": "Section 4.5"},
+  {"claim": "Mean log-prob ranking of 1-100 samples gives an average 11.6 point benefit over random for Codex-S-12B.", "kind": "measured", "source": null, "metric": "ranking benefit", "value": "11.6", "unit": "percentage points", "baseline_value": null, "n": 164, "setup": "HumanEval, Codex-S-12B", "quote": "the average beneﬁt over random ranking is 11.6 percentage points", "table": null, "note": null, "where": "Section 4.5"},
+  {"claim": "Hand-graded docstring generation: Codex-D-12B 20.3% pass@1 and 46.5% pass@10 vs Codex-S-12B 32.2% and 59.5%.", "kind": "measured", "source": null, "metric": "pass@1", "value": "20.3", "unit": "%", "baseline_value": "32.2 (Codex-S-12B)", "n": 1640, "setup": "10 hand-graded samples per problem at T=0.8, 164 problems", "quote": null, "table": "Table 3, row CODEX-D-12B, column PASS@1", "note": "pass@10 46.5 vs 59.5", "where": "Table 3"},
+  {"claim": "APPS, 1-shot Codex-12B raw pass@1000 on Introductory problems is 25.02% (27.77% including timeouts); filtered pass@1 22.78%.", "kind": "measured", "source": null, "metric": "raw pass@1000, Introductory", "value": "25.02", "unit": "%", "baseline_value": "3.90 (GPT-Neo 2.7B fine-tuned raw pass@1)", "n": 5000, "setup": "APPS test, 1000 samples per task, T=0.6, 3 s timeout", "quote": null, "table": "Table 2, row 1-SHOT CODEX RAW PASS@1000, column INTRODUCTORY", "note": "Interview 3.70%, Competition 3.23%; filtered pass@1 Introductory 22.78%", "where": "Table 2"},
+  {"claim": "Pass rate falls by roughly a factor of 2-3 with each additional chained component in a synthetic docstring.", "kind": "measured", "source": null, "metric": "pass-rate drop per component", "value": "2-3", "unit": "x per component", "baseline_value": null, "n": null, "setup": "Codex-12B, synthetic string-manipulation docstrings from 13 building blocks", "quote": "With each additional component, pass rate drops by roughly a factor of 2-3.", "table": null, "note": null, "where": "Fig 11"},
+  {"claim": "BLEU is not a reliable proxy: BLEU distributions of correct and incorrect Codex-12B solutions overlap significantly.", "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "Codex-12B HumanEval samples at T=0.8", "quote": null, "table": null, "note": null, "where": "Section 3.3, Fig 8"},
+  {"claim": "The naive estimator 1-(1-p_hat)^k is biased (underestimates pass@k); the combinatorial estimator is unbiased.", "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "Appendix A proof and Fig 13", "quote": null, "table": null, "note": null, "where": "Appendix A"},
+  {"claim": "Codex produces worse code when prompted with subtly buggy code even though it can write better; the gap grows with model size.", "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "30-problem subset of HumanEval with hand-written subtle-bug solutions, 3 in-context examples, T=0.2; evaluated on 158 problems", "quote": null, "table": null, "note": "Appendix E.5 says 158 problems while main text says 164.", "where": "Fig 12/14, Appendix E"},
+  {"claim": "Generated code that appears identical to training data occurs in under 0.1% of generations.", "kind": "reported", "source": "Ziegler (2021)", "metric": "verbatim recitation rate", "value": "0.1", "unit": "% (upper bound)", "baseline_value": null, "n": null, "setup": "GitHub Copilot research on code matching training snippets", "quote": "Such occurrences were < 0.1% in a study examining", "table": null, "note": null, "where": "Section 7.7"}
+ ],
+ "limits": [
+  "Codex is not sample efficient to train: hundreds of millions of lines of code; a strong CS student would solve a larger fraction than Codex-12B.",
+  "Performance falls roughly 2-3x per added chained operation in a docstring, and the model mis-binds operations to variables.",
+  "HumanEval is small (164 problems), Python-only, standalone functions at roughly easy-interview difficulty; no confidence intervals or seeds reported.",
+  "Training batch size, learning-rate value, context length, layers/width and sequence length are not stated.",
+  "Abstract (70.2%), intro/Fig 1 (77.5%) and Table 1 (72.31%) report different pass@100 figures; alignment appendix says 158 problems vs 164 in the main text.",
+  "Docstring evaluation is hand-graded on limited samples; the specification-based evaluation framework (Appendix D) is qualitative only, with results deferred to a forthcoming paper.",
+  "Bias, security and economics sections are preliminary and qualitative; models are research versions, not the production Copilot model."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "pass@k", "definition": "k code samples are generated per problem, a problem is considered solved if any sample passes the unit tests, and the total fraction of problems solved is reported", "where": "Section 2.1"},
+  {"term": "HumanEval", "definition": "164 hand-written programming problems, each with a function signature, docstring, body, and several unit tests (average 7.7 per problem)", "where": "Section 2.2"},
+  {"term": "Codex-S", "definition": "Codex further fine-tuned on correctly implemented standalone functions (supervised fine-tuning)", "where": "Section 4"},
+  {"term": "Codex-D", "definition": "docstring-generating model trained on signature + reference solution + docstring", "where": "Section 5"},
+  {"term": "filtered pass@k", "definition": "pass rate over only those samples that pass the 3 public input/output examples in the APPS task description", "where": "Section 3.5"}
+ ],
+ "lineage": [
+  {"work": "Language Models are Few-Shot Learners (GPT-3)", "year": 2020, "arxiv": "2005.14165", "relation": "extends", "note": "Codex is fine-tuned from the GPT-3 family and reuses its tokenizer and learning rates", "quote": null},
+  {"work": "Kulal et al., SPoC: Search-based pseudocode to code", "year": 2019, "arxiv": "1906.04908", "relation": "uses-method", "note": "origin of the pass@k functional-correctness metric", "quote": "Kulal et al. (2019) evaluate functional correctness using the pass@k metric"},
+  {"work": "APPS (Hendrycks et al.)", "year": 2021, "arxiv": "2105.09938", "relation": "uses-data", "note": "second benchmark for Codex; 1-shot setting", "quote": null},
+  {"work": "GPT-Neo (Black et al.)", "year": 2021, "arxiv": null, "relation": "baseline", "note": "evaluated on HumanEval", "quote": null},
+  {"work": "GPT-J (Wang & Komatsuzaki)", "year": 2021, "arxiv": null, "relation": "baseline", "note": "6B model on The Pile", "quote": null},
+  {"work": "The Pile (Gao et al.)", "year": 2020, "arxiv": "2101.00027", "relation": "related", "note": "GPT-Neo/GPT-J training data with 8% GitHub", "quote": null},
+  {"work": "Scaling Laws for Neural Language Models (Kaplan et al.)", "year": 2020, "arxiv": "2001.08361", "relation": "uses-method", "note": "power-law scaling of test loss compared against", "quote": null},
+  {"work": "The Curious Case of Neural Text Degeneration (nucleus sampling, Holtzman et al.)", "year": 2020, "arxiv": "1904.09751", "relation": "uses-method", "note": "top_p 0.95 sampling", "quote": null},
+  {"work": "BLEU / CodeBLEU (Ren et al.)", "year": 2020, "arxiv": "2009.10297", "relation": "contradicts", "note": "argues match-based metrics poorly track functional correctness", "quote": null},
+  {"work": "TransCoder (Lachaux et al.)", "year": 2020, "arxiv": "2006.03511", "relation": "related", "note": "also found functional correctness better than BLEU", "quote": null},
+  {"work": "PyMT5 (Clement et al.)", "year": 2020, "arxiv": "2010.03150", "relation": "related", "note": "similar in spirit; T5 objective over signature/docstring/body", "quote": null},
+  {"work": "CodeBERT (Feng et al.)", "year": 2020, "arxiv": "2002.08155", "relation": "related", "note": "BERT objective on docstring-function pairs", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 1", "caption": "Pass rates of our models on the HumanEval dataset as a function of model size.", "page": 2, "why": "Shows GPT vs Codex vs Codex-S and the oracle versus log-prob ranked 100-sample gains on one plot."},
+  {"figure": "Fig 3", "caption": "A numerically stable script for calculating an unbiased estimate of pass@k.", "page": 3, "why": "The reference implementation of the metric."},
+  {"figure": "Fig 5", "caption": "pass@k against number of samples for various temperatures; best temperature per k.", "page": 5, "why": "Shows why optimal temperature rises with k."},
+  {"figure": "Fig 11", "caption": "Pass rates of Codex-12B samples against the number of chained components in the synthetically generated docstring.", "page": 8, "why": "Exponential drop in performance with specification length."},
+  {"figure": "Table 1", "caption": "Codex, GPT-Neo, & TabNine evaluations for HumanEval.", "page": 6, "why": "Main pass@1/10/100 numbers across sizes."}
+ ],
+ "code": [
+  {"where": "Figure 3", "snippet": "def pass_at_k(n, c, k):\n    \"\"\"\n    :param n: total number of samples\n    :param c: number of correct samples\n    :param k: k in pass@$k$\n    \"\"\"\n    if n - c < k: return 1.0\n    return 1.0 - np.prod(1.0 - k / np.arange(n - c + 1, n + 1))", "verbatim": true},
+  {"where": "Eq 1", "snippet": "pass@k := E_problems[ 1 - C(n-c, k) / C(n, k) ]", "verbatim": false}
+ ],
+ "problems": [
+  "No embedded instructions found. Figure-only data (Figs 4-10, 12, 14, 15) not extractable from text; extraction splits some equations across lines.",
+  "Internal inconsistencies: abstract 70.2% vs intro/Fig 1 77.5% vs Table 1 72.31% for pass@100; HumanEval 164 vs 158 problems in Appendix E.5; Fig 1 temperature 0.8 vs Section 4.5 T*=1 for pass@100."
+ ]
+}

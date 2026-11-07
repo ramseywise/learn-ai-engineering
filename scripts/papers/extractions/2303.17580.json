@@ -1,0 +1,474 @@
+{
+ "schema": 1,
+ "key": "2303.17580",
+ "pdf": "generative-ai/03-agentic-foundations/sources/shen-2023-hugginggpt.pdf",
+ "bib": {
+  "title": "HuggingGPT: Solving AI Tasks with ChatGPT and its Friends in Hugging Face",
+  "authors": [
+   "Yongliang Shen",
+   "Kaitao Song",
+   "Xu Tan",
+   "Dongsheng Li",
+   "Weiming Lu",
+   "Yueting Zhuang"
+  ],
+  "first_author": "Shen",
+  "year": 2023,
+  "venue": "NeurIPS 2023",
+  "arxiv": "2303.17580",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 93530,
+  "chars_total": 93530,
+  "engine": "pymupdf",
+  "skipped": "Reference list and case-study figure text skimmed only"
+ },
+ "type": "system",
+ "question": "Can an LLM act as a controller that plans tasks and selects and runs expert models from Hugging Face to solve complex multimodal AI tasks through language as the interface?",
+ "hypothesis": "LLMs can manage existing AI models via language descriptions to solve complicated AI tasks.",
+ "contributions": [
+  "HuggingGPT with an inter-model cooperation protocol, LLM as the brain for planning and decision",
+  "Integration of the Hugging Face hub for multimodal, multi-domain tasks",
+  "Evaluations of LLM capability in task planning and model selection",
+  "Experiments across language, vision, speech and cross-modality tasks"
+ ],
+ "method": {
+  "summary": "A controller LLM (ChatGPT) runs four stages: task planning into a JSON task graph with dependencies, model selection from Hugging Face model descriptions (filtered by task type, top-K by downloads), task execution (parallel when independent, hybrid local/cloud endpoints), and response generation. Evaluated on task-planning quality across LLMs and a 130-request human evaluation.",
+  "task": "LLM-controlled orchestration of expert models for multimodal AI tasks",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "GPT-4-annotated task planning set",
+    "role": "eval",
+    "size": "3,497 requests: 1,450 single, 1,917 sequential, 130 graph",
+    "split": null,
+    "source": "requests submitted by annotators, labels (pseudo) from GPT-4",
+    "preprocessing": null
+   },
+   {
+    "name": "Human-annotated task planning set",
+    "role": "eval",
+    "size": "46 examples: 24 sequential, 22 graph",
+    "split": null,
+    "source": "expert annotators",
+    "preprocessing": null
+   },
+   {
+    "name": "Human evaluation requests",
+    "role": "eval",
+    "size": "130 requests",
+    "split": null,
+    "source": "manually created from 3-5 tasks of the task list",
+    "preprocessing": "samples that cannot generate new requests from the selected tasks discarded"
+   }
+  ],
+  "models": [
+   {
+    "name": "gpt-3.5-turbo",
+    "role": "proposed",
+    "params": null,
+    "architecture": "API LLM",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "text-davinci-003",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "API LLM",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "named as a main LLM; no results reported"
+    }
+   },
+   {
+    "name": "gpt-4",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "API LLM",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Alpaca-7b / Alpaca-13b",
+    "role": "baseline",
+    "params": "7B / 13B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Vicuna-7b / Vicuna-13b",
+    "role": "baseline",
+    "params": "7B / 13B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-4 (judge for GPT-4 Score)",
+    "role": "judge",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "API decoding",
+   "temperature": "0",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": "Three prompts (Table 1): task planning with slots Available Task List, Demonstrations, Chat Logs; model selection with Candidate Models; response generation. Few-shot demonstrations (0 to 5 shots in ablation; default number not stated).",
+   "retrieval": "Model selection: filter models by task type, rank by Hugging Face downloads, take top-K candidates (K not stated)",
+   "parameters": {
+    "logit_bias": "0.2 on format tokens such as { and }",
+    "supported tasks": "24",
+    "endpoint priority": "local endpoints before cloud (Hugging Face)"
+   },
+   "other": {
+    "parallelism": "tasks without unmet dependencies run in parallel"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Accuracy / Precision / Recall / F1",
+     "definition": "task-name match for planning; type only, arguments ignored",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Edit Distance (ED)",
+     "definition": "normalized edit distance between planned and reference task sequences",
+     "unit": "normalized (Table 7 prints %)",
+     "higher_is_better": false
+    },
+    {
+     "name": "GPT-4 Score",
+     "definition": "GPT-4 judges whether a planned graph is accurate (yes/no), accuracy of its judgments",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Passing rate / Rationality / Success rate",
+     "definition": "three human experts rate whether plan or model runs, fits the request, and final result satisfies the user; averaged",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Alpaca-7b",
+    "Vicuna-7b",
+    "Alpaca-13b",
+    "Vicuna-13b",
+    "GPT-3.5",
+    "GPT-4"
+   ],
+   "protocol": "Planning scored against GPT-4 pseudo-labels and a small human-annotated set; human evaluation by three experts on 130 requests; no seeds or significance tests stated."
+  },
+  "availability": {
+   "code": "https://github.com/microsoft/JARVIS",
+   "weights": null,
+   "data": null
+  },
+  "prompts": [
+   {
+    "purpose": "Task planning (prompt #1)",
+    "text": "#1 Task Planning Stage - The AI assistant performs task parsing on user input, generating a list of tasks with the following format: [{\"task\": task, \"id\", task_id, \"dep\": dependency_task_ids, \"args\": {\"text\": text, \"image\": URL, \"audio\": URL, \"video\": URL}}]. The \"dep\" field denotes the id of the previous task which generates a new resource upon which the current task relies. The tag \"<resource>-task_id\" represents the generated text, image, audio, or video from the dependency task with the corresponding task_id. The task must be selected from the following options: {{ Available Task List }}. Please note that there exists a logical connections and order between the tasks. In case the user input cannot be parsed, an empty JSON response should be provided. Here are several cases for your reference: {{ Demonstrations }}. To assist with task planning, the chat history is available as {{ Chat Logs }}, where you can trace the user-mentioned resources and incorporate them into the task planning stage.",
+    "where": "Table 1"
+   },
+   {
+    "purpose": "Model selection (prompt #2)",
+    "text": "#2 Model Selection Stage - Given the user request and the call command, the AI assistant helps the user to select a suitable model from a list of models to process the user request. The AI assistant merely outputs the model id of the most appropriate model. The output must be in a strict JSON format: {\"id\": \"id\", \"reason\": \"your detail reason for the choice\"}. We have a list of models for you to choose from {{ Candidate Models }}. Please select one model from the list.",
+    "where": "Table 1"
+   },
+   {
+    "purpose": "Response generation (prompt #4)",
+    "text": "#4 Response Generation Stage - With the input and the inference results, the AI assistant needs to describe the process and results. The previous stages can be formed as - User Input: {{ User Input }}, Task Planning: {{ Tasks }}, Model Selection: {{ Model Assignment }}, Task Execution: {{ Predictions }}. You must first answer the user's request in a straightforward manner. Then describe the task process and show your analysis and model inference results to the user in the first person. If inference results contain a file path, must tell the user the complete file path. If there is nothing in the results, please tell me you can't make it.",
+    "where": "Table 1"
+   },
+   {
+    "purpose": "GPT-4 Score critic",
+    "text": "As a critic, your task is to assess whether the AI assistant has properly planned the task based on the user's request. ... {\"choice\": \"yes\"/\"no\", \"reason\": \"Your reason for your choice\"} ... Positive examples: {{Positive Demos}} Negative examples: {{Negative Demos}} Current user request: {{Input}} AI assistant's output: {{Output}} Your judgement:",
+    "where": "Table 10 (abridged)"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "inference.temperature",
+    "quote": "we set the decoding temperature to 0",
+    "where": "Sec 4.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "GPT-4 plans 58.33 accuracy on graph tasks in the human-annotated set, versus 20.83 for GPT-3.5",
+   "kind": "measured",
+   "source": null,
+   "metric": "Graph Task Acc",
+   "value": "58.33",
+   "unit": "%",
+   "baseline_value": "20.83 (GPT-3.5)",
+   "n": null,
+   "setup": "Human-annotated dataset, 46 complex requests (24 sequential, 22 graph); task planning scored on task type only; LLM as HuggingGPT controller, temperature 0",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row GPT-4, column Graph Task Acc"
+  },
+  {
+   "claim": "GPT-4 gets 41.36 accuracy on sequential tasks in the human-annotated set, versus 18.18 for GPT-3.5",
+   "kind": "measured",
+   "source": null,
+   "metric": "Sequential Task Acc",
+   "value": "41.36",
+   "unit": "%",
+   "baseline_value": "18.18 (GPT-3.5)",
+   "n": null,
+   "setup": "Human-annotated dataset, 46 complex requests (24 sequential, 22 graph); task planning scored on task type only; LLM as HuggingGPT controller, temperature 0",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row GPT-4, column Sequential Task Acc"
+  },
+  {
+   "claim": "Human evaluation: end-to-end success rate of 63.08 with GPT-3.5 as controller",
+   "kind": "measured",
+   "source": null,
+   "metric": "Success Rate",
+   "value": "63.08",
+   "unit": "%",
+   "baseline_value": "15.64 (Vicuna-13b), 6.92 (Alpaca-13b)",
+   "n": null,
+   "setup": "130 diverse user requests, three human experts averaged; GPT-3.5 controller",
+   "note": null,
+   "where": "Table 8",
+   "table": "Table 8, row GPT-3.5, column Response Success Rate"
+  },
+  {
+   "claim": "Human evaluation: task planning passing rate 91.22 and model selection passing rate 93.89 for GPT-3.5",
+   "kind": "measured",
+   "source": null,
+   "metric": "Passing Rate",
+   "value": "91.22",
+   "unit": "%",
+   "baseline_value": "79.41 (Vicuna-13b)",
+   "n": null,
+   "setup": "130 requests, human experts, GPT-3.5",
+   "note": null,
+   "where": "Table 8",
+   "table": "Table 8, row GPT-3.5, columns Task Planning Passing Rate and Model Selection Passing Rate (93.89)"
+  },
+  {
+   "claim": "GPT-3.5 single-task planning accuracy 52.62 vs Alpaca-7b 6.48 and Vicuna-7b 23.86",
+   "kind": "measured",
+   "source": null,
+   "metric": "Single Task Acc",
+   "value": "52.62",
+   "unit": "%",
+   "baseline_value": "23.86 (Vicuna-7b)",
+   "n": null,
+   "setup": "GPT-4-annotated pseudo-labels, 3,497 requests, task type only (arguments ignored)",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row GPT-3.5, column Acc"
+  },
+  {
+   "claim": "GPT-3.5 sequential-task edit distance 0.54 vs 0.83 Alpaca-7b and 0.80 Vicuna-7b",
+   "kind": "measured",
+   "source": null,
+   "metric": "Edit Distance",
+   "value": "0.54",
+   "unit": "normalized, lower is better",
+   "baseline_value": "0.80 (Vicuna-7b)",
+   "n": null,
+   "setup": "GPT-4-annotated pseudo-labels, 3,497 requests, task type only (arguments ignored)",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row GPT-3.5, column ED"
+  },
+  {
+   "claim": "GPT-3.5 graph-task GPT-4 Score 50.48 vs 13.14 Alpaca-7b and 19.17 Vicuna-7b",
+   "kind": "measured",
+   "source": null,
+   "metric": "GPT-4 Score",
+   "value": "50.48",
+   "unit": "%",
+   "baseline_value": "19.17 (Vicuna-7b)",
+   "n": null,
+   "setup": "GPT-4-annotated pseudo-labels, 3,497 requests, task type only (arguments ignored)",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row GPT-3.5, column GPT-4 Score"
+  },
+  {
+   "claim": "Gains from more demonstrations are limited beyond 4",
+   "kind": "measured",
+   "source": null,
+   "metric": "demonstrations ablation",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-3.5 and GPT-4, 0 to 5 shots, Fig 3",
+   "note": null,
+   "where": "Sec 4.4",
+   "quote": "adding some demonstrations can slightly improve model performance but this improvement will be limited when the number is over 4 demonstrations"
+  },
+  {
+   "claim": "More demo variety (2 to 10 task types) raises graph-task F1 for GPT-3.5 from 43.42 to 64.24",
+   "kind": "measured",
+   "source": null,
+   "metric": "Graph F1",
+   "value": "64.24",
+   "unit": "%",
+   "baseline_value": "43.42 (2 task types)",
+   "n": null,
+   "setup": "Task planning, GPT-3.5, 10 task types in demonstrations",
+   "note": null,
+   "where": "Table 7",
+   "table": "Table 7, row 10 GPT-3.5, column Graph Task F1"
+  },
+  {
+   "claim": "Dataset sizes: 3,497 GPT-4-labelled requests (1,450 single, 1,917 sequence, 130 graph)",
+   "kind": "measured",
+   "source": null,
+   "metric": "requests",
+   "value": "3,497",
+   "unit": "requests",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Task planning evaluation set",
+   "note": null,
+   "where": "A.2",
+   "quote": "we gathered a diverse set of 3,497 user requests"
+  }
+ ],
+ "limits": [
+  "Planning depends on the LLM; plans may be infeasible or suboptimal",
+  "Multiple LLM calls per request raise latency",
+  "Context length limits how many model descriptions fit",
+  "Instability: LLM may not follow format or instructions",
+  "Planning scored on task type only, arguments ignored; GPT-4 Score is not always correct",
+  "Human-annotated set has only 46 examples; K, default shot count and cost are not stated",
+  "Sec 4.1 names text-davinci-003 but reports no results for it"
+ ],
+ "practices": [],
+ "terms": [],
+ "lineage": [
+  {
+   "work": "Toolformer",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "pioneering external API tags in LLM text",
+   "quote": null
+  },
+  {
+   "work": "Visual ChatGPT",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "fuses visual foundation models with LLMs",
+   "quote": null
+  },
+  {
+   "work": "ViperGPT / Visual Programming",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "LLMs write Python for visual queries",
+   "quote": null
+  },
+  {
+   "work": "AutoGPT, AgentGPT, BabyAGI",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "iterative planners contrasted with HuggingGPT's global planning (Table 12)",
+   "quote": null
+  },
+  {
+   "work": "Vicuna",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "GPT-4 as critic evaluation method",
+   "quote": null
+  },
+  {
+   "work": "Alpaca-7b, Vicuna-7b, GPT-3.5, GPT-4",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "controller LLMs compared",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "Overview of HuggingGPT. With an LLM (e.g., ChatGPT) as the core controller and the expert models as the executors, the workflow consists of four stages",
+   "page": 4,
+   "why": "Shows the four stages and task dependency graph in one worked example"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "The details of the prompt design in HuggingGPT",
+   "page": 5,
+   "why": "The three stage prompts verbatim"
+  }
+ ],
+ "code": [
+  {
+   "where": "Table 1 / A.1.1",
+   "snippet": "[{\"task\": task, \"id\", task_id, \"dep\": dependency_task_ids, \"args\": {\"text\": text, \"image\": URL, \"audio\": URL, \"video\": URL}}]",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "No instructions found in the PDF text.",
+  "Table 6 'Acc' for graph tasks is not defined in the text."
+ ]
+}

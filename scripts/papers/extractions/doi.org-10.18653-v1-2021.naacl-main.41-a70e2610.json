@@ -1,0 +1,670 @@
+{
+ "schema": 1,
+ "key": "https://doi.org/10.18653/v1/2021.naacl-main.41",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/xue-2021-mt5.pdf",
+ "bib": {
+  "title": "mT5: A Massively Multilingual Pre-trained Text-to-Text Transformer",
+  "authors": [
+   "Linting Xue",
+   "Noah Constant",
+   "Adam Roberts",
+   "Mihir Kale",
+   "Rami Al-Rfou",
+   "Aditya Siddhant",
+   "Aditya Barua",
+   "Colin Raffel"
+  ],
+  "first_author": "Xue",
+  "year": 2021,
+  "venue": "NAACL-HLT 2021 (pages 483-498)",
+  "arxiv": "2010.11934",
+  "doi": "10.18653/v1/2021.naacl-main.41"
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 66481,
+  "chars_total": 66481,
+  "engine": "pymupdf",
+  "skipped": "Reference list skimmed only; per-language tables 7-14 skimmed (only cited cells used)."
+ },
+ "type": "empirical",
+ "question": "Can the T5 text-to-text recipe be applied unchanged-as-possible to 101 languages with a new multilingual Common Crawl corpus, and how well does it do on multilingual benchmarks?",
+ "hypothesis": "Scaling up a simple T5-style pre-training recipe on multilingual data is a viable alternative to more complex techniques (LM filtering, parallel data, intermediate tasks).",
+ "contributions": [
+  "mT5, a multilingual T5 (300M to 13B) pre-trained on 101 languages",
+  "mC4, a multilingual variant of C4 from Common Crawl",
+  "State-of-the-art on many XTREME tasks",
+  "Characterisation of 'accidental translation' in zero-shot generation and a simple fix (mixing in the pre-training task during fine-tuning)"
+ ],
+ "method": {
+  "summary": "mT5 follows the T5.1.1 encoder-decoder recipe with a 250,000-wordpiece vocabulary, pre-trained with span corruption on mC4 (101 languages, sampled with exponent alpha=0.3) for 1M steps. It is fine-tuned on XTREME tasks cast as text-to-text in zero-shot, translate-train and in-language multitask settings.",
+  "task": "multilingual span-corruption pre-training; XTREME fine-tuning (NLI, paraphrase, NER, extractive QA)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "mC4",
+    "role": "pretrain",
+    "size": "6.6B pages, 6.3T tokens (107 cld3 languages, 101 counted); all 71 monthly Common Crawl scrapes",
+    "split": null,
+    "source": "Public Common Crawl; language ID with cld3",
+    "preprocessing": "Keep pages with >=3 lines of 200+ characters (line length filter); dedupe lines across documents; remove pages with bad words; drop pages with cld3 language confidence below 70%; keep languages with >=10,000 pages"
+   },
+   {
+    "name": "XNLI",
+    "role": "both",
+    "size": "14 languages",
+    "split": "standard XTREME validation sets for early stopping",
+    "source": "Conneau et al. 2018 via XTREME",
+    "preprocessing": "text-to-text, label text generated"
+   },
+   {
+    "name": "PAWS-X",
+    "role": "both",
+    "size": "7 languages",
+    "split": null,
+    "source": "Yang et al. 2019",
+    "preprocessing": null
+   },
+   {
+    "name": "WikiAnn NER",
+    "role": "both",
+    "size": "40 XTREME languages",
+    "split": null,
+    "source": "Pan et al. 2017",
+    "preprocessing": "Entities concatenated in order of appearance; target 'None' if no entities"
+   },
+   {
+    "name": "XQuAD",
+    "role": "eval",
+    "size": "10 languages",
+    "split": null,
+    "source": "Artetxe et al. 2020",
+    "preprocessing": null
+   },
+   {
+    "name": "MLQA",
+    "role": "eval",
+    "size": "7 languages",
+    "split": null,
+    "source": "Lewis et al. 2019",
+    "preprocessing": null
+   },
+   {
+    "name": "TyDi QA GoldP",
+    "role": "both",
+    "size": "11 languages (as printed in text)",
+    "split": null,
+    "source": "Clark et al. 2020",
+    "preprocessing": null
+   },
+   {
+    "name": "SQuAD",
+    "role": "both",
+    "size": null,
+    "split": null,
+    "source": "Rajpurkar et al. 2016",
+    "preprocessing": "Used for T5 vs mT5 comparison"
+   },
+   {
+    "name": "Wikipedia (TFDS 2020)",
+    "role": "pretrain",
+    "size": null,
+    "split": null,
+    "source": "TensorFlow Datasets, 103 languages, same languages as mBERT",
+    "preprocessing": "Only used in an ablation"
+   }
+  ],
+  "models": [
+   {
+    "name": "mT5-Small",
+    "role": "proposed",
+    "params": "≈300M",
+    "architecture": "encoder-decoder Transformer (T5.1.1, GeGLU)",
+    "init_from": null,
+    "tokenizer": "SentencePiece, character coverage 0.99999, byte-fallback, trained with pre-training language sampling rates",
+    "vocab": "250,000 wordpieces",
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "1024 input tokens in pre-training",
+    "other": {}
+   },
+   {
+    "name": "mT5-Base",
+    "role": "proposed",
+    "params": "580M",
+    "architecture": "same",
+    "init_from": null,
+    "tokenizer": "same",
+    "vocab": "250,000",
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "mT5-Large",
+    "role": "proposed",
+    "params": "1.2B",
+    "architecture": "same",
+    "init_from": null,
+    "tokenizer": "same",
+    "vocab": "250,000",
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "mT5-XL",
+    "role": "proposed",
+    "params": "3.7B",
+    "architecture": "same",
+    "init_from": null,
+    "tokenizer": "same",
+    "vocab": "250,000",
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "mT5-XXL",
+    "role": "proposed",
+    "params": "13B",
+    "architecture": "same",
+    "init_from": null,
+    "tokenizer": "same",
+    "vocab": "250,000",
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "d_model and d_ff both scaled in larger models (T5.1.1: scales d_model as well as d_ff)"
+    }
+   },
+   {
+    "name": "T5 (English)",
+    "role": "baseline",
+    "params": "60M to 11B",
+    "architecture": "encoder-decoder",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "SQuAD numbers reproduced from Raffel et al. 2020"
+    }
+   },
+   {
+    "name": "mBERT, XLM, XLM-R, InfoXLM, X-STILTs, VECO, RemBERT, FILTER",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "T5 span corruption: 15% of tokens masked, average noise span length 3; fine-tuning teacher-forced maximum likelihood",
+   "optimizer": null,
+   "lr": "pre-training: 1/sqrt(max(n,k)); fine-tuning: constant 0.001",
+   "lr_schedule": "inverse square-root, k = 10^4 warm-up steps",
+   "warmup": "10^4 steps (k=104 as printed, read as 10^4)",
+   "batch_size": "pre-training 1024 sequences; fine-tuning 2^17 tokens for most tasks, 2^16 for WikiAnn NER zero-shot, 2^20 for XNLI",
+   "steps": "1 million pre-training steps; fine-tuning steps not stated (checkpoint every 200 steps)",
+   "epochs": "Fraction of an epoch for high-resource languages (English 2%)",
+   "tokens": "roughly 1 trillion input tokens",
+   "seq_len": "1024 input tokens",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": "0 in pre-training; 0.1 in fine-tuning",
+   "regularisation": "No dropout in pre-training (T5.1.1)",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": "TyDi QA zero-shot: median of five fine-tuning runs; others not stated",
+   "other": {
+    "language_sampling": "p(L) proportional to |L|^alpha, alpha=0.3 (alpha 0.2 and 0.7 ablated)",
+    "early_stopping": "checkpoint every 200 steps, best on XTREME validation sets",
+    "domain_preserving_training": "mix mC4 span-corruption task into XQuAD fine-tuning at 1:100 ratio, sentinel tokens removed from targets, alpha reduced 0.3 to 0.1",
+    "batch_size_note": "Fine-tuning batch sizes printed as 217, 216, 220 tokens; read as 2^17, 2^16, 2^20 (superscripts lost in extraction)"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "TyDi QA zero-shot: median across five fine-tuning runs",
+   "prompting": "Tasks cast as text-to-text, label text or answer generated",
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Accuracy",
+     "definition": "XNLI, PAWS-X",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "F1",
+     "definition": "WikiAnn NER; QA F1",
+     "unit": "points",
+     "higher_is_better": true
+    },
+    {
+     "name": "EM",
+     "definition": "Exact match for QA",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Illegal prediction rate",
+     "definition": "Prediction not a substring of the input context (XQuAD zero-shot); also after Unicode NFKC normalisation",
+     "unit": "%",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "mBERT",
+    "XLM",
+    "InfoXLM",
+    "X-STILTs",
+    "XLM-R",
+    "VECO",
+    "RemBERT",
+    "FILTER + Self-Teaching",
+    "English T5 on SQuAD"
+   ],
+   "protocol": "Three settings: zero-shot (English only), translate-train (English plus machine translations, using Hu et al. 2020 data), in-language multitask. Checkpoint chosen on XTREME validation sets."
+  },
+  "availability": {
+   "code": "https://goo.gle/mt5-code",
+   "weights": "Model checkpoints publicly available",
+   "data": "mC4 released"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.batch_size",
+    "quote": "We use a batch size of 217 for most tasks, but decrease to 216 for WikiAnn NER zero-shot",
+    "where": "Section 4"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "mT5-XXL reaches 85.0 zero-shot XNLI accuracy",
+   "kind": "measured",
+   "source": null,
+   "metric": "Accuracy",
+   "value": 85.0,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "XNLI zero-shot, mT5-XXL fine-tuned on English only",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row mT5-XXL (zero-shot), column XNLI"
+  },
+  {
+   "claim": "mT5-XXL zero-shot XQuAD",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 82.5,
+   "unit": "F1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "XQuAD zero-shot, mT5-XXL",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row mT5-XXL (zero-shot), column XQuAD F1 / EM (82.5 / 66.8)"
+  },
+  {
+   "claim": "mT5-XXL is near SOTA on NER",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 69.2,
+   "unit": "F1",
+   "baseline_value": 70.1,
+   "n": null,
+   "setup": "WikiAnn NER zero-shot, mT5-XXL; RemBERT 70.1",
+   "note": null,
+   "where": "Sec 4.1",
+   "quote": "is near SOTA on NER (69.2 vs. 70.1)"
+  },
+  {
+   "claim": "Translate-train XNLI, mT5-XXL",
+   "kind": "measured",
+   "source": null,
+   "metric": "Accuracy",
+   "value": 87.1,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "XNLI translate-train (English plus translations), mT5-XXL",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row mT5-XXL (translate-train), column XNLI"
+  },
+  {
+   "claim": "Pre-training budget",
+   "kind": "measured",
+   "source": null,
+   "metric": "tokens",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "All sizes: 1M steps, batches of 1024 sequences of length 1024",
+   "note": null,
+   "where": "Sec 4",
+   "quote": "We pre-train our mT5 model variants for 1 million steps on batches of 1024 length-1024 input sequences, corresponding to roughly 1 trillion input tokens total."
+  },
+  {
+   "claim": "mT5-Small trails English T5-Small on SQuAD",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 84.7,
+   "unit": "F1",
+   "baseline_value": 87.2,
+   "n": null,
+   "setup": "SQuAD fine-tuning, mT5-Small vs T5-Small 87.2",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row Small, column mT5 (84.7 / 76.4); T5 87.2 / 79.1"
+  },
+  {
+   "claim": "mT5-XXL nearly closes gap to T5-XXL on SQuAD",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 95.6,
+   "unit": "F1",
+   "baseline_value": 96.2,
+   "n": null,
+   "setup": "SQuAD fine-tuning, mT5-XXL vs T5-XXL 96.2",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row XXL, column mT5 (95.6 / 90.4); T5 96.2 / 91.3"
+  },
+  {
+   "claim": "mT5-Large baseline XNLI zero-shot average",
+   "kind": "measured",
+   "source": null,
+   "metric": "Accuracy",
+   "value": 81.1,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Zero-shot XNLI average accuracy, mT5-Large ablations (one change at a time) baseline",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row Baseline (mT5-Large)"
+  },
+  {
+   "claim": "Removing the line length filter lowers XNLI",
+   "kind": "measured",
+   "source": null,
+   "metric": "Accuracy",
+   "value": 79.1,
+   "unit": "%",
+   "baseline_value": 81.1,
+   "n": null,
+   "setup": "Zero-shot XNLI average accuracy, mT5-Large ablations (one change at a time)",
+   "note": "Text: filter provides a +2 point boost",
+   "where": "Table 4",
+   "table": "Table 4, row No line length filter"
+  },
+  {
+   "claim": "Dropout 0.1 in pre-training hurts XNLI",
+   "kind": "measured",
+   "source": null,
+   "metric": "Accuracy",
+   "value": 77.6,
+   "unit": "%",
+   "baseline_value": 81.1,
+   "n": null,
+   "setup": "Zero-shot XNLI average accuracy, mT5-Large ablations (one change at a time)",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row Dropout 0.1"
+  },
+  {
+   "claim": "Span length 10 hurts XNLI",
+   "kind": "measured",
+   "source": null,
+   "metric": "Accuracy",
+   "value": 78.6,
+   "unit": "%",
+   "baseline_value": 81.1,
+   "n": null,
+   "setup": "Zero-shot XNLI average accuracy, mT5-Large ablations (one change at a time)",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row Span length 10"
+  },
+  {
+   "claim": "Sequence length 512 slightly hurts XNLI",
+   "kind": "measured",
+   "source": null,
+   "metric": "Accuracy",
+   "value": 80.5,
+   "unit": "%",
+   "baseline_value": 81.1,
+   "n": null,
+   "setup": "Zero-shot XNLI average accuracy, mT5-Large ablations (one change at a time)",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row Sequence length 512"
+  },
+  {
+   "claim": "alpha=0.7 lowers XNLI average (0.2 gives same)",
+   "kind": "measured",
+   "source": null,
+   "metric": "Accuracy",
+   "value": 80.7,
+   "unit": "%",
+   "baseline_value": 81.1,
+   "n": null,
+   "setup": "Zero-shot XNLI average accuracy, mT5-Large ablations (one change at a time)",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row alpha = 0.7 (alpha = 0.2 also 80.7)"
+  },
+  {
+   "claim": "Adding Wikipedia data lowers XNLI",
+   "kind": "measured",
+   "source": null,
+   "metric": "Accuracy",
+   "value": 80.3,
+   "unit": "%",
+   "baseline_value": 81.1,
+   "n": null,
+   "setup": "Zero-shot XNLI average accuracy, mT5-Large ablations (one change at a time)",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row Add Wikipedia data"
+  },
+  {
+   "claim": "alpha=0.7 helps Russian but hurts Swahili",
+   "kind": "measured",
+   "source": null,
+   "metric": "Accuracy",
+   "value": 82.8,
+   "unit": "%",
+   "baseline_value": 81.5,
+   "n": null,
+   "setup": "XNLI zero-shot, mT5-Large; Russian 81.5 to 82.8, Swahili 75.4 to 70.6",
+   "note": null,
+   "where": "Sec 4.2",
+   "quote": "improving performance in high-resource languages (e.g. Russian 81.5 →82.8)"
+  },
+  {
+   "claim": "Swahili drops with alpha=0.7",
+   "kind": "measured",
+   "source": null,
+   "metric": "Accuracy",
+   "value": 70.6,
+   "unit": "%",
+   "baseline_value": 75.4,
+   "n": null,
+   "setup": "XNLI zero-shot, mT5-Large, alpha 0.7",
+   "note": null,
+   "where": "Sec 4.2",
+   "quote": "Swahili 75.4 →70.6"
+  },
+  {
+   "claim": "Mixing 1:100 unsupervised task cuts illegal predictions for Small and Base",
+   "kind": "measured",
+   "source": null,
+   "metric": "relative reduction",
+   "value": 70,
+   "unit": "% (more than)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "XQuAD zero-shot, mT5-Small and mT5-Base, Domain Preserving Training",
+   "note": null,
+   "where": "Sec 5.2",
+   "quote": "reducing the illegal prediction rates by more than 70% (relative)"
+  },
+  {
+   "claim": "mT5-XXL surpasses human in four of nine TyDi QA languages in-language",
+   "kind": "measured",
+   "source": null,
+   "metric": "count",
+   "value": 4,
+   "unit": "languages",
+   "baseline_value": null,
+   "n": null,
+   "setup": "TyDi QA GoldP in-language multitask, mT5-XXL",
+   "note": null,
+   "where": "Sec 4.1",
+   "quote": "mT5-XXL surpassing human performance in four of nine languages"
+  },
+  {
+   "claim": "Std dev of TyDi QA zero-shot across five runs is highest for Large",
+   "kind": "measured",
+   "source": null,
+   "metric": "std dev",
+   "value": 3.66,
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "TyDi QA zero-shot, five fine-tuning runs, mT5-Large",
+   "note": null,
+   "where": "Table 2 footnote 6",
+   "quote": "Large: 3.66"
+  }
+ ],
+ "limits": [
+  "Illegal (non-substring) predictions remain a problem for generative models in zero-shot span selection; the DPT fix is shown only for XQuAD.",
+  "Ablations are on mT5-Large and XNLI zero-shot (XQuAD in appendix), single runs.",
+  "Hardware, compute time, optimiser and layer counts are not stated.",
+  "XLM-R sees over 6 times more tokens (6.3T) than mT5 (1T), so pre-training budgets differ.",
+  "mT5 benefits for translate-train comparisons depend on using English data in addition, differing from XTREME's setup."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Accidental translation",
+   "definition": "a generative model chooses to (partially) translate its prediction into the wrong language",
+   "where": "Abstract"
+  },
+  {
+   "term": "Domain Preserving Training (DPT)",
+   "definition": "Mixing the unsupervised mC4 task into fine-tuning",
+   "where": "Fig 4"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Exploring the limits of transfer learning with a unified text-to-text transformer (T5)",
+   "year": 2020,
+   "arxiv": "1910.10683",
+   "relation": "extends",
+   "note": "mT5 follows the T5.1.1 recipe",
+   "quote": null
+  },
+  {
+   "work": "C4",
+   "year": 2020,
+   "arxiv": "1910.10683",
+   "relation": "extends",
+   "note": "mC4 is a multilingual variant",
+   "quote": null
+  },
+  {
+   "work": "XLM-R (Conneau et al.)",
+   "year": 2020,
+   "arxiv": "1911.02116",
+   "relation": "baseline",
+   "note": "Vocabulary size and alpha=0.3 follow XLM-R",
+   "quote": null
+  },
+  {
+   "work": "mBERT (Devlin)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "alpha=0.7",
+   "quote": null
+  },
+  {
+   "work": "XTREME (Hu et al.)",
+   "year": 2020,
+   "arxiv": "2003.11080",
+   "relation": "uses-data",
+   "note": "benchmark",
+   "quote": null
+  },
+  {
+   "work": "Arivazhagan et al. massively multilingual NMT",
+   "year": 2019,
+   "arxiv": "1907.05019",
+   "relation": "uses-method",
+   "note": "alpha=0.2 sampling",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Page counts per language in mC4, and percentage of mT5 training examples from each language for different alpha",
+   "page": 3,
+   "why": "Shows the effect of the sampling exponent"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Error rates of mT5 on XQuAD zero-shot. Baseline vs Domain Preserving Training",
+   "page": 9,
+   "why": "Shows DPT effect"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Superscripts lost in text extraction (2^17 etc.; 10^4 warm-up steps printed as 104).",
+  "No hyperparameters for optimizer, layers, hidden size, hardware."
+ ]
+}

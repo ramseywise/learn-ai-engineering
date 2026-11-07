@@ -1,0 +1,644 @@
+{
+ "schema": 1,
+ "key": "1607.06450",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/ba-2016-layer-normalization.pdf",
+ "bib": {
+  "title": "Layer Normalization",
+  "authors": [
+   "Jimmy Lei Ba",
+   "Jamie Ryan Kiros",
+   "Geoffrey E. Hinton"
+  ],
+  "first_author": "Ba",
+  "year": 2016,
+  "venue": "preprint",
+  "arxiv": "1607.06450",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 46345,
+  "chars_total": 46345,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can normalization statistics computed over the hidden units of a single training case, instead of over a mini-batch, speed up training and work for recurrent networks and small batches?",
+ "hypothesis": "Fixing the mean and variance of the summed inputs within each layer reduces covariate shift and stabilises hidden-state dynamics in RNNs without batch dependence.",
+ "contributions": [
+  "Layer normalization: mean and variance over all hidden units in a layer on one training case, with per-neuron gain and bias, identical at train and test time",
+  "Invariance analysis against batch and weight normalization (Table 1)",
+  "Geometry-of-parameter-space analysis using the Fisher information of normalized GLMs",
+  "Experiments on six tasks, mostly RNNs"
+ ],
+ "method": {
+  "summary": "Layer norm replaces batch statistics with per-case statistics over the H hidden units of a layer, then applies learned gain and bias before the non-linearity. It is inserted into LSTM/GRU recurrences in existing Theano codebases and compared with the unmodified models and with batch norm on six tasks.",
+  "task": "Training-speed and generalisation comparison of normalization schemes across image-sentence ranking, reading comprehension, skip-thought sentence embeddings, DRAW on MNIST, handwriting generation, permutation-invariant MNIST",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "MSCOCO",
+    "role": "both",
+    "size": "5 test splits of 1000 images and 5000 captions each",
+    "split": "held-out validation set for model selection; mean over 5 test splits",
+    "source": "Lin et al., 2014",
+    "preprocessing": "VGG ConvNet 10-crop image features (pretrained)"
+   },
+   {
+    "name": "CNN corpus (attentive reader)",
+    "role": "both",
+    "size": null,
+    "split": "validation only",
+    "source": "Hermann et al. 2015, pre-processed version of Cooijmans et al. 2016",
+    "preprocessing": "anonymised entities; each passage limited to 4 sentences"
+   },
+   {
+    "name": "BookCorpus",
+    "role": "pretrain",
+    "size": null,
+    "split": null,
+    "source": "Zhu et al. 2015",
+    "preprocessing": null
+   },
+   {
+    "name": "SICK, MR, CR, SUBJ, MPQA",
+    "role": "eval",
+    "size": null,
+    "split": "skip-thought evaluation protocol; plots with error use 10-fold cross validation",
+    "source": "Marelli 2014; Pang & Lee 2005/2004; Hu & Liu 2004; Wiebe 2005",
+    "preprocessing": null
+   },
+   {
+    "name": "Binarized MNIST (Larochelle & Murray 2011)",
+    "role": "both",
+    "size": "50,000 train / 10,000 validation / 10,000 test",
+    "split": "fixed binarization",
+    "source": "Larochelle and Murray 2011",
+    "preprocessing": null
+   },
+   {
+    "name": "IAM-OnDB",
+    "role": "both",
+    "size": "12179 handwriting line sequences, 221 writers",
+    "split": null,
+    "source": "Liwicki and Bunke 2005",
+    "preprocessing": "average line length around 700; input string typically more than 25 characters"
+   },
+   {
+    "name": "MNIST (permutation invariant)",
+    "role": "both",
+    "size": "55000 training data points",
+    "split": null,
+    "source": null,
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Layer-normalized GRU order-embedding",
+    "role": "proposed",
+    "params": null,
+    "architecture": "GRU sentence encoder, VGG image encoder, asymmetric order-embedding scoring",
+    "init_from": "Vendrov et al. 2016 code",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "LN attentive reader (LSTM)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "unidirectional attentive reader, LN inside the LSTM only",
+    "init_from": "Cooijmans et al. 2016 code",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "gain_init_tried": "1.0 and 0.1"
+    }
+   },
+   {
+    "name": "LN skip-thoughts",
+    "role": "proposed",
+    "params": null,
+    "architecture": "GRU encoder/decoders",
+    "init_from": "Kiros et al. 2015 code",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": "2400-dimensional sentence encoder",
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "LN DRAW",
+    "role": "proposed",
+    "params": null,
+    "architecture": "DRAW, LN on LSTM cell output only",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": "256 LSTM hidden units",
+    "heads": null,
+    "context": null,
+    "other": {
+     "glimpses": 64
+    }
+   },
+   {
+    "name": "LN handwriting LSTM",
+    "role": "proposed",
+    "params": "approximately 3.7M weights",
+    "architecture": "Graves 2013 Sec 5.2: 3 hidden layers of 400 LSTM cells, 20 bivariate Gaussian mixture outputs, window of 10 Gaussians",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "3",
+    "hidden": "400 LSTM cells",
+    "heads": null,
+    "context": null,
+    "other": {
+     "input_layer_size": 3,
+     "window_vector_size": 57,
+     "window_param_vector": 30
+    }
+   },
+   {
+    "name": "MNIST MLP 784-1000-1000-10",
+    "role": "proposed",
+    "params": null,
+    "architecture": "fully connected, LN on hidden layers, not the softmax layer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "2 hidden",
+    "hidden": "1000",
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "Task-specific (ranking loss, cross-entropy / validation error, skip-thought sentence prediction, variational bound, NLL); not given in one place",
+   "optimizer": "Adam (default settings for DRAW; initial hyperparameters same as baseline for order embeddings); optimizer for attentive reader and skip-thoughts not stated here",
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "128 (DRAW); 8 (handwriting); 128 and 4 (MNIST); others not stated",
+   "steps": "skip-thoughts 1M iterations (and 1 month, approx 1.7M iterations for the dagger row)",
+   "epochs": "DRAW 200 epochs (curve shown for first 100); MNIST curves 60 epochs (read from Fig 6)",
+   "tokens": null,
+   "seq_len": "500 for the handwriting run (Fig 5 caption)",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": "skip-thoughts long run: 1 month",
+   "seeds": null,
+   "other": {
+    "ln_init": "main text: gains 1, biases 0 by default; supplement text says alpha (gain) init zeros and beta (bias) init ones, a swap of the names/values",
+    "order_embedding_checkpointing": "R@K on validation every 300 iterations; save model when R@K improves",
+    "skipthought_checkpoint": "every 50,000 iterations",
+    "CNMeM": "used so LN gave no significant per-iteration slowdown",
+    "batchnorm_small_batch": "unbiased variance estimator used at batch size 4"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "Order embeddings: mean over 5 test splits; other results single curves, no seeds stated",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Recall@K (caption/image retrieval)",
+     "definition": "fraction of queries with the correct item in top K",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Mean rank r",
+     "definition": "mean rank of the correct item",
+     "unit": "rank",
+     "higher_is_better": false
+    },
+    {
+     "name": "SICK r / rho / MSE",
+     "definition": "Pearson, Spearman correlation and mean squared error on semantic relatedness",
+     "unit": "correlation / MSE",
+     "higher_is_better": true
+    },
+    {
+     "name": "MR, CR, SUBJ, MPQA accuracy",
+     "definition": "classification accuracy on top of skip-thought features",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Test variational bound",
+     "definition": "negative log likelihood bound of DRAW on binarized MNIST",
+     "unit": "nats",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "Unnormalized models",
+    "Recurrent batch normalization (Cooijmans et al. 2016), BN-LSTM and BN-everywhere",
+    "Weight normalization (DRAW)",
+    "Batch normalization on MNIST",
+    "Original reported results of Vendrov 2016 and Kiros 2015"
+   ],
+   "protocol": "Each experiment reuses the public code and protocol of the original paper and adds LN; single runs, no seeds or significance tests reported."
+  },
+  "availability": {
+   "code": "Builds on public Theano code from Vendrov, Cooijmans and Kiros repositories; no release of its own stated",
+   "weights": null,
+   "data": null
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.other.ln_init",
+    "quote": "Each αi is initialized to a vector of zeros and each βi is initialized to a vector of ones.",
+    "where": "Supplementary Material"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Order-embedding with LN reaches its best validation model in 60% of the baseline's time.",
+   "kind": "measured",
+   "source": null,
+   "metric": "relative time to best validation",
+   "value": "60%",
+   "unit": "% of baseline",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MSCOCO image retrieval validation, order-embedding with GRU, Fig 1",
+   "quote": "converges to its best validation model in 60% of the time it takes the baseline model to do so",
+   "table": null,
+   "note": null,
+   "where": "Sec 6.1"
+  },
+  {
+   "claim": "LN improves caption retrieval R@1 over the order-embedding baseline on MSCOCO.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Caption R@1",
+   "value": "48.5",
+   "unit": "%",
+   "baseline_value": "46.6",
+   "n": null,
+   "setup": "Mean over 5 test splits of 1000 images / 5000 captions; OE (ours) vs OE + LN",
+   "quote": null,
+   "table": "Table 2, row OE + LN, column Caption Retrieval R@1",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "LN improves image retrieval R@1 over the order-embedding baseline.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Image R@1",
+   "value": "38.9",
+   "unit": "%",
+   "baseline_value": "37.8",
+   "n": null,
+   "setup": "Same as above",
+   "quote": null,
+   "table": "Table 2, row OE + LN, column Image Retrieval R@1",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "On the attentive reader, LN trains faster and converges to a better validation result than baseline LSTM and BN variants.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "CNN corpus, 4-sentence passages, validation only, LN inside LSTM only (Fig 2)",
+   "quote": "layer normalization not only trains faster but converges to a better validation result over both the baseline and BN variants",
+   "table": null,
+   "note": null,
+   "where": "Sec 6.2"
+  },
+  {
+   "claim": "LN with scale init 1.0 performed significantly better than 0.1, whereas recurrent BN needs 0.1.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Attentive reader; both inits tried",
+   "quote": "We experimented with layer normalization for both 1.0 and 0.1 scale initialization and found that the former model performed signiﬁcantly better",
+   "table": null,
+   "note": null,
+   "where": "Sec 6.2"
+  },
+  {
+   "claim": "Skip-thoughts with LN beat the self-trained baseline on SICK(r) after 1M iterations.",
+   "kind": "measured",
+   "source": null,
+   "metric": "SICK Pearson r",
+   "value": "0.854",
+   "unit": "correlation",
+   "baseline_value": "0.842",
+   "n": null,
+   "setup": "BookCorpus, 2400-d encoder, Kiros 2015 hyperparameters",
+   "quote": null,
+   "table": "Table 3, row Ours + LN, column SICK(r)",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Skip-thoughts with LN improve MR accuracy over the self-trained baseline after 1M iterations.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MR accuracy",
+   "value": "79.5",
+   "unit": "%",
+   "baseline_value": "77.3",
+   "n": null,
+   "setup": "Same",
+   "quote": null,
+   "table": "Table 3, row Ours + LN, column MR",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Training LN skip-thoughts for one month (about 1.7M iterations) gives further gains on all but one task.",
+   "kind": "measured",
+   "source": null,
+   "metric": "SICK Pearson r",
+   "value": "0.858",
+   "unit": "correlation",
+   "baseline_value": "0.854",
+   "n": null,
+   "setup": "Table 3 dagger row",
+   "quote": null,
+   "table": "Table 3, row Ours + LN †, column SICK(r)",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "LN DRAW converges almost twice as fast as the baseline.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "DRAW, 64 glimpses, 256 LSTM units, Adam, batch 128, fixed-binarization MNIST",
+   "quote": "converges almost twice as fast than the baseline model",
+   "table": null,
+   "note": null,
+   "where": "Sec 6.4"
+  },
+  {
+   "claim": "After 200 epochs the LN DRAW reaches a slightly better test bound than the baseline.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test variational bound",
+   "value": "82.09",
+   "unit": "nats",
+   "baseline_value": "82.36",
+   "n": null,
+   "setup": "Same",
+   "quote": "the layer normalization model obtains 82.09 nats",
+   "table": null,
+   "note": "Baseline value 82.36 nats printed in the same sentence.",
+   "where": "Sec 6.4"
+  },
+  {
+   "claim": "LN converges to a comparable log likelihood as baseline on handwriting generation but much faster.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "IAM-OnDB, 3x400 LSTM, batch 8, sequence length 500, Adam (Fig 5)",
+   "quote": "layer normalization converges to a comparable log likelihood as the baseline model but is much faster",
+   "table": null,
+   "note": null,
+   "where": "Sec 6.5"
+  },
+  {
+   "claim": "LN is robust to batch size and converges faster than BN on permutation-invariant MNIST.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "784-1000-1000-10, 55000 training points, Adam, batch size 128 and 4, LN on hidden layers only (Fig 6)",
+   "quote": "layer normalization is robust to the batch-sizes and exhibits a faster training convergence comparing to batch normalization",
+   "table": null,
+   "note": null,
+   "where": "Sec 6.6"
+  },
+  {
+   "claim": "In preliminary convnet experiments LN gives a speedup over no normalization but BN does better.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Convolutional networks; no numbers, task and architecture not stated",
+   "quote": "batch normalization outperforms the other methods",
+   "table": null,
+   "note": "Preliminary experiments only; no data reported.",
+   "where": "Sec 6.7"
+  },
+  {
+   "claim": "LN is invariant to re-scaling and shifting of the whole weight matrix and to re-scaling of individual training cases, but not to re-scaling of a single weight vector.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Analytical, Table 1 and Eq. 6-7",
+   "quote": "layer normalization is invariant to scaling of the entire weight matrix and invariant to a shift to all of the incoming weights in the weight matrix",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.1"
+  },
+  {
+   "claim": "When a weight vector's norm doubles, the curvature along it halves, giving an implicit early-stopping effect.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Generalized linear model analysis",
+   "quote": "The curvature along the wi direction will change by a factor of 1\n2",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.2.2"
+  }
+ ],
+ "limits": [
+  "Convolutional networks: only preliminary experiments, BN outperformed LN; authors say further research is needed (Sec 6.7)",
+  "Skip-thought comparison differs from the original because public code does not condition at each decoder timestep",
+  "Attentive reader results are validation only, with BN curves taken from Cooijmans et al.",
+  "Single runs; no seeds, learning rates or significance tests; many hyperparameters deferred to the original papers",
+  "Comparison with Wang et al. 2016 on MSCOCO is not direct (1 test set vs mean of 5)",
+  "No transformer or attention experiments; the paper predates the transformer"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "layer normalization",
+   "definition": "all the hidden units in a layer share the same normalization terms mu and sigma, but different training cases have different normalization terms",
+   "where": "Sec 3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Batch normalization",
+   "year": 2015,
+   "arxiv": "1502.03167",
+   "relation": "extends",
+   "note": "transposes BN statistics from batch to layer",
+   "quote": null
+  },
+  {
+   "work": "Recurrent batch normalization (Cooijmans et al.)",
+   "year": 2016,
+   "arxiv": "1603.09025",
+   "relation": "baseline",
+   "note": "attentive reader protocol and BN curves",
+   "quote": null
+  },
+  {
+   "work": "Weight normalization (Salimans and Kingma)",
+   "year": 2016,
+   "arxiv": "1602.07868",
+   "relation": "baseline",
+   "note": "compared in invariance analysis and DRAW",
+   "quote": null
+  },
+  {
+   "work": "Order-embeddings of images and language (Vendrov et al.)",
+   "year": 2016,
+   "arxiv": "1511.06361",
+   "relation": "uses-method",
+   "note": "model and code modified",
+   "quote": null
+  },
+  {
+   "work": "Skip-thought vectors (Kiros et al.)",
+   "year": 2015,
+   "arxiv": "1506.06726",
+   "relation": "uses-method",
+   "note": "code and setup reused",
+   "quote": null
+  },
+  {
+   "work": "DRAW (Gregor et al.)",
+   "year": 2015,
+   "arxiv": "1502.04623",
+   "relation": "evaluates",
+   "note": "LN applied to DRAW",
+   "quote": null
+  },
+  {
+   "work": "Generating sequences with RNNs (Graves)",
+   "year": 2013,
+   "arxiv": "1308.0850",
+   "relation": "uses-method",
+   "note": "handwriting model architecture",
+   "quote": null
+  },
+  {
+   "work": "Teaching machines to read and comprehend (Hermann et al.)",
+   "year": 2015,
+   "arxiv": "1506.03340",
+   "relation": "uses-data",
+   "note": "CNN corpus",
+   "quote": null
+  },
+  {
+   "work": "Natural gradient works efficiently in learning (Amari)",
+   "year": 1998,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Riemannian metric analysis",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Table 1",
+   "caption": "Invariance properties under the normalization methods.",
+   "page": 4,
+   "why": "Shows at a glance which re-scalings/re-centerings each of BN, WN and LN is invariant to."
+  },
+  {
+   "figure": "Fig 1",
+   "caption": "Recall@K curves using order-embeddings with and without layer normalization.",
+   "page": 6,
+   "why": "Per-iteration speedup of LN."
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "Permutation invariant MNIST 784-1000-1000-10 model negative log likelihood and test error with layer normalization and batch normalization.",
+   "page": 10,
+   "why": "LN versus BN at batch 128 and batch 4."
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq. 3, p.2",
+   "snippet": "mu^l = (1/H) sum_i a_i^l ; sigma^l = sqrt((1/H) sum_i (a_i^l - mu^l)^2)",
+   "verbatim": false
+  },
+  {
+   "where": "Supplement Eq. 15",
+   "snippet": "LN(z; alpha, beta) = (z - mu)/sigma * alpha + beta",
+   "verbatim": false
+  },
+  {
+   "where": "Supplement Eq. 20-22",
+   "snippet": "LSTM gates = LN(W_h h_{t-1}; a1,b1) + LN(W_x x_t; a2,b2) + b ; h_t = sigma(o_t) * tanh(LN(c_t; a3,b3))",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Supplement names alpha as additive/gain inconsistently: Eq. 15 puts alpha as the gain (multiplicative) and beta as bias, but text says alpha is initialized to zeros and beta to ones, contradicting main text (gains 1, biases 0) and describing alpha, beta as 'additive and multiplicative' in reverse.",
+  "The cached text file contains NUL bytes; text otherwise readable. Equation layout is garbled.",
+  "No epsilon in the variance; no learning rates or batch sizes for several experiments."
+ ]
+}

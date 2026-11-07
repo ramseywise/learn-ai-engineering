@@ -1,0 +1,765 @@
+{
+ "schema": 1,
+ "key": "2210.11416",
+ "pdf": "generative-ai/05-RL/sources/chung-2022-scaling-instruction-finetuned-language-models.pdf",
+ "bib": {
+  "title": "Scaling Instruction-Finetuned Language Models",
+  "authors": [
+   "Hyung Won Chung",
+   "Le Hou",
+   "Shayne Longpre",
+   "Barret Zoph",
+   "Yi Tay",
+   "William Fedus",
+   "Yunxuan Li",
+   "Xuezhi Wang",
+   "Mostafa Dehghani",
+   "Siddhartha Brahma",
+   "Albert Webson",
+   "Shixiang Shane Gu",
+   "Zhuyun Dai",
+   "Mirac Suzgun",
+   "Xinyun Chen",
+   "Aakanksha Chowdhery",
+   "Alex Castro-Ros",
+   "Marie Pellat",
+   "Kevin Robinson",
+   "Dasha Valter",
+   "Sharan Narang",
+   "Gaurav Mishra",
+   "Adams Yu",
+   "Vincent Zhao",
+   "Yanping Huang",
+   "Andrew Dai",
+   "Hongkun Yu",
+   "Slav Petrov",
+   "Ed H. Chi",
+   "Jeff Dean",
+   "Jacob Devlin",
+   "Adam Roberts",
+   "Denny Zhou",
+   "Quoc V. Le",
+   "Jason Wei"
+  ],
+  "first_author": "Chung",
+  "year": 2022,
+  "venue": "preprint (arXiv v5, 6 Dec 2022)",
+  "arxiv": "2210.11416",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 156120,
+  "chars_total": 156120,
+  "engine": "pymupdf",
+  "skipped": "per-task result tables 11-21 skimmed only (numbers per MMLU/BBH task); reference list skimmed"
+ },
+ "type": "empirical",
+ "question": "How does instruction finetuning scale with the number of finetuning tasks, model size and the inclusion of chain-of-thought data, and does it generalize across model families?",
+ "hypothesis": "Scaling tasks and model size, and adding CoT data to the mixture, improves held-out performance in zero-shot, few-shot and CoT settings.",
+ "contributions": [
+  "Study scaling of instruction finetuning in model size (8B, 62B, 540B) and number of tasks (9 to 1,836)",
+  "Show finetuning on nine CoT datasets preserves and improves reasoning on held-out tasks, while non-CoT-only finetuning degrades CoT",
+  "Release Flan-T5 checkpoints (80M to 11B) and train Flan-PaLM, Flan-cont-PaLM, Flan-U-PaLM"
+ ],
+ "method": {
+  "summary": "Instruction-finetune T5, PaLM, cont-PaLM and U-PaLM on a mixture of Muffin, T0-SF, NIV2 and CoT collections (1,836 tasks) with a constant learning rate and Adafactor, then evaluate on held-out MMLU, BBH, TyDiQA and MGSM, plus a 190-example human preference study and responsible-AI benchmarks.",
+  "task": "multi-task instruction finetuning of pretrained LMs; held-out task generalization",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Muffin",
+    "role": "train",
+    "size": "80 tasks (69 datasets, 27 categories); 62 tasks from Wei et al. 2021 plus 26 new",
+    "split": null,
+    "source": "Wei et al. 2021 plus dialog and program-synthesis data",
+    "preprocessing": "templates from mixture creators"
+   },
+   {
+    "name": "T0-SF",
+    "role": "train",
+    "size": "193 tasks (55 datasets, 14 categories)",
+    "split": null,
+    "source": "T0 tasks not overlapping Muffin",
+    "preprocessing": "templates from mixture creators"
+   },
+   {
+    "name": "NIV2 (Natural Instructions v2)",
+    "role": "train",
+    "size": "1,554 tasks (372 datasets, 108 categories) after removing 44 MMLU-related tasks",
+    "split": null,
+    "source": "Wang et al. 2022c",
+    "preprocessing": "44 MMLU-related tasks removed"
+   },
+   {
+    "name": "CoT mixture",
+    "role": "train",
+    "size": "9 datasets, 9 tasks, 74,730 examples (AQuA 2,715; CREAK 6,910; ECQA 7,110; ESNLI 36,170; GSM8K 7,470; QASC 1,080; QED 5,145; Sensemaking 6,070; StrategyQA 2,060)",
+    "split": null,
+    "source": "datasets with human-written CoT annotations",
+    "preprocessing": "about ten manually written instruction templates per dataset"
+   },
+   {
+    "name": "MMLU",
+    "role": "eval",
+    "size": "57 tasks",
+    "split": "5-shot, few-shot exemplars from dev set; validation set reported except Tables 1 and 4 (test)",
+    "source": "Hendrycks et al. 2020",
+    "preprocessing": null
+   },
+   {
+    "name": "BBH",
+    "role": "eval",
+    "size": "23 tasks",
+    "split": "3-shot",
+    "source": "Suzgun et al. 2022 from BIG-Bench",
+    "preprocessing": null
+   },
+   {
+    "name": "TyDiQA",
+    "role": "eval",
+    "size": "8 languages",
+    "split": "1-shot, exact match, direct prompting only",
+    "source": "Clark et al. 2020",
+    "preprocessing": null
+   },
+   {
+    "name": "MGSM",
+    "role": "eval",
+    "size": "10 languages",
+    "split": "8-shot, CoT only",
+    "source": "Shi et al. 2022",
+    "preprocessing": null
+   },
+   {
+    "name": "Open-ended set",
+    "role": "eval",
+    "size": "190 examples (5 categories of 20, 60 CoT variants, 30 few-shot)",
+    "split": null,
+    "source": "written by the authors",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Flan-T5 (Small, Base, Large, XL, XXL)",
+    "role": "proposed",
+    "params": "80M, 250M, 780M, 3B, 11B",
+    "architecture": "encoder-decoder, span corruption",
+    "init_from": "T5 (Raffel 2020)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "model card says Flan-T5-small has 77 million weights": "Table 26"
+    }
+   },
+   {
+    "name": "Flan-PaLM",
+    "role": "proposed",
+    "params": "8B, 62B, 540B",
+    "architecture": "decoder-only, causal LM",
+    "init_from": "PaLM",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "model card text also mentions a 6-billion model (Table 25), Table 2 lists 8B": "inconsistency"
+    }
+   },
+   {
+    "name": "Flan-cont-PaLM",
+    "role": "proposed",
+    "params": "62B",
+    "architecture": "decoder-only",
+    "init_from": "cont-PaLM (PaLM 62B + 500B more tokens)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Flan-U-PaLM",
+    "role": "proposed",
+    "params": "540B",
+    "architecture": "decoder-only, prefix LM + span corruption",
+    "init_from": "U-PaLM (PaLM-540B + UL2 objective for 20k steps)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "PaLM, T5 (LM-adapted), cont-PaLM, U-PaLM",
+    "role": "baseline",
+    "params": "as above",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "T5 baseline": "LM-adapted, 100B extra tokens of C4 with LM objective (Lester 2021)"
+    }
+   }
+  ],
+  "training": {
+   "objective": "supervised next-token loss on instruction/target pairs (inferred: standard seq2seq or causal LM loss; inputs separated from targets by end-of-sequence token)",
+   "optimizer": "Adafactor",
+   "lr": "T5: 5e-4; PaLM 8B and 62B and cont-PaLM: 3e-3; PaLM 540B and U-PaLM 540B: 1e-3 (Table 22)",
+   "lr_schedule": "constant",
+   "warmup": null,
+   "batch_size": "global batch 64 for Flan-T5, 32 for Flan-PaLM and variants (Table 22); packing makes effective size larger",
+   "steps": "Flan-T5 Small 98k, Base 84k, Large 64k, XL 38k, XXL 14k; Flan-PaLM 8B 40k, 62B 40k, 540B 21k; Flan-cont-PaLM 62B 60k; Flan-U-PaLM 540B 30k",
+   "epochs": null,
+   "tokens": "1.4B tokens for PaLM finetuning (0.2% of 780B pretraining tokens)",
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": "0.05 for all except 0.1 for Flan-PaLM 540B and Flan-U-PaLM 540B",
+   "regularisation": "packing with attention masking across example boundaries",
+   "hardware": "about 512 TPU v4 chips for 37 hours (Flan-PaLM 540B)",
+   "compute": "Table 2: Flan-PaLM 540B 5.6E+21 FLOPs finetune vs 2.5E+24 pretrain (0.2%)",
+   "wall_clock": "37 hours (540B)",
+   "seeds": null,
+   "other": {
+    "checkpoint selection": "single checkpoint per model chosen from periodic evaluations (every 2k to 10k steps) on held-out tasks; same step count across ablations",
+    "mixture caps": "Muffin 30,000, T0-SF 20,000, CoT 100,000, NIV2 5,000 examples per task (Table 23)",
+    "mixture proportions A (scaling and ablation sections)": "Muffin 52%, T0-SF 15%, CoT 3%, NIV2 30%",
+    "mixture proportions B (all other experiments)": "Muffin 46.0%, T0-SF 27.9%, CoT 1.8%, NIV2 24.2%",
+    "framework": "JAX-based T5X",
+    "task order for scaling": "CoT, Muffin, T0-SF, NIV2 added sequentially"
+   }
+  },
+  "inference": {
+   "decoding": "human eval: temperature sampling, 5 responses, pick best log-probability without length normalisation after filtering scores better than half of the median; benchmarks: not stated",
+   "temperature": "0.7 (open-ended human eval); toxicity eval 1.0 with top-k 40",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "5 samples per prompt in human eval; 25 continuations per prompt (10k prompts) for RealToxicityPrompts; 50 per prompt for identity-term prompts",
+   "prompting": "5-shot MMLU, 3-shot BBH, 1-shot TyDiQA, 8-shot MGSM; direct and CoT prompting; zero-shot CoT via 'Let's think step by step'; prompts at github.com/jasonwei20/flan-2",
+   "retrieval": null,
+   "parameters": {
+    "self-consistency": "used for CoT+SC rows; number of samples not stated"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "normalized average",
+     "definition": "macro-average of six normalized scores (MMLU-Direct, MMLU-CoT, BBH-Direct, BBH-CoT, TyDiQA-Direct, MGSM-CoT), each scaled against a task-specific lower bound such as random guessing",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "exact match / accuracy",
+     "definition": "few-shot prompted accuracy, unweighted average over tasks",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "human preference",
+     "definition": "percent of 190 examples where raters preferred the model output; one rater per pair",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "toxicity probability",
+     "definition": "probability of at least one continuation with Perspective score >= 0.5 in 25",
+     "unit": "probability",
+     "higher_is_better": false
+    },
+    {
+     "name": "AUC-ROC",
+     "definition": "CivilComments zero/10-shot classification from normalised log-likelihoods of yes/no",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "PaLM",
+    "T5 (LM-adapted)",
+    "cont-PaLM",
+    "U-PaLM",
+    "GPT-3",
+    "Chinchilla",
+    "code-davinci-002",
+    "ByT5 finetuned (TyDiQA)"
+   ],
+   "protocol": "single run per configuration, no seeds or confidence intervals reported; held-out benchmarks excluded from finetuning mixture"
+  },
+  "availability": {
+   "code": "T5X framework; MMLU prompts at github.com/jasonwei20/flan-2",
+   "weights": "Flan-T5 checkpoints public (github.com/google-research/t5x docs models.md); Flan-PaLM not released",
+   "data": "all sources public; mixture composition in Table 24"
+  },
+  "prompts": [
+   {
+    "purpose": "human rater instructions for open-ended evaluation",
+    "text": "Rank the responses according to which one provides the best",
+    "where": "Appendix I"
+   },
+   {
+    "purpose": "zero-shot CoT trigger",
+    "text": "Let's think step by step.",
+    "where": "Section 4.3, Fig 7"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training.dropout",
+    "quote": null,
+    "where": "Table 22"
+   },
+   {
+    "field": "training.other.mixture proportions",
+    "quote": "Proportion A was used in scaling and the ablation sections in Section 3 and Section 4.",
+    "where": "Table 23"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Flan-PaLM 540B gains 9.4 normalized-average points over PaLM 540B when finetuned on 1,836 tasks (8B gains 15.5, 62B gains 10.4).",
+   "kind": "measured",
+   "source": null,
+   "metric": "normalized average",
+   "value": 9.4,
+   "unit": "points (normalized average)",
+   "baseline_value": 49.1,
+   "n": null,
+   "setup": "PaLM 540B, mixture proportion A, four held-out benchmark suites (MMLU, BBH, TyDiQA, MGSM)",
+   "quote": null,
+   "table": "Table 3, row 540B CoT, Muffin, T0-SF, NIV2, column Norm. avg.",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Flan-PaLM 540B reaches 75.2% on five-shot MMLU with CoT plus self-consistency.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MMLU accuracy",
+   "value": 75.2,
+   "unit": "%",
+   "baseline_value": 69.3,
+   "n": null,
+   "setup": "MMLU test set, 5-shot, CoT + SC; PaLM 540B 69.3 direct",
+   "quote": "75.2% on ﬁve-shot MMLU",
+   "table": null,
+   "note": null,
+   "where": "Abstract, Table 1, Table 4"
+  },
+  {
+   "claim": "Most of the gain from more tasks arrives by 282 tasks; 1,836 tasks add little.",
+   "kind": "measured",
+   "source": null,
+   "metric": "tasks at which most gain arrives",
+   "value": 282,
+   "unit": "tasks",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Flan-PaLM 8B/62B/540B, normalized average on held-out benchmarks",
+   "quote": "although the majority of the improvement comes from using up to 282 tasks",
+   "table": null,
+   "note": null,
+   "where": "Section 3"
+  },
+  {
+   "claim": "Instruction finetuning used 1.4B tokens, 0.2% of PaLM's 780B pretraining tokens.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 1.4,
+   "unit": "B tokens",
+   "baseline_value": null,
+   "n": null,
+   "setup": "PaLM finetuning mixture",
+   "quote": "1.4B tokens (0.2% of the pre-training tokens)",
+   "table": null,
+   "note": null,
+   "where": "Section 3"
+  },
+  {
+   "claim": "Finetuning Flan-PaLM 540B costs 0.2% of pretraining compute.",
+   "kind": "measured",
+   "source": null,
+   "metric": "finetune compute share",
+   "value": 0.2,
+   "unit": "% of pretraining FLOPs",
+   "baseline_value": null,
+   "n": null,
+   "setup": "540B, about 512 TPU v4 chips for 37 hours",
+   "quote": null,
+   "table": "Table 2, row 540B Flan-PaLM, column % Finetune Compute",
+   "note": null,
+   "where": "Table 2, Section 2.2"
+  },
+  {
+   "claim": "Finetuning on non-CoT data only degrades held-out CoT performance; adding nine CoT datasets recovers it.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 9,
+   "unit": "CoT datasets",
+   "baseline_value": null,
+   "n": null,
+   "setup": "8B, 62B, 540B PaLM; held-out CoT benchmarks (MMLU, BBH, MGSM) normalized average; effect read from Fig 5",
+   "quote": "it is critical to ﬁnetune on some CoT examples",
+   "table": null,
+   "note": "magnitudes only in Fig 5, not in text",
+   "where": "Section 4.2, Fig 5"
+  },
+  {
+   "claim": "Flan-PaLM 540B with CoT+SC reaches 83.9% on GSM8K, but GSM8K training data is in the finetuning mixture.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 83.9,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GSM8K, CoT + self-consistency",
+   "quote": "achieves a new state of the art of",
+   "table": null,
+   "note": "quote locates only the phrase; number is on next line of text: '83.9%, though note that the GSM8K training dataset is included'",
+   "where": "Section 4.1"
+  },
+  {
+   "claim": "Flan-PaLM 540B scores 72.0% on MGSM with CoT+SC, versus 57.9 for PaLM.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 72.0,
+   "unit": "%",
+   "baseline_value": 57.9,
+   "n": null,
+   "setup": "MGSM, 8-shot",
+   "quote": null,
+   "table": "Table 4, row Flan-PaLM 540B CoT + self-consistency, column MGSM",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "Flan-PaLM improves TyDiQA one-shot by 14.9% absolute over PaLM and by 8.1% on MGSM-style arithmetic in under-represented languages.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 14.9,
+   "unit": "% absolute",
+   "baseline_value": null,
+   "n": null,
+   "setup": "TyDiQA 1-shot direct, 540B",
+   "quote": "14.9% absolute improvement on one-shot TyDiQA",
+   "table": null,
+   "note": "Table 4 gives 67.8 vs 52.9 which is 14.9",
+   "where": "Section 1"
+  },
+  {
+   "claim": "Human raters preferred Flan-PaLM 540B over PaLM 540B on 79% of 190 open-ended examples.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 79,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "190 examples, 5 samples at temperature 0.7, best by log probability, one rater per pair",
+   "quote": "Flan-PaLM generations were preferred 79%",
+   "table": null,
+   "note": null,
+   "where": "Section 6, Fig 8"
+  },
+  {
+   "claim": "Flan-T5-XL (3B) reaches 52.4% MMLU direct, above GPT-3 175B's 43.9%.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 52.4,
+   "unit": "%",
+   "baseline_value": 43.9,
+   "n": null,
+   "setup": "5-shot MMLU, validation set",
+   "quote": "Flan-T5-XL",
+   "table": "Table 5, row Flan-T5-XL, column MMLU Direct",
+   "note": "MMLU for GPT-3 from Table 1 (test set) while Flan-T5 is validation set",
+   "where": "Section 5, Table 5"
+  },
+  {
+   "claim": "Flan-PaLM 62B beats PaLM 540B on TyDiQA, 58.7 vs 52.9 EM.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 58.7,
+   "unit": "% EM",
+   "baseline_value": 52.9,
+   "n": null,
+   "setup": "TyDiQA 1-shot",
+   "quote": "Flan-PaLM 62B outperforms PaLM 540B on TyDiQA (58.7% vs. 52.9% EM)",
+   "table": null,
+   "note": null,
+   "where": "Section 7"
+  },
+  {
+   "claim": "Flan-T5 11B outperforms PaLM 62B on BBH-direct.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 43.7,
+   "unit": "%",
+   "baseline_value": 37.5,
+   "n": null,
+   "setup": "BBH 3-shot direct; text says 43.7 vs 37.5",
+   "quote": "Flan-T5 11B outperforms PaLM 62B on BBH-direct (43.7% vs. 37.5%)",
+   "table": null,
+   "note": "Table 5 prints Flan-T5-XXL BBH Direct as 45.3 and PaLM 62B as 37.4, so text and table disagree",
+   "where": "Section 7 vs Table 5"
+  },
+  {
+   "claim": "Flan-U-PaLM 540B has the highest normalized average (59.1) of the models trained.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 59.1,
+   "unit": "%",
+   "baseline_value": 50.2,
+   "n": null,
+   "setup": "Table 5",
+   "quote": null,
+   "table": "Table 5, row Flan-U-PaLM, column Norm. avg.",
+   "note": null,
+   "where": "Table 5"
+  },
+  {
+   "claim": "Flan-PaLM 540B normalized average is 58.5 in Table 3 (proportion A) and 58.4 in Table 5 (proportion B).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 58.4,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "540B final model",
+   "quote": "",
+   "table": "Table 5, row Flan-PaLM 540B, column Norm. avg.",
+   "note": "Table 3 prints 58.5; the models used different mixture proportions (Table 23)",
+   "where": "Tables 3 and 5"
+  },
+  {
+   "claim": "Probability of a toxic continuation (>=0.5 in 25 samples) for non-toxic prompts fell from 0.44 (PaLM 8B) to 0.14 (Flan-PaLM 8B).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 0.14,
+   "unit": "probability",
+   "baseline_value": 0.44,
+   "n": null,
+   "setup": "RealToxicityPrompts, 10k prompts, 25 continuations, top-k 40, temperature 1.0, Perspective API",
+   "quote": null,
+   "table": "Table 6, row 8B, column Non-toxic input prompt",
+   "note": null,
+   "where": "Table 6"
+  },
+  {
+   "claim": "CivilComments zero-shot AUC for Flan-PaLM 62B is 86.8 vs 66.6 for PaLM 62B.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 86.8,
+   "unit": "AUC %",
+   "baseline_value": 66.6,
+   "n": null,
+   "setup": "10,000 test samples, Schick et al. 2021 template",
+   "quote": null,
+   "table": "Table 7, row 62B Flan-PaLM, column 0-shot",
+   "note": null,
+   "where": "Table 7"
+  },
+  {
+   "claim": "Instruction finetuning raised the absolute gain more for 8B than 540B but the relative error reduction was larger for 540B (18.4% vs 16.6%).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 18.4,
+   "unit": "% relative error reduction",
+   "baseline_value": null,
+   "n": null,
+   "setup": "normalized average, Table 3",
+   "quote": "18.4% for 540B vs. 16.6% for 8B",
+   "table": null,
+   "note": null,
+   "where": "Section 3"
+  }
+ ],
+ "limits": [
+  "Single runs, no seeds or confidence intervals reported",
+  "Flan-PaLM and PaLM are not released; only Flan-T5 weights are public",
+  "Scaling plot cannot say whether finetuning helps small or large models more, since baselines also improve with scale (Appendix A.3)",
+  "Does not evaluate single-task finetuning of instruction-tuned models (Appendix A.1)",
+  "Flan-PaLM does not beat code-davinci-002 on BBH-algo or finetuned ByT5 on TyDiQA",
+  "GSM8K training data is in the mixture so the 83.9% is not held-out",
+  "Responsible-AI evals are English-only and limited to a biased subset of identity terms",
+  "Mixture proportions changed between sections (A vs B), so Table 3 and Table 5 are not directly comparable",
+  "Authors hypothesize but do not test why gains beyond 282 tasks are small"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Flan",
+   "definition": "the finetuning procedure (Finetuning language models) of instruction-finetuning on a mixture of tasks with and without exemplars and CoT",
+   "where": "Section 2"
+  },
+  {
+   "term": "Task",
+   "definition": "a unique <dataset, task category> pair, with any number of templates which preserve the task category",
+   "where": "Figure 2"
+  },
+  {
+   "term": "normalized average",
+   "definition": "macro-average over six normalized scores scaled against a task-specific lower bound such as random guessing",
+   "where": "Section 2.3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Finetuned language models are zero-shot learners (FLAN)",
+   "year": 2021,
+   "arxiv": "2109.01652",
+   "relation": "extends",
+   "note": "original instruction finetuning; Muffin includes its 62 tasks",
+   "quote": null
+  },
+  {
+   "work": "Multitask prompted training enables zero-shot task generalization (T0)",
+   "year": 2021,
+   "arxiv": "2110.08207",
+   "relation": "uses-data",
+   "note": "T0-SF mixture",
+   "quote": null
+  },
+  {
+   "work": "Super-NaturalInstructions / Benchmarking generalization via in-context instructions on 1,600+ language tasks",
+   "year": 2022,
+   "arxiv": "2204.07705",
+   "relation": "uses-data",
+   "note": "NIV2 mixture",
+   "quote": null
+  },
+  {
+   "work": "PaLM",
+   "year": 2022,
+   "arxiv": "2204.02311",
+   "relation": "extends",
+   "note": "base model finetuned; main baseline",
+   "quote": null
+  },
+  {
+   "work": "Transcending scaling laws with 0.1% extra compute (U-PaLM)",
+   "year": 2022,
+   "arxiv": "2210.11399",
+   "relation": "extends",
+   "note": "UL2R continued pretraining, combined with Flan",
+   "quote": null
+  },
+  {
+   "work": "T5",
+   "year": 2020,
+   "arxiv": "1910.10683",
+   "relation": "extends",
+   "note": "base for Flan-T5",
+   "quote": null
+  },
+  {
+   "work": "Chain of thought prompting elicits reasoning in large language models",
+   "year": 2022,
+   "arxiv": "2201.11903",
+   "relation": "uses-method",
+   "note": "CoT prompting and CoT finetuning data",
+   "quote": null
+  },
+  {
+   "work": "Self-consistency improves chain of thought reasoning",
+   "year": 2022,
+   "arxiv": "2203.11171",
+   "relation": "uses-method",
+   "note": "CoT+SC results",
+   "quote": null
+  },
+  {
+   "work": "Training language models to follow instructions with human feedback (InstructGPT)",
+   "year": 2022,
+   "arxiv": "2203.02155",
+   "relation": "related",
+   "note": "consistent with its finding of better human ratings",
+   "quote": null
+  },
+  {
+   "work": "Large language models are zero-shot reasoners",
+   "year": 2022,
+   "arxiv": "2205.11916",
+   "relation": "related",
+   "note": "paper argues its negative zero-shot CoT result for PaLM is not inconsistent with Kojima et al.",
+   "quote": null
+  },
+  {
+   "work": "MMLU, BBH, TyDiQA, MGSM, RealToxicityPrompts, CivilComments, Winogender",
+   "year": null,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "held-out and responsible-AI benchmarks",
+   "quote": null
+  },
+  {
+   "work": "Adafactor",
+   "year": 2018,
+   "arxiv": "1804.04235",
+   "relation": "uses-method",
+   "note": "optimizer",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 4",
+   "caption": "Scaling behavior of multi-task instruction finetuning with respect to model size and number of finetuning tasks",
+   "page": 6,
+   "why": "shows gains saturating after 282 tasks across 8B/62B/540B"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Jointly finetuning on non-CoT and CoT data improves performance on both evaluations",
+   "page": 8,
+   "why": "shows non-CoT-only finetuning hurts CoT benchmarks"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Finetuning data comprises 473 datasets, 146 task categories, and 1,836 total tasks",
+   "page": 3,
+   "why": "mixture composition"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Ligatures (fi, ff) in extracted text; quotes keep them",
+  "Text claims Flan-T5 11B BBH-direct 43.7 but Table 5 prints 45.3",
+  "Figure 2 caption says 473 datasets/146 categories/1,836 tasks, while panel counts sum to 372+69+55+9 datasets and 1554+80+193+9 = 1,836 tasks",
+  "Model card mentions 6B Flan-PaLM, Table 2 lists 8B",
+  "Table 3 and Table 5 print different Flan-PaLM 540B normalized averages (58.5 vs 58.4)"
+ ]
+}

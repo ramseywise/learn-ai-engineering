@@ -1,0 +1,137 @@
+{
+ "schema": 1,
+ "key": "2109.00859",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/wang-2021-codet5.pdf",
+ "bib": {
+  "title": "CodeT5: Identifier-aware Unified Pre-trained Encoder-Decoder Models for Code Understanding and Generation",
+  "authors": ["Yue Wang", "Weishi Wang", "Shafiq Joty", "Steven C.H. Hoi"],
+  "first_author": "Wang",
+  "year": 2021,
+  "venue": "Proceedings of the 2021 Conference on Empirical Methods in Natural Language Processing (EMNLP), pages 8696-8708",
+  "arxiv": "2109.00859",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 56981,
+  "chars_total": 56981,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can a unified T5-style encoder-decoder pre-trained on code with identifier-aware objectives serve both code understanding and generation tasks better than encoder-only or decoder-only models?",
+ "hypothesis": "Exploiting identifier token-type information and bimodal NL-PL dual generation in a unified encoder-decoder gives better code semantics and NL-PL alignment than treating code as plain text.",
+ "contributions": [
+  "One of the first unified encoder-decoder models (CodeT5) supporting code understanding and generation tasks, and multi-task learning",
+  "A novel identifier-aware pre-training objective (identifier tagging, masked identifier prediction) plus bimodal dual generation to align NL and PL",
+  "State-of-the-art results on fourteen sub-tasks in CodeXGLUE"
+ ],
+ "method": {
+  "summary": "T5-architecture encoder-decoder pre-trained on CodeSearchNet plus extra C/C# from BigQuery with three alternating objectives (masked span prediction, identifier tagging, masked identifier prediction) then bimodal dual generation; fine-tuned per task or multi-task on CodeXGLUE.",
+  "task": "code pre-training; CodeXGLUE summarization, generation, translation, refinement, defect detection, clone detection",
+  "trains": true,
+  "datasets": [
+   {"name": "CodeSearchNet + extra C/CSharp", "role": "pretrain", "size": "8,347,634 instances (3,158,313 with NL, 5,189,321 without NL)", "split": "not stated", "source": "CodeSearchNet (six PLs) plus C and CSharp collected from Google BigQuery GitHub repos", "preprocessing": "tree-sitter AST for identifier labels; reserved keywords filtered from identifier list; whole-word masking by sampling spans before subword tokenization; multi-rounds of data cleaning (unspecified)"},
+   {"name": "CodeXGLUE tasks (CodeSearchNet summarization, Concode, Java-C# translation, Tufano refinement small/medium, Devign defect, BigCloneBench-style clone from Wang et al. 2020)", "role": "both", "size": "not stated in paper", "split": "same public splits as CodeXGLUE", "source": "Lu et al. 2021", "preprocessing": null}
+  ],
+  "models": [
+   {"name": "CodeT5-small", "role": "proposed", "params": "60M", "architecture": "T5 encoder-decoder", "init_from": "inferred: pre-trained from scratch (not stated)", "tokenizer": "byte-level BPE trained on pre-training data", "vocab": "32,000", "layers": null, "hidden": null, "heads": null, "context": "source 512, target 256 tokens", "other": {"special_tokens": "[PAD], [CLS], [SEP], [MASK0]..[MASK99]"}},
+   {"name": "CodeT5-base", "role": "proposed", "params": "220M", "architecture": "T5 encoder-decoder", "init_from": "inferred: pre-trained from scratch (not stated)", "tokenizer": "byte-level BPE", "vocab": "32,000", "layers": null, "hidden": null, "heads": null, "context": "source 512, target 256 tokens", "other": {}},
+   {"name": "PLBART", "role": "baseline", "params": "140M", "architecture": "BART encoder-decoder", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"pretrain_data": "470M Python and 210M Java functions, 47M StackOverflow NL posts"}},
+   {"name": "CodeBERT, GraphCodeBERT, RoBERTa, RoBERTa (code), DOBF, GPT-2, CodeGPT-2, CodeGPT-adapted", "role": "baseline", "params": null, "architecture": "encoder-only or decoder-only", "init_from": "CodeGPT-adapted from GPT-2 checkpoint; CodeGPT-2 from scratch", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"DOBF_pretrain": "7.9M Java and 3.6M Python files"}}
+  ],
+  "training": {
+   "objective": "Pre-train: alternate (equal probability) MSP, identifier tagging (BCE), masked identifier prediction, 100 epochs; then bimodal dual generation (NL->PL and PL->NL) 50 more epochs. MSP: 15% corruption, span length 1-5 uniform (avg 3). Multi-task fine-tune: task control code prefix, balanced sampling q_i = r_i^alpha / sum r_j^alpha, alpha=0.7.",
+   "optimizer": null,
+   "lr": "peak 2e-4 (pre-training)",
+   "lr_schedule": "linear decay",
+   "warmup": null,
+   "batch_size": "1024 (pre-training)",
+   "steps": null,
+   "epochs": "100 (denoising) + 50 (dual gen)",
+   "tokens": null,
+   "seq_len": "512 source / 256 target",
+   "precision": "FP16 mixed",
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "16 NVIDIA A100 GPUs, 40G",
+   "compute": "training CodeT5-base produced around 49.25 kg CO2 (offset by provider, Google Cloud)",
+   "wall_clock": "5 days (small), 12 days (base)",
+   "seeds": null,
+   "other": {"finetune": "grid search over learning rate, training steps, batch size, selected on validation set; values not reported", "multitask": "covers all downstream tasks except clone detection; best checkpoint selected per task", "understanding_heads": "defect: label generated as unigram target; clone: last decoder state embedding similarity following Lewis et al. 2020"}
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": "target length 256",
+   "samples": null,
+   "prompting": "task control code prefix e.g. 'Translate Java to CSharp:' in multi-task setting",
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "smoothed BLEU-4", "definition": "Lin and Och 2004; summarization, translation, refinement, generation", "unit": "score", "higher_is_better": true},
+    {"name": "Exact match (EM)", "definition": "exact string match of output", "unit": "%", "higher_is_better": true},
+    {"name": "CodeBLEU", "definition": "Ren et al. 2020: n-gram plus syntactic and semantic match", "unit": "score", "higher_is_better": true},
+    {"name": "Defect accuracy", "definition": "Devign C dataset", "unit": "%", "higher_is_better": true},
+    {"name": "Clone F1", "definition": "Java clone data from Wang et al. 2020", "unit": "F1", "higher_is_better": true}
+   ],
+   "baselines": ["RoBERTa", "CodeBERT", "GraphCodeBERT", "DOBF", "GPT-2", "CodeGPT-2", "CodeGPT-adapted", "PLBART", "Naive copy"],
+   "protocol": "CodeXGLUE public data and splits; baseline numbers taken from original papers and the CodeXGLUE paper; single run, no seeds or significance tests stated"
+  },
+  "availability": {"code": "https://github.com/salesforce/CodeT5", "weights": "released publicly", "data": "CodeSearchNet and CodeXGLUE public; extra C/CSharp from BigQuery"},
+  "prompts": [],
+  "evidence": [
+   {"field": "training.hardware", "quote": "on a cluster of 16 NVIDIA A100 GPUs with 40G memory", "where": "Sec 4.5"}
+  ]
+ },
+ "results": [
+  {"claim": "CodeT5-base with dual-gen gets the best code generation (Concode) CodeBLEU, about 4.7 points above PLBART.", "kind": "measured", "source": null, "metric": "CodeBLEU", "value": "44.10", "unit": "CodeBLEU", "baseline_value": "38.52", "n": null, "setup": "Concode Java, CodeT5-base +dual-gen vs PLBART", "table": "Table 3, row CodeT5-base +dual-gen, column CodeBLEU", "quote": null, "note": "Text says 'around 4.7 points' over PLBART; best variant gap is 5.58, CodeT5-base without dual-gen is 43.20 (4.68 gap).", "where": "Table 3, Sec 5.1"},
+  {"claim": "CodeT5-small (60M) beats PLBART (140M) overall on code summarization.", "kind": "measured", "source": null, "metric": "smoothed BLEU-4 overall", "value": "19.14", "unit": "BLEU-4", "baseline_value": "18.32", "n": null, "setup": "CodeSearchNet six PLs average, CodeT5-small vs PLBART", "table": "Table 2, row CodeT5-small, column Overall", "quote": null, "note": null, "where": "Table 2"},
+  {"claim": "CodeT5-base improves summarization overall by over 1.2 absolute points over PLBART.", "kind": "measured", "source": null, "metric": "smoothed BLEU-4 overall", "value": "19.55", "unit": "BLEU-4", "baseline_value": "18.32", "n": null, "setup": "CodeT5-base vs PLBART, six PLs", "table": "Table 2, row CodeT5-base, column Overall", "quote": "our CodeT5-base boosts the overall performance by over 1.2 absolute points over PLBART", "note": null, "where": "Sec 5.1"},
+  {"claim": "CodeT5-base reaches 65.78 defect detection accuracy, 2.6 above PLBART.", "kind": "measured", "source": null, "metric": "accuracy", "value": "65.78", "unit": "%", "baseline_value": "63.18", "n": null, "setup": "Devign C defect detection", "table": "Table 5, row CodeT5-base, column Defect Accuracy", "quote": "CodeT5-base yields 2.6 accuracy score improvement than PLBART", "note": null, "where": "Table 5, Sec 5.1"},
+  {"claim": "CodeT5-base EM on medium code refinement is 13.96 vs GraphCodeBERT 9.10.", "kind": "measured", "source": null, "metric": "EM", "value": "13.96", "unit": "%", "baseline_value": "9.10", "n": null, "setup": "Tufano refinement medium (50-100 tokens)", "table": "Table 4, row CodeT5-base, column Refine Medium EM", "quote": "(13.96 vs. GraphCodeBERT’s 9.10)", "note": null, "where": "Sec 5.1"},
+  {"claim": "Clone detection F1 of CodeT5-base equals PLBART (97.2), comparable to GraphCodeBERT 97.1.", "kind": "measured", "source": null, "metric": "F1", "value": "97.2", "unit": "F1", "baseline_value": "97.2", "n": null, "setup": "Java clone detection", "table": "Table 5, row CodeT5-base, column Clone F1", "quote": null, "note": null, "where": "Table 5"},
+  {"claim": "Ablation: removing MSP drops code generation CodeBLEU from 41.39 to 37.44 but raises defect accuracy to 64.02.", "kind": "measured", "source": null, "metric": "CodeBLEU", "value": "37.44", "unit": "CodeBLEU", "baseline_value": "41.39", "n": null, "setup": "CodeT5-small ablation on Concode", "table": "Table 6, row -MSP, column Code-Gen (CodeBLEU)", "quote": null, "note": null, "where": "Table 6"},
+  {"claim": "Identifier tagging achieves over 99% F1 for all PLs.", "kind": "measured", "source": null, "metric": "F1", "value": "99", "unit": "%", "baseline_value": null, "n": null, "setup": "identifier tagging during pre-training, all PLs", "quote": "it achieves over 99% F1 for all PLs", "note": "no table given", "where": "Sec 5.3"},
+  {"claim": "The custom BPE tokenizer shortens tokenized code by 30%-45% versus T5's default and avoids unknown tokens for brackets.", "kind": "measured", "source": null, "metric": "sequence length reduction", "value": "30%-45%", "unit": "%", "baseline_value": null, "n": null, "setup": "downstream tasks, vs T5 default tokenizer", "quote": "largely reduces the length of tokenized code sequence by 30% - 45% on downstream tasks", "note": null, "where": "Sec 4.2"},
+  {"claim": "Multi-task fine-tuning hurts code generation versus single-task for CodeT5-base.", "kind": "measured", "source": null, "metric": "CodeBLEU", "value": "40.01", "unit": "CodeBLEU", "baseline_value": "43.20", "n": null, "setup": "Concode, CodeT5-base +multi-task vs CodeT5-base", "table": "Table 3, row CodeT5-base +multi-task, column CodeBLEU", "quote": null, "note": "Text says multi-task generally improves most tasks except translation and defect detection; Table 3 shows generation also drops.", "where": "Table 3, Sec 5.2"},
+  {"claim": "CodeT5-base has 220M parameters, about 55x smaller than Codex 12B; training it produced around 49.25 kg CO2.", "kind": "measured", "source": null, "metric": "CO2", "value": "49.25", "unit": "kg CO2", "baseline_value": null, "n": null, "setup": "CodeT5-base pre-training on Google Cloud", "quote": "training CodeT5-base pro-\nduced around 49.25 kg CO2", "note": null, "where": "Broader impact"}
+ ],
+ "limits": [
+  "Fine-tuning hyperparameters (learning rate, steps, batch size) are chosen by grid search but never reported; optimizer, warmup, weight decay, dropout, seeds and layer/hidden/head sizes are not stated.",
+  "Baseline numbers are copied from other papers; single runs with no variance or significance tests.",
+  "Dual-gen and multi-task do not help or slightly hurt PL-PL and understanding tasks; multi-task also drops code generation.",
+  "BLEU is acknowledged as imperfect for code (Fig 3); no execution-based evaluation (no pass@k).",
+  "Authors note possible dataset bias, sensitive information leakage and automation bias."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "Masked Span Prediction (MSP)", "definition": "T5-style span masking with 15% corruption, spans 1-5 tokens, predicted with sentinel tokens at the decoder", "where": "Sec 3.2"},
+  {"term": "Identifier Tagging (IT)", "definition": "Binary sequence labelling of whether each code token is an identifier, from encoder hidden states", "where": "Sec 3.2"},
+  {"term": "Masked Identifier Prediction (MIP)", "definition": "Mask all identifiers with one unique sentinel per identifier (obfuscation) and predict the mapping autoregressively", "where": "Sec 3.2"},
+  {"term": "Bimodal dual generation", "definition": "Train NL->PL and PL->NL as two instances per NL-PL pair with language ids", "where": "Sec 3.2"}
+ ],
+ "lineage": [
+  {"work": "Exploring the limits of transfer learning with a unified text-to-text transformer (T5)", "year": 2020, "arxiv": "1910.10683", "relation": "extends", "note": "architecture, span masking, task prefixes", "quote": null},
+  {"work": "CodeBERT", "year": 2020, "arxiv": null, "relation": "baseline", "note": "pre-training data (CodeSearchNet) followed", "quote": null},
+  {"work": "PLBART (Ahmad et al.)", "year": 2021, "arxiv": null, "relation": "baseline", "note": "previous SOTA encoder-decoder on CodeXGLUE", "quote": null},
+  {"work": "GraphCodeBERT", "year": 2021, "arxiv": null, "relation": "baseline", "note": null, "quote": null},
+  {"work": "DOBF (Roziere et al.)", "year": 2021, "arxiv": null, "relation": "uses-method", "note": "deobfuscation inspires MIP", "quote": null},
+  {"work": "CodeXGLUE", "year": 2021, "arxiv": null, "relation": "uses-data", "note": "benchmark and splits", "quote": null},
+  {"work": "CodeSearchNet", "year": 2019, "arxiv": null, "relation": "uses-data", "note": "pre-training data", "quote": null},
+  {"work": "BART (Lewis et al.)", "year": 2020, "arxiv": null, "relation": "uses-method", "note": "classification from last decoder state", "quote": null},
+  {"work": "Codex (Chen et al.)", "year": 2021, "arxiv": null, "relation": "related", "note": "size comparison only (12B vs 220M)", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 1", "caption": "Illustration of our CodeT5 for code-related understanding and generation tasks.", "page": 2, "why": "shows task-prefix unified text-to-text interface"},
+  {"figure": "Fig 2", "caption": "Pre-training tasks of CodeT5.", "page": 3, "why": "shows MSP, identifier tagging, MIP and dual generation inputs/outputs"}
+ ],
+ "code": [],
+ "problems": ["Table cells flattened by extraction; values mapped by row order. Layers/hidden/heads not stated in the paper."]
+}

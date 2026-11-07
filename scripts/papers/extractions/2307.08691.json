@@ -1,0 +1,74 @@
+{
+ "schema": 1,
+ "key": "2307.08691",
+ "pdf": "ai-engineering/07-inference-engineering/sources/dao-2023-flashattention-2.pdf",
+ "bib": {"title": "FlashAttention-2: Faster Attention with Better Parallelism and Work Partitioning", "authors": ["Tri Dao"], "first_author": "Dao", "year": 2023, "venue": "preprint", "arxiv": "2307.08691", "doi": null},
+ "read": {"by": "source-reader", "at": "2026-11-07", "chars_read": 39905, "chars_total": 39905, "engine": "pymupdf", "skipped": null},
+ "type": "system",
+ "question": "Can FlashAttention be made much closer to GEMM efficiency by better work partitioning across thread blocks and warps?",
+ "hypothesis": "FlashAttention's inefficiency comes from suboptimal work partitioning between thread blocks and warps, causing low occupancy or unnecessary shared memory reads/writes.",
+ "contributions": ["Tweak the algorithm to reduce non-matmul FLOPs", "Parallelize forward and backward over sequence length in addition to batch and heads", "Partition work between warps inside a thread block to avoid split-K and reduce shared memory traffic"],
+ "method": {
+  "summary": "Exact attention kernel (CUTLASS 3.x based) that keeps an un-scaled output accumulator, stores only logsumexp, swaps loop order so row blocks are parallel across thread blocks, and splits Q across warps instead of K/V. Benchmarked on A100 and H100 and in end-to-end GPT training.",
+  "task": "GPU attention kernel (forward and backward) speed",
+  "trains": false,
+  "datasets": [],
+  "models": [
+   {"name": "FlashAttention-2", "role": "proposed", "params": null, "architecture": "attention kernel", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"block_sizes": "{64, 128} x {64, 128}, tuned manually per head dimension", "warps_per_thread_block": "4 or 8"}},
+   {"name": "GPT3-1.3B and GPT3-2.7B", "role": "evaluated", "params": "1.3B, 2.7B", "architecture": "GPT-style transformer", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": "2k and 8k", "other": {}}
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null, "temperature": null, "top_p": null, "max_tokens": null,
+   "samples": null,
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {"benchmark_seq_lengths": "512, 1k, ..., 16k", "tokens_per_batch": "batch size set so total tokens is 16k", "hidden_dim": "2048", "head_dim": "64 (32 heads) or 128 (16 heads)", "masks": "without and with causal mask"},
+   "other": {"hardware_attention": "A100 80GB SXM4 (Figs 4-6); H100 80GB SXM5 (Fig 7)", "hardware_e2e": "8xA100 80GB SXM", "fwd_flops_formula": "4 * seqlen^2 * head dimension * number of heads, halved with causal mask", "bwd_flops_formula": "2.5 x forward FLOPs", "e2e_flops_formula": "6 * seqlen * number of params + 12 * number of layers * hidden dim * seqlen^2 (attention term not halved for causal)", "repeats_or_variance": null}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "Speed", "definition": "attention FLOPs by the formula divided by runtime", "unit": "TFLOPs/s", "higher_is_better": true},
+    {"name": "End-to-end training throughput", "definition": "model FLOPs by Megatron-LM formula divided by time, per GPU", "unit": "TFLOPs/s/GPU", "higher_is_better": true}
+   ],
+   "baselines": ["PyTorch standard attention", "FlashAttention", "FlashAttention in xformers (cutlass)", "FlashAttention in Triton"],
+   "protocol": "Single runs reported as bar values; no seeds, repeats or variance stated."
+  },
+  "availability": {"code": "https://github.com/Dao-AILab/flash-attention", "weights": null, "data": null},
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {"claim": "FlashAttention-2 reaches up to 225 TFLOPs/s per A100 in end-to-end GPT training, 72% model FLOPs utilization.", "kind": "measured", "source": null, "metric": "training throughput", "value": "225", "unit": "TFLOPs/s/GPU", "baseline_value": "175 (FlashAttention)", "n": null, "setup": "GPT3-2.7B, 8k context, 8xA100 80GB SXM; FLOPs via Megatron formula without halving attention term", "quote": "reaching up to 225 TFLOPs/s per A100 GPU", "table": "Table 1, row GPT3-2.7B 8k context, column FlashAttention-2", "note": null, "where": "Sec 4.2, Table 1"},
+  {"claim": "End-to-end speedup is 2.8x over no FlashAttention and 1.3x over FlashAttention.", "kind": "measured", "source": null, "metric": "speedup", "value": "2.8", "unit": "x", "baseline_value": null, "n": null, "setup": "GPT-style 1.3B and 2.7B, 2k or 8k context, 8xA100; best case", "quote": "FlashAttention-2 yields 2.8× speedup compared to a baseline without FlashAttention", "table": null, "note": "Text says '1.3× speedup compared to FlashAttention-2' in Sec 4.2, apparently a typo for FlashAttention.", "where": "Sec 4.2"},
+  {"claim": "Attention kernel reaches up to 230 TFLOPs/s, 73% of A100 theoretical max.", "kind": "measured", "source": null, "metric": "attention speed", "value": "230", "unit": "TFLOPs/s", "baseline_value": null, "n": null, "setup": "A100 80GB SXM4, forward, no causal mask, head dim 128 (Fig 5b shows 227 at 2k)", "quote": "FlashAttention-2 reaches up to 230 TFLOPs/s, 73% of the theoretical maximum TFLOPs/s on A100 GPUs.", "table": null, "note": "Fig 5 bars max at 227.", "where": "Sec 4"},
+  {"claim": "FlashAttention-2 is about 2x faster than FlashAttention, 1.7-3.0x in range.", "kind": "measured", "source": null, "metric": "speedup vs FlashAttention", "value": "1.7-3.0", "unit": "x", "baseline_value": null, "n": null, "setup": "A100 attention benchmark, seq 512 to 16k, head dim 64/128, with and without causal mask", "quote": "FlashAttention-2 is 1.7-3.0× faster than FlashAttention", "table": null, "note": "Sec 3 intro says 2-3x; abstract says around 2x.", "where": "Sec 4"},
+  {"claim": "Backward pass reaches up to 63% of theoretical max throughput.", "kind": "measured", "source": null, "metric": "backward utilization", "value": "63", "unit": "%", "baseline_value": null, "n": null, "setup": "A100 attention backward benchmark", "quote": "up to 63% of the theoretical max throughput in the backward pass", "table": null, "note": null, "where": "Sec 1"},
+  {"claim": "FlashAttention (v1) reaches only 30-50% of peak in forward and 25-35% in backward on A100.", "kind": "measured", "source": null, "metric": "FA1 utilization", "value": "30-50", "unit": "% of peak (forward)", "baseline_value": null, "n": null, "setup": "A100, FlashAttention v1", "quote": "the forward pass only reaches 30-50% of the theoretical maximum FLOPs/s of the device", "table": null, "note": "Abstract says 25-40% for FlashAttention without splitting forward/backward.", "where": "Sec 1"},
+  {"claim": "Each non-matmul FLOP is 16x more expensive than a matmul FLOP on A100.", "kind": "reported", "source": "A100 specs (312 TFLOPs/s FP16/BF16 matmul vs 19.5 non-matmul FP32)", "metric": "cost ratio", "value": "16", "unit": "x", "baseline_value": null, "n": null, "setup": "A100", "quote": "each non-matmul FLOP is 16× more expensive than a matmul FLOP", "table": null, "note": null, "where": "Sec 3.1"},
+  {"claim": "Skipping fully masked blocks makes causal attention 1.7-1.8x faster than without a mask.", "kind": "claim", "source": null, "metric": "causal speedup", "value": "1.7-1.8", "unit": "x", "baseline_value": null, "n": null, "setup": "large sequence lengths, about half of blocks skipped", "quote": "This leads to around 1.7-1.8× speedup compared to attention without the causal mask.", "table": null, "note": "No table directly isolates this.", "where": "Sec 3.1.1"},
+  {"claim": "Same code on H100 with no Hopper-specific instructions reaches up to 335 TFLOPs/s.", "kind": "measured", "source": null, "metric": "attention speed", "value": "335", "unit": "TFLOPs/s", "baseline_value": null, "n": null, "setup": "H100 80GB SXM5, forward+backward, no causal mask, head dim 128", "quote": "we obtain up to 335 TFLOPs/s (Fig. 7)", "table": null, "note": null, "where": "Sec 4.1"},
+  {"claim": "FlashAttention-2 is up to 10x faster than PyTorch standard attention.", "kind": "measured", "source": null, "metric": "speedup vs PyTorch", "value": "10", "unit": "x", "baseline_value": null, "n": null, "setup": "A100 attention benchmark", "quote": "FlashAttention-2 can be up to 10× faster.", "table": null, "note": "Quote text reads 'Compared to a standard attention implementation in PyTorch, FlashAttention-2 can be up to 10× faster'.", "where": "Sec 4.1"}
+ ],
+ "limits": ["Block sizes tuned manually per head dimension; auto-tuning left to future work.", "H100 results use no TMA or 4th-gen Tensor Core instructions; authors expect another 1.5-2x from them.", "Single-run bars, no variance; training-speed numbers only for 1.3B/2.7B GPT-style models, no model quality results.", "End-to-end FLOPs formula does not halve attention FLOPs for causal masking, which inflates reported utilization relative to a halved count.", "No FP8, AMD, or inference/decode benchmark."],
+ "practices": [],
+ "terms": [{"term": "split-K", "definition": "FlashAttention scheme splitting K and V across warps while Q is shared, requiring shared-memory reduction", "where": "Sec 3.3"}],
+ "lineage": [
+  {"work": "FlashAttention: Fast and memory-efficient exact attention with IO-awareness", "year": 2022, "arxiv": "2205.14135", "relation": "extends", "note": "Direct predecessor and main baseline", "quote": null},
+  {"work": "Triton fused attention (Tillet et al.)", "year": 2019, "arxiv": null, "relation": "uses-method", "note": "Loop swap and sequence-length parallelism first suggested and implemented there", "quote": null},
+  {"work": "Online normalizer calculation for softmax (Milakov and Gimelshein)", "year": 2018, "arxiv": "1805.02867", "relation": "uses-method", "note": "Online softmax", "quote": null},
+  {"work": "Self-attention does not need O(n^2) memory (Rabe and Staats)", "year": 2021, "arxiv": "2112.05682", "relation": "uses-method", "note": "Online softmax in attention", "quote": null},
+  {"work": "xformers (Lefaudeux et al.)", "year": 2022, "arxiv": null, "relation": "baseline", "note": "cutlass FlashAttention", "quote": null},
+  {"work": "Megatron-LM (Shoeybi et al.)", "year": 2019, "arxiv": "1909.08053", "relation": "uses-method", "note": "FLOPs formula", "quote": null},
+  {"work": "GQA (Ainslie et al.)", "year": 2023, "arxiv": "2305.13245", "relation": "related", "note": "MQA/GQA supported by index manipulation", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 3", "caption": "Work partitioning between different warps in the forward pass", "page": 9, "why": "Shows split-K (FA1) vs split-Q (FA2)"},
+  {"figure": "Fig 4-6", "caption": "Attention forward+backward / forward / backward speed on A100", "page": 10, "why": "Per-length TFLOPs/s for all baselines"},
+  {"figure": "Table 1", "caption": "Training speed (TFLOPs/s/GPU) of GPT-style models on 8xA100 GPUs", "page": 12, "why": "End-to-end numbers"}
+ ],
+ "code": [
+  {"where": "Sec 3.1.1", "snippet": "L(j) = m(j) + log(l(j))", "verbatim": true}
+ ],
+ "problems": ["Figure bar values are extracted as unlabeled number lists; not mapped to series.", "Sec 4.2 says '1.3x speedup compared to FlashAttention-2' (likely typo)."]
+}

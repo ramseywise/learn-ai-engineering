@@ -1,19 +1,488 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "1902.00751",
  "pdf": "ai-engineering/08-multimodal-engineering/sources/houlsby-2019-parameter-efficient-transfer-learning-nlp.pdf",
  "bib": {
   "title": "Parameter-Efficient Transfer Learning for NLP",
+  "authors": [
+   "Neil Houlsby",
+   "Andrei Giurgiu",
+   "Stanisław Jastrzębski",
+   "Bruna Morrone",
+   "Quentin de Laroussilhe",
+   "Andrea Gesmundo",
+   "Mona Attariyan",
+   "Sylvain Gelly"
+  ],
   "first_author": "Houlsby",
   "year": 2019,
-  "venue": "ICML 2019",
+  "venue": "Proceedings of the 36th International Conference on Machine Learning, Long Beach, California, PMLR 97, 2019",
   "arxiv": "1902.00751",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-04",
-  "session": "97b4134b-decf-4866-ae85-c6872cbbba19"
+  "at": "2026-11-07",
+  "chars_read": 52288,
+  "chars_total": 52288,
+  "engine": "pymupdf",
+  "skipped": null
  },
- "legacy_report": "SOURCE: \"Parameter-Efficient Transfer Learning for NLP\", Neil Houlsby, Andrei Giurgiu, Stanisław Jastrzębski, Bruna Morrone, Quentin de Laroussilhe, Andrea Gesmundo, Mona Attariyan, Sylvain Gelly (Google Research; Jagiellonian University). Venue as printed: \"Proceedings of the 36th International Conference on Machine Learning, Long Beach, California, PMLR 97, 2019\" (ICML 2019). arXiv:1902.00751v2, 13 Jun 2019.\n\nCOVERAGE: I read all 52,264 of 52,264 extracted characters. That covers every page: the main text, the references, and the appendices (Tables 3 to 7, App. B, Fig. 7). I skimmed the references for origins only. The AutoML search-space tables (5 to 7) are only baseline configuration, so I just noted them. File: /Users/ramsey-wise/workspace/learn-ai-engineering/ai-engineering/08-multimodal-engineering/sources/houlsby-2019-parameter-efficient-transfer-learning-nlp.pdf\n\nCLAIMS\n- claim: On GLUE, adapter tuning of BERT-large scores within 0.4 of full fine-tuning while training 3.6% of the parameters per task.\n  number: 80.0 vs 80.4 mean GLUE; 3.6% trained params per task; 1.3x vs 9.0x total params\n  setup: BERT-LARGE (24 layers, 330M params). Scored on GLUE test sets via the evaluation server, WNLI omitted. Adapter size picked per task from {8, 64, 256}. LR swept over {3e-5, 3e-4, 3e-3}, epochs over {3, 20}. Best of 5 seeds, picked on validation \"due to training instability\". MNLI-m and MNLI-mm treated as separate tasks.\n  quote: \"On GLUE, we attain within 0.4% of the performance of full ﬁne-tuning, adding only 3.6% parameters per task.\" / \"Adapters achieve a mean GLUE score of 80.0, compared to 80.4 achieved by full ﬁne-tuning.\" / Table 1: \"BERTLARGE 9.0× 100% ... 80.4\", \"Adapters (8-256) 1.3× 3.6% ... 80.0\"\n  where: abstract p1; Sec 3.2 p4; Table 1 p5\n- claim: If the adapter size is fixed at 64 for every task, the GLUE score drops slightly and the model gets slightly smaller.\n  number: 79.6; 2.1% params/task; 1.2x total\n  setup: same as the row above, with size 64 for all tasks\n  quote: \"Restricting always to size 64, leads to a small decrease in average accuracy to 79.6.\" / \"Adapters (64) 1.2× 2.1% ... 79.6\"\n  where: Sec 3.2 p4; Table 1 p5\n- claim: At a similar trainable-parameter budget, adapters clearly beat fine-tuning only the top layer.\n  number: top layer about 9M params, 77.8% MNLI-m; adapters size 64 about 2M params, 83.7%; full fine-tune 84.4%\n  setup: BERT-BASE, MNLI-m validation accuracy, ±1 s.e.m. over 3 seeds\n  quote: \"ﬁne-tuning just the top layer yields approximately 9M train-able parameters and 77.8%± 0.1% validation accuracy on MNLIm. In contrast, adapter tuning with size 64 yields ap-proximately 2M trainable parameters and 83.7%± 0.1% validation accuracy. For comparison, full ﬁne-tuning attains 84.4%± 0.02% on MNLIm.\"\n  where: Sec 3.4 p5\n- claim: Across task suites, adapters stay close to full fine-tuning while training about two orders of magnitude fewer parameters. Fine-tuning the top layers degrades sharply on GLUE as fewer layers are trained.\n  number: \"two orders of magnitude\"\n  setup: Figs 1 and 3. Scores are normalized by full fine-tuning, with 20/50/80th percentiles across tasks. GLUE uses BERT-LARGE and validation accuracy; the additional tasks use BERT-BASE and test accuracy.\n  quote: \"Adapter-based tuning attains a similar performance to full ﬁne-tuning with two orders of magnitude fewer trained parameters.\" / \"On GLUE, performance decreases dra-matically when fewer layers are ﬁne-tuned.\"\n  where: Fig 1 caption p1; Sec 3.4 p5\n- claim: On 17 additional classification tasks, adapters are 0.4 behind full fine-tuning at 1.14% params per task. Variable fine-tuning (top n layers) does slightly better but trains about half the network.\n  number: avg 73.3 adapters, 73.7 fine-tune, 74.0 variable FT, 72.7 AutoML; totals 1.19x, 17x, 9.9x; trained per task 1.14%, 100%, 52.9%\n  setup: BERT-BASE. Adapter sizes {2..64}, n in {1, 2, 3, 5, 7, 9, 11, 12}. Test accuracy with s.e.m. over seeds. Datasets range from 900 to 330k training examples and 2 to 157 classes.\n  quote: \"The performance of adapter-tuning is close to full ﬁne-tuning (0.4% behind).\" / \"They intro-duce 1.14% new parameters per task, resulting in 1.19× parameters for all 17 tasks.\" / \"Average 72.7 73 .7 74 .0 73 .3\"\n  where: Sec 3.3 p4; Table 2 p5\n- claim: Adapter architecture: a bottleneck (down-project d to m, nonlinearity, up-project to d) with an internal skip connection. It is inserted twice per Transformer layer, after the attention projection and after the FFN, before the residual add and the LayerNorm. Each task trains the adapters, new LayerNorm parameters, and the classifier head.\n  number: 2md + d + m params per layer; 0.5 to 8% of the model in practice\n  setup: standard Transformer (Vaswani 2017) as used in BERT\n  quote: \"The total number of parameters added per layer, including biases, is 2md +d +m. By setting m≪ d, we limit the number of parameters added per task; in practice, we use around 0.5− 8% of the parameters of the original model.\"\n  where: Sec 2.1 p3\n- claim: Near-identity initialization is needed for stable training. Weights are drawn from a truncated Gaussian with std 1e-2, and performance is robust below that but degrades when the init is too large, more so on CoLA.\n  number: std 10^-2 default; tested range [10^-7, 1]\n  setup: BERT-BASE, MNLI-m and CoLA validation (Fig 6 right)\n  quote: \"the weights in the adapter module were drawn from a zero-mean Gaussian with standard deviation 10−2, truncated to two standard deviations.\" / \"the performance of adapters is robust for standard deviations below 10−2. However, when the initialization is too large, performance degrades, more substantially on CoLA.\"\n  where: Sec 3.6 p7\n- claim: Removing any single layer's adapters costs little, but removing all of them collapses the model to the majority class. Lower-layer adapters matter less than higher-layer ones.\n  number: max single-layer drop 2%; all removed gives 37% MNLI, 69% CoLA; layers 0 to 4 removable on MNLI\n  setup: BERT-BASE, adapter size 64, adapters removed after training without retraining\n  quote: \"where largest performance drop is 2%. In contrast, when all of the adapters are removed from the network, the performance drops substantially: to 37% on MNLI and 69% on CoLA\" / \"Removing the adapters from the layers 0− 4 on MNLI barely affects performance.\"\n  where: Sec 3.6 p7-8\n- claim: Model quality is stable across bottleneck sizes.\n  number: sizes 8/64/256 give mean validation accuracy 86.2/85.8/85.7%\n  setup: GLUE data from Sec 3.2, 8 classification tasks, STS-B excluded, best LR and epochs per size\n  quote: \"For adapter sizes 8, 64, and 256, the mean validation accuracies are 86.2%, 85.8% and 85.7%, respectively.\"\n  where: Sec 3.6 p8\n- claim: Tuning only the LayerNorm parameters is cheap but not enough.\n  number: 40k params; about 3.5% drop on CoLA, about 4% on MNLI\n  setup: BERT-BASE\n  quote: \"40k for BERTBASE. However this strategy performs poorly: performance decreases by approximately 3.5% on CoLA and 4% on MNLI.\"\n  where: Sec 3.4 p5\n- claim: On SQuAD v1.1, adapters nearly match fine-tuning, even when they are tiny.\n  number: size 64 (2%) F1 90.4 vs fine-tune 90.7; size 2 (0.1%) F1 89.9\n  setup: SQuAD v1.1 validation set, LR and epoch sweeps as stated, 3 seeds\n  quote: \"Adapters of size 64 (2% parameters) attain a best F1 of90.4%, while ﬁne-tuning attains 90.7. SQuAD performs well even with very small adapters, those of size 2 (0.1% parameters) attain an F1 of 89.9.\"\n  where: Sec 3.5 p7\n- claim: More complex variants did no better than the plain bottleneck. These were a batch/layer norm inside the adapter, more layers, tanh, attention-only placement, and parallel or multiplicative adapters.\n  number: none\n  setup: unspecified datasets\n  quote: \"In all cases we observed the resulting performance to be similar to the bottleneck proposed in Section 2.1.\"\n  where: Sec 3.6 p8\n\nLIMITS:\n- Only text classification and extractive QA are tested, on BERT-base and BERT-large encoders. There is no generation, no decoder LLM, and no vision or multimodal model. Anything said about VLMs is extrapolation.\n- The method costs inference latency, because it adds serial layers, but the paper never measures that. It reports no training-time or memory savings either; the only efficiency metric is stored parameters per task.\n- GLUE results take the best of 5 seeds, re-run \"due to training instability\", so the variance is understated.\n- The paper does not specify which nonlinearity the bottleneck uses.\n- The ablations of the complex variants give no numbers or datasets.\n- The LR robustness figure (App. B, Fig 7) has no stated conclusion in the text.\n- The paper is internally inconsistent. It says \"3%\" (intro, Sec 3) where the abstract and Table 1 say 3.6%, and \"52%\" in the text where Table 2 says 52.9%. \"Within 0.4%\" is really 0.4 GLUE points (80.4 vs 80.0).\n- Dated: there is no comparison with LoRA or prefix-tuning, which came later.\n- Concurrent work (PALs, Stickland & Murray 2019) is mentioned but not compared head to head.\n\nBUILDS ON: residual adapters in vision (Rebuffi et al., 2017; 2018; Rosenfeld & Tsotsos, 2018), which use 1x1 conv adapters at about 11% growth per task. It also credits BERT (Devlin et al., 2018), Transformer (Vaswani et al., 2017), and conditional BN, FiLM and self-modulation for the LayerNorm tuning (De Vries et al., 2017; Perez et al., 2018; Chen et al., 2019). It cites the top-layer focus of ULMFiT (Howard & Ruder, 2018), catastrophic forgetting (McCloskey & Cohen, 1989; French, 1999), and Neural AutoML (Zoph & Le, 2017; Wong et al., 2018) for the baseline.\n\nCODE: none in the paper. It gives only a link: \"Code at https://github.com/google-research/adapter-bert\" (footnote 1, p1).\n\nFIGURES:\n- Fig 2 (p3): \"Architecture of the adapter module and its integration with the Transformer.\" This is the clearest picture of placement (twice per layer) and of the bottleneck with its skip connection. Best single figure for the note.\n- Fig 1 (p1) / Fig 3 (p6): accuracy delta vs trainable params per task, adapters vs fine-tuning the top layers. Shows the two-orders-of-magnitude gap at a glance.\n- Fig 4 (p6): MNLI-m and CoLA validation accuracy vs params for adapters, top-k fine-tuning and LayerNorm-only. Shows all three PEFT choices on one axis.\n- Fig 6 (p8): layer-span removal heatmaps plus the init-scale sweep. Shows that higher layers matter more and that near-identity init is needed.\n- Fig 5 (p7) SQuAD trade-off and Fig 7 (p13) LR robustness are less essential.\n\nPROBLEMS: Extraction is clean apart from minor spacing artifacts in the tables (e.g. \"94 .9\") and ligatures. There were no embedded instructions."
+ "type": "empirical",
+ "question": "Can a pre-trained text Transformer be adapted to many downstream tasks by training only a few added parameters per task, without losing accuracy relative to full fine-tuning?",
+ "hypothesis": "Small bottleneck adapter modules with near-identity initialisation inside a frozen BERT match full fine-tuning at a fraction of the per-task parameters.",
+ "contributions": [
+  "Bottleneck adapter module and its integration into Transformer layers",
+  "Near full fine-tuning accuracy on GLUE and 17 further classification tasks with 1-4% task parameters",
+  "Ablation of which layers' adapters matter and robustness to size and init scale"
+ ],
+ "method": {
+  "summary": "Insert two serial bottleneck adapters per Transformer layer of a frozen BERT, train only adapters, layer norms and the classifier per task, and compare with full and top-layer fine-tuning on GLUE, 17 classification tasks and SQuAD v1.1.",
+  "task": "text classification and extractive QA transfer",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "GLUE (excl. WNLI)",
+    "role": "both",
+    "size": "9 tasks",
+    "split": "test via GLUE server; validation for selection",
+    "source": "Wang et al. 2018",
+    "preprocessing": null
+   },
+   {
+    "name": "17 additional text classification tasks",
+    "role": "both",
+    "size": "900 to 330k train examples; 2 to 157 classes; avg length 57 to 1.9k chars",
+    "split": "train/validation/test per Table 3 (e.g. 20 newsgroups 15076/1885/1885)",
+    "source": "20 newsgroups, Crowdflower, customer complaint (catalog.data.gov), news aggregator, SMS spam",
+    "preprocessing": null
+   },
+   {
+    "name": "SQuAD v1.1",
+    "role": "both",
+    "size": null,
+    "split": "validation set",
+    "source": "Rajpurkar et al.",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "BERT-large",
+    "role": "base",
+    "params": "330M",
+    "architecture": "Transformer encoder",
+    "init_from": "public pre-trained BERT",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": 24,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "used_for": "GLUE"
+    }
+   },
+   {
+    "name": "BERT-base",
+    "role": "base",
+    "params": null,
+    "architecture": "Transformer encoder",
+    "init_from": "public pre-trained BERT",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": 12,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "used_for": "additional tasks, SQuAD, analysis"
+    }
+   },
+   {
+    "name": "Adapter module",
+    "role": "proposed",
+    "params": "2md + d + m per adapter (incl. biases); 0.5-8% of model",
+    "architecture": "down-project d->m, nonlinearity, up-project m->d, internal skip; two per Transformer layer (after attention projection, after feed-forward), before the skip add and layer norm",
+    "init_from": "random, near-identity: zero-mean Gaussian std 1e-2 truncated to 2 std",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "sizes_tested": "GLUE {8,64,256}; other tasks {2,4,8,16,32,64}; Fig 4 2^n n=0..9",
+     "also_trained": "layer norm params and classifier layer; base frozen"
+    }
+   },
+   {
+    "name": "AutoML no-BERT baseline",
+    "role": "baseline",
+    "params": null,
+    "architecture": "feedforward/conv nets on TF-Hub text embeddings",
+    "init_from": "TF Hub embeddings, frozen or tuned",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "supervised task loss; linear classifier on [CLS] embedding (SQuAD span selection)",
+   "optimizer": "Adam",
+   "lr": "GLUE sweep {3e-5,3e-4,3e-3}; other tasks {1e-5,3e-5,1e-4,3e-3}; SQuAD FT {3e-5,5e-5,1e-4}, adapters {3e-5,1e-4,3e-4,1e-3}",
+   "lr_schedule": "linear warmup over first 10% of steps, then linear decay to zero",
+   "warmup": "10% of steps",
+   "batch_size": "32",
+   "steps": null,
+   "epochs": "GLUE {3,20}; other tasks {20,50,100} chosen manually (Table 4); SQuAD FT {2,3,5}, adapters {3,10,20}",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "4 Google Cloud TPUs",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": "GLUE: 5 seeds, best on validation; Fig 4/5/7 three seeds; Table 2 mean +- s.e.m. over seeds (count not stated)",
+   "other": {}
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {
+    "latency": "not measured"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "GLUE score",
+     "definition": "MRPC and QQP F1, STS-B Spearman, CoLA Matthews correlation, others accuracy; Total is the mean",
+     "unit": "points",
+     "higher_is_better": true
+    },
+    {
+     "name": "accuracy",
+     "definition": "test accuracy on additional tasks",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "F1",
+     "definition": "SQuAD v1.1 F1",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Total num params / trained params per task",
+     "definition": "model size across all tasks as multiple of BERT; share of parameters trained per task",
+     "unit": "x, %",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "Full fine-tuning",
+    "Variable fine-tuning (top n layers, n in {1,2,3,5,7,9,11,12})",
+    "Layer-norm-only tuning",
+    "AutoML no-BERT baseline (30 CPU machines, one week per task)"
+   ],
+   "protocol": "Hyperparameter sweep per dataset and method; best model on validation; GLUE test via server; GLUE re-run 5 seeds."
+  },
+  "availability": {
+   "code": "https://github.com/google-research/adapter-bert",
+   "weights": null,
+   "data": "public datasets, Table 3"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.hardware",
+    "quote": "All runs are trained",
+    "where": "Sec 3.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Adapter tuning of BERT-large reaches a mean GLUE test score of 80.0 against 80.4 for full fine-tuning, with 3.6% trained parameters per task.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "80.0",
+   "unit": "GLUE score",
+   "baseline_value": "80.4",
+   "n": null,
+   "setup": "BERT-large (24 layers, 330M), GLUE test via server, adapter size chosen per task from {8,64,256}, best of 5 seeds on validation",
+   "quote": "Adapters achieve a mean GLUE score of 80.0, compared to 80.4 achieved by full",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.2"
+  },
+  {
+   "claim": "Total parameters to solve the 9 GLUE tasks: 1.3x BERT for adapters vs 9x for fine-tuning.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "1.3",
+   "unit": "x BERT params",
+   "baseline_value": "9.0",
+   "n": null,
+   "setup": "GLUE, adapters size 8-256 per task",
+   "quote": null,
+   "table": "Table 1, row Adapters (8-256), column Total num params",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Fixing adapter size to 64 on GLUE gives a mean score of 79.6 with 2.1% trained parameters per task.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "79.6",
+   "unit": "GLUE score",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BERT-large, adapter size 64 for all tasks",
+   "quote": "leads to a small decrease in average accuracy to 79.6",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.2"
+  },
+  {
+   "claim": "On 17 additional classification tasks (BERT-base) adapters average 73.3 vs 73.7 for full fine-tuning, with 1.14% new parameters per task and 1.19x total.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "73.3",
+   "unit": "accuracy %",
+   "baseline_value": "73.7",
+   "n": null,
+   "setup": "BERT-base, 17 tasks, test accuracy, mean over seeds",
+   "quote": null,
+   "table": "Table 2, row Average, column Adapters",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Variable fine-tuning (top n layers) averages 74.0 on the additional tasks, above full fine-tuning (73.7), training 52.9% of parameters on average.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "74.0",
+   "unit": "accuracy %",
+   "baseline_value": "73.7",
+   "n": null,
+   "setup": "BERT-base, 17 tasks",
+   "quote": null,
+   "table": "Table 2, row Average, column Variable FT",
+   "note": "Text says 52% (Sec 3.3), Table 2 prints 52.9%.",
+   "where": "Table 2"
+  },
+  {
+   "claim": "AutoML no-BERT baseline averages 72.7 on the additional tasks, below all BERT variants.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "72.7",
+   "unit": "accuracy %",
+   "baseline_value": null,
+   "n": null,
+   "setup": "One week on 30 CPU machines per task, over 10k models on average",
+   "quote": null,
+   "table": "Table 2, row Average, column No BERT baseline",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Fine-tuning only the top layer of BERT-base on MNLI-m gets 77.8% validation accuracy with about 9M trainable parameters, vs 83.7% for size-64 adapters with about 2M and 84.4% for full fine-tuning.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "83.7",
+   "unit": "% validation accuracy",
+   "baseline_value": "77.8",
+   "n": null,
+   "setup": "BERT-base, MNLI-m validation, mean +- s.e.m. over seeds",
+   "quote": "validation accuracy on MNLIm. In contrast, adapter tuning with size 64 yields ap-",
+   "table": null,
+   "note": "Top-layer 77.8 +- 0.1, adapters 83.7 +- 0.1, full 84.4 +- 0.02 (text).",
+   "where": "Sec 3.4"
+  },
+  {
+   "claim": "Tuning only layer-norm parameters (40k for BERT-base) loses about 3.5% on CoLA and 4% on MNLI.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "4",
+   "unit": "% drop on MNLI",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BERT-base",
+   "quote": "performance decreases by approximately",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.4"
+  },
+  {
+   "claim": "On SQuAD v1.1, size-64 adapters (2% params) reach F1 90.4 vs 90.7 for fine-tuning; size 2 (0.1%) reaches 89.9.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "90.4",
+   "unit": "F1",
+   "baseline_value": "90.7",
+   "n": null,
+   "setup": "SQuAD v1.1 validation, three seeds in Fig 5",
+   "quote": "attain a best F1 of 90.4%",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.5"
+  },
+  {
+   "claim": "Removing all adapters drops MNLI to 37% and CoLA to 69% (majority-class); removing adapters from layers 0-4 on MNLI barely changes accuracy.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "37",
+   "unit": "% accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BERT-base, size 64, no re-training, validation",
+   "quote": "to 37% on MNLI and 69% on CoLA",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.6"
+  },
+  {
+   "claim": "Mean validation accuracy over eight classification tasks is 86.2, 85.8, 85.7% for adapter sizes 8, 64, 256.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "85.8",
+   "unit": "% accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GLUE data re-examined, best LR and epochs per size",
+   "quote": "the mean validation accuracies are 86.2%, 85.8% and",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.6"
+  },
+  {
+   "claim": "Adapters are robust to init std below 1e-2; larger init degrades, more on CoLA.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "1e-2",
+   "unit": "std",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Gaussian truncated to 2 std, tested in [1e-7, 1]",
+   "quote": "the performance of adapters is robust for standard deviations",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.6 / Fig 6"
+  }
+ ],
+ "limits": [
+  "Only BERT, text classification and SQuAD; no generation models",
+  "Inference latency and memory not measured",
+  "GLUE headline picks adapter size per task and best of 5 seeds on validation because of training instability",
+  "Additional-task epochs chosen manually from validation learning curves",
+  "Fixed-size 64 costs 0.4 GLUE points versus per-task sizes"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "adapter module",
+   "definition": "new modules added between layers of a pre-trained network",
+   "where": "Sec 1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Rebuffi et al. 2017 residual adapters",
+   "year": 2017,
+   "arxiv": "1705.08045",
+   "relation": "extends",
+   "note": "adapter modules in vision, brought to text",
+   "quote": null
+  },
+  {
+   "work": "BERT (Devlin et al.)",
+   "year": 2018,
+   "arxiv": "1810.04805",
+   "relation": "evaluates",
+   "note": "base model and training procedure",
+   "quote": null
+  },
+  {
+   "work": "GLUE (Wang et al.)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "benchmark",
+   "quote": null
+  },
+  {
+   "work": "SQuAD v1.1 (Rajpurkar et al.)",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "extractive QA",
+   "quote": null
+  },
+  {
+   "work": "Stickland & Murray 2019 PALs",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "related",
+   "note": "concurrent; multitask training",
+   "quote": null
+  },
+  {
+   "work": "Howard & Ruder 2018 ULMFiT",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "related",
+   "note": "fine-tuning top layers",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "Architecture of the adapter module and its integration with the Transformer.",
+   "page": 3,
+   "why": "Shows where the two adapters sit and what is trained"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Accuracy versus the number of trained parameters, aggregated across tasks.",
+   "page": 5,
+   "why": "Core parameter/accuracy trade-off"
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 2.1",
+   "snippet": "2md + d + m",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "No embedded instructions found"
+ ]
 }

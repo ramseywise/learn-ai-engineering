@@ -1,0 +1,454 @@
+{
+ "schema": 1,
+ "key": "2308.12966",
+ "pdf": "ai-engineering/08-multimodal-engineering/sources/bai-2023-qwen-vl.pdf",
+ "bib": {
+  "title": "Qwen-VL: A Versatile Vision-Language Model for Understanding, Localization, Text Reading, and Beyond",
+  "authors": [
+   "Jinze Bai",
+   "Shuai Bai",
+   "Shusheng Yang",
+   "Shijie Wang",
+   "Sinan Tan",
+   "Peng Wang",
+   "Junyang Lin",
+   "Chang Zhou",
+   "Jingren Zhou"
+  ],
+  "first_author": "Bai",
+  "year": 2023,
+  "venue": "preprint",
+  "arxiv": "2308.12966",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 60225,
+  "chars_total": 60225,
+  "engine": "pymupdf",
+  "skipped": "reference list skimmed only"
+ },
+ "type": "empirical",
+ "question": "How can an LLM be given fine-grained visual perception (captioning, VQA, text reading, grounding) in an open model trained in three stages?",
+ "hypothesis": "Higher input resolution, a position-aware compressing adapter and fine-grained caption-box and OCR data give an open LVLM better grounding and text reading than coarse-grained generalists of similar size.",
+ "contributions": [
+  "Visual receptor: language-aligned ViT plus position-aware cross-attention adapter",
+  "Input-output interface with image, box and ref special tokens",
+  "3-stage training pipeline",
+  "Multilingual multimodal cleaned corpus",
+  "Qwen-VL and Qwen-VL-Chat released publicly"
+ ],
+ "method": {
+  "summary": "Qwen-7B LLM, OpenCLIP ViT-bigG encoder and a single-layer cross-attention adapter with 256 learnable queries. Stage 1 trains ViT and adapter on 1.4B cleaned image-text pairs at 224px; stage 2 trains everything on 7 tasks at 448px; stage 3 instruction-tunes LLM and adapter on 350k dialogues to give Qwen-VL-Chat.",
+  "task": "vision-language pretraining and instruction tuning; captioning, VQA, text-oriented VQA, referring expression comprehension",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Stage-1 image-text pairs (LAION-en/zh, LAION-COCO, DataComp, Coyo, CC12M, CC3M, SBU, COCO Caption, in-house)",
+    "role": "pretrain",
+    "size": "5B original, 1.4B after cleaning (77.3% English, 22.7% Chinese)",
+    "split": null,
+    "source": "public web-crawled sets plus 220M in-house",
+    "preprocessing": "8 filters: aspect ratio, small images, CLIP score (dataset-specific), non-English/Chinese characters, emoji, text length, HTML tags, irregular patterns; for CC12M and SBU remove special tags; longest text kept when several match an image"
+   },
+   {
+    "name": "Stage-2 multi-task data",
+    "role": "pretrain",
+    "size": "Captioning 19.7M, VQA 3.6M, Grounding 3.5M, Ref Grounding 8.7M, Grounded Cap. 8.7M, OCR 24.8M, Pure-text 7.8M samples",
+    "split": null,
+    "source": "GQA, VGQA, VQAv2, DVQA, OCR-VQA, DocVQA, TextVQA, ChartQA, AI2D, GRIT, Visual Genome, RefCOCO/+/g, SynthDoG-en/zh, Common Crawl pdf and HTML, in-house text",
+    "preprocessing": "same-task data packed into sequences of length 2048; GRIT recursive boxes cleaned greedily; synthetic OCR with 41 English and 11 Chinese fonts on COCO backgrounds; PDF/HTML pages rendered via PyMuPDF/Puppeteer and filtered"
+   },
+   {
+    "name": "SFT instruction data",
+    "role": "train",
+    "size": "350k",
+    "split": null,
+    "source": "caption/LLM self-instruct dialogue data plus manual annotation, model generation and strategy concatenation; mixed with pure-text dialogue",
+    "preprocessing": "ChatML format, 'Picture id:' before each image; only answers and special tokens supervised"
+   },
+   {
+    "name": "Evaluation benchmarks (Table 9)",
+    "role": "eval",
+    "size": null,
+    "split": "Nocaps val; Flickr30K karpathy-test; VQAv2 test-dev; OKVQA val; GQA test-balanced; ScienceQA-Img test; VizWiz test-dev; TextVQA val; DocVQA/ChartQA/OCRVQA/AI2D test; RefCOCO/+ val,testA,testB; RefCOCOg val,test; GRIT test",
+    "source": "public",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Qwen-VL",
+    "role": "proposed",
+    "params": "9.6B (ViT 1.9B, adapter 0.08B, LLM 7.7B)",
+    "architecture": "ViT + single-layer cross-attention adapter + decoder LLM",
+    "init_from": "Qwen-7B (an intermediate checkpoint, Appendix E.4), OpenCLIP ViT-bigG",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "2048 LLM sequence length (512 in stage 1)",
+    "other": {
+     "patch_stride": "14",
+     "adapter_queries": "256 compressed from 256 (224px) or 1024 (448px) ViT tokens",
+     "adapter_pos": "2D absolute positional encodings added to cross-attention query-key pairs"
+    }
+   },
+   {
+    "name": "Qwen-VL-Chat",
+    "role": "proposed",
+    "params": "9.6B",
+    "architecture": "Qwen-VL after SFT",
+    "init_from": "Qwen-VL stage 2",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "2048",
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "cross-entropy of text tokens",
+   "optimizer": "AdamW, beta1 0.9, beta2 0.98, eps 1e-6",
+   "lr": "peak 2e-4 / 5e-5 / 1e-5 (stage 1 / 2 / SFT); min 1e-6 / 1e-5 / 1e-6",
+   "lr_schedule": "cosine decay; ViT layer-wise lr decay 0.95 (stages 1, 2), 0 in SFT",
+   "warmup": "500 / 400 / 3k steps",
+   "batch_size": "30720 / 4096 / 128 (global); gradient accumulation 6 / 8 / 8",
+   "steps": "50k / 19k / 8k",
+   "epochs": "one epoch in stage 1 (each image seen once)",
+   "tokens": "stage 1: about 1.5 billion image-text samples and 500 billion image-text tokens",
+   "seq_len": "LLM 512 / 2048 / 2048; ViT 256 / 1024 / 1024",
+   "precision": "bfloat16",
+   "weight_decay": "0.05",
+   "dropout": null,
+   "regularisation": "gradient clip 1.0; ViT drop path 0",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "frozen": "stage 1 freezes the LLM (trains ViT and adapter); stage 2 trains all; SFT freezes the ViT, trains LLM and adapter",
+    "resolution": "224x224 / 448x448 / 448x448",
+    "optimizer_sharding": "yes",
+    "activation_checkpointing": "no",
+    "model_parallelism": "none in stage 1, 2 in stages 2 and SFT",
+    "stage_inits": "adapter random in stage 1; stage 2 from stage 1; SFT from stage 2"
+   }
+  },
+  "inference": {
+   "decoding": "greedy search for captions; greedy open-ended generation for VQAv2, OKVQA, GQA, VizWiz; ScienceQA constrained to options, highest-confidence option",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": "caption prompt 'Descripe the image in English:'; VQA prompt '{question} Answer:'; few-shot exemplars by naive random sampling; SEED-Bench video by sampling four frames",
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "CIDEr",
+     "definition": "caption consensus score",
+     "unit": "points",
+     "higher_is_better": true
+    },
+    {
+     "name": "VQA score / EM / ANLS / relaxed EM / accuracy",
+     "definition": "per-benchmark metrics in Table 9",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "GPT-4 score (TouchStone)",
+     "definition": "GPT-4 judged open-ended instruction following",
+     "unit": "points",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Flamingo-9B/80B",
+    "Unified-IO-XL",
+    "Kosmos-1/2",
+    "BLIP-2",
+    "InstructBLIP",
+    "Shikra",
+    "mPLUG-DocOwl",
+    "Pix2Struct",
+    "OFA-L",
+    "VisionLLM-H",
+    "specialist SOTAs"
+   ],
+   "protocol": "single reported number per benchmark, no seeds or significance tests stated"
+  },
+  "availability": {
+   "code": "https://github.com/QwenLM/Qwen-VL",
+   "weights": "public (models released)",
+   "data": "in-house data not released; public sources used"
+  },
+  "prompts": [
+   {
+    "purpose": "caption",
+    "text": "Descripe the image in English:",
+    "where": "Sec 4.1"
+   },
+   {
+    "purpose": "VQA",
+    "text": "{question} Answer:",
+    "where": "Sec 4.1"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training.tokens",
+    "quote": "consuming approximately 1.5 billion image-text samples and 500 billion image-text tokens",
+    "where": "Appendix C"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Qwen-VL gets 85.8 CIDEr zero-shot on Flickr30K, above Flamingo-80B.",
+   "kind": "measured",
+   "source": null,
+   "metric": "CIDEr",
+   "value": 85.8,
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Flickr30K karpathy-test, zero-shot, greedy",
+   "note": null,
+   "where": "Sec 4.1, Table 4",
+   "quote": "Qwen-VL achieves state-of-the-art performance (i.e., 85.8 CIDEr score) on the Flickr30K karpathy-test split"
+  },
+  {
+   "claim": "Qwen-VL scores 79.5 / 58.6 / 59.3 on VQAv2 / OKVQA / GQA.",
+   "kind": "measured",
+   "source": null,
+   "metric": "VQAv2 accuracy",
+   "value": 79.5,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "open-ended greedy, prompt '{question} Answer:'",
+   "note": null,
+   "where": "Sec 4.1",
+   "quote": "On VQAv2, OKVQA and GQA benchmarks, Qwen-VL achieves 79.5, 58.6 and 59.3 accuracy respectively"
+  },
+  {
+   "claim": "Qwen-VL gets 63.8 on TextVQA, above InstructBLIP at 50.7.",
+   "kind": "measured",
+   "source": null,
+   "metric": "TextVQA VQA score",
+   "value": 63.8,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "TextVQA val, Qwen-VL (Qwen-7B)",
+   "note": null,
+   "where": null,
+   "table": "Table 5, row Qwen-VL (Qwen-7B), column TextVQA (63.8; InstructBLIP 50.7)"
+  },
+  {
+   "claim": "Qwen-VL-7B gets 89.36 on RefCOCO val, above Shikra-13B 87.83 and below UNINEXT-H 92.64.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 89.36,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "referring expression comprehension",
+   "note": null,
+   "where": null,
+   "table": "Table 6, row Qwen-VL-7B, column RefCOCO val (89.36)"
+  },
+  {
+   "claim": "Qwen-VL-Chat scores 1487.58 on MME perception and 360.71 on cognition.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MME perception",
+   "value": 1487.58,
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "instruction following",
+   "note": null,
+   "where": null,
+   "table": "Table 7, row Qwen-VL-Chat, columns MME Perception 1487.58, Cognition 360.71"
+  },
+  {
+   "claim": "Qwen-VL-Chat scores 645.2 on TouchStone English and 401.2 on Chinese.",
+   "kind": "measured",
+   "source": null,
+   "metric": "TouchStone En",
+   "value": 645.2,
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-4 judged",
+   "note": null,
+   "where": null,
+   "table": "Table 7, row Qwen-VL-Chat, column TouchStone En 645.2, Cn 401.2"
+  },
+  {
+   "claim": "Qwen-VL MMLU is 50.7 against 49.9 for the intermediate Qwen-7B used for initialisation, so multimodal training did not erode text ability.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MMLU",
+   "value": 50.7,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MMLU, Qwen-VL after stage 2 vs intermediate Qwen-7B checkpoint",
+   "note": "Final released Qwen-7B scores 58.2; the comparison is to an earlier checkpoint.",
+   "where": null,
+   "table": "Table 11, row Qwen-VL, column MMLU (50.7); row Qwen-7B (intermediate) 49.9"
+  },
+  {
+   "claim": "Window attention gave clearly higher loss than global attention in the ViT, with similar speed at 448px (9 vs 10 s/iter), so global attention was kept.",
+   "kind": "measured",
+   "source": null,
+   "metric": "s per iteration",
+   "value": 10,
+   "unit": "s/iter",
+   "baseline_value": null,
+   "n": null,
+   "setup": "448x448 ablation",
+   "note": null,
+   "where": null,
+   "table": "Table 10, rows 448x448 Global 10s / iter and Window 9s / iter"
+  },
+  {
+   "claim": "Stage 1 consumed about 1.5 billion samples in 50,000 steps at batch size 30720.",
+   "kind": "measured",
+   "source": null,
+   "metric": "batch size",
+   "value": 30720,
+   "unit": "pairs",
+   "baseline_value": null,
+   "n": null,
+   "setup": "stage 1",
+   "note": null,
+   "where": "Appendix C",
+   "quote": "The training process uses a batch size of 30720 for the image-text pairs, and the entire first stage of pre-training lasts for 50,000 steps"
+  }
+ ],
+ "limits": [
+  "Compute, hardware and wall-clock not stated; no seeds or significance tests.",
+  "In-house data (220M pairs and text corpora) not released and its details are not given.",
+  "Adapter-query and window-attention ablations use a ViT-L/14 or are shown only as loss curves, not benchmark scores.",
+  "Stage 1 has no VQA data yet zero-shot VQA rises, noted without analysis.",
+  "Authors name speech/video, scaling and image generation as future work.",
+  "LLM start is an intermediate Qwen-7B checkpoint, not the released one."
+ ],
+ "practices": [],
+ "terms": [],
+ "lineage": [
+  {
+   "work": "Qwen-7B",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "LLM initialisation",
+   "quote": null
+  },
+  {
+   "work": "OpenCLIP ViT-bigG",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "visual encoder init (Ilharco et al.)",
+   "quote": null
+  },
+  {
+   "work": "Kosmos-2 / GRIT",
+   "year": 2023,
+   "arxiv": "2306.14824",
+   "relation": "uses-data",
+   "note": "grounding data and format followed with minor modifications",
+   "quote": "We follow Kosmos-2 to use the GRIT (Peng et al., 2023) dataset for the grounding task with minor modifications."
+  },
+  {
+   "work": "Shikra",
+   "year": 2023,
+   "arxiv": "2306.15195",
+   "relation": "baseline",
+   "note": "grounding LVLM",
+   "quote": null
+  },
+  {
+   "work": "BLIP-2",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Q-Former alternative to cross-attention adapter",
+   "quote": null
+  },
+  {
+   "work": "InstructBLIP",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "Flamingo",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "few-shot comparison",
+   "quote": null
+  },
+  {
+   "work": "SynthDoG (Donut, Kim et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "synthetic OCR data",
+   "quote": null
+  },
+  {
+   "work": "TouchStone",
+   "year": 2023,
+   "arxiv": "2308.16890",
+   "relation": "evaluates",
+   "note": "same group benchmark",
+   "quote": null
+  },
+  {
+   "work": "Visual Genome",
+   "year": 2017,
+   "arxiv": "1602.07332",
+   "relation": "uses-data",
+   "note": "region grounding data",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 3",
+   "caption": "The training pipeline of the Qwen-VL series.",
+   "page": 4,
+   "why": "Shows which modules are frozen/trained and resolution per stage."
+  },
+  {
+   "figure": "Table 8",
+   "caption": "Training hyperparameters of Qwen-VL",
+   "page": 20,
+   "why": "All per-stage settings in one place."
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Table cell values extracted column-by-column; Specialist SOTA rows in Table 4 are misaligned in text.",
+  "Text says 'Descripe' (typo in prompt, kept verbatim).",
+  "Appendix E.2 ablation uses ViT-L/14 not ViT-bigG."
+ ]
+}

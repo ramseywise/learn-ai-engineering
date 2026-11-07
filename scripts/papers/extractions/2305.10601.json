@@ -1,0 +1,666 @@
+{
+ "schema": 1,
+ "key": "2305.10601",
+ "pdf": "generative-ai/03-agentic-foundations/sources/yao-2023-tree-thoughts.pdf",
+ "bib": {
+  "title": "Tree of Thoughts: Deliberate Problem Solving with Large Language Models",
+  "authors": [
+   "Shunyu Yao",
+   "Dian Yu",
+   "Jeffrey Zhao",
+   "Izhak Shafran",
+   "Thomas L. Griffiths",
+   "Yuan Cao",
+   "Karthik Narasimhan"
+  ],
+  "first_author": "Yao",
+  "year": 2023,
+  "venue": "NeurIPS 2023 (37th Conference on Neural Information Processing Systems)",
+  "arxiv": "2305.10601",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 54896,
+  "chars_total": 54896,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can language-model inference be improved on tasks needing exploration, lookahead or backtracking by searching over a tree of coherent intermediate text units (thoughts) with the LM itself generating and evaluating them?",
+ "hypothesis": "Left-to-right token-level decoding (IO, CoT, CoT-SC) is a 'System 1' mechanism that fails on search/planning tasks; adding a deliberate 'System 2' search with LM self-evaluation, lookahead and backtracking will do markedly better.",
+ "contributions": [
+  "The Tree of Thoughts framework: generalizes IO, CoT, CoT-SC and self-refinement as special cases, modular over thought decomposition, generator, state evaluator and search algorithm, no extra training.",
+  "Three new tasks that challenge GPT-4 (Game of 24, Creative Writing, Mini Crosswords) with ToT results and ablations.",
+  "LM self-evaluation as a third kind of search heuristic, alongside programmed (Deep Blue) and learned (AlphaGo)."
+ ],
+ "method": {
+  "summary": "ToT prompts a pre-trained chat LM to propose or sample k candidate next thoughts from each state, evaluate states by value prompts (sure/maybe/impossible, or 1-10) or by voting, and runs BFS (keep best b states per step) or DFS (prune below a value threshold, backtrack). Instantiated per task: Game of 24 with BFS b=5, Creative Writing with a depth-2 sample-and-vote tree, Mini Crosswords with DFS and pruning. No training of any kind.",
+  "task": "Search/planning problems with an LLM: arithmetic puzzle, constrained creative writing, 5x5 mini crosswords",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "Game of 24 (4nums.com)",
+    "role": "eval",
+    "size": "1,362 games scraped; 100 used",
+    "split": "games indexed 901-1,000 (relatively hard, sorted by human solving time)",
+    "source": "4nums.com",
+    "preprocessing": null
+   },
+   {
+    "name": "Creative Writing inputs",
+    "role": "eval",
+    "size": "100 inputs of 4 random sentences",
+    "split": "no ground-truth passage",
+    "source": "randomwordgenerator.com",
+    "preprocessing": null
+   },
+   {
+    "name": "Mini Crosswords (GooBix)",
+    "role": "both",
+    "size": "156 games of 5x5 crosswords",
+    "split": "20 test games (indices 1, 6, ..., 91, 96); games 136, 141, 146, 151, 156 used for prompting",
+    "source": "GooBix",
+    "preprocessing": "adjacent games contain similar clues, hence the spaced test indices"
+   },
+   {
+    "name": "GSM8K (appendix B.1)",
+    "role": "eval",
+    "size": "subset of 100 random test questions",
+    "split": "test",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "StrategyQA (appendix B.1)",
+    "role": "eval",
+    "size": "subset of 100 random questions",
+    "split": "dev",
+    "source": null,
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT-4 (Chat Completion mode)",
+    "role": "base",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "main model; experiments done between May 5-16, 2023; exact snapshot not stated"
+    }
+   },
+   {
+    "name": "GPT-3.5-turbo",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "appendix B.2 only; Game of 24 proposal prompt changed from 1-shot to 3-shot"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "sampling, Chat Completion mode",
+   "temperature": "0.7 (unless otherwise stated)",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "Game of 24: IO and CoT sampled 100 times per game, CoT-SC majority of 100 CoT samples, IO+Refine up to 10 iterations. Creative Writing: 10 IO and 10 CoT samples per task, refine k<=5, GPT-4 score averaged over 5 scores per output. Crosswords: 10 samples per prompt, averaged. Single run of ToT; no seeds or variance reported.",
+   "prompting": "Game of 24 IO: 5 in-context examples; CoT adds 3 intermediate equations per example; ToT propose prompt has one 4-number example, same prompt for all 3 steps. Creative Writing IO and CoT zero-shot. Crosswords IO 5 examples, CoT adds intermediate words h1..5 then v1..5.",
+   "retrieval": null,
+   "parameters": {
+    "game_of_24": "3 thought steps; BFS keep b=5 (b=1 also run); propose prompt per state; value prompt labels each thought sure/maybe/impossible, sampled 3 times per thought",
+    "creative_writing": "depth 2, one intermediate thought (plan); 5 plans sampled i.i.d. then 5 votes; 5 passages then 5 votes; b=1",
+    "mini_crosswords": "DFS, thoughts constrained not to change filled words so at most 10 intermediate steps; proposal prompt sampled 5 times, with LM confidence levels aggregated into a priority queue; state evaluator marks each remaining clue possible/impossible and prunes if any is impossible; DFS limited to 100 steps; deepest explored state (first if tied) rendered as output",
+    "bfs_general": "BFS used when depth T<=3 and breadth b<=5",
+    "zero_shot_tot_B1": "GSM8K/StrategyQA: sample 5 strategies, vote for best; sample 5 solutions, vote for best"
+   },
+   "other": {
+    "vote_aggregation": "prompt LM multiple times and aggregate value or vote results"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Game of 24 success rate",
+     "definition": "output is a valid equation equal to 24 using the input numbers each exactly once, over 100 games",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Creative Writing coherency score",
+     "definition": "GPT-4 zero-shot 1-10 scalar score, 5 samples averaged per output",
+     "unit": "score 1-10",
+     "higher_is_better": true
+    },
+    {
+     "name": "Creative Writing human comparison",
+     "definition": "blind pairwise coherency comparison of CoT vs ToT passages by a subset of authors, order randomly flipped, over 100 inputs",
+     "unit": "pairs out of 100",
+     "higher_is_better": true
+    },
+    {
+     "name": "Mini Crosswords success",
+     "definition": "portion of correct letters (25 per game), words (10 per game) and games solved",
+     "unit": "% letter, % word, games of 20",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "IO prompt",
+    "CoT prompt",
+    "CoT-SC (k=100)",
+    "IO + Refine (k=10, uses ground-truth correctness feedback)",
+    "IO / CoT best of 100 (oracle)",
+    "ToT ablations: -prune, -backtrack, +best state (oracle)"
+   ],
+   "protocol": "Single ToT run per task. Creative Writing human study uses a subset of the authors, not independent raters. Standard deviation of the 5 GPT-4 scores about 0.56 on average. No significance tests."
+  },
+  "availability": {
+   "code": "https://github.com/princeton-nlp/tree-of-thought-llm",
+   "weights": null,
+   "data": "prompts at .../src/tot/prompts, trajectories at .../logs"
+  },
+  "prompts": [
+   {
+    "purpose": "Zero-shot voting prompt for ToT on GSM8K/StrategyQA",
+    "text": "Given an instruction and several choices, decide which choice is most promising. Analyze each choice in detail, then conclude in the last line \"The best choice is {s}\", where s the integer id of the choice.",
+    "where": "Appendix B.1"
+   },
+   {
+    "purpose": "Zero-shot CoT/ToT thought format for GSM8K/StrategyQA",
+    "text": "Answer the following question: {input}\nMake a strategy then write. Your output should be of the following format:\nStrategy:\nYour strategy about how to answer the question.\nAnswer:\nYour answer to the question. It should end with {format}.",
+    "where": "Appendix B.1"
+   },
+   {
+    "purpose": "Creative Writing vote prompt (paraphrased in text)",
+    "text": "analyze choices below, then conclude which is most promising for the instruction",
+    "where": "Section 4.2"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "inference.temperature",
+    "quote": "sampling temperature of 0.7",
+    "where": "Section 4"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "On Game of 24, ToT with breadth 5 solves 74% of games.",
+   "kind": "measured",
+   "source": null,
+   "metric": "success rate",
+   "value": "74",
+   "unit": "%",
+   "baseline_value": "4.0 (CoT)",
+   "n": 100,
+   "setup": "GPT-4 chat, temperature 0.7, games 901-1,000 of 4nums.com, BFS b=5, 3 thought steps, value prompt sampled 3 times per thought, single run",
+   "quote": "achieves a success rate of 45%, while b = 5 achieves 74%.",
+   "table": null,
+   "note": "Abstract says CoT solved 4%; Table 2 prints 4.0%.",
+   "where": "Section 4.1, Table 2"
+  },
+  {
+   "claim": "IO, CoT and CoT-SC prompting perform badly on Game of 24.",
+   "kind": "measured",
+   "source": null,
+   "metric": "success rate",
+   "value": "4.0",
+   "unit": "%",
+   "baseline_value": null,
+   "n": 100,
+   "setup": "GPT-4, Game of 24 games 901-1,000; CoT prompted with 3 intermediate equations, averaged over 100 samples per game; IO 7.3%, CoT-SC (k=100) 9.0%",
+   "quote": "achieving only 7.3%, 4.0%, and 9.0% success rates.",
+   "table": null,
+   "note": null,
+   "where": "Section 4.1, Table 2"
+  },
+  {
+   "claim": "ToT with breadth 1 (no beam) already reaches 45% on Game of 24.",
+   "kind": "measured",
+   "source": null,
+   "metric": "success rate",
+   "value": "45",
+   "unit": "%",
+   "baseline_value": null,
+   "n": 100,
+   "setup": "GPT-4, Game of 24, ToT b=1",
+   "quote": "achieves a success rate of 45%, while b = 5 achieves 74%.",
+   "table": null,
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Oracle best of 100 CoT samples reaches 49% on Game of 24, still well below ToT b=5.",
+   "kind": "measured",
+   "source": null,
+   "metric": "success rate",
+   "value": "49",
+   "unit": "%",
+   "baseline_value": null,
+   "n": 100,
+   "setup": "GPT-4, Game of 24; best-of-k oracle (any of 100 samples correct) treated as visiting k nodes; IO best of 100 is 33%",
+   "quote": null,
+   "table": "Table 2, row CoT (best of 100), column Success",
+   "note": "The oracle uses ground-truth correctness to pick the best sample, so it is not a deployable baseline.",
+   "where": "Table 2, Section 4.1"
+  },
+  {
+   "claim": "IO + Refine (up to 10 iterations, with ground-truth feedback) reaches 27% on Game of 24.",
+   "kind": "measured",
+   "source": null,
+   "metric": "success rate",
+   "value": "27",
+   "unit": "%",
+   "baseline_value": null,
+   "n": 100,
+   "setup": "GPT-4, Game of 24, refine conditioned on all previous history, uses groundtruth feedback on equation correctness",
+   "quote": null,
+   "table": "Table 2, row IO + Refine (k=10), column Success",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Around 60% of CoT samples on Game of 24 had already failed after the first step.",
+   "kind": "measured",
+   "source": null,
+   "metric": "share of CoT samples failed at step 1",
+   "value": "60",
+   "unit": "%",
+   "baseline_value": null,
+   "n": 100,
+   "setup": "GPT-4, Game of 24, CoT samples; failure means the thought is invalid or cannot reach 24; value read as approximate",
+   "quote": "around 60% of CoT samples already failed the task after generating the first step",
+   "table": null,
+   "note": null,
+   "where": "Section 4.1, Fig 3(b)"
+  },
+  {
+   "claim": "In Creative Writing ToT gets a higher GPT-4 coherency score than IO and CoT.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GPT-4 coherency score",
+   "value": "7.56",
+   "unit": "score 1-10",
+   "baseline_value": "6.93 (CoT), 6.19 (IO)",
+   "n": 100,
+   "setup": "GPT-4 generating and scoring, 100 inputs, 5 scores averaged per output; ToT = 5 plans + vote, 5 passages + vote, b=1; scorer is the same model family as the generator",
+   "quote": "where ToT (7.56) is deemed to",
+   "table": null,
+   "note": "Table 6 repeats 6.19, 6.93, 7.56 for GPT-4.",
+   "where": "Section 4.2, Fig 5(a), Table 6"
+  },
+  {
+   "claim": "Authors prefer ToT over CoT passages in 41 of 100 pairs, CoT over ToT in 21, tie in 38.",
+   "kind": "measured",
+   "source": null,
+   "metric": "pairs preferring ToT",
+   "value": "41",
+   "unit": "pairs of 100",
+   "baseline_value": "21 (prefer CoT)",
+   "n": 100,
+   "setup": "blind comparison by a subset of the authors, order randomly flipped",
+   "quote": "CoT in 41 out of 100 passage pairs, while only prefer CoT over ToT in 21",
+   "table": null,
+   "note": null,
+   "where": "Section 4.2, Fig 5(b)"
+  },
+  {
+   "claim": "Iterative refine raises Creative Writing coherency for IO from 6.19 to 7.67 and ToT from 7.56 to 7.91.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GPT-4 coherency score",
+   "value": "7.91",
+   "unit": "score 1-10",
+   "baseline_value": "7.56 (ToT without refine)",
+   "n": 100,
+   "setup": "GPT-4, refine k<=5 on top of IO sample or ToT output",
+   "quote": "it improves IO coherency score from 6.19 to 7.67, and ToT coherency score from 7.56 to 7.91.",
+   "table": null,
+   "note": null,
+   "where": "Section 4.2"
+  },
+  {
+   "claim": "On Mini Crosswords ToT reaches 60% word-level success and solves 4 of 20 games, against 14-15.6% word success for IO/CoT.",
+   "kind": "measured",
+   "source": null,
+   "metric": "word-level success",
+   "value": "60",
+   "unit": "%",
+   "baseline_value": "15.6 (CoT)",
+   "n": 20,
+   "setup": "GPT-4, 20 test games, DFS limited to 100 steps, pruning on; IO/CoT 10 samples averaged; letter-level 78% vs 38.7/40.6",
+   "quote": "success rate of 60% and solving 4 out of 20 games.",
+   "table": null,
+   "note": "Table 3 columns are Letter, Word, Game; IO game-level 0%, CoT 1%, ToT 20%.",
+   "where": "Section 4.3, Table 3"
+  },
+  {
+   "claim": "Choosing the oracle best DFS state instead of the heuristic one lifts crosswords to 7 of 20 games.",
+   "kind": "measured",
+   "source": null,
+   "metric": "game-level success",
+   "value": "35",
+   "unit": "%",
+   "baseline_value": "20",
+   "n": 20,
+   "setup": "GPT-4, Mini Crosswords, ToT '+best state' oracle",
+   "quote": null,
+   "table": "Table 3, row +best state, column Game",
+   "note": "Text says 7/20 games.",
+   "where": "Section 4.3, Table 3"
+  },
+  {
+   "claim": "Ablating pruning lowers crossword word success to 41.5% (from 60%).",
+   "kind": "measured",
+   "source": null,
+   "metric": "word-level success",
+   "value": "41.5",
+   "unit": "%",
+   "baseline_value": "60",
+   "n": 20,
+   "setup": "GPT-4, Mini Crosswords, ToT with pruning removed",
+   "quote": null,
+   "table": "Table 3, row -prune, column Word",
+   "note": "Without pruning it still found the solution in 4/20 games but only output 1 via the heuristic.",
+   "where": "Table 3"
+  },
+  {
+   "claim": "Removing backtracking drops crossword word success to 20%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "word-level success",
+   "value": "20",
+   "unit": "%",
+   "baseline_value": "60",
+   "n": 20,
+   "setup": "GPT-4, Mini Crosswords, greedy fill allowing overwrites for at most 20 steps (similar to b=1)",
+   "quote": "performs poorly with a word level success of only 20%",
+   "table": null,
+   "note": null,
+   "where": "Section 4.3, Table 3"
+  },
+  {
+   "claim": "Solving one Game of 24 problem with ToT costs about 5.5k completion tokens, close to 100 CoT trials.",
+   "kind": "measured",
+   "source": null,
+   "metric": "completion tokens per case",
+   "value": "5.5k",
+   "unit": "tokens",
+   "baseline_value": "6.7k (100 CoT trials)",
+   "n": 100,
+   "setup": "GPT-4 API; cost per case $0.74 for ToT vs $0.47 for CoT best of 100 and $0.13 for IO best of 100",
+   "quote": "solving a problem with ToT requires 5.5k completion tokens, close to",
+   "table": null,
+   "note": "Table 8 caption says 'Game of 24' but the table is Creative Writing.",
+   "where": "Appendix B.3, Table 7"
+  },
+  {
+   "claim": "ToT may need 5-100 times more generated tokens than CoT.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "authors' general statement, depends on prompts and search algorithm",
+   "quote": "could require 5-100 times more generated tokens than CoT.",
+   "table": null,
+   "note": null,
+   "where": "Appendix B.3"
+  },
+  {
+   "claim": "On Creative Writing ToT costs about $0.32 per case against $0.07 for CoT, about 5x.",
+   "kind": "measured",
+   "source": null,
+   "metric": "cost per case",
+   "value": "0.32",
+   "unit": "$",
+   "baseline_value": "0.07 (CoT)",
+   "n": 100,
+   "setup": "GPT-4 API, b=5",
+   "quote": null,
+   "table": "Table 8, row ToT, column Cost per case",
+   "note": null,
+   "where": "Appendix B.3"
+  },
+  {
+   "claim": "With GPT-3.5 ToT reaches only 19% on Game of 24 versus 74% for GPT-4.",
+   "kind": "measured",
+   "source": null,
+   "metric": "success rate",
+   "value": "19",
+   "unit": "%",
+   "baseline_value": "74 (GPT-4)",
+   "n": 100,
+   "setup": "GPT-3.5-turbo, Game of 24, proposal prompt changed from 1-shot to 3-shot; IO 6%, CoT 3%",
+   "quote": null,
+   "table": "Table 5, row ToT, column GPT-3.5",
+   "note": null,
+   "where": "Appendix B.2, Table 5"
+  },
+  {
+   "claim": "Mixing models shows thought generation is the Game of 24 bottleneck: GPT-4 generation with GPT-3.5 evaluation gets 64%, the reverse 31%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "success rate",
+   "value": "64",
+   "unit": "%",
+   "baseline_value": "31 (GPT-3.5 generation + GPT-4 evaluation)",
+   "n": 100,
+   "setup": "Game of 24, ToT, mixed GPT-4 / GPT-3.5 roles",
+   "quote": "vs. evaluation, we ran GPT-4 generation + GPT-3.5 evaluation (64%) and GPT-3.5 generation +",
+   "table": null,
+   "note": null,
+   "where": "Appendix B.2"
+  },
+  {
+   "claim": "On GSM8K zero-shot ToT beats CoT only slightly (90 vs 86), on StrategyQA 83 vs 82.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "90",
+   "unit": "%",
+   "baseline_value": "86 (CoT)",
+   "n": 100,
+   "setup": "GPT-4, 100 random GSM8K test questions, zero-shot ToT (5 strategies then vote, 5 solutions then vote); StrategyQA 100 dev questions",
+   "quote": null,
+   "table": "Table 4, row ToT, column GSM8K",
+   "note": "Units not printed in Table 4; read as percent.",
+   "where": "Appendix B.1, Table 4"
+  }
+ ],
+ "limits": [
+  "Authors: deliberate search may be unnecessary for tasks GPT-4 already handles (Appendix B.1); only three relatively simple tasks were tried.",
+  "Authors: ToT needs more resources (GPT-4 API cost) than sampling methods; 5-100x more generated tokens than CoT.",
+  "Authors: off-the-shelf LM only; fine-tuning for ToT-style deliberation left open.",
+  "Authors: state evaluator is imperfect; GPT-4 pruned valid but rare/obsolete words in crosswords (example 'agend').",
+  "Best-of-k IO/CoT baselines are oracles; IO+Refine uses ground-truth feedback.",
+  "Single run per configuration, no variance or significance tests; Creative Writing human study uses authors as judges and GPT-4 judges GPT-4 output.",
+  "Tasks and prompts were designed by the authors to challenge GPT-4 as of May 2023; later reasoning models do much of this search internally (not in the paper).",
+  "Only BFS and DFS explored; A* and MCTS left for future work."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "thought",
+   "definition": "a coherent language sequence that serves as an intermediate step toward problem solving",
+   "where": "Section 1"
+  },
+  {
+   "term": "ToT-BFS",
+   "definition": "maintains a set of the b most promising states per step (Algorithm 1)",
+   "where": "Section 3"
+  },
+  {
+   "term": "ToT-DFS",
+   "definition": "explores the most promising state first until the output is reached or the evaluator deems it impossible (value <= threshold), then prunes and backtracks (Algorithm 2)",
+   "where": "Section 3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Chain of thought prompting elicits reasoning in large language models",
+   "year": 2022,
+   "arxiv": "2201.11903",
+   "relation": "baseline",
+   "note": "CoT baseline that ToT generalizes",
+   "quote": null
+  },
+  {
+   "work": "Self-consistency improves chain of thought reasoning in language models",
+   "year": 2022,
+   "arxiv": "2203.11171",
+   "relation": "baseline",
+   "note": "CoT-SC baseline (k=100)",
+   "quote": null
+  },
+  {
+   "work": "Reflexion: an autonomous agent with dynamic memory and self-reflection",
+   "year": 2023,
+   "arxiv": "2303.11366",
+   "relation": "related",
+   "note": "self-reflection family; iterative refine seen as special case of ToT",
+   "quote": null
+  },
+  {
+   "work": "Self-Refine: Iterative refinement with self-feedback",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "basis of the iterative-refine baseline",
+   "quote": null
+  },
+  {
+   "work": "Reasoning with language model is planning with world model (RAP)",
+   "year": 2023,
+   "arxiv": "2305.14992",
+   "relation": "related",
+   "note": "concurrent MCTS-based work; authors say its tasks are simpler and it lacks modularity over search algorithms",
+   "quote": null
+  },
+  {
+   "work": "Decomposition enhances reasoning via self-evaluation guided decoding",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "tree search with LLM self-eval but thoughts as code (PAL)",
+   "quote": null
+  },
+  {
+   "work": "GPT-4 technical report",
+   "year": 2023,
+   "arxiv": "2303.08774",
+   "relation": "evaluates",
+   "note": "main model",
+   "quote": null
+  },
+  {
+   "work": "ReAct: Synergizing reasoning and acting in language models",
+   "year": 2022,
+   "arxiv": "2210.03629",
+   "relation": "related",
+   "note": "cited as LM planning work",
+   "quote": null
+  },
+  {
+   "work": "Newell, Shaw and Simon, Report on a general problem solving program; Human problem solving",
+   "year": 1959,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "problem solving as search through a tree",
+   "quote": null
+  },
+  {
+   "work": "Automated crossword solving (Wallace et al.)",
+   "year": 2022,
+   "arxiv": "2205.09665",
+   "relation": "related",
+   "note": "specialized crossword pipelines using retrieval",
+   "quote": null
+  },
+  {
+   "work": "LLM+P",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "delegates planning to a classical planner",
+   "quote": null
+  },
+  {
+   "work": "Least-to-most prompting",
+   "year": 2022,
+   "arxiv": "2205.10625",
+   "relation": "related",
+   "note": "program-guided LM generation",
+   "quote": null
+  },
+  {
+   "work": "4nums.com, GooBix, randomwordgenerator.com, GSM8K, StrategyQA",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "task data sources",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Schematic illustrating various approaches to problem solving with LLMs (IO, CoT, CoT-SC, ToT).",
+   "page": 2,
+   "why": "Shows IO, CoT and CoT-SC as degenerate trees."
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "ToT in a game of 24. The LM is prompted for (a) thought generation and (b) valuation.",
+   "page": 5,
+   "why": "Concrete propose and value prompt flow."
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Game of 24 (a) scale analysis & (b) error analysis.",
+   "page": 6,
+   "why": "Success vs nodes visited and the step at which CoT fails."
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "In Mini Crosswords, (a) how thoughts are proposed and aggregated in a priority queue for DFS, and (b) how a state is evaluated and pruned.",
+   "page": 8,
+   "why": "DFS with pruning and backtracking in practice."
+  }
+ ],
+ "code": [
+  {
+   "where": "Appendix B.1",
+   "snippet": "standard_prompt = 'Answer the following question with {format}: {input}'",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Figure text (Figs 2, 4, 6) is garbled glyph output from pymupdf; captions and tables are readable.",
+  "Table 8 caption reads 'Cost analysis on Game of 24' but the table is Creative Writing.",
+  "Table 4 prints no unit; Table 3 columns Letter/Word/Game are inferred from the text.",
+  "No embedded instructions found.",
+  "Game of 24 and Crosswords propose/value prompts are not printed in the paper (code repo only, Appendix A)."
+ ]
+}

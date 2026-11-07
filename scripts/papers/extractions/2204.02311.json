@@ -1,0 +1,902 @@
+{
+ "schema": 1,
+ "key": "2204.02311",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/chowdhery-2022-palm.pdf",
+ "bib": {
+  "title": "PaLM: Scaling Language Modeling with Pathways",
+  "authors": [
+   "Aakanksha Chowdhery",
+   "Sharan Narang",
+   "Jacob Devlin",
+   "et al. (67 authors, Google Research)"
+  ],
+  "first_author": "Chowdhery",
+  "year": 2022,
+  "venue": "preprint",
+  "arxiv": "2204.02311",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 240000,
+  "chars_total": 288603,
+  "engine": "pymupdf",
+  "skipped": "References (about 45k chars) skimmed for lineage only; appendix G sample outputs and H per-task tables (BIG-bench, multilingual NLG) and the long datasheet pages (App D, E) not read in detail; Sections 6.6-6.7 read only for headline numbers, Sections 9-10.1 skimmed."
+ },
+ "type": "empirical",
+ "question": "What does scaling a dense decoder-only Transformer to 540B parameters and 780B tokens buy in few-shot performance across language, reasoning, code and multilingual tasks?",
+ "hypothesis": null,
+ "contributions": [
+  "Efficient scaling with Pathways to 6144 TPU v4 chips",
+  "Continued improvements from scaling",
+  "Breakthrough capabilities",
+  "Discontinuous improvements",
+  "Multilingual understanding",
+  "Bias and toxicity analysis"
+ ],
+ "method": {
+  "summary": "Trains three dense decoder-only Transformers (8B, 62B, 540B) with the same recipe on a 780B-token (795B for 62B) single-epoch mixture, using Pathways across two TPU v4 pods with no pipeline parallelism, then evaluates few-shot on 29 English NLP tasks, BIG-bench, chain-of-thought reasoning, code (plus a code-finetuned PaLM-Coder), translation, multilingual generation/QA, memorization, contamination, bias and toxicity.",
+  "task": "next-token pretraining",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "PaLM pretraining mixture",
+    "role": "pretrain",
+    "size": "780 billion tokens",
+    "split": "exactly one epoch, shuffled identically for all models",
+    "source": "social media conversations 50%, filtered webpages 27%, books (English) 13%, GitHub code 5%, Wikipedia 4%, news (English) 1%; multilingual part spans over 100 languages; non-English about 22%",
+    "preprocessing": "webpages sampled in proportion to a quality-classifier score; code filtered by licence (copyleft excluded), 24 languages, 196GB, deduplicated by Levenshtein distance; vocabulary generated from the training data"
+   },
+   {
+    "name": "ExtraPythonData",
+    "role": "train",
+    "size": "5.8B tokens",
+    "split": "used only for PaLM-Coder finetuning",
+    "source": "GitHub repositories not used in pretraining",
+    "preprocessing": null
+   },
+   {
+    "name": "29 English NLP benchmarks (TriviaQA, NQ, WebQ, LAMBADA, HellaSwag, StoryCloze, Winograd, WinoGrande, PIQA, ARC, OpenBookQA, DROP, CoQA, QuAC, SQuADv2, RACE, SuperGLUE, ANLI)",
+    "role": "eval",
+    "size": null,
+    "split": "same splits as Du et al. (2021) and Brown et al. (2020)",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "MMLU",
+    "role": "eval",
+    "size": "57 tasks",
+    "split": "test set, 5-shot",
+    "source": "Hendrycks et al. 2021",
+    "preprocessing": null
+   },
+   {
+    "name": "BIG-bench",
+    "role": "eval",
+    "size": "150 text tasks (58 in common with Gopher/Chinchilla/GPT-3)",
+    "split": "0/1/5-shot",
+    "source": "BIG-bench collaboration 2021",
+    "preprocessing": "programmatic tasks excluded"
+   },
+   {
+    "name": "GSM8K, SVAMP, MAWPS, ASDiv, AQuA, CommonsenseQA, StrategyQA",
+    "role": "eval",
+    "size": null,
+    "split": "8-shot chain of thought, exemplars from Wei et al. 2022b",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "HumanEval, MBPP, GSM8K-Python, TransCoder (560 test samples), DeepFix (1260 programs)",
+    "role": "eval",
+    "size": null,
+    "split": "MBPP and GSM8K test splits",
+    "source": null,
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "PaLM 540B",
+    "role": "proposed",
+    "params": "540.35B",
+    "architecture": "decoder-only Transformer; SwiGLU, parallel layers, multi-query attention, RoPE, shared input-output embeddings, no biases",
+    "init_from": null,
+    "tokenizer": "SentencePiece, lossless, digits split individually, unknown Unicode to UTF-8 bytes",
+    "vocab": "256k",
+    "layers": "118",
+    "hidden": "18432",
+    "heads": "48",
+    "context": "2048 tokens",
+    "other": {
+     "d_ff": "4 x d_model",
+     "head_size": "256",
+     "batch_size_table1": "512 -> 1024 -> 2048",
+     "train_tokens": "780B"
+    }
+   },
+   {
+    "name": "PaLM 62B",
+    "role": "proposed",
+    "params": "62.50B",
+    "architecture": "decoder-only Transformer; SwiGLU, parallel layers, multi-query attention, RoPE, shared input-output embeddings, no biases",
+    "init_from": null,
+    "tokenizer": "SentencePiece, lossless, digits split individually, unknown Unicode to UTF-8 bytes",
+    "vocab": "256k",
+    "layers": "64",
+    "hidden": "8192",
+    "heads": "32",
+    "context": "2048 tokens",
+    "other": {
+     "batch_size_table1": "512 -> 1024",
+     "train_tokens": "795B (an oversight in checkpoint selection; also continued to 1325B in Appendix F)"
+    }
+   },
+   {
+    "name": "PaLM 8B",
+    "role": "proposed",
+    "params": "8.63B",
+    "architecture": "decoder-only Transformer; SwiGLU, parallel layers, multi-query attention, RoPE, shared input-output embeddings, no biases",
+    "init_from": null,
+    "tokenizer": "SentencePiece, lossless, digits split individually, unknown Unicode to UTF-8 bytes",
+    "vocab": "256k",
+    "layers": "32",
+    "hidden": "4096",
+    "heads": "16",
+    "context": "2048 tokens",
+    "other": {
+     "batch_size_table1": "256 -> 512",
+     "train_tokens": "780B"
+    }
+   },
+   {
+    "name": "PaLM-Coder 8B/62B/540B",
+    "role": "proposed",
+    "params": "as PaLM",
+    "architecture": "PaLM finetuned on code",
+    "init_from": "PaLM",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "finetune": "stage 1 6.5B tokens: 60% Python (ExtraPythonData), 30% multi-language code, 10% natural language; stage 2 1.9B tokens more Python; 7.75B finetuning tokens total, 5.9B Python"
+    }
+   },
+   {
+    "name": "GPT-3 175B, Gopher 280B, Chinchilla 70B, Megatron-Turing NLG 530B, GLaM 64B/64E, LaMDA 137B, Codex 12B, Davinci Codex",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "standard language modeling loss (average log probability of all tokens, no label smoothing) plus auxiliary z-loss 1e-4 * log^2 Z",
+   "optimizer": "Adafactor without factorization (Adam with parameter scaling), beta1 0.9, beta2 = 1.0 - k^-0.8, global-norm gradient clipping 1.0",
+   "lr": "1e-2",
+   "lr_schedule": "constant 1e-2 for the first 10,000 steps, then decay 1/sqrt(k) with step k",
+   "warmup": null,
+   "batch_size": "540B: 512 (1M tokens) until step 50k, 1024 (2M) until step 115k, 2048 (4M) until step 255k; smaller models followed similar schedules",
+   "steps": "255k (540B)",
+   "epochs": "1",
+   "tokens": "780B (8B, 540B); 795B (62B)",
+   "seq_len": "2048",
+   "precision": null,
+   "weight_decay": "dynamic, lr^2.0 (lr is the current learning rate)",
+   "dropout": "0 in pretraining; 0.1 for finetuning in most cases",
+   "regularisation": "no biases; z-loss; kernel init N(0, 1/sqrt(n_in)), embeddings N(0,1), pre-softmax logits scaled by 1/sqrt(n)",
+   "hardware": "540B: 6144 TPU v4 chips (two pods of 3072, 768 hosts each), 12-way model parallel x 256-way fully sharded data parallel per pod, two-way pod-level data parallel via Pathways, no pipeline parallelism",
+   "compute": "2.56e24 train FLOPs (540B, excluding rematerialization), 3.08e23 (62B), 4.29e22 (8B); 29600 PetaFLOP/s-days for 540B",
+   "wall_clock": "6144 TPU v4 chips for 1200 hours plus 3072 chips for 336 hours, including some downtime and repeated steps",
+   "seeds": null,
+   "other": {
+    "loss_spikes": "about 20 spikes in 540B, none in smaller models; mitigated by restarting from a checkpoint about 100 steps before the spike and skipping 200-500 batches",
+    "bitwise_determinism": "fully reproducible from any checkpoint (JAX+XLA+T5X, deterministic data pipeline)",
+    "finetune_superglue": "lr 5e-5, Adafactor, batch 32, converges typically in under 15K steps",
+    "energy": "271.43 tCO2e, Oklahoma datacenter PUE 1.08, 378.5W per TPU v4 chip, 89% carbon-free energy"
+   }
+  },
+  "inference": {
+   "decoding": "greedy for Figure 1 and pass@1 code; nucleus sampling p=0.95 temperature 0.8 for pass@k with k>1; top-k 40 temperature 1.0 for toxicity",
+   "temperature": "0.8 (pass@k, k>1); 1.0 (toxicity)",
+   "top_p": "0.95 (code pass@k)",
+   "max_tokens": "128 decoding steps (toxicity)",
+   "samples": "25 continuations for each of 10K prompts (toxicity); pass@k with k samples per problem (code)",
+   "prompting": "0/1/few-shot with number of shots per task in Table 4; 8-shot chain of thought exemplars from Wei et al. 2022b; 5-shot BIG-bench and MMLU; 2-shot exemplars for Fig 1",
+   "retrieval": null,
+   "parameters": {
+    "calculator": "post-hoc external calculator on arithmetic datasets, said not to improve any dataset by more than 5%",
+    "contamination_threshold": "example is contaminated if at least 70% of its 8-grams in question, prompt or target appear in training data"
+   },
+   "other": {
+    "memorization_probe": "100 token spans from training examples, first 50 tokens as prompt, greedy, exact match of 50-token continuation"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "model FLOPs utilization (MFU)",
+     "definition": "observed tokens/sec over theoretical max tokens/sec at peak FLOPs, counting only forward+backward FLOPs, not rematerialization: R = P / (6N + 12LHQT)",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "few-shot accuracy / EM / F1 per task",
+     "definition": "task-specific",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "normalized preferred metric (BIG-bench)",
+     "definition": "random chance = 0, max = 100 for multiple choice, averaged over tasks",
+     "unit": "points",
+     "higher_is_better": true
+    },
+    {
+     "name": "pass@k (code)",
+     "definition": "percentage of k samples that solve the task (not the Chen et al. estimator)",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "BLEU",
+     "definition": "translation",
+     "unit": "BLEU",
+     "higher_is_better": true
+    },
+    {
+     "name": "memorization rate",
+     "definition": "fraction of 100 sampled training spans whose 50-token continuation is reproduced exactly given the first 50 tokens",
+     "unit": "%",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "GLaM 62B/64E",
+    "GPT-3 175B",
+    "Megatron-Turing NLG 530B",
+    "Gopher 280B",
+    "Chinchilla 70B",
+    "LaMDA 137B",
+    "Codex",
+    "T5-11B",
+    "ST-MoE-32B"
+   ],
+   "protocol": "single run per configuration; no seeds or confidence intervals reported; all results from one checkpoint (780B tokens for 8B and 540B, 795B for 62B); the paper shows 1-shot WebQuestions varies across checkpoints 2B tokens apart"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": null
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.lr_schedule",
+    "quote": "We use an Adafactor learning rate of 10−2 for the ﬁrst 10,000",
+    "where": "Sec 5"
+   },
+   {
+    "field": "models.62B.tokens",
+    "quote": "780B for PaLM 8B and 540B, and 795B for PaLM 62B, due",
+    "where": "Sec 6.8"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "PaLM 540B reaches 46.2% model FLOPs utilization on 6144 TPU v4 chips, against 21.3% for GPT-3, 32.5% for Gopher and 30.2% for Megatron-Turing NLG.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MFU",
+   "value": "46.2",
+   "unit": "%",
+   "baseline_value": "30.2 (Megatron-Turing NLG)",
+   "n": null,
+   "setup": "PaLM 540B, batch 2048, 238.3K tokens/sec, rematerialization used",
+   "note": null,
+   "where": "Sec 4.1, Table 3",
+   "quote": "The MFU of PaLM 540B is 45.7% without\nself-attention or 46.2% with it."
+  },
+  {
+   "claim": "Hardware FLOPs utilization (including rematerialization) is 57.8%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "HFU",
+   "value": "57.8",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "PaLM 540B",
+   "note": null,
+   "where": "Sec 4.1",
+   "quote": "Our analytically computed hardware FLOPs utilization, which includes\nrematerialization FLOPs, is 57.8%."
+  },
+  {
+   "claim": "Two-pod training achieves about 1.95x the throughput of one pod (97% of perfect weak scaling).",
+   "kind": "measured",
+   "source": null,
+   "metric": "throughput scaling",
+   "value": "1.95",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "PaLM 540B, batch doubled across two pods",
+   "note": null,
+   "where": "Sec 4",
+   "quote": "we achieve a training throughput of about 1.95x relative to the"
+  },
+  {
+   "claim": "PaLM 540B beats prior SOTA on 28 of 29 English NLP tasks in the few-shot setting and 24 of 29 in 1-shot.",
+   "kind": "measured",
+   "source": null,
+   "metric": "tasks won",
+   "value": "28",
+   "unit": "of 29 tasks",
+   "baseline_value": null,
+   "n": null,
+   "setup": "few-shot, single pretrained checkpoints only, prior SOTA per task from GLaM, GPT-3, MT-NLG, Gopher, Chinchilla, LaMDA",
+   "note": null,
+   "where": "Sec 6.1, Table 4",
+   "quote": "outperforms prior SOTA on 24 of the 29 task in the 1-shot setting and 28 of the 29 tasks in the\nfew-shot setting"
+  },
+  {
+   "claim": "PaLM 540B averages 69.3 on MMLU (5-shot) against 67.5 for Chinchilla 70B.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "69.3",
+   "unit": "% accuracy",
+   "baseline_value": "67.5",
+   "n": null,
+   "setup": "5-shot, test set, 57 tasks",
+   "note": null,
+   "where": "Sec 6.1.1",
+   "quote": "PaLM 540B improves the average score of\nMMLU benchmark by ≈2 points.",
+   "table": "Table 6, row PaLM 540B, column Average"
+  },
+  {
+   "claim": "PaLM 62B scores 53.7 and 8B scores 25.3 on MMLU 5-shot, i.e. near chance at 8B.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "53.7",
+   "unit": "% accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "5-shot MMLU test",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row PaLM 62B, column Average"
+  },
+  {
+   "claim": "Average 1-shot NLG/NLU across 29 benchmarks improves with scale: NLU 59.2 (8B), 67.3 (62B), 74.7 (540B); NLG 41.5, 57.7, 63.9.",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg NLU",
+   "value": "74.7",
+   "unit": "avg NLU score",
+   "baseline_value": "65.4 (GPT-3 175B)",
+   "n": null,
+   "setup": "1-shot, 29 English benchmarks",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row PaLM 540B, column Avg NLU"
+  },
+  {
+   "claim": "PaLM 540B 5-shot beats average human on 58 BIG-bench tasks and beats prior SOTA on 44 of 58.",
+   "kind": "measured",
+   "source": null,
+   "metric": "tasks won",
+   "value": "44",
+   "unit": "of 58 tasks",
+   "baseline_value": null,
+   "n": null,
+   "setup": "5-shot, 58 tasks in common with GPT-3, Gopher, Chinchilla",
+   "note": null,
+   "where": "Sec 6.2",
+   "quote": "PaLM 540B 5-shot outperforms the prior SOTA on 44 out of the 58 common tasks"
+  },
+  {
+   "claim": "On BIG-bench, about 25% of 150 tasks show a discontinuity above +10 points and 15% above +20 points from 62B to 540B.",
+   "kind": "measured",
+   "source": null,
+   "metric": "discontinuity",
+   "value": "25",
+   "unit": "% of tasks",
+   "baseline_value": null,
+   "n": null,
+   "setup": "discontinuity = actual 540B score minus log-linear projection from 8B->62B",
+   "note": "Example task logical_sequence 13%, 25%, 87%.",
+   "where": "Sec 6.2",
+   "quote": "25% of tasks had discontinuity greater than +10%"
+  },
+  {
+   "claim": "PaLM 540B scores 87% on english_proverbs against 25% for PaLM 62B.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "87",
+   "unit": "%",
+   "baseline_value": "25",
+   "n": null,
+   "setup": "BIG-bench english_proverbs, 5-shot",
+   "note": null,
+   "where": "Sec 6.2",
+   "quote": "from 25% for PaLM 62B to 87% for PaLM\n540B"
+  },
+  {
+   "claim": "Average human performance is still higher than PaLM 540B on 35% of BIG-bench tasks.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "35",
+   "unit": "% of tasks",
+   "baseline_value": null,
+   "n": null,
+   "setup": "150 BIG-bench tasks",
+   "note": null,
+   "where": "Sec 6.2",
+   "quote": "the average human performance is still higher than PaLM 540B on 35% of the\nindividual tasks"
+  },
+  {
+   "claim": "GSM8K: PaLM 540B with 8-shot chain of thought and calculator reaches 58%, above 55% for finetuned GPT-3 with a verifier.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "58",
+   "unit": "% accuracy",
+   "baseline_value": "55",
+   "n": null,
+   "setup": "8-shot CoT + external calculator",
+   "note": null,
+   "where": "Table 10",
+   "table": "Table 10, row PaLM 540B+chain-of-thought+calculator, column Accuracy"
+  },
+  {
+   "claim": "Without chain of thought PaLM 540B scores 17% on GSM8K; with it 54% (no calculator).",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "54",
+   "unit": "% accuracy",
+   "baseline_value": "17 (without CoT)",
+   "n": null,
+   "setup": "8-shot, PaLM 540B",
+   "note": null,
+   "where": "Table 10",
+   "table": "Table 10, row PaLM 540B+chain-of-thought, column Accuracy"
+  },
+  {
+   "claim": "PaLM 62B with chain of thought gets 33% on GSM8K versus 54% for 540B.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "33",
+   "unit": "% accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "8-shot CoT",
+   "note": null,
+   "where": "Table 10",
+   "table": "Table 10, row PaLM 62B+chain-of-thought, column Accuracy"
+  },
+  {
+   "claim": "Across 7 reasoning datasets, 8-shot PaLM 540B + CoT is SOTA on 4 (GSM8K, MAWPS, SVAMP, StrategyQA).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "4",
+   "unit": "of 7 datasets",
+   "baseline_value": null,
+   "n": null,
+   "setup": "8-shot CoT",
+   "note": null,
+   "where": "Sec 6.3.1",
+   "quote": "achieved SOTA accuracy on 4 tasks (GSM8K, MAWPS, SVAMP, StrategyQA)"
+  },
+  {
+   "claim": "PaLM 540B reaches 26.2 pass@1 on HumanEval 0-shot, comparable to Codex 12B at 28.8, with about 50x less Python.",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass@1",
+   "value": "26.2",
+   "unit": "pass@1 %",
+   "baseline_value": "28.8 (Codex 12B)",
+   "n": null,
+   "setup": "0-shot, greedy",
+   "note": null,
+   "where": "Table 12",
+   "table": "Table 12, row HumanEval (0) pass@1, column PaLM 540B"
+  },
+  {
+   "claim": "PaLM-Coder 540B reaches 88.4% HumanEval pass@100 and 80.8% MBPP pass@80.",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass@100",
+   "value": "88.4",
+   "unit": "pass@100 %",
+   "baseline_value": null,
+   "n": null,
+   "setup": "code-finetuned, nucleus sampling p=0.95 temp 0.8",
+   "note": null,
+   "where": "Sec 6.4",
+   "quote": "achieving 88.4% pass@100 on HumanEval and 80.8% pass@80 on MBPP"
+  },
+  {
+   "claim": "PaLM-Coder 540B compile rate on DeepFix is 82.1% against 71.7% prior work.",
+   "kind": "measured",
+   "source": null,
+   "metric": "compile rate",
+   "value": "82.1",
+   "unit": "% compile rate",
+   "baseline_value": "71.7",
+   "n": null,
+   "setup": "DeepFix 1260 programs, 2 hand-written exemplars",
+   "note": null,
+   "where": "Sec 6.4",
+   "quote": "reaching a compile rate of 82.1%, compared to 71.7% achieved by prior work"
+  },
+  {
+   "claim": "0-shot En-Fr BLEU 38.5, En-De 31.8, En-Ro 24.2 for PaLM 540B; few-shot En-De 37.4 vs 26.8 prior.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": "37.4",
+   "unit": "BLEU",
+   "baseline_value": "26.8",
+   "n": null,
+   "setup": "few-shot En-De, WMT'16",
+   "note": null,
+   "where": "Table 14",
+   "table": "Table 14, row en de, column Few-shot PaLM 540B"
+  },
+  {
+   "claim": "Larger models memorize more: 1.6% of 50-token continuations exact-matched at 8B, 2.4% at 540B.",
+   "kind": "measured",
+   "source": null,
+   "metric": "memorization rate",
+   "value": "2.4",
+   "unit": "%",
+   "baseline_value": "1.6 (8B)",
+   "n": null,
+   "setup": "100 sampled training spans, 50-token prompt, greedy",
+   "note": null,
+   "where": "Sec 7",
+   "quote": "while the 540B model\nwas able to reproduce the continuation for 2.4% of the data"
+  },
+  {
+   "claim": "Examples seen exactly once have 0.75% memorization at 540B; those seen over 500 times exceed 40%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "memorization rate",
+   "value": "0.75",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "540B",
+   "note": null,
+   "where": "Sec 7",
+   "quote": "examples seen exactly once in the training have a memorization\nrate of 0.75% for our largest model"
+  },
+  {
+   "claim": "10 of 29 English benchmarks are partly contaminated; clean-subset deltas are as often positive as negative.",
+   "kind": "measured",
+   "source": null,
+   "metric": "contaminated sets",
+   "value": "10",
+   "unit": "of 29 tasks",
+   "baseline_value": null,
+   "n": null,
+   "setup": "contaminated if at least 70% of 8-grams seen in training",
+   "note": "Tasks flagged: SQuADv2, Winograd, WebQuestions, ReCoRD, LAMBADA among others.",
+   "where": "Sec 8",
+   "quote": "We found that 10 out of the 29 sets fall into the ﬁrst two categories."
+  },
+  {
+   "claim": "Training PaLM 62B to 1.325T tokens raises 5-shot MMLU from 53.7 to 62.8, but does not reach 540B (69.3).",
+   "kind": "measured",
+   "source": null,
+   "metric": "MMLU",
+   "value": "62.8",
+   "unit": "MMLU avg %",
+   "baseline_value": "53.7",
+   "n": null,
+   "setup": "PaLM 62B continued on a refreshed dataset, resumed at 600B tokens",
+   "note": null,
+   "where": "Appendix F, Table 32",
+   "table": "Table 32, row MMLU average 5-shot, column PaLM 62B 1325"
+  },
+  {
+   "claim": "Continuing 62B on repeated data did not help; refreshed data did better.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "PaLM 62B beyond 780B tokens",
+   "note": "Value not given in text; see Table 33.",
+   "where": "Appendix F",
+   "quote": "continuing the training of PaLM 62B with a refreshed dataset, where new data is added to avoid training on any data\nmore than once, has much better few-shot performance than continuing with the dataset with repeated subcorpora."
+  },
+  {
+   "claim": "PaLM 540B used 2.56e24 training FLOPs (3.28 TFLOPs per token excl. rematerialization, 4.10 incl.).",
+   "kind": "measured",
+   "source": null,
+   "metric": "train FLOPs",
+   "value": "2.56e24",
+   "unit": "FLOPs",
+   "baseline_value": null,
+   "n": null,
+   "setup": "780B tokens, Table 22",
+   "note": "2.56e24 matches non-attention+attention FLOPs without rematerialization; with remat it would be higher.",
+   "where": "Table 22",
+   "table": "Table 22, row 540B, column Train FLOPs"
+  },
+  {
+   "claim": "Training emitted 271.43 tCO2e.",
+   "kind": "measured",
+   "source": null,
+   "metric": "emissions",
+   "value": "271.43",
+   "unit": "tCO2e",
+   "baseline_value": "552 (GPT-3, Patterson et al.)",
+   "n": null,
+   "setup": "6144 chips x 1200 h + 3072 chips x 336 h, 378.5W per chip",
+   "note": null,
+   "where": "Appendix B",
+   "quote": "this leads to a total eﬀective emissions of 271.43 tCO2e"
+  },
+  {
+   "claim": "Loss spiked about 20 times in 540B despite gradient clipping; mitigation was restart and skip 200-500 batches.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "20",
+   "unit": "spikes",
+   "baseline_value": null,
+   "n": null,
+   "setup": "540B only",
+   "note": null,
+   "where": "Sec 5.1",
+   "quote": "we observed spikes in the loss roughly 20 times during training"
+  },
+  {
+   "claim": "PaLM 540B at 780B tokens and Chinchilla 70B (1.4T tokens) lie close to the same scaling line; the paper cannot answer the size-versus-tokens question.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "58 BIG-bench tasks and 9 English tasks",
+   "note": "Chinchilla moderately above PaLM scaling curve on BIG-bench, slightly below on English NLP.",
+   "where": "Sec 13"
+  }
+ ],
+ "limits": [
+  "No ablation separates model size from tokens or data quality; the authors say a 62B model on 7T tokens versus 540B on 780B is an open question (Sec 13).",
+  "Only three scales (8B, 62B, 540B), so the discontinuity analysis rests on three points.",
+  "Single run per configuration, no seeds or confidence intervals; WebQuestions 1-shot varies across checkpoints 2B tokens apart.",
+  "Parallel layers had a small quality drop at 8B and were assumed neutral at 540B by extrapolation.",
+  "Loss spikes had no principled fix; the restart-and-skip strategy was empirical.",
+  "Bias and toxicity analyses are English only, template-based and brittle to prompt wording; Perspective API has its own bias.",
+  "Code correctness is measured on a small number of tests and can overestimate performance.",
+  "Davinci Codex comparison is not controlled: size, data and post-processing unknown.",
+  "Data repeats in some subcorpora beyond 780B tokens, which is why training stopped there.",
+  "Dated: BIG-bench comparisons use the GPT-3 models from the GPT-3 paper, not newer OpenAI models."
+ ],
+ "practices": [],
+ "terms": [],
+ "lineage": [
+  {
+   "work": "Language Models are Few-Shot Learners (GPT-3)",
+   "year": 2020,
+   "arxiv": "2005.14165",
+   "relation": "baseline",
+   "note": "few-shot paradigm and 29-task suite",
+   "quote": null
+  },
+  {
+   "work": "Pathways: Asynchronous distributed dataflow for ML",
+   "year": 2022,
+   "arxiv": "2203.12533",
+   "relation": "uses-method",
+   "note": "training system",
+   "quote": null
+  },
+  {
+   "work": "Training Compute-Optimal Large Language Models (Chinchilla)",
+   "year": 2022,
+   "arxiv": "2203.15556",
+   "relation": "baseline",
+   "note": "compared on 58 BIG-bench tasks and 9 English tasks; prior MMLU SOTA",
+   "quote": null
+  },
+  {
+   "work": "Scaling Language Models: Gopher",
+   "year": 2021,
+   "arxiv": "2112.11446",
+   "relation": "baseline",
+   "note": "280B on 300B tokens",
+   "quote": null
+  },
+  {
+   "work": "GLaM",
+   "year": 2021,
+   "arxiv": "2112.06905",
+   "relation": "uses-data",
+   "note": "dataset basis, baseline",
+   "quote": null
+  },
+  {
+   "work": "LaMDA",
+   "year": 2022,
+   "arxiv": "2201.08239",
+   "relation": "uses-data",
+   "note": "dataset basis, baseline",
+   "quote": null
+  },
+  {
+   "work": "Megatron-Turing NLG 530B",
+   "year": 2022,
+   "arxiv": "2201.11990",
+   "relation": "baseline",
+   "note": "530B comparison, MFU",
+   "quote": null
+  },
+  {
+   "work": "Chain-of-thought prompting (Wei et al.)",
+   "year": 2022,
+   "arxiv": "2201.11903",
+   "relation": "uses-method",
+   "note": "8-shot exemplars used exactly",
+   "quote": null
+  },
+  {
+   "work": "Scaling Laws for Neural Language Models (Kaplan et al.)",
+   "year": 2020,
+   "arxiv": "2001.08361",
+   "relation": "related",
+   "note": "power-law rule of thumb; 6N FLOPs per token",
+   "quote": null
+  },
+  {
+   "work": "Training Verifiers to Solve Math Word Problems (Cobbe et al.)",
+   "year": 2021,
+   "arxiv": "2110.14168",
+   "relation": "baseline",
+   "note": "GSM8K prior SOTA 55%",
+   "quote": null
+  },
+  {
+   "work": "GLU Variants Improve Transformer (Shazeer)",
+   "year": 2020,
+   "arxiv": "2002.05202",
+   "relation": "uses-method",
+   "note": "SwiGLU",
+   "quote": null
+  },
+  {
+   "work": "Fast Transformer Decoding: Multi-query attention (Shazeer)",
+   "year": 2019,
+   "arxiv": "1911.02150",
+   "relation": "uses-method",
+   "note": "MQA",
+   "quote": null
+  },
+  {
+   "work": "RoFormer: RoPE (Su et al.)",
+   "year": 2021,
+   "arxiv": "2104.09864",
+   "relation": "uses-method",
+   "note": "rotary embeddings",
+   "quote": null
+  },
+  {
+   "work": "Adafactor (Shazeer & Stern)",
+   "year": 2018,
+   "arxiv": "1804.04235",
+   "relation": "uses-method",
+   "note": "optimizer",
+   "quote": null
+  },
+  {
+   "work": "Quantifying Memorization Across Neural Language Models (Carlini et al.)",
+   "year": 2022,
+   "arxiv": "2202.07646",
+   "relation": "replicates",
+   "note": "memorization method and slope 0.002",
+   "quote": null
+  },
+  {
+   "work": "Evaluating Large Language Models Trained on Code (Codex)",
+   "year": 2021,
+   "arxiv": "2107.03374",
+   "relation": "baseline",
+   "note": "HumanEval",
+   "quote": null
+  },
+  {
+   "work": "BIG-bench",
+   "year": 2021,
+   "arxiv": "2206.04615",
+   "relation": "uses-data",
+   "note": "150+ tasks",
+   "quote": null
+  },
+  {
+   "work": "MMLU (Hendrycks et al.)",
+   "year": 2021,
+   "arxiv": "2009.03300",
+   "relation": "uses-data",
+   "note": "57 tasks",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Table 1",
+   "caption": "Model architecture details: layers, dmodel, heads, params, batch size.",
+   "page": 6,
+   "why": "gives 8B/62B/540B hyperparameters at a glance"
+  },
+  {
+   "figure": "Table 3",
+   "caption": "Model FLOPs utilization of PaLM and prior large models.",
+   "page": 9,
+   "why": "MFU comparison 46.2 vs 21.3, 32.5, 30.2"
+  },
+  {
+   "figure": "Fig 3 and Fig 5",
+   "caption": "BIG-bench scaling; six tasks with log-linear, discontinuous, flat curves.",
+   "page": 15,
+   "why": "shows discontinuous improvement visually"
+  },
+  {
+   "figure": "Table 10",
+   "caption": "8-shot GSM8K with CoT versus prior SOTA.",
+   "page": 21,
+   "why": "CoT and scale ablation in four rows"
+  },
+  {
+   "figure": "Table 22",
+   "caption": "Compute usage to train PaLM 8B, 62B, 540B.",
+   "page": 66,
+   "why": "FLOPs per token and total training FLOPs"
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 2, parallel formulation",
+   "snippet": "y = x + MLP(LayerNorm(x)) + Attention(LayerNorm(x))",
+   "verbatim": true
+  },
+  {
+   "where": "Appendix B, MFU",
+   "snippet": "R = P / (6N + 12LHQT)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text extraction renders superscripts flat (z-loss printed as 'log2 Z', i.e. log^2 Z; 10−2 for 1e-2).",
+  "Table 6 column order in the extracted text (Humanities, STEM, Social Sciences, Other) kept as printed.",
+  "Appendix G, H and datasheet pages not read in detail.",
+  "No instructions embedded in the PDF found."
+ ]
+}

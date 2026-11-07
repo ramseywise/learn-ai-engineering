@@ -1,0 +1,312 @@
+{
+ "schema": 1,
+ "key": "1906.04341",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/clark-2019-what-does-bert-look.pdf",
+ "bib": {
+  "title": "What does BERT look at? An Analysis of BERT's Attention",
+  "authors": ["Kevin Clark", "Urvashi Khandelwal", "Omer Levy", "Christopher D. Manning"],
+  "first_author": "Clark",
+  "year": 2019,
+  "venue": "Proceedings of the Second BlackboxNLP Workshop on Analyzing and Interpreting Neural Networks for NLP, pages 276-286",
+  "arxiv": "1906.04341",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 38537,
+  "chars_total": 38537,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "What do the attention heads of a pre-trained BERT model attend to, and do they correspond to linguistic notions of syntax and coreference?",
+ "hypothesis": "Attention heads learned by self-supervised pre-training encode some syntactic and coreference structure without explicit supervision.",
+ "contributions": [
+  "Analysis methods for attention maps of pre-trained models, applied to BERT",
+  "Surface-level patterns: delimiter tokens, positional offsets, broad attention; heads in a layer behave similarly",
+  "Individual heads that match specific dependency relations and coreference",
+  "An attention-based probing classifier that reaches 77 UAS on dependency parsing"
+ ],
+ "method": {
+  "summary": "Attention maps are extracted from frozen BERT-base and analysed three ways: surface statistics (attention to special tokens, offsets, entropy, gradients), each head treated as a no-training classifier that predicts the most-attended word for syntactic relations and coreference, and small trained probes over all heads' attention for dependency parsing. A final section clusters heads by Jensen-Shannon distance.",
+  "task": "analysis of attention in pre-trained BERT-base (dependency parsing, coreference probes)",
+  "trains": true,
+  "datasets": [
+   {"name": "Wikipedia segments", "role": "eval", "size": "1000 segments", "split": null, "source": "Wikipedia", "preprocessing": "each segment at most 128 tokens, two consecutive paragraphs, input [CLS]<paragraph-1>[SEP]<paragraph-2>[SEP]"},
+   {"name": "Penn Treebank WSJ with Stanford Dependencies", "role": "both", "size": null, "split": "head analysis (Table 1): not stated; probe results on the dev set; probe trained on train set", "source": "Marcus et al., 1993", "preprocessing": "token-to-word attention: sum over tokens of a split-up target word, mean over tokens of a split-up source word; about 8% of words are split; [SEP] and [CLS] ignored"},
+   {"name": "CoNLL-2012", "role": "eval", "size": null, "split": null, "source": "Pradhan et al., 2012", "preprocessing": "documents truncated to 128 tokens"}
+  ],
+  "models": [
+   {"name": "BERT-base", "role": "evaluated", "params": null, "architecture": "Transformer encoder", "init_from": null, "tokenizer": "byte-pair (Sennrich et al., 2016)", "vocab": null, "layers": "12", "hidden": null, "heads": "12 per layer (144 total)", "context": null, "other": {"pretraining": "3.3 billion tokens of unlabeled text, masked LM and next sentence prediction", "uncased": "a similar [SEP] pattern appears in the uncased model (not shown)"}},
+   {"name": "Attention-only probe", "role": "proposed", "params": "weight vectors w and u, one entry per head per direction (2 x 144)", "architecture": "p(i|j) proportional to exp(sum_k w_k a_ij^k + u_k a_ji^k)", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"bert_frozen": "BERT attention outputs fixed, no backprop into BERT"}},
+   {"name": "Attention-and-words probe", "role": "proposed", "params": "weight matrices W and U", "architecture": "p(i|j) proportional to exp(sum_k W_k,:(v_i concat v_j) a_ij^k + U_k,:(v_i concat v_j) a_ji^k), v = fixed GloVe", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}}
+  ],
+  "training": {
+   "objective": "supervised head prediction: probability distribution over candidate head words for each word (graph-based dependency parser)",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {"note": "only the probe parameters are trained; the paper gives no training hyperparameters"}
+  },
+  "inference": {
+   "decoding": "per word, the other word receiving the most attention weight is the prediction",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single pass over the data, no seeds stated",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {"fixed_offset_baseline": "predicts the head at a fixed offset, best offset per relation shown in parentheses", "head_distance": "sum over tokens in data of Jensen-Shannon divergence between two heads' attention distributions, embedded by multidimensional scaling (Kruskal, 1964)", "gradient_importance": "magnitude of gradient of BERT masked-LM loss w.r.t. each attention weight (Sundararajan et al., 2017)"},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "Accuracy per dependency relation", "definition": "share of words of that relation for which the most-attended word is the gold head/dependent (best direction)", "unit": "%", "higher_is_better": true},
+    {"name": "UAS", "definition": "unlabeled attachment score of head prediction on WSJ", "unit": "UAS points", "higher_is_better": true},
+    {"name": "Antecedent selection accuracy", "definition": "percent of time the head word of a coreferent mention most attends to the head of one of that mention's antecedents", "unit": "%", "higher_is_better": true},
+    {"name": "Attention entropy", "definition": "average entropy of a head's attention distribution", "unit": "nats", "higher_is_better": null}
+   ],
+   "baselines": ["fixed-offset baseline", "right-branching", "nearest mention", "nearest mention with same head word", "rule-based multi-pass sieve system (Lee et al., 2011)", "neural coref (Wiseman et al., 2015)", "distances + GloVe network", "probe on randomly initialized BERT with pretrained word/positional embeddings", "structural probe (Hewitt and Manning, 2019)"],
+   "protocol": "no seeds, confidence intervals or significance tests reported; best head chosen on the same data it is scored on"
+  },
+  "availability": {
+   "code": "https://github.com/clarkkev/attention-analysis (stated 'will be released')",
+   "weights": null,
+   "data": null
+  },
+  "prompts": [],
+  "evidence": [
+   {"field": "datasets.Wikipedia segments", "quote": "We extract the attention maps from BERT-base over 1000 Wikipedia segments.", "where": "Section 3 Setup"}
+  ]
+ },
+ "results": [
+  {
+   "claim": "In BERT-base, over half of the attention in layers 6-10 goes to [SEP].",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "BERT-base, 1000 Wikipedia segments of up to 128 tokens",
+   "quote": "For example, over half of BERT's attention in layers 6-10 focuses on [SEP].",
+   "table": null,
+   "note": "the PDF text uses a typographic apostrophe",
+   "where": "Section 3.2"
+  },
+  {
+   "claim": "Heads processing [SEP] attend almost entirely to [SEP] tokens, against the segment-aggregation hypothesis.",
+   "kind": "measured",
+   "source": null,
+   "metric": "share of attention from [SEP] to [SEP]",
+   "value": ">90",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BERT-base, Wikipedia segments, Figure 2 bottom",
+   "quote": "they instead almost entirely (more than 90%; see bottom of Figure 2) attend to themselves and the other [SEP] token",
+   "table": null,
+   "note": null,
+   "where": "Section 3.2"
+  },
+  {
+   "claim": "Gradients of the masked-LM loss w.r.t. attention to [SEP] become small from layer 5, so attention to [SEP] acts as a no-op.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "BERT-base, gradient magnitude of MLM loss w.r.t. attention weights (Figure 3)",
+   "quote": "We find that starting in layer 5 - the same layer where attention to [SEP] becomes high - the gradients for attention to [SEP] become small.",
+   "table": null,
+   "note": "Figure 3 itself is not extractable; the original text uses a different dash character, so the quote may fail the check",
+   "where": "Section 3.2"
+  },
+  {
+   "claim": "Last-layer [CLS] attention is very broad.",
+   "kind": "measured",
+   "source": null,
+   "metric": "entropy of attention from [CLS], last layer",
+   "value": "3.89",
+   "unit": "nats",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BERT-base, Wikipedia segments",
+   "quote": "the last layer has a high entropy from [CLS] of 3.89 nats",
+   "table": null,
+   "note": null,
+   "where": "Section 3.3"
+  },
+  {
+   "claim": "Head 8-10 finds the verb of a direct object far better than the best fixed offset.",
+   "kind": "measured",
+   "source": null,
+   "metric": "dobj accuracy",
+   "value": "86.8",
+   "unit": "%",
+   "baseline_value": "40.0 (offset -2)",
+   "n": null,
+   "setup": "BERT-base head 8-10, WSJ Penn Treebank Stanford Dependencies, dependent attends to head",
+   "quote": null,
+   "table": "Table 1, row dobj, columns Head 8-10, Accuracy 86.8, Baseline 40.0 (-2)",
+   "note": null,
+   "where": "Table 1, Fig 5"
+  },
+  {
+   "claim": "Head 8-11 finds the noun for a determiner with 94.3% accuracy.",
+   "kind": "measured",
+   "source": null,
+   "metric": "det accuracy",
+   "value": "94.3",
+   "unit": "%",
+   "baseline_value": "51.7 (offset 1)",
+   "n": null,
+   "setup": "BERT-base head 8-11, WSJ dependencies",
+   "quote": null,
+   "table": "Table 1, row det, columns Head 8-11, Accuracy 94.3, Baseline 51.7 (1)",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Head 9-6 links prepositions to their objects at 76.3% against a 34.6% offset baseline.",
+   "kind": "measured",
+   "source": null,
+   "metric": "pobj accuracy",
+   "value": "76.3",
+   "unit": "%",
+   "baseline_value": "34.6 (offset -2)",
+   "n": null,
+   "setup": "BERT-base head 9-6, WSJ dependencies; pobj is the one relation where the head attends to the dependent",
+   "quote": null,
+   "table": "Table 1, row pobj, columns Head 9-6, Accuracy 76.3, Baseline 34.6 (-2)",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "No single head does well at syntax overall: the best head gets 34.5 UAS, close to right-branching.",
+   "kind": "measured",
+   "source": null,
+   "metric": "UAS, best single head",
+   "value": "34.5",
+   "unit": "UAS",
+   "baseline_value": "26.3",
+   "n": null,
+   "setup": "BERT-base head 7-6, WSJ dependencies, versus right-branching baseline",
+   "quote": "the best head gets 34.5 UAS, which is not much better than the right-branching baseline, which gets 26.3 UAS",
+   "table": null,
+   "note": null,
+   "where": "Section 4.2"
+  },
+  {
+   "claim": "Head 5-4 resolves coreference at 65% overall, 10+ points over head-word match and near the rule-based system.",
+   "kind": "measured",
+   "source": null,
+   "metric": "antecedent selection accuracy, all mentions",
+   "value": "65",
+   "unit": "%",
+   "baseline_value": "52 head-word match; 69 rule-based; 27 nearest; 83* neural coref (not comparable)",
+   "n": null,
+   "setup": "BERT-base head 5-4, CoNLL-2012 truncated to 128 tokens",
+   "quote": null,
+   "table": "Table 2, row Head 5-4, column All (65); Head-word match 52; Rule-based 69; Nearest 27; Neural coref 83*",
+   "note": "Fig 5 labels the same head's accuracy as 65.1%",
+   "where": "Table 2"
+  },
+  {
+   "claim": "The Attn + GloVe probe reaches 77 UAS on PTB dev, far above its baselines.",
+   "kind": "measured",
+   "source": null,
+   "metric": "UAS",
+   "value": "77",
+   "unit": "UAS",
+   "baseline_value": "26 right-branching; 58 Distances + GloVe; 30 random-init Attn + GloVe; 61 Attn only",
+   "n": null,
+   "setup": "BERT-base frozen attention maps, GloVe fixed, PTB dev set Stanford dependencies",
+   "quote": null,
+   "table": "Table 3, rows Attn + GloVe (77), Attn (61), Distances + GloVe (58), Random Init Attn + GloVe (30), Right-branching (26)",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "A structural probe on BERT vectors scores similarly, so vectors hold little more syntax than the attention maps; the scores are not directly comparable.",
+   "kind": "reported",
+   "source": "Hewitt and Manning, 2019",
+   "metric": "UUAS",
+   "value": "80",
+   "unit": "UUAS",
+   "baseline_value": null,
+   "n": null,
+   "setup": "single BERT layer, undirected trees, trained on syntactic distance",
+   "quote": null,
+   "table": "Table 3, row Structural probe (Hewitt and Manning, 2019), 80 UUAS*",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "High-entropy heads in lower layers spend at most 10% of attention on any single word.",
+   "kind": "measured",
+   "source": null,
+   "metric": "max attention mass on one word",
+   "value": "10",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BERT-base, high-entropy heads in lower layers",
+   "quote": "These high-entropy attention heads typically spend at most 10% of their attention mass on any single word.",
+   "table": null,
+   "note": null,
+   "where": "Section 3.3"
+  }
+ ],
+ "limits": [
+  "Only BERT-base analysed; one run, no seeds or significance tests reported.",
+  "The authors say they would not claim individual heads capture dependency structure as a whole; many relations only slightly beat the fixed-offset baseline.",
+  "Best head per relation is picked on the same data it is scored on.",
+  "The no-op account of [SEP] attention is speculation supported by small gradients, not an intervention.",
+  "The structural probe comparison is not like for like.",
+  "The authors cite Jain and Wallace (2019) on attention not being explanation and Michel et al. (2019) on prunable heads; they study what attention holds, not what drives predictions.",
+  "Probe training hyperparameters are not given."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "no-op", "definition": "Attention over special tokens such as [SEP] used when the head's function is not applicable", "where": "Section 3.2"}
+ ],
+ "lineage": [
+  {"work": "BERT: Pre-training of deep bidirectional transformers for language understanding", "year": 2019, "arxiv": "1810.04805", "relation": "evaluates", "note": "model analysed (BERT-base)", "quote": null},
+  {"work": "Attention is all you need", "year": 2017, "arxiv": "1706.03762", "relation": "related", "note": "Transformer architecture", "quote": null},
+  {"work": "Finding syntax with structural probes", "year": 2019, "arxiv": null, "relation": "related", "note": "vector-based probe compared with the attention probe", "quote": null},
+  {"work": "An analysis of encoder representations in transformer-based machine translation", "year": 2018, "arxiv": null, "relation": "related", "note": "also finds no single head good at syntax overall", "quote": null},
+  {"work": "Penn Treebank", "year": 1993, "arxiv": null, "relation": "uses-data", "note": "WSJ dependency evaluation", "quote": null},
+  {"work": "CoNLL-2012 shared task", "year": 2012, "arxiv": null, "relation": "uses-data", "note": "coreference evaluation", "quote": null},
+  {"work": "Axiomatic attribution for deep networks", "year": 2017, "arxiv": "1703.01365", "relation": "uses-method", "note": "gradient-based feature importance", "quote": null},
+  {"work": "Attention is not explanation", "year": 2019, "arxiv": "1902.10186", "relation": "related", "note": "authors say their motivation differs", "quote": null},
+  {"work": "Are sixteen heads really better than one?", "year": 2019, "arxiv": "1905.10650", "relation": "related", "note": "BERT heads can be pruned", "quote": null},
+  {"work": "Analyzing multi-head self-attention: specialized heads do the heavy lifting", "year": 2019, "arxiv": "1905.09418", "relation": "related", "note": "concurrent work on MT heads", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 1", "caption": "Examples of heads exhibiting the patterns discussed in Section 3.", "page": 2, "why": "shows broad, next-token, [SEP] and period heads"},
+  {"figure": "Fig 2", "caption": "Average attention a BERT head puts toward a token type.", "page": 3, "why": "shows per-layer attention to [CLS], [SEP], and punctuation"},
+  {"figure": "Fig 5", "caption": "BERT attention heads that correspond to linguistic phenomena.", "page": 6, "why": "named heads with accuracies"},
+  {"figure": "Fig 6", "caption": "BERT attention heads embedded in two-dimensional space.", "page": 8, "why": "heads in a layer cluster together"}
+ ],
+ "code": [],
+ "problems": ["Text is clean. No embedded instructions found. The first-listed quote for the layer-5 gradient finding contains a dash that may differ from the PDF text."]
+}

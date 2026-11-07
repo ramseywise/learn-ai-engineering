@@ -1,0 +1,620 @@
+{
+ "schema": 1,
+ "key": "1609.08144",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/wu-2016-google-s-neural-machine-translation.pdf",
+ "bib": {
+  "title": "Google’s Neural Machine Translation System: Bridging the Gap between Human and Machine Translation",
+  "authors": [
+   "Yonghui Wu",
+   "Mike Schuster",
+   "Zhifeng Chen",
+   "Quoc V. Le",
+   "Mohammad Norouzi",
+   "Wolfgang Macherey",
+   "Maxim Krikun",
+   "Yuan Cao",
+   "Qin Gao",
+   "Klaus Macherey",
+   "Jeff Klingner",
+   "Apurva Shah",
+   "Melvin Johnson",
+   "Xiaobing Liu",
+   "Łukasz Kaiser",
+   "Stephan Gouws",
+   "Yoshikiyo Kato",
+   "Taku Kudo",
+   "Hideto Kazawa",
+   "Keith Stevens",
+   "George Kurian",
+   "Nishant Patil",
+   "Wei Wang",
+   "Cliff Young",
+   "Jason Smith",
+   "Jason Riesa",
+   "Alex Rudnick",
+   "Oriol Vinyals",
+   "Greg Corrado",
+   "Macduff Hughes",
+   "Jeffrey Dean"
+  ],
+  "first_author": "Wu",
+  "year": 2016,
+  "venue": "preprint",
+  "arxiv": "1609.08144",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 75634,
+  "chars_total": 75634,
+  "engine": "pymupdf",
+  "skipped": "Reference list skimmed; Table 11 examples and Figure 6 histogram not read in detail."
+ },
+ "type": "system",
+ "question": "Can a deep LSTM NMT system be made fast, robust to rare words and accurate enough to replace a phrase-based production translation system?",
+ "hypothesis": "Residual deep LSTMs with attention, wordpiece units, quantized inference and a coverage-penalised beam search close the gap with PBMT and approach human translation.",
+ "contributions": [
+  "GNMT: 8-layer encoder/decoder LSTM with residual connections and bottom-to-top attention",
+  "Wordpiece model (8K-32K shared vocab) for open vocabulary",
+  "Model and data parallelism for training in about a week",
+  "Quantized inference on TPU",
+  "Length normalization and coverage penalty in beam search",
+  "RL refinement with GLEU reward (no human gain)"
+ ],
+ "method": {
+  "summary": "Seq2seq LSTM with 8 encoder (1 bidirectional) and 8 decoder layers, residual connections, feed-forward attention from bottom decoder layer to top encoder layer, wordpiece segmentation, ML training then optional RL refinement, quantization-aware training and beam search with length/coverage score.",
+  "task": "neural machine translation (WMT'14 En->Fr, En->De, Google production pairs)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "WMT'14 En->Fr",
+    "role": "both",
+    "size": "36M sentence pairs",
+    "split": "dev: newstest2012+newstest2013 (6003 sentences); test: newstest2014",
+    "source": "WMT'14",
+    "preprocessing": "Shared source/target wordpiece model 8K/16K/32K; tokenized BLEU"
+   },
+   {
+    "name": "WMT'14 En->De",
+    "role": "both",
+    "size": "5M sentence pairs",
+    "split": "dev: newstest2012+2013; test: newstest2014",
+    "source": "WMT'14",
+    "preprocessing": null
+   },
+   {
+    "name": "Google production data (En<->Fr, En<->Es, En<->Zh)",
+    "role": "both",
+    "size": "two to three decimal orders of magnitude bigger than WMT",
+    "split": "500 randomly sampled Wikipedia and news sentences per pair for human evaluation",
+    "source": "Google-internal",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "GNMT (WPM-32K)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "8-layer encoder (bottom bidirectional) + 8-layer decoder LSTM, residual connections from third layer, attention",
+    "init_from": null,
+    "tokenizer": "wordpiece, shared source/target",
+    "vocab": "32K (also 8K, 16K tried)",
+    "layers": "8 encoder + 8 decoder",
+    "hidden": "1024 LSTM nodes per layer; attention FFN one hidden layer with 1024 nodes",
+    "heads": null,
+    "context": null,
+    "other": {
+     "word model vocab": "212K source / 80K target",
+     "mixed word/char vocab": "32K",
+     "char model": "a few hundred basic characters (En->De char model 512 nodes)",
+     "softmax logit clip": "gamma=25",
+     "state clip delta": "annealed 8.0 -> 1.0, 1.0 at inference"
+    }
+   },
+   {
+    "name": "PBMT",
+    "role": "baseline",
+    "params": null,
+    "architecture": "phrase-based MT (Durrani et al. WMT14 for En->Fr; Buck et al. for En->De; Google production)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "ML sum log P(Y*|X) (eq 7); optional refinement with alpha*O_ML + O_RL, alpha typically 0.017, GLEU reward, mean-reward baseline from m=15 samples",
+   "optimizer": "Adam for first 60k steps then plain SGD (async, Downpour-style, 12 replicas)",
+   "lr": "Adam 0.0002; SGD 0.5",
+   "lr_schedule": "En->Fr: anneal after 1.2M steps, halve every 200k steps for an additional 800k steps",
+   "warmup": null,
+   "batch_size": "128 examples per step (per replica)",
+   "steps": "ML: about 2M (inferred from 1.2M + 800k annealing); RL refinement 400k steps on En->Fr",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": "full-precision float in training, with clipping constraints for quantization",
+   "weight_decay": null,
+   "dropout": "0.2 En->Fr, 0.3 En->De; ML phase only; none on production data",
+   "regularisation": "gradient clipping norm 5.0; uniform init [-0.04, 0.04]; accumulator clipping",
+   "hardware": "96 NVIDIA K80 GPUs for En->Fr basic model; each replica partitioned 8-way over GPUs",
+   "compute": "about 6 days ML + about 3 days RL (En->Fr)",
+   "wall_clock": "about 6 days ML; about 3 days RL",
+   "seeds": "8 models trained per configuration; test numbers use model chosen on dev",
+   "other": {
+    "replicas": "12 (Sec 8.3); n often around 10 (Sec 3.3)",
+    "framework": "TensorFlow"
+   }
+  },
+  "inference": {
+   "decoding": "beam search with length normalization and coverage penalty; typically 8-12 hypotheses kept, beamsize 3.0 pruning; batch up to 35 similar-length sentences",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": "twice the source length",
+   "samples": "test BLEU averaged over 8 models; single decode per model",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "alpha": "0.2 (0.6-0.7 best for length-only normalization)",
+    "beta": "0.2",
+    "table 4 timing": "CPU, batch 16 sentences, max 4 concurrent hypotheses"
+   },
+   "other": {
+    "quantization": "8-bit weights, 16-bit accumulators and elementwise ops; attention and softmax not quantized"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "BLEU",
+     "definition": "tokenized BLEU via Moses multi-bleu.pl",
+     "unit": "BLEU",
+     "higher_is_better": true
+    },
+    {
+     "name": "Side-by-side human score",
+     "definition": "raters fluent in both languages score translations 0 (nonsense) to 6 (perfect)",
+     "unit": "0-6",
+     "higher_is_better": true
+    },
+    {
+     "name": "CPU decoding time per sentence",
+     "definition": "total decoding time / number of sentences",
+     "unit": "s",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "PBMT (Edinburgh WMT14, Buck et al., Google production)",
+    "LSTM 6 layers (Luong et al.)",
+    "Deep-Att (Zhou et al.)",
+    "RNNSearch (Jean et al.)"
+   ],
+   "protocol": "Test numbers from model picked on dev; 8 models averaged; human SxS on 500 sentences; no significance test reported"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "WMT'14 public; production data internal"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.steps",
+    "quote": "we begin to anneal the\nlearning rate after 1.2M steps, after which we halve the learning rate every 200k steps for an additional 800k steps.",
+    "where": "Sec 8.3"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "GNMT WPM-32K single model reaches 38.95 BLEU on WMT En->Fr newstest2014, averaged over 8 trained models.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": "38.95",
+   "unit": "BLEU",
+   "baseline_value": "37.0 (PBMT)",
+   "n": 8,
+   "setup": "WMT'14 En->Fr, 36M pairs, ML-trained, shared 32K wordpiece vocab, tokenized BLEU via multi-bleu.pl; mean of 8 models",
+   "note": null,
+   "where": "Sec 8.4, Table 4",
+   "quote": "Our best model, WPM-32K, achieves a BLEU score of 38.95. Note that this BLEU score represents the\naveraged score of 8 models we trained."
+  },
+  {
+   "claim": "Best of the 8 WPM-32K models scores 39.37 BLEU on En->Fr.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": "39.37",
+   "unit": "BLEU",
+   "baseline_value": null,
+   "n": null,
+   "setup": "same as above; maximum of 8 models",
+   "note": null,
+   "where": "Sec 8.4",
+   "quote": "The maximum BLEU score of the 8 models is higher at 39.37."
+  },
+  {
+   "claim": "Word model vs character model vs wordpiece on En->Fr: word 37.90, character 38.01, WPM-32K 38.95.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": "37.90",
+   "unit": "BLEU",
+   "baseline_value": "38.95 (WPM-32K)",
+   "n": null,
+   "setup": "WMT En->Fr newstest2014, single ML models; word model 212K source/80K target vocab with attention copy of UNKs",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, rows Word / Character / WPM-32K, column BLEU (37.90, 38.01, 38.95)"
+  },
+  {
+   "claim": "Other En->Fr vocabularies: WPM-8K 38.27, WPM-16K 37.60, mixed word/character (32K) 38.39; WPM-16K is below the word model.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": "37.60",
+   "unit": "BLEU",
+   "baseline_value": null,
+   "n": null,
+   "setup": "WMT En->Fr newstest2014, single ML models",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, rows WPM-8K, WPM-16K, Mixed Word/Character, column BLEU (38.27, 37.60, 38.39)"
+  },
+  {
+   "claim": "Character model decodes about 5x slower than WPM-32K on CPU (1.0530 s vs 0.2118 s per sentence).",
+   "kind": "measured",
+   "source": null,
+   "metric": "CPU decoding time per sentence",
+   "value": "1.0530",
+   "unit": "s",
+   "baseline_value": "0.2118 (WPM-32K)",
+   "n": null,
+   "setup": "CPU decoding, batch 16 sentences, max 4 concurrent hypotheses, WMT En->Fr newstest2014; time per sentence = total decode time / sentences",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, rows Character and WPM-32K, column CPU decoding time per sentence (s): 1.0530 vs 0.2118"
+  },
+  {
+   "claim": "WPM-32K gets 24.61 BLEU on WMT En->De, averaged over 8 runs, vs 23.12 for word model.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": "24.61",
+   "unit": "BLEU",
+   "baseline_value": "23.12 (Word)",
+   "n": 8,
+   "setup": "WMT'14 En->De, 5M pairs, newstest2014",
+   "note": "Table 6 prints the ML-trained En->De single-model average as 24.67, Table 5 prints WPM-32K as 24.61.",
+   "where": "Sec 8.4, Table 5",
+   "quote": "Our best model, WPM-32K, achieves a BLEU score of 24.61, which is averaged over 8 runs."
+  },
+  {
+   "claim": "Wordpiece/mixed models give more than 2 BLEU over the word model on En->De.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "WMT En->De newstest2014",
+   "note": null,
+   "where": "Sec 8.4",
+   "quote": "which provide a gain of more than 2 BLEU points on top of the word model and about 4 BLEU points on top of previously reported\nresults in [6, 45]"
+  },
+  {
+   "claim": "RL refinement improves En->Fr single-model BLEU from 38.95 to 39.92 but slightly lowers En->De (24.67 to 24.60).",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": "39.92",
+   "unit": "BLEU",
+   "baseline_value": "38.95",
+   "n": 8,
+   "setup": "avg of 8 independent models, test BLEU, dropout off in RL phase",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row En->Fr, columns Trained with log-likelihood / Refined with RL: 38.95, 39.92"
+  },
+  {
+   "claim": "Ensemble of 8 RL-refined WPM-32K models gets 41.16 BLEU on En->Fr; ML-only ensemble 40.35.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": "41.16",
+   "unit": "BLEU",
+   "baseline_value": "40.35",
+   "n": null,
+   "setup": "WMT En->Fr newstest2014, ensemble of 8",
+   "note": null,
+   "where": "Sec 8.6, Table 7",
+   "quote": "We ensemble 8 RL-reﬁned models to obtain a state-of-the-art result of 41.16 BLEU points on the WMT\nEn→Fr dataset."
+  },
+  {
+   "claim": "Ensemble of 8 RL-refined models gets 26.30 BLEU on En->De.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": "26.30",
+   "unit": "BLEU",
+   "baseline_value": "26.20",
+   "n": null,
+   "setup": "WMT En->De newstest2014",
+   "note": null,
+   "where": "Sec 8.6",
+   "quote": "We ensemble 8 RL-reﬁned models to obtain a state-of-the-art result of 26.30 BLEU points on the WMT\nEn→De dataset."
+  },
+  {
+   "claim": "RL gain in BLEU did not show in human evaluation: SxS 4.46 before RL vs 4.44 after (PBMT 3.87, human 4.82).",
+   "kind": "measured",
+   "source": null,
+   "metric": "side-by-side score",
+   "value": "4.44",
+   "unit": "0-6",
+   "baseline_value": "4.46",
+   "n": 500,
+   "setup": "WMT En->Fr, 500 examples side-by-side, 0-6 scale",
+   "note": null,
+   "where": "Table 9",
+   "table": "Table 9, rows NMT before RL / NMT after RL, column Side-by-side averaged score: 4.46, 4.44"
+  },
+  {
+   "claim": "GNMT reduces translation errors by more than 60% vs PBMT on production data for En<->Fr/Es/Zh.",
+   "kind": "measured",
+   "source": null,
+   "metric": "relative improvement",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "500 random sentences per pair from Wikipedia and news, human SxS 0-6, single wordpiece 32K models, no ensemble, no RL",
+   "note": "Table 10 relative improvements per pair: 87%, 64%, 58%, 63%, 83%, 60%; the En->Zh value 58% is below 60%.",
+   "where": "Sec 8.7, Table 10",
+   "quote": "results show that our model reduces translation errors by more than 60% compared to the PBMT model on\nthese major pairs of languages."
+  },
+  {
+   "claim": "Abstract states 60% average error reduction on isolated simple sentences.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "human SxS vs Google PBMT production",
+   "note": null,
+   "where": "Abstract",
+   "quote": "it reduces translation errors by an average of\n60% compared to Google’s phrase-based production system."
+  },
+  {
+   "claim": "TPU quantized decoding is 3.4x faster than CPU with no BLEU loss (31.21 vs 31.20) and log perplexity 1.4626 vs 1.4553.",
+   "kind": "measured",
+   "source": null,
+   "metric": "decoding time",
+   "value": "384",
+   "unit": "s",
+   "baseline_value": "1322 (CPU)",
+   "n": null,
+   "setup": "WMT En->Fr dev set (newstest2012+2013, 6003 sentences), ML+quantization-constrained model; CPU/GPU full precision; 88-core host; K80 GPU; one TPU",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, rows CPU/GPU/TPU, columns BLEU, Log Perplexity, Decoding time (s): 31.20/1.4553/1322; 31.20/1.4553/3028; 31.21/1.4626/384"
+  },
+  {
+   "claim": "CPU decoding is 2.3x faster than GPU in their implementation.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "same as Table 1",
+   "note": null,
+   "where": "Sec 6",
+   "quote": "Table 1 also shows that decoding our model on CPU is actually 2.3 times faster than on GPU."
+  },
+  {
+   "claim": "Length normalization and coverage penalty raise dev BLEU from 30.3 to 31.4 (alpha=0.2, beta=0.2: +1.1).",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": "31.4",
+   "unit": "BLEU",
+   "baseline_value": "30.3",
+   "n": null,
+   "setup": "WMT En->Fr dev set, ML-only model, beam search",
+   "note": null,
+   "where": "Table 2 / Sec 7",
+   "quote": "having some length normalization and coverage penalty\nimproves BLEU score considerably (from 30.3 to 31.4)"
+  },
+  {
+   "claim": "Training WMT En->Fr takes about 6 days on 96 K80 GPUs; RL refinement 3 days for 400k steps.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "ML basic model",
+   "note": null,
+   "where": "Sec 8.3",
+   "quote": "it takes around 6 days to train a basic model using 96 NVIDIA K80 GPUs."
+  },
+  {
+   "claim": "Plain stacked LSTMs work up to 4 layers, barely at 6, very poorly beyond 8.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "large-scale translation tasks, no residual connections; anecdotal, no table",
+   "note": null,
+   "where": "Sec 3.1",
+   "quote": "simple stacked LSTM layers work well up to 4 layers, barely\nwith 6 layers, and very poorly beyond 8 layers."
+  },
+  {
+   "claim": "Adam for first 60k steps then SGD converges better than Adam alone or SGD alone.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "WMT En->Fr ML training, log perplexity (read from Fig 5)",
+   "note": null,
+   "where": "Sec 8.3, Fig 5",
+   "quote": "We run Adam for the ﬁrst 60k steps, after which we switch to simple SGD."
+  }
+ ],
+ "limits": [
+  "RL refinement raised BLEU but not human SxS scores; authors suspect small sample (500) and BLEU/quality mismatch.",
+  "Production human evaluation uses simple isolated sentences; difficult cases and longer inputs left as future work.",
+  "Human translations score only about 5 of 6, indicating noisy raters.",
+  "WMT En->De RL refinement slightly hurt test BLEU.",
+  "Hyperparameters vary by dataset and model and are not fully listed; code and weights not released; parameter count not stated.",
+  "Wordpiece algorithm details deferred to Schuster and Nakajima 2012."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "wordpiece",
+   "definition": "Select D wordpieces such that the resulting corpus is minimal in the number of wordpieces when segmented according to the chosen wordpiece model; special symbol marks word beginning.",
+   "where": "Sec 4.1"
+  },
+  {
+   "term": "GLEU",
+   "definition": "minimum of n-gram recall and precision (1-4 grams) between output and target",
+   "where": "Sec 5"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Sequence to sequence learning with neural networks (Sutskever et al.)",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "seq2seq framework",
+   "quote": null
+  },
+  {
+   "work": "Neural machine translation by jointly learning to align and translate (Bahdanau et al.)",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "attention",
+   "quote": null
+  },
+  {
+   "work": "Japanese and Korean voice search (Schuster and Nakajima)",
+   "year": 2012,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "wordpiece model origin",
+   "quote": null
+  },
+  {
+   "work": "Neural machine translation of rare words with subword units (Sennrich et al.)",
+   "year": 2016,
+   "arxiv": "1508.07909",
+   "relation": "related",
+   "note": "similar subword method",
+   "quote": null
+  },
+  {
+   "work": "Deep residual learning (He et al.)",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "residual connections",
+   "quote": null
+  },
+  {
+   "work": "Addressing the rare word problem in NMT (Luong et al.)",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "6-layer LSTM, PosUnk",
+   "quote": null
+  },
+  {
+   "work": "Deep recurrent models with fast-forward connections (Zhou et al., Deep-Att)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "uses external alignment",
+   "quote": null
+  },
+  {
+   "work": "Adam (Kingma and Ba)",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "optimizer",
+   "quote": null
+  },
+  {
+   "work": "Large scale distributed deep networks (Dean et al.)",
+   "year": 2012,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Downpour SGD",
+   "quote": null
+  },
+  {
+   "work": "Sequence level training with recurrent neural networks (Ranzato et al.) / Norouzi et al. reward augmented ML",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "RL refinement, expected reward",
+   "quote": null
+  },
+  {
+   "work": "WMT'14 En->Fr and En->De, newstest2014",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "benchmarks",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Figure 1",
+   "caption": "The model architecture of GNMT.",
+   "page": 4,
+   "why": "Shows layer partitioning over 8 GPUs and bottom-decoder attention."
+  },
+  {
+   "figure": "Table 4",
+   "caption": "Single model results on WMT En->Fr (newstest2014)",
+   "page": 16,
+   "why": "Vocabulary comparison with BLEU and decode time."
+  }
+ ],
+ "code": [
+  {
+   "where": "eq 14",
+   "snippet": "s(Y,X) = log(P(Y|X))/lp(Y) + cp(X;Y); lp(Y) = (5+|Y|)^alpha/(5+1)^alpha; cp(X;Y) = beta * sum_i log(min(sum_j p_ij, 1.0))",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text extraction flattened tables into one cell per line; values mapped by hand.",
+  "Reference [9] and [10] are duplicates in the source.",
+  "Table 5 lists RNNSearch-LV twice."
+ ]
+}

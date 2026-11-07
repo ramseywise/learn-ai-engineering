@@ -1,0 +1,646 @@
+{
+ "schema": 1,
+ "key": "1910.10683",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/raffel-2019-exploring-limits-transfer-learning-unified.pdf",
+ "bib": {
+  "title": "Exploring the Limits of Transfer Learning with a Unified Text-to-Text Transformer",
+  "authors": [
+   "Colin Raffel",
+   "Noam Shazeer",
+   "Adam Roberts",
+   "Katherine Lee",
+   "Sharan Narang",
+   "Michael Matena",
+   "Yanqi Zhou",
+   "Wei Li",
+   "Peter J. Liu"
+  ],
+  "first_author": "Raffel",
+  "year": 2020,
+  "venue": "Journal of Machine Learning Research 21 (2020) 1-67",
+  "arxiv": "1910.10683",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 206450,
+  "chars_total": 206450,
+  "engine": "pymupdf",
+  "skipped": "Appendix D (preprocessed examples per task), Appendix E table body (per-task score grids) and the reference list were skimmed, not read line by line: they are examples, raw score grids already summarised in the main tables, and citations."
+ },
+ "type": "empirical",
+ "question": "Which choices of architecture, pre-training objective, unlabeled data, transfer approach and scale matter most for transfer learning in NLP when every task is cast as text-to-text, and how far does scaling them go?",
+ "hypothesis": null,
+ "contributions": [
+  "A unified text-to-text framework for all NLP tasks",
+  "A systematic empirical comparison of architectures, objectives, data sets, transfer approaches and scaling",
+  "The C4 data set (about 750 GB of cleaned Common Crawl English text)",
+  "T5 models up to 11B parameters with state-of-the-art results on many benchmarks",
+  "Release of code, C4 and pre-trained model weights"
+ ],
+ "method": {
+  "summary": "Every task is cast as text in, text out with a task prefix, and one encoder-decoder Transformer is trained with maximum likelihood. A baseline (220M params, span-style denoising on C4, 2^35 tokens, then per-task fine-tuning) is varied one factor at a time. The best settings are combined and scaled to T5 Small/Base/Large/3B/11B pre-trained on about 1T tokens.",
+  "task": "text-to-text transfer learning: denoising pre-training then fine-tuning on GLUE, SuperGLUE, CNN/DM, SQuAD, WMT En-De/Fr/Ro",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "C4 (Colossal Clean Crawled Corpus)",
+    "role": "pretrain",
+    "size": "about 750 GB (745GB in Table 8)",
+    "split": "never repeated in baseline (2^35 tokens used)",
+    "source": "Common Crawl web-extracted text from April 2019, released in TensorFlow Datasets",
+    "preprocessing": "Keep lines ending in terminal punctuation; drop pages with fewer than 3 sentences, lines with fewer than 5 words, pages with bad words, lorem ipsum or '{'; remove lines with 'Javascript' or policy strings; strip citation markers; dedupe three-sentence spans; langdetect English with probability at least 0.99"
+   },
+   {
+    "name": "C4 variants (unfiltered 6.1TB, RealNews-like 35GB, WebText-like 17GB, Wikipedia 16GB, Wikipedia+TBC 20GB)",
+    "role": "pretrain",
+    "size": "as listed",
+    "split": null,
+    "source": "Common Crawl, Wikipedia (TFDS), Toronto Books Corpus",
+    "preprocessing": "WebText-like uses 12 months of Common Crawl (Aug 2018 to Jul 2019) filtered to Reddit-score>=3 URLs"
+   },
+   {
+    "name": "GLUE (WNLI never trained on) and SuperGLUE (plus DPR)",
+    "role": "both",
+    "size": null,
+    "split": "validation sets in all experiments except Sec 3.7 (test via benchmark servers)",
+    "source": "GLUE and SuperGLUE as distributed; constituent tasks concatenated into one task for fine-tuning",
+    "preprocessing": "Task prefix text; STS-B rounded to nearest 0.2 and written as string; Winograd tasks recast as referent noun prediction"
+   },
+   {
+    "name": "CNN/Daily Mail",
+    "role": "both",
+    "size": null,
+    "split": "validation; standard test in Sec 3.7",
+    "source": "non-anonymized version of See et al. 2017",
+    "preprocessing": null
+   },
+   {
+    "name": "SQuAD",
+    "role": "both",
+    "size": null,
+    "split": "validation set throughout (test server could not run largest models)",
+    "source": "Rajpurkar et al. 2016",
+    "preprocessing": "question and context fed in, answer generated token by token"
+   },
+   {
+    "name": "WMT En-De, En-Fr, En-Ro",
+    "role": "both",
+    "size": null,
+    "split": "validation newstest2013 (De), newstest2014 (Fr), WMT 2016 val (Ro); test newstest2014/2015/2016",
+    "source": "De: News Commentary v13, Common Crawl, Europarl v7; Fr: 2015 standard data; Ro: WMT 2016",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Baseline / T5-Base",
+    "role": "base",
+    "params": "220M",
+    "architecture": "encoder-decoder Transformer, pre-LN (layer norm without bias), relative position scalars (32 buckets, logarithmic to offset 128), shared embedding/softmax",
+    "init_from": null,
+    "tokenizer": "SentencePiece",
+    "vocab": "32,000 wordpieces (trained on 10 parts English C4 to 1 part each German, French, Romanian)",
+    "layers": "12 encoder + 12 decoder",
+    "hidden": "d_model=768, d_ff=3072, d_kv=64",
+    "heads": 12,
+    "context": "512 tokens",
+    "other": {
+     "dropout": "0.1"
+    }
+   },
+   {
+    "name": "T5-Small",
+    "role": "proposed",
+    "params": "60M",
+    "architecture": "as baseline",
+    "init_from": null,
+    "tokenizer": "same",
+    "vocab": "32,000",
+    "layers": "6+6",
+    "hidden": "d_model=512, d_ff=2048",
+    "heads": 8,
+    "context": "512 tokens",
+    "other": {}
+   },
+   {
+    "name": "T5-Large",
+    "role": "proposed",
+    "params": "770M",
+    "architecture": "as baseline",
+    "init_from": null,
+    "tokenizer": "same",
+    "vocab": "32,000",
+    "layers": "24+24",
+    "hidden": "d_model=1024, d_ff=4096, d_kv=64",
+    "heads": 16,
+    "context": "512 tokens",
+    "other": {}
+   },
+   {
+    "name": "T5-3B",
+    "role": "proposed",
+    "params": "2.8B (called 3B)",
+    "architecture": "as baseline",
+    "init_from": null,
+    "tokenizer": "same",
+    "vocab": "32,000",
+    "layers": "24+24",
+    "hidden": "d_model=1024, d_ff=16,384, d_kv=128",
+    "heads": 32,
+    "context": "512 tokens",
+    "other": {}
+   },
+   {
+    "name": "T5-11B",
+    "role": "proposed",
+    "params": "11B",
+    "architecture": "as baseline",
+    "init_from": null,
+    "tokenizer": "same",
+    "vocab": "32,000",
+    "layers": "24+24",
+    "hidden": "d_model=1024, d_ff=65,536, d_kv=128",
+    "heads": 128,
+    "context": "512 tokens",
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "Maximum likelihood with teacher forcing and cross-entropy. Baseline: i.i.d. denoising, 15% of tokens dropped, consecutive spans replaced by unique sentinel tokens, target is the dropped spans. Final T5: span corruption, mean span length 3, 15% corrupted",
+   "optimizer": "AdaFactor",
+   "lr": "pre-train 0.01 constant for first 10^4 steps then inverse square root decay; fine-tune constant 0.001",
+   "lr_schedule": "inverse square root 1/sqrt(max(n,k)), k=10^4",
+   "warmup": "k = 10^4 steps (constant 0.01 rather than ramp)",
+   "batch_size": "128 sequences of length 512 (about 2^16 = 65,536 tokens incl. packing) baseline; 2^11 sequences for final T5 pre-training; 8 sequences for per-task GLUE/SuperGLUE fine-tuning in Sec 3.7",
+   "steps": "baseline pre-train 2^19 = 524,288, fine-tune 2^18 = 262,144; final T5 pre-train 1M steps",
+   "epochs": null,
+   "tokens": "baseline 2^35 about 34B; final T5 about 1 trillion",
+   "seq_len": "512",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": "0.1 everywhere",
+   "regularisation": "dropout 0.1",
+   "hardware": "Cloud TPU Pod slices (TPU v3, pod = 1,024 chips), Mesh TensorFlow model and data parallelism",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": "baseline trained 10 times from scratch (different init and data shuffle) to estimate std dev; other variants single run",
+   "other": {
+    "checkpointing": "save every 5,000 steps (1,000 for per-task GLUE/SuperGLUE in 3.7), report best validation checkpoint",
+    "multitask_mix_sizes_final": "artificial unlabeled size 710,000 Small, 2,620,000 Base, 8,660,000 Large, 33,500,000 3B, 133,000,000 11B; En-Fr and En-De capped at 1M examples",
+    "mixing": "examples-proportional r_m=min(e_m,K)/sum min(e_n,K); temperature-scaled with K=2^21",
+    "fine_tune_multitask_total_steps": "2^19+2^18 = 786,432"
+   }
+  },
+  "inference": {
+   "decoding": "greedy for all ablations; beam search width 4, length penalty alpha=0.6 for WMT and CNN/DM in Sec 3.7",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "baseline 10 training runs; single run per variant",
+   "prompting": "task prefix such as 'translate English to German:', 'cola sentence:', 'summarize:'",
+   "retrieval": null,
+   "parameters": {},
+   "other": {
+    "invalid_output": "output not in label set counted wrong"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "GLUE / SuperGLUE average",
+     "definition": "mean over subtask scores per benchmark; WNLI excluded from validation GLUE",
+     "unit": "points",
+     "higher_is_better": true
+    },
+    {
+     "name": "BLEU",
+     "definition": "SacreBLEU v1.3.0, exp smoothing, intl tokenization",
+     "unit": "BLEU",
+     "higher_is_better": true
+    },
+    {
+     "name": "ROUGE-2-F",
+     "definition": "CNN/DM headline metric",
+     "unit": "points",
+     "higher_is_better": true
+    },
+    {
+     "name": "SQuAD exact match",
+     "definition": "EM",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "No pre-training baseline",
+    "Alternative architectures/objectives/data/training strategies (ablation rows)",
+    "Previous state of the art as of October 24th, 2019 (ALBERT, RoBERTa, MT-DNN etc.)"
+   ],
+   "protocol": "One factor changed at a time (coordinate ascent) vs baseline; scores bold if within two baseline standard deviations of best; validation sets except Sec 3.7."
+  },
+  "availability": {
+   "code": "https://github.com/google-research/text-to-text-transfer-transformer",
+   "weights": "released for each T5 variant",
+   "data": "C4 and variants released in TensorFlow Datasets"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.warmup",
+    "quote": "k is the number of warm-up steps (set to 104 in all of our experiments)",
+    "where": "Sec 3.1.2 (10^4 lost superscript in extraction)"
+   },
+   {
+    "field": "training.tokens",
+    "quote": "corresponding to a total of about",
+    "where": "Sec 3.7"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "T5-11B reaches state-of-the-art GLUE average on the test set",
+   "kind": "measured",
+   "source": null,
+   "metric": "GLUE average",
+   "value": 90.3,
+   "unit": "points",
+   "baseline_value": 89.4,
+   "n": null,
+   "setup": "Final T5-11B, 1T-token multi-task pre-training, per-task fine-tuning, GLUE test server",
+   "quote": "We achieved a state-of-the-art average GLUE score of 90.3.",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.7, Table 14"
+  },
+  {
+   "claim": "T5-11B improves SuperGLUE test average to near human level",
+   "kind": "measured",
+   "source": null,
+   "metric": "SuperGLUE average",
+   "value": 88.9,
+   "unit": "points",
+   "baseline_value": 84.6,
+   "n": null,
+   "setup": "T5-11B, test set; human 89.8",
+   "quote": null,
+   "table": "Table 14, row T5-11B, column SuperGLUE Average",
+   "note": null,
+   "where": "Table 14"
+  },
+  {
+   "claim": "T5-11B state of the art on SQuAD validation exact match",
+   "kind": "measured",
+   "source": null,
+   "metric": "SQuAD EM",
+   "value": 91.26,
+   "unit": "EM",
+   "baseline_value": 90.1,
+   "n": null,
+   "setup": "T5-11B, validation set",
+   "quote": null,
+   "table": "Table 14, row T5-11B, column SQuAD EM",
+   "note": null,
+   "where": "Table 14"
+  },
+  {
+   "claim": "T5-11B CNN/DM ROUGE-2",
+   "kind": "measured",
+   "source": null,
+   "metric": "ROUGE-2-F",
+   "value": 21.55,
+   "unit": "points",
+   "baseline_value": 20.3,
+   "n": null,
+   "setup": "T5-11B test set, beam 4",
+   "quote": null,
+   "table": "Table 14, row T5-11B, column CNN/DM ROUGE-2",
+   "note": null,
+   "where": "Table 14"
+  },
+  {
+   "claim": "T5-11B WMT En-Fr BLEU did not beat prior best",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": 43.4,
+   "unit": "BLEU",
+   "baseline_value": 43.8,
+   "n": null,
+   "setup": "T5-11B test set",
+   "quote": null,
+   "table": "Table 14, row T5-11B, column WMT EnFr BLEU",
+   "note": "no state of the art on any WMT task; English-only pre-training",
+   "where": "Table 14"
+  },
+  {
+   "claim": "Pre-training matters: baseline GLUE vs no pre-training",
+   "kind": "measured",
+   "source": null,
+   "metric": "GLUE",
+   "value": 83.28,
+   "unit": "points",
+   "baseline_value": 66.22,
+   "n": null,
+   "setup": "220M baseline, 2^35 tokens C4 then fine-tune",
+   "quote": null,
+   "table": "Table 1, row Baseline average, column GLUE",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Encoder-decoder with denoising is best architecture; decoder-only LM much worse on GLUE",
+   "kind": "measured",
+   "source": null,
+   "metric": "GLUE",
+   "value": 74.7,
+   "unit": "points",
+   "baseline_value": 83.28,
+   "n": null,
+   "setup": "Language model (decoder-only) with denoising, same cost M, P params",
+   "quote": null,
+   "table": "Table 2, row Language model Denoising, column GLUE",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Removing C4 heuristic filtering hurts GLUE",
+   "kind": "measured",
+   "source": null,
+   "metric": "GLUE",
+   "value": 81.46,
+   "unit": "points",
+   "baseline_value": 83.28,
+   "n": null,
+   "setup": "Unfiltered C4 (6.1TB) vs C4 baseline",
+   "quote": null,
+   "table": "Table 8, row C4 unfiltered, column GLUE",
+   "note": null,
+   "where": "Table 8"
+  },
+  {
+   "claim": "Repeating 2^23 tokens 4,096 times degrades GLUE",
+   "kind": "measured",
+   "source": null,
+   "metric": "GLUE",
+   "value": 76.34,
+   "unit": "points",
+   "baseline_value": 83.28,
+   "n": null,
+   "setup": "Pre-training on first 2^23 tokens of C4 for 2^35 tokens total",
+   "quote": null,
+   "table": "Table 9, row 2^23 (4,096 repeats), column GLUE",
+   "note": null,
+   "where": "Table 9"
+  },
+  {
+   "claim": "Baseline-1T vs T5-Base: non-scaling changes help beyond 1T tokens",
+   "kind": "measured",
+   "source": null,
+   "metric": "GLUE",
+   "value": 85.97,
+   "unit": "points",
+   "baseline_value": 84.8,
+   "n": null,
+   "setup": "T5-Base, validation set, vs baseline pre-trained on 1T tokens",
+   "quote": null,
+   "table": "Table 15, row T5-Base, column GLUE",
+   "note": null,
+   "where": "Table 15"
+  },
+  {
+   "claim": "4x size, 1x steps beats 1x size 4x steps on SuperGLUE",
+   "kind": "measured",
+   "source": null,
+   "metric": "SuperGLUE",
+   "value": 78.04,
+   "unit": "points",
+   "baseline_value": 74.72,
+   "n": null,
+   "setup": "Scaling with 4x compute",
+   "quote": null,
+   "table": "Table 13, row 4x size 1x training steps, column SGLUE",
+   "note": null,
+   "where": "Table 13"
+  },
+  {
+   "claim": "Adapter layers with small d fall far below full fine-tuning on translation",
+   "kind": "measured",
+   "source": null,
+   "metric": "EnFr BLEU",
+   "value": 17.88,
+   "unit": "BLEU",
+   "baseline_value": 39.82,
+   "n": null,
+   "setup": "Adapter d=32",
+   "quote": null,
+   "table": "Table 10, row Adapter layers d = 32, column EnFr",
+   "note": "Table 10 prints identical rows for d=128 and d=2048 (81.51/16.62/79.47/63.03/19.83/27.50/22.63), likely a typesetting error",
+   "where": "Table 10"
+  },
+  {
+   "claim": "Baseline inter-run std dev on GLUE",
+   "kind": "measured",
+   "source": null,
+   "metric": "std dev",
+   "value": 0.235,
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "10 baseline runs",
+   "quote": null,
+   "table": "Table 1, row Baseline standard deviation, column GLUE",
+   "note": null,
+   "where": "Table 1"
+  }
+ ],
+ "limits": [
+  "Coordinate-ascent design misses interactions between factors (authors concede)",
+  "Variants other than the baseline were run once; variance borrowed from 10 baseline runs",
+  "Baseline is small (220M, 34B tokens); effects may differ for larger models (authors say bigger models may overfit small pre-training sets more)",
+  "English-only pre-training; no SOTA on any WMT task",
+  "Validation sets used for nearly all comparisons; SQuAD final reported on validation",
+  "Low-resource tasks (CoLA, CB, COPA) have high variance, making GLUE and SuperGLUE averages noisy",
+  "Table 10 appears to print the d=128 row twice for d=2048",
+  "Model sizes, SOTA claims as of October 24th, 2019 have dated",
+  "Authors state it is not proposing new methods but a survey and comparison"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "C4",
+   "definition": "Colossal Clean Crawled Corpus, heuristically cleaned Common Crawl English text",
+   "where": "Sec 2.2"
+  },
+  {
+   "term": "Span corruption",
+   "definition": "corrupt contiguous spans of tokens, replace each with a unique sentinel, predict the spans",
+   "where": "Sec 3.3.4"
+  },
+  {
+   "term": "Prefix LM",
+   "definition": "decoder-only model with fully-visible attention over the input prefix and causal over the target",
+   "where": "Sec 3.2.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Attention is All You Need (Vaswani et al.)",
+   "year": 2017,
+   "arxiv": "1706.03762",
+   "relation": "extends",
+   "note": "encoder-decoder architecture followed closely",
+   "quote": null
+  },
+  {
+   "work": "BERT (Devlin et al.)",
+   "year": 2018,
+   "arxiv": "1810.04805",
+   "relation": "baseline",
+   "note": "masked-LM objective adapted; BERT-base size reference",
+   "quote": null
+  },
+  {
+   "work": "RoBERTa (Liu et al.)",
+   "year": 2019,
+   "arxiv": "1907.11692",
+   "relation": "baseline",
+   "note": "prior SOTA on SuperGLUE; 2.2T tokens comparison",
+   "quote": null
+  },
+  {
+   "work": "ALBERT (Lan et al.)",
+   "year": 2019,
+   "arxiv": "1909.11942",
+   "relation": "baseline",
+   "note": "prior SOTA GLUE and SQuAD",
+   "quote": null
+  },
+  {
+   "work": "SpanBERT (Joshi et al.)",
+   "year": 2019,
+   "arxiv": "1907.10529",
+   "relation": "uses-method",
+   "note": "inspired the span-corruption objective",
+   "quote": null
+  },
+  {
+   "work": "MASS (Song et al.)",
+   "year": 2019,
+   "arxiv": "1905.02450",
+   "relation": "baseline",
+   "note": "MASS-style objective variant",
+   "quote": null
+  },
+  {
+   "work": "GPT-2 (Radford et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "related",
+   "note": "WebText data and LM zero-shot text-to-text, TL;DR",
+   "quote": null
+  },
+  {
+   "work": "Natural Language Decathlon (McCann et al.)",
+   "year": 2018,
+   "arxiv": "1806.08730",
+   "relation": "related",
+   "note": "earlier unified QA-format multi-task framing",
+   "quote": null
+  },
+  {
+   "work": "Adapter layers (Houlsby et al.)",
+   "year": 2019,
+   "arxiv": "1902.00751",
+   "relation": "evaluates",
+   "note": "compared as fine-tuning method",
+   "quote": null
+  },
+  {
+   "work": "ULMFiT gradual unfreezing (Howard and Ruder)",
+   "year": 2018,
+   "arxiv": "1801.06146",
+   "relation": "evaluates",
+   "note": "compared as fine-tuning method",
+   "quote": null
+  },
+  {
+   "work": "MT-DNN (Liu et al.)",
+   "year": 2019,
+   "arxiv": "1901.11504",
+   "relation": "related",
+   "note": "multi-task pre-training then fine-tuning",
+   "quote": null
+  },
+  {
+   "work": "AdaFactor (Shazeer and Stern)",
+   "year": 2018,
+   "arxiv": "1804.04235",
+   "relation": "uses-method",
+   "note": "optimizer",
+   "quote": null
+  },
+  {
+   "work": "Mesh TensorFlow (Shazeer et al.)",
+   "year": 2018,
+   "arxiv": "1811.02084",
+   "relation": "uses-method",
+   "note": "model+data parallelism",
+   "quote": null
+  },
+  {
+   "work": "SentencePiece (Kudo and Richardson)",
+   "year": 2018,
+   "arxiv": "1808.06226",
+   "relation": "uses-method",
+   "note": "tokenizer",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "A diagram of our text-to-text framework.",
+   "page": 3,
+   "why": "Shows the task-prefix input/output format for all tasks at a glance"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Schematic of the objective we use in our baseline model.",
+   "page": 13,
+   "why": "Shows sentinel-token span corruption input/target"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Schematics of the Transformer architecture variants we consider.",
+   "page": 17,
+   "why": "Contrasts encoder-decoder, LM and prefix LM attention visibility"
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "Pre-training loss for C4 and 4 truncated versions.",
+   "page": 29,
+   "why": "Shows memorization when data repeats"
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 3.5.2",
+   "snippet": "r_m = min(e_m, K) / sum_n min(e_n, K)",
+   "verbatim": false
+  },
+  {
+   "where": "Sec 3.1.2",
+   "snippet": "learning rate = 1 / sqrt(max(n, k)), k = 10^4",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Superscripts lost in extraction (2^19, 10^4 appear as 219, 104)",
+  "Tables extracted as one value per line",
+  "Table 10 duplicate rows for d=128 and d=2048 as printed",
+  "No embedded instructions found"
+ ]
+}

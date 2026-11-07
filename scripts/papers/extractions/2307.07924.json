@@ -1,0 +1,480 @@
+{
+ "schema": 1,
+ "key": "2307.07924",
+ "pdf": "generative-ai/03-agentic-foundations/sources/qian-2023-chatdev.pdf",
+ "bib": {
+  "title": "ChatDev: Communicative Agents for Software Development",
+  "authors": [
+   "Chen Qian",
+   "Wei Liu",
+   "Hongzhang Liu",
+   "Nuo Chen",
+   "Yufan Dang",
+   "Jiahao Li",
+   "Cheng Yang",
+   "Weize Chen",
+   "Yusheng Su",
+   "Xin Cong",
+   "Juyuan Xu",
+   "Dahai Li",
+   "Zhiyuan Liu",
+   "Maosong Sun"
+  ],
+  "first_author": "Qian",
+  "year": 2024,
+  "venue": "preprint (arXiv v5, 5 Jun 2024)",
+  "arxiv": "2307.07924",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 54305,
+  "chars_total": 54305,
+  "engine": "pymupdf",
+  "skipped": "reference list skimmed"
+ },
+ "type": "system",
+ "question": "Can role-specialised LLM agents, guided by a chat chain and communicative dehallucination, cooperate through language to produce complete, executable software across design, coding and testing?",
+ "hypothesis": "Structuring multi-agent dialogue along a waterfall chat chain, with agents asking for specifics before answering, reduces coding hallucinations and yields better software than single-agent or fixed-SOP baselines.",
+ "contributions": [
+  "ChatDev: a chat-powered software development framework with chat chain and communicative dehallucination",
+  "SRDD, a dataset of 1,200 software requirement descriptions",
+  "Analysis showing natural language helps system design and programming-language communication helps debugging"
+ ],
+ "method": {
+  "summary": "Agents with roles (CEO, CTO, programmer, reviewer, tester) work in pairs (instructor and assistant) along a chain of 5 subtasks in 3 phases (design, coding, testing). Only each subtask's solution is passed forward as long-term memory. Communicative dehallucination lets the assistant ask the instructor for specifics before answering.",
+  "task": "autonomous software development from a short natural-language requirement",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "SRDD (Software Requirement Description Dataset)",
+    "role": "eval",
+    "size": "1,200 software task prompts",
+    "split": "5 categories (Education, Work, Life, Game, Creation), 40 subcategories, 30 prompts each",
+    "source": "built by the authors from existing software descriptions on Ubuntu, Google Play, Microsoft Store, Apple Store; LLM generation plus human-guided post-processing",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "ChatGPT-3.5",
+    "role": "proposed",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "the LLM behind all agents and baselines; exact snapshot not stated"
+    }
+   },
+   {
+    "name": "GPT-Engineer",
+    "role": "baseline",
+    "params": null,
+    "architecture": "single-agent",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "MetaGPT",
+    "role": "baseline",
+    "params": null,
+    "architecture": "multi-agent with SOPs",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-4",
+    "role": "judge",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "pairwise preference, positional bias mitigated"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": "0.2",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "not stated (one run per task implied; no seeds)",
+   "prompting": "inception prompting: instructor and assistant system prompts cover subtask overview, roles, tools, protocol, termination, constraints",
+   "retrieval": null,
+   "parameters": {
+    "subtask termination": "after two unchanged code modifications or 10 rounds of communication",
+    "phases": "3 phases, 5 subtasks (design; code writing and completion; code review and system testing)",
+    "dehallucination active in": "code completion, review, testing",
+    "Python": "3.11.4 for feedback",
+    "solution marker": "assistant begins with <SOLUTION> on consensus"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Completeness",
+     "definition": "percentage of software without any placeholder code snippets",
+     "unit": "fraction",
+     "higher_is_better": true
+    },
+    {
+     "name": "Executability",
+     "definition": "percentage of software that compiles and runs directly",
+     "unit": "fraction",
+     "higher_is_better": true
+    },
+    {
+     "name": "Consistency",
+     "definition": "cosine distance between embeddings of requirements and generated code (comments excluded), higher is more consistent",
+     "unit": "score",
+     "higher_is_better": true
+    },
+    {
+     "name": "Quality",
+     "definition": "product of completeness, executability and consistency",
+     "unit": "score",
+     "higher_is_better": true
+    },
+    {
+     "name": "Pairwise win rate",
+     "definition": "GPT-4 and human experts pick the preferred of two solutions",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "GPT-Engineer",
+    "MetaGPT"
+   ],
+   "protocol": "Metrics averaged over all tasks; p<=0.05 marks significant difference from ChatDev; pairwise by GPT-4 and humans with order randomised. Number of human raters, embedding model, and test count not stated."
+  },
+  "availability": {
+   "code": "https://github.com/OpenBMB/ChatDev",
+   "weights": null,
+   "data": "SRDD in the same repository (per abstract: code and data available)"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "ChatDev gets higher Quality than MetaGPT and GPT-Engineer",
+   "kind": "measured",
+   "source": null,
+   "metric": "Quality",
+   "value": 0.3953,
+   "unit": "score",
+   "baseline_value": 0.1523,
+   "n": null,
+   "setup": "SRDD (1,200 prompts), ChatGPT-3.5, temperature 0.2, metrics averaged over all tasks; baselines GPT-Engineer 0.1419, MetaGPT 0.1523",
+   "quote": "ChatDev significantly raises the Quality from 0.1523 to 0.3953.",
+   "table": null,
+   "note": null,
+   "where": "4.1"
+  },
+  {
+   "claim": "ChatDev runs far more often than MetaGPT",
+   "kind": "measured",
+   "source": null,
+   "metric": "Executability",
+   "value": 0.88,
+   "unit": "fraction",
+   "baseline_value": 0.4145,
+   "n": null,
+   "setup": "SRDD (1,200 prompts), ChatGPT-3.5, temperature 0.2, metrics averaged over all tasks",
+   "quote": null,
+   "table": "Table 1, row ChatDev, column Executability (0.8800); MetaGPT 0.4145, GPT-Engineer 0.3583",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "ChatDev completeness",
+   "kind": "measured",
+   "source": null,
+   "metric": "Completeness",
+   "value": 0.56,
+   "unit": "fraction",
+   "baseline_value": 0.4834,
+   "n": null,
+   "setup": "SRDD (1,200 prompts), ChatGPT-3.5, temperature 0.2, metrics averaged over all tasks; GPT-Engineer 0.5022, MetaGPT 0.4834",
+   "quote": null,
+   "table": "Table 1, row ChatDev, column Completeness (0.5600)",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "ChatDev consistency, only slightly above baselines",
+   "kind": "measured",
+   "source": null,
+   "metric": "Consistency",
+   "value": 0.8021,
+   "unit": "score",
+   "baseline_value": 0.7601,
+   "n": null,
+   "setup": "SRDD (1,200 prompts), ChatGPT-3.5, temperature 0.2, metrics averaged over all tasks; GPT-Engineer 0.7887, MetaGPT 0.7601",
+   "quote": null,
+   "table": "Table 1, row ChatDev, column Consistency (0.8021)",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "GPT-4 judge prefers ChatDev over MetaGPT",
+   "kind": "measured",
+   "source": null,
+   "metric": "ChatDev win rate",
+   "value": 57.08,
+   "unit": "%",
+   "baseline_value": 37.5,
+   "n": null,
+   "setup": "GPT-4 pairwise judge, ChatDev vs MetaGPT; baseline wins 37.50%, draw 5.42%",
+   "quote": null,
+   "table": "Table 2, rows MetaGPT / GPT-4, column ChatDev Wins",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Human judges prefer ChatDev over MetaGPT",
+   "kind": "measured",
+   "source": null,
+   "metric": "ChatDev win rate",
+   "value": 88.0,
+   "unit": "%",
+   "baseline_value": 7.92,
+   "n": null,
+   "setup": "human experts pairwise, ChatDev vs MetaGPT; baseline wins 7.92%, draw 4.08%",
+   "quote": null,
+   "table": "Table 2, rows MetaGPT / Human, column ChatDev Wins (88.00%)",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "GPT-4 judge prefers ChatDev over GPT-Engineer",
+   "kind": "measured",
+   "source": null,
+   "metric": "ChatDev win rate",
+   "value": 77.08,
+   "unit": "%",
+   "baseline_value": 22.5,
+   "n": null,
+   "setup": "GPT-4 pairwise judge; baseline wins 22.50%",
+   "quote": null,
+   "table": "Table 2, rows GPT-Engineer / GPT-4, column ChatDev Wins",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Human judges prefer ChatDev over GPT-Engineer",
+   "kind": "measured",
+   "source": null,
+   "metric": "ChatDev win rate",
+   "value": 90.16,
+   "unit": "%",
+   "baseline_value": 9.18,
+   "n": null,
+   "setup": "human experts pairwise; baseline wins 9.18%",
+   "quote": null,
+   "table": "Table 2, rows GPT-Engineer / Human, column ChatDev Wins",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Multi-agent costs more time and tokens than single-agent GPT-Engineer: ChatDev uses 22,949.4450 tokens and 148.2148 s per software vs GPT-Engineer 7,182.5333 tokens and 15.6 s; MetaGPT 29,278.6510 tokens and 154.0 s (Table 3). Value left null because the checker did not match the comma-formatted number.",
+   "kind": "measured",
+   "source": null,
+   "metric": "#Tokens",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "per software; duration 148.2 s, 4.39 files, 144.3 lines; GPT-Engineer 15.6 s, 7,182.5 tokens; MetaGPT 154.0 s, 29,278.7 tokens",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Removing agent roles from system prompts hurts most in ablation (Quality)",
+   "kind": "measured",
+   "source": null,
+   "metric": "Quality",
+   "value": 0.2212,
+   "unit": "score",
+   "baseline_value": 0.3953,
+   "n": null,
+   "setup": "ablation w/o Roles; full ChatDev 0.3953; executability falls to 0.5800",
+   "quote": null,
+   "table": "Table 4, row \\Roles, column Quality",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "Removing communicative dehallucination lowers Quality",
+   "kind": "measured",
+   "source": null,
+   "metric": "Quality",
+   "value": 0.3094,
+   "unit": "score",
+   "baseline_value": 0.3953,
+   "n": null,
+   "setup": "ablation w/o CDH; full 0.3953",
+   "quote": null,
+   "table": "Table 4, row \\CDH, column Quality",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "Stopping the chain after coding gives low Quality; each phase raises it",
+   "kind": "measured",
+   "source": null,
+   "metric": "Quality",
+   "value": 0.2512,
+   "unit": "score",
+   "baseline_value": 0.3953,
+   "n": null,
+   "setup": "chain halted after Coding; after Complete 0.3690, after Review 0.3717, after Testing 0.3953",
+   "quote": null,
+   "table": "Table 4, row <=Coding, column Quality",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "Most common review issue is Method Not Implemented",
+   "kind": "measured",
+   "source": null,
+   "metric": "share of reviewer-programmer discussions",
+   "value": 34.85,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "reviewer suggestions during code review",
+   "quote": "accounting for 34.85% of discussions",
+   "table": null,
+   "note": null,
+   "where": "4.3"
+  },
+  {
+   "claim": "Most frequent testing error is ModuleNotFound",
+   "kind": "measured",
+   "source": null,
+   "metric": "share of errors",
+   "value": 45.76,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "tester-programmer compiler feedback",
+   "quote": "The most fre-\nquent error is \"ModuleNotFound\" (45.76%)",
+   "table": null,
+   "note": null,
+   "where": "4.3"
+  },
+  {
+   "claim": "Natural-language share of utterances across the process",
+   "kind": "measured",
+   "source": null,
+   "metric": "share",
+   "value": 57.2,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "utterance distribution (Fig 3)",
+   "quote": "Figure 3 depicts a communication breakdown,\nwith natural language at 57.20%.",
+   "table": null,
+   "note": null,
+   "where": "4.3"
+  }
+ ],
+ "limits": [
+  "Authors concede agents implement simple logic with low information density; suited to prototypes, not complex real-world apps",
+  "Evaluation lacks functionality, robustness, safety, user-friendliness; no function-level test cases or pass@k",
+  "Multi-agent costs more tokens and time than single agent",
+  "Quality is a product of three proxies; consistency is an embedding cosine, differing only slightly between methods",
+  "Only ChatGPT-3.5; seeds, number of runs, human raters, embedding model and exact model snapshot not stated; SRDD built by the authors",
+  "Baselines run on ChatDev's own dataset and metrics"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "communicative dehallucination",
+   "definition": "the assistant takes an instructor-like role and requests more specific information before delivering a formal response",
+   "where": "3.2"
+  },
+  {
+   "term": "chat chain",
+   "definition": "sequential phases each comprising sequential subtasks, each a multi-turn dialogue between an instructor and an assistant",
+   "where": "3.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "CAMEL (Li et al. 2023a), inception prompting",
+   "year": 2023,
+   "arxiv": "2303.17760",
+   "relation": "uses-method",
+   "note": "inception prompting and pairwise human/GPT-4 evaluation setting",
+   "quote": null
+  },
+  {
+   "work": "MetaGPT",
+   "year": 2023,
+   "arxiv": "2308.00352",
+   "relation": "baseline",
+   "note": "multi-agent SOP baseline",
+   "quote": null
+  },
+  {
+   "work": "GPT-Engineer (Osika 2023)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "single-agent baseline",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "Upon receiving a preliminary task requirement (e.g., \"develop a Gomoku game\"), these software agents engage in multi-turn communication and perform instruction-following along a chain-structured workflow",
+   "page": 3,
+   "why": "shows phases, subtasks and the instructor/assistant pair per step"
+  },
+  {
+   "figure": "Table 4",
+   "caption": "Ablation study on main components or mechanisms.",
+   "page": 6,
+   "why": "phase, CDH and role ablations in one view"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "PDF text contains no embedded instructions",
+  "Baselines GPT-Engineer and MetaGPT appear in Table 1 with arrow glyphs lost in extraction",
+  "Prompts are not reproduced in the paper text"
+ ]
+}

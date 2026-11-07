@@ -1,19 +1,439 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "1412.2306",
  "pdf": "ai-engineering/08-multimodal-engineering/sources/karpathy-2015-deep-visual-semantic-alignments-generating.pdf",
  "bib": {
-  "title": "Deep visual-semantic alignments for generating image descriptions",
+  "title": "Deep Visual-Semantic Alignments for Generating Image Descriptions",
+  "authors": [
+   "Andrej Karpathy",
+   "Li Fei-Fei"
+  ],
   "first_author": "Karpathy",
   "year": 2015,
-  "venue": "CVPR 2015",
+  "venue": "preprint",
   "arxiv": "1412.2306",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-04",
-  "session": "97b4134b-decf-4866-ae85-c6872cbbba19"
+  "at": "2026-11-07",
+  "chars_read": 57393,
+  "chars_total": 57393,
+  "engine": "pymupdf",
+  "skipped": null
  },
- "legacy_report": "SOURCE: \"Deep Visual-Semantic Alignments for Generating Image Descriptions\", Andrej Karpathy and Li Fei-Fei (Stanford). The PDF doesn't name a venue. Its only identifier is \"arXiv:1412.2306v2 [cs.CV] 14 Apr 2015\", so cite it as preprint, arXiv v2, 2015. The CVPR 2015 publication is not stated anywhere in this file, so don't attribute it to this PDF.\n\nCOVERAGE: I read 57,296 of 57,296 chars, all 17 pages. That covers the main paper, the limitations section, Tables 1 to 5, the references (skimmed for origins) and the supplementary sections 6.1 to 6.5. Nothing was skipped.\n\nCLAIMS\n- claim: The data splits. Flickr8K and Flickr30K use 1,000 validation images, 1,000 test images and the rest for training. MSCOCO uses 5,000 validation and 5,000 test images.\n  number: 1,000 / 1,000 (Flickr); 5,000 / 5,000 (COCO)\n  setup: Flickr8K has 8,000 images, Flickr30K 31,000 and MSCOCO 123,000, each with 5 AMT sentences. The Flickr splits are \"consistent with [21, 24]\", meaning Hodosh et al. 2013 and Karpathy et al. 2014. The paper never uses the phrase \"Karpathy split\" and doesn't list image IDs in the text; it points to released data at cs.stanford.edu/people/karpathy/deepimagesent.\n  quote: \"For Flickr8K and Flickr30K, we use 1,000 images for validation, 1,000 for testing and the rest for training (consistent with [21, 24]). For MSCOCO we use 5,000 images for both validation and testing.\"\n  where: Section 4 Datasets, p.5, around char 21,500\n- claim: The COCO training set under this split is about 113K images.\n  number: 113,000\n  setup: The figure appears in the nearest-neighbour baseline discussion.\n  quote: \"even with 113,000 train set images in MSCOCO the retrieval approach is inadequate\"\n  where: Section 4.2, p.7\n- claim: Vocabulary comes from lowercasing, stripping non-alphanumerics and keeping words with 5 or more occurrences in the training set.\n  number: 2538 / 7414 / 8791 words\n  setup: Flickr8k, Flickr30K and MSCOCO.\n  quote: \"We filter words to those that occur at least 5 times in the training set, which results in 2538, 7414, and 8791 words for Flickr8k, Flickr30K, and MSCOCO datasets respectively.\"\n  where: Section 4, p.5\n- claim: Recall@K falls as the test set grows, so COCO 1K and 5K results can't be compared directly.\n  number: COCO 1K vs 5K, image annotation R@1 38.4 vs 16.5\n  setup: This is the BRNN model. The 1K result is on \"a subset of 1,000 images\". The paper doesn't say whether the 1K figure is averaged over folds.\n  quote: \"Our model: 1K test images 38.4 69.9 80.5 1.0 27.4 60.2 74.8 3.0\" / \"Our model: 5K test images 16.5 39.2 52.0 9.0 10.7 29.6 42.2 14.0\" / \"Note that the 5000 images numbers are lower since Recall@K is a function of test set size.\"\n  where: Table 1 and Section 4.1, p.6\n- claim: On Flickr30K the BRNN alignment model beats earlier AlexNet-class retrieval work. Vinyals et al. do better, but with a stronger CNN.\n  number: R@1/R@5/R@10/Med r. Annotation 22.2/48.2/61.4/4.8; search 15.2/37.7/50.5/9.2\n  setup: Results are the average of the top 5 validation models evaluated on test; recall standard deviations are about 0.5 to 1.0. The features are RCNN (ImageNet-pretrained, fine-tuned on 200 detection classes): top 19 detections plus the whole image, so 20 regions.\n  quote: \"Our model: BRNN 22.2 48.2 61.4 4.8 15.2 37.7 50.5 9.2\" / \"Vinyals et al. [54] (more powerful CNN) 23 - 63 5 17 - 57 8\" / \"we take the top 5 validation set models, evaluate each independently on the test set and then report the average performance. The standard deviations on the recall values range from approximately 0.5 to 1.0.\"\n  where: Table 1, p.6\n- claim: The ablation splits the gain into two parts. The simpler max-over-regions objective helps on its own (DeFrag reimplementation to DepTree edges), and replacing dependency trees with the BRNN helps further.\n  number: Flickr30K annotation R@1 19.2 to 20.0 to 22.2\n  setup: Same features and training as above.\n  quote: \"Our implementation of DeFrag [24] 19.2 44.5 58.0 6.0 12.9 35.4 47.5 10.8\" / \"Our model: DepTree edges 20.0 46.6 59.4 5.4 15.0 36.5 48.2 10.4\"\n  where: Table 1, p.6\n- claim: The Flickr8K ranking results sit in the appendix.\n  number: BRNN annotation 16.5/40.6/54.2/7.6; search 11.8/32.1/44.7/12.4\n  quote: \"Our model: BRNN 16.5 40.6 54.2 7.6 11.8 32.1 44.7 12.4\"\n  where: Table 5, supplementary p.16\n- claim: Full-image captioning on COCO beats a nearest-neighbour retrieval baseline and trails Google NIC.\n  number: COCO B-1/2/3/4 62.5/45.0/32.1/23.0, METEOR 19.5, CIDEr 66.0. NN baseline: 48.0/28.1/16.6/10.0, 15.7, 38.3\n  setup: VGGNet features, coco-caption scorer, 5 references per image. The caption says \"on 1,000 test images\" even though COCO's test split is defined as 5,000, so which COCO test set was used is ambiguous. NIC used GoogLeNet, an LSTM and an ensemble.\n  quote: \"Our model 57.9 38.3 24.5 16.0 57.3 36.9 24.0 15.7 62.5 45.0 32.1 23.0 19.5 66.0\" / \"Table 2. Evaluation of full image predictions on 1,000 test images.\" / \"Google NIC [54] 63 41 27 — 66.3 42.3 27.7 18.3 66.6 46.1 32.9 24.6 — —\"\n  where: Table 2, p.7\n- claim: METEOR and CIDEr on Flickr were reported for future comparison.\n  number: Flickr8K 16.7/31.8; Flickr30K 15.3/24.7\n  quote: \"For future comparisons, our METEOR/CIDEr Flickr8K scores are 16.7/31.8 and the Flickr30K scores are 15.3/24.7.\"\n  where: Table 2 caption, p.7\n- claim: Many generated captions are copied verbatim from the training set. Beam search increases copying and also increases CIDEr.\n  number: 60% at beam 7, 25% at beam 1; CIDEr 0.66 vs 0.61\n  quote: \"a relatively large portion of generated sentences (60% with beam size 7) can be found in the training data. This fraction decreases with lower beam size; For instance, with beam size 1 this falls to 25%, but the performance also deteriorates (e.g. from 0.66 to 0.61 CIDEr).\"\n  where: Section 4.2, p.7\n- claim: The paper built a new region-level test set and reports that the region RNN beats both the full-frame RNN and a retrieval baseline. Human agreement is still higher.\n  number: Region model B-1..4 35.2/23.0/16.1/14.8; human agreement 61.5/45.2/30.1/22.0\n  setup: 9,000 snippets on 200 MSCOCO test images, 9 annotators per image, mean snippet length 2.3 words, test-only. The full-frame model's longer outputs likely lower its BLEU.\n  quote: \"we collected 9,000 text snippets for 200 images in our MSCOCO test split (i.e. 45 snippets per image). The snippets have an average length of 2.3 words.\" / \"RNN: Region level model 35.2 23.0 16.1 14.8\" / \"CIDEr 61.6/20.3, METEOR 15.8/13.3, ROUGE 35.1/21.0 for region/fullframe respectively.\"\n  where: Section 4.3 and Table 3, p.8\n- claim: The alignment model works like this. Each word, encoded by a BRNN, is scored by its best-matching region (S_kl = sum over words of the max over regions of v_i^T s_t), with a bidirectional max-margin ranking loss using margin 1. A chain MRF with β smoothing, solved by dynamic programming, turns word alignments into contiguous phrase-to-box alignments.\n  number: h = 1000 to 1600; 4096-d CNN features; about 60M CNN parameters\n  quote: \"h ranges from 1000-1600 in our experiments\" / \"Here, every word st aligns to the single best image region.\"\n  where: Sections 3.1.1 to 3.1.4, pp.3 to 4\n- claim: The learned embedding magnitudes act as importance weights. Discriminative words get large norms and stop words sit near zero.\n  number: \"kayaking\" 2.61 vs \"now\" 0.42 (Flickr30K, averaged over contexts)\n  quote: \"0.42 now 2.61 kayaking\"\n  where: Table 4, supplementary p.11\n\nLIMITS\n- The authors list these limitations themselves: the model describes one pixel array at a fixed resolution; the image enters only through an additive bias at step 1; and the system is two separately trained models, not one end-to-end model (\"remains an open problem\", Section 4.4).\n- The appendix says the model \"does not explicitly handle or support counting\" (\"three people\" ends up boxed around two). Region captions lack context. Retrieval quality drops for rare concepts (\"roof\", \"straw hat\").\n- After submission the authors found that LSTMs \"consistently produced better results\" than their RNN (Section 6.5). They admit the RNN is \"simpler ... but also suffers in performance\".\n- Retrieval uses AlexNet-class RCNN features while captioning uses VGGNet, so the two halves of the paper use different backbones.\n- The paper doesn't publish the image ID lists in the text and doesn't describe 5-fold averaging for COCO 1K. The \"Karpathy split\" name is later usage and doesn't appear in this paper.\n- Dated: these are 2014-era baselines. BLEU, METEOR and CIDEr are the only measures, with no human evaluation of the full-image captions. CIDEr was then an arXiv-only metric.\n\nBUILDS ON: Karpathy, Joulin and Fei-Fei 2014, DeFrag (fragment embeddings, ranking objective, top 19 detections); Frome et al. 2013, DeViSE; Girshick et al. 2014, RCNN; Schuster and Paliwal 1997, BRNN; Socher et al. 2014, SDT-RNN loss; Mikolov et al. 2013, word2vec; Mikolov et al. 2010 and Sutskever et al. 2011, RNN language models; Hodosh et al. 2013 and Young et al. 2014 (Flickr8K/30K); Lin et al. 2014 (COCO); Chen et al. 2015, coco-caption; Vedantam et al. 2014 (CIDEr); Papineni et al. 2002 (BLEU); Denkowski and Lavie 2014 (METEOR); Tieleman and Hinton 2012, RMSprop; Zaremba et al. 2014, dropout for RNNs.\n\nCODE: None. The paper has equations only (Eq. 8 score, Eq. 9 loss, Eqs. 10 to 12 MRF, Eqs. 13 to 15 RNN). A training tip worth keeping from Section 6.5: initialise the softmax biases to the log unigram frequencies for faster early convergence, and clip gradients elementwise at 5.\n\nFIGURES\n- Fig. 3, p.4: \"Diagram for evaluating the image-sentence score Skl\", the region-by-word similarity grid reduced by max. It shows the alignment objective faster than Eq. 8 does, which suits notes/01-image-input.\n- Fig. 5, p.6: example word-to-region alignments with scores. It makes the idea of weak supervision from captions concrete.\n- Fig. 2, p.3: the two-stage pipeline overview (align, then generate).\n- Fig. 4, p.5: the multimodal RNN with the image fed in at step 1.\n\nPROBLEMS\n- The extraction is clean. Math layout is partly flattened (summation symbols on their own lines, \"| {z }\" artefacts in Eq. 9), but it can be read.\n- The Table 2 caption says \"1,000 test images\" while COCO's test split is defined as 5,000. I've reported this as written and haven't tried to resolve it.\n- I found no embedded instructions."
+ "type": "empirical",
+ "question": "How can image-sentence datasets be used as weak labels to align sentence snippets with image regions and then generate descriptions of images and regions?",
+ "hypothesis": "Treating sentences as weak labels for unknown image locations lets a BRNN-CNN alignment model and a multimodal RNN beat retrieval baselines.",
+ "contributions": [
+  "A deep network that infers latent alignment between sentence segments and image regions via a multimodal embedding and structured objective, surpassing state of the art in image-sentence retrieval",
+  "A multimodal RNN that generates image descriptions, outperforming retrieval baselines on full images and on a new region-level annotation dataset"
+ ],
+ "method": {
+  "summary": "Stage 1: RCNN region features (20 per image) and a BRNN over words are embedded in one space and trained with a max-margin ranking loss using score S_kl = sum_t max_i v_i^T s_t; a chain MRF decodes word-to-region alignments. Stage 2: a simple multimodal RNN, conditioned on the image at step 1 only, is trained on full images (VGGNet features) or on inferred region-snippet pairs.",
+  "task": "image-sentence retrieval and image/region caption generation",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Flickr8K",
+    "role": "both",
+    "size": "8,000 images, 5 AMT sentences each",
+    "split": "1,000 validation, 1,000 test, rest train",
+    "source": "Hodosh et al. 2013",
+    "preprocessing": "lowercase, drop non-alphanumerics, keep words occurring at least 5 times: 2538 words"
+   },
+   {
+    "name": "Flickr30K",
+    "role": "both",
+    "size": "31,000 images, 5 AMT sentences each",
+    "split": "1,000 validation, 1,000 test, rest train",
+    "source": "Young et al. 2014",
+    "preprocessing": "same filter: 7414 words"
+   },
+   {
+    "name": "MSCOCO",
+    "role": "both",
+    "size": "123,000 images, 5 AMT sentences each",
+    "split": "5,000 validation, 5,000 test, rest train (text mentions 113,000 train images)",
+    "source": "Lin et al. 2014",
+    "preprocessing": "same filter: 8791 words"
+   },
+   {
+    "name": "Region annotations (new)",
+    "role": "eval",
+    "size": "9,000 text snippets on 200 images of the MSCOCO test split (45 per image), average length 2.3 words",
+    "split": "test only",
+    "source": "collected with AMT, nine annotators per image, five boxes each",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Alignment model (RCNN + BRNN)",
+    "role": "proposed",
+    "params": "CNN approx 60 million parameters",
+    "architecture": "RCNN image regions + bidirectional RNN over words, ReLU",
+    "init_from": "CNN pre-trained on ImageNet, finetuned on the 200 ImageNet Detection classes; word embeddings from 300-d word2vec, kept fixed",
+    "tokenizer": "word level, 1-of-k",
+    "vocab": "2538 / 7414 / 8791 words",
+    "layers": null,
+    "hidden": "BRNN hidden size 300-600; embedding h 1000-1600",
+    "heads": null,
+    "context": null,
+    "other": {
+     "regions": "top 19 detections plus whole image = 20",
+     "cnn_feature": "4096-d fc layer"
+    }
+   },
+   {
+    "name": "Multimodal RNN",
+    "role": "proposed",
+    "params": null,
+    "architecture": "simple RNN, image bias bv added at first step only",
+    "init_from": null,
+    "tokenizer": "word level plus START/END",
+    "vocab": null,
+    "layers": null,
+    "hidden": "typical 512",
+    "heads": null,
+    "context": null,
+    "other": {
+     "full_image_features": "VGGNet",
+     "region_model_input": "region CNN vector"
+    }
+   },
+   {
+    "name": "Nearest Neighbor",
+    "role": "baseline",
+    "params": null,
+    "architecture": "retrieve sentence of nearest training image by L2 on VGGNet fc7",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "alignment: bidirectional max-margin ranking loss with margin 1 (Eq 9); RNN: maximise log probability of next word (softmax)",
+   "optimizer": "alignment: SGD with momentum 0.9; generative RNN: RMSprop",
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "100 image-sentence pairs (alignment model)",
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": "cross-validated, value not stated",
+   "dropout": "in all layers except recurrent layers; rate not stated",
+   "regularisation": "elementwise gradient clipping at 5",
+   "hardware": "NVIDIA GPUs (donated); model not stated",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": "top 5 validation models evaluated independently on test and averaged",
+   "other": {
+    "softmax_bias_init": "biases initialised to log probability of word occurrence in training data (Sec 6.5)",
+    "mrf_beta": "hyperparameter, value not stated",
+    "word_vectors": "authors say training them from random init gave little change"
+   }
+  },
+  "inference": {
+   "decoding": "sample or argmax; beam search, e.g. beam size 7",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": null,
+   "retrieval": "retrieval by image-sentence score S_kl",
+   "parameters": {},
+   "other": {
+    "beam1_vs_7": "beam 1 gives CIDEr 0.61 vs 0.66 at beam 7"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Recall@K",
+     "definition": "fraction of times a correct item is among top K results",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Median rank (Med r)",
+     "definition": "median rank of closest ground truth item",
+     "unit": "rank",
+     "higher_is_better": false
+    },
+    {
+     "name": "BLEU B-n",
+     "definition": "BLEU with up to n-grams, coco-caption code, 5 references",
+     "unit": "score",
+     "higher_is_better": true
+    },
+    {
+     "name": "METEOR",
+     "definition": "coco-caption",
+     "unit": "score",
+     "higher_is_better": true
+    },
+    {
+     "name": "CIDEr",
+     "definition": "coco-caption",
+     "unit": "score",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "SDT-RNN (Socher)",
+    "Kiros et al.",
+    "Mao et al.",
+    "Donahue et al.",
+    "DeFrag (Karpathy et al.)",
+    "Our implementation of DeFrag",
+    "Vinyals et al. (Google NIC)",
+    "Nearest Neighbor"
+   ],
+   "protocol": "Ranking: top 5 validation models each evaluated on test, averaged; recall std approx 0.5 to 1.0. Captioning: coco-caption scorer. No human evaluation of full-image captions."
+  },
+  "availability": {
+   "code": "stated public at cs.stanford.edu/people/karpathy/deepimagesent",
+   "weights": null,
+   "data": "stated public (same page)"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "BRNN alignment model, Flickr30K image annotation Recall@1",
+   "kind": "measured",
+   "source": null,
+   "metric": "R@1",
+   "value": "22.2",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Flickr30K test, average of top 5 validation models, AlexNet-class RCNN features",
+   "quote": null,
+   "table": "Table 1, row Our model: BRNN, column R@1",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Same model beats the DeFrag reimplementation (19.2) and DepTree edges (20.0) on Flickr30K annotation R@1",
+   "kind": "measured",
+   "source": null,
+   "metric": "R@1",
+   "value": "19.2 to 22.2",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Flickr30K, same features",
+   "quote": null,
+   "table": "Table 1, rows Our implementation of DeFrag / DepTree edges / BRNN, column R@1",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "MSCOCO image annotation R@1 on 1K test images",
+   "kind": "measured",
+   "source": null,
+   "metric": "R@1",
+   "value": "38.4",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MSCOCO, subset of 1,000 test images",
+   "quote": null,
+   "table": "Table 1, row Our model: 1K test images, column R@1",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "MSCOCO image annotation R@1 on the full 5K test images",
+   "kind": "measured",
+   "source": null,
+   "metric": "R@1",
+   "value": "16.5",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MSCOCO, 5,000 test images; recall falls as test set grows",
+   "quote": "Note that the 5000 images numbers are lower since Re-\ncall@K is a function of test set size.",
+   "table": "Table 1, row Our model: 5K test images, column R@1",
+   "note": "same alignment model; 1K vs 5K not comparable",
+   "where": "Sec 4.1"
+  },
+  {
+   "claim": "Generated captions found verbatim in training data at beam 7",
+   "kind": "measured",
+   "source": null,
+   "metric": "fraction",
+   "value": "60%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "full-image RNN, VGGNet, beam size 7",
+   "quote": "(60% with beam size 7) can be found in the training data",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2"
+  },
+  {
+   "claim": "At beam size 1 the verbatim fraction is 25% and CIDEr 0.61 instead of 0.66",
+   "kind": "measured",
+   "source": null,
+   "metric": "fraction",
+   "value": "25%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "same model, beam size 1",
+   "quote": "with beam size 1 this falls to 25%, but the performance also deteriorates (e.g. from 0.66 to 0.61 CIDEr)",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2"
+  },
+  {
+   "claim": "Full-image captioning on MSCOCO CIDEr, versus 38.3 for nearest neighbour",
+   "kind": "measured",
+   "source": null,
+   "metric": "CIDEr",
+   "value": "66.0",
+   "unit": null,
+   "baseline_value": "38.3",
+   "n": null,
+   "setup": "VGGNet features, coco-caption, 5 references; Table 2 caption says 1,000 test images",
+   "quote": null,
+   "table": "Table 2, row Our model, column CIDEr (66.0); row Nearest Neighbor (38.3)",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Region-level RNN BLEU-4 versus human agreement 22.0",
+   "kind": "measured",
+   "source": null,
+   "metric": "B-4",
+   "value": "14.8",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "new region dataset, 9,000 snippets on 200 COCO test images",
+   "quote": null,
+   "table": "Table 3, row RNN: Region level model, column B-4",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Annotation collected: 9,000 snippets for 200 images",
+   "kind": "measured",
+   "source": null,
+   "metric": "count",
+   "value": "9,000",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "region dataset",
+   "quote": "we collected 9,000 text snippets for 200 images in our MSCOCO test split (i.e. 45 snippets per image)",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.3"
+  },
+  {
+   "claim": "Flickr8K BRNN annotation R@1",
+   "kind": "measured",
+   "source": null,
+   "metric": "R@1",
+   "value": "16.5",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Flickr8K ranking",
+   "quote": null,
+   "table": "Table 5, row Our model: BRNN, column R@1",
+   "note": null,
+   "where": "Table 5"
+  }
+ ],
+ "limits": [
+  "Authors: model describes one pixel array at a fixed resolution; image enters only through additive bias; two separately trained models, not end-to-end",
+  "Appendix: no explicit counting support; region captions lack context; quality drops for rare concepts",
+  "After submission the authors found LSTMs consistently better than their RNN",
+  "Retrieval uses AlexNet-class features while captioning uses VGGNet",
+  "Table 2 caption says 1,000 test images though the COCO test split is 5,000; learning rate, dropout rate, weight decay, epochs and MRF beta are not stated",
+  "The paper never uses the name Karpathy split and names no venue in the PDF"
+ ],
+ "practices": [],
+ "terms": [],
+ "lineage": [
+  {
+   "work": "Deep fragment embeddings (Karpathy, Joulin, Fei-Fei)",
+   "year": 2014,
+   "arxiv": "1406.5679",
+   "relation": "extends",
+   "note": "builds on its ranking objective, simplified; BRNN replaces dependency trees",
+   "quote": "We build on the approach of Karpathy et al. [24]"
+  },
+  {
+   "work": "RCNN (Girshick et al.)",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "region detections",
+   "quote": null
+  },
+  {
+   "work": "Show and tell (Vinyals et al.)",
+   "year": 2014,
+   "arxiv": "1411.4555",
+   "relation": "baseline",
+   "note": "Google NIC, LSTM, GoogLeNet",
+   "quote": null
+  },
+  {
+   "work": "Flickr8K, Flickr30K, MSCOCO",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Hodosh 2013, Young 2014, Lin 2014 (1405.0312)",
+   "quote": null
+  },
+  {
+   "work": "DeViSE (Frome et al.)",
+   "year": 2013,
+   "arxiv": null,
+   "relation": "related",
+   "note": "inspiration for semantic embedding",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 3",
+   "caption": "Diagram for evaluating the image-sentence score Skl.",
+   "page": 4,
+   "why": "shows region-by-word grid reduced by max"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Image-Sentence ranking experiment results.",
+   "page": 6,
+   "why": "retrieval results and ablation"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 8",
+   "snippet": "Skl = sum_{t in gl} max_{i in gk} v_i^T s_t",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "No embedded instructions found. Math layout flattened in text."
+ ]
 }

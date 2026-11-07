@@ -1,0 +1,533 @@
+{
+ "schema": 1,
+ "key": "1706.03741",
+ "pdf": "generative-ai/05-RL/sources/christiano-2017-deep-rl-from-human-preferences.pdf",
+ "bib": {
+  "title": "Deep Reinforcement Learning from Human Preferences",
+  "authors": [
+   "Paul F Christiano",
+   "Jan Leike",
+   "Tom B Brown",
+   "Miljan Martic",
+   "Shane Legg",
+   "Dario Amodei"
+  ],
+  "first_author": "Christiano",
+  "year": 2017,
+  "venue": "preprint (arXiv v4, 17 Feb 2023; NIPS 2017)",
+  "arxiv": "1706.03741",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 57195,
+  "chars_total": 57195,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can deep RL agents learn complex tasks from non-expert human preferences between short trajectory segments, with feedback on a tiny fraction of interactions?",
+ "hypothesis": "A reward predictor fit to pairwise comparisons, trained asynchronously with the policy, can match RL on the true reward using orders of magnitude less human feedback.",
+ "contributions": [
+  "Scale reward learning from human preferences to deep RL (Atari, MuJoCo)",
+  "Feedback on less than 1% of agent interactions",
+  "Learn novel behaviours (backflip, one-legged cheetah, Enduro keep-alongside) with about an hour of human time",
+  "Ablations of ensembling, online queries, clip length, comparisons vs scores"
+ ],
+ "method": {
+  "summary": "A policy (A2C for Atari, TRPO for MuJoCo) maximises a reward predictor fit with a Bradley-Terry cross-entropy loss to human (or synthetic oracle) comparisons of 1-2 s clips. Predictor, policy and labelling run asynchronously; queries are chosen by maximum ensemble disagreement.",
+  "task": "RL with unobserved reward, learned from pairwise preferences over trajectory segments",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "MuJoCo tasks via OpenAI Gym (8 robotics tasks plus pendulum)",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "MuJoCo / OpenAI Gym",
+    "preprocessing": "Episode termination replaced by a penalty; torque penalties removed"
+   },
+   {
+    "name": "Atari (7 games: BeamRider, Breakout, Enduro, Pong, Qbert, SpaceInvaders, Seaquest)",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Arcade Learning Environment",
+    "preprocessing": "Mnih 2015 wrappers; score area blacked out; life-loss/episode-end signals not sent to agent; rewards clipped to [-1,1]"
+   },
+   {
+    "name": "Human preference labels",
+    "role": "train",
+    "size": "700 queries (MuJoCo), 5,500 queries (Atari) in main runs; 900 (backflip), 800 (one-leg cheetah), ~1,300 (Enduro)",
+    "split": "1/e of data held out as validation per predictor",
+    "source": "Contractors for main tasks; authors for Reacher, Cheetah and novel behaviours",
+    "preprocessing": "Ties give uniform mu; 'can't tell' dropped"
+   }
+  ],
+  "models": [
+   {
+    "name": "Reward predictor, MuJoCo",
+    "role": "reward",
+    "params": null,
+    "architecture": "2-layer MLP, 64 hidden units each, leaky ReLU alpha=0.01",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "2",
+    "hidden": "64",
+    "heads": null,
+    "context": "segments of 1.5 s = 15 to 60 timesteps",
+    "other": {
+     "output_norm": "std 1"
+    }
+   },
+   {
+    "name": "Reward predictor, Atari",
+    "role": "reward",
+    "params": null,
+    "architecture": "84x84x4 input; 4 conv layers 7x7,5x5,3x3,3x3 strides 3,2,1,1, 16 filters each, leaky ReLU alpha=0.01, batch norm and dropout 0.5; FC 64; scalar output",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "4 conv + FC 64 + scalar",
+    "hidden": "64",
+    "heads": null,
+    "context": "25 timesteps (1.7 s at 15 fps)",
+    "other": {
+     "output_norm": "std 0.05"
+    }
+   },
+   {
+    "name": "Policy, MuJoCo (TRPO)",
+    "role": "base",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "gamma": 0.995,
+     "lambda": 0.97,
+     "entropy_bonus": "0.01 (swimmer 0.001)"
+    }
+   },
+   {
+    "name": "Policy, Atari (A2C)",
+    "role": "base",
+    "params": null,
+    "architecture": "as Mnih et al. 2015",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "entropy_bonus": 0.01,
+     "lr": "0.0007 decayed linearly to zero after 80M timesteps (trained 50M)",
+     "n_steps": 5,
+     "workers": 16,
+     "gamma": 0.99,
+     "optimizer": "Adam alpha=0.99 eps=1e-5"
+    }
+   }
+  ],
+  "training": {
+   "objective": "Cross-entropy between Bradley-Terry preference probability P(s1>s2)=exp(sum r1)/(exp(sum r1)+exp(sum r2)) and human label distribution mu; 10% uniform-random-response adjustment",
+   "optimizer": "Atari policy: Adam (alpha=0.99, eps=1e-5); predictor optimizer not stated",
+   "lr": "Atari policy 0.0007 linear decay; predictor lr not stated",
+   "lr_schedule": "Atari policy linear to zero over 80M timesteps",
+   "warmup": "Atari: reward predictor pretrained 200 epochs on 500 random-policy comparisons; MuJoCo: 25% of comparisons from random policy",
+   "batch_size": null,
+   "steps": "Atari 50M timesteps",
+   "epochs": "200 (Atari predictor pretrain)",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": "l2 coefficient adapted to keep validation loss 1.1-1.5x train loss",
+   "dropout": "0.5 on Atari predictor conv layers; 'in some domains' otherwise",
+   "regularisation": "l2 adaptive; ensemble of 3 predictors, each on |D| triples bootstrapped with replacement; 1/e held out",
+   "hardware": "Atari: VM with 16 CPUs and one Nvidia K80 GPU",
+   "compute": "about a day per Atari run, ~$25",
+   "wall_clock": "about a day (Atari)",
+   "seeds": "5 runs MuJoCo, 3 runs Atari for synthetic/RL curves; real human feedback a single run",
+   "other": {
+    "label_rate_mujoco": "2e6/(T+2e6) after T frames",
+    "label_rate_atari": "decreased every 5e6 frames, roughly proportional to 5e6/(T+5e6)",
+    "candidate_pairs": "10x more clip pairs drawn than presented, picked by max variance across ensemble",
+    "atari_label_buffer": "last 3,000 labels, looped continuously",
+    "predictor_throughput": "about 1 label per 10 RL timesteps",
+    "reward_normalisation": "zero mean, constant std"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "True task reward",
+     "definition": "Average reward under the underlying environment reward (not seen by agent), averaged over 5 batches (MuJoCo) or ~150,000 frames (Atari)",
+     "unit": "task reward",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "RL on true reward",
+    "synthetic oracle feedback with 350, 700, 1400 (MuJoCo) or 350, 700, 1400, 3300 etc. labels (Atari)",
+    "ablations: random queries, no ensemble, no online queries, no regularization, no segments, target (regression on true segment reward)"
+   ],
+   "protocol": "Mean of 5 (MuJoCo) or 3 (Atari) runs for synthetic and RL; real human feedback single run; no significance tests"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": null
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.compute",
+    "quote": "Training takes about a day, so the compute cost is ~$25.",
+    "where": "footnote 6"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Feedback on a tiny fraction of interactions suffices",
+   "kind": "measured",
+   "source": null,
+   "metric": "fraction of interactions labelled",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Atari and MuJoCo",
+   "quote": "providing feedback on less than 1% of our agent’s interactions with the environment",
+   "table": null,
+   "note": null,
+   "where": "Abstract"
+  },
+  {
+   "claim": "Interaction complexity is cut by roughly 3 orders of magnitude by a separate reward model",
+   "kind": "claim",
+   "source": null,
+   "metric": "orders of magnitude",
+   "value": 3,
+   "unit": "orders of magnitude",
+   "baseline_value": null,
+   "n": null,
+   "setup": "vs using human feedback directly as reward",
+   "quote": "it is possible to reduce the interaction\ncomplexity by roughly 3 orders of magnitude",
+   "table": null,
+   "note": null,
+   "where": "Sec 4"
+  },
+  {
+   "claim": "With 700 labels MuJoCo agents nearly match RL on the true reward",
+   "kind": "measured",
+   "source": null,
+   "metric": "labels",
+   "value": 700,
+   "unit": "queries",
+   "baseline_value": null,
+   "n": null,
+   "setup": "8 MuJoCo tasks + pendulum, human or synthetic feedback, 5 runs for synthetic, human single run",
+   "quote": "With 700 labels we are able to nearly match reinforcement learning on all of these tasks.",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.1.1, Fig 2"
+  },
+  {
+   "claim": "By 1400 synthetic labels the agent slightly beats RL on the true reward, perhaps from better shaping",
+   "kind": "measured",
+   "source": null,
+   "metric": "labels",
+   "value": 1400,
+   "unit": "queries",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MuJoCo, synthetic oracle",
+   "quote": "by 1400 labels our algorithm performs slightly better than if it had simply been given\nthe true reward",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.1.1"
+  },
+  {
+   "claim": "Atari human feedback run used 5,500 queries; matches RL on some games, not others",
+   "kind": "measured",
+   "source": null,
+   "metric": "labels",
+   "value": 5500,
+   "unit": "queries",
+   "baseline_value": null,
+   "n": null,
+   "setup": "7 Atari games, single human run",
+   "quote": "Figure 3 shows the results of training our agent with 5,500 queries to a human rater",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.1.2, Fig 3"
+  },
+  {
+   "claim": "Hopper backflip trained with 900 queries in under an hour (feedback from authors)",
+   "kind": "measured",
+   "source": null,
+   "metric": "queries",
+   "value": 900,
+   "unit": "queries",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Hopper, same parameters as main runs, authors as labellers",
+   "quote": "This behavior was\ntrained using 900 queries in less than an hour.",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.2"
+  },
+  {
+   "claim": "Half-Cheetah on one leg trained with 800 queries in under an hour (authors)",
+   "kind": "measured",
+   "source": null,
+   "metric": "queries",
+   "value": 800,
+   "unit": "queries",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Half-Cheetah, authors as labellers",
+   "quote": "This behavior was\ntrained using 800 queries in under an hour.",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.2"
+  },
+  {
+   "claim": "Enduro keep-alongside trained with about 1,300 queries and 4M frames (authors)",
+   "kind": "measured",
+   "source": null,
+   "metric": "queries",
+   "value": 1300,
+   "unit": "queries",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Enduro, authors as labellers",
+   "quote": "This was trained with roughly 1,300 queries\nand 4 million frames of interaction",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.2"
+  },
+  {
+   "claim": "Contractors answered the average query in 3-5 s; real-human experiments took 30 min to 5 h",
+   "kind": "measured",
+   "source": null,
+   "metric": "seconds per query",
+   "value": "3-5",
+   "unit": "s",
+   "baseline_value": null,
+   "n": null,
+   "setup": "contractors, several hundred to several thousand pairs per task",
+   "quote": "Contractors responded to the average query in 3-5 seconds",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.1"
+  },
+  {
+   "claim": "Human feedback on Atari performs like synthetic feedback with 40% fewer labels",
+   "kind": "measured",
+   "source": null,
+   "metric": "label deficit",
+   "value": 40,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Atari, comparable to synthetic with same label count",
+   "quote": "comparably to synthetic feedback that has 40%\nfewer labels",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.1.2"
+  },
+  {
+   "claim": "Offline (non-online) reward predictor training performs poorly and yields bizarre behaviour (Pong endless volleys)",
+   "kind": "measured",
+   "source": null,
+   "metric": "ablation",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "MuJoCo (700 synthetic labels, 5 runs) and Atari (5,500 synthetic labels, 3 runs)",
+   "quote": "human feedback needs to be intertwined with RL learning rather than\nprovided statically",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.3, Figs 5-6"
+  },
+  {
+   "claim": "Cost: Atari compute about $25 vs about $36 of human labour for 5k labels",
+   "kind": "measured",
+   "source": null,
+   "metric": "compute cost",
+   "value": 25,
+   "unit": "$",
+   "baseline_value": null,
+   "n": null,
+   "setup": "K80 VM ~$700/month, one day training; 5k labels ~5 h at US minimum wage ~$36",
+   "quote": "Training takes about a day, so the compute cost is ~$25.",
+   "table": null,
+   "note": null,
+   "where": "footnote 6, p10"
+  },
+  {
+   "claim": "Ensemble disagreement query selection can impair performance on some tasks",
+   "kind": "measured",
+   "source": null,
+   "metric": "ablation",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "MuJoCo ablations",
+   "quote": "in some tasks it actually impairs performance",
+   "table": null,
+   "note": null,
+   "where": "Sec 2.2.4"
+  }
+ ],
+ "limits": [
+  "Human feedback on novel behaviours came from the authors, not non-expert contractors",
+  "Real-human results are a single run per task; synthetic curves are 3-5 runs, no significance tests",
+  "Query selection by ensemble variance is described as crude and sometimes hurts",
+  "On Qbert real human feedback fails to beat the first level; human labels are uneven and inconsistent across contractors",
+  "Environment termination conditions were removed so as not to leak task information; no text/LM setting",
+  "Reward assumed a function of 4 preceding frames in Atari, ignoring general partial observability",
+  "Predictor optimizer, learning rate and batch size are not stated"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "trajectory segment",
+   "definition": "a sequence of observations and actions of length k, here 1-2 seconds of video",
+   "where": "Sec 2.1"
+  },
+  {
+   "term": "label annealing",
+   "definition": "labels are fed in at a rate decaying inversely with the number of timesteps",
+   "where": "Appendix A"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Bradley and Terry, Rank analysis of incomplete block designs (1952)",
+   "year": 1952,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "preference model for the reward loss",
+   "quote": null
+  },
+  {
+   "work": "Akrour et al. 2012; 2014",
+   "year": 2012,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "same basic approach; whole-trajectory preferences, linear hand-coded features",
+   "quote": null
+  },
+  {
+   "work": "Wilson et al. 2012",
+   "year": 2012,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "feedback elicitation closely follows; trajectory preference queries",
+   "quote": null
+  },
+  {
+   "work": "A3C/A2C (Mnih et al. 2016)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Atari policy optimiser",
+   "quote": null
+  },
+  {
+   "work": "TRPO (Schulman et al. 2015)",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "MuJoCo policy optimiser",
+   "quote": null
+  },
+  {
+   "work": "Arcade Learning Environment (Bellemare et al. 2013)",
+   "year": 2013,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Atari tasks",
+   "quote": null
+  },
+  {
+   "work": "MuJoCo (Todorov et al. 2012), OpenAI Gym (Brockman et al. 2016)",
+   "year": 2012,
+   "arxiv": "1606.01540",
+   "relation": "uses-data",
+   "note": "robotics tasks",
+   "quote": null
+  },
+  {
+   "work": "Concrete problems in AI safety (Amodei et al. 2016)",
+   "year": 2016,
+   "arxiv": "1606.06565",
+   "relation": "related",
+   "note": "motivation, reward misspecification",
+   "quote": null
+  },
+  {
+   "work": "TAMER (Knox 2012)",
+   "year": 2012,
+   "arxiv": null,
+   "relation": "related",
+   "note": "learns a reward model but in simpler settings",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Schematic illustration of our approach: the reward predictor is trained asynchronously from comparisons of trajectory segments, and the agent maximizes predicted reward.",
+   "page": 2,
+   "why": "Shows the three-process loop"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Results on MuJoCo simulated robotics as measured on the tasks’ true reward.",
+   "page": 7,
+   "why": "Human vs synthetic vs true-reward RL"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Performance of our algorithm on MuJoCo tasks after removing various components",
+   "page": 9,
+   "why": "Ablations"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 1, Sec 2.2.3",
+   "snippet": "P(s1 > s2) = exp(sum r(o1_t,a1_t)) / (exp(sum r(o1_t,a1_t)) + exp(sum r(o2_t,a2_t)))",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Extraction text has no section map for Section 2/3 sub-headings beyond a few; Fig 2-3 curves not readable from text, so no per-task numbers"
+ ]
+}

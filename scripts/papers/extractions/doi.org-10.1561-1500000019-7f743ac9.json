@@ -1,19 +1,394 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "https://doi.org/10.1561/1500000019",
  "pdf": "generative-ai/02-rag-retrieval/sources/robertson-2009-probabilistic-relevance-framework.pdf",
  "bib": {
   "title": "The Probabilistic Relevance Framework: BM25 and Beyond",
+  "authors": [
+   "Stephen Robertson",
+   "Hugo Zaragoza"
+  ],
   "first_author": "Robertson",
   "year": 2009,
-  "venue": "Found. Trends Inf. Retr. 2009",
+  "venue": "Foundations and Trends in Information Retrieval, Vol. 3, No. 4, pp. 333-389",
   "arxiv": null,
-  "doi": null
+  "doi": "10.1561/1500000019"
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-04",
-  "session": "5f2f0582-f958-4d9c-8469-02f3d5079657"
+  "at": "2026-11-07",
+  "chars_read": 99331,
+  "chars_total": 99331,
+  "engine": "pymupdf",
+  "skipped": "References skimmed only for lineage"
  },
- "legacy_report": "SOURCE: \"The Probabilistic Relevance Framework: BM25 and Beyond\", Stephen Robertson and Hugo Zaragoza, Foundations and Trends in Information Retrieval Vol. 3, No. 4 (2009) 333–389, DOI 10.1561/1500000019.\n\nCOVERAGE: I read all 99,228 of 99,228 characters (59 PDF pages), from the table of contents through the conclusions. I skimmed the references for origins. I did not run the figure-caption script. Figure captions come from the extracted text.\n\nCLAIMS\n- claim: The classic BM25 weight divides tf by a soft length normaliser B, applies the saturation tf'/(k1+tf'), and multiplies by the RSJ weight. A document's score is the sum of these weights over the query terms.\n  number: Eq. 3.12 to 3.15\n  setup: General derivation, with no particular corpus.\n  quote: \"B := ( (1 − b)+ b dlavdl ), 0 ≤ b ≤ 1 (3.12)\" … \"wBM25i (tf )= tf ′k1 + tf ′ wRSJi (3.14) = tfk1 ((1 − b)+ b dlavdl ) + tf wRSJi (3.15) This is the classic BM25 term-weighting and document-scoring function.\" (The fractions are flattened in extraction.)\n  where: p. 359–360, about chars 45,000–46,700\n- claim: The (k1+1) factor in the numerator, which the note's formula includes, is a variant. It does not change the ranking. It only makes one occurrence score the same as the RSJ weight alone.\n  number: none\n  setup: Section 3.5.1, variations on BM25.\n  quote: \"A common variant is to add a ( k1 + 1) component to the numerator of the saturation function. This is the same for all terms, and therefore does not aﬀect the ranking produced.\"\n  where: p. 361\n- claim: k1 comes from fitting a simple curve to the saturating term-weight shape that Harter's 2-Poisson eliteness model produces. The weight rises with tf toward an asymptote, the binary eliteness (BIM) weight. That limit is what \"saturation\" means.\n  number: tf/(k+tf), Eq. 3.10\n  setup: The 2-Poisson model assumes fixed-length documents.\n  quote: \"the authors of BM25 decided to ﬁt a simple parametric curve to this shape. The following one-parameter function was chosen: tf k + tf for some k> 0 (3.10)\"; \"any one term's contribution to the document score cannot exceed a saturation point (the asymptotic limit)\"\n  where: p. 355–357\n- claim: b comes from soft length normalisation between two hypotheses. \"Verbosity\" would mean normalising tf fully by length. \"Scope\" would mean not normalising at all. b=1 gives full normalisation and b=0 switches it off.\n  number: b between 0 and 1\n  setup: Section 3.4.5.\n  quote: \"Thus setting b = 1 will perform full document-length normalisation, while b = 0 will switch normalisation oﬀ.\"\n  where: p. 359\n- claim: The model gives no guidance on k1 and b, and the authors call this a limitation. Experiments find a range of values that works reasonably well, but the best values depend on the documents and queries.\n  number: 0.5<b<0.8, 1.2<k1<2\n  setup: Many retrieval experiments, not fully referenced.\n  quote: \"the model provides no guid- ance on how these should be set. This may be regarded as a limi- tation of the model.\" … \"values s u c ha s0.5 <b< 0.8 and 1 .2 <k 1 < 2 are reasonably good in many circumstances. However, there is also evidence that optimal values do depend on other factors (such as the type of documents or queries).\"\n  where: p. 360–361\n- claim: Some published versions fix b=0.5 and k1=2. Experiments favour a lower k1 and a higher b. (The note's default of b=0.75 sits inside the 0.5–0.8 range above. The source never states 0.75 itself.)\n  number: b=0.5, k1=2\n  setup: Published BM25 variants.\n  quote: \"A common combination would be b =0 .5 and k1 = 2. (However, many experiments suggest a somewhat lower value of k1 and a somewhat higher value of b.)\"\n  where: p. 361\n- claim: Without relevance information, the RSJ weight with R=r=0 reduces to an IDF form with 0.5 smoothing. That is the same as setting P(t|rel)=0.5.\n  number: Eq. 3.3\n  setup: No relevance judgements; the complement method treats the whole collection as non-relevant.\n  quote: \"All this can be achieved by setting R = ri = 0 in the RSJ formula (3.2) — this is equivalent to settingP(ti |rel) = 0.5\" … \"wIDFi = logN − ni +0 .5ni +0 .5 (3.3)\" (that is, log((N−n+0.5)/(n+0.5)))\n  where: p. 349\n- claim: The 0.5 pseudo-count exists because raw ratios inside a log can give infinite weights. The source does NOT discuss the negative IDF this form gives for terms in more than half the documents. See LIMITS.\n  number: 0.5\n  setup: RSJ estimation.\n  quote: \"the combination of a ratio of proba- bilities and a log function may yield (positive or negative) inﬁnities as estimates … introduces a small pseudo-count of frequency 0.5.\"\n  where: p. 348\n- claim: BM25F weights fields (streams) before saturation. It sums the stream-weighted, per-stream length-normalised tf for each term, then applies saturation once. The reasoning is that eliteness belongs to the term and document, so it is shared across fields. Scoring each field with BM25 and adding the scores is the wrong order.\n  number: Eq. 3.19–3.21\n  setup: There is one flat set of fields shared by all documents, for example title, body and anchor.\n  quote: \"we should combine evidence across terms and streams in the opposite order to that suggested above: ﬁrst streams, then terms.\" \"~tf i = S∑ s=1 vs tf si Bs (3.19)\" \"wBM25Fi = ~tf i k1 + ~tf i wRSJi (3.21)\"\n  where: p. 362–364\n- claim: Tuned BM25F parameters from TREC 2003 web tasks are far from plain-BM25 defaults, because field weights rescale tf.\n  number: k1 27.5 (TD), 4.9 (NP); v_title 38.4 / 13.5\n  setup: Table 3.1, from [62]; topic distillation (TD) and named page (NP) tasks, TREC 2003.\n  quote: \"k1 27.5 4.9 btitle 0.95 0.6 bbody 0.7 0.5 banchor 0.6 0.6 vtitle 38.4 13.5 vbody 1.0 1.0 vanchor 35 11.5\"\n  where: p. 365\n- claim: With integer weights, simple BM25F is the same as ordinary BM25 run on a document whose fields have been copied that many times.\n  number: v_title=5\n  setup: Simple version (Eq. 3.18) only.\n  quote: \"formula 3.18 is equivalent to 3.15 applied to a document in which the title has been replicated ﬁve times and the abstract twice.\"\n  where: p. 365\n- claim: Computing IDF over the whole collection and ignoring fields worked in practice, but it can break down.\n  number: none\n  setup: BM25F.\n  quote: \"it can lead to degener- ate cases (e.g., when a stream is extremely verbose and contains most terms for most documents). The proper deﬁnition of IDF in this con- text requires further research\"\n  where: p. 364\n- claim: A linear tf, as in tf·idf, only follows from the model in the special case where eliteness equals relevance. Otherwise, saturating tf has repeatedly beaten traditional tf·idf.\n  number: none\n  setup: Section 3.4.3.\n  quote: \"the non-linear, saturating function of tf developed below (also combined with anidf component) has frequently been shown to work better than traditional tf *idf .\"\n  where: p. 356\n- claim: Query-independent features are added as extra terms with their own transforms. This explains why BM25F + log(PageRank) works.\n  number: none\n  setup: Section 3.7.\n  quote: \"This development can explain for example why simple scoring functions such as BM25F(q,d)+log(PageRank (d)) may work well in practice\"\n  where: p. 367\n- claim: When fields are added, k1 should be rescaled by how much the field weights change the average length.\n  number: Eq. 5.1\n  setup: BM25F tuning.\n  quote: \"kBM25F1 ≈ kBM251 ∑ s vsavsl s∑ s avsl s (5.1)\"\n  where: p. 382\n- claim: BM25 and BM25F are robust to their parameters, but tuning still gives significant gains on a new collection.\n  number: none\n  setup: Section 5.\n  quote: \"small changes in the parameter values (or in the collection) do not produce large changes in accuracy or relevance. Nevertheless signiﬁcant gains in relevance can be obtained by properly optimising the parameters\"\n  where: p. 377\n\nLIMITS:\n- What the framework does not handle:\n  - Positions and proximity. \"For the most part the PRF ignores positional information\". The gains from position-aware variants \"are small\".\n  - Calibrated probabilities. The rank-preserving steps throw away what an explicit P(rel) would need, so the model must be \"considerably modiﬁed\" for uses such as filtering.\n  - Graded relevance, or relevance that depends on other documents. Both assumptions are \"arguable\".\n  - Term independence, which is \"clearly a much more arguable step\".\n  - Parameter guidance. k1 and b come from experiments, not from the model.\n  - Field-aware IDF, which is still open.\n  - Synonymy. Query expansion \"may worsen the term independence assumption\".\n- Blind feedback \"tends to fail on some queries, particularly on queries that are diﬃcult to start with\".\n- The source is \"not primarily an experimental survey\". Most \"works well\" claims are not referenced to experiments.\n- Negative IDF is not discussed. The IDF form log((N−n+0.5)/(n+0.5)) goes negative when n > N/2, but the text never says so. BM25+ is not mentioned either. Cite those claims to another source.\n- Dated material: the 2009 open-source list says Lucene \"does not implement BM25\" and only MG4J fully implements BM25F. Lucene has used BM25 by default for a long time since then. The gradient learning-to-rank discussion predates neural retrieval.\n\nBUILDS ON:\n- Harter 1975 (2-Poisson eliteness)\n- Robertson & Sparck Jones 1977 (RSJ weight)\n- Robertson 1977 (PRP)\n- Robertson, van Rijsbergen & Porter 1981\n- Robertson & Walker 1994, SIGIR (original BM25)\n- Cooper 1995 (linked dependence)\n- Maron & Kuhns 1960\n- Sparck Jones, Walker & Robertson 2000 (Parts 1–2)\n- Robertson, Zaragoza & Taylor 2004 CIKM (simple BM25F)\n- Zaragoza et al. TREC 2004 (BM25F with per-field b)\n- Craswell et al. 2005 (non-textual features)\n\nCODE: None. The source has formulas only. Note that PF/Tijah uses a different IDF: \"PF/Tijah uses idf= logN +0.5n+0.5\" (p. 370, footnote).\n\nFIGURES:\n- Fig. 3.3, p. 358: \"Saturation functions generated by Equation (3.10) with raw frequencies (left) and with frequencies normalised using Equation (3.13) ( right). Stronger saturation is obtained with lower values of k (left) and with shorter documents ( right). For the plot on the right we used k = 1 and b =0 .5.\" This shows the effect of k1 and of length together, faster than a sweep table does.\n- Fig. 3.2, p. 357: \"Left: some possible saturation functions. Right: saturation functions generated by the 2-Poisson model.\" This explains why tf/(k+tf) was chosen.\n- Fig. 3.1, p. 353: graphical model of eliteness.\n- Figs. 5.1 and 5.2, p. 380: examples of robust line search and promising-directions search.\n\nPROBLEMS:\n- Extraction flattened the fractions and dropped the overbars. For example, \"P(d|rel,q)P(d|rel,q)\" has lost the bar marking the non-relevant term, so read the quotes with that in mind.\n- Some spaces were inserted (\"s u c ha s0.5\", \"k 1\").\n- \"Sprck Jones\" has lost its diacritic.\n- pypdf warned that fontTools was missing, but the text was otherwise readable.\n- There were no embedded instructions.\n\nNote for the caller: the note's slide line about \"1.3×\" and its saturation table are consistent with this source's tf/(k1+tf) form. The source does not state b=0.75 as a default."
+ "type": "survey",
+ "question": "How is the Probabilistic Relevance Framework developed from the probability ranking principle into BM25, BM25F and related ranking functions, and how are their parameters set?",
+ "hypothesis": null,
+ "contributions": [
+  "Conceptual derivation of PRF from the PRP to sum-of-weights scoring (Sec 2)",
+  "Derived models: BIM/RSJ, relevance feedback, eliteness model, BM25, BM25F, non-textual features, positions (Sec 3)",
+  "Comparison with Maron-Kuhns, unified model, language models, topic models and DFR (Sec 4)",
+  "Parameter optimisation techniques (Sec 5)"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "Setting b=1 gives full document-length normalisation and b=0 switches it off; B=(1-b)+b*dl/avdl, tf'=tf/B.",
+   "kind": "reported",
+   "source": "Robertson and Sparck Jones, Robertson and Walker (as surveyed)",
+   "metric": "BM25 b range",
+   "value": "b in [0,1]",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Survey of the Probabilistic Relevance Framework; no experiment of the authors' own is run here, statements summarise many experiments by many people (Sec 1); Eq 3.12-3.13, Sec 3.4.5",
+   "quote": "Thus setting b = 1 will perform full document-length normalisation",
+   "table": null,
+   "note": null,
+   "where": "p. 359"
+  },
+  {
+   "claim": "Experiments suggest b between 0.5 and 0.8 and k1 between 1.2 and 2 are reasonably good in many circumstances; the model gives no guidance on setting them.",
+   "kind": "reported",
+   "source": "Robertson and Sparck Jones, Robertson and Walker (as surveyed)",
+   "metric": "BM25 parameter ranges",
+   "value": "0.5<b<0.8; 1.2<k1<2",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Unspecified collections; 'a significant number of such experiments', none cited; optimal values depend on document and query type (Sec 3.5)",
+   "quote": "values such as 0.5 < b < 0.8 and 1.2 < k1 < 2 are reasonably good in many",
+   "table": null,
+   "note": null,
+   "where": "p. 360-361"
+  },
+  {
+   "claim": "A common published BM25 setting is b=0.5 and k1=2, though many experiments suggest lower k1 and higher b.",
+   "kind": "reported",
+   "source": "Robertson and Sparck Jones, Robertson and Walker (as surveyed)",
+   "metric": "common published BM25 parameters",
+   "value": "b=0.5, k1=2",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Published versions of BM25 (Sec 3.5.1)",
+   "quote": "A common combination would be b = 0.5 and",
+   "table": null,
+   "note": null,
+   "where": "p. 361"
+  },
+  {
+   "claim": "The (k1+1) numerator factor is common to all terms so it does not change the ranking; it makes one occurrence weigh the same as the RSJ weight alone.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Sec 3.5.1, variations on BM25",
+   "quote": "A common variant is to add a (k1 + 1) component to the",
+   "table": null,
+   "note": null,
+   "where": "p. 361"
+  },
+  {
+   "claim": "BM25F parameters tuned on TREC 2003 web tasks: topic distillation k1=27.5, name page k1=4.9; title stream weight 38.4 (TD) and 13.5 (NP), body weight 1.0.",
+   "kind": "reported",
+   "source": "Zaragoza et al., Microsoft Cambridge at TREC 2004 [62]",
+   "metric": "tuned BM25F parameters",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "BM25F with per-stream b and stream weights v_s, parameters reported in Zaragoza et al. TREC 2004 [62] for TREC 2003 TD and NP tasks; k1 interacts with stream weights (Eq 5.1)",
+   "quote": null,
+   "table": "Table 3.1, rows k1 (27.5, 4.9), v_title (38.4, 13.5), v_body (1.0, 1.0)",
+   "note": "Also b_title 0.95/0.6, b_body 0.7/0.5, b_anchor 0.6/0.6, v_anchor 35/11.5.",
+   "where": "p. 365"
+  },
+  {
+   "claim": "Saturation: a single term's contribution cannot exceed an asymptote (the binary-eliteness BIM weight), however often it occurs.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "2-Poisson eliteness model, fixed-length documents (Sec 3.4.2); proven for the 2-Poisson case only, 'likely' for other distributions",
+   "quote": "contribution to the document score cannot exceed a saturation",
+   "table": null,
+   "note": null,
+   "where": "p. 356"
+  },
+  {
+   "claim": "With no relevance information (R=ri=0) the RSJ weight reduces to a close approximation of classical idf, log((N-ni+0.5)/(ni+0.5)).",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Binary independence model, complement method (Sec 3.1, Eq 3.3)",
+   "quote": "All this can be achieved by setting R = ri = 0 in the RSJ formula",
+   "table": null,
+   "note": null,
+   "where": "p. 349"
+  },
+  {
+   "claim": "Query expansion by offer weight: rank terms from relevant docs and add only the top x (of the order of 10).",
+   "kind": "reported",
+   "source": "Robertson and Sparck Jones, Robertson and Walker (as surveyed)",
+   "metric": "expansion terms",
+   "value": "x ~ 10",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Relevance feedback with BIM/RSJ weights (Sec 3.2)",
+   "quote": "add only the top x terms from this ranked list (x may be of the",
+   "table": null,
+   "note": null,
+   "where": "p. 351"
+  },
+  {
+   "claim": "Blind feedback takes the top y documents (say 5 or 10) as relevant; it helps on average but fails on difficult queries.",
+   "kind": "claim",
+   "source": null,
+   "metric": "feedback docs",
+   "value": "y = 5 or 10",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Pseudo-relevance feedback (Sec 3.3)",
+   "quote": "documents (say 5 or 10), assume them to be relevant",
+   "table": null,
+   "note": null,
+   "where": "p. 351"
+  },
+  {
+   "claim": "Positional information has surprisingly little effect on retrieval accuracy on average.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Sec 3.8; gains in proximity studies reported as small",
+   "quote": "position information has been shown to have surprisingly little",
+   "table": null,
+   "note": null,
+   "where": "p. 367"
+  },
+  {
+   "claim": "BM25 and BM25F are quite robust to parameter values but tuning gives significant gains on a new collection.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Sec 5; tuning is collection-specific and costly",
+   "quote": "are known to be quite robust with respect to their parameters",
+   "table": null,
+   "note": null,
+   "where": "p. 377"
+  },
+  {
+   "claim": "In BM25F k1 depends on the stream weights; k1 for BM25F is initialised by scaling BM25's k1 with the change in average length (Eq 5.1).",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Sec 5.2, K1 scaling",
+   "quote": "k1 will depend on the weights",
+   "table": null,
+   "note": null,
+   "where": "p. 381"
+  },
+  {
+   "claim": "Optimisation is done on a grid with parameters not changed beyond the second decimal, with caching.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Authors' own tuning practice (Sec 5.1)",
+   "quote": "of our experiments we did not allow parameters to change beyond the",
+   "table": null,
+   "note": null,
+   "where": "p. 379"
+  },
+  {
+   "claim": "Greedy recursive robust line search is exponentially expensive in the number of parameters, impractical for n>3.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Sec 5.2",
+   "quote": "However, this approach remains exponentially expensive with respect",
+   "table": null,
+   "note": null,
+   "where": "p. 380"
+  }
+ ],
+ "limits": [
+  "Not an experimental survey: performance statements derive from many uncited experiments (Sec 1).",
+  "Binary, document-independent relevance and term independence are assumed and 'arguable' (Sec 2.2, 2.4.2).",
+  "Model gives no guidance on setting k1 and b (Sec 3.5).",
+  "Dropping rank-irrelevant terms means no calibrated probability of relevance, which hurts blind feedback and filtering (Sec 2.5, 3.3).",
+  "Positional information is not a natural PRF extension (Sec 3.8).",
+  "IDF for BM25F streams left as open research (Sec 3.6.3).",
+  "Predates dense/neural retrieval (2009)."
+ ],
+ "practices": [
+  "Use k1 about 1.2-2 and b about 0.5-0.8 as starting values, then tune on judged queries (Sec 3.5).",
+  "Without relevance information use the idf form of the RSJ weight (Sec 3.1).",
+  "For fielded documents sum weighted, length-normalised tf over streams first and saturate once per term (BM25F, Sec 3.6.1, 3.6.3).",
+  "Tune on a grid with caching; tune k1,b first, then stream weights, then k1 and b_s (Sec 5.1, 5.2.1).",
+  "Expand queries with the top ~10 offer-weight terms (Sec 3.2)."
+ ],
+ "terms": [
+  {
+   "term": "Probability Ranking Principle",
+   "definition": "If retrieved documents are ordered by decreasing probability of relevance on the data available, then the system's effectiveness is the best that can be obtained for the data.",
+   "where": "Sec 2.3"
+  },
+  {
+   "term": "Eliteness",
+   "definition": "A hidden binary document-term property, a form of aboutness; term frequency depends on eliteness, which is associated with relevance.",
+   "where": "Sec 3.4"
+  },
+  {
+   "term": "Saturation",
+   "definition": "Any one term's contribution to the document score cannot exceed a saturation point (the asymptotic limit).",
+   "where": "Sec 3.4.2"
+  },
+  {
+   "term": "RSJ weight",
+   "definition": "Robertson/Sparck Jones weight, log((ri+0.5)(N-R-ni+ri+0.5)/((ni-ri+0.5)(R-ri+0.5))), with 0.5 pseudo-count.",
+   "where": "Eq 3.2"
+  },
+  {
+   "term": "BM25F",
+   "definition": "BM25 extension to weighted streams: accumulate stream-weighted, length-normalised tf per term, then saturate.",
+   "where": "Sec 3.6.3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Robertson and Sparck Jones, Relevance weighting of search terms",
+   "year": 1977,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "RSJ weight",
+   "quote": null
+  },
+  {
+   "work": "Robertson and Walker, Some Simple Effective Approximations to the 2-Poisson Model",
+   "year": 1994,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "BM25 origin",
+   "quote": null
+  },
+  {
+   "work": "Harter, A probabilistic approach to automatic keyword indexing",
+   "year": 1975,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "2-Poisson eliteness model",
+   "quote": null
+  },
+  {
+   "work": "Robertson, The probability ranking principle in IR",
+   "year": 1977,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "PRP",
+   "quote": null
+  },
+  {
+   "work": "Robertson, Zaragoza, Taylor, Simple BM25 extension to multiple weighted fields",
+   "year": 2004,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "BM25F",
+   "quote": null
+  },
+  {
+   "work": "Zaragoza et al., Microsoft Cambridge at TREC 2004",
+   "year": 2005,
+   "arxiv": null,
+   "relation": "related",
+   "note": "source of Table 3.1",
+   "quote": null
+  },
+  {
+   "work": "Maron and Kuhns",
+   "year": 1960,
+   "arxiv": null,
+   "relation": "related",
+   "note": "first probabilistic IR model, compared in Sec 4.1",
+   "quote": null
+  },
+  {
+   "work": "Language models for IR (Lafferty and Zhai; Lavrenko and Croft; Metzler et al.)",
+   "year": 2001,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Sec 4.3-4.4",
+   "quote": null
+  },
+  {
+   "work": "Divergence from randomness (Amati and van Rijsbergen)",
+   "year": 2002,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Sec 4.6",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 3.3",
+   "caption": "Saturation functions generated by Equation (3.10) with raw frequencies (left) and with frequencies normalised using Equation (3.13) (right).",
+   "page": 358,
+   "why": "Shows how lower k1 and shorter documents saturate faster."
+  },
+  {
+   "figure": "Table 3.1",
+   "caption": "BM25F parameters reported in [62] for topic distillation (TD) and name page (NP) search tasks",
+   "page": 365,
+   "why": "Tuned values far from defaults."
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 3.15 (fractions flattened in extraction)",
+   "snippet": "w_BM25(tf) = tf / (k1*((1-b)+b*dl/avdl) + tf) * w_RSJ",
+   "verbatim": false
+  },
+  {
+   "where": "Eq 3.3",
+   "snippet": "w_IDF = log((N-ni+0.5)/(ni+0.5))",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Equations are flattened by text extraction; formulas in code are reconstructed.",
+  "No embedded instructions found."
+ ]
 }

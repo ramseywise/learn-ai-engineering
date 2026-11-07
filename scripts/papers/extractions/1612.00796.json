@@ -1,19 +1,436 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "1612.00796",
  "pdf": "ai-engineering/08-multimodal-engineering/sources/kirkpatrick-2017-overcoming-catastrophic-forgetting-neural-networks.pdf",
  "bib": {
   "title": "Overcoming catastrophic forgetting in neural networks",
+  "authors": [
+   "James Kirkpatrick",
+   "Razvan Pascanu",
+   "Neil Rabinowitz",
+   "Joel Veness",
+   "Guillaume Desjardins",
+   "Andrei A. Rusu",
+   "Kieran Milan",
+   "John Quan",
+   "Tiago Ramalho",
+   "Agnieszka Grabska-Barwinska",
+   "Demis Hassabis",
+   "Claudia Clopath",
+   "Dharshan Kumaran",
+   "Raia Hadsell"
+  ],
   "first_author": "Kirkpatrick",
   "year": 2017,
-  "venue": "Proceedings of the National Academy of Sciences",
+  "venue": "preprint",
   "arxiv": "1612.00796",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-04",
-  "session": "97b4134b-decf-4866-ae85-c6872cbbba19"
+  "at": "2026-11-07",
+  "chars_read": 49877,
+  "chars_total": 49877,
+  "engine": "pymupdf",
+  "skipped": null
  },
- "legacy_report": "SOURCE: \"Overcoming catastrophic forgetting in neural networks\", Kirkpatrick, Pascanu, Rabinowitz, Veness, Desjardins, Rusu, Milan, Quan, Ramalho, Grabska-Barwinska, Hassabis, Clopath, Kumaran, Hadsell (DeepMind / Imperial College). The file is **arXiv 1612.00796v2 (25 Jan 2017)**, not the PNAS 2017 typeset version. The figure numbering and wording may differ from PNAS, so cite it as the arXiv v2.\n\nCOVERAGE: I read all 49,782 of 49,782 chars: the main text, discussion, Appendix 4.1–4.3, Tables 1–2, Figure 4 (axis tick labels only) and a skim of the references. I also pulled the figure captions with figures.py. I skipped nothing.\n\n**The headline:** the paper reports **no result numbers in its text**. Every MNIST and Atari result is a curve in Figures 2–4. The text gives qualitative comparisons only. The numbers below are setup and hyperparameters, plus one score definition. If the note quotes an accuracy or a score for EWC, that number does not come from this source.\n\nCLAIMS\n- claim: EWC adds a quadratic penalty that anchors each parameter to its task-A value, weighted by the diagonal of the Fisher information. It is a Laplace approximation of the task-A posterior as a Gaussian with diagonal precision.\n  number: none (eq. 3)\n  setup: general method. λ is the weight of the old task against the new one.\n  quote: \"we approximate the posterior as a Gaussian distribution with mean given by the parametersθ∗A and a diagonal precision given by the diagonal of the Fisher information matrixF\" ... \"L(θ) =LB(θ) + ∑ i λ 2Fi(θi−θ∗A,i)2 (3) whereLB(θ) is the loss for task B only,λ sets how important the old task is compared to the new one\"\n  where: p2–3, ~chars 8000–10500\n- claim: The Fisher was chosen because it approximates the second derivative of the loss near a minimum, needs only first-order gradients, and is positive semi-definite.\n  number: none\n  setup: method\n  quote: \"(a) it is equivalent to the second derivative of the loss near a minimum, (b) it can be computed from ﬁrst-order derivatives alone and is thus easy to calculate even for large models, and (c) it is guaranteed to be positive semi-deﬁnite.\"\n  where: p3\n- claim: For a third task you either keep one penalty per earlier task or merge them, because a sum of quadratics is itself a quadratic.\n  number: none\n  setup: method\n  quote: \"This can be enforced either with two separate penalties, or as one by noting that the sum of two quadratic penalties is itself a quadratic penalty.\"\n  where: p3\n- claim: On permuted MNIST (tasks A, B, C), plain SGD forgets task A. A uniform L2 penalty protects task A but cannot learn task B. EWC learns task B without forgetting task A.\n  number: none (curves only, Fig 2A)\n  setup: fully connected ReLU MLP, 2 hidden layers of width 400, lr 1e-3, 20 epochs per dataset, no dropout (Table 1, column \"3A\"). Each task applies its own fixed random pixel permutation.\n  quote: \"the performance in task A degrades much less severely, but task B cannot be learned properly as the constraint protects all weights equally, leaving little spare capacity for learning on B. However, when we use EWC... the network can learn task B well without forgetting task A (red curves).\"\n  where: p4\n- claim: SGD with dropout (plus early stopping) does not scale past a few permutations. EWC learns many tasks in sequence with only modest error growth. The text never states the number of tasks.\n  number: earlier methods managed \"up to two random permutations\". Hyperparameter search tried 50 combinations.\n  setup: Table 1 column \"3B\": lr 1e-5 to 1e-3, dropout 0.2 on the input and 0.5 on hidden layers, early stopping, 2 hidden layers of width 400–2000, 100 epochs. The best setting was reported. Early stopping halted a segment after validation error rose for more than five steps.\n  quote: \"they have only achieved reasonable results on up to two random permutations [Srivastava et al., 2013, Goodfellow et al., 2014]\" ... \"EWC allows a large number of tasks to be learned in sequence, with only modest growth in the error rates.\" ... \"50 combinations of parameters were attempted for each number experiment.\"\n  where: p4; Appendix 4.1 p10\n- claim: Fisher overlap: similar tasks share weights throughout the network. Dissimilar tasks split the early layers but reuse the layers near the output, because the labels are shared.\n  number: 8x8 vs 26x26 permuted squares\n  setup: Table 1 column \"3C\": 6 hidden layers of width 100, 100 epochs. Overlap = 1 − Fréchet distance between trace-normalised Fishers.\n  quote: \"Either a small square of 8x8 pixels in the middle of the image is permuted (grey) or a large square of 26x26 pixels is permuted (black).\" ... \"even for the large permutations, the layers of the network closer to the output are indeed being reused for both tasks.\"\n  where: p4 caption, p4 text, Appendix 4.3\n- claim: On Atari, plain SGD never learns more than one game, and its total score stays below 1 out of 10. EWC learns multiple games.\n  number: maximum score 10. SGD stays \"below one\".\n  setup: each run used 10 games drawn from a pool of 19 that standalone DQN plays at human level within 50e6 frames. There were 10 sets of 10 games with 4 seeds per set. Order was random and games recurred. The score is the total human-normalised score with each game clipped at 1.\n  quote: \"Our measure of performance is therefore a number with a maximum of 10 (at least at human level on all games) where 0 means the agent is as good as a random agent. If we rely on plain gradient descent methods as in [Mnih et al., 2015], the agent never learns to play more than one game and the harm inﬂicted by forgetting the old games means that the total human-normalized score remains below one.\"; \"we chose 10 sets of 10 games, and ran 4 different random seeds for each set.\"\n  where: p5; Appendix 4.2 p11\n- claim: EWC still falls short of ten separate single-game DQNs.\n  number: ten separate DQNs\n  setup: Atari, as above\n  quote: \"it does not reach the score that would have been obtained by training ten separate DQNs\"\n  where: p6\n- claim: Giving the agent the true task labels instead of the learned Forget-Me-Not task recognition helped only a little.\n  number: none\n  quote: \"The improvement here was only modest.\"\n  where: p5\n- claim: Perturbation test: weight noise shaped by the inverse Fisher hurts less than uniform noise. But noise in the Fisher nullspace hurts as much as inverse-Fisher noise, so the diagonal Fisher is over-confident that some weights do not matter.\n  number: none\n  setup: single-game DQN, Breakout shown (the paper says every game gave the same pattern). 10 episodes, with a fresh perturbation every timestep.\n  quote: \"perturbing in this space (orange) has the same effect as perturbing in the inverse Fisher space. This suggests that we are over-conﬁdent about certain parameters being unimportant: it is therefore likely that the chief limitation of the current implementation is that it under-estimates parameter uncertainty.\"\n  where: p6\n- claim: The EWC hyperparameters for Atari.\n  number: λ = 400. Fisher estimated from 100 minibatches. EWC applies only after 20M frames of a game.\n  quote: \"Fisher multiplier 400 The Fisher is scaled by this number to form the EWC penalty.\" ... \"num. samples Fisher 100 Whenever the diagonal of the Fisher is recomputed for a task, one hundred mini-batches are drawn from the replay buffer.\" ... \"We only added an EWC penalty to games which had experienced at least 20 million frames.\"\n  where: Table 2 p12; p5\n- claim: Cost is linear in parameters and in training examples, unlike ELLA, which inverts parameter-sized matrices.\n  number: none\n  quote: \"EWC has a run time which is linear in both the number of parameters and the number of training examples.\"\n  where: p7\n- claim: The Atari setup was not a pure EWC test. It added task-specific gains and biases per layer, separate replay buffers per task, a network about 4x larger, and an HMM task-recognition module.\n  number: about 4x parameters. 1024 FC units.\n  quote: \"this network has approximately four times as many parameters as the standard network\"; \"we allowed each layer of the network to have biases and per element multiplicative gains that were speciﬁc to each game.\"\n  where: Appendix 4.2 p10; p5\n\nLIMITS\n- The text gives no accuracies or scores. Every effect is read off curves. The number of MNIST tasks in Fig 2B is not stated in the text.\n- Scale: MLPs of 2–6 layers with widths of 100–2000, and a DQN conv net. It was never tested on large pretrained models, transformers, language or vision-language fine-tuning, or pretrained-to-fine-tuned forgetting. Every experiment trains from scratch on task sequences.\n- Seeds: Atari used 4 seeds × 10 game sets. MNIST seed counts are not given, and the \"best hyperparameter setting\" was the one reported. No error bars or significance values appear in the text.\n- Concessions: the diagonal or point-estimate Fisher is \"a signiﬁcant weakness\"; the method under-estimates uncertainty; it falls short of ten separate DQNs; the Atari gains depend on other components (task-specific gains, per-task replay); EWC needs task boundaries (the Fisher is computed \"at each task switch\"); and storage grows to \"three values ... for each synapse\".\n- The baselines are plain SGD, uniform L2 and SGD with dropout plus early stopping. There are no replay or distillation baselines, which the paper sets aside as impractical or as needing extra capacity.\n- Dated: the evidence is permuted MNIST, a benchmark later criticised as easy for this purpose (that criticism is not in this source). The argument also leans on neuroscience motivation.\n\nBUILDS ON: MacKay 1992 (Laplace approximation); Pascanu and Bengio 2013 (Fisher properties, natural gradient); Eskin et al. 2004 (Laplace propagation); French and Chater 2002 and Eaton and Ruvolo 2013 (ELLA), both earlier quadratic penalties; McCloskey and Cohen 1989, French 1999, Ratcliff 1990 and McClelland et al. 1995 (catastrophic forgetting); Goodfellow et al. 2014 and Srivastava et al. 2013 (the permuted-MNIST protocol and the dropout baseline); Mnih et al. 2015 and van Hasselt et al. 2016 (DQN and Double DQN); Kieran [Milan] et al. 2016 (Forget Me Not); Veness et al. 2012 (switch rate α=1/t); Yang et al. 2009, Hayashi-Takagi et al. 2015 and Cichon and Gan 2015 (synaptic consolidation); Blundell et al. 2015 (Bayesian NNs, offered as the fix); Dowson and Landau 1982 (Fréchet distance).\n\nCODE: none. The only load-bearing formula is eq. 3, quoted above. Atari task-specific layer, eq. 4 (p10): \"yi = ( ∑ j Wijxj +bci ) gci\".\n\nFIGURES\n- Fig 1, p3: schematic of task A and task B low-error regions, with three paths (SGD, uniform L2, EWC). It is the fastest way to show why per-weight stiffness matters. Good for \"What it learned, and what it didn't\".\n- Fig 2, p4: (A) permuted-MNIST curves for EWC, L2 and SGD; (B) average performance against number of tasks, EWC vs dropout; (C) Fisher overlap by depth. Panel A is the one figure that shows the forgetting-against-plasticity trade-off.\n- Fig 3, p6: Atari schedule, total scores, and the Breakout perturbation test. Panel C shows that the diagonal Fisher's blind spot is visible.\n- Fig 4, p13: per-game scores for 19 games, EWC vs SGD vs single-game. Mainly an appendix check.\n\nPROBLEMS\n- No embedded instructions found.\n- Internal inconsistencies in v2 (reported as printed):\n  - The Discussion cites \"Fig 4C\", which should be Fig 3C.\n  - Appendix 4.1 says Table 1 covers \"Figure 3\", but its columns match the Fig 2 panels.\n  - Table 2's caption reads \"Hyperparameters for each of the MNIST ﬁgures\", but it lists Atari settings.\n  - The text gives replay \"5× 105\" and a target update of \"3× 104\"; Table 2 gives a memory of 50000 and a target update of 7500.\n  - \"start EWC 20E6\" is described as \"after 5 million steps (20 million frames)\".\n  - A broken cross-reference reads \"Appendix app:atari\".\n- Figure 4 extracted only as axis tick labels, with no curve data.\n- Ligatures (ﬁ, ﬂ) and the equation layout are slightly mangled, but readable.\n\nPDF path: /Users/ramsey-wise/workspace/learn-ai-engineering/ai-engineering/08-multimodal-engineering/sources/kirkpatrick-2017-overcoming-catastrophic-forgetting-neural-networks.pdf"
+ "type": "empirical",
+ "question": "Can a neural network learn tasks sequentially without catastrophically forgetting earlier ones, without storing old data or adding capacity?",
+ "hypothesis": "Slowing learning on weights that are important to old tasks (task-specific synaptic consolidation) lets one fixed-capacity network keep old tasks while learning new ones.",
+ "contributions": [
+  "Elastic weight consolidation (EWC): a quadratic penalty weighted by the diagonal Fisher information anchoring parameters to old-task values",
+  "Demonstration on permuted MNIST sequences and on ten Atari games learned sequentially with a DQN agent",
+  "Fisher-overlap analysis showing layers closer to the output are shared across tasks",
+  "Perturbation test showing the diagonal Fisher is a useful but over-confident importance estimate"
+ ],
+ "method": {
+  "summary": "EWC adds a penalty sum_i lambda/2 F_i (theta_i - theta*_A,i)^2 to the new-task loss, with F the diagonal Fisher information at the old-task solution (Laplace approximation of the task-A posterior). Tested on permuted-MNIST fully connected nets and on a DQN with HMM-based task recognition over ten Atari games.",
+  "task": "continual learning (permuted MNIST classification; sequential Atari reinforcement learning)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Permuted MNIST",
+    "role": "both",
+    "size": null,
+    "split": "validation set used for early stopping; test sets used for curves",
+    "source": "MNIST (LeCun et al., 1998); each task a fixed random pixel permutation",
+    "preprocessing": "fixed random permutation of input pixels per task"
+   },
+   {
+    "name": "Atari 2600 games",
+    "role": "both",
+    "size": "10 games per experiment drawn from a pool of 19; 10 sets of 10 games",
+    "split": null,
+    "source": "Arcade Learning Environment (Bellemare et al., 2013)",
+    "preprocessing": "210x160 frames downsampled to 84x84 bilinear, YUV grayscale channel, 4 latest frames stacked; rewards clipped to 1; action repeat 4; up to 30 no-ops; full 18-action set"
+   }
+  ],
+  "models": [
+   {
+    "name": "Fully connected ReLU network (MNIST)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "fully connected, ReLU",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "2 hidden (Fig 2A/B), 6 hidden (Fig 3C row of Table 1)",
+    "hidden": "400 (Fig A), 400-2000 (Fig B), 100 (Fig C)",
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "DQN with EWC and task recognition (Atari)",
+    "role": "proposed",
+    "params": "inferred: about four times the standard DQN network",
+    "architecture": "conv 8x8 stride 4 32 filters; conv 4x4 stride 2 64 filters; conv 3x3 stride 1 128 filters; FC 1024; per-game biases and gains per layer; 18 outputs",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "3 conv + 1 FC",
+    "hidden": "1024",
+    "heads": null,
+    "context": "4 stacked frames",
+    "other": {
+     "init": "uniform in [-sigma, sigma]; biases 0, gains 1"
+    }
+   }
+  ],
+  "training": {
+   "objective": "MNIST: task-B loss + EWC quadratic penalty (Eq 3). Atari: Double Q-learning (van Hasselt 2016) + EWC penalty with Fisher recomputed at each task switch",
+   "optimizer": "MNIST: SGD (optimizer variant not stated). Atari: RMSProp, momentum 0, decay 0.95",
+   "lr": "MNIST: 1e-3 (Fig 2A, 3C), 1e-5 to 1e-3 searched (Fig 2B). Atari: 2.5e-4, max learning rate 2.5e-3",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "Atari: 32 experiences every 4 steps; MNIST: small batches, size not stated",
+   "steps": "Atari: EWC penalty only after 20 million frames in a game; total steps not stated",
+   "epochs": "MNIST: 20 per dataset (Fig 2A), 100 (Fig 2B, 3C)",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": "MNIST SGD+dropout baseline: 0.2 on input, 0.5 on hidden layers; none for EWC runs in Fig 2A",
+   "regularisation": "EWC lambda: Atari 400 (Fisher multiplier); MNIST lambda not stated. Early stopping for the dropout baseline (stop after validation error rises for more than five steps, reset to best weights)",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": "Atari: 4 random seeds for each of 10 sets of 10 games; MNIST not stated",
+   "other": {
+    "fisher_estimate": "100 minibatches drawn from the replay buffer per task",
+    "replay_memory": "Table 2: 50000 transitions; text: 5 x 10^5",
+    "target_update": "Table 2: 7500 steps; text: 3 x 10^4",
+    "epsilon": "1 for 5e4 steps then linear to 0.01 over next 1e6 (text) / 1050000 end (Table 2)",
+    "discount": 0.99,
+    "grad_clip": "clip delta 1, max norm 50",
+    "task_recognition": "HMM over task context, factored Dirichlet-multinomial pixel models on 42x42 downscaled images, window W=4, update every 4 steps, switch rate alpha=1/t",
+    "mnist_random_search": "50 hyperparameter combinations per experiment; best reported"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "Fig 3C: ten full game episodes per perturbation level, new random weight perturbation every timestep",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Total human-normalized score (Atari)",
+     "definition": "sum over ten games of human-normalized score, each clipped to 1; 0 = random agent",
+     "unit": "score, max 10",
+     "higher_is_better": true
+    },
+    {
+     "name": "Test accuracy/error per permuted-MNIST task",
+     "definition": "performance on test set of each task during sequential training",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Fisher overlap",
+     "definition": "1 - d^2 where d^2 is Frechet distance between unit-trace Fisher matrices",
+     "unit": "0 to 1",
+     "higher_is_better": null
+    }
+   ],
+   "baselines": [
+    "plain SGD",
+    "L2 regularization (uniform quadratic)",
+    "SGD with dropout and early stopping (Goodfellow et al. 2014)",
+    "single-game DQN trained separately",
+    "DQN with true task labels (control)"
+   ],
+   "protocol": "Atari scores averaged over 10 sets of 10 games and 4 seeds; MNIST results from best of 50 random hyperparameter combos; no significance tests reported"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "MNIST and Atari public"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.other.target_update",
+    "quote": "The target network is updated every 3 × 104 time steps.",
+    "where": "Appendix 4.2 (conflicts with Table 2: 7500)"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "With plain SGD the Atari agent never learns more than one game; total human-normalized score stays below one, while EWC lets it learn multiple games.",
+   "kind": "measured",
+   "source": null,
+   "metric": "total human-normalized score",
+   "value": "below 1",
+   "unit": "score (max 10)",
+   "baseline_value": null,
+   "n": "10 sets of 10 games, 4 seeds",
+   "setup": "DQN with task recognition, ten Atari games learned sequentially, plain SGD baseline",
+   "quote": "the agent never learns to play more than one game and the harm inﬂicted by forgetting the old games means that the total human-normalized score remains below one",
+   "table": null,
+   "note": "Exact EWC score is only shown in Fig 3B, not in text",
+   "where": "Sec 2.2"
+  },
+  {
+   "claim": "EWC with learned task labels is only modestly worse than giving the agent the true task labels.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Atari, Fig 3B red vs brown",
+   "quote": null,
+   "table": null,
+   "note": "Paper says 'The improvement here was only modest'; no number",
+   "where": "Sec 2.2"
+  },
+  {
+   "claim": "EWC on permuted MNIST keeps old-task accuracy while learning new tasks; L2 cannot learn task B; SGD forgets A (qualitative from Fig 2A, no numbers in text).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Permuted MNIST, 2x400 ReLU net, lr 1e-3, 20 epochs per dataset",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Sec 2.1, Fig 2A"
+  },
+  {
+   "claim": "Prior methods (dropout etc.) reached reasonable results only up to two random permutations; EWC handles many tasks with modest error growth.",
+   "kind": "reported",
+   "source": "Srivastava et al. 2013; Goodfellow et al. 2014",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "permuted MNIST",
+   "quote": "they have only achieved reasonable results on up to two random permutations",
+   "table": null,
+   "note": null,
+   "where": "Sec 2.1"
+  },
+  {
+   "claim": "EWC does not reach the score of training ten separate DQNs.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Atari, Fig 4 (appendix) single game baseline",
+   "quote": "it does not reach the score that would have been obtained by training ten separate DQNs",
+   "table": null,
+   "note": null,
+   "where": "Sec 2.2"
+  },
+  {
+   "claim": "Perturbations shaped by the inverse Fisher hurt less than uniform ones, validating the diagonal Fisher as importance estimate; but perturbing the Fisher nullspace hurts as much, so uncertainty is under-estimated.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": "10 episodes per point",
+   "setup": "single-game DQN on Breakout, Fig 3C",
+   "quote": "it is therefore likely that the chief limitation of the current implementation is that it under-estimates parameter uncertainty",
+   "table": null,
+   "note": null,
+   "where": "Sec 2.2"
+  },
+  {
+   "claim": "Atari EWC lambda (Fisher multiplier) was 400.",
+   "kind": "measured",
+   "source": null,
+   "metric": "EWC lambda",
+   "value": "400",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Atari DQN, tuned by hyperparameter search",
+   "quote": "a scaling factor for the EWC penalty of 400",
+   "table": null,
+   "note": null,
+   "where": "Appendix 4.2"
+  },
+  {
+   "claim": "EWC run time is linear in parameters and training examples.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "diagonal-Fisher approximation",
+   "quote": "EWC has a run time which is linear in both the number of parameters and the number of training examples",
+   "table": null,
+   "note": null,
+   "where": "Sec 3"
+  }
+ ],
+ "limits": [
+  "Diagonal Fisher / Laplace point estimate under-estimates parameter uncertainty (authors' stated main weakness).",
+  "EWC on Atari falls short of ten separate single-game DQNs.",
+  "Main text gives almost no numeric results; scores only in figures.",
+  "Needs a task boundary (Fisher computed at each task switch) and one stored Fisher and anchor per task; storage per parameter grows.",
+  "Only small MLPs and a small DQN tested; no language or vision-language models, no pretrained-model fine-tuning.",
+  "Penalty only applied to games with at least 20 million frames experienced."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "catastrophic forgetting",
+   "definition": "knowledge of previously learnt task(s) is abruptly lost as information relevant to the current task is incorporated",
+   "where": "Sec 1"
+  },
+  {
+   "term": "elastic weight consolidation",
+   "definition": "an algorithm that slows down learning on certain weights based on how important they are to previously seen tasks",
+   "where": "Sec 1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Goodfellow et al. 2014, empirical investigation of catastrophic forgetting",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "replicates",
+   "note": "dropout + cross-validated search baseline and permuted-MNIST protocol",
+   "quote": null
+  },
+  {
+   "work": "MacKay 1992, practical Bayesian framework for backpropagation",
+   "year": 1992,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Laplace approximation of posterior",
+   "quote": null
+  },
+  {
+   "work": "van Hasselt et al. 2016, Double Q-learning",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "agent base",
+   "quote": null
+  },
+  {
+   "work": "Mnih et al. 2015, DQN",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "architecture and preprocessing",
+   "quote": null
+  },
+  {
+   "work": "Kieran et al. 2016, Forget me not process",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "task recognition",
+   "quote": null
+  },
+  {
+   "work": "Rusu et al. 2016, Progressive neural networks",
+   "year": 2016,
+   "arxiv": "1606.04671",
+   "relation": "related",
+   "note": "adds capacity per task, contrasted",
+   "quote": null
+  },
+  {
+   "work": "French and Chater 2002; Eaton and Ruvolo 2013 (ELLA)",
+   "year": 2002,
+   "arxiv": null,
+   "relation": "related",
+   "note": "earlier quadratic-penalty approaches limited to small models",
+   "quote": null
+  },
+  {
+   "work": "MNIST",
+   "year": 1998,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "permuted-pixel tasks",
+   "quote": null
+  },
+  {
+   "work": "Arcade Learning Environment",
+   "year": 2013,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Atari 2600 games",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "EWC ensures task A is remembered whilst training on task B (schematic parameter space).",
+   "page": 3,
+   "why": "Shows why per-weight stiffness beats uniform L2."
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Results on the permuted MNIST task (A curves for EWC, L2, SGD; B average across tasks vs dropout; C Fisher overlap vs depth).",
+   "page": 4,
+   "why": "Core evidence of forgetting and its prevention."
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Results on Atari task (schedule, total scores, perturbation sensitivity).",
+   "page": 6,
+   "why": "Shows RL result and the Fisher validity test."
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 3",
+   "snippet": "L(θ) = L_B(θ) + Σ_i (λ/2) F_i (θ_i − θ*_A,i)^2",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Table 2 caption reads 'Hyperparameters for each of the MNIST figures' but holds Atari values.",
+  "Appendix text and Table 2 disagree: target update 3e4 vs 7500; replay buffer 5e5 vs 50000; exploration decay 1e6 vs end 1050000.",
+  "Appendix refers to Figure 3 of the main text for MNIST figures (should be Figure 2) and discussion cites Fig 4C (should be 3C); Table 1 column labels 3A/3B/3C likewise.",
+  "Table 2 'start EWC 20E6' described as 5 million steps (20 million frames).",
+  "No embedded instructions found."
+ ]
 }

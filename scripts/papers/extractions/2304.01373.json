@@ -1,0 +1,166 @@
+{
+ "schema": 1,
+ "key": "2304.01373",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/biderman-2023-pythia.pdf",
+ "bib": {
+  "title": "Pythia: A Suite for Analyzing Large Language Models Across Training and Scaling",
+  "authors": ["Stella Biderman", "Hailey Schoelkopf", "Quentin Anthony", "Herbie Bradley", "Kyle O'Brien", "Eric Hallahan", "Mohammad Aflah Khan", "Shivanshu Purohit", "USVSN Sai Prashanth", "Edward Raff", "Aviya Skowron", "Lintang Sutawika", "Oskar van der Wal"],
+  "first_author": "Biderman",
+  "year": 2023,
+  "venue": "Proceedings of the 40th International Conference on Machine Learning (ICML), PMLR 202",
+  "arxiv": "2304.01373",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 110418,
+  "chars_total": 110418,
+  "engine": "pymupdf",
+  "skipped": "Reference list skimmed; five-shot tables 11-16 and per-benchmark plot pages (Figs 8-15 axis text) only skimmed, as they repeat the zero-shot layout."
+ },
+ "type": "empirical",
+ "question": "How do LLMs develop over training and change with scale, when studied on a suite trained on public data in an identical order with many public checkpoints?",
+ "hypothesis": "Training order influences memorization (later data memorized more); this is stated as a theory-driven hypothesis for case study 3.2 and the data is reported as refuting it.",
+ "contributions": [
+  "Pythia: 16 LLMs from 70M to 12B parameters, two copies (Pile and deduplicated Pile) of 8 sizes, all trained on the same data in the same order",
+  "154 public checkpoints per model plus tools to reconstruct the exact training dataloaders",
+  "Case studies on gender bias via counterfactual retraining, memorization as a Poisson process, and term-frequency effects on few-shot performance"
+ ],
+ "method": {
+  "summary": "Eight decoder-only transformers (70M-12B) trained with GPT-NeoX on the Pile, and eight more on a near-deduplicated Pile, each for about 300B tokens with batch 1024 x 2048 tokens. Checkpoints saved at init, log-spaced early steps and every 1,000 steps. Three case studies use the controlled setup.",
+  "task": "autoregressive next-token pretraining; analysis of bias, memorization and term-frequency effects",
+  "trains": true,
+  "datasets": [
+   {"name": "The Pile", "role": "pretrain", "size": "300B tokens trained on; 334B tokens with the GPT-NeoX tokenizer", "split": "split 969,30,1 (Table 6)", "source": "Gao et al. 2020; public", "preprocessing": "GPT-NeoX BPE tokenizer trained on the Pile; some data may go unseen because 299,892,736,000 tokens < 334B"},
+   {"name": "The Pile, deduplicated", "role": "pretrain", "size": "approximately 207B tokens; about 1.5 epochs to reach 300B", "split": null, "source": "derived from the Pile", "preprocessing": "near-deduplication with MinHashLSH, threshold 0.87"},
+   {"name": "WinoBias (pro-stereotypical subset)", "role": "eval", "size": null, "split": null, "source": "Zhao et al. 2018", "preprocessing": "PromptSource templates, multiple choice between two pronouns, log probabilities"},
+   {"name": "CrowS-Pairs (English, revised)", "role": "eval", "size": null, "split": null, "source": "Neveol et al. 2022", "preprocessing": "percent of sentences where the stereotyping sentence has lower perplexity"},
+   {"name": "TriviaQA", "role": "eval", "size": null, "split": "train and validation", "source": "Joshi et al. 2017", "preprocessing": "template 'Q: x1 \\n A: y', 4 shots, exact match"},
+   {"name": "Arithmetic (add, multiply)", "role": "eval", "size": null, "split": null, "source": "Razeghi et al. 2022", "preprocessing": "x1 in [0,99], x2 in [1,50], prompt 'Q:What is x1 # x2? A:'"}
+  ],
+  "models": [
+   {"name": "Pythia 70M", "role": "proposed", "params": "70M (18,915,328 non-embedding)", "architecture": "decoder-only transformer, parallel attention+MLP, rotary (25%), untied embeddings, dense attention, Flash Attention", "init_from": "random (small-init; wang-init for output layer)", "tokenizer": "GPT-NeoX-20B BPE", "vocab": null, "layers": "6", "hidden": "512", "heads": "8", "context": "2048", "other": {"lr": "10.0e-4"}},
+   {"name": "Pythia 160M", "role": "proposed", "params": "160M (85,056,000 non-embedding)", "architecture": "same", "init_from": null, "tokenizer": "GPT-NeoX-20B BPE", "vocab": null, "layers": "12", "hidden": "768", "heads": "12", "context": "2048", "other": {"lr": "6.0e-4"}},
+   {"name": "Pythia 410M", "role": "proposed", "params": "410M (302,311,424 non-embedding)", "architecture": "same", "init_from": null, "tokenizer": "GPT-NeoX-20B BPE", "vocab": null, "layers": "24", "hidden": "1024", "heads": "16", "context": "2048", "other": {"lr": "3.0e-4"}},
+   {"name": "Pythia 1.0B", "role": "proposed", "params": "1.0B (805,736,448 non-embedding)", "architecture": "same", "init_from": null, "tokenizer": "GPT-NeoX-20B BPE", "vocab": null, "layers": "16", "hidden": "2048", "heads": "8", "context": "2048", "other": {"lr": "3.0e-4"}},
+   {"name": "Pythia 1.4B", "role": "proposed", "params": "1.4B (1,208,602,624 non-embedding)", "architecture": "same", "init_from": null, "tokenizer": "GPT-NeoX-20B BPE", "vocab": null, "layers": "24", "hidden": "2048", "heads": "16", "context": "2048", "other": {"lr": "2.0e-4"}},
+   {"name": "Pythia 2.8B", "role": "proposed", "params": "2.8B (2,517,652,480 non-embedding)", "architecture": "same", "init_from": null, "tokenizer": "GPT-NeoX-20B BPE", "vocab": null, "layers": "32", "hidden": "2560", "heads": "32", "context": "2048", "other": {"lr": "1.6e-4"}},
+   {"name": "Pythia 6.9B", "role": "proposed", "params": "6.9B (6,444,163,072 non-embedding)", "architecture": "same; model-parallel-size 2", "init_from": null, "tokenizer": "GPT-NeoX-20B BPE", "vocab": null, "layers": "32", "hidden": "4096", "heads": "32", "context": "2048", "other": {"lr": "1.2e-4"}},
+   {"name": "Pythia 12B", "role": "proposed", "params": "12B (11,327,027,200 non-embedding)", "architecture": "same; model-parallel-size 4", "init_from": null, "tokenizer": "GPT-NeoX-20B BPE", "vocab": null, "layers": "36", "hidden": "5120", "heads": "40", "context": "2048", "other": {"lr": "1.2e-4"}},
+   {"name": "OPT, BLOOM, GPT-Neo", "role": "baseline", "params": null, "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"note": "OPT and BLOOM zero-shot comparisons are run by the authors with the LM Evaluation Harness (Figs 8, Tables 15-16)"}}
+  ],
+  "training": {
+   "objective": "autoregressive next-token prediction (inferred: decoder-only language model)",
+   "optimizer": "Adam, betas [0.9, 0.95], eps 1e-08, ZeRO stage 1",
+   "lr": "per size, 10.0e-4 (70M) down to 1.2e-4 (6.9B, 12B); see Table 1",
+   "lr_schedule": "cosine, lr-decay-iters 143000, decaying to min-lr = 0.1 x max LR",
+   "warmup": "0.01 (Table 6 'warmup'; inferred: fraction of training)",
+   "batch_size": "1024 samples x 2048 tokens (2,097,152 tokens)",
+   "steps": "143000 train iterations",
+   "epochs": "1 on Pile (some data unseen); about 1.5 on deduplicated Pile",
+   "tokens": "299,892,736,000 (about 300B)",
+   "seq_len": "2048",
+   "precision": "fp16 (loss scale dynamic, initial-scale-power 12)",
+   "weight_decay": "0.01",
+   "dropout": "attention-dropout 0, hidden-dropout 0",
+   "regularisation": "gradient clipping 1.0",
+   "hardware": "A100 40GB: 32 GPUs (70M, 160M, 410M), 64 (1.0B, 1.4B, 2.8B), 128 (6.9B), 256 (12B)",
+   "compute": "136,070 A100-hours for one suite; 544,280 A100-hours for this paper (two suites, each trained twice)",
+   "wall_clock": null,
+   "seeds": "one training run per model; no repeated seeds",
+   "other": {
+    "checkpoints": "step 0, steps {1,2,4,8,16,32,64,128,256,512}, then every 1,000 iterations (2,097,152,000 tokens): 154 per model",
+    "gpu_hours_by_size": "70M 510; 160M 1,030; 410M 2,540; 1.0B 4,830; 1.4B 7,120; 2.8B 14,240; 6.9B 33,500; 12B 72,300 (Table 5)",
+    "library": "GPT-NeoX with DeepSpeed, data parallel + tensor parallel",
+    "v0_to_v1": "suite was retrained: uniform 2M-token batch (previously 4M for 160M, 410M, 1.4B), added early checkpoints, Flash Attention, and LR floor of 0.1x for all sizes (6.9B and 12B had decayed to 0). All reported results use v1.",
+    "intervention_runs": "resume from checkpoint and optimizer state 21B tokens (7%) before end for 70M, 410M, 1.4B, 6.9B deduped; 63B tokens (21%) for 1.4B deduped; masculine pronouns replaced by feminine"
+   }
+  },
+  "inference": {
+   "decoding": "evaluation by log-probability / perplexity / greedy-style exact match through the LM Evaluation Harness (decoding settings not stated)",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single model per size; memorization uses first 64 tokens of every training sequence",
+   "prompting": "zero-shot and five-shot tables; term-frequency tasks use k-shot with k in {0, 4, 16}; TriviaQA 4-shot",
+   "retrieval": null,
+   "parameters": {},
+   "other": {"memorization": "(k, l)-memorization of Carlini et al. 2021 with k = l = 32; Poisson fit on batches of 512 sequences"}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "benchmark accuracy", "definition": "LM Evaluation Harness accuracy on LAMBADA (OpenAI), PIQA, WinoGrande, WSC, ARC-Easy, ARC-Challenge, SciQ, LogiQA, with standard error", "unit": "fraction (0-1)", "higher_is_better": true},
+    {"name": "CrowS-Pairs % Stereotype", "definition": "percentage of sentence pairs where the stereotyping sentence has lower perplexity", "unit": "fraction", "higher_is_better": false},
+    {"name": "WinoBias stereotype accuracy", "definition": "share of times the model gives the higher log probability to the stereotyped pronoun; 0.5 = no bias", "unit": "fraction", "higher_is_better": false},
+    {"name": "(k, l)-memorization with k = l = 32", "definition": "a 32-token prompt from training data makes the model generate the next 32 tokens correctly", "unit": "count per batch", "higher_is_better": null},
+    {"name": "term-frequency task accuracy", "definition": "mean accuracy over prompts sharing x1 (arithmetic) or exact match over binned entity counts (TriviaQA)", "unit": "fraction", "higher_is_better": true}
+   ],
+   "baselines": ["OPT", "BLOOM", "GPT-Neo (in design table)", "Pythia vs Pythia-deduped"],
+   "protocol": "No seeds or significance tests; benchmark scores come with harness standard errors; authors ran all evaluations themselves."
+  },
+  "availability": {
+   "code": "https://github.com/EleutherAI/pythia (training code and analysis code)",
+   "weights": "HuggingFace Hub, Apache 2.0",
+   "data": "the Pile, plus tool to download the pre-tokenized files and rebuild the exact dataloader"
+  },
+  "prompts": [
+   {"purpose": "arithmetic term-frequency task", "text": "Q:What is x1 # x2? A:", "where": "Section 3.3"},
+   {"purpose": "TriviaQA", "text": "Q: x1 \\n A: y", "where": "Section 3.3"},
+   {"purpose": "WinoBias multiple choice", "text": "In this sentence, what can 'the librarian' be replaced by: 'him' or 'her'?", "where": "Appendix C.1 footnote 5"}
+  ],
+  "evidence": [
+   {"field": "training.warmup", "quote": "warmup 0.01", "where": "Table 6"},
+   {"field": "training.steps", "quote": "train-iters 143000", "where": "Table 6"}
+  ]
+ },
+ "results": [
+  {"claim": "Each model has 154 checkpoints, far more than other public suites.", "kind": "measured", "source": null, "metric": "checkpoints per model", "value": "154", "unit": "checkpoints", "baseline_value": "8 (BLOOM, next highest)", "n": null, "setup": "Pythia, all 16 models; Table 2 counts the model with the fewest checkpoints in each suite", "quote": "a total of 154 checkpoints per model", "table": null, "note": null, "where": "Section 2.4, Table 2"},
+  {"claim": "Models were trained on about 300B tokens, token-matched to GPT-3 and OPT.", "kind": "measured", "source": null, "metric": "training tokens", "value": "299,892,736,000", "unit": "tokens", "baseline_value": null, "n": null, "setup": "all 16 models", "quote": "299,892,736,000", "table": null, "note": "Pile is 334B tokens with the GPT-NeoX tokenizer, so some Pile data is not seen by the standard models.", "where": "Section 2.4"},
+  {"claim": "The deduplicated Pile is about 207B tokens against 300B for the original Pile, so deduped models run about 1.5 epochs.", "kind": "measured", "source": null, "metric": "deduped Pile size", "value": "207B", "unit": "tokens", "baseline_value": "300B", "n": null, "setup": "near-deduplication with MinHashLSH, threshold 0.87", "quote": "approximately 207B", "table": null, "note": "Section 2.2 says original Pile is 300B tokens; Section 2.4 says 334B with the GPT-NeoX tokenizer.", "where": "Section 2.2, 2.4"},
+  {"claim": "Deduplication had no clear benefit on language modeling performance, and the second epoch showed no negative effect.", "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "8 benchmarks via LM Evaluation Harness, final checkpoints and checkpoints at 93k steps (Tables 7-10), one run per size", "quote": null, "table": null, "note": "Authors say it agrees with Black et al. 2022 and conflicts with other papers.", "where": "Section 2.6, Appendix G"},
+  {"claim": "Parallel attention+MLP matched equi-parameter OPT at all scales, contrary to the claim that it hurts below 6B.", "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "equi-token, equi-parameter comparison on 8 benchmarks", "quote": null, "table": null, "note": null, "where": "Section 2.6, Fig 8"},
+  {"claim": "Batch sizes 4x to 8x the standard gave no convergence problems for models under 1B parameters.", "kind": "measured", "source": null, "metric": "batch size", "value": "2,097,152", "unit": "tokens per batch", "baseline_value": null, "n": null, "setup": "all models, 1024 samples x 2048 tokens", "quote": "2,097,152 tokens", "table": null, "note": null, "where": "Section 2.4"},
+  {"claim": "The large batch gives wall-clock speed-ups up to 10x on small models.", "kind": "measured", "source": null, "metric": "speed-up", "value": "10x", "unit": "factor", "baseline_value": null, "n": null, "setup": "against GPT-3 batch sizes", "quote": "wall-clock speed-ups of factors as large as 10", "table": null, "note": "Text says 10x citing Table 5; Table 3 shows 8x for 70M and 4x for others.", "where": "Section 2.4, Table 3"},
+  {"claim": "Memorized 32-token sequences occur at a uniform Poisson rate through training, so data order does not affect memorization.", "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "(32,32)-memorization on first 64 tokens of every training sequence, 12B model, Pile and deduped, batch of 512 sequences, Q-Q plot", "quote": "We choose k = ℓ= 32 largely arbitrarily", "table": null, "note": null, "where": "Section 3.2, Fig 3"},
+  {"claim": "Models of 2.8B parameters or more show a correlation between task accuracy and term frequency starting after 65,000 steps.", "kind": "measured", "source": null, "metric": "training step of phase change", "value": "65,000", "unit": "steps", "baseline_value": null, "n": null, "setup": "Pythia deduped, arithmetic and TriviaQA with 0, 4, 16 shots", "quote": "after 65,000 training steps (45%", "table": null, "note": null, "where": "Section 1, 3.3"},
+  {"claim": "Swapping masculine pronouns to feminine in the last 7% or 21% of training lowers measured gender bias with only marginal LAMBADA change.", "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "70M, 410M, 1.4B, 6.9B deduped; 21B tokens (7%) before end, plus 63B tokens (21%) for 1.4B; CrowS-Pairs and WinoBias", "quote": null, "table": null, "note": "Authors call the CrowS-Pairs progression noisy and its reliability open.", "where": "Section 3.1, Figs 1, 2, 6"},
+  {"claim": "Pythia-12B zero-shot LAMBADA (OpenAI) accuracy on the Pile.", "kind": "measured", "source": null, "metric": "accuracy", "value": "0.705", "unit": "fraction", "baseline_value": null, "n": null, "setup": "zero-shot, LM Evaluation Harness, fully trained Pythia 12B", "quote": null, "table": "Table 7, row Lambada (OpenAI), column 12B", "note": "Deduped 12B is 0.684 at the 93k-step checkpoint (Table 10 gives 0.697 for standard, Table 8 gives 0.710 for deduped final).", "where": "Table 7"},
+  {"claim": "Training the 12B model took 72,300 A100-hours.", "kind": "measured", "source": null, "metric": "GPU hours", "value": "72,300", "unit": "A100-hours", "baseline_value": null, "n": null, "setup": "256 A100 40GB, one 12B model", "quote": null, "table": "Table 5, row 12 B, column Total GPU hours", "note": null, "where": "Appendix D"},
+  {"claim": "Total compute for the paper was 544,280 A100-hours.", "kind": "measured", "source": null, "metric": "GPU hours", "value": "544,280", "unit": "A100-hours", "baseline_value": "136,070 for one suite", "n": null, "setup": "two suites (Pile, deduped), each trained twice", "quote": "544,280 A100-hours", "table": null, "note": null, "where": "Appendix D"},
+  {"claim": "Running 25 random seeds of the suite would cost approximately 10 million USD.", "kind": "claim", "source": null, "metric": "cost", "value": "10 million", "unit": "USD", "baseline_value": null, "n": 25, "setup": "estimate given as reason for training one copy per size", "quote": "approximately 10 million USD", "table": null, "note": null, "where": "Appendix F.2"}
+ ],
+ "limits": [
+  "One training run per model size, so no seed variance (authors: 25 seeds would cost approximately 10 million USD).",
+  "(k, l) = (32, 32) chosen largely arbitrarily; other pairs would cost as much as retraining all models.",
+  "Gender-bias benchmarks were not built for autoregressive models; CrowS-Pairs reliability is called an open question.",
+  "English-only; multilingual corpus rejected.",
+  "Suite was retrained (v0 to v1) and models renamed; results are for v1 only.",
+  "Pile has 334B tokens under this tokenizer, so some data is unseen by standard models."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "(k, l)-memorized", "definition": "a string is (k, l)-memorized if prompting the model with a string of length k from the training data induces the model to generate the next l tokens from the training data correctly", "where": "Section 3.2"}
+ ],
+ "lineage": [
+  {"work": "The Pile", "year": 2020, "arxiv": "2101.00027", "relation": "uses-data", "note": "training corpus", "quote": null},
+  {"work": "GPT-NeoX-20B", "year": 2022, "arxiv": null, "relation": "extends", "note": "tokenizer and architecture choices", "quote": null},
+  {"work": "Language models are few-shot learners (GPT-3)", "year": 2020, "arxiv": "2005.14165", "relation": "extends", "note": "architecture and hyperparameters largely follow it", "quote": null},
+  {"work": "OPT", "year": 2022, "arxiv": null, "relation": "baseline", "note": "equi-parameter comparison", "quote": null},
+  {"work": "BLOOM", "year": 2022, "arxiv": null, "relation": "baseline", "note": "zero-shot comparison", "quote": null},
+  {"work": "Lee et al. 2021 deduplication", "year": 2021, "arxiv": null, "relation": "uses-method", "note": "motivation for deduped suite", "quote": null},
+  {"work": "Carlini et al. 2021 extracting training data", "year": 2021, "arxiv": null, "relation": "uses-method", "note": "memorization definition", "quote": null},
+  {"work": "Razeghi et al. 2022", "year": 2022, "arxiv": null, "relation": "extends", "note": "arithmetic term-frequency task", "quote": null},
+  {"work": "Kandpal et al. 2022", "year": 2022, "arxiv": "2211.08411", "relation": "extends", "note": "TriviaQA term-frequency task", "quote": null},
+  {"work": "Black et al. 2022", "year": 2022, "arxiv": null, "relation": "replicates", "note": "dedup no-benefit result agrees", "quote": null},
+  {"work": "Language Model Evaluation Harness", "year": 2021, "arxiv": null, "relation": "uses-method", "note": "all evaluations", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Table 1", "caption": "Models in the Pythia suite and select hyperparameters.", "page": 2, "why": "Sizes, layers, widths and learning rates in one place."},
+  {"figure": "Table 2", "caption": "Commonly used model suites and how they rate according to our requirements.", "page": 4, "why": "Shows what other suites lack."},
+  {"figure": "Fig 3", "caption": "Quantile-Quantile plot of rate of occurrence of memorized sequences in 12B model compared to a Poisson Point Process", "page": 8, "why": "Evidence for the uniform memorization claim."},
+  {"figure": "Table 6", "caption": "The full configuration details for Pythia training.", "page": 22, "why": "Rerun hyperparameters."}
+ ],
+ "code": [],
+ "problems": ["Text extraction of tables is one value per line; table values were matched by row order. No embedded instructions found."]
+}

@@ -1,0 +1,636 @@
+{
+ "schema": 1,
+ "key": "2212.08073",
+ "pdf": "generative-ai/05-RL/sources/bai-2022-constitutional-ai.pdf",
+ "bib": {
+  "title": "Constitutional AI: Harmlessness from AI Feedback",
+  "authors": [
+   "Yuntao Bai",
+   "Saurav Kadavath",
+   "Sandipan Kundu",
+   "Amanda Askell",
+   "Jackson Kernion",
+   "Andy Jones",
+   "Anna Chen",
+   "Anna Goldie",
+   "Azalia Mirhoseini",
+   "Cameron McKinnon",
+   "Carol Chen",
+   "Catherine Olsson",
+   "Christopher Olah",
+   "Danny Hernandez",
+   "Dawn Drain",
+   "Deep Ganguli",
+   "Dustin Li",
+   "Eli Tran-Johnson",
+   "Ethan Perez",
+   "Jamie Kerr",
+   "Jared Mueller",
+   "Jeffrey Ladish",
+   "Joshua Landau",
+   "Kamal Ndousse",
+   "Kamile Lukosuite",
+   "Liane Lovitt",
+   "Michael Sellitto",
+   "Nelson Elhage",
+   "Nicholas Schiefer",
+   "Noemi Mercado",
+   "Nova DasSarma",
+   "Robert Lasenby",
+   "Robin Larson",
+   "Sam Ringer",
+   "Scott Johnston",
+   "Shauna Kravec",
+   "Sheer El Showk",
+   "Stanislav Fort",
+   "Tamera Lanham",
+   "Timothy Telleen-Lawton",
+   "Tom Conerly",
+   "Tom Henighan",
+   "Tristan Hume",
+   "Samuel R. Bowman",
+   "Zac Hatfield-Dodds",
+   "Ben Mann",
+   "Dario Amodei",
+   "Nicholas Joseph",
+   "Sam McCandlish",
+   "Tom Brown",
+   "Jared Kaplan"
+  ],
+  "first_author": "Bai",
+  "year": 2022,
+  "venue": "preprint",
+  "arxiv": "2212.08073",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 118848,
+  "chars_total": 118848,
+  "engine": "pymupdf",
+  "skipped": "Appendix D sample responses and E few-shot examples read at skim level (qualitative text, no hyperparameters)."
+ },
+ "type": "empirical",
+ "question": "Can a helpful-and-harmless assistant be trained with no human harmlessness labels, using only a short list of written principles and AI-generated critiques and preference labels?",
+ "hypothesis": "AI feedback guided by principles (with chain-of-thought) can replace human harmlessness labels and give a less evasive, equally or more harmless assistant than RLHF.",
+ "contributions": [
+  "AI identification of harms improves with scale and chain-of-thought makes it competitive with human-feedback preference models (Fig 4).",
+  "Model-generated critiques and revisions can be applied repeatedly to reduce harmfulness; critiques help over direct revision (Figs 5, 7).",
+  "RL on self-supervised preference labels (RL-CAI) equals or exceeds human-feedback harmlessness (Figs 2, 3)."
+ ],
+ "method": {
+  "summary": "Stage 1 (SL-CAI): a helpful RLHF model answers red-team prompts, critiques and revises its answers against randomly sampled principles, and a pretrained LM is finetuned on the revisions plus helpfulness samples. Stage 2 (RL-CAI): SL-CAI generates response pairs, a feedback model labels the more harmless one by multiple choice (soft log-prob labels, or CoT labels clamped to 40-60 percent), a PM is trained on these AI harmlessness labels mixed with human helpfulness labels, and the SL-CAI policy is trained by RL against it.",
+  "task": "harmlessness alignment of a dialogue assistant (RLAIF)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Red-team prompts",
+    "role": "train",
+    "size": "182,831 (42,496 human-written + 140,335 few-shot generated)",
+    "split": null,
+    "source": "Ganguli et al. 2022 red-teaming data plus model-generated",
+    "preprocessing": "4 critique-revision pairs sampled per prompt"
+   },
+   {
+    "name": "Helpfulness prompts (SL)",
+    "role": "train",
+    "size": "135,296 human-written; 2 responses sampled per prompt from helpful RLHF",
+    "split": null,
+    "source": "crowdworker-collected",
+    "preprocessing": null
+   },
+   {
+    "name": "PM comparison data",
+    "role": "train",
+    "size": "135,296 human helpfulness comparisons + 182,831 constitutionally generated harmlessness comparisons",
+    "split": null,
+    "source": "HF helpfulness; AI harmlessness",
+    "preprocessing": "one comparison per SL-CAI prompt"
+   },
+   {
+    "name": "RL prompts",
+    "role": "train",
+    "size": "all SL-CAI prompts plus 491,142 model-generated red team and 474,300 model-generated helpfulness prompts",
+    "split": null,
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "HHH comparison eval (new)",
+    "role": "eval",
+    "size": "217 new comparisons (plus original 221 from Askell et al.); Fig 4 caption says 438",
+    "split": null,
+    "source": "written by authors, in repo",
+    "preprocessing": null
+   },
+   {
+    "name": "Harmful vs ethical eval",
+    "role": "eval",
+    "size": "254 balanced conversations",
+    "split": null,
+    "source": "Ganguli et al. red teaming",
+    "preprocessing": null
+   },
+   {
+    "name": "Harm classification eval",
+    "role": "eval",
+    "size": "287 examples, 9-way multiple choice",
+    "split": null,
+    "source": "Ganguli et al. red teaming",
+    "preprocessing": null
+   },
+   {
+    "name": "Crowdworker comparison tests",
+    "role": "eval",
+    "size": "10,274 helpfulness and 8,135 harmlessness comparisons over 24 snapshots",
+    "split": null,
+    "source": "Surge AI workers",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Pretrained LMs (series)",
+    "role": "base",
+    "params": "up to 52B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "pretrained as in Bai et al. 2022; improved since"
+    }
+   },
+   {
+    "name": "Helpful RLHF",
+    "role": "base",
+    "params": "52B for main runs",
+    "architecture": null,
+    "init_from": "pretrained LM directly (no context distillation)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "generates SL critiques/revisions; CoT feedback model"
+    }
+   },
+   {
+    "name": "SL-CAI",
+    "role": "proposed",
+    "params": "52B main",
+    "architecture": null,
+    "init_from": "pretrained LM finetuned on revisions",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "RL-CAI / RL-CAI w/ CoT",
+    "role": "proposed",
+    "params": "52B main",
+    "architecture": null,
+    "init_from": "SL-CAI",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Feedback model",
+    "role": "judge",
+    "params": null,
+    "architecture": null,
+    "init_from": "pretrained LM (non-CoT); helpful RLHF (CoT)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "HH RLHF",
+    "role": "baseline",
+    "params": "52B main",
+    "architecture": null,
+    "init_from": "pretrained LM",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "SL: finetune on revisions; PM on comparison targets (soft normalized probabilities); RL against PM (RL algorithm not named in this paper, 'identical to RLHF')",
+   "optimizer": null,
+   "lr": "SL: constant 0.5 relative to the pre-training learning rate",
+   "lr_schedule": "constant (SL)",
+   "warmup": null,
+   "batch_size": "1024 sequences (SL)",
+   "steps": null,
+   "epochs": "1 (SL)",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "rl_hparams": "same hyperparameters as Bai et al. 2022 (not restated)",
+    "rl_train_sequences": "read from Fig 8: about 3 million",
+    "sampling_temperature": "T = 1 for SL data",
+    "principles": "16 critique/revision pairs (SL), 16 comparison principles (RL), sampled at random per step/label",
+    "cot_clamp": "CoT probabilities clamped to 40-60 percent; 20-80 tried"
+   }
+  },
+  "inference": {
+   "decoding": "sampling",
+   "temperature": "T = 1 (SL data generation); Fig 10 uses T=1 and T=0",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "256 model responses per prompt on 64 held-out red team prompts (absolute harmfulness); CoT HHH eval averages 5 CoT samples",
+   "prompting": "few-shot critique/revision prompts (App E.1); feedback prompt 'Consider the following conversation... Options: (A) (B) The answer is:'; CoT uses 'Let's think step-by-step' with hand-written few-shot examples (App E.2)",
+   "retrieval": null,
+   "parameters": {
+    "num_principles": "16",
+    "soft_vs_hard_labels": "soft normalized log-probs for non-CoT",
+    "clamp": "40-60 percent for CoT main results"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Helpfulness / harmlessness Elo",
+     "definition": "Elo from crowdworker pairwise comparisons in open-ended conversations, following Bai et al. 2022",
+     "unit": "Elo",
+     "higher_is_better": true
+    },
+    {
+     "name": "Absolute harmfulness score",
+     "definition": "LM finetuned with L2 loss to predict worker success 0-4 at eliciting harm",
+     "unit": "0-4 scale",
+     "higher_is_better": false
+    },
+    {
+     "name": "HHH accuracy",
+     "definition": "accuracy picking the better of two responses",
+     "unit": "fraction",
+     "higher_is_better": true
+    },
+    {
+     "name": "PM score",
+     "definition": "52B PM trained on human feedback scoring responses/revisions",
+     "unit": "PM score",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Helpful RLHF",
+    "HH RLHF",
+    "pretrained LM",
+    "direct revision (no critique)"
+   ],
+   "protocol": "Crowdworkers (Surge AI) instructed to prefer non-evasive harmless responses; Elo with error bars; no seeds or significance tests stated."
+  },
+  "availability": {
+   "code": "https://github.com/anthropics/ConstitutionalHarmlessnessPaper (prompts, principles, samples)",
+   "weights": null,
+   "data": "HHH/red-team evals in the repository; hh-rlhf data at github.com/anthropics/hh-rlhf"
+  },
+  "prompts": [
+   {
+    "purpose": "Critique request example",
+    "text": "Critique Request: Identify specific ways in which the assistant's last response is harmful, unethical, racist, sexist, toxic, dangerous, or illegal.",
+    "where": "Section 3.1"
+   },
+   {
+    "purpose": "Revision request example",
+    "text": "Revision Request: Please rewrite the assistant response to remove any and all harmful, unethical, racist, sexist, toxic, dangerous, or illegal content.",
+    "where": "Section 3.1"
+   },
+   {
+    "purpose": "Feedback model multiple-choice format",
+    "text": "Consider the following conversation between a human and an assistant:\n[HUMAN/ASSISTANT CONVERSATION]\n[PRINCIPLE FOR MULTIPLE CHOICE EVALUATION]\nOptions:\n(A) [RESPONSE A]\n(B) [RESPONSE B]\nThe answer is:",
+    "where": "Section 4.1"
+   },
+   {
+    "purpose": "CoT feedback format",
+    "text": "Human: Consider the following conversation between a human and an assistant:\n[HUMAN/ASSISTANT CONVERSATION]\n[PRINCIPLE FOR MULTIPLE CHOICE EVALUATION]\n(A) [RESPONSE A]\n(B) [RESPONSE B]\nAssistant: Let's think step-by-step: [CHAIN-OF-THOUGHT]",
+    "where": "Section 4.1"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training.lr",
+    "quote": "constant learning rate of 0.5 relative to the pre-training learning rate, and batch size 1024 sequences",
+    "where": "Section 3.2"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "SL-CAI critique/revision data come from 182,831 red-team prompts with 4 revisions each.",
+   "kind": "measured",
+   "source": null,
+   "metric": "red-team prompt count",
+   "value": "182,831",
+   "unit": "prompts",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Section 3.2",
+   "quote": "giving a total of 182,831. We sampled 4 critique-revision pairs per red team prompt",
+   "table": null,
+   "note": null,
+   "where": "3.2"
+  },
+  {
+   "claim": "Harmlessness PM score does not change with the number of principles (N=1..16), though diversity is expected to improve.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "52B PM, Fig 6",
+   "quote": "the number of constitutions does not appear to have a signiﬁcant effect on harmlessness score",
+   "table": null,
+   "note": null,
+   "where": "3.4"
+  },
+  {
+   "claim": "Critiqued revisions beat direct revisions for small models and are similar for large; critiques were often inaccurate.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "PM scores, Fig 7, 52B inspected",
+   "quote": "critiqued revisions achieved better harmlessness scores for small models, but made no noticeable different for large",
+   "table": null,
+   "note": null,
+   "where": "3.5"
+  },
+  {
+   "claim": "CoT probabilities clamped to 40-60 percent worked best; 20-80 slightly improved; unclamped CoT RL-CAI gave extreme responses.",
+   "kind": "measured",
+   "source": null,
+   "metric": "CoT label clamp",
+   "value": "40-60",
+   "unit": "percent",
+   "baseline_value": null,
+   "n": null,
+   "setup": "RL-CAI with CoT",
+   "quote": "clamping the probabilities at 20-80 percent slightly improved results, while clamping at 40-60 improved results further",
+   "table": null,
+   "note": null,
+   "where": "4.3"
+  },
+  {
+   "claim": "Soft preference labels gave much better results than hard labels for non-CoT RL-CAI.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "RL-CAI without CoT",
+   "quote": "soft preference labels (i.e., normalized log-probabilities from the feedback model) led to much better results than",
+   "table": null,
+   "note": null,
+   "where": "4.3"
+  },
+  {
+   "claim": "RL-CAI models are significantly more harmless than RLHF and SL-CAI; RL-CAI w/ CoT slightly less helpful, slightly more harmless than without CoT.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "52B, crowdworker Elo (Figs 2,3,8); no Elo numbers printed",
+   "quote": "We ﬁnd that RL-CAI models are signiﬁcantly more harmless than the RLHF and SL-CAI models",
+   "table": null,
+   "note": null,
+   "where": "4.3"
+  },
+  {
+   "claim": "Over-trained RL-CAI shows Goodharting: harsh or boilerplate responses such as 'you are valid, valued, and cared for'.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "RL-CAI 52B",
+   "quote": "RL-CAI models can be over-trained, resulting in Goodharting behavior",
+   "table": null,
+   "note": null,
+   "where": "4.3"
+  },
+  {
+   "claim": "HH RLHF and helpful RLHF harmlessness Elo gaps are much smaller than in prior work because workers were told to prefer non-evasive answers.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Surge AI workers, new instructions",
+   "quote": "we instructed crowdworkers to prefer thoughtfully harm-\nless responses over evasively harmless responses",
+   "table": null,
+   "note": "Quote spans a line break in the cached text; see 3.3 footnote 8.",
+   "where": "Fn 8"
+  },
+  {
+   "claim": "Absolute harmfulness score: helpful RLHF gets more harmful in RL; HH RLHF, RL-CAI, RL-CAI CoT get less harmful.",
+   "kind": "measured",
+   "source": null,
+   "metric": "eval prompts",
+   "value": "64",
+   "unit": "prompts",
+   "baseline_value": null,
+   "n": null,
+   "setup": "64 hand-picked held-out red team prompts, 256 responses each, 52B, 0-4 scale",
+   "quote": "We show absolute harmfulness scores for our models in Figure 10 on a selection of 64 hand-picked held-out\nred team prompts, averaged over 256 model responses per prompt",
+   "table": null,
+   "note": null,
+   "where": "4.5"
+  },
+  {
+   "claim": "Language models can reach well over 90 percent accuracy on the original HHH comparisons, motivating a harder 217-comparison set.",
+   "kind": "measured",
+   "source": null,
+   "metric": "original HHH set size",
+   "value": "221",
+   "unit": "comparisons",
+   "baseline_value": null,
+   "n": null,
+   "setup": "original 221 comparisons from Askell et al. 2021",
+   "quote": "achieve well over 90% binary accuracy in their ability to predict the better response",
+   "table": null,
+   "note": "Fig 4 caption says 438 comparisons (221 + 217).",
+   "where": "2"
+  },
+  {
+   "claim": "Crowdworker comparison tests used 10,274 helpfulness and 8,135 harmlessness comparisons over 24 snapshots.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "10,274",
+   "unit": "helpfulness comparisons",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Figs 2, 3",
+   "quote": "A total of 10,274 helpfulness and 8,135 comparisons were collected",
+   "table": null,
+   "note": "Text omits the word harmlessness before 8,135.",
+   "where": "3.3"
+  }
+ ],
+ "limits": [
+  "Principles chosen ad hoc for research; authors say a broader set of stakeholders should refine them (fn 2, fn 7).",
+  "Still relies on human helpfulness labels and a helpful RLHF model.",
+  "PM scores are less calibrated at high values; absolute harmfulness scores may be poorly calibrated across workers.",
+  "Main results are Elo plots with no printed numbers, no seeds or significance tests; RL hyperparameters deferred to Bai et al. 2022.",
+  "RL-CAI can be over-trained into boilerplate and over-harsh responses.",
+  "Comparisons with HH RLHF depend on a changed worker instruction that penalises evasiveness, and on older PM data collected under different instructions (Upwork/MTurk vs Surge)."
+ ],
+ "practices": [],
+ "terms": [],
+ "lineage": [
+  {
+   "work": "Training a helpful and harmless assistant with reinforcement learning from human feedback",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Prior HH RLHF work; same RL hyperparameters, PM process, Elo procedure.",
+   "quote": null
+  },
+  {
+   "work": "Red teaming language models to reduce harms (Ganguli et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Red-team prompts and harm labels.",
+   "quote": null
+  },
+  {
+   "work": "Deep reinforcement learning from human preferences (Christiano et al.)",
+   "year": 2017,
+   "arxiv": "1706.03741",
+   "relation": "extends",
+   "note": "RLHF it partly replaces.",
+   "quote": null
+  },
+  {
+   "work": "A general language assistant as a laboratory for alignment (Askell et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "HHH comparisons.",
+   "quote": null
+  },
+  {
+   "work": "Chain of thought prompting elicits reasoning (Wei et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "CoT for feedback labels.",
+   "quote": null
+  },
+  {
+   "work": "Large language models are zero-shot reasoners (Kojima et al.)",
+   "year": 2022,
+   "arxiv": "2205.11916",
+   "relation": "uses-method",
+   "note": "'Let's think step-by-step' prompt.",
+   "quote": null
+  },
+  {
+   "work": "Language models (mostly) know what they know (Kadavath et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Calibrated multiple-choice probabilities as soft labels.",
+   "quote": null
+  },
+  {
+   "work": "Improving alignment of dialogue agents via targeted human judgements (Sparrow)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Rule decomposition similar to principles.",
+   "quote": null
+  },
+  {
+   "work": "Learning to summarize from human feedback (Stiennon et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "related",
+   "note": "RLHF with LMs.",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Basic steps of the CAI process: SL stage (critique, revision) and RL stage (RLAIF).",
+   "page": 2,
+   "why": "Whole pipeline in one diagram."
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Harmlessness versus helpfulness Elo for all 52B RL runs.",
+   "page": 3,
+   "why": "Shows the Pareto improvement of RL-CAI over RLHF."
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Helpfulness and harmlessness Elo by model size.",
+   "page": 4,
+   "why": "Main results across scale."
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Performance on 438 HHH binary comparisons: PM vs multiple choice, CoT.",
+   "page": 6,
+   "why": "Motivates AI feedback."
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Figures were read from text only; no Elo numbers are printed so no quantitative headline results can be quoted.",
+  "Cached text contains ligature glyphs; quotes copied with them."
+ ]
+}

@@ -1,19 +1,705 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "1909.11740",
  "pdf": "ai-engineering/08-multimodal-engineering/sources/chen-2020-uniter.pdf",
  "bib": {
   "title": "UNITER: UNiversal Image-TExt Representation Learning",
+  "authors": [
+   "Yen-Chun Chen",
+   "Linjie Li",
+   "Licheng Yu",
+   "Ahmed El Kholy",
+   "Faisal Ahmed",
+   "Zhe Gan",
+   "Yu Cheng",
+   "Jingjing Liu"
+  ],
   "first_author": "Chen",
   "year": 2020,
-  "venue": "ECCV (30) 2020",
+  "venue": "preprint (arXiv v3, 17 Jul 2020)",
   "arxiv": "1909.11740",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-04",
-  "session": "97b4134b-decf-4866-ae85-c6872cbbba19"
+  "at": "2026-11-07",
+  "chars_read": 67103,
+  "chars_total": 67103,
+  "engine": "pymupdf",
+  "skipped": null
  },
- "legacy_report": "SOURCE: \"UNITER: UNiversal Image-TExt Representation Learning\", Yen-Chun Chen, Linjie Li, Licheng Yu et al. (Microsoft Dynamics 365 AI Research). ECCV 2020; the file is arXiv:1909.11740v3 (17 Jul 2020).\nFile: /Users/ramsey-wise/workspace/learn-ai-engineering/ai-engineering/08-multimodal-engineering/sources/chen-2020-uniter.pdf\n\nCOVERAGE: I read all 67,290 chars (that count includes the page markers I added), covering all 26 pages including appendices A.1–A.8. I skimmed the references. I did not run the captions script and took captions from the text.\n\nCLAIMS\n- claim: UNITER is single-stream. Detector regions and word tokens go into one Transformer together. Each region's input is its Faster R-CNN pooled ROI feature plus a 7-d box vector, each passed through an FC layer, then summed and normalised.\n  number: 7-d location vector; base model 86M parameters, large 303M\n  setup: Faster R-CNN pretrained on VG objects and attributes (Anderson 2018 features)\n  quote: \"we ﬁrst use Faster R-CNN 2 to extract the visual features (pooled ROI features) for each region. We also encode the location features for each region via a 7-dimensional vector.\" (p.4). \"with much fewer parameters (UNITER-base: 86M, LXMERT: 183M, VilBERT: 221M)\" (p.11)\n- claim: In-domain pretraining data beats out-of-domain data even though out-of-domain has more images. Using both gives the best result.\n  number: Meta-Sum 400.93 (COCO+VG) vs 396.91 (CC+SBU) vs 405.24 (both). COCO+VG gives 5.6M training pairs; CC is 3.0M pairs and SBU 990K.\n  setup: UNITER-base, all tasks, Table 2 rows 11, 13 and 14. Meta-Sum adds VQA, Flickr IR and TR, NLVR2 and RefCOCO+.\n  quote: \"A performance drop (396.91 in L13) from the model trained on In-domain data (COCO + Visual Genome) (400.93 in L11)\" … \"With doubled data size, the model continues to improve (405.24 in L14).\" (pp.10–11)\n- claim: Ablation of pretraining tasks. MLM and ITM matter most. MRC-kl is the best MRM variant, and it adds to MRFR. WRA helps mainly region-level tasks (VQA, RefCOCO+).\n  number: Meta-Sum 314.34 (no pretraining), 346.24 (text-only BERT), 393.04 (MLM+ITM), 397.09 (+MRC-kl), 399.97 (+MRFR), 400.93 (+WRA). MRFR alone gives 344.66.\n  setup: UNITER-base, in-domain data, Table 2\n  quote: \"MRC-kl (L9) achieves the best performance (397.09) when combined with MLM + ITM, while MRC (L7) the worst (393.97)\" (p.10)\n- claim: Conditional masking (mask one modality while the other stays whole) beats joint random masking.\n  number: Meta-Sum 399.97 vs 396.51\n  setup: UNITER-base, in-domain data, MLM+ITM+MRC-kl+MRFR\n  quote: \"w/o conditional masking (L12), we observe a decrease in Meta-Sum score (396.51) compared to that with conditional masking (399.97)\" (p.10)\n- claim: Headline results set a new state of the art. On VQA the large model beats LXMERT, but the base model does not.\n  number: VQA test-std 72.91 (base) and 74.02 (large) vs LXMERT 72.54. NLVR2 test-P 77.85 and 79.98 vs LXMERT 74.50. Flickr IR R@1 72.52 and 75.56; zero-shot Flickr IR R@1 66.16 and 68.74.\n  setup: pretrained on in-domain plus out-of-domain data. VQA training adds VG question-answer pairs. NLVR2 uses the Pair-biattn head. Retrieval finetuning uses hard negatives.\n  quote: \"UNITER-base model also outperforms the others by a large margin across all tasks except VQA\" (p.11)\n- claim: Within the same model, WRA gives its biggest gain on zero-shot retrieval.\n  number: zero-shot Flickr TR R@1 77.50 → 83.60; zero-shot IR R@1 65.82 → 68.74\n  setup: UNITER-large, both data sources, Table 8\n  quote: \"We observe large performance gains in zero-shot setup for image/text retrieval and consistent gains across all other tasks.\" (p.23)\n\nLIMITS:\n- No inference latency or detector cost is reported anywhere. The only compute figure is for pretraining: \"882 and 3645 V100 GPU hours\" for base and large (p.8).\n- The paper never says how many regions it takes per image.\n- The authors admit the detector features are contaminated for referring-expression tasks: \"we ignore this issue and use the same features [2] as the others\" (p.21). They say the features lift MAttNet by 1.5%.\n- Future work they name is interaction \"between raw image pixels and sentence tokens\" (p.14). That marks the detector bottleneck that CLIP, ViT and LLaVA later removed.\n- Retrieval is a cross-encoder: every image-text pair is scored jointly through [CLS]. The cost of this at retrieval time is not discussed.\n- All results are finetuned. The only zero-shot result is Flickr retrieval.\n- MRC labels come from the detector itself, not ground truth.\n\nBUILDS ON: BERT (Devlin et al., NAACL 2019); Transformer (Vaswani et al., NeurIPS 2017); bottom-up/top-down Faster R-CNN features (Anderson et al., CVPR 2018); the two-stream ViLBERT (Lu et al., NeurIPS 2019) and LXMERT (Tan & Bansal, EMNLP 2019); single-stream VisualBERT (Li et al., arXiv 2019), VL-BERT (Su et al., ICLR 2020), Unicoder-VL (Li et al., AAAI 2020) and B2T2 (Alberti et al., EMNLP 2019); IPOT (Xie et al., arXiv 2018); optimal transport (Peyré & Cuturi, 2019); knowledge distillation for MRC-kl (Hinton et al., 2015).\n\nFIGURES:\n- Fig. 1 (p.2): \"Overview of the proposed UNITER model … consisting of an Image Embedder, a Text Embedder and a multi-layer Transformer, learned through four pre-training tasks\". It shows R-CNN features plus location going into one stream with tokens, which is quicker to grasp than the prose.\n- Fig. 5 (p.22, the conditional vs joint masking dog example) is a backup choice.\n\nPROBLEMS:\n- The table text extracted in a usable form, but header alignment was lost.\n- Appendix A.3 cites \"Table 2 (row 10 & 11)\" for conditional masking, but the actual comparison is rows 10 vs 12. This inconsistency is in the source itself.\n- No embedded instructions were found."
+ "type": "empirical",
+ "question": "Can one pre-trained single-stream Transformer give a universal image-text representation that transfers to all vision-and-language tasks, and which pre-training tasks matter?",
+ "hypothesis": "Conditional masking (mask one modality, keep the other intact) and optimal-transport word-region alignment give better joint embeddings than joint random masking and implicit alignment.",
+ "contributions": [
+  "UNITER, a universal image-text representation for V+L tasks",
+  "Conditional masking for MLM/MRM and an Optimal-Transport-based Word-Region Alignment pre-training task",
+  "New state of the art on a wide range of V+L benchmarks, with ablations on each pre-training task and dataset"
+ ],
+ "method": {
+  "summary": "A single-stream Transformer takes Faster R-CNN region features (plus a 7-d box vector) and WordPiece tokens. It is pre-trained on 5.6M in-domain plus 4M out-of-domain image-text pairs with MLM, MRM (3 variants), ITM and OT-based WRA, one task sampled per mini-batch, then fine-tuned end to end on six V+L tasks.",
+  "task": "multimodal pre-training for vision-and-language tasks (VQA, VCR, NLVR2, SNLI-VE, image-text retrieval, referring expression comprehension)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "COCO Captions (pre-training)",
+    "role": "pretrain",
+    "size": "533K pairs (106K images) train, 25K (5K) val",
+    "split": "raw train+val merged, downstream eval images excluded",
+    "source": "COCO",
+    "preprocessing": "Excluded all val/test images used downstream and Flickr30K images by URL matching (222 images removed in total)"
+   },
+   {
+    "name": "Visual Genome dense captions (pre-training)",
+    "role": "pretrain",
+    "size": "5.06M pairs (101K images) train, 106K (2.1K) val",
+    "split": "same exclusion rules as COCO",
+    "source": "Visual Genome",
+    "preprocessing": null
+   },
+   {
+    "name": "Conceptual Captions",
+    "role": "pretrain",
+    "size": "3.0M pairs (3.0M images) train, 14K val",
+    "split": "out-of-domain",
+    "source": "Sharma et al. 2018",
+    "preprocessing": "URL-matching exclusion; 109 images excluded from training (CC+SBU)"
+   },
+   {
+    "name": "SBU Captions",
+    "role": "pretrain",
+    "size": "990K pairs (990K images) train, 10K val",
+    "split": "out-of-domain",
+    "source": "Ordonez et al. 2011",
+    "preprocessing": null
+   },
+   {
+    "name": "VQA",
+    "role": "both",
+    "size": "204K images, 1.1M texts",
+    "split": "test-dev, test-std; train+val plus Visual Genome QA for test results",
+    "source": "COCO images",
+    "preprocessing": "3129 most frequent answers as candidates"
+   },
+   {
+    "name": "VCR",
+    "role": "both",
+    "size": "110K images, 290K texts",
+    "split": "val, test",
+    "source": "Movie clips",
+    "preprocessing": null
+   },
+   {
+    "name": "NLVR2",
+    "role": "both",
+    "size": "214K images, 107K texts",
+    "split": "dev, test-P, test-U",
+    "source": "web crawled",
+    "preprocessing": null
+   },
+   {
+    "name": "SNLI-VE",
+    "role": "both",
+    "size": "31K images, 507K texts",
+    "split": "val, test",
+    "source": "Flickr30K",
+    "preprocessing": null
+   },
+   {
+    "name": "COCO retrieval",
+    "role": "both",
+    "size": "92K images, 460K texts (Table 6)",
+    "split": "82K/5K/5K train/val/test images (Karpathy), plus 30K extra images from COCO val",
+    "source": "COCO",
+    "preprocessing": null
+   },
+   {
+    "name": "Flickr30K retrieval",
+    "role": "both",
+    "size": "32K images, 160K texts (Table 6)",
+    "split": "30K/1K/1K train/val/test",
+    "source": "Flickr",
+    "preprocessing": "Also used zero-shot after pre-training"
+   },
+   {
+    "name": "RefCOCO / RefCOCO+ / RefCOCOg",
+    "role": "both",
+    "size": "20K/20K/26K images; 142K/142K/95K texts",
+    "split": "val, testA, testB (and detected-proposal versions)",
+    "source": "COCO",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "UNITER-base",
+    "role": "proposed",
+    "params": "86M",
+    "architecture": "single-stream Transformer over regions and tokens",
+    "init_from": "BERT pre-trained weights (Table 2 L2, MLM text-only on Wikipedia+BookCorpus)",
+    "tokenizer": "WordPiece",
+    "vocab": null,
+    "layers": "12",
+    "hidden": "768",
+    "heads": "12",
+    "context": null,
+    "other": {
+     "word embedding layer excluded from parameter counts": true,
+     "GPU hours": "882 V100 GPU hours for pre-training"
+    }
+   },
+   {
+    "name": "UNITER-large",
+    "role": "proposed",
+    "params": "303M",
+    "architecture": "single-stream Transformer",
+    "init_from": "inferred: BERT-large weights (the paper only says weights from BERT are used for the base ablation)",
+    "tokenizer": "WordPiece",
+    "vocab": null,
+    "layers": "24",
+    "hidden": "1024",
+    "heads": "16",
+    "context": null,
+    "other": {
+     "GPU hours": "3645 V100 GPU hours for pre-training"
+    }
+   },
+   {
+    "name": "Faster R-CNN",
+    "role": "base",
+    "params": null,
+    "architecture": "object detector, pooled ROI features",
+    "init_from": "pre-trained on Visual Genome object+attribute data",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "location features": "7-d [x1,y1,x2,y2,w,h,w*h] normalised"
+    }
+   }
+  ],
+  "training": {
+   "objective": "One task sampled per mini-batch: MLM (15% mask: 80% [MASK], 10% random, 10% unchanged), MRM with MRFR (L2), MRC (CE on detector label) and MRC-kl (KL to detector distribution), region mask 15% by zeroing features, ITM (BCE on [CLS], random negative image or text), WRA (OT distance, cosine cost, IPOT with K=1 inner iteration)",
+   "optimizer": "AdamW stated for fine-tuning only; pre-training optimizer not stated",
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": "mixed precision via Nvidia Apex",
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "Nvidia V100 16GB PCIe; up to 4 nodes of 4x V100 with Horovod+NCCL over ethernet; fine-tuning on V100 or Titan RTX 24GB",
+   "compute": "882 V100 GPU hours (base), 3645 V100 GPU hours (large)",
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "batching": "dynamic sequence length, batches by number of input units (text tokens + image regions); gradient accumulation",
+    "VCR second-stage pre-training": "MLM+MRFR+MRC-kl on VCR, batch 4096 input units, lr 3e-4, weight decay 0.01, max 60K steps",
+    "fine-tuning VQA": "BCE multi-label, batch 10240 units, max 5K steps, AdamW lr 3e-4, wd 0.01",
+    "fine-tuning VCR": "batch 4096 units, max 5K steps, lr 1e-4, wd 0.01; after stage II: lr 6e-5, max 8K steps",
+    "fine-tuning NLVR2": "8K steps, batch 10K units, lr 1e-4, wd 0.01",
+    "fine-tuning COCO retrieval": "batch 60, lr 2e-5, 20K steps",
+    "fine-tuning Flickr30K retrieval": "batch 120, lr 5e-5, max 16K steps",
+    "retrieval hard negatives": "two random plus two hard negatives per positive; 128 sampled negatives per text, top 20 kept; refreshed every N=4000 (COCO) or 2500 (Flickr) steps; triplet loss",
+    "fine-tuning SNLI-VE": "batch 10K units, AdamW lr 8e-5, 3K steps",
+    "fine-tuning RE comprehension": "batch 64, lr 5e-5, 5 epochs",
+    "pre-training hyperparameters": "not given in this version (batch size, steps, lr, warmup, optimizer)"
+   }
+  },
+  "inference": {
+   "decoding": "VQA: max-probable answer; others classification or ranking",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single model per cell; 10-model ensemble only for VCR (Table 9); no seeds reported",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "VQA-score",
+     "definition": "soft accuracy against 10 human answers",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Accuracy",
+     "definition": "VCR Q->A, QA->R, Q->AR; NLVR2; SNLI-VE; RE comprehension",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Recall@1,5,10",
+     "definition": "image retrieval and text retrieval",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Meta-Sum",
+     "definition": "sum of all scores across benchmarks (VQA test-dev, Flickr IR and TR averages of R@1/5/10, NLVR2 dev, RefCOCO+ vald) in Table 2",
+     "unit": "points",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "MCAN (VQA)",
+    "MaxEnt (NLVR2)",
+    "B2T2 (VCR)",
+    "SCAN (retrieval)",
+    "EVE-Image (SNLI-VE)",
+    "MAttNet (RE)",
+    "ViLBERT",
+    "VL-BERT",
+    "Unicoder-VL",
+    "VisualBERT",
+    "LXMERT"
+   ],
+   "protocol": "Ablations use UNITER-base on four tasks plus Meta-Sum; single runs, no significance test or seeds reported."
+  },
+  "availability": {
+   "code": "https://github.com/ChenRocks/UNITER",
+   "weights": null,
+   "data": "built from public datasets (COCO, VG, CC, SBU)"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "models.params",
+    "quote": "882 and 3645 V100 GPU hours were used for pre-training UNITER-base and UNITER-large.",
+    "where": "footnote 12, p8"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "UNITER-large reaches the best VQA test-std among compared models.",
+   "kind": "measured",
+   "source": null,
+   "metric": "VQA test-std",
+   "value": 74.02,
+   "unit": "%",
+   "baseline_value": 72.54,
+   "n": null,
+   "setup": "Table 3, UNITER-large pre-trained on in+out-of-domain data with MLM+ITM+MRC-kl+MRFR+WRA",
+   "quote": null,
+   "table": "Table 3, row VQA test-std, column UNITER Large",
+   "note": "LXMERT 72.54 (it pre-trains with VQA/VG/GQA data per the text)",
+   "where": "Table 3"
+  },
+  {
+   "claim": "UNITER-base VQA test-std.",
+   "kind": "measured",
+   "source": null,
+   "metric": "VQA test-std",
+   "value": 72.91,
+   "unit": "%",
+   "baseline_value": 72.54,
+   "n": null,
+   "setup": "Table 3, UNITER-base, 86M parameters",
+   "quote": null,
+   "table": "Table 3, row VQA test-std, column UNITER Base",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "UNITER-large on VCR holistic Q->AR.",
+   "kind": "measured",
+   "source": null,
+   "metric": "VCR Q->AR",
+   "value": 62.8,
+   "unit": "%",
+   "baseline_value": 59.7,
+   "n": null,
+   "setup": "Table 3, UNITER-large single model, VCR test",
+   "quote": null,
+   "table": "Table 3, row VCR Q->AR, column UNITER Large",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Ensemble of 10 UNITER-large on VCR Q->AR.",
+   "kind": "measured",
+   "source": null,
+   "metric": "VCR Q->AR",
+   "value": 66.8,
+   "unit": "%",
+   "baseline_value": 59.8,
+   "n": null,
+   "setup": "Table 9, 10-model ensemble",
+   "quote": null,
+   "table": "Table 9, row UNITER-large (10 ensemble), column Q->AR",
+   "note": "vs ViLBERT 10-ensemble 59.8",
+   "where": "Table 9"
+  },
+  {
+   "claim": "UNITER-large NLVR2 test-P.",
+   "kind": "measured",
+   "source": null,
+   "metric": "NLVR2 test-P",
+   "value": 79.98,
+   "unit": "%",
+   "baseline_value": 74.5,
+   "n": null,
+   "setup": "Table 3, Pair-biattn setting, UNITER-large",
+   "quote": null,
+   "table": "Table 3, row NLVR2 test-P, column UNITER Large",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "UNITER-large SNLI-VE test.",
+   "kind": "measured",
+   "source": null,
+   "metric": "SNLI-VE test",
+   "value": 79.38,
+   "unit": "%",
+   "baseline_value": 71.16,
+   "n": null,
+   "setup": "Table 3, UNITER-large",
+   "quote": null,
+   "table": "Table 3, row SNLI-VE test, column UNITER Large",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "UNITER-large zero-shot Flickr30K image retrieval R@1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ZS IR R@1",
+   "value": 68.74,
+   "unit": "%",
+   "baseline_value": 48.4,
+   "n": null,
+   "setup": "Table 3, no Flickr fine-tuning, UNITER-large",
+   "quote": null,
+   "table": "Table 3, row ZS IR (Flickr) R@1, column UNITER Large",
+   "note": "baseline is Unicoder-VL",
+   "where": "Table 3"
+  },
+  {
+   "claim": "UNITER-large Flickr30K text retrieval R@1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "TR R@1",
+   "value": 87.3,
+   "unit": "%",
+   "baseline_value": 86.2,
+   "n": null,
+   "setup": "Table 3, UNITER-large",
+   "quote": null,
+   "table": "Table 3, row TR (Flickr) R@1, column UNITER Large",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Pre-training with no image data beyond BERT init (MLM text only) lifts Meta-Sum about 30 over no pre-training.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Meta-Sum",
+   "value": 346.24,
+   "unit": "points",
+   "baseline_value": 314.34,
+   "n": null,
+   "setup": "Table 2, UNITER-base, L2 vs L1 (314.34)",
+   "quote": "we see a gain of approximately +30 on Meta-Sum over L1",
+   "table": "Table 2, row 2, column Meta-Sum",
+   "note": null,
+   "where": "Sec 4.2"
+  },
+  {
+   "claim": "ITM alone and MLM alone are the two strongest single in-domain pre-training tasks; MRFR alone is weak.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Meta-Sum",
+   "value": 386.1,
+   "unit": "points",
+   "baseline_value": 385.29,
+   "n": null,
+   "setup": "Table 2, UNITER-base, in-domain; MLM L5 386.10, ITM L4 385.29, MRFR L3 344.66",
+   "quote": null,
+   "table": "Table 2, row 5 MLM, column Meta-Sum",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Adding WRA to the best combination gives the highest in-domain Meta-Sum.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Meta-Sum",
+   "value": 400.93,
+   "unit": "points",
+   "baseline_value": 399.97,
+   "n": null,
+   "setup": "Table 2 L11 (MLM+ITM+MRC-kl+MRFR+WRA) vs L10 399.97",
+   "quote": null,
+   "table": "Table 2, row 11, column Meta-Sum",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Removing conditional masking (random masking on both modalities) lowers Meta-Sum.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Meta-Sum",
+   "value": 396.51,
+   "unit": "points",
+   "baseline_value": 399.97,
+   "n": null,
+   "setup": "Table 2 L12 vs L10 with conditional masking",
+   "quote": "we observe a decrease in Meta-Sum score (396.51) compared to that with conditional masking (399.97)",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2"
+  },
+  {
+   "claim": "In-domain pre-training beats out-of-domain pre-training despite fewer images.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Meta-Sum",
+   "value": 396.91,
+   "unit": "points",
+   "baseline_value": 400.93,
+   "n": null,
+   "setup": "Table 2 L13 (SBU+CC) vs L11 (COCO+VG 400.93)",
+   "quote": "A performance drop (396.91 in L13) from the model trained on In-domain data (COCO + Visual Genome) (400.93 in L11)",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2"
+  },
+  {
+   "claim": "Using both in- and out-of-domain data gives the best Meta-Sum.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Meta-Sum",
+   "value": 405.24,
+   "unit": "points",
+   "baseline_value": 400.93,
+   "n": null,
+   "setup": "Table 2 L14, UNITER-base",
+   "quote": "the model continues to improve (405.24 in L14)",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2"
+  },
+  {
+   "claim": "Second-stage pre-training on VCR data helps VCR far more than first-stage pre-training.",
+   "kind": "measured",
+   "source": null,
+   "metric": "VCR Q->AR val",
+   "value": 57.76,
+   "unit": "%",
+   "baseline_value": 53.52,
+   "n": null,
+   "setup": "Table 4, UNITER-base, both stages vs none 53.52, stage I only 54.94, stage II only 55.6",
+   "quote": null,
+   "table": "Table 4, row Y/Y, column Q->AR",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "NLVR2 Pair-biattn beats Pair and Triplet.",
+   "kind": "measured",
+   "source": null,
+   "metric": "NLVR2 dev",
+   "value": 77.18,
+   "unit": "%",
+   "baseline_value": 73.03,
+   "n": null,
+   "setup": "Table 5, UNITER-base; Pair 75.85, Triplet 73.03",
+   "quote": null,
+   "table": "Table 5, row Pair-biattn, column dev",
+   "note": null,
+   "where": "Table 5"
+  },
+  {
+   "claim": "WRA ablation on UNITER-large increases zero-shot Flickr text retrieval R@1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ZS TR R@1",
+   "value": 83.6,
+   "unit": "%",
+   "baseline_value": 77.5,
+   "n": null,
+   "setup": "Table 8, UNITER-large with vs without WRA (77.50)",
+   "quote": null,
+   "table": "Table 8, row Y, column ZS TR",
+   "note": null,
+   "where": "Table 8"
+  },
+  {
+   "claim": "Trained on CC only, UNITER-base beats ViLBERT and VL-BERT-base on VQA test-dev.",
+   "kind": "measured",
+   "source": null,
+   "metric": "VQA test-dev",
+   "value": 71.22,
+   "unit": "%",
+   "baseline_value": 71.16,
+   "n": null,
+   "setup": "Table 11, all pre-trained on Conceptual Captions only",
+   "quote": null,
+   "table": "Table 11, row UNITER-base, column VQA test-dev",
+   "note": "VLBERT-base 71.16; ViLBERT 70.55",
+   "where": "Table 11"
+  },
+  {
+   "claim": "UNITER-base has fewer parameters than the two-stream models it beats.",
+   "kind": "measured",
+   "source": null,
+   "metric": "parameters",
+   "value": 86,
+   "unit": "M",
+   "baseline_value": null,
+   "n": null,
+   "setup": "UNITER-base 86M vs LXMERT 183M, ViLBERT 221M",
+   "quote": "UNITER-base: 86M, LXMERT: 183M, VilBERT: 221M",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.3"
+  }
+ ],
+ "limits": [
+  "Pre-training hyperparameters (optimizer, lr, batch, steps) are not stated, only fine-tuning ones.",
+  "Ablations are single runs on UNITER-base with no seeds or significance tests; differences between rows are often under 1 point of Meta-Sum.",
+  "Relies on a frozen off-the-shelf Faster R-CNN; the authors list early interaction between raw pixels and tokens as future work.",
+  "The detector was trained on COCO images that include RefCOCO val/test images, so RE comprehension numbers are contaminated; the authors ignore this for comparability with concurrent work.",
+  "LXMERT pre-trains on downstream VQA-related data, so VQA comparison is not like-for-like.",
+  "Text says UNITER-base outperforms others 'across all tasks except VQA', yet Table 3 lists base 72.70/72.91 above LXMERT 72.42/72.54 on VQA; the text and table disagree."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Conditional masking",
+   "definition": "masking only one modality while keeping the other untainted, instead of randomly masking both",
+   "where": "Sec 3.1"
+  },
+  {
+   "term": "Meta-Sum",
+   "definition": "sum of all the scores across all the benchmarks",
+   "where": "Sec 4.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "BERT",
+   "year": 2019,
+   "arxiv": "1810.04805",
+   "relation": "extends",
+   "note": "MLM recipe and weight init",
+   "quote": null
+  },
+  {
+   "work": "ViLBERT",
+   "year": 2019,
+   "arxiv": "1908.02265",
+   "relation": "baseline",
+   "note": "two-stream baseline; direct CC-only comparison",
+   "quote": null
+  },
+  {
+   "work": "LXMERT",
+   "year": 2019,
+   "arxiv": "1908.07490",
+   "relation": "baseline",
+   "note": "two-stream baseline",
+   "quote": null
+  },
+  {
+   "work": "VL-BERT",
+   "year": 2020,
+   "arxiv": "1908.08530",
+   "relation": "baseline",
+   "note": "single-stream baseline",
+   "quote": null
+  },
+  {
+   "work": "VisualBERT",
+   "year": 2019,
+   "arxiv": "1908.03557",
+   "relation": "baseline",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "Unicoder-VL",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "Bottom-up and top-down attention (Anderson et al.)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Faster R-CNN features",
+   "quote": null
+  },
+  {
+   "work": "IPOT (Xie et al.)",
+   "year": 2018,
+   "arxiv": "1802.04307",
+   "relation": "uses-method",
+   "note": "approximate OT for WRA",
+   "quote": null
+  },
+  {
+   "work": "COCO, Visual Genome, Conceptual Captions, SBU Captions",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "pre-training data",
+   "quote": null
+  },
+  {
+   "work": "Hinton et al. distillation",
+   "year": 2015,
+   "arxiv": "1503.02531",
+   "relation": "uses-method",
+   "note": "MRC-kl soft labels",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Overview of the proposed UNITER model, consisting of an Image Embedder, a Text Embedder and a multi-layer Transformer, learned through four pre-training tasks",
+   "page": 2,
+   "why": "shows the single-stream input layout"
+  },
+  {
+   "figure": "Table 2",
+   "caption": "Evaluation on pre-training tasks and datasets using VQA, Image-Text Retrieval on Flickr30K, NLVR2, and RefCOCO+",
+   "page": 9,
+   "why": "the full pre-training ablation"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Example showing difference between conditional masking and joint random masking",
+   "page": 22,
+   "why": "explains why joint masking can misalign"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 3",
+   "snippet": "L_WRA(θ) = D_ot(µ, ν) = min_{T∈Π(a,b)} Σ_i Σ_j T_ij · c(w_i, v_j)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "PDF text is a figure/table-flattened extraction; Table 3 and Table 2 cell positions were reconstructed from column order.",
+  "Pre-training hyperparameters are absent from this arXiv v3 text."
+ ]
 }

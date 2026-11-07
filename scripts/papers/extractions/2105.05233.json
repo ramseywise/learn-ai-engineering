@@ -1,0 +1,168 @@
+{
+ "schema": 1,
+ "key": "2105.05233",
+ "pdf": "ai-engineering/08-multimodal-engineering/sources/dhariwal-2021-diffusion-models-beat-gans-image.pdf",
+ "bib": {
+  "title": "Diffusion Models Beat GANs on Image Synthesis",
+  "authors": ["Prafulla Dhariwal", "Alex Nichol"],
+  "first_author": "Dhariwal",
+  "year": 2021,
+  "venue": "preprint",
+  "arxiv": "2105.05233",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 76324,
+  "chars_total": 76324,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can diffusion models match or beat GANs on image sample quality by improving the architecture and adding a way to trade diversity for fidelity?",
+ "hypothesis": "The gap between diffusion models and GANs stems from heavily refined GAN architectures and from GANs' ability to trade diversity for fidelity; fixing both closes it.",
+ "contributions": [
+  "Architecture ablations for the diffusion UNet (more attention heads, multi-resolution attention, BigGAN up/downsampling, AdaGN) that reach state-of-the-art unconditional FID on LSUN and ImageNet 64x64",
+  "Classifier guidance: scaling gradients of a noisy-image classifier during sampling to trade diversity for fidelity",
+  "State-of-the-art class-conditional FID on ImageNet 128, 256 and 512, matching BigGAN-deep with 25 sampling steps",
+  "Guidance combined with upsampling stacks gives the best FIDs at 256 and 512"
+ ],
+ "method": {
+  "summary": "Ablated diffusion UNet (ADM) trained with the Lsimple + lambda*Lvlb hybrid objective and learned variances, then guided at sampling time by gradients of a separately trained classifier on noisy images (ADM-G), optionally with a two-stage upsampler (ADM-U). Evaluated against GANs and other likelihood models using FID, sFID, precision and recall on LSUN and ImageNet.",
+  "task": "image synthesis (unconditional LSUN; class-conditional ImageNet)",
+  "trains": true,
+  "datasets": [
+   {"name": "ImageNet", "role": "train", "size": null, "split": "entire training set used as FID reference batch", "source": "Russakovsky et al. 2014", "preprocessing": null},
+   {"name": "LSUN bedroom, horse, cat", "role": "train", "size": null, "split": "256x256", "source": "Yu et al. 2015", "preprocessing": null}
+  ],
+  "models": [
+   {"name": "ADM (ImageNet 128)", "role": "proposed", "params": "422M", "architecture": "UNet, 256 channels, depth 2, 64 channels per head, attention at 32,16,8, BigGAN up/downsample, AdaGN", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"channels_multiple": "1,1,2,3,4", "diffusion_steps": 1000, "noise_schedule": "linear"}},
+   {"name": "ADM (ImageNet 256)", "role": "proposed", "params": "554M", "architecture": "as above", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"channels_multiple": "1,1,2,2,4,4"}},
+   {"name": "ADM (ImageNet 512)", "role": "proposed", "params": "559M", "architecture": "as above", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"channels_multiple": "0.5,1,1,2,2,4,4"}},
+   {"name": "ADM (ImageNet 64)", "role": "proposed", "params": "296M", "architecture": "192 channels, depth 3, cosine schedule", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "ADM (LSUN)", "role": "proposed", "params": "552M", "architecture": "256 channels, depth 2, 4 heads", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "Noisy-image classifier (ImageNet 256)", "role": "proposed", "params": "54M", "architecture": "downsampling trunk of the UNet with attention pool at 8x8", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"128_channels": true, "weight_decay": 0.05}},
+   {"name": "ADM-U 64->256", "role": "proposed", "params": "312M", "architecture": "upsampling diffusion model", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "ADM-U 128->512", "role": "proposed", "params": "309M", "architecture": "upsampling diffusion model", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "BigGAN-deep", "role": "baseline", "params": null, "architecture": "GAN", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"note": "public TFHub model at 128; own trained model at 64"}},
+   {"name": "StyleGAN / StyleGAN2", "role": "baseline", "params": null, "architecture": "GAN", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}}
+  ],
+  "training": {
+   "objective": "Lsimple + lambda*Lvlb hybrid with learned variances (Nichol & Dhariwal); classifier trained on same noising distribution as the diffusion model",
+   "optimizer": "Adam or AdamW, beta1 = 0.9, beta2 = 0.999",
+   "lr": "1e-4 (ImageNet 128/256/512 and LSUN diffusion), 3e-4 (ImageNet 64 diffusion); classifiers 6e-4 (64), 3e-4 (128-512)",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "256 (all except ImageNet 64 diffusion: 2048); classifier 1024 for ImageNet 64",
+   "steps": "ImageNet 128: 4360K; 256: 1980K; 512: 1940K; 64: 540K; LSUN cat 200K, horse 250K, bedroom 500K; classifiers 300K-500K",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": "16-bit with loss scaling; 32-bit weights, EMA and optimizer state",
+   "weight_decay": "classifiers 0.2 (64), 0.05 (128-512)",
+   "dropout": "0.1 (LSUN, ImageNet 64), 0.0 (ImageNet 128/256/512)",
+   "regularisation": "random crops for classifier; EMA rate 0.9999",
+   "hardware": "NVIDIA Tesla V100 (8 per machine), PyTorch",
+   "compute": "V100-days (Table 10): ImageNet 256 ADM-G 1980K = 962 total; ImageNet 128 ADM-G 4360K = 530 total",
+   "wall_clock": null,
+   "seeds": null,
+   "other": {"diffusion_steps": 1000, "ablation_setup": "batch size 256, 250 sampling steps, ImageNet 128, 700K/1200K iterations", "fid_ablation_samples": "10k samples instead of 50k in Figure 2"}
+  },
+  "inference": {
+   "decoding": "250-step sampling (ImageNet) using Nichol & Dhariwal uniform stride; DDIM with 25 steps; 1000 steps on LSUN",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "FID in the main tables computed against whole training set; sample count not stated for tables (Figure 2 uses 10k instead of 50k)",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "classifier_gradient_scale_250_steps": "ImageNet 64: 1.0; 128: 0.5; 256: 1.0; 512: 4.0",
+    "classifier_gradient_scale_DDIM_25_steps": "ImageNet 128: 1.25; 256: 2.5; 512: 9.0",
+    "scale_sweeps": "[0.5, 1, 2] for 128 and 256, [1, 2, 3, 3.5, 4, 4.5, 5] for 512",
+    "DDIM_used_when": "fewer than 50 sampling steps",
+    "LSUN_250_step_schedule": "90, 60, 60, 20, 20 steps per fifth of the process (Table 15)"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "FID", "definition": "Frechet distance between Inception-V3 feature distributions of samples and the full training set", "unit": "points", "higher_is_better": false},
+    {"name": "sFID", "definition": "FID on spatial Inception features", "unit": "points", "higher_is_better": false},
+    {"name": "Inception Score", "definition": "class-distribution coverage with confident per-sample class", "unit": "score", "higher_is_better": true},
+    {"name": "Precision", "definition": "fraction of model samples inside the data manifold (fidelity)", "unit": "fraction", "higher_is_better": true},
+    {"name": "Recall", "definition": "fraction of data samples inside the sample manifold (diversity)", "unit": "fraction", "higher_is_better": true}
+   ],
+   "baselines": ["BigGAN-deep", "StyleGAN", "StyleGAN2", "DDPM", "IDDPM", "DCTransformer", "VQ-VAE-2", "SR3", "LOGAN"],
+   "protocol": "Metrics recomputed with one codebase from public samples or models where possible; values for DCTransformer, VQ-VAE-2, SR3, LOGAN taken from earlier papers. No seeds or significance tests."
+  },
+  "availability": {
+   "code": "https://github.com/openai/guided-diffusion",
+   "weights": null,
+   "data": null
+  },
+  "prompts": [],
+  "evidence": [
+   {"field": "inference.parameters.classifier_gradient_scale", "quote": null, "where": "Table 14"}
+  ]
+ },
+ "results": [
+  {"claim": "Classifier-guided ADM-G reaches FID 2.97 on ImageNet 128x128, ahead of BigGAN-deep at 6.02.", "kind": "measured", "source": null, "metric": "FID", "value": "2.97", "unit": "FID", "baseline_value": "6.02", "n": null, "setup": "ImageNet 128x128, 250 sampling steps, gradient scale 0.5", "quote": "We achieve an FID of 2.97 on ImageNet 128×128,", "table": null, "note": null, "where": "Abstract; Table 5"},
+  {"claim": "ADM-G reaches FID 4.59 on ImageNet 256x256 against BigGAN-deep 6.95.", "kind": "measured", "source": null, "metric": "FID", "value": "4.59", "unit": "FID", "baseline_value": "6.95", "n": null, "setup": "ImageNet 256x256, 250 steps, gradient scale 1.0, 1980K iterations", "quote": "4.59 on ImageNet 256×256, and 7.72 on ImageNet 512×512, and we match", "table": null, "note": null, "where": "Abstract; Table 5"},
+  {"claim": "ADM-G reaches FID 7.72 on ImageNet 512x512 against BigGAN-deep 8.43.", "kind": "measured", "source": null, "metric": "FID", "value": "7.72", "unit": "FID", "baseline_value": "8.43", "n": null, "setup": "ImageNet 512x512, 250 steps, gradient scale 4.0", "quote": "4.59 on ImageNet 256×256, and 7.72 on ImageNet 512×512, and we match", "table": null, "note": null, "where": "Abstract; Table 5"},
+  {"claim": "Guidance on the 64x64 base model plus upsampling gives FID 3.94 on ImageNet 256x256.", "kind": "measured", "source": null, "metric": "FID", "value": "3.94", "unit": "FID", "baseline_value": "4.59", "n": null, "setup": "ADM-G + ADM-U, 250 base and 250 upsample steps, guidance applied to the low-resolution model only", "quote": "further improving FID to 3.94", "table": null, "note": "Table 10 prints this row (ADM-G 540K, ADM-U 500K) as 3.85 at 256, and 3.85 also appears for 512; check which row is which before citing", "where": "Abstract; Table 6"},
+  {"claim": "Guidance plus upsampling gives FID 3.85 on ImageNet 512x512.", "kind": "measured", "source": null, "metric": "FID", "value": "3.85", "unit": "FID", "baseline_value": "7.72", "n": null, "setup": "ADM-G + ADM-U, 250/250 steps, 128->512", "quote": null, "table": "Table 6, ImageNet 512x512, row ADM-G, ADM-U 250 250, column FID", "note": null, "where": "Table 6"},
+  {"claim": "Raising classifier scale from 1.0 to 10.0 on the conditional 256x256 model raises precision and lowers recall, and worsens FID.", "kind": "measured", "source": null, "metric": "FID / precision / recall", "value": "FID 4.59 -> 9.11; precision 0.82 -> 0.88; recall 0.52 -> 0.32", "unit": null, "baseline_value": null, "n": null, "setup": "Conditional diffusion model trained 2M iterations on ImageNet 256x256, batch size 256", "quote": null, "table": "Table 4, conditional rows, scale 1.0 and 10.0, columns FID 4.59 9.11, Precision 0.82 0.88, Recall 0.52 0.32", "note": "Paper says FID and sFID have their best values at an intermediate scale (Fig 4)", "where": "Table 4"},
+  {"claim": "Unconditional model with guidance scale 10.0 gets FID 12.00 against 26.21 without guidance (scale 1.0: 33.03).", "kind": "measured", "source": null, "metric": "FID", "value": "12.00", "unit": "FID", "baseline_value": "26.21", "n": null, "setup": "Unconditional ImageNet 256x256, 2M iterations", "quote": null, "table": "Table 4, unconditional rows, column FID 26.21 33.03 12.00", "note": null, "where": "Table 4"},
+  {"claim": "With 25 DDIM steps ADM-G still beats BigGAN-deep at 256x256.", "kind": "measured", "source": null, "metric": "FID", "value": "5.44", "unit": "FID", "baseline_value": "6.95", "n": null, "setup": "ImageNet 256x256, DDIM 25 steps, gradient scale 2.5", "quote": null, "table": "Table 5, ImageNet 256x256, row ADM-G (25 steps), column FID 5.44", "note": null, "where": "Table 5; Fig 22"},
+  {"claim": "Recall is higher for ADM-G than BigGAN-deep at similar precision on 256x256.", "kind": "measured", "source": null, "metric": "recall", "value": "0.52 vs 0.28", "unit": "fraction", "baseline_value": "0.28", "n": null, "setup": "ImageNet 256x256, scale 1.0, 250 steps", "quote": null, "table": "Table 5, ImageNet 256x256, rows BigGAN-deep and ADM-G, column Rec 0.28 0.52", "note": null, "where": "Table 5"},
+  {"claim": "AdaGN beats addition + GroupNorm.", "kind": "measured", "source": null, "metric": "FID", "value": "13.06 vs 15.08", "unit": "FID", "baseline_value": "15.08", "n": null, "setup": "ImageNet 128x128, 128 base channels, 2 resblocks per resolution, 700K iterations", "quote": null, "table": "Table 3, rows AdaGN and Addition + GroupNorm, column FID", "note": null, "where": "Table 3"},
+  {"claim": "The 256x256 model beats BigGAN-deep FID after 750K iterations, about a third of training.", "kind": "measured", "source": null, "metric": "FID", "value": "6.49", "unit": "FID", "baseline_value": "6.95", "n": null, "setup": "ImageNet 256x256, classifier scale 1.0", "quote": "model beats BigGAN-deep after 750K iterations, roughly a third of the way through training.", "table": null, "note": null, "where": "Appendix A.2, Table 9"},
+  {"claim": "Compute: ADM-G 256 at 1980K iterations costs 962 V100-days total versus BigGAN-deep 128-256.", "kind": "measured", "source": null, "metric": "V100-days", "value": "962", "unit": "V100-days", "baseline_value": "128-256", "n": null, "setup": "Generator 916 + classifier 46; 2 TPU-v3 day = 1 V100 day conversion for BigGAN-deep", "quote": null, "table": "Table 10, ImageNet 256x256, row ADM-G (1980K), column Total Compute 962", "note": null, "where": "Table 10"},
+  {"claim": "Guided models need substantially more compute than BigGAN-deep at the best FID but a cheaper 750K run still beats it.", "kind": "measured", "source": null, "metric": "V100-days", "value": "393", "unit": "V100-days", "baseline_value": null, "n": null, "setup": "ImageNet 256 ADM-G 750K iterations, FID 6.49", "quote": null, "table": "Table 10, ImageNet 256x256, row ADM-G (750K), column Total 393", "note": null, "where": "Table 10"},
+  {"claim": "LSUN bedrooms FID 1.90 with 1000 sampling steps against StyleGAN 2.35.", "kind": "measured", "source": null, "metric": "FID", "value": "1.90", "unit": "FID", "baseline_value": "2.35", "n": null, "setup": "LSUN Bedrooms 256x256, dropout model, 1000 steps", "quote": null, "table": "Table 5, LSUN Bedrooms, row ADM (dropout), column FID 1.90", "note": null, "where": "Table 5"},
+  {"claim": "Reduced-temperature sampling gave no substantial improvement and produced blurry images.", "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "ImageNet 128x128 model, noise scaling and epsilon scaling", "quote": "neither technique provides any substantial improvement in", "table": null, "note": null, "where": "Appendix G, Fig 11-12"},
+  {"claim": "Guidance is strictly better than the BigGAN truncation trick for the FID/IS trade-off but cannot reach the highest precision.", "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "ImageNet 128x128, BigGAN-deep TFHub model at truncation 0.1 to 1.0", "quote": "classiﬁer guidance is strictly better than BigGAN-deep when trading off FID for Inception Score", "table": null, "note": null, "where": "Section 4.3, Fig 5"}
+ ],
+ "limits": [
+  "Diffusion models are slower than GANs at sampling because of multiple forward passes.",
+  "Classifier guidance is limited to labeled datasets; no strategy is given for unlabeled data.",
+  "LSUN models needed 1000 steps; a swept 250-step schedule only mostly closes the gap, and the sweep was not exhaustive.",
+  "FID and related metrics are not a perfect proxy for sample quality.",
+  "Single runs; no seeds or confidence intervals; baseline values for several models are copied from earlier papers."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "classifier guidance", "definition": "using gradients of a classifier trained on noisy images to guide diffusion sampling toward a class label, with a scale s on the gradient", "where": "Section 4"},
+  {"term": "ADM", "definition": "ablated diffusion model; ADM-G additionally uses classifier guidance", "where": "Table 5 caption"},
+  {"term": "AdaGN", "definition": "adaptive group normalization: AdaGN(h, y) = ys GroupNorm(h) + yb", "where": "Section 3.1"}
+ ],
+ "lineage": [
+  {"work": "Denoising Diffusion Probabilistic Models", "year": 2020, "arxiv": "2006.11239", "relation": "extends", "note": "base formulation and UNet", "quote": null},
+  {"work": "Improved Denoising Diffusion Probabilistic Models", "year": 2021, "arxiv": "2102.09672", "relation": "extends", "note": "learned variances, hybrid objective, upsampling stack", "quote": null},
+  {"work": "Denoising Diffusion Implicit Models", "year": 2020, "arxiv": "2010.02502", "relation": "uses-method", "note": "DDIM sampler for fewer than 50 steps", "quote": null},
+  {"work": "Score-based generative modeling through SDEs", "year": 2020, "arxiv": "2011.13456", "relation": "uses-method", "note": "classifier conditioning trick and architecture changes", "quote": null},
+  {"work": "Deep unsupervised learning using nonequilibrium thermodynamics", "year": 2015, "arxiv": "1503.03585", "relation": "uses-method", "note": "classifier-conditioned reverse process", "quote": null},
+  {"work": "BigGAN", "year": 2018, "arxiv": "1809.11096", "relation": "baseline", "note": "BigGAN-deep is the main baseline; truncation trick compared", "quote": null},
+  {"work": "StyleGAN2", "year": 2019, "arxiv": "1912.04958", "relation": "baseline", "note": "LSUN baseline", "quote": null},
+  {"work": "ImageNet", "year": 2014, "arxiv": "1409.0575", "relation": "uses-data", "note": "128, 256, 512", "quote": null},
+  {"work": "LSUN", "year": 2015, "arxiv": "1506.03365", "relation": "uses-data", "note": "bedroom, horse, cat", "quote": null},
+  {"work": "Improved Precision and Recall metric", "year": 2019, "arxiv": "1904.06991", "relation": "uses-method", "note": "precision and recall", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Table 4", "caption": "Effect of classifier guidance on sample quality.", "page": 9, "why": "Shows the precision/recall/FID trade-off at scale 1 and 10"},
+  {"figure": "Fig 4", "caption": "Change in sample quality as we vary scale of the classifier gradients for a class-conditional ImageNet 128x128 model.", "page": 9, "why": "FID best at an intermediate scale"},
+  {"figure": "Table 5", "caption": "Sample quality comparison with state-of-the-art generative models for each task.", "page": 10, "why": "Main headline comparison against GANs"},
+  {"figure": "Table 6", "caption": "Comparing our single, upsampling and classifier guided models.", "page": 11, "why": "Guidance and upsampling are complementary"}
+ ],
+ "code": [
+  {"where": "Algorithm 1", "snippet": "xt−1 ←sample from N(µ + sΣ ∇xt log pφ(y|xt), Σ)", "verbatim": true},
+  {"where": "Eq 14", "snippet": "ˆϵ(xt) := ϵθ(xt) − √(1 − ᾱt) ∇xt log pφ(y|xt)", "verbatim": false}
+ ],
+ "problems": [
+  "Figure text is extracted as stray numbers; tables were read from the flattened text.",
+  "Text says ADM-G+ADM-U 256 FID 3.94 (Table 6) while Table 10 lists 3.85 for the 256 ADM-G 540K + ADM-U 500K row; the 3.85 in Table 10 is the 512 FID repeated, likely a typo or a different run.",
+  "No embedded instructions found."
+ ]
+}

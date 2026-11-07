@@ -1,0 +1,143 @@
+{
+ "schema": 1,
+ "key": "2310.11511",
+ "pdf": "generative-ai/02-rag-retrieval/sources/2310.11511v1.pdf",
+ "bib": {
+  "title": "SELF-RAG: LEARNING TO RETRIEVE, GENERATE, AND CRITIQUE THROUGH SELF-REFLECTION",
+  "authors": ["Akari Asai", "Zeqiu Wu", "Yizhong Wang", "Avirup Sil", "Hannaneh Hajishirzi"],
+  "first_author": "Asai",
+  "year": 2023,
+  "venue": "preprint",
+  "arxiv": "2310.11511",
+  "doi": null
+ },
+ "read": {"by": "source-reader", "at": "2026-11-07", "chars_read": 105749, "chars_total": 105749, "engine": "pymupdf", "skipped": "Reference list skimmed; appendix prompt tables 8-12 read in part (instructions and first demonstrations)."},
+ "type": "empirical",
+ "question": "Can a single LM be trained to decide when to retrieve, and to critique retrieved passages and its own output, so that factuality and citation accuracy improve without losing versatility?",
+ "hypothesis": "Indiscriminate fixed-number retrieval hurts versatility and quality; training an LM to emit reflection tokens and using them at decoding gives better quality, factuality and attribution than standard RAG.",
+ "contributions": [
+  "SELF-RAG framework: one LM trained with reflection tokens to retrieve on demand, generate and critique",
+  "Critic model distilled from GPT-4 labels inserts reflection tokens offline, so no critic is needed at training or inference",
+  "Inference-time customisation via segment-level beam search weighted by reflection-token probabilities and retrieval threshold",
+  "Outperforms ChatGPT and retrieval-augmented Llama2-chat on several tasks, with higher citation precision on ASQA"
+ ],
+ "method": {
+  "summary": "Llama 2 7B/13B generators are fine-tuned with the standard next-token loss on instruction data whose outputs are augmented offline by a Llama2-7B critic with Retrieve, IsRel, IsSup, IsUse tokens and inserted passages. At inference the model predicts a Retrieve token, processes K passages in parallel and picks segments by beam search over a weighted sum of critique-token scores.",
+  "task": "retrieval-augmented generation: short-form QA, closed-set classification, long-form generation with citations",
+  "trains": true,
+  "datasets": [
+   {"name": "Generator training mix (Open-Instruct subsets: GPT-4 Alpaca, Stanford Alpaca, FLAN-V2, ShareGPT, Open Assistant 1; KILT: Wizard of Wikipedia, NQ, FEVER; OpenBookQA, ARC-Easy, ASQA)", "role": "train", "size": "145,619 instances (text also says 150k)", "split": "full mix; 5k/10k/20k/50k random subsets for scale analysis", "source": "Open-Instruct (Wang et al., 2023), KILT, HF datasets, ASQA", "preprocessing": "Critic inserts reflection tokens offline; retrieved text between <p></p> masked from loss; output split into sentences with spaCy"},
+   {"name": "Critic training data", "role": "train", "size": "4k-20k per token type; collected 1,2594 [sic] Retrieve, 11,181 IsSup, 19,317 relevance, 3,831 utility", "split": "train/dev/test split of GPT-4 labels", "source": "GPT-4 labels on samples from the training data", "preprocessing": "Discarded GPT-4 outputs not in expected format"},
+   {"name": "PopQA (long-tail subset)", "role": "eval", "size": "1,399 queries", "split": "test; monthly page views < 100", "source": "Mallen et al. 2023", "preprocessing": "Dec 2020 Wikipedia corpus used for retrieval"},
+   {"name": "TriviaQA-unfiltered", "role": "eval", "size": "11,313 test queries", "split": "validation/test split of Min et al. 2019, Guu et al. 2020", "source": "Joshi et al. 2017", "preprocessing": null},
+   {"name": "PubHealth", "role": "eval", "size": null, "split": "test", "source": "Zhang et al. 2023", "preprocessing": "predictions lowercased"},
+   {"name": "ARC-Challenge", "role": "eval", "size": null, "split": "test", "source": "Clark et al. 2018", "preprocessing": null},
+   {"name": "Biography generation", "role": "eval", "size": null, "split": null, "source": "Min et al. 2023 (FactScore)", "preprocessing": null},
+   {"name": "ALCE-ASQA", "role": "eval", "size": null, "split": null, "source": "Gao et al. 2023; Stelmakh et al. 2022", "preprocessing": "author-provided top-5 GTR-XXL documents for all baselines"}
+  ],
+  "models": [
+   {"name": "SELF-RAG 7B / 13B (generator M)", "role": "proposed", "params": "7B, 13B", "architecture": "Llama 2 with vocabulary expanded by reflection tokens", "init_from": "Llama 2 7B / 13B", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": "2,048 tokens max training length (7B), 1,524 (13B)", "other": {}},
+   {"name": "Critic C", "role": "proposed", "params": "7B", "architecture": "Llama 2", "init_from": "Llama 2 7B", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"agreement": ">90% with GPT-4 on most categories; FLAN-3B variant also trained for comparison"}},
+   {"name": "Contriever-MS MARCO", "role": "retriever", "params": null, "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "GPT-4", "role": "teacher", "params": null, "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"decoding": "temperature 1, max 200 output tokens"}},
+   {"name": "Llama2 7B/13B, Alpaca 7B/13B, Llama2-chat 13B, ChatGPT, Llama2-FT 7B, SAIL, Toolformer, CoVE 65B, perplexity.ai", "role": "baseline", "params": null, "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}}
+  ],
+  "training": {
+   "objective": "standard next-token log-likelihood on output plus reflection tokens (Eq. 2); critic: conditional LM likelihood of reflection tokens (Eq. 1)",
+   "optimizer": null,
+   "lr": "2e-5 peak",
+   "lr_schedule": "linear decay after warmup",
+   "warmup": "3% of steps",
+   "batch_size": "128",
+   "steps": null,
+   "epochs": "3",
+   "tokens": null,
+   "seq_len": "2,048 (7B), 1,524 (13B)",
+   "precision": "bfloat16",
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "4x Nvidia A100 80GB; DeepSpeed stage 3, FlashAttention",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {"inference_hardware": "1-2 Quadro RTX 6000 24GB"}
+  },
+  "inference": {
+   "decoding": "segment-level beam search, beam width 2; greedy at token level; one sentence = one segment; vllm",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": "100 new tokens open-domain QA and ALCE; 50 for PubHealth/ARC-C; FactScore 500 for baselines, 200 per segment for SELF-RAG",
+   "samples": "single run per item; no seeds stated",
+   "prompting": "zero-shot, task instruction only (Table 5); no instruction for open-domain QA",
+   "retrieval": "Contriever-MS MARCO, top 5 (up to ten documents stated in 4.3); 2018 Wikipedia embeddings, Dec 2020 corpus for PopQA; bio and open-domain QA add 5 Google Programmable Search documents; ASQA uses provided GTR-XXL top 5",
+   "parameters": {"weights IsRel/IsSup/IsUse": "1.0 / 1.0 / 0.5", "retrieval threshold": "0.2 for most tasks, 0 for ALCE", "beam width": "2", "IsUse score weights": "{-1,-0.5,0,0.5,1} for 1..5"},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "accuracy (PopQA, TriviaQA, PubHealth, ARC-C)", "definition": "gold answer contained in generation for open QA; class accuracy for closed-set", "unit": "%", "higher_is_better": true},
+    {"name": "FactScore", "definition": "factual precision of biographies (Min et al. 2023)", "unit": "score", "higher_is_better": true},
+    {"name": "ASQA str-em, MAUVE, citation precision, citation recall", "definition": "ALCE official metrics", "unit": "%", "higher_is_better": true}
+   ],
+   "baselines": ["Llama2, Alpaca, Llama2-chat, ChatGPT, CoVE, Ret-ChatGPT, Ret-Llama2-chat, perplexity.ai, Llama2-FT, SAIL, Toolformer"],
+   "protocol": "zero-shot; Toolformer, SAIL, CoVE numbers taken from their papers; ablation uses 50k training instances on PopQA, PubHealth, ASQA (150 sampled ASQA instances); small human evaluation of 50 samples"
+  },
+  "availability": {"code": "https://selfrag.github.io/", "weights": "https://selfrag.github.io/ (trained models)", "data": null},
+  "prompts": [
+   {"purpose": "GPT-4 Retrieve token labelling", "text": "Given an instruction, please make a judgment on whether finding some external documents from the web (e.g., Wikipedia) helps to generate a better response. Please answer [Yes] or [No] and write an explanation.", "where": "Appendix D, Table 8"},
+   {"purpose": "PubHealth evaluation", "text": "Is the following statement correct or not? Say true if it's correct; otherwise, say false. Don't capitalize or add periods, just say \"true\" or \"false\".", "where": "Table 5"},
+   {"purpose": "Biography evaluation", "text": "Tell me a bio about [Person Name]", "where": "Table 5"}
+  ],
+  "evidence": [
+   {"field": "training.hardware", "quote": "We use 4 Nvidia A100 with 80GB memory to train our models.", "where": "Appendix B.1"}
+  ]
+ },
+ "results": [
+  {"claim": "SELF-RAG 13B beats Ret-ChatGPT on ASQA citation precision", "kind": "measured", "source": null, "metric": "citation precision", "value": "70.3", "unit": "%", "baseline_value": "65.1", "n": null, "setup": "ALCE-ASQA, SELF-RAG 13B vs Ret-ChatGPT, zero-shot", "table": "Table 2, row Our SELF-RAG 13B, column ASQA pre", "note": "Ret-ChatGPT 65.1 from Table 2 row Ret-ChatGPT", "where": "Table 2"},
+  {"claim": "SELF-RAG 13B on PopQA vs Ret-Llama2-chat 13B", "kind": "measured", "source": null, "metric": "accuracy", "value": "55.8", "unit": "%", "baseline_value": "51.8", "n": 1399, "setup": "PopQA long-tail subset, SELF-RAG 13B", "table": "Table 2, row Our SELF-RAG 13B, column PopQA", "note": null, "where": "Table 2"},
+  {"claim": "SELF-RAG 13B on PubHealth far above retrieval-augmented baselines", "kind": "measured", "source": null, "metric": "accuracy", "value": "74.5", "unit": "%", "baseline_value": "52.1", "n": null, "setup": "PubHealth, SELF-RAG 13B vs Ret-Llama2-chat 13B", "table": "Table 2, row Our SELF-RAG 13B, column PubHealth", "note": null, "where": "Table 2"},
+  {"claim": "SELF-RAG 13B on ARC-Challenge, Ret-ChatGPT is 75.3", "kind": "measured", "source": null, "metric": "accuracy", "value": "73.1", "unit": "%", "baseline_value": "75.3", "n": null, "setup": "ARC-Challenge, SELF-RAG 13B", "table": "Table 2, row Our SELF-RAG 13B, column ARC", "note": null, "where": "Table 2"},
+  {"claim": "SELF-RAG 13B FactScore on biographies", "kind": "measured", "source": null, "metric": "FactScore", "value": "80.2", "unit": "FS", "baseline_value": "79.9", "n": null, "setup": "Bio generation, SELF-RAG 13B vs Ret-Llama2-chat 13B; SELF-RAG 7B scores 81.2", "table": "Table 2, row Our SELF-RAG 13B, column Bio", "note": null, "where": "Table 2"},
+  {"claim": "SELF-RAG does not win on ASQA str-em: 13B gets 31.7 vs Ret-Llama2-chat 32.8", "kind": "measured", "source": null, "metric": "str-em", "value": "31.7", "unit": "%", "baseline_value": "32.8", "n": null, "setup": "ASQA, SELF-RAG 13B", "table": "Table 2, row Our SELF-RAG 13B, column ASQA em", "note": null, "where": "Table 2"},
+  {"claim": "Llama2-FT 7B (same data, no reflection tokens) lags SELF-RAG 7B on PopQA", "kind": "measured", "source": null, "metric": "accuracy", "value": "48.7", "unit": "%", "baseline_value": "54.9", "n": null, "setup": "PopQA, Llama2-FT 7B vs SELF-RAG 7B", "table": "Table 2, row Llama2-FT 7B, column PopQA", "note": "SELF-RAG 7B is 54.9", "where": "Table 2"},
+  {"claim": "Ablation: always retrieving top-1 drops PopQA accuracy", "kind": "measured", "source": null, "metric": "PopQA accuracy", "value": "41.8", "unit": "%", "baseline_value": "45.5", "n": null, "setup": "7B model trained on 50k instances; Retrieve top1 at test time", "table": "Figure 3a, row Retrieve top1, column PQA (text of figure)", "note": "Read from figure 3a text layer", "where": "Fig 3a"},
+  {"claim": "Ablation: training without critic (No Critic) collapses ASQA", "kind": "measured", "source": null, "metric": "ASQA em", "value": "18.1", "unit": "%", "baseline_value": "32.1", "n": 150, "setup": "7B, 50k training instances, 150 ASQA instances", "table": "Figure 3a, row No Critic, column AS", "note": "Read from figure 3a text layer", "where": "Fig 3a"},
+  {"claim": "Only 2% of SELF-RAG correct predictions are not in provided passages", "kind": "measured", "source": null, "metric": "share of correct answers not in retrieved passages", "value": "2", "unit": "%", "baseline_value": "20", "n": null, "setup": "TriviaQA and PopQA; baseline is Alpaca 30B as printed", "quote": "while it is only 2% in SELF-RAG", "note": "Text says Alpaca 30B, but the models evaluated were Alpaca 7B/13B", "where": "Appendix C.1"},
+  {"claim": "Critic reward prediction accuracy vs GPT-4 labels for Retrieve with Llama2-7B", "kind": "measured", "source": null, "metric": "accuracy", "value": "93.8", "unit": "%", "baseline_value": null, "n": null, "setup": "Critic on held-out GPT-4 labels, Llama2-7B base", "table": "Appendix A.2 reward table, row Llama2-7B, column Retrieve", "note": "Caption says Figure 5, body text says Table 5", "where": "Appendix A.2"}
+ ],
+ "limits": [
+  "Authors keep training data to 150k and say more data may help; scale curves still rising.",
+  "Off-the-shelf retrievers trained on knowledge-intensive tasks are weak for open-ended generation; joint retriever training left for future work.",
+  "Output can still be not fully supported by citations (Ethical Concerns).",
+  "SELF-RAG 7B sometimes beats 13B on factual precision because it writes shorter outputs.",
+  "Toolformer, SAIL, CoVE numbers are reported from their papers, not re-run.",
+  "Ablations use 50k training instances and 150 ASQA samples; no seeds or significance tests stated.",
+  "Optimizer, seeds and ARC/PubHealth/Bio/ASQA test sizes not stated."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "reflection tokens", "definition": "special tokens (Retrieve, IsRel, IsSup, IsUse) added to the vocabulary that the LM generates to signal retrieval need and critique its output", "where": "Section 3"}
+ ],
+ "lineage": [
+  {"work": "Retrieval-Augmented Generation (Lewis et al.)", "year": 2020, "arxiv": null, "relation": "extends", "note": "conventional RAG is the contrast", "quote": null},
+  {"work": "Llama 2 (Touvron et al.)", "year": 2023, "arxiv": null, "relation": "uses-method", "note": "base for generator and critic", "quote": null},
+  {"work": "Contriever (Izacard et al.)", "year": 2022, "arxiv": null, "relation": "uses-method", "note": "default retriever", "quote": null},
+  {"work": "SAIL (Luo et al.)", "year": 2023, "arxiv": null, "relation": "baseline", "note": "concurrent; No Critic ablation resembles it", "quote": null},
+  {"work": "Toolformer (Schick et al.)", "year": 2023, "arxiv": null, "relation": "baseline", "note": "reported numbers", "quote": null},
+  {"work": "Chain-of-verification (Dhuliawala et al.)", "year": 2023, "arxiv": null, "relation": "baseline", "note": "CoVE 65B on biographies", "quote": null},
+  {"work": "FActScore (Min et al.)", "year": 2023, "arxiv": null, "relation": "uses-data", "note": "biography metric", "quote": null},
+  {"work": "ALCE (Gao et al.)", "year": 2023, "arxiv": null, "relation": "uses-data", "note": "ASQA citation metrics", "quote": null},
+  {"work": "FLARE (Jiang et al.)", "year": 2023, "arxiv": null, "relation": "related", "note": "adaptive retrieval on a proprietary LLM", "quote": null},
+  {"work": "InstructGPT (Ouyang et al.)", "year": 2022, "arxiv": null, "relation": "related", "note": "RLHF contrast; critique is offline", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 1", "caption": "Overview of SELF-RAG. SELF-RAG learns to retrieve, critique, and generate text passages to enhance overall generation quality, factuality, and verifiability.", "page": 2, "why": "Shows retrieve-on-demand, parallel generation and critique versus fixed top-K RAG"},
+  {"figure": "Table 1", "caption": "Four types of reflection tokens used in SELF-RAG.", "page": 4, "why": "Defines input and outputs of each token"},
+  {"figure": "Fig 3", "caption": "Analysis on SELF-RAG: ablation, effects of soft weights, retrieval frequency and normalized accuracy.", "page": 9, "why": "Ablation and threshold trade-off"}
+ ],
+ "code": [
+  {"where": "Eq. 3-4", "snippet": "f(yt, d, Critique) = p(yt|x, d, y<t) + S(Critique), S = sum_G w_G s_t^G", "verbatim": false}
+ ],
+ "problems": ["Table 2 and figure 3a are flattened into one value per line; cells were matched by order. Appendix text has typos (1,2594 for 12,594; s(IsRel) label on IsSup formula; Alpaca 30B)."]
+}

@@ -1,0 +1,630 @@
+{
+ "schema": 1,
+ "key": "2309.16609",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/bai-2023-qwen-technical-report.pdf",
+ "bib": {
+  "title": "QWEN TECHNICAL REPORT",
+  "authors": [
+   "Jinze Bai",
+   "Shuai Bai",
+   "Yunfei Chu",
+   "Zeyu Cui",
+   "Kai Dang",
+   "Xiaodong Deng",
+   "Yang Fan",
+   "Wenbin Ge",
+   "Yu Han",
+   "Fei Huang",
+   "Binyuan Hui",
+   "Luo Ji",
+   "Mei Li",
+   "Junyang Lin",
+   "Runji Lin",
+   "Dayiheng Liu",
+   "Gao Liu",
+   "Chengqiang Lu",
+   "Keming Lu",
+   "Jianxin Ma",
+   "Rui Men",
+   "Xingzhang Ren",
+   "Xuancheng Ren",
+   "Chuanqi Tan",
+   "Sinan Tan",
+   "Jianhong Tu",
+   "Peng Wang",
+   "Shijie Wang",
+   "Wei Wang",
+   "Shengguang Wu",
+   "Benfeng Xu",
+   "Jin Xu",
+   "An Yang",
+   "Hao Yang",
+   "Jian Yang",
+   "Shusheng Yang",
+   "Yang Yao",
+   "Bowen Yu",
+   "Hongyi Yuan",
+   "Zheng Yuan",
+   "Jianwei Zhang",
+   "Xingxuan Zhang",
+   "Yichang Zhang",
+   "Zhenru Zhang",
+   "Chang Zhou",
+   "Jingren Zhou",
+   "Xiaohuan Zhou",
+   "Tianhang Zhu"
+  ],
+  "first_author": "Bai",
+  "year": 2023,
+  "venue": "preprint",
+  "arxiv": "2309.16609",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 161461,
+  "chars_total": 161461,
+  "engine": "pymupdf",
+  "skipped": "Appendix human-evaluation case studies (Chinese/English sample responses) and reference list skimmed only; benchmark tables 13-17 not transcribed."
+ },
+ "type": "system",
+ "question": "How do the Qwen base, chat, code and math models compare with open-source and proprietary models, and how were they built?",
+ "hypothesis": null,
+ "contributions": [
+  "Base Qwen models (1.8B, 7B, 14B) trained on up to 3 trillion tokens",
+  "Qwen-Chat models aligned with SFT and RLHF, with tool-use and agent ability",
+  "Code-Qwen and Code-Qwen-Chat (7B, 14B)",
+  "Math-Qwen-Chat (7B, 14B)"
+ ],
+ "method": {
+  "summary": "A series of decoder-only LLMs (LLaMA-style modified Transformer) pretrained on up to 3T tokens with a ~152K BPE vocabulary built from cl100k_base, then aligned with SFT and PPO-based RLHF, and specialised for code and math by continued pretraining and SFT.",
+  "task": "autoregressive pretraining, SFT, RLHF, code/math specialisation",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Qwen pretraining corpus",
+    "role": "pretrain",
+    "size": "up to 3 trillion tokens",
+    "split": null,
+    "source": "public web documents, encyclopedia, books, codes, etc.; multilingual, mostly English and Chinese; includes high-quality instruction data",
+    "preprocessing": "HTML text extraction, language ID, exact-match dedup after normalisation, MinHash+LSH fuzzy dedup, rule and model-based quality filters, up-sampling of some sources, removal of samples with 13-gram overlap with test sets (for instruction data of reported tasks)"
+   },
+   {
+    "name": "Code continued-pretraining data",
+    "role": "pretrain",
+    "size": "around 90 billion tokens",
+    "split": null,
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "SFT agent data",
+    "role": "train",
+    "size": "around 2000 high-quality samples",
+    "split": null,
+    "source": "self-instruct with ReAct format, filtered by rules and humans",
+    "preprocessing": null
+   },
+   {
+    "name": "Human evaluation set",
+    "role": "eval",
+    "size": "300 Chinese instructions",
+    "split": null,
+    "source": "in-house, 3 annotators rank responses",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Qwen-1.8B",
+    "role": "proposed",
+    "params": "1.8B",
+    "architecture": "modified Transformer (LLaMA-style)",
+    "init_from": null,
+    "tokenizer": "BPE, tiktoken cl100k_base extended, digits split singly",
+    "vocab": "approximately 152K",
+    "layers": 24,
+    "hidden": 2048,
+    "heads": 16,
+    "context": "2048 training",
+    "other": {
+     "tokens": "2.2T",
+     "untied embeddings": true
+    }
+   },
+   {
+    "name": "Qwen-7B",
+    "role": "proposed",
+    "params": "7B",
+    "architecture": "modified Transformer",
+    "init_from": null,
+    "tokenizer": "same",
+    "vocab": "approximately 152K",
+    "layers": 32,
+    "hidden": 4096,
+    "heads": 32,
+    "context": "2048 training",
+    "other": {
+     "tokens": "2.4T"
+    }
+   },
+   {
+    "name": "Qwen-14B",
+    "role": "proposed",
+    "params": "14B",
+    "architecture": "modified Transformer",
+    "init_from": null,
+    "tokenizer": "same",
+    "vocab": "approximately 152K",
+    "layers": 40,
+    "hidden": 5120,
+    "heads": 40,
+    "context": "2048 training",
+    "other": {
+     "tokens": "3.0T",
+     "heads and layers 40 each per Table 1 order Hidden size, Heads, Layers": "read as heads 40, layers 40"
+    }
+   },
+   {
+    "name": "Code-Qwen 7B/14B",
+    "role": "proposed",
+    "params": "7B, 14B",
+    "architecture": "Qwen continued pretrained on code",
+    "init_from": "Qwen base",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "up to 8192",
+    "other": {}
+   },
+   {
+    "name": "Math-Qwen-Chat 7B/14B",
+    "role": "proposed",
+    "params": "7B, 14B",
+    "architecture": "Qwen with math SFT",
+    "init_from": "Qwen base",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "seq len 1024 in SFT",
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "next-token prediction (pretraining and SFT, loss masked on system/user inputs); RLHF with PPO; reward model with pooling layer on end token",
+   "optimizer": "AdamW, beta1 0.9, beta2 0.95, eps 1e-8",
+   "lr": "3.0e-4 peak for all three base sizes (Table 1); SFT peak 2e-6; reward model constant 3e-6; PPO policy 1e-6, value 5e-6; Code-Qwen 6.0e-5 (14B), 3.0e-5 (7B); Code SFT 2.0e-6 (14B), 1.0e-5 (7B); Math SFT 2e-5",
+   "lr_schedule": "pretraining cosine decaying to 10% of peak; Code-Qwen pretraining no decay; Code SFT cosine warmup then constant",
+   "warmup": "SFT: first 1430 steps; Code-Qwen 3% warm-up iterations; Code SFT 3% warm-up steps",
+   "batch_size": "4M (pretraining, Table 1); SFT 128; reward model 64",
+   "steps": "SFT 4000; Math SFT 50 000",
+   "epochs": "reward model 1",
+   "tokens": "1.8B 2.2T; 7B 2.4T; 14B 3.0T; code ~90B additional",
+   "seq_len": "pretraining 2048; SFT 2048; reward 2048; Code-Qwen up to 8192; Math SFT 1024",
+   "precision": "BFloat16 mixed precision; FP32 for RoPE inverse frequency matrix",
+   "weight_decay": "0.1 (SFT)",
+   "dropout": "0.1 (SFT)",
+   "regularisation": "gradient clipping 1.0 (SFT); PPO KL coefficient 0.04, value loss clip 0.15, pretrained-gradient term against alignment tax",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "architecture changes": "untied embeddings, RoPE, bias removed except QKV, pre-norm RMSNorm, SwiGLU with FFN dim 8/3 of hidden, Flash Attention",
+    "reward model": "initialised from same-size pretrained Qwen; ~6600 tags classification system for prompts",
+    "PPO": "value model only updated for first 50 steps; 2 responses sampled per query; reward normalised by running mean; top-p 0.9"
+   }
+  },
+  "inference": {
+   "decoding": "greedy for math (Table 12); PPO policy top-p 0.9",
+   "temperature": null,
+   "top_p": "0.9 (RLHF policy)",
+   "max_tokens": null,
+   "samples": null,
+   "prompting": "MMLU 5-shot, C-Eval 5-shot, GSM8K 8-shot, MATH 4-shot, HumanEval 0-shot, MBPP 0-shot, BBH 3-shot for base; chat zero-shot and few-shot; ReAct prompting for tools",
+   "retrieval": null,
+   "parameters": {
+    "context extension": "training-free dynamic NTK-aware interpolation, LogN-Scaling, layer-wise window attention (shorter windows in lower layers)"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "accuracy",
+     "definition": "benchmark accuracy (MMLU, C-Eval, GSM8K, MATH, BBH)",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "pass@1",
+     "definition": "HumanEval, MBPP, HumanEvalPack",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "perplexity",
+     "definition": "on arXiv test text at several sequence lengths",
+     "unit": "PPL",
+     "higher_is_better": false
+    },
+    {
+     "name": "human win rate vs GPT-3.5",
+     "definition": "3 annotators rank responses on 300 Chinese instructions",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "LLaMA",
+    "LLaMA 2",
+    "MPT",
+    "Falcon",
+    "Baichuan2",
+    "ChatGLM2",
+    "InternLM",
+    "StableBeluga2",
+    "GPT-3.5",
+    "GPT-4",
+    "Code Llama",
+    "StarCoder",
+    "WizardMath",
+    "Minerva"
+   ],
+   "protocol": "Baseline scores copied from official reports and OpenCompass (higher of reported and leaderboard); single run, no seeds or significance tests stated."
+  },
+  "availability": {
+   "code": "https://github.com/QwenLM/Qwen",
+   "weights": "14B and 7B base and chat models open-sourced",
+   "data": "tool-use and code-interpreter benchmarks released; pretraining data not released"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "models.Qwen-14B",
+    "quote": "5120",
+    "where": "Table 1 (columns: params, hidden size, heads, layers, learning rate, batch size, training tokens)"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Qwen tokenizer vocabulary size",
+   "kind": "measured",
+   "source": null,
+   "metric": "vocab size",
+   "value": "152K",
+   "unit": "tokens",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Qwen BPE tokenizer built on tiktoken cl100k_base with added Chinese and multilingual tokens",
+   "quote": "The final vocabulary size is approximately 152K.",
+   "table": null,
+   "note": null,
+   "where": "Sec 2.2"
+  },
+  {
+   "claim": "Qwen-14B scores 66.3 on MMLU 5-shot",
+   "kind": "measured",
+   "source": null,
+   "metric": "MMLU 5-shot",
+   "value": 66.3,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Base model, Table 2",
+   "quote": null,
+   "table": "Table 2, row QWEN 14B, column MMLU",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Qwen-14B scores 72.1 on C-Eval 5-shot",
+   "kind": "measured",
+   "source": null,
+   "metric": "C-Eval 5-shot",
+   "value": 72.1,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Base model",
+   "quote": null,
+   "table": "Table 2, row QWEN 14B, column C-Eval",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Qwen-7B scores 58.2 on MMLU 5-shot",
+   "kind": "measured",
+   "source": null,
+   "metric": "MMLU 5-shot",
+   "value": 58.2,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Base model",
+   "quote": null,
+   "table": "Table 2, row QWEN 7B, column MMLU",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Qwen-7B arXiv perplexity at 4096 tokens without extension",
+   "kind": "measured",
+   "source": null,
+   "metric": "PPL",
+   "value": 39.35,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Qwen-7B trained at context 2048, arXiv test set, no inference tricks",
+   "quote": null,
+   "table": "Table 3, row QWEN-7B, column 4096",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Qwen-7B arXiv perplexity at 16384 tokens without extension",
+   "kind": "measured",
+   "source": null,
+   "metric": "PPL",
+   "value": 2645.09,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "as above",
+   "quote": null,
+   "table": "Table 3, row QWEN-7B, column 16384",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Qwen-7B with dynamic NTK + LogN + window attention reaches PPL 3.49 at 8192",
+   "kind": "measured",
+   "source": null,
+   "metric": "PPL",
+   "value": 3.49,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "arXiv test set, training-free inference techniques",
+   "quote": null,
+   "table": "Table 3, row + dynamic ntk + logn + window attn, column 8192",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Same configuration PPL at 16384",
+   "kind": "measured",
+   "source": null,
+   "metric": "PPL",
+   "value": 4.32,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "as above",
+   "quote": null,
+   "table": "Table 3, row + dynamic ntk + logn + window attn, column 16384",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Qwen-14B with all techniques PPL at 8192 versus 334.65 without",
+   "kind": "measured",
+   "source": null,
+   "metric": "PPL",
+   "value": 3.18,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "arXiv test set",
+   "quote": null,
+   "table": "Table 3, row QWEN-14B + dynamic ntk + logn + window attn, column 8192",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Qwen-Chat-14B HumanEval zero-shot",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass@1",
+   "value": 43.9,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Chat model, Table 5",
+   "quote": null,
+   "table": "Table 5, row QWEN-CHAT 14B, column HumanEval",
+   "note": null,
+   "where": "Table 5"
+  },
+  {
+   "claim": "Code-Qwen-14B-Chat HumanEval pass@1",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass@1",
+   "value": 66.4,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 10",
+   "quote": null,
+   "table": "Table 10, row CODE-QWEN-CHAT 14B, column HumanEval",
+   "note": null,
+   "where": "Table 10"
+  },
+  {
+   "claim": "Math-Qwen-14B-Chat GSM8K accuracy, greedy decoding",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 69.8,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 12",
+   "quote": null,
+   "table": "Table 12, row MATH-QWEN-CHAT 14B, column GSM8K",
+   "note": null,
+   "where": "Table 12"
+  },
+  {
+   "claim": "Reward model test accuracy on Qwen Helpful-base",
+   "kind": "measured",
+   "source": null,
+   "metric": "pairwise accuracy",
+   "value": 74.78,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "RM vs PMP, Table 4",
+   "quote": null,
+   "table": "Table 4, row RM, column QWEN Helpful-base",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "Qwen base data scale",
+   "kind": "measured",
+   "source": null,
+   "metric": "tokens",
+   "value": "3 trillion",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Pretraining",
+   "quote": "Finally, we have built a dataset of up to 3 trillion tokens.",
+   "table": null,
+   "note": null,
+   "where": "Sec 2.1"
+  },
+  {
+   "claim": "Untied embeddings chosen, costing memory",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Architecture choice from preliminary experiments",
+   "quote": "achieve better performance with the price of memory costs",
+   "table": null,
+   "note": null,
+   "where": "Sec 2.3"
+  }
+ ],
+ "limits": [
+  "Baseline numbers are copied from other reports and OpenCompass, so prompts and settings may differ.",
+  "Authors concede traditional benchmarks cannot accurately measure aligned chat models and that the gap to proprietary models is hard to capture.",
+  "No compute, hardware, wall-clock or seeds reported; pretraining data not released.",
+  "Vocabulary scaling claim rests on unreported preliminary experiments.",
+  "Perplexity extension evidence is on arXiv text only and shows no use of far context."
+ ],
+ "practices": [],
+ "terms": [],
+ "lineage": [
+  {
+   "work": "LLaMA",
+   "year": 2023,
+   "arxiv": "2302.13971",
+   "relation": "extends",
+   "note": "architecture follows LLaMA",
+   "quote": null
+  },
+  {
+   "work": "Llama 2",
+   "year": 2023,
+   "arxiv": "2307.09288",
+   "relation": "baseline",
+   "note": "main open-source baseline",
+   "quote": null
+  },
+  {
+   "work": "RoFormer (RoPE)",
+   "year": 2021,
+   "arxiv": "2104.09864",
+   "relation": "uses-method",
+   "note": "positional embedding",
+   "quote": null
+  },
+  {
+   "work": "tiktoken cl100k_base",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "starting vocabulary",
+   "quote": null
+  },
+  {
+   "work": "Qwen-VL",
+   "year": 2023,
+   "arxiv": "2308.12966",
+   "relation": "related",
+   "note": "multimodal sibling, also used to grade visualisation",
+   "quote": null
+  },
+  {
+   "work": "Training a helpful and harmless assistant (Bai et al. 2022b)",
+   "year": 2022,
+   "arxiv": "2204.05862",
+   "relation": "uses-method",
+   "note": "preference model pretraining",
+   "quote": null
+  },
+  {
+   "work": "Training LMs to follow instructions (Ouyang et al.)",
+   "year": 2022,
+   "arxiv": "2203.02155",
+   "relation": "uses-method",
+   "note": "RLHF with PPO",
+   "quote": null
+  },
+  {
+   "work": "Code Llama",
+   "year": 2023,
+   "arxiv": "2308.12950",
+   "relation": "baseline",
+   "note": "code baseline",
+   "quote": null
+  },
+  {
+   "work": "Dynamic NTK interpolation (bloc97, Peng et al. 2023a)",
+   "year": 2023,
+   "arxiv": "2309.00071",
+   "relation": "uses-method",
+   "note": "training-free context extension",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Table 3",
+   "caption": "Results of QWEN on long-context inference using various techniques.",
+   "page": 9,
+   "why": "Shows perplexity blowing up past 2048 tokens and each inference trick restoring it."
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Encoding compression rates of different models.",
+   "page": 6,
+   "why": "Tokenizer compression per language against XLM-R."
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Model sizes, architectures, and optimization hyper-parameters.",
+   "page": 7,
+   "why": "All base hyperparameters in one place."
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Table 1 and 2 columns flattened by extraction; layer/head order for 14B inferred from header order (hidden size, heads, layers).",
+  "Many figure-embedded numbers (Fig 4) not recorded."
+ ]
+}

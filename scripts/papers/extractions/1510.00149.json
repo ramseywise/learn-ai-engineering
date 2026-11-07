@@ -1,0 +1,580 @@
+{
+ "schema": 1,
+ "key": "1510.00149",
+ "pdf": "ai-engineering/07-inference-engineering/sources/han-2015-deep-compression.pdf",
+ "bib": {
+  "title": "Deep Compression: Compressing Deep Neural Networks with Pruning, Trained Quantization and Huffman Coding",
+  "authors": [
+   "Song Han",
+   "Huizi Mao",
+   "William J. Dally"
+  ],
+  "first_author": "Han",
+  "year": 2016,
+  "venue": "ICLR 2016 (arXiv v5, 15 Feb 2016)",
+  "arxiv": "1510.00149",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 44870,
+  "chars_total": 44870,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can a trained CNN's storage and inference energy be cut by an order of magnitude through pruning, trained weight sharing and Huffman coding without losing accuracy?",
+ "hypothesis": "Pruning and trained quantization do not interfere with each other, so combined they give very high compression at unchanged accuracy.",
+ "contributions": [
+  "Three-stage pipeline: pruning, trained quantization (weight sharing), Huffman coding, giving 35x-49x storage reduction",
+  "Evaluation on LeNet-300-100, LeNet-5, AlexNet, VGG-16 with no accuracy loss",
+  "Benchmarks of pruned FC layers on CPU, GPU and mobile GPU: 3x-4x speedup, 3x-7x energy at batch 1"
+ ],
+ "method": {
+  "summary": "Train a network, prune connections below a magnitude threshold and retrain, cluster remaining weights per layer with 1-D k-means (linear initialization) and fine-tune the shared centroids with grouped gradients, then Huffman-code the weight indices and relative sparse indices. Implemented in Caffe; speed and energy measured on pruned (not quantized) FC layers.",
+  "task": "neural network compression for inference (image classification)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "MNIST",
+    "role": "both",
+    "size": null,
+    "split": null,
+    "source": null,
+    "preprocessing": "accuracy measured without data augmentation (reference from Caffe model zoo)"
+   },
+   {
+    "name": "ImageNet ILSVRC-2012",
+    "role": "both",
+    "size": "1.2M training examples, 50k validation examples",
+    "split": "validation for top-1/top-5 error",
+    "source": null,
+    "preprocessing": "accuracy measured without data augmentation"
+   }
+  ],
+  "models": [
+   {
+    "name": "LeNet-300-100",
+    "role": "evaluated",
+    "params": "266K (1070 KB)",
+    "architecture": "fully connected, hidden 300 and 100",
+    "init_from": "Caffe model zoo reference",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "3 FC",
+    "hidden": "300,100",
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "LeNet-5",
+    "role": "evaluated",
+    "params": "431K (1720 KB)",
+    "architecture": "2 conv + 2 FC",
+    "init_from": "Caffe model zoo reference",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "4",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "AlexNet",
+    "role": "evaluated",
+    "params": "61M (240MB)",
+    "architecture": "CNN, Caffemodel",
+    "init_from": "BVLC Caffe model zoo",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "5 conv + 3 FC",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "ref_top1_acc": "57.2%",
+     "ref_top5_acc": "80.3%"
+    }
+   },
+   {
+    "name": "VGG-16",
+    "role": "evaluated",
+    "params": "138M (552MB)",
+    "architecture": "CNN",
+    "init_from": "pretrained reference (Simonyan & Zisserman)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "13 conv + 3 FC",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "retraining of pruned weights; centroid fine-tuning with gradient summed per cluster (eq 3), k-means WCSS clustering (eq 2)",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": "32-bit float reference; 8-bit conv / 5-bit FC cluster indices (4-bit relative index for AlexNet, 5-bit for others per Tables 2-5)",
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "pruning": "remove connections with weights below a threshold (threshold value not given); retrain; implemented by a mask on blobs",
+    "centroid_init": "linear (Forgy, density-based, linear compared)",
+    "clusters": "256 per conv layer (8 bits), 32 per FC layer (5 bits) for AlexNet/VGG-16",
+    "index_encoding": "relative index difference, 8 bits conv / 5 bits FC per Sec 2 (text and Table 4 give 4 bits for AlexNet); filler zero padding",
+    "framework": "Caffe (Jia et al. 2014)"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "timing: 4096 input samples averaged per layer; power measured over repeated runs",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "batch_sizes": "1 and 64",
+    "kernels": "GPU cuBLAS GEMV/GEMM vs cuSPARSE CSRMV/CSRMM; CPU MKL CBLAS GEMV vs MKL SPBLAS CSRMV"
+   },
+   "other": {
+    "hardware": "NVIDIA GeForce GTX Titan X, Intel Core i7-5930K, NVIDIA Tegra K1 (Jetson TK1)",
+    "power": "nvidia-smi (GPU), pcm-power (CPU), external meter with 15% AC-DC loss, 85% regulator efficiency, 15% peripherals (Tegra)",
+    "not_benchmarked": "quantized/Huffman-coded model, since BLAS libraries lack indirect lookup"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Top-1 / Top-5 error",
+     "definition": "classification error on test/validation set",
+     "unit": "%",
+     "higher_is_better": false
+    },
+    {
+     "name": "Compression rate",
+     "definition": "original size / compressed size including sparse index and codebook overhead (eq 1 for quantization)",
+     "unit": "x",
+     "higher_is_better": true
+    },
+    {
+     "name": "Layer time",
+     "definition": "average time per input sample over 4096 samples for FC6-FC8; GPU excludes cudaMalloc/cudaMemcpy",
+     "unit": "us",
+     "higher_is_better": false
+    },
+    {
+     "name": "Energy",
+     "definition": "power x time, normalized to CPU",
+     "unit": "relative",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "Baseline Caffemodel",
+    "Fastfood-32/16-AD",
+    "Collins & Kohli 2014",
+    "SVD (Denton et al. 2014)",
+    "Network pruning (Han et al. 2015)"
+   ],
+   "protocol": "Single reported value per cell; no seeds or variance stated."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": null
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.other.index_encoding",
+    "quote": "The relative\nsparse index is encoded with 4 bits.",
+    "where": "Sec 5.2; Sec 2 says 8 bits conv / 5 bits FC"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "AlexNet storage falls 35x (240MB to 6.9MB) with unchanged top-1 error",
+   "kind": "measured",
+   "source": null,
+   "metric": "storage compression",
+   "value": "35x",
+   "unit": "compression rate",
+   "baseline_value": null,
+   "n": null,
+   "setup": "AlexNet Caffe model, ILSVRC-2012, pruning+trained quantization (8-bit conv, 5-bit FC)+Huffman, includes index and codebook overhead",
+   "note": null,
+   "where": "Abstract; Table 1",
+   "quote": "Our method reduced the storage required by AlexNet by 35×, from 240MB to 6.9MB"
+  },
+  {
+   "claim": "VGG-16 storage falls 49x (552MB to 11.3MB); top-1 error 31.50% to 31.17%",
+   "kind": "measured",
+   "source": null,
+   "metric": "storage compression",
+   "value": "49x",
+   "unit": "compression rate",
+   "baseline_value": null,
+   "n": null,
+   "setup": "VGG-16, ILSVRC-2012, full pipeline",
+   "note": null,
+   "where": "Abstract; Table 1",
+   "quote": "Our method reduced the size of VGG-16 by 49× from 552MB to 11.3MB"
+  },
+  {
+   "claim": "LeNet-300-100 compressed 40x and LeNet-5 39x on MNIST with no error increase",
+   "kind": "measured",
+   "source": null,
+   "metric": "storage compression",
+   "value": "40x / 39x",
+   "unit": "compression rate",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MNIST; LeNet-300-100 error 1.64% to 1.58%; LeNet-5 0.80% to 0.74%",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, rows LeNet-300-100 Compressed (40×) and LeNet-5 Compressed (39×)"
+  },
+  {
+   "claim": "Pruning alone reduces connections 9x (AlexNet) and 13x (VGG-16)",
+   "kind": "measured",
+   "source": null,
+   "metric": "parameter reduction",
+   "value": "9x and 13x",
+   "unit": "parameter reduction",
+   "baseline_value": null,
+   "n": null,
+   "setup": "AlexNet and VGG-16; magnitude threshold, retrain",
+   "note": null,
+   "where": "Sec 2",
+   "quote": "Pruning reduced the number of parameters by 9× and 13× for AlexNet and VGG-16"
+  },
+  {
+   "claim": "Pruning+quantization gives 27x on AlexNet (8.9MB); Huffman adds to 35x (6.9MB)",
+   "kind": "measured",
+   "source": null,
+   "metric": "storage compression",
+   "value": "27x then 35x",
+   "unit": "compression rate",
+   "baseline_value": null,
+   "n": null,
+   "setup": "AlexNet, Table 7 progression; Table 4 totals 3.7% (27x) and 2.88% (35x)",
+   "note": null,
+   "where": "Table 4, Table 7",
+   "table": "Table 7, rows Pruning+Quantization (27×) and Pruning+Quantization+Huffman (35×)"
+  },
+  {
+   "claim": "Huffman coding saves a further 20-30% of storage",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "20%-30%",
+   "unit": "storage saved",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Weight and sparse index distributions of last FC layer of AlexNet",
+   "note": null,
+   "where": "Sec 4",
+   "quote": "Experiments show that Huffman coding these non-uniformly distributed values saves 20% −30% of network storage"
+  },
+  {
+   "claim": "On AlexNet, compression to 2.88% of original size without accuracy impact; Huffman gives an additional 22%",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "2.88%",
+   "unit": "of original size",
+   "baseline_value": null,
+   "n": null,
+   "setup": "AlexNet, 61M parameters, ref top-1 57.2% / top-5 80.3%; 8-bit conv, 5-bit FC, 4-bit relative index",
+   "note": null,
+   "where": "Sec 5.2",
+   "quote": "Table 4 shows that AlexNet can be compressed to 2.88% of its original size"
+  },
+  {
+   "claim": "Pruned FC layers give 3x-4x layerwise speedup at batch size 1",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "3x to 4x",
+   "unit": "speedup vs dense",
+   "baseline_value": null,
+   "n": null,
+   "setup": "FC6/FC7/FC8 of AlexNet and VGG-16; Core i7-5930K, Titan X, Tegra K1; batch 1; pruned sparse layer (CSR), quantized model NOT benchmarked",
+   "note": "Figure 9 caption: 3x CPU, 3.5x GPU, 4.2x mobile GPU on average",
+   "where": "Sec 6.3, Fig 9",
+   "quote": "pruned network layer obtained 3× to 4× speedup over the dense network on average"
+  },
+  {
+   "claim": "Pruned FC layers use 3x-7x less energy at batch size 1",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "3× to 7×",
+   "unit": "energy reduction",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Same setup; energy = power x time, AP+DRAM power; Fig 10 caption gives 7x CPU, 3.3x GPU, 4.2x mobile GPU",
+   "note": null,
+   "where": "Sec 6.3, Fig 10",
+   "quote": "pruned network layer consumes 3× to 7× less energy over the dense network on average"
+  },
+  {
+   "claim": "At batch size 64 pruning loses its advantage (e.g. Titan X AlexNet FC6 dense 19.8us vs sparse 94.6us)",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "19.8 vs 94.6",
+   "unit": "us per sample",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Titan X, AlexNet FC6, batch 64, cuBLAS gemm vs cuSPARSE csrmm",
+   "note": "Text: 'pruned network no longer shows its advantage'",
+   "where": "Appendix A, Table 8",
+   "table": "Table 8, Titan X rows dense (batch=64) and sparse (batch=64), column AlexNet FC6"
+  },
+  {
+   "claim": "AlexNet with 8/5 bits has no accuracy loss; 8/4 bits loses 0.01% top-1; 4/2 bits loses 1.99% top-1 and 2.60% top-5",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "1.99% / 2.60%",
+   "unit": "error increase",
+   "baseline_value": null,
+   "n": null,
+   "setup": "AlexNet CONV bits / FC bits, Table 6",
+   "note": null,
+   "where": "Table 6",
+   "quote": "4/2 bit quantization resulted in 1.99% and 2.60% loss of accuracy"
+  },
+  {
+   "claim": "CONV layers need more bits than FC: accuracy drops below 4 bits for CONV, below 2 bits for FC",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "4 bits / 2 bits",
+   "unit": "bits",
+   "baseline_value": null,
+   "n": null,
+   "setup": "AlexNet, Fig 7 quantization with and without pruning",
+   "note": null,
+   "where": "Sec 6.1",
+   "quote": "For CONV layers, accuracy drops signiﬁcantly below 4 bits, while FC layer is more robust: not until\n2 bits did the accuracy drop signiﬁcantly"
+  },
+  {
+   "claim": "Linear centroid initialization beats density and random initialization at all bit widths except 3 bits",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "none",
+   "unit": "qualitative",
+   "baseline_value": null,
+   "n": null,
+   "setup": "AlexNet, quantized to 2-8 bits, top-1 and top-5, Fig 8",
+   "note": null,
+   "where": "Sec 6.2, Fig 8",
+   "quote": "Linear initialization outperforms the density initialization and random initialization in all\ncases except at 3 bits"
+  },
+  {
+   "claim": "Combined pruning and quantization reaches 3% of original size with no loss; each alone degrades below 8%",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "3% / 8%",
+   "unit": "of original size",
+   "baseline_value": null,
+   "n": null,
+   "setup": "AlexNet, Fig 6; numbers read from text",
+   "note": null,
+   "where": "Sec 6.1, Fig 6",
+   "quote": "But when combined, as shown in the red line, the network can be compressed to 3% of original\nsize with no loss of accuracy"
+  },
+  {
+   "claim": "Memory energy: 32-bit DRAM access 640pJ vs SRAM 5pJ vs float add 0.9pJ; 1G connections at 20fps needs 12.8W for DRAM",
+   "kind": "reported",
+   "source": "not named in text",
+   "metric": null,
+   "value": "12.8W",
+   "unit": "W",
+   "baseline_value": null,
+   "n": null,
+   "setup": "45nm CMOS; cited figures, source not named in text",
+   "note": null,
+   "where": "Sec 1",
+   "quote": "(20Hz)(1G)(640pJ) = 12.8W just"
+  },
+  {
+   "claim": "Prior methods on AlexNet: Fastfood 2-3.7x, Collins&Kohli 4x, SVD 5x with 44.02% top-1",
+   "kind": "reported",
+   "source": "Table 7 cites Denton et al. 2014",
+   "metric": null,
+   "value": "5x",
+   "unit": "compression rate",
+   "baseline_value": null,
+   "n": null,
+   "setup": "AlexNet baselines in Table 7",
+   "note": null,
+   "where": "Table 7",
+   "table": "Table 7, row SVD (Denton et al., 2014), column Compress Rate"
+  }
+ ],
+ "limits": [
+  "Speed and energy are measured only for pruned FC layers, not for the quantized or Huffman-coded model, because cuSPARSE and MKL lack indirect lookup and relative indexing (Sec 6.3, Sec 8).",
+  "Pruning loses its advantage at batch size 64 on GPU and CPU (Table 8).",
+  "Optimizer, learning rate, epochs, pruning threshold and hardware for training are not stated.",
+  "Index width stated as 8 bits conv / 5 bits FC in Sec 2 but 4 bits in Sec 5.2 and Table 4.",
+  "Full benefit needs custom kernels or an ASIC (EIE, Sec 8).",
+  "Accuracy is without data augmentation; one run per cell."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "weight sharing",
+   "definition": "multiple connections share the same weight so only a codebook and small indices are stored",
+   "where": "Sec 3"
+  },
+  {
+   "term": "relative index",
+   "definition": "store the index difference instead of absolute position in sparse format, with filler zeros on overflow",
+   "where": "Sec 2, Fig 2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Learning both weights and connections for efficient neural networks",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "pruning stage builds on this",
+   "quote": "We build on top of that approach."
+  },
+  {
+   "work": "HashedNets (Chen et al.)",
+   "year": 2015,
+   "arxiv": "1504.04788",
+   "relation": "related",
+   "note": "weight sharing by hash before training, versus k-means after training",
+   "quote": null
+  },
+  {
+   "work": "Gong et al. vector quantization",
+   "year": 2014,
+   "arxiv": "1412.6115",
+   "relation": "baseline",
+   "note": "16-24x with 1% loss",
+   "quote": null
+  },
+  {
+   "work": "Denton et al. SVD",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "5x, 44.02% top-1 in Table 7",
+   "quote": null
+  },
+  {
+   "work": "Deep fried convnets",
+   "year": 2014,
+   "arxiv": "1412.7149",
+   "relation": "baseline",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "Memory bounded deep convolutional networks",
+   "year": 2014,
+   "arxiv": "1412.1442",
+   "relation": "baseline",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "EIE",
+   "year": 2016,
+   "arxiv": "1602.01528",
+   "relation": "related",
+   "note": "hardware accelerator built on compressed model",
+   "quote": null
+  },
+  {
+   "work": "AlexNet (Krizhevsky et al.)",
+   "year": 2012,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "VGG-16 (Simonyan & Zisserman)",
+   "year": 2014,
+   "arxiv": "1409.1556",
+   "relation": "evaluates",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "Caffe (Jia et al.)",
+   "year": 2014,
+   "arxiv": "1408.5093",
+   "relation": "uses-method",
+   "note": "implementation framework",
+   "quote": null
+  },
+  {
+   "work": "MNIST / ILSVRC-2012",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": null,
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "The three stage compression pipeline: pruning, quantization and Huffman coding.",
+   "page": 2,
+   "why": "shows stage-by-stage reduction 9-13x, 27-31x, 35-49x"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Weight sharing by scalar quantization (top) and centroids fine-tuning (bottom).",
+   "page": 3,
+   "why": "shows grouped-gradient centroid update"
+  },
+  {
+   "figure": "Fig 9",
+   "caption": "Pruned network layer achieved 3x speedup on CPU, 3.5x on GPU and 4.2x on mobile GPU on average. Batch size = 1.",
+   "page": 9,
+   "why": "speedup by hardware"
+  }
+ ],
+ "code": [
+  {
+   "where": "eq 1",
+   "snippet": "r = nb / (n log2(k) + kb)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text uses ligature characters (fi, fl) in places; quotes keep them as printed.",
+  "Figures 2,4-8 are plots whose values are not in the text and were not read."
+ ]
+}

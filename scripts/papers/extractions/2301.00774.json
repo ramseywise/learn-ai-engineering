@@ -1,0 +1,551 @@
+{
+ "schema": 1,
+ "key": "2301.00774",
+ "pdf": "ai-engineering/07-inference-engineering/sources/frantar-2023-sparsegpt.pdf",
+ "bib": {
+  "title": "SparseGPT: Massive Language Models Can be Accurately Pruned in One-Shot",
+  "authors": [
+   "Elias Frantar",
+   "Dan Alistarh"
+  ],
+  "first_author": "Frantar",
+  "year": 2023,
+  "venue": "preprint (arXiv v3, 22 Mar 2023)",
+  "arxiv": "2301.00774",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 62363,
+  "chars_total": 62363,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can 10-100B+ parameter GPT-family models be pruned to high sparsity in one shot, without retraining, at little accuracy loss?",
+ "hypothesis": "Larger models are easier to sparsify (speculated to be due to overparametrization); layerwise sparse regression can be solved approximately fast enough for 175B models.",
+ "contributions": [
+  "SparseGPT, an approximate layer-wise sparse regression solver scaling to 175B parameters on one GPU",
+  "Extension to 2:4 and 4:8 semi-structured patterns",
+  "Joint sparsification and quantization in one pass",
+  "Evidence that larger models are more compressible"
+ ],
+ "method": {
+  "summary": "Layer-wise pruning where, for each layer, columns are processed in order with a shared sequence of inverse Hessians (OBS updates on remaining weights to the right), masks chosen adaptively per block of 128 columns by OBS error. No retraining; layers processed sequentially on one A100.",
+  "task": "post-training one-shot pruning of LLMs",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "C4 first shard (calibration)",
+    "role": "train",
+    "size": "128 segments x 2048 tokens",
+    "split": "random segments from first shard",
+    "source": "Raffel et al. 2020",
+    "preprocessing": null
+   },
+   {
+    "name": "raw-WikiText2 test",
+    "role": "eval",
+    "size": null,
+    "split": "test",
+    "source": "Merity et al. 2016",
+    "preprocessing": "samples concatenated with \\n\\n, non-overlapping 2048-token segments"
+   },
+   {
+    "name": "PTB (ptb text only)",
+    "role": "eval",
+    "size": null,
+    "split": "test",
+    "source": "Marcus et al. 1994",
+    "preprocessing": "samples concatenated directly, no separator"
+   },
+   {
+    "name": "C4 validation subset",
+    "role": "eval",
+    "size": "256 x 2048 tokens",
+    "split": "start of first shard validation",
+    "source": "Raffel et al. 2020",
+    "preprocessing": null
+   },
+   {
+    "name": "Lambada, ARC-e/c, PIQA, StoryCloze",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "GPTQ implementation of EleutherAI eval harness",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "OPT family 125M to 175B",
+    "role": "evaluated",
+    "params": "125M-175B",
+    "architecture": "decoder-only transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "2048 tokens",
+    "other": {}
+   },
+   {
+    "name": "BLOOM-176B",
+    "role": "evaluated",
+    "params": "176B",
+    "architecture": "decoder-only transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "SparseGPT",
+    "role": "proposed",
+    "params": null,
+    "architecture": "pruning method",
+    "init_from": "pretrained dense OPT/BLOOM",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "one pruning run per config; 5 seeds for calibration sampling only in ablation (OPT-2.7B)",
+   "prompting": "zero-shot via GPTQ/eval-harness",
+   "retrieval": null,
+   "parameters": {
+    "mask_blocksize_Bs": 128,
+    "lazy_update_blocksize_B": "128 (inferred: Bs matches the default lazy batch size)",
+    "hessian_dampening": "1% of average diagonal (0.01)",
+    "calibration_samples": 128,
+    "sparsity_targets": "50% unstructured, 2:4, 4:8; sweeps up to 80%",
+    "pruned_layers": "all linear layers, excluding embeddings and head",
+    "joint_quant": "50% + 4-bit, 50% + 3-bit"
+   },
+   "other": {
+    "hardware": "1x NVIDIA A100 80GB",
+    "runtime": "under 4.5 hours for 175B",
+    "software": "PyTorch, HuggingFace Transformers",
+    "precision": null
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "perplexity",
+     "definition": "exp of mean LM loss over non-overlapping 2048-token segments of concatenated test set (HuggingFace procedure, full stride)",
+     "unit": "perplexity",
+     "higher_is_better": false
+    },
+    {
+     "name": "zero-shot accuracy",
+     "definition": "Lambada, PIQA, ARC-e, ARC-c, StoryCloze via GPTQ eval harness",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "speedup",
+     "definition": "dense runtime / sparse runtime",
+     "unit": "x",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Layer-wise magnitude pruning (Zhu & Gupta 2017)",
+    "AdaPrune (Hubara et al. 2021a), models up to 1B",
+    "GPTQ 3-bit (joint comparison)"
+   ],
+   "protocol": "single run per config; same code for dense and sparse; calibration-seed std measured on OPT-2.7B only"
+  },
+  "availability": {
+   "code": "https://github.com/IST-DASLab/sparsegpt",
+   "weights": null,
+   "data": "public datasets"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "SparseGPT prunes OPT-175B to 50% with perplexity no worse than dense",
+   "kind": "measured",
+   "source": null,
+   "metric": "WikiText2 ppl",
+   "value": "8.21",
+   "unit": "perplexity",
+   "baseline_value": "8.35",
+   "n": null,
+   "setup": "OPT-175B, raw-WikiText2 perplexity, one-shot, 128 C4 calibration segments of 2048 tokens, uniform 50% unstructured",
+   "note": "Table 5 prints the dense OPT-175B WikiText2 value as 8.34, Table 1 as 8.35",
+   "where": "Table 1",
+   "table": "Table 1, row SparseGPT 50%, column 175B"
+  },
+  {
+   "claim": "2:4 sparsity on OPT-175B costs 0.39 perplexity",
+   "kind": "measured",
+   "source": null,
+   "metric": "WikiText2 ppl",
+   "value": "8.74",
+   "unit": "perplexity",
+   "baseline_value": "8.35",
+   "n": null,
+   "setup": "OPT-175B, raw-WikiText2 perplexity, one-shot, 128 C4 calibration segments of 2048 tokens, 2:4",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row SparseGPT 2:4, column 175B"
+  },
+  {
+   "claim": "4:8 sparsity on OPT-175B costs 0.11 perplexity",
+   "kind": "measured",
+   "source": null,
+   "metric": "WikiText2 ppl",
+   "value": "8.45",
+   "unit": "perplexity",
+   "baseline_value": "8.35",
+   "n": null,
+   "setup": "OPT-175B, raw-WikiText2 perplexity, one-shot, 128 C4 calibration segments of 2048 tokens, 4:8",
+   "note": null,
+   "where": "Sec 4.1",
+   "quote": "the perplexity increases are only of 0.11 and 0.39 for 4:8 and 2:4 sparsity, respectively"
+  },
+  {
+   "claim": "Magnitude pruning at 50% collapses OPT-175B",
+   "kind": "measured",
+   "source": null,
+   "metric": "WikiText2 ppl",
+   "value": "4.3e4",
+   "unit": "perplexity",
+   "baseline_value": "8.35",
+   "n": null,
+   "setup": "OPT-175B, raw-WikiText2 perplexity, one-shot, 128 C4 calibration segments of 2048 tokens, 50% layerwise magnitude",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Magnitude 50%, column 175B"
+  },
+  {
+   "claim": "OPT-2.7B loses about 1 perplexity point at 50%",
+   "kind": "measured",
+   "source": null,
+   "metric": "WikiText2 ppl",
+   "value": "13.48",
+   "unit": "perplexity",
+   "baseline_value": "12.47",
+   "n": null,
+   "setup": "OPT-2.7B, raw-WikiText2, 50% unstructured",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row SparseGPT 50%, column 2.7B"
+  },
+  {
+   "claim": "SparseGPT sparsifies OPT-175B and BLOOM-176B in under 4.5 hours on one A100 80GB",
+   "kind": "measured",
+   "source": null,
+   "metric": "runtime",
+   "value": "4.5",
+   "unit": "hours (upper bound)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "single NVIDIA A100 80GB, layers pruned sequentially",
+   "note": "Sec 4 says 'approximately 4 hours'",
+   "where": "Abstract; Sec 4",
+   "quote": "under 4.5 hours"
+  },
+  {
+   "claim": "AdaPrune needs about 4.3h on a 1.3B model",
+   "kind": "measured",
+   "source": null,
+   "metric": "runtime",
+   "value": "4.3",
+   "unit": "hours",
+   "baseline_value": null,
+   "n": null,
+   "setup": "OPT-1.3B, same A100",
+   "note": null,
+   "where": "Sec 4.1",
+   "quote": "≈4.3h on a 1.3B one"
+  },
+  {
+   "claim": "Magnitude pruning keeps OPT-175B accuracy only up to about 10% sparsity; SparseGPT reaches 60% at comparable perplexity increase",
+   "kind": "measured",
+   "source": null,
+   "metric": "max sparsity",
+   "value": "60",
+   "unit": "% sparsity",
+   "baseline_value": null,
+   "n": null,
+   "setup": "OPT-175B, uniform per-layer sparsity sweep, WikiText2 (Fig 1)",
+   "note": null,
+   "where": "Sec 4.1, Fig 1",
+   "quote": "SparseGPT enables up to 60% sparsity at a comparable perplexity increase"
+  },
+  {
+   "claim": "BLOOM-176B: magnitude pruning admits up to 30% sparsity, SparseGPT 50%",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "1.66",
+   "unit": "x improvement",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BLOOM-176B, WikiText2 (Fig 5)",
+   "note": null,
+   "where": "Sec 4.1",
+   "quote": "SparseGPT can deliver 50% sparsity, a 1.66× improvement"
+  },
+  {
+   "claim": "50% sparse + 4-bit beats size-equivalent 3-bit GPTQ on OPT-175B",
+   "kind": "measured",
+   "source": null,
+   "metric": "WikiText2 ppl",
+   "value": "8.29",
+   "unit": "perplexity",
+   "baseline_value": "8.68",
+   "n": null,
+   "setup": "OPT-175B WikiText2, 50% + 4-bit joint",
+   "note": null,
+   "where": "Sec 4.1, Fig 6",
+   "quote": "including 175B with 8.29 vs. 8.68 3-bit"
+  },
+  {
+   "claim": "2:4 + 4-bit on OPT-175B",
+   "kind": "measured",
+   "source": null,
+   "metric": "WikiText2 ppl",
+   "value": "8.55",
+   "unit": "perplexity",
+   "baseline_value": null,
+   "n": null,
+   "setup": "OPT-175B WikiText2",
+   "note": "8.55 is 2:4, 8.85 is 4:8",
+   "where": "Sec 4.1",
+   "quote": "yielding 8.55 and 8.85 perplexities"
+  },
+  {
+   "claim": "50% + 3-bit on OPT-175B beats GPTQ 2.5-bit",
+   "kind": "measured",
+   "source": null,
+   "metric": "WikiText2 ppl",
+   "value": "8.60",
+   "unit": "perplexity",
+   "baseline_value": "8.94",
+   "n": null,
+   "setup": "OPT-175B WikiText2",
+   "note": null,
+   "where": "App C",
+   "quote": "OPT-175B achieves 8.60 PPL on raw-WikiText2"
+  },
+  {
+   "claim": "Zero-shot average of 50% SparseGPT OPT-175B matches dense",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg zero-shot acc",
+   "value": "70.52",
+   "unit": "avg accuracy %",
+   "baseline_value": "70.29",
+   "n": null,
+   "setup": "OPT-175B, Lambada/PIQA/ARC-e/ARC-c/StoryCloze, 50%",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row SparseGPT 50%, column Avg."
+  },
+  {
+   "claim": "Magnitude 50% zero-shot average collapses",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg zero-shot acc",
+   "value": "31.10",
+   "unit": "avg accuracy %",
+   "baseline_value": "70.29",
+   "n": null,
+   "setup": "OPT-175B, same tasks",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Magnitude 50%, column Avg."
+  },
+  {
+   "claim": "Seed sensitivity of calibration sampling at 50%",
+   "kind": "measured",
+   "source": null,
+   "metric": "WikiText2 ppl",
+   "value": "13.52 ± 0.075",
+   "unit": "perplexity mean/std",
+   "baseline_value": null,
+   "n": null,
+   "setup": "OPT-2.7B, 5 seeds, WikiText2",
+   "note": null,
+   "where": "App A",
+   "quote": "13.52 ± 0.075"
+  },
+  {
+   "claim": "Layer-level 2:4 speedup on OPT-175B matmuls (2048 tokens) is 1.54-1.79x, not end to end",
+   "kind": "measured",
+   "source": null,
+   "metric": "speedup",
+   "value": "1.79",
+   "unit": "x (Q/K/V/Out)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CUTLASS 2:4 vs cuBLAS dense, batch 2048 tokens; FC1 1.67x, FC2 1.54x",
+   "note": null,
+   "where": "App E",
+   "table": "Table 8, row Speedup, column Q/K/V/Out"
+  },
+  {
+   "claim": "CPU unstructured speedup OPT-2.7B at 50% sparsity",
+   "kind": "measured",
+   "source": null,
+   "metric": "speedup",
+   "value": "1.82",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "DeepSparse, single batch of 400 tokens, i9-7980XE 18 cores, end-to-end",
+   "note": null,
+   "where": "App E",
+   "table": "Table 7, column 50%"
+  },
+  {
+   "claim": "SparseGPT partial-update approximation error is about 20% above exact reconstruction",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "20",
+   "unit": "% layer-wise squared error",
+   "baseline_value": null,
+   "n": null,
+   "setup": "OPT-2.7B, 50%, first half of model",
+   "note": null,
+   "where": "App A.1",
+   "quote": "only around 20% worse than exact reconstruction"
+  }
+ ],
+ "limits": [
+  "Authors concede zero-shot numbers are noisy and a slight perplexity improvement at 175B is dataset specific (absent on PTB, C4)",
+  "Speedups are preliminary with off-the-shelf tools; GPU numbers are per-layer matmul only, end-to-end likely lower",
+  "2:4/4:8 lose noticeable accuracy on smaller models",
+  "Why larger models are easier to prune is speculation, left to future work",
+  "Only OPT and BLOOM studied; perplexity and a few zero-shot tasks, no generation quality or reasoning evals",
+  "AdaPrune compared only up to 1.3B"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "sparsity mask",
+   "definition": "a binary tensor of the same dimensions, with 0 at the indices of the sparsified entries, and 1 at the other indices",
+   "where": "footnote 1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "GPTQ",
+   "year": 2022,
+   "arxiv": "2210.17323",
+   "relation": "uses-method",
+   "note": "column-wise greedy framework, Cholesky and lazy batch updates; joint quantization",
+   "quote": null
+  },
+  {
+   "work": "Optimal Brain Compression",
+   "year": 2022,
+   "arxiv": "2208.11580",
+   "relation": "extends",
+   "note": "OBS updates and greedy solver; SparseGPT approximates it",
+   "quote": null
+  },
+  {
+   "work": "AdaPrune",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Hubara et al. 2021a",
+   "quote": null
+  },
+  {
+   "work": "Optimal Brain Surgeon",
+   "year": 1993,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Hassibi et al.",
+   "quote": null
+  },
+  {
+   "work": "Magnitude pruning",
+   "year": 2017,
+   "arxiv": "1710.01878",
+   "relation": "baseline",
+   "note": "Zhu & Gupta",
+   "quote": null
+  },
+  {
+   "work": "OPT",
+   "year": 2022,
+   "arxiv": "2205.01068",
+   "relation": "evaluates",
+   "note": "main model family",
+   "quote": null
+  },
+  {
+   "work": "BLOOM",
+   "year": 2022,
+   "arxiv": "2211.05100",
+   "relation": "evaluates",
+   "note": "176B",
+   "quote": null
+  },
+  {
+   "work": "C4 / T5",
+   "year": 2020,
+   "arxiv": "1910.10683",
+   "relation": "uses-data",
+   "note": "calibration and eval",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Sparsity-vs-perplexity comparison of SparseGPT against magnitude pruning on OPT-175B",
+   "page": 2,
+   "why": "shows magnitude collapse beyond 10-30% versus SparseGPT flat to 60%"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Visualization of the SparseGPT reconstruction algorithm and adaptive mask selection",
+   "page": 4,
+   "why": "column-wise update with shared Hessian sequence"
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "Joint 50% sparsity + 4-bit vs size-equivalent 3-bit on OPT family",
+   "page": 7,
+   "why": "storage-matched comparison"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 3",
+   "snippet": "δm = −wm/[H^-1]mm · H^-1:,m ,  εm = wm^2/[H^-1]mm",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "No embedded instructions found. Text cache has figure axis labels interleaved; Fig 6 text refers to '(right)' although single panel."
+ ]
+}

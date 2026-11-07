@@ -1,19 +1,514 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2111.06377",
  "pdf": "ai-engineering/08-multimodal-engineering/sources/he-2022-masked-autoencoders-scalable-vision-learners.pdf",
  "bib": {
   "title": "Masked Autoencoders Are Scalable Vision Learners",
+  "authors": [
+   "Kaiming He",
+   "Xinlei Chen",
+   "Saining Xie",
+   "Yanghao Li",
+   "Piotr Dollár",
+   "Ross Girshick"
+  ],
   "first_author": "He",
   "year": 2022,
-  "venue": "CVPR 2022",
+  "venue": "preprint (arXiv v3, 19 Dec 2021; published CVPR 2022)",
   "arxiv": "2111.06377",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-04",
-  "session": "97b4134b-decf-4866-ae85-c6872cbbba19"
+  "at": "2026-11-07",
+  "chars_read": 60545,
+  "chars_total": 60545,
+  "engine": "pymupdf",
+  "skipped": "References skimmed only"
  },
- "legacy_report": "SOURCE: Masked Autoencoders Are Scalable Vision Learners. Kaiming He, Xinlei Chen, Saining Xie, Yanghao Li, Piotr Dollár, Ross Girshick (FAIR). The file is the arXiv:2111.06377v3 preprint, dated 19 Dec 2021. The CVPR 2022 paper is the published version, but this PDF is the arXiv copy.\n\nCOVERAGE: I read all 60,658 characters across the 14 pages, including Appendices A to C (Tables 8 to 13). I only skimmed the references, to find where the method comes from.\n\nCLAIMS\n- claim: A 75% masking ratio works best for both fine-tuning and linear probing. Images carry a lot of spatial redundancy, so a high ratio stops the model from just filling patches in from their neighbours. BERT masks 15%; earlier vision methods masked 20–50%.\n  number: 75%; linear probe 54.6% at a 10% ratio vs 73.5% at 75%\n  setup: ViT-L/16, IN1K, 800 epochs, unnormalised pixel target (Fig. 5, Table 1)\n  quote: \"The ratio of 75% is good for both linear probing and ﬁne-tuning. This behavior is in contrast with BERT [14], whose typical masking ratio is 15%.\" / \"the accuracy gap is up to ∼20% (54.6% vs. 73.5%)\"\n  where: p.4–5\n- claim: The encoder only processes the visible patches. Mask tokens are added afterwards, in a light decoder whose default compute is 9% of the encoder's FLOPs per token. Putting mask tokens in the encoder cut FLOPs by 3.3×, gave a 2.8–4.1× wall-clock speedup, and also raised accuracy (a mask-token encoder scored 14% lower on linear probing).\n  number: 3.3× FLOPs; 2.8× (ViT-L, 8-block decoder) up to 4.1× (ViT-H, 1-block decoder)\n  setup: 800 epochs on 128 TPU-v3 cores with TensorFlow, 75% mask, decoder width 512 (Table 2)\n  quote: \"we reduce the overall training FLOPs by 3.3×. This leads to a 2.8× wall-clock speedup ... even bigger (3.5–4.1 ×), for a smaller decoder (1-block), a larger encoder (ViT-H), or both\"\n  where: p.5\n- claim: The target is pixel MSE, computed only on the masked patches. Normalising each patch by its own mean and std improves results. It matches dVAE tokens (BEiT-style), so a separate tokenizer adds nothing.\n  number: ViT-L ft 84.9 → 85.4, lin 73.5 → 73.9 with normalisation; token vs normalised pixel Δ ≤ 0.2\n  setup: ViT-L ablation (Table 1d); IN1K/COCO/ADE20K (Table 7)\n  quote: \"pixel (w/ norm) 85.4 73.9\" / \"The difference is statistically insigniﬁcant.\"\n  where: p.4–5, p.8\n- claim: Fine-tuned on IN1K only, ViT-H reaches 87.8% at 448 px, beating the previous IN1K-only best of 87.1% (VOLO, 512 px). MAE scores higher than BEiT and MoCo v3 at every model size, and it is 3.5× faster per epoch than BEiT.\n  number: ViT-B 83.6, ViT-L 85.9, ViT-H 86.9, ViT-H@448 87.8. BEiT ViT-L 85.2; MoCo v3 ViT-L 84.1\n  setup: normalised-pixel target, 1600 pre-training epochs, end-to-end fine-tuning (50 epochs for L/H), 224 px unless stated (Table 3)\n  quote: \"By ﬁne-tuning with a 448 size, we achieve 87.8% accuracy, using only IN1K data. The previous best accuracy ... is 87.1% (512 size) [67]\"\n  where: p.7\n- claim: MAE features do poorly on linear probing compared with contrastive methods. Tuning even one block closes most of that gap, and from one tuned block upward MAE is ahead of MoCo v3.\n  number: linear probe 73.5 → 81.0 with 1 block tuned; ViT-L linear probe 75.8 (MAE) vs 77.6 (MoCo v3)\n  setup: ViT-L partial fine-tuning (Fig. 9); App. B (Table 12)\n  quote: \"ﬁne-tuning onlyone Transformer block boosts the accuracy signiﬁcantly from 73.5% to 81.0%\" / \"it still lags behind contrastive methods under this protocol: e.g., MoCo v3 [9] has 77.6% linear probing accuracy for the ViT-L\"\n  where: p.7, p.12\n- claim: In transfer, MAE beats supervised pre-training on COCO and ADE20K, and the gap gets bigger as the model gets bigger. MoCo v3 only matches supervised.\n  number: COCO APbox ViT-L 53.3 vs 49.3 supervised (+4.0); ADE20K mIoU ViT-L 53.6 vs 49.9\n  setup: Mask R-CNN with ViT+FPN; UperNet. Hyper-parameters were searched for every entry (Tables 4–5)\n  quote: \"with the larger ViT-L, our MAE pre-training outperforms supervised pre-training by 4.0 points (53.3 vs. 49.3)\"\n  where: p.8\n\nLIMITS:\n- Everything is pre-trained on IN1K with vanilla ViT, and no ConvNets are tested. The paper argues that mask tokens are hard to fit into convolutions, but it does not run that experiment. That gap is what ConvNeXt V2 later addresses.\n- Linear probing still trails contrastive methods.\n- Wall-clock speedups are from TPU/TensorFlow only.\n- Linear-probe accuracy had not saturated at 1600 epochs, so the full cost of training to convergence is unknown.\n- The authors call the claim that the model learned \"semantics\" a hypothesis, supported only qualitatively by the reconstructions.\n- Broader impacts: the model reflects biases in its data and \"may generate inexistent content\".\n- The loss ignores visible patches, so reconstructions there look worse.\n- The SOTA comparison is limited to IN1K-only methods, and the 87.8% depends on a 448 px fine-tune.\n- Dated: this is the arXiv v3 text, which may differ from the CVPR camera-ready.\n\nBUILDS ON:\n- Denoising autoencoders: Vincent et al., ICML 2008; Stacked DAE, Vincent et al. [59]\n- Context Encoders: Pathak et al., CVPR 2016\n- BERT: Devlin et al., NAACL 2019\n- ViT: Dosovitskiy et al., ICLR 2021\n- BEiT: Bao et al., arXiv 2021\n- MoCo v3: Chen, Xie, He, ICCV 2021\n- iGPT [6], cited as a method (details not extracted)\n\nCODE: There is no code listing. The implementation is described in prose on p.4: \"randomly shufﬂe the list of tokens and remove the last portion of the list ... append a list of mask tokens ... and unshufﬂe this full list\". It needs no sparse ops.\n\nFIGURES: Fig. 1 (p.2), the MAE architecture: \"a large random subset of image patches (e.g., 75%) is masked out. The encoder is applied to the small subset of visible patches. Mask tokens are introduced after the encoder\". It is the best fit for 01-image-input \"What the model actually sees\", because it shows that the encoder never sees mask tokens and that the decoder is thrown away after pre-training. Fig. 5 (p.4, masking-ratio curves) is a second option for the deep-learning note.\n\nPROBLEMS:\n- The extraction is clean apart from ligature glyphs.\n- A few lines in A.1 (the ViT architecture sentence) were lost to a grep filter on my side. Nothing in the claims above depends on them.\n- The text contains no embedded instructions.\n- PDF: /Users/ramsey-wise/workspace/learn-ai-engineering/ai-engineering/08-multimodal-engineering/sources/he-2022-masked-autoencoders-scalable-vision-learners.pdf"
+ "type": "empirical",
+ "question": "What makes masked autoencoding different between vision and language, and can a simple MAE scale self-supervised pre-training of vision transformers?",
+ "hypothesis": "Because images are spatially redundant, masking a very high portion of random patches with an asymmetric encoder-decoder gives a nontrivial, scalable pretext task.",
+ "contributions": [
+  "Asymmetric encoder-decoder: encoder sees only visible patches, lightweight decoder reconstructs with mask tokens",
+  "Very high masking ratio (75%) gives a meaningful task and 3x or more faster training",
+  "Vanilla ViT-H reaches 87.8% on ImageNet-1K-only; transfer beats supervised pre-training on detection, segmentation, classification"
+ ],
+ "method": {
+  "summary": "Divide image into 16x16 (14x14 for ViT-H) non-overlapping patches, randomly mask 75%, encode visible patches only with a ViT, then a small Transformer decoder with shared learned mask tokens reconstructs pixels of masked patches with MSE loss. Pre-train on ImageNet-1K, evaluate by end-to-end fine-tuning, linear probing, partial fine-tuning and transfer.",
+  "task": "self-supervised image pre-training (masked image modelling) and downstream recognition",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "ImageNet-1K",
+    "role": "both",
+    "size": null,
+    "split": "train set for pre-training (no labels); validation set for top-1 of single 224x224 crop",
+    "source": "Deng et al. 2009",
+    "preprocessing": "RandomResizedCrop (with horizontal flip); no color jitter"
+   },
+   {
+    "name": "COCO",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Lin et al. 2014",
+    "preprocessing": null
+   },
+   {
+    "name": "ADE20K",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Zhou et al. 2019",
+    "preprocessing": null
+   },
+   {
+    "name": "iNaturalist 2017/2018/2019, Places205/365",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "ImageNet variants (C, A, R, Sketch)",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": null,
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "MAE ViT-B/16",
+    "role": "proposed",
+    "params": "86 M",
+    "architecture": "ViT encoder + lightweight Transformer decoder",
+    "init_from": "xavier uniform, from scratch",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "MAE ViT-L/16",
+    "role": "proposed",
+    "params": "304 M",
+    "architecture": "ViT encoder (24 blocks, 1024-d) + decoder",
+    "init_from": "xavier uniform, from scratch",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "24",
+    "hidden": "1024",
+    "heads": null,
+    "context": "196 patches (224x224, 16x16)",
+    "other": {
+     "default decoder": "8 blocks, 512-d, 9% FLOPs per token vs ViT-L"
+    }
+   },
+   {
+    "name": "MAE ViT-H/14",
+    "role": "proposed",
+    "params": "632 M",
+    "architecture": "ViT-H, patch 14",
+    "init_from": "xavier uniform, from scratch",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "MoCo v3, DINO, BEiT, supervised ViT",
+    "role": "baseline",
+    "params": null,
+    "architecture": "ViT",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "BEiT": "tokenizer dVAE pre-trained on 250M DALLE images"
+    }
+   }
+  ],
+  "training": {
+   "objective": "MSE between reconstructed and original pixels, on masked patches only (normalized per-patch pixels in main results)",
+   "optimizer": "AdamW, beta1,beta2=0.9,0.95 (pre-training)",
+   "lr": "base lr 1.5e-4, lr = base lr x batchsize / 256",
+   "lr_schedule": "cosine decay",
+   "warmup": "40 epochs",
+   "batch_size": "4096",
+   "steps": null,
+   "epochs": "800 (ablations); 1600 (Table 3 models)",
+   "tokens": null,
+   "seq_len": "196 patches at 224; 25% (49) visible to encoder at 75% masking",
+   "precision": null,
+   "weight_decay": "0.05",
+   "dropout": null,
+   "regularisation": "no color jitter, drop path, or gradient clip",
+   "hardware": "128 TPU-v3 cores (TensorFlow) for timing",
+   "compute": "ViT-L 800 epochs: 15.4 hours; ViT-H 34.5 hours (Table 2)",
+   "wall_clock": "ViT-L 1600 epochs: 31 hours on 128 TPU-v3 cores",
+   "seeds": null,
+   "other": {
+    "fine-tune": "AdamW lr 1e-3, wd 0.05, betas 0.9,0.999, layer-wise lr decay 0.75, batch 1024, cosine, warmup 5, epochs 100 (B) / 50 (L/H), RandAug(9,0.5), label smoothing 0.1, mixup 0.8, cutmix 1.0, drop path 0.1 (B/L) 0.2 (H)",
+    "linear probe": "LARS lr 0.1, wd 0, momentum 0.9, batch 16384, cosine, warmup 10, 90 epochs, RandomResizedCrop, extra BatchNorm (affine=False) before classifier",
+    "partial fine-tune": "Table 9 setting with epochs searched in {50,100,200}",
+    "supervised scratch recipe": "AdamW lr 1e-4, wd 0.3, betas 0.9,0.95, batch 4096, warmup 20, 300 (B) / 200 (L/H) epochs, EMA 0.9999, drop path 0.1 (B) 0.2 (L/H)",
+    "COCO": "Mask R-CNN + FPN; lr, wd, drop path, epochs searched per entry",
+    "ADE20K": "UperNet, 100 epochs, batch 16, lr searched, relative position bias on only in transfer",
+    "positional embedding": "sine-cosine, in encoder and decoder",
+    "class token": "auxiliary dummy token appended to encoder input"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single run per entry; no seeds or error bars stated",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "masking_ratio": "75%",
+    "mask sampling": "uniform random without replacement"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "top-1 accuracy",
+     "definition": "ImageNet-1K validation, single 224x224 crop",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "APbox / APmask",
+     "definition": "COCO Mask R-CNN",
+     "unit": "AP",
+     "higher_is_better": true
+    },
+    {
+     "name": "mIoU",
+     "definition": "ADE20K UperNet",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "supervised ViT from scratch",
+    "DINO",
+    "MoCo v3",
+    "BEiT",
+    "iGPT"
+   ],
+   "protocol": "fine-tuning, linear probing, partial fine-tuning; hyperparameters searched per baseline on COCO/ADE20K; no seeds or significance tests, though Table 7 differences called statistically insignificant"
+  },
+  "availability": {
+   "code": "stated: will release COCO configs; no URL in text",
+   "weights": null,
+   "data": "public datasets"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "MAE ViT-H at 448 fine-tuning reaches 87.8% on ImageNet-1K, best among IN1K-only methods (prior best 87.1%).",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1",
+   "value": "87.8",
+   "unit": "%",
+   "baseline_value": "87.1",
+   "n": null,
+   "setup": "ViT-H/14, 1600 epoch normalized-pixel MAE, fine-tune at 448",
+   "quote": null,
+   "table": "Table 3, row MAE, column ViT-H448",
+   "note": null,
+   "where": "Table 3, Sec 4.2"
+  },
+  {
+   "claim": "A 75% masking ratio is best for both fine-tuning and linear probing; linear probe 54.6 at 10% vs 73.5 at 75%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "masking ratio",
+   "value": "75",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ViT-L/16, IN1K, 800 epochs",
+   "quote": "ratio of 75% is good for both linear probing and",
+   "table": null,
+   "note": null,
+   "where": "Fig 5, Sec 4.1"
+  },
+  {
+   "claim": "Skipping mask tokens in the encoder gives 2.8x wall-clock speedup for ViT-L (3.3x fewer FLOPs).",
+   "kind": "measured",
+   "source": null,
+   "metric": "speedup",
+   "value": "2.8",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ViT-L, 800 epochs, decoder 8 blocks 512-d, 128 TPU-v3",
+   "quote": "a 2.8× wall-clock speedup in our implementation",
+   "table": null,
+   "note": null,
+   "where": "Table 1c, Table 2"
+  },
+  {
+   "claim": "Encoder with mask tokens loses 14% linear probing accuracy.",
+   "kind": "measured",
+   "source": null,
+   "metric": "linear probing drop",
+   "value": "14",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ViT-L, Table 1c",
+   "quote": "accuracy drops by 14% in linear probing.",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.1"
+  },
+  {
+   "claim": "MAE-pretrained ViT-L fine-tuned reaches 84.9 vs 82.5 for supervised from scratch (our recipe) and 76.5 original.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1",
+   "value": "84.9",
+   "unit": "%",
+   "baseline_value": "82.5",
+   "n": null,
+   "setup": "ViT-L/16, 800 epoch MAE, 50 epoch fine-tune vs 200 epoch scratch",
+   "quote": null,
+   "table": "Table 1d, row pixel (w/o norm), column ft",
+   "note": null,
+   "where": "Sec 4"
+  },
+  {
+   "claim": "Fine-tuning one block lifts ViT-L from 73.5 (linear probe) to 81.0; MAE beats MoCo v3 at any partial fine-tuning depth but trails it in linear probing.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1",
+   "value": "81.0",
+   "unit": "%",
+   "baseline_value": "73.5",
+   "n": null,
+   "setup": "ViT-L, Fig 9",
+   "quote": "73.5% to 81.0%",
+   "table": null,
+   "note": null,
+   "where": "Fig 9, Sec 4.3"
+  },
+  {
+   "claim": "MAE beats supervised pre-training on COCO box AP with ViT-L.",
+   "kind": "measured",
+   "source": null,
+   "metric": "APbox",
+   "value": "53.3",
+   "unit": "AP",
+   "baseline_value": "49.3",
+   "n": null,
+   "setup": "Mask R-CNN, ViT-L, IN1K pre-train",
+   "quote": "53.3 vs. 49.3",
+   "table": null,
+   "note": null,
+   "where": "Table 4, Sec 5"
+  },
+  {
+   "claim": "Predicting dVAE tokens is statistically no better than normalized pixels as the target.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1",
+   "value": "85.9",
+   "unit": "%",
+   "baseline_value": "85.7",
+   "n": null,
+   "setup": "ViT-B/L/H, IN1K, COCO, ADE20K",
+   "quote": null,
+   "table": "Table 7, row pixel (w/ norm), column IN1K ViT-L",
+   "note": "dVAE token ViT-L is 85.7",
+   "where": "Table 7"
+  },
+  {
+   "claim": "MAE ViT-L linear probe 75.8% vs MoCo v3 77.6%: still behind contrastive in linear probing.",
+   "kind": "measured",
+   "source": null,
+   "metric": "linear probe top-1",
+   "value": "75.8",
+   "unit": "%",
+   "baseline_value": "77.6",
+   "n": null,
+   "setup": "ViT-L, 1600 epoch MAE",
+   "quote": "Our MAE with ViT-L has 75.8% linear probing",
+   "table": null,
+   "note": null,
+   "where": "Appendix B, Table 12"
+  },
+  {
+   "claim": "MAE is far more robust on ImageNet-A than supervised ViT-H (68.2 vs 33.1).",
+   "kind": "measured",
+   "source": null,
+   "metric": "IN-A top-1",
+   "value": "68.2",
+   "unit": "%",
+   "baseline_value": "33.1",
+   "n": null,
+   "setup": "ViT-H fine-tuned on IN1K, no extra tuning",
+   "quote": "(68.2% vs 33.1%) than the supervised counterpart.",
+   "table": null,
+   "note": null,
+   "where": "Appendix C, Table 13"
+  },
+  {
+   "claim": "Training time ViT-L 1600 epochs MAE is 31 hours vs MoCo v3 36 hours for 300 epochs.",
+   "kind": "measured",
+   "source": null,
+   "metric": "pre-training time",
+   "value": "31",
+   "unit": "hours",
+   "baseline_value": "36",
+   "n": null,
+   "setup": "128 TPU-v3 cores",
+   "quote": "training time is 31 hours for 1600",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2"
+  }
+ ],
+ "limits": [
+  "Pretext task reconstructs pixels, which are not semantic entities; authors hypothesize semantics emerge",
+  "Linear probing remains worse than contrastive methods (MAE 75.8 vs MoCo v3 77.6 ViT-L)",
+  "Reflects dataset biases and may generate inexistent content (broader impacts)",
+  "No seeds, error bars or significance tests stated; COCO configs not given in text",
+  "Result uses vanilla ViT; authors expect advanced networks to do better",
+  "Longer schedules: no saturation seen at 1600 epochs, so reported numbers may understate"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "masking ratio",
+   "definition": "the ratio of removed patches",
+   "where": "Sec 3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "ViT: An image is worth 16x16 words",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "backbone architecture; also ViT-L/H baselines",
+   "quote": null
+  },
+  {
+   "work": "BERT",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "masked autoencoding idea from NLP",
+   "quote": null
+  },
+  {
+   "work": "BEiT",
+   "year": 2021,
+   "arxiv": "2106.08254",
+   "relation": "baseline",
+   "note": "token-prediction masked image modelling; compared and reproduced",
+   "quote": null
+  },
+  {
+   "work": "MoCo v3",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "contrastive ViT baseline",
+   "quote": null
+  },
+  {
+   "work": "DINO",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "self-supervised ViT baseline",
+   "quote": null
+  },
+  {
+   "work": "Denoising autoencoders (Vincent et al.)",
+   "year": 2008,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "MAE is a form of DAE",
+   "quote": null
+  },
+  {
+   "work": "iGPT",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "linear probing comparison, Table 12",
+   "quote": null
+  },
+  {
+   "work": "ImageNet-1K",
+   "year": 2009,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "pre-training and eval",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Our MAE architecture.",
+   "page": 1,
+   "why": "shows encoder on visible patches only, mask tokens added at decoder"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Masking ratio.",
+   "page": 4,
+   "why": "fine-tune and linear probe vs ratio, peak near 75%"
+  },
+  {
+   "figure": "Table 2",
+   "caption": "Wall-clock time of MAE training (800 epochs), 128 TPU-v3 cores.",
+   "page": 5,
+   "why": "speedup from dropping encoder mask tokens"
+  },
+  {
+   "figure": "Fig 9",
+   "caption": "Partial fine-tuning results of ViT-L vs number of blocks tuned.",
+   "page": 7,
+   "why": "MAE vs MoCo v3 trade-off between linear and non-linear features"
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 3, Simple implementation",
+   "snippet": "generate a token per patch, randomly shuffle, remove last portion by masking ratio, encode, append mask tokens, unshuffle to align with targets, decode",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text cache has ligature characters (fi, fl); quotes chosen to avoid them",
+  "Table cell layout flattened in text; values matched by row order",
+  "No embedded instructions found"
+ ]
 }

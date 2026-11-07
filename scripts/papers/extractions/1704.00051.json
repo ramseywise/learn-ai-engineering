@@ -1,19 +1,125 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "1704.00051",
  "pdf": "generative-ai/02-rag-retrieval/sources/chen-2017-reading-wikipedia-answer-open-domain.pdf",
- "bib": {
-  "title": "Reading Wikipedia to Answer Open-Domain Questions",
-  "first_author": "Chen",
-  "year": 2017,
-  "venue": "ACL (1) 2017",
-  "arxiv": "1704.00051",
-  "doi": null
+ "bib": {"title": "Reading Wikipedia to Answer Open-Domain Questions", "authors": ["Danqi Chen", "Adam Fisch", "Jason Weston", "Antoine Bordes"], "first_author": "Chen", "year": 2017, "venue": "ACL 2017 (55th Annual Meeting of the Association for Computational Linguistics), pages 1870-1879", "arxiv": "1704.00051", "doi": "10.18653/v1/P17-1171"},
+ "read": {"by": "source-reader", "at": "2026-11-07", "chars_read": 40160, "chars_total": 40160, "engine": "pymupdf", "skipped": null},
+ "type": "system",
+ "question": "Can open-domain factoid QA be done with Wikipedia as the only knowledge source by combining document retrieval with a neural machine-comprehension reader (machine reading at scale)?",
+ "hypothesis": "A simple non-learned retriever plus a strong RNN reader, trained with multitask learning and distant supervision across several QA datasets, gives an effective single full system.",
+ "contributions": [
+  "Define machine reading at scale (MRS): retrieve from over 5 million Wikipedia articles, then read to find the answer span",
+  "DrQA: a TF-IDF plus hashed-bigram Document Retriever and a multi-layer BiLSTM Document Reader",
+  "Document Reader reaches 70.0 EM / 79.0 F1 on the SQuAD test set",
+  "Distant supervision and multitask learning over SQuAD, CuratedTREC, WebQuestions and WikiMovies improve the full system"
+ ],
+ "method": {
+  "summary": "DrQA retrieves the top 5 Wikipedia articles with a TF-IDF bag-of-words and hashed-bigram retriever (no machine learning), then runs a 3-layer BiLSTM reader on every paragraph to predict start and end of an answer span, taking the argmax of unnormalised span scores across paragraphs. The reader is trained on SQuAD and on distantly supervised paragraphs for three other QA datasets.",
+  "task": "open-domain extractive QA over Wikipedia (machine reading at scale)",
+  "trains": true,
+  "datasets": [
+   {"name": "English Wikipedia 2016-12-21 dump", "role": "eval", "size": "5,075,182 articles; 9,008,962 unique uncased token types", "split": null, "source": "dumps.wikimedia.org/enwiki", "preprocessing": "WikiExtractor; plain text only, lists and figures stripped; disambiguation, list, index and outline pages discarded"},
+   {"name": "SQuAD", "role": "both", "size": "87,599 train questions (87k), 10,570 dev (10k); hidden test set", "split": "train for the reader; dev for open-domain eval (questions only, no paragraph)", "source": "Rajpurkar et al. 2016", "preprocessing": null},
+   {"name": "CuratedTREC", "role": "both", "size": "2,180 questions; Table 2: 1,486 train (no paragraph), 3,464 DS train, 694 test", "split": "train / test", "source": "TREC 1999-2002, curated by Baudis and Sedivy 2015", "preprocessing": null},
+   {"name": "WebQuestions", "role": "both", "size": "Table 2: 3,778 train (no paragraph), 4,602 DS train, 2,032 test", "split": "train / test", "source": "Berant et al. 2013", "preprocessing": "answers converted to entity-name text"},
+   {"name": "WikiMovies", "role": "both", "size": "96k QA pairs; Table 2: 96,185 train (no paragraph), 36,301 DS train, 9,952 test", "split": "train / test", "source": "Miller et al. 2016", "preprocessing": null},
+   {"name": "Distantly supervised (DS) training data", "role": "train", "size": "Table 2: SQuAD 71,231; CuratedTREC 3,464; WebQuestions 4,602; WikiMovies 36,301", "split": null, "source": "built from the QA pairs with the Document Retriever", "preprocessing": "top 5 articles per question; drop paragraphs without exact answer match, shorter than 25 or longer than 1500 characters, or lacking question named entities; score answer positions by unigram and bigram overlap in a 20 token window; keep up to top 5 paragraphs; discard if zero overlap"}
+  ],
+  "models": [
+   {"name": "DrQA Document Retriever", "role": "retriever", "params": null, "architecture": "inverted index with TF-IDF weighted bag-of-words, hashed bigram counts", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"hash": "unsigned murmur3 into 2^24 bins (printed '224' in the extracted text)", "top_k": "5 articles"}},
+   {"name": "DrQA Document Reader", "role": "proposed", "params": null, "architecture": "multi-layer bidirectional LSTM with exact-match, token (POS, NER, TF) and aligned question embedding features; bilinear start and end classifiers", "init_from": "GloVe 300-d 840B Web crawl embeddings, mostly fixed; only the 1000 most frequent question words fine-tuned", "tokenizer": "Stanford CoreNLP", "vocab": null, "layers": "3", "hidden": "h = 128 per direction/layer (printed 'h = 128 hidden units')", "heads": null, "context": null, "other": {"max_span": "i <= i' <= i + 15", "full_wikipedia_variant": "streamlined: no CoreNLP f_token features or lemmas for f_exact match"}},
+   {"name": "Wikipedia Search API (ElasticSearch based)", "role": "baseline", "params": null, "architecture": "built-in search", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "YodaQA", "role": "baseline", "params": null, "architecture": "open-source pipeline using web, Freebase, DBpedia, Wikipedia", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"note": "numbers copied from its benchmarks wiki"}}
+  ],
+  "training": {
+   "objective": "two independent classifiers for span start and end (softmax over paragraph tokens); the loss is not written out",
+   "optimizer": "Adamax (Kingma and Ba 2014)",
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "32 examples per minibatch, sorted by paragraph length",
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": "p = 0.3 on word embeddings and all LSTM hidden units",
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {"variants": "SQuAD only; Fine-tune (DS): pretrain on SQuAD then fine-tune per dataset on its DS set; Multitask (DS): one model trained jointly on SQuAD and all DS sets"}
+  },
+  "inference": {
+   "decoding": "best span i..i' maximising P_start(i) x P_end(i'), i' <= i+15; unnormalised exponential scores, argmax over all paragraph spans of the retrieved documents",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single model, single run; no seeds reported",
+   "prompting": null,
+   "retrieval": "top 5 articles from the Document Retriever; WebQuestions and WikiMovies answers restricted to the candidate list (1.6 million Freebase entity strings for WebQuestions)",
+   "parameters": {"retriever_bins": "2^24", "top_k_articles": "5"},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "Retrieval answer-in-top-5", "definition": "% of questions for which an answer text span appears in at least one of the top 5 pages", "unit": "%", "higher_is_better": true},
+    {"name": "EM", "definition": "exact string match (SQuAD eval script)", "unit": "%", "higher_is_better": true},
+    {"name": "F1", "definition": "weighted average of precision and recall at token level", "unit": "%", "higher_is_better": true},
+    {"name": "Top-1 exact-match accuracy, full Wikipedia", "definition": "top-1 EM using SQuAD eval script", "unit": "%", "higher_is_better": true}
+   ],
+   "baselines": ["Wikipedia Search API", "Okapi BM25 and bag-of-embeddings cosine retrieval (worse, numbers not given)", "Dynamic Coattention Networks", "Multi-Perspective Matching", "BiDAF", "R-net", "YodaQA"],
+   "protocol": "SQuAD reader on dev and hidden test (test run by Rajpurkar); open-domain eval on SQuAD dev, CuratedTREC, WebQuestions and WikiMovies test sets; no significance tests"
+  },
+  "availability": {"code": null, "weights": null, "data": "Wikipedia dump URL and CuratedTREC URL given; no DrQA code URL in the text"},
+  "prompts": [],
+  "evidence": [
+   {"field": "retriever.hash", "quote": "map the bigrams to 224 bins with an un-", "where": "Section 3.1; superscript lost in extraction, 2^24 intended"}
+  ]
  },
- "read": {
-  "by": "source-reader",
-  "at": "2026-11-04",
-  "session": "5f2f0582-f958-4d9c-8469-02f3d5079657"
- },
- "legacy_report": "SOURCE: \"Reading Wikipedia to Answer Open-Domain Questions\" (DrQA). Danqi Chen, Adam Fisch, Jason Weston, Antoine Bordes. ACL 2017, pages 1870–1879, doi 10.18653/v1/P17-1171. The PDF is the ACL proceedings version, not the arXiv 1704.00051 preprint. Its page numbers 1870–1879 match PDF pages 1–10.\n\nCOVERAGE: I read all 40,612 extracted characters across all 10 pages, including the references. I skipped nothing.\n\nCLAIMS (ranked)\n\n- claim: DrQA has two parts. A Document Retriever that does not use machine learning, and a neural Document Reader that pulls out answer spans. This is the retrieve-then-read split the note refers to.\n  number: none\n  setup: open-domain QA with Wikipedia as the only knowledge source\n  quote: \"We develop DrQA, a strong system for question answering from Wikipedia composed of: (1) Document Retriever, a module using bigram hashing and TF-IDF matching designed to, given a question, efficiently return a subset of relevant articles and (2) Document Reader, a multi-layer recurrent neural network machine comprehension model trained to detect answer spans in those few returned documents.\"\n  where: p2 (1871)\n\n- claim: The retriever scores TF-IDF bag-of-words vectors. It adds hashed bigram features and returns the top 5 articles to the reader.\n  number: 2^24 hash bins; top 5 articles\n  setup: inverted index plus term-vector scoring, unsigned murmur3 hash, following Weinberger et al. 2009\n  quote: \"Our best performing system uses bigram counts while preserving speed and memory efficiency by using the hashing of (Weinberger et al., 2009) to map the bigrams to 224 bins with an unsigned murmur3 hash. We use Document Retriever as the first part of our full model, by setting it to return 5 Wikipedia articles given any question.\"\n  where: p3–4 (1872–1873). The extraction shows \"224\"; it is the superscript 2^24.\n\n- claim: The retriever beats the built-in Wikipedia Search on three of four datasets. Bigrams help most on WikiMovies and SQuAD, but on WebQuestions they do slightly worse than plain TF-IDF.\n  number: answer appears in top-5 pages, Wiki Search / plain / +bigrams: SQuAD 62.7/76.1/77.8; CuratedTREC 81.0/85.2/86.0; WebQuestions 73.7/75.5/74.4; WikiMovies 61.7/54.4/70.3\n  setup: 2016-12-21 English Wikipedia dump, 5,075,182 articles. Metric is the % of questions for which an answer string appears in at least one of the top 5 pages. This measures string presence, not whether the passage is relevant.\n  quote: \"SQuAD 62.7 76.1 77.8 / CuratedTREC 81.0 85.2 86.0 / WebQuestions 73.7 75.5 74.4 / WikiMovies 61.7 54.4 70.3 ... Table 3: Document retrieval results. % of questions for which the answer segment appears in one of the top 5 pages returned by the method.\"\n  where: p6 (1875), Table 3\n\n- claim: Okapi BM25 and bag-of-embeddings cosine retrieval did worse than TF-IDF with bigrams. The paper gives no numbers for either.\n  number: none\n  setup: same retrieval task as Table 3\n  quote: \"We also compare doing retrieval with Okapi BM25 or by using cosine distance in the word embeddings space (by encoding questions and articles as bag-of-embeddings), both of which we find performed worse.\"\n  where: p7 (1876)\n\n- claim: Given the gold paragraph, the reader alone was state of the art among published single models on SQuAD. R-net, listed only from the leaderboard, scored higher.\n  number: test 70.0 EM / 79.0 F1; dev 69.5 EM / 78.8 F1; R-net test 71.3 / 79.7\n  setup: SQuAD v1.1, single model, 3-layer BiLSTM with h=128, 300-d GloVe, Adamax, dropout 0.3\n  quote: \"Our system (single model) can achieve 70.0% exact match and 79.0% F1 scores on the test set, which surpasses all the published results and can match the top performance on the SQuAD leaderboard at the time of writing.\"\n  where: p7 (1876); Table 4, p8 (1877)\n\n- claim: When the reader has to search all of Wikipedia instead of being handed the paragraph, SQuAD EM falls by more than half. Even with the correct document it reaches only 49.4.\n  number: 69.5 to 27.1 EM; 49.4 given the correct document\n  setup: SQuAD dev questions, full Wikipedia, SQuAD-trained reader\n  quote: \"DrQA's performance on SQuAD compared to its Document Reader component on machine comprehension in Table 4 shows a large drop (from 69.5 to 27.1) as we now are given Wikipedia to read, not a single paragraph. Given the correct document (but not the paragraph) we can achieve 49.4, indicating many false positives come from highly topical sentences. This is despite the fact that the Document Retriever works relatively well (77.8% of the time retrieving the answer, see Table 3).\"\n  where: p8 (1877)\n\n- claim: Full-system open-domain EM is modest. Distant supervision raises it on every dataset, and the multitask model is best on three of four. On CuratedTREC, per-dataset fine-tuning (25.7) edges out multitask (25.4).\n  number: top-1 EM, SQuAD-only / +Fine-tune(DS) / +Multitask(DS): SQuAD 27.1/28.4/29.8; CuratedTREC 19.7/25.7/25.4; WebQuestions 11.8/19.5/20.7; WikiMovies 24.5/34.3/36.5\n  setup: full Wikipedia, retriever fixed. Streamlined reader without CoreNLP token features or lemmas. WebQ and WikiMovies answers restricted to candidate lists (1.6M Freebase entity strings for WebQ).\n  quote: \"SQuAD (All Wikipedia) n/a 27.1 28.4 29.8 / CuratedTREC 31.3 19.7 25.7 25.4 / WebQuestions 39.8 11.8 19.5 20.7 / WikiMovies n/a 24.5 34.3 36.5 / Table 6: Full Wikipedia results. Top-1 exact-match accuracy (in %, using SQuAD eval script).\"\n  where: p9 (1878), Table 6\n\n- claim: The authors credit most of the gain to extra in-domain data, not to task transfer.\n  number: none\n  setup: Table 6 comparison\n  quote: \"The majority of the improvement from SQuAD to Multitask (DS) however is likely not from task transfer as fine-tuning on each dataset alone using DS also gives improvements, showing that is is the introduction of extra data in the same domain that helps.\"\n  where: p8 (1877)\n\n- claim: DrQA, using Wikipedia only, scores below YodaQA, which draws on several sources including Freebase and DBpedia.\n  number: CuratedTREC 25.4 vs 31.3; WebQuestions 20.7 vs 39.8\n  setup: YodaQA numbers are copied from its GitHub benchmarks page, not rerun\n  quote: \"it is reassuring that our performance is not too far behind on CuratedTREC (31.3 vs. 25.4).\"\n  where: p8 (1877)\n\n- claim: Distant supervision builds training data from question–answer pairs alone. It retrieves the top 5 articles, keeps paragraphs that contain the exact answer, filters them, and scores answer positions by n-gram overlap with the question.\n  number: paragraphs 25–1500 chars; 20-token window; up to 5 paragraphs. DS training sizes: SQuAD 71,231; TREC 3,464; WebQ 4,602; WikiMovies 36,301\n  setup: Section 4.4, following Mintz et al. 2009\n  quote: \"All paragraphs shorter than 25 or longer than 1500 characters are also filtered out. ... we score all positions that match an answer using unigram and bigram overlap between the question and a 20 token window, keeping up to the top 5 paragraphs with the highest overlaps.\"\n  where: p6 (1875)\n\n- claim: The reader depends on exact-match and aligned-attention features. Removing both drops F1 by 19.4 points.\n  number: 78.8 to 59.4 F1\n  setup: SQuAD dev, ablation\n  quote: \"No faligned and fexact match 59.4 (-19.4)\"\n  where: p8 (1877), Table 5\n\n- claim: The approach is generic and does not depend on Wikipedia's link structure.\n  number: none\n  setup: design statement\n  quote: \"our approach is generic and could be switched to other collections of documents, books, or even daily updated newspapers.\"\n  where: p1 (1870)\n\nLIMITS:\n- The paper reports no test of any other corpus. The genericity claim is asserted, not measured.\n- The retriever and reader are trained separately. The authors name end-to-end training as future work: \"perform end-to-end training across the Document Retriever and Document Reader pipeline, rather than independent systems\" (p9). The reader also trains on paragraphs independently, not across documents.\n- Retrieval recall counts any answer-string occurrence in the top 5. It is not a relevance judgement.\n- The BM25 and embedding comparisons give no numbers.\n- The authors concede that much of the SQuAD drop comes from SQuAD questions being ambiguous out of context: \"Additional resources other than SQuAD, specifically designed for MRS, might be needed to go further\" (p8).\n- Results are a single run with no variance reported.\n- The paper is dated: an LSTM extractive reader, top-1 EM of 20–37%, pre-BERT and pre-dense retrieval. The generator in the note's sense is an extractive span classifier here. It does not generate text.\n- The note calls it a \"document reader\" and a \"Wikipedia retriever\". The paper's own terms are \"Document Retriever\" and \"Document Reader\", and it names the setting \"machine reading at scale (MRS)\".\n\nBUILDS ON (as printed): TF-IDF and bigram feature hashing (Weinberger et al., 2009); the Elasticsearch-based Wikipedia Search baseline (Gormley and Tong, 2015); AttentiveReader (Hermann et al., 2015; Chen et al., 2016); aligned question embedding (Lee et al., 2016); GloVe (Pennington et al., 2014); distant supervision (Mintz et al., 2009); multitask learning (Caruana, 1998; Collobert and Weston, 2008); SQuAD (Rajpurkar et al., 2016); CuratedTREC and YodaQA (Baudiš and Šedivý, 2015; Baudiš, 2015); WebQuestions (Berant et al., 2013); WikiMovies (Miller et al., 2016); earlier pipeline QA systems DeepQA (Ferrucci et al., 2010) and AskMSR (Brill et al., 2002).\n\nCODE: none. The paper contains no code. The useful method lines are the reader's span scoring, P_start(i) ∝ exp(p_i W_s q) and P_end(i) ∝ exp(p_i W_e q), with i ≤ i′ ≤ i+15 (p4, 1873).\n\nFIGURES: Figure 1, \"An overview of our question answering system DrQA.\", p3. It shows a question going into the Document Retriever over Wikipedia, then the Document Reader, then an answer (\"833,500\"), with the four evaluation datasets labelled. It is the cleanest diagram of retrieve-then-read for the \"two components\" section.\n\nPROBLEMS:\n- Superscripts were lost in extraction. \"224 bins\" is 2^24.\n- The f_exact_match and f_aligned subscripts in Table 5 came out as plain text.\n- The file is the ACL proceedings PDF, not the arXiv version named in the task. The content should be the same, but I did not compare them.\n- The PDF contains no embedded instructions.\n- PDF read: /Users/ramsey-wise/workspace/learn-ai-engineering/generative-ai/02-rag-retrieval/sources/chen-2017-reading-wikipedia-answer-open-domain.pdf"
+ "results": [
+  {"claim": "Document Reader alone reaches 70.0 EM on the SQuAD test set, above all published single models then.", "kind": "measured", "source": null, "metric": "EM", "value": "70.0", "unit": "%", "baseline_value": "71.3 (R-net, leaderboard)", "n": null, "setup": "SQuAD test, single model, reader given the gold paragraph", "quote": "Our system (single model) can achieve 70.0% exact match and 79.0% F1 scores on the test set", "table": null, "note": "R-net at 71.3 EM is a leaderboard entry in Table 4", "where": "Section 5.2, Table 4"},
+  {"claim": "Reader F1 on the SQuAD test set.", "kind": "measured", "source": null, "metric": "F1", "value": "79.0", "unit": "%", "baseline_value": null, "n": null, "setup": "SQuAD test, single model", "quote": "70.0% exact match and 79.0% F1 scores on the test set", "table": null, "note": null, "where": "Section 5.2"},
+  {"claim": "In the full Wikipedia setting on SQuAD dev, the multitask DS model gets 29.8 top-1 EM.", "kind": "measured", "source": null, "metric": "top-1 EM", "value": "29.8", "unit": "%", "baseline_value": "27.1 (SQuAD-only)", "n": null, "setup": "SQuAD dev questions, 5,075,182-article Wikipedia, retriever top 5, Multitask (DS) reader", "quote": null, "table": "Table 6, row SQuAD (All Wikipedia), column +Multitask (DS)", "note": null, "where": "Table 6"},
+  {"claim": "Moving from a single given paragraph to all of Wikipedia drops SQuAD EM sharply.", "kind": "measured", "source": null, "metric": "EM", "value": "27.1", "unit": "%", "baseline_value": "69.5", "n": null, "setup": "SQuAD dev, reader trained on SQuAD only; 69.5 is given-paragraph dev EM", "quote": "a large drop (from 69.5 to 27.1)", "table": null, "note": null, "where": "Section 5.3"},
+  {"claim": "Given the correct document but not the paragraph, EM is 49.4, so many false positives come from highly topical sentences.", "kind": "measured", "source": null, "metric": "EM", "value": "49.4", "unit": "%", "baseline_value": null, "n": null, "setup": "SQuAD dev, gold document, no paragraph", "quote": "Given the correct document (but not the paragraph) we can achieve 49.4", "table": null, "note": null, "where": "Section 5.3"},
+  {"claim": "Retriever with hashed bigrams finds the answer in the top 5 pages for 77.8% of SQuAD questions versus 62.7% for Wikipedia Search.", "kind": "measured", "source": null, "metric": "answer in top-5 pages", "value": "77.8", "unit": "%", "baseline_value": "62.7", "n": null, "setup": "SQuAD dev questions; string presence of the answer, not relevance", "quote": null, "table": "Table 3, row SQuAD, column +bigrams (Wiki Search 62.7, plain 76.1)", "note": "other rows: CuratedTREC 81.0/85.2/86.0; WebQuestions 73.7/75.5/74.4; WikiMovies 61.7/54.4/70.3", "where": "Table 3"},
+  {"claim": "On WikiMovies, plain TF-IDF (54.4) is worse than Wikipedia Search (61.7); bigrams lift it to 70.3. On WebQuestions bigrams (74.4) are slightly below plain (75.5).", "kind": "measured", "source": null, "metric": "answer in top-5 pages", "value": "70.3", "unit": "%", "baseline_value": "61.7", "n": null, "setup": "WikiMovies test, top 5 pages", "quote": null, "table": "Table 3, row WikiMovies, column +bigrams", "note": null, "where": "Table 3"},
+  {"claim": "Removing both aligned question embedding and exact match features drops dev F1 from 78.8 to 59.4.", "kind": "measured", "source": null, "metric": "F1", "value": "59.4", "unit": "%", "baseline_value": "78.8", "n": null, "setup": "SQuAD dev, feature ablation of paragraph representation", "quote": null, "table": "Table 5, row No f_aligned and f_exact match, column F1", "note": null, "where": "Table 5"},
+  {"claim": "Multitask DS training beats SQuAD-only on all four datasets in the full setting; fine-tuning with DS alone also helps, so most gain is extra in-domain data, not task transfer.", "kind": "measured", "source": null, "metric": "top-1 EM", "value": "36.5", "unit": "%", "baseline_value": "24.5", "n": null, "setup": "WikiMovies test, Multitask (DS) vs SQuAD-only reader, full Wikipedia", "quote": "The majority of the improvement from SQuAD", "table": "Table 6, row WikiMovies, column +Multitask (DS)", "note": "CuratedTREC 19.7/25.7/25.4; WebQuestions 11.8/19.5/20.7; on CuratedTREC and WebQuestions fine-tune vs multitask are close (25.7 vs 25.4 on TREC)", "where": "Table 6, Section 5.3"},
+  {"claim": "DrQA trails YodaQA, which uses Freebase and other resources, on CuratedTREC (25.4 vs 31.3) and more on WebQuestions (20.7 vs 39.8).", "kind": "measured", "source": null, "metric": "top-1 EM", "value": "25.4", "unit": "%", "baseline_value": "31.3", "n": null, "setup": "CuratedTREC test, Multitask (DS); YodaQA numbers taken from its benchmarks wiki", "quote": "our performance is not too far behind on CuratedTREC (31.3 vs. 25.4)", "table": null, "note": "the paper prints 31.3 vs. 25.4; Table 6 gives the DrQA figure as 25.4 under +Multitask (DS)", "where": "Section 5.3, Table 6"}
+ ],
+ "limits": [
+  "Training of reader paragraphs is independent; no aggregation over paragraphs or documents in training (authors' future work i)",
+  "Retriever and reader are not trained end to end (future work ii)",
+  "SQuAD questions were written with a paragraph in mind and are ambiguous without context, so the drop to 27.1 partly reflects the dataset",
+  "Retrieval metric checks string presence of the answer, not relevance",
+  "No learning rate, epochs, seeds, hardware or compute reported; no code URL in the text",
+  "BM25 and bag-of-embeddings retrieval said to be worse, with no numbers",
+  "Full-Wikipedia numbers are far below machine comprehension numbers and below YodaQA on two datasets"
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "machine reading at scale (MRS)", "definition": "combining the challenges of document retrieval with machine comprehension: retrieve the few relevant articles among more than 5 million, then scan them to identify the answer", "where": "Section 1"},
+  {"term": "distant supervision (DS)", "definition": "automatically associating Wikipedia paragraphs with question-answer pairs that have no paragraph, following Mintz et al. 2009", "where": "Section 4.4"}
+ ],
+ "lineage": [
+  {"work": "AttentiveReader (Hermann et al. 2015; Chen et al. 2016)", "year": 2016, "arxiv": null, "relation": "extends", "note": "reader inspired by it", "quote": null},
+  {"work": "SQuAD (Rajpurkar et al. 2016)", "year": 2016, "arxiv": null, "relation": "uses-data", "note": "main training data and dev eval", "quote": null},
+  {"work": "Feature hashing (Weinberger et al. 2009)", "year": 2009, "arxiv": null, "relation": "uses-method", "note": "hashing bigrams", "quote": null},
+  {"work": "Distant supervision for relation extraction (Mintz et al. 2009)", "year": 2009, "arxiv": null, "relation": "uses-method", "note": "DS paragraph building", "quote": null},
+  {"work": "YodaQA (Baudis 2015)", "year": 2015, "arxiv": null, "relation": "baseline", "note": "unconstrained open-source QA comparison", "quote": null},
+  {"work": "Adamax (Kingma and Ba 2014)", "year": 2014, "arxiv": "1412.6980", "relation": "uses-method", "note": "optimizer", "quote": null},
+  {"work": "GloVe (Pennington et al. 2014)", "year": 2014, "arxiv": null, "relation": "uses-method", "note": "word embeddings", "quote": null},
+  {"work": "CuratedTREC, WebQuestions, WikiMovies", "year": null, "arxiv": null, "relation": "uses-data", "note": "open-domain eval sets", "quote": null},
+  {"work": "AskMSR, DeepQA, QuASE", "year": null, "arxiv": null, "relation": "related", "note": "redundancy-based multi-source QA systems", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Figure 1", "caption": "An overview of our question answering system DrQA.", "page": 3, "why": "Shows the retrieve-then-read split: question to Document Retriever to Document Reader to answer"},
+  {"figure": "Table 6", "caption": "Full Wikipedia results. Top-1 exact-match accuracy (in %, using SQuAD eval script).", "page": 9, "why": "All end-to-end numbers in one place"}
+ ],
+ "code": [],
+ "problems": ["The PDF is the ACL proceedings version, not the arXiv preprint", "Superscript lost: '224 bins' means 2^24", "Table 4 and Table 6 cells are laid out as flat lines in the text"]
 }

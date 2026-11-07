@@ -1,0 +1,441 @@
+{
+ "schema": 1,
+ "key": "2108.12409",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/press-2021-train-short-test-long.pdf",
+ "bib": {
+  "title": "Train Short, Test Long: Attention with Linear Biases Enables Input Length Extrapolation",
+  "authors": [
+   "Ofir Press",
+   "Noah A. Smith",
+   "Mike Lewis"
+  ],
+  "first_author": "Press",
+  "year": 2021,
+  "venue": "ICLR 2022",
+  "arxiv": "2108.12409",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 74902,
+  "chars_total": 74902,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can a transformer LM trained on short sequences be applied to longer ones at inference, and which position method enables this efficiently?",
+ "hypothesis": "Extrapolation depends on the position method; a non-learned linear distance penalty on attention scores (recency bias) will extrapolate without runtime cost.",
+ "contributions": [
+  "Show sinusoidal, rotary and T5 bias extrapolate poorly or slowly",
+  "Introduce ALiBi, a static linear attention bias with no position embeddings",
+  "Show ALiBi extrapolates and trains faster/leaner on WikiText-103, Toronto BookCorpus and a 1.3B model on CC100+RoBERTa",
+  "Analysis that gains from longer Lvalid largely reflect reduced early token curse"
+ ],
+ "method": {
+  "summary": "Replace position embeddings in the Baevski & Auli LM with ALiBi: add m*[-(i-1),...,0] to query-key scores per head with fixed geometric slopes. Train at L in 64..3072 on WikiText-103, then evaluate at longer Lvalid; repeat on Toronto BookCorpus and a 1.3B model on CC100+RoBERTa.",
+  "task": "next-token language modelling, perplexity vs input length",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "WikiText-103",
+    "role": "both",
+    "size": "about 103 million tokens (half a gigabyte)",
+    "split": "train/validation/test (standard)",
+    "source": "Merity et al. 2016, English Wikipedia",
+    "preprocessing": null
+   },
+   {
+    "name": "Toronto BookCorpus",
+    "role": "both",
+    "size": "about 700M tokens (2.9 GB)",
+    "split": "same split as Khandelwal et al. (2020)",
+    "source": "Zhu et al. 2015",
+    "preprocessing": "BERT vocabulary of 29K byte-pair encodings (Khandelwal et al. tokenization)"
+   },
+   {
+    "name": "CC100+RoBERTa",
+    "role": "both",
+    "size": "461 GB; validation set 649K tokens",
+    "split": "train/validation",
+    "source": "RoBERTa corpus (161 GB: Toronto Book Corpus, English Wikipedia, CC-News, OpenWebText, Stories) plus English CC-100 (300 GB)",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Baevski & Auli transformer LM with ALiBi / sinusoidal / rotary / T5 bias",
+    "role": "proposed",
+    "params": "247M (Table 6)",
+    "architecture": "decoder-only transformer, tied embedding and softmax",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": 16,
+    "hidden": "1024 (feedforward inner 4096)",
+    "heads": 8,
+    "context": "trained L=64 to 3072; evaluated up to 16k",
+    "other": {
+     "slopes": "geometric sequence 2^(-8/n) start and ratio for n heads; 8 heads: 1/2^1 .. 1/2^8",
+     "not_scaled": "bias not multiplied by sqrt(dk)"
+    }
+   },
+   {
+    "name": "1.3B model",
+    "role": "proposed",
+    "params": "1.3B",
+    "architecture": "decoder-only transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": 25,
+    "hidden": "2048 (feedforward 8192)",
+    "heads": 16,
+    "context": "trained L=512, 1024, 2048",
+    "other": {
+     "slopes": "16 heads: 8 slopes interpolated by geometric averaging, start 1/2^0.5, ratio 1/sqrt2"
+    }
+   }
+  ],
+  "training": {
+   "objective": "next-token cross-entropy (language modelling)",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": "CC100+RoBERTa: 50k updates (one epoch)",
+   "epochs": "WikiText-103: 205; CC100+RoBERTa: 1",
+   "tokens": null,
+   "seq_len": "L = 64,128,256,512,1024,1536,2048,3072 (WikiText-103); 512,1024,3072 (Books); 512, 1024, 2048 (CC100+RoBERTa)",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "WikiText-103: one V100 GPU (32GB per Fig 1); 1.3B: 128 V100 GPUs",
+   "compute": "1.3B: roughly 5.5k to 6.7k hours per run (Tables 11-12 'Hours' column, unit not printed)",
+   "wall_clock": null,
+   "seeds": "other than position method and training length, no other hyperparameters changed, including the random seed; sinusoidal L=3072 std dev 0.24",
+   "other": {
+    "note": "optimizer, lr, batch size, dropout inherited from Baevski & Auli (2018) and not restated"
+   }
+  },
+  "inference": {
+   "decoding": "perplexity scoring; nonoverlapping inference by default; sliding window with stride S=1 or 512 in the analysis",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "perplexity",
+     "definition": "exp of mean next-token loss on the validation or test set, at a chosen Lvalid",
+     "unit": "perplexity",
+     "higher_is_better": false
+    },
+    {
+     "name": "training/inference speed",
+     "definition": "words per second on one V100",
+     "unit": "WPS",
+     "higher_is_better": true
+    },
+    {
+     "name": "training memory",
+     "definition": "GPU memory during training",
+     "unit": "GB",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "sinusoidal (Vaswani et al. 2017)",
+    "rotary (Su et al. 2021)",
+    "T5 bias (Raffel et al. 2020)"
+   ],
+   "protocol": "Single run per configuration, except sinusoidal L=3072 std dev (0.24) reported. Sinusoidal baselines on CC100+RoBERTa are stopped at equal training time in Table 11."
+  },
+  "availability": {
+   "code": "https://github.com/ofirpress/attention_with_linear_biases",
+   "weights": "released (footnote 1: 'Code & models')",
+   "data": "public corpora"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.epochs",
+    "quote": "number of training epochs (205)",
+    "where": "2.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "1.3B ALiBi (L=1024) reaches slightly lower validation perplexity than sinusoidal (L=2048) at Lvalid=2048 with 3.1 GB less memory.",
+   "kind": "measured",
+   "source": null,
+   "metric": "perplexity gap",
+   "value": "0.09",
+   "unit": "ppl",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CC100+RoBERTa, 1.3B, 50k updates (1 epoch), equal training time",
+   "note": "Table 11: 8.92 vs 9.01.",
+   "where": "4.2",
+   "quote": "outperforms by 0.09 perplexity the sinusoidal model trained on L = 2048"
+  },
+  {
+   "claim": "Abstract: 1.3B model trained on 1024 extrapolates to 2048, matching sinusoidal L=2048 perplexity with 11% faster training and 11% less memory.",
+   "kind": "measured",
+   "source": null,
+   "metric": "training speed and memory saving",
+   "value": "11%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "1.3B model, CC100+RoBERTa 461 GB, 50k updates, 128 V100, Lvalid=2048",
+   "quote": "training 11% faster and\nusing 11% less memory",
+   "note": "Table 11 memory is 26.2 GB vs 29.3 GB (about 10.6%); Fig 5 caption says 6%-11% less memory.",
+   "where": "Abstract"
+  },
+  {
+   "claim": "ALiBi L=1024 model reaches a given perplexity on average 11% faster than sinusoidal L=2048.",
+   "kind": "measured",
+   "source": null,
+   "metric": "time to equal perplexity",
+   "value": "11%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CC100+RoBERTa, 1.3B, five evenly spaced points through training",
+   "note": null,
+   "where": "4.2",
+   "quote": "reaches a given perplexity value, on average, 11% faster than the sinusoidal model does"
+  },
+  {
+   "claim": "Sinusoidal model trained on 512 cannot extrapolate: it improves only until k=20, is steady to k=50, then degrades.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "WikiText-103, Baevski & Auli model, L=512",
+   "note": null,
+   "where": "2.2",
+   "quote": "performance stops improving and stays steady from k = 20 to k = 50 and then begins degrading"
+  },
+  {
+   "claim": "On WikiText-103, ALiBi trained at L=512 gets 18.40 validation perplexity at Lvalid=3072, better than the sinusoidal L=3072 model.",
+   "kind": "measured",
+   "source": null,
+   "metric": "perplexity",
+   "value": "18.40",
+   "unit": "ppl",
+   "baseline_value": "18.67",
+   "n": null,
+   "setup": "WikiText-103 dev, 247M model, nonoverlapping evaluation",
+   "note": "Sinusoidal L=3072 is 18.67 +/- 0.24 (std dev).",
+   "where": "4.1",
+   "quote": "achieves a perplexity score of 18.40 on the development set when extrapolating to subsequences of length 3072"
+  },
+  {
+   "claim": "ALiBi L=3072 gets 17.60 vs sinusoidal 18.67 at Lvalid=3072 without extrapolation.",
+   "kind": "measured",
+   "source": null,
+   "metric": "perplexity",
+   "value": "17.60",
+   "unit": "ppl",
+   "baseline_value": "18.67",
+   "n": null,
+   "setup": "WikiText-103 dev, 247M",
+   "note": null,
+   "where": "4.1",
+   "quote": "our L = 3072 model achieves 17.60 perplexity"
+  },
+  {
+   "claim": "ALiBi L=512 model is 1.84 times faster to train than L=3072 sinusoidal and still beats it at Lvalid=3072.",
+   "kind": "measured",
+   "source": null,
+   "metric": "training speedup",
+   "value": "1.84",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "WikiText-103, one V100",
+   "note": null,
+   "where": "4.1",
+   "quote": "The L = 512 model is 1.84 times faster to train"
+  },
+  {
+   "claim": "ALiBi adds no runtime or parameters and 0-0.7% memory over sinusoidal at the same L.",
+   "kind": "measured",
+   "source": null,
+   "metric": "memory increase",
+   "value": "0-0.7%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "WikiText-103, V100, L=512/1024/3072",
+   "note": null,
+   "where": "1",
+   "quote": "incurs a negligible (0–0.7%) memory increase"
+  },
+  {
+   "claim": "T5 bias training is at least twice as slow as sinusoidal: 14.4k WPS (L=512) vs 28.5k WPS (sinusoidal L=1024).",
+   "kind": "measured",
+   "source": null,
+   "metric": "words per second",
+   "value": "14.4k",
+   "unit": "WPS",
+   "baseline_value": "28.5k",
+   "n": null,
+   "setup": "WikiText-103, one V100, batched",
+   "note": null,
+   "where": "2.2",
+   "quote": "L = 512 T5 bias model runs at 14.4k WPS"
+  },
+  {
+   "claim": "Test perplexity on WikiText-103: ALiBi L=3072 18.30 vs sinusoidal 19.38, rotary 19.28, T5 bias 18.73.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test perplexity",
+   "value": "18.30",
+   "unit": "ppl",
+   "baseline_value": "19.38",
+   "n": null,
+   "setup": "WikiText-103 test, 247M, nonoverlapping",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, rows Sinusoidal, Rotary, T5 Bias, ALiBi L = 3072, column Test (19.38, 19.28, 18.73, 18.30)"
+  },
+  {
+   "claim": "With sliding-window evaluation (S=1), ALiBi perplexity stays flat as Lvalid grows (L=512: 17.98 at 512 to 18.3 at 3072) while sinusoidal explodes (18.35 to 360.12), so the gain from longer Lvalid under nonoverlapping evaluation is attributed to the early token curse.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "WikiText-103 dev, L=512, stride S=1",
+   "note": null,
+   "where": "Tables 13 and 15",
+   "table": "Table 13 row 512 (18.35, 360.12) and Table 15 row 512 (17.98, 18.3)"
+  }
+ ],
+ "limits": [
+  "Authors' analysis (App B): gains from Lvalid > L under nonoverlapping evaluation largely come from reduced early token curse; with sliding window S=1 ALiBi stays flat, so it may not use contexts longer than trained.",
+  "On the 1.3B model ALiBi performs similarly to sinusoidal at equal L, not better; advantage on small data is conjectured to be an inductive bias benefit.",
+  "Optimizer and learning-rate settings are not stated (inherited from Baevski & Auli).",
+  "Rotary was run with unoptimised code, about 2% slower after optimisation per footnote 5.",
+  "Slopes were set by manual exploration of about ten sets on WikiText-103; one run on Books used them untuned.",
+  "Perplexity only; no downstream tasks."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "extrapolation",
+   "definition": "a model's ability to continue performing well as the number of input tokens during validation increases beyond the number of tokens on which the model was trained",
+   "where": "1"
+  },
+  {
+   "term": "early token curse",
+   "definition": "predictions early in each subsequence cannot access many previous context tokens, increasing perplexity",
+   "where": "App B.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Attention is all you need",
+   "year": 2017,
+   "arxiv": "1706.03762",
+   "relation": "baseline",
+   "note": "sinusoidal position embeddings",
+   "quote": null
+  },
+  {
+   "work": "Adaptive input representations for neural language modeling",
+   "year": 2018,
+   "arxiv": "1809.10853",
+   "relation": "extends",
+   "note": "base architecture and hyperparameters",
+   "quote": null
+  },
+  {
+   "work": "RoFormer",
+   "year": 2021,
+   "arxiv": "2104.09864",
+   "relation": "baseline",
+   "note": "rotary position embeddings",
+   "quote": null
+  },
+  {
+   "work": "Exploring the limits of transfer learning with a unified text-to-text transformer",
+   "year": 2020,
+   "arxiv": "1910.10683",
+   "relation": "baseline",
+   "note": "T5 bias",
+   "quote": null
+  },
+  {
+   "work": "Shortformer",
+   "year": 2021,
+   "arxiv": "2012.15832",
+   "relation": "related",
+   "note": "early token curse, staged training",
+   "quote": null
+  },
+  {
+   "work": "Pointer sentinel mixture models (WikiText-103)",
+   "year": 2016,
+   "arxiv": "1609.07843",
+   "relation": "uses-data",
+   "note": "WikiText-103",
+   "quote": null
+  },
+  {
+   "work": "Toronto BookCorpus",
+   "year": 2015,
+   "arxiv": "1506.06724",
+   "relation": "uses-data",
+   "note": "book-domain experiment",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Extrapolation: as the validation input gets longer, sinusoidal, rotary and T5 degrade, ALiBi does not (L=512 and 1024, WikiText-103)",
+   "page": 2,
+   "why": "Shows the central result at a glance"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "ALiBi adds a constant bias (right) to each attention score (left)",
+   "page": 5,
+   "why": "Shows the linear distance matrix"
+  },
+  {
+   "figure": "Fig 11",
+   "caption": "ALiBi vs sinusoidal with sliding window stride S=1",
+   "page": 24,
+   "why": "Shows the early token curse explanation"
+  }
+ ],
+ "code": [
+  {
+   "where": "Section 3",
+   "snippet": "softmax(qiK⊤+ m · [−(i −1), ..., −2, −1, 0])",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Some figure axis labels are garbled in the text layer; no embedded instructions found."
+ ]
+}

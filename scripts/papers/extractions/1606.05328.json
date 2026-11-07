@@ -1,0 +1,406 @@
+{
+ "schema": 1,
+ "key": "1606.05328",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/oord-2016-conditional-image-generation-pixelcnn-decoders.pdf",
+ "bib": {
+  "title": "Conditional Image Generation with PixelCNN Decoders",
+  "authors": [
+   "Aäron van den Oord",
+   "Nal Kalchbrenner",
+   "Oriol Vinyals",
+   "Lasse Espeholt",
+   "Alex Graves",
+   "Koray Kavukcuoglu"
+  ],
+  "first_author": "van den Oord",
+  "year": 2016,
+  "venue": "preprint",
+  "arxiv": "1606.05328",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 28325,
+  "chars_total": 28325,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can a PixelCNN be improved to match PixelRNN likelihoods and be conditioned on arbitrary vectors to generate and decode images?",
+ "hypothesis": "Gated activations and a two-stack design close the gap to PixelRNN at lower compute; conditioning on a latent vector gives controllable, diverse images.",
+ "contributions": [
+  "Gated PixelCNN: gated activation units replace ReLU",
+  "Two stacks (horizontal and vertical) remove the receptive-field blind spot",
+  "Conditional PixelCNN conditioned on class labels or embeddings",
+  "PixelCNN as decoder in an autoencoder"
+ ],
+ "method": {
+  "summary": "Masked-convolution autoregressive image model with gated tanh*sigmoid units and horizontal/vertical stacks; conditioning vector h added inside the gates. Evaluated by NLL on CIFAR-10 and ImageNet, and qualitatively for class, portrait-embedding and autoencoder uses.",
+  "task": "autoregressive image density modelling and conditional image generation",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "CIFAR-10",
+    "role": "both",
+    "size": null,
+    "split": null,
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "ImageNet 32x32 and 64x64",
+    "role": "both",
+    "size": "roughly 1000 images per class (1000 classes)",
+    "split": null,
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "Flickr portraits",
+    "role": "train",
+    "size": null,
+    "split": null,
+    "source": "portraits automatically cropped from Flickr images using a face detector",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Gated PixelCNN (ImageNet)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "masked-conv autoregressive, gated units, residual in horizontal stack only",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": "256 values per colour channel (softmax)",
+    "layers": "20",
+    "hidden": "384 hidden units",
+    "heads": null,
+    "context": null,
+    "other": {
+     "filter": "5x5",
+     "colour_order": "R, then G given R, then B given R,G"
+    }
+   },
+   {
+    "name": "PixelRNN / PixelCNN / others",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "numbers taken from cited papers"
+    }
+   }
+  ],
+  "training": {
+   "objective": "negative log-likelihood (bits/dim) of the pixel product of conditionals; autoencoder trained end-to-end",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "128 total",
+   "steps": "200K synchronous updates",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "32 GPUs, TensorFlow",
+   "compute": "60 hours on 32 GPUs",
+   "wall_clock": "60 hours",
+   "seeds": null,
+   "other": {
+    "scope": "20 layers, 384 units, 5x5 filters stated for the Table 2 ImageNet model only"
+   }
+  },
+  "inference": {
+   "decoding": "sequential pixel-by-pixel sampling from softmax, each sampled pixel fed back",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "multiple conditional reconstructions per input in Fig 6; count not stated",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {
+    "interpolation": "same random seed per row for smooth transitions"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "NLL",
+     "definition": "negative log-likelihood per dimension on test set (train in brackets)",
+     "unit": "bits/dim",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "Uniform",
+    "Multivariate Gaussian",
+    "NICE",
+    "Deep Diffusion",
+    "DRAW",
+    "Deep GMMs",
+    "Conv DRAW",
+    "RIDE",
+    "PixelCNN",
+    "PixelRNN"
+   ],
+   "protocol": "Single reported number per model; no seeds or error bars; architectures optimised for validation score; qualitative samples for conditional experiments."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": null
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.batch_size",
+    "quote": "We used 200K synchronous updates over 32 GPUs in TensorFlow [1] using a total batch size of 128.",
+    "where": "3.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Gated PixelCNN reaches 3.03 bits/dim test NLL on CIFAR-10, close to PixelRNN.",
+   "kind": "measured",
+   "source": null,
+   "metric": "NLL test",
+   "value": "3.03",
+   "unit": "bits/dim",
+   "baseline_value": "3.00 (PixelRNN)",
+   "n": null,
+   "setup": "CIFAR-10, Gated PixelCNN, architecture tuned for validation score; test NLL",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Gated PixelCNN, column NLL Test (Train)"
+  },
+  {
+   "claim": "Gated PixelCNN improves on the original PixelCNN by 0.11 bits/dim on CIFAR-10.",
+   "kind": "measured",
+   "source": null,
+   "metric": "NLL improvement",
+   "value": "0.11",
+   "unit": "bits/dim",
+   "baseline_value": "3.14 (PixelCNN)",
+   "n": null,
+   "setup": "CIFAR-10, Gated PixelCNN, architecture tuned for validation score; test NLL",
+   "note": null,
+   "where": "3.1",
+   "quote": "Gated PixelCNN outperforms the PixelCNN by 0.11 bits/dim"
+  },
+  {
+   "claim": "On ImageNet 32x32 Gated PixelCNN gets 3.83 test NLL, beating PixelRNN.",
+   "kind": "measured",
+   "source": null,
+   "metric": "NLL test",
+   "value": "3.83",
+   "unit": "bits/dim",
+   "baseline_value": "3.86 (PixelRNN)",
+   "n": null,
+   "setup": "ImageNet 32x32, 20 layers, 384 hidden units, 5x5 filters",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, 32x32, row Gated PixelCNN"
+  },
+  {
+   "claim": "On ImageNet 64x64 Gated PixelCNN gets 3.57 test NLL, beating PixelRNN.",
+   "kind": "measured",
+   "source": null,
+   "metric": "NLL test",
+   "value": "3.57",
+   "unit": "bits/dim",
+   "baseline_value": "3.63 (PixelRNN)",
+   "n": null,
+   "setup": "ImageNet 64x64, same model as 32x32 results",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, 64x64, row Gated PixelCNN"
+  },
+  {
+   "claim": "Similar performance to PixelRNN (Row LSTM) in under half the training time.",
+   "kind": "measured",
+   "source": null,
+   "metric": "training time",
+   "value": "60",
+   "unit": "hours (32 GPUs)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ImageNet, 32 GPUs, TensorFlow",
+   "note": null,
+   "where": "3.1",
+   "quote": "We were able to achieve similar performance to the PixelRNN (Row LSTM [30]) in less than half the training time (60 hours using 32 GPUs)."
+  },
+  {
+   "claim": "Class conditioning on ImageNet gave no big log-likelihood change but greatly improved visual sample quality.",
+   "kind": "measured",
+   "source": null,
+   "metric": "qualitative",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Class-conditional Gated PixelCNN, one-hot over 1000 classes",
+   "note": null,
+   "where": "3.2",
+   "quote": "however we did not observe big differences. On the other hand, as noted in [27], we observed great improvements in the visual quality of the generated samples."
+  },
+  {
+   "claim": "Class label carries about 0.003 bits/pixel of information for a 32x32 image.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "information",
+   "value": "0.003",
+   "unit": "bits/pixel",
+   "baseline_value": null,
+   "n": null,
+   "setup": "1000 classes, 32x32 image",
+   "note": "log(1000)/3072 is about 0.003 only in bits if log base 2 (9.97/3072=0.00324); paper does not state the base",
+   "where": "3.2",
+   "quote": "log(1000) ≈0.003 bits/pixel (for a 32x32 image)"
+  },
+  {
+   "claim": "Embedding-conditioned model generates varied new portraits of the same person from a single unseen image.",
+   "kind": "measured",
+   "source": null,
+   "metric": "qualitative",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Flickr portraits, triplet-loss embedding as h",
+   "note": null,
+   "where": "3.3",
+   "quote": "the generative model is able to produce a large variety of new faces with these features in new poses, lighting conditions, etc."
+  },
+  {
+   "claim": "PixelCNN decoder in an autoencoder yields qualitatively different bottleneck information than an MSE decoder.",
+   "kind": "measured",
+   "source": null,
+   "metric": "qualitative",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "32x32 ImageNet patches, bottleneck 10 or 100 dims",
+   "note": null,
+   "where": "3.4",
+   "quote": "the information encoded in the bottleneck representation h will be qualitatively different with a PixelCNN decoder"
+  },
+  {
+   "claim": "Sampling is sequential: each predicted pixel is fed back to predict the next, while training is parallel.",
+   "kind": "claim",
+   "source": null,
+   "metric": "sampling",
+   "value": "sequential",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "PixelCNN family",
+   "note": null,
+   "where": "2",
+   "quote": "During sampling the predictions are sequential: every time a pixel is predicted, it is"
+  }
+ ],
+ "limits": [
+  "Optimizer, learning rate, schedule and CIFAR-10 model size not stated.",
+  "Conditional experiments are qualitative; no quantitative sample-quality metric.",
+  "Authors believe models underfit on ImageNet, which explains outperforming PixelRNN.",
+  "Conditioning is location independent unless a spatial map is used."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "blind spot",
+   "definition": "part of the receptive field of stacked masked convolutions that cannot be used for prediction",
+   "where": "2.2"
+  },
+  {
+   "term": "Gated PixelCNN",
+   "definition": "PixelCNN with y = tanh(Wf*x) ⊙ σ(Wg*x) and two stacks",
+   "where": "2.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Pixel recurrent neural networks",
+   "year": 2016,
+   "arxiv": "1601.06759",
+   "relation": "extends",
+   "note": "PixelCNN/PixelRNN basis and main baseline",
+   "quote": null
+  },
+  {
+   "work": "Theis et al., A note on the evaluation of generative models",
+   "year": 2015,
+   "arxiv": "1511.01844",
+   "relation": "related",
+   "note": "cited for visual quality improving with class conditioning",
+   "quote": null
+  },
+  {
+   "work": "FaceNet (Schroff et al.)",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "triplet loss for portrait embeddings",
+   "quote": null
+  },
+  {
+   "work": "ImageNet / CIFAR-10",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "evaluation data",
+   "quote": null
+  },
+  {
+   "work": "Deep residual learning (He et al.)",
+   "year": 2015,
+   "arxiv": "1512.03385",
+   "relation": "uses-method",
+   "note": "residual connection in horizontal stack",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "PixelCNN receptive field, mask, blind spot and two stacks",
+   "page": 2,
+   "why": "Shows blind spot and the fix"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "A single layer in the Gated PixelCNN architecture",
+   "page": 4,
+   "why": "Layer block wiring"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 2",
+   "snippet": "y = tanh(Wk,f ∗ x) ⊙ σ(Wk,g ∗ x)",
+   "verbatim": true
+  },
+  {
+   "where": "Eq 4",
+   "snippet": "y = tanh(Wk,f ∗ x + Vk,f^T h) ⊙ σ(Wk,g ∗ x + Vk,g^T h)",
+   "verbatim": true
+  }
+ ],
+ "problems": []
+}

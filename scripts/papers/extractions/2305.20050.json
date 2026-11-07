@@ -1,0 +1,130 @@
+{
+ "schema": 1,
+ "key": "2305.20050",
+ "pdf": "generative-ai/05-RL/sources/lightman-2023-let-s-verify-step-step.pdf",
+ "bib": {
+  "title": "Let's Verify Step by Step",
+  "authors": ["Hunter Lightman", "Vineet Kosaraju", "Yura Burda", "Harri Edwards", "Bowen Baker", "Teddy Lee", "Jan Leike", "John Schulman", "Ilya Sutskever", "Karl Cobbe"],
+  "first_author": "Lightman",
+  "year": 2023,
+  "venue": "preprint",
+  "arxiv": "2305.20050",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 53156,
+  "chars_total": 53156,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Does process supervision (feedback on each reasoning step) train more reliable reward models than outcome supervision (feedback on the final answer) on challenging math problems?",
+ "hypothesis": "Process supervision gives more precise feedback and should yield a more reliable reward model than outcome supervision when scaled up.",
+ "contributions": [
+  "Process supervision trains much more reliable reward models than outcome supervision; the PRM solves 78.2% of a representative MATH test subset.",
+  "A large reward model can reliably approximate human supervision for smaller reward models and be used for large-scale data collection ablations.",
+  "Active learning gives a 2.6x improvement in the data efficiency of process supervision.",
+  "Release of PRM800K, the full process supervision dataset."
+ ],
+ "method": {
+  "summary": "A fixed GPT-4 generator produces step-delimited MATH solutions. Human labelers label each step positive, negative or neutral (PRM800K). PRMs and ORMs, fine-tuned from GPT-4 after a MathMix math pretraining step, are compared by best-of-N selection accuracy. A small-scale regime uses the large PRM as a labelling oracle for ablations.",
+  "task": "reward model training for best-of-N reranking of math chain-of-thought solutions",
+  "trains": true,
+  "datasets": [
+   {"name": "PRM800K", "role": "train", "size": "about 800,000 step-level labels over about 75,000 solutions to 12K problems (filtered); unfiltered 1,085,590 labels over 101,599 solutions", "split": "includes data from 4.5K MATH test problems", "source": "human step labels on GPT-4 generator solutions; https://github.com/openai/prm800k", "preprocessing": "discard quality-control labels and labels where the labeler could not complete the task"},
+   {"name": "MATH (train problems)", "role": "train", "size": "7,500 training problems plus 4,500 test-split problems", "split": "500 held-out test problems for evaluation", "source": "Hendrycks et al. 2021", "preprocessing": "500 test problems chosen uniformly at random"},
+   {"name": "MathMix", "role": "pretrain", "size": "1.5B tokens (about 1B for small-scale variant without critiques data)", "split": null, "source": "math problems and solutions, math discussion text, synthetic data, critiques grading data", "preprocessing": "decontaminated against MATH test with LaTeX stripping and n-gram matching; no guarantee"},
+   {"name": "STEM OOD set", "role": "eval", "size": "224 questions (AP Calculus 45, AP Chemistry 60, AP Physics 45, AMC10/12 84)", "split": "best-of-100", "source": "recent AP Physics, AP Calculus, AP Chemistry, AMC10, AMC12 exams", "preprocessing": null},
+   {"name": "ORM training set (large-scale)", "role": "train", "size": "100 uniform samples per problem from the generator", "split": null, "source": "generator samples with final-answer labels", "preprocessing": "no overlap with PRM800K, an order of magnitude larger"}
+  ],
+  "models": [
+   {"name": "GPT-4 base (large-scale generator, ORM, PRM)", "role": "base", "params": null, "architecture": "GPT-4, pretrained only for next-token prediction, no RLHF", "init_from": "base GPT-4, then MathMix finetune", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"generator_finetune": "few-shot generate solutions to MATH train problems, keep correct ones, finetune 1 epoch for newline-delimited steps"}},
+   {"name": "small-scale models", "role": "base", "params": null, "architecture": "similar in design to GPT-4", "init_from": "pretrained with roughly 200 times less compute than GPT-4, then MathMix", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}}
+  ],
+  "training": {
+   "objective": "PRM: maximise log-likelihood of a single correctness token (positive/negative/neutral) after each step; ORM: predict solution correctness at every token, final-token score used at test",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": "PRM 2 epochs; ORM 1 epoch; MathMix 2 epochs (about 3B tokens) large, 6 epochs (about 6.6B tokens) small; generator 1 epoch",
+   "tokens": "MathMix about 3B tokens large-scale, about 6.6B small-scale",
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": "ORM: none",
+   "regularisation": "ORM: no jointly learned language modeling objective",
+   "hardware": null,
+   "compute": "small-scale base models pretrained with roughly 200 times less compute than GPT-4",
+   "wall_clock": null,
+   "seeds": "Fig 4: mean and standard deviation across three seeds",
+   "other": {"lr_note": "paper says only that low learning rates were important for stable PRM training; no value given", "hyperparameter_sweep": "on first ~10% of PRM800K"}
+  },
+  "inference": {
+   "decoding": "uniform sampling from generator; best-of-N reranking by reward model",
+   "temperature": "1.0 for ORM sample collection",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "1860 solutions per problem generated in total; N up to 1860; for N<=1000 variance over subsamples; OOD set best-of-100; small-scale eval best-of-500",
+   "prompting": "few-shot to generate generator training data",
+   "retrieval": null,
+   "parameters": {"prm_score": "product of step correctness probabilities, neutral counted positive", "synthetic_label_threshold": "step with >20% PRM_large negative probability counted incorrect", "active_learning_mix": "80% most convincing wrong-answer, 20% most convincing remaining; PRM_selector scores 1000 samples per problem"},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "% problems solved (best-of-N)", "definition": "pick the solution ranked highest by the reward model, grade by final answer, report fraction correct", "unit": "%", "higher_is_better": true}
+   ],
+   "baselines": ["outcome-supervised RM", "majority voting"],
+   "protocol": "500-problem MATH test subset; three seeds for small-scale (Fig 4); RM-weighted voting tried with no noticeable gain"
+  },
+  "availability": {"code": "https://github.com/openai/prm800k", "weights": null, "data": "https://github.com/openai/prm800k"},
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {"claim": "The large-scale PRM beats the ORM and majority voting at best-of-1860 on the 500-problem MATH subset.", "kind": "measured", "source": null, "metric": "% solved best-of-1860", "value": "78.2", "unit": "%", "baseline_value": "ORM 72.4, majority voting 69.6", "n": 500, "setup": "GPT-4 fine-tuned PRM (PRM800K) vs ORM trained on 100 uniform samples per problem (different, larger training set); 500 held-out MATH test problems; neutral=positive, product scoring", "quote": "We use our state-of-the-art PRM to solve 78.2% of problems from a representative subset of the MATH test set.", "table": null, "note": "Fig 3 shows 72.4 (ORM), 78.2 (PRM), 69.6 (majority voting) as bar labels; the training sets are not directly comparable.", "where": "Intro, Fig 3"},
+  {"claim": "Active learning is about 2.6x more data efficient than uniform labelling in the small-scale setting.", "kind": "measured", "source": null, "metric": "data efficiency ratio", "value": "2.6", "unit": "x", "baseline_value": null, "n": null, "setup": "small-scale models supervised by PRM_large (synthetic), best-of-500, 80/20 wrong-answer/other selection by PRM_selector, slope of best-fit lines", "quote": "we estimate that this form of active learning is approximately 2.6x more data efficient than uniform data labelling", "table": null, "note": null, "where": "Sec 4.2"},
+  {"claim": "On out-of-distribution STEM tests the PRM beats the ORM and majority voting in aggregate.", "kind": "measured", "source": null, "metric": "aggregate best-of-100", "value": "72.9", "unit": "%", "baseline_value": "ORM 63.8, majority vote 61.3", "n": 234, "setup": "large-scale models, 100 test samples per problem, AP Calculus/Chemistry/Physics and AMC10/12", "quote": null, "table": "Table 1, row Aggregate, column PRM", "note": "text says 224 questions; Table 1 row counts sum to 234 (45+60+45+84)", "where": "Sec 5, Table 1"},
+  {"claim": "Scoring choice matters little: product with neutral=positive is best at best-of-1860.", "kind": "measured", "source": null, "metric": "best-of-1860", "value": "78.2", "unit": "%", "baseline_value": "minimum 77.6; neutral=negative 77.4 (product), 77.8 (minimum)", "n": 500, "setup": "large-scale PRM, 500 MATH test problems", "quote": null, "table": "Table 4, row neutral = positive, column product", "note": null, "where": "Appendix F.2"},
+  {"claim": "In the small-scale comparison process supervision beats both forms of outcome supervision at all data scales.", "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "small-scale generator, 1 to 200 solutions per problem, best-of-500, supervision by PRM_large or final-answer check", "quote": null, "table": null, "note": "values only in Fig 4a", "where": "Sec 4.1"},
+  {"claim": "Outcome supervision by PRM_large is more effective than final-answer checking.", "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "small-scale, Fig 4b", "quote": null, "table": null, "note": "authors treat PRM_large outcome supervision as the more relevant baseline", "where": "Sec 4.1"},
+  {"claim": "The labelled dataset is mostly incorrect solutions after active learning.", "kind": "measured", "source": null, "metric": "% solutions ending correct, combined", "value": "14.2", "unit": "%", "baseline_value": null, "n": null, "setup": "PRM800K, phase 1 85.1%, phase 2 13.2%", "quote": null, "table": "Table 3, row % end in correct solution, column combined", "note": null, "where": "Appendix B"},
+  {"claim": "Labelers were screened with 30 quality-control questions and admitted at 75% agreement with gold labels.", "kind": "measured", "source": null, "metric": "agreement threshold", "value": "75", "unit": "%", "baseline_value": null, "n": 30, "setup": "phase 2 labelers", "quote": "we only admitted labelers that agreed with our gold labels at least 75% of the time", "table": null, "note": null, "where": "Appendix B"}
+ ],
+ "limits": [
+  "ORM and PRM training sets at large scale are not directly comparable (PRM set active-learning-biased and an order of magnitude smaller).",
+  "The generator is never improved with RL; only reward models are evaluated by best-of-N.",
+  "Generalisation beyond math is unknown (authors).",
+  "Iterative retraining of PRM_selector was unstable and gave no gain; authors could not diagnose it.",
+  "Possible MATH test contamination in pretraining; authors expect relative comparisons to be unaffected.",
+  "Which outcome baseline (final-answer vs PRM_large) is appropriate is unclear; the 'negative alignment tax' claim rests on math only.",
+  "Optimizer, learning rate, batch size and hardware are not reported."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "outcome supervision", "definition": "feedback for a final result", "where": "Abstract"},
+  {"term": "process supervision", "definition": "feedback for each intermediate reasoning step", "where": "Abstract"},
+  {"term": "convincing wrong-answer solution", "definition": "a solution rated highly by the current best PRM that reaches an incorrect final answer", "where": "Sec 2.4"}
+ ],
+ "lineage": [
+  {"work": "Solving math word problems with process- and outcome-based feedback (Uesato et al.)", "year": 2022, "arxiv": "2211.14275", "relation": "extends", "note": "closest prior comparison; found similar final-answer error on GSM8K; this paper uses a stronger model, MATH, and more feedback", "quote": null},
+  {"work": "Training verifiers to solve math word problems (Cobbe et al.)", "year": 2021, "arxiv": "2110.14168", "relation": "uses-method", "note": "ORM training follows token-level verifiers", "quote": null},
+  {"work": "GPT-4 technical report", "year": 2023, "arxiv": "2303.08774", "relation": "uses-method", "note": "base model for all large-scale models", "quote": null},
+  {"work": "MATH (Hendrycks et al.)", "year": 2021, "arxiv": "2103.03874", "relation": "uses-data", "note": "train and test problems", "quote": null},
+  {"work": "Scaling laws for reward model overoptimization (Gao et al.)", "year": 2022, "arxiv": "2210.10760", "relation": "related", "note": "similar use of a large RM to supervise smaller ones", "quote": null},
+  {"work": "Self-consistency (Wang et al.)", "year": 2022, "arxiv": "2203.11171", "relation": "baseline", "note": "majority voting baseline", "quote": null},
+  {"work": "Minerva (Lewkowycz et al.)", "year": 2022, "arxiv": "2206.14858", "relation": "related", "note": "inspiration for MathMix", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 3", "caption": "A comparison of outcome-supervised and process-supervised reward models, evaluated by their ability to search over many test solutions.", "page": 7, "why": "shows PRM gap over ORM and majority voting widening with N"},
+  {"figure": "Fig 4", "caption": "A comparison of different forms of outcome and process supervision. Mean and standard deviation is shown across three seeds.", "page": 8, "why": "small-scale ablation and active learning slope"},
+  {"figure": "Fig 2", "caption": "Two solutions to the same problem, graded by the PRM.", "page": 6, "why": "step-level scores visualised"}
+ ],
+ "code": [],
+ "problems": ["Text says 224 STEM questions but Table 1 per-subject counts sum to 234.", "Figure 3 bar labels extracted as loose numbers."]
+}

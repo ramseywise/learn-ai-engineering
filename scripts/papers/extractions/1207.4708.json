@@ -1,0 +1,511 @@
+{
+ "schema": 1,
+ "key": "1207.4708",
+ "pdf": "generative-ai/05-RL/sources/bellemare-2013-arcade-learning-environment.pdf",
+ "bib": {
+  "title": "The Arcade Learning Environment: An Evaluation Platform for General Agents",
+  "authors": [
+   "Marc G. Bellemare",
+   "Yavar Naddaf",
+   "Joel Veness",
+   "Michael Bowling"
+  ],
+  "first_author": "Bellemare",
+  "year": 2013,
+  "venue": "Journal of Artificial Intelligence Research 47 (2013) 253-279",
+  "arxiv": "1207.4708",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 67477,
+  "chars_total": 67477,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "benchmark",
+ "question": "How can general, domain-independent agents be evaluated across many diverse Atari 2600 games, and how well do standard RL and planning methods do on them?",
+ "hypothesis": "A train/test split over games (tune on a few, evaluate once on unseen games) gives a rigorous evaluation of general competency.",
+ "contributions": [
+  "ALE: a software framework and challenge problem over Atari 2600 games",
+  "An evaluation methodology with training and testing games",
+  "Benchmark SARSA(lambda) agents with five feature sets and two search agents (breadth-first, UCT) on 55 games",
+  "Normalisation and aggregation metrics for cross-game comparison"
+ ],
+ "method": {
+  "summary": "ALE wraps the Stella Atari 2600 emulator as an RL environment. Five SARSA(lambda) linear agents (Basic, BASS, DISCO, LSH, RAM features) and two search agents (full-tree BFS, UCT using the emulator as a model) are tuned on five games and evaluated on 50 test games, with baselines Random, Const, Perturb and a beginner human.",
+  "task": "Atari 2600 game playing (RL and planning benchmark)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Training games",
+    "role": "dev",
+    "size": "5 games: Asterix, Beam Rider, Freeway, Seaquest, Space Invaders",
+    "split": "used for parameter tuning and design refinements",
+    "source": "Atari 2600 ROMs via ALE",
+    "preprocessing": null
+   },
+   {
+    "name": "Test games",
+    "role": "eval",
+    "size": "50 games",
+    "split": "chosen at random from 123 eligible of 381 games listed on Wikipedia (July 12, 2012)",
+    "source": "Atari 2600 ROMs via ALE",
+    "preprocessing": "eligible: own Wikipedia page, single player mode, not adult-themed or prototype, emulable in ALE"
+   }
+  ],
+  "models": [
+   {
+    "name": "SARSA(lambda) with linear function approximation, replacing traces, epsilon-greedy",
+    "role": "proposed",
+    "params": null,
+    "architecture": "linear value function over hand-built features",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "Basic": "binary feature per colour (128) per tile (16x14 grid) = 28,672 features",
+     "BASS": "Basic plus pairwise feature combinations, 8-colour SECAM encoding",
+     "DISCO": "object class detection, tile coding of position and velocity",
+     "LSH": "locality sensitive hashing of screens, l=2000 random vectors",
+     "RAM": "1024 RAM bits plus pairwise AND of every bit pair"
+    }
+   },
+   {
+    "name": "Breadth-first full-tree search",
+    "role": "baseline",
+    "params": null,
+    "architecture": "search over emulator",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "node limit": "max 100,000 simulation steps per frame (text) / 133,000 frames emulated per action (Appendix C)"
+    }
+   },
+   {
+    "name": "UCT",
+    "role": "proposed",
+    "params": null,
+    "architecture": "Monte Carlo tree search with duplicate-state action pruning and tree reuse",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Random, Const, Perturb, beginner human",
+    "role": "baseline",
+    "params": null,
+    "architecture": "Random picks random action every frame; Const best single fixed action; Perturb fixed action with prob 0.95 else uniform random (best per game); human: five-episode average of a beginner",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "SARSA(lambda) TD control, linear function approximation",
+   "optimizer": null,
+   "lr": "alpha: 0.5 (BASS, Basic, LSH), 0.1 (DISCO), 0.2 (RAM)",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": "Compute/Calcul Canada (amount not stated)",
+   "wall_clock": null,
+   "seeds": "30 trials per result",
+   "other": {
+    "training episodes per trial": "5,000",
+    "discount gamma": "0.999 (all agents)",
+    "epsilon": "0.05",
+    "lambda": "0.9 (BASS, Basic, DISCO), 0.5 (RAM, LSH)",
+    "DISCO tile coding": "8 tilings, grid size 8",
+    "LSH": "l=2000, k=1000, M=50",
+    "background detection": "18,000 sample screens per game",
+    "class discovery": "36,000 sample screens, max 10 classes, max velocity 8 pixels, min frequency 20%",
+    "UCT": "500 simulations per action, max depth 300 frames, exploration constant 0.1"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "RL: 30 trials x 500 evaluation episodes (no learning); search: 10 episodes per game",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "episode length": "18,000 frames (5 minutes) max",
+    "frames per action": "5 (12 actions per second)",
+    "search action selection time": "about 15 seconds per action"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Average evaluation score",
+     "definition": "mean game score over evaluation episodes",
+     "unit": "game points",
+     "higher_is_better": true
+    },
+    {
+     "name": "Baseline-normalised score",
+     "definition": "(s - min ref)/(max ref - min ref) with range from 37 baseline agents (Random, Const per action, Perturb per action)",
+     "unit": "ratio",
+     "higher_is_better": true
+    },
+    {
+     "name": "Inter-algorithm score",
+     "definition": "normalised to min and max over the algorithms compared; in [0,1]",
+     "unit": "ratio",
+     "higher_is_better": true
+    },
+    {
+     "name": "Paired tests",
+     "definition": "per game two-tailed Welch t-test with 99% confidence intervals; count of games better-worse",
+     "unit": "games",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Random",
+    "Const",
+    "Perturb",
+    "beginner human",
+    "Basic",
+    "BASS",
+    "DISCO",
+    "LSH",
+    "RAM",
+    "Full Tree search"
+   ],
+   "protocol": "Tune on 5 training games, evaluate once on 50 test games; average, median and score-distribution aggregates."
+  },
+  "availability": {
+   "code": "open source, GNU GPL, http://arcadelearningenvironment.org; benchmark agent source on publication page",
+   "weights": null,
+   "data": "Atari ROMs via emulator"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.other.discount gamma",
+    "quote": null,
+    "where": "Appendix C"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Learning agents beat the baseline agents in 40 of 55 games",
+   "kind": "measured",
+   "source": null,
+   "metric": "games where learners beat baselines",
+   "value": 40,
+   "unit": "games of 55",
+   "baseline_value": null,
+   "n": 55,
+   "setup": "ALE, 55 Atari 2600 games (5 training + 50 test), 5 frames per action, 18,000 frame episodes; five SARSA(lambda) agents vs Random/Const/Perturb",
+   "note": null,
+   "where": "Sec 3.1.3",
+   "quote": "In 40 games out of 55, learning agents perform better than the baseline agents."
+  },
+  {
+   "claim": "Search (full tree or UCT) beat both learners and baselines in 49 of 55 games",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 49,
+   "unit": "games of 55",
+   "baseline_value": null,
+   "n": 55,
+   "setup": "ALE, 55 Atari 2600 games (5 training + 50 test), 5 frames per action, 18,000 frame episodes; UCT 500 simulations per action, depth 300",
+   "note": null,
+   "where": "Sec 3.2.3",
+   "quote": "Together, our two search methods performed better than both learning agents and the baseline policies on 49 of 55 games."
+  },
+  {
+   "claim": "UCT score on Asterix vs best learner",
+   "kind": "measured",
+   "source": null,
+   "metric": "score",
+   "value": 290700,
+   "unit": "points",
+   "baseline_value": 987,
+   "n": null,
+   "setup": "ALE, 55 Atari 2600 games (5 training + 50 test), 5 frames per action, 18,000 frame episodes; Asterix is a training game",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Asterix, column UCT"
+  },
+  {
+   "claim": "Sparse-reward games where search is not best: Freeway, Private Eye, Montezuma's Revenge, Venture",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 6,
+   "unit": "games of 55 where search was not best",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ALE, 55 Atari 2600 games (5 training + 50 test), 5 frames per action, 18,000 frame episodes",
+   "note": null,
+   "where": "Sec 3.2.3",
+   "quote": "Four of the six games for which search methods do not perform best are games where rewards are sparse and require long-term planning."
+  },
+  {
+   "claim": "Training set was five games, test set 50 games drawn at random from 123 eligible",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 50,
+   "unit": "test games",
+   "baseline_value": null,
+   "n": 50,
+   "setup": "ALE, 55 Atari 2600 games (5 training + 50 test), 5 frames per action, 18,000 frame episodes",
+   "note": null,
+   "where": "Sec 3.1.2",
+   "quote": "From this list, 50 games were chosen at random to form the test set."
+  },
+  {
+   "claim": "Each RL trial is 5,000 training episodes then 500 evaluation episodes, averaged over 30 trials",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 5000,
+   "unit": "training episodes per trial",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ALE, 55 Atari 2600 games (5 training + 50 test), 5 frames per action, 18,000 frame episodes",
+   "note": null,
+   "where": "Sec 3.1.2",
+   "quote": "A reinforcement learning trial consists of 5,000 training episodes, followed by 500 evaluation episodes during which no learning takes place."
+  },
+  {
+   "claim": "BASS best RL method in table: best on 17 of 55 games",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 17,
+   "unit": "games (Times Best)",
+   "baseline_value": 8,
+   "n": null,
+   "setup": "ALE, 55 Atari 2600 games (5 training + 50 test), 5 frames per action, 18,000 frame episodes",
+   "note": "Basic 6, DISCO 1, LSH 8, RAM 8 in the same row (Random 2, Const 9, Perturb 4)",
+   "where": "Table 4",
+   "table": "Table 4, row Times Best, column BASS"
+  },
+  {
+   "claim": "UCT is best on 45 games in the search table (Times Best)",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 45,
+   "unit": "games",
+   "baseline_value": 4,
+   "n": null,
+   "setup": "ALE, 55 Atari 2600 games (5 training + 50 test), 5 frames per action, 18,000 frame episodes",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row Times Best, column UCT"
+  },
+  {
+   "claim": "RAM agent did not outperform image-based methods",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "ALE, 55 Atari 2600 games (5 training + 50 test), 5 frames per action, 18,000 frame episodes",
+   "note": null,
+   "where": "Sec 3.1.3",
+   "quote": "The RAM-based agent, surprisingly, did not outperform image-based methods, despite building its representation from raw game state."
+  },
+  {
+   "claim": "DISCO does reasonably on training games but drops sharply on unseen games, showing the value of the train/test split",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "ALE, 55 Atari 2600 games (5 training + 50 test), 5 frames per action, 18,000 frame episodes",
+   "note": null,
+   "where": "Sec 3.1.3"
+  },
+  {
+   "claim": "Random-normalised scores explode when the random score is near 0 (Freeway)",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Freeway random agent scores about 0; learner scores 10-20",
+   "note": null,
+   "where": "Sec 4.1.1",
+   "quote": "scores achieved by learning agents, in the 10-20 range, are normalized into thousands."
+  },
+  {
+   "claim": "Average baseline score is outlier-sensitive: LSH looks superior only because of Zaxxon",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "ALE, 55 Atari 2600 games (5 training + 50 test), 5 frames per action, 18,000 frame episodes",
+   "note": null,
+   "where": "Sec 4.2.2"
+  },
+  {
+   "claim": "Paired test BASS vs DISCO: BASS better in 48 games, worse in 5",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 48,
+   "unit": "games",
+   "baseline_value": 5,
+   "n": null,
+   "setup": "ALE, 55 Atari 2600 games (5 training + 50 test), 5 frames per action, 18,000 frame episodes; Welch t-test 99% CI",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row BASS, column DISCO"
+  },
+  {
+   "claim": "Looking ahead one second needs about 10^75 simulation steps (18^60)",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "18 actions per frame, 60 frames per second",
+   "note": "text extraction flattens exponents: 18^60 ≈ 10^75",
+   "where": "Sec 3.2",
+   "quote": "looking ahead one second requires 1860 ≈1075 simulation steps"
+  }
+ ],
+ "limits": [
+  "Human baseline is a single beginner, five-episode average, selected games only; the authors say it is not exhaustive or accurate.",
+  "Test games chosen from games with Wikipedia pages; no estimate of variance beyond 30 trials for RL and 10 episodes for search.",
+  "Search agents use the emulator as a perfect model and take about 15 seconds per action, so are not real-time or comparable with model-free learners.",
+  "Hand-designed features, linear SARSA(lambda); no deep networks (dated by later work).",
+  "Authors concede that cross-game score summarisation needs further attention and that sparse-reward games need long-term planning beyond these methods."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "inter-algorithm normalisation",
+   "definition": "normalise using the min and max scores achieved by the algorithms themselves, so z is in [0,1]",
+   "where": "Sec 4.1.3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Naddaf (2010), BASS, DISCO and RAM features",
+   "year": 2010,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Three of the five feature sets were introduced there",
+   "quote": null
+  },
+  {
+   "work": "Sutton and Barto (1998), SARSA(lambda)",
+   "year": 1998,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Algorithm used for RL agents",
+   "quote": null
+  },
+  {
+   "work": "Kocsis and Szepesvari (2006), UCT",
+   "year": 2006,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Search baseline",
+   "quote": null
+  },
+  {
+   "work": "Whiteson et al. (2011), Protecting against evaluation overfitting",
+   "year": 2011,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Evaluation challenges this work tries to address",
+   "quote": null
+  },
+  {
+   "work": "Bellemare, Veness and Bowling (2012), contingency awareness in Atari",
+   "year": 2012,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Used this evaluation methodology across a large test set",
+   "quote": null
+  },
+  {
+   "work": "Hausknecht et al. (2012), HyperNEAT-GGP",
+   "year": 2012,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Atari evolutionary approach reported on two games",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "Left to right: random-normalized, baseline and inter-algorithm scores.",
+   "page": 7,
+   "why": "Shows how the same scores look under the three normalisations"
+  },
+  {
+   "figure": "Table 4",
+   "caption": "Reinforcement Learning results. The first five games constitute our training set.",
+   "page": 28,
+   "why": "Full per-game scores for all agents and baselines"
+  }
+ ],
+ "code": [
+  {
+   "where": "Appendix B, Algorithm 3",
+   "snippet": "V(c) <- average-return(c) + sqrt(log[visits(c)] / visits(n))  (UCT selectAction; exploration constant 0.1 in Appendix C)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text extraction flattens exponents (18^60 appears as 1860) and the UCT square-root; Table 1 duplicates Table 4 values rounded.",
+  "Section 3.2.1 says 100,000 simulation steps per frame while Appendix C says 133,000 maximum frames emulated per action for full-tree search."
+ ]
+}

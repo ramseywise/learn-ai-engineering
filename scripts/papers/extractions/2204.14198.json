@@ -1,19 +1,733 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2204.14198",
  "pdf": "ai-engineering/08-multimodal-engineering/sources/alayrac-2022-flamingo.pdf",
  "bib": {
   "title": "Flamingo: a Visual Language Model for Few-Shot Learning",
+  "authors": [
+   "Jean-Baptiste Alayrac",
+   "Jeff Donahue",
+   "Pauline Luc",
+   "Antoine Miech",
+   "Iain Barr",
+   "Yana Hasson",
+   "Karel Lenc",
+   "Arthur Mensch",
+   "Katie Millican",
+   "Malcolm Reynolds",
+   "Roman Ring",
+   "Eliza Rutherford",
+   "Serkan Cabi",
+   "Tengda Han",
+   "Zhitao Gong",
+   "Sina Samangooei",
+   "Marianne Monteiro",
+   "Jacob Menick",
+   "Sebastian Borgeaud",
+   "Andrew Brock",
+   "Aida Nematzadeh",
+   "Sahand Sharifzadeh",
+   "Mikolaj Binkowski",
+   "Ricardo Barreira",
+   "Oriol Vinyals",
+   "Andrew Zisserman",
+   "Karen Simonyan"
+  ],
   "first_author": "Alayrac",
   "year": 2022,
-  "venue": "NeurIPS 2022",
+  "venue": "NeurIPS 2022 (arXiv:2204.14198v2)",
   "arxiv": "2204.14198",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-04",
-  "session": "97b4134b-decf-4866-ae85-c6872cbbba19"
+  "at": "2026-11-07",
+  "chars_read": 148082,
+  "chars_total": 187082,
+  "engine": "pymupdf",
+  "skipped": "Reference list (about chars 41511-80299) skimmed only; datasheet tables 14-16 and model card lightly read (checked for sizes and licences)."
  },
- "legacy_report": "SOURCE: \"Flamingo: a Visual Language Model for Few-Shot Learning\", Alayrac, Donahue, Luc, Miech, ... Zisserman, Simonyan (DeepMind). NeurIPS 2022 (arXiv:2204.14198v2, 15 Nov 2022). File: /Users/ramsey-wise/workspace/learn-ai-engineering/ai-engineering/08-multimodal-engineering/sources/alayrac-2022-flamingo.pdf\n\nCOVERAGE: I read 190,811 characters out of 190,811 across 54 pages. I read 0–40,000 and 77,000–190,811 in full: the main text, the checklist, and Appendices A–G, including the model card and datasheets. I only skimmed the references (about 40,000–77,091), plus targeted lookups for the BUILDS ON list.\n\nAUDIT OF THE NOTE'S NUMBERS\n1. 64 visual tokens from the Perceiver Resampler: confirmed. \"produces a fixed number of visual outputs (64)\" (§2.1, p.5). The resampler is the same about 200M-parameter (194M in Table 5) \"Medium\" size, with 6 layers, in all three model sizes.\n2. Frozen 70B Chinchilla: confirmed. Flamingo-80B = 70B frozen LM + 435M frozen NFNet-F6 + 10B trainable GATED XATTN-DENSE (inserted every 7th layer) + 194M resampler (Table 5, p.28).\n3. tanh gates initialised at zero: confirmed. \"α is a layer-specific learnable scalar initialized to 0\" (p.5). In the 3B ablation, removing them costs 4.2 points of Overall score and causes \"training instabilities\" (p.9).\n4. \"32-shot beats fine-tuned SOTA on 6 of 16 benchmarks\": confirmed, but tighten the setup. The 6 are among 15 comparable tasks, because RareAct has no fine-tuned result. From Table 1 they are OKVQA, MSVDQA, Flickr30K, iVQA, STAR and NextQA. The Table 1 caption itself says \"on seven tasks\", which contradicts the text and Fig. 2 (\"6 of the 16\"). Use 6.\n5. VQAv2 67.6% vs 80.2%: confirmed with setup. Both are VQAv2 test-dev, VQA accuracy, Flamingo-80B, 32 shots. 80.2 is Florence [140], fine-tuned on 444K examples (Table 1). Caveats:\n   - (a) The unrestricted SotA, which uses ensembling, is 81.3 (Yan et al. [133], Table 2/8).\n   - (b) Fine-tuned Flamingo reaches 82.0 test-dev and 82.1 test-std.\n   - (c) Appendix B.2.2 gives the 32-shot figure as \"67.3%\", which is inconsistent with the 67.6 in the tables.\n   - (d) VQAv2 is a DEV benchmark, which the authors say \"may be biased, as a result of model selection\".\n6. 3B ablations, 8.0% and 12.9%: the numbers are right, but the units need care. The metric is the \"Overall score\": each benchmark score is divided by its Table 1 SotA, then averaged over the 5 DEV benchmarks (validation subsets, 4 shots, short schedule). The baseline is 70.7. Fine-tuning the pretrained LM gives 62.7, a drop of 8.0 points. Training the LM from random init gives 57.8, a drop of 12.9 points. These are absolute drops in a percent-of-SotA average, not relative percentage drops. Fine-tuning the LM also raises step time from 1.74s to 2.42s. The paper frames the 8.0 drop as catastrophic forgetting.\n\nCLAIMS\n- claim: Freezing the LM beats both fine-tuning it and training it from scratch (3B ablation).\n  number: -8.0 / -12.9 Overall points\n  setup: Flamingo-3B, 5 DEV validation subsets, 4-shot, short schedule, baseline 70.7\n  quote: \"If trained from scratch, we observe a large performance de-crease of−12.9%. Interestingly, ﬁne-tuning our pretrained LM also leads to a drop in performance of −8.0%.\"\n  where: p.9, Table 3 row (viii)\n- claim: The interleaved web data (M3W) matters most in the data mix; image-text pairs matter too.\n  number: >17% (70.7→53.4); 9.8%\n  setup: same 3B ablation\n  quote: \"removing the interleaved image-text dataset M3W leads to a decrease of more than 17% in performance while removing the conventional paired image-text pairs also decreases performance (by 9.8%)\"\n  where: p.8–9\n- claim: The 32-shot result beats fine-tuned SotA on 6 tasks with about 1000x less task data.\n  number: 6 of 16; ~1000x\n  setup: Flamingo-80B, 32 shots, no weight updates\n  quote: \"On 6 of these 16 tasks, Flamingo also outperforms the ﬁne-tuned state of the art despite using only 32 task-speciﬁc examples, around 1000 times less task-speciﬁc training data\"\n  where: p.4\n- claim: Fine-tuning Flamingo sets SotA on 5 more tasks.\n  number: VQAv2 82.0\n  setup: unfreezes the vision encoder; resolution 480×480; per-task grid search\n  quote: \"on VQAv2, we observe improved results at82.0%, outperforming our results achieved with 32-shot in-context learning (67.3%) as well as the previous state of the art (81.3%, Yan et al. [133])\"\n  where: p.34, B.2.2\n- claim: Inserting cross-attention every 4th layer is a good trade-off between compute and score.\n  number: 66% faster, -1.9%\n  setup: 3B ablation\n  quote: \"inserting them every fourth block accelerates training by 66% while only decreasing the overall score by 1.9%\"\n  where: p.9\n- claim: Cross-attending only to the most recent image beats attending to all previous images, and it generalises from 5 training images to 32 at test.\n  number: 7.2%; 5 → 32\n  setup: Table 10 row (ii), 3B\n  quote: \"the single image case leads to signiﬁcantly better results (7.2% better in the overall score)\"\n  where: p.35\n- claim: A strong vision encoder matters.\n  number: +5.8% vs CLIP ViT-L/14; +8.0% vs NFNet-F0\n  setup: 3B ablation\n  quote: \"Our NFNet-F6 has a +5.8% advantage over the CLIP ViT-L/14 and+8.0% over a smaller NFNet-F0 encoder\"\n  where: p.9\n- claim: Unfreezing the vision encoder also hurts.\n  number: -9.3% (scratch), -2.6% (pretrained)\n  setup: Table 10 (v), 3B; these runs needed 4x the chips\n  quote: \"the performance decreases by a large margin of−9.3%. Starting from pretrained weights still leads to a drop in performance of−2.6%\"\n  where: p.36\n- claim: Co-training on the LM's own text corpus does not beat freezing. Overall scores: 68.6 starting from the pretrained LM, 55.9 starting from random init, against a baseline of 70.7.\n  number: 68.6 / 55.9\n  setup: Table 10 (vi), 3B, 5.34s step time\n  quote: \"In both cases, the overall scores are worse than our baseline\"\n  where: p.36\n- claim: The quality of the LM's text pretraining matters, mostly for VQA.\n  number: -7.9% (C4 vs MassiveText)\n  quote: \"Using the C4 dataset ... leads to a signiﬁcant loss in performance (−7.9% overall)\"\n  where: p.36\n- claim: Compute for the largest model.\n  number: 1536 TPUv4 chips, 15 days\n  quote: \"The largest model containing 80 billion parameters is trained on 1536 chips for 15 days and sharded across 16 devices.\"\n  where: p.29\n- claim: Freezing saves most of the trainable weights at 80B.\n  number: ~90%\n  quote: \"Flamingo-80B, where we freeze almost 90% of the overall weights\"\n  where: p.36\n- claim: Input resolution and video sampling.\n  number: 320×320 training (288 for contrastive pretraining); video 8 frames at 1 FPS in training, 30 frames at 3 FPS at inference\n  quote: \"The visual inputs are resized to 320× 320 while preserving their aspect ratios\" / \"at inference time, we input 30 frames at 3 FPS\"\n  where: p.29\n- claim: Retrieval-based example selection (RICES) beats random example choice for classification. Even so, Flamingo still trails contrastive models, including its own encoder (77.9 zero-shot ImageNet vs 77.3 for the best Flamingo).\n  number: +9.2% ImageNet\n  quote: \"Flamingo achieves a 9.2% improvement in ImageNet classiﬁcation when selecting 16 support examples out of 5000 using RICES\"\n  where: p.33, Table 7\n- claim: Data scale.\n  number: 43M pages (M3W); ALIGN 1.8B; LTIP 312M; VTP 27M\n  quote: \"approximately 43 million webpages\" / \"LTIP (Long Text & Image Pairs) which consists of 312 million image and text pairs\"\n  where: p.6; M3W datasheet gives \"43.3M instances (documents) in total, with a total of 185M images and 182 GB of text\"\n- claim: Prompt length caps VisDial results.\n  number: 4096–8192 tokens vs a 2048 training length; capped at 16 shots\n  quote: \"the prompt length ranges from 4096 to 8192 tokens. This is signiﬁcantly longer than the maximum sequence length (2048) our LMs have been trained on\"\n  where: p.38\n\nLIMITS:\n- Hallucinations and ungrounded guesses are attributed to the LM priors (Fig. 13).\n- The model inherits the LM's poor length generalisation and its causal-only conditioning.\n- Classification trails contrastive models.\n- In-context learning is sensitive to example order and format.\n- Inference cost scales linearly with shots if the KV cache is reused, and quadratically otherwise.\n- Performance \"plateaus rapidly as the number of few-shot samples increases beyond 32\".\n- Text is an awkward interface for boxes, dense prediction or continuous outputs.\n- There are no error bars: each model was trained once.\n- The DEV benchmarks (COCO, OKVQA, VQAv2, MSVDQA, VATEX) are biased by model selection. Only 11 benchmarks are held out.\n- The model is English-only. Code and data are proprietary and not released.\n- VizWiz, HatefulMemes and TextVQA were not deduplicated against training data, and M3W was not deduplicated: 1314 near-duplicate candidates, of which 125 are exact duplicates.\n- Only sexually explicit content was filtered; toxic content was not.\n- The bias study is preliminary: COCO captioning showed no significant gender or skin-tone CIDEr gap, lowest p = 0.25. Intersectional bias was not studied.\n- The model card says research use only.\n- Dated: these are 2022 SotA comparisons, and the NFNet encoder and Chinchilla LM are not public.\n\nBUILDS ON: Perceiver (Jaegle et al. 2021 [48]); DETR (Carion et al. 2020 [13]); tanh gating from LSTM (Hochreiter & Schmidhuber 1997 [41]); zero-init residual from ReZero (Bachlechner et al. 2021 [4]); Chinchilla (Hoffmann et al. 2022 [42]); NFNet (Brock et al. 2021 [10]); CLIP contrastive loss (Radford et al. [85]); ALIGN dataset (Jia et al. [50]); Frozen (Tsimpoukelli et al. 2021 [114]); GPT-3 in-context learning (Brown et al. 2020 [11]); RICES (Yang et al. 2021 [136]); the compared alternatives VirTex (Desai & Johnson 2021 [22]) and VC-GPT \"grafting\" (Luo et al. 2022 [68]); Megatron (Shoeybi et al. [99]); ZeRO [88].\n\nCODE:\n- p.5, Fig. 4:\n  y = y + tanh(alpha_xattn) * attention(q=y, kv=x)\n  y = y + tanh(alpha_dense) * ffw(y)\n  y = y + frozen_attention(q=y, kv=y)\n  y = y + frozen_ffw(y)\n- p.23, Fig. 5 (Perceiver Resampler):\n  x_f = x_f + time_embeddings\n  x_f = flatten(x_f)  # [T, S, d] -> [T * S, d]\n  for i in range(num_layers):\n    x = x + attention_i(q=x, kv=concat([x_f, x]))\n    x = x + ffw_i(x)\n  Note that the keys and values concatenate the latents with the visual features. The resampler uses no spatial position encodings, only temporal ones.\n\nFIGURES:\n- Fig. 3 (p.4), architecture overview: the frozen and trained parts in one picture.\n- Fig. 4 (p.5), GATED XATTN-DENSE with pseudo-code: shows the zero-init gate at a glance.\n- Fig. 5 (p.23), Perceiver Resampler: a variable-size grid goes in and a fixed set of tokens comes out.\n- Fig. 7 (p.24), per-image cross-attention masking on interleaved text: makes the \"attend to the last image only\" rule concrete.\n- Fig. 6 (p.24), gate magnitudes growing from 0 during training.\n- Fig. 13 (p.42), hallucination and ungrounded-guess examples: a ready-made failure-mode illustration.\n\nPROBLEMS:\n- Page 42 contains an embedded fragment of a different draft of Appendix D.1. It cites \"Section 4.2\" and author-year references, and claims \"a large drop of roughly 30% in relative performance on VisDial when going from 16-shots to 32-shot\". That claim does not appear in the main v2 text, so I would not cite it without checking the rendered page.\n- Internal inconsistencies: \"six\" vs \"seven\" tasks (Table 1 caption), and 67.6 vs 67.3 for VQAv2 32-shot (B.2.2).\n- Table cells in the extraction are run together, so I recomputed the ablation deltas from the Table 3 rows: 70.7 → 62.7 / 57.8 / 66.5 / 53.4 / 60.9.\n- The PDF contains no embedded instructions."
+ "type": "empirical",
+ "question": "Can a model that bridges a frozen vision encoder and a frozen large LM, trained on web interleaved image-text data, learn new vision-language tasks from a handful of in-context examples?",
+ "hypothesis": "Training on arbitrarily interleaved web image-text data with frozen pretrained components gives in-context few-shot ability on image and video tasks without task-specific tuning.",
+ "contributions": [
+  "Flamingo family of VLMs accepting interleaved visual and text input and producing free-form text",
+  "Quantitative few-shot evaluation on 16 benchmarks, with a held-out set not used for design decisions",
+  "New few-shot SotA on 16 tasks; beats fine-tuned SotA on 6 with 32 examples; fine-tuning sets SotA on five more"
+ ],
+ "method": {
+  "summary": "Frozen NFNet-F6 vision encoder (contrastively pretrained) feeds a Perceiver Resampler producing 64 visual tokens; new gated cross-attention dense layers (tanh gate init 0) are interleaved into a frozen Chinchilla LM (1.4B, 7B, 70B). Trained on M3W, ALIGN, LTIP and VTP with a weighted next-token loss; evaluated by in-context prompting on 16 benchmarks.",
+  "task": "visually conditioned next-token prediction; few-shot in-context evaluation",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "M3W (MultiModal MassiveWeb)",
+    "role": "pretrain",
+    "size": "about 43 million webpages; datasheet: 43.3M documents, 185M images, 182 GB text",
+    "split": "random subsequence of L=256 tokens per document, up to first N=5 images",
+    "source": "scraped web pages, English only, internal explicit-content filters; proprietary",
+    "preprocessing": "<image> tags inserted at image positions, <EOC> before each image and at end; images <64px or aspect ratio >3 dropped; p_next=0.5 image-index augmentation"
+   },
+   {
+    "name": "ALIGN",
+    "role": "pretrain",
+    "size": "1.8 billion image-alt-text pairs",
+    "split": null,
+    "source": "Jia et al.",
+    "preprocessing": "<image> prepended, <EOC> appended; avg 12.4 tokens per text; deduplicated against benchmarks"
+   },
+   {
+    "name": "LTIP (Long Text & Image Pairs)",
+    "role": "pretrain",
+    "size": "312 million image-text pairs",
+    "split": null,
+    "source": "crawled from fewer than ten websites; proprietary",
+    "preprocessing": "avg 20.5 tokens per caption; deduplicated"
+   },
+   {
+    "name": "VTP (Video & Text Pairs)",
+    "role": "pretrain",
+    "size": "27 million short videos, about 22 s on average",
+    "split": null,
+    "source": "crawled; none from YouTube or Flickr",
+    "preprocessing": "8 frames at 1 FPS per clip in training; not deduplicated"
+   },
+   {
+    "name": "16 evaluation benchmarks (COCO, OKVQA, VQAv2, MSVDQA, VATEX = DEV; Flickr30k, VizWiz, TextVQA, VisDial, HatefulMemes, MSRVTTQA, iVQA, YouCook2, RareAct, NextQA, STAR)",
+    "role": "eval",
+    "size": "DEV eval: 5000 COCO samples, 1024 VATEX and QA samples; support sets 2048 samples",
+    "split": "validation support/query and test support/query for DEV; ImageNet and Kinetics700 also used as DEV classification: 10 images/class, 32 support per class",
+    "source": "public benchmarks, Table 6",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Flamingo-3B",
+    "role": "proposed",
+    "params": "3.2B total (1.4B frozen LM, 435M vision, 1.2B trainable xattn, 194M resampler)",
+    "architecture": "frozen Chinchilla LM + GATED XATTN-DENSE before every block",
+    "init_from": "Chinchilla 1.4B",
+    "tokenizer": "SentencePiece",
+    "vocab": "32,000",
+    "layers": "LM 24; xattn 24; resampler 6",
+    "hidden": "2048 (resampler 1536)",
+    "heads": "16",
+    "context": "2048 (LM training length)",
+    "other": {
+     "table4_note": "text says 1.4B additional learned params, Table 5 says 1.2B"
+    }
+   },
+   {
+    "name": "Flamingo-9B",
+    "role": "proposed",
+    "params": "9.3B (7.1B LM, 435M vision, 1.6B xattn every 4th, 194M resampler)",
+    "architecture": "same",
+    "init_from": "Chinchilla 7B",
+    "tokenizer": "SentencePiece",
+    "vocab": "32,000",
+    "layers": "LM 40; xattn 10; resampler 6",
+    "hidden": "4096",
+    "heads": "32",
+    "context": "2048",
+    "other": {
+     "text_note": "text says 1.8B additional learned params"
+    }
+   },
+   {
+    "name": "Flamingo (80B)",
+    "role": "proposed",
+    "params": "80B (70B LM, 435M vision, 10B xattn every 7th, 194M resampler)",
+    "architecture": "same",
+    "init_from": "Chinchilla 70B",
+    "tokenizer": "SentencePiece",
+    "vocab": "32,000",
+    "layers": "LM 80; xattn 12; resampler 6",
+    "hidden": "8192",
+    "heads": "64",
+    "context": "2048",
+    "other": {
+     "sharding": "16-way model parallelism"
+    }
+   },
+   {
+    "name": "NFNet-F6 contrastive vision encoder",
+    "role": "base",
+    "params": "435M",
+    "architecture": "NFNet-F6 with BERT text encoder, CLIP two-term loss",
+    "init_from": null,
+    "tokenizer": "Jia et al. tokenizer",
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "image_res": "288x288",
+     "embedding_dim": "1376",
+     "batch": "16,384",
+     "steps": "1.2 million (2 gradient calcs each) on 512 TPUv4",
+     "lr": "1e-3 linearly to 0",
+     "label_smoothing": "0.1",
+     "clip": "AGC 1e-2 on NFNet, global norm 10 on BERT",
+     "trained_on": "ALIGN and LTIP"
+    }
+   }
+  ],
+  "training": {
+   "objective": "weighted sum over datasets of next-token negative log-likelihood of text given visuals, lambda: M3W 1.0, ALIGN 0.2, LTIP 0.2, VTP 0.03; gradients accumulated across datasets",
+   "optimizer": "AdamW, global norm clipping 1",
+   "lr": "1e-4",
+   "lr_schedule": "linear from 0 to 1e-4 over first 5000 steps then constant",
+   "warmup": "5000 steps",
+   "batch_size": null,
+   "steps": "500k",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "256 tokens per M3W sample, up to 5 images",
+   "precision": "trained params and optimizer state float32; activations and gradients bfloat16; frozen params bfloat16",
+   "weight_decay": "0.1 (none for Perceiver Resampler)",
+   "dropout": null,
+   "regularisation": "random flips and colour augmentation; space prepended to paired text with prob 0.5",
+   "hardware": "TPUv4; 80B on 1536 chips",
+   "compute": "15 days on 1536 TPUv4 chips for 80B",
+   "wall_clock": "15 days (80B)",
+   "seeds": "each model trained once",
+   "other": {
+    "ablation_setup": "Flamingo-3B, batch 256 M3W, 512 ALIGN, 512 LTIP, 64 VTP; 1M gradient steps = 250,000 updates",
+    "finetune": "LM frozen, vision encoder unfrozen, 480x480, per-task grid search lr 3e-8 to 1e-5, batch 8 or 16",
+    "image_res": "320x320 training",
+    "video": "8 frames at 1 FPS in training; 30 frames at 3 FPS at inference via interpolated temporal embeddings",
+    "zero_init": "tanh gate alpha init 0",
+    "activation": "Squared ReLU in new layers",
+    "framework": "JAX and Haiku, Megatron sharding, ZeRO stage 1"
+   }
+  },
+  "inference": {
+   "decoding": "beam search, beam size 3, open-ended; log-likelihood ranking for close-ended; greedy for qualitative",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": "stop at first <EOC>",
+   "samples": "single trained model; support examples ordered randomly; ensembling over 6 random permutations of few-shot examples",
+   "prompting": "Question: {question} Answer: {answer} for QA; Output: {output} for others; up to 32 shots; zero-shot uses two text-only examples; VisDial capped at 16 shots",
+   "retrieval": "RICES: nearest support images by frozen encoder features, ordered by increasing similarity",
+   "parameters": {
+    "num_visual_tokens": "64"
+   },
+   "other": {
+    "shots_evaluated": "zero-shot, 4 and 32 shots (Table 1)"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "VQA accuracy",
+     "definition": "VQA acc of Antol et al.",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "CIDEr",
+     "definition": "captioning",
+     "unit": "score",
+     "higher_is_better": true
+    },
+    {
+     "name": "Overall score",
+     "definition": "each DEV benchmark score divided by its Table 1 SotA, averaged over 5 DEV benchmarks (validation, 4 shots)",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Frozen",
+    "SimVLM",
+    "OFA",
+    "Florence",
+    "per-task fine-tuned SotA (Table 1)",
+    "CLIP, ALIGN contrastive models"
+   ],
+   "protocol": "single hyperparameter set across benchmarks; 11 benchmarks held out of design decisions; no repeats or error bars"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": null
+  },
+  "prompts": [
+   {
+    "purpose": "VQA few-shot",
+    "text": "Question: {question} Answer: {answer}",
+    "where": "App B.1.5"
+   },
+   {
+    "purpose": "captioning etc.",
+    "text": "Output: {output}",
+    "where": "App B.1.5"
+   },
+   {
+    "purpose": "HatefulMemes",
+    "text": "is an image with written: \"{meme_text}\" on it. Is it hateful? Answer: {answer}",
+    "where": "App B.1.5"
+   },
+   {
+    "purpose": "RareAct",
+    "text": "Caption: a person {verb + object}",
+    "where": "App B.1.5"
+   },
+   {
+    "purpose": "dialogue",
+    "text": "This is a conversation between a human, User, and an intelligent visual AI, Flamingo. User sends images, and Flamingo describes them.",
+    "where": "App B.1.6 (continues with three example turns)"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training.lr_schedule",
+    "quote": "The learning rate is increased linearly from 0 to 10−4 up over the ﬁrst 5000 steps then held constant",
+    "where": "App B.1.2"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Flamingo-80B at 32 shots beats the fine-tuned state of the art on 6 of 16 benchmarks with about 1000x less task-specific data",
+   "kind": "measured",
+   "source": null,
+   "metric": "tasks beaten",
+   "value": "6 of 16",
+   "unit": "count",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Flamingo-80B, 32 in-context examples, no weight updates; 15 comparable tasks since RareAct has no fine-tuned result",
+   "note": "Table 1 caption says 'seven tasks'; text, Fig 2 and model card say 6",
+   "where": "Sec 1 p3",
+   "quote": "On 6 of these 16 tasks, Flamingo also outperforms the ﬁne-tuned state of the art despite using only 32 task-speciﬁc examples, around 1000 times less task-speciﬁc training data"
+  },
+  {
+   "claim": "VQAv2 test-dev, Flamingo-80B 32-shot",
+   "kind": "measured",
+   "source": null,
+   "metric": "VQA acc",
+   "value": "67.6",
+   "unit": "%",
+   "baseline_value": "80.2 (Florence, fine-tuned, 444K examples)",
+   "n": null,
+   "setup": "Flamingo-80B, 32 shots, VQAv2 test-dev, VQA accuracy; DEV benchmark",
+   "note": "App B.2.2 prints the 32-shot figure as 67.3%",
+   "where": "Table 1",
+   "table": "Table 1, row Flamingo 32 shot, column VQAv2"
+  },
+  {
+   "claim": "Fine-tuned Flamingo-80B on VQAv2 test-dev beats previous SotA",
+   "kind": "measured",
+   "source": null,
+   "metric": "VQA acc",
+   "value": "82.0",
+   "unit": "%",
+   "baseline_value": "81.3",
+   "n": null,
+   "setup": "Flamingo-80B fine-tuned per task, vision encoder unfrozen, 480x480, VQAv2 test-dev",
+   "note": null,
+   "where": "App B.2.2",
+   "quote": "on VQAv2, we observe improved results at 82.0%, outperforming our results achieved with 32-shot in-context learning (67.3%) as well as the previous state of the art (81.3%, Yan et al. [133])"
+  },
+  {
+   "claim": "Flamingo-80B zero-shot VQAv2 test-dev",
+   "kind": "measured",
+   "source": null,
+   "metric": "VQA acc",
+   "value": "56.3",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Flamingo-80B, 0 shots (two text-only examples), VQAv2 test-dev",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Flamingo 0 shot, column VQAv2"
+  },
+  {
+   "claim": "Freezing the LM beats fine-tuning it: fine-tuning a pretrained LM drops the Overall score",
+   "kind": "measured",
+   "source": null,
+   "metric": "Overall score change",
+   "value": "-8.0",
+   "unit": "points",
+   "baseline_value": "70.7",
+   "n": null,
+   "setup": "Flamingo-3B ablation, 5 DEV validation subsets, 4 shots, short schedule; baseline 70.7 vs 62.7",
+   "note": "Overall = mean of benchmark score / Table 1 SotA; absolute change in that average, not relative",
+   "where": "Sec 3.3 Table 3 row viii",
+   "quote": "Interestingly, ﬁne-tuning our pretrained LM also leads to a drop in performance of −8.0%."
+  },
+  {
+   "claim": "Training the LM from scratch drops the Overall score",
+   "kind": "measured",
+   "source": null,
+   "metric": "Overall score change",
+   "value": "-12.9",
+   "unit": "points",
+   "baseline_value": "70.7",
+   "n": null,
+   "setup": "Flamingo-3B ablation, same setup; 57.8 vs 70.7",
+   "note": null,
+   "where": "Sec 3.3",
+   "quote": "If trained from scratch, we observe a large performance de-crease of −12.9%."
+  },
+  {
+   "claim": "Removing M3W interleaved data cuts Overall score by more than 17",
+   "kind": "measured",
+   "source": null,
+   "metric": "Overall score",
+   "value": "53.4",
+   "unit": "points",
+   "baseline_value": "70.7",
+   "n": null,
+   "setup": "Flamingo-3B ablation; Overall 53.4 without M3W vs 70.7",
+   "note": null,
+   "where": "Sec 3.3 Table 3 row i",
+   "quote": "removing the interleaved image-text dataset M3W leads to a decrease of more than 17% in performance"
+  },
+  {
+   "claim": "Removing image-text pairs cuts Overall score",
+   "kind": "measured",
+   "source": null,
+   "metric": "Overall score",
+   "value": "60.9",
+   "unit": "points",
+   "baseline_value": "70.7",
+   "n": null,
+   "setup": "Flamingo-3B ablation; 60.9 vs 70.7 (drop 9.8)",
+   "note": null,
+   "where": "Sec 3.3",
+   "quote": "removing the conventional paired image-text pairs also decreases",
+   "table": "Table 3, row w/o Image-Text pairs, column Overall"
+  },
+  {
+   "claim": "Gradient accumulation over datasets beats round-robin",
+   "kind": "measured",
+   "source": null,
+   "metric": "Overall score",
+   "value": "62.9",
+   "unit": "points",
+   "baseline_value": "70.7",
+   "n": null,
+   "setup": "Flamingo-3B; round robin Overall 62.9 vs 70.7",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row (ii) Round Robin, column Overall"
+  },
+  {
+   "claim": "Removing zero-initialised tanh gating drops Overall and causes instability",
+   "kind": "measured",
+   "source": null,
+   "metric": "Overall score change",
+   "value": "-4.2",
+   "unit": "points",
+   "baseline_value": "70.7",
+   "n": null,
+   "setup": "Flamingo-3B ablation, Overall 66.5 vs 70.7",
+   "note": null,
+   "where": "Sec 3.3",
+   "quote": "Without it, we see a drop of 4.2% in our overall score."
+  },
+  {
+   "claim": "GATED XATTN-DENSE every 4th block trains 66% faster for 1.9 lower Overall",
+   "kind": "measured",
+   "source": null,
+   "metric": "Overall score change",
+   "value": "1.9",
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Flamingo-3B ablation; 68.8 vs 70.7, step time 1.02s vs 1.74s",
+   "note": null,
+   "where": "Sec 3.3",
+   "quote": "inserting them every fourth block accelerates training by 66% while only decreasing the overall score by 1.9%"
+  },
+  {
+   "claim": "NFNet-F6 vision encoder beats CLIP ViT-L/14",
+   "kind": "measured",
+   "source": null,
+   "metric": "Overall score advantage",
+   "value": "5.8",
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Flamingo-3B ablation; 64.9 vs 70.7",
+   "note": null,
+   "where": "Sec 3.3",
+   "quote": "Our NFNet-F6 has a +5.8% advantage over the CLIP ViT-L/14"
+  },
+  {
+   "claim": "Cross-attending only to the most recent image beats attending to all previous images",
+   "kind": "measured",
+   "source": null,
+   "metric": "Overall score",
+   "value": "7.2",
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Flamingo-3B; 63.5 for all-previous vs 70.7",
+   "note": null,
+   "where": "App B.3.1",
+   "quote": "the single image case leads to signiﬁcantly better results (7.2% better in the overall score)"
+  },
+  {
+   "claim": "Unfreezing vision encoder from scratch drops Overall",
+   "kind": "measured",
+   "source": null,
+   "metric": "Overall score change",
+   "value": "-9.3",
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Flamingo-3B, Table 10 row v; step time 4.70s* with 4x chips",
+   "note": null,
+   "where": "App B.3.1",
+   "quote": "the performance decreases by a large margin of −9.3%"
+  },
+  {
+   "claim": "C4-pretrained frozen LM instead of MassiveText",
+   "kind": "measured",
+   "source": null,
+   "metric": "Overall score change",
+   "value": "-7.9",
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Flamingo-3B, Table 10 row iv",
+   "note": null,
+   "where": "App B.3.1",
+   "quote": "(−7.9% overall)"
+  },
+  {
+   "claim": "Co-training on MassiveText from random init",
+   "kind": "measured",
+   "source": null,
+   "metric": "Overall score",
+   "value": "55.9",
+   "unit": "points",
+   "baseline_value": "70.7",
+   "n": null,
+   "setup": "Flamingo-3B, Table 10 row vi; pretrained start gives 68.6, both below 70.7",
+   "note": null,
+   "where": "Table 10",
+   "table": "Table 10, row (vi) Co-train LM (random init), column Overall"
+  },
+  {
+   "claim": "Largest model trained on 1536 TPUv4 chips for 15 days",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "15 days",
+   "unit": "days",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Flamingo-80B, sharded across 16 devices",
+   "note": null,
+   "where": "App B.1.2",
+   "quote": "is trained on 1536 chips for 15 days"
+  },
+  {
+   "claim": "RICES beats random example selection on ImageNet",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1 improvement",
+   "value": "9.2",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Flamingo-80B, 16 of 5000 support examples",
+   "note": null,
+   "where": "App B.2.1",
+   "quote": "Flamingo achieves a 9.2% improvement in ImageNet classiﬁcation when selecting 16 support examples out of 5000 using RICES"
+  },
+  {
+   "claim": "Flamingo-80B with RICES plus ensembling on ImageNet top-1",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1",
+   "value": "77.3",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "16 prompt size, 5 shots/class; zero-shot own contrastive model scores 77.9",
+   "note": null,
+   "where": "Table 7",
+   "table": "Table 7, row Flamingo-80B RICES+ensembling, column ImageNet top 1"
+  },
+  {
+   "claim": "M3W near-duplicates found against eval sets",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "125",
+   "unit": "images",
+   "baseline_value": null,
+   "n": null,
+   "setup": "185M M3W images; 1314 candidates, 125 exact duplicates",
+   "note": null,
+   "where": "App A.3.4",
+   "quote": "Out of the 1314 candidates, only 125 are exact duplicates."
+  },
+  {
+   "claim": "Bias study: COCO CIDEr gap female vs male at 32 shots not significant",
+   "kind": "measured",
+   "source": null,
+   "metric": "p-value",
+   "value": "0.54",
+   "unit": "p",
+   "baseline_value": null,
+   "n": null,
+   "setup": "two-tailed t-test unequal variance on per-sample CIDEr; lowest p across four comparisons 0.25",
+   "note": null,
+   "where": "App D.2.2",
+   "quote": "the lowest p-value we ﬁnd is 𝑝= 0.25"
+  }
+ ],
+ "limits": [
+  "Inherits LM weaknesses: hallucination, poor length generalisation (VisDial prompts 4096-8192 tokens vs 2048 training length, capped at 16 shots)",
+  "Classification lags contrastive models, including its own vision encoder",
+  "In-context learning is order- and format-sensitive; performance plateaus beyond 32 shots; inference cost scales with shots",
+  "Each model trained once, no error bars; DEV benchmarks biased by model selection",
+  "Code, weights and data not released; English only; M3W not deduplicated, VizWiz/HatefulMemes/TextVQA not deduplicated",
+  "Preliminary bias study only; 2022 SotA comparisons have dated"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Perceiver Resampler",
+   "definition": "takes a variable number of image or video features and produces a fixed number of visual outputs (64) via learned latent queries",
+   "where": "Sec 2.1"
+  },
+  {
+   "term": "RICES",
+   "definition": "Retrieval-based In-Context Example Selection: retrieve similar support images by frozen encoder features",
+   "where": "App A.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Chinchilla",
+   "year": 2022,
+   "arxiv": "2203.15556",
+   "relation": "uses-method",
+   "note": "frozen base LM at 1.4B, 7B, 70B",
+   "quote": null
+  },
+  {
+   "work": "Perceiver",
+   "year": 2021,
+   "arxiv": "2103.03206",
+   "relation": "uses-method",
+   "note": "resampler design",
+   "quote": null
+  },
+  {
+   "work": "CLIP",
+   "year": 2021,
+   "arxiv": "2103.00020",
+   "relation": "uses-method",
+   "note": "contrastive loss and ViT-L/14 baseline",
+   "quote": null
+  },
+  {
+   "work": "NFNet",
+   "year": 2021,
+   "arxiv": "2102.06171",
+   "relation": "uses-method",
+   "note": "vision encoder",
+   "quote": null
+  },
+  {
+   "work": "ALIGN",
+   "year": 2021,
+   "arxiv": "2102.05918",
+   "relation": "uses-data",
+   "note": "1.8B image-text pairs",
+   "quote": null
+  },
+  {
+   "work": "Frozen (Tsimpoukelli et al.)",
+   "year": 2021,
+   "arxiv": "2106.13884",
+   "relation": "extends",
+   "note": "frozen-LM multimodal few-shot",
+   "quote": null
+  },
+  {
+   "work": "GPT-3",
+   "year": 2020,
+   "arxiv": "2005.14165",
+   "relation": "uses-method",
+   "note": "in-context learning",
+   "quote": null
+  },
+  {
+   "work": "RICES (Yang et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "example retrieval",
+   "quote": null
+  },
+  {
+   "work": "Florence",
+   "year": 2021,
+   "arxiv": "2111.11432",
+   "relation": "baseline",
+   "note": "VQAv2 fine-tuned SotA 80.2",
+   "quote": null
+  },
+  {
+   "work": "VC-GPT grafting (Luo et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "GRAFTING ablation",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 3",
+   "caption": "Flamingo architecture overview",
+   "page": 4,
+   "why": "frozen vs trained parts"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "GATED XATTN-DENSE layers",
+   "page": 5,
+   "why": "zero-init gate with pseudo-code"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Flamingo results overview",
+   "page": 3,
+   "why": "6 of 16 vs fine-tuned SotA and scaling with shots"
+  },
+  {
+   "figure": "Fig 7",
+   "caption": "Interleaved visual data and text support",
+   "page": 24,
+   "why": "per-image cross-attention masking"
+  }
+ ],
+ "code": [
+  {
+   "where": "Fig 4 p5",
+   "snippet": "y = y + tanh(alpha_xattn) * attention(q=y, kv=x)\ny = y + tanh(alpha_dense) * ffw(y)\ny = y + frozen_attention(q=y, kv=y)\ny = y + frozen_ffw(y)",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Table 1 caption says seven tasks, text says six",
+  "VQAv2 32-shot printed 67.6 (Table 1) and 67.3 (App B.2.2)",
+  "Parameter counts in text (1.4B, 1.8B xattn) differ from Table 5 (1.2B, 1.6B)",
+  "Table cells run together in the text; deltas recomputed from Table 3 rows",
+  "Earlier legacy report claimed a '30% VisDial drop' fragment; it is not in the cached text",
+  "No embedded instructions found"
+ ]
 }

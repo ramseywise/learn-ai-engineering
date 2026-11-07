@@ -1,0 +1,186 @@
+{
+ "schema": 1,
+ "key": "1602.06023",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/nallapati-2016-abstractive-text-summarization-using-sequence.pdf",
+ "bib": {
+  "title": "Abstractive Text Summarization using Sequence-to-sequence RNNs and Beyond",
+  "authors": ["Ramesh Nallapati", "Bowen Zhou", "Cicero dos Santos", "Çağlar Gülçehre", "Bing Xiang"],
+  "first_author": "Nallapati",
+  "year": 2016,
+  "venue": "Proceedings of the 20th SIGNLL Conference on Computational Natural Language Learning (CoNLL), pages 280-290",
+  "arxiv": "1602.06023",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 46036,
+  "chars_total": 46036,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can an off-the-shelf attentional encoder-decoder RNN, plus extensions for keywords, rare words and hierarchy, do abstractive summarization well?",
+ "hypothesis": "Each proposed extension addresses a specific weakness of the basic MT-style model and should add incremental improvement.",
+ "contributions": [
+  "Apply the off-the-shelf attentional encoder-decoder RNN from machine translation to summarization and outperform state-of-the-art on two English corpora",
+  "Propose models for summarization-specific problems (feature-rich encoder, switching generator-pointer, hierarchical attention) with further gains",
+  "Propose a new multi-sentence summarization dataset (CNN/Daily Mail) and establish benchmarks"
+ ],
+ "method": {
+  "summary": "Bidirectional GRU encoder, unidirectional GRU decoder with attention and the large vocabulary trick, trained on Gigaword headline data; variants add TF/IDF/POS/NER feature embeddings, a switching generator/pointer for OOV words, and word+sentence hierarchical attention. Evaluated with ROUGE on Gigaword, DUC-2004 (zero-shot) and a new CNN/Daily Mail multi-sentence set.",
+  "task": "abstractive summarization (headline and multi-sentence)",
+  "trains": true,
+  "datasets": [
+   {"name": "Annotated Gigaword (Rush et al. 2015 preprocessing)", "role": "train", "size": "about 3.8M training examples; random 2000 validation and 2000 test examples from about 400K", "split": "random 2000 validation, 2000 test (internal test set); also the exact Rush et al. test sample", "source": "scripts from Rush et al. (2015), github.com/facebook/NAMAS", "preprocessing": "scripts modified to also extract system-generated POS and NER tags; first sentence (or first two) of document as source"},
+   {"name": "DUC 2003/2004", "role": "eval", "size": "2003: 624 pairs; 2004: 500 pairs", "split": "DUC-2004 test; model trained on Gigaword only, not tuned on DUC", "source": "duc.nist.gov", "preprocessing": "decoder forced to emit exactly 30 words (end-of-summary suppressed)"},
+   {"name": "CNN/Daily Mail (new multi-sentence summarization corpus)", "role": "both", "size": "286,817 train, 13,368 validation, 11,487 test pairs", "split": "as defined by Hermann et al. scripts", "source": "modified Hermann et al. (2015) scripts; anonymized version used", "preprocessing": "highlights restored in original order, each treated as a sentence; source vocab 150K, target vocab 60K, source/target at most 800/100 words; training sources average 766 words, 29.74 sentences; summaries 53 words, 3.72 sentences"}
+  ],
+  "models": [
+   {"name": "words-lvt2k-1sent (baseline attentional enc-dec + LVT)", "role": "baseline", "params": null, "architecture": "bidirectional GRU encoder, unidirectional GRU decoder, attention, softmax over target vocab, large vocabulary trick", "init_from": "200-d word2vec trained on same corpus (Gigaword); updated during training; code started from Kyunghyun Cho's dl4mt-material", "tokenizer": null, "vocab": "Gigaword first-sentence: encoder 119,505, decoder 68,885; LVT restricts decoder to 2,000", "layers": null, "hidden": "400 (Gigaword), 200 (CNN/DM)", "heads": null, "context": null, "other": {"cnn_dm_embedding": "100-d word2vec trained on dataset", "feats_embedding": "input embedding grew from 100 to 155 with features"}},
+   {"name": "words-lvt2k-2sent, -2sent-hieratt, feats-lvt2k-2sent, feats-lvt2k-2sent-ptr", "role": "proposed", "params": null, "architecture": "variants: two source sentences; hierarchical word+sentence attention with sentence positional embeddings; feature-rich encoder (POS, NER, discretized TF, IDF); switching generator/pointer", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": "400", "heads": null, "context": null, "other": {}},
+   {"name": "ABS+ (Rush et al. 2015)", "role": "baseline", "params": null, "architecture": "convolutional/attentional encoder with feed-forward decoder plus log-linear extractive model", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "context": null, "heads": null, "other": {}}
+  ],
+  "training": {
+   "objective": "conditional log-likelihood; for pointer model log P(y|x) = sum_i g_i log{P(y_i|y_-i,x)P(s_i)} + (1-g_i) log{P(p(i)|y_-i,x)(1-P(s_i))}",
+   "optimizer": "Adadelta",
+   "lr": "0.001 (initial)",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "50",
+   "steps": null,
+   "epochs": "Gigaword: typically converged within 15 epochs; CNN/DM: nearly 35 epochs",
+   "tokens": null,
+   "seq_len": "CNN/DM: source at most 800, target at most 100 words",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": "none",
+   "regularisation": "no dropout or regularization; gradient clipping applied (clip value not stated); early stopping on validation set",
+   "hardware": "single Tesla K40 GPU",
+   "compute": "Gigaword: about 10 hours/epoch (12 for hierarchical attention); CNN/DM: under 5 hours/epoch flat, about 12.5 hours/epoch hierarchical",
+   "wall_clock": "Gigaword 6-8 days to convergence; CNN/DM about 7 days flat, nearly 18 days hierarchical",
+   "seeds": null,
+   "other": {"shuffling": "training data shuffled every epoch, every 10 batches sorted by length", "lvt_effect": "decoder vocab 2,000 cuts training time per epoch by nearly three times and converges in 50%-75% of epochs", "pointer_supervision": "explicit pointer given when summary word is OOV for decoder vocab; ties broken to first occurrence"}
+  },
+  "inference": {
+   "decoding": "beam search size 5",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": "30 words (Gigaword); exactly 30 words forced for DUC",
+   "samples": "single run; no seeds reported",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {"pointer_decision": "arg max of switch posterior at each step"},
+   "other": {"throughput": "about 20 summaries/s on one GPU, batch 1 (Gigaword); 2/s flat and 1.5/s hierarchical on CNN/DM"}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "ROUGE-1/2/L full-length F1", "definition": "official ROUGE script, full-length F1", "unit": "ROUGE points", "higher_is_better": true},
+    {"name": "ROUGE full-length recall", "definition": "reported for comparison with Rush et al.", "unit": "ROUGE points", "higher_is_better": true},
+    {"name": "ROUGE limited-length recall", "definition": "official DUC metric", "unit": "ROUGE points", "higher_is_better": true},
+    {"name": "src. copy rate", "definition": "percentage of tokens in system summary that occur in the source", "unit": "%", "higher_is_better": null}
+   ],
+   "baselines": ["ABS and ABS+ (Rush et al. 2015)", "TOPIARY (Zajic et al. 2004)", "words-lvt2k baseline"],
+   "protocol": "single run; significance via 95% confidence interval in official ROUGE script, reported only for the best performing models; CNN/DM highlights treated as separate sentences"
+  },
+  "availability": {"code": "built on Kyunghyun Cho's dl4mt-material; own code release not stated", "weights": null, "data": "CNN/Daily Mail dataset described as released in anonymized and non-anonymized versions"},
+  "prompts": [],
+  "evidence": [
+   {"field": "training.regularisation", "quote": "We did not use any dropout or regular-", "where": "Sec 4.1 Training"}
+  ]
+ },
+ "results": [
+  {
+   "claim": "Best Gigaword model (feats-lvt2k-2sent-ptr) reaches ROUGE-1 F1 36.40 on the internal test set, versus 34.97 for the one-sentence baseline.",
+   "kind": "measured", "source": null, "metric": "ROUGE-1 F1", "value": "36.40", "unit": "ROUGE points", "baseline_value": "34.97", "n": "2000 test examples",
+   "setup": "Gigaword internal test set, full-length F1, trained on about 3.8M examples, beam 5",
+   "quote": null, "table": "Table 1, row 5 feats-lvt2k-2sent-ptr, column Rouge-1 (baseline row 1 words-lvt2k-1sent)", "note": null, "where": "Table 1"
+  },
+  {
+   "claim": "On Rush et al.'s test sample, words-lvt2k-1sent beats ABS+ in full-length F1 ROUGE-1.",
+   "kind": "measured", "source": null, "metric": "ROUGE-1 F1", "value": "32.67", "unit": "ROUGE points", "baseline_value": "29.78", "n": null,
+   "setup": "Rush et al. (2015) test sample, full-length F1, one-sentence source; ABS+ F1 supplied by Rush et al. authors",
+   "quote": null, "table": "Table 1, row 9 words-lvt2k-1sent vs row 8 ABS+, column Rouge-1", "note": "Same model scores 34.19 vs 31.47 on full-length recall (rows 7, 6)", "where": "Table 1"
+  },
+  {
+   "claim": "Hierarchical attention improves ROUGE-2 over the flat two-sentence model on Gigaword.",
+   "kind": "measured", "source": null, "metric": "ROUGE-2 F1", "value": "18.17", "unit": "ROUGE points", "baseline_value": "17.38", "n": null,
+   "setup": "Gigaword internal test set, two source sentences",
+   "quote": null, "table": "Table 1, row 3 words-lvt2k-2sent-hieratt vs row 2 words-lvt2k-2sent, column Rouge-2", "note": null, "where": "Table 1"
+  },
+  {
+   "claim": "Model copies far less from source than ABS+ (src. copy rate).",
+   "kind": "measured", "source": null, "metric": "src. copy rate", "value": "74.57", "unit": "%", "baseline_value": "91.50", "n": null,
+   "setup": "Rush et al. test sample; reference summaries have 45% on validation sample",
+   "quote": null, "table": "Table 1, row 7 words-lvt2k-1sent vs row 6 ABS+, column Src. copy rate", "note": null, "where": "Table 1 and caption"
+  },
+  {
+   "claim": "On DUC-2004, the Gigaword-trained untuned model outperforms ABS+ in ROUGE-2 recall but differences versus ABS+ are not statistically significant.",
+   "kind": "measured", "source": null, "metric": "ROUGE-2 limited-length recall", "value": "9.46", "unit": "ROUGE points", "baseline_value": "8.49", "n": "500 pairs",
+   "setup": "DUC-2004, limited-length recall, exactly 30 words forced, no DUC tuning",
+   "quote": "consistently outperforms ABS+ on all three vari-", "table": "Table 2, row words-lvt2k-1sent vs ABS+, column Rouge-2", "note": "Significance claim: 'the differences are not statistically signiﬁcant' vs ABS+, significant vs ABS", "where": "Sec 4.2, Table 2"
+  },
+  {
+   "claim": "On CNN/Daily Mail the plain attentional baseline scores best; pointer and hierarchical models do not beat it.",
+   "kind": "measured", "source": null, "metric": "ROUGE-1 F1", "value": "32.49", "unit": "ROUGE points", "baseline_value": null, "n": "11,487 test pairs",
+   "setup": "CNN/DM anonymized, full-length F1, highlights as sentences; words-lvt2k-ptr 32.12, hieratt 31.78",
+   "quote": null, "table": "Table 3, row words-lvt2k, column Rouge-1", "note": null, "where": "Table 3"
+  },
+  {
+   "claim": "Authors state full-length recall favors longer summaries so they switch to full-length F1.",
+   "kind": "claim", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null,
+   "setup": "Gigaword evaluation motivation",
+   "quote": "However, full-length recall favors longer summaries, so it may not be fair to use this metric", "table": null, "note": null, "where": "Sec 4.1 Evaluation metrics"
+  },
+  {
+   "claim": "Authors note summaries can be meaningful and relevant even when they differ from the target, which ROUGE does not capture.",
+   "kind": "claim", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null,
+   "setup": "qualitative inspection of feats-lvt2k-2sent on Gigaword validation set",
+   "quote": "a phenomenon not captured by word/phrase", "table": null, "note": null, "where": "Sec 5"
+  },
+  {
+   "claim": "Gigaword training takes 6-8 days to convergence on one K40; CNN/DM hierarchical attention takes nearly 18 days.",
+   "kind": "measured", "source": null, "metric": "wall-clock days", "value": "6-8", "unit": "days", "baseline_value": null, "n": null,
+   "setup": "single Tesla K40 GPU",
+   "quote": "time until convergence therefore varies between", "table": null, "note": "6-8 days printed on the next line of the text", "where": "Sec 4.1 Computational costs"
+  }
+ ],
+ "limits": [
+  "Best models (2sent, feats, ptr, hieratt) could not be evaluated on the Rush et al. test sample because it has one source sentence and no NLP annotations, so the comparison with ABS+ uses only the baseline model.",
+  "Pointer model gives accurate pointing but its overall improvement is not significant; authors expect more impact with heavier-tailed rare word distributions.",
+  "On CNN/Daily Mail, pointer and hierarchical models fail to beat the baseline; results called preliminary.",
+  "Generated CNN/DM summaries often repeat the same sentence or phrase.",
+  "Significance reported only for the best performing models; single runs, no seeds.",
+  "Concurrent Chopra et al. (2016) reports slightly better Gigaword numbers on all three ROUGE F1 metrics.",
+  "Weakness conceded: capturing the meaning of complex sentences; ROUGE misses meaningful paraphrase."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "large vocabulary trick (LVT)", "definition": "decoder vocabulary of each mini-batch is restricted to words in the source documents of that batch, plus most frequent target words until a fixed size", "where": "Sec 2.1"},
+  {"term": "src. copy rate", "definition": "percentage of tokens in the system summary that occur in the source", "where": "Sec 4.1"}
+ ],
+ "lineage": [
+  {"work": "Neural machine translation by jointly learning to align and translate (Bahdanau et al.)", "year": 2014, "arxiv": "1409.0473", "relation": "extends", "note": "baseline architecture taken from NMT model", "quote": null},
+  {"work": "On using very large target vocabulary for neural machine translation (Jean et al.)", "year": 2014, "arxiv": "1412.2007", "relation": "uses-method", "note": "large vocabulary trick", "quote": null},
+  {"work": "A neural attention model for abstractive sentence summarization (Rush et al.)", "year": 2015, "arxiv": "1509.00685", "relation": "baseline", "note": "ABS/ABS+ baseline, Gigaword preprocessing and test sample", "quote": null},
+  {"work": "Teaching machines to read and comprehend (Hermann et al.)", "year": 2015, "arxiv": "1506.03340", "relation": "uses-data", "note": "CNN/Daily Mail scripts modified for summarization", "quote": null},
+  {"work": "Abstractive sentence summarization with attentive recurrent neural networks (Chopra et al.)", "year": 2016, "arxiv": null, "relation": "related", "note": "concurrent RNN-decoder work, slightly better Gigaword numbers", "quote": null},
+  {"work": "LCSTS (Hu et al.)", "year": 2015, "arxiv": null, "relation": "related", "note": "same encoder-decoder framework on Chinese data", "quote": null},
+  {"work": "Pointing the unknown words (Gulcehre et al.)", "year": 2016, "arxiv": null, "relation": "related", "note": "parallel work on switching pointer model", "quote": null},
+  {"work": "Pointer Networks (Vinyals et al.)", "year": 2015, "arxiv": null, "relation": "uses-method", "note": "pointer mechanism", "quote": null},
+  {"work": "Empirical evaluation of gated recurrent neural networks (Chung et al.)", "year": 2014, "arxiv": "1412.3555", "relation": "uses-method", "note": "GRU", "quote": null},
+  {"work": "ADADELTA (Zeiler)", "year": 2012, "arxiv": "1212.5701", "relation": "uses-method", "note": "optimizer", "quote": null},
+  {"work": "TOPIARY (Zajic et al.)", "year": 2004, "arxiv": null, "relation": "baseline", "note": "best DUC-2004 system", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 1", "caption": "Feature-rich-encoder: one embedding each for POS, NER tags and discretized TF and IDF, concatenated with word embeddings as encoder input.", "page": 2, "why": "shows how features are concatenated per word"},
+  {"figure": "Fig 2", "caption": "Switching generator/pointer model: 'G' uses softmax generator, 'P' activates pointer to copy from source.", "page": 3, "why": "shows the switch mechanism"},
+  {"figure": "Fig 3", "caption": "Hierarchical encoder with hierarchical attention: word-level attention re-scaled by sentence-level attention.", "page": 3, "why": "shows two-level attention"},
+  {"figure": "Table 1", "caption": "Performance comparison of various models.", "page": 6, "why": "incremental gains per extension on Gigaword"}
+ ],
+ "code": [
+  {"where": "Sec 2.3", "snippet": "P(s_i = 1) = sigma(v^s . (W^s_h h_i + W^s_e E[o_{i-1}] + W^s_c c_i + b^s))", "verbatim": false},
+  {"where": "Sec 2.4", "snippet": "P^a(j) = P^a_w(j) P^a_s(s(j)) / sum_{k=1..Nd} P^a_w(k) P^a_s(s(k))", "verbatim": false}
+ ],
+ "problems": ["Equations are garbled by PDF extraction; snippets are reconstructed (verbatim false). The gradient clipping value, number of layers, seeds and parameter counts are not stated."]
+}

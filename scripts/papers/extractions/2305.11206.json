@@ -1,0 +1,150 @@
+{
+ "schema": 1,
+ "key": "2305.11206",
+ "pdf": "generative-ai/05-RL/sources/zhou-2023-lima.pdf",
+ "bib": {
+  "title": "LIMA: Less Is More for Alignment",
+  "authors": ["Chunting Zhou", "Pengfei Liu", "Puxin Xu", "Srini Iyer", "Jiao Sun", "Yuning Mao", "Xuezhe Ma", "Avia Efrat", "Ping Yu", "Lili Yu", "Susan Zhang", "Gargi Ghosh", "Mike Lewis", "Luke Zettlemoyer", "Omer Levy"],
+  "first_author": "Zhou",
+  "year": 2023,
+  "venue": "preprint",
+  "arxiv": "2305.11206",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 64418,
+  "chars_total": 64418,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "How much of an LLM's ability to follow instructions comes from pretraining versus large-scale instruction tuning and RLHF?",
+ "hypothesis": "Superficial Alignment Hypothesis: knowledge and capabilities are learnt almost entirely during pretraining, and alignment only teaches which subdistribution of formats to use, so a small curated set should suffice.",
+ "contributions": [
+  "LIMA, a 65B LLaMa fine-tuned with supervised loss on 1,000 curated prompt-response pairs, no RL or preference modelling",
+  "Human and GPT-4 preference comparison against five baselines on 300 test prompts",
+  "Ablations on data diversity, quality and quantity with 7B models",
+  "Multi-turn dialogue improved by adding 30 hand-crafted dialogue chains"
+ ],
+ "method": {
+  "summary": "Fine-tune LLaMa 65B for 15 epochs on 1,000 hand-curated examples (750 from Stack Exchange, wikiHow, Reddit; 250 written by the authors), pick a checkpoint between epochs 5 and 10 on a 50-prompt dev set, and compare single sampled responses to five baselines with crowd workers and GPT-4. Ablations fine-tune 7B LLaMa and score with ChatGPT.",
+  "task": "supervised instruction tuning / alignment with minimal data",
+  "trains": true,
+  "datasets": [
+   {"name": "LIMA training set", "role": "train", "size": "1,000 examples, roughly 750,000 tokens", "split": "Stack Exchange STEM 200, Stack Exchange other 200, wikiHow 200, r/WritingPrompts 150, Natural Instructions 50, authors Group A 200", "source": "Stack Exchange, wikiHow, Pushshift Reddit, Super-Natural Instructions, authors", "preprocessing": "Stack Exchange: tau=3 sampling over 75 STEM / 99 other exchanges (5 niche discarded), title-only top-scored questions, top answer with score >= 10, drop answers under 1200 or over 4096 characters, first person, references to other answers; strip links, images, HTML except code and lists. wikiHow: 19 categories, title as prompt, body as response, 'This article...' replaced by 'The following answer...'. 13 safety prompts with refusals."},
+   {"name": "Dev set", "role": "dev", "size": "50 prompts", "split": "authors Group A held-out", "source": "authors", "preprocessing": null},
+   {"name": "Test set", "role": "eval", "size": "300 prompts", "split": "70 r/AskReddit + 230 authors Group B (after filtering)", "source": "Pushshift Reddit, authors", "preprocessing": null},
+   {"name": "Dialogue chains", "role": "train", "size": "30 chains (10 author-written, 20 edited Stack Exchange comment chains)", "split": "added to 1,000 for 1,030 total", "source": "authors, Stack Exchange", "preprocessing": null},
+   {"name": "Ablation sets", "role": "train", "size": "2,000 examples each for Stack Exchange filtered, unfiltered, wikiHow; 2K to 32K for quantity", "split": null, "source": "Stack Exchange, wikiHow", "preprocessing": null}
+  ],
+  "models": [
+   {"name": "LIMA", "role": "proposed", "params": "65B", "architecture": "LLaMa decoder-only", "init_from": "LLaMa 65B", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": "texts longer than 2048 tokens trimmed", "other": {"eot_token": "special end-of-turn token at end of each utterance"}},
+   {"name": "LLaMa 7B", "role": "base", "params": "7B", "architecture": "LLaMa", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"use": "ablations"}},
+   {"name": "Alpaca 65B", "role": "baseline", "params": "65B", "architecture": "LLaMa 65B fine-tuned on 52,000 Alpaca examples", "init_from": "LLaMa 65B", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "DaVinci003", "role": "baseline", "params": null, "architecture": "OpenAI, RLHF", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "Bard", "role": "baseline", "params": null, "architecture": "based on PaLM", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "Claude", "role": "baseline", "params": "52B", "architecture": "Constitutional AI (RL from AI feedback)", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "GPT-4", "role": "baseline", "params": null, "architecture": "RLHF", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"also": "GPT-4 used as preference annotator"}},
+   {"name": "ChatGPT (GPT-3.5 Turbo)", "role": "judge", "params": null, "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"use": "1-6 Likert helpfulness score in ablations"}}
+  ],
+  "training": {
+   "objective": "standard supervised fine-tuning loss",
+   "optimizer": "AdamW, beta1=0.9, beta2=0.95",
+   "lr": "1e-5 initial, linearly decayed to 1e-6",
+   "lr_schedule": "linear decay, no warmup",
+   "warmup": "none",
+   "batch_size": "32 examples (64 for smaller models)",
+   "steps": null,
+   "epochs": "15, checkpoint chosen manually between epoch 5 and 10",
+   "tokens": null,
+   "seq_len": "2048 tokens (longer trimmed)",
+   "precision": null,
+   "weight_decay": "0.1",
+   "dropout": "residual dropout rising linearly from 0.0 at the bottom layer to 0.3 at the last layer (0.2 for smaller models)",
+   "regularisation": "residual dropout following Ouyang et al. 2022",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {"checkpoint_selection": "perplexity does not correlate with generation quality; checkpoints picked by hand on the 50-example dev set", "ablation_note": "7B tuning with 1,000 examples possible but at least 2,000 improved stability", "figure9": "read from Fig 9: validation perplexity rises with training steps while generation quality rises"}
+  },
+  "inference": {
+   "decoding": "nucleus sampling",
+   "temperature": "0.7",
+   "top_p": "0.9",
+   "max_tokens": "2048",
+   "samples": "1 response per test prompt per model for human study; 5 responses per test prompt in ablations",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {"repetition_penalty": "1.2"},
+   "other": {"baseline_sampling_dates": "baseline responses sampled throughout April 2023"}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "Pairwise preference", "definition": "annotator labels which of two responses is better or neither significantly better; reported as wins/ties/losses", "unit": "% of 300 prompts", "higher_is_better": true},
+    {"name": "Absolute Fail/Pass/Excellent", "definition": "manual label of 50 random LIMA responses", "unit": "%", "higher_is_better": true},
+    {"name": "Inter-annotator agreement", "definition": "tie-discounted accuracy: 1 point if agree, 0.5 if exactly one labelled tie, else 0; over 50 shared examples", "unit": "%", "higher_is_better": true},
+    {"name": "ChatGPT helpfulness score", "definition": "1-6 Likert from GPT-3.5 Turbo, mean over 5 samples per prompt with p=0.95 two-sided confidence interval", "unit": "points (1-6)", "higher_is_better": true}
+   ],
+   "baselines": ["Alpaca 65B", "DaVinci003", "Bard", "Claude", "GPT-4"],
+   "protocol": "Crowd workers and GPT-4 given identical instructions, single response per model per prompt; ablations on 7B scored by ChatGPT."
+  },
+  "availability": {"code": null, "weights": null, "data": null},
+  "prompts": [
+   {"purpose": "ChatGPT helpfulness grading (ablations)", "text": "[Criterion]: helpfulness: \"1\": \"Not helpful - ...\" ... \"6\": \"Highly helpful - ...\" ... Does the submission meet the criterion? First, write out in a step by step manner your reasoning about the criterion to be sure that your conclusion is correct. Avoid simply stating the correct answers at the outset. Then print the choice only from \"1, 2, 3, 4, 5, 6\" (without quotes or punctuation) on its own line corresponding to the correct answer. At the end, repeat just the selected choice again by itself on a new line.", "where": "Appendix D, Figure 12 (full rubric text there)"}
+  ],
+  "evidence": []
+ },
+ "results": [
+  {"claim": "LIMA responses are equal or preferred to GPT-4 in 43% of human comparisons.", "kind": "measured", "source": null, "metric": "win+tie rate vs GPT-4", "value": "43", "unit": "%", "baseline_value": null, "n": 300, "setup": "LIMA 65B, 1,000 examples, 300 test prompts, crowd annotators, single sampled response each", "quote": "responses from LIMA are either equivalent or strictly preferred to GPT-4 in 43% of cases", "table": null, "note": "Fig 1: wins 18% + tie 25% = 43%; loses 57%", "where": "Abstract, Fig 1"},
+  {"claim": "LIMA is equal or preferred to Bard in 58% and to DaVinci003 (RLHF) in 65% of cases.", "kind": "measured", "source": null, "metric": "win+tie rate", "value": "65", "unit": "%", "baseline_value": null, "n": 300, "setup": "As above; 58% vs Bard, 65% vs DaVinci003", "quote": "this statistic is as high as 58% when compared to Bard and 65% versus DaVinci003", "table": null, "note": null, "where": "Abstract, Fig 1"},
+  {"claim": "Alpaca 65B trained on 52 times more data is less preferred than LIMA.", "kind": "measured", "source": null, "metric": "qualitative comparison", "value": null, "unit": null, "baseline_value": null, "n": 300, "setup": "Human preference study, Fig 1: LIMA wins 53% vs Alpaca", "quote": "despite training on 52 times more data, Alpaca 65B", "table": null, "note": null, "where": "Section 4.2"},
+  {"claim": "GPT-4 prefers LIMA over its own output 19% of the time.", "kind": "measured", "source": null, "metric": "LIMA win rate vs GPT-4", "value": "19", "unit": "%", "baseline_value": null, "n": 300, "setup": "GPT-4 as annotator, Fig 2", "quote": "even GPT-4 prefers LIMA outputs over its own 19% of the time", "table": null, "note": "Human study Fig 1 gives 18% LIMA wins vs GPT-4; Section 4.2 text quotes 19% in the GPT-4-annotated context", "where": "Section 4.2"},
+  {"claim": "88% of LIMA responses meet the prompt requirements and 50% are excellent.", "kind": "measured", "source": null, "metric": "Pass+Excellent", "value": "88", "unit": "%", "baseline_value": null, "n": 50, "setup": "50 random test prompts, manual labelling by authors", "quote": "88% meet the prompt requirements, and 50% are considered excellent.", "table": null, "note": "Fig 3: 50% Excellent, 38% Pass, 12% Fail", "where": "Introduction, Fig 3"},
+  {"claim": "LIMA follows all but 6 of 50 analysed prompts.", "kind": "measured", "source": null, "metric": "failures", "value": "6", "unit": "of 50", "baseline_value": null, "n": 50, "setup": "Same 50 prompts", "quote": "it is able to follow all but 6 of the 50 analyzed prompts", "table": null, "note": null, "where": "Section 4.3"},
+  {"claim": "On 20 out-of-distribution prompts LIMA gets 20% fail, 35% pass, 45% excellent.", "kind": "measured", "source": null, "metric": "Fail/Pass/Excellent", "value": "45", "unit": "% excellent", "baseline_value": null, "n": 20, "setup": "7 of 50 plus 13 additional prompts with no related training example (43 of 50 had related format)", "quote": "20% of responses fail, 35% pass, and 45% are excellent", "table": null, "note": "Small sample", "where": "Section 4.3"},
+  {"claim": "LIMA responds safely to 80% of 30 sensitive test prompts, 6 of 10 malicious.", "kind": "measured", "source": null, "metric": "safe response rate", "value": "80", "unit": "%", "baseline_value": null, "n": 30, "setup": "13 safety examples in training; 30 sensitive test prompts", "quote": "LIMA responds safely to 80% of them", "table": null, "note": null, "where": "Section 4.3 Safety"},
+  {"claim": "Filtered, diverse Stack Exchange gives 3.83 versus 3.49 wikiHow and 3.33 unfiltered Stack Exchange.", "kind": "measured", "source": null, "metric": "ChatGPT helpfulness 1-6", "value": "3.83", "unit": "points", "baseline_value": "3.33 (unfiltered), 3.49 (wikiHow)", "n": 2000, "setup": "7B LLaMa, 2,000 examples per source, 5 samples per test prompt, ChatGPT grader", "quote": null, "table": "Figure 5, bars 3.49 (wikiHow), 3.33 (unfiltered Stack Exchange), 3.83 (filtered Stack Exchange)", "note": "Text states a 0.5 point gap for quality filtering; 3.83-3.33=0.50", "where": "Section 5, Fig 5"},
+  {"claim": "Doubling the training set (up to 16x, 2K to 32K) does not improve response quality.", "kind": "measured", "source": null, "metric": "ChatGPT helpfulness", "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "7B LLaMa, quality-filtered Stack Exchange, 2K-32K examples", "quote": "doubling the training set does not improve response quality", "table": null, "note": null, "where": "Section 5 Quantity, Fig 6"},
+  {"claim": "30 dialogue chains raise the excellent share of multi-turn responses from 45.2% to 76.1%.", "kind": "measured", "source": null, "metric": "Excellent share of turns", "value": "76.1", "unit": "%", "baseline_value": "45.2", "n": 10, "setup": "10 live conversations, 1,000 vs 1,030 examples", "quote": "from 45.2% to 76.1%", "table": null, "note": null, "where": "Section 6, Fig 7"},
+  {"claim": "Zero-shot LIMA fails to follow the prompt within 3 interactions in 6 of 10 conversations.", "kind": "measured", "source": null, "metric": "conversations failing", "value": "6", "unit": "of 10", "baseline_value": null, "n": 10, "setup": "LIMA trained on single-turn data only", "quote": "in 6 out of 10 conversations, LIMA fails to follow the prompt within 3 interactions", "table": null, "note": null, "where": "Section 6"},
+  {"claim": "Inter-annotator agreement among humans is 78-82%.", "kind": "measured", "source": null, "metric": "tie-discounted accuracy", "value": "82", "unit": "% crowd-crowd", "baseline_value": null, "n": 50, "setup": "50 shared examples", "quote": "crowd-crowd 82%, crowd-author 81%, and author-author 78%", "table": null, "note": "GPT-4 agreement: crowd-GPT 78%, author-GPT 79%", "where": "Section 4.1"}
+ ],
+ "limits": [
+  "Authors concede the effort of constructing such examples is significant and hard to scale.",
+  "LIMA is not as robust as product-grade models; an unlucky sample or adversarial prompt often gives a weak response.",
+  "Safety analysis rests on 30 prompts and 13 training examples; implicit malicious intent often yields unsafe answers.",
+  "Diversity ablation compares Stack Exchange to wikiHow, which the authors admit has confounding factors.",
+  "Ablations use 7B and a ChatGPT grader; the main result uses 65B and 300 prompts with one sample each.",
+  "Groups A and B authors had significant contact, so test prompts share priors with training prompts.",
+  "No seeds, hardware or compute are reported; no code or weights link in the text.",
+  "Baseline responses were sampled in April 2023; GPT-4, Claude and Bard versions have since changed."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "Superficial Alignment Hypothesis", "definition": "A model's knowledge and capabilities are learnt almost entirely during pretraining, while alignment teaches it which subdistribution of formats should be used when interacting with users.", "where": "Section 2"}
+ ],
+ "lineage": [
+  {"work": "LLaMA: Open and efficient foundation language models", "year": 2023, "arxiv": "2302.13971", "relation": "uses-method", "note": "Base model for LIMA", "quote": null},
+  {"work": "Training language models to follow instructions with human feedback", "year": 2022, "arxiv": "2203.02155", "relation": "baseline", "note": "RLHF reference; residual dropout schedule taken from it; DaVinci003", "quote": null},
+  {"work": "Stanford Alpaca", "year": 2023, "arxiv": null, "relation": "baseline", "note": "52,000-example Alpaca set reproduced on LLaMa 65B", "quote": null},
+  {"work": "Constitutional AI", "year": 2022, "arxiv": "2212.08073", "relation": "evaluates", "note": "Claude baseline", "quote": null},
+  {"work": "GPT-4 technical report", "year": 2023, "arxiv": "2303.08774", "relation": "evaluates", "note": "Baseline and annotator", "quote": null},
+  {"work": "A few more examples may be worth billions of parameters", "year": 2021, "arxiv": "2110.04374", "relation": "extends", "note": "Cited for small-data corollary", "quote": null},
+  {"work": "Super-Natural Instructions", "year": 2022, "arxiv": null, "relation": "uses-data", "note": "50 examples", "quote": null},
+  {"work": "Pushshift Reddit Dataset", "year": 2020, "arxiv": null, "relation": "uses-data", "note": "Reddit prompts", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 1", "caption": "Human preference evaluation, comparing LIMA to 5 different baselines across 300 test prompts.", "page": 5, "why": "Win/tie/lose bars against every baseline"},
+  {"figure": "Fig 5", "caption": "Performance of 7B models trained with 2,000 examples from different sources.", "page": 8, "why": "Diversity and quality ablation"},
+  {"figure": "Fig 6", "caption": "Performance of 7B models trained with exponentially increasing amounts of data, sampled from (quality-filtered) Stack Exchange.", "page": 8, "why": "Quantity plateau"},
+  {"figure": "Fig 9", "caption": "Validation set perplexity versus generation quality across the training process of LIMA 65B.", "page": 12, "why": "Perplexity rises while quality rises"}
+ ],
+ "code": [],
+ "problems": [
+  "Text contains ligature characters (fi, ff) from PDF extraction; quotes avoid them.",
+  "No embedded instructions found."
+ ]
+}

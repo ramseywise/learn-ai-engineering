@@ -1,0 +1,452 @@
+{
+ "schema": 1,
+ "key": "2104.08691",
+ "pdf": "generative-ai/05-RL/sources/lester-2021-power-scale-parameter-efficient-prompt.pdf",
+ "bib": {
+  "title": "The Power of Scale for Parameter-Efficient Prompt Tuning",
+  "authors": [
+   "Brian Lester",
+   "Rami Al-Rfou",
+   "Noah Constant"
+  ],
+  "first_author": "Lester",
+  "year": 2021,
+  "venue": "Proceedings of the 2021 Conference on Empirical Methods in Natural Language Processing (EMNLP), pages 3045-3059",
+  "arxiv": "2104.08691",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 64035,
+  "chars_total": 64035,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can a small set of learned soft-prompt embeddings prepended to the input of a fully frozen language model match full model tuning, and how does this depend on model size?",
+ "hypothesis": "Prompt tuning becomes more competitive with model tuning as the frozen model grows, and LM-adapted T5 is a better frozen base than span-corruption T5.",
+ "contributions": [
+  "Proposing prompt tuning and showing its competitiveness with model tuning in the regime of large language models.",
+  "Ablating many design choices, and showing quality and robustness improve with scale.",
+  "Showing prompt tuning outperforms model tuning on domain shift problems.",
+  "Proposing \"prompt ensembling\" and showing its effectiveness."
+ ],
+ "method": {
+  "summary": "A trainable prompt matrix P_e (p x e) is concatenated to the embedded input of a frozen T5 1.1 encoder-decoder and trained by backprop on the usual cross-entropy loss; only P_e is updated. Compared against single-task and multi-task model tuning on SuperGLUE across five T5 sizes, with ablations of prompt length, initialization, pre-training objective and LM-adaptation steps, plus domain-shift and ensembling tests.",
+  "task": "SuperGLUE classification/QA in text-to-text form; zero-shot domain transfer (MRQA, QQP<->MRPC)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "SuperGLUE (BoolQ, CB, COPA, MultiRC, ReCoRD, RTE, WiC, WSC)",
+    "role": "both",
+    "size": "Table 7, e.g. BoolQ 9,427 train / 3,270 val; ReCoRD 100,730 train; WSC 259 train",
+    "split": "TFDS train/validation/test splits; metrics reported on dev set",
+    "source": "TensorFlow Datasets super_glue 1.0.2",
+    "preprocessing": "T5 text-to-text format with task-name prefix omitted; WSC recast as generation, keeping only examples with correct referent"
+   },
+   {
+    "name": "SQuAD v1.1",
+    "role": "train",
+    "size": "87,599 train / 10,570 val",
+    "split": "TFDS v1.1:3.0.0",
+    "source": "TensorFlow Datasets",
+    "preprocessing": "T5 SQuAD preprocessing"
+   },
+   {
+    "name": "MRQA 2019 out-of-domain (TextbookQA, RACE, BioASQ, RE, DuoRC, DROP)",
+    "role": "eval",
+    "size": "dev splits 1,504 / 1,503 / 1,501 / 674 / 2,948 / 1,503",
+    "split": "MRQA dev splits",
+    "source": "MRQA 2019 shared task",
+    "preprocessing": null
+   },
+   {
+    "name": "QQP and MRPC (GLUE)",
+    "role": "both",
+    "size": "QQP 363,849 train; MRPC 3,668 train",
+    "split": "TFDS glue 1.0.0; train on one, zero-shot on the other",
+    "source": "GLUE",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "T5 1.1 (Small, Base, Large, XL, XXL), LM-adapted",
+    "role": "base",
+    "params": "Small to XXL; XXL 11B (11,135,336,448 incl. prompt of length 1)",
+    "architecture": "encoder-decoder transformer",
+    "init_from": "public T5 1.1 checkpoints plus 100K extra steps of LM-objective training (default)",
+    "tokenizer": "SentencePiece",
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "embedding dim e": "Table 4: 512 (Small) to 4,096 (XXL), from trainable params at prompt length 1"
+    }
+   },
+   {
+    "name": "Prompt tuning (soft prompt)",
+    "role": "proposed",
+    "params": "20,480 per task for length 5 on XXL; 409,600 for length 100 on XXL",
+    "architecture": "prompt matrix prepended to input embeddings",
+    "init_from": "default: class-label embeddings; alternatives random uniform [-0.5,0.5], 5,000 most common vocab tokens",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "default prompt length": "100"
+    }
+   },
+   {
+    "name": "Model Tuning and Model Tuning (Multi-task)",
+    "role": "baseline",
+    "params": "same T5 1.1 sizes",
+    "architecture": "all parameters tuned",
+    "init_from": "T5 1.1",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "T5 standard cross-entropy loss, only prompt parameters updated",
+   "optimizer": "Adafactor, beta2 decay 0.8, parameter scaling off",
+   "lr": "0.3 constant (prompt tuning); 0.001 (model tuning, T5 library default)",
+   "lr_schedule": "constant",
+   "warmup": null,
+   "batch_size": "32 (prompt tuning); 2^16 tokens per batch single-task model tuning (footnote 4 prints 216, superscript lost); 2^20 tokens multi-task (footnote prints 220)",
+   "steps": "30,000 (prompt tuning), early stopping on dev set",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": "1e-5",
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "T5 Small and Base: 4 TPU v2 chips; larger: 16 TPU v3 chips",
+   "compute": "77 hyperparameter search trials (40 prompt, 37 model tuning); 195 runs main+ablations; 18 domain-shift runs; 24 ensemble runs",
+   "wall_clock": "Table 5, BoolQ to convergence: XXL length 100 3:51:15 +-45:53; Small length 100 16:25",
+   "seeds": "3 runs per configuration, mean and stddev",
+   "other": {
+    "LM adaptation": "100K additional steps, about 10% of original T5 pre-training steps",
+    "hyperparameter search space": "Table 6: LR 0.001-0.5, batch {32,64,126,256,512}, steps {10k,20k,30k}",
+    "framework": "JAX with Flax"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "3 runs; ensemble of 5 prompts with majority voting",
+   "prompting": "soft prompt of 100 tokens prepended to input; no task name prefix",
+   "retrieval": null,
+   "parameters": {
+    "prompt length ablation": "{1,5,20,100,150}",
+    "LM adaptation steps ablation": "0K,10K,50K,100K"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "SuperGLUE score",
+     "definition": "average of task metrics on dev sets (T5 evaluation code)",
+     "unit": "points",
+     "higher_is_better": true
+    },
+    {
+     "name": "F1",
+     "definition": "SQuAD/MRQA F1 over partial answer spans",
+     "unit": "F1",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Model Tuning (single task)",
+    "Model Tuning (Multi-task)",
+    "GPT-3 few-shot prompt design (as reported by Brown et al. 2020)",
+    "prefix tuning, WARP (parameter-count comparison)"
+   ],
+   "protocol": "mean and stddev over 3 runs; checkpoint selected by early stopping on dev; hyperparameters chosen by manual tuning on SuperGLUE score"
+  },
+  "availability": {
+   "code": "https://github.com/google-research/prompt-tuning",
+   "weights": "released model checkpoints",
+   "data": "TFDS public datasets"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.batch_size",
+    "quote": "we performed a sweep over the batch size hyperparameter and selected 216 tokens per batch",
+    "where": "footnote 4"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "At T5-XXL, prompt tuning matches multi-task model tuning on SuperGLUE with far fewer task parameters.",
+   "kind": "measured",
+   "source": null,
+   "metric": "task parameter ratio",
+   "value": "20,000",
+   "unit": "x fewer",
+   "baseline_value": null,
+   "n": null,
+   "setup": "T5 1.1 XXL (11B), default config, SuperGLUE dev, mean of 3 runs",
+   "quote": "At the XXL size (11 billion parameters), prompt tuning matches even the stronger multi-task model tuning baseline, despite having over 20,000 times fewer task-speciﬁc parameters.",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.1"
+  },
+  {
+   "claim": "Five-prompt ensemble on T5-XXL scores 91.3 SuperGLUE dev versus 90.5 average and 91.0 best single prompt.",
+   "kind": "measured",
+   "source": null,
+   "metric": "SuperGLUE (dev)",
+   "value": "91.3",
+   "unit": "points",
+   "baseline_value": "90.5",
+   "n": null,
+   "setup": "T5-XXL, 5 prompts per task, majority vote",
+   "quote": null,
+   "table": "Table 3, row SuperGLUE (dev), columns Average/Best/Ensemble (90.5/91.0/91.3)",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Prompt tuning beats model tuning by 12.5 F1 on out-of-domain TextbookQA when trained on SQuAD.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1 difference",
+   "value": "+12.5",
+   "unit": "F1",
+   "baseline_value": "54.3",
+   "n": null,
+   "setup": "trained on SQuAD, zero-shot; model size not stated in this section; mean of 3 runs; Model 54.3 vs Prompt 66.8",
+   "quote": null,
+   "table": "Table 1, row TextbookQA, column delta",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Prompt tuning is worse than model tuning on DROP and DuoRC out of domain.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1 difference",
+   "value": "-1.8",
+   "unit": "F1",
+   "baseline_value": "68.9",
+   "n": null,
+   "setup": "trained on SQuAD, zero-shot; DROP Model 68.9 vs Prompt 67.1",
+   "quote": null,
+   "table": "Table 1, row DROP, column delta",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "QQP to MRPC zero-shot transfer: prompt tuning gains 3.2 accuracy and 3.1 F1 over model tuning.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy gain",
+   "value": "+3.2",
+   "unit": "accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "train QQP, eval MRPC, 3 runs",
+   "quote": "Table 2 shows that training a lightweight prompt on the QQP data and evaluating on MRPC gives much better performance than tuning the entire model (+3.2 accuracy and +3.1 F1).",
+   "table": null,
+   "note": null,
+   "where": "Sec 5"
+  },
+  {
+   "claim": "Prompt-tuned T5-Small matches GPT-3 XL and prompt-tuned T5-Large beats GPT-3 175B on SuperGLUE.",
+   "kind": "measured",
+   "source": null,
+   "metric": "model size ratio",
+   "value": "16",
+   "unit": "x larger",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-3 few-shot as reported by Brown et al. (2020), SuperGLUE dev",
+   "quote": "prompt-tuned T5-Small matching GPT-3 XL (over 16 times larger), and prompt-tuned T5-Large beating GPT-3 175B (over 220 times larger).",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.1"
+  },
+  {
+   "claim": "GPT-3 175B few-shot trails fine-tuned T5-XXL on SuperGLUE by 17.5 points.",
+   "kind": "measured",
+   "source": null,
+   "metric": "SuperGLUE",
+   "value": "71.8 vs 89.3",
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-3 175B few-shot vs fine-tuned T5-XXL (Raffel et al. 2020)",
+   "quote": "GPT-3 175B few-shot performance on SuperGLUE is 17.5 points below ﬁne-tuned T5-XXL (Raffel et al., 2020) (71.8 vs. 89.3)",
+   "table": null,
+   "note": null,
+   "where": "Sec 1"
+  },
+  {
+   "claim": "A 5-token prompt on T5-XXL needs 20,480 parameters per task.",
+   "kind": "measured",
+   "source": null,
+   "metric": "trainable parameters",
+   "value": "20,480",
+   "unit": "parameters",
+   "baseline_value": null,
+   "n": null,
+   "setup": "T5-XXL, prompt length 5",
+   "quote": "our tuned prompts would only require 20,480 parameters per task",
+   "table": null,
+   "note": null,
+   "where": "Fig 2 caption"
+  },
+  {
+   "claim": "Prompt tuning with the span-corruption objective is unreliable: only 2 of 5 model sizes work well.",
+   "kind": "measured",
+   "source": null,
+   "metric": "models working",
+   "value": "2 of 5",
+   "unit": "models",
+   "baseline_value": null,
+   "n": null,
+   "setup": "T5 1.1 without LM adaptation, SuperGLUE",
+   "quote": "with only 2 out of 5 models working well, whereas the LM adapted versions work reliably across all model sizes.",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.2"
+  },
+  {
+   "claim": "LM adaptation of 100K steps costs about 10% of original T5 pre-training steps.",
+   "kind": "measured",
+   "source": null,
+   "metric": "adaptation steps",
+   "value": "100K",
+   "unit": "steps",
+   "baseline_value": null,
+   "n": null,
+   "setup": "T5 1.1 LM adaptation",
+   "quote": "making an effective switch takes an investment of training resources (10% of the steps of the original T5 pre-training)",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.2"
+  },
+  {
+   "claim": "Prompt length beyond 20 tokens gives only marginal gains; XXL works even with a single token.",
+   "kind": "measured",
+   "source": null,
+   "metric": "prompt length",
+   "value": "20",
+   "unit": "tokens",
+   "baseline_value": null,
+   "n": null,
+   "setup": "SuperGLUE ablation over {1,5,20,100,150}, 3 runs",
+   "quote": "Across all models, increasing beyond 20 tokens only yields marginal gains.",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.2"
+  }
+ ],
+ "limits": [
+  "Main curves (Fig 1, 3) are read from figures only; per-size SuperGLUE numbers are not tabulated in text.",
+  "Only T5 1.1 encoder-decoder models and English classification/extractive QA tasks; no generation benchmark.",
+  "Domain-shift section does not state model size.",
+  "Authors concede learned prompts are largely not interpretable and that prompt design is cheapest in parameters but weaker.",
+  "Hyperparameters were tuned manually on the same dev-set SuperGLUE score used for reporting."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "prompt tuning",
+   "definition": "freeze the entire pre-trained model and only allow an additional k tunable tokens per downstream task to be prepended to the input text",
+   "where": "Sec 1"
+  },
+  {
+   "term": "LM Adaptation",
+   "definition": "continue T5's self-supervised training for a small number of additional steps using the LM objective",
+   "where": "Sec 2.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Prefix-tuning (Li and Liang)",
+   "year": 2021,
+   "arxiv": "2101.00190",
+   "relation": "related",
+   "note": "concurrent; prompt tuning is a simplification",
+   "quote": "Our method can be seen as a simpliﬁcation of the recently proposed “preﬁx tuning”"
+  },
+  {
+   "work": "Exploring the limits of transfer learning with a unified text-to-text transformer (T5)",
+   "year": 2020,
+   "arxiv": "1910.10683",
+   "relation": "extends",
+   "note": "base frozen models and text-to-text format",
+   "quote": null
+  },
+  {
+   "work": "Language Models are Few-Shot Learners",
+   "year": 2020,
+   "arxiv": "2005.14165",
+   "relation": "baseline",
+   "note": "few-shot prompt design baseline",
+   "quote": null
+  },
+  {
+   "work": "WARP (Hambardzumyan et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "related",
+   "note": "input-layer prompts with output head",
+   "quote": null
+  },
+  {
+   "work": "Parameter-efficient transfer learning for NLP (Houlsby et al.)",
+   "year": 2019,
+   "arxiv": "1902.00751",
+   "relation": "related",
+   "note": "adapters",
+   "quote": null
+  },
+  {
+   "work": "SuperGLUE",
+   "year": 2019,
+   "arxiv": "1905.00537",
+   "relation": "uses-data",
+   "note": "main benchmark",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Standard model tuning of T5 achieves strong performance, but requires storing separate copies of the model for each end task. Our prompt tuning of T5 matches the quality of model tuning as size increases",
+   "page": 1,
+   "why": "Shows the scale-closes-the-gap result"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Ablations of various hyperparameters on prompt tuning performance (mean and stddev across 3 runs).",
+   "page": 4,
+   "why": "Length, init, objective, adaptation steps vs model size"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Footnote exponents lost in text extraction (216 and 220 tokens per batch are 2^16 and 2^20)."
+ ]
+}

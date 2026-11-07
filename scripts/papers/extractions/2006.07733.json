@@ -1,19 +1,694 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2006.07733",
  "pdf": "ai-engineering/08-multimodal-engineering/sources/grill-2020-bootstrap-your-own-latent.pdf",
  "bib": {
-  "title": "Bootstrap your own latent: A new approach to self-supervised Learning",
+  "title": "Bootstrap Your Own Latent: A New Approach to Self-Supervised Learning",
+  "authors": [
+   "Jean-Bastien Grill",
+   "Florian Strub",
+   "Florent Altché",
+   "Corentin Tallec",
+   "Pierre H. Richemond",
+   "Elena Buchatskaya",
+   "Carl Doersch",
+   "Bernardo Avila Pires",
+   "Zhaohan Daniel Guo",
+   "Mohammad Gheshlaghi Azar",
+   "Bilal Piot",
+   "Koray Kavukcuoglu",
+   "Rémi Munos",
+   "Michal Valko"
+  ],
   "first_author": "Grill",
   "year": 2020,
-  "venue": "NeurIPS 2020",
+  "venue": "preprint (arXiv:2006.07733v3, 10 Sep 2020; PDF names no venue)",
   "arxiv": "2006.07733",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-04",
-  "session": "97b4134b-decf-4866-ae85-c6872cbbba19"
+  "at": "2026-11-07",
+  "chars_read": 108872,
+  "chars_total": 108872,
+  "engine": "pymupdf",
+  "skipped": null
  },
- "legacy_report": "SOURCE: Bootstrap Your Own Latent: A New Approach to Self-Supervised Learning. Grill, Strub, Altché, Tallec, Richemond et al. (DeepMind). The file is arXiv:2006.07733v3 (10 Sep 2020). You say it was published at NeurIPS 2020, but the PDF itself does not name a venue.\n\nCOVERAGE: I read about 75k of 109,142 chars in full: the main text pp.1–11, Appendices A–C and E–I, and J.3. I skimmed Appendix D (transfer implementation details), the rest of J (JAX pseudo-code) and the references, which I used only to check origins.\n\nCLAIMS\n- claim: BYOL needs no negatives. An online network (encoder, projector, predictor) is trained to predict the target network's projection of a second view of the same image. The target has no predictor and receives no gradient (stop-gradient), and its weights are an exponential moving average (EMA) of the online weights, with τ going from 0.996 up to 1 on a cosine schedule. The loss is MSE between the l2-normalised vectors, applied in both directions.\n  number: 0.996\n  quote: \"ξ←τξ + (1−τ )θ\" ... \"τ starts fromτbase = 0.996 and is increased to one during training\"\n  where: pp.3–5\n\n- claim: Under ImageNet linear evaluation BYOL beats SimCLR at every architecture size tested.\n  number: 74.3 vs 69.3 (ResNet-50); 77.4 vs 74.2 (R50 2×, 94M); 78.6 vs 76.5 (R50 4×, 375M); 79.6 best (ResNet-200 2×, 250M)\n  setup: 1000 epochs, batch 4096, 512 TPU v3 cores; standard frozen-feature linear probe. The SimCLR figures are the ones published in [8].\n  quote: \"SimCLR [8] ResNet- 50 (4×) 375M 76.5 93 .2 / BYOL (ours) ResNet- 50 (4×) 375M 78.6 94.2\" ; \"BYOL (ours) 74.3 91.6\"\n  where: p.6, Table 1\n\n- claim: BYOL is much less sensitive to batch size than SimCLR.\n  number: BYOL 72.5→71.8 vs SimCLR 67.9→64.3 (batch 4096→256)\n  setup: 300-epoch ablations, 3 seeds. Smaller batches use gradient accumulation (the paper's \"average gradients over N consecutive steps\"), and SimCLR is the authors' own reproduction. Both drop at 64 (59.7 vs 59.2), which the authors blame on BatchNorm.\n  quote: \"256 71 .8 64 .3±2.1\"\n  where: p.26, Table 16; p.8, Fig 3a\n\n- claim: Removing colour augmentation, or training on crops only, hurts BYOL far less than SimCLR.\n  number: −9.1 vs −22.2 points; crop only 59.4 vs 40.3\n  setup: same 300-epoch ablation setup\n  quote: \"(−9.1 accuracy points for BYOL,−22.2 accuracy points for SimCLR)\" ; \"BYOL still displays good performance ( 59.4%, i.e.−13.1 points from 72.5% ), while SimCLR loses more than a third of its performance (40.3%\"\n  where: p.8\n\n- claim: The model collapses at τ=0 and stalls at τ=1, and it collapses without the predictor or without the target network. Removing the predictor gives an unsupervised Mean Teacher, which collapses.\n  number: τ=0 → 0.3; τ=1 (constant random target) → 18.8; τ 0.9–0.999 → ≥68.4; without negatives (β=0), dropping the predictor or the target → 0.1–0.3\n  quote: \"Stop gradient of online† 0 0 .3\" ; \"Constant random network 1 18 .8±0.7\" ; \"the representation does collapse when either is removed\"\n  where: p.9, Table 5; p.10\n\n- claim: The target network can be dropped (hard copy, τ=0) if the predictor is kept near-optimal. Two ways work: a closed-form linear predictor fitted on each batch, or a predictor learning rate higher than the projector's.\n  number: 52.5% (closed-form linear predictor); 66.5% (higher predictor learning rate)\n  quote: \"using an optimal linear predictor (obtained by linear regression on the current batch) ... (52.5% top-1 accuracy), or (ii) increasing the learning rate of the predictor (66.5% top-1)\"\n  where: p.10; App. I, Tables 21–22\n\nLIMITS: There is no proof of why collapse is avoided. The authors say \"this objective admits collapsed solutions ... we empirically show that BYOL does not converge to such solutions\". They \"hypothesize\" that the collapsed equilibria are unstable, and that argument assumes an optimal predictor and drops normalisation and symmetrisation (pp.2–5). They also concede that \"BYOL's dynamics still admit undesirable equilibria\". BYOL still depends on vision-specific augmentations, and the authors say extending it to other modalities needs new ones (p.10). Batch norm stays in the encoder and is the only place batch size enters; the paper does not test BYOL without batch norm. With no weight decay, both BYOL and SimCLR diverge (p.9). All ablations run 300 epochs, not the full 1000. The batch-size and augmentation comparisons use the authors' SimCLR reproduction (67.9 at 300 epochs).\n\nBUILDS ON: SimCLR (Chen et al., arXiv 2020) for augmentations and the projector. MoCo (He et al., arXiv 2019) for the momentum encoder. Mean Teacher (Tarvainen and Valpola, NeurIPS 2017). EMA target networks from deep RL: DQN (Mnih et al.) and DDPG (Lillicrap et al., arXiv 2015). PBL (Guo et al., ICML). DeepCluster (Caron et al., ECCV 2018). Cross-view prediction (Becker and Hinton, Nature 1992). CPC/InfoNCE (van den Oord et al., arXiv 2018).\n\nCODE: The J.3 loss is the negative cosine similarity between the online \"prediction\" and `jax.lax.stop_gradient(target_network_out_2[ projection ])`, applied in both directions (p.33).\n\nFIGURES: Figure 2, p.4: \"BYOL's architecture ... ξ are an exponential moving average of θ and sg means stop-gradient\". It shows the asymmetry (predictor on the online side only, stop-gradient on the target) faster than prose. An alternative is Figure 3 (p.8), the batch-size and augmentation drop curves against SimCLR.\n\nPROBLEMS: Appendix I.2 contains an unfilled placeholder: \"we obtain a top-1 accuracy offill .\" The main text gives 52.5% for the same experiment. In Table 5b the checkmarks extract ambiguously, so I could not reliably say which collapsed row (0.3, 0.2 or 0.1) means \"no predictor\" and which means \"no target\". Table 19 is clearer, e.g. \"ξ 0 0.2\" (target, no predictor). The PDF contains no embedded instructions."
+ "type": "empirical",
+ "question": "Can a self-supervised image representation reach state-of-the-art quality without negative pairs?",
+ "hypothesis": "A predictor on the online network plus a slow moving-average target network prevents collapse and allows learning by predicting the target's representation of another view.",
+ "contributions": [
+  "BYOL, a self-supervised representation method without negative pairs, state of the art under ImageNet linear evaluation",
+  "Learned representation outperforms the state of the art on semi-supervised and transfer benchmarks",
+  "More resilient than contrastive counterparts to batch size and augmentation set changes"
+ ],
+ "method": {
+  "summary": "Online network (encoder f, projector g, predictor q) regresses the l2-normalised target projection of a second augmented view; target weights are an EMA of online weights, with stop-gradient and a symmetrised loss. Pretrained on ImageNet with ResNets and evaluated by linear probe, fine-tuning and transfer.",
+  "task": "self-supervised image representation learning",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "ImageNet ILSVRC-2012",
+    "role": "pretrain",
+    "size": "1281167 training images (1271158 train + 10009 local validation)",
+    "split": "test = public validation set, 50000 images",
+    "source": "Russakovsky et al. 2015",
+    "preprocessing": "SimCLR-style augmentations; random crop area 8%-100%, aspect 3/4-4/3, resize 224x224 bicubic; per-channel mean/std normalisation"
+   },
+   {
+    "name": "Places365-Standard",
+    "role": "pretrain",
+    "size": "1.80M train images, 36500 val",
+    "split": null,
+    "source": "Zhou et al. 2017",
+    "preprocessing": null
+   },
+   {
+    "name": "12 transfer classification sets (Food101, CIFAR-10/100, Birdsnap, SUN397, Cars, Aircraft, VOC2007, DTD, Pets, Caltech-101, Flowers)",
+    "role": "eval",
+    "size": "see Table 10",
+    "split": "official test, else validation as test with held-out val",
+    "source": "Table 10",
+    "preprocessing": null
+   },
+   {
+    "name": "VOC2012 seg / VOC2007 det / NYU v2 depth",
+    "role": "eval",
+    "size": "VOC2012 train_aug 10582, val 1449; NYU test 654 images",
+    "split": null,
+    "source": null,
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "BYOL ResNet-50 (1x) v1",
+    "role": "proposed",
+    "params": "24M",
+    "architecture": "ResNet-50 encoder (2048-d); projector MLP 4096 hidden + BN + ReLU + 256 out; predictor same architecture as projector; no BN on MLP output",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": 50,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "larger": "ResNet-50/101/152/200 at 1x-4x width; best ResNet-200 2x 250M"
+    }
+   },
+   {
+    "name": "SimCLR (own JAX reproduction)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "same ResNet",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "MSE between l2-normalised prediction and target projection, symmetrised: L = ||q(z)-z'||^2 = 2-2<q(z),z'>/(|q(z)||z'|)",
+   "optimizer": "LARS (beta 0.9, trust coef 1e-3), biases and BN excluded from adaption and weight decay",
+   "lr": "base 0.2 x batch/256",
+   "lr_schedule": "cosine decay, no restarts",
+   "warmup": "10 epochs",
+   "batch_size": "4096 (512 TPU v3 cores); 512 variant on 64 cores",
+   "steps": "inferred: int(1000*1281167/4096) from Appendix J HPS",
+   "epochs": "1000 (ablations 300)",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": "1.5e-6 (ablations 1e-6)",
+   "dropout": null,
+   "regularisation": "EMA target tau from 0.996 to 1 by cosine: tau = 1-(1-tau_base)(cos(pi k/K)+1)/2; ablations tau_base 0.99, lr 0.3",
+   "hardware": "512 Cloud TPU v3 cores (64 cores for ablations)",
+   "compute": "~8 hours for ResNet-50 (1x) at batch 4096; ~4 days at batch 512 on 64 cores",
+   "wall_clock": "~8 hours",
+   "seeds": "ablations: 3 seeds averaged; Appendix J code seed=1337; main results single run, no variance reported",
+   "other": {
+    "augmentations": "Table 6: blur p 1.0 (T) / 0.1 (T'), solarize p 0.0 / 0.2; jitter p 0.8 with max brightness 0.4, contrast 0.4, saturation 0.2, hue 0.1; grayscale 0.2; flip 0.5",
+    "bn_decay": "0.9, eps 1e-5",
+    "linear_eval": "SGD Nesterov 80 epochs, batch 1024, momentum 0.9, no weight decay, lr swept {0.4,0.3,0.2,0.1,0.05}",
+    "finetune_semi": "batch 1024, momentum 0.9, lr sweep {0.01,0.02,0.05,0.1,0.005}, epochs {30,50}",
+    "transfer_ft": "SGD Nesterov 20000 steps batch 256, 7 lr in 1e-4..0.1, 7 wd in 1e-6..1e-3",
+    "transfer_linear": "L-BFGS logistic regression, 45 l2 values in 1e-6..1e5",
+    "segmentation": "FCN, 30000 iters, batch 16, wd 1e-4",
+    "detection": "Faster R-CNN R50-C4, async SGD 9 workers, 1.5M steps, lr 1e-3",
+    "depth": "7500 steps, batch 256, wd 5e-4, lr 0.16"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "ablations averaged over 3 seeds; half-difference of best/worst reported when >0.25",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {
+    "eval_crop": "resize shorter side 256 bicubic, 224 center crop"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "top-1/top-5 accuracy",
+     "definition": "linear classifier on frozen representation; also semi-supervised fine-tune",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "mIoU / AP50 / depth pct<1.25n, rms, rel",
+     "definition": "transfer tasks",
+     "unit": "%/m",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "SimCLR",
+    "MoCo/MoCo v2",
+    "CPC v2",
+    "CMC",
+    "InfoMin Aug.",
+    "PIRL",
+    "Local Agg.",
+    "Supervised-IN"
+   ],
+   "protocol": "Ablations at 300 epochs on 64 TPU v3, 3 seeds; main results from one 1000-epoch run each; hyperparameters picked on 10009-image local validation split"
+  },
+  "availability": {
+   "code": "https://github.com/deepmind/deepmind-research/tree/master/byol",
+   "weights": "pretrained models on GitHub",
+   "data": "ImageNet public"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.lr",
+    "quote": "We set the base learning rate to 0.2, scaled linearly [72] with the batch size",
+    "where": "Sec 3.3"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "BYOL ResNet-50 (1x) linear-eval top-1 on ImageNet",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1",
+   "value": 74.3,
+   "unit": "%",
+   "baseline_value": 69.3,
+   "n": null,
+   "setup": "ImageNet ILSVRC-2012 train set, 1000-epoch BYOL pretraining, batch 4096; frozen-feature linear evaluation, top-1 on ImageNet val",
+   "quote": "BYOL reaches 74.3% top-1 accuracy with a standard ResNet-50",
+   "table": null,
+   "note": "Baseline is SimCLR ResNet-50 69.3 (Table 1a); best prior self-supervised InfoMin Aug. 73.0",
+   "where": "Intro, Sec 4, Table 1a"
+  },
+  {
+   "claim": "BYOL ResNet-50 (4x) linear-eval top-1",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1",
+   "value": 78.6,
+   "unit": "%",
+   "baseline_value": 76.5,
+   "n": null,
+   "setup": "ImageNet ILSVRC-2012 train set, 1000-epoch BYOL pretraining, batch 4096; frozen-feature linear evaluation, top-1 on ImageNet val, ResNet-50 4x, 375M params",
+   "quote": null,
+   "table": "Table 1b, row BYOL (ours) ResNet-50 (4x), column Top-1",
+   "note": null,
+   "where": "Table 1b"
+  },
+  {
+   "claim": "Best BYOL linear-eval top-1 with ResNet-200 (2x), 250M params",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1",
+   "value": 79.6,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ImageNet ILSVRC-2012 train set, 1000-epoch BYOL pretraining, batch 4096; frozen-feature linear evaluation, top-1 on ImageNet val",
+   "quote": "79.6% top-1 accuracy with a larger ResNet",
+   "table": null,
+   "note": null,
+   "where": "Abstract, Table 1b"
+  },
+  {
+   "claim": "BYOL ResNet-50 (2x) top-1",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1",
+   "value": 77.4,
+   "unit": "%",
+   "baseline_value": 74.2,
+   "n": null,
+   "setup": "ImageNet ILSVRC-2012 train set, 1000-epoch BYOL pretraining, batch 4096; frozen-feature linear evaluation, top-1 on ImageNet val, ResNet-50 2x, 94M",
+   "quote": null,
+   "table": "Table 1b, row BYOL (ours) ResNet-50 (2x), column Top-1",
+   "note": null,
+   "where": "Table 1b"
+  },
+  {
+   "claim": "Semi-supervised fine-tuning with 1% of ImageNet labels, ResNet-50, top-1",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1",
+   "value": 53.2,
+   "unit": "%",
+   "baseline_value": 48.3,
+   "n": null,
+   "setup": "ImageNet, fine-tune from BYOL init on SimCLR's fixed 1% split",
+   "quote": null,
+   "table": "Table 2a, row BYOL (ours), column Top-1 1%",
+   "note": "baseline SimCLR; supervised 25.4",
+   "where": "Table 2a"
+  },
+  {
+   "claim": "Semi-supervised fine-tuning with 10% of ImageNet labels, ResNet-50, top-1",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1",
+   "value": 68.8,
+   "unit": "%",
+   "baseline_value": 65.6,
+   "n": null,
+   "setup": "ImageNet, SimCLR's fixed 10% split",
+   "quote": null,
+   "table": "Table 2a, row BYOL (ours), column Top-1 10%",
+   "note": null,
+   "where": "Table 2a"
+  },
+  {
+   "claim": "Fine-tuning on 100% of ImageNet labels from BYOL init, ResNet-50 (1x)",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1",
+   "value": 77.7,
+   "unit": "%",
+   "baseline_value": 76.5,
+   "n": null,
+   "setup": "ImageNet full labels, SGD Nesterov fine-tune",
+   "quote": "BYOL reaches 77.7% top-1 accuracy with ResNet-50",
+   "table": null,
+   "note": "76.5 is random-init SimCLR repro / supervised [8]; stronger MaxUp supervised baseline 78.9 (Table 8)",
+   "where": "Sec 4, Table 8"
+  },
+  {
+   "claim": "Linear-eval variant (pre-train augmentations + logit regularization) raises ResNet-50 top-1",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1",
+   "value": 74.8,
+   "unit": "%",
+   "baseline_value": 74.3,
+   "n": null,
+   "setup": "Appendix C.1 modified protocol, not the main-table protocol",
+   "quote": "increase the BYOL’s top-1 accuracy from 74.3% to 74.8% with a ResNet-50 (1×)",
+   "table": null,
+   "note": null,
+   "where": "App C.1, Table 7"
+  },
+  {
+   "claim": "BYOL at batch 256 vs 4096 (300 epochs): small drop",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1",
+   "value": 71.8,
+   "unit": "%",
+   "baseline_value": 72.5,
+   "n": null,
+   "setup": "300-epoch ablation, 64 TPU v3, lr 0.3, wd 1e-6, tau_base 0.99, 3 seeds, gradient accumulation for small batches",
+   "quote": null,
+   "table": "Table 16, row 256, column BYOL (ours) Top-1",
+   "note": "SimCLR (own repro) 64.3±2.1 at batch 256 vs 67.9 at 4096",
+   "where": "Table 16, Fig 3a"
+  },
+  {
+   "claim": "SimCLR repro at batch 256 (300 epochs)",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1",
+   "value": 64.3,
+   "unit": "%",
+   "baseline_value": 67.9,
+   "n": null,
+   "setup": "same ablation setup as above; authors' own JAX SimCLR reproduction",
+   "quote": null,
+   "table": "Table 16, row 256, column SimCLR (repro) Top-1",
+   "note": null,
+   "where": "Table 16"
+  },
+  {
+   "claim": "Removing color distortion costs BYOL 9.1 points, SimCLR repro 22.2",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy drop",
+   "value": 9.1,
+   "unit": "points",
+   "baseline_value": 22.2,
+   "n": null,
+   "setup": "300-epoch ablation setup",
+   "quote": "(−9.1 accuracy points for BYOL, −22.2 accuracy points for SimCLR)",
+   "table": null,
+   "note": "Table 17: Remove color (jittering and grayscale) BYOL 63.4 vs SimCLR 45.7 from baselines 72.5 / 67.9",
+   "where": "Sec 5, Fig 3b"
+  },
+  {
+   "claim": "Crop-only augmentation: BYOL keeps 59.4 vs SimCLR repro 40.3",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1",
+   "value": 59.4,
+   "unit": "%",
+   "baseline_value": 40.3,
+   "n": null,
+   "setup": "300-epoch ablation setup, random crops only",
+   "quote": "BYOL still displays good performance (59.4%, i.e. −13.1 points from 72.5% )",
+   "table": null,
+   "note": null,
+   "where": "Sec 5, Table 17"
+  },
+  {
+   "claim": "Constant random target network (tau=1) gives 18.8 top-1; random init network alone 1.4",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1",
+   "value": 18.8,
+   "unit": "%",
+   "baseline_value": 1.4,
+   "n": null,
+   "setup": "300-epoch ablation, linear eval",
+   "quote": "achieve 18.8% top-1 accuracy (Table 5a) on the linear evaluation protocol on ImageNet",
+   "table": null,
+   "note": null,
+   "where": "Sec 3, Table 5a"
+  },
+  {
+   "claim": "tau_base=0.99 is best of 0.9/0.99/0.999 at 300 epochs",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1",
+   "value": 72.5,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "300-epoch ablation",
+   "quote": null,
+   "table": "Table 5a, row Moving average of online, tau_base 0.99",
+   "note": "0.999 -> 69.8, 0.9 -> 68.4; text: all values in 0.9-0.999 above 68.4",
+   "where": "Table 5a"
+  },
+  {
+   "claim": "Instantaneous target (tau=0, stop gradient of online) collapses",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1",
+   "value": 0.3,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "300-epoch ablation",
+   "quote": null,
+   "table": "Table 5a, row Stop gradient of online, column Top-1",
+   "note": "Table 19 gives 5.5 for predictor + sg(theta) with beta=0 and Table 21 gives 5.5 for lambda=1 (hard copy, predictor lr x1); Table 5a gives 0.3",
+   "where": "Table 5a, Tables 19, 21"
+  },
+  {
+   "claim": "In the unified formalism with a predictor and target network, adding negatives (beta=1) gives 70.9 vs BYOL 72.5; adding only a target network to SimCLR gives +1.6 points",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1",
+   "value": 70.9,
+   "unit": "%",
+   "baseline_value": 69.4,
+   "n": null,
+   "setup": "300-epoch ablation, alpha=0.1, beta=1",
+   "quote": null,
+   "table": "Table 5b, row BYOL-style with predictor and target network, beta 1",
+   "note": "Text: 'Simply adding a target network to SimCLR already improves performance (+1.6 points)'; baseline_value is SimCLR 69.4",
+   "where": "Table 5b, Sec 5"
+  },
+  {
+   "claim": "Without target network, optimal closed-form linear predictor avoids collapse",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1",
+   "value": 52.5,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "300 epochs, target = hard copy of online",
+   "quote": "(52.5% top-1 accuracy)",
+   "table": null,
+   "note": "Appendix I.2 has an unfilled placeholder 'top-1 accuracy of fill.'",
+   "where": "Sec 5, App I.2"
+  },
+  {
+   "claim": "Without target network, raising predictor learning rate avoids collapse",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1",
+   "value": 66.5,
+   "unit": "%",
+   "baseline_value": 72.5,
+   "n": null,
+   "setup": "300 epochs, tau=0",
+   "quote": "(66.5% top-1)",
+   "table": null,
+   "note": "Table 21 gives 66.6 at lambda=10 and 66.3 at lambda=20",
+   "where": "Sec 5, Table 21"
+  },
+  {
+   "claim": "BYOL with batch 512 over 1000 epochs on 64 TPU cores",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1",
+   "value": 73.7,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "1000 epochs, batch 512, lr base 0.4, tau_base 0.9995, wd 1.5e-6, ~4 days",
+   "quote": "BYOL achieves 73.7% top-1 accuracy when trained over 1000",
+   "table": null,
+   "note": null,
+   "where": "App G"
+  },
+  {
+   "claim": "VOC2012 semantic segmentation transfer, ResNet-50",
+   "kind": "measured",
+   "source": null,
+   "metric": "mIoU",
+   "value": 76.3,
+   "unit": "mIoU",
+   "baseline_value": 74.4,
+   "n": null,
+   "setup": "FCN, 30000 iterations, 5 seeds",
+   "quote": null,
+   "table": "Table 4a, row BYOL (ours), column mIoU",
+   "note": "Supervised-IN 74.4; SimCLR repro 75.2",
+   "where": "Table 4a"
+  },
+  {
+   "claim": "VOC2007 detection transfer (Faster R-CNN R50-C4)",
+   "kind": "measured",
+   "source": null,
+   "metric": "AP50",
+   "value": 77.5,
+   "unit": "AP50",
+   "baseline_value": 74.4,
+   "n": null,
+   "setup": "fine-tune trainval2007, test2007",
+   "quote": null,
+   "table": "Table 4a, row BYOL (ours), column AP50",
+   "note": null,
+   "where": "Table 4a"
+  },
+  {
+   "claim": "NYU v2 depth, pct. error below 1.25",
+   "kind": "measured",
+   "source": null,
+   "metric": "pct<1.25",
+   "value": 84.6,
+   "unit": "%",
+   "baseline_value": 81.1,
+   "n": null,
+   "setup": "654 test images",
+   "quote": null,
+   "table": "Table 4b, row BYOL (ours), column pct.<1.25",
+   "note": "SimCLR repro 83.3; BYOL worse than some baselines on rms (0.541 vs 0.399 RelPos)",
+   "where": "Table 4b, Table 12"
+  },
+  {
+   "claim": "Places365-pretrained BYOL on Places365 linear eval",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1",
+   "value": 53.2,
+   "unit": "%",
+   "baseline_value": 53.0,
+   "n": null,
+   "setup": "ResNet-50, 1000 epochs, linear eval",
+   "quote": null,
+   "table": "Table 13, row BYOL-PL, column Places365",
+   "note": "SimCLR-PL 53.0; BYOL-IN 51.0",
+   "where": "Table 13"
+  },
+  {
+   "claim": "Removing weight decay makes BYOL and SimCLR diverge; BYOL robust in a range",
+   "kind": "claim",
+   "source": null,
+   "metric": "claim",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "300-epoch ablations",
+   "quote": "leads to network divergence, emphasizing the need for weight regularization",
+   "table": null,
+   "note": null,
+   "where": "Sec 5"
+  }
+ ],
+ "limits": [
+  "No proof why collapse is avoided; authors only hypothesise, assuming an optimal predictor and dropping normalisation/symmetrisation (Sec 3.2)",
+  "BYOL dynamics still admit undesirable equilibria; authors say they did not observe them",
+  "Depends on vision-specific augmentations; other modalities need new ones (Conclusion)",
+  "BN stays in encoder and heads; never tested without batch statistics",
+  "Ablations run at 300 epochs with authors' own SimCLR reproduction; main results have no seeds or variance",
+  "Large fine-tuned ResNets overfit (App C.1)",
+  "RMS depth error worse than several baselines"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "online / target network",
+   "definition": "online network (encoder, projector, predictor) is trained; target has same architecture without predictor, weights an EMA of online",
+   "where": "Sec 3.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "SimCLR (Chen et al.)",
+   "year": 2020,
+   "arxiv": "2002.05709",
+   "relation": "baseline",
+   "note": "augmentations, projector design and main contrastive baseline",
+   "quote": null
+  },
+  {
+   "work": "MoCo (He et al.)",
+   "year": 2019,
+   "arxiv": "1911.05722",
+   "relation": "baseline",
+   "note": "momentum encoder idea; BYOL uses it for prediction targets",
+   "quote": null
+  },
+  {
+   "work": "Mean Teacher (Tarvainen and Valpola)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "related",
+   "note": "BYOL without predictor is unsupervised MT, which collapses",
+   "quote": null
+  },
+  {
+   "work": "CPC v2 (Henaff et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Table 1/2 baseline",
+   "quote": null
+  },
+  {
+   "work": "Contrastive Predictive Coding (van den Oord et al.)",
+   "year": 2018,
+   "arxiv": "1807.03748",
+   "relation": "related",
+   "note": "InfoNCE",
+   "quote": null
+  },
+  {
+   "work": "DeepCluster (Caron et al.)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "related",
+   "note": "bootstrapping without negatives but needs clustering",
+   "quote": null
+  },
+  {
+   "work": "Bootstrap latent-predictive representations (Guo et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "related",
+   "note": "PBL, RL analogue",
+   "quote": null
+  },
+  {
+   "work": "DDPG (Lillicrap et al.)",
+   "year": 2015,
+   "arxiv": "1509.02971",
+   "relation": "uses-method",
+   "note": "EMA target network",
+   "quote": null
+  },
+  {
+   "work": "LARS (You et al.)",
+   "year": 2017,
+   "arxiv": "1708.03888",
+   "relation": "uses-method",
+   "note": "optimizer",
+   "quote": null
+  },
+  {
+   "work": "ImageNet",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Russakovsky et al.",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "BYOL's architecture",
+   "page": 4,
+   "why": "shows online/target asymmetry and stop-gradient"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Decrease in top-1 accuracy of BYOL and SimCLR repro at 300 epochs vs batch size and augmentation set",
+   "page": 8,
+   "why": "robustness to batch size and augmentations"
+  },
+  {
+   "figure": "Table 5",
+   "caption": "Ablations at 300 epochs",
+   "page": 9,
+   "why": "target network and predictor are both needed"
+  }
+ ],
+ "code": [
+  {
+   "where": "Appendix J.3",
+   "snippet": "loss = regression_loss(online_network_out_1['prediction'], jax.lax.stop_gradient(target_network_out_2['projection']))",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Appendix I.2 has an unfilled placeholder 'top-1 accuracy of fill.'; main text gives 52.5",
+  "Table 5b checkmarks are ambiguous in extracted text",
+  "Venue not named in the PDF",
+  "Table 5a gives 0.3 for tau=0 stop-gradient but Tables 19 and 21 give 5.5 for predictor + hard copy"
+ ]
 }

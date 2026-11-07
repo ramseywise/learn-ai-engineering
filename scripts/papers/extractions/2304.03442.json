@@ -1,0 +1,138 @@
+{
+ "schema": 1,
+ "key": "2304.03442",
+ "pdf": "generative-ai/03-agentic-foundations/sources/park-2023-generative-agents.pdf",
+ "bib": {
+  "title": "Generative Agents: Interactive Simulacra of Human Behavior",
+  "authors": ["Joon Sung Park", "Joseph C. O'Brien", "Carrie J. Cai", "Meredith Ringel Morris", "Percy Liang", "Michael S. Bernstein"],
+  "first_author": "Park",
+  "year": 2023,
+  "venue": "UIST '23 (36th ACM Symposium on User Interface Software and Technology)",
+  "arxiv": "2304.03442",
+  "doi": "10.1145/3586183.3606763"
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 130371,
+  "chars_total": 130371,
+  "engine": "pymupdf",
+  "skipped": "Reference list skimmed for lineage only."
+ },
+ "type": "system",
+ "question": "How can an LLM-based agent architecture produce believable individual and emergent social behavior over long horizons in an interactive sandbox?",
+ "hypothesis": "Observation, planning and reflection over a natural-language memory stream are each needed for believable behavior; removing any should reduce believability.",
+ "contributions": [
+  "Generative agents, believable simulacra of human behavior that are dynamically conditioned on agents' changing experiences and environment.",
+  "A novel architecture (memory stream, retrieval, reflection, planning) letting agents remember, retrieve, reflect, interact and plan.",
+  "Two evaluations, a controlled evaluation and an end-to-end evaluation, establishing causal effects of the architecture's components and identifying breakdowns.",
+  "Discussion of opportunities and ethical and societal risks of generative agents."
+ ],
+ "method": {
+  "summary": "A memory stream of natural-language records (observations, reflections, plans) is retrieved by a weighted sum of recency, importance and relevance and fed to gpt3.5-turbo, which also generates reflections, daily plans, reactions and dialogue. 25 agents live in a Phaser-based sandbox (Smallville) for two game days; believability is ranked by 100 human raters against ablations and a crowdworker baseline.",
+  "task": "Believable agent behavior simulation (memory retrieval, reflection, planning, reaction, dialogue)",
+  "trains": false,
+  "datasets": [
+   {"name": "Smallville agent seed descriptions", "role": "eval", "size": "25 agents, one paragraph each (semicolon-delimited phrases become initial memories)", "split": "not applicable", "source": "authored by the paper's authors", "preprocessing": "each semicolon-delimited phrase entered as an initial memory"},
+   {"name": "Interview questions", "role": "eval", "size": "25 questions (5 categories x 5)", "split": "one random question per category shown to each rater", "source": "Appendix B", "preprocessing": null}
+  ],
+  "models": [
+   {"name": "gpt3.5-turbo (ChatGPT)", "role": "base", "params": null, "architecture": "LLM, used via API for generation, importance rating, embeddings", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"note": "GPT-4 API was invitation-only at time of writing"}}
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "One 2-day simulation of 25 agents; interviews taken at end of the 2 game days; each of 100 raters ranked responses to one random question per category",
+   "prompting": "Zero-shot natural-language prompts for importance rating, reflection questions, insights, daily plan, reaction, dialogue, location choice (see prompts).",
+   "retrieval": "Score = alpha_recency*recency + alpha_importance*importance + alpha_relevance*relevance, each min-max scaled to [0,1], all alphas 1; top-ranked memories that fit the context window go into the prompt.",
+   "parameters": {
+    "recency_decay": "0.995 exponential decay per sandbox game hour since the memory was last retrieved",
+    "alpha_weights": "all 1",
+    "importance": "LLM integer 1-10 at memory creation",
+    "relevance": "cosine similarity of LLM embeddings of memory and query",
+    "reflection_threshold": "150 (sum of importance scores of latest events)",
+    "reflection_context": "100 most recent memory records; 3 salient questions; 5 insights",
+    "plan_granularity": "5-8 chunks per day, then hour-long, then 5-15 minute chunks",
+    "real_to_game_time": "one second real time is one minute game time"
+   },
+   "other": {"cost": "thousands of dollars in token credits and multiple days for 25 agents over two days"}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "TrueSkill rating (mu, sigma)", "definition": "Computed from 100 participants' rankings of 5 conditions by believability", "unit": "TrueSkill points", "higher_is_better": true},
+    {"name": "Kruskal-Wallis H, Dunn post-hoc (Holm-Bonferroni)", "definition": "Significance of rank differences", "unit": "p", "higher_is_better": false},
+    {"name": "Information diffusion", "definition": "Percentage of the 25 agents answering yes to knowing the party / the mayoral candidacy, verified against memory stream", "unit": "% of agents", "higher_is_better": true},
+    {"name": "Network density", "definition": "eta = 2*|E|/(|V|(|V|-1)) on mutual-knowledge graph", "unit": "ratio", "higher_is_better": true},
+    {"name": "Party attendance", "definition": "Number of invited agents who showed up", "unit": "agents", "higher_is_better": true}
+   ],
+   "baselines": ["no observation, no reflection, no planning (prior art)", "no reflection, no planning", "no reflection", "human crowdworker-authored responses"],
+   "protocol": "Within-subjects; 100 Prolific raters (US, fluent English, >18, $15.00/hour, ~30 min) ranked 5 conditions; ablations given equivalent access to all memories accrued up to interview time (no re-simulation). Single simulation, no repeated runs reported. Crowdworker baseline: one worker per agent (25); four sets re-generated."
+  },
+  "availability": {
+   "code": "https://github.com/joonspk-research/generative_agents",
+   "weights": null,
+   "data": "demo at https://reverie.herokuapp.com/UIST_Demo/"
+  },
+  "prompts": [
+   {"purpose": "Importance score", "text": "On the scale of 1 to 10, where 1 is purely mundane (e.g., brushing teeth, making bed) and 10 is extremely poignant (e.g., a break up, college acceptance), rate the likely poignancy of the following piece of memory.\nMemory: buying groceries at The Willows Market and Pharmacy\nRating: <fill in>", "where": "Sec 4.1"},
+   {"purpose": "Reflection questions", "text": "Given only the information above, what are 3 most salient high-level questions we can answer about the subjects in the statements?", "where": "Sec 4.2"},
+   {"purpose": "Reflection insights", "text": "What 5 high-level insights can you infer from the above statements? (example format: insight (because of 1, 5, 3))", "where": "Sec 4.2"},
+   {"purpose": "Reaction decision", "text": "Should John react to the observation, and if so, what would be an appropriate reaction?", "where": "Sec 4.3.1"},
+   {"purpose": "Location choice", "text": "* Prefer to stay in the current area if the activity can be done there.\nEddy Lin is planning to take a short walk around his workspace. Which area should Eddy Lin go to?", "where": "Sec 5.1"}
+  ],
+  "evidence": [
+   {"field": "inference.parameters.recency_decay", "quote": "Our decay factor is 0.995.", "where": "Sec 4.1"}
+  ]
+ },
+ "results": [
+  {"claim": "The full architecture is the most believable of five conditions.", "kind": "measured", "source": null, "metric": "TrueSkill mu", "value": "29.89", "unit": "TrueSkill points", "baseline_value": "21.21 (no observation, reflection or planning)", "n": 100, "setup": "100 Prolific raters ranking 5 conditions; agents sampled at end of 2-game-day simulation; gpt3.5-turbo; ablations given all accrued memories", "quote": "the full generative agent architecture produced the most believable behavior (𝜇= 29.89; 𝜎= 0.72)", "table": null, "note": null, "where": "Sec 6.5.1, Fig 8"},
+  {"claim": "No-reflection ablation (observations and plans) ranks next.", "kind": "measured", "source": null, "metric": "TrueSkill mu", "value": "26.88", "unit": "TrueSkill points", "baseline_value": null, "n": 100, "setup": "same as above", "quote": "the ablated architecture with no access to reflection was the next best (𝜇= 26.88; 𝜎= 0.69)", "table": null, "note": null, "where": "Sec 6.5.1"},
+  {"claim": "No reflection and no planning (observations only) scored lower.", "kind": "measured", "source": null, "metric": "TrueSkill mu", "value": "25.64", "unit": "TrueSkill points", "baseline_value": null, "n": 100, "setup": "same as above", "quote": "followed by no access to reflection or planning (𝜇= 25.64; 𝜎= 0.68)", "table": null, "note": null, "where": "Sec 6.5.1"},
+  {"claim": "Human crowdworker-authored responses scored below three of the architectures.", "kind": "measured", "source": null, "metric": "TrueSkill mu", "value": "22.95", "unit": "TrueSkill points", "baseline_value": null, "n": 100, "setup": "one crowdworker per agent, role-playing after watching a replay; not maximal human performance", "quote": "then the crowdworker condition (𝜇= 22.95; 𝜎= 0.69)", "table": null, "note": null, "where": "Sec 6.5.1"},
+  {"claim": "The fully ablated condition (prior-art style) is worst.", "kind": "measured", "source": null, "metric": "TrueSkill mu", "value": "21.21", "unit": "TrueSkill points", "baseline_value": null, "n": 100, "setup": "no memory, planning or reflection", "quote": "(𝜇= 21.21; 𝜎= 0.70)", "table": null, "note": null, "where": "Sec 6.5.1"},
+  {"claim": "Effect size of full architecture over the prior-art condition.", "kind": "measured", "source": null, "metric": "Cohen's d", "value": "8.16", "unit": "d", "baseline_value": null, "n": 100, "setup": "TrueSkill skill modelled as N(mu, sigma^2)", "quote": "produces a standardized effect size of 𝑑= 8.16, or eight standard deviations", "table": null, "note": null, "where": "Sec 6.5.1"},
+  {"claim": "Overall rank differences are significant.", "kind": "measured", "source": null, "metric": "Kruskal-Wallis H(4)", "value": "150.29", "unit": "H", "baseline_value": null, "n": 100, "setup": "raw ranks; all pairwise Dunn differences p<0.001 except crowdworker vs fully ablated", "quote": "(𝐻(4) = 150.29,", "table": null, "note": null, "where": "Sec 6.5.1"},
+  {"claim": "Knowledge of Sam's candidacy spread from 1 to 8 of 25 agents.", "kind": "measured", "source": null, "metric": "agents knowing", "value": "32", "unit": "% of 25 agents", "baseline_value": "4%", "n": 25, "setup": "two game days, no user intervention, interview at end, checked against memory stream", "quote": "increased from one (4%) to eight (32%)", "table": null, "note": null, "where": "Sec 7.1.2"},
+  {"claim": "Knowledge of the party spread from 1 to 13 of 25 agents.", "kind": "measured", "source": null, "metric": "agents knowing", "value": "52", "unit": "% of 25 agents", "baseline_value": "4%", "n": 25, "setup": "as above", "quote": "increased from one (4%) to thirteen (52%)", "table": null, "note": null, "where": "Sec 7.1.2"},
+  {"claim": "Network density rose over two days.", "kind": "measured", "source": null, "metric": "network density", "value": "0.74", "unit": "ratio", "baseline_value": "0.167", "n": 25, "setup": "mutual-knowledge graph over 25 agents", "quote": "the network density increasing from 0.167 to 0.74", "table": null, "note": null, "where": "Sec 7.1.2"},
+  {"claim": "Hallucinated awareness responses were a small share.", "kind": "measured", "source": null, "metric": "hallucinated responses", "value": "1.3", "unit": "% of 453 responses (n=6)", "baseline_value": null, "n": 453, "setup": "agent awareness of other agents", "quote": "1.3% (n=6) were found to be hallucinated", "table": null, "note": null, "where": "Sec 7.1.2"},
+  {"claim": "Only five of twelve invited agents attended the party.", "kind": "measured", "source": null, "metric": "attendance", "value": "5", "unit": "agents of 12 invited", "baseline_value": null, "n": 12, "setup": "Valentine's Day party at Hobbs Cafe; 3 of 7 absentees cited conflicts, 4 expressed interest but did not plan to come", "quote": "five out of the twelve invited agents showed up at Hobbs cafe to join the party", "table": null, "note": null, "where": "Sec 7.1.2"},
+  {"claim": "Reflection fired roughly two or three times a day at threshold 150.", "kind": "measured", "source": null, "metric": "reflection frequency", "value": "150", "unit": "importance-sum threshold", "baseline_value": null, "n": 25, "setup": "implementation setting; agents reflected roughly two or three times a day", "quote": "exceeds a threshold (150 in", "table": null, "note": "Frequency stated in text as 'roughly two or three times a day' (game days).", "where": "Sec 4.2"},
+  {"claim": "Cost of the simulation was high.", "kind": "claim", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "25 agents, two game days, gpt3.5-turbo; described as thousands of dollars in token credits and multiple days, no exact figure", "quote": null, "table": null, "note": null, "where": "Sec 8.2"}
+ ],
+ "limits": [
+  "Evaluation covers a short timescale (two game days) and a single simulation with no repeated runs.",
+  "Ablations were given all memories accrued by the full architecture rather than re-simulated; authors say this likely underestimates true differences.",
+  "Crowdworker baseline does not represent maximal human performance.",
+  "Most common errors: failed retrieval, embellished memories, overly formal speech inherited from instruction tuning; agents also chose atypical locations as memory/location knowledge grew.",
+  "Robustness (prompt hacking, memory hacking, hallucination) untested; cost is thousands of dollars of tokens for 25 agents over two days.",
+  "Built on gpt3.5-turbo; weights/hyperparameters (alphas) not varied; temperature and decoding not stated."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "memory stream", "definition": "a database that maintains a comprehensive record of an agent's experience; a list of memory objects each with a natural language description, a creation timestamp and a most recent access timestamp", "where": "Sec 4, 4.1"},
+  {"term": "reflection", "definition": "higher-level, more abstract thoughts generated by the agent, stored as memories and included in retrieval", "where": "Sec 4.2"}
+ ],
+ "lineage": [
+  {"work": "Social Simulacra (Park et al.)", "year": 2022, "arxiv": null, "relation": "extends", "note": "prior LLM persona generation for social prototyping; agents here keep state", "quote": null},
+  {"work": "Recursively Summarizing Books with Human Feedback (Wu et al.)", "year": 2021, "arxiv": "2109.10862", "relation": "related", "note": "simple summarization scheme the paper goes beyond", "quote": null},
+  {"work": "Demonstrate-Search-Predict (Khattab et al.)", "year": 2023, "arxiv": "2212.14024", "relation": "related", "note": "static knowledge base with retrieval scheme the paper extends", "quote": null},
+  {"work": "ChatGPT / gpt3.5-turbo", "year": 2023, "arxiv": null, "relation": "uses-method", "note": "underlying language model", "quote": null},
+  {"work": "TrueSkill (Herbrich et al.)", "year": null, "arxiv": null, "relation": "uses-method", "note": "rating of ranked outcomes", "quote": null},
+  {"work": "Large Language Models as Simulated Economic Agents (Horton)", "year": 2023, "arxiv": "2301.07543", "relation": "baseline", "note": "no-memory prior art condition", "quote": null},
+  {"work": "Using cognitive psychology to understand GPT-3 (Binz and Schulz)", "year": 2023, "arxiv": null, "relation": "baseline", "note": "prior-art condition", "quote": null},
+  {"work": "Chain-of-Thought Prompting (Wei et al.)", "year": 2023, "arxiv": "2201.11903", "relation": "related", "note": "first-order prompting template", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 5", "caption": "Our generative agent architecture.", "page": 6, "why": "Shows perception, memory stream, retrieval, reflection and planning loop in one picture."},
+  {"figure": "Fig 8", "caption": "The full generative agent architecture produces more believable behavior than the ablated architectures and the human crowdworkers.", "page": 9, "why": "TrueSkill ordering of the five conditions."},
+  {"figure": "Fig 7", "caption": "A reflection tree for Klaus Mueller.", "page": 7, "why": "Shows observations as leaves and reflections as higher nodes."}
+ ],
+ "code": [
+  {"where": "Sec 4.1", "snippet": "score = alpha_recency * recency + alpha_importance * importance + alpha_relevance * relevance", "verbatim": false}
+ ],
+ "problems": []
+}

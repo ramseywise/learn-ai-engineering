@@ -1,0 +1,55 @@
+{
+ "schema": 1,
+ "key": "1808.06226",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/kudo-2018-sentencepiece.pdf",
+ "bib": {"title": "SentencePiece: A simple and language independent subword tokenizer and detokenizer for Neural Text Processing", "authors": ["Taku Kudo", "John Richardson"], "first_author": "Kudo", "year": 2018, "venue": "EMNLP 2018 System Demonstrations, pages 66-71", "arxiv": "1808.06226", "doi": null},
+ "read": {"by": "source-reader", "at": "2026-11-07", "chars_read": 25044, "chars_total": 25044, "engine": "pymupdf", "skipped": null},
+ "type": "system",
+ "question": "Can a subword tokenizer and detokenizer be built that trains directly from raw sentences, is lossless and language independent, and still matches pre-tokenized subword quality in NMT?",
+ "hypothesis": "Pre-tokenization is not always necessary for subword NMT, and training on raw text is fast enough to be practical.",
+ "contributions": ["Open-source C++/Python/TensorFlow library implementing BPE and unigram LM subword segmentation trained directly from raw sentences", "Lossless tokenization with whitespace escaped as a meta symbol", "Vocabulary-size-specified training with vocabulary-to-id management", "Customizable Unicode normalization (default NFKC) compiled into the model", "Self-contained model file; on-the-fly API enabling subword regularization"],
+ "method": {
+  "summary": "A tokenizer library with Normalizer, Trainer, Encoder and Decoder components. Validated by training GNMT models on KFTT English-Japanese with word, SentencePiece and SentencePiece with pre-tokenization, and by timing training and segmentation against subword-nmt.",
+  "task": "subword tokenization for neural machine translation (English-Japanese)",
+  "trains": true,
+  "datasets": [{"name": "KFTT (Kyoto Free Translation Task), Wikipedia en-ja", "role": "both", "size": "440k train, 1166 dev, 1160 test sentences", "split": "train/dev/test as in KFTT", "source": "http://www.phontron.com/kftt", "preprocessing": "Moses tokenizer (English) and KyTea (Japanese) for pre-tokenization arms and the word model; Japanese output segmented with KyTea before BLEU"}],
+  "models": [
+   {"name": "GNMT with SentencePiece (unigram LM)", "role": "proposed", "params": null, "architecture": "GNMT LSTM encoder-decoder", "init_from": null, "tokenizer": "SentencePiece unigram LM, with and without pre-tokenization", "vocab": "8k shared", "layers": "6", "hidden": "512 (LSTM nodes)", "heads": null, "context": null, "other": {}},
+   {"name": "GNMT word model", "role": "baseline", "params": null, "architecture": "GNMT LSTM encoder-decoder", "init_from": null, "tokenizer": "word", "vocab": "80k/80k", "layers": "6", "hidden": "512 (LSTM nodes)", "heads": null, "context": null, "other": {}},
+   {"name": "subword-nmt (BPE)", "role": "baseline", "params": null, "architecture": "tokenizer only, timing comparison", "init_from": null, "tokenizer": "BPE", "vocab": "16k", "layers": null, "hidden": null, "heads": null, "context": null, "other": {}}
+  ],
+  "training": {"objective": null, "optimizer": null, "lr": null, "lr_schedule": null, "warmup": null, "batch_size": null, "steps": null, "epochs": null, "tokens": null, "seq_len": null, "precision": null, "weight_decay": null, "dropout": null, "regularisation": null, "hardware": null, "compute": null, "wall_clock": null, "seeds": null, "other": {"settings": "generally followed Wu et al. 2016 (GNMT) settings and training procedure; only node size 512 and 6 layers changed"}},
+  "inference": {"decoding": null, "temperature": null, "top_p": null, "max_tokens": null, "samples": null, "prompting": null, "retrieval": null, "parameters": {"segmentation_speed": "around 21k (English) and 74k (Japanese) sentences/sec", "subword_sampling_example": "SampleEncodeAsPieces('New York', -1, 0.1)"}, "other": {}},
+  "eval": {"metrics": [{"name": "case-sensitive BLEU", "definition": "Papineni et al. 2002; Japanese output segmented with KyTea first", "unit": "%", "higher_is_better": true}, {"name": "training and segmentation time", "definition": "wall time on KFTT 440k sentences, vocabulary 16k, Xeon 3.5GHz Linux", "unit": "sec", "higher_is_better": false}], "baselines": ["word model 80k/80k", "subword-nmt (BPE)", "SentencePiece with pre-tokenization"], "protocol": "single reported run per cell; no seeds or significance test reported (text says ja to en improvement from pre-tokenization 'has no significant difference' without naming a test)"},
+  "availability": {"code": "https://github.com/google/sentencepiece (Apache 2)", "weights": null, "data": "KFTT public"},
+  "prompts": [],
+  "evidence": [{"field": "models.layers", "quote": "we changed the node and layer size of LSTM to be 512 and 6 respectively", "where": "Sec 4.1"}]
+ },
+ "results": [
+  {"claim": "SentencePiece without pre-tokenization beats the word model on ja to en.", "kind": "measured", "source": null, "metric": "BLEU", "value": "29.55", "unit": "%", "baseline_value": "28.24", "n": null, "setup": "KFTT ja to en, GNMT 6x512 LSTM, SentencePiece unigram 8k shared vocab vs word model 80k/80k, Moses/KyTea tokenizers for word model", "quote": null, "table": "Table 1, ja to en, rows SentencePiece 8k (shared) and Word model (baseline) 80k/80k, column BLEU", "note": null, "where": "Table 1"},
+  {"claim": "SentencePiece beats the word model on en to ja.", "kind": "measured", "source": null, "metric": "BLEU", "value": "21.62", "unit": "%", "baseline_value": "20.06", "n": null, "setup": "KFTT en to ja, same models as above", "quote": null, "table": "Table 1, en to ja, rows SentencePiece 8k (shared) and Word model (baseline) 80k/80k, column BLEU", "note": null, "where": "Table 1"},
+  {"claim": "Pre-tokenization gives a marginal, non-significant gain on ja to en and hurts on en to ja.", "kind": "measured", "source": null, "metric": "BLEU", "value": "29.85 ja-en; 20.86 en-ja", "unit": "%", "baseline_value": "29.55 ja-en; 21.62 en-ja", "n": null, "setup": "SentencePiece w/ pre-tok. vs without, 8k shared vocab", "quote": "In Japanese to English, the improvement is marginal and has no signiﬁcant difference. In English to Japanese, the BLEU score is degraded with pre-tokenization.", "table": null, "note": null, "where": "Sec 4.1, Table 1"},
+  {"claim": "On raw Japanese, SentencePiece segmentation is about 380 times faster than subword-nmt.", "kind": "measured", "source": null, "metric": "speed ratio", "value": "380", "unit": "x", "baseline_value": null, "n": null, "setup": "KFTT 440k sentences, vocab 16k, no pre-tokenization, BPE model in SentencePiece; 5.9 s vs 216.2 s", "quote": "The segmentation speed of SentencePiece is about 380 times faster than that of subword-nmt in this setting.", "table": null, "note": "216.2/5.9 is about 37, not 380; the 380 figure does not follow from Table 2 as printed", "where": "Sec 4.2, Table 2"},
+  {"claim": "Segmentation speed is fast enough for on-the-fly use.", "kind": "measured", "source": null, "metric": "sentences/sec", "value": "74k", "unit": "sentences/sec", "baseline_value": null, "n": null, "setup": "Japanese; English about 21k", "quote": "The segmentation speed of SentencePiece is around 21k and 74k sentences/sec. in English and Japanese respectively", "table": null, "note": null, "where": "Sec 4.2"},
+  {"claim": "Training on raw Japanese takes 217.3 s with SentencePiece vs 528.0 s with subword-nmt.", "kind": "measured", "source": null, "metric": "train time", "value": "217.3", "unit": "sec", "baseline_value": "528.0", "n": null, "setup": "KFTT Japanese, no pre-tok, vocab 16k", "quote": null, "table": "Table 2, Train, Pre-tok no, Japanese, SentencePiece 217.3 vs subword-nmt 528.0", "note": null, "where": "Table 2"},
+  {"claim": "BPE and unigram LM show almost comparable speed performance.", "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "Table 2 setup", "quote": "We found that BPE and unigram language models show almost comparable performance.", "table": null, "note": null, "where": "Table 2 caption"},
+  {"claim": "Naive BPE segmentation is O(N^2); SentencePiece uses a binary-heap O(N log N) algorithm.", "kind": "claim", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "input length N", "quote": "SentencePiece adopts an O(N log(N)) algorithm in which the merged symbols are managed by a binary heap (priority queue).", "table": null, "note": null, "where": "Sec 3.2"}
+ ],
+ "limits": ["One language pair (en-ja) and one small corpus (440k sentences); no seeds or variance reported.", "Training hyperparameters other than layers and nodes are not given; deferred to GNMT.", "Word model uses 80k vocab vs 8k for SentencePiece, so vocab size is confounded with segmentation method.", "SentencePiece implements only a subset of NFKC (no full CCC reordering).", "Speed numbers are for 2018 Xeon hardware."],
+ "practices": [],
+ "terms": [{"term": "lossless tokenization", "definition": "Decode(Encode(Normalize(text))) = Normalize(text); all information to reproduce the normalized text is preserved in the encoder's output", "where": "Sec 3.1"}],
+ "lineage": [
+  {"work": "Neural machine translation of rare words with subword units (Sennrich et al.)", "year": 2016, "arxiv": "1508.07909", "relation": "extends", "note": "BPE and subword-nmt baseline", "quote": null},
+  {"work": "Subword regularization (Kudo)", "year": 2018, "arxiv": "1804.10959", "relation": "extends", "note": "unigram language model and sampling", "quote": null},
+  {"work": "Google's NMT system (Wu et al.)", "year": 2016, "arxiv": "1609.08144", "relation": "uses-method", "note": "GNMT used for experiments", "quote": null},
+  {"work": "A call for clarity in reporting BLEU scores (Post)", "year": 2018, "arxiv": "1804.08771", "relation": "related", "note": "motivates self-contained models", "quote": null},
+  {"work": "KFTT", "year": null, "arxiv": null, "relation": "uses-data", "note": "English-Japanese Wikipedia", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Figure 1", "caption": "Commandline usage of SentencePiece", "page": 2, "why": "shows train/encode/decode round trip"},
+  {"figure": "Table 1", "caption": "Translation Results (BLEU(%))", "page": 5, "why": "main quality comparison"},
+  {"figure": "Table 2", "caption": "Segmentation performance", "page": 6, "why": "speed comparison"}
+ ],
+ "code": [{"where": "Sec 3.1", "snippet": "detok = ''.join(tokens).replace('_', ' ')", "verbatim": false}],
+ "problems": ["Text uses ASCII underscore where the paper's meta symbol is U+2581.", "Sec 4.2 claims 380x segmentation speedup but Table 2 gives 216.2/5.9 which is about 37x."]
+}

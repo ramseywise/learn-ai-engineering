@@ -77,7 +77,8 @@ For each paper:
    whole PDF, writes the paper's extraction to `scripts/papers/extractions/<key>.json` (question, hypothesis, method
    in numbers, results, limits, lineage) and returns claims, numbers, setups, verbatim quotes, limits and figure
    candidates. You keep the judgement and the writing, so the raw PDF stays out of this session. Check `COVERAGE` in
-   its report: a partial read is not a read. Check its `EXTRACTION` line says the check passed; if it did not, or the
+   its report: a partial read is not a read. `COVERAGE: reused extraction` is fine: a full read made that file, and
+   the reader reported from it instead of reading the PDF again. Check its `EXTRACTION` line says the check passed; if it did not, or the
    agent ran without writing one, send it back to finish the extraction before you write the note. The extraction's
    `lineage` and `method` are there when the note needs a training detail or an origin. If the agent is unavailable, or a quote looks wrong, extract the text yourself
    (poppler isn't installed, so the Read tool can't render PDFs):

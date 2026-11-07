@@ -1,0 +1,789 @@
+{
+ "schema": 1,
+ "key": "2104.14294",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/caron-2021-emerging-properties-self-supervised-vision.pdf",
+ "bib": {
+  "title": "Emerging Properties in Self-Supervised Vision Transformers",
+  "authors": [
+   "Mathilde Caron",
+   "Hugo Touvron",
+   "Ishan Misra",
+   "Hervé Jegou",
+   "Julien Mairal",
+   "Piotr Bojanowski",
+   "Armand Joulin"
+  ],
+  "first_author": "Caron",
+  "year": 2021,
+  "venue": "ICCV 2021 (arXiv v2 preprint as read)",
+  "arxiv": "2104.14294",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 97547,
+  "chars_total": 97547,
+  "engine": "pymupdf",
+  "skipped": "Text lines after ~3400 are ImageNet class labels of Fig 11 (t-SNE); skimmed. References skimmed."
+ },
+ "type": "empirical",
+ "question": "Does self-supervised pretraining give Vision Transformers properties, such as explicit scene layout and strong k-NN features, that supervised ViTs and convnets lack?",
+ "hypothesis": "The muted success of ViTs may be explained by supervised pretraining; self-supervised pretraining (as in NLP) should yield distinctive features.",
+ "contributions": [
+  "Observe that self-supervised ViT features contain explicit semantic segmentation information and are excellent k-NN classifiers",
+  "Show importance of momentum encoder, multi-crop training and small patches",
+  "DINO: self-distillation with no labels, centering and sharpening to avoid collapse",
+  "80.1% top-1 linear on ImageNet with ViT-Base"
+ ],
+ "method": {
+  "summary": "DINO trains a student ViT or ResNet to match the output of a momentum (EMA) teacher of identical architecture, using cross-entropy over K-dim softmax outputs, with local-to-global multi-crop views and teacher centering plus sharpening to avoid collapse. Pretrained on ImageNet without labels; evaluated by linear probe, 20-NN, retrieval, copy detection, DAVIS and finetuning.",
+  "task": "self-supervised image representation learning (self-distillation)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "ImageNet-1k (no labels)",
+    "role": "pretrain",
+    "size": null,
+    "split": "train; eval on val",
+    "source": "Russakovsky et al. 2015",
+    "preprocessing": "BYOL augmentations (color jitter, Gaussian blur, solarization) and multi-crop with bicubic interpolation of position embeddings"
+   },
+   {
+    "name": "Google Landmarks v2 clean set",
+    "role": "pretrain",
+    "size": "1.2M",
+    "split": null,
+    "source": "Weyand et al. 2020",
+    "preprocessing": null
+   },
+   {
+    "name": "Revisited Oxford and Paris; INRIA Copydays strong (+10k YFCC100M distractors, 20K YFCC100M for whitening); DAVIS 2017; PASCAL VOC12; CIFAR10/100, iNat18/19, Flowers, Cars",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": null,
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "ViT-S/16",
+    "role": "proposed",
+    "params": "21M",
+    "architecture": "ViT (DeiT-S config), pre-norm, no BN",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": 12,
+    "hidden": 384,
+    "heads": 6,
+    "context": "197 tokens at 224^2",
+    "other": {
+     "im/s V100": 1007
+    }
+   },
+   {
+    "name": "ViT-S/8",
+    "role": "proposed",
+    "params": "21M",
+    "architecture": "ViT",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": 12,
+    "hidden": 384,
+    "heads": 6,
+    "context": "785 tokens at 224^2",
+    "other": {
+     "im/s V100": 180
+    }
+   },
+   {
+    "name": "ViT-B/16",
+    "role": "proposed",
+    "params": "85M",
+    "architecture": "ViT",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": 12,
+    "hidden": 768,
+    "heads": 12,
+    "context": "197 tokens",
+    "other": {
+     "im/s V100": 312
+    }
+   },
+   {
+    "name": "ViT-B/8",
+    "role": "proposed",
+    "params": "85M",
+    "architecture": "ViT",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": 12,
+    "hidden": 768,
+    "heads": 12,
+    "context": "785 tokens",
+    "other": {
+     "im/s V100": 63
+    }
+   },
+   {
+    "name": "ResNet-50",
+    "role": "proposed",
+    "params": "23M",
+    "architecture": "convnet",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": 2048,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "cross-entropy H(Pt,Ps) between centered+sharpened teacher and student softmax outputs; 2 global (224^2) views to teacher, all views to student",
+   "optimizer": "adamw",
+   "lr": "0.0005 * batchsize/256",
+   "lr_schedule": "linear warmup then cosine; weight decay cosine 0.04 to 0.4; teacher momentum cosine 0.996 to 1",
+   "warmup": "10 epochs (lr); teacher temperature 0.04 to 0.07 linear over first 30 epochs",
+   "batch_size": "1024 (16 GPUs for ViT-S/16)",
+   "steps": null,
+   "epochs": "300 (ablations), 800 for ViT-S in Table 2 (Appendix D)",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": "cosine 0.04 to 0.4",
+   "dropout": null,
+   "regularisation": "centering + sharpening of teacher output",
+   "hardware": "two 8-GPU machines for ViT-S/16 timing; V100 for throughput",
+   "compute": "72.6h for 300 epochs 2x224+10x96 ViT-S/16 on two 8-GPU servers; 15.4G peak memory per GPU",
+   "wall_clock": "about 3 days for 76.1% linear",
+   "seeds": null,
+   "other": {
+    "student temperature": 0.1,
+    "output dim K": 65536,
+    "projection head": "3-layer MLP hidden 2048 GELU, l2-norm bottleneck d=256, weight-normalized linear to K, no BN",
+    "local crops": "96^2, scale (0.05,s), global (s,1) with s about 0.3; basic setting 2 global + local views, ablations use 6 or 10",
+    "center momentum m": "0.9 default region (0.999 collapses)"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single runs; no seeds or error bars reported",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "k-NN": "k=20, weighted vote, tau=0.07, CLS token",
+    "linear eval": "SGD, batch 1024, 100 epochs, no weight decay, lr swept, last 4 CLS tokens concatenated for ViT-S (77.0), final layer + avgpooled patches for ViT-B (78.2)",
+    "segmentation mask": "threshold self-attention to keep 60% of mass (Fig 4) or 80% (App. D)"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "top-1",
+     "definition": "ImageNet val accuracy, linear or 20-NN on frozen features",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "mAP",
+     "definition": "revisited Oxford/Paris Medium and Hard; Copydays strong",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "(J&F)m",
+     "definition": "DAVIS 2017 mean region similarity and contour accuracy",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Jaccard similarity",
+     "definition": "between ground truth and mask from thresholded self-attention, PASCAL VOC12 val",
+     "unit": "x100",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Supervised DeiT",
+    "SimCLR",
+    "MoCo-v2",
+    "InfoMin",
+    "BarlowTwins",
+    "OBoW",
+    "BYOL",
+    "SwAV/DCv2",
+    "SimCLRv2"
+   ],
+   "protocol": "Baselines marked * and Table 13 are run by the authors; k-NN eval on released weights; no seeds or significance tests stated."
+  },
+  "availability": {
+   "code": "https://github.com/facebookresearch/dino",
+   "weights": "publicly available",
+   "data": "ImageNet"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.epochs",
+    "quote": "SwAV, MoCo-v2 and DINO are trained for 800 epochs",
+    "where": "App. D, Longer training"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "DINO ViT-B/8 reaches 80.1% top-1 linear and 77.4% k-NN on ImageNet",
+   "kind": "measured",
+   "source": null,
+   "metric": "linear top-1",
+   "value": "80.1",
+   "unit": "% top-1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ImageNet val, ViT-B/8 85M params, DINO, 800 epochs (inferred from App. D: DINO trained 800 ep in Tab 2)",
+   "note": null,
+   "where": "4.1",
+   "quote": "a base ViT with 8 × 8 patches trained with DINO achieves 80.1% top-1 in linear classiﬁcation and 77.4% with a k-NN classiﬁer"
+  },
+  {
+   "claim": "DINO ViT-S (ViT-S/16) linear 77.0 vs supervised ViT-S 79.8; k-NN 74.5",
+   "kind": "measured",
+   "source": null,
+   "metric": "linear top-1",
+   "value": "77.0",
+   "unit": "% top-1",
+   "baseline_value": "79.8 (supervised ViT-S)",
+   "n": null,
+   "setup": "ImageNet val, ViT-S 21M params, Table 2 top panel; DINO trained 800 epochs per App. D (BYOL 300)",
+   "note": "Table 2 supervised ViT-S linear 79.8; 300-epoch DINO ViT-S/16 linear is 76.1 (Table 7)",
+   "where": "Table 2",
+   "quote": "(74.5% versus 77.0%)",
+   "table": "Table 2, row DINO ViT-S, column Linear"
+  },
+  {
+   "claim": "DINO ViT-S k-NN top-1 on ImageNet",
+   "kind": "measured",
+   "source": null,
+   "metric": "k-NN top-1",
+   "value": "74.5",
+   "unit": "% top-1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ImageNet val, ViT-S, 800 epochs, 20-NN",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row DINO ViT-S, column k-NN"
+  },
+  {
+   "claim": "DINO ViT-S/8 reaches 78.3% k-NN top-1 (abstract headline)",
+   "kind": "measured",
+   "source": null,
+   "metric": "k-NN top-1",
+   "value": "78.3",
+   "unit": "% top-1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ImageNet val, ViT-S/8 (21M params, 180 im/s)",
+   "note": null,
+   "where": "Abstract; Table 2",
+   "quote": "reaching 78.3% top-1 on ImageNet with a small ViT"
+  },
+  {
+   "claim": "Without the momentum encoder the framework collapses",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1",
+   "value": "0.1",
+   "unit": "% k-NN and linear top-1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ViT-S/16, 300 epochs, multi-crop, CE loss, no momentum, no Sinkhorn-Knopp",
+   "note": null,
+   "where": "Table 7",
+   "table": "Table 7, row 2, columns k-NN and Lin."
+  },
+  {
+   "claim": "Default DINO ViT-S/16 at 300 epochs",
+   "kind": "measured",
+   "source": null,
+   "metric": "k-NN top-1",
+   "value": "72.8",
+   "unit": "% k-NN top-1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ViT-S/16, 300 epochs; linear 76.1",
+   "note": null,
+   "where": "Table 7",
+   "table": "Table 7, row 1 DINO, column k-NN"
+  },
+  {
+   "claim": "Removing multi-crop drops DINO ViT-S/16 k-NN",
+   "kind": "measured",
+   "source": null,
+   "metric": "k-NN top-1",
+   "value": "67.9",
+   "unit": "% k-NN top-1",
+   "baseline_value": "72.8",
+   "n": null,
+   "setup": "ViT-S/16, 300 epochs, 2x224 only",
+   "note": null,
+   "where": "Table 7",
+   "table": "Table 7, row 4, column k-NN"
+  },
+  {
+   "claim": "MSE loss instead of cross-entropy drops DINO k-NN",
+   "kind": "measured",
+   "source": null,
+   "metric": "k-NN top-1",
+   "value": "52.6",
+   "unit": "% k-NN top-1",
+   "baseline_value": "72.8",
+   "n": null,
+   "setup": "ViT-S/16, 300 epochs",
+   "note": null,
+   "where": "Table 7",
+   "table": "Table 7, row 5, column k-NN"
+  },
+  {
+   "claim": "Adding a predictor to the student has little impact",
+   "kind": "measured",
+   "source": null,
+   "metric": "k-NN top-1",
+   "value": "71.8",
+   "unit": "% k-NN top-1",
+   "baseline_value": "72.8",
+   "n": null,
+   "setup": "ViT-S/16, 300 epochs",
+   "note": null,
+   "where": "Table 7",
+   "table": "Table 7, row 6, column k-NN"
+  },
+  {
+   "claim": "Momentum teacher outperforms the student throughout training",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "claim",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "ViT-S and ResNet-50, k-NN protocol, 300 epochs",
+   "note": null,
+   "where": "5.2",
+   "quote": "A key observation is that this teacher constantly outperforms the student during the training"
+  },
+  {
+   "claim": "Teacher from previous epoch gives 66.6 k-NN; student copy or previous iteration does not converge (0.1)",
+   "kind": "measured",
+   "source": null,
+   "metric": "k-NN top-1",
+   "value": "66.6",
+   "unit": "% k-NN top-1",
+   "baseline_value": "72.8 (momentum)",
+   "n": null,
+   "setup": "ViT-S, 300 epochs",
+   "note": null,
+   "where": "Fig 6",
+   "table": "Fig 6 right, row Previous epoch (read from figure text)"
+  },
+  {
+   "claim": "Removing centering or sharpening makes KL go to zero (collapse); entropy goes to 0 without centering and -log(1/K) without sharpening",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "claim",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "ViT-S training, Fig 7",
+   "note": null,
+   "where": "5.3",
+   "quote": "If one operation is missing, the KL converges to zero, indicating a collapse."
+  },
+  {
+   "claim": "Self-attention maps: DINO Jaccard vs supervised on PASCAL VOC12",
+   "kind": "measured",
+   "source": null,
+   "metric": "Jaccard",
+   "value": "45.9",
+   "unit": "Jaccard similarity (x100)",
+   "baseline_value": "27.3 supervised; 22.0 random weights",
+   "n": null,
+   "setup": "ViT-S/16 masks from thresholded [CLS] self-attention of the best head, PASCAL VOC12 val",
+   "note": "Fig 4 caption and 4.2.2 say the mask keeps 60% of the mass; the Appendix D table prints the same 45.9/27.3 under 80% of the mass.",
+   "where": "Fig 4; App. D",
+   "table": "Fig 4 table, row ViT-S/16, column DINO; Appendix D table, row DINO"
+  },
+  {
+   "claim": "Other SSL ViT-S/16 frameworks score similar Jaccard to DINO, so the property is shared by self-supervised methods",
+   "kind": "measured",
+   "source": null,
+   "metric": "Jaccard",
+   "value": "46.3-47.8",
+   "unit": "Jaccard similarity (x100)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ViT-S/16, PASCAL VOC12, App. D table: MoCo-v2 46.3, BYOL 47.8, SwAV 46.8, DINO w/o multicrop 45.1",
+   "note": null,
+   "where": "App. D",
+   "quote": "The properties that self-attention maps from ViT explicitly contain the scene layout and, in particular, object boundaries is observed across different self-supervised methods."
+  },
+  {
+   "claim": "ViT-S/8 supervised vs DINO Jaccard",
+   "kind": "measured",
+   "source": null,
+   "metric": "Jaccard",
+   "value": "23.7",
+   "unit": "Jaccard similarity (x100)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ViT-S/8, PASCAL VOC12; supervised 21.8, DINO 44.7 per Fig 4 text layout (columns ambiguous in extracted text)",
+   "note": "Extracted table is column-ambiguous; treat as low confidence.",
+   "where": "Fig 4",
+   "table": "Fig 4 table, row ViT-S/8"
+  },
+  {
+   "claim": "DINO ResNet-50 matches SOTA: linear 75.3, k-NN 67.5",
+   "kind": "measured",
+   "source": null,
+   "metric": "linear top-1",
+   "value": "75.3",
+   "unit": "% top-1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ImageNet val, ResNet-50 23M",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row DINO RN50, column Linear"
+  },
+  {
+   "claim": "DINO beats BYOL, MoCov2, SwAV on ViT-S by +3.5% linear and +7.9% k-NN",
+   "kind": "measured",
+   "source": null,
+   "metric": "linear top-1 gain",
+   "value": "+3.5",
+   "unit": "% top-1 points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ImageNet val, ViT-S (BYOL/MoCov2/SwAV run by the authors)",
+   "note": null,
+   "where": "4.1",
+   "quote": "DINO outperforms BYOL, MoCov2 and SwAV by +3.5% with linear classiﬁcation and by +7.9% with k-NN evaluation"
+  },
+  {
+   "claim": "DINO ViT-S/16 trained in 2 8-GPU servers for 3 days gets 76.1% linear",
+   "kind": "measured",
+   "source": null,
+   "metric": "linear top-1",
+   "value": "76.1",
+   "unit": "% top-1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ViT-S/16, 300 epochs, 2x224+10x96 multi-crop, 72.6h",
+   "note": null,
+   "where": "1; 5.4; Table 8",
+   "quote": "training DINO with ViT takes just two 8-GPU servers over 3 days to achieve 76.1% on ImageNet linear benchmark"
+  },
+  {
+   "claim": "Multi-crop trades memory for time: 2x224+10x96 gives 74.6 in 24h vs 72.5 in 46h for 2x224",
+   "kind": "measured",
+   "source": null,
+   "metric": "linear top-1",
+   "value": "74.6",
+   "unit": "% linear top-1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ViT-S/16, 100 epochs 2x224+10x96 (24.2h, 15.4G/GPU) vs 300 epochs 2x224 (45.9h, 9.3G)",
+   "note": null,
+   "where": "5.4",
+   "quote": "the performance is 72.5% after 46 hours of training without multi-crop (i.e. 2×2242) while DINO in 2×2242+10×962 crop setting reaches 74.6% in 24 hours only"
+  },
+  {
+   "claim": "Smaller patches help a lot without adding parameters, at throughput cost",
+   "kind": "measured",
+   "source": null,
+   "metric": "throughput",
+   "value": "44",
+   "unit": "im/s",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ViT-S with 5x5 patches vs 180 im/s for 8x8, V100, 128 samples/forward",
+   "note": null,
+   "where": "5.1",
+   "quote": "the throughput falls to 44 im/s, vs 180 im/s for 8×8 patches"
+  },
+  {
+   "claim": "Frozen DINO ViT-S features transfer by finetuning better than supervised on ViT",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1",
+   "value": "82.8",
+   "unit": "% top-1",
+   "baseline_value": "81.8",
+   "n": null,
+   "setup": "ImageNet finetuned from DINO ViT-B/16 pretrain, DeiT procedure; supervised pretrain 81.9, random init 81.8",
+   "note": null,
+   "where": "Table 11; Table 6 (ViT-B/16 DINO 82.8 vs 81.8 sup.)",
+   "table": "Table 11, row DINO ImNet 224 [69]"
+  },
+  {
+   "claim": "DAVIS 2017 video segmentation with frozen features, ViT-B/8",
+   "kind": "measured",
+   "source": null,
+   "metric": "(J&F)m",
+   "value": "71.4",
+   "unit": "(J&F)m",
+   "baseline_value": "66.0 supervised ViT-S/8",
+   "n": null,
+   "setup": "frozen features, nearest neighbour between frames, 480p",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row DINO INet ViT-B/8, column (J&F)m"
+  },
+  {
+   "claim": "Copy detection mAP, DINO ViT-B/8 at 320^2",
+   "kind": "measured",
+   "source": null,
+   "metric": "mAP",
+   "value": "85.5",
+   "unit": "mAP",
+   "baseline_value": "82.5 Multigrain RN50 at largest side 800",
+   "n": null,
+   "setup": "INRIA Copydays strong subset + 10k YFCC100M distractors, whitening, 1536d",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row DINO ViT-B/8, column mAP"
+  },
+  {
+   "claim": "Retrieval: DINO ViT-S/16 trained on GLDv2 on revisited Oxford Medium",
+   "kind": "measured",
+   "source": null,
+   "metric": "mAP",
+   "value": "51.5",
+   "unit": "mAP",
+   "baseline_value": "41.8 DINO ImNet; 33.5 supervised ViT-S/16",
+   "n": null,
+   "setup": "ROxford Medium, frozen features with k-NN",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row DINO ViT-S/16 GLDv2, column ROx M"
+  },
+  {
+   "claim": "Batch size 128 on 1 GPU still reaches 57.9 k-NN at 100 epochs (1024: 59.9)",
+   "kind": "measured",
+   "source": null,
+   "metric": "k-NN top-1",
+   "value": "57.9",
+   "unit": "% k-NN top-1",
+   "baseline_value": "59.9",
+   "n": null,
+   "setup": "ViT-S, 100 epochs, no multi-crop",
+   "note": null,
+   "where": "Table 9",
+   "table": "Table 9, bs 128"
+  },
+  {
+   "claim": "Longer training helps: k-NN 70.9 / 72.8 / 74.5 at 100 / 300 / 800 epochs",
+   "kind": "measured",
+   "source": null,
+   "metric": "k-NN top-1",
+   "value": "74.5",
+   "unit": "% k-NN top-1",
+   "baseline_value": "72.8 at 300 ep",
+   "n": null,
+   "setup": "DINO ViT-S",
+   "note": null,
+   "where": "App. D",
+   "table": "Appendix D Longer training, 800-ep"
+  },
+  {
+   "claim": "Low-shot: frozen logistic regression on 1% labels",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1",
+   "value": "64.5",
+   "unit": "% top-1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "DINO-FROZEN ViT-S/16, cyanure logistic regression, ImageNet 1% labels",
+   "note": "10% labels: 72.2",
+   "where": "Table 12",
+   "table": "Table 12, row DINO-FROZEN, column 1%"
+  },
+  {
+   "claim": "Multi-crop benefits DINO most (+3.4% linear) and hurts BYOL",
+   "kind": "measured",
+   "source": null,
+   "metric": "linear gain",
+   "value": "+3.4",
+   "unit": "% linear points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ViT-S/16, 300 epochs, 2x224 vs 2x224+6x96",
+   "note": null,
+   "where": "App. E",
+   "quote": "Remarkably, DINO beneﬁts the most from multi-crop training (+3.4% in linear eval)."
+  },
+  {
+   "claim": "Centering EMA m=0.999 collapses; teacher temperature must be below 0.06 unless warmed up",
+   "kind": "measured",
+   "source": null,
+   "metric": "k-NN top-1",
+   "value": "0.1",
+   "unit": "% k-NN top-1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ViT-S, 100 epochs; m=0.999",
+   "note": null,
+   "where": "App. D",
+   "table": "Appendix D online centering table, m 0.999"
+  }
+ ],
+ "limits": [
+  "Most ablations use ViT-S/16 for 300 epochs and k-NN, not the headline ViT-B/8",
+  "No seeds or error bars; authors note linear/finetune evals vary with learning rate",
+  "BYOL could not be trained longer than 300 epochs, so Table 2 compares BYOL 300 epochs with others at 800",
+  "Mask threshold 60% vs 80% inconsistency between Fig 4 and App. D",
+  "Authors say multi-crop does not combine with BYOL out of the box and leave it open",
+  "Segmentation emergence is shared across self-supervised methods, not DINO specific",
+  "Pretraining only on curated ImageNet; uncurated data left to future work"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "DINO",
+   "definition": "self-distillation with no labels",
+   "where": "Abstract"
+  },
+  {
+   "term": "local-to-global correspondence",
+   "definition": "all crops go through the student while only global views go through the teacher",
+   "where": "3.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "BYOL (Grill et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "DINO takes its inspiration from BYOL, same architecture for student and teacher, no predictor",
+   "quote": "Our approach takes its inspiration from BYOL"
+  },
+  {
+   "work": "Vision Transformer (Dosovitskiy et al.)",
+   "year": 2020,
+   "arxiv": "2010.11929",
+   "relation": "uses-method",
+   "note": "backbone",
+   "quote": null
+  },
+  {
+   "work": "DeiT (Touvron et al.)",
+   "year": 2020,
+   "arxiv": "2012.12877",
+   "relation": "uses-method",
+   "note": "implementation and finetuning protocol",
+   "quote": null
+  },
+  {
+   "work": "SwAV (Caron et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "multi-crop and projection head design",
+   "quote": null
+  },
+  {
+   "work": "MoCo (He et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "momentum encoder",
+   "quote": null
+  },
+  {
+   "work": "Mean Teacher (Tarvainen and Valpola)",
+   "year": 2017,
+   "arxiv": "1703.01780",
+   "relation": "uses-method",
+   "note": "teacher as weight average",
+   "quote": null
+  },
+  {
+   "work": "SimCLR",
+   "year": 2020,
+   "arxiv": "2002.05709",
+   "relation": "baseline",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "ImageNet",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "pretraining and eval",
+   "quote": null
+  },
+  {
+   "work": "Attention is all you need",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Transformer",
+   "quote": null
+  },
+  {
+   "work": "BERT",
+   "year": 2018,
+   "arxiv": "1810.04805",
+   "relation": "related",
+   "note": "motivation: self-supervised pretraining in NLP",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "Self-distillation with no labels",
+   "page": 3,
+   "why": "student/teacher/centering/EMA data flow"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Segmentations from supervised versus DINO",
+   "page": 8,
+   "why": "Jaccard gap 45.9 vs 27.3"
+  },
+  {
+   "figure": "Fig 7",
+   "caption": "Collapse study",
+   "page": 9,
+   "why": "entropy and KL with and without centering and sharpening"
+  }
+ ],
+ "code": [
+  {
+   "where": "Algorithm 1",
+   "snippet": "gt.params = l*gt.params + (1-l)*gs.params\nC = m*C + (1-m)*cat([t1, t2]).mean(dim=0)",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Appendix pages after the references end in ImageNet class label text for Fig 11 (not content).",
+  "Table/figure cells are flattened one value per line; Fig 4 ViT-S/8 column assignment ambiguous."
+ ]
+}

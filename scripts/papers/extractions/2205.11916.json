@@ -1,0 +1,542 @@
+{
+ "schema": 1,
+ "key": "2205.11916",
+ "pdf": "ai-engineering/01-prompt-engineering/sources/kojima-2022-large-language-models-zero-shot.pdf",
+ "bib": {
+  "title": "Large Language Models are Zero-Shot Reasoners",
+  "authors": [
+   "Takeshi Kojima",
+   "Shixiang Shane Gu",
+   "Machel Reid",
+   "Yutaka Matsuo",
+   "Yusuke Iwasawa"
+  ],
+  "first_author": "Kojima",
+  "year": 2022,
+  "venue": "NeurIPS 2022 (36th Conference on Neural Information Processing Systems)",
+  "arxiv": "2205.11916",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 128528,
+  "chars_total": 128528,
+  "engine": "pymupdf",
+  "skipped": "Reference list skimmed; qualitative example output tables 12-22 and 24 (sample generations) read only in part."
+ },
+ "type": "empirical",
+ "question": "Can large language models do multi-step reasoning zero-shot with a single task-agnostic prompt, without hand-crafted few-shot chain-of-thought exemplars?",
+ "hypothesis": "LLMs are decent zero-shot reasoners: adding a trigger sentence such as 'Let's think step by step' elicits chain-of-thought reasoning without exemplars.",
+ "contributions": [
+  "Zero-shot-CoT: a single zero-shot, task-agnostic two-stage prompt that elicits chain of thought",
+  "Evaluation on 12 datasets across arithmetic, commonsense, symbolic and logical reasoning with 17 models",
+  "Showing that zero-shot performance scales with model size under CoT, and a robustness study of trigger templates and few-shot exemplars"
+ ],
+ "method": {
+  "summary": "Zero-shot-CoT prompts the model twice: first 'Q: [X]. A: Let's think step by step.' to generate a reasoning path, then appends the reasoning and an answer-extraction trigger (e.g. 'Therefore, the answer (arabic numerals) is') to get the final answer. Compared with standard zero-shot and the few-shot and few-shot-CoT baselines of Wei et al. (2022), all with greedy decoding.",
+  "task": "multi-step reasoning benchmarks via prompting (arithmetic, commonsense, symbolic, logical)",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "SingleEq",
+    "role": "eval",
+    "size": "508",
+    "split": "questions.json",
+    "source": "Math World Problem Repository; no license",
+    "preprocessing": null
+   },
+   {
+    "name": "AddSub",
+    "role": "eval",
+    "size": "395",
+    "split": "AddSub.json",
+    "source": "Hosseini et al. 2014; license unspecified",
+    "preprocessing": null
+   },
+   {
+    "name": "MultiArith",
+    "role": "eval",
+    "size": "600",
+    "split": "MultiArith.json",
+    "source": "Roy and Roth 2015; license unspecified",
+    "preprocessing": null
+   },
+   {
+    "name": "GSM8K",
+    "role": "eval",
+    "size": "1319",
+    "split": "test.jsonl",
+    "source": "Cobbe et al. 2021; MIT",
+    "preprocessing": null
+   },
+   {
+    "name": "AQUA-RAT",
+    "role": "eval",
+    "size": "254",
+    "split": "test.jsonl",
+    "source": "Ling et al. 2017; Apache-2.0",
+    "preprocessing": null
+   },
+   {
+    "name": "SVAMP",
+    "role": "eval",
+    "size": "1000",
+    "split": "SVAMP.json",
+    "source": "Patel et al. 2021; MIT",
+    "preprocessing": null
+   },
+   {
+    "name": "CommonsenseQA",
+    "role": "eval",
+    "size": "1221",
+    "split": "dev_rand_split.jsonl",
+    "source": "Talmor et al. 2019; license unspecified",
+    "preprocessing": null
+   },
+   {
+    "name": "StrategyQA",
+    "role": "eval",
+    "size": "2290",
+    "split": "task.json",
+    "source": "Geva et al. 2021; Apache-2.0",
+    "preprocessing": null
+   },
+   {
+    "name": "Date Understanding",
+    "role": "eval",
+    "size": "369",
+    "split": "task.json",
+    "source": "BIG-bench; Apache-2.0",
+    "preprocessing": null
+   },
+   {
+    "name": "Tracking Shuffled Objects (three objects)",
+    "role": "eval",
+    "size": "750",
+    "split": "three_objects/task.json",
+    "source": "BIG-bench; Apache-2.0",
+    "preprocessing": null
+   },
+   {
+    "name": "Last Letters",
+    "role": "eval",
+    "size": "500",
+    "split": null,
+    "source": "created by the authors following Wei et al. 2022, 4 random names from names-dataset",
+    "preprocessing": "template: Take the last letters of each words in \"{Name1} {Name2} {Name3} {Name4}\" and concatenate them."
+   },
+   {
+    "name": "Coin Flip",
+    "role": "eval",
+    "size": "500",
+    "split": null,
+    "source": "created by the authors following Wei et al. 2022, four flip/does-not-flip trials",
+    "preprocessing": "template with random names and flips / does not flip"
+   }
+  ],
+  "models": [
+   {
+    "name": "text-davinci-002 (InstructGPT)",
+    "role": "evaluated",
+    "params": "not stated (size order inferred from API names)",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "default model unless stated"
+    }
+   },
+   {
+    "name": "InstructGPT text-ada/babbage/curie/davinci-001",
+    "role": "evaluated",
+    "params": "not stated",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Original GPT-3 ada/babbage/curie/davinci",
+    "role": "evaluated",
+    "params": "0.3B / 1.3B / 6.7B / 175B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "PaLM",
+    "role": "evaluated",
+    "params": "8B / 62B / 540B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-2 / GPT-Neo / GPT-J / T0 / OPT",
+    "role": "evaluated",
+    "params": "1.5B / 2.7B / 6B / 11B / 13B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "checkpoints": "gpt2-xl, gpt-neo, gptj, T0pp, opt-13b"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "greedy (temperature = 0 for OpenAI API; TopK=1 for PaLM)",
+   "temperature": "0 (OpenAI API)",
+   "top_p": null,
+   "max_tokens": "128 (all except PaLM); 256 (PaLM)",
+   "samples": "1 run per item; greedy so zero-shot methods deterministic; few-shot run once with a fixed seed; PaLM self-consistency used 40 paths",
+   "prompting": "Zero-shot-CoT: 'Q: [X]. A: Let's think step by step.' then second prompt '[X'] [Z] [A]' with an answer trigger. Few-shot baselines use the same 8 exemplars as Wei et al. 2022. 'Q:' is a custom stop sequence for all models except InstructGPT3.",
+   "retrieval": null,
+   "parameters": {
+    "reasoning trigger": "Let's think step by step.",
+    "answer triggers": "task-specific, Tables 9 and 10",
+    "answer cleansing": "first number / first capital letter / first yes or no (Table 11)"
+   },
+   "other": {
+    "hardware": "cloud V100 instances without GPU for GPT-3 models; A100x8 (60GB) for T0 and OPT; A100x1 (60GB) for GPT-J, GPT-Neo, GPT-2",
+    "api_dates": "GPT-3 via OpenAI API April-May 2022, except Table 4 No.10-16 in Aug 2022"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "accuracy",
+     "definition": "fraction of items whose cleansed prediction matches ground truth",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Zero-shot (answer-extraction prompt only)",
+    "Few-shot (2, 8 exemplars)",
+    "Few-shot-CoT (Wei et al. 2022)",
+    "Zero-Plus-Few-Shot-CoT",
+    "Finetuned GPT-3 175B (+verifier), as reported by Wei et al. 2022",
+    "PaLM 540B few-shot results from Wei et al. 2022"
+   ],
+   "protocol": "single run, greedy decoding, no significance test or confidence intervals stated"
+  },
+  "availability": {
+   "code": "https://github.com/kojima-takeshi188/zero_shot_cot",
+   "weights": null,
+   "data": "public datasets except Last Letters and Coin Flip, which are generated from the given templates"
+  },
+  "prompts": [
+   {
+    "purpose": "reasoning extraction (1st prompt)",
+    "text": "Q: [X]. A: Let's think step by step.",
+    "where": "Sec 3.1, Fig 1-2"
+   },
+   {
+    "purpose": "answer extraction, arithmetic",
+    "text": "Therefore, the answer (arabic numerals) is",
+    "where": "Sec 3.1, Table 10"
+   },
+   {
+    "purpose": "answer extraction, multiple choice",
+    "text": "Therefore, among A through E, the answer is",
+    "where": "Sec 3.1, Table 10"
+   },
+   {
+    "purpose": "answer extraction, yes/no",
+    "text": "Therefore, the answer (Yes or No) is",
+    "where": "Table 10"
+   },
+   {
+    "purpose": "zero-shot baseline answer prompt",
+    "text": "The answer (arabic numerals) is",
+    "where": "Table 9"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Zero-shot-CoT lifts MultiArith accuracy from 17.7 to 78.7 with text-davinci-002.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 78.7,
+   "unit": "%",
+   "baseline_value": 17.7,
+   "n": null,
+   "setup": "MultiArith, text-davinci-002, greedy, default answer prompts",
+   "note": null,
+   "where": "Abstract, Table 1",
+   "quote": "from 17.7% to 78.7% on MultiArith"
+  },
+  {
+   "claim": "Zero-shot-CoT lifts GSM8K accuracy from 10.4 to 40.7 with text-davinci-002.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 40.7,
+   "unit": "%",
+   "baseline_value": 10.4,
+   "n": null,
+   "setup": "GSM8K, text-davinci-002, greedy",
+   "note": null,
+   "where": "Sec 1, Table 1",
+   "quote": "from 10.4% to 40.7% on GSM8K"
+  },
+  {
+   "claim": "Few-shot-CoT (8 samples) remains better than Zero-shot-CoT on MultiArith.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 93.0,
+   "unit": "%",
+   "baseline_value": 78.7,
+   "n": null,
+   "setup": "MultiArith, text-davinci-002, same 8 Wei et al. exemplars",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Few-Shot-CoT (8 samples), column MultiArith"
+  },
+  {
+   "claim": "Zero-shot-CoT beats standard few-shot with 8 exemplars on MultiArith.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 78.7,
+   "unit": "%",
+   "baseline_value": 33.8,
+   "n": null,
+   "setup": "MultiArith, text-davinci-002",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, rows Zero-Shot-CoT and Few-Shot (8 samples), column MultiArith"
+  },
+  {
+   "claim": "With PaLM 540B, Zero-shot-CoT raises GSM8K from 12.5 to 43.0 and MultiArith from 25.5 to 66.1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 43.0,
+   "unit": "%",
+   "baseline_value": 12.5,
+   "n": null,
+   "setup": "GSM8K, PaLM 540B",
+   "note": null,
+   "where": "Table 2, Table 25",
+   "table": "Table 2, rows PaLM 540B: Zero-Shot-CoT and Zero-Shot, column GSM8K"
+  },
+  {
+   "claim": "Adding self-consistency to PaLM 540B Zero-shot-CoT reaches 70.1 on GSM8K.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 70.1,
+   "unit": "%",
+   "baseline_value": 43.0,
+   "n": null,
+   "setup": "GSM8K, PaLM 540B, 40 paths",
+   "note": null,
+   "where": "Table 25",
+   "table": "Table 25, row Zero-shot-CoT + self consistency (40 paths), column GSM8K"
+  },
+  {
+   "claim": "The wording of the trigger matters: 'Let's think step by step.' is best of 16 templates on MultiArith; misleading and irrelevant triggers score near or below zero-shot.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 78.7,
+   "unit": "%",
+   "baseline_value": 17.7,
+   "n": null,
+   "setup": "MultiArith, text-davinci-002, 16 templates",
+   "note": "Worst instructive template 'The answer is after the proof.' scores 45.7; irrelevant ones 13.1 to 17.5.",
+   "where": "Table 4",
+   "table": "Table 4, row 1 Let's think step by step., column Accuracy"
+  },
+  {
+   "claim": "Zero-shot-CoT is flat in small models and rises sharply with scale: original GPT-3 175B gets 19.0 vs 3.3 zero-shot on MultiArith.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 19.0,
+   "unit": "%",
+   "baseline_value": 3.3,
+   "n": null,
+   "setup": "MultiArith, original GPT-3 davinci",
+   "note": null,
+   "where": "Table 26, Fig 3",
+   "table": "Table 26, row Zero-shot-CoT, column 175B"
+  },
+  {
+   "claim": "On symbolic and logical tasks the gains are large: Coin Flip 91.4 vs 12.8 and Last Letter 57.6 vs 0.2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 91.4,
+   "unit": "%",
+   "baseline_value": 12.8,
+   "n": null,
+   "setup": "Coin Flip (4 times), text-davinci-002, default answer prompts",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row zero-shot-cot, column Coin Flip (4 times)"
+  },
+  {
+   "claim": "Zero-shot-CoT gives no gain on CommonsenseQA (64.6 vs 68.8), and no gain on SingleEq and AddSub.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 64.6,
+   "unit": "%",
+   "baseline_value": 68.8,
+   "n": null,
+   "setup": "CommonsenseQA, text-davinci-002",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row zero-shot-cot, column CommonSenseQA"
+  }
+ ],
+ "limits": [
+  "Evaluated mainly on text-davinci-002 and PaLM; claims about models like those are not tested on later models.",
+  "Training data of the LLMs is not public, so memorisation cannot be ruled out directly; authors argue it is unlikely.",
+  "No variance, seeds or significance tests; single greedy runs and few-shot run once with a fixed seed.",
+  "Zero-shot-CoT sometimes continues with unnecessary steps and flips a correct answer; sometimes only rephrases the question.",
+  "Prompt sensitivity is large; how to build better templates automatically is left open.",
+  "Needs two model calls per question.",
+  "Commonsense tasks show no gain in accuracy."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Zero-shot-CoT",
+   "definition": "a zero-shot template-based prompting for chain of thought reasoning",
+   "where": "Sec 3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Chain of thought prompting (Wei et al. 2022)",
+   "year": 2022,
+   "arxiv": "2201.11903",
+   "relation": "extends",
+   "note": "Few-shot-CoT baseline and exemplars",
+   "quote": null
+  },
+  {
+   "work": "Self-consistency (Wang et al. 2022)",
+   "year": 2022,
+   "arxiv": "2203.11171",
+   "relation": "uses-method",
+   "note": "combined with Zero-shot-CoT on PaLM",
+   "quote": null
+  },
+  {
+   "work": "Language models are few-shot learners (Brown et al. 2020)",
+   "year": 2020,
+   "arxiv": "2005.14165",
+   "relation": "evaluates",
+   "note": "original GPT-3 models",
+   "quote": null
+  },
+  {
+   "work": "InstructGPT (Ouyang et al. 2022)",
+   "year": 2022,
+   "arxiv": "2203.02155",
+   "relation": "evaluates",
+   "note": "text-davinci models",
+   "quote": null
+  },
+  {
+   "work": "PaLM (Chowdhery et al. 2022)",
+   "year": 2022,
+   "arxiv": "2204.02311",
+   "relation": "evaluates",
+   "note": "8B, 62B, 540B",
+   "quote": null
+  },
+  {
+   "work": "Reynolds and McDonell 2021",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "related",
+   "note": "similar step-splitting prompt, not quantitatively evaluated",
+   "quote": null
+  },
+  {
+   "work": "Min et al. 2022",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "few-shot examples mostly convey format",
+   "quote": null
+  },
+  {
+   "work": "GSM8K (Cobbe et al. 2021)",
+   "year": 2021,
+   "arxiv": "2110.14168",
+   "relation": "uses-data",
+   "note": "also finetuned baseline",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Example inputs and outputs of GPT-3 with (a) standard Few-shot, (b) Few-shot-CoT, (c) standard Zero-shot, and (d) Zero-shot-CoT",
+   "page": 2,
+   "why": "Shows the four prompting styles side by side."
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Full pipeline of Zero-shot-CoT: reasoning prompt then answer prompt",
+   "page": 4,
+   "why": "Shows the two-stage structure."
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Model scale study with various types of models",
+   "page": 7,
+   "why": "Shows CoT gain appears only at large scale."
+  }
+ ],
+ "code": [
+  {
+   "where": "Appendix A.6 Table 11",
+   "snippet": "pred = pred.replace(\",\", \"\")\npred = [s for s in re.findall(r'-?\\d+\\.?\\d*', pred)]\npred = pred[0]",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Table 1 mixes left/right values (two answer prompts) in extracted text; the left value is the default.",
+  "Reference list skimmed only."
+ ]
+}

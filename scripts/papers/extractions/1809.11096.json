@@ -1,0 +1,506 @@
+{
+ "schema": 1,
+ "key": "1809.11096",
+ "pdf": "ai-engineering/08-multimodal-engineering/sources/brock-2018-large-scale-gan-training-high.pdf",
+ "bib": {
+  "title": "Large Scale GAN Training for High Fidelity Natural Image Synthesis",
+  "authors": [
+   "Andrew Brock",
+   "Jeff Donahue",
+   "Karen Simonyan"
+  ],
+  "first_author": "Brock",
+  "year": 2019,
+  "venue": "ICLR 2019 (arXiv v2, 25 Feb 2019)",
+  "arxiv": "1809.11096",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 74595,
+  "chars_total": 74595,
+  "engine": "pymupdf",
+  "skipped": "References skimmed; Appendix A and F figures are images with no extractable content."
+ },
+ "type": "empirical",
+ "question": "Can class-conditional GANs trained at much larger scale produce high-resolution, diverse ImageNet samples, and what limits their stability?",
+ "hypothesis": "Scaling batch size and width, plus orthogonal regularisation and a truncation trick, closes the fidelity and variety gap between GANs and real images.",
+ "contributions": [
+  "Scale GANs to 2-4x the parameters and 8x the batch size of prior art, with shared embeddings and skip-z",
+  "Truncation trick for fidelity/variety control, enabled by orthogonal regularisation",
+  "Characterise instabilities of large-scale GANs via singular values of G and D"
+ ],
+ "method": {
+  "summary": "SA-GAN-based class-conditional ResNet GANs (BigGAN, BigGAN-deep) trained on ImageNet at 128, 256, 512 px and on a JFT-300M subset with batch 2048 on TPU v3 pods. Hinge loss, spectral norm, shared class embedding, hierarchical z, off-diagonal orthogonal regularisation, EMA of G weights.",
+  "task": "class-conditional image synthesis",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "ImageNet ILSVRC 2012",
+    "role": "both",
+    "size": null,
+    "split": "training set for training; train and validation IS reported",
+    "source": "Russakovsky et al. 2015",
+    "preprocessing": "crop along long edge, rescale with area resampling"
+   },
+   {
+    "name": "JFT-300M subset",
+    "role": "both",
+    "size": "292M images, 8.5K most common of 18K labels",
+    "split": null,
+    "source": "Sun et al. 2017",
+    "preprocessing": "single label sampled randomly each time an image is sampled"
+   },
+   {
+    "name": "CIFAR-10",
+    "role": "both",
+    "size": null,
+    "split": null,
+    "source": "Krizhevsky and Hinton 2009",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "BigGAN",
+    "role": "proposed",
+    "params": "G 70.4M and D 88.0M at 128x128; 158.3M total in Table 1 row 8",
+    "architecture": "ResNet GAN, one non-local block, shared embedding, chunked skip-z (20-D chunks)",
+    "init_from": "orthogonal initialisation",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "z_dim": "120 (128px), 140 (256px), 160 (512px)",
+     "class_embedding": "128-D",
+     "ch": "96 in main runs (Table 1 row 8)"
+    }
+   },
+   {
+    "name": "BigGAN-deep",
+    "role": "proposed",
+    "params": "G 50.4M and D 34.6M at 128x128",
+    "architecture": "bottleneck ResBlocks, 2 blocks per resolution, four times deeper than BigGAN, attention at 64x64",
+    "init_from": "orthogonal initialisation",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "ch": "128",
+     "z_dim": "128"
+    }
+   },
+   {
+    "name": "SA-GAN",
+    "role": "baseline",
+    "params": "81.5M",
+    "architecture": "self-attention GAN",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "hinge-loss GAN; class conditioning by conditional BatchNorm in G and projection in D",
+   "optimizer": "Adam, beta1=0, beta2=0.999",
+   "lr": "BigGAN: 2e-4 D, 5e-5 G at all resolutions; BigGAN-deep 128px same, 256/512px 2.5e-5 both",
+   "lr_schedule": "constant",
+   "warmup": null,
+   "batch_size": "2048 (main); 256 to 2048 in ablation",
+   "steps": "stable runs to 1e6 iterations in Table 1; models collapse earlier (e.g. 152 to 371 thousand)",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": "inferred: low precision on TPU (epsilon raised from 1e-8 to 1e-4 in BatchNorm and Spectral Norm to mollify low-precision numerical issues)",
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "orthogonal regularisation beta=1e-4 on G (off-diagonal form); spectral norm in G and D; 2 D steps per G step; EMA of G decay 0.9999",
+   "hardware": "Google TPU v3 Pod, 128/256/512 cores for 128/256/512 px",
+   "compute": null,
+   "wall_clock": "24 to 48 hours for most models",
+   "seeds": "Table 1 rows other than 1-4: 8 random initialisations; Table 2: at least three",
+   "other": {
+    "cross_replica_BN": "batch stats aggregated across all devices",
+    "standing_stats": "~100 forward passes at sampling time",
+    "no_progressive_growing": true
+   }
+  },
+  "inference": {
+   "decoding": "sampling z from truncated normal, threshold swept (sigma 0 to 2)",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "truncation_threshold": "0.5 for Fig 4 samples; swept for Table 2",
+    "ortho_beta": "1e-4"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Inception Score",
+     "definition": "Salimans et al. 2016",
+     "unit": "score",
+     "higher_is_better": true
+    },
+    {
+     "name": "FID",
+     "definition": "Frechet Inception Distance, Heusel et al. 2017",
+     "unit": "score",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "SN-GAN 27.62/36.80",
+    "SA-GAN 18.65/52.52"
+   ],
+   "protocol": "Table 2 reports no-truncation, best-FID, FID at validation-data IS, and FID at max IS; JFT uses an Inception v2 trained on JFT."
+  },
+  "availability": {
+   "code": "Pretrained generators on TF Hub (tfhub.dev/s?q=biggan); training code not stated",
+   "weights": "yes, TF Hub",
+   "data": "ImageNet public; JFT-300M internal"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "BigGAN-deep at 128x128 on ImageNet reaches IS 166.5 and FID 7.4, against SA-GAN 52.52 and 18.65.",
+   "kind": "measured",
+   "source": null,
+   "metric": "IS",
+   "value": "166.5",
+   "unit": null,
+   "baseline_value": "52.52",
+   "n": null,
+   "setup": "ImageNet ILSVRC 2012, 128x128, BigGAN-deep; scores taken at the truncation setting where the model's IS equals that of real validation data (Table 2 column 5), not untruncated.",
+   "note": "Abstract and Sec 1 print 166.5 and 7.4 without stating the truncation setting. Untruncated BigGAN-deep 128 is FID 5.7, IS 124.5 (column 3); best-FID truncation is 6.3/148.1.",
+   "where": "Abstract; Table 2",
+   "table": "Table 2, row BigGAN-deep 128, column FID / (valid IS): 7.4 ± .6/166.5 ± 1; row SA-GAN 128: 18.65/52.52"
+  },
+  {
+   "claim": "Best FID at 128x128 is 5.7 untruncated for BigGAN-deep.",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": "5.7",
+   "unit": null,
+   "baseline_value": "18.65",
+   "n": null,
+   "setup": "ImageNet 128x128, BigGAN-deep, no truncation, at least three random initialisations.",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row BigGAN-deep 128, column FID/IS: 5.7 ± .3/124.5 ± 2"
+  },
+  {
+   "claim": "At 256x256 the paper reports IS 232.5 and FID 8.1; at 512x512 IS 241.5 and FID 11.5.",
+   "kind": "measured",
+   "source": null,
+   "metric": "IS (256x256)",
+   "value": "232.5",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "ImageNet, BigGAN-deep, truncation chosen so IS matches validation data (Table 2 column 5).",
+   "note": null,
+   "where": "Sec 1; Table 2",
+   "quote": "IS and FID of 232.5 and 8.1 at 256×256 and IS and FID of 241.5 and 11.5 at 512×512"
+  },
+  {
+   "claim": "Raising the batch size by a factor of 8 improves the state-of-the-art IS by 46%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "IS relative gain",
+   "value": "46%",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "SA-GAN baseline, batch 256 to 2048, ImageNet 128x128, Table 1 rows 1-4; scores from checkpoints just before collapse.",
+   "note": null,
+   "where": "Sec 3",
+   "quote": "8 improves the state-of-the-art IS by 46%"
+  },
+  {
+   "claim": "Widening each layer by 50% (about double the parameters) gives a further 21% IS gain.",
+   "kind": "measured",
+   "source": null,
+   "metric": "IS relative gain",
+   "value": "21%",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "ImageNet 128x128, batch 2048, channel multiplier 64 to 96.",
+   "note": null,
+   "where": "Sec 3",
+   "quote": "This leads to a further IS improvement of 21%"
+  },
+  {
+   "claim": "Shared class embedding speeds training by 37% in iterations to a given performance.",
+   "kind": "measured",
+   "source": null,
+   "metric": "iterations saved",
+   "value": "37%",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "ImageNet 128x128, ablation in Table 1.",
+   "note": null,
+   "where": "Sec 3",
+   "quote": "training speed (in number of iterations required to reach a given performance) by 37%"
+  },
+  {
+   "claim": "Skip-z gives about 4% performance gain and a further 18% training speedup.",
+   "kind": "measured",
+   "source": null,
+   "metric": "gain",
+   "value": "4%",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "ImageNet 128x128, ablation in Table 1.",
+   "note": null,
+   "where": "Sec 3",
+   "quote": "improvement of around 4%, and improves training speed by a further 18%"
+  },
+  {
+   "claim": "Orthogonal regularisation raises the share of runs amenable to truncation from 16% to 60%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "share amenable to truncation",
+   "value": "60%",
+   "unit": null,
+   "baseline_value": "16%",
+   "n": null,
+   "setup": "Runs in Table 1; beta = 1e-4 on the off-diagonal-only penalty.",
+   "note": null,
+   "where": "Sec 3.1",
+   "quote": "models are amenable to truncation, compared to 60% when trained with Orthogonal Regularization."
+  },
+  {
+   "claim": "Truncating z (resampling values above a threshold) trades sample variety for fidelity; IS rises as the threshold falls, FID improves then collapses toward zero threshold.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Models trained with z ~ N(0,I), sampled from truncated normal.",
+   "note": null,
+   "where": "Sec 3.1",
+   "quote": "truncating a z vector by re-sampling the values with magnitude above a chosen threshold leads to improvement in individual"
+  },
+  {
+   "claim": "R1 gradient penalty of strength 10 on D makes training stable but cuts IS by 45%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "IS reduction",
+   "value": "45%",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "ImageNet 128x128 BigGAN-type model; strength 1 is the lowest that avoids sudden collapse and still cuts IS by 20%.",
+   "note": "Strength 1 row: 'the IS is reduced by 20%'.",
+   "where": "Sec 4.2",
+   "quote": "performance severely degrades, resulting in a 45%"
+  },
+  {
+   "claim": "Discriminator memorises: train accuracy above 98%, validation 50-55%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "D train accuracy",
+   "value": "98%",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Uncollapsed discriminators on ImageNet train and validation sets.",
+   "note": null,
+   "where": "Sec 4.2",
+   "quote": "above 98%, the validation accuracy falls in the range of 50-55%"
+  },
+  {
+   "claim": "On JFT-300M at 256x256, the full BigGAN with 128 base channels reaches FID 13.75 and IS 30.61 versus baseline 48.38 and 23.27.",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": "13.75",
+   "unit": null,
+   "baseline_value": "48.38",
+   "n": null,
+   "setup": "JFT-300M subset (292M images, 8.5K labels), batch 2048, Inception v2 trained on JFT, untruncated.",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row Ch 128 (355.7M params) vs row Ch 64 baseline: FID 13.75, IS 30.61 vs 48.38, 23.27"
+  },
+  {
+   "claim": "JFT-300M models stay stable for hundreds of thousands of iterations, unlike ImageNet models.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "JFT-300M, same techniques.",
+   "note": null,
+   "where": "Sec 5.2",
+   "quote": "the models trained on JFT-300M remain stable over many"
+  },
+  {
+   "claim": "CIFAR-10 result: IS 9.22 and FID 14.73 without truncation.",
+   "kind": "measured",
+   "source": null,
+   "metric": "IS",
+   "value": "9.22",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Settings of Table 1 row 8.",
+   "note": null,
+   "where": "App C.2",
+   "quote": "an IS of 9.22 and an FID of 14.73 without truncation"
+  },
+  {
+   "claim": "Training takes between 24 and 48 hours for most models.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "TPU v3 Pod, 128/256/512 cores for 128/256/512 px.",
+   "note": null,
+   "where": "App C",
+   "quote": "Training takes between 24 and 48 hours for"
+  }
+ ],
+ "limits": [
+  "Complete training stability is only reachable at a dramatic cost to performance; models are early-stopped just before collapse.",
+  "IS and FID have notable flaws (Barratt and Sharma 2018).",
+  "Negative results are specific to the authors' setup (App H).",
+  "Headline IS/FID depends on the truncation setting chosen."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Truncation Trick",
+   "definition": "truncating a z vector by re-sampling the values with magnitude above a chosen threshold",
+   "where": "Sec 3.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Self-attention generative adversarial networks (SA-GAN)",
+   "year": 2018,
+   "arxiv": "1805.08318",
+   "relation": "extends",
+   "note": "baseline architecture",
+   "quote": null
+  },
+  {
+   "work": "Spectral normalization for GANs",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Miyato et al.",
+   "quote": null
+  },
+  {
+   "work": "cGANs with projection discriminator",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "conditioning of D",
+   "quote": null
+  },
+  {
+   "work": "Progressive growing of GANs",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "related",
+   "note": "found unnecessary",
+   "quote": null
+  },
+  {
+   "work": "Neural photo editing with introspective adversarial networks",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "orthogonal regularisation",
+   "quote": null
+  },
+  {
+   "work": "Which training methods for GANs do actually converge?",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "R1 gradient penalty",
+   "quote": null
+  },
+  {
+   "work": "ImageNet ILSVRC 2012",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "main dataset",
+   "quote": null
+  },
+  {
+   "work": "Revisiting unreasonable effectiveness of data (JFT-300M)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "larger dataset",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Table 1",
+   "caption": "FID and IS for ablations of proposed modifications",
+   "page": 3,
+   "why": "Shows batch, width, shared embedding, skip-z and ortho contributions"
+  },
+  {
+   "figure": "Table 2",
+   "caption": "Evaluation of models at different resolutions",
+   "page": 7,
+   "why": "Shows how headline numbers depend on truncation setting"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Effects of increasing truncation; saturation artifacts",
+   "page": 4,
+   "why": "Visualises truncation trade-off"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 3",
+   "snippet": "R_beta(W) = beta * || W^T W ⊙ (1 − I) ||_F^2",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Check-mark columns (Shared, Skip-z, Ortho.) in Table 1 are lost in the text; row identification relies on the text's 'Table 1, row 8'.",
+  "No embedded instructions found."
+ ]
+}
