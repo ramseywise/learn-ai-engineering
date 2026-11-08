@@ -1,0 +1,556 @@
+{
+ "schema": 1,
+ "key": "1312.6199",
+ "pdf": "ai-engineering/01-prompt-engineering/sources/szegedy-2013-intriguing-properties-neural-networks.pdf",
+ "bib": {
+  "title": "Intriguing properties of neural networks",
+  "authors": [
+   "Christian Szegedy",
+   "Wojciech Zaremba",
+   "Ilya Sutskever",
+   "Joan Bruna",
+   "Dumitru Erhan",
+   "Ian Goodfellow",
+   "Rob Fergus"
+  ],
+  "first_author": "Szegedy",
+  "year": 2014,
+  "venue": "preprint (arXiv v4, 19 Feb 2014; ICLR 2014 per ledger)",
+  "arxiv": "1312.6199",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 33804,
+  "chars_total": 33804,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Do individual high-level units carry the semantics of a deep network, and is the network's input-output map smooth under small input perturbations?",
+ "hypothesis": "Implied: networks that generalise well should be locally smooth, so imperceptible perturbations should not change the class; the paper finds otherwise.",
+ "contributions": [
+  "Random directions in feature space are as semantically interpretable as individual units (section 3).",
+  "Adversarial examples: imperceptible perturbations found by optimisation that change the prediction (section 4).",
+  "Adversarial examples transfer across models and across disjoint training sets (section 4.2).",
+  "Spectral (Lipschitz upper bound) analysis of layer instability (section 4.3)."
+ ],
+ "method": {
+  "summary": "Finds minimum-L2 perturbations r with f(x+r)=l by box-constrained L-BFGS with a line search on c, on MNIST (FC, autoencoder), AlexNet and QuocNet. Measures how often the perturbed images fool other models and models trained on disjoint data, and computes upper Lipschitz bounds per layer of AlexNet.",
+  "task": "adversarial example generation and transfer for image classifiers; unit analysis",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "MNIST",
+    "role": "both",
+    "size": "60000 training images",
+    "split": "split into disjoint P1 and P2 of 30000 each for the cross-training-set test; Table 4 distorts the test set",
+    "source": "LeCun and Cortes 1998",
+    "preprocessing": "pixel intensities scaled to [0, 1]"
+   },
+   {
+    "name": "ImageNet",
+    "role": "eval",
+    "size": null,
+    "split": "validation set used as I for unit analysis",
+    "source": "Deng et al. 2009",
+    "preprocessing": null
+   },
+   {
+    "name": "YouTube images",
+    "role": "pretrain",
+    "size": "~10M image samples",
+    "split": null,
+    "source": "Le et al. 2011",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "FC10(lambda)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "softmax linear classifier on pixels, lambda 1e-4, 1e-2, 1",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "FC100-100-10 / FC200-200-10 / FC123-456-10",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "sigmoid network with two hidden layers and softmax classifier",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "2 hidden",
+    "hidden": "100-100, 200-200, 123-456",
+    "heads": null,
+    "context": null,
+    "other": {
+     "weight decay": "lambda 1e-5, 1e-5, 1e-6 (Table 1)"
+    }
+   },
+   {
+    "name": "AE400-10",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "single-layer sparse autoencoder with sigmoid, 400 nodes, plus softmax; first layer not fine-tuned",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": 1,
+    "hidden": 400,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "AlexNet",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "Krizhevsky et al. 2012 convolutional net",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "5 conv + 3 FC",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "QuocNet",
+    "role": "evaluated",
+    "params": "~1 billion learnable parameters",
+    "architecture": "unsupervised network; binary car classifier trained on last-layer features without fine-tuning",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "MNIST models: softmax cross-entropy plus quadratic weight decay lambda*sum(w_i^2)/k, k = units in the layer",
+   "optimizer": "L-BFGS until convergence",
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": "lambda per Table 1 (1e-4, 1e-2, 1, 1e-5/1e-5/1e-6, 1e-6)",
+   "dropout": "none for the adversarial-training network",
+   "regularisation": "weight decay",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "adversarial training": "2-layer 100-100-10 net trained with a pool of adversarial examples, a random subset continuously replaced by new ones and mixed into the training set; adversarial examples generated for each layer's outputs and used to train all layers above; pool kept per layer; alternating training; pool size and mix ratio not stated",
+    "AlexNet/QuocNet training": "not described; pretrained models of Krizhevsky 2012 and Le 2011 used"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "adversarial example for every sample; Fig 5 AlexNet examples strictly randomly chosen, 64 examples for average distortion",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "attack": "minimise ||r||_2 s.t. f(x+r)=l, x+r in [0,1]^m, approximated by box-constrained L-BFGS minimising c|r| + loss_f(x+r,l) with line search for minimum c>0 that gives f(x+r)=l",
+    "amplification": "x + 0.1*(x'-x)/||x'-x||_2 raises distortion by about 40%, stddev 0.06 to 0.1",
+    "c values/iterations": "not stated"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Error rate on distorted examples",
+     "definition": "proportion of adversarial instances misclassified by a given model",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Average minimum distortion",
+     "definition": "sqrt(sum_i (x'_i - x_i)^2 / n), n=784, pixel range [0,1]; minimum average needed to reach 0% accuracy on the training set",
+     "unit": "pixel stddev",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "Gaussian noise with stddev 0.1, 0.3 (Table 2); 0.06, 0.1 (Table 4)"
+   ],
+   "protocol": "Single runs, no seeds, no significance tests reported. Table 2 distorts training set; Table 4 distorts test set."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "examples at http://goo.gl/huaGPb (link only)"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Adversarial examples that are visually near-identical were found for every sample of every network studied.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "MNIST models, QuocNet, AlexNet",
+   "quote": "we have always managed to generate very close, visually hard to distinguish, ad-",
+   "table": null,
+   "note": null,
+   "where": "p5, section 4.2"
+  },
+  {
+   "claim": "AlexNet adversarial examples (all predicted 'ostrich') have tiny average distortion.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 0.006508,
+   "unit": "pixel stddev",
+   "baseline_value": null,
+   "n": null,
+   "setup": "AlexNet, 64 randomly chosen examples, no post-selection",
+   "quote": "Average distortion based on 64 examples is 0.006508.",
+   "table": null,
+   "note": null,
+   "where": "Fig 5, p6"
+  },
+  {
+   "claim": "Adversarial examples made for FC10(1e-4) fool FC10(1e-2) only a minority of the time.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "11.7%",
+   "unit": "error",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MNIST training set, cross-model",
+   "quote": null,
+   "table": "Table 2, row FC10(10-4), column FC10(10-2)",
+   "note": null,
+   "where": "Table 2, p7"
+  },
+  {
+   "claim": "Adversarial examples for FC10(1e-2) cause 87.1% error on FC10(1e-4).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "87.1%",
+   "unit": "error",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MNIST training set, cross-model",
+   "quote": null,
+   "table": "Table 2, row FC10(10-2), column FC10(10-4)",
+   "note": null,
+   "where": "Table 2, p7"
+  },
+  {
+   "claim": "Gaussian noise of stddev 0.1 (larger than adversarial) causes far less error than adversarial examples, e.g. 0% on FC100-100-10.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "0%",
+   "unit": "error",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MNIST, cross-model",
+   "quote": null,
+   "table": "Table 2, row Gaussian noise stddev=0.1, column FC100-100-10",
+   "note": null,
+   "where": "Table 2, p7"
+  },
+  {
+   "claim": "Autoencoder-based model is most resilient but not immune to transferred adversarial examples.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "MNIST, Table 2",
+   "quote": "Although the autoencoder based version seems most resilient to adversarial examples, it is not fully immune either.",
+   "table": null,
+   "note": null,
+   "where": "p7"
+  },
+  {
+   "claim": "Adversarial examples (stddev 0.062) generated for FC100-100-10 on P1 give 5.9% error on a same-architecture network trained on disjoint P2.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "5.9%",
+   "unit": "error",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MNIST test set, cross-training-set, unamplified",
+   "quote": null,
+   "table": "Table 4, row Distorted for FC100-100-10 (av. stddev=0.062), column FC100-100-10'",
+   "note": "Random noise of stddev 0.06 gives 2.2-2.6% error.",
+   "where": "Table 4, p8"
+  },
+  {
+   "claim": "Amplified to stddev 0.1, the same examples give 43% error on the P2-trained network.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "43%",
+   "unit": "error",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MNIST test set, amplified",
+   "quote": null,
+   "table": "Table 4, row Distorted for FC100-100-10 amplified to stddev=0.1, column FC100-100-10'",
+   "note": null,
+   "where": "Table 4, p8"
+  },
+  {
+   "claim": "Cross-training-set transfer is real but effectiveness decreases considerably.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 4",
+   "quote": "The intriguing conclusion is that the adversarial examples remain hard for models trained even on a disjoint training set, although",
+   "table": null,
+   "note": null,
+   "where": "p8"
+  },
+  {
+   "claim": "Random Gaussian noise of stddev 1 leaves 51% accuracy, whereas adversarial examples of stddev ~0.06 give 0% accuracy on their own model.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "51%",
+   "unit": "accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MNIST subset, Fig 7",
+   "quote": "Accuracy: 51%.",
+   "table": null,
+   "note": null,
+   "where": "Fig 7, p7"
+  },
+  {
+   "claim": "Training on a pool of adversarial examples gave a 100-100-10 net with test error below 1.2%, versus 1.6% with weight decay alone and about 1.3% with dropout.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "below 1.2%",
+   "unit": "test error",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MNIST, 2-layer 100-100-10, weight decay no dropout; adversarial examples for every layer's outputs; preliminary",
+   "quote": "test error below 1.2% by keeping a pool of adversarial examples a random subset",
+   "table": null,
+   "note": "Preliminary, single run, no variance reported. Baselines: 1.6% weight decay, ~1.3% dropout.",
+   "where": "p5-6, section 4.2"
+  },
+  {
+   "claim": "Upper Lipschitz bound of AlexNet conv layer 2 is 10 and of conv layer 5 is 11; bounds are large from the first layer on.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "11",
+   "unit": "upper Lipschitz bound",
+   "baseline_value": null,
+   "n": null,
+   "setup": "AlexNet of Krizhevsky 2012, frame bounds computed via eq (1)",
+   "quote": null,
+   "table": "Table 5, row Conv. 5, column Upper bound",
+   "note": "Upper bounds only: large bounds do not imply adversarial examples exist, small ones would guarantee none.",
+   "where": "Table 5, p9"
+  },
+  {
+   "claim": "Unit-level and random-direction images both give semantically coherent sets, so the natural basis is not special.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "MNIST and AlexNet, held-out set I",
+   "quote": "This suggests that the natural basis is not better than a random basis for inspecting the properties",
+   "table": null,
+   "note": null,
+   "where": "p3, section 3"
+  }
+ ],
+ "limits": [
+  "Authors concede they do not understand how often adversarial negatives appear: 'we don't have a deep understanding of how often adversarial negatives appears'.",
+  "Quantitative transfer results are on MNIST fully connected nets only; no convolutional MNIST results, AlexNet only qualitative.",
+  "Adversarial-training result is preliminary; pool size, ratio, iterations and seeds are not given.",
+  "Lipschitz bounds are upper bounds and do not explain transfer across models or training sets.",
+  "Attack is white-box and optimisation-based (L-BFGS), costly; fast gradient methods came later.",
+  "No defence or training hyperparameters (c, iterations) given for the attack; no code released."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "adversarial examples",
+   "definition": "imperceptible non-random perturbation applied to a test image that arbitrarily changes the network's prediction, found by optimizing the input to maximize the prediction error",
+   "where": "section 1"
+  },
+  {
+   "term": "D(x, l)",
+   "definition": "the closest image to x classified as l by f, a minimizer of ||r||_2 with f(x+r)=l and x+r in [0,1]^m",
+   "where": "section 4.1"
+  },
+  {
+   "term": "cross model generalization",
+   "definition": "a relatively large fraction of examples will be misclassified by networks trained from scratch with different hyper-parameters",
+   "where": "section 4.2"
+  },
+  {
+   "term": "cross training-set generalization",
+   "definition": "a relatively large fraction of examples will be misclassified by networks trained from scratch on a disjoint training set",
+   "where": "section 4.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "ImageNet classification with deep convolutional neural networks (Krizhevsky et al.)",
+   "year": 2012,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "AlexNet attacked and Lipschitz-analysed",
+   "quote": null
+  },
+  {
+   "work": "Building high-level features using large scale unsupervised learning (Le et al.)",
+   "year": 2011,
+   "arxiv": "1112.6209",
+   "relation": "evaluates",
+   "note": "QuocNet",
+   "quote": null
+  },
+  {
+   "work": "MNIST (LeCun and Cortes)",
+   "year": 1998,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "MNIST experiments",
+   "quote": null
+  },
+  {
+   "work": "ImageNet (Deng et al.)",
+   "year": 2009,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "ImageNet unit analysis",
+   "quote": null
+  },
+  {
+   "work": "Visualizing and understanding convolutional neural networks (Zeiler and Fergus)",
+   "year": 2013,
+   "arxiv": "1311.2901",
+   "relation": "extends",
+   "note": "unit-level inspection questioned",
+   "quote": null
+  },
+  {
+   "work": "Measuring invariances in deep networks (Goodfellow et al.)",
+   "year": 2009,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "max-activation unit analysis",
+   "quote": null
+  },
+  {
+   "work": "Felzenszwalb et al. deformable part model",
+   "year": 2008,
+   "arxiv": null,
+   "relation": "related",
+   "note": "hard-negative mining, close in spirit to adversarial training",
+   "quote": null
+  },
+  {
+   "work": "Mikolov et al. word representations",
+   "year": 2013,
+   "arxiv": "1301.3781",
+   "relation": "related",
+   "note": "directions in vector space carry semantics",
+   "quote": null
+  },
+  {
+   "work": "Learning deep architectures for AI (Bengio)",
+   "year": 2009,
+   "arxiv": null,
+   "relation": "related",
+   "note": "non-local generalization prior that the smoothness result challenges",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 5",
+   "caption": "Adversarial examples generated for AlexNet. (Left) correctly predicted sample, (center) difference magnified 10x, (right) adversarial example, all predicted 'ostrich'.",
+   "page": 6,
+   "why": "Shows an imperceptible perturbation flips the label; the canonical picture."
+  },
+  {
+   "figure": "Fig 7",
+   "caption": "Adversarial examples for a randomly chosen subset of MNIST compared with randomly distorted examples.",
+   "page": 7,
+   "why": "Contrasts structured vs random noise: random stddev 1 keeps 51% accuracy, adversarial 0%."
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "Adversarial examples for QuocNet; binary car classifier on last-layer features.",
+   "page": 6,
+   "why": "Second model family showing the effect."
+  },
+  {
+   "figure": "Table 2",
+   "caption": "Cross-model generalization of adversarial examples.",
+   "page": 7,
+   "why": "Transfer matrix between models."
+  },
+  {
+   "figure": "Table 4",
+   "caption": "Cross-training-set generalization error rate.",
+   "page": 8,
+   "why": "Transfer across disjoint training data, with amplification."
+  }
+ ],
+ "code": [
+  {
+   "where": "section 4.1, p5",
+   "snippet": "Minimize ||r||_2 subject to: f(x + r) = l; x + r in [0, 1]^m  (approximated by minimizing c|r| + loss_f(x + r, l) with line search on c)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text extraction shows no embedded instructions.",
+  "Figure content not readable from text; only captions used.",
+  "Venue ICLR 2014 comes from the task description, not the PDF text (arXiv v4)."
+ ]
+}

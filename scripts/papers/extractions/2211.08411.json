@@ -1,0 +1,604 @@
+{
+ "schema": 1,
+ "key": "2211.08411",
+ "pdf": "ai-engineering/01-prompt-engineering/sources/kandpal-2022-large-language-models-struggle-learn.pdf",
+ "bib": {
+  "title": "Large Language Models Struggle to Learn Long-Tail Knowledge",
+  "authors": [
+   "Nikhil Kandpal",
+   "Haikang Deng",
+   "Adam Roberts",
+   "Eric Wallace",
+   "Colin Raffel"
+  ],
+  "first_author": "Kandpal",
+  "year": 2023,
+  "venue": "ICML 2023 (PMLR 202)",
+  "arxiv": "2211.08411",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 48583,
+  "chars_total": 48583,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "How does an LLM's ability to answer a factoid question depend on how many pre-training documents are relevant to that question?",
+ "hypothesis": "Plainly implied: models mainly succeed on knowledge that appears widely in pre-training data, so accuracy rises with relevant document count and rare facts are learned poorly.",
+ "contributions": [
+  "Entity-linking pipeline over trillions of tokens (C4, Pile, ROOTS, OpenWebText, Wikipedia) that counts documents where question and answer entities co-occur",
+  "Correlational study of QA accuracy vs relevant document count across BLOOM, GPT-Neo, GPT-3",
+  "Counterfactual re-training of a 4.8B LM with relevant documents removed",
+  "Analysis of dataset scaling, model scaling and retrieval augmentation for long-tail knowledge",
+  "Release of code and entity data"
+ ],
+ "method": {
+  "summary": "Entity-link pre-training corpora and QA sets, count documents containing both the salient question entity and answer entity, and plot few-shot closed-book exact-match accuracy of open LLMs against that count. A 4.8B LM is retrained on C4 with relevant documents removed to test causality, and oracle and BM25 retrieval are added to see if they remove the dependence.",
+  "task": "closed-book factoid open-domain QA, analysed against pre-training data frequency",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "TriviaQA",
+    "role": "eval",
+    "size": null,
+    "split": "train and validation combined, except a small set held out for few-shot prompts",
+    "source": "Joshi et al. 2017",
+    "preprocessing": "Entity linked with DBpedia Spotlight; question and all answers concatenated; most common answer entity is salient answer entity; question entity with most co-occurrence with it chosen; examples with no entity or zero relevant documents discarded"
+   },
+   {
+    "name": "Natural Questions",
+    "role": "eval",
+    "size": null,
+    "split": "train and validation combined, except a small set held out for few-shot prompts",
+    "source": "Kwiatkowski et al. 2019",
+    "preprocessing": "same as TriviaQA"
+   },
+   {
+    "name": "The Pile",
+    "role": "pretrain",
+    "size": "825GB",
+    "split": null,
+    "source": "Gao et al. 2020",
+    "preprocessing": "entity linked"
+   },
+   {
+    "name": "ROOTS (En)",
+    "role": "pretrain",
+    "size": "490GB",
+    "split": null,
+    "source": "Laurencon et al. 2022",
+    "preprocessing": "entity linked"
+   },
+   {
+    "name": "C4",
+    "role": "pretrain",
+    "size": "305GB",
+    "split": null,
+    "source": "Raffel et al. 2020",
+    "preprocessing": "entity linked; also used to train the 4.8B baseline and counterfactual LMs"
+   },
+   {
+    "name": "OpenWebText",
+    "role": "pretrain",
+    "size": "39GB",
+    "split": null,
+    "source": "Gokaslan & Cohen 2019",
+    "preprocessing": "entity linked; used to estimate GPT-3 counts by scaling"
+   },
+   {
+    "name": "Wikipedia (Dec 2018 dump)",
+    "role": "pretrain",
+    "size": null,
+    "split": null,
+    "source": "Lee et al. 2019",
+    "preprocessing": "entity linked; knowledge corpus for BM25 retrieval"
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT-Neo / GPT-J / GPT-NeoX",
+    "role": "evaluated",
+    "params": "125M to 20B",
+    "architecture": "decoder-only transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "sizes_in_plots": "125M, 1.3B, 2.7B, 6B, 20B",
+     "trained_on": "The Pile"
+    }
+   },
+   {
+    "name": "BLOOM",
+    "role": "evaluated",
+    "params": "560M to 176B",
+    "architecture": "decoder-only transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "sizes_in_plots": "560M, 1.1B, 1.7B, 3B, 7.1B, 176B",
+     "trained_on": "ROOTS; English performance only"
+    }
+   },
+   {
+    "name": "GPT-3 (ada, babbage, curie, davinci)",
+    "role": "evaluated",
+    "params": "~350M (Ada) to ~175B (Davinci)",
+    "architecture": "decoder-only transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "caveat": "training data not public; counts estimated by scaling OpenWebText counts; sizes approximate; fine-tuning status uncertain; results in Appendix"
+    }
+   },
+   {
+    "name": "Baseline and counterfactual LM",
+    "role": "proposed",
+    "params": "4.8B",
+    "architecture": "decoder-only (inferred: follows Wang et al. 2022 setup)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "trained_on": "C4, single epoch"
+    }
+   },
+   {
+    "name": "BM25 retriever",
+    "role": "retriever",
+    "params": null,
+    "architecture": "sparse lexical",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "corpus": "Wikipedia"
+    }
+   }
+  ],
+  "training": {
+   "objective": null,
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": "counterfactual model trained for 30% fewer steps than baseline; absolute steps not stated",
+   "epochs": "1 for both baseline and counterfactual",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "setup": "baseline 4.8B LM on C4 following Wang et al. (2022); counterfactual removes all relevant documents of 100 sampled TriviaQA questions per log-scaled count bin, about 30% of C4",
+    "note": "Only the 4.8B retraining trains anything; hyperparameters deferred to Wang et al. 2022"
+   }
+  },
+  "inference": {
+   "decoding": "greedy until newline",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "one greedy answer per question; no seeds stated",
+   "prompting": "4-shot closed-book 'Q: ... A: ...' template (other shot counts gave similar trends); 2-shot for oracle retrieval",
+   "retrieval": "oracle: 300-word segment around the ground-truth answer in the gold Wikipedia page; BM25: top-3 Wikipedia paragraphs in prompt for in-context examples and test question, each in-context example checked to have the answer in at least one paragraph",
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Exact Match QA accuracy",
+     "definition": "exact match against ground-truth answer set, averaged over log-spaced bins of relevant document count; bins under 500 examples trimmed from plots",
+     "unit": "fraction",
+     "higher_is_better": true
+    },
+    {
+     "name": "BM25 top-k recall",
+     "definition": "recall of the answer-bearing document in top k",
+     "unit": "fraction",
+     "higher_is_better": true
+    },
+    {
+     "name": "Human accuracy",
+     "definition": "leave-one-annotator-out on NQ questions with 5 raters, with background text",
+     "unit": "fraction",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "question-entity-only count",
+    "answer-entity-only count",
+    "counterfactual vs original LM",
+    "closed-book vs retrieval-augmented",
+    "human accuracy",
+    "strong supervised model (Izacard & Grave 2021)"
+   ],
+   "protocol": "Correlation plots over log-spaced bins; no significance tests or seeds reported; precision of document counting checked by manual labelling of 300 TriviaQA pairs"
+  },
+  "availability": {
+   "code": "https://github.com/nkandpa2/long tail knowledge",
+   "weights": null,
+   "data": "entity data for ROOTS, The Pile, C4, OpenWebText, Wikipedia released at same URL"
+  },
+  "prompts": [
+   {
+    "purpose": "4-shot closed-book QA",
+    "text": "Q: [In-Context Question 1]\nA: [In-Context Answer 1]\n...\nQ: [In-Context Question n]\nA: [In-Context Answer n]\nQ: [Test Question]",
+    "where": "Section 3"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "inference.decoding",
+    "quote": "We generate answers by greedy decoding until the models",
+    "where": "p4"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "BLOOM-176B accuracy on TriviaQA rises sharply with relevant document count.",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM accuracy",
+   "value": 55,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BLOOM-176B, TriviaQA, 4-shot EM, documents from ROOTS",
+   "quote": "jumps from 25% to above 55% when the number of relevant",
+   "table": null,
+   "note": null,
+   "where": "p2, p5"
+  },
+  {
+   "claim": "Document-count precision of the pipeline on TriviaQA is about 60%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "precision",
+   "value": 60,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "300 random TriviaQA pairs, one random relevant doc each, manually labelled: 33% enough to answer, additional 27% some relevant info",
+   "quote": "Thus, our pipeline has ∼60% precision at identifying relevant documents for TriviaQA.",
+   "table": null,
+   "note": null,
+   "where": "p3 Sec 2.3"
+  },
+  {
+   "claim": "BLOOM-176B has over 4x the accuracy of BLOOM-560M on TriviaQA questions with many relevant documents.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy ratio",
+   "value": 4,
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BLOOM, TriviaQA, questions with more than 10^5 relevant documents",
+   "quote": "BLOOM-176B has over 4× higher accuracy than BLOOM-560M on",
+   "table": null,
+   "note": null,
+   "where": "p5 Sec 3.1"
+  },
+  {
+   "claim": "Removing relevant documents from C4 for a retrained 4.8B LM lowers accuracy mainly on questions with many original relevant documents, indicating a causal link.",
+   "kind": "measured",
+   "source": null,
+   "metric": "share of C4 removed",
+   "value": 30,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "4.8B LM trained on C4 one epoch; 100 TriviaQA questions per log bin; about 30% of C4 removed; counterfactual trained 30% fewer steps",
+   "quote": "In total, this removes about 30% of C4.",
+   "table": null,
+   "note": null,
+   "where": "p5 Sec 3.2"
+  },
+  {
+   "claim": "A log-linear fit of BLOOM accuracy on rare NQ questions implies over 10^18 parameters to match supervised or human accuracy.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "BLOOM, Natural Questions, questions with fewer than 100 relevant docs; fit R2 = 0.98; train+validation used for the trend, validation for baselines",
+   "quote": "one would need a BLOOM model with over 1018",
+   "table": null,
+   "note": "Text extraction renders 10^18 as '1018'; abstract says 'many orders of magnitude', intro cites one quadrillion parameters.",
+   "where": "p6 Sec 4.2"
+  },
+  {
+   "claim": "Scaling datasets by moderate factors (e.g. 5x) gives small accuracy gains; relevant counts are highly rank-correlated across pre-training corpora.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Spearman correlation of TriviaQA relevant doc counts across ROOTS, Pile, C4, OWT, Wikipedia: 0.87 to 0.97",
+   "quote": "scaling datasets by moderate factors (e.g., 5x) usually results in small accu-",
+   "table": null,
+   "note": null,
+   "where": "p5-6 Sec 4.1, Table 1"
+  },
+  {
+   "claim": "Oracle retrieval (gold paragraph) removes the low-count weakness: GPT-Neo accuracy falls rather than rises with relevant count, matching human trend.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-Neo, Natural Questions, 2-shot, 300-word gold Wikipedia segment",
+   "quote": "evaluate the 2-shot accuracy of GPT-Neo.",
+   "table": null,
+   "note": null,
+   "where": "p7 Sec 4.3"
+  },
+  {
+   "claim": "BM25 top-3 retrieval raises GPT-Neo accuracy over closed-book at all count ranges, especially rare ones, though BM25 recall still depends mildly on count.",
+   "kind": "measured",
+   "source": null,
+   "metric": "paragraphs retrieved",
+   "value": 3,
+   "unit": "paragraphs",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-Neo, Natural Questions, BM25 over Wikipedia, top-3 paragraphs",
+   "quote": "We add the top-3 highest scoring para-",
+   "table": null,
+   "note": null,
+   "where": "p7 Sec 4.3"
+  },
+  {
+   "claim": "Counting only question or only answer entity does not correlate with accuracy when Q-A entities co-occur fewer than 5 times, supporting the co-occurrence definition.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "TriviaQA, GPT-Neo (per Fig 13)",
+   "quote": "two baseline",
+   "table": null,
+   "note": null,
+   "where": "p5 Sec 3.1, App C"
+  },
+  {
+   "claim": "Humans show the opposite trend from LMs: highest accuracy on questions with few relevant documents, so low counts are not simply harder questions.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Natural Questions, leave-one-annotator-out, 5 raters with background text",
+   "quote": "Human accuracy is actually highest",
+   "table": null,
+   "note": null,
+   "where": "p5 Sec 3.1"
+  },
+  {
+   "claim": "Entity linking 2.1TB of pre-training data took about 3 weeks on a 128-CPU-core machine.",
+   "kind": "measured",
+   "source": null,
+   "metric": "wall clock",
+   "value": 3,
+   "unit": "weeks",
+   "baseline_value": null,
+   "n": null,
+   "setup": "DBpedia Spotlight, distributed",
+   "quote": "approximately 3 weeks",
+   "table": null,
+   "note": null,
+   "where": "p3 Sec 2.1"
+  }
+ ],
+ "limits": [
+  "Document counting is imperfect: about 60% precision on TriviaQA, plus entity-linker errors and unknown recall; examples with zero relevant documents were discarded as linker errors.",
+  "Co-occurrence of two entities is a proxy for the fact being stated, not proof.",
+  "GPT-3 results rest on estimated counts from OpenWebText, uncertain sizes and unknown fine-tuning; moved to Appendix.",
+  "Only factoid QA studied (TriviaQA, NQ); authors leave open whether other tasks show the same relation.",
+  "The causal experiment uses one 4.8B model trained for one epoch; the counterfactual had 30% fewer steps, so only removed-question accuracy is compared.",
+  "Scaling extrapolation (over 10^18 parameters) is a log-linear fit across a limited model range, with R2 0.97 to 0.99; the degree changes by setup (App B).",
+  "BM25 retrieval with Wikipedia; no dense retriever or modern RAG pipelines tested; models are 2022-era base LMs, not instruction-tuned chat models.",
+  "Hyperparameters of the 4.8B retraining are not given beyond a pointer to Wang et al. 2022."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "relevant document",
+   "definition": "documents that contain the salient question and answer entities",
+   "where": "p3 Sec 2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Language models as knowledge bases?",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Petroni et al.; answer-entity count baseline and LMs-as-KB idea",
+   "quote": null
+  },
+  {
+   "work": "How much knowledge can you pack into the parameters of a language model?",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Roberts et al.; closed-book QA evaluation",
+   "quote": null
+  },
+  {
+   "work": "T-REx",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Elsahar et al.; subject-object co-occurrence implies triple often present, motivates counting",
+   "quote": null
+  },
+  {
+   "work": "DBpedia Spotlight",
+   "year": 2011,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Mendes et al.; entity linker",
+   "quote": null
+  },
+  {
+   "work": "Measuring causal effects of data statistics on language model's factual predictions",
+   "year": 2022,
+   "arxiv": "2207.14251",
+   "relation": "related",
+   "note": "Elazar et al.; most similar work, causal inference on data statistics",
+   "quote": null
+  },
+  {
+   "work": "When not to trust language models",
+   "year": 2022,
+   "arxiv": "2212.10511",
+   "relation": "related",
+   "note": "Mallen et al.; concurrent, uses Wikipedia popularity proxies",
+   "quote": null
+  },
+  {
+   "work": "BLOOM",
+   "year": 2022,
+   "arxiv": "2211.05100",
+   "relation": "evaluates",
+   "note": "Scao et al.",
+   "quote": null
+  },
+  {
+   "work": "The Pile",
+   "year": 2020,
+   "arxiv": "2101.00027",
+   "relation": "uses-data",
+   "note": "Gao et al.",
+   "quote": null
+  },
+  {
+   "work": "TriviaQA",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Joshi et al.",
+   "quote": null
+  },
+  {
+   "work": "Natural Questions",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Kwiatkowski et al.",
+   "quote": null
+  },
+  {
+   "work": "What language model architecture and pretraining objective work best for zero-shot generalization?",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Wang et al.; setup for 4.8B C4 model",
+   "quote": null
+  },
+  {
+   "work": "Retrieval-augmented generation for knowledge-intensive NLP tasks",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Lewis et al.; retrieval augmentation motivation",
+   "quote": null
+  },
+  {
+   "work": "Distilling knowledge from reader to retriever",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Izacard & Grave; strong supervised baseline",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Language models struggle to capture the long-tail of information on the web.",
+   "page": 1,
+   "why": "BLOOM TriviaQA accuracy vs relevant doc count at six sizes; the whole thesis in one plot"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Document counting pipeline: entity link pre-training data, store document indices per entity, link QA pairs, count co-occurrence.",
+   "page": 2,
+   "why": "shows the method visually"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Counterfactual re-training experiment.",
+   "page": 5,
+   "why": "causal evidence"
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "Scaling trends for fact learning, log-linear fit R2 = 0.98.",
+   "page": 6,
+   "why": "shows the 10^18-parameter extrapolation"
+  },
+  {
+   "figure": "Fig 7",
+   "caption": "Models with access to required background context do not struggle on low-count questions.",
+   "page": 7,
+   "why": "oracle context vs closed book, relevant to RAG"
+  },
+  {
+   "figure": "Fig 9",
+   "caption": "Retrieval-augmented LMs no longer exhibit low accuracy on rare instances.",
+   "page": 8,
+   "why": "BM25 top-3 RAG fixes the long tail"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Figures are vector plots; axis values (and exponents like 10^4) come through the text layer only as digits, so numbers are not read from figures.",
+  "No embedded instructions found."
+ ]
+}

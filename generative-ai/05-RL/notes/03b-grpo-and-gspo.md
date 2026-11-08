@@ -16,6 +16,7 @@ sources:
   - https://arxiv.org/abs/2504.12216
   - https://arxiv.org/abs/2510.07242
   - https://arxiv.org/abs/2601.05242
+  - https://arxiv.org/abs/2402.14740 (RLOO, Back to Basics)
   - https://arxiv.org/abs/2606.08501 (Back on Track, step rewards for diffusion-LLM RL)
 confidence: medium
 cleaned: 2026-11-01

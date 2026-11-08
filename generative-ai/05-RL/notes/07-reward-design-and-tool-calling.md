@@ -351,4 +351,4 @@ RL for tool calling (DAPO, rStar2-Agent, ARPO, ComputerRL, Koa) and on-policy an
 
 ## Next
 
-[08 — Reasoning RL](08-reasoning-rl-deepseek-r1.md) is what happened when a verifiable reward met a strong base model: long reasoning emerged with no reasoning labels at all.
+RL for tool calling and dense signals continues in [07b](07b-rl-for-tool-calling-and-dense-signals.md). [08 — Reasoning RL](08-reasoning-rl-deepseek-r1.md) is what happened when a verifiable reward met a strong base model: long reasoning emerged with no reasoning labels at all.

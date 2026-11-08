@@ -1,0 +1,517 @@
+{
+ "schema": 1,
+ "key": "1909.13231",
+ "pdf": "ai-engineering/01-prompt-engineering/sources/sun-2019-test-time-training-self-supervision.pdf",
+ "bib": {
+  "title": "Test-Time Training with Self-Supervision for Generalization under Distribution Shifts",
+  "authors": [
+   "Yu Sun",
+   "Xiaolong Wang",
+   "Zhuang Liu",
+   "John Miller",
+   "Alexei A. Efros",
+   "Moritz Hardt"
+  ],
+  "first_author": "Sun",
+  "year": 2020,
+  "venue": "ICML 2020 (PMLR 119)",
+  "arxiv": "1909.13231",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 75704,
+  "chars_total": 75704,
+  "engine": "pymupdf",
+  "skipped": "References skimmed only."
+ },
+ "type": "empirical",
+ "question": "Can a model improve under distribution shift by updating its parameters on each unlabeled test sample through a self-supervised auxiliary task before predicting?",
+ "hypothesis": "Test-time updates on a self-supervised task help the main task when the gradients of the two losses are positively correlated.",
+ "contributions": [
+  "Test-Time Training: turn a single unlabeled test sample into a self-supervised learning problem and update parameters before predicting, with an online variant that keeps state",
+  "Improvements on CIFAR-10-C, ImageNet-C, VID-Robust and CIFAR-10.1 without hurting the original distribution",
+  "Theory for convex models: positive gradient correlation between main and auxiliary losses guarantees improvement (Theorem 1), supported empirically (Fig 4)"
+ ],
+ "method": {
+  "summary": "A Y-shaped ResNet (shared feature extractor, main branch, rotation-prediction branch) is trained jointly on classification and 4-way rotation prediction. At test time the shared layers are fine-tuned by SGD on the rotation loss of the single test image (augmented copies), then the image is classified; the online variant carries parameters across the test stream.",
+  "task": "image classification under distribution shift",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "CIFAR-10",
+    "role": "train",
+    "size": "50K train, 10K test",
+    "split": "standard",
+    "source": "Krizhevsky & Hinton 2009",
+    "preprocessing": "random crop and random horizontal flip"
+   },
+   {
+    "name": "ImageNet",
+    "role": "train",
+    "size": "1.2M train; 50K validation images used as test",
+    "split": "standard",
+    "source": "Russakovsky et al. 2015",
+    "preprocessing": null
+   },
+   {
+    "name": "CIFAR-10-C / ImageNet-C",
+    "role": "eval",
+    "size": "15 corruption types x 5 severity levels, copies of the test sets",
+    "split": "train on original training set only",
+    "source": "Hendrycks & Dietterich 2019",
+    "preprocessing": null
+   },
+   {
+    "name": "VID-Robust",
+    "role": "eval",
+    "size": "1109 sets of video frames in 30 classes; results on anchor frames",
+    "split": "ImageNet model, max-conversion of 1000 to 30 classes; 7 CIFAR-overlap classes rescaled to CIFAR size for the CIFAR model",
+    "source": "Shankar et al. 2019",
+    "preprocessing": null
+   },
+   {
+    "name": "CIFAR-10.1",
+    "role": "eval",
+    "size": "2000 images",
+    "split": "test only",
+    "source": "Recht et al. 2018",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "ResNet-26 (CIFAR-10)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "ResNet with Group Normalization, Y-structure; three groups, shared extractor split at end of second group; self-supervised branch same architecture as main branch except output dim",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "26",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "ResNet-18 (ImageNet)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "ResNet with Group Normalization; four groups, split at end of third group",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "18",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "Joint: mean of l_m(x,y;theta_m,theta_e) + l_s(x;theta_s,theta_e), cross-entropy main task plus 4-way rotation (0, 90, 180, 270 degrees) prediction, losses summed with equal weight",
+   "optimizer": "SGD, 'standard hyper-parameters as (Huang et al., 2016; He et al., 2016a)' (values not given)",
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "Group Normalization instead of Batch Normalization",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": "'multiple independent trials' for the 0.2% original-set gain; number not stated",
+   "other": {
+    "note": "joint-training hyperparameters deferred to cited works; only the last-epoch lr (0.001) is stated"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "Standard TTT: 10 gradient steps per test image, parameters reset after each prediction. TTT-Online: 1 step per new image, parameters carried over; accuracy averaged over whole shuffled test set.",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "test_time_optimizer": "SGD, lr 0.001 (last-epoch training lr), weight decay 0, momentum 0",
+    "steps_standard": "10",
+    "steps_online": "1",
+    "batch_for_update": "batch of augmented copies of the single test image (random crop + horizontal flip); batch size not stated",
+    "appendix_variant": "1 iteration with lr 0.01 gave results 'almost as good' (preliminary)",
+    "cost": "2 x batch size x number of iterations slower than a single forward pass"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "test error",
+     "definition": "classification error on the shifted test set",
+     "unit": "%",
+     "higher_is_better": false
+    },
+    {
+     "name": "test accuracy",
+     "definition": "used for ImageNet-C, VID-Robust",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Object recognition task only (plain ResNet, GN)",
+    "Joint training (Hendrycks et al. 2019a), model fixed at test time",
+    "UDA-SS (Sun et al. 2019), treated as an oracle with access to the full unlabeled test set",
+    "Adversarial Logit Pairing (Kannan et al. 2018), CIFAR only"
+   ],
+   "protocol": "Test set shuffled before TTT-Online; no significance tests; seeds not reported except 'multiple independent trials'."
+  },
+  "availability": {
+   "code": "project website https://test-time-training.github.io/",
+   "weights": null,
+   "data": "public benchmarks"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "inference.parameters.test_time_optimizer",
+    "quote": "we use stochastic gradient descent with the learning rate set to that of the last epoch during training, which is 0.001 in all our experiments",
+    "where": "Sec 3 Optimization details"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "TTT-Online sharply lowers CIFAR-10-C level 5 error on Gaussian noise vs joint training",
+   "kind": "measured",
+   "source": null,
+   "metric": "test error",
+   "value": 25.8,
+   "unit": "% error",
+   "baseline_value": 49.4,
+   "n": null,
+   "setup": "CIFAR-10-C level 5, ResNet-26 GN, Gaussian noise",
+   "note": "Joint training 49.4, baseline 50.5, standard TTT 45.6 (Table A2)",
+   "where": "Fig 1 / Table A2",
+   "table": "Table A2, row TTT-Online, column gauss"
+  },
+  {
+   "claim": "Standard TTT beats joint training on all CIFAR-10-C level 5 types; Gaussian noise 45.6 vs 49.4",
+   "kind": "measured",
+   "source": null,
+   "metric": "test error",
+   "value": 45.6,
+   "unit": "% error",
+   "baseline_value": 49.4,
+   "n": null,
+   "setup": "CIFAR-10-C level 5, ResNet-26 GN",
+   "note": null,
+   "where": "Table A2",
+   "table": "Table A2, row TTT, column gauss"
+  },
+  {
+   "claim": "TTT-Online outperforms UDA-SS (an oracle with the full unlabeled test set) on 13 of 15 corruptions and the original",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 13,
+   "unit": "corruptions of 15",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CIFAR-10-C level 5",
+   "note": null,
+   "where": "Sec 3.1, Table 1",
+   "quote": "Surprisingly, TTT-Online outperforms UDA-SS on 13 out"
+  },
+  {
+   "claim": "Joint training improves original CIFAR-10 test error over the plain baseline",
+   "kind": "measured",
+   "source": null,
+   "metric": "test error",
+   "value": 8.1,
+   "unit": "% error",
+   "baseline_value": 8.9,
+   "n": null,
+   "setup": "ResNet-26 GN, CIFAR-10 original test",
+   "note": null,
+   "where": "Sec 3.1",
+   "quote": "The joint training baseline actually improves performance on the original to 8.1%."
+  },
+  {
+   "claim": "TTT improves the original test set a further 0.2% consistently",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 0.2,
+   "unit": "% absolute",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CIFAR-10 original test, multiple independent trials",
+   "note": "Table A2 shows TTT 7.9 vs JT 8.1; TTT-Online 8.2",
+   "where": "Sec 3.1",
+   "quote": "Test-Time Training further improves on the original test"
+  },
+  {
+   "claim": "TTT-Online on ImageNet-C level 5 Gaussian noise accuracy vs baseline",
+   "kind": "measured",
+   "source": null,
+   "metric": "test accuracy",
+   "value": 26.3,
+   "unit": "% accuracy",
+   "baseline_value": 1.3,
+   "n": null,
+   "setup": "ImageNet-C level 5, ResNet-18 GN, Gaussian noise",
+   "note": "Baseline 1.3, JT 2.1, TTT 3.1; original 68.9 -> 68.8 for TTT-Online",
+   "where": "Fig 2 / Table A3",
+   "table": "Table A3, row TTT-Online, column gauss"
+  },
+  {
+   "claim": "CIFAR-10.1 error: TTT 15.9 vs joint training 16.7 and baseline 17.4",
+   "kind": "measured",
+   "source": null,
+   "metric": "test error",
+   "value": 15.9,
+   "unit": "% error",
+   "baseline_value": 16.7,
+   "n": null,
+   "setup": "CIFAR-10.1, ResNet-26 GN, standard TTT",
+   "note": "Text: improvement of 0.8% (relative 4.8%) over joint training",
+   "where": "Table 4",
+   "table": "Table 4, row TTT (standard version), column Error (%)"
+  },
+  {
+   "claim": "VID-Robust accuracy with TTT-Online (ImageNet model)",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 64.3,
+   "unit": "% accuracy",
+   "baseline_value": 63.5,
+   "n": null,
+   "setup": "VID-Robust, ResNet-18",
+   "note": "Baseline 62.7, joint 63.5, TTT 63.8",
+   "where": "Table 3",
+   "table": "Table 3, row TTT-Online, column Accuracy (%)"
+  },
+  {
+   "claim": "VID-Robust CIFAR classes average accuracy with TTT-Online; airplane class does not improve",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 45.4,
+   "unit": "% accuracy",
+   "baseline_value": 42.4,
+   "n": null,
+   "setup": "7 CIFAR-overlap VID-Robust classes, CIFAR model",
+   "note": "Baseline 41.4, joint 42.4. Airplane unchanged at 70.2; black margins give trivial rotation hint",
+   "where": "Table 2",
+   "table": "Table 2, row TTT-Online, column Average"
+  },
+  {
+   "claim": "Gradient inner product between main and auxiliary losses correlates with TTT improvement (standard version)",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 0.93,
+   "unit": "linear correlation coefficient",
+   "baseline_value": null,
+   "n": null,
+   "setup": "75 test sets (15 corruptions x 5 levels), CIFAR-10-C",
+   "note": "0.89 is the online version",
+   "where": "Fig 4",
+   "quote": "The linear correlation coefﬁcients are 0.93 and 0.89 respectively"
+  },
+  {
+   "claim": "Test-time slowdown is 2 x batch size x number of iterations versus one forward pass",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Standard TTT with 10 iterations; batch size not stated",
+   "note": null,
+   "where": "Appendix A2"
+  },
+  {
+   "claim": "With Batch Normalization, standard TTT still helps and the online version does not work",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "CIFAR-10-C level 5, ResNet-26 BN, hard example mining on large l_s",
+   "note": "Table A1 gauss: B 63.9, JT 70.7, TTT 47.9",
+   "where": "Appendix A4.1, Table A1"
+  },
+  {
+   "claim": "ALP incurs about twice the error on the original distribution",
+   "kind": "measured",
+   "source": null,
+   "metric": "test error",
+   "value": 16.5,
+   "unit": "% error",
+   "baseline_value": 8.1,
+   "n": null,
+   "setup": "ALP baseline, CIFAR-10 original",
+   "note": null,
+   "where": "Table A2",
+   "table": "Table A2, row ALP, column orig"
+  }
+ ],
+ "limits": [
+  "Only image classification with a rotation-prediction auxiliary task; the authors say the auxiliary task must be well defined and non-trivial (airplane class shows no gain).",
+  "Computational cost is high: test-time slowdown of 2 x batch size x iterations; efficiency left to future work.",
+  "Online version assumes test samples come from the same or smoothly changing shifts; it did not work with Batch Normalization, forcing Group Normalization.",
+  "Theory covers only smooth convex models; deep nets are supported empirically (Fig 4).",
+  "CIFAR-10.1 gain is small relative to the drop (authors concede).",
+  "Joint-training hyperparameters (batch size, epochs, lr schedule) are not stated in the paper; no seed counts or confidence intervals.",
+  "Paper text refers to a thresholding trick 'introduced in the method section' (Appendix A2) that this version's method section does not contain."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Test-Time Training",
+   "definition": "Fine-tune the shared feature extractor by minimizing the auxiliary self-supervised loss on a single unlabeled test sample before predicting",
+   "where": "Sec 2, Eq 3"
+  },
+  {
+   "term": "TTT-Online",
+   "definition": "Online version where theta for x_t is initialised from theta(x_{t-1}) rather than reset",
+   "where": "Sec 2"
+  },
+  {
+   "term": "Joint training",
+   "definition": "Baseline trained on main and self-supervised tasks but fixed at test time",
+   "where": "Sec 1, Sec 3"
+  },
+  {
+   "term": "Variable decision boundary",
+   "definition": "Model parameters theta(x) depend on the test sample x but not its label",
+   "where": "Sec 1, Appendix A1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Unsupervised domain adaptation through self-supervision (UDA-SS)",
+   "year": 2019,
+   "arxiv": "1909.11825",
+   "relation": "extends",
+   "note": "Paper is a follow-up; compared as oracle baseline",
+   "quote": null
+  },
+  {
+   "work": "Using self-supervised learning can improve model robustness and uncertainty (Hendrycks et al.)",
+   "year": 2019,
+   "arxiv": "1906.12340",
+   "relation": "baseline",
+   "note": "Joint training baseline; improved implementation",
+   "quote": null
+  },
+  {
+   "work": "Unsupervised representation learning by predicting image rotations (Gidaris et al.)",
+   "year": 2018,
+   "arxiv": "1803.07728",
+   "relation": "uses-method",
+   "note": "Rotation auxiliary task",
+   "quote": null
+  },
+  {
+   "work": "Benchmarking neural network robustness to common corruptions (Hendrycks & Dietterich)",
+   "year": 2019,
+   "arxiv": "1903.12261",
+   "relation": "uses-data",
+   "note": "CIFAR-10-C, ImageNet-C",
+   "quote": null
+  },
+  {
+   "work": "Do CIFAR-10 classifiers generalize to CIFAR-10? (Recht et al.)",
+   "year": 2018,
+   "arxiv": "1806.00451",
+   "relation": "uses-data",
+   "note": "CIFAR-10.1",
+   "quote": null
+  },
+  {
+   "work": "Do image classifiers generalize across time? (Shankar et al.)",
+   "year": 2019,
+   "arxiv": "1906.02168",
+   "relation": "uses-data",
+   "note": "VID-Robust",
+   "quote": null
+  },
+  {
+   "work": "Adversarial Logit Pairing (Kannan et al.)",
+   "year": 2018,
+   "arxiv": "1803.06373",
+   "relation": "baseline",
+   "note": "Extra robustness baseline",
+   "quote": null
+  },
+  {
+   "work": "Shocher et al. 2018 (zero-shot super-resolution)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Key inspiration: learning at test time on the input itself",
+   "quote": null
+  },
+  {
+   "work": "Mullapudi et al. 2018 (online video segmentation)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Inspired the online version",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Test error (%) on CIFAR-10-C with level 5 corruptions. We compare our approaches, Test-Time Training (TTT) and its online version (TTT-Online), with two baselines",
+   "page": 3,
+   "why": "Headline bar chart across 15 corruptions for the four methods"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Test accuracy (%) on ImageNet-C with level 5 corruptions; lower panel sliding-window accuracy of TTT-Online",
+   "page": 4,
+   "why": "Shows online adaptation accuracy rising as more unlabeled samples are seen"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Test error (%) on CIFAR-10-C, for the three noise types, with gradually changing distribution",
+   "page": 5,
+   "why": "Online TTT under drifting noise vs joint training and UDA-SS"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Scatter plot of gradient inner product between main and self-supervised losses vs improvement from TTT",
+   "page": 7,
+   "why": "Evidence for the gradient-correlation theory (r 0.93 and 0.89)"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 2-3, Sec 2",
+   "snippet": "joint: min over (theta_e, theta_m, theta_s) of 1/n sum_i [ l_m(x_i,y_i;theta_m,theta_e) + l_s(x_i;theta_s,theta_e) ]; test time: min over theta_e of l_s(x;theta_s,theta_e), then predict with (theta_e*, theta_m)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text extraction of tables is column-wise; figure axes values are scattered in the text.",
+  "No embedded instructions found.",
+  "Appendix A2 mentions a thresholding trick 'introduced in the method section' that is absent from the text."
+ ]
+}

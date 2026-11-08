@@ -109,6 +109,9 @@ flowchart TD
 
 PlanRAG measured the plan step on database questions. Its Decision QA benchmark has 301 scenarios built from two video games (200 Locating and 101 Building), each asking which business decision is best, over a relational database queried with SQL or a graph database queried with Cypher. The model writes a plan of data analyses first, queries to fit the plan, and re-plans when the results do not serve it. GPT-4 at temperature 0, zero-shot, one run, averaged over the two database types, scored 64.3% (Locating) and 45.0% (Building) with PlanRAG. Iterative RAG scored 48.5% and 37.6%, and single-turn RAG 30.5% and 2.5%. The abstract's 15.8% and 7.4% are percentage points over iterative RAG. Without re-planning PlanRAG fell to 53.5% and 44.1%, and it re-planned on 6% of Locating and 38% of Building runs. Runs that never queried a critical value fell from 3.3% and 33.2% for iterative RAG to 1.3% and 21.8%. The benchmark is game data with a simulator for ground truth, with one reader and no variance, and Building stays hard at 45.0% ([arXiv:2406.12430](https://arxiv.org/abs/2406.12430), Lee et al., NAACL 2024).
 
+![Previous single-turn and iterative RAG compared with PlanRAG, which adds a planning step and re-planning from the query results before retrieving and answering](../sources/images/lee-planrag-fig3.png)
+*Image Source: Lee et al., [PlanRAG: A Plan-then-Retrieval Augmented Generation for Generative Large Language Models as Decision Makers](https://arxiv.org/abs/2406.12430) (2024), Fig. 3*
+
 ---
 
 ## Context discipline across the agents

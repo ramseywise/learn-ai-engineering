@@ -1,0 +1,469 @@
+{
+ "schema": 1,
+ "key": "1706.06083",
+ "pdf": "ai-engineering/01-prompt-engineering/sources/madry-2017-towards-deep-learning-models-resistant.pdf",
+ "bib": {
+  "title": "Towards Deep Learning Models Resistant to Adversarial Attacks",
+  "authors": [
+   "Aleksander Mądry",
+   "Aleksandar Makelov",
+   "Ludwig Schmidt",
+   "Dimitris Tsipras",
+   "Adrian Vladu"
+  ],
+  "first_author": "Madry",
+  "year": 2018,
+  "venue": "ICLR 2018 (arXiv v4, 2019)",
+  "arxiv": "1706.06083",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 69000,
+  "chars_total": 69777,
+  "engine": "pymupdf",
+  "skipped": "Trailing axis labels of supplementary Figures 11-12 only"
+ },
+ "type": "empirical",
+ "question": "How can we train deep neural networks that are robust to adversarial inputs, with a guarantee covering a well-defined class of attacks?",
+ "hypothesis": "Training against a strong PGD first-order adversary on the min-max objective, with sufficient network capacity, yields robustness against all first-order attacks.",
+ "contributions": [
+  "Study of the loss landscape of the saddle point problem: PGD local maxima are well concentrated, so first-order methods solve it, motivating PGD as universal first-order adversary",
+  "Network capacity matters: robust classification needs larger capacity than benign classification",
+  "MNIST and CIFAR10 models robust to a wide range of attacks, plus a public challenge"
+ ],
+ "method": {
+  "summary": "Casts adversarial robustness as a min-max problem, attacks with multi-step l_inf PGD from a random start and trains on the resulting adversarial examples. Evaluated on MNIST and CIFAR10 with white-box, black-box and CW attacks.",
+  "task": "adversarially robust image classification",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "MNIST",
+    "role": "both",
+    "size": null,
+    "split": "standard train / evaluation set",
+    "source": "LeCun 1998",
+    "preprocessing": null
+   },
+   {
+    "name": "CIFAR10",
+    "role": "both",
+    "size": "10,000 evaluation examples",
+    "split": "train / evaluation set",
+    "source": "Krizhevsky 2009",
+    "preprocessing": "random crops and flips, per-image standardization"
+   }
+  ],
+  "models": [
+   {
+    "name": "MNIST CNN",
+    "role": "proposed",
+    "params": null,
+    "architecture": "conv 32 filters, conv 64 filters (each 2x2 max-pool), FC 1024",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "capacity study": "start conv 2, conv 4, FC 64, doubled up to scale 16"
+    }
+   },
+   {
+    "name": "CIFAR10 ResNet (wide)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "ResNet, 5 residual units, filters (16,160,320,640), 10x wider than original",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "natural accuracy": "95.2%"
+    }
+   }
+  ],
+  "training": {
+   "objective": "min_theta E[max_{delta in S} L(theta,x+delta,y)], cross-entropy on PGD adversarial examples",
+   "optimizer": "SGD (stated generically; variant not specified)",
+   "lr": null,
+   "lr_schedule": "CIFAR10 training step size decreased in steps (visible as drops in Fig 5)",
+   "warmup": null,
+   "batch_size": null,
+   "steps": "read from Fig 5: about 100k iterations MNIST, about 75k CIFAR10",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "train PGD MNIST": "40 steps, step 0.01, eps 0.3, random start, l_inf sign steps",
+    "train PGD CIFAR10": "7 steps, step size 2, eps 8",
+    "restarts": "no restarts during training; a new random start each epoch"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "Attacks: PGD with 1 or 20 restarts; single trained model per setting",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "MNIST attacks": "PGD 40 or 100 steps, 1 or 20 restarts, eps 0.3",
+    "CIFAR10 attacks": "PGD 7 or 20 steps, step 2, eps 8; CW 30 steps",
+    "CW+ kappa": "50",
+    "l2/eps sweep PGD": "100 steps, step size 2.5*eps/100",
+    "DBA": "2000 steps"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "adversarial accuracy",
+     "definition": "accuracy on the evaluation set after attack",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "standard (natural) training",
+    "FGSM adversarial training"
+   ],
+   "protocol": "White-box (A), black-box from independent copy (A'), from natural net (Anat), from architecture B (Tramer et al. 2017), CW loss attacks; eps sweeps incl. l2. No seeds or significance tests."
+  },
+  "availability": {
+   "code": "https://github.com/MadryLab/mnist_challenge and https://github.com/MadryLab/cifar10_challenge",
+   "weights": "pre-trained models at same repos",
+   "data": "public MNIST, CIFAR10"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Adversarially trained MNIST net keeps 89.3% accuracy under the strongest white-box attack (100-step PGD, 20 restarts).",
+   "kind": "measured",
+   "source": null,
+   "metric": "adversarial accuracy",
+   "value": "89.3%",
+   "unit": "%",
+   "baseline_value": "98.8% natural",
+   "n": null,
+   "setup": "MNIST, eps=0.3 l_inf, 2 conv (32,64) + FC 1024, PGD-trained (40 steps, step 0.01); white-box source A",
+   "note": null,
+   "where": "Table 1, p13",
+   "table": "Table 1, row PGD 100 steps 20 restarts source A, column Accuracy"
+  },
+  {
+   "claim": "Adversarially trained CIFAR10 wide ResNet reaches 45.8% under 20-step white-box PGD.",
+   "kind": "measured",
+   "source": null,
+   "metric": "adversarial accuracy",
+   "value": "45.8%",
+   "unit": "%",
+   "baseline_value": "87.3% natural",
+   "n": null,
+   "setup": "CIFAR10, eps=8 l_inf, 10x wide ResNet, PGD-trained (7 steps of size 2); attack 20 steps",
+   "note": null,
+   "where": "Table 2, p14",
+   "table": "Table 2, row PGD 20 steps source A, column Accuracy"
+  },
+  {
+   "claim": "Natural accuracy of the CIFAR10 PGD-trained wide model is 87.3%, below the 95.2% of the naturally trained wide network.",
+   "kind": "measured",
+   "source": null,
+   "metric": "natural accuracy",
+   "value": "87.3%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CIFAR10 wide ResNet, PGD training",
+   "note": null,
+   "where": "Sec 4, Table 2",
+   "quote": "This network can achieve an accuracy of 95.2% when\ntrained with natural examples.",
+   "table": "Table 2, row Natural, column Accuracy"
+  },
+  {
+   "claim": "A naturally trained MNIST net drops from 99.2% to 6.4% accuracy under FGSM.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy under FGSM",
+   "value": "6.4%",
+   "unit": "%",
+   "baseline_value": "99.2%",
+   "n": null,
+   "setup": "MNIST, natural training, FGSM eps=0.3",
+   "note": null,
+   "where": "Sec 5, p12",
+   "quote": "when evaluating on examples perturbed with FGSM the accuracy drops to 6.4%"
+  },
+  {
+   "claim": "Black-box transfer attacks are far weaker than white-box: MNIST PGD from independent copy A' gives 96.0%, CIFAR10 PGD 7 steps from A' gives 64.2%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "adversarial accuracy",
+   "value": "96.0%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "PGD-trained models, transfer from independently trained copy",
+   "note": null,
+   "where": "Tables 1,2",
+   "table": "Table 1, row PGD 40 1 A', column Accuracy; Table 2 row PGD 7 A' (64.2%)"
+  },
+  {
+   "claim": "Local maxima found by PGD from random restarts have well-concentrated loss values (checked on 10^5 restarts), supporting PGD as a universal first-order adversary.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "MNIST and CIFAR10 standard and adversarially trained nets, PGD from random points in the l_inf ball",
+   "note": "Text prints 10^5 as '105' due to extraction of superscript.",
+   "where": "Sec 3.1, Fig 2",
+   "quote": "we verified this concentration based on 105 restarts"
+  },
+  {
+   "claim": "Robust training needs more capacity: small PGD-trained MNIST nets collapse to predicting a fixed class.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "MNIST conv net with 2,4 filters and FC 64, doubled up to scale 16; PGD training eps=0.3",
+   "note": null,
+   "where": "Sec 4, Fig 4",
+   "quote": "attempting to train against a strong adversary (PGD) prevents the network from learning anything\nmeaningful."
+  },
+  {
+   "claim": "FGSM-trained networks overfit (label leaking) and give no robustness to PGD: CIFAR10 wide FGSM-trained model has 0.0% accuracy under 7- and 20-step PGD while 95.1% under FGSM.",
+   "kind": "measured",
+   "source": null,
+   "metric": "adversarial accuracy",
+   "value": "0.0%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CIFAR10 wide, FGSM training, eps=8, white-box",
+   "note": null,
+   "where": "Table 5, p22",
+   "table": "Table 5, row Wide (FGSM training), columns PGD (7 steps), PGD (20 steps)"
+  },
+  {
+   "claim": "PGD overestimates l2 robustness of the l_inf-trained MNIST model (gradient masking by threshold filters); a decision-based attack finds it much more brittle.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "MNIST l_inf-trained, l2 PGD up to eps=4.5, DBA 2000 steps",
+   "note": null,
+   "where": "Sec 5, Fig 6",
+   "quote": "PGD is in fact overestimating the ℓ2-robustness of this model"
+  },
+  {
+   "claim": "First conv layer of robust MNIST model uses only 3 of 32 filters, each with a single nonzero weight, acting as thresholding filters ReLU(alpha x - beta).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "MNIST PGD-trained public and secret challenge models",
+   "note": null,
+   "where": "App C",
+   "quote": "the robust\nmodels only utilize 3 out of the total 32 ﬁlters"
+  },
+  {
+   "claim": "Min-max formulation: rho(theta)=E[max_{delta in S} L(theta,x+delta,y)]; inner max = attack, outer min = adversarial training; Danskin's theorem justifies SGD on gradients at inner maximizers.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Theory, eq 2.1, App A",
+   "note": null,
+   "where": "Sec 2, 3.3, App A"
+  }
+ ],
+ "limits": [
+  "Only l_inf-bounded attacks are the focus; l2 PGD overestimates robustness (gradient masking)",
+  "CIFAR10 results far from satisfactory (45.8% under PGD 20)",
+  "Danskin's theorem assumptions do not hold exactly (ReLU, approximate maximizers)",
+  "PGD cannot rule out isolated higher maxima; robustness claim is empirical",
+  "Image classification only; no text or language model evaluation"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "first-order adversary",
+   "definition": "attacks that rely only on gradients of the loss with respect to the input",
+   "where": "Sec 3.2"
+  },
+  {
+   "term": "saddle point problem",
+   "definition": "min over theta of rho(theta) with rho(theta)=E[max over delta in S of L(theta,x+delta,y)]",
+   "where": "Eq 2.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Goodfellow et al., Explaining and harnessing adversarial examples (FGSM)",
+   "year": 2015,
+   "arxiv": "1412.6572",
+   "relation": "extends",
+   "note": "FGSM adversarial training generalised to multi-step PGD",
+   "quote": null
+  },
+  {
+   "work": "Huang et al., Learning with a strong adversary",
+   "year": 2015,
+   "arxiv": "1511.03034",
+   "relation": "extends",
+   "note": "earlier min-max with one-step adversary",
+   "quote": null
+  },
+  {
+   "work": "Shaham et al., Understanding adversarial training",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "min-max, FGSM-only evaluation",
+   "quote": null
+  },
+  {
+   "work": "Tramer et al., The space of transferable adversarial examples",
+   "year": 2017,
+   "arxiv": "1704.03453",
+   "relation": "uses-method",
+   "note": "black-box architecture B; FGSM random",
+   "quote": null
+  },
+  {
+   "work": "Kurakin et al., Adversarial machine learning at scale",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "related",
+   "note": "label leaking, capacity",
+   "quote": null
+  },
+  {
+   "work": "Carlini and Wagner, Towards evaluating the robustness of neural networks",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "CW loss attack",
+   "quote": null
+  },
+  {
+   "work": "Brendel et al., Decision-based adversarial attacks",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "DBA",
+   "quote": null
+  },
+  {
+   "work": "MNIST",
+   "year": 1998,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "CIFAR10",
+   "year": 2009,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "Szegedy et al., Intriguing properties of neural networks",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "related",
+   "note": "original adversarial examples",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Cross-entropy loss values while creating an adversarial example (20 PGD runs)",
+   "page": 6,
+   "why": "shows loss plateau and clustering of PGD maxima"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Values of local maxima for five examples from 10^5 random starts",
+   "page": 7,
+   "why": "concentration of maxima, standard vs adversarially trained"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Conceptual illustration of standard vs. adversarial decision boundaries",
+   "page": 9,
+   "why": "why robustness needs capacity"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Effect of network capacity on performance",
+   "page": 11,
+   "why": "capacity vs natural/FGSM/PGD training"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "MNIST adversarial accuracy under attacks",
+   "page": 13,
+   "why": "headline numbers"
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "Performance against PGD of different strength (eps sweeps, l2)",
+   "page": 14,
+   "why": "eps generalisation and gradient masking"
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 2 eq 2.1",
+   "snippet": "min_theta rho(theta), rho(theta) = E_(x,y)~D [ max_{delta in S} L(theta, x+delta, y) ]",
+   "verbatim": false
+  },
+  {
+   "where": "Sec 2.1",
+   "snippet": "x_{t+1} = Pi_{x+S}( x_t + alpha sgn(grad_x L(theta, x_t, y)) )",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Superscripts garbled in text (10^5 printed as 105)",
+  "No embedded instructions found"
+ ]
+}

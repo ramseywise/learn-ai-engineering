@@ -146,6 +146,9 @@ HNSW speeds up the early part of the walk by stacking proximity graphs of decrea
 
 Each layer has exponentially fewer vectors (1000 → 100 → 10), which makes the search approximately logarithmic. The guarantee is weaker than it sounds. Malkov and Yashunin prove O(log N) only for an exact Delaunay graph with bounded degree, and they support the approximate graph that real indexes build only with simulations on low-dimensional data (d=4, plus scaling runs at d=8). On 200M SIFT vectors (128-d) their query time "deviates from the pure logarithm". The paper's largest test is 200M vectors, and it leaves billion-scale data to future work ([arXiv:1603.09320](https://arxiv.org/abs/1603.09320), Malkov & Yashunin, IEEE TPAMI 2020). Two other details matter in practice. A node's top layer is drawn at random, ⌊−ln(U)·m<sub>L</sub>⌋ with m<sub>L</sub> = 1/ln M, so no layer is planned. Neighbours are chosen for diversity, not only for closeness, because on clustered data a graph of nearest neighbours only "stucks at the clusters boundaries".
 
+![HNSW search: a query enters at the sparse top layer and greedily descends, with each layer holding more vectors and a smaller characteristic radius](../sources/images/malkov-efficient-robust-approximate-fig1.png)
+*Image Source: Malkov and Yashunin, [Efficient and Robust Approximate Nearest Neighbor Search Using Hierarchical Navigable Small World Graphs](https://arxiv.org/abs/1603.09320) (2018), Fig. 1*
+
 ```text
 layer 3   o-----------------o-----------o            10 nodes: long jumps
           |                 |

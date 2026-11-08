@@ -1,0 +1,469 @@
+{
+ "schema": 1,
+ "key": "2110.08193",
+ "pdf": "ai-engineering/01-prompt-engineering/sources/parrish-2022-bbq.pdf",
+ "bib": {
+  "title": "BBQ: A Hand-Built Bias Benchmark for Question Answering",
+  "authors": [
+   "Alicia Parrish",
+   "Angelica Chen",
+   "Nikita Nangia",
+   "Vishakh Padmakumar",
+   "Jason Phang",
+   "Jana Thompson",
+   "Phu Mon Htut",
+   "Samuel R. Bowman"
+  ],
+  "first_author": "Parrish",
+  "year": 2022,
+  "venue": "Findings of the Association for Computational Linguistics: ACL 2022, pages 2086-2105",
+  "arxiv": "2110.08193",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 87094,
+  "chars_total": 87094,
+  "engine": "pymupdf",
+  "skipped": "Figure data (numeric heat-map cells, pp. 8-20) skimmed only; read as noise."
+ },
+ "type": "benchmark",
+ "question": "How do social biases against protected classes manifest in the discrete outputs of question-answering models, and when do they override a correct answer?",
+ "hypothesis": "Models will rely on social stereotypes when the context is under-informative, and biases may also lower accuracy when the correct answer conflicts with a stereotype.",
+ "contributions": [
+  "BBQ, a hand-written dataset of 58,492 examples over nine social bias categories plus two intersectional categories, validated by crowdworkers",
+  "A bias score metric computed separately for ambiguous and disambiguated contexts",
+  "Evaluation of UnifiedQA, RoBERTa and DeBERTaV3 showing reliance on stereotypes in ambiguous contexts"
+ ],
+ "method": {
+  "summary": "Authors hand-write 325 templates, each targeting an attested bias, expanded into 58,492 three-choice QA examples in sets of four (ambiguous or disambiguated context x negative or non-negative question). Models answer zero-shot (UnifiedQA) or after RACE fine-tuning (RoBERTa, DeBERTaV3); accuracy and a bias score are computed per category and context.",
+  "task": "multiple-choice question answering for social bias measurement",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "BBQ",
+    "role": "eval",
+    "size": "58,492 examples; 325 templates, about 175 questions per template on average; at least 25 templates per category; 8 to 200 examples per template",
+    "split": "no split; all used for evaluation",
+    "source": "Hand-written by authors, CC-BY 4.0, github.com/nyu-mll/BBQ",
+    "preprocessing": "Each template validated on MTurk: 5 annotators per item, 4/5 must match gold label, failing templates edited and re-validated. UNKNOWN answer sampled from 10 equivalent strings. Order of target and non-target permuted."
+   },
+   {
+    "name": "RACE",
+    "role": "train",
+    "size": null,
+    "split": null,
+    "source": "Lai et al. 2017",
+    "preprocessing": "Used to fine-tune RoBERTa and DeBERTaV3 for multiple choice"
+   }
+  ],
+  "models": [
+   {
+    "name": "UnifiedQA 11B (RACE-style and ARC-style input formats)",
+    "role": "evaluated",
+    "params": "11B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "zero-shot, no prior exposure to BBQ; trained on eight datasets"
+    }
+   },
+   {
+    "name": "RoBERTa Base and Large",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": "fine-tuned on RACE",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "DeBERTaV3 Base and Large",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": "fine-tuned on RACE",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "multiple-choice QA fine-tuning on RACE (RoBERTa, DeBERTaV3 only)",
+   "optimizer": null,
+   "lr": "1e-5",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "16",
+   "steps": null,
+   "epochs": "3",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "scope": "applies to RoBERTa and DeBERTaV3 only; UnifiedQA is used as released"
+   }
+  },
+  "inference": {
+   "decoding": "UnifiedQA outputs a string; scored by exact match between top output and each answer option",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "inferred: one run per model, no seeds or repeats reported",
+   "prompting": "zero-shot; context, question and three answer options in RACE-style or ARC-style input format; exact templates not printed",
+   "retrieval": null,
+   "parameters": {},
+   "other": {
+    "unknown_strings": "UNKNOWN option sampled from 10 strings: can't answer, can't be determined, cannot answer, cannot be determined, not answerable, not enough info, not enough information, not known, undetermined, unknown",
+    "excluded": "3 examples (0.005%) excluded because UnifiedQA output matched no option"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Accuracy",
+     "definition": "per category and context (ambiguous, disambiguated); in disambiguated further split by whether correct answer aligns with the bias",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Bias score, disambiguated (sDIS)",
+     "definition": "2*(n_biased_ans / n_non-UNKNOWN_outputs) - 1",
+     "unit": "% (-100 to 100; 0 = no measured bias)",
+     "higher_is_better": false
+    },
+    {
+     "name": "Bias score, ambiguous (sAMB)",
+     "definition": "(1 - accuracy) * sDIS",
+     "unit": "%",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "Question-only baseline (UnifiedQA, context removed)",
+    "Human accuracy on 300 sampled examples + 50 filler items"
+   ],
+   "protocol": "Single run per model; no significance tests. Human accuracy by MTurk, 5 raters, raw and majority vote."
+  },
+  "availability": {
+   "code": "https://github.com/nyu-mll/BBQ",
+   "weights": null,
+   "data": "https://github.com/nyu-mll/BBQ, CC-BY 4.0"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "UnifiedQA with RACE-style input scores highest overall on BBQ accuracy; RoBERTa-Base lowest.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 77.8,
+   "unit": "% accuracy",
+   "baseline_value": 61.4,
+   "n": null,
+   "setup": "BBQ all categories, ambiguous and disambiguated pooled; chance 33.3%; RoBERTa-Base 61.4%",
+   "quote": "at 77.8% and lowest for RoBERTa-Base at 61.4% (chance is 33.3%)",
+   "table": null,
+   "note": null,
+   "where": "Section 6"
+  },
+  {
+   "claim": "In disambiguated contexts, accuracy is up to 3.4 points higher when the correct answer aligns with the stereotype than when it conflicts.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy gap aligned vs nonaligned",
+   "value": 3.4,
+   "unit": "percentage points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "averaged over categories, six model variants; over 5 points on gender for most models",
+   "quote": "average up to 3.4 percentage points higher accuracy",
+   "table": null,
+   "note": null,
+   "where": "Abstract"
+  },
+  {
+   "claim": "Accuracy in ambiguous contexts, where UNKNOWN is always correct, is low.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 67.5,
+   "unit": "% (maximum)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ambiguous contexts, best model",
+   "quote": "no more than 67.5%",
+   "table": null,
+   "note": null,
+   "where": "Section 8"
+  },
+  {
+   "claim": "When UnifiedQA errs in ambiguous contexts, its wrong answer aligns with the targeted stereotype about 77% of the time.",
+   "kind": "measured",
+   "source": null,
+   "metric": "share of errors aligned with bias",
+   "value": 77,
+   "unit": "% of errors",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ambiguous contexts; other models 56 to 76%; rate rises with general capability",
+   "quote": "about 77% of errors in ambiguous contexts aligning with the",
+   "table": null,
+   "note": null,
+   "where": "Section 6"
+  },
+  {
+   "claim": "Human accuracy on BBQ: raw crowdworker accuracy.",
+   "kind": "measured",
+   "source": null,
+   "metric": "human accuracy",
+   "value": 95.7,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "random sample of 300 BBQ examples plus 50 fillers, MTurk, 5 raters",
+   "quote": "raw human (crowd-",
+   "table": null,
+   "note": "Majority-vote aggregate accuracy 99.7%; Krippendorf alpha 0.883",
+   "where": "Section 4"
+  },
+  {
+   "claim": "Aggregate majority-vote human accuracy on BBQ.",
+   "kind": "measured",
+   "source": null,
+   "metric": "human accuracy",
+   "value": 99.7,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "same 300-example sample",
+   "quote": "aggregate human accuracy calculated via majority",
+   "table": null,
+   "note": null,
+   "where": "Section 4"
+  },
+  {
+   "claim": "BBQ size.",
+   "kind": "measured",
+   "source": null,
+   "metric": "dataset size",
+   "value": 58492,
+   "unit": "examples",
+   "baseline_value": null,
+   "n": null,
+   "setup": "325 templates, nine bias categories plus two intersectional",
+   "quote": "BBQ contains 58,492 unique examples",
+   "table": null,
+   "note": null,
+   "where": "Section 3"
+  },
+  {
+   "claim": "A single physical-appearance template shows UnifiedQA picking the obese person as sloppy in ambiguous contexts.",
+   "kind": "measured",
+   "source": null,
+   "metric": "rate of choosing",
+   "value": 80.1,
+   "unit": "% of answers",
+   "baseline_value": null,
+   "n": null,
+   "setup": "one template, 72 examples, UnifiedQA; 19.9% UNKNOWN; for the neat question, 88.9% picked the non-obese person",
+   "quote": "80.1",
+   "table": null,
+   "note": "Table 2 cell text; 88.9 for non-obese on the 'neat and organized' question",
+   "where": "Table 2, Section 7"
+  },
+  {
+   "claim": "Question-only baseline (no context) gives accuracy and bias score similar to ambiguous contexts.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "UnifiedQA, context removed, UNKNOWN always correct",
+   "quote": "do not substantially differ from those seen with an",
+   "table": null,
+   "note": null,
+   "where": "Section 6, Appendix F"
+  },
+  {
+   "claim": "Intersectional categories give inconsistent bias scores; authors cannot conclude models are sensitive to multiple identity aspects.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "race by gender and race by SES; all models",
+   "quote": "we are not able to conclude that we observe",
+   "table": null,
+   "note": null,
+   "where": "Section 6, Appendix H"
+  }
+ ],
+ "limits": [
+  "Bias scores near zero do not prove a model is unbiased: only 25 templates per category.",
+  "Only US English-speaking cultural contexts; not valid for other cultures or very different text domains.",
+  "Measures discrete outputs, so it will miss biases UnQover's likelihood approach catches (authors concede).",
+  "Names are an imperfect proxy for race and gender.",
+  "Single-template results are noisy (Table 2 is 72 examples).",
+  "Intersectional results inconsistent; no conclusion possible.",
+  "Only fine-tuned/QA-specific models (UnifiedQA, RoBERTa, DeBERTaV3) tested; no prompted generative LLMs, no prompt variants, no seeds or repeated runs.",
+  "RoBERTa-Base favors UNKNOWN regardless of context; authors do not explain."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Ambiguous context",
+   "definition": "A context missing the information needed to answer; the correct answer is always the UNKNOWN option.",
+   "where": "Section 3.2"
+  },
+  {
+   "term": "Disambiguated context",
+   "definition": "Adds information identifying which individual answers the negative or non-negative question; the correct answer is always one of the two individuals.",
+   "where": "Section 3.2"
+  },
+  {
+   "term": "Bias score",
+   "definition": "The percent of non-UNKNOWN outputs that align with a social bias; 0% means no bias measured, 100% all answers align, -100% all go against.",
+   "where": "Section 5"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "UNQOVERing stereotyping biases via underspecified questions (Li et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Only other QA bias dataset; measures likelihoods of two incorrect options, BBQ measures outputs and always includes a correct option",
+   "quote": null
+  },
+  {
+   "work": "UnifiedQA (Khashabi et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "11B model tested zero-shot",
+   "quote": null
+  },
+  {
+   "work": "RoBERTa (Liu et al.)",
+   "year": 2019,
+   "arxiv": "1907.11692",
+   "relation": "evaluates",
+   "note": "Base and Large fine-tuned on RACE",
+   "quote": null
+  },
+  {
+   "work": "DeBERTaV3 (He et al.)",
+   "year": 2021,
+   "arxiv": "2111.09543",
+   "relation": "evaluates",
+   "note": "Base and Large fine-tuned on RACE",
+   "quote": null
+  },
+  {
+   "work": "RACE (Lai et al.)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Fine-tuning data and input format",
+   "quote": null
+  },
+  {
+   "work": "Language (technology) is power (Blodgett et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Bias definitions vary",
+   "quote": null
+  },
+  {
+   "work": "What do bias measures measure? (Dev et al.)",
+   "year": 2021,
+   "arxiv": "2108.03362",
+   "relation": "related",
+   "note": "Contrasting groups",
+   "quote": null
+  },
+  {
+   "work": "Stereotyping Norwegian salmon (Blodgett et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Pitfalls in fairness benchmarks; comparable groups",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Examples in BBQ come in sets of 4 ... ambiguous or ambiguous + disambiguated context x negative or non-negative question",
+   "page": 1,
+   "why": "Shows the 2x2 item structure and correct answers"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Bias scores in each category, split by ambiguous or disambiguated context",
+   "page": 8,
+   "why": "Main result heat map: bias high when ambiguous, near zero when disambiguated"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Accuracy difference within the disambiguated contexts",
+   "page": 7,
+   "why": "Accuracy cost of bias nonalignment"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Examples from the nine bias categories",
+   "page": 2,
+   "why": "One template per category with ambiguous, disambiguated, negative and non-negative question"
+  },
+  {
+   "figure": "Table 2",
+   "caption": "Results from a single template from the physical appearance category tested on UnifiedQA",
+   "page": 9,
+   "why": "Concrete illustration of biased answer rates"
+  }
+ ],
+ "code": [
+  {
+   "where": "Section 5",
+   "snippet": "sDIS = 2 * (n_biased_ans / n_non-UNKNOWN_outputs) - 1 ; sAMB = (1 - accuracy) * sDIS",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "PDF text has ligature loss (fi/fl/ff missing) and figure data is scrambled numbers; tables 2 and 4 are interleaved.",
+  "No embedded instructions found.",
+  "Per-model per-category values are only in figure heat maps (not recorded as results)."
+ ]
+}
