@@ -1,0 +1,776 @@
+{
+ "schema": 1,
+ "key": "sha1:541241df72c4",
+ "pdf": "ai-engineering/08-multimodal-engineering/sources/seamless-2023.pdf",
+ "bib": {
+  "title": "Seamless: Multilingual Expressive and Streaming Speech Translation",
+  "authors": [
+   "Seamless Communication",
+   "Loïc Barrault",
+   "Yu-An Chung",
+   "Mariano Coria Meglioli",
+   "David Dale",
+   "Ning Dong",
+   "et al. (full list on cover)"
+  ],
+  "first_author": "Seamless Communication",
+  "year": 2023,
+  "venue": "preprint",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 400000,
+  "chars_total": 432915,
+  "engine": "pymupdf",
+  "skipped": "Per-language result tables (Tables 1, 61-75, 78-80) skimmed, not read cell by cell; reference list skimmed."
+ },
+ "type": "system",
+ "question": "Can one family of models translate speech across many languages while preserving vocal style and prosody, and while streaming with low latency?",
+ "hypothesis": null,
+ "contributions": [
+  "SeamlessM4T v2 with UnitY2, w2v-BERT 2.0 and expanded SeamlessAlign (76 languages)",
+  "SeamlessExpressive: Prosody UnitY2 and PRETSSEL",
+  "SeamlessStreaming: EMMA-based simultaneous translation",
+  "Seamless: streaming plus expressivity",
+  "Red teaming, MuTox, MinTox, SeamlessWM watermarking, metrics (AutoPCP, rhythm toolkit)"
+ ],
+ "method": {
+  "summary": "SeamlessM4T v2 is a 2.3B multitask S2ST model with a w2v-BERT 2.0 encoder, NLLB text model and non-autoregressive T2U decoder. SeamlessExpressive adds a Prosody UnitY2 and a PRETSSEL expressive acoustic model; SeamlessStreaming fine-tunes v2 with EMMA monotonic attention in two stages; Seamless combines streaming with PRETSSEL.",
+  "task": "multilingual speech-to-speech and speech-to-text translation, expressive and streaming",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "SeamlessAlign (expanded)",
+    "role": "train",
+    "size": "114,800 additional hours, 76 languages; 3.9M hours raw audio",
+    "split": null,
+    "source": "mined with SONAR, margin threshold 1.15, k=16, FAISS, Silero VAD",
+    "preprocessing": "filtering rules incl. toxicity imbalance threshold 1, length 0.1-50 s, text <=250 subwords"
+   },
+   {
+    "name": "w2v-BERT 2.0 pretraining audio",
+    "role": "pretrain",
+    "size": "4.5M hours unlabeled",
+    "split": null,
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "mExpresso",
+    "role": "both",
+    "size": null,
+    "split": "test set reported",
+    "source": "derived from Expresso",
+    "preprocessing": null
+   },
+   {
+    "name": "mDRAL",
+    "role": "both",
+    "size": null,
+    "split": "test set reported",
+    "source": "derived from DRAL",
+    "preprocessing": null
+   },
+   {
+    "name": "Fleurs / CoVoST2 / CVSS / Flores",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": null,
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "SeamlessM4T v2",
+    "role": "proposed",
+    "params": "2.3B (w2v-BERT 635M, T2TT 1370M, T2U 295M)",
+    "architecture": "Multitask-UnitY2: w2v-BERT 2.0 Conformer encoder, NLLB text enc/dec, NAR T2U",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "24 (speech encoder)",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "unit_vocoder": "unit HiFi-GAN",
+     "units": "XLS-R-1B layer 35, k-means k=10,000"
+    }
+   },
+   {
+    "name": "PRETSSEL",
+    "role": "proposed",
+    "params": "65M",
+    "architecture": "textless FastSpeech2-like acoustic model, ECAPA-TDNN 512-dim expressivity encoder, FiLM, Gaussian upsampler, HiFi-GAN mel vocoder",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Unit Voicebox",
+    "role": "baseline",
+    "params": "329M",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Whisper-Large-v2",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "multitask S2TT/T2TT/ASR with token-level knowledge distillation; T2U with CTC forward-sum and GLAT; EMMA latency and variance losses for streaming",
+   "optimizer": "Adam (watermark, MuTox); not stated for the main models",
+   "lr": "PRETSSEL 1e-4; Prosody UnitY2 5e-5; SeamlessWM 3e-4; MuTox 0.001",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "Prosody UnitY2 302k tokens (360k for E2M/M2M); SeamlessWM 32; HiFi-GAN 16",
+   "steps": "X2T 200K updates (100K per stage); PRETSSEL 500k iterations; Prosody UnitY2 max 600k steps; SeamlessWM 400k steps",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "SpecAugment (PRETSSEL)",
+   "hardware": "PRETSSEL 16 V100; HiFi-GAN 8 V100",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "temperature_sampling": "T=2 (X2T), 5 (PRETSSEL)",
+    "asr_loss_weight": "0.04 stage 1, 0.13 stage 2",
+    "pretssel_loss_weights": "lambda_local 1.0, lambda_film 0.001",
+    "streaming_stages": "stage 1 simultaneous text decoder with encoder frozen; stage 2 T2U only",
+    "early_stop": "5 runs without improvement (Prosody UnitY2)",
+    "latency_loss_weights": null
+   }
+  },
+  "inference": {
+   "decoding": "beam search; ASR-BLEU scored with Whisper-Large greedy; streaming via SimulEval",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "t_EMMA": "0.5 default (0.4-0.7 swept)",
+    "min_unit_chunk": "L_unit"
+   },
+   "other": {
+    "hardware": "single A100 for timing"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "BLEU / chrF / ASR-BLEU",
+     "definition": "text or ASR-transcribed speech output vs reference",
+     "unit": "points",
+     "higher_is_better": true
+    },
+    {
+     "name": "AutoPCP",
+     "definition": "3-layer net on XLS-R layer 9, regression plus contrastive",
+     "unit": "1-5 scale",
+     "higher_is_better": true
+    },
+    {
+     "name": "VSim",
+     "definition": "WavLM cosine similarity",
+     "unit": "cosine",
+     "higher_is_better": true
+    },
+    {
+     "name": "AL / LAAL / Ending Offset",
+     "definition": "streaming latency",
+     "unit": "s",
+     "higher_is_better": false
+    },
+    {
+     "name": "XSTS, MOS, PCP",
+     "definition": "human evaluation; bootstrap nb=500",
+     "unit": "score",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "SeamlessM4T-Large",
+    "Whisper-Large-v2",
+    "cascades WL-v2 + NLLB",
+    "AudioPaLM-2-8B-AST",
+    "WavMark",
+    "Unit Voicebox"
+   ],
+   "protocol": "automatic plus human (PCP 5 annotators, MOS 3); PCP eng-X not completed"
+  },
+  "availability": {
+   "code": "https://github.com/facebookresearch/seamless_communication",
+   "weights": "released per the paper (research-only)",
+   "data": "aligned data metadata and code released"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "SeamlessM4T v2 beats SeamlessM4T-Large and the best cascade on Fleurs X-eng S2TT.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": "26.6",
+   "unit": null,
+   "baseline_value": "24.1 (SeamlessM4T-Large)",
+   "n": null,
+   "setup": "Fleurs X-eng S2TT, 2.3B model, average BLEU",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row SeamlessM4T v2, column Fleurs S2TT X-eng (26.6); row WL-v2 (ASR) + NLLB-3.3B is 22.7"
+  },
+  {
+   "claim": "SeamlessM4T v2 reaches 22.2 ASR-BLEU on Fleurs X-eng S2ST.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ASR-BLEU",
+   "value": "22.2",
+   "unit": null,
+   "baseline_value": "21.8 (SeamlessM4T-Large)",
+   "n": null,
+   "setup": "Fleurs X-eng S2ST, ASR-BLEU",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row SeamlessM4T v2, column Fleurs S2ST X-eng (22.2)"
+  },
+  {
+   "claim": "SeamlessM4T v2 reaches 39.2 on the last column of Table 6 (CVSS).",
+   "kind": "measured",
+   "source": null,
+   "metric": "ASR-BLEU",
+   "value": "39.2",
+   "unit": null,
+   "baseline_value": "35.7 (SeamlessM4T-Large)",
+   "n": null,
+   "setup": "CVSS S2ST, 2.3B model",
+   "note": "Column header not checked against text beyond the row; read as CVSS.",
+   "where": "Table 6",
+   "table": "Table 6, row SeamlessM4T v2, last column (39.2)"
+  },
+  {
+   "claim": "The NAR T2U with character input and non-reduced units gives 13.41 ASR-WER versus 20.79 for the best autoregressive T2U.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ASR-WER",
+   "value": "13.41",
+   "unit": "lower is better",
+   "baseline_value": "20.79",
+   "n": null,
+   "setup": "Teacher T2U ablation, n=32 languages",
+   "note": null,
+   "where": "Table 10",
+   "table": "Table 10a, rows NAR T2U Character Non-reduced (13.41) and AR T2U Subword Reduced (20.79)"
+  },
+  {
+   "claim": "S2ST inference time is a linear function of hypothesis length, with a much smaller slope for v2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "seconds",
+   "value": "0.022 x + 0.077",
+   "unit": null,
+   "baseline_value": "0.128 x - 0.28 (v1)",
+   "n": null,
+   "setup": "Single-GPU timing, S2ST seconds vs S2TT hypothesis length x in subword tokens",
+   "note": null,
+   "where": "Fig 30, Appendix I",
+   "quote": "0.128 × x −0.28\nSEAMLESSM4T V2:\n0.022 × x + 0.077"
+  },
+  {
+   "claim": "Noise robustness: v2 beats Whisper-Large-v2 on X-eng S2TT by an average of 53.2%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "average relative gain",
+   "value": "53.2%",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Various noise types and levels, X-eng S2TT",
+   "note": "50.5% is the same comparison for ASR.",
+   "where": "Robustness section",
+   "quote": "outperforms Whisper-Large-v2 by an average of 53.2% and 50.5% over various noise types and levels"
+  },
+  {
+   "claim": "v2 is more stable across vocal styles than Whisper-Large-v2 (S2TT chrFMS).",
+   "kind": "measured",
+   "source": null,
+   "metric": "chrFMS",
+   "value": "51.6",
+   "unit": null,
+   "baseline_value": "40.8",
+   "n": null,
+   "setup": "Vocal-style variation test, by-group mean chrF",
+   "note": null,
+   "where": "Table 40",
+   "table": "Table 40, row SeamlessM4T-Large v2, column chrFMS (51.6); Whisper-Large-v2 40.8"
+  },
+  {
+   "claim": "v2 has lower variation across groups than Whisper-Large-v2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "CoefVarMS",
+   "value": "6.3",
+   "unit": null,
+   "baseline_value": "13.7",
+   "n": null,
+   "setup": "Vocal-style variation test, by-group coefficient of variation",
+   "note": null,
+   "where": "Table 40",
+   "table": "Table 40, row SeamlessM4T-Large v2, column CoefVarMS (6.3); Whisper-Large-v2 13.7"
+  },
+  {
+   "claim": "Best expressive model (Model 5) scores 39.00 ASR-BLEU on mExpresso X-eng.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ASR-BLEU",
+   "value": "39.00",
+   "unit": null,
+   "baseline_value": "31.95",
+   "n": null,
+   "setup": "mExpresso test, X-eng average, Model 5 (Prosody UnitY2 + PRETSSEL)",
+   "note": null,
+   "where": "Table 21",
+   "table": "Table 21, X-eng row Model 5, column ASR-BLEU (39.00); Model 1 cascade 31.95"
+  },
+  {
+   "claim": "Model 5 reaches AutoPCP 3.18 on mExpresso X-eng, against 2.16 for the plain Model 2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AutoPCP",
+   "value": "3.18",
+   "unit": null,
+   "baseline_value": "2.16",
+   "n": null,
+   "setup": "mExpresso test, X-eng",
+   "note": null,
+   "where": "Table 21",
+   "table": "Table 21, X-eng, Model 5 AutoPCP 3.18; Model 2 2.16"
+  },
+  {
+   "claim": "PRETSSEL is cheaper and faster to run than Unit Voicebox.",
+   "kind": "measured",
+   "source": null,
+   "metric": "RTF",
+   "value": "0.014",
+   "unit": null,
+   "baseline_value": "0.089",
+   "n": null,
+   "setup": "Speech generator comparison, 65M vs 329M parameters",
+   "note": null,
+   "where": "Section 6, expressive results",
+   "quote": "the real-time factor (RTF) of PRETSSEL is 0.014 and 0.089 for Unit Voicebox"
+  },
+  {
+   "claim": "Adding PRETSSEL lowers MOS sound quality and clarity compared with the unit vocoder system.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MOS clarity",
+   "value": "4.09",
+   "unit": null,
+   "baseline_value": "4.58",
+   "n": null,
+   "setup": "Human MOS, Model 3 vs Model 2",
+   "note": null,
+   "where": "Human evaluation",
+   "quote": "lower MOS subscores for “clarity of speech” (δ=-0.49; 4.09 (0.08) vs 4.58"
+  },
+  {
+   "claim": "AutoPCP item-level correlation with human PCP is 0.49 on average, above the baseline and near human level.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Pearson correlation",
+   "value": "0.49",
+   "unit": null,
+   "baseline_value": "0.31",
+   "n": null,
+   "setup": "AutoPCP evaluation across deu, spa, fra, ita, cmn",
+   "note": null,
+   "where": "Table 38",
+   "table": "Table 38, row Item-level correlation, column avg (0.49); baseline 0.31, human 0.46"
+  },
+  {
+   "claim": "AutoPCP correlates strongly with human overall expressive intent.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Spearman rho",
+   "value": "0.796",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Human PCP vs automatic metrics",
+   "note": null,
+   "where": "Fig 20",
+   "quote": "strong correlation (ρ = 0.796) between “AutoPCP” and the PCP’s “Overall\nExpressive Intent” (OEI) dimension"
+  },
+  {
+   "claim": "SeamlessStreaming speech output at t_EMMA 0.5 loses 7.6 ASR-BLEU to offline on X-eng.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ASR-BLEU",
+   "value": "22.1",
+   "unit": null,
+   "baseline_value": "29.7",
+   "n": null,
+   "setup": "Fleurs X-eng S2ST, 101 source languages",
+   "note": null,
+   "where": "Table 30",
+   "table": "Table 30, row SeamlessStreaming threshold 0.5, column X-eng ASR-BLEU (22.1; ending offset 2.79); offline v2 29.7"
+  },
+  {
+   "claim": "eng-X streaming speech reaches 21.4 ASR-BLEU with ending offset 4.64.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ASR-BLEU",
+   "value": "21.4",
+   "unit": null,
+   "baseline_value": "26.1",
+   "n": null,
+   "setup": "Fleurs eng-X, t_EMMA 0.5",
+   "note": null,
+   "where": "Table 30",
+   "table": "Table 30, row threshold 0.5, columns eng-X ASR-BLEU (21.4) and Ending Offset (4.64); offline 26.1"
+  },
+  {
+   "claim": "Relative S2TT BLEU drop of streaming vs offline grows as resource level falls; zero-shot drops 31.4%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "relative BLEU drop",
+   "value": "31.4",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 31, X-eng, t_EMMA 0.5",
+   "note": null,
+   "where": "Table 31",
+   "table": "Table 31, row Zero-Shot, first column (31.4); High 10.1, Medium 14.8, Low 21.5"
+  },
+  {
+   "claim": "The unified Seamless-6 loses little ASR-BLEU to SeamlessStreaming but ends sooner.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ASR-BLEU",
+   "value": "20.4",
+   "unit": null,
+   "baseline_value": "22.1",
+   "n": null,
+   "setup": "Fleurs X-eng, t_EMMA 0.5, n=101",
+   "note": null,
+   "where": "Table 34",
+   "table": "Table 34, row Seamless-6 threshold 0.5 (20.4, ending offset 2.02); SeamlessStreaming 22.1 / 2.79"
+  },
+  {
+   "claim": "Seamless-36 (PRETSSEL for 36 languages) degrades quality versus Seamless-6.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ASR-BLEU",
+   "value": "18.1",
+   "unit": null,
+   "baseline_value": "20.4",
+   "n": null,
+   "setup": "Fleurs X-eng, t_EMMA 0.5",
+   "note": null,
+   "where": "Table 34",
+   "table": "Table 34, row Seamless-36 threshold 0.5 (18.1); Seamless-6 20.4"
+  },
+  {
+   "claim": "SeamlessAlign was extended by 114,800 hours covering 76 languages.",
+   "kind": "measured",
+   "source": null,
+   "metric": "added data",
+   "value": "114,800",
+   "unit": "hours",
+   "baseline_value": null,
+   "n": null,
+   "setup": "SONAR-mined aligned data, margin threshold 1.15",
+   "note": null,
+   "where": "Section 3.1",
+   "quote": "incorporated 114,800 hours of additional data"
+  },
+  {
+   "claim": "SeamlessWM watermark has higher SI-SNR than WavMark.",
+   "kind": "measured",
+   "source": null,
+   "metric": "SI-SNR",
+   "value": "37.82",
+   "unit": "dB",
+   "baseline_value": "33.69",
+   "n": null,
+   "setup": "Watermarked vs original audio",
+   "note": null,
+   "where": "Table 58",
+   "quote": "The average SI-SNR\nbetween the original and watermarked audio is 37.82 dB, while WavMark achieves 33.7 dB."
+  }
+ ],
+ "limits": [
+  "Seamless (unified model) evaluated only automatically.",
+  "Human PCP eng-X evaluation incomplete; X-eng PCP excludes cmn and fra.",
+  "Expressive models trained without the semantic and prosodic data filtering due to time limit.",
+  "PRETSSEL raises expressivity but lowers MOS sound quality and clarity; joint training lowers VSim and AutoPCP.",
+  "Streaming loses 10-31% BLEU against offline, most in zero-shot languages; over-generation there.",
+  "Expressive covers only 5 non-English languages; Seamless drops phrase-level rate and pause preservation.",
+  "Watermarked released models may differ slightly from reported results.",
+  "Research-only models, not for long-form use.",
+  "Gender overgeneralization not improved over v1; T2TT chrF drops 1.6 vs v1.",
+  "Red-team prompts differed between models, so toxicity results are not directly comparable.",
+  "Batch size, learning rate and hardware for the main M4T v2 and streaming training, and seeds, are not stated. The PDF gives no arXiv id."
+ ],
+ "practices": [],
+ "terms": [],
+ "lineage": [
+  {
+   "work": "Seamless Communication et al. 2023 SeamlessM4T",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Starting point; v2 retrains with w2v-BERT 2.0, NAR T2U and expanded SeamlessAlign",
+   "quote": null
+  },
+  {
+   "work": "NLLB Team 2022 No Language Left Behind",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Text encoder/decoder and data",
+   "quote": null
+  },
+  {
+   "work": "w2v-BERT (Chung et al. 2021)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Speech encoder basis; v2 uses w2v-BERT 2.0",
+   "quote": null
+  },
+  {
+   "work": "UnitY (Inaguma et al.)",
+   "year": null,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Two-pass S2ST with unit decoder; UnitY2 makes T2U non-autoregressive",
+   "quote": null
+  },
+  {
+   "work": "EMMA (Ma et al. 2023)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Monotonic attention for SeamlessStreaming",
+   "quote": null
+  },
+  {
+   "work": "Voicebox (Le et al. 2023)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Unit Voicebox used for vocal style conversion data",
+   "quote": null
+  },
+  {
+   "work": "FastSpeech2 (Ren et al. 2021)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "NAR T2U and PRETSSEL design",
+   "quote": null
+  },
+  {
+   "work": "RAD-TTS (Shih et al. 2021)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Unsupervised aligner",
+   "quote": null
+  },
+  {
+   "work": "GLAT (Qian et al. 2021)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Glancing training for NAR T2U",
+   "quote": null
+  },
+  {
+   "work": "SONAR (Duquenne et al. 2023)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Sentence embeddings for mining and filtering; extended to 76 languages",
+   "quote": null
+  },
+  {
+   "work": "PCP (Huang et al. 2023)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Prosodic Consistency Protocol for human expressivity evaluation",
+   "quote": null
+  },
+  {
+   "work": "Whisper (Radford et al. 2022)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Whisper-Large-v2 baseline and ASR-BLEU scorer",
+   "quote": null
+  },
+  {
+   "work": "AudioPaLM",
+   "year": null,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "CoVoST2 comparison",
+   "quote": null
+  },
+  {
+   "work": "WavMark (Chen et al. 2023)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Watermark baseline",
+   "quote": null
+  },
+  {
+   "work": "MinTox and ETOX (Costa-jussa et al. 2023)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Added toxicity detection and mitigation",
+   "quote": null
+  },
+  {
+   "work": "Expresso (Nguyen et al. 2023)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Basis of mExpresso",
+   "quote": null
+  },
+  {
+   "work": "DRAL (Ward et al. 2023)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Basis of mDRAL",
+   "quote": null
+  },
+  {
+   "work": "Fleurs",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Main eval set",
+   "quote": null
+  },
+  {
+   "work": "CoVoST2 / CVSS",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Eval sets",
+   "quote": null
+  },
+  {
+   "work": "Multilingual HolisticBias",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Gender bias evaluation",
+   "quote": null
+  },
+  {
+   "work": "Coqui-XTTS and YourTTS",
+   "year": null,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Expressive TTS comparisons",
+   "quote": null
+  },
+  {
+   "work": "PolyVoice and Prosody2Vec",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Prior expressive S2ST work",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Overview of technical components",
+   "page": null,
+   "why": "map of the whole system"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "UnitY2 and multitask-UnitY2 architecture",
+   "page": null,
+   "why": "shows the model layout"
+  },
+  {
+   "figure": "Fig 7",
+   "caption": "SeamlessExpressive: Prosody UnitY2 + PRETSSEL",
+   "page": null,
+   "why": "expressive pipeline"
+  },
+  {
+   "figure": "Fig 15",
+   "caption": "Seamless architecture",
+   "page": null,
+   "why": "streaming plus expressive"
+  },
+  {
+   "figure": "Fig 30",
+   "caption": "S2ST inference time v1 vs v2",
+   "page": null,
+   "why": "speedup at a glance"
+  }
+ ],
+ "code": [
+  {
+   "where": "Appendix K.1",
+   "snippet": "def monotonic_alignment(p):\n bsz, tgt_len, src_len = p.size()\n # Extension probablity matrix\n p_ext = p.roll(1, [-1]).unsqueeze(-2).expand(-1, -1, src_len, -1).triu(1)\n # Transition matrix\n T = (1 - p_ext).comprod(-1).triu()\n alpha = [p[:, [0]] * T[:, [0]]\n for i in range(1, tgt_len):\n  alpha.append(p[:, [i]] * torch.bmm(alpha[i - 1], T[:, i]))\n return torch.cat(alpha[1:], dim=1)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "No arXiv id or venue is printed; cover date November 30, 2023, Model Card says 'Arxiv, 2023'.",
+  "The 29-of-34 user-study figure was not located verbatim, so it is not recorded.",
+  "Table 52 MuTox AUC not located verbatim, left out of results.",
+  "Per-language tables skimmed."
+ ]
+}

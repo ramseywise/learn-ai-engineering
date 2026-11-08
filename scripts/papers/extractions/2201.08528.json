@@ -1,0 +1,721 @@
+{
+ "schema": 1,
+ "key": "2201.08528",
+ "pdf": "data-science/sources/elor-2022-to-smote-or-not.pdf",
+ "bib": {
+  "title": "To SMOTE, or not to SMOTE?",
+  "authors": [
+   "Yotam Elor",
+   "Hadar Averbuch-Elor"
+  ],
+  "first_author": "Elor",
+  "year": 2022,
+  "venue": "preprint",
+  "arxiv": "2201.08528",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 50398,
+  "chars_total": 50398,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Does balancing (oversampling) imbalanced binary tabular data improve prediction when strong state-of-the-art classifiers are used as baselines?",
+ "hypothesis": "Theory on proper metrics and consistent algorithms suggests balancing should not help strong classifiers; weak classifiers may benefit.",
+ "contributions": [
+  "First large scale study of balancing that includes SOTA classifiers (LightGBM, XGBoost, CatBoost).",
+  "For proper metrics, balancing helps weak classifiers but not SOTA ones, and unbalanced strong classifiers beat balanced weak ones.",
+  "For label metrics with strong classifiers, balancing and threshold optimization give similar quality; threshold optimization is cheaper; random oversampling is as good as SMOTE-like methods.",
+  "Identify scenarios where SMOTE-like oversampling helps.",
+  "State that AUC is proper under i.i.d. sampling (Theorem 1)."
+ ],
+ "method": {
+  "summary": "Seven classifiers are trained on 73 imbalanced datasets with no balancing, random oversampling, SMOTE, SVM-SMOTE, ADASYN or Polynomfit SMOTE, with a-priori or validation-tuned HPs, scoring proper probability metrics and label metrics at a fixed or tuned threshold.",
+  "task": "imbalanced binary classification on tabular data",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "104 datasets of Kovacs 2019 plus 24 imbalanced-learn datasets (KEEL, UCI, PROMISE and others) filtered to 73",
+    "role": "both",
+    "size": "73 datasets (128 candidates; 48 removed as saturated: 19 with Catboost AUC 1, 29 above 0.99; 7 removed for technical reasons)",
+    "split": "random stratified 60% train / 20% validation / 20% test, repeated 7 times with different seeds and splits",
+    "source": "[21] Kovacs 2019, imbalanced-learn, KEEL, UCI, PROMISE, CoIL 2000",
+    "preprocessing": "String features ordinal-encoded; numeric features untouched; majority class 0, minority 1"
+   }
+  ],
+  "models": [
+   {
+    "name": "Decision tree (sklearn 1.0.1)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "min_samples_leaf 0.5%,1%,2%,4% of samples",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "SVM (sklearn)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "C in {1,10}, loss squared_hinge or hinge; outputs labels only so threshold cannot be optimized",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "MLP (sklearn)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "hidden layer 10%,50%,100% relu; 50% logistic",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Adaboost (sklearn)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "N = 10,20,40,80",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "LightGBM 3.3.1",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "eta 0.1 N=100, eta 0.025 N=1000, subsample 1 or 0.66",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "XGBoost 1.5.0",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "eta 0.1 or 0.025, N=1000, subsample 1 or 0.66",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "CatBoost 1.0.1",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "default; N=500; boosting_type=ordered; N=500 + ordered",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "each classifier's default (logloss for boosters and MLP)",
+   "optimizer": null,
+   "lr": "per Table 1 for boosters (eta 0.1 / 0.025)",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": "7 random seeds with different data splits per {dataset, oversampler, oversampler HPs, classifier, classifier HPs}",
+   "other": {
+    "early_stopping": "on the non-augmented validation fold when applicable",
+    "classifier_hp_configs": "4 per classifier (Table 1)",
+    "oversampler_hps": "SMOTE and ADASYN kn=3,5,7,9; SVM-SMOTE (kn,mn) in kn 4 or 6, mn 8 or 12; Poly topology star,bus,mesh; desired minority ratios 0.1-0.5 for all (Table 2, Sec 3.6)",
+    "oversamplers": "Random, SMOTE, SVM-SMOTE, ADASYN, Polynomfit SMOTE (imbalanced-learn; Poly from smote-variants)"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {
+    "threshold": "fixed 0.5 (non-consistent) or optimized on validation fold (consistent)",
+    "hp_selection": "a-priori HPs = best on test data; validation HPs = best on validation fold"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "AUC",
+     "definition": "area under ROC, proper under i.i.d. (Theorem 1)",
+     "unit": "score",
+     "higher_is_better": true
+    },
+    {
+     "name": "logloss",
+     "definition": "logistic loss, reported also per class",
+     "unit": "x10^3",
+     "higher_is_better": false
+    },
+    {
+     "name": "Brier score",
+     "definition": "proper probability metric",
+     "unit": "score",
+     "higher_is_better": false
+    },
+    {
+     "name": "F1",
+     "definition": "label metric at fixed 0.5 or optimized threshold",
+     "unit": "score",
+     "higher_is_better": true
+    },
+    {
+     "name": "F2, Jaccard, balanced accuracy",
+     "definition": "label metrics (full results in repository only)",
+     "unit": "score",
+     "higher_is_better": true
+    },
+    {
+     "name": "mean rank",
+     "definition": "rank across datasets, lower is better",
+     "unit": "rank",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "classifier with optimized HPs and no balancing",
+    "classifier with default HPs (sanity check)",
+    "decision threshold optimization"
+   ],
+   "protocol": "Mean over datasets and 7 seeds; error bars one SD over seeds; extra checks with normalization, two validation folds and 5-fold CV gave similar results (not shown)."
+  },
+  "availability": {
+   "code": "https://github.com/aws/to-smote-or-not",
+   "weights": null,
+   "data": "datasets from Kovacs 2019, imbalanced-learn, KEEL etc.; full results in the repository"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "datasets",
+    "quote": "Finally, we experimented with the remaining 73 datasets.",
+    "where": "Sec 3.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Abstract finding: balancing helps weak classifiers but does not improve prediction for strong ones.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "73 datasets, 7 classifiers, proper metrics (AUC) with validation HPs",
+   "note": null,
+   "where": "Abstract",
+   "quote": "Our results support the known utility of balancing for weak classifiers. However, we find that balancing does not improve prediction performance for the strong ones."
+  },
+  {
+   "claim": "Catboost F1 with optimized threshold and no balancing (best of the Catboost rows).",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 0.532,
+   "unit": "F1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "73 imbalanced binary datasets, 7 classifiers, 5 oversamplers, validation HPs, optimized decision threshold on validation fold, mean test F1 over 7 seeds/splits",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row Cat Baseline, column Optimized threshold"
+  },
+  {
+   "claim": "Catboost F1 with SMOTE (best oversampler for Cat).",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 0.529,
+   "unit": "F1",
+   "baseline_value": 0.532,
+   "n": null,
+   "setup": "73 imbalanced binary datasets, 7 classifiers, 5 oversamplers, validation HPs, oversampled training fold, mean test F1 over 7 seeds/splits",
+   "note": "Table 3 layout in the text cache puts oversampler rows in a single value cell; which threshold column they sit under is not recoverable from the text. Text 4.3 says the balanced F1 is compared to optimized-threshold F1 and that the oversamplers are run with the threshold optimized (Sec 3.7).",
+   "where": "Table 3",
+   "table": "Table 3, row Cat SMOTE"
+  },
+  {
+   "claim": "Catboost F1 with fixed threshold 0.5 and no balancing.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 0.444,
+   "unit": "F1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "73 imbalanced binary datasets, 7 classifiers, 5 oversamplers, validation HPs, fixed threshold 0.5, mean test F1 over 7 seeds/splits",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row Cat Baseline, column Threshold = 0.5"
+  },
+  {
+   "claim": "Catboost F1 with random oversampling.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 0.525,
+   "unit": "F1",
+   "baseline_value": 0.532,
+   "n": null,
+   "setup": "as Table 3",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row Cat Random"
+  },
+  {
+   "claim": "XGBoost F1: optimized threshold baseline.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 0.515,
+   "unit": "F1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "73 imbalanced binary datasets, 7 classifiers, 5 oversamplers, validation HPs, optimized decision threshold on validation fold, mean test F1 over 7 seeds/splits",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row XGB Baseline, column Optimized threshold"
+  },
+  {
+   "claim": "XGBoost F1 with SMOTE.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 0.513,
+   "unit": "F1",
+   "baseline_value": 0.515,
+   "n": null,
+   "setup": "as Table 3",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row XGB SMOTE"
+  },
+  {
+   "claim": "XGBoost F1 fixed threshold 0.5 baseline.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 0.436,
+   "unit": "F1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "fixed threshold 0.5",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row XGB Baseline, column Threshold = 0.5"
+  },
+  {
+   "claim": "LightGBM F1: optimized threshold baseline.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 0.504,
+   "unit": "F1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "73 imbalanced binary datasets, 7 classifiers, 5 oversamplers, validation HPs, optimized decision threshold on validation fold, mean test F1 over 7 seeds/splits",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row LGBM Baseline, column Optimized threshold"
+  },
+  {
+   "claim": "LightGBM F1 with Poly SMOTE (best for LGBM), only slightly above threshold optimization.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 0.514,
+   "unit": "F1",
+   "baseline_value": 0.504,
+   "n": null,
+   "setup": "as Table 3",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row LGBM Poly"
+  },
+  {
+   "claim": "LightGBM F1 fixed threshold 0.5 baseline.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 0.398,
+   "unit": "F1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "fixed threshold 0.5",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row LGBM Baseline, column Threshold = 0.5"
+  },
+  {
+   "claim": "MLP F1: SMOTE (and Poly) far above optimized-threshold baseline.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 0.411,
+   "unit": "F1",
+   "baseline_value": 0.303,
+   "n": null,
+   "setup": "as Table 3",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row MLP SMOTE"
+  },
+  {
+   "claim": "MLP F1 optimized-threshold baseline.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 0.303,
+   "unit": "F1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "73 imbalanced binary datasets, 7 classifiers, 5 oversamplers, validation HPs, optimized decision threshold on validation fold, mean test F1 over 7 seeds/splits",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row MLP Baseline, column Optimized threshold"
+  },
+  {
+   "claim": "MLP F1 fixed-threshold baseline.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 0.188,
+   "unit": "F1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "fixed threshold 0.5",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row MLP Baseline, column Threshold = 0.5"
+  },
+  {
+   "claim": "SVM F1 with SMOTE; SVM has no probability output so threshold cannot be optimized (baseline both columns 0.366).",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 0.483,
+   "unit": "F1",
+   "baseline_value": 0.366,
+   "n": null,
+   "setup": "as Table 3",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row SVM SMOTE"
+  },
+  {
+   "claim": "Decision tree F1: SVM-SMOTE best, optimized baseline 0.471.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 0.477,
+   "unit": "F1",
+   "baseline_value": 0.471,
+   "n": null,
+   "setup": "as Table 3",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row DT SVM-SM"
+  },
+  {
+   "claim": "Adaboost F1: SVM-SMOTE and Poly best, optimized baseline 0.482.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 0.497,
+   "unit": "F1",
+   "baseline_value": 0.482,
+   "n": null,
+   "setup": "as Table 3",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row Ada SVM-SM"
+  },
+  {
+   "claim": "Except for MLP and SVM, balancing and threshold optimization give comparable F1.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 3 setup",
+   "note": null,
+   "where": "Sec 4.3",
+   "quote": "To summarize, except for very weak classifiers (MLP and SVM), balancing the data and optimizing the decision threshold yield comparable prediction performance."
+  },
+  {
+   "claim": "With a fixed 0.5 threshold, SMOTE-like methods were not significantly better than random oversampling; with strong classifiers random oversampling is as effective as SMOTE variants.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "F1, validation HPs, 7 classifiers",
+   "note": null,
+   "where": "Sec 4.3",
+   "quote": "Note, however, that the SMOTE-like methods were not significantly better than the simple random oversampler."
+  },
+  {
+   "claim": "Recommendation: for a strong but non-consistent classifier (fixed threshold, cannot tune it), use simple random oversampling.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Sec 5.2",
+   "note": null,
+   "where": "Sec 5.2",
+   "quote": "Thus, when using a strong but non-consistent classifier, it is recommended to augment the data using the simple random oversampler."
+  },
+  {
+   "claim": "Optimizing the decision threshold is recommended over balancing for compute cost.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Sec 5.1",
+   "note": null,
+   "where": "Sec 5.1",
+   "quote": "However, optimizing the decision threshold is recommended because it’s more compute efficient"
+  },
+  {
+   "claim": "With a-priori (test-tuned) HPs all four SMOTE variants beat the baselines and random oversampling; authors warn this may be HP overfitting.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "AUC, Fig 1a",
+   "note": null,
+   "where": "Sec 4.1",
+   "quote": "With a-priori HPs, presented in Figure 1(a), all four SMOTE variants achieved considerably better prediction quality than their respective baselines."
+  },
+  {
+   "claim": "Catboost baseline mean AUC (validation HPs), x10^3, best overall; rank 14.2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AUC",
+   "value": 889,
+   "unit": "AUC x10^3",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Validation HPs, test set",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row Cat Baseline, column AUC (mean)"
+  },
+  {
+   "claim": "Catboost baseline logloss x10^3 vs +SMOTE 180: balancing raises overall logloss.",
+   "kind": "measured",
+   "source": null,
+   "metric": "logloss",
+   "value": 170,
+   "unit": "logloss x10^3",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Validation HPs",
+   "note": "Cat SMOTE logloss 180 ± 5 (+5.9%)",
+   "where": "Table 4",
+   "table": "Table 4, row Cat Baseline, column Logistic loss (mean)"
+  },
+  {
+   "claim": "Balancing lowers minority logloss, raises majority logloss and overall logloss in all cases.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 4",
+   "note": null,
+   "where": "Sec 4.2",
+   "quote": "In all cases, balancing the data results in better logloss for the minority samples, worse logloss for the majority samples and worse logloss overall."
+  },
+  {
+   "claim": "Seventy-three datasets remained after filtering 128 candidates.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 73,
+   "unit": "datasets",
+   "baseline_value": null,
+   "n": null,
+   "setup": "104 datasets of Kovács 2019 plus 24 from imbalanced-learn",
+   "note": null,
+   "where": "Sec 3.1",
+   "quote": "Finally, we experimented with the remaining 73 datasets."
+  }
+ ],
+ "limits": [
+  "Does not explain why balancing helps weak classifiers but not strong ones: 'We leave explaining this disparity between weak and strong classifiers for future work.'",
+  "Classifier labelling is inconsistent: LGBM is listed as a SOTA classifier in the abstract and contributions but grouped with the weak classifiers in Sec 4.1/4.2/5.2.",
+  "Only binary tabular data; specialised imbalance classifiers and post-processing not evaluated with SOTA models.",
+  "Table 3 text layout leaves unclear which threshold column the oversampler rows belong to (only baseline rows show two values).",
+  "Additional robustness experiments and F2/Jaccard/balanced accuracy results are only in the repository, not the paper.",
+  "Datasets with Catboost AUC above 0.99 were removed, which biases toward harder problems.",
+  "Neither drift nor any time split is tested, despite drift being named as a difficulty factor."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "proper metric",
+   "definition": "A probability metric is proper when it is optimized by a classifier predicting the true class probabilities.",
+   "where": "Sec 2"
+  },
+  {
+   "term": "consistent algorithm",
+   "definition": "a learning algorithm is consistent in respect to a metric when, given enough training data, the algorithm converges to a solution that optimizes the metric",
+   "where": "Sec 2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "SMOTE (Chawla 2002)",
+   "year": 2002,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "The base oversampler studied",
+   "quote": null
+  },
+  {
+   "work": "Kovacs 2019, empirical comparison of minority oversampling techniques",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "contradicts",
+   "note": "Source of 104 datasets; its gains attributed to weak classifiers and a-priori HPs",
+   "quote": "In that study, balancing was beneficial due to the use of weak classifiers and a-priori HPs."
+  },
+  {
+   "work": "Koyejo et al 2014; Menon et al 2013",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Consistency of logloss with threshold optimization on held-out data",
+   "quote": null
+  },
+  {
+   "work": "Byrne 2016, empirical AUC for probabilistic forecasts",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Theorem 1 is a corollary of its Theorem 7",
+   "quote": null
+  },
+  {
+   "work": "Maloof 2003",
+   "year": 2003,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Showed threshold optimization as effective as random oversampling on a single dataset",
+   "quote": null
+  },
+  {
+   "work": "XGBoost; LightGBM; CatBoost; ADASYN; SVM-SMOTE; Polynomfit SMOTE",
+   "year": null,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "Classifiers and oversamplers used",
+   "quote": null
+  },
+  {
+   "work": "Tarawneh et al 2022, Stop Oversampling for Class Imbalance Learning",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Synthetic samples may belong to the majority class",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Figure 1",
+   "caption": "Mean AUC and rank (a) using a-priori HPs and (b) using validation HPs.",
+   "page": 5,
+   "why": "Shows oversampling gains vanish for strong classifiers under validation HPs."
+  },
+  {
+   "figure": "Figure 2",
+   "caption": "Mean F1 score and rank with a-priori HPs (a) using a fixed decision threshold of 0.5 and (b) optimizing the decision threshold on the validation set.",
+   "page": 7,
+   "why": "Oversampling helps at threshold 0.5 but not with an optimized threshold."
+  },
+  {
+   "figure": "Table 3",
+   "caption": "Mean F1 score achieved by balancing the data and by optimizing the decision threshold.",
+   "page": 3,
+   "why": "Direct per-classifier comparison of threshold vs oversampler."
+  }
+ ],
+ "code": [],
+ "problems": [
+  "No venue printed in the PDF: header shows only 'Elor and Elor' and arXiv:2201.08528v3 [cs.LG] 11 May 2022 (CCS concepts and ACM-style layout, no conference name).",
+  "Table 3 and Table 4 extracted as one value per line; column assignment for oversampler rows in Table 3 is ambiguous.",
+  "Fig 2 caption says a-priori HPs but Sec 4.3 text says validation HPs."
+ ]
+}

@@ -1,0 +1,472 @@
+{
+ "schema": 1,
+ "key": "sha1:9f2aefc38218",
+ "pdf": "data-science/sources/bergstra-2011-algorithms-hyper-parameter-optimization.pdf",
+ "bib": {
+  "title": "Algorithms for Hyper-Parameter Optimization",
+  "authors": [
+   "James Bergstra",
+   "Rémi Bardenet",
+   "Yoshua Bengio",
+   "Balázs Kégl"
+  ],
+  "first_author": "Bergstra",
+  "year": 2011,
+  "venue": "not printed in the PDF text (no venue line on page 1)",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 35747,
+  "chars_total": 35747,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can sequential model-based optimisation (GP and TPE with expected improvement) find better DBN hyper-parameters than random search and manual search in a tree-structured space?",
+ "hypothesis": "Algorithmic sequential search outperforms both manual and random search when many trials are affordable.",
+ "contributions": [
+  "Random search is competitive with the manual optimization of DBNs in [1]",
+  "Automatic sequential optimization outperforms both manual and random search",
+  "Two novel techniques for response-surface models with irrelevant elements: hierarchical GP and tree-structured Parzen estimator"
+ ],
+ "method": {
+  "summary": "Compares random search, grid-assisted manual search (Larochelle 2007), a hierarchical GP-EI SMBO and TPE (EI via l(x)/g(x)) on a 32-variable DBN search space for the convex and MRBI datasets, up to 200 trials each, parallelised over 5 GPUs.",
+  "task": "hyper-parameter optimisation of deep belief networks (classification)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "convex",
+    "role": "eval",
+    "size": null,
+    "split": "validation score for search, test error reported",
+    "source": "Larochelle et al. 2007",
+    "preprocessing": "raw or ZCA (searched)"
+   },
+   {
+    "name": "MNIST rotated background images (MRBI)",
+    "role": "eval",
+    "size": null,
+    "split": "validation for search, test error reported",
+    "source": "Larochelle et al. 2007",
+    "preprocessing": null
+   },
+   {
+    "name": "Boston Housing",
+    "role": "eval",
+    "size": "506 points, 13 scaled inputs, scalar output",
+    "split": null,
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "mnist basic, mnist background images, rectangles, rectangles images",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": null,
+    "preprocessing": "random search only (Fig 2)"
+   }
+  ],
+  "models": [
+   {
+    "name": "DBN",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "up to 3 layers, CD-1 layer-wise pretraining, 128-4096 hidden units per layer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "1 to 3",
+    "hidden": "log U(128, 4096) per layer",
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "MLP (Boston Housing)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "MLP with 10 hyper-parameters (learning rate, l1, l2, hidden size, iterations, PCA)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": null,
+   "optimizer": null,
+   "lr": "searched: classifier learn rate log U(0.001, 10); CD learn rate log U(1e-4, 1)",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "searched: 20 or 100",
+   "steps": null,
+   "epochs": "CD epochs log U(1, 10^4)",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": "classifier l2-penalty: 0 or log U(1e-7, 1e-4)",
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "GTX 285, 470, 480 or 580 GPUs; 5 GPUs in parallel",
+   "compute": "runtime per trial capped at 1 hour GPU",
+   "wall_clock": "about 24 hours per experiment",
+   "seeds": "random seed is a hyper-parameter with 5 choices; Boston Housing GP experiment repeated 20 times",
+   "other": {
+    "per-layer CD": "CD anneal start log U(10, 10^4); CD sample data yes or no; algo A coef U(.2, 2)",
+    "whole-model": "classifier anneal start log U(100, 10^4); ZCA energy U(.5,1); W init U(-a,a) or N(0,a^2)"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "20 repeats of GP vs random on Boston Housing; DBN runs: single run of up to 200 trials per algorithm (inferred: no repeats stated)",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "TPE gamma": "0.15",
+    "TPE candidates per iteration": "best among 100 drawn from l(x)",
+    "initial random points (GP and TPE)": "30 (same points for both)",
+    "GP kernel": "squared exponential at every node",
+    "GP EI optimiser": "EDA on discrete part, CMA-ES on continuous part, 3 random restarts per proposal",
+    "GP length-scale fitting": "up to 500 conjugate-gradient iterations",
+    "GP parallelism": "constant liar, fake value = mean of y in training set",
+    "TPE parallelism": "ignore pending proposals",
+    "TPE bounds": "allowed to grow past initial bounds; GP and random stayed within",
+    "Parzen sigma": "greater of distances to left and right neighbour, clipped",
+    "Parzen mixture": "equally-weighted mixture of prior with Gaussians at each observation",
+    "discrete posterior": "proportional to N*p_i + C_i",
+    "parallel proposals": "up to 5"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "test set classification error of best model",
+     "definition": "error of the model with best validation score among trials",
+     "unit": "%",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "random search",
+    "manual grid-assisted search (Larochelle et al. 2007; 82 trials convex, 27 MRBI; avg 41 across datasets in Fig 2)"
+   ],
+   "protocol": "Up to 200 trials per algorithm; Table 2 gives ± as printed (convex ±0.30 to 0.34, MRBI ±0.44) with no stated definition; Fig 4 95% CI on validation 0.018 (convex), 0.021 (MRBI)."
+  },
+  "availability": {
+   "code": "Hyperopt, BSD licence, https://github.com/jaberg/hyperopt",
+   "weights": null,
+   "data": null
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "inference.parameters.TPE gamma",
+    "quote": "we chose γ = 0.15 and picked the best among 100 candidates drawn\nfrom ℓ(x) on each iteration",
+    "where": "Section 6"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "TPE best model on convex reaches 14.13% test error, versus 18.97% for random search at up to 200 trials.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test set classification error",
+   "value": "14.13 ±0.30 %",
+   "unit": "% test error",
+   "baseline_value": "18.97 ± 0.34 %",
+   "n": 200,
+   "setup": "DBN (up to 3 layers, 32-variable search space, Table 1), best model found by each algorithm with up to 200 trials; manual search used 82 trials (convex) and 27 (MRBI)",
+   "table": "Table 2, row TPE, column convex",
+   "note": null,
+   "where": "Table 2, p.7"
+  },
+  {
+   "claim": "Random search with up to 200 trials gets 18.97% test error on convex.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test set classification error",
+   "value": "18.97 ± 0.34 %",
+   "unit": "% test error",
+   "baseline_value": null,
+   "n": 200,
+   "setup": "DBN (up to 3 layers, 32-variable search space, Table 1), best model found by each algorithm with up to 200 trials; manual search used 82 trials (convex) and 27 (MRBI)",
+   "table": "Table 2, row Random, column convex",
+   "note": "Section 7 text rounds this to 17% ('random search with 200 trials (17%)'), which does not match Table 2's 18.97; manual search is 18.63 in the table but '19%' in the text.",
+   "where": "Table 2, p.7"
+  },
+  {
+   "claim": "GP best model on convex gets 16.70% test error.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test set classification error",
+   "value": "16.70 ± 0.32%",
+   "unit": "% test error",
+   "baseline_value": null,
+   "n": 200,
+   "setup": "DBN (up to 3 layers, 32-variable search space, Table 1), best model found by each algorithm with up to 200 trials; manual search used 82 trials (convex) and 27 (MRBI)",
+   "table": "Table 2, row GP, column convex",
+   "note": null,
+   "where": "Table 2, p.7"
+  },
+  {
+   "claim": "Manual search (82 trials) on convex gets 18.63% test error.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test set classification error",
+   "value": "18.63 ± 0.34%",
+   "unit": "% test error",
+   "baseline_value": null,
+   "n": 200,
+   "setup": "DBN (up to 3 layers, 32-variable search space, Table 1), best model found by each algorithm with up to 200 trials; manual search used 82 trials (convex) and 27 (MRBI)",
+   "table": "Table 2, row Manual, column convex",
+   "note": null,
+   "where": "Table 2, p.7"
+  },
+  {
+   "claim": "TPE finds a new best on MRBI at 44.55% test error.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test set classification error",
+   "value": "44.55 ±0.44%",
+   "unit": "% test error",
+   "baseline_value": null,
+   "n": 200,
+   "setup": "DBN (up to 3 layers, 32-variable search space, Table 1), best model found by each algorithm with up to 200 trials; manual search used 82 trials (convex) and 27 (MRBI)",
+   "table": "Table 2, row TPE, column MRBI",
+   "note": null,
+   "where": "Table 2, p.7"
+  },
+  {
+   "claim": "GP gets 47.08% on MRBI.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test set classification error",
+   "value": "47.08 ± 0.44%",
+   "unit": "% test error",
+   "baseline_value": null,
+   "n": 200,
+   "setup": "DBN (up to 3 layers, 32-variable search space, Table 1), best model found by each algorithm with up to 200 trials; manual search used 82 trials (convex) and 27 (MRBI)",
+   "table": "Table 2, row GP, column MRBI",
+   "note": null,
+   "where": "Table 2, p.7"
+  },
+  {
+   "claim": "Manual search (27 trials) gets 47.39% on MRBI.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test set classification error",
+   "value": "47.39 ± 0.44%",
+   "unit": "% test error",
+   "baseline_value": null,
+   "n": 200,
+   "setup": "DBN (up to 3 layers, 32-variable search space, Table 1), best model found by each algorithm with up to 200 trials; manual search used 82 trials (convex) and 27 (MRBI)",
+   "table": "Table 2, row Manual, column MRBI",
+   "note": null,
+   "where": "Table 2, p.7"
+  },
+  {
+   "claim": "Random search is worst on MRBI at 50.52%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test set classification error",
+   "value": "50.52 ± 0.44%",
+   "unit": "% test error",
+   "baseline_value": null,
+   "n": 200,
+   "setup": "DBN (up to 3 layers, 32-variable search space, Table 1), best model found by each algorithm with up to 200 trials; manual search used 82 trials (convex) and 27 (MRBI)",
+   "table": "Table 2, row Random, column MRBI",
+   "note": null,
+   "where": "Table 2, p.7"
+  },
+  {
+   "claim": "Manual-search performance of Larochelle et al. is reliably matched by 32 random trials on several datasets.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "32",
+   "unit": "random trials",
+   "baseline_value": "41 manual trials on average",
+   "n": null,
+   "setup": "DBN random search over Table 1 space; Fig 2 box-plots of best-of-N",
+   "quote": "the result of\nmanual search can be reliably matched with 32 random trials for several datasets",
+   "note": null,
+   "where": "Section 5"
+  },
+  {
+   "claim": "GP and EI reach manual-search performance within 80 trials, slightly less efficient than manual search.",
+   "kind": "measured",
+   "source": null,
+   "metric": "trials to match manual",
+   "value": "80",
+   "unit": "trials",
+   "baseline_value": "82 (convex), 27 (MRBI)",
+   "n": null,
+   "setup": "DBN, convex and MRBI",
+   "quote": "GP and EI identiﬁed performance on par with manual search within 80 trials",
+   "note": null,
+   "where": "Section 7"
+  },
+  {
+   "claim": "Per-proposal cost after 200 trials: GP about 150 s, TPE about 10 s.",
+   "kind": "measured",
+   "source": null,
+   "metric": "proposal time",
+   "value": "150 s vs 10 s",
+   "unit": "seconds",
+   "baseline_value": null,
+   "n": null,
+   "setup": "after 200 trials, DBN search",
+   "quote": "After 200 trials, the prediction of a point x∗using this GP took around 150 seconds.",
+   "note": "TPE: 'took around 10 seconds'",
+   "where": "Section 6"
+  },
+  {
+   "claim": "Each experiment took about 24 hours of wall time using five GPUs.",
+   "kind": "measured",
+   "source": null,
+   "metric": "wall time",
+   "value": "24 hours",
+   "unit": "hours",
+   "baseline_value": null,
+   "n": null,
+   "setup": "up to 5 parallel proposals, 1 hour GPU limit per trial",
+   "quote": "each experiment took about 24 hours of wall time using ﬁve GPUs",
+   "note": null,
+   "where": "Section 6.1"
+  },
+  {
+   "claim": "GP vs random on Boston Housing MLP (10 hyper-parameters): GP finds noticeably better points; no number given in text (read from Fig 3).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": 20,
+   "setup": "first 30 iterations random, repeated 20 times",
+   "quote": null,
+   "note": null,
+   "where": "Section 6, Fig 3"
+  }
+ ],
+ "limits": [
+  "Only DBNs on two datasets; no repeats of the 200-trial runs stated, so no variance across searches.",
+  "Authors concede SMBO can be arbitrarily bad with a poor p(y|x), or slower than random if it finds a local optimum.",
+  "Reasons TPE beat GP are untested hypotheses.",
+  "Search spaces differ from manual search (larger, no discretisation); TPE could leave initial bounds while GP and random could not.",
+  "Venue not printed in PDF text."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "TPE (tree-structured Parzen estimator)",
+   "definition": "models p(x|y) as l(x) if y < y*, g(x) if y >= y*, with l from observations with loss below y* and g from the rest; y* is the gamma quantile of observed y, so p(y<y*)=gamma",
+   "where": "Section 4, Eq 2"
+  },
+  {
+   "term": "TPE acquisition",
+   "definition": "EI_y*(x) proportional to (gamma + g(x)/l(x) (1-gamma))^-1: pick x with high l(x) and low g(x); draw candidates from l and rank by g(x)/l(x)",
+   "where": "Section 4.1"
+  },
+  {
+   "term": "Expected improvement",
+   "definition": "EI_y*(x) := integral of max(y*-y,0) p_M(y|x) dy",
+   "where": "Eq 1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Larochelle et al., An empirical evaluation of deep architectures on problems with many factors of variation",
+   "year": 2007,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "datasets, DBN model and manual-search baseline",
+   "quote": null
+  },
+  {
+   "work": "Bergstra and Bengio, Random search for hyper-parameter optimization",
+   "year": 2012,
+   "arxiv": null,
+   "relation": "related",
+   "note": "random search efficiency, cited as [19],[21]",
+   "quote": null
+  },
+  {
+   "work": "Bardenet and Kégl, Surrogating the surrogate",
+   "year": 2010,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "EI optimisation with EDA + CMA-ES used for the GP",
+   "quote": null
+  },
+  {
+   "work": "Jones, A taxonomy of global optimization methods based on response surfaces",
+   "year": 2001,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "expected improvement criterion",
+   "quote": null
+  },
+  {
+   "work": "Hutter et al., Sequential model-based optimization for general algorithm configuration",
+   "year": 2011,
+   "arxiv": null,
+   "relation": "related",
+   "note": "SMBO",
+   "quote": null
+  },
+  {
+   "work": "Pinto et al. 2009; Coates et al. 2010",
+   "year": 2009,
+   "arxiv": null,
+   "relation": "related",
+   "note": "results from concerted hyper-parameter search",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 4",
+   "caption": "Efficiency of GP and TPE sequential optimization on convex and MRBI",
+   "page": 8,
+   "why": "shows trajectories vs manual and random 99.5th-quantile lines"
+  },
+  {
+   "figure": "Table 2",
+   "caption": "Test set classification error of the best model found by each search algorithm",
+   "page": 7,
+   "why": "headline comparison"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "DBN performance according to random search, best-of-N box-plots",
+   "page": 6,
+   "why": "random search matches manual at 32 trials"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 2-3",
+   "snippet": "p(x|y) = l(x) if y < y*, g(x) if y >= y*;  EI_y*(x) ∝ (γ + (g(x)/l(x))(1-γ))^-1",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Table 2 random convex 18.97 vs text 17%; manual 18.63 vs text 19%.",
+  "Section 5 says 'up to 32 hyper-parameters' ; Conclusion says 32 variables.",
+  "Cached text file has NUL bytes at start; harmless."
+ ]
+}

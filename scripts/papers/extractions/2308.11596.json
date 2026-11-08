@@ -1,0 +1,1167 @@
+{
+ "schema": 1,
+ "key": "2308.11596",
+ "pdf": "ai-engineering/08-multimodal-engineering/sources/communication-2023-seamlessm4t.pdf",
+ "bib": {
+  "title": "SeamlessM4T: Massively Multilingual & Multimodal Machine Translation",
+  "authors": [
+   "Seamless Communication",
+   "Loïc Barrault",
+   "Yu-An Chung",
+   "Mariano Coria Meglioli",
+   "David Dale",
+   "Ning Dong",
+   "Paul-Ambroise Duquenne",
+   "Hady Elsahar",
+   "Hongyu Gong",
+   "Kevin Heffernan",
+   "John Hoffman",
+   "Christopher Klaiber",
+   "Pengwei Li",
+   "Daniel Licht",
+   "Jean Maillard",
+   "Alice Rakotoarison",
+   "Kaushik Ram Sadagopan",
+   "Guillaume Wenzek",
+   "Ethan Ye",
+   "and others (Meta AI; about 60 authors listed)"
+  ],
+  "first_author": "Seamless Communication",
+  "year": 2023,
+  "venue": "preprint",
+  "arxiv": "2308.11596",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 303881,
+  "chars_total": 303881,
+  "engine": "pymupdf",
+  "skipped": "Reference list (lines 7742-8660) skimmed for lineage only; per-language numeric rows of Tables 5, 30, 32, 38 and 39 read but not transcribed (summed totals only)."
+ },
+ "type": "system",
+ "question": "Can a single model translate speech and text between up to 100 languages across S2ST, S2TT, T2ST, T2TT and ASR, and match or beat cascaded systems?",
+ "hypothesis": "A direct multitask model built on self-supervised speech pre-training, a multilingual NLLB text model and mined speech alignments can close the gap with strong cascaded systems.",
+ "contributions": [
+  "SeamlessAlign: about 470,000 hours of automatically aligned speech translation data, built with an extended LID model and the Sonar multimodal embedding space",
+  "w2v-BERT 2.0 speech pre-training on 1 million hours",
+  "SeamlessM4T-Large (2.3B) and Medium (1.2B): one multitask UnitY model for S2ST, S2TT, T2ST, T2TT and ASR",
+  "Blaser 2.0, a modality-agnostic quality metric",
+  "Robustness benchmarks (noisy Fleurs, speaker variation), added-toxicity (ASR-ETOX) and gender-bias evaluation",
+  "Open release of models, inference code, fine-tuning recipes (Fairseq2) and SeamlessAlign metadata"
+ ],
+ "method": {
+  "summary": "A three-stage fine-tuned multitask UnitY: stage 1 trains an X2T model (w2v-BERT 2.0 Conformer speech encoder + length adaptor + NLLB-derived text encoder/decoder) on X-eng S2TT and English ASR; stage 2 adds eng-X S2TT and non-English ASR; stage 3 freezes X2T and fine-tunes a 6+6 layer text-to-unit model on 121K hours of S2ST data, with a multilingual HiFi-GAN unit vocoder. Training data mix human-labeled, NLLB-pseudo-labeled and mined (SeamlessAlign) data.",
+  "task": "multitask speech/text translation and recognition",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Open speech pre-training audio",
+    "role": "pretrain",
+    "size": "1 million hours, over 143 languages",
+    "split": null,
+    "source": "open speech audio data",
+    "preprocessing": null
+   },
+   {
+    "name": "Raw audio for mining",
+    "role": "pretrain",
+    "size": "4 million hours, about 1 million hours English",
+    "split": null,
+    "source": "publicly available repository of crawled web data",
+    "preprocessing": "URL dedup, resample to 16 kHz, audio event detection to drop non-speech, Silero VAD splitting, LID, over-segmentation (about 8x segments)"
+   },
+   {
+    "name": "SeamlessAlign",
+    "role": "train",
+    "size": "about 470,000 h over 37 languages (Sen2Txx about 200,000 h; Sxx2Ten about 240,000 h; Sxx2Sen about 29,000 h); metadata released up to Sonar threshold 1.15",
+    "split": null,
+    "source": "mined with Sonar embeddings and FAISS, margin criterion k=16, threshold 1.15",
+    "preprocessing": "top 400 h per X-eng direction (33 directions) and top 200 h per eng-X direction (29 directions) of S2TT used, +18.3K h; up to 2,500 h per direction of S2ST"
+   },
+   {
+    "name": "X2T supervised data (ASR + S2TT)",
+    "role": "train",
+    "size": "Table 38 totals (garbled in extraction): ASR primary 40,012 h; X-eng S2TT 50,596 h primary and 12,682 h mined; eng-X mined 5,701 h",
+    "split": null,
+    "source": "human-labeled open-source and licensed data plus pseudo-labeled ASR (NLLB-200-3.3B translating ASR transcripts)",
+    "preprocessing": "drop special tokens, max 100 sub-word tokens, skewed text/audio ratio over 5 sub-words per second removed; toxicity imbalance threshold 1; audio 0.1 s to 50 s; text over 250 sub-words, over 20% emojis, over 50% punctuation or spaces removed"
+   },
+   {
+    "name": "S2ST data",
+    "role": "train",
+    "size": "121K h total (Table 39 totals 26,254 + 23,171 + 49,425 + 21,983 h: X-eng primary, X-eng mined, eng-X primary, eng-X mined)",
+    "split": null,
+    "source": "primary pseudo-labeled via a multilingual T2U model, plus mined SeamlessAlign S2ST with in-house ASR for first-pass text",
+    "preprocessing": "pairs with audio seconds per text token above 0.5 discarded; unit extraction with XLS-R-1B layer 35, k-means K=10000"
+   },
+   {
+    "name": "T2TT bitext",
+    "role": "train",
+    "size": "NLLB-200 data limited to 95 languages plus over 75M extra bitexts (arb, cmn, fra, rus, spa)",
+    "split": null,
+    "source": "NLLB data plus open-source T2TT sets",
+    "preprocessing": null
+   },
+   {
+    "name": "LID training data",
+    "role": "train",
+    "size": "17k h, average 171 h per language, 1 to 600 h",
+    "split": null,
+    "source": "VoxLingua107 plus extra languages",
+    "preprocessing": null
+   },
+   {
+    "name": "Fleurs",
+    "role": "eval",
+    "size": "102 languages, up to 350 test sentences, up to 3 speakers each",
+    "split": "test (dev in ablations)",
+    "source": "Conneau et al. 2022",
+    "preprocessing": null
+   },
+   {
+    "name": "Flores-200 devtest",
+    "role": "eval",
+    "size": "200 languages",
+    "split": "devtest",
+    "source": "NLLB Team 2022",
+    "preprocessing": null
+   },
+   {
+    "name": "CoVoST 2",
+    "role": "eval",
+    "size": "21 X-eng, 15 eng-X",
+    "split": "test",
+    "source": "Wang et al. 2021c",
+    "preprocessing": null
+   },
+   {
+    "name": "CVSS-C",
+    "role": "eval",
+    "size": "21 languages into English; 8 languages have missing samples",
+    "split": "test",
+    "source": "Jia et al. 2022b",
+    "preprocessing": null
+   },
+   {
+    "name": "HolisticBias and Multilingual HolisticBias",
+    "role": "eval",
+    "size": "472K English sentences; speech extension 325 sentences over 19 languages",
+    "split": null,
+    "source": "Smith et al. 2022; Costa-jussa et al. 2023",
+    "preprocessing": "numbers converted to words, synthesized with MMS-TTS; English side with fairseq S^2 transformer-tts"
+   }
+  ],
+  "models": [
+   {
+    "name": "SeamlessM4T-Large",
+    "role": "proposed",
+    "params": "2.3B (2,326M)",
+    "architecture": "multitask UnitY: Conformer speech encoder, Transformer text encoder/decoder, Transformer T2U, HiFi-GAN vocoder",
+    "init_from": "w2v-BERT 2.0 (669M incl. length adaptor), SeamlessM4T-NLLB-1.3B (1,370M), pre-trained T2U (287M)",
+    "tokenizer": "SentencePiece BPE retrained on NLLB data, forced inclusion of top 5000 Chinese/kanji characters seen at least 15 times",
+    "vocab": "256K",
+    "layers": "w2v-BERT 2.0: 24 Conformer layers; T2U: 6 encoder + 6 decoder",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "length_adaptor": "modified M-adaptor with one shared pooling module for Q, K, V",
+     "hifigan": "multilingual, 36 target languages, language embedding, LID auxiliary loss, embedding dim 1280 for duration predictor and LID classifier"
+    }
+   },
+   {
+    "name": "SeamlessM4T-Medium",
+    "role": "proposed",
+    "params": "1.2B (1,151M)",
+    "architecture": "same recipe",
+    "init_from": "300M w2v-BERT 2.0 (366M incl. adaptor), NLLB-600M-Distilled (615M), T2U 170M",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "SeamlessM4T-NLLB-1.3B",
+    "role": "base",
+    "params": "1.3B",
+    "architecture": "dense NLLB 1.3B T2TT trained on 95 languages",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "w2v-BERT 2.0",
+    "role": "base",
+    "params": "about 600M (24 Conformer layers, XL architecture)",
+    "architecture": "contrastive + masked prediction, product quantization with 2 GVQ codebooks, plus RPQ masked prediction",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": 24,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "loss": "L = wc*Lc + wmGVQ*LmGVQ + wmRPQ*LmRPQ with weights 1.0, 0.5, 0.5"
+    }
+   },
+   {
+    "name": "Sonar",
+    "role": "retriever",
+    "params": null,
+    "architecture": "NLLB-1.3B encoder-decoder with mean-pooled fixed-size bottleneck; speech encoders: w2v-BERT 2.0 + 3-layer seq2seq attention pooling, MSE loss to text embeddings",
+    "init_from": "NLLB-1.3B",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "speech_encoders": "trained on human ASR transcripts only, at least 100 h for most languages, languages grouped by family"
+    }
+   },
+   {
+    "name": "LID100",
+    "role": "base",
+    "params": null,
+    "architecture": "ECAPA-TDNN",
+    "init_from": "scratch (VL107 baseline retrained for validation)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "training": "40 epochs, about 172 h on 8 GPUs"
+    }
+   },
+   {
+    "name": "Whisper-Large-v2 / Medium",
+    "role": "baseline",
+    "params": "1.5B / 0.8B",
+    "architecture": "encoder-decoder transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "AudioPaLM-2-8B-AST, XLS-R-2B-S2T, MMS, NLLB-3.3B, YourTTS",
+    "role": "baseline",
+    "params": "8.0B, 2.6B, 1.0B, 3.3B, n/a",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "external results copied from their papers with matched scoring"
+    }
+   },
+   {
+    "name": "Blaser 2.0",
+    "role": "judge",
+    "params": null,
+    "architecture": "3-layer perceptron with tanh on 6 concatenated Sonar-derived vectors",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": 3,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "training": "50% dropout, weight decay 0.1, batch size 1024, linear LR decay to zero, 50 epochs"
+    }
+   }
+  ],
+  "training": {
+   "objective": "L = alpha*L_S2TT + beta*L_T2TT + gamma*L_KD (alpha, beta, gamma tuned on dev, values not given); L_KD is token-level KL from T2TT teacher to S2TT student; auto-encoding teacher for ASR data. Stage 3: only T2U fine-tuned on S2ST data, X2T frozen. Text decoder in S2TT ablation trained with LNA-D.",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "final_model_hyperparameters": "The paper gives no learning rate, batch size, steps, optimizer, hardware or compute for the final stage 1-3 training, or for w2v-BERT 2.0 pre-training.",
+    "w2v_bert_ablation (Sec 4.5.1)": "LR up to 3e-4 over 4000 warm-up updates then inverse square root; 32 GPUs; batch of 960K frames per GPU; 100K updates; all speech encoder parameters trained, text decoder LayerNorm and self-attention only (LNA-D)",
+    "multitask_ablation (Sec 4.5.2)": "100K updates (5-7 epochs); LayerDrop p=0.1 with masking p=0.1 on speech encoder; dropout p=0.1 on text encoder-decoder; LNA; last checkpoint evaluated",
+    "s2st_ablation": "50K and 80K updates equal 2 epochs in two data settings (Table 25)",
+    "stages": "Stage1 X-eng S2TT + English ASR (found necessary for both X-eng and eng-X quality); Stage2 adds eng-X S2TT and non-English ASR; Stage3 S2ST 121K h",
+    "T2U": "12+12 layer T2U used for pseudo-labeling, 6+6 layer T2U distilled with its labels for UnitY",
+    "unit_extraction": "XLS-R-1B layer 35, 50 Hz, 10K samples per language for k-means, K in {1000,2000,5000,10000}, K=10000 best"
+   }
+  },
+  "inference": {
+   "decoding": "beam search width 5 for text; two-pass beam search for S2ST and T2ST with beam 5 in both passes; beam 10 for S2TT in the bias study",
+   "temperature": "Whisper scorer: 0 (greedy)",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single deterministic decode; bias experiments repeated 3 times because MMS-TTS is non-deterministic",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "mining_margin_k": "16",
+    "mining_threshold": "1.15 (Laser-era threshold 1.06)"
+   },
+   "other": {
+    "ASR_scorer": "Whisper-Medium for X-eng and Whisper-Large-v2 for eng-X ASR-BLEU"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "BLEU / spBLEU",
+     "definition": "SacreBLEU (13a, or char tokenization for cmn, jpn, tha, lao, mya); spBLEU with Flores-200 sentencepiece",
+     "unit": "points",
+     "higher_is_better": true
+    },
+    {
+     "name": "chrF++",
+     "definition": "T2TT quality on Flores",
+     "unit": "points",
+     "higher_is_better": true
+    },
+    {
+     "name": "WER",
+     "definition": "Whisper-normalized word error rate",
+     "unit": "%",
+     "higher_is_better": false
+    },
+    {
+     "name": "ASR-BLEU",
+     "definition": "BLEU on Whisper transcripts of generated speech",
+     "unit": "points",
+     "higher_is_better": true
+    },
+    {
+     "name": "Blaser 2.0",
+     "definition": "similarity of Sonar embeddings of source, output and reference; supervised version predicts XSTS",
+     "unit": "score about 1-5",
+     "higher_is_better": true
+    },
+    {
+     "name": "XSTS",
+     "definition": "human semantic similarity, 1-5, median of 3-5 annotators, calibrated",
+     "unit": "1-5",
+     "higher_is_better": true
+    },
+    {
+     "name": "MOS",
+     "definition": "human 1-5 naturalness, clarity, sound quality",
+     "unit": "1-5",
+     "higher_is_better": true
+    },
+    {
+     "name": "chrFMS / CoefVarMS",
+     "definition": "mean and coefficient of variation of chrF across speakers reading the same content",
+     "unit": "chrF / ratio",
+     "higher_is_better": true
+    },
+    {
+     "name": "ETOX / ASR-ETOX",
+     "definition": "added toxicity: output has more word-list toxic items than input",
+     "unit": "% of sentences",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "Whisper-Medium/Large-v2 + NLLB cascades (2-stage, 3-stage with YourTTS)",
+    "Whisper-Large-v2",
+    "AudioPaLM-2-8B-AST",
+    "XLS-R-2B-S2T",
+    "MMS",
+    "NLLB-3.3B / 1.3B / 1.3B-distilled"
+   ],
+   "protocol": "Automatic metrics on a single run; no seeds or significance tests reported for translation scores. Human XSTS: up to 30 annotators per pair, 3 per item, 2 more when scores differ by 2 or more, 500-item cross-lingual calibration set, bootstrap CI about plus or minus 0.1."
+  },
+  "availability": {
+   "code": "https://github.com/facebookresearch/seamless_communication (Fairseq2, Stopes pipelines, Sonar)",
+   "weights": "SeamlessM4T-Large and Medium, CC-BY-NC 4.0",
+   "data": "metadata to recreate unfiltered 470,000 h SeamlessAlign; training audio not released"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.other.w2v_bert_ablation",
+    "quote": "Our learning rate increased up to 3e-4 through 4000 warm-up updates and subsequently followed the inverse square root learning rate schedule.",
+    "where": "Sec 4.5.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "SeamlessM4T-Large beats the previous direct S2TT SOTA (AudioPaLM-2-8B-AST) by 4.2 BLEU on Fleurs X-eng.",
+   "kind": "measured",
+   "source": null,
+   "metric": "S2TT BLEU",
+   "value": "24.0",
+   "unit": "BLEU",
+   "baseline_value": "19.7",
+   "n": "81 directions",
+   "setup": "Fleurs test, S2TT into English, BLEU averaged over 81 languages Whisper supports; AudioPaLM figure copied from its paper",
+   "note": null,
+   "where": "Sec 4.4.2, Table 16",
+   "quote": "by 4.2 BLEU points in S2TTX–eng directions",
+   "table": "Table 16, row SeamlessM4T-Large, column Fleurs X–eng (24.0 vs 19.7 AudioPaLM-2-8B-AST)"
+  },
+  {
+   "claim": "Direct SeamlessM4T-Large beats the strongest cascade (Whisper-Large-v2 + NLLB-3.3B, 4.8B params) on Fleurs X-eng S2TT by 1.3 BLEU; on eng-X the larger cascade is ahead.",
+   "kind": "measured",
+   "source": null,
+   "metric": "S2TT BLEU",
+   "value": "24.0",
+   "unit": "BLEU",
+   "baseline_value": "22.7",
+   "n": "81 directions",
+   "setup": "Fleurs test S2TT; 81 X-eng and 88 eng-X directions",
+   "note": null,
+   "where": "Sec 4.4.1, Table 14",
+   "quote": "SeamlessM4T-Large improves on Whisper-Large-v2 +NLLB-3.3B by 1.3 BLEU",
+   "table": "Table 14, row SeamlessM4T-Large vs Whisper-Large-v2 (ASR)+ NLLB-3.3B, column X–eng (24.0 vs 22.7); eng-X 21.5 vs 22.2"
+  },
+  {
+   "claim": "SeamlessM4T-Large beats the best 3-stage cascade on Fleurs X-eng S2ST by 2.6 ASR-BLEU.",
+   "kind": "measured",
+   "source": null,
+   "metric": "S2ST ASR-BLEU",
+   "value": "25.8",
+   "unit": "ASR-BLEU",
+   "baseline_value": "23.2",
+   "n": "81 directions",
+   "setup": "Fleurs test X-eng S2ST, ASR-BLEU with Whisper-Medium as scorer; cascade is Whisper-Large-v2 + NLLB-3.3B + YourTTS",
+   "note": "Table 19 gives 22.7 for X-eng n=101 and 26.3 for n=82, so the 25.8 in Table 15 differs from both Table 19 averages.",
+   "where": "Sec 4.4.1, Table 15",
+   "table": "Table 15, row SeamlessM4T-Large, column Fleurs (n=81): 25.8 vs 23.2"
+  },
+  {
+   "claim": "On CVSS X-eng S2ST SeamlessM4T-Large far exceeds the 2-stage cascade Whisper-Large-v2 (S2TT) + YourTTS.",
+   "kind": "measured",
+   "source": null,
+   "metric": "S2ST ASR-BLEU",
+   "value": "36.5",
+   "unit": "ASR-BLEU",
+   "baseline_value": "22.6",
+   "n": "21 directions",
+   "setup": "CVSS-C test, 21 source languages, ASR-BLEU",
+   "note": "The paper states the gap three ways: 58% (abstract), 8.5 ASR-BLEU / 50% (Introduction), 14 ASR-BLEU (Sec 4.4.1). Table 15 gives 36.5 vs 22.6 = 13.9 points, which fits the 14 figure.",
+   "where": "Abstract, Introduction, Sec 4.4.1, Table 15",
+   "table": "Table 15, row SeamlessM4T-Large, column CVSS (n=21): 36.5 vs 22.6"
+  },
+  {
+   "claim": "Fleurs ASR word error rate is 45% lower than Whisper-Large-v2 over the 77 shared languages.",
+   "kind": "measured",
+   "source": null,
+   "metric": "WER",
+   "value": "23.1",
+   "unit": "WER %",
+   "baseline_value": "41.7",
+   "n": "77 languages",
+   "setup": "Fleurs test, normalized WER (Whisper normalizer), 77 languages supported by both",
+   "note": null,
+   "where": "Sec 4.4.2, Table 16",
+   "quote": "on the overlapping 77 supported languages with a WER reduction of 45%",
+   "table": "Table 16, row SeamlessM4T-Large, column Fleurs (n=77): 23.1 vs Whisper-Large-v2 41.7"
+  },
+  {
+   "claim": "SeamlessM4T-Large gains most on low-resource source languages in Fleurs S2TT X-eng.",
+   "kind": "measured",
+   "source": null,
+   "metric": "S2TT BLEU",
+   "value": "25.4",
+   "unit": "BLEU",
+   "baseline_value": "18.0",
+   "n": "34 languages",
+   "setup": "Fleurs test, BLEU averaged over low-resource languages (<500 h supervision) covered by Whisper, AudioPaLM and SeamlessM4T (n=34); AudioPaLM-2-8B-AST is the comparison",
+   "note": null,
+   "where": "Sec 4.4.2, Table 17",
+   "quote": "an improvement of +7.4 BLEU",
+   "table": "Table 17, row SeamlessM4T-Large, column Low (n=34): 25.4 vs AudioPaLM-2-8B-AST 18.0"
+  },
+  {
+   "claim": "SeamlessM4T-Large improves CoVoST 2 eng-X S2TT over XLS-R-2B-S2T by 2.8 BLEU but trails AudioPaLM-2-8B-AST by 3.7 BLEU on X-eng.",
+   "kind": "measured",
+   "source": null,
+   "metric": "S2TT BLEU",
+   "value": "30.6",
+   "unit": "BLEU",
+   "baseline_value": "27.8",
+   "n": "15 directions",
+   "setup": "CoVoST 2 test, BLEU; eng-X n=15, X-eng n=21",
+   "note": null,
+   "where": "Sec 4.4.2, Table 16",
+   "table": "Table 16, row SeamlessM4T-Large, column CoVoST 2 eng–X: 30.6 vs XLS-R-2B-S2T 27.8; X-eng 34.1 vs AudioPaLM-2-8B-AST 37.8"
+  },
+  {
+   "claim": "T2TT quality of the SeamlessM4T-NLLB-1.3B / Large text path matches NLLB-3.3B into English and gains 1 chrF++ from English.",
+   "kind": "measured",
+   "source": null,
+   "metric": "T2TT chrF++",
+   "value": "50.9",
+   "unit": "chrF++",
+   "baseline_value": "49.6",
+   "n": "95 languages",
+   "setup": "Flores devtest, chrF++ averaged over 95 languages",
+   "note": "Table 12 reports the stand-alone SeamlessM4T-NLLB-1.3B at 60.7 / 49.6 versus NLLB-3.3B 60.6 / 49.6; Table 16 reports NLLB-3.3B at 60.7 / 49.6 and SeamlessM4T-Large at 60.8 / 50.9.",
+   "where": "Sec 4.2.2, 4.4.2, Tables 12 and 16",
+   "table": "Table 16, row SeamlessM4T-Large, column Flores eng–X: 50.9 vs NLLB-3.3B 49.6"
+  },
+  {
+   "claim": "Zero-shot T2ST X-eng scores higher than supervised S2ST X-eng, so non-English speech input is the hardest case.",
+   "kind": "measured",
+   "source": null,
+   "metric": "T2ST ASR-BLEU",
+   "value": "34.9",
+   "unit": "ASR-BLEU",
+   "baseline_value": "24.6",
+   "n": "88 directions",
+   "setup": "Fleurs, ASR-BLEU, SeamlessM4T-Large",
+   "note": "The text compares with 24.6 for S2ST X-eng; Table 19 lists 22.7 (n=101) and 26.3 (n=82) and no 24.6. The Sec 4.4 text also writes '32 X–eng directions' where eng-X is meant.",
+   "where": "Sec 4.4.3, Table 20",
+   "quote": "(34.9 vs. 24.6)",
+   "table": "Table 20, row SeamlessM4T-Large, column X–eng (n=88): 34.9"
+  },
+  {
+   "claim": "SeamlessM4T-Large S2ST eng-X reaches 21.5 ASR-BLEU on 32 directions; the Medium model reaches 15.4.",
+   "kind": "measured",
+   "source": null,
+   "metric": "S2ST ASR-BLEU",
+   "value": "21.5",
+   "unit": "ASR-BLEU",
+   "baseline_value": "15.4",
+   "n": "32 directions",
+   "setup": "Fleurs test eng-X S2ST, ASR-BLEU, three languages with Whisper WER above 100 excluded",
+   "note": null,
+   "where": "Sec 4.4.1, Table 19",
+   "table": "Table 19, row SeamlessM4T-Large, column Fleurs eng–X (n=32): 21.5; Medium 15.4"
+  },
+  {
+   "claim": "Human XSTS for S2TT eng-X is 4.53 averaged over 24 languages against a human reference of 4.69.",
+   "kind": "measured",
+   "source": null,
+   "metric": "XSTS",
+   "value": "4.53",
+   "unit": "XSTS (1-5)",
+   "baseline_value": "4.69",
+   "n": "24 languages",
+   "setup": "Fleurs test, up to 350 sentences per language, 3 annotators per item (5 on disagreement of 2 or more), median per item, calibrated XSTS",
+   "note": null,
+   "where": "Sec 5.2.3, Table 29",
+   "table": "Table 29, row eng–X SeamlessM4T-Large, column Avg. XSTS (S2TT): 4.53 vs human reference 4.69"
+  },
+  {
+   "claim": "Human XSTS for S2TT X-eng is 4.16 against 4.05 for Whisper-Large-v2, with a large gain for Swahili (+2.38).",
+   "kind": "measured",
+   "source": null,
+   "metric": "XSTS",
+   "value": "4.16",
+   "unit": "XSTS (1-5)",
+   "baseline_value": "4.05",
+   "n": "24 languages",
+   "setup": "Fleurs test, 24 languages, calibrated XSTS; SeamlessM4T-Large generations came from fairseq not Fairseq2",
+   "note": "Significant improvement for 10 of 24 languages and regressions for 10, per Sec 5.2.3; the abstract and conclusion say 'significant improvement ... for 7 out of 24 languages'.",
+   "where": "Sec 5.2.3, Table 29",
+   "table": "Table 29, row X–eng SeamlessM4T-Large, column Avg. XSTS (S2TT): 4.16 vs Whisper-Large-v2 4.05"
+  },
+  {
+   "claim": "In human XSTS for S2ST X-eng, SeamlessM4T-Large scores below the Whisper-Large-v2 + YourTTS cascade even though automatic metrics favour it.",
+   "kind": "measured",
+   "source": null,
+   "metric": "XSTS",
+   "value": "3.87",
+   "unit": "XSTS (1-5)",
+   "baseline_value": "4.04",
+   "n": "24 languages",
+   "setup": "Fleurs test, 24 languages, calibrated XSTS",
+   "note": null,
+   "where": "Sec 5.2.3, Table 31",
+   "table": "Table 31, row X–eng SeamlessM4T-Large, column Avg. XSTS (S2ST): 3.87 vs Whisper-Large-v2 +YourTTS 4.04"
+  },
+  {
+   "claim": "Moving from S2TT to S2ST lowers SeamlessM4T-Large XSTS by 0.29 on average, while the cascade barely changes (0.01).",
+   "kind": "measured",
+   "source": null,
+   "metric": "XSTS drop S2TT to S2ST",
+   "value": "0.29",
+   "unit": "XSTS points",
+   "baseline_value": "0.01",
+   "n": null,
+   "setup": "Language-level XSTS, 24 languages, X-eng",
+   "note": null,
+   "where": "Sec 5.2.3",
+   "quote": "decreased by an average of 0.29 points for the SeamlessM4T-Large model"
+  },
+  {
+   "claim": "Annotators flagged far more SeamlessM4T-Large S2ST outputs with audio issues than cascade outputs.",
+   "kind": "measured",
+   "source": null,
+   "metric": "audio-issue flags",
+   "value": "206",
+   "unit": "flagged generations",
+   "baseline_value": "22",
+   "n": null,
+   "setup": "X-eng S2ST, count of generations flagged by at least one annotator; 206 for SeamlessM4T-Large, 22 for Whisper-Large-v2 + YourTTS, 13 for human reference",
+   "note": null,
+   "where": "Sec 5.2.3",
+   "quote": "(on X–eng direction, 206 SeamlessM4T-LargeS2ST generations"
+  },
+  {
+   "claim": "A manual check of 50 S2ST items found that half of the sampled SeamlessM4T-Large items had the end of the translation truncated in the audio; S2ST XSTS falls off beyond about 8 s of source audio.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "25 SeamlessM4T-Large and 25 cascade items with S2TT median XSTS 5 and S2ST below 4; Fig 13 buckets XSTS by source duration",
+   "note": null,
+   "where": "Sec 5.2.3, Fig 12, Fig 13",
+   "quote": "half of the samples had the end of the S2TT"
+  },
+  {
+   "claim": "Naturalness, clarity and sound quality MOS for X-eng S2ST are above the cascade baseline.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MOS",
+   "value": "0.67",
+   "unit": "MOS points (sound quality)",
+   "baseline_value": "0.79 (clarity of speech)",
+   "n": "8 languages",
+   "setup": "MOS (1-5) on 8 X-eng languages, mostly 3 annotators per item, no calibration",
+   "note": null,
+   "where": "Sec 5.2.3",
+   "quote": "SeamlessM4T-Large averaged 0.67 points higher in sound quality"
+  },
+  {
+   "claim": "Blaser 2.0 correlates better with human XSTS than BLEU or ASR-BLEU.",
+   "kind": "measured",
+   "source": null,
+   "metric": "correlation with XSTS",
+   "value": "0.827",
+   "unit": "Spearman",
+   "baseline_value": "0.625",
+   "n": null,
+   "setup": "Language-level Spearman correlation with XSTS, S2TT (BLEU baseline) all directions",
+   "note": null,
+   "where": "Sec 5.2.3, Table 33, Fig 15",
+   "table": "Table 33, rows S2TT All: Blaser 2.0 Spearman 0.827 vs BLEU 0.625; S2ST All: Blaser 2.0 0.736 vs ASR-BLEU 0.561"
+  },
+  {
+   "claim": "Blaser 2.0 supervised reaches the same average Pearson correlation with XSTS as BLASER 1.0 (0.58) while supporting 83 speech languages.",
+   "kind": "measured",
+   "source": null,
+   "metric": "correlation with XSTS",
+   "value": "0.58",
+   "unit": "Pearson",
+   "baseline_value": "0.58",
+   "n": null,
+   "setup": "BLASER 1.0 S2ST test data, six directions, Pearson with XSTS",
+   "note": null,
+   "where": "Sec 5.1, Table 27",
+   "table": "Table 27, row Blaser 2.0 sup, column average: 0.58 vs BLASER 1.0 sup 0.58; Blaser 2.0 unsup 0.58 vs BLASER 1.0 unsup 0.49"
+  },
+  {
+   "claim": "SeamlessM4T-Large is more robust than Whisper-Large-v2 to background noise.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU-SNR / WER-SNR curves",
+   "value": "33.3",
+   "unit": "% relative improvement (S2TT; 42.2 for ASR)",
+   "baseline_value": "Whisper-Large-v2",
+   "n": "4 languages",
+   "setup": "Noisy Fleurs: MUSAN noise and music mixed at SNR 10, 5, 0, -5, -10, -15, -20 dB; 4 languages (fra, spa, arb, rus); X-eng S2TT BLEU and ASR WER",
+   "note": "The abstract says 38% (noise) and 49% (speaker); the body gives 33.3% and 42.2% per task, whose mean is about 37.8%.",
+   "where": "Sec 5.3.1, Fig 16",
+   "quote": "SeamlessM4T-Large outperforms Whisper-Large-v2 by an average of 33.3% and 42.2% over various noise types and noise"
+  },
+  {
+   "claim": "SeamlessM4T-Large has lower quality variance across speakers than Whisper-Large-v2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "CoefVarMS",
+   "value": "9.1",
+   "unit": "CoefVarMS (lower is better)",
+   "baseline_value": "13.7",
+   "n": "77 languages",
+   "setup": "Fleurs test, languages with at least 40 content groups, coefficient of variation of utterance chrF by transcript; X-eng S2TT 77 languages",
+   "note": null,
+   "where": "Sec 5.3.2, Table 34",
+   "table": "Table 34, row X–eng S2TT for 77 langs, column SeamlessM4T-Large CoefVarMS: 9.1 vs Whisper-Large-v2 13.7; ASR 6.4 vs 17.0"
+  },
+  {
+   "claim": "Average relative improvement in CoefVarMS over Whisper-Large-v2 across the two tasks.",
+   "kind": "measured",
+   "source": null,
+   "metric": "CoefVarMS relative improvement",
+   "value": "49.4",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Same as Table 34",
+   "note": null,
+   "where": "Sec 5.3.2",
+   "quote": "49.4% over the 2 tasks"
+  },
+  {
+   "claim": "Added toxicity in SeamlessM4T-Large outputs is rare on Fleurs.",
+   "kind": "measured",
+   "source": null,
+   "metric": "added toxicity prevalence",
+   "value": "0.15",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fleurs, ETOX / ASR-ETOX word-list detection, averaged over languages, tasks and directions",
+   "note": null,
+   "where": "Sec 6.2.3",
+   "quote": "added toxicity of 0.15%"
+  },
+  {
+   "claim": "Added toxicity is 63% lower than Whisper-Large-v2 for X-eng S2TT on overlapping languages.",
+   "kind": "measured",
+   "source": null,
+   "metric": "added toxicity",
+   "value": "63",
+   "unit": "% reduction",
+   "baseline_value": "0.31% (Whisper-Large-v2 absolute)",
+   "n": null,
+   "setup": "Fleurs X-eng S2TT; Whisper-Large-v2 0.31% versus SeamlessM4T-Large 0.11%",
+   "note": "Human check: 80-84% of detected items in Fleurs eng-X are false positives; HolisticBias detections are 97-98% true positives.",
+   "where": "Sec 6.2.3, Fig 17",
+   "quote": "the latter shows an added toxicity reduction of 63%"
+  },
+  {
+   "claim": "In the absence of gender cues SeamlessM4T-Large prefers the masculine form by about 10%, and is about 3% less robust on feminine source speech.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Delta masc-fem",
+   "value": "10",
+   "unit": "% relative chrF gap (masculine vs feminine)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Multilingual HolisticBias speech extension (325 utterances, MMS-TTS synthesized), 25 languages S2TT and 17 S2ST in eng-X; chrF, ASR-chrF, Blaser 2.0, three repeats",
+   "note": null,
+   "where": "Sec 6.3.5, Table 37",
+   "quote": "exhibits an average preference of ∼10% towards translating to the"
+  },
+  {
+   "claim": "SeamlessAlign totals about 470,000 hours of mined speech-text alignments across 37 languages.",
+   "kind": "measured",
+   "source": null,
+   "metric": "mined data size",
+   "value": "470000",
+   "unit": "hours",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Mining at Sonar margin threshold 1.15, k=16, from 4M hours of raw audio",
+   "note": null,
+   "where": "Sec 3.3.3, Table 10",
+   "quote": "Overall, SeamlessAlign covers 37 languages and a total of 470,000"
+  },
+  {
+   "claim": "Sonar text space has far lower similarity-search error than Laser3 and LaBSE.",
+   "kind": "measured",
+   "source": null,
+   "metric": "xsim",
+   "value": "1.4",
+   "unit": "xsim error %",
+   "baseline_value": "5.1",
+   "n": "200 languages",
+   "setup": "Flores, 200 languages, xsim error rate",
+   "note": null,
+   "where": "Sec 3.3.1, Table 9",
+   "table": "Table 9, row Sonar, column xsim (n=200): 1.4 vs Laser3 5.1, LaBSE 10.7"
+  },
+  {
+   "claim": "Sonar zero-shot speech encoders average 23.3 BLEU on Fleurs X-eng versus 22.5 for Whisper-Large-v2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "zero-shot S2TT BLEU",
+   "value": "23.3",
+   "unit": "BLEU",
+   "baseline_value": "22.5",
+   "n": "37 languages",
+   "setup": "Speech encoders trained on ASR transcripts only, decoded with the Sonar text decoder, 37 source languages",
+   "note": null,
+   "where": "Sec 3.3.2, Table 10",
+   "table": "Table 10, row Total/avr, column X–eng Ours 23.3 vs Whisper 22.5"
+  },
+  {
+   "claim": "The in-house LID100 model reaches 86.0% F1-micro on 100 languages, 89.5% after score filtering that drops 8% of data.",
+   "kind": "measured",
+   "source": null,
+   "metric": "LID F1",
+   "value": "89.5",
+   "unit": "F1-micro %",
+   "baseline_value": "86.0",
+   "n": "100 languages",
+   "setup": "Test set: Fleurs test, VoxLingua107 dev, plus VAANI, IIITH, KENCORPUS extras",
+   "note": null,
+   "where": "Sec 3.1, Tables 6-7",
+   "table": "Table 7, row +filtering, column F1 micro: 89.5% (coverage 92.1%)"
+  },
+  {
+   "claim": "Adding 400 h per direction of top-ranked mined S2TT data gives the best ablation BLEU; 600 h is worse.",
+   "kind": "measured",
+   "source": null,
+   "metric": "S2TT BLEU",
+   "value": "26.6",
+   "unit": "BLEU",
+   "baseline_value": "23.9",
+   "n": "14 languages",
+   "setup": "Ablation set of 14 languages, Fleurs dev, BLEU; baseline = primary data only",
+   "note": null,
+   "where": "Sec 4.5.3, Table 24",
+   "table": "Table 24, row + 400H mined, column X–eng ↑BLEU: 26.6 vs baseline 23.9"
+  },
+  {
+   "claim": "Adding token-level knowledge distillation from T2TT to S2TT improves S2TT by 0.6 BLEU on average, and removing the T2TT loss causes forgetting of T2TT.",
+   "kind": "measured",
+   "source": null,
+   "metric": "S2TT BLEU",
+   "value": "0.6",
+   "unit": "BLEU",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Ablation set, Fleurs dev, three data setups D1-D3, objectives L1 (S2TT), L2 (+T2TT), L3 (+KD)",
+   "note": null,
+   "where": "Sec 4.5.2, Table 23",
+   "quote": "S2TT’s performance improves by 0.6 BLEU points on"
+  },
+  {
+   "claim": "w2v-BERT 2.0 design choices each add a little: 12.4 to 12.8 BLEU from product quantization, 1M h data and RPQ masked prediction.",
+   "kind": "measured",
+   "source": null,
+   "metric": "S2TT BLEU",
+   "value": "12.8",
+   "unit": "BLEU",
+   "baseline_value": "12.4",
+   "n": "101 directions",
+   "setup": "S2TT X-eng fine-tuning on 67 languages, Fleurs test 101 directions, 600M-parameter 24-layer Conformer",
+   "note": null,
+   "where": "Sec 4.5.1, Table 21",
+   "table": "Table 21, row D, column Fleurs X–eng: 12.8 vs A 12.4"
+  },
+  {
+   "claim": "Pre-training T2U makes UnitY converge faster: 18.1 vs 6.9 ASR-BLEU at 10K updates X-eng.",
+   "kind": "measured",
+   "source": null,
+   "metric": "S2ST ASR-BLEU",
+   "value": "18.1",
+   "unit": "ASR-BLEU",
+   "baseline_value": "6.9",
+   "n": null,
+   "setup": "S2ST ablation set, Fleurs dev, ASR-BLEU, only T2U fine-tuned",
+   "note": null,
+   "where": "Sec 4.5.4, Table 25",
+   "table": "Table 25, row M2 pre-trained T2U, 10K updates, column X–eng: 18.1 vs M1 6.9"
+  },
+  {
+   "claim": "Adding mined S2ST data raises eng-X ASR-BLEU by 0.5 but lowers X-eng by 0.2, yet was kept for better generated speech.",
+   "kind": "measured",
+   "source": null,
+   "metric": "S2ST ASR-BLEU",
+   "value": "0.5",
+   "unit": "ASR-BLEU",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Ablation, Fleurs dev, M2 vs M3",
+   "note": null,
+   "where": "Sec 4.5.5, Table 25",
+   "quote": "improves eng–X translation accuracy by 0.5 ASR-BLEU points"
+  },
+  {
+   "claim": "SeamlessM4T-Large has 2,326M parameters: w2v-BERT 2.0 669M, T2TT 1,370M, T2U 287M; Medium has 1,151M.",
+   "kind": "measured",
+   "source": null,
+   "metric": "parameters",
+   "value": "2326",
+   "unit": "M parameters",
+   "baseline_value": "1151",
+   "n": null,
+   "setup": "Parameter counts per component",
+   "note": null,
+   "where": "Sec 4.4, Table 13",
+   "table": "Table 13, row SeamlessM4T-Large, column Total: 2326M; Medium 1151M"
+  }
+ ],
+ "limits": [
+  "Final-model training hyperparameters, hardware, compute and seeds are not reported; only ablation settings are given.",
+  "Model card: research model, not for production; not intended for long-form translation (trained on short inputs); not for domain-specific use such as medical or legal.",
+  "S2ST human XSTS is below the cascade for X-eng and the authors link this to truncation and omission in long inputs (falls off above about 8 s) and to many 'audio issues'.",
+  "Human evaluation covers 24 high and mid resource languages with at most 2 speakers per sentence, 3 annotators per item, and single-annotator MOS for 14 languages with no calibration; human results are called preliminary.",
+  "Toxicity and gender-representation checks use word lists and string matching (over-detection, tokenization errors, ASR false negatives); Fleurs detections are 81-84% false positives.",
+  "Mining covers 37 languages only; Sen2Txx and other directions left for future work; only top-scored subsets of SeamlessAlign used in training.",
+  "Quality gap: SeamlessM4T-Large lags AudioPaLM by 3.7 BLEU on CoVoST 2 X-eng and trails MMS variants using n-gram LMs by 5% WER on Fleurs-54; larger cascades beat it on eng-X S2TT.",
+  "Expressivity, prosody and streaming/low-latency translation are not addressed.",
+  "Gender bias: about 10% masculine preference when gender is unspecified and about 3% lower quality on feminine source speech; comparable to baselines, not mitigated.",
+  "Several numbers are inconsistent within the paper (CVSS gain 58% / 50% / 14 points; noise and speaker robustness 38% / 49% in abstract versus 33.3% / 42.2% and 49.4% in body)."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "SeamlessAlign",
+   "definition": "multimodal corpus of automatically aligned speech translations, 470,000 hours",
+   "where": "Sec 3"
+  },
+  {
+   "term": "Sonar",
+   "definition": "Sentence-level multimOdal and laNguage-Agnostic Representations: fixed-size embedding space for text (200 languages) and speech (37 languages)",
+   "where": "Sec 3.3.1"
+  },
+  {
+   "term": "UnitY",
+   "definition": "two-pass framework that first generates text then predicts discrete acoustic units",
+   "where": "Sec 4"
+  },
+  {
+   "term": "XSTS",
+   "definition": "cross-lingual semantic text similarity human protocol, scores 1-5",
+   "where": "Sec 5.2.1"
+  },
+  {
+   "term": "added toxicity",
+   "definition": "the introduction of toxic elements not present in a source utterance",
+   "where": "Sec 6.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "UnitY: Two-pass direct speech-to-speech translation with discrete units",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "two-pass text-then-unit decoding; here with pre-trained X2T and deeper pre-trained T2U",
+   "quote": null
+  },
+  {
+   "work": "No Language Left Behind (NLLB)",
+   "year": 2022,
+   "arxiv": "2207.04672",
+   "relation": "extends",
+   "note": "T2TT model, data pipeline, toxicity filtering, decoding options",
+   "quote": null
+  },
+  {
+   "work": "w2v-BERT",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "w2v-BERT 2.0 adds codebooks and an RPQ masked prediction loss",
+   "quote": null
+  },
+  {
+   "work": "SpeechMatrix",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "mining pipeline extended from 17 to 37 languages, new LID and Sonar",
+   "quote": null
+  },
+  {
+   "work": "SONAR (Duquenne et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "embedding space for mining and for Blaser 2.0",
+   "quote": null
+  },
+  {
+   "work": "BLASER (Chen et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Blaser 2.0 is modality-agnostic successor",
+   "quote": null
+  },
+  {
+   "work": "Whisper (Radford et al.)",
+   "year": 2022,
+   "arxiv": "2212.04356",
+   "relation": "baseline",
+   "note": "main ASR/S2TT baseline and ASR-BLEU scorer",
+   "quote": null
+  },
+  {
+   "work": "AudioPaLM (Rubenstein et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "previous direct S2TT SOTA",
+   "quote": null
+  },
+  {
+   "work": "XLS-R (Babu et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "layer-35 features for acoustic units; XLS-R-2B-S2T baseline",
+   "quote": null
+  },
+  {
+   "work": "MMS (Pratap et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "ASR baseline and TTS for bias data",
+   "quote": null
+  },
+  {
+   "work": "USM (Zhang et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "proprietary 12M-hour speech pre-training",
+   "quote": null
+  },
+  {
+   "work": "Fleurs (Conneau et al.)",
+   "year": 2022,
+   "arxiv": "2205.12446",
+   "relation": "uses-data",
+   "note": "main evaluation set",
+   "quote": null
+  },
+  {
+   "work": "HolisticBias / Multilingual HolisticBias / ETOX",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "bias and toxicity evaluation",
+   "quote": null
+  },
+  {
+   "work": "XSTS (Licht et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "human evaluation protocol",
+   "quote": null
+  },
+  {
+   "work": "YourTTS (Casanova et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "TTS in cascaded S2ST baselines",
+   "quote": null
+  },
+  {
+   "work": "HiFi-GAN (Kong et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "unit vocoder",
+   "quote": null
+  },
+  {
+   "work": "ECAPA-TDNN (Desplanques et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "LID architecture",
+   "quote": null
+  },
+  {
+   "work": "CoVoST 2 and CVSS",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "evaluation sets",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 4",
+   "caption": "Overview of SeamlessM4T. (1) shows the pre-trained models used when finetuning multitasking UnitY. (2) outlines multitasking UnitY with its two encoders, text decoder, T2U encoder-decoder, and the supporting vocoders for synthesizing output speech in S2ST.",
+   "page": 28,
+   "why": "Shows the whole architecture: speech/text encoders, shared text decoder, T2U, unit vocoder."
+  },
+  {
+   "figure": "Fig 7",
+   "caption": "Overview of the SeamlessM4T multitask UnitY model. (2) describes the training of the UnitY model. In Stage3, the model is trained on S2ST data.",
+   "page": 33,
+   "why": "Shows stage 3: frozen X2T, trainable T2U, the S2ST path via text then units."
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Workflow of the Sonar encoding and mining processes.",
+   "page": 19,
+   "why": "Data engine: segmented audio and NLLB text in one embedding space to mine S2TT and S2ST pairs."
+  },
+  {
+   "figure": "Table 15",
+   "caption": "Comparison against 2/3-stage cascaded models on Fleurs and CVSS S2ST X–eng.",
+   "page": 38,
+   "why": "Direct vs cascade headline with sizes."
+  },
+  {
+   "figure": "Fig 12/13",
+   "caption": "XSTS score differences between S2ST and S2TT; XSTS as function of source audio duration.",
+   "page": 58,
+   "why": "Explains why human S2ST scores trail ASR-BLEU: truncation on longer inputs."
+  },
+  {
+   "figure": "Fig 16",
+   "caption": "Evaluation results of model robustness against background noises.",
+   "page": 64,
+   "why": "BLEU/WER versus SNR curves for noise robustness vs Whisper."
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 3.3.3, Eq 1",
+   "snippet": "score(x, y) = margin(cos(x, y), sum_{z in NN_k(x)} cos(x, z)/2k + sum_{v in NN_k(y)} cos(y, v)/2k), k=16, threshold 1.15",
+   "verbatim": false
+  },
+  {
+   "where": "Sec 4.1, Eq 2",
+   "snippet": "L = wc*Lc + wmGVQ*LmGVQ + wmRPQ*LmRPQ, weights 1.0, 0.5, 0.5",
+   "verbatim": false
+  },
+  {
+   "where": "Sec 4.2.3",
+   "snippet": "L = alpha*L_S2TT + beta*L_T2TT + gamma*L_KD",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text extraction flattens tables one cell per line; Table 38 totals are garbled ('17,6827') and the Table 39 totals were summed from the four listed values.",
+  "No ledger or venue: the PDF is the arXiv v3 preprint (25 Oct 2023); no venue printed.",
+  "Several internal inconsistencies noted in results (CVSS gain, 24.6 vs table, noise/speaker percentages, '7 out of 24' vs 10 of 24 significant).",
+  "No embedded instructions found in the text."
+ ]
+}

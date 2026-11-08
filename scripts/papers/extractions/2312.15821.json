@@ -1,0 +1,872 @@
+{
+ "schema": 1,
+ "key": "2312.15821",
+ "pdf": "ai-engineering/08-multimodal-engineering/sources/vyas-2023-audiobox.pdf",
+ "bib": {
+  "title": "Audiobox: Unified Audio Generation with Natural Language Prompts",
+  "authors": [
+   "Apoorv Vyas",
+   "Bowen Shi",
+   "Matthew Le",
+   "Andros Tjandra",
+   "Yi-Chiao Wu",
+   "Baishan Guo",
+   "Jiemin Zhang",
+   "Xinyue Zhang",
+   "Robert Adkins",
+   "William Ngan",
+   "Jeff Wang",
+   "Ivan Cruz",
+   "Bapi Akula",
+   "Akinniyi Akinyemi",
+   "Brian Ellis",
+   "Rashel Moritz",
+   "Yael Yungster",
+   "Alice Rakotoarison",
+   "Liang Tan",
+   "Chris Summers",
+   "Carleigh Wood",
+   "Joshua Lane",
+   "Mary Williamson",
+   "Wei-Ning Hsu"
+  ],
+  "first_author": "Vyas",
+  "year": 2023,
+  "venue": "preprint",
+  "arxiv": "2312.15821",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 133807,
+  "chars_total": 133807,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "system",
+ "question": "Can one flow-matching model generate speech and sound from text descriptions, audio examples, or both, with finer control than modality-specific models?",
+ "hypothesis": "Self-supervised infilling pre-training on large mixed speech/music/sound data, then fine-tuning, yields a unified model that matches or beats modality-specific models.",
+ "contributions": [
+  "Audiobox SSL: flow-matching infilling pre-training on 160K h speech, 20K h music, 6K h sound",
+  "Audiobox Speech and Audiobox Sound fine-tuned from it",
+  "Unified Audiobox with description-based and example-based (voice prompt) control",
+  "Joint-CLAP for evaluating description-conditioned speech",
+  "Bespoke Solver integration giving 25x fewer ODE evaluations",
+  "Fairness and watermarking studies"
+ ],
+ "method": {
+  "summary": "A 330M-parameter Transformer trained with conditional flow matching on Encodec dense latents, pre-trained by masked-frame infilling on unlabeled audio, then fine-tuned for transcript-guided speech, caption-guided sound, and a unified model taking transcript, description, voice prompt and audio context. Inference uses an ODE solver (midpoint or dopri5; Bespoke solver for 4 steps) with classifier-free guidance and CLAP re-ranking.",
+  "task": "audio generation: in-context TTS, description-guided TTS, text-to-audio, infilling",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Mix-185K (SSL pre-training)",
+    "role": "pretrain",
+    "size": "over 160K hours speech, 20K hours music, 6K hours sound",
+    "split": null,
+    "source": "internal mix: audiobooks, podcasts, read sentences, talks, conversations, in-the-wild; speakers from over 150 countries, over 200 primary languages",
+    "preprocessing": "samples randomly chunked if over 1,600 frames"
+   },
+   {
+    "name": "SP-multi-100K",
+    "role": "train",
+    "size": "100K hours transcribed English speech",
+    "split": null,
+    "source": "subset of pre-training speech",
+    "preprocessing": "PyAnnote diarization for unsegmented conversations; Whisper large-v2 and medium.en transcription; drop if P(English)<50% or WER between the two transcripts >50%; inverse text normalization with Whisper-punctuator"
+   },
+   {
+    "name": "SP-book-60K",
+    "role": "train",
+    "size": "60K hours audiobook speech",
+    "split": null,
+    "source": "subset of SP-multi-100K (ablation)",
+    "preprocessing": null
+   },
+   {
+    "name": "SD-tag-6K",
+    "role": "train",
+    "size": "about 6K hours audio with tags",
+    "split": "stage 1 fine-tuning",
+    "source": null,
+    "preprocessing": "tags at different ontology levels concatenated as pseudo-caption"
+   },
+   {
+    "name": "SD-cap-150",
+    "role": "train",
+    "size": "about 150 hours captioned audio",
+    "split": "stages 1 and 2",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "Speech captions (automatic + human)",
+    "role": "train",
+    "size": "500 hour human-annotated subset of SP-multi-100K; the rest LLM captions from attribute tags; stage 2 about 2,310 hours total",
+    "split": null,
+    "source": "Llama 2 7B converts attributes (age 4 classes, gender 2, quality 3, pitch 3, rate 3, accent/emotion/environment open vocabulary) into captions using a style bank; RIR and background noise augmentation",
+    "preprocessing": "quality set to low when noise added"
+   },
+   {
+    "name": "AudioCaps test",
+    "role": "eval",
+    "size": null,
+    "split": "test",
+    "source": "Kim et al. 2019",
+    "preprocessing": "TTA and text-guided infilling (30% context, middle 70% infilled)"
+   },
+   {
+    "name": "Librispeech test-clean (LS)",
+    "role": "eval",
+    "size": null,
+    "split": "4 to 10 s samples",
+    "source": "Panayotov et al. 2015",
+    "preprocessing": null
+   },
+   {
+    "name": "CommonVoice v13 English (CV)",
+    "role": "eval",
+    "size": null,
+    "split": "test",
+    "source": "Ardila et al. 2019",
+    "preprocessing": null
+   },
+   {
+    "name": "Switchboard (SWBD)",
+    "role": "eval",
+    "size": "611 samples from 8 speakers",
+    "split": "subset",
+    "source": "Godfrey 1992",
+    "preprocessing": null
+   },
+   {
+    "name": "Expresso (Expr)",
+    "role": "eval",
+    "size": "999 samples",
+    "split": "subset",
+    "source": "Nguyen et al. 2023",
+    "preprocessing": null
+   },
+   {
+    "name": "Accent (internal)",
+    "role": "eval",
+    "size": "500 samples",
+    "split": "subset",
+    "source": "internal expressive accented read sentences, 10 emotions",
+    "preprocessing": null
+   },
+   {
+    "name": "SpCap (SC)",
+    "role": "eval",
+    "size": "1,946 recordings",
+    "split": null,
+    "source": "annotated samples from LibriTTS, Common Voice, Switchboard, Fisher, Spotify, AudioSet, Expresso",
+    "preprocessing": null
+   },
+   {
+    "name": "AC-filt",
+    "role": "eval",
+    "size": "825 utterances",
+    "split": null,
+    "source": "AudioCaps test with reliable ASR transcripts (Lee et al. 2023)",
+    "preprocessing": null
+   },
+   {
+    "name": "Accent+",
+    "role": "eval",
+    "size": "500 utterances",
+    "split": null,
+    "source": "Accent set with random RIR and noise augmentation",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Audiobox SSL",
+    "role": "base",
+    "params": "330M",
+    "architecture": "Transformer, conv position embeddings, symmetric bi-directional ALiBi, UNet skip connections, flow matching on Encodec dense features",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": 24,
+    "hidden": "1024 (FFN 4096)",
+    "heads": 16,
+    "context": null,
+    "other": {
+     "p_cond": 0.1,
+     "n_mask": "U[70%,100%]",
+     "l_mask": 10,
+     "sigma_min": "1e-5"
+    }
+   },
+   {
+    "name": "Audiobox Speech",
+    "role": "proposed",
+    "params": null,
+    "architecture": "Audiobox SSL + char embeddings (128 dim) frame-aligned by SeamlessM4T v2 aligner; full fine-tuning",
+    "init_from": "Audiobox SSL",
+    "tokenizer": "raw characters",
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Audiobox Speech duration model",
+    "role": "proposed",
+    "params": null,
+    "architecture": "flow-matching duration model",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": 10,
+    "hidden": "768 (FFN 2048)",
+    "heads": 8,
+    "context": null,
+    "other": {
+     "char_embedding": "40 dim"
+    }
+   },
+   {
+    "name": "Audiobox Sound",
+    "role": "proposed",
+    "params": null,
+    "architecture": "Audiobox SSL + T5-base text encoder, cross-attention in every layer (16 heads)",
+    "init_from": "Audiobox SSL (cross-attention random)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Audiobox (unified)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "Audiobox SSL + frozen T5-base (512 dim, linear to 1024) + 3-layer voice-prompt Transformer (1024, 16 heads, FFN 4096) + cross-attention",
+    "init_from": "Audiobox SSL",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Unified duration model",
+    "role": "proposed",
+    "params": null,
+    "architecture": "12 Transformer decoder layers with cross-attention to description",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": 12,
+    "hidden": "768 (FFN 2048)",
+    "heads": 8,
+    "context": null,
+    "other": {
+     "char_embedding": "40 dim"
+    }
+   },
+   {
+    "name": "Joint-CLAP (Speech-CLAP)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "WavLM-base+ audio encoder, RoBERTa-base text encoder, contrastive loss",
+    "init_from": "pretrained WavLM-base+, RoBERTa-base",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "VoiceLDM",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "AudioLDM2 / AudioLDM / TANGO / UniAudio / Voicebox / VALL-E / NS2 / YourTTS",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "baselines evaluated from official repos; VALL-E, NS2, UniAudio numbers cited from prior work"
+    }
+   }
+  ],
+  "training": {
+   "objective": "conditional flow matching (OT path), loss on masked frames only; contrastive CLAP loss for Joint-CLAP",
+   "optimizer": "Adam",
+   "lr": "1e-4 (SSL, Speech); 0.0002 (Sound); 5e-5 (Joint-CLAP)",
+   "lr_schedule": "linear warmup then linear decay",
+   "warmup": "5k steps",
+   "batch_size": "480K frames effective (SSL); 240K frames (Speech); 720K (Sound stage 1), 240K (stage 2); 75 per GPU x 64 GPUs (Joint-CLAP)",
+   "steps": "SSL 1M updates; Speech 200K; Speech duration 600K; Sound 200K then 100K; Audiobox stage 1 max 600K (stopped at 350K), stage 2 100K LoRA r=64; unified duration 600K (eval 200K ckpt); Joint-CLAP 200K",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "chunked at 1,600 frames",
+   "precision": "Joint-CLAP: raw floating point, no quantization",
+   "weight_decay": null,
+   "dropout": "Audiobox: P(vp=F)=0.5, P(ctx=F|vp=T)=0.7, P(ctx=F|vp=F)=0.5, P(cap=F)=0.3; Speech: audio fully masked p=0.3; duration fully masked 0.2",
+   "regularisation": "gradient norm clipping 0.2 (10 for Joint-CLAP)",
+   "hardware": "Audiobox stage 1: 32 A100-80GB; stage 2: 16 A100-80GB; unified duration: 8 A100-80GB; Joint-CLAP: 64 Volta32",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "stage_data_ratio": "speech:audio hours about 3:1 stage 1, 2.6:1 stage 2",
+    "joint_probs": "ZS-TTS 0.075, desc-TTS w/ vocal 0.245, desc-TTS 0.175, sampling 0.075"
+   }
+  },
+  "inference": {
+   "decoding": "ODE solver via torchdiffeq: midpoint step 0.0625 (32 NFE, 64 model calls with CFG) for Audiobox Speech; step 1/32 (64 NFE, 128 calls) for unified; dopri5 tol 1e-5 for Sound",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "Sound: 32 samples per prompt, best by CLAP; Audiobox desc-TTS: N=8 with stochastic silence padding, CLAP rerank; sound-only N=16; duration averaged over 5 samples",
+   "prompting": "3 s audio prompt (trailing silence removed); description via T5",
+   "retrieval": null,
+   "parameters": {
+    "cfg_weight": "0.7 Speech; 1 Sound (tuned 0 to 5); 0.75 desc-TTS; 1.33 sound-only; 1.0 ZS-TTS",
+    "silence_padding": "random 0 to 3 s both ends for desc-TTS",
+    "bespoke": "ground truth paths from dopri5, N=200 steps, GW 0.7; 4 steps = 8 NFE"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Sim-o / Sim-r",
+     "definition": "cosine similarity of WavLM-TDCNN embeddings between prompt and generated audio (original / resynthesized prompt)",
+     "unit": "cosine",
+     "higher_is_better": true
+    },
+    {
+     "name": "WER",
+     "definition": "Whisper large-v2 transcription",
+     "unit": "%",
+     "higher_is_better": false
+    },
+    {
+     "name": "FAD, FD, KLD, IS",
+     "definition": "audioldm_eval toolkit, PANN tagger",
+     "unit": "various",
+     "higher_is_better": false
+    },
+    {
+     "name": "CLAP / JointCLAP",
+     "definition": "cosine of text and audio embeddings",
+     "unit": "cosine",
+     "higher_is_better": true
+    },
+    {
+     "name": "MOS (style similarity, quality QMOS, OVL, REL)",
+     "definition": "1 to 5 ratings, 5 annotators per sample from professional service, 100 AudioCaps files",
+     "unit": "1-5",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "VALL-E",
+    "NS2",
+    "UniAudio",
+    "YourTTS",
+    "Voicebox",
+    "AudioLDM-L-Full",
+    "AudioLDM2",
+    "TANGO",
+    "VoiceLDM"
+   ],
+   "protocol": "Objective metrics plus professional-rater MOS; 95% confidence intervals; no seeds or significance tests stated"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "demo at audiobox.metademolab.com; training data internal"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Audiobox Speech sets best style similarity on Librispeech zero-shot TTS",
+   "kind": "measured",
+   "source": null,
+   "metric": "Sim-r",
+   "value": 0.745,
+   "unit": "Sim-r",
+   "baseline_value": 0.71,
+   "n": null,
+   "setup": "In-context TTS, Librispeech test-clean, 3 s prompt, Audiobox Speech trained on SP-multi-100K",
+   "quote": "Audiobox Speech achieves a new best on style similarity (0.745 vs. 0.710 from UniAudio) on the audiobook domain test set (LS).",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.4"
+  },
+  {
+   "claim": "Audiobox Speech average Sim-o over five domains vs Voicebox",
+   "kind": "measured",
+   "source": null,
+   "metric": "Sim-o",
+   "value": 0.642,
+   "unit": "Sim-o",
+   "baseline_value": 0.531,
+   "n": null,
+   "setup": "LS, CV, SWBD, Expr, Accent average",
+   "quote": null,
+   "table": "Table 1, row Audiobox Speech, column Avg (Sim-o)",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Audiobox Speech average WER over five domains vs Voicebox",
+   "kind": "measured",
+   "source": null,
+   "metric": "WER",
+   "value": 4.0,
+   "unit": "%",
+   "baseline_value": 6.1,
+   "n": null,
+   "setup": "same setup",
+   "quote": null,
+   "table": "Table 1, row Audiobox Speech, column Avg (WER)",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Audiobox Sound FAD on AudioCaps text-to-sound",
+   "kind": "measured",
+   "source": null,
+   "metric": "FAD",
+   "value": 0.77,
+   "unit": "FAD",
+   "baseline_value": 1.57,
+   "n": null,
+   "setup": "AudioCaps test, dopri5, CFG 1, best of 32 by CLAP",
+   "quote": null,
+   "table": "Table 5, row Audiobox Sound, column FAD",
+   "note": "baseline is TANGO",
+   "where": "Table 5"
+  },
+  {
+   "claim": "Joint-CLAP raises speech text-to-audio retrieval R@10 over public CLAP",
+   "kind": "measured",
+   "source": null,
+   "metric": "T2A R@10",
+   "value": 22.01,
+   "unit": "%",
+   "baseline_value": 2.29,
+   "n": null,
+   "setup": "speech retrieval, Joint-CLAP vs CLAP (general audio)",
+   "quote": "T2A@10 on speech: 2.29 →22.01",
+   "table": null,
+   "note": null,
+   "where": "Sec 7.3.1"
+  },
+  {
+   "claim": "Joint-CLAP correlates with human REL; public CLAP does not",
+   "kind": "measured",
+   "source": null,
+   "metric": "Pearson r",
+   "value": 0.727,
+   "unit": "Pearson r",
+   "baseline_value": 0.028,
+   "n": null,
+   "setup": "six Audiobox models, four eval sets",
+   "quote": "the Pearson correlation coefficient between the text-audio similarity and REL score is increased from 0.028 to 0.727",
+   "table": null,
+   "note": null,
+   "where": "Sec 7.3.1"
+  },
+  {
+   "claim": "Bespoke solver with 4 steps keeps quality of dopri5",
+   "kind": "measured",
+   "source": null,
+   "metric": "Sim-o",
+   "value": 0.735,
+   "unit": "Sim-o",
+   "baseline_value": 0.733,
+   "n": null,
+   "setup": "zero-shot TTS LS, GW 0.7, 8 NFE vs dopri5 about 280 NFE",
+   "quote": null,
+   "table": "Table 15, row Bespoke 4 steps, column LS Sim-o",
+   "note": null,
+   "where": "Table 15"
+  },
+  {
+   "claim": "Unified Audiobox beats VoiceLDM and AudioLDM2 on description-guided TTS (Accent+ JointCLAP)",
+   "kind": "measured",
+   "source": null,
+   "metric": "JointCLAP",
+   "value": 0.596,
+   "unit": "JointCLAP",
+   "baseline_value": 0.235,
+   "n": null,
+   "setup": "description-guided TTS, Accent+",
+   "quote": null,
+   "table": "Table 11, row Audiobox, column Accent+ (JointCLAP)",
+   "note": "baseline is VoiceLDM",
+   "where": "Table 11"
+  },
+  {
+   "claim": "Unified Audiobox text-to-audio FAD, worse only than Audiobox Sound",
+   "kind": "measured",
+   "source": null,
+   "metric": "FAD",
+   "value": 1.1,
+   "unit": "FAD",
+   "baseline_value": 0.77,
+   "n": null,
+   "setup": "AudioCaps",
+   "quote": null,
+   "table": "Table 14, row Audiobox (ours), column FAD",
+   "note": "baseline is Audiobox Sound",
+   "where": "Table 14"
+  },
+  {
+   "claim": "Voice prompt raises speaker similarity (Expr)",
+   "kind": "measured",
+   "source": null,
+   "metric": "Sim-o",
+   "value": 0.377,
+   "unit": "Sim-o",
+   "baseline_value": 0.181,
+   "n": null,
+   "setup": "description-guided TTS, Expr, with voice prompt vs without",
+   "quote": null,
+   "table": "Table 12, row Audiobox Yes, column Sim-o Expr",
+   "note": null,
+   "where": "Table 12"
+  },
+  {
+   "claim": "Full fine-tuning gives 23% to 43% relative WER reduction over LoRA",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "in-context TTS ablation, except SWBD",
+   "quote": "we see that by fine-tuning the whole model, style similarity improves slightly and WER improves greatly on most of the domains (23% to 43% relative WER reduction)",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.5"
+  },
+  {
+   "claim": "Scaling pre-training data improves similarity, especially out-of-domain; WER similar",
+   "kind": "measured",
+   "source": null,
+   "metric": "Sim-o",
+   "value": 0.505,
+   "unit": "Sim-o",
+   "baseline_value": 0.461,
+   "n": null,
+   "setup": "CV, LoRA, PT Mix-185K vs SP-book-60K PT",
+   "quote": null,
+   "table": "Table 3, row 2, column CV Sim-o",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "General pre-training boosts sound generation about 20% in FAD",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Audiobox Sound ablation",
+   "quote": "using a general pre-trained model boosts the performance by ∼20% in FAD",
+   "table": null,
+   "note": null,
+   "where": "Sec 6.5"
+  },
+  {
+   "claim": "CLAP reranking improves FAD and CLAP score",
+   "kind": "measured",
+   "source": null,
+   "metric": "FAD",
+   "value": 0.78,
+   "unit": "FAD",
+   "baseline_value": 0.91,
+   "n": null,
+   "setup": "Table 7 last two rows, FAD 0.91 to 0.78, CLAP 0.60 to 0.71",
+   "quote": "audio quality (FAD: 0.91 →0.78) and text-audio relatedness (CLAP score: 0.60 →0.71)",
+   "table": null,
+   "note": null,
+   "where": "Sec 6.5"
+  },
+  {
+   "claim": "LoRA is 15% to 30% worse than full fine-tuning for sound",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Audiobox Sound",
+   "quote": "LoRA fine-tuning is on average 15% to 30% worse (relative) than its full fine-tuning counterpart.",
+   "table": null,
+   "note": null,
+   "where": "Sec 6.5"
+  },
+  {
+   "claim": "Watermark detection near 0% FPR and FNR; SI-SNR -20.6 dB",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Seamless Watermark over all tasks and augmentations",
+   "quote": "Simultaneously, the watermarked audio also have very low scale-invariant signal-to-noise ratio (SI-SNR) -20.6db",
+   "table": null,
+   "note": null,
+   "where": "Sec 9.2"
+  },
+  {
+   "claim": "WER across gender and accent groups about 1.5%, no significant gap",
+   "kind": "measured",
+   "source": null,
+   "metric": "WER",
+   "value": 1.5,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "zero-shot TTS, 64 accents, 400 samples per accent, 12800 per gender",
+   "quote": "Across gender and accent, WER remains very low around 1.5%",
+   "table": null,
+   "note": null,
+   "where": "Sec 9.1"
+  },
+  {
+   "claim": "Public CLAP loses about 30x on speech retrieval vs sound",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "CLAP (general audio, w/ speech)",
+   "quote": "∼30x performance degradation compared to the sound benchmark",
+   "table": null,
+   "note": null,
+   "where": "Sec 7.3.1"
+  }
+ ],
+ "limits": [
+  "Description-based control is limited by scarce paired audio-description data; unseen concepts (chihuahua vs dog, regional accents) cannot be generated (Sec 10.1)",
+  "Fine-grained descriptions are hard to create and annotators disagree on emotion, age, quality (Sec 10.1)",
+  "Most speech captions are LLM-generated from coarse tags; only 500 hours are human-annotated",
+  "No statistical significance tests or seeds; training data and weights not released; code not stated",
+  "Unified model slightly worse WER than Audiobox Speech (e.g. avg 4.8 vs 4.0) and worse FAD than Audiobox Sound",
+  "Mostly English; baselines VoiceLDM/AudioLDM2 fed averaged CLAP embeddings for voice+description, a best-effort comparison",
+  "Fairness tested only on zero-shot TTS; watermarking depends on Seamless Watermark"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Voice prompt",
+   "definition": "an additional utterance from the same speaker, chosen to differ in emotion/environment/rate, to condition vocal style only",
+   "where": "Sec 7.1.2"
+  },
+  {
+   "term": "Joint-CLAP",
+   "definition": "CLAP-style audio-text model with WavLM and RoBERTa encoders trained on speech and sound descriptions",
+   "where": "Sec 7.3.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Voicebox",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "flow-matching transcript-guided speech infilling, architecture basis",
+   "quote": null
+  },
+  {
+   "work": "SpeechFlow (Liu et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "self-supervised infilling objective",
+   "quote": null
+  },
+  {
+   "work": "Flow matching (Lipman et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "OT conditional paths",
+   "quote": null
+  },
+  {
+   "work": "Bespoke Solvers (Shaul et al.)",
+   "year": 2023,
+   "arxiv": "2310.19075",
+   "relation": "uses-method",
+   "note": "fast ODE solver",
+   "quote": null
+  },
+  {
+   "work": "Encodec (Defossez et al.)",
+   "year": 2022,
+   "arxiv": "2210.13438",
+   "relation": "uses-method",
+   "note": "dense latent features",
+   "quote": null
+  },
+  {
+   "work": "LoRA (Hu et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "fine-tuning option",
+   "quote": null
+  },
+  {
+   "work": "VoiceLDM",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "most related unified model",
+   "quote": null
+  },
+  {
+   "work": "AudioLDM2",
+   "year": 2023,
+   "arxiv": "2308.05734",
+   "relation": "baseline",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "TANGO",
+   "year": 2023,
+   "arxiv": "2304.13731",
+   "relation": "baseline",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "UniAudio",
+   "year": 2023,
+   "arxiv": "2310.00704",
+   "relation": "baseline",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "VALL-E",
+   "year": 2023,
+   "arxiv": "2301.02111",
+   "relation": "baseline",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "CLAP (Wu et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Joint-CLAP built on it",
+   "quote": null
+  },
+  {
+   "work": "AudioCaps",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "TTA benchmark",
+   "quote": null
+  },
+  {
+   "work": "Seamless watermark",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "watermarking",
+   "quote": null
+  },
+  {
+   "work": "Llama 2",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "7B generates captions",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Audiobox model diagram",
+   "page": 2,
+   "why": "shows transcript, masked audio, description, voice prompt inputs"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Quality-speed trade-off of Audiobox Sound, Tango and AudioLDM2. NFE: Number of function evaluations.",
+   "page": 15,
+   "why": "FAD vs NFE efficiency of flow matching"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Correlation between text-audio similarity and REL score in different CLAP models. r: Pearson correlation coefficient.",
+   "page": 19,
+   "why": "justifies Joint-CLAP as a metric"
+  },
+  {
+   "figure": "Table 9/10",
+   "caption": "Drop-out probabilities and derived joint probabilities for use cases",
+   "page": 20,
+   "why": "how one model is trained for several conditioning modes"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 1, Sec 3",
+   "snippet": "Et,x1,x0||u(xt, t) - vt||^2, xt = (1 - (1 - sigma_min)t)x0 + t x1, vt = x1 - (1 - sigma_min)x0",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "figures.py captions returned nothing; figure captions for Fig 1-3 taken from cached text and partly missing; Fig 4/5 captions are panel labels only",
+  "Table 5/6/11 cells flattened by pdf extraction; row alignment inferred",
+  "Table 8 labels the model Speech-CLAP while text calls it Joint-CLAP",
+  "Table 13 caption says both use regression duration model while Sec 5.1 uses flow-matching duration",
+  "No embedded instructions found"
+ ]
+}

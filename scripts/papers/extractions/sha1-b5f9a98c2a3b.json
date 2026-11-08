@@ -1,0 +1,550 @@
+{
+ "schema": 1,
+ "key": "sha1:b5f9a98c2a3b",
+ "pdf": "data-science/sources/van-den-goorbergh-2022-harm-class-imbalance-corrections.pdf",
+ "bib": {
+  "title": "The harm of class imbalance corrections for risk prediction models: illustration and simulation using logistic regression",
+  "authors": [
+   "van den Goorbergh R",
+   "van Smeden M",
+   "Timmerman D",
+   "Van Calster B"
+  ],
+  "first_author": "van den Goorbergh",
+  "year": 2022,
+  "venue": "preprint",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 78909,
+  "chars_total": 78909,
+  "engine": "pymupdf",
+  "skipped": "Tables S3-S8 were read for structure and selected rows only, not every cell."
+ },
+ "type": "empirical",
+ "question": "How do random undersampling, random oversampling and SMOTE affect discrimination, calibration and classification of standard and ridge logistic regression?",
+ "hypothesis": "Imbalance correction distorts calibration by inflating probabilities, and shifting the probability threshold has a similar effect on sensitivity and specificity as correction.",
+ "contributions": [
+  "Simulation of 24 scenarios plus an ovarian cancer case study showing correction yields miscalibration without AUROC gain",
+  "Shows threshold shifting matches correction's classification effect",
+  "Shows intercept-only recalibration repairs calibration"
+ ],
+ "method": {
+  "summary": "Standard (SLR) and ridge logistic regression were trained on uncorrected, RUS, ROS and SMOTE data, in a Monte Carlo simulation and in a real ovarian tumour dataset, and compared on AUROC, calibration intercept and slope, sensitivity, specificity and Net Benefit. Corrected models were also recalibrated by an intercept-only offset model.",
+  "task": "binary risk prediction (clinical)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "IOTA ovarian tumour data (3 waves 1999-2005, 2005-2007, 2009-2012)",
+    "role": "both",
+    "size": "5914 recruited; 3369 premenopausal aged 18-59; 658 malignant (20%)",
+    "split": "4:1 train/test: train 2695 (518 events), test 674 (140 events)",
+    "source": "International Ovarian Tumor Analysis study; ethics approval S64709 KU Leuven; operated patients only, borderline counted malignant",
+    "preprocessing": "predictors age, max lesion diameter (mm), papillary structures (0-4); continuous predictors as restricted cubic splines with 3 knots"
+   },
+   {
+    "name": "Simulated data",
+    "role": "both",
+    "size": "train N 2500 or 5000; test N=100,000 per scenario",
+    "split": "24 scenarios: N x p (3,6,12,24) x event fraction (0.3,0.1,0.01); 2000 runs each, new training set per run",
+    "source": "multivariate standard normal predictors, zero correlation, equal strength, true c-statistic about 0.75",
+    "preprocessing": "coefficients found numerically (BFGS via optim, median of 20 fits, repeated on 20 datasets of N=1e5); datasets with separation (apparent AUROC=1) or one class removed"
+   }
+  ],
+  "models": [
+   {
+    "name": "Standard logistic regression (SLR)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "maximum likelihood logistic regression",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Ridge logistic regression",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "L2-penalised logistic regression",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "lambda": "grid of 251 values between 0 and 64, nonzero values equidistant on log scale, tuned by 10-fold CV on deviance; leave-one-out CV if fewer than 8 events or non-events"
+    }
+   }
+  ],
+  "training": {
+   "objective": "maximum likelihood (SLR); penalised log-likelihood l(a,b) - lambda * sum b_j^2 (Ridge)",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "ridge lambda tuned by CV",
+   "hardware": "high-performance computing facility, CentOS7",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": "2000 simulation runs per scenario; no seed value stated",
+   "other": {
+    "RUS": "discard random majority cases until majority equals minority size",
+    "ROS": "resample minority with replacement until equal to majority size",
+    "SMOTE": "k=5 nearest minority neighbours, difference times random number in (0,1) added to minority case; k set to events minus 1 if fewer than 6 events",
+    "recalibration": "intercept-only logistic model on the development dataset with the logit of the initial model's estimated probability as offset: logit(pi_recalibrated) = a + logit(pi_hat); applied to RUS/ROS/SMOTE models (6 extra models)",
+    "software": "R 3.6.2, glmnet 4.0-2, smotefamily 1.3.1, MASS 7.3-51.5"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "2000 simulation runs per scenario; one test set per scenario",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "thresholds": "0.5 default; for uncorrected models also threshold equal to event fraction (case study 0.192 = 518/2695)"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "AUROC (c statistic)",
+     "definition": "probability a random event case gets higher risk than a random non-event",
+     "unit": "0-1",
+     "higher_is_better": true
+    },
+    {
+     "name": "Calibration intercept",
+     "definition": "a in logit(pi_i)=a+LP with LP as offset (slope fixed at 1); <0 means overestimation",
+     "unit": "logit",
+     "higher_is_better": null
+    },
+    {
+     "name": "Calibration slope",
+     "definition": "b in logit(pi_i)=a+b*LP; <1 means too extreme",
+     "unit": "ratio",
+     "higher_is_better": null
+    },
+    {
+     "name": "Sensitivity",
+     "definition": "TP/(TP+FN)",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Specificity",
+     "definition": "TN/(TN+FP)",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Accuracy",
+     "definition": "(TP+TN)/N",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Net Benefit",
+     "definition": "(TP - w*FP)/N with w = odds(t)",
+     "unit": "net benefit",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Uncorrected training data",
+    "Uncorrected with threshold shifted to event fraction"
+   ],
+   "protocol": "Primary metric is calibration intercept; simulation follows ADEMP; medians and IQRs over 2000 runs; case study reports 95% CIs on one test set."
+  },
+  "availability": {
+   "code": "https://github.com/benvancalster/classimb_calibration",
+   "weights": null,
+   "data": "IOTA data not stated to be public; ethics approval for secondary use only"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Imbalance correction (RUS, ROS, SMOTE) never gave a higher median AUROC than uncorrected training data; RUS was often lower.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Monte Carlo simulation, 24 scenarios (N 2500/5000, p 3/6/12/24, event fraction 0.3/0.1/0.01), 2000 runs each, SLR and Ridge, true c-statistic about 0.75, test set N=100,000",
+   "where": "Results, Simulation study",
+   "note": null,
+   "quote": "The median AUROC of models trained on unadjusted data was never lower than the median AUROC of models after RUS, ROS, or SMOTE."
+  },
+  {
+   "claim": "Worst AUROC gap: SLR with 24 predictors, N=2500, 1% events: uncorrected 0.69 vs RUS 0.59 (ROS and SMOTE 0.68).",
+   "kind": "measured",
+   "source": null,
+   "metric": "median AUROC (RUS, SLR)",
+   "value": "0.59",
+   "unit": null,
+   "baseline_value": "0.69",
+   "n": null,
+   "setup": "Monte Carlo simulation, 24 scenarios (N 2500/5000, p 3/6/12/24, event fraction 0.3/0.1/0.01), 2000 runs each, SLR and Ridge, true c-statistic about 0.75, test set N=100,000; scenario 4",
+   "where": "Table S3",
+   "note": null,
+   "table": "Table S3, scenario 4 (EF 0.01, N 2500, p 24), SLR columns Uncorrected 0.69 (0.67;0.70) vs RUS 0.59 (0.56;0.62)"
+  },
+  {
+   "claim": "RUS lowers AUROC more when event fraction is lower, training set smaller and predictors more numerous.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Monte Carlo simulation, 24 scenarios (N 2500/5000, p 3/6/12/24, event fraction 0.3/0.1/0.01), 2000 runs each, SLR and Ridge, true c-statistic about 0.75, test set N=100,000",
+   "where": "Results, Simulation study",
+   "note": null,
+   "quote": "For RUS, the median AUROC was often lower, with larger differences when event fraction was lower, training set size was lower, and number of predictors was higher."
+  },
+  {
+   "claim": "Models trained on uncorrected data had median calibration intercepts near zero.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Monte Carlo simulation, 24 scenarios (N 2500/5000, p 3/6/12/24, event fraction 0.3/0.1/0.01), 2000 runs each, SLR and Ridge, true c-statistic about 0.75, test set N=100,000",
+   "where": "Results, Simulation study",
+   "note": null,
+   "quote": "Models trained on unadjusted data had median calibration intercepts between -0.05 and 0.03."
+  },
+  {
+   "claim": "Imbalance correction gave median calibration intercept of -4.5 or lower at 1% event fraction.",
+   "kind": "measured",
+   "source": null,
+   "metric": "median calibration intercept",
+   "value": "-4.5 or lower",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Monte Carlo simulation, 24 scenarios (N 2500/5000, p 3/6/12/24, event fraction 0.3/0.1/0.01), 2000 runs each, SLR and Ridge, true c-statistic about 0.75, test set N=100,000; 1% event fraction (-2.1 at 10%, -0.7 at 30%)",
+   "where": "Results, Simulation study",
+   "note": "Negative intercept = overestimated risk.",
+   "quote": "Imbalance correction methods had median calibration intercepts of -4.5 or lower for scenarios with a 1% event fraction, -2.1 or lower for scenarios with a 10% event fraction, and -0.7 or lower for scenarios with a 30% event fraction."
+  },
+  {
+   "claim": "Intercept-only logistic recalibration restored median calibration intercepts to between -0.07 and 0.03.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Monte Carlo simulation, 24 scenarios (N 2500/5000, p 3/6/12/24, event fraction 0.3/0.1/0.01), 2000 runs each, SLR and Ridge, true c-statistic about 0.75, test set N=100,000; recalibration of RUS/ROS/SMOTE models; exception SLR after RUS with 1% events, N=2500, p=24 (only 25 events and 25 non-events on average, no convergence)",
+   "where": "Results; Table S5",
+   "note": "Methods say the recalibration model is fitted on the development dataset; Results say 'Using the original (imbalanced) data'. Reading: the original uncorrected training data.",
+   "quote": "recalibration improved median calibration intercepts to values between -0.07 and 0.03"
+  },
+  {
+   "claim": "Ovarian case study: AUROC 0.79 to 0.80 for all algorithm and correction combinations.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AUROC",
+   "value": "0.79 to 0.80",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "IOTA data, 3369 premenopausal patients, 658 malignant (20%); train 2695 (518 events), test 674 (140 events); predictors age, lesion diameter, papillary structures; 3-knot restricted cubic splines; SLR and Ridge",
+   "where": "Results, Case study",
+   "note": null,
+   "quote": "with average AUROC of 0.79 to 0.80 (Table S2)"
+  },
+  {
+   "claim": "Ovarian case study: calibration intercept 0.06 (SLR) and 0.05 (Ridge) uncorrected, versus -1.32 to -1.50 after correction.",
+   "kind": "measured",
+   "source": null,
+   "metric": "calibration intercept (corrected)",
+   "value": "-1.32 to -1.50",
+   "unit": null,
+   "baseline_value": "0.06 SLR / 0.05 Ridge",
+   "n": null,
+   "setup": "IOTA ovarian case study, test set n=674",
+   "where": "Results, Case study; Table S2",
+   "note": "-1.32 is SMOTE+SLR, -1.50 is RUS+SLR (-1.72 to -1.28).",
+   "quote": "these were 0.06 (95% CI -0.16 to 0.26) for SLR and 0.05 (-0.16 to 0.26) for Ridge on training data without imbalance correction"
+  },
+  {
+   "claim": "Ovarian: at threshold 0.5 uncorrected models had sensitivity 31% (SLR), 29% (Ridge) and specificity 96%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "sensitivity at t=0.5, uncorrected",
+   "value": "31% SLR / 29% Ridge",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "IOTA ovarian case study, threshold 0.5",
+   "where": "Results, Case study",
+   "note": null,
+   "quote": "specificity (96% for SLR and Ridge) was clearly higher than sensitivity (31% for SLR, 29% for Ridge)"
+  },
+  {
+   "claim": "Ovarian: corrected models at threshold 0.5 gave sensitivities 69-75% and specificities 74-78%.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "69-75% sens, 74-78% spec",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "IOTA ovarian case study; the sentence covers corrected models at 0.5 and uncorrected models at the shifted threshold",
+   "where": "Results, Case study",
+   "note": "Text says 'sensitivity increased and specificity increased', evidently a slip for 'decreased'. Table S2: corrected models at 0.5 sens 69-71, spec 74-78.",
+   "quote": "(sensitivities between 69% and 75%, specificities between 74% and 78%)"
+  },
+  {
+   "claim": "Ovarian: shifting the threshold to 0.192 (training prevalence 518/2695) on uncorrected SLR gave sensitivity 71% and specificity 76%, accuracy 75%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "sensitivity / specificity at t=0.192",
+   "value": "71% sens, 76% spec (SLR); 70% / 76% (Ridge)",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "IOTA ovarian case study, uncorrected models, test n=674",
+   "where": "Table S2; Methods 'risk threshold of 0.192'",
+   "note": "Corrected models are Nc (not computed) at 0.192.",
+   "table": "Table S2, SLR rows Sensitivity t=0.192 = 71, Specificity t=0.192 = 76, Accuracy t=0.192 = 75; Ridge 70 / 76 / 75"
+  },
+  {
+   "claim": "Ovarian: calibration slope 0.99 (SLR) and 1.03 (Ridge) uncorrected; lowest after RUS (0.85 SLR, 0.93 Ridge).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "IOTA ovarian case study",
+   "where": "Results, Case study",
+   "note": null,
+   "quote": "(0.99 for SLR, 1.03 for Ridge) and lowest (i.e. worst) for models after RUS (0.85 for SLR, 0.93 for Ridge)"
+  },
+  {
+   "claim": "Ovarian: Net Benefit of corrected models was negative at thresholds of 0.3 or higher.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "IOTA ovarian case study, decision curve (Figure 2)",
+   "where": "Results, Case study",
+   "note": null,
+   "quote": "even to the extent that the Net Benefit was negative when using a probability threshold of 0.3 or higher to select individuals for treatment"
+  },
+  {
+   "claim": "At 1% event fraction with threshold 0.5, uncorrected models had median sensitivity 0% and specificity 100%.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Monte Carlo simulation, 24 scenarios (N 2500/5000, p 3/6/12/24, event fraction 0.3/0.1/0.01), 2000 runs each, SLR and Ridge, true c-statistic about 0.75, test set N=100,000; uncorrected, threshold 0.5",
+   "where": "Results, Simulation study",
+   "note": null,
+   "quote": "resulted in median sensitivities of 0% and median specificities of 100% when the true event fraction was 1%"
+  },
+  {
+   "claim": "Resampling methods, and shifting the threshold, both balance sensitivity and specificity.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Monte Carlo simulation, 24 scenarios (N 2500/5000, p 3/6/12/24, event fraction 0.3/0.1/0.01), 2000 runs each, SLR and Ridge, true c-statistic about 0.75, test set N=100,000",
+   "where": "Results, Simulation study",
+   "note": null,
+   "quote": "specificity were obtained by either using imbalance correction methods or shifting the probability threshold"
+  },
+  {
+   "claim": "SMOTE and to a lesser extent ROS give median calibration slopes below 1 (too extreme probabilities); SLR after RUS overfits more.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Monte Carlo simulation, 24 scenarios (N 2500/5000, p 3/6/12/24, event fraction 0.3/0.1/0.01), 2000 runs each, SLR and Ridge, true c-statistic about 0.75, test set N=100,000",
+   "where": "Results; Table S6",
+   "note": null,
+   "quote": "The use of SMOTE, and to a lesser extent ROS, resulted probability estimates that were too extreme as evidenced by median calibration slopes below 1"
+  },
+  {
+   "claim": "Headline conclusion: outcome imbalance is not a problem in itself; correction may worsen performance.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Abstract, standard and ridge logistic regression only",
+   "where": "Abstract",
+   "note": null,
+   "quote": "Our study shows that outcome imbalance is not a problem in itself, and that imbalance correction may even worsen model performance."
+  }
+ ],
+ "limits": [
+  "Only standard and ridge logistic regression were tested; Random Forest, SVM and neural networks are left for follow-up",
+  "Other corrections (weighting, cost-sensitive learning, variants of RUS/ROS/SMOTE) not tested",
+  "Authors anticipate miscalibration will persist for other models and techniques unless recalibrated, but this was not tested",
+  "Simulation uses uncorrelated predictors of equal strength and one true c-statistic of about 0.75",
+  "Case study has a single 4:1 split with moderate imbalance (20%)",
+  "Preprint with no venue printed; main text 3148 words"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Class imbalance",
+   "definition": "imbalance between the frequency of outcome events and non-events",
+   "where": "Abstract"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "SMOTE (Chawla et al.)",
+   "year": 2002,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "One of three corrections tested",
+   "quote": null
+  },
+  {
+   "work": "He & Garcia, Learning from imbalanced data",
+   "year": 2009,
+   "arxiv": null,
+   "relation": "contradicts",
+   "note": "Argues imbalance is not a pervasive problem, against their framing",
+   "quote": null
+  },
+  {
+   "work": "Fernandez et al., Learning from Imbalanced Data Sets",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "contradicts",
+   "note": "Same",
+   "quote": null
+  },
+  {
+   "work": "Wallace & Dahabreh, Improving class probability estimates for imbalanced data",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "contradicts",
+   "note": "Says its Brier-score reading of RUS improvement is wrong",
+   "quote": null
+  },
+  {
+   "work": "Dal Pozzolo et al., When is undersampling effective",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Also found undersampling distorts probabilities",
+   "quote": null
+  },
+  {
+   "work": "Oommen et al., Sampling bias and class imbalance in maximum-likelihood logistic regression",
+   "year": 2011,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Hinted at calibration link",
+   "quote": null
+  },
+  {
+   "work": "Steyerberg, Clinical Prediction Models",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Logistic recalibration",
+   "quote": null
+  },
+  {
+   "work": "Wynants et al., Three myths about risk thresholds",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Threshold choice from clinical costs",
+   "quote": null
+  },
+  {
+   "work": "IOTA studies (Kaijser 2013; Van Calster 2014)",
+   "year": 2013,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Ovarian case study data",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Figure 1",
+   "caption": "Flexible calibration curves on the test set for the Ridge models to diagnose ovarian cancer.",
+   "page": 17,
+   "why": "Shows overestimation after correction"
+  },
+  {
+   "figure": "Figure 3",
+   "caption": "Test set AUROC for the Ridge models in the simulation scenarios with an event fraction of 1%.",
+   "page": 19,
+   "why": "No AUROC gain"
+  },
+  {
+   "figure": "Figure 4",
+   "caption": "Test set calibration intercept for the Ridge models in the simulation scenarios with an event fraction of 1%.",
+   "page": 20,
+   "why": "Size of miscalibration"
+  }
+ ],
+ "code": [
+  {
+   "where": "Methods, recalibration",
+   "snippet": "logit(pi_i,recalibrated) = a + logit(pi_hat_i)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Equations garbled in text extraction; recalibration formula reconstructed from the text description",
+  "No venue, DOI or arXiv id printed in the PDF; venue recorded as preprint",
+  "Figure 2 caption not found by the caption tool"
+ ]
+}

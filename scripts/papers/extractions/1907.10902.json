@@ -1,0 +1,462 @@
+{
+ "schema": 1,
+ "key": "1907.10902",
+ "pdf": "data-science/sources/akiba-2019-optuna.pdf",
+ "bib": {
+  "title": "Optuna: A Next-generation Hyperparameter Optimization Framework",
+  "authors": [
+   "Takuya Akiba",
+   "Shotaro Sano",
+   "Toshihiko Yanase",
+   "Takeru Ohta",
+   "Masanori Koyama"
+  ],
+  "first_author": "Akiba",
+  "year": 2019,
+  "venue": "preprint (printed: 'Preprint, compiled July 26, 2019'; arXiv:1907.10902v1 [cs.LG] 25 Jul 2019)",
+  "arxiv": "1907.10902",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 47487,
+  "chars_total": 47487,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "system",
+ "question": "What design criteria should a next-generation hyperparameter optimization framework meet, and does Optuna meet them?",
+ "hypothesis": "A define-by-run API, combined efficient sampling and pruning, and an easy-to-set-up scalable architecture together give cost-effective optimization.",
+ "contributions": [
+  "Define-by-run API that builds the search space dynamically",
+  "Efficient implementation of sampling and pruning (ASHA variant; TPE+CMA-ES mixture)",
+  "Easy-to-setup, versatile architecture from notebook to distributed (shared storage)"
+ ],
+ "method": {
+  "summary": "Optuna is an open-source (MIT) HPO framework where the objective function receives a trial object and calls suggest_* to build the search space at runtime. It supports independent (TPE) and relational (CMA-ES, GP-BO) sampling, an Asynchronous Successive Halving pruner, and a shared-storage design (in-memory, SQLite or RDB) for distributed runs.",
+  "task": "hyperparameter optimization",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "Black-box optimization test collection (evalset / Dewancker et al.)",
+    "role": "eval",
+    "size": "56 test cases",
+    "split": null,
+    "source": "McCourt 2016; Dewancker et al. 2016",
+    "preprocessing": null
+   },
+   {
+    "name": "SVHN",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Netzer et al. 2011",
+    "preprocessing": null
+   },
+   {
+    "name": "RocksDB file set",
+    "role": "eval",
+    "size": "500,000 files of 10KB each",
+    "split": null,
+    "source": "prepared by authors",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Simplified AlexNet",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "3 conv layers + 1 fully-connected layer, 8 hyperparameters",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "4",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "Sec 5.1: each study repeated 30 times per algorithm, 80 trials per study. Sec 5.2: each study repeated 40 times, 4 hours each.",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "TPE+CMA-ES": "TPE for the first 40 steps, CMA-ES for the rest (Sec 5.1)",
+    "Successive Halving pruner inputs": "minimum resource r, reduction factor eta, minimum early-stopping rate s (values not stated)",
+    "Pruning rule": "trial promoted if provisional rank within top 1/eta at its rung; no repechage",
+    "Sec 5.3 workers": "1, 2, 4, 8"
+   },
+   "other": {
+    "hardware_pruning_exp": "one NVIDIA Tesla P100 per study",
+    "RocksDB": "34 of 100+ parameters tuned; default 372 s on HDD, tuned 30 s; 4 h budget"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "best attained objective value in 80 trials",
+     "definition": "best value found per study, compared by paired Mann-Whitney U test",
+     "unit": "objective value",
+     "higher_is_better": false
+    },
+    {
+     "name": "average test error",
+     "definition": "test error of simplified AlexNet on SVHN over time",
+     "unit": "error",
+     "higher_is_better": false
+    },
+    {
+     "name": "trials per study",
+     "definition": "number of trials completed or explored within 4 hours",
+     "unit": "trials",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "random search",
+    "Hyperopt (TPE)",
+    "SMAC3",
+    "GPyOpt",
+    "Median pruning (Vizier)"
+   ],
+   "protocol": "Paired Mann-Whitney U test, alpha = 0.0005, 30 repeats (Sec 5.1); 40 repeats (Sec 5.2)."
+  },
+  "availability": {
+   "code": "https://github.com/pfnet/optuna/ (MIT)",
+   "weights": null,
+   "data": null
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Without pruning, TPE completes about 36 trials per study in 4 hours.",
+   "kind": "measured",
+   "source": null,
+   "metric": "trials per study",
+   "value": 35.8,
+   "unit": "trials/study",
+   "baseline_value": null,
+   "n": 40,
+   "setup": "Simplified AlexNet (3 conv layers + 1 FC, 8 hyperparameters) on SVHN, one NVIDIA Tesla P100 per study, 4 hours per study, 40 repeats per setting; TPE without pruning",
+   "quote": "On average, TPE and random search without pruning completed 35.8 and 36.0 trials per study, respectively.",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.2, p7"
+  },
+  {
+   "claim": "Without pruning, random search completes about 36 trials per study in 4 hours.",
+   "kind": "measured",
+   "source": null,
+   "metric": "trials per study",
+   "value": 36.0,
+   "unit": "trials/study",
+   "baseline_value": null,
+   "n": 40,
+   "setup": "Simplified AlexNet (3 conv layers + 1 FC, 8 hyperparameters) on SVHN, one NVIDIA Tesla P100 per study, 4 hours per study, 40 repeats per setting; random search without pruning",
+   "quote": "On average, TPE and random search without pruning completed 35.8 and 36.0 trials per study, respectively.",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.2, p7"
+  },
+  {
+   "claim": "With ASHA pruning, TPE explores about 1279 trials per study in 4 hours.",
+   "kind": "measured",
+   "source": null,
+   "metric": "trials per study",
+   "value": 1278.6,
+   "unit": "trials/study",
+   "baseline_value": 35.8,
+   "n": 40,
+   "setup": "Simplified AlexNet (3 conv layers + 1 FC, 8 hyperparameters) on SVHN, one NVIDIA Tesla P100 per study, 4 hours per study, 40 repeats per setting; TPE with pruning",
+   "quote": "TPE with pruning explored 1278.6 trials on average per study, of which 1271.5 were pruned during the process.",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.2, p7"
+  },
+  {
+   "claim": "Of the TPE+pruning trials, 1271.5 on average were pruned.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 1271.5,
+   "unit": "pruned trials/study",
+   "baseline_value": null,
+   "n": 40,
+   "setup": "Simplified AlexNet (3 conv layers + 1 FC, 8 hyperparameters) on SVHN, one NVIDIA Tesla P100 per study, 4 hours per study, 40 repeats per setting; TPE with pruning",
+   "quote": "TPE with pruning explored 1278.6 trials on average per study, of which 1271.5 were pruned during the process.",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.2, p7"
+  },
+  {
+   "claim": "With pruning, random search explores about 1119 trials per study in 4 hours.",
+   "kind": "measured",
+   "source": null,
+   "metric": "trials per study",
+   "value": 1119.3,
+   "unit": "trials/study",
+   "baseline_value": 36.0,
+   "n": 40,
+   "setup": "Simplified AlexNet (3 conv layers + 1 FC, 8 hyperparameters) on SVHN, one NVIDIA Tesla P100 per study, 4 hours per study, 40 repeats per setting; random search with pruning",
+   "quote": "Random search with pruning explored 1119.3 trials with 1111.3 pruned trials.",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.2, p7"
+  },
+  {
+   "claim": "Of the random search+pruning trials, 1111.3 on average were pruned.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 1111.3,
+   "unit": "pruned trials/study",
+   "baseline_value": null,
+   "n": 40,
+   "setup": "Simplified AlexNet (3 conv layers + 1 FC, 8 hyperparameters) on SVHN, one NVIDIA Tesla P100 per study, 4 hours per study, 40 repeats per setting; random search with pruning",
+   "quote": "Random search with pruning explored 1119.3 trials with 1111.3 pruned trials.",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.2, p7"
+  },
+  {
+   "claim": "ASHA pruning beats median pruning and accelerates both TPE and random search (read from Fig 11a; no number in text).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Simplified AlexNet (3 conv layers + 1 FC, 8 hyperparameters) on SVHN, one NVIDIA Tesla P100 per study, 4 hours per study, 40 repeats per setting",
+   "quote": "Our implementation of ASHA signiﬁcantly outperforms Median pruning, a pruning method featured in Vizier.",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.2, Fig 11a"
+  },
+  {
+   "claim": "TPE+CMA-ES is statistically worse than random search in only 1/56 test cases.",
+   "kind": "measured",
+   "source": null,
+   "metric": "cases where worse",
+   "value": "1/56",
+   "unit": "cases",
+   "baseline_value": null,
+   "n": null,
+   "setup": "56 black-box test cases, 80 trials, 30 repeats, paired Mann-Whitney U alpha=0.0005",
+   "quote": "TPE+CMA-ES ﬁnds statistically worse solution than random search in only 1/56 test cases",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.1, p6"
+  },
+  {
+   "claim": "GPyOpt beat TPE+CMA-ES in 34/56 cases but needed about twenty times longer per study.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "34/56",
+   "unit": "cases",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Same as above",
+   "quote": "GPyOpt performed better than TPE+CMA-ES in 34/56 cases in terms of the best-attained loss value.",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.1, p6"
+  },
+  {
+   "claim": "RocksDB tuning with pruning cut run time from 372 s to 30 s; 937 parameter sets explored with pruning vs 39 without in 4 hours.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 30,
+   "unit": "seconds",
+   "baseline_value": 372,
+   "n": null,
+   "setup": "RocksDB, 500,000 files of 10KB, 34 parameters, HDD, 4 h",
+   "quote": "With pruning, Optuna was able to ﬁnd a parameter-set that reduces the computation time to 30 seconds.",
+   "table": null,
+   "note": null,
+   "where": "Sec 6, p7-8"
+  },
+  {
+   "claim": "Without a time-out and without pruning, only 2 RocksDB trials complete in 4 hours.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 2,
+   "unit": "trials",
+   "baseline_value": null,
+   "n": null,
+   "setup": "RocksDB, no evaluation time-out, no pruning",
+   "quote": "When we disable the time-out option for the evaluation process, the algorithm without pruning explores only 2 trials.",
+   "table": null,
+   "note": null,
+   "where": "Sec 6, p8"
+  },
+  {
+   "claim": "Distributed optimization scales linearly with workers; score per trial barely changes with 1, 2, 4, 8 workers.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "TPE, 1/2/4/8 workers, same setup as Sec 5.2",
+   "quote": "This shows that the performance is linearly scaling with the number of trials, and hence with the number of workers.",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.3, Fig 11b/c"
+  }
+ ],
+ "limits": [
+  "Experiments report no confidence intervals in text; pruning results are figures (Fig 11) with only trial counts in text.",
+  "Pruner hyperparameters (r, eta, s) for the experiments are not stated.",
+  "Pruning experiment uses one simplified AlexNet/SVHN task; the trial-count gain (about 35x) mixes more trials explored with more trials pruned early.",
+  "Time-out used for no-pruning RocksDB baseline is not specified.",
+  "2019 preprint; Optuna's API has since changed (e.g. suggest_loguniform, optuna.Study(name, storage)) and later versions are not covered."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "define-by-run",
+   "definition": "a design that allows the user to dynamically construct the search space",
+   "where": "Sec 2"
+  },
+  {
+   "term": "study / trial",
+   "definition": "Optuna refers to each process of optimization as a study, and to each evaluation of objective function as a trial",
+   "where": "Sec 2"
+  },
+  {
+   "term": "pruning",
+   "definition": "termination of unpromising trials based on intermediate values; automated early stopping, named differently from early-stopping regularization",
+   "where": "Sec 3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Hyperopt",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "TPE-based, define-and-run comparison",
+   "quote": null
+  },
+  {
+   "work": "Algorithms for hyper-parameter optimization (TPE), Bergstra et al.",
+   "year": 2011,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "independent sampler",
+   "quote": null
+  },
+  {
+   "work": "CMA-ES, Hansen and Ostermeier",
+   "year": 2001,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "relational sampler",
+   "quote": null
+  },
+  {
+   "work": "Massively parallel hyperparameter tuning (ASHA), Li et al.",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Optuna implements a variant without repechage",
+   "quote": null
+  },
+  {
+   "work": "Non-stochastic best arm identification (Successive Halving), Jamieson and Talwalkar",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "basis of ASHA",
+   "quote": null
+  },
+  {
+   "work": "Hyperband, Li et al.",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "related",
+   "note": "AlexNet-on-SVHN setup follows it",
+   "quote": null
+  },
+  {
+   "work": "SMAC3",
+   "year": 2011,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "random-forest based",
+   "quote": null
+  },
+  {
+   "work": "GPyOpt",
+   "year": null,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "GP based",
+   "quote": null
+  },
+  {
+   "work": "Google Vizier",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "median pruning compared against",
+   "quote": null
+  },
+  {
+   "work": "Dewancker et al., ranking optimization methods; McCourt evalset",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "56-case test collection and Mann-Whitney protocol",
+   "quote": null
+  },
+  {
+   "work": "SVHN, Netzer et al.",
+   "year": 2011,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "pruning experiment dataset",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1/2",
+   "caption": "Optuna define-by-run vs Hyperopt define-and-run code for the same MLP search",
+   "page": 2,
+   "why": "Shows conditional search space as plain loops"
+  },
+  {
+   "figure": "Fig 11",
+   "caption": "Transition of average test errors of simplified AlexNet for SVHN: pruning effect, workers, errors per trial",
+   "page": 8,
+   "why": "Shows pruning and parallel speedups"
+  }
+ ],
+ "code": [
+  {
+   "where": "Fig 5, p5",
+   "snippet": "trial.report(intermediate_value, step=step)\nif trial.should_prune(step):\n    raise TrialPruned()",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text extraction rendered underscores as spaces in code; snippets are normalised.",
+  "No venue besides arXiv preprint printed."
+ ]
+}

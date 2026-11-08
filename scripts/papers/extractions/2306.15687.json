@@ -1,0 +1,805 @@
+{
+ "schema": 1,
+ "key": "2306.15687",
+ "pdf": "ai-engineering/08-multimodal-engineering/sources/le-2023-voicebox.pdf",
+ "bib": {
+  "title": "Voicebox: Text-Guided Multilingual Universal Speech Generation at Scale",
+  "authors": [
+   "Matthew Le",
+   "Apoorv Vyas",
+   "Bowen Shi",
+   "Brian Karrer",
+   "Leda Sari",
+   "Rashel Moritz",
+   "Mary Williamson",
+   "Vimal Manohar",
+   "Yossi Adi",
+   "Jay Mahadeokar",
+   "Wei-Ning Hsu"
+  ],
+  "first_author": "Le",
+  "year": 2023,
+  "venue": "preprint",
+  "arxiv": "2306.15687",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 118229,
+  "chars_total": 118229,
+  "engine": "pymupdf",
+  "skipped": "reference list skimmed only"
+ },
+ "type": "empirical",
+ "question": "Can a single non-autoregressive speech model trained at scale on text-guided infilling perform many speech generation tasks in-context, and beat task-specific SOTA?",
+ "hypothesis": "Scale plus a flexible infilling objective with flow matching lets speech models generalise to unseen tasks like LLMs do.",
+ "contributions": [
+  "Voicebox learns text-guided speech infilling at scale and solves tasks it was not explicitly trained on via in-context learning.",
+  "Voicebox outperforms VALL-E with new SOTA English zero-shot TTS (5.9%->1.9% WER, 0.580->0.681 similarity).",
+  "First model with high-quality cross-lingual zero-shot TTS across six languages without style labels, pretrained embedders or multilingual samples.",
+  "Infills speech of any length and outperforms A3T on text-guided denoising.",
+  "Generates diverse realistic speech: ASR trained solely on synthetic speech loses only 0.4%/1.7% absolute WER."
+ ],
+ "method": {
+  "summary": "Voicebox is a non-autoregressive continuous normalizing flow trained with flow matching (OT path) to infill masked 80-d Mel frames given the surrounding audio and a frame-level phone transcript, plus a separate duration model (regression or flow matching). Tasks (zero-shot TTS, denoising, editing, style transfer, diverse sampling) are cast as different context masks at inference; classifier-free guidance and ODE step count trade quality for speed.",
+  "task": "text-guided speech infilling / zero-shot TTS",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "English audiobooks (ASR-transcribed)",
+    "role": "train",
+    "size": "60K hours",
+    "split": null,
+    "source": "audiobooks, ASR-transcribed; named only as 'English audiobooks'",
+    "preprocessing": "MFA phonemisation and forced alignment; 80-d log Mel at 100 Hz, normalised mean -5.884 std 2.261"
+   },
+   {
+    "name": "Multilingual audiobooks (En, Fr, De, Es, Pl, Pt)",
+    "role": "train",
+    "size": "50K hours",
+    "split": null,
+    "source": "audiobooks; MLS used for test",
+    "preprocessing": "language upsampling beta=0.25 (audio), 0.5 (duration)"
+   },
+   {
+    "name": "LibriSpeech test-clean (filtered, 4-10 s)",
+    "role": "eval",
+    "size": null,
+    "split": "test-clean",
+    "source": "LibriSpeech",
+    "preprocessing": "3 s prompt: another sample of same speaker (cross-sentence) or first 3 s (continuation)"
+   },
+   {
+    "name": "MLS test splits (filtered)",
+    "role": "eval",
+    "size": "3535 En, 2323 Es, 3183 De, 2284 Fr, 508 Pl, 838 Pt after filtering",
+    "split": "test",
+    "source": "Multilingual LibriSpeech",
+    "preprocessing": "kept Whisper-transcript WER <20% (<30% Pl, Pt) and MFA alignment success"
+   },
+   {
+    "name": "LibriSpeech test-other text / train text",
+    "role": "eval",
+    "size": "281K utterances synthesised from train text",
+    "split": "test-other text (diverse sampling); train text (ASR data)",
+    "source": "LibriSpeech",
+    "preprocessing": null
+   },
+   {
+    "name": "1K-hour English audiobook subset",
+    "role": "train",
+    "size": "1K hours",
+    "split": null,
+    "source": "subset used for ablations and FSD reference",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Voicebox audio model (VB-En / VB-Multi)",
+    "role": "proposed",
+    "params": "330M",
+    "architecture": "Transformer with conv positional embedding, symmetric bi-directional ALiBi, UNet-style skip connections; flow-matching CNF",
+    "init_from": null,
+    "tokenizer": "MFA phones with word-position postfixes and ghost silence",
+    "vocab": null,
+    "layers": "24",
+    "hidden": "1024 (FFN 4096)",
+    "heads": "16",
+    "context": "audio chunks capped at 1,600 frames",
+    "other": {
+     "input": "80-d log Mel at 100 Hz; flow step as sinusoidal embedding prepended"
+    }
+   },
+   {
+    "name": "Voicebox duration model",
+    "role": "proposed",
+    "params": "28M (En) / 34M (Multi)",
+    "architecture": "Transformer, regression (L1) or conditional flow matching",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "8 En / 10 Multi",
+    "hidden": "512 En / 768 Multi per Table D14 (text says 512/2048 for both)",
+    "heads": "8",
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "HiFi-GAN V1 (adapted)",
+    "role": "base",
+    "params": "13M",
+    "architecture": "vocoder, 16 kHz, upsampling [5,4,4,2]",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "training": "60K h English, 1.5M updates, 8 GPUs, 7.5 days"
+    }
+   },
+   {
+    "name": "VALL-E",
+    "role": "baseline",
+    "params": null,
+    "architecture": "AR + NAR codec LM on Encodec",
+    "init_from": null,
+    "tokenizer": "Encodec 8 codebooks 75 Hz",
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "model not available; numbers from its paper"
+    }
+   },
+   {
+    "name": "YourTTS",
+    "role": "baseline",
+    "params": null,
+    "architecture": "VITS-based flow with speaker embedder",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "A3T",
+    "role": "baseline",
+    "params": null,
+    "architecture": "NAR regression infilling model trained on VCTK",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Demucs",
+    "role": "baseline",
+    "params": null,
+    "architecture": "speech enhancement",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "RNN-T Conformer ASR",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "20-layer conformer encoder 512-d, 8 heads, FFN 2048; LSTM predictor 512-d; 4096 wordpieces",
+    "init_from": null,
+    "tokenizer": "4096 wordpieces from LS 960h text",
+    "vocab": "4096",
+    "layers": "20",
+    "hidden": "512",
+    "heads": "8",
+    "context": null,
+    "other": {
+     "training": "Adam, 120 epochs, tri-stage lr max 0.001 (0.0001 for 100h), clip 10, weight decay 0.1, SpecAugment; beam 15"
+    }
+   }
+  ],
+  "training": {
+   "objective": "Masked conditional flow matching (OT path, sigma_min) on infilling: L=E||m*(u_t(x_t|x)-v_t(x_t,x_ctx,z;theta))||^2; duration: masked CFM or masked L1 regression",
+   "optimizer": "Adam",
+   "lr": "1e-4 peak (audio and duration)",
+   "lr_schedule": "linear warmup then linear decay over rest of training",
+   "warmup": "5K steps",
+   "batch_size": "effective 240K frames (audio); 60K frames (duration)",
+   "steps": "500K (VB-En) / 750K (VB-Multi) audio updates; 600K duration updates",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "audio capped at 1,600 frames, random chunking",
+   "precision": "FP16",
+   "weight_decay": null,
+   "dropout": "attention 0.0, activation 0.1 (audio); attention 0.1, activation 0.1 (duration)",
+   "regularisation": "gradient-norm clip 0.2 (audio); conditional dropout puncond 0.2",
+   "hardware": "32 GPUs audio, 4 GPUs duration, 8 GPUs vocoder (GPU type not stated)",
+   "compute": "vocoder 7.5 days on 8 GPUs; audio model wall-clock not stated",
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "masking": "with pdrop 0.3/0.2 (audio/duration) whole sequence masked, otherwise contiguous segment of r% with r~U[70,100] audio / U[10,100] duration",
+    "tokens_per_batch_table": "7500 audio / 15000 duration (Table D13/D14)",
+    "cfg": "alpha chosen empirically per task; 0.7 for En TTS and denoising, 1.0 for multilingual"
+   }
+  },
+  "inference": {
+   "decoding": "ODE solve (torchdiffeq), midpoint solver, step size 0.0625 (NFE=32) by default; regression duration model by default; silence at both ends trimmed to 0.1 s max",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "one sample per item; FM duration model averaged over 20 samples only for duration metrics; no seeds stated",
+   "prompting": "3 s audio prompt + its transcript concatenated with target text",
+   "retrieval": null,
+   "parameters": {
+    "cfg_alpha": "0.7 English TTS and denoising, 1.0 multilingual, 0 for diverse sampling",
+    "cfg_formula": "v~ = (1+alpha) v(w,x_ctx,z) - alpha v(w); each evaluation costs two forward passes",
+    "NFE": "32 default; <10 claimed enough"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "WER",
+     "definition": "ASR transcription of output vs input text; HuBERT-L (English) or Whisper large-v2 (multilingual)",
+     "unit": "%",
+     "higher_is_better": false
+    },
+    {
+     "name": "SIM-o",
+     "definition": "WavLM-TDCNN speaker embedding cosine similarity to original audio context",
+     "unit": "cosine",
+     "higher_is_better": true
+    },
+    {
+     "name": "SIM-r",
+     "definition": "same, against vocoder-resynthesised context (VALL-E convention)",
+     "unit": "cosine",
+     "higher_is_better": true
+    },
+    {
+     "name": "FSD",
+     "definition": "Frechet distance on wav2vec 2.0 BASE layer-6 features, real vs generated",
+     "unit": "Frechet distance",
+     "higher_is_better": false
+    },
+    {
+     "name": "QMOS/SMOS",
+     "definition": "crowd MOS via CrowdMOS, 50 samples x 10 ratings, 95% CI",
+     "unit": "1-5",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "VALL-E",
+    "YourTTS",
+    "A3T",
+    "Demucs",
+    "VITS-LJ",
+    "VITS-VCTK"
+   ],
+   "protocol": "Single run per configuration, no seeds or significance tests stated; MOS with 95% CI."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "audio samples at voicebox.metademolab.com; training data unnamed audiobooks"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.batch_size",
+    "quote": "effective batch size of 240K frames",
+    "where": "Sec 5.1"
+   },
+   {
+    "field": "models.hidden (duration)",
+    "quote": "512/2048 embedding/FFN dimensions, with 8/10 layers for English/multilingual",
+    "where": "Sec 5.1 text says 512 for both; Table D14 gives 512 En and 768 Multi"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Voicebox beats VALL-E on zero-shot TTS word error rate (cross-sentence prompt).",
+   "kind": "measured",
+   "source": null,
+   "metric": "WER",
+   "value": "1.9",
+   "unit": "%",
+   "baseline_value": "5.9",
+   "n": null,
+   "setup": "VB-En, filtered LibriSpeech test-clean (4-10 s), 3 s cross-sentence prompt, midpoint solver NFE=32, WER from HuBERT-L ASR; VALL-E number as reported in its paper.",
+   "note": null,
+   "where": "Table 2, p.12",
+   "table": "Table 2, cross-sentence, rows VB-En (1.9) and VALL-E (5.9), column WER"
+  },
+  {
+   "claim": "Voicebox speaker similarity to the (resynthesised) audio context exceeds VALL-E's.",
+   "kind": "measured",
+   "source": null,
+   "metric": "SIM-r",
+   "value": "0.681",
+   "unit": "cosine similarity",
+   "baseline_value": "0.580",
+   "n": null,
+   "setup": "Same as above; SIM-r uses WavLM-TDCNN against vocoder-resynthesised context.",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, cross-sentence, rows VB-En (0.681) and VALL-E (0.580), column SIM-r"
+  },
+  {
+   "claim": "Against raw (original) context, Voicebox SIM-o is 0.662 cross-sentence; on continuation the gap over VALL-E is +0.141 SIM-o.",
+   "kind": "measured",
+   "source": null,
+   "metric": "SIM-o gap vs VALL-E (continuation)",
+   "value": "0.141",
+   "unit": "cosine similarity",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LS test-clean, 3 s prompt; VALL-E continuation SIM-o obtained from authors by communication.",
+   "note": "Table 2 continuation: VB-En (alpha=0.7) SIM-o 0.593 vs VALL-E 0.452 (asterisk, from authors).",
+   "where": "Sec 5.2, p.12",
+   "quote": "the gap is even bigger when compared against raw audio (+0.141 SIM-o on continuation)"
+  },
+  {
+   "claim": "Voicebox is about 20x faster than VALL-E at low NFE without guidance.",
+   "kind": "measured",
+   "source": null,
+   "metric": "inference time, 10 s audio",
+   "value": "0.31",
+   "unit": "seconds",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Inference time for 10 s of audio incl. vocoding and duration prediction, NFE=2, no CFG; VALL-E is the authors' re-implementation (6.2 s vs 10 s in original).",
+   "note": null,
+   "where": "Sec 5.6, p.14",
+   "quote": "For NFE=2 without CFG, Voicebox takes about 0.31 seconds, about 20 times faster than VALL-E."
+  },
+  {
+   "claim": "At NFE=64 Voicebox is only slightly slower than VALL-E, so the speed advantage is a function of NFE.",
+   "kind": "measured",
+   "source": null,
+   "metric": "relative slowdown",
+   "value": "4",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Same timing setup, NFE=64.",
+   "note": null,
+   "where": "Sec 5.6",
+   "quote": "At NFE=64, Voicebox is only 4% slower than VALL-E."
+  },
+  {
+   "claim": "Cross-lingual zero-shot TTS: Voicebox cuts average English-target WER vs YourTTS and raises similarity.",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg WER",
+   "value": "5.2",
+   "unit": "%",
+   "baseline_value": "10.9",
+   "n": null,
+   "setup": "VB-Multi (alpha=1.0), filtered MLS test sets, 3 s context from each of 6 languages (36 directions); WER from Whisper large-v2. Averages from contribution list.",
+   "note": null,
+   "where": "Sec 1 contribution 3, p.3",
+   "quote": "Compared to the prior cross-lingual SOTA YourTTS, Voicebox reduces the average WER from 10.9% to 5.2%, and improves audio similarity from 0.335 to 0.481."
+  },
+  {
+   "claim": "On En/Fr/Pt (YourTTS-supported) Voicebox has lower WER and higher SIM-o than YourTTS, averaged over six context languages.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "MLS, same setup.",
+   "note": null,
+   "where": "Sec 5.3, p.12",
+   "quote": "Voicebox obtains 3.1%/5.9%/8.1% lower WERs and 0.136/0.141/0.160 higher similarity averaged across audio context in six languages."
+  },
+  {
+   "claim": "Subjective similarity and quality also favour Voicebox in cross-lingual TTS.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "MLS English target text, prompts in 6 languages, 50 samples x 10 ratings, 95% CI.",
+   "note": null,
+   "where": "Sec 5.3",
+   "quote": "The average audio similarity MOS is 0.59 (3.89 vs 3.30) higher for Voicebox and the average quality MOS is 0.27 (3.50 vs. 3.23) higher."
+  },
+  {
+   "claim": "Transient noise removal: Voicebox infilling reaches near-clean WER where Demucs does not.",
+   "kind": "measured",
+   "source": null,
+   "metric": "WER",
+   "value": "2.0",
+   "unit": "%",
+   "baseline_value": "32.5",
+   "n": null,
+   "setup": "Librispeech test-clean mixed with non-speech noise over 50% of duration at -10 dB SNR; A3T and Voicebox given transcript and noise location, Demucs not.",
+   "note": null,
+   "where": "Table 5, p.13",
+   "table": "Table 5, row VB-En (alpha = 0.7), column WER (2.0); Demucs 32.5, A3T 11.5, noisy 41.2"
+  },
+  {
+   "claim": "Voicebox denoising quality MOS vs baselines.",
+   "kind": "measured",
+   "source": null,
+   "metric": "QMOS",
+   "value": "3.87",
+   "unit": "1-5",
+   "baseline_value": "3.10",
+   "n": null,
+   "setup": "Same noise setup; QMOS 1-5, 95% CI.",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row VB-En (alpha = 0.7), column QMOS (3.87); Demucs 2.86, A3T 3.10"
+  },
+  {
+   "claim": "A synthetic-only ASR training set from Voicebox is within 0.4/1.7 absolute WER of real data.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "RNN-T Conformer ASR trained on 281K synthetic utterances (one per LibriSpeech train text), VB-En alpha=0, FM duration; vs real 960 h; test-other / test-clean.",
+   "note": "With 4-gram LM, Table 7: 2.6 vs 2.2 on test-clean (0.4) and 6.7 vs 5.0 on test-other (1.7). The contribution list says '0.4%/1.7% ... test-other/test-clean', which is reversed relative to the table. No-LM gaps are 0.5 and 2.0.",
+   "where": "Sec 5.5, p.14",
+   "quote": "only lags behind real data by 0.4% and 1.7% absolute"
+  },
+  {
+   "claim": "ASR trained on Voicebox data with FM duration, no LM, WER on test-other.",
+   "kind": "measured",
+   "source": null,
+   "metric": "WER",
+   "value": "8.3",
+   "unit": "%",
+   "baseline_value": "55.5",
+   "n": null,
+   "setup": "Table 7, trained on synthetic only, tested on real LS.",
+   "note": "baseline_value is VITS-VCTK no-LM test-other (55.5); YourTTS 54.6; VITS-LJ 81.2.",
+   "where": "Table 7",
+   "table": "Table 7, row VB-En (alpha = 0, dur=FM, alpha_dur = 0), column No LM test-o"
+  },
+  {
+   "claim": "Voicebox diverse samples have far lower FSD than baselines, even below real test-other audio.",
+   "kind": "measured",
+   "source": null,
+   "metric": "FSD",
+   "value": "155.7",
+   "unit": "Frechet distance",
+   "baseline_value": "277.9",
+   "n": null,
+   "setup": "LS test-other text, text-only sampling, FSD with wav2vec 2.0 layer 6.",
+   "note": null,
+   "where": "Table 6, p.14",
+   "table": "Table 6, row VB-En (alpha = 0, dur=regr), column FSD (155.7); ground truth 171.1, YourTTS 277.9"
+  },
+  {
+   "claim": "Flow matching with OT path trains much faster than diffusion-path variants.",
+   "kind": "measured",
+   "source": null,
+   "metric": "WER at 50K updates",
+   "value": "2.5",
+   "unit": "%",
+   "baseline_value": "76.0",
+   "n": null,
+   "setup": "Reduced setup (1K h data, smaller model, lr 1e-4, loss on all frames), NFE=32, zero-shot TTS; at 50K updates.",
+   "note": null,
+   "where": "Table 8, p.16",
+   "table": "Table 8, row FM w/ OT, upd=50K WER 2.5; FM w/ diff 76.0; SM w/ diff 73.3"
+  },
+  {
+   "claim": "FM with OT produces good results at 8 NFEs; diffusion variants need 16 or more than 64.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Reduced setup, 150K updates.",
+   "note": null,
+   "where": "Sec 5.8, p.16",
+   "quote": "which can produce good results with just 8 NFEs, while FM w/ diff requires at least 16 NFEs and SM w/ diff requires over 64 NFEs"
+  },
+  {
+   "claim": "A flow-matching audio model beats a regression audio model on similarity and diversity while WER is similar.",
+   "kind": "measured",
+   "source": null,
+   "metric": "SIM-r",
+   "value": "0.597",
+   "unit": "cosine similarity",
+   "baseline_value": "0.520",
+   "n": null,
+   "setup": "1K h English, 12-layer 1024-d model, 150k steps, batch 120k frames; masked loss.",
+   "note": null,
+   "where": "Table B2, App B.1",
+   "table": "Table B2, row Flow Matching / Masked, SIM-r 0.597, FSD 242.5; Regression / Masked SIM-r 0.520, FSD 278.8"
+  },
+  {
+   "claim": "More training data improves zero-shot TTS WER and SIM-r (monotone from 60 h to 60,000 h).",
+   "kind": "measured",
+   "source": null,
+   "metric": "SIM-r at 60,000 h",
+   "value": "0.645",
+   "unit": "cosine similarity",
+   "baseline_value": "0.151",
+   "n": null,
+   "setup": "Reduced setup, cross-sentence; subsets 0.1/1/10/100% of 60K h English.",
+   "note": "FSD got worse from 6K h to 60K h (195.52 to 214.38); authors attribute to a 1K-hour reference distribution.",
+   "where": "Table B3, App B.2",
+   "table": "Table B3, rows 60 (WER 2.30, SIM-r 0.151) and 60,000 (WER 2.05, SIM-r 0.645)"
+  },
+  {
+   "claim": "Prompt length: SIM-r grows with longer prompts and Voicebox matches VALL-E's similarity with about two thirds of the audio.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Zero-shot TTS 5.2, regression duration, alpha 0.7, NFE 32; read from Fig 6.",
+   "note": null,
+   "where": "Sec 5.7, p.15",
+   "quote": "achieving the same speaker similarity as VALL-E with roughly two thirds the input audio"
+  },
+  {
+   "claim": "Cross-lingual WER rises with prompt length for most directions, worst from English to non-English.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "MLS, targets truncated to 4 s; authors blame English being over 90% of multilingual data.",
+   "note": null,
+   "where": "Sec 5.7, p.16",
+   "quote": "English accounts for over 90% of the multilingual training data"
+  },
+  {
+   "claim": "Original vs Voicebox-generated speech is trivially detectable by a CNN classifier; resynthesised vs generated is harder at low mask rates.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy at 90% mask",
+   "value": "0.907",
+   "unit": "fraction",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Classifier trained on 100 h subset, tested on LS dev-clean-sized split, alpha 0.7, NFE 64.",
+   "note": null,
+   "where": "Table 10, p.18",
+   "table": "Table 10, rows Resynthesized vs Voicebox-generated: 30% mask accuracy 0.704, 50% 0.809, 90% 0.907"
+  },
+  {
+   "claim": "Audio-model skip connections and ALiBi: authors report ALiBi helps convergence and extrapolation (no number).",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Appendix A.6.",
+   "note": null,
+   "where": "App A.6",
+   "quote": "we find ALiBi Bias to improve convergence and extrapolation to longer sequences"
+  }
+ ],
+ "limits": [
+  "Preprint, under review: venue stated as 'Preprint. Under review.' in the PDF; NeurIPS 2023 is not confirmed by the text.",
+  "Trained on read audiobook speech in up to six languages; may not transfer to conversational speech with laughter or backchannels.",
+  "Depends on a phonemizer and forced aligner; word-based phonemizers miss context-dependent pronunciation (e.g. French liaison).",
+  "No independent control of voice versus emotion or other attributes.",
+  "VALL-E was not available; its numbers are copied from its paper, and the latency comparison uses the authors' re-implementation.",
+  "Training data, code and weights are not released in the paper; GPU type and wall-clock for the audio model are not stated.",
+  "Lower WER does not imply better quality; regression duration lowers WER partly by being more regular.",
+  "Performance of English-prompt cross-lingual TTS degrades with longer prompts due to English-dominated data."
+ ],
+ "practices": [],
+ "terms": [],
+ "lineage": [
+  {
+   "work": "Flow Matching for Generative Modeling (Lipman et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "CFM objective and OT path adopted.",
+   "quote": null
+  },
+  {
+   "work": "Neural ODEs / CNFs (Chen et al.)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "continuous normalizing flow framing.",
+   "quote": null
+  },
+  {
+   "work": "VALL-E (Wang et al.)",
+   "year": 2023,
+   "arxiv": "2301.02111",
+   "relation": "baseline",
+   "note": "main zero-shot TTS comparison.",
+   "quote": null
+  },
+  {
+   "work": "YourTTS (Casanova et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "multilingual zero-shot baseline.",
+   "quote": null
+  },
+  {
+   "work": "A3T (Bai et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "infilling and editing baseline.",
+   "quote": null
+  },
+  {
+   "work": "Demucs (Defossez et al.)",
+   "year": 2020,
+   "arxiv": "2006.12847",
+   "relation": "baseline",
+   "note": "speech enhancement baseline.",
+   "quote": null
+  },
+  {
+   "work": "NaturalSpeech 2 (Shen et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "concurrent diffusion-based in-context TTS.",
+   "quote": null
+  },
+  {
+   "work": "Classifier-free guidance (Ho and Salimans)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "extended to flow matching.",
+   "quote": null
+  },
+  {
+   "work": "AudioLM (Borsos et al.)",
+   "year": 2022,
+   "arxiv": "2209.03143",
+   "relation": "related",
+   "note": "token LM for audio.",
+   "quote": null
+  },
+  {
+   "work": "Encodec (Defossez et al.)",
+   "year": 2022,
+   "arxiv": "2210.13438",
+   "relation": "related",
+   "note": "codec used by VALL-E.",
+   "quote": null
+  },
+  {
+   "work": "Montreal Forced Aligner (McAuliffe et al.)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "phonemisation and alignment.",
+   "quote": null
+  },
+  {
+   "work": "HiFi-GAN",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "vocoder, adapted to 16 kHz.",
+   "quote": null
+  },
+  {
+   "work": "ALiBi (Press et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "bi-directional variant.",
+   "quote": null
+  },
+  {
+   "work": "LibriSpeech, MLS, Librilight",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "evaluation and ASR data.",
+   "quote": null
+  },
+  {
+   "work": "Whisper large-v2 (Radford et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "multilingual ASR for WER.",
+   "quote": null
+  },
+  {
+   "work": "WavLM (Chen et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "speaker-similarity embedder.",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Voicebox task generalization through in-context learning.",
+   "page": 2,
+   "why": "One picture of all tasks as different masks."
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Illustration of the Voicebox audio model.",
+   "page": 6,
+   "why": "Shows the inputs: noisy speech, masked speech, frame-level phones, flow step."
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Detailed diagrams of diverse speech sampling, content editing, and style transfer.",
+   "page": 9,
+   "why": "Duration plus audio model flow for each task."
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Trade-off between NFE and different metrics.",
+   "page": 15,
+   "why": "Speed versus quality, source of the 20x claim."
+  },
+  {
+   "figure": "Table 8/9",
+   "caption": "Comparing objectives on training and inference efficiency.",
+   "page": 16,
+   "why": "FM with OT vs diffusion paths."
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq. 8, p.8",
+   "snippet": "v~_t(w, x_mis, z; theta) = (1 + alpha) * v_t(w, x_ctx, z; theta) - alpha * v_t(w; theta)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Venue not stated beyond 'Preprint. Under review.' (arXiv v2, 19 Oct 2023); NeurIPS unconfirmed.",
+  "Abstract says 'over 50K hours'; intro says 60K h English and 50K h multilingual.",
+  "Duration model hidden size: text says 512 for both; Table D14 says 768 for VB-Multi.",
+  "Text extraction flattens tables; table cell reading relies on order."
+ ]
+}

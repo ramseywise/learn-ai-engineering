@@ -1,0 +1,652 @@
+{
+ "schema": 1,
+ "key": "sha1:f593c4e68bb6",
+ "pdf": "data-analytics/sources/chari-2023-specious-art-single-cell.pdf",
+ "bib": {
+  "title": "The specious art of single-cell genomics",
+  "authors": [
+   "Tara Chari",
+   "Lior Pachter"
+  ],
+  "first_author": "Chari",
+  "year": 2023,
+  "venue": "PLOS Computational Biology 19(8): e1011288 (Perspective)",
+  "arxiv": null,
+  "doi": "10.1371/journal.pcbi.1011288"
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 66775,
+  "chars_total": 66775,
+  "engine": "pymupdf",
+  "skipped": "Supporting information S1 Text (methods, Figs A-ZA, Tables A-B, Note) is not in the PDF; methods details live there."
+ },
+ "type": "empirical",
+ "question": "How faithfully do 2D t-SNE/UMAP embeddings (after PCA preprocessing) of single-cell gene expression preserve local neighbourhoods, global structure and distances, and what does that do to the inferences drawn from them?",
+ "hypothesis": "Extreme reduction from hundreds or thousands of dimensions to 2 inevitably distorts the data, so embeddings are counter-productive for exploratory biological analysis.",
+ "contributions": [
+  "Quantify distortion of local (kNN Jaccard), global (cell-type neighbour ranking) and distance (max/min ratio) properties in 2D embeddings",
+  "Show distortion changes conclusions in integration, clustering, density, and trajectory applications",
+  "Introduce 'Picasso', an autoencoder that fits cells to arbitrary 2D shapes (elephant, flower) with fidelity similar to t-SNE/UMAP",
+  "Propose targeted alternatives (analysis in ambient or higher-dimensional space, L1 metric, MCML embeddings, dendrograms, heatmaps)"
+ ],
+ "method": {
+  "summary": "Re-analysis of public single-cell RNA-seq datasets. Cells are reduced ambient -> PCA (e.g. 50D) -> 2D t-SNE/UMAP and distortion is measured against ambient and PCA spaces using neighbour overlap, rank correlation, distance ratios, label prediction and mixing fractions. Most methods are in the S1 Text, which this PDF does not contain.",
+  "task": "Evaluating dimensionality-reduction distortion for single-cell exploratory analysis",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "Mouse VMH neurons (10x and SMART-Seq)",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Kim et al. 2019 [37]",
+    "preprocessing": "Highly variable gene selection and log-normalisation (ambient space)"
+   },
+   {
+    "name": "Ex utero (E8.5) and ex/in utero (E10.5) mouse embryo",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Aguilera-Castrejon et al. 2021 [8]",
+    "preprocessing": "E10.5 Seurat-integrated [7]"
+   },
+   {
+    "name": "Mouse primary motor cortex (MOp, MERFISH)",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Zhang et al. 2020 [38]",
+    "preprocessing": null
+   },
+   {
+    "name": "mESC in DMSO",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Desai et al. 2021 [39]",
+    "preprocessing": null
+   },
+   {
+    "name": "96-plex mouse NSCs",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Gehring et al. 2020 [40]",
+    "preprocessing": null
+   },
+   {
+    "name": "Human monocytes, 40 drugs",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Chen et al. 2020 [41]",
+    "preprocessing": null
+   },
+   {
+    "name": "Pancreatic islet SMART-Seq2 and CEL-Seq",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Hie et al. 2019 [10]",
+    "preprocessing": "Merged with MNN or Scanorama"
+   },
+   {
+    "name": "Developing mouse brain",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "[51]",
+    "preprocessing": null
+   },
+   {
+    "name": "Swiss roll; image digits benchmark [53]",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "synthetic / ML benchmark",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "PCA-preprocessed t-SNE / UMAP (e.g. PCA-50D -> UMAP)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "PCA then nonlinear 2D embedding",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Picasso autoencoder",
+    "role": "proposed",
+    "params": null,
+    "architecture": "autoencoder fitting cells to an arbitrary 2D shape while preserving ambient distances",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "Embeddings generated n = 3 times (Fig 2B); n = 5 embeddings (Fig 7); n = 5 random subsets of 1,000 HVGs from top 2,000 HVGs (Fig 8)",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "k_neighbours_local_Jaccard": "30 (L2 distance); k varied 5 to 100",
+    "pca_dims": "50 in the main example; other dimensions also tried",
+    "umap_n_neighbors_density": "5 and 50 (Fig 5)",
+    "tsne_perplexity_density": "5 and 50 (Fig 5)",
+    "velocity_neighbours": "17 and 50 (Fig 6)",
+    "label_prediction": "30% of dataset predicted from labels of 50 nearest neighbours (Fig 4A)",
+    "distance_metrics": "L2 default; L1 in S1 Text"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Jaccard distance of 30-NN sets",
+     "definition": "Jaccard dissimilarity between each cell's 30 nearest neighbours in the embedding and in ambient (or PCA) space; 1.0 = no overlap",
+     "unit": "distance 0-1",
+     "higher_is_better": false
+    },
+    {
+     "name": "Cell-type neighbour ranking correlation",
+     "definition": "Correlation of rankings of cell-type neighbours built from average pairwise distances between types, versus ambient or PCA space",
+     "unit": "correlation",
+     "higher_is_better": true
+    },
+    {
+     "name": "max/min distance ratio",
+     "definition": "Ratio of maximum to minimum distance within groups of equidistant cells or nearest neighbours, embedding vs source space",
+     "unit": "fold increase",
+     "higher_is_better": false
+    },
+    {
+     "name": "Neighbour label prediction",
+     "definition": "Predict a cell's label (type or condition) for 30% of the data from labels of 50 nearest neighbours",
+     "unit": "accuracy (values in Fig 4A)",
+     "higher_is_better": true
+    },
+    {
+     "name": "Mixing fraction",
+     "definition": "Fraction of each cell's nearest neighbours with the cell's own condition label; 1.0 = no mixing",
+     "unit": "fraction",
+     "higher_is_better": null
+    },
+    {
+     "name": "K-S distance between inter- and intra-type distance distributions",
+     "definition": "Separation of cell types; higher = greater separation",
+     "unit": "K-S distance",
+     "higher_is_better": true
+    },
+    {
+     "name": "Relative contrast (L1 vs L2)",
+     "definition": "Ratio from Aggarwal et al. 2001 of an Lk norm's ability to separate near from far in high dimension",
+     "unit": "log2 ratio",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "ambient space (HVG, log-normalised)",
+    "PCA-50D and other PCA dimensions",
+    "PCA-2D",
+    "t-SNE, UMAP, supervised UMAP, dens-SNE/densMAP",
+    "MCML"
+   ],
+   "protocol": "Distances compared to ambient and PCA spaces, L2 default and L1 repeated; no significance tests stated in main text."
+  },
+  "availability": {
+   "code": "https://github.com/pachterlab/CP_2023 and Zenodo 10.5281/zenodo.8087950 (Colab notebooks)",
+   "weights": null,
+   "data": "Original data links in Table A of S1 Text; processed matrices on CaltechData (Table B)"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Mean Jaccard distance of 30-NN sets between PCA-preprocessed 2D t-SNE/UMAP and ambient space is above 0.7 across datasets.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Jaccard distance",
+   "value": 0.7,
+   "unit": "Jaccard distance (lower bound of average)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "VMH 10x and SMART-Seq, E8.5, E10.5 embryos, MOp, mESC, 96-plex NSC; PCA-50D -> UMAP/t-SNE; L2, k=30",
+   "quote": "The 2D t-SNE/UMAP embeddings (e.g., “PCA-50D!UMAP” in Fig 2A) displayed large\nJaccard distances with respect to the neighbors in ambient dimension, with an average consis-\ntently above 0.7 (70%).",
+   "table": null,
+   "note": null,
+   "where": "p.3-4 Local preservation"
+  },
+  {
+   "claim": "Jaccard distance between the 2D embedding and its own PCA space is also above 0.8 on average, whatever the initial PCA dimension.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Jaccard distance",
+   "value": 0.8,
+   "unit": "Jaccard distance",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Same datasets; 2D vs relevant PCA space",
+   "quote": "Jaccard distances were consistently above 0.8 on average, regardless of the dimension of the initial\nPCA reduction (Fig 2Aii",
+   "table": null,
+   "note": null,
+   "where": "p.4"
+  },
+  {
+   "claim": "Dissimilarity grows with dataset size, and 2D PCA is sometimes worse than t-SNE/UMAP at neighbour retention.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 2A, Figs A and B S1 Text",
+   "quote": "Generally, dissimilarity increased with the size of the dataset",
+   "table": null,
+   "note": null,
+   "where": "p.3"
+  },
+  {
+   "claim": "Cell-type neighbour-ranking correlation to ambient is low (<=0.4) in PCA-preprocessed 2D embeddings, at least 33% lower than PCA spaces, with warped or reversed ranks.",
+   "kind": "measured",
+   "source": null,
+   "metric": "rank correlation",
+   "value": 0.4,
+   "unit": "correlation (upper bound)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Same datasets plus human monocytes 40 drugs; ranks from average pairwise distance between cell types over replicate embeddings (n = 3)",
+   "quote": "at least 33% lower than",
+   "table": null,
+   "note": "The inequality sign before 0.4 is lost in the text extraction; the paper reads as 'low (<=0.4)' by inference.",
+   "where": "p.5 Global preservation"
+  },
+  {
+   "claim": "Johnson-Lindenstrauss: preserving pairwise distances within 20% error for 10,000 cells needs at least 1,842 dimensions.",
+   "kind": "reported",
+   "source": "Johnson-Lindenstrauss lemma; Larsen and Nelson (refs 45-48)",
+   "metric": null,
+   "value": 1842,
+   "unit": "dimensions",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Theory, 10,000 cells, 20% error",
+   "quote": "would require at least 1,842 dimensions",
+   "table": null,
+   "note": null,
+   "where": "p.5"
+  },
+  {
+   "claim": "Distortion of max/min distance ratio for n points in 2D grows as O(sqrt(n)).",
+   "kind": "reported",
+   "source": "ref 49 (Matousek)",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Theory: n points embedded in 2 dimensions",
+   "quote": "grows as Oð",
+   "table": null,
+   "note": "Quote is the garbled math fragment; value null.",
+   "where": "p.5"
+  },
+  {
+   "claim": "In 2D embeddings, max/min distance ratios rise 4- to 200-fold versus PCA or ambient space.",
+   "kind": "measured",
+   "source": null,
+   "metric": "max/min ratio increase",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "E10.5 ex/in utero and 10x VMH neurons; equidistant groups and NN groups",
+   "quote": "revealed 4- to 200-fold increases in these ratios",
+   "table": null,
+   "note": null,
+   "where": "p.5"
+  },
+  {
+   "claim": "Upwards of 2.5 million groups of 3 to 8 equidistant cells ('near' or 'far' in ambient space) in E10.5 data appear with the same dispersion in UMAP, so near and far are indistinguishable.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 2500000,
+   "unit": "groups",
+   "baseline_value": null,
+   "n": null,
+   "setup": "E10.5 Seurat-integrated embryo",
+   "quote": "This revealed upwards of 2.5 million such groups, with 3 to 8 cells in each",
+   "table": null,
+   "note": null,
+   "where": "p.5"
+  },
+  {
+   "claim": "The mixing of ex/in utero cells reverses between ambient space and UMAP depending on normalisation: well-mixed ambient becomes unmixed in 2D, and unmixed ambient becomes well-mixed.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "E10.5 integrated; log-normalised vs variance-stabilised and scaled",
+   "quote": "the distribution generated from embedding\ninto 2 dimensions was shifted towards unmixed",
+   "table": null,
+   "note": null,
+   "where": "p.6-7"
+  },
+  {
+   "claim": "MNN and Scanorama give similar mixing of CEL-Seq cells in ambient space but UMAP shows opposite pictures (MNN well-mixed, Scanorama unmixed).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Pancreatic islet SMART-Seq2 + CEL-Seq; UMAP and t-SNE; L1 repeats",
+   "quote": "However\nthe UMAP embeddings provide opposite pictures",
+   "table": null,
+   "note": null,
+   "where": "p.7"
+  },
+  {
+   "claim": "Neighbour-based cell-label prediction is consistently worse in the 2D embedding than in higher-dimensional representations, even with supervised UMAP.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "VMH, E10.5, developing brain, 96-plex NSC; 30% held out, 50 nearest neighbours",
+   "quote": "is consistently worse in the 2D embedding space\nthan in higher dimensional representations, even when labels are given as with supervised\nUMAP",
+   "table": null,
+   "note": null,
+   "where": "p.7-8, Fig 4A"
+  },
+  {
+   "claim": "2D reduction can narrow or widen the gap between inter- and intra-type distance distributions depending on dataset, so cluster separation in plots is not reliable.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "K-S distance; L2 and L1",
+   "quote": "reducing the gap\nbetween inter-, intra-type distributions for some datasets and increasing the gap for others",
+   "table": null,
+   "note": null,
+   "where": "p.8"
+  },
+  {
+   "claim": "Cluster structure is highly sensitive to n_neighbors / perplexity; common choices (1% to 10% of data) move progenitors away or merge distinct early populations.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "E10.5 data, Fig P S1 Text",
+   "quote": "cluster structures were additionally highly sensitive to the number of neigh-\nbors (perplexity for t-SNE)",
+   "table": null,
+   "note": null,
+   "where": "p.8"
+  },
+  {
+   "claim": "Scanpy and Seurat feed the same PCA-space kNN graph to both clustering and embedding, so the embedding is not an independent check of the clustering.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig V S1 Text",
+   "quote": "the same k-nearest neighbor (kNN) graph constructed from the higher\ndimensional PCA space is passed to both the clustering algorithm and the embedding algorithm",
+   "table": null,
+   "note": null,
+   "where": "p.9"
+  },
+  {
+   "claim": "Changing n_neighbors from 5 to 50 (UMAP) or perplexity 5 to 50 (t-SNE) creates and removes condition-specific populations and changes apparent density scale.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "E10.5 ex vs in utero, Fig 5",
+   "quote": "can result in dramatic appearances of cell populations present in 1 condition but not the other",
+   "table": null,
+   "note": null,
+   "where": "p.9"
+  },
+  {
+   "claim": "Picasso autoencoder embeds cells in an elephant or flower shape with inter-/intra-type distance correlations comparable to t-SNE/UMAP and better intra-type correlations.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "E8.5, MERFISH MOp, SMART-Seq VMH; n = 5 embeddings",
+   "quote": "Each Picasso embedding demonstrated comparable performance to t-SNE and\nUMAP (Fig 7)",
+   "table": null,
+   "note": null,
+   "where": "p.11"
+  },
+  {
+   "claim": "L1 has higher relative contrast than L2 across datasets in gene space.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "n = 5 random subsets of 1,000 HVGs from top 2,000; Fig 8",
+   "quote": "We found that L1 has higher contrast values than the L2\nnorm across datasets (Fig 8)",
+   "table": null,
+   "note": null,
+   "where": "p.14"
+  },
+  {
+   "claim": "UMAP transform of uniformly distributed high-dim points using coordinates fit on a single-cell dataset imposes a false structure resembling that dataset.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig L S1 Text",
+   "quote": "imposes a false structure akin to the structure of the single-cell data",
+   "table": null,
+   "note": null,
+   "where": "p.7"
+  }
+ ],
+ "limits": [
+  "Methods, per-dataset sizes, and most supporting figures are in S1 Text, not in this PDF.",
+  "Perspective piece: no significance tests in the main text; most results are qualitative or read from figures.",
+  "Authors concede 2D embeddings 'can reflect the broader strokes of the data such as cell type inter-distances'.",
+  "Theory (JL, O(sqrt n)) concerns distance preservation; t-SNE/UMAP aim mainly at local structure, though local neighbour overlap was also poor.",
+  "The PCA-then-embed pipeline is the focus; pure 2D from ambient was also poor but sometimes slightly different.",
+  "Alternatives (MCML, relative contrast) are only sketched; role of dataset features in contrast values is 'unexplored'.",
+  "Single-cell RNA-seq data only; carryover to other tabular segmentation data is an inference."
+ ],
+ "practices": [
+  "Do not use 2D t-SNE/UMAP for quantitative claims about distances, density, mixing, or trajectories; treat as cartoon diagrams displayed post-analysis (Discussion).",
+  "Cluster in higher-dimensional PCA space or ambient space, not on 2D coordinates (Discussion, p.15).",
+  "Validate clusters with heatmaps of marker features, not the embedding (p.15).",
+  "Use dendrograms, trees or graph diagrams for between-cluster relationships (p.15).",
+  "Consider L1 over L2 for high-dimensional distances; pick the metric before any reduction (p.14).",
+  "Limit dimensionality reduction and ad hoc transforms when the space of interest can be treated directly (p.15)."
+ ],
+ "terms": [
+  {
+   "term": "local preservation",
+   "definition": "“local” is defined as nearest neighbor relationships",
+   "where": "p.2"
+  },
+  {
+   "term": "global preservation",
+   "definition": "“global” as neighbor relationships and properties of groups of cells (e.g., cell types)",
+   "where": "p.2-3"
+  },
+  {
+   "term": "ambient space",
+   "definition": "the gene count matrix after highly variable gene selection and log-normalization of the counts",
+   "where": "p.3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Kobak and Berens, The art of using t-SNE for single-cell transcriptomics",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "related",
+   "note": "standard workflow being critiqued",
+   "quote": null
+  },
+  {
+   "work": "McInnes, Healy, Melville, UMAP",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "UMAP evaluated",
+   "quote": null
+  },
+  {
+   "work": "van der Maaten and Hinton, t-SNE",
+   "year": 2008,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "t-SNE evaluated",
+   "quote": null
+  },
+  {
+   "work": "Heiser and Lau, framework for evaluating structure preservation",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "prior distortion study",
+   "quote": null
+  },
+  {
+   "work": "Cooley et al., novel metric reveals distortion in dimensionality reduction of scRNA-seq",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "prior evidence of poor neighbour preservation",
+   "quote": null
+  },
+  {
+   "work": "Kobak and Linderman, Initialization is critical",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "related",
+   "note": "global structure",
+   "quote": null
+  },
+  {
+   "work": "Aggarwal, Hinneburg, Keim, On the surprising behavior of distance metrics in high dimensional space",
+   "year": 2001,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "relative contrast, L1",
+   "quote": null
+  },
+  {
+   "work": "Linderman and Steinerberger, Clustering with t-SNE, provably",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "related",
+   "note": "guarantees rely on assumptions that ignore PCA preprocessing",
+   "quote": null
+  },
+  {
+   "work": "Larsen and Nelson, Optimality of the Johnson-Lindenstrauss lemma",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "dimension bound",
+   "quote": null
+  },
+  {
+   "work": "Agrawal, Ali, Boyd, Minimum-Distortion Embedding",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "related",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "Hie et al., Scanorama",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "pancreatic islet data and method",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Necessary properties for embedding applications.",
+   "page": 2,
+   "why": "Maps each task to the local/global/distance property it assumes."
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Distortion of necessary properties in embeddings.",
+   "page": 4,
+   "why": "Jaccard, rank correlation and equidistant-group dispersion in one view."
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Distortion in cluster validation and relationships.",
+   "page": 8,
+   "why": "Label prediction and inter/intra-type separation."
+  },
+  {
+   "figure": "Fig 7",
+   "caption": "Embedding properties are arbitrary.",
+   "page": 12,
+   "why": "Elephant-shaped embedding scoring like UMAP."
+  }
+ ],
+ "code": [],
+ "problems": [
+  "S1 Text (supplement) not in PDF; method details missing.",
+  "Inequality signs lost in text extraction (<=0.4; O(sqrt n)).",
+  "No embedded instructions found."
+ ]
+}

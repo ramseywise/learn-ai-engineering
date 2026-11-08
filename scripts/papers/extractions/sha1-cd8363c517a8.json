@@ -1,0 +1,886 @@
+{
+ "schema": 1,
+ "key": "sha1:cd8363c517a8",
+ "pdf": "ai-engineering/08-multimodal-engineering/sources/sam-2-2024.pdf",
+ "bib": {
+  "title": "SAM 2: Segment Anything in Images and Videos",
+  "authors": [
+   "Nikhila Ravi",
+   "Valentin Gabeur",
+   "Yuan-Ting Hu",
+   "Ronghang Hu",
+   "Chaitanya Ryali",
+   "Tengyu Ma",
+   "Haitham Khedr",
+   "Roman Rädle",
+   "Chloe Rolland",
+   "Laura Gustafson",
+   "Eric Mintun",
+   "Junting Pan",
+   "Kalyan Vasudev Alwala",
+   "Nicolas Carion",
+   "Chao-Yuan Wu",
+   "Ross Girshick",
+   "Piotr Dollár",
+   "Christoph Feichtenhofer"
+  ],
+  "first_author": "Ravi",
+  "year": 2024,
+  "venue": "preprint",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 155014,
+  "chars_total": 155014,
+  "engine": "pymupdf",
+  "skipped": "Read all prose, tables, appendices A-H; per-dataset plot axis numbers (Figs 12-15) and Table 17 cell values and reference list were only skimmed (numeric chart residue)."
+ },
+ "type": "empirical",
+ "question": "Can the Segment Anything promptable segmentation model be extended to a unified model for images and videos, with a memory mechanism and a large video segmentation dataset built by a model-in-the-loop data engine?",
+ "hypothesis": "A SAM generalisation with streaming memory, trained on a large diverse video dataset collected with the model in the loop, gives more accurate and more interaction-efficient video segmentation, and image segmentation as good as SAM but faster.",
+ "contributions": [
+  "Promptable Visual Segmentation (PVS) task generalising image segmentation to video",
+  "SAM 2 model: simple transformer with streaming memory for real-time video processing",
+  "Data engine with SAM 2 in the loop, 8.4x faster than per-frame SAM annotation",
+  "SA-V dataset: 50.9K videos, 642.6K masklets, 35.5M masks, released CC BY 4.0",
+  "Release of model checkpoints, training code (Apache 2.0) and demo code"
+ ],
+ "method": {
+  "summary": "SAM 2 keeps SAM's prompt encoder and two-way mask decoder, replaces the ViT with an MAE-pretrained Hiera image encoder, and inserts memory attention that conditions each frame's embedding on a FIFO memory bank of spatial memories plus object pointers; images are single-frame videos. It is pre-trained on SA-1B then trained jointly on video (SA-V, Internal, optional open VOS) and image data with simulated interactive prompting.",
+  "task": "promptable visual segmentation in images and videos (interactive and semi-supervised VOS, SA task)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "SA-1B",
+    "role": "pretrain",
+    "size": "images, 10% subset used in full training; full for pre-training",
+    "split": "pre-training ~90k steps",
+    "source": "Kirillov et al 2023",
+    "preprocessing": "filter masks covering >90% of image; 64 random masks per image; hflip; resize 1024x1024"
+   },
+   {
+    "name": "SA-V",
+    "role": "both",
+    "size": "50.9K videos, 642.6K masklets (190.9K manual, 451.7K auto), 35.5M masks, 196.0 hr, 4.2M frames",
+    "split": "train/val/test split by video author and geography; val 155 videos 293 masklets; test 150 videos 278 masklets",
+    "source": "crowdworker videos, CC BY 4.0; annotated at 6 FPS",
+    "preprocessing": "only manual masklets used for training"
+   },
+   {
+    "name": "Internal",
+    "role": "both",
+    "size": "62.9K videos, 69.6K masklets for training; Internal-test 96 videos 189 masklets",
+    "split": "train and Internal-test",
+    "source": "internally available licensed video data, Phase 2/3 annotated (test Phase 1)",
+    "preprocessing": null
+   },
+   {
+    "name": "DAVIS, MOSE, YouTubeVOS",
+    "role": "train",
+    "size": "open VOS datasets",
+    "split": "mixture ~1.3% DAVIS, ~9.4% MOSE, ~9.2% YouTubeVOS in the open-source mixture",
+    "source": "public",
+    "preprocessing": null
+   },
+   {
+    "name": "MOSE dev",
+    "role": "dev",
+    "size": "200 randomly-sampled videos from MOSE training split, excluded from training",
+    "split": "ablation eval",
+    "source": "MOSE",
+    "preprocessing": null
+   },
+   {
+    "name": "17 zero-shot video datasets (9 dense + 8 sparse)",
+    "role": "eval",
+    "size": "see Table 16",
+    "split": "zero-shot",
+    "source": "EndoVis 2018, ESD, LVOSv2, LV-VIS, UVO, VOST, PUMaVOS, Virtual KITTI 2, VIPSeg, Wildfires, VISOR, FBMS, Ego-Exo4D, Cityscapes, Lindenthal Camera, HT1080WT, Drosophila Heart",
+    "preprocessing": null
+   },
+   {
+    "name": "37 zero-shot image datasets (SA-23 + 14 video-derived)",
+    "role": "eval",
+    "size": "37 datasets",
+    "split": "1 and 5 click mIoU",
+    "source": "SAM's 23 plus frames from 14 video datasets",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "SAM 2 (Hiera-B+) default",
+    "role": "proposed",
+    "params": null,
+    "architecture": "Hiera image encoder + FPN, memory attention (L=4 layers, self+cross attention + MLP), SAM prompt encoder, two-way mask decoder with occlusion head, memory encoder, memory bank",
+    "init_from": "MAE pre-trained Hiera",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "memory attention L = 4",
+    "hidden": "256 channel embeddings; memory features projected to 64 dim; 256-dim object pointer split into 4 tokens of 64",
+    "heads": null,
+    "context": "N=6 recent frames (ablation default), M prompted frames; 8-frame training sequences",
+    "other": {
+     "global_attn_blocks": "12-16-20 (B+)",
+     "drop_path": "0.2 (B+)",
+     "layer_decay": "0.9 (B+)",
+     "resolution": "1024"
+    }
+   },
+   {
+    "name": "SAM 2 (Hiera-L)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "as above with Hiera-L",
+    "init_from": "MAE pre-trained Hiera",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "global_attn_blocks": "23-33-43",
+     "drop_path": "0.3",
+     "layer_decay": "0.925"
+    }
+   },
+   {
+    "name": "SAM 2 Hiera-T and Hiera-S",
+    "role": "proposed",
+    "params": null,
+    "architecture": "as above",
+    "init_from": "MAE pre-trained Hiera",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "global_attn_blocks": "5-7-9 (T), 7-10-13 (S)",
+     "drop_path": "0.1",
+     "layer_decay": "0.8"
+    }
+   },
+   {
+    "name": "SAM (ViT-B, ViT-H)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "image-only promptable segmenter",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "HQ-SAM (ViT-B, ViT-H)",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "SAM+XMem++ and SAM+Cutie",
+    "role": "baseline",
+    "params": null,
+    "architecture": "SAM for click/box prompts, XMem++ or Cutie (modified to take mask inputs on multiple frames) for propagation",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "linear combination of focal and dice loss for masks, MAE (L1) loss for IoU prediction, cross-entropy for occlusion/object prediction, weight ratio 20:1:1:1; only the lowest-loss mask supervised for multi-mask outputs; no supervision of masks on frames with no ground-truth mask but occlusion head always supervised",
+   "optimizer": "AdamW, beta1,beta2=0.9,0.999, gradient clipping l2 max 0.1, layer-wise decay",
+   "lr": "pre-training 4e-4; full training img. enc.: 6e-5, other: 3.0e-4; 16-frame fine-tune: half of original",
+   "lr_schedule": "pre-training reciprocal sqrt timescale=1000, linear cooldown 5k iters; full training cosine",
+   "warmup": "pre-training linear 1k iters; full training linear 7.5k iters",
+   "batch_size": "256 (both stages); 128 in data-mix ablations",
+   "steps": "~90k pre-training on SA-1B; ~150k full training; 50k fine-tune on 16-frame sequences (1/3 of original schedule); 200k in Table 7 ablations",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "8 frames per training sequence (up to 2 prompted, up to 3 masklets); 16-frame fine-tuning",
+   "precision": "bfloat16",
+   "weight_decay": "0.1",
+   "dropout": "drop path 0.1 (T,S), 0.2 (B+), 0.3 (L)",
+   "regularisation": "augmentation: hflip, affine (deg 25, shear 20), colorjitter (b 0.1, c 0.03, s 0.03), grayscale 0.05, per-frame colorjitter (b 0.1, c 0.05, s 0.05), mosaic 2x2 with prob 0.1; temporal reversal prob 0.5",
+   "hardware": "256 A100 GPUs (80 GB)",
+   "compute": "12165.12 kWH, 3.89 metric tons CO2e",
+   "wall_clock": "108 hours",
+   "seeds": null,
+   "other": {
+    "data_mix_full": "~15.2% SA-1B, ~70% SA-V, ~14.8% Internal",
+    "data_mix_with_open_VOS": "~1.3% DAVIS, ~9.4% MOSE, ~9.2% YouTubeVOS, ~15.5% SA-1B, ~49.5% SA-V, ~15.1% Internal",
+    "initial_prompt": "ground-truth mask p=0.5, positive click p=0.25, box p=0.25",
+    "correction_clicks": "7; 10% chance sampled from ground truth irrespective of prediction",
+    "pretrain_changes_vs_SAM": "L1 IoU loss, sigmoid on IoU logits, no no-prompt iterations, 7 correction clicks instead of 8",
+    "alternating_batches": "each iteration samples a full batch from image or video data, probability proportional to source size",
+    "released_model": "trained on SA-V manual + Internal and SA-1B",
+    "16-frame_finetune": "top 50% most-edited masklets of SA-V and Internal, image encoder frozen",
+    "ablation_default": "512 resolution, SA-V manual + 10% SA-1B"
+   }
+  },
+  "inference": {
+   "decoding": "multiple masks predicted per frame under ambiguity; mask with highest predicted IoU is propagated if no further prompt",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "each object inferred independently in multi-object videos; single deterministic run, no seeds stated",
+   "prompting": "positive/negative clicks, boxes, or masks on any frame; interactive eval places first click at the mask centre (pixel with largest distance to boundary) and further clicks at centre of error region",
+   "retrieval": null,
+   "parameters": {
+    "N_recent_frames": "6 default (ablation)",
+    "M_prompted_frames": null,
+    "memory_attention_layers": "4",
+    "N_click_per_frame": "3",
+    "Nframe": "1..8",
+    "online_pause_threshold": "IoU < 0.75",
+    "annotation_time_model": "Tloc=1 s, Tclick=1.5 s, Texam=30 s per 300-frame video"
+   },
+   "other": {
+    "speed": "single A100, PyTorch 2.3.1, CUDA 12.1, bfloat16 autocast, torch.compile on image encoder; batch 10 for image FPS, batch 1 for video",
+    "auto_masklets": "32x32 grid on first frame plus 16x16 on 4 zoomed crops and 4x4 on 16 zoomed crops; remove components <200 px, fill holes <200 px"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "J&F",
+     "definition": "standard VOS region similarity and boundary accuracy (Pont-Tuset 2017); J only on VOST; G on YTVOS 2019",
+     "unit": "points (0-100)",
+     "higher_is_better": true
+    },
+    {
+     "name": "mIoU",
+     "definition": "mean IoU for SA task at 1 and 5 clicks",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "FPS",
+     "definition": "frames per second on one A100",
+     "unit": "frames/s",
+     "higher_is_better": true
+    },
+    {
+     "name": "Phase 1 Mask Alignment Score",
+     "definition": "percentage of masks whose IoU with the Phase 1 masks exceeds 0.75",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "J&F@60s / AUC-J&F",
+     "definition": "DAVIS interactive benchmark metrics from its evaluator",
+     "unit": "0-1",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "SAM+XMem++",
+    "SAM+Cutie",
+    "SAM (ViT-B/H)",
+    "HQ-SAM",
+    "STCN",
+    "SwinB-AOT",
+    "SwinB-DeAOT",
+    "RDE",
+    "XMem",
+    "SimVOS-B",
+    "JointFormer",
+    "ISVOS",
+    "DEVA",
+    "Cutie-base/base+",
+    "MiVOS",
+    "CiVOS"
+   ],
+   "protocol": "Offline: multiple passes, next prompt on worst-IoU frame. Online: single pass, pause at frame with IoU<0.75 and add clicks. 9 dense zero-shot datasets, Nclick=3. VOS: 1/3/5 clicks, box or mask on first frame over 17 datasets. No seeds or significance tests."
+  },
+  "availability": {
+   "code": "https://github.com/facebookresearch/sam2 (training code Apache 2.0)",
+   "weights": "SAM 2 checkpoints released (note: results use SAM 2.1 version)",
+   "data": "SA-V CC BY 4.0, https://ai.meta.com/datasets/segment-anything-video/"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "models.SAM 2 version",
+    "quote": "All the results presented in this paper are based on a new version of SAM 2 (improved over our initial release; denoted as “SAM 2.1” in https://github.com/facebookresearch/sam2)",
+    "where": "Sec 1 footnote 1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "SAM 2 gives better interactive video segmentation accuracy with more than 3x fewer interactions than SAM+XMem++ / SAM+Cutie baselines",
+   "kind": "measured",
+   "source": null,
+   "metric": "interactions for equal J&F",
+   "value": "3",
+   "unit": "x fewer interactions",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Promptable video segmentation, 9 zero-shot densely annotated video datasets, 3 clicks per frame, offline and online, Nframe=1..8, Hiera-B+ at 1024",
+   "quote": "Overall, SAM 2 can generate better segmentation accuracy, with >3× fewer interactions.",
+   "table": null,
+   "note": null,
+   "where": "Sec 6.1"
+  },
+  {
+   "claim": "Data engine Phase 3 (SAM 2 in loop) is 8.4x faster per frame than Phase 1 (SAM only)",
+   "kind": "measured",
+   "source": null,
+   "metric": "annotation time per frame",
+   "value": "8.4",
+   "unit": "x speed-up",
+   "baseline_value": "37.8 s",
+   "n": null,
+   "setup": "Controlled experiment, 169 videos and 452 masklets, three annotator subsets (E.2.2); 4.5 s vs 37.8 s per frame",
+   "quote": "Phase 3 with SAM 2 in the loop leads to increased efficiency and comparable quality: it is 8.4× faster than Phase 1",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.1, Table 1"
+  },
+  {
+   "claim": "Annotation time per frame fell from 37.8 s (Phase 1) to 7.4 s (Phase 2) to 4.5 s (Phase 3)",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "4.5",
+   "unit": "s/frame",
+   "baseline_value": "37.8",
+   "n": null,
+   "setup": "Same controlled experiment as Table 1",
+   "quote": "With SAM 2 in the loop, the annotation time per frame went down to 4.5 seconds, a ∼8.4x speed up over Phase 1.",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.1"
+  },
+  {
+   "claim": "SAM 2 (Hiera-B+) beats SAM (ViT-H) on 1-click mIoU over the 23 SAM datasets when both trained on SA-1B only, while 6x faster",
+   "kind": "measured",
+   "source": null,
+   "metric": "1-click mIoU",
+   "value": "58.9",
+   "unit": "mIoU (1 click)",
+   "baseline_value": "58.1",
+   "n": null,
+   "setup": "SA-23 All, 37-dataset zero-shot suite, SA-1B only, FPS on single A100",
+   "quote": "SAM 2 achieves higher accuracy (58.9 mIoU with 1 click) than SAM (58.1 mIoU with 1 click), without using any extra data and while being 6× faster.",
+   "table": null,
+   "note": null,
+   "where": "Sec 6.3"
+  },
+  {
+   "claim": "Training SAM 2 (Hiera-B+) on SA-1B plus video mix raises SA-23 1-click mIoU to 61.4 in text",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "61.4",
+   "unit": "% mIoU",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Average over 23 SAM datasets, Hiera-B+",
+   "quote": "The bottom row shows how training on our SA-1B and video data mix can further improve accuracy to 61.4% on average on the 23 datasets.",
+   "table": null,
+   "note": "Table 5 prints 61.9 for SAM 2 our mix SA-23 All 1-click; Sec 6.3 and F.3.2 text say 61.4 (Table 15 also prints 61.9). Inconsistency in the paper.",
+   "where": "Sec 6.3"
+  },
+  {
+   "claim": "SAM 2 (Hiera-B+) image-model speed 130.1 FPS vs SAM ViT-H 21.7 FPS",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "130.1",
+   "unit": "FPS",
+   "baseline_value": "21.7",
+   "n": null,
+   "setup": "Image SA task, single A100, batch of 10 images, bfloat16, torch.compile",
+   "quote": null,
+   "table": "Table 5, row SAM 2 SA-1B, column FPS",
+   "note": null,
+   "where": "Table 5 / D.3"
+  },
+  {
+   "claim": "SAM 2 on 14 new video datasets, 1-click mIoU 69.6 vs SAM 59.1 when trained on the mix",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "69.6",
+   "unit": "mIoU (1 click)",
+   "baseline_value": "59.1",
+   "n": null,
+   "setup": "14 additional zero-shot video datasets evaluated as images, Hiera-B+ our mix",
+   "quote": null,
+   "table": "Table 5, row SAM 2 our mix, column 14 new Video",
+   "note": null,
+   "where": "Table 5"
+  },
+  {
+   "claim": "Semi-supervised VOS, SAM 2 Hiera-L: MOSE val J&F 77.9, vs Cutie-base+ 71.7",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "77.9",
+   "unit": "J&F",
+   "baseline_value": "71.7",
+   "n": null,
+   "setup": "First-frame ground-truth mask prompt, MOSE val",
+   "quote": null,
+   "table": "Table 6, row SAM 2 (Hiera-L), column MOSE val",
+   "note": null,
+   "where": "Table 6"
+  },
+  {
+   "claim": "SA-V val J&F with SAM 2 (Hiera-L) 77.9 while best prior work is 61.4",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "77.9",
+   "unit": "J&F",
+   "baseline_value": "61.4",
+   "n": null,
+   "setup": "Semi-supervised VOS, first-frame mask, SA-V val",
+   "quote": null,
+   "table": "Table 6, row SAM 2 (Hiera-L), column SA-V val",
+   "note": null,
+   "where": "Table 6"
+  },
+  {
+   "claim": "SAM 2 Hiera-B+ and Hiera-L run at real-time 43.8 and 30.2 FPS in VOS",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "43.8",
+   "unit": "FPS",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Single A100, batch size 1, video",
+   "quote": "SAM 2 based on Hiera-B+ and Hiera-L runs at real-time speeds of 43.8 and 30.2 FPS, respectively.",
+   "table": null,
+   "note": "Hiera-L 30.2 FPS",
+   "where": "Sec 7"
+  },
+  {
+   "claim": "Semi-supervised VOS zero-shot over 17 datasets: 1-click J&F 64.7 vs 56.9/56.7",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "64.7",
+   "unit": "J&F",
+   "baseline_value": "56.9 (SAM+XMem++), 56.7 (SAM+Cutie)",
+   "n": null,
+   "setup": "Average over 17 zero-shot video datasets, click on first frame",
+   "quote": null,
+   "table": "Table 4, row SAM 2, column 1-click",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "3-click J&F 75.3 vs 68.4/70.1",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "75.3",
+   "unit": "J&F",
+   "baseline_value": "68.4, 70.1",
+   "n": null,
+   "setup": "Average over 17 zero-shot video datasets",
+   "quote": null,
+   "table": "Table 4, row SAM 2, column 3-click",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "Ground-truth-mask prompt J&F 79.3 vs 72.7 XMem++ and 74.1 Cutie",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "79.3",
+   "unit": "J&F",
+   "baseline_value": "72.7, 74.1",
+   "n": null,
+   "setup": "Average over 17 zero-shot video datasets; baselines use mask directly without SAM",
+   "quote": null,
+   "table": "Table 4, row SAM 2, column ground-truth mask",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "Adding data engine data improves zero-shot J&F: 62.5 -> 71.5 across phases (9 zero-shot), SA-V val 50.0 -> 63.2",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "71.5",
+   "unit": "J&F",
+   "baseline_value": "62.5",
+   "n": null,
+   "setup": "3 clicks on first frame, fixed iterations, VOS+SA-1B baseline then + Phase 1,2,3,Auto",
+   "quote": null,
+   "table": "Table 2, row + Auto, column 9 zero-shot",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "SA-V has 642.6K masklets and 35.5M masks over 50.9K videos, 53x more masks than any existing VOS dataset",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "35.5M",
+   "unit": "masks",
+   "baseline_value": null,
+   "n": null,
+   "setup": "SA-V Manual+Auto, 196.0 hr, 4.2M frames",
+   "quote": "Our final Segment Anything Video (SA-V) dataset (§5.2) consists of 35.5M masks across 50.9K videos, 53× more masks than any existing video segmentation dataset.",
+   "table": null,
+   "note": null,
+   "where": "Sec 1, Table 3"
+  },
+  {
+   "claim": "Adding data engine data to VOS-only training gives +12.1% on 9 zero-shot datasets",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "12.1",
+   "unit": "% J&F",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 7 row 11 vs row 1, 200k iterations, batch size 128, 3-click",
+   "quote": "including +12.1% average performance improvement on 9 zero-shot datasets (row 11 vs 1)",
+   "table": null,
+   "note": null,
+   "where": "App A.1"
+  },
+  {
+   "claim": "Accuracy follows a power law with SA-V quantity",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 6, 3-click J&F on SA-V val, 9 zero-shot, MOSE dev; pre-trained on SA-1B",
+   "quote": "Fig. 6 shows a consistent power law relationship between the quantity of training data and the video segmentation accuracy on all benchmarks.",
+   "table": null,
+   "note": null,
+   "where": "App A.1"
+  },
+  {
+   "claim": "Filtering to the 50k most-edited masklets beats 50k random on SA-V val",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "66.2",
+   "unit": "J&F",
+   "baseline_value": "63.7",
+   "n": null,
+   "setup": "3-click, SA-1B + SA-V 50k most edited vs random 63.7; full SA-V 69.9",
+   "quote": null,
+   "table": "Table 8, row SA-1B + SA-V 50k most edited, column SA-V val",
+   "note": null,
+   "where": "Table 8"
+  },
+  {
+   "claim": "Resolution 512 -> 1024 raises 9 zero-shot J&F 70.7 -> 72.3 at 0.22x relative speed",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "72.3",
+   "unit": "J&F",
+   "baseline_value": "70.7",
+   "n": null,
+   "setup": "Ablation model, Table 9a",
+   "quote": null,
+   "table": "Table 9a, row 1024, column 9 zero-shot",
+   "note": null,
+   "where": "Table 9a"
+  },
+  {
+   "claim": "Image encoder B+ -> L: SA-23 mIoU 59.7 -> 61.1 at 0.60x speed",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "61.1",
+   "unit": "mIoU",
+   "baseline_value": "59.7",
+   "n": null,
+   "setup": "Ablation at 512 res, Table 9f",
+   "quote": null,
+   "table": "Table 9f, row L, column SA-23",
+   "note": null,
+   "where": "Table 9f"
+  },
+  {
+   "claim": "Object pointers lift SA-V val from 64.5 to 68.3 and LVOSv2 val 67.0 to 71.6",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "68.3",
+   "unit": "J&F",
+   "baseline_value": "64.5",
+   "n": null,
+   "setup": "Ablation Table 11, no GRU",
+   "quote": null,
+   "table": "Table 11, row Object Pointers, column SA-V val",
+   "note": null,
+   "where": "Table 11"
+  },
+  {
+   "claim": "DAVIS interactive benchmark: SAM 2 J&F@60s 0.90 vs CiVOS 0.84 and MiVOS scribbles 0.88",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "0.90",
+   "unit": "J&F@60s",
+   "baseline_value": "0.84",
+   "n": null,
+   "setup": "Click inputs following CiVOS sampling",
+   "quote": null,
+   "table": "Table 14, row SAM 2, column J&F@60s",
+   "note": null,
+   "where": "Table 14"
+  },
+  {
+   "claim": "Fairness: 1-click J&F male 81.9 vs female 75.1; 3-click 95.1 vs 94.1",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "95.1",
+   "unit": "J&F",
+   "baseline_value": "94.1 (female)",
+   "n": null,
+   "setup": "EgoExo4D people, 20 s clips from exo videos, 3 clicks, male",
+   "quote": null,
+   "table": "Table 13, row male, column 3-click",
+   "note": null,
+   "where": "Table 13"
+  },
+  {
+   "claim": "Released SAM 2 trained on 256 A100 GPUs for 108 hours, 3.89 tCO2e",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "108",
+   "unit": "hours",
+   "baseline_value": null,
+   "n": null,
+   "setup": "256 A100 GPUs, 12165.12 kWH",
+   "quote": "The released SAM 2 was trained on 256 A100 GPUs for 108 hours.",
+   "table": null,
+   "note": null,
+   "where": "Table 18"
+  },
+  {
+   "claim": "Offline/online interactive SAM 2 outperforms SAM+XMem++ and SAM+Cutie on all 9 datasets",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "per-dataset curves Fig 12/13",
+   "quote": "SAM 2 outperforms both baselines with a notable margin on all datasets and settings.",
+   "table": null,
+   "note": null,
+   "where": "F.1.2"
+  }
+ ],
+ "limits": [
+  "May fail to segment objects across shot changes and can lose track or confuse objects in crowded scenes, after long occlusions or in extended videos (App C).",
+  "Struggles with thin or fine details especially when fast-moving, and with nearby similar-looking objects; explicit motion modelling suggested.",
+  "Each object processed separately with only shared per-frame embeddings, no inter-object communication.",
+  "Data engine still relies on human annotators to verify masklet quality and select frames to correct.",
+  "Did not scale beyond Hiera-L.",
+  "On DAVIS interactive, SAM 2 tends to segment parts at first click while DAVIS has whole objects, which may penalise it.",
+  "1-click fairness gap (male 81.9 vs female 75.1) partly attributed to prompt ambiguity; authors suggest users run their own fairness evaluation.",
+  "No seeds, variance or significance tests reported; no PDF-stated arXiv id or venue.",
+  "OVIS is not strictly zero-shot (its videos are in MOSE)."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "masklet",
+   "definition": "spatio-temporal mask predicted for an object across video frames",
+   "where": "Sec 1"
+  },
+  {
+   "term": "Promptable Visual Segmentation (PVS)",
+   "definition": "task that takes points, boxes, or masks on any frame of the video to define a segment of interest for which the masklet is predicted; SA and semi-supervised VOS are special cases",
+   "where": "Sec 1, App B"
+  },
+  {
+   "term": "disappearance rate",
+   "definition": "percentage of annotated masklets that disappear in at least one frame and then re-appear (Ding et al 2023)",
+   "where": "Sec 5.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Segment Anything (Kirillov et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "SAM is the image model SAM 2 generalises; prompt encoder and decoder largely follow it; SA-1B used for pre-training",
+   "quote": null
+  },
+  {
+   "work": "Hiera (Ryali et al.; Bolya et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "MAE pre-trained hierarchical image encoder",
+   "quote": null
+  },
+  {
+   "work": "MAE (He et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "pre-training of Hiera",
+   "quote": null
+  },
+  {
+   "work": "XMem++ (Bekuzarov et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "combined with SAM as SAM+XMem++",
+   "quote": null
+  },
+  {
+   "work": "Cutie (Cheng et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "SAM+Cutie baseline; Cutie-base+ in Table 6",
+   "quote": null
+  },
+  {
+   "work": "RoPE (Su et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "2d RoPE in memory attention",
+   "quote": null
+  },
+  {
+   "work": "FlashAttention-2 (Dao)",
+   "year": 2023,
+   "arxiv": "2307.08691",
+   "relation": "uses-method",
+   "note": "efficient attention kernels enabled by removing RPB",
+   "quote": null
+  },
+  {
+   "work": "HQ-SAM (Ke et al.)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "image-segmentation comparison",
+   "quote": null
+  },
+  {
+   "work": "MOSE, DAVIS, YouTube-VOS",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "open VOS training data and benchmarks",
+   "quote": null
+  },
+  {
+   "work": "LVOS / LVOSv2 (Hong et al.)",
+   "year": 2024,
+   "arxiv": "2404.19326",
+   "relation": "uses-data",
+   "note": "long-term VOS benchmark",
+   "quote": null
+  },
+  {
+   "work": "CiVOS, MiVOS",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "DAVIS interactive comparison",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "We introduce the Segment Anything Model 2 (SAM 2), towards solving the promptable visual segmentation task (a) with our foundation model (b), trained on our large-scale SA-V dataset collected through our data engine (c).",
+   "page": 1,
+   "why": "Task, model and data in one picture"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Interactive segmentation with SAM 2. Step 1 (selection)... Step 2 (refinement): a single click in frame 3 is sufficient to recover the object",
+   "page": 4,
+   "why": "Shows why memory makes one-click correction possible vs restarting a tracker"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "The SAM 2 architecture.",
+   "page": 5,
+   "why": "Image encoder, memory attention, memory bank, memory encoder, mask decoder flow"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Zero-shot accuracy over 9 datasets in interactive offline and online evaluation settings.",
+   "page": 9,
+   "why": "J&F vs number of annotated frames, SAM 2 vs baselines"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Evolution of data engine phases showing the average annotation time per frame...",
+   "page": 7,
+   "why": "Shows the 37.8 -> 7.4 -> 4.5 s/frame speed-up"
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "SAM 2 accuracy as a function of the SA-V quantity.",
+   "page": 13,
+   "why": "Power-law data scaling"
+  },
+  {
+   "figure": "Fig 8",
+   "caption": "Mask decoder architecture.",
+   "page": 17,
+   "why": "Occlusion token and object pointer additions to SAM decoder"
+  }
+ ],
+ "code": [
+  {
+   "where": "App D.1",
+   "snippet": "Training loss ratio focal:dice:IoU:occlusion = 20:1:1:1 (focal+dice for mask, MAE for IoU, cross-entropy for object presence)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "The PDF does not print an arXiv id or venue; recorded venue as preprint and arxiv null.",
+  "figures.py captions returned nothing; captions taken from the cached text.",
+  "Sec 6.3/F.3.2 text says 61.4 average on SA-23 for the mix but Tables 5 and 15 print 61.9 (Hiera-B+).",
+  "Results in plot-axis residue of Figs 12-15 and Table 17 are not extractable as text; Table 17 cells not recorded.",
+  "No embedded instructions found."
+ ]
+}

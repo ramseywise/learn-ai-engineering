@@ -1,0 +1,318 @@
+{
+ "schema": 1,
+ "key": "sha1:3ea44320da9d",
+ "pdf": "data-science/sources/bengio-2004-no-unbiased-estimator-variance-k-fold.pdf",
+ "bib": {
+  "title": "No Unbiased Estimator of the Variance of K-Fold Cross-Validation",
+  "authors": [
+   "Yoshua Bengio",
+   "Yves Grandvalet"
+  ],
+  "first_author": "Bengio",
+  "year": 2004,
+  "venue": "Journal of Machine Learning Research 5 (2004) 1089-1105",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 38403,
+  "chars_total": 38403,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can the variance of the K-fold cross-validation estimate of generalization error be estimated without bias, and how much does ignoring test-error correlations underestimate it?",
+ "hypothesis": "Naive variance estimators that ignore error correlations from overlapping training/test sets grossly underestimate the variance of K-fold CV.",
+ "contributions": [
+  "Main theorem: no universal (valid under all distributions) unbiased estimator of the variance of K-fold cross-validation exists",
+  "Eigen-decomposition of the error covariance matrix: three eigenvalues, three variance components (sigma^2, omega, gamma)",
+  "Numerical experiments comparing the three components as problem difficulty and K vary"
+ ],
+ "method": {
+  "summary": "Theory: by permutation symmetry the covariance of CV errors has three distinct values (sigma^2, omega, gamma), so Var[CV] = sigma^2/n + (m-1)/n omega + (n-m)/n gamma; any unbiased quadratic estimator would need an unsatisfiable linear system. Experiments estimate the three components by Monte Carlo from many independent training sets.",
+  "task": "variance estimation of K-fold cross-validation / generalization error",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "Synthetic Gaussian regression (Exp 1 and 2)",
+    "role": "eval",
+    "size": "n varied (training sample size on x axis of Fig 1, 4); d=30 inputs",
+    "split": "Exp 2: K=10 folds, one sample of size n; Exp 1: K=10 independent train and test sets of size n",
+    "source": "x ~ N(0,I) d=30; y = sqrt(3/d) sum x_k + eps, eps ~ N(0,1) (R2 about 3/4)",
+    "preprocessing": "Outlier variant: x ~ N(0,I) with prob p=0.95, N(0,100I) otherwise; y = sqrt(3/(d(p+100(1-p)))) sum x_k + eps"
+   },
+   {
+    "name": "Letter",
+    "role": "eval",
+    "size": "20,000 examples, 16 numeric features",
+    "split": "treated as the population; independent training samples drawn by uniform sampling with replacement; K=10 folds",
+    "source": "Letter data set (source not cited in text)",
+    "preprocessing": "26 classes collapsed to 2 classes (A to M) vs (N to Z)"
+   }
+  ],
+  "models": [
+   {
+    "name": "Ordinary least squares line",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "linear regression",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Decision trees (Exp 3)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "classification tree; pruning and settings not stated",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "Fig 1: variance of EPE estimated on 100,000 independent experiments; Exp 2 and 3: number of independent training samples used to estimate sigma^2, omega, gamma not stated (only 'many')",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "K": "10 in Exp 2 and 3; Fig 5 varies K at n=120",
+    "Exp 1 K": 10,
+    "d": 30,
+    "p outliers": 0.95
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Contribution to Var[CV] of sigma^2, omega, gamma",
+     "definition": "Var[CV]=theta = sigma^2/n + (m-1)/n omega + (n-m)/n gamma (Eq 7); sigma^2 = variance of a test error, omega = covariance within a test block, gamma = covariance between test blocks; shown as bar plots of each term's share",
+     "unit": "fraction/percent of total variance",
+     "higher_is_better": null
+    }
+   ],
+   "baselines": [
+    "naive estimator theta1 ignoring correlations vs theta2 accounting for them (hold-out, Exp 1)"
+   ],
+   "protocol": "Monte Carlo estimation of the moments from independent training sets; no significance tests; seeds not stated"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "Letter dataset only; synthetic generator specified in text"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "eval.metrics",
+    "quote": "According to the number of training examples, σ2 is only responsible for 50 to 70 % of the total variance, so that a variance estimate based solely on σ2 has a negative bias of the order of magnitude of the variance itself.",
+    "where": "Section 7, Experiment 3 (Letter), K=10"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "There exists no universally unbiased estimator of Var of K-fold cross-validation (Theorem 6): the constraints a=1/n, b=(m-1)/n, c=(n-m)/n, a+b+c=0 cannot hold together.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Theory, any K, any distribution; quadratic estimators suffice by Lemmas 4 and 5; also holds for leave-one-out (K=n) and two-fold",
+   "quote": null,
+   "table": null,
+   "note": "Proof, not experiment. Reason: variance of the projection on the all-ones eigenvector (lambda3) cannot be estimated from one realization; repeating K-fold splits does not give independent realizations.",
+   "where": "Theorem 6, Sec 4; Sec 5"
+  },
+  {
+   "claim": "On Letter (2-class, trees, K=10), the sigma^2 component alone is only 50 to 70% of the total variance of CV depending on training set size, so an estimator based only on sigma^2 is biased low by about the size of the variance.",
+   "kind": "measured",
+   "source": null,
+   "metric": "share of Var[CV] due to sigma^2 term",
+   "value": "50 to 70",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Experiment 3, Letter data set (20,000 examples as population, 16 features, A-M vs N-Z), decision trees, K=10, independent training samples drawn with replacement; varied training size n (Fig 6)",
+   "quote": "σ2 is only responsible for 50 to 70 % of the total variance",
+   "table": null,
+   "note": "The percentage is the sigma^2 share (sigma^2/n) of the true total Var[CV]=theta, i.e. what an estimate counting only test-error variance would capture; the paper does not call it a 'naive within-fold estimate' and does not measure any specific naive estimator on Letter. Exact percentages per n are only in Fig 6 (not in text). Remainder is attributed mainly to gamma.",
+   "where": "Sec 7, Exp 3, p.1102"
+  },
+  {
+   "claim": "With outliers in synthetic regression, omega has little effect but gamma's contribution is of the same order as sigma^2 even at a high examples-to-parameters ratio (up to 20).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Experiment 2, OLS, d=30, K=10, outlier mixture p=0.95 (Fig 4)",
+   "quote": null,
+   "table": null,
+   "note": "qualitative; read from Fig 4",
+   "where": "Sec 7, p.1101"
+  },
+  {
+   "claim": "Without outliers, gamma matters at small sample sizes; at large n total variance falls and is mainly sigma^2.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Experiment 2, no outliers, K=10 (Fig 4)",
+   "quote": null,
+   "table": null,
+   "note": "qualitative",
+   "where": "Sec 7, p.1101"
+  },
+  {
+   "claim": "No general trend of variance or its decomposition with K; minimum variance can be at K=n or at an intermediate K.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Experiment 2, n=120, with and without outliers (Fig 5)",
+   "quote": null,
+   "table": null,
+   "note": "qualitative",
+   "where": "Sec 7, p.1101-1102"
+  },
+  {
+   "claim": "In hold-out with independent train/test sets gamma=0 so an unbiased estimator exists (theta2); the correlation-ignoring theta1 is highly biased even for large n.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Experiment 1, K=10 independent train/test sets, d=30, OLS, truth from 100,000 experiments (Fig 1)",
+   "quote": null,
+   "table": null,
+   "note": "qualitative; read from Fig 1",
+   "where": "Sec 2.2, 8.1"
+  }
+ ],
+ "limits": [
+  "Only shows no estimator is unbiased for all distributions, not that none is useful; authors name building variance estimators for the dependence structure as the next step",
+  "Admissible (omega,gamma) region is very large so no estimator with universally small bias",
+  "Experiments are simple (linear model, trees, Letter reduced to 2 classes); numbers of Monte Carlo training sets for Exp 2 and 3, tree settings and exact per-n shares are not stated in text",
+  "Assumes symmetric algorithms and n a multiple of K; analysis does not cover repeated K-fold splits (not independent)"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "sigma^2 (within-example variance)",
+   "definition": "average variance of errors for true test examples when A is fed training sets of size m(K-1)",
+   "where": "Sec 3"
+  },
+  {
+   "term": "omega",
+   "definition": "within-block covariance of test errors, from the common training set",
+   "where": "Sec 3"
+  },
+  {
+   "term": "gamma",
+   "definition": "between-blocks covariance due to dependence of training sets and test block Tk appearing in all Dl for l != k",
+   "where": "Sec 3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Nadeau and Bengio (2003) Inference for the generalization error",
+   "year": 2003,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "builds on it; considers K independent splits whereas this paper treats standard K-fold with disjoint test sets",
+   "quote": "This paper builds upon the work of Nadeau and Bengio (2003)"
+  },
+  {
+   "work": "Dietterich (1999) Approximate statistical tests",
+   "year": 1999,
+   "arxiv": null,
+   "relation": "related",
+   "note": "adopts its view of CV as estimating EPE(n-m); two-fold CV for testing",
+   "quote": null
+  },
+  {
+   "work": "Breiman (1996) Heuristics of instability",
+   "year": 1996,
+   "arxiv": null,
+   "relation": "related",
+   "note": "CV variance can be very large",
+   "quote": null
+  },
+  {
+   "work": "Kohavi (1995)",
+   "year": 1995,
+   "arxiv": null,
+   "relation": "related",
+   "note": "CV vs bootstrap study",
+   "quote": null
+  },
+  {
+   "work": "Letter data set",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Experiment 3, 20,000 examples",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 4",
+   "caption": "Bar plots of the contributions to total variance Var[CV] due to sigma^2, omega and gamma vs. the number of training examples n-m for Experiment 2.",
+   "page": 1102,
+   "why": "shows gamma comparable to sigma^2 under outliers"
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "Bar plots of the contributions to total variance Var[CV] due to sigma^2, omega and gamma vs. the number of training examples n for Experiment 3.",
+   "page": 1103,
+   "why": "source of the 50 to 70% sigma^2 share on Letter"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 7",
+   "snippet": "theta = (1/n) sigma^2 + ((m-1)/n) omega + ((n-m)/n) gamma",
+   "verbatim": false
+  },
+  {
+   "where": "Eq 14",
+   "snippet": "a = 1/n, b = (m-1)/n, c = (n-m)/n, a+b+c = 0",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "No embedded instructions found",
+  "Figure data not in text; per-n percentages unavailable"
+ ]
+}

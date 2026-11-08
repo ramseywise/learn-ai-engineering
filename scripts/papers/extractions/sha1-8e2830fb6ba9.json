@@ -1,0 +1,488 @@
+{
+ "schema": 1,
+ "key": "sha1:8e2830fb6ba9",
+ "pdf": "data-science/sources/bergstra-2012-random-search-hyper-parameter-optimization.pdf",
+ "bib": {
+  "title": "Random Search for Hyper-Parameter Optimization",
+  "authors": [
+   "James Bergstra",
+   "Yoshua Bengio"
+  ],
+  "first_author": "Bergstra",
+  "year": 2012,
+  "venue": "Journal of Machine Learning Research 13 (2012) 281-305",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 72298,
+  "chars_total": 72298,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Is random search a more efficient strategy than grid search (and manual search) for hyper-parameter optimization of neural networks and deep belief networks?",
+ "hypothesis": "Random search is more efficient than grid search in high-dimensional spaces because the response function Psi has low effective dimensionality.",
+ "contributions": [
+  "Empirical comparison of random search vs grid search on neural networks (Larochelle et al. 2007 setup)",
+  "Gaussian process / ARD analysis showing low effective dimensionality of Psi that differs by dataset",
+  "Simulation comparing grid, random, Sobol, Niederreiter, Halton and latin hypercube point sets",
+  "Comparison with expert manual+grid search on 32-dimensional DBN configuration",
+  "Procedure for estimating generalization of best model under uncertainty about which trial is best, and the random experiment efficiency curve"
+ ],
+ "method": {
+  "summary": "Random search (i.i.d. uniform draws, log-uniform for scale parameters) over the same configuration space as the grid of Larochelle et al. 2007. 256 trials per dataset are subsampled into experiments of size 1 to 32 or 64 to give efficiency curves, compared with the published grid-search accuracy (average 100 trials) for NNs and grid-assisted manual search (average 41 trials) for DBNs. A GP with ARD squared-exponential kernels is fit to validation performance to estimate per-hyper-parameter relevance.",
+  "task": "Hyper-parameter optimization; image classification on MNIST variants, rectangles, convex",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "mnist basic",
+    "role": "both",
+    "size": "10 000 train, 2000 valid, 50 000 test",
+    "split": "random reshuffle of original MNIST",
+    "source": "Larochelle et al. 2007 / MNIST",
+    "preprocessing": null
+   },
+   {
+    "name": "mnist background images",
+    "role": "both",
+    "size": "10 000 train, 2000 valid, 50 000 test",
+    "split": null,
+    "source": "MNIST digit composited (max) on natural image patch",
+    "preprocessing": "low-variance patches rejected"
+   },
+   {
+    "name": "mnist background random",
+    "role": "both",
+    "size": "10 000 train, 2000 valid, 50 000 test",
+    "split": null,
+    "source": "MNIST digit on uniform(0,1) noise",
+    "preprocessing": null
+   },
+   {
+    "name": "mnist rotated",
+    "role": "both",
+    "size": "10 000 train, 2000 valid, 50 000 test",
+    "split": null,
+    "source": "MNIST rotated randomly 0 to 2pi",
+    "preprocessing": null
+   },
+   {
+    "name": "mnist rotated background images",
+    "role": "both",
+    "size": "10 000 train, 2000 valid, 50 000 test",
+    "split": null,
+    "source": "rotated MNIST on natural image patch",
+    "preprocessing": null
+   },
+   {
+    "name": "rectangles",
+    "role": "both",
+    "size": "1000 train, 200 valid, 50 000 test",
+    "split": null,
+    "source": "synthetic 28x28 rectangle outlines, tall vs wide (2 classes)",
+    "preprocessing": null
+   },
+   {
+    "name": "rectangles images",
+    "role": "both",
+    "size": "10 000 train, 2000 valid, 50 000 test",
+    "split": null,
+    "source": "synthetic, rectangles filled with natural image patch",
+    "preprocessing": null
+   },
+   {
+    "name": "convex",
+    "role": "both",
+    "size": null,
+    "split": null,
+    "source": "synthetic 28x28 binary images, convex vs non-convex",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "single-layer neural network",
+    "role": "proposed",
+    "params": null,
+    "architecture": "1 hidden layer, sigmoid or tanh, zero-initialised output weights",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "1 hidden",
+    "hidden": "drawn geometrically from 18 to 1024",
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Deep Belief Network (1, 2 or 3 layers)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "stacked RBMs pretrained by contrastive divergence then fine-tuned; 8 global + 8 per-layer hyper-parameters = 32 for 3 layers",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "1, 2 or 3 with equal probability",
+    "hidden": "log-uniform 128 to 4000 per layer",
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "classification error (zero-one loss), mean over minibatches",
+   "optimizer": "SGD",
+   "lr": "NN: initial learning rate drawn geometrically 0.001 to 10.0; DBN finetune log-uniform 0.001 to 10; CD lr log-uniform 0.0001 to 1.0",
+   "lr_schedule": "eps_t = t0*eps0 / max(t,t0), t0 drawn geometrically 300 to 30000 (NN); DBN anneal start log-uniform 100 to 10000 (finetune), 10 to 10000 (CD)",
+   "warmup": null,
+   "batch_size": "20 or 100 with equal probability (NN)",
+   "steps": null,
+   "epochs": "min 100, max 1000 iterations over training data; stop if best validation was before iteration t/2",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": "l2 penalty applied with 50% probability, strength drawn exponentially 3.1e-7 to 3.1e-5 (NN); DBN: 0 w.p. 0.5 else log-uniform 1e-7 to 1e-4",
+   "dropout": null,
+   "regularisation": "l2",
+   "hardware": null,
+   "compute": "256 trials per dataset per search space (NN)",
+   "wall_clock": null,
+   "seeds": "NN weights: one of 3 Mersenne Twister seeds; DBN: seed one of 2, 3, 4",
+   "other": {
+    "nn_hyperparameters_7": "activation (sigmoid/tanh), n hidden units, initial W algo, initial W norm, weight penalty, learning rate, learning-rate annealing",
+    "nn_hyperparameters_9": "adds preprocessing type (none, normalize, PCA) and PCA variance kept uniform 0.5 to 1.0",
+    "init": "distribution uniform(-1,1) or unit normal; scale heuristic (a) multiplier uniform (0.2,2.0) / sqrt(inputs) or (b) sqrt(6)/sqrt(inputs+hidden)",
+    "no_preprocessing_fraction": "71/256 trials used no preprocessing"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "256 i.i.d. trials per dataset; experiments of size s formed as N=S/s independent sub-experiments (e.g. 32 experiments of 8); DBN figure uses up to 128 trials",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "gp": "squared exponential kernel per hyper-parameter multiplied; length scales by marginal likelihood; 50 refits on random 80% subsets, length scale init uniform 0.1 to 2; hyper-parameters rescaled to unit interval, log scale for geometric/exponential ones",
+    "qmc_simulation": "100 random target problems; target 1% of unit hypercube; 3-d and 5-d, cube or hyper-rectangle; experiments up to 512 trials; Sobol used to represent Sobol/Halton/Niederreiter"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "test accuracy of best model by validation",
+     "definition": "Gaussian-mixture weighted mean of test scores, each trial weighted by probability of being best on validation (Eq 5, 6; weights by simulation, a few tens of draws)",
+     "unit": "accuracy (fraction)",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "grid search NN, average 100 trials (Larochelle et al. 2007)",
+    "manual+grid search DBN-1 and DBN-3, average 41 trials for DBN-3 (Larochelle et al. 2007)",
+    "grid, Sobol, latin hypercube in simulation"
+   ],
+   "protocol": "Efficiency curves from subsampling 256 i.i.d. trials; GP relevance via 50 refits; no seeds/significance test beyond the 95% interval from Eq 6"
+  },
+  "availability": {
+   "code": "https://github.com/jaberg/hyperopt (source code for simulations)",
+   "weights": null,
+   "data": "http://www.iro.umontreal.ca/~lisa/twiki/bin/view.cgi/Public/DeepVsShallowComparisonICML2007"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.compute",
+    "quote": "We formed experiments for each data set by drawing S = 256 trials from this distribution.",
+    "where": "Section 2.4"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Across the 8 datasets, the 7-hyper-parameter NN response surface has effective dimension between 1 and 4, depending on the dataset (ARD length scales)",
+   "kind": "measured",
+   "source": null,
+   "metric": "effective dimension",
+   "value": "1 to 4",
+   "unit": "hyper-parameters that matter, of 7",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GP-ARD on the 7-hyper-parameter raw-preprocessing NN, Fig 7",
+   "quote": "Even in this simple 7-d problem, Ψ has a much lower effective dimension of between 1 and 4,",
+   "table": null,
+   "note": "Dimension 1 or 2 for mnist basic, mnist background images, mnist background random, rectangles images; 3 or 4 for convex, mnist rotated, rectangles.",
+   "where": "Section 3, p.295"
+  },
+  {
+   "claim": "The learning rate is always among the important hyper-parameters; others vary by dataset",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 7 ARD, same NN setup",
+   "quote": "The learning rate is always important, but sometimes the learning rate annealing rate was important (rectangles",
+   "table": null,
+   "note": null,
+   "where": "Section 3, p.295"
+  },
+  {
+   "claim": "Random search with 8 trials matches or outperforms grid search averaging 100 trials (NN, no preprocessing)",
+   "kind": "measured",
+   "source": null,
+   "metric": "trials needed",
+   "value": "8 vs 100",
+   "unit": "trials",
+   "baseline_value": "100",
+   "n": 8,
+   "setup": "Single-hidden-layer neural network, 7 hyper-parameters (no preprocessing), 8 classification datasets from Larochelle et al. 2007 (MNIST variants, rectangles, convex), S=256 random trials per dataset; grid accuracy taken from Larochelle et al. 2007, dashed line",
+   "quote": "Random searches of 8 trials match or outperform grid searches of (on average) 100 trials.",
+   "table": null,
+   "note": "Text p.291 states it for the 71/256 trials with no preprocessing. Exact accuracy values are only in the figure, not in text.",
+   "where": "Fig 5 caption, p.292"
+  },
+  {
+   "claim": "In the larger 9-hyper-parameter space (adds normalise/PCA preprocessing), 32 trials were needed to consistently beat the grid instead of 8",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "32",
+   "unit": "trials",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Single-hidden-layer neural network, 9 hyper-parameters incl. preprocessing, 8 classification datasets from Larochelle et al. 2007 (MNIST variants, rectangles, convex), S=256 random trials per dataset",
+   "quote": "In the larger space, 32 trials were necessary to consistently outperform grid search rather than 8,",
+   "table": null,
+   "note": null,
+   "where": "Section 2.4, p.291"
+  },
+  {
+   "claim": "With 64 or more trials, the larger space finds better models than the restricted one",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "64",
+   "unit": "trials",
+   "baseline_value": null,
+   "n": null,
+   "setup": "9-hyper-parameter NN space, grid average 100 trials without preprocessing",
+   "quote": "with random search 64 trials are enough to ﬁnd better models in a larger less promising space",
+   "table": null,
+   "note": null,
+   "where": "Fig 6 caption, p.293"
+  },
+  {
+   "claim": "Grid over just four PCA variance levels would have needed 5x as many trials (average 500)",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "500",
+   "unit": "trials",
+   "baseline_value": null,
+   "n": null,
+   "setup": "grid extension of the Larochelle et al. grid",
+   "quote": "Exploring just four PCA variance levels by grid search would have required 5 times as many (average 500) trials",
+   "table": null,
+   "note": null,
+   "where": "Fig 6 caption, p.293"
+  },
+  {
+   "claim": "Nine-trial illustration: a 3x3 grid tests the important parameter at only 3 distinct values; 9 random trials test 9 distinct values",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": "3 vs 9",
+   "unit": "distinct values of the important parameter",
+   "baseline_value": null,
+   "n": null,
+   "setup": "f(x,y)=g(x)+h(y)≈g(x), one important and one unimportant parameter; the figure draws 9 trials",
+   "quote": "With grid search, nine trials only test g(x) in three distinct places. With random search, all nine trials explore distinct values of g.",
+   "table": null,
+   "note": null,
+   "where": "Fig 1 caption, p.284"
+  },
+  {
+   "claim": "A grid with 4 values on each of the few important axes would need 256 trials, versus 8 to 16 random trials",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "256",
+   "unit": "trials",
+   "baseline_value": null,
+   "n": null,
+   "setup": "4 important axes x 4 values = 256 (4^4); NN 7-d problem",
+   "quote": "a grid with, say, four values in each of these axes would already require 256 trials,",
+   "table": null,
+   "note": null,
+   "where": "Section 3, p.295"
+  },
+  {
+   "claim": "Random search on 32-dim DBN: better than manual+grid on 1 dataset, equal on 4, worse on 3 (128 random trials vs average 41 grid-assisted trials)",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "1 better, 4 equal, 3 worse",
+   "unit": "datasets",
+   "baseline_value": null,
+   "n": null,
+   "setup": "3-layer DBN, 32 hyper-parameters, 8 datasets",
+   "quote": "random search found a better model than the manual search in one data set (convex), an equally good model in four (mnist basic, mnist rotated, rectangles, and rectangles images), and an inferior model in three",
+   "table": null,
+   "note": "Abstract says 'statistically equal performance on four of seven data sets, and superior performance on one of seven' while Section 5 and Fig 9 count eight datasets (1+4+3).",
+   "where": "Section 5, p.301"
+  },
+  {
+   "claim": "Average number of trials for the manual+grid DBN-3 search was 41; range 13 to 102",
+   "kind": "reported",
+   "source": null,
+   "metric": null,
+   "value": "41",
+   "unit": "trials",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Larochelle et al. 2007 procedure; mnist background images 102 trials, mnist background random 13",
+   "quote": "of trials across data sets for the DBN-3 model was 41.",
+   "table": null,
+   "note": null,
+   "where": "Section 5, p.300"
+  },
+  {
+   "claim": "Quasi-random simulation: latin hypercube no better than random search; grids worst on axis-elongated targets",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "1% volume target, 3-d and 5-d; random search probability 1-0.99^T",
+   "quote": "Latin hypercubes, commonly used to initialize experiments in Bayesian optimization, were no more efﬁcient than the expected performance of random search.",
+   "table": null,
+   "note": null,
+   "where": "Section 4, p.296"
+  }
+ ],
+ "limits": [
+  "Random search was not as good as expert sequential manual+grid search on the 32-dimensional DBN problem",
+  "All strategies studied are non-adaptive; adaptive/sequential (Bayesian) optimization left to future work",
+  "Compared to published grid results of Larochelle et al. 2007, not re-run; their scores used a different averaging technique, and the paper's averaging is slightly biased toward underestimation",
+  "Grid-side experiments were not independent across datasets (later ones benefited from earlier experience)",
+  "Only shallow NNs and DBNs on small image datasets (1000 to 10 000 train examples); no modern deep nets",
+  "Exact accuracies appear only in figures, not tables",
+  "Low effective dimension is estimated with a GP-ARD fit with non-convex length-scale optimisation (50 restarts)"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "effective dimension",
+   "definition": "Psi is more sensitive to changes in some dimensions than others; f(x1,x2)≈g(x1) has low effective dimension",
+   "where": "Section 1"
+  },
+  {
+   "term": "random experiment efficiency curve",
+   "definition": "test accuracy of best trial(s) vs experiment size, obtained by treating S i.i.d. trials as N experiments of s trials",
+   "where": "Section 2.2"
+  },
+  {
+   "term": "drawn geometrically",
+   "definition": "drawing uniformly in the log domain between log(A) and log(B), exponentiating, and rounding to the nearest integer",
+   "where": "Section 2.4 footnote 3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Larochelle et al. 2007, An empirical evaluation of deep architectures on problems with many factors of variation",
+   "year": 2007,
+   "arxiv": null,
+   "relation": "replicates",
+   "note": "grid/manual search baseline, datasets and search space reused",
+   "quote": null
+  },
+  {
+   "work": "Hinton et al. 2006, A fast learning algorithm for deep belief nets",
+   "year": 2006,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "DBN model",
+   "quote": null
+  },
+  {
+   "work": "Vincent et al. 2008, denoising autoencoders",
+   "year": 2008,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "datasets",
+   "quote": null
+  },
+  {
+   "work": "Rasmussen and Williams 2006; Neal 1998",
+   "year": 2006,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "GP regression with ARD",
+   "quote": null
+  },
+  {
+   "work": "Caflisch et al. 1997",
+   "year": 1997,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "effective dimension concept",
+   "quote": null
+  },
+  {
+   "work": "Sobol, Halton, Niederreiter, McKay et al. 1979 latin hypercube",
+   "year": 1979,
+   "arxiv": null,
+   "relation": "related",
+   "note": "low-discrepancy point sets compared in simulation",
+   "quote": null
+  },
+  {
+   "work": "Hutter et al. 2011 SMAC; Drew and de Mello 2006",
+   "year": 2011,
+   "arxiv": null,
+   "relation": "related",
+   "note": "adaptive methods named as future work",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Grid and random search of nine trials for optimizing a function f(x,y) = g(x) + h(y) ≈ g(x) with low effective dimensionality.",
+   "page": 4,
+   "why": "Shows at a glance that 9 grid trials probe 3 distinct values of the important parameter, 9 random trials probe 9."
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Neural network performance without preprocessing. Random experiment efficiency curves ... 7 hyper-parameters",
+   "page": 12,
+   "why": "Core evidence: 8 random trials vs grid average 100 trials."
+  },
+  {
+   "figure": "Fig 7",
+   "caption": "ARD applied to hyper-parameters of neural network experiments",
+   "page": 14,
+   "why": "Shows which of 7 hyper-parameters matter per dataset; learning rate always."
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 7, p.290",
+   "snippet": "eps_t = t0*eps0 / max(t, t0)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Abstract says four of seven / one of seven datasets for DBN; Section 5 and Fig 9 report eight datasets (1 better, 4 equal, 3 worse).",
+  "Figure data (accuracies, ARD relevances) are only in plots, so exact per-dataset numbers are not recoverable from text."
+ ]
+}

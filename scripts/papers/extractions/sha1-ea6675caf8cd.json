@@ -1,0 +1,548 @@
+{
+ "schema": 1,
+ "key": "sha1:ea6675caf8cd",
+ "pdf": "data-science/sources/prechelt-1998-early-stopping-but-when.pdf",
+ "bib": {
+  "title": "Early Stopping - but when?",
+  "authors": [
+   "Lutz Prechelt"
+  ],
+  "first_author": "Prechelt",
+  "year": null,
+  "venue": "not printed in the PDF (LLNCS-style chapter in the 'tricks' format; no book title, publisher or year on the pages; latest dated reference is September 1997)",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 37846,
+  "chars_total": 37846,
+  "engine": "pymupdf",
+  "skipped": "nothing skipped. The pymupdf text layer drops every digit and symbol, so all numbers were read from the pypdf text layer (digits escaped as '/1/2/9/6') and from page images; table cells read from page 8 image and confirmed in pypdf."
+ },
+ "type": "empirical",
+ "question": "Which validation-based stopping criterion should be used to stop neural-network training, given a tradeoff between training time and generalization?",
+ "hypothesis": "Slower stopping criteria (which stop later) give somewhat better generalization than faster ones, at a large cost in training time; no criterion class has a big advantage over another.",
+ "contributions": [
+  "Three classes of stopping criteria (GL, PQ, UP) defined formally",
+  "A systematic empirical comparison of 14 criteria on 1296 runs of multi-layer perceptrons on 12 Proben1 problems",
+  "Three selection rules for choosing a criterion, and a quantified time versus test-error tradeoff"
+ ],
+ "method": {
+  "summary": "Fully connected MLPs are trained with RPROP on 12 Proben1 problems; each training run evaluates 14 stopping criteria simultaneously (GL, PQ, UP variants) on the same error curve and records when each would stop and the test error of the weights at the validation minimum found up to that point. Results are averaged over all 1296 runs and normalised relative to GL2 or to the best criterion of the same run.",
+  "task": "validation-based early stopping of MLP training (classification and approximation)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Proben1 (12 problems: cancer, card, diabetes, gene, glass, heart, horse, soybean, thyroid; building, flare, hearta)",
+    "role": "both",
+    "size": "8 to 120 inputs, 1 to 19 outputs, 214 to 7200 examples per problem",
+    "split": "50% training, 25% validation, 25% test, drawn in 3 different random ways per problem (36 datasets); the building dataset uses the chronological non-random partition of Proben1",
+    "source": "Prechelt, PROBEN1 technical report 21/94, Karlsruhe (reference [19])",
+    "preprocessing": "all inputs and outputs normalised to range 0...1; 1-of-n output encoding for the 9 classification problems"
+   }
+  ],
+  "models": [
+   {
+    "name": "fully connected feedforward MLP with all shortcut connections",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "12 topologies: one hidden layer with 2, 4, 8, 16, 24 or 32 nodes; two hidden layers with 2+2, 4+2, 4+4, 8+4, 8+8 or 16+8 nodes",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "1 or 2 hidden",
+    "hidden": "2 to 32 (one layer); 2+2 to 16+8 (two layers)",
+    "heads": null,
+    "context": null,
+    "other": {
+     "output_units": "per topology and dataset, two runs with linear output units and one with sigmoidal output units",
+     "sigmoid": "f(x) = x/(1+|x|)"
+    }
+   }
+  ],
+  "training": {
+   "objective": "squared error",
+   "optimizer": "RPROP (epoch/batch learning, weights updated once per epoch), no parameter tuning",
+   "lr": "no global learning rate; RPROP step sizes: initial step per weight drawn at random from 0.05...0.2, max step 50, min step 0",
+   "lr_schedule": "RPROP adaptive per-weight step sizes, increase factor 1.1, decrease factor 0.5",
+   "warmup": null,
+   "batch_size": "full training set (epoch learning)",
+   "steps": null,
+   "epochs": "stopped by the criteria; hard cap 3000 epochs; also stopped when training progress P5 drops below 0.1",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "none besides early stopping",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": "3 runs per topology per dataset (two with linear outputs, one with sigmoidal outputs); initial weights random in -0.5...0.5; seed values not given",
+   "other": {
+    "rprop_params_as_printed": "eta+ = 1.1, eta- = 0.5 (Greek letters garbled in the text layer, read as RPROP's increase and decrease factors), delta0 in 0.05...0.2 randomly per weight, delta_max = 50, delta_min = 0",
+    "validation_checking": "validation error measured only at the end of each strip of 5 epochs",
+    "run_count": "1296 runs = 12 problems x 3 dataset variants x 12 topologies x 3 runs",
+    "records": "1296 runs x 14 criteria = 18144 stopping-criterion performance records"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "1296 training runs; all 14 criteria evaluated simultaneously on each run",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "strip_length_k": "5 epochs",
+    "criteria": "GL1, GL2, GL3, GL5, PQ0.5, PQ0.75, PQ1, PQ2, PQ3, UP2, UP3, UP4, UP6, UP8",
+    "safety_stop": "progress below 0.1, or at most 3000 epochs",
+    "returned_weights": "the weights with the lowest validation error seen up to the stop"
+   },
+   "other": {
+    "deployment_note": "in a real application one would add the validation examples to the training set and retrain from scratch for the stopping time found (stated, not run)"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "slowness S_x(C)",
+     "definition": "t_s(C)/t_s(x): training time of criterion C relative to criterion x (x = GL2 or the fastest criterion of the same run that finds the same result, S_Chat)",
+     "unit": "ratio",
+     "higher_is_better": false
+    },
+    {
+     "name": "redundancy r(C)",
+     "definition": "(t_s(C)/t_m(C)) - 1: how long training continues after the finally chosen validation minimum; 0 is perfect",
+     "unit": "ratio",
+     "higher_is_better": false
+    },
+    {
+     "name": "badness B_x(C)",
+     "definition": "E_te(C)/E_te(x): test error relative to criterion x (GL2 or the best criterion of the same run)",
+     "unit": "ratio",
+     "higher_is_better": false
+    },
+    {
+     "name": "P_g(C)",
+     "definition": "fraction of the 1296 runs in which C was a good criterion, i.e. reached the lowest validation error among the 14, however slowly",
+     "unit": "fraction",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "GL2 (normalisation reference)",
+    "best of 14 criteria in the same run (Chat)"
+   ],
+   "protocol": "means over all 1296 runs; per problem/criterion means and std over 108 runs shown in Fig 3; no significance test"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "Proben1 benchmark set (anonymous FTP at ftp.ira.uka.de)"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.other.rprop_params_as_printed",
+    "quote": null,
+    "where": "Sec 3.2, Training algorithm: symbols are garbled in the text layer"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Slower stopping criteria buy about 4% lower test error for about a fourfold increase in training time, with no panacea among the criteria.",
+   "kind": "measured",
+   "source": null,
+   "metric": "relative test error B_GL2 and relative training time S_GL2, UP2 to PQ3",
+   "value": "test error 1.024 to 0.988; training time 0.766 to 3.095",
+   "unit": "ratio to GL2",
+   "baseline_value": null,
+   "n": null,
+   "setup": "12 Proben1 problems, 12 MLP topologies, RPROP, 14 criteria evaluated per run, means over all 1296 runs; test error and training time relative to GL2",
+   "note": "1.024 to 0.988 is a 3.5% relative drop and 3.095/0.766 is 4.04x; the paper rounds to 4% and fourfold. Abstract says 'about 4% on average' and 'about factor 4 longer on average'.",
+   "where": "Sec 3.4 item 6",
+   "quote": "w e can roughly trade a /4/#25 decrease in test error /#28from /1/./0/2/4\nto /0/./9/8/8/#29 for an ab out fourfold increase in training time /#28from /0/./7/6/6 to /3/./0/9/5/#"
+  },
+  {
+   "claim": "The study consists of 1296 training runs, giving 18144 stopping-criterion records for the 14 criteria.",
+   "kind": "measured",
+   "source": null,
+   "metric": "training runs",
+   "value": 1296,
+   "unit": "runs",
+   "baseline_value": null,
+   "n": 1296,
+   "setup": "12 problems x 3 dataset variants x 12 topologies x 3 runs",
+   "note": "The abstract says '1296 training runs using different 12 problems and 24 different network architectures'; the body lists 12 topologies (24 does not appear in the setup).",
+   "where": "Sec 3.3",
+   "quote": "Altogether/, /1/2/9/6 training runs w ere made for the comparison/, giving /1/8/1/4/4"
+  },
+  {
+   "claim": "A real validation error curve (Glass, 4+4 hidden) has as many as 16 local minima before severe overfitting begins at about epoch 400.",
+   "kind": "measured",
+   "source": null,
+   "metric": "local minima in validation curve",
+   "value": 16,
+   "unit": "minima",
+   "baseline_value": null,
+   "n": null,
+   "setup": "One example curve, Glass dataset, 4+4 hidden nodes (Fig 2)",
+   "note": null,
+   "where": "Sec 1.3, Fig 2",
+   "quote": "exhibits as man y as /1/6\nlo cal minima b efore sev ere o v er/#0Ctting b egins at ab out ep o c h /4/0/0"
+  },
+  {
+   "claim": "Of the 16 local minima in that curve, 4 are the global minimum up to where they occur, and the optimal stopping point is epoch 205.",
+   "kind": "measured",
+   "source": null,
+   "metric": "global-so-far minima; best epoch",
+   "value": 4,
+   "unit": "minima",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Same Glass 4+4 curve",
+   "note": "optimal stopping epoch 205 is stated in the next sentence",
+   "where": "Sec 1.3",
+   "quote": "Of these lo cal\nminima/, /4 are the global minim um up to where they o ccur"
+  },
+  {
+   "claim": "In the same curve, stopping at epoch 400 instead of just after the first deep local minimum at epoch 45 costs about sevenfold more learning time for a 1.1% better validation error (minimum at epoch 205).",
+   "kind": "measured",
+   "source": null,
+   "metric": "validation error improvement",
+   "value": 1.1,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Same Glass 4+4 curve; epoch 45 versus epoch 205 minimum",
+   "note": null,
+   "where": "Sec 1.3",
+   "quote": "trades an ab out sev enfold increase of learning time for an impro v emen t of\nv alidation set error b y /1/./1/#"
+  },
+  {
+   "claim": "The fastest criteria reach a result as good as the best of the same run in about 60% of cases; the slowest achieve about 80%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "P_g",
+   "value": "about 60% (fastest) and about 80% (slowest)",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "12 Proben1 problems, 12 MLP topologies, RPROP, 14 criteria evaluated per run, means over all 1296 runs; test error and training time relative to GL2",
+   "note": "Table 1 P_g: UP2 0.587, PQ3 0.800",
+   "where": "Sec 3.4 item 3",
+   "quote": "in ab out /6/0/#25 of the cases"
+  },
+  {
+   "claim": "Table 1: PQ3, the slowest criterion, has P_g 0.800, normalised time 3.095 and normalised test error 0.988; UP2, the fastest, has P_g 0.587, time 0.766 and error 1.024.",
+   "kind": "measured",
+   "source": null,
+   "metric": "P_g, S_GL2, B_GL2 (PQ3 row)",
+   "value": "0.800; 3.095; 0.988",
+   "unit": "fraction; ratio",
+   "baseline_value": null,
+   "n": null,
+   "setup": "12 Proben1 problems, 12 MLP topologies, RPROP, 14 criteria evaluated per run, means over all 1296 runs; test error and training time relative to GL2",
+   "note": null,
+   "where": "Table 1, p. 8",
+   "quote": "PQ\n/3\n/2/./6/1/4 /3/./0/9/5 /2/./1/4/0 /1/./0/0/9 /0/./9/8/8 /0/./8/0/0",
+   "table": "Table 1, row PQ3, columns S_GL2, B_GL2, P_g"
+  },
+  {
+   "claim": "The slower criteria train twice as long as necessary to find the same solution (redundancy r = 2.140 for PQ3); the fastest, UP2, has r = 0.277.",
+   "kind": "measured",
+   "source": null,
+   "metric": "redundancy r(C)",
+   "value": "2.140 (PQ3); 0.277 (UP2)",
+   "unit": "ratio",
+   "baseline_value": null,
+   "n": null,
+   "setup": "12 Proben1 problems, 12 MLP topologies, RPROP, 14 criteria evaluated per run, means over all 1296 runs; test error and training time relative to GL2",
+   "note": "text: the fastest criteria 'waste' about one fifth of their overall training time",
+   "where": "Sec 3.4 item 2, Table 1",
+   "quote": "PQ\n/3\n/2/./6/1/4 /3/./0/9/5 /2/./1/4/0 /1/./0/0/9 /0/./9/8/8 /0/./8/0/0",
+   "table": "Table 1, rows PQ3 and UP2, column r(C)"
+  },
+  {
+   "claim": "Training time relative to a fixed criterion varies by more than a factor 4 across criteria, yet even the slowest criteria train only about 2.5 times as long as the fastest criterion of the same run that finds the same result.",
+   "kind": "measured",
+   "source": null,
+   "metric": "S_Chat of slowest criteria",
+   "value": 2.5,
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Slowness relative to the fastest criterion of each run that finds the same result",
+   "note": "Table 1 column S_Chat for PQ3 is 2.614",
+   "where": "Sec 3.4 item 1",
+   "quote": "ev en the slo w est criteria train only ab out /2/./5 times"
+  },
+  {
+   "claim": "The criteria with the lowest error achieve only about 1% lower test error on average than the fairly fast GL2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "B_GL2 of best criteria",
+   "value": 1,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "12 Proben1 problems, 12 MLP topologies, RPROP, 14 criteria evaluated per run, means over all 1296 runs; test error and training time relative to GL2",
+   "note": null,
+   "where": "Sec 3.4 item 3",
+   "quote": "ab out /1/#25 lo w er error on the a v erage than the relativ ely fast criterion"
+  },
+  {
+   "claim": "Several only modestly slow criteria have about 2% higher test error on average than the best criterion of the same run.",
+   "kind": "measured",
+   "source": null,
+   "metric": "B_Chat",
+   "value": 2,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "12 Proben1 problems, 12 MLP topologies, RPROP, 14 criteria evaluated per run, means over all 1296 runs; test error and training time relative to GL2",
+   "note": null,
+   "where": "Sec 3.4 item 3",
+   "quote": "just\nab out /2/#25 higher error on the a v erage than the b est criteria of the same run"
+  },
+  {
+   "claim": "270 of 18144 records (1.5%), from 125 different runs, hit the 3000 epoch limit instead of the stopping criterion.",
+   "kind": "measured",
+   "source": null,
+   "metric": "records at the epoch cap",
+   "value": 270,
+   "unit": "records",
+   "baseline_value": null,
+   "n": null,
+   "setup": "12 Proben1 problems, 12 MLP topologies, RPROP, 14 criteria evaluated per run, means over all 1296 runs; test error and training time relative to GL2",
+   "note": null,
+   "where": "Sec 3.3",
+   "quote": "2/7/0 of these records /#28or\n/1/./5/#25/#"
+  },
+  {
+   "claim": "Best tradeoffs between test error and training time are UP3, UP4 and UP6 for the expected result of a single run; GL criteria are preferable when several runs are made and the best by validation error is picked.",
+   "kind": "measured",
+   "source": null,
+   "metric": "best tradeoff criteria",
+   "value": "UP3, UP4, UP6 (single run); GL (multiple runs, P_g)",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "12 Proben1 problems, 12 MLP topologies, RPROP, 14 criteria evaluated per run, means over all 1296 runs; test error and training time relative to GL2",
+   "note": "The text names UP3, UP4, UP6 only; Table 1 stars UP8 (B_Chat 1.010) as well.",
+   "where": "Sec 3.4 item 5",
+   "table": "Table 1, starred cells in column B_Chat (UP3 1.026, UP4 1.020, UP6 1.012, UP8 1.010) and column P_g (GL1 0.680, GL2 0.723, GL3 0.748, GL5 0.772)"
+  },
+  {
+   "claim": "Selection rule 1: use fast stopping criteria unless small improvements (e.g. 4%) are worth large increases of training time (e.g. factor 4).",
+   "kind": "claim",
+   "source": null,
+   "metric": "rule",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Rules for setups similar to this study (MLP, RPROP, small datasets)",
+   "note": null,
+   "where": "Sec 2.2"
+  },
+  {
+   "claim": "Selection rule 2: to maximise the probability of finding a good solution use a GL criterion; rule 3: to maximise average quality use PQ if the network overfits very little, otherwise UP.",
+   "kind": "claim",
+   "source": null,
+   "metric": "rule",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "As above",
+   "note": null,
+   "where": "Sec 2.2"
+  },
+  {
+   "claim": "GL criteria are much less robust on the building problem (the only chronologically, non-randomly partitioned dataset); slower criteria are less robust than fast ones for slowness and redundancy, PQ especially on card and horse.",
+   "kind": "measured",
+   "source": null,
+   "metric": "robustness",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 3: per problem mean and spread over 108 runs per criterion",
+   "note": null,
+   "where": "Sec 3.4 item 4, Fig 3"
+  }
+ ],
+ "limits": [
+  "Only one training algorithm (RPROP, epoch learning, small training sets) and one error function (squared error) were used; the author expects similar behaviour for other learners only if they do not take extreme steps (Sec 3.5, speculation).",
+  "Only 12 Proben1 problems, none strongly nonlinear; criteria differ by learning problem (Fig 3) and which problem properties cause this is left open.",
+  "The author states the discussion is biased by the particular 14 criteria chosen; PQ criteria chosen are slower than the others, so comparing PQ0.5 to GL1 or UP2 is unfair.",
+  "The validation set is used only for stopping (never for weight updates); a real application would retrain with it included, which was not tested.",
+  "No significance tests or confidence intervals; spread only shown as std over 108 runs in Fig 3.",
+  "Theory (Wang et al., Amari et al.) is not applicable to the MLPs and small datasets studied, so the answer is empirical only.",
+  "Dated: single-run RPROP MLP setting from the 1990s; nothing on SGD, minibatches, deep nets or large data."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "generalization loss GL(t)",
+   "definition": "relative increase of the validation error over the minimum-so-far, in percent: GL(t) = 100 * (E_va(t)/E_opt(t) - 1)",
+   "where": "Sec 2.1"
+  },
+  {
+   "term": "GL_alpha",
+   "definition": "stop after first epoch t with GL(t) > alpha",
+   "where": "Sec 2.1"
+  },
+  {
+   "term": "training strip",
+   "definition": "a sequence of k epochs numbered n+1...n+k where n is divisible by k",
+   "where": "Sec 2.1"
+  },
+  {
+   "term": "training progress P_k(t)",
+   "definition": "in per thousand, how much the average training error during the strip is larger than the minimum training error during the strip",
+   "where": "Sec 2.1"
+  },
+  {
+   "term": "PQ_alpha",
+   "definition": "stop after first end-of-strip epoch t with GL(t)/P_k(t) > alpha",
+   "where": "Sec 2.1"
+  },
+  {
+   "term": "UP_s",
+   "definition": "stop when the validation error increased in s successive strips: UP_s stops after epoch t iff UP_(s-1) stops after t-k and E_va(t) > E_va(t-k); UP_1 stops at the first end-of-strip epoch with E_va(t) > E_va(t-k)",
+   "where": "Sec 2.1"
+  },
+  {
+   "term": "slowness, redundancy, badness, P_g",
+   "definition": "S_x(C)=t_s(C)/t_s(x); r(C)=t_s(C)/t_m(C)-1; B_x(C)=E_te(C)/E_te(x); P_g = fraction of runs in which C was good",
+   "where": "Sec 3.4"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "PROBEN1: a set of benchmarks and benchmarking rules for neural network training algorithms (Prechelt 1994)",
+   "year": 1994,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "source of the 12 problems and the 50/25/25 partitions",
+   "quote": null
+  },
+  {
+   "work": "RPROP (Riedmiller and Braun 1993)",
+   "year": 1993,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "the only training algorithm used",
+   "quote": null
+  },
+  {
+   "work": "Finnoff, Hergert and Zimmermann 1993, Improving model selection by nonconvergent methods",
+   "year": 1993,
+   "arxiv": null,
+   "relation": "related",
+   "note": "cited for early stopping reported superior to regularization methods and an experimental comparison",
+   "quote": null
+  },
+  {
+   "work": "Morgan and Bourlard, Generalization and parameter estimation in feedforward nets",
+   "year": 1990,
+   "arxiv": null,
+   "relation": "related",
+   "note": "cited for early stopping",
+   "quote": null
+  },
+  {
+   "work": "Wang, Venkatesh and Judd, Optimal stopping and effective machine complexity in learning",
+   "year": 1994,
+   "arxiv": null,
+   "relation": "related",
+   "note": "theory applying only to output-weight training; basis for the phase I/II/III explanation",
+   "quote": null
+  },
+  {
+   "work": "Amari, Murata, Muller, Finke and Yang, asymptotic statistical theory of overtraining and cross-validation",
+   "year": 1997,
+   "arxiv": null,
+   "relation": "related",
+   "note": "asymptotic theory; optimal train/validation split; early stopping not useful with very many examples",
+   "quote": null
+  },
+  {
+   "work": "Geman, Bienenstock and Doursat, Neural networks and the bias/variance dilemma",
+   "year": 1992,
+   "arxiv": null,
+   "relation": "related",
+   "note": "bias/variance view used to explain jagged validation curves",
+   "quote": null
+  },
+  {
+   "work": "Krogh and Hertz, A simple weight decay can improve generalization",
+   "year": 1992,
+   "arxiv": null,
+   "relation": "related",
+   "note": "weight decay as the regularization alternative",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Idealized training and validation error curves. Vertical: errors; horizontal: time.",
+   "page": 2,
+   "why": "the textbook picture that real curves do not follow"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "A real validation error curve (Glass dataset, 4+4 hidden). Vertical: validation set error; horizontal: time in training epochs.",
+   "page": 3,
+   "why": "shows 16 local minima and why 'stop at first increase' fails"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Behavior of stopping criteria: S_GL2 normalised training time, B_GL2 normalised test error (relative to GL2), r redundancy, P_g probability of finding a good solution.",
+   "page": 8,
+   "why": "the whole time-versus-error comparison of the 14 criteria in one table"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Variance of slowness, redundancy and badness for each pair of learning problem and stopping criterion (168 columns, each the mean over 108 runs; line is twice the std).",
+   "page": 9,
+   "why": "shows which criteria are robust across problems"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Badness and P_g against slowness of criteria (scaled by 1000).",
+   "page": 10,
+   "why": "local minima mark the best tradeoff criteria"
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 2.1",
+   "snippet": "GL(t) = 100 * (E_va(t) / E_opt(t) - 1);  E_opt(t) = min_{t' <= t} E_va(t')",
+   "verbatim": false
+  },
+  {
+   "where": "Sec 2.1",
+   "snippet": "P_k(t) = 1000 * ( sum_{t'=t-k+1..t} E_tr(t') / (k * min_{t'=t-k+1..t} E_tr(t')) - 1 );  GL_a: stop at first t with GL(t) > a;  PQ_a: first end-of-strip t with GL(t)/P_k(t) > a;  UP_s: stop when E_va rose over s successive strips",
+   "verbatim": false
+  },
+  {
+   "where": "Sec 1.2",
+   "snippet": "1. Split the training data into a training set and a validation set, e.g. in a 2-to-1 proportion. 2. Train only on the training set and evaluate the per-example error on the validation set once in a while, e.g. after every fifth epoch. 3. Stop training as soon as the error on the validation set is higher than it was the last time it was checked. 4. Use the weights the network had in that previous step as the result of the training run.",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "The pymupdf text layer drops every digit, so numeric quotes in results are in the pypdf form with digits escaped (for example '/1/2/9/6'); they were chosen so that extract.py check can match them.",
+  "The PDF prints no book title, publisher or year, so bib.year is null and venue is not filled from memory. The repo's 'Neural Networks: Tricks of the Trade 1998' is external to the PDF; the text calls itself 'this trick'.",
+  "The abstract says 24 different network architectures; the body lists 12 topologies (24 is not derived anywhere)."
+ ]
+}

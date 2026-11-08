@@ -1,0 +1,381 @@
+{
+ "schema": 1,
+ "key": "1705.07321",
+ "pdf": "data-analytics/sources/mcinnes-2017-accelerated-hierarchical-density-clustering.pdf",
+ "bib": {
+  "title": "Accelerated Hierarchical Density Clustering",
+  "authors": [
+   "Leland McInnes",
+   "John Healy"
+  ],
+  "first_author": "McInnes",
+  "year": 2017,
+  "venue": "preprint (arXiv v2, May 2017); published ICDM Workshops 2017 per DOI",
+  "arxiv": "1705.07321",
+  "doi": "10.1109/ICDMW.2017.12"
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 77595,
+  "chars_total": 77595,
+  "engine": "pymupdf",
+  "skipped": "References skimmed only for lineage"
+ },
+ "type": "system",
+ "question": "Can HDBSCAN* be computed with sub-quadratic, near N log N average-case run-time so it matches DBSCAN's speed while keeping variable-density clusters and no epsilon parameter?",
+ "hypothesis": "Replacing the O(N^2) steps (core distances, MST) with space-tree nearest-neighbour search and a Dual-Tree Boruvka MST makes HDBSCAN* scale comparably to DBSCAN.",
+ "contributions": [
+  "Three descriptions of HDBSCAN* (statistical, DBSCAN*-based computational, topological/sheaf); the topological one is claimed as new",
+  "Accelerated HDBSCAN* using kd-/ball-tree core distances and a Dual-Tree Boruvka MST adapted to mutual reachability distance",
+  "Run-time scaling benchmarks against the Java reference HDBSCAN*, eight scikit-learn algorithms and DBSCAN"
+ ],
+ "method": {
+  "summary": "Core distances come from kd-tree or ball-tree k-nearest-neighbour queries; the MST of the mutual reachability graph comes from a Dual-Tree Boruvka algorithm (March et al. 2010, in the Curtin et al. 2013 framework) with core-distance filtering and tie handling that gives an approximate MST; then sort edges, union-find single linkage tree, condensed tree and stability-based flat extraction. Implemented in Python on scikit-learn and benchmarked for run-time only.",
+  "task": "density-based clustering run-time scaling benchmark",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "Synthetic 2-d and 50-d data (reference comparison)",
+    "role": "eval",
+    "size": "varying size up to 200,000 points",
+    "split": null,
+    "source": "generated in the paper's Performance data generation notebook",
+    "preprocessing": null
+   },
+   {
+    "name": "Synthetic Gaussian-ball mixtures in a fixed-diameter hypercube (DBSCAN comparison)",
+    "role": "eval",
+    "size": "varying number of points, dimension and clusters; exact grids only in Fig 7",
+    "split": "ten random data sets per parameter combination",
+    "source": "generated; constant-variance Gaussian balls",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Accelerated HDBSCAN* (Python, scikit-learn compatible)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "kd-tree or ball-tree plus Dual-Tree Boruvka MST",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "HDBSCAN* reference implementation (Java, Campello et al.)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "O(N^2)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "scikit-learn v0.18.1 DBSCAN",
+    "role": "baseline",
+    "params": null,
+    "architecture": "tree based",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "parameters": "epsilon and k chosen by Gaussian-process search (scikit-optimize) to maximise adjusted Rand index against the HDBSCAN* partition, noise treated as one extra cluster"
+    }
+   },
+   {
+    "name": "scikit-learn algorithms: Affinity Propagation, Birch, Complete Linkage, KMeans, Mean Shift, Spectral Clustering, Ward",
+    "role": "baseline",
+    "params": null,
+    "architecture": "default scikit-learn parameters",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "Fig 5: several runs per data set size (range shown as vertical bars, count not stated); Fig 7: ten random data sets per parameter combination",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "HDBSCAN* parameters": "k (core-distance neighbour count) and m (minimum cluster size); values used in the benchmarks not stated",
+    "tie handling": "repeat tree search with same bounds B until no new edges; loses the exact-MST guarantee",
+    "Fig 1 parameters": "hand tuned qualitatively"
+   },
+   "other": {
+    "hardware": "Macbook Pro, 3.1 GHz Intel Core i7, 8GB RAM",
+    "software": "scikit-learn v0.18.1; kd-tree and ball tree from scikit-learn",
+    "DBSCAN search cluster": "distributed over a large-memory cluster, specification omitted; results in optimizationResults.csv"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Run-time vs data set size",
+     "definition": "wall-clock time, plotted raw and log-log; read for slope (asymptotic scaling)",
+     "unit": "seconds (inferred from plots; axis units not in text)",
+     "higher_is_better": false
+    },
+    {
+     "name": "Adjusted Rand index",
+     "definition": "similarity of DBSCAN and HDBSCAN* partitions (noise as one cluster), used only to pick DBSCAN parameters",
+     "unit": "index",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Java reference HDBSCAN*",
+    "Affinity Propagation",
+    "Birch",
+    "Complete Linkage",
+    "DBSCAN",
+    "KMeans",
+    "Mean Shift",
+    "Spectral Clustering",
+    "Ward"
+   ],
+   "protocol": "Clustering quality is not evaluated (deferred to Campello et al.). Only scaling trends are compared; authors disclaim claims of strict superiority and note implementation effects on run-time."
+  },
+  "availability": {
+   "code": "https://github.com/lmcinnes/hdbscan_paper (benchmark notebooks); hdbscan Python package (McInnes, Healy, Astels 2017)",
+   "weights": null,
+   "data": "generated by notebooks"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Accelerated Python HDBSCAN* is about two orders of magnitude faster than the Java reference at 200,000 points, in both 2-d and 50-d.",
+   "kind": "measured",
+   "source": null,
+   "metric": "absolute run-time ratio",
+   "value": "roughly two orders of magnitude",
+   "unit": null,
+   "baseline_value": null,
+   "n": "200,000 points",
+   "setup": "Synthetic 2-d and 50-d data, Python accelerated vs Java reference, MacBook Pro 3.1 GHz i7 8GB",
+   "quote": "the accelerated Python version demonstrates roughly two orders of magnitude better absolute run-time performance on data set sizes of 200,000 points",
+   "table": null,
+   "note": "Read from Fig 4 narrative; the baseline implementation is in a different language, so part of the gap is implementation",
+   "where": "Section 4.1"
+  },
+  {
+   "claim": "On scikit-learn defaults, K-Means, DBSCAN and HDBSCAN* form the fastest group and are hard to tell apart; Affinity Propagation, Spectral Clustering and Mean Shift degrade beyond a few thousand points.",
+   "kind": "measured",
+   "source": null,
+   "metric": "run-time scaling class",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Default parameters, scikit-learn v0.18.1, Fig 5 and 6",
+   "quote": "DBSCAN, K-Means and HDBSCAN*, which are difficult to tell apart from one another",
+   "table": null,
+   "note": null,
+   "where": "Section 4.2"
+  },
+  {
+   "claim": "Accelerated HDBSCAN* shows comparable asymptotic and absolute run-time to scikit-learn DBSCAN across dimensions and cluster counts, with DBSCAN parameters tuned to match HDBSCAN* output.",
+   "kind": "measured",
+   "source": null,
+   "metric": "log-log run-time scaling",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": "ten random data sets per parameter combination",
+   "setup": "Gaussian-ball mixtures, Fig 7; DBSCAN epsilon and k found by Gaussian-process search maximising adjusted Rand index",
+   "quote": "our accelerated algorithm has comparable asymptotic performance to DBSCAN",
+   "table": null,
+   "note": "Authors concede that in 2-d overlapping Gaussians give variable-density output DBSCAN cannot reproduce, so 2-d DBSCAN timings are uncertain",
+   "where": "Section 4.3"
+  },
+  {
+   "claim": "The original HDBSCAN* has O(N^2) run-time; the accelerated version is argued to approach O(N log N) on average, with no strict bound given.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Depends on data distribution and space tree (kd-tree, ball-tree)",
+   "quote": "we can certainly approach O(N log N) asymptotic performance for many data sets",
+   "table": null,
+   "note": null,
+   "where": "Section 3"
+  }
+ ],
+ "limits": [
+  "Run-time only; clustering quality is explicitly not evaluated (deferred to Campello et al. 2013, 2015).",
+  "Benchmarks use synthetic Gaussian mixtures; real data and noisy background left as an extension.",
+  "Different-language reference comparison conflates implementation and algorithm; authors cite Kriegel et al. 2016 on this.",
+  "Tie-handling trick loses the exact-MST guarantee, giving an approximate MST; effect said to be small after condensing, worst for high-dimensional kd/ball trees.",
+  "Inherently serial; no parallel version. No cover tree support, so scaling with dimension is limited.",
+  "No complexity bound stated; data-dependent.",
+  "Single machine (8GB laptop), scikit-learn 0.18.1; HDBSCAN k and m used in benchmarks not stated; benchmark speeds are dated.",
+  "DBSCAN comparison gives DBSCAN its best-matching parameters, which a user would not know a priori (authors note this)."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "mutual reachability distance",
+   "definition": "max of the two points' core distances and their distance; core distance is the distance to the kth nearest neighbor",
+   "where": "Section 2.2"
+  },
+  {
+   "term": "clustering vs partitioning",
+   "definition": "clustering finds natural subsets without necessarily assigning every point; partitioning assigns every point",
+   "where": "Section 1"
+  },
+  {
+   "term": "cluster stability",
+   "definition": "sum over points of the range of lambda (1/epsilon) for which the point is in the cluster; flat clusters maximise total stability without overlap",
+   "where": "Section 2.2"
+  },
+  {
+   "term": "minimum cluster size m",
+   "definition": "child clusters with fewer than m points are spurious splits and their points fall out of the parent",
+   "where": "Section 2.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Campello, Moulavi, Sander: Density-based clustering based on hierarchical density estimates",
+   "year": 2013,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Introduces HDBSCAN*",
+   "quote": null
+  },
+  {
+   "work": "Campello, Moulavi, Zimek, Sander: Hierarchical density estimates for data clustering, visualization, and outlier detection (TKDD)",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Reference HDBSCAN* with O(N^2) steps",
+   "quote": null
+  },
+  {
+   "work": "Ester et al.: DBSCAN",
+   "year": 1996,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Main speed competitor",
+   "quote": null
+  },
+  {
+   "work": "March, Ram, Gray: Fast Euclidean minimum spanning tree",
+   "year": 2010,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Dual-Tree Boruvka",
+   "quote": null
+  },
+  {
+   "work": "Curtin et al.: Tree-independent dual-tree algorithms",
+   "year": 2013,
+   "arxiv": "1304.4327",
+   "relation": "uses-method",
+   "note": "Generic dual-tree framework",
+   "quote": null
+  },
+  {
+   "work": "Chaudhuri, Dasgupta et al.: Robust Single Linkage / cluster tree estimation",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Statistical view",
+   "quote": null
+  },
+  {
+   "work": "Stuetzle: runt pruning",
+   "year": 2003,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Tree simplification by minimum cluster size",
+   "quote": null
+  },
+  {
+   "work": "Kriegel, Schubert, Zimek: The (black) art of runtime evaluation",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Caution on run-time comparisons",
+   "quote": null
+  },
+  {
+   "work": "scikit-learn clustering suite",
+   "year": 2011,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "Eight algorithms benchmarked",
+   "quote": null
+  },
+  {
+   "work": "Hubert and Arabie: Comparing partitions (adjusted Rand index)",
+   "year": 1985,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Used to match DBSCAN to HDBSCAN*",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "A qualitative comparison of some candidate clustering algorithms on synthetic data. Colors indicate cluster membership (grey denotes noise).",
+   "page": 2,
+   "why": "Shows K-Means partitioning noise versus DBSCAN and HDBSCAN* leaving noise unclustered"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Reference Java implementation versus accelerated Python version.",
+   "page": 22,
+   "why": "Log-log slope shows sub-quadratic scaling"
+  },
+  {
+   "figure": "Fig 7",
+   "caption": "Comparison of scaling performance for scikit-learn's DBSCAN and accelerated HDBSCAN*; ten random data sets per combination.",
+   "page": 26,
+   "why": "Core evidence for DBSCAN parity"
+  }
+ ],
+ "code": [
+  {
+   "where": "Algorithm 6, page 20",
+   "snippet": "dist = max{d(pq, pr), C(pq), C(pr)}; if dist < D(F(pq)): D(F(pq)) <- dist; N(F(pq)) <- pr; P(F(pq)) <- pq",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "No embedded instructions found.",
+  "Ligature characters in the text cache; quotes avoid them.",
+  "Algorithm 1 and 5 pseudocode in the text has variable typos (Nqr/Nrc); not reproduced.",
+  "Section map found only some headings; whole body read."
+ ]
+}

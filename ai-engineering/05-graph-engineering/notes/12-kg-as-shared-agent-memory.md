@@ -5,7 +5,6 @@ sources:
   - https://platform.claude.com/cookbook/capabilities-knowledge-graph-guide
   - https://www.anthropic.com/engineering/building-effective-agents
   - https://www.anthropic.com/engineering/multi-agent-research-system
-  - "Graph Engineering: The Karpathy Loop, Improved 1000x by Itself, community-compiled playbook (2026) (community synthesis; secondary)"
   - https://pkhamdee.blog/2026/07/21/graph-engineering-from-karpathys-loops-to-shared-knowledge-graphs/ (secondary)
   - https://youmind.com/landing/x-viral-articles/graph-engineering-ai-agent-loops (secondary)
   - https://flowtivity.ai/blog/graph-engineering-2026-guide-openclaw-codex/ (vendor; secondary)
@@ -40,9 +39,9 @@ The last two rows matter most for this note.
 
 ## Loop → swarm → graph
 
-Each architecture moves a different bottleneck out of the agent's context. This progression comes from the community synthesis in [sources/](../sources/graph-engineering-karpathy-loop-anthropic-playbook-2026.pdf), which is secondary; the primary sources are cited inline.
+Each architecture moves a different bottleneck out of the agent's context. The three-step framing comes from an unattributed, self-described independent compilation (no author or publisher, not endorsed by Karpathy or Anthropic). It is framing, not evidence: the claims below rest on the primary sources cited inline.
 
-**1. Loop.** Karpathy's [autoresearch](https://github.com/karpathy/autoresearch) (March 2026) runs one agent inside a research harness. The agent may edit `train.py` but not `prepare.py`, and a `program.md` sets the rules. It runs about 5 minutes of training per experiment, keeps a change only if validation bits-per-byte improves, and otherwise `git reset`s. The synthesis puts `train.py` at about 630 lines. It works for the reasons [04-loop](../../04-loop-engineering/README.md) gives: the result is verifiable, the action is reversible, the horizon is short and the environment is bounded. **The loop moves iteration and evaluation out of the agent.**
+**1. Loop.** Karpathy's [autoresearch](https://github.com/karpathy/autoresearch) (March 2026) runs one agent inside a research harness. The agent may edit `train.py` but not `prepare.py`, and a `program.md` sets the rules. It runs about 5 minutes of training per experiment, keeps a change only if validation bits-per-byte improves, and otherwise `git reset`s. It works for the reasons [04-loop](../../04-loop-engineering/README.md) gives: the result is verifiable, the action is reversible, the horizon is short and the environment is bounded. **The loop moves iteration and evaluation out of the agent.**
 
 **2. Swarm.** Fan the loop out across parallel workers with fresh contexts, for example Claude Code's dynamic workflows, where orchestration is a generated script that spawns sub-agents. **The swarm moves parallel search out of the agent.** It also creates a new problem, **redundancy**: workers that share nothing rediscover the same findings, and the synthesiser has to read every transcript to combine them.
 
@@ -78,7 +77,7 @@ flowchart LR
 | **Grounding layer** | An evaluator checks each claim against edges with sources: "no supported path from X to Y" is a critique you can act on |
 | **Persistent world model** | Long investigations, incremental ingestion, contradiction tracking, facts with time ranges, handoff between models, recovery after a failed run |
 
-The synthesis makes one further distinction worth keeping. A **commit or lineage DAG** records *what changed and who changed it*. The **KG** records *what is believed and why*. Don't collapse them into one structure. Track A tracing ([note 08](08-governance-and-production.md)) covers the first.
+The playbook makes one further distinction worth keeping. A **commit or lineage DAG** records *what changed and who changed it*. The **KG** records *what is believed and why*. Don't collapse them into one structure. Track A tracing ([note 08](08-governance-and-production.md)) covers the first.
 
 ---
 
@@ -160,7 +159,7 @@ The contract on the wire is a JSON Schema the validator enforces. Trimmed to its
 
 ## Five planes
 
-The synthesis's reference architecture keeps five concerns apart:
+The playbook's reference architecture keeps five concerns apart:
 
 | Plane | Holds | Track A note |
 |---|---|---|
@@ -204,13 +203,13 @@ Each layer has a metric that is easy to misread:
 | Query | Answer correctness **and** path validity: supported edges, cited, time and source constraints respected | A right answer reached through a wrong path is luck |
 | Swarm | Redundant findings, tokens and quality compared with a single loop | Wall-clock gains that cost quality |
 
-Improving the extraction prompt is itself an autoresearch loop. Propose one prompt or schema change, rerun on the gold set, keep it if precision, recall and false-merge rate improve, and revert it otherwise. The synthesis calls this "graph autoresearch". It is [04-loop](../../04-loop-engineering/README.md) applied to [note 10](10-building-kgs-with-llms.md).
+Improving the extraction prompt is itself an autoresearch loop. Propose one prompt or schema change, rerun on the gold set, keep it if precision, recall and false-merge rate improve, and revert it otherwise. The playbook calls this "graph autoresearch". It is [04-loop](../../04-loop-engineering/README.md) applied to [note 10](10-building-kgs-with-llms.md).
 
 ---
 
 ## Build path
 
-Don't start at the swarm. The synthesis's staged path matches [note 06](06-when-not-to-build-a-graph.md)'s adoption advice:
+Don't start at the swarm. The playbook's staged path matches [note 06](06-when-not-to-build-a-graph.md)'s adoption advice:
 
 1. **One measured loop.** A fixed metric and reversible actions.
 2. **A role split.** Generator and verifier with isolated contexts.

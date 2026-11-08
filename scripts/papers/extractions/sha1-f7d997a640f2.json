@@ -1,0 +1,534 @@
+{
+ "schema": 1,
+ "key": "sha1:f7d997a640f2",
+ "pdf": "data-science/sources/cawley-2010-over-fitting-model-selection.pdf",
+ "bib": {
+  "title": "On Over-fitting in Model Selection and Subsequent Selection Bias in Performance Evaluation",
+  "authors": [
+   "Gavin C. Cawley",
+   "Nicola L. C. Talbot"
+  ],
+  "first_author": "Cawley",
+  "year": 2010,
+  "venue": "Journal of Machine Learning Research 11 (2010) 2079-2107",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 81110,
+  "chars_total": 81110,
+  "engine": "pymupdf",
+  "skipped": "References only skimmed"
+ },
+ "type": "empirical",
+ "question": "Does over-fitting the model selection criterion (hyper-parameter tuning on a finite sample) degrade generalisation, and does it bias common performance-evaluation protocols?",
+ "hypothesis": "The variance of a model selection criterion, not only its bias, permits over-fitting in model selection, and evaluation protocols that do not repeat model selection inside each trial give optimistically biased error estimates.",
+ "contributions": [
+  "Empirical demonstration that over-fitting at the second level of inference (model selection) can substantially hurt generalisation of state-of-the-art learners",
+  "Demonstration that common evaluation protocols (median-hyper-parameter protocol; external model selection before cross-validation) give optimistic selection bias",
+  "Discussion of remedies: regularisation, early stopping, hyper-parameter averaging, fewer hyper-parameters, Bayesian integration, nested cross-validation"
+ ],
+ "method": {
+  "summary": "Kernel ridge regression (and KLR, EP-GPC) are tuned by minimising PRESS/LOO-CV or maximising evidence on a synthetic Ripley-style benchmark with known ground truth and on the 13 Ratsch benchmarks. Internal (model selection inside each trial) protocols are compared against median and external protocols to measure selection bias.",
+  "task": "binary classification; hyper-parameter selection and performance evaluation",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Synthetic benchmark (Ripley-style, four spherical Gaussians, variance 0.04)",
+    "role": "both",
+    "size": "256 patterns for the fixed training set (Sec 4.2); 1000 realisations of 64 samples (Fig 2); 100 training sets of 64 plus test set of 4096 (Sec 5.2.1); training set 4096 for ARD tuned on true test MSE",
+    "split": "validation sets of 64 or 256 patterns, 100 random realisations (Sec 4.2); test error computed numerically from generative model",
+    "source": "generated; Bayes error approx 12.38%",
+    "preprocessing": null
+   },
+   {
+    "name": "Thirteen benchmarks of Ratsch et al. (2001), from UCI",
+    "role": "both",
+    "size": "banana 400/4900 train/test; breast cancer 200/77; diabetis 468/300; flare solar 666/400; german 700/300; heart 170/100; image 1300/1010; ringnorm 400/7000; splice 1000/2175; thyroid 140/75; titanic 150/2051; twonorm 400/7000; waveform 400/4600",
+    "split": "100 pre-defined train/test partitions per data set (20 for image and splice)",
+    "source": "UCI machine learning repository, partitions from Ratsch et al. (2001)",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "RBF-KRR (kernel ridge regression / LS-SVM classifier, RBF kernel)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "kernel machine, hyper-parameters lambda and eta",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "model selection": "minimise Allen's PRESS (closed-form leave-one-out) with scaled conjugate gradient or Nelder-Mead simplex"
+    }
+   },
+   {
+    "name": "ARD-KRR (ARD kernel, one scale per feature)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "kernel ridge regression, ARD RBF kernel",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "RBF-KLR (kernel logistic regression)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "RBF kernel; approximate leave-one-out CV of log-likelihood for model selection",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "EP-GPC (expectation-propagation Gaussian process classifier)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "isotropic squared exponential covariance (RBF) or ARD; model selection by maximising marginal likelihood (evidence)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "regularised least squares L = 1/2||w||^2 + 1/(2 lambda) sum [y_i - w.phi(x_i) - b]^2 (KRR)",
+   "optimizer": "closed-form solve (Cholesky); outer hyper-parameter loop by scaled conjugate gradient or Nelder-Mead simplex",
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "lambda tuned by model selection",
+   "hardware": "a single modern Linux workstation",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": "100 benchmark realisations per data set (20 for image, splice); 1000 synthetic realisations in Fig 2",
+   "other": {
+    "model selection criteria": "PRESS (KRR), approximate LOO log-likelihood (KLR), Bayesian evidence (EP-GPC), 4-fold CV MSE (Fig 2), split-sample smoothed error rate with gamma=8 (Sec 4.2), repeated split-sample 9:1 with varying repetitions (Fig 14)",
+    "cross-validation in Table 8": "10-fold, external vs internal model selection"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "100 realisations per benchmark (20 for image, splice)",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "test error rate",
+     "definition": "mean error over test data across realisations, with standard error",
+     "unit": "%",
+     "higher_is_better": false
+    },
+    {
+     "name": "bias of protocol",
+     "definition": "mean difference between error under internal protocol and under median/external protocol",
+     "unit": "percentage points",
+     "higher_is_better": false
+    },
+    {
+     "name": "mean rank",
+     "definition": "mean rank of classifiers over the 13 data sets, shown in critical difference diagrams (Demsar 2006)",
+     "unit": "rank",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "RBF vs ARD kernel (Tables 2, 3)",
+    "internal vs median protocol (Tables 4-7)",
+    "internal vs external protocol (Table 8)"
+   ],
+   "protocol": "Wilcoxon signed ranks test per data set and across data sets; Friedman test / critical difference diagrams for ranks; significance of bias taken as larger than twice the standard error in Table 8"
+  },
+  "availability": {
+   "code": "GKM (Generalised Kernel Machine) MATLAB toolbox, public domain, theoval.cmp.uea.ac.uk/~gcc/projects/gkm",
+   "weights": null,
+   "data": "Ratsch et al. (2001) benchmark suite; synthetic generator described in Sec 3.1"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Over-fitting in model selection is visible on the synthetic benchmark: the cross-validation criterion keeps falling while true test MSE rises after roughly 30-40 optimisation iterations.",
+   "kind": "measured",
+   "source": null,
+   "metric": "iterations before test MSE rises",
+   "value": "30-40",
+   "unit": "iterations",
+   "baseline_value": null,
+   "n": 1000,
+   "setup": "Synthetic benchmark, 1000 realisations of 64 samples, KRR with ARD kernel tuned to minimise 4-fold CV MSE",
+   "quote": "30–40 iterations), the test error begins to climb slowly once more as the hyper-parameters are tuned",
+   "table": null,
+   "note": null,
+   "where": "Sec 4, Fig 2, p.2085"
+  },
+  {
+   "claim": "The variance of the selection criterion can produce models from severely under-fit to severely over-fit depending on which small validation set is drawn, so a higher-variance unbiased criterion can pick a worse model than a lower-variance biased one.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Synthetic benchmark, fixed training set of 256 patterns, RBF-KRR, split-sample validation sets of 64 patterns, 100 random draws (Figs 4-8); larger 256-pattern validation sets cluster hyper-parameters tighter",
+   "quote": "variance of the split-sample estimator can result in models ranging from severely under-ﬁt (a) to severely over-ﬁt (f), with variations in between these extremes.",
+   "table": null,
+   "note": "Quote is from Sec 4.2 text near Fig 6; the conceptual argument (unbiasedness unimportant relative to variance) is Sec 4.1 / Fig 3.",
+   "where": "Sec 4.1-4.2, Figs 3-8, pp.2086-2089"
+  },
+  {
+   "claim": "The effect of over-fitting in model selection is of comparable magnitude to differences in performance between learning algorithms.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Abstract-level summary of the paper's experiments on the 13 benchmarks",
+   "quote": "in performance between learning algorithms, and thus cannot be ignored in empirical evaluation.",
+   "table": null,
+   "note": null,
+   "where": "Abstract"
+  },
+  {
+   "claim": "The more flexible ARD kernel (nested around RBF, so never worse in principle) was statistically better than RBF on only one of thirteen data sets for KRR, because of more hyper-parameters to over-fit; ARD often had lower PRESS but higher test error.",
+   "kind": "measured",
+   "source": null,
+   "metric": "data sets where ARD significantly better",
+   "value": 1,
+   "unit": "of 13",
+   "baseline_value": null,
+   "n": 13,
+   "setup": "KRR classifier, PRESS model selection, Wilcoxon signed ranks test, 13 benchmarks",
+   "quote": "ARD kernel only achieves statistical superiority on one of the thirteen (image).",
+   "table": null,
+   "note": "Same pattern for EP-GPC with evidence (Table 3), where RBF often beats ARD and test error is often negatively correlated with the evidence.",
+   "where": "Sec 4.3, Table 2, p.2092"
+  },
+  {
+   "claim": "External model selection (done once on the whole design set before 10-fold CV) gives an optimistic bias on all 13 benchmarks; largest on breast cancer.",
+   "kind": "measured",
+   "source": null,
+   "metric": "bias (internal minus external error)",
+   "value": 1.19,
+   "unit": "percentage points",
+   "baseline_value": null,
+   "n": 100,
+   "setup": "RBF-KRR, 10-fold CV, 100 realisations per data set (20 for image and splice), breast cancer",
+   "quote": null,
+   "table": "Table 8, row breast cancer, column Bias (1.190 ± 0.135; external 26.280, internal 27.470)",
+   "note": "Thyroid bias 0.536 ± 0.073 (external 3.743, internal 4.279). Bias is larger than twice the standard error on all but splice and twonorm.",
+   "where": "Sec 5.3, Table 8, p.2102"
+  },
+  {
+   "claim": "The thyroid bias of external model selection is large relative to the gap between competitive classifiers.",
+   "kind": "measured",
+   "source": null,
+   "metric": "bias (internal minus external error)",
+   "value": 0.536,
+   "unit": "percentage points",
+   "baseline_value": null,
+   "n": 100,
+   "setup": "RBF-KRR, 10-fold CV, thyroid",
+   "quote": null,
+   "table": "Table 8, row thyroid, column Bias",
+   "note": null,
+   "where": "Table 8"
+  },
+  {
+   "claim": "The median protocol (hyper-parameters selected on first five realisations, median applied to all) is optimistically biased; the heart bias is the largest.",
+   "kind": "measured",
+   "source": null,
+   "metric": "bias (internal minus median error)",
+   "value": 1.01,
+   "unit": "percentage points",
+   "baseline_value": null,
+   "n": 100,
+   "setup": "RBF-KRR, heart data set, 100 realisations",
+   "quote": null,
+   "table": "Table 5, row heart, column Bias (1.010 ± 0.186; internal 16.730, median 15.720)",
+   "note": "Positive bias on 11 of 13; twonorm and waveform negative. Table 5 caption is copied from Table 4 and does not describe the content.",
+   "where": "Sec 5.2, Table 5, p.2097"
+  },
+  {
+   "claim": "The median-protocol bias exceeds the typical difference between classifiers on breast cancer, german, heart and thyroid.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "RBF-KRR internal vs median protocol, Tables 4 and 5",
+   "quote": "breast cancer, german, heart and thyroid in particular, the bias is larger than the typical dif-",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.2, p.2097"
+  },
+  {
+   "claim": "Under the internal (unbiased) protocol no classifier among RBF-KRR, RBF-KLR and EP-GPC is significantly better; under the median protocol RBF-KRR appears significantly superior at the 95% level, purely from the bias.",
+   "kind": "measured",
+   "source": null,
+   "metric": "mean rank (RBF-KRR median)",
+   "value": 1.2308,
+   "unit": "rank",
+   "baseline_value": 1.9231,
+   "n": 13,
+   "setup": "13 benchmarks; internal mean ranks 1.9231 (KRR), 2 (GPC), 2.0769 (KLR) (Fig 10); with KRR median, ranks 1.2308 vs 2.3846 for both others (Fig 12)",
+   "quote": null,
+   "table": "Figure 12, RBF-KRR (median) rank 1.2308; Figure 10, RBF-KRR (internal) rank 1.9231",
+   "note": "baseline_value is RBF-KRR internal rank.",
+   "where": "Sec 5.1-5.2, Figs 10 and 12, pp.2095-2099"
+  },
+  {
+   "claim": "The median-protocol bias is not only from test-sample re-use: with disjoint data on the synthetic benchmark the optimistic bias remains highly significant.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Wilcoxon p-value",
+   "value": 0.001,
+   "unit": "p <",
+   "baseline_value": null,
+   "n": 100,
+   "setup": "100 replications, 100 training sets of 64 patterns, test set of 4096, all mutually disjoint",
+   "quote": "p < 0.001",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.2.1, Fig 11, p.2098"
+  },
+  {
+   "claim": "The median protocol does not impose a commensurate bias across classifiers: its bias differs significantly between RBF-KRR and RBF-EP-GPC (p<0.05) on five of thirteen benchmarks, favouring KRR.",
+   "kind": "measured",
+   "source": null,
+   "metric": "data sets with p<0.05",
+   "value": 5,
+   "unit": "of 13",
+   "baseline_value": null,
+   "n": 13,
+   "setup": "Wilcoxon signed ranks on bias per realisation, RBF-KRR vs RBF-EP-GPC",
+   "quote": null,
+   "table": "Table 7, column Wilcoxon p-value (< 0.05 on banana, diabetis, heart, ringnorm, twonorm)",
+   "note": "Text says five; the table has < 0.05 in five rows.",
+   "where": "Sec 5.2.2, Table 7, p.2100"
+  },
+  {
+   "claim": "With repeated split-sample selection, RBF-KRR with five or fewer folds ranks poorly under the internal protocol (high-variance criterion over-fits); the median protocol hides this, favouring the worst criterion.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "RBF-KRR with repeated 9:1 split-sample model selection, number of folds 2-20, versus EP-GPC and RBF-KLR, mean ranks (Fig 14)",
+   "quote": null,
+   "table": null,
+   "note": "Read from Fig 14; the text states the threshold as five or less.",
+   "where": "Sec 5.2.2, Fig 14, p.2101"
+  },
+  {
+   "claim": "Nested cross-validation (model selection repeated inside every trial) is the recommended unbiased protocol, at higher compute cost.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Recommendation in Intro and Conclusions",
+   "quote": "such a nested cross-validation or “double cross” (Stone, 1974).",
+   "table": null,
+   "note": null,
+   "where": "Sec 1, p.2080; Sec 6, p.2103"
+  },
+  {
+   "claim": "A KRR with ARD kernel tuned on the true test MSE reaches 12.50% error against a Bayes error of about 12.38%, so model mis-specification is not the cause.",
+   "kind": "measured",
+   "source": null,
+   "metric": "error rate",
+   "value": 12.5,
+   "unit": "%",
+   "baseline_value": 12.38,
+   "n": null,
+   "setup": "Synthetic benchmark, training set 4096 samples",
+   "quote": "The performance of this model achieved an error rate of 12.50%",
+   "table": null,
+   "note": null,
+   "where": "Sec 4, p.2085"
+  }
+ ],
+ "limits": [
+  "Experiments use small data sets (140 to 1300 training patterns) and mainly kernel machines (KRR, KLR, EP-GPC) with 2 or more hyper-parameters; no deep nets or tree ensembles.",
+  "The authors state no theory: over-fitting in model selection lacks mathematical tractability and 'would greatly benefit from further theoretical analysis'.",
+  "Remedies (regularisation, early stopping, averaging, fewer hyper-parameters, Bayesian integration) are discussed but not tested here beyond the repeated split-sample and median-averaging illustrations.",
+  "Nested CV is recommended but costs processor time; the paper does not give run times or a nested CV experiment of its own (its internal protocol is the nested analogue).",
+  "Authors say the findings apply to any criterion optimised over a finite sample, including Bayesian evidence and performance bounds; only CV/PRESS and evidence are tested."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "internal protocol",
+   "definition": "model selection performed independently within each fold of the resampling procedure",
+   "where": "Sec 5.1"
+  },
+  {
+   "term": "median protocol",
+   "definition": "model selection on the first five realisations, median hyper-parameters then used to evaluate every realisation",
+   "where": "Sec 5.2"
+  },
+  {
+   "term": "external protocol",
+   "definition": "model selection performed once using the entire design set, before cross-validation",
+   "where": "Sec 5.3"
+  },
+  {
+   "term": "over-fitting in model selection",
+   "definition": "minimisation of the model selection criterion beyond the point at which generalisation performance ceases to improve and subsequently begins to decline",
+   "where": "Sec 4"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Cawley and Talbot, Preventing over-fitting during model selection via Bayesian regularisation of the hyper-parameters",
+   "year": 2007,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "previous study noting model selection criterion variance and regularisation of it",
+   "quote": null
+  },
+  {
+   "work": "Ambroise and McLachlan, Selection bias in gene extraction on the basis of microarray gene-expression data",
+   "year": 2002,
+   "arxiv": null,
+   "relation": "related",
+   "note": "analogous selection bias from feature selection prior to evaluation",
+   "quote": null
+  },
+  {
+   "work": "Ratsch, Onoda, Muller, Soft margins for AdaBoost",
+   "year": 2001,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "13-benchmark suite and the median protocol this paper criticises",
+   "quote": null
+  },
+  {
+   "work": "Stone, Cross-validatory choice and assessment of statistical predictions",
+   "year": 1974,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "cross-validation and double cross",
+   "quote": null
+  },
+  {
+   "work": "Demsar, Statistical comparisons of classifiers over multiple data sets",
+   "year": 2006,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Wilcoxon signed ranks test, critical difference diagrams",
+   "quote": null
+  },
+  {
+   "work": "Allen, The relationship between variable selection and prediction (PRESS)",
+   "year": 1974,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "PRESS criterion",
+   "quote": null
+  },
+  {
+   "work": "Rasmussen and Williams, Gaussian Processes for Machine Learning",
+   "year": 2006,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "EP-GPC baseline",
+   "quote": null
+  },
+  {
+   "work": "Bengio and Grandvalet, No unbiased estimator of the variance of k-fold cross-validation",
+   "year": 2004,
+   "arxiv": null,
+   "relation": "related",
+   "note": "variance of CV",
+   "quote": null
+  },
+  {
+   "work": "Hall and Robinson, Reducing the variability of crossvalidation for smoothing parameter choice",
+   "year": 2009,
+   "arxiv": null,
+   "relation": "related",
+   "note": "hyper-parameter averaging",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "Evolution of the expected four-fold cross-validation and true test mean squared error as a function of the number of iterations of the model selection process",
+   "page": 2085,
+   "why": "Shows the classic over-fitting U-curve in model selection: CV error falls monotonically while test error turns up."
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Hypothetical example of an unbiased (a) and a biased (b) model selection criterion",
+   "page": 2087,
+   "why": "Shows why low variance can matter more than unbiasedness."
+  },
+  {
+   "figure": "Table 8",
+   "caption": "Error rate estimates for kernel ridge regression ... for model selection schemes that are internal and external to the cross-validation process",
+   "page": 2102,
+   "why": "Direct size of selection bias per data set."
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 2.1, p.2082",
+   "snippet": "PRESS(theta) = sum_{i=1..l} [ r_i^(-i) ]^2, with r_i^(-i) = alpha_i / [C^-1]_ii",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Table 5 caption is a copy of Table 4's and describes three classifiers though the table holds KRR internal vs median plus bias.",
+  "PDF text contains ligature characters (fi) which complicate verbatim quoting.",
+  "No embedded instructions found."
+ ]
+}

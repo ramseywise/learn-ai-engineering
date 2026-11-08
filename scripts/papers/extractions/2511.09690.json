@@ -1,0 +1,784 @@
+{
+ "schema": 1,
+ "key": "2511.09690",
+ "pdf": "ai-engineering/08-multimodal-engineering/sources/team-2025-omnilingual-asr.pdf",
+ "bib": {
+  "title": "Omnilingual ASR: Open-Source Multilingual Speech Recognition for 1600+ Languages",
+  "authors": [
+   "Omnilingual ASR team (core: Gil Keren, Artyom Kozhevnikov, Yen Meng, Christophe Ropers, Matthew Setzler, Skyler Wang; plus Ife Adebara, Michael Auli, Can Balioglu, Kevin Chan, Chierh Cheng, Joe Chuang, Caley Droof, Mark Duppenthaler, Paul-Ambroise Duquenne, Alexander Erben, Cynthia Gao, Gabriel Mejia Gonzalez, Kehan Lyu, Sagar Miglani, Vineel Pratap, Kaushik Ram Sadagopan, Safiyyah Saleem, Arina Turkatenko, Albert Ventayol-Boada, Zheng-Xin Yong; leadership: Yu-An Chung, Jean Maillard, Rashel Moritz, Alexandre Mourachko, Mary Williamson, Shireen Yates)"
+  ],
+  "first_author": "Omnilingual ASR team",
+  "year": 2025,
+  "venue": "preprint",
+  "arxiv": "2511.09690",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 207628,
+  "chars_total": 207628,
+  "engine": "pymupdf",
+  "skipped": "Reference list (about chars 135486-160091) skimmed; Table 25 language list (about 160091-196569) scanned only, not read row by row."
+ },
+ "type": "system",
+ "question": "Can one ASR system cover 1,600+ languages, including long-tail languages with little data, and let communities add unseen languages from a few in-context examples?",
+ "hypothesis": "Because the training corpus covers many languages, training an LLM-style decoder on N context speech-text pairs from one language should generalize to languages absent from training (Section 4.3).",
+ "contributions": [
+  "SSL wav2vec 2.0 models at 300M, 1B, 3B and 7B covering 1600+ languages",
+  "Supervised CTC ASR models fine-tuned from the SSL checkpoints",
+  "Supervised LLM-based ASR models",
+  "A zero-shot LLM-based ASR model that transcribes unseen languages from a few examples at inference",
+  "A massively multilingual ASR dataset covering over 300 languages, average 10 hours of transcribed speech per language"
+ ],
+ "method": {
+  "summary": "A wav2vec 2.0 encoder is scaled to 7B and pre-trained on 4.3M hours of unlabeled speech, then fine-tuned on a 1,690-language labeled corpus (AllASR) with either a linear CTC head or a 1.2B Transformer decoder (LLM-ASR). A zero-shot variant prepends N context speech-text pairs to the decoder prompt, trained on N+1 same-language pairs. Language/script ID conditioning and speech translation are added with small changes.",
+  "task": "multilingual character-level speech recognition, zero-shot ASR by in-context examples, X-to-English speech translation",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "SSL pre-training corpus (unlabeled speech)",
+    "role": "pretrain",
+    "size": "3.84M hours across 1,239 languages plus 460K hours with no language ID (about 4.3M hours total)",
+    "split": null,
+    "source": "public data, partner and commissioned data available when encoder training began, plus a large internal unlabeled collection",
+    "preprocessing": "long recordings segmented into chunks of at most 30 s"
+   },
+   {
+    "name": "AllASR (labeled)",
+    "role": "train",
+    "size": "Table 3 total row: 120,710 hours, 1,690 languages",
+    "split": "training split; dev and test splits per corpus",
+    "source": "open source datasets, LTPP/internal/licensed data, African Next Voices, Open Multilingual Speech Fund, Lanfrica/Naijavoices, Omnilingual ASR Corpus",
+    "preprocessing": "text split with SAT sat-12l-sm into segments under 200 chars; forced alignment; audio segments kept within [2 s, 50 s] by split/merge; WER filtering on the Omnilingual corpus with source-specific thresholds 150 to 250 WER (Appendix B) using a 7B CTC model; character tokenizer of 9,812 symbols (characters seen fewer than 5 times removed); transcripts with >=15% unknown tokens dropped"
+   },
+   {
+    "name": "Omnilingual ASR Corpus (commissioned)",
+    "role": "train",
+    "size": "3,350 hours, 348 languages (Table 3)",
+    "split": "part of AllASR",
+    "source": "commissioned spontaneous speech from survey-style prompts; target 10 hours from 10 speakers per language over about 350-400 languages; to be open-sourced",
+    "preprocessing": "QA: every language human-reviewed at least in small scale, 279 languages in depth; language-code validation on 206 languages found misattributed codes in 20"
+   },
+   {
+    "name": "MMS-Lab, FLEURS, MLS, Common Voice 22, Babel",
+    "role": "eval",
+    "size": "MMS-Lab-1143, FLEURS-102, MLS-8, CV22-76 (as named in the tables)",
+    "split": "dev and test",
+    "source": "public",
+    "preprocessing": null
+   },
+   {
+    "name": "CoVoST2 and FLEURS (S2TT)",
+    "role": "eval",
+    "size": "CoVoST2 21 source languages; FLEURS 101",
+    "split": "test",
+    "source": "X-Eng training data largely reused from SeamlessM4T, FLEURS excluded from training",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "OmniASR-W2V-0.3B/1B/3B/7B",
+    "role": "proposed",
+    "params": "317M / 965M / 3046M / 6488M",
+    "architecture": "wav2vec 2.0 (conv feature encoder, Transformer encoder, quantizer; contrastive loss with 100 distractors)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "24 / 48 / 60 / 128",
+    "hidden": "1024 / 1280 / 2048 / 2048",
+    "heads": "16 for all",
+    "context": null,
+    "other": {
+     "ffn_dim": "4096 / 5120 / 8192 / 8192",
+     "frame": "25 ms window, 20 ms stride"
+    }
+   },
+   {
+    "name": "OmniASR CTC (300M, 1B, 3B, 7B)",
+    "role": "proposed",
+    "params": "encoder size plus one linear layer",
+    "architecture": "SSL encoder with linear CTC head over characters",
+    "init_from": "OmniASR-W2V of the same size",
+    "tokenizer": "character set from AllASR",
+    "vocab": "9,812 symbols (Section 3.4)",
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "OmniASR LLM-ASR (300M, 1B, 3B, 7B encoder)",
+    "role": "proposed",
+    "params": "decoder 1.2B; Table 14 lists totals 2.2B, 4.3B, 7.7B for 1B, 3B, 7B encoders",
+    "architecture": "wav2vec 2.0 encoder + 12-layer Transformer decoder, model dim 4096, 8 attention heads, next-token prediction",
+    "init_from": "OmniASR-W2V encoder; decoder trained from scratch (stated for S2TT)",
+    "tokenizer": "character-level",
+    "vocab": null,
+    "layers": "12 (decoder)",
+    "hidden": "4096 (decoder)",
+    "heads": "8 (decoder)",
+    "context": null,
+    "other": {
+     "language_conditioning": "language+script ID embedding, dropped with probability p; final models use 50%"
+    }
+   },
+   {
+    "name": "Zero-shot LLM-ASR",
+    "role": "proposed",
+    "params": null,
+    "architecture": "LLM-ASR with N context speech-text pairs in the decoder prompt",
+    "init_from": "7B wav2vec 2.0 encoder (w2v2 seed); CTC-seeded variant generalised worse",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "5 or 10 context examples tested",
+    "other": {}
+   },
+   {
+    "name": "Whisper small/medium/large-v3; large-v2 for S2TT",
+    "role": "baseline",
+    "params": "244M / 769M / 1.5B",
+    "architecture": "encoder-decoder Transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "USM, USM-M, USM-M-adapter, Maestro-U",
+    "role": "baseline",
+    "params": "2B Conformer encoder",
+    "architecture": "Conformer + RNN-T",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "published numbers; models not public"
+    }
+   },
+   {
+    "name": "MMS, XLS-R, SeamlessM4T v1, AudioPaLM-2-8B-AST",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "SSL: wav2vec 2.0 contrastive loss. ASR: CTC loss (CTC models) or next-token cross-entropy (LLM-ASR). Zero-shot: next-token cross-entropy on the target transcript after N context pairs.",
+   "optimizer": "SSL: Adam. Fine-tuning: Adam with beta1=0.9, beta2=0.98",
+   "lr": "SSL 1e-4; CTC fine-tune 1e-5; LLM-ASR 5e-5; per-language CTC fine-tune 1e-05",
+   "lr_schedule": "SSL: warmup then polynomial decay to zero. Fine-tuning: tri-stage, warm-up first 10% of updates, constant next 40%, exponential decay final 50%",
+   "warmup": "SSL 32K steps; fine-tuning first 10% of updates",
+   "batch_size": "SSL (hours of audio per batch) 6, 5.7, 8.5, 17.6 for 300M, 1B, 3B, 7B; CTC effective batch 4.2 hours; LLM-ASR effective batch 2.1 hours",
+   "steps": "SSL one million updates; CTC 200k steps; LLM-ASR 150k steps",
+   "epochs": null,
+   "tokens": "SSL 4.3M hours of audio",
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "language upsampling p_l proportional to (n_l/N)^beta; SSL betaL=betaD=0.5; ASR final (beta_corpus, beta_language)=(0.5, 0.25); language ID dropped during training with probability p (50% in final)",
+   "hardware": "Ablations: 1B CTC 100K steps on 32 GPUs; 7B LLM-ASR 150K steps on 64 GPUs; per-language CTC fine-tune about 1 hour wall time on 32 GPUs at 300M scale. GPU type and main-run hardware not stated.",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "framework": "fairseq2",
+    "pretraining_sampling": "two-step: languages within each source from p_l=(n_l/N)^betaL, then sources the same way with betaD",
+    "per_language_finetune": "w2v2 seed: lr 1e-05, 30K steps (converges around 10K); CTC seed: lr 1e-05, 5K steps; 11 low-resource languages with 5-10 h train and at least 1 h validation",
+    "upsampling_sweep_model": "1B CTC, 200K steps",
+    "s2tt": "same hyperparameters as LLM-ASR; source and target LID tokens inserted; encoders W2V-1B/3B/7B"
+   }
+  },
+  "inference": {
+   "decoding": "LLM-ASR: beam search, beam size 5; CTC decoding not described",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single evaluation per system; zero-shot context examples chosen randomly per utterance, same across models; no seeds or repeated runs stated",
+   "prompting": "zero-shot: <c> {<cs> g_s(x_i) <cs BOS> g_t(y_i) <cs EOS> </cs>} x N </c> g_s(x) <BOS> g_t(y) <EOS>; language-conditioned: g_s(x) g_t(<language>) g_l(l) g_t(<BOS>) g_t(y) g_t(<EOS>)",
+   "retrieval": "context examples by SONAR speech or text embedding nearest neighbours (sonar_ss, sonar_st), mean-pooled wav2vec 2.0 (w2v2), bm25 on target transcript (text_sim, oracle), top-5 character-bigram diversity (bigram), or the target pair itself (same_ex, oracle); similar examples ordered by increasing similarity",
+   "parameters": {
+    "context_examples": "5 (selection study), 5 and 10 (unseen-language study)",
+    "n_gram_LM_fusion": "n-gram LMs trained on FLEURS and MLS training transcripts for the 7B variant; hyperparameters tuned on dev; values not stated",
+    "language_conditioning_p_final": "0.5"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "CER",
+     "definition": "character error rate averaged across languages within a benchmark or bucket",
+     "unit": "%",
+     "higher_is_better": false
+    },
+    {
+     "name": "WER",
+     "definition": "word error rate, used for MLS-8 in Table 7",
+     "unit": "%",
+     "higher_is_better": false
+    },
+    {
+     "name": "UER",
+     "definition": "reported in Table 12 on holdout languages; not defined (Section 5.5 text calls it CER)",
+     "unit": "%",
+     "higher_is_better": false
+    },
+    {
+     "name": "BLEU",
+     "definition": "average over X-Eng directions",
+     "unit": "BLEU",
+     "higher_is_better": true
+    },
+    {
+     "name": "Win rate",
+     "definition": "number of FLEURS-81 languages where the model has lower CER than Whisper large-v3",
+     "unit": "languages",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Whisper small/medium/large-v3",
+    "USM, USM-M, USM-M-adapter, Maestro-U",
+    "MMS (single- and multi-domain, with n-gram LM)",
+    "XLS-R and MMS SSL encoders",
+    "SeamlessM4T v1 medium/large, Whisper large-v2, AudioPaLM-2-8B-AST, XLSR-2B-S2T (S2TT)",
+    "non-zero-shot CTC and LLM-ASR trained with the same 32 languages held out"
+   ],
+   "protocol": "Mean CER over languages per benchmark on dev and test; 95% CIs across languages for bucket and grouping tables; buckets high >50 h, mid 10-50 h, low <10 h of AllASR labeled data; languages with <30 min validation excluded; 14 language groupings; zero-shot: 32 held-out languages (half high-resource, half low-resource), CER pooled per language across eval sets. The authors caution against comparing numbers across heterogeneous benchmarks."
+  },
+  "availability": {
+   "code": "https://github.com/facebookresearch/omnilingual-asr",
+   "weights": "SSL (300M-7B), CTC, LLM-ASR and zero-shot models released via the same repository (Introduction)",
+   "data": "Omnilingual ASR Corpus (over 300 languages, average 10 h per language) to be open-sourced; parts of AllASR are internal or licensed"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.lr",
+    "quote": "All CTC models were trained with a learning rate of 10−5, an effective batch size of 4.2 hours, and for 200k steps.",
+    "where": "Section 5.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "The 7B LLM-ASR beats Whisper large-v3 in most FLEURS-81 languages.",
+   "kind": "measured",
+   "source": null,
+   "metric": "win count",
+   "value": 65,
+   "unit": "of 81 languages",
+   "baseline_value": null,
+   "n": null,
+   "setup": "FLEURS-81 test, CER per language, 7B LLM-ASR with language conditioning vs Whisper large-v3",
+   "note": "24 of 34 on the most spoken languages",
+   "where": "Section 5.2.1",
+   "quote": "we achieve an 80% win rate (65 out of 81) across all languages in FLEURS-81"
+  },
+  {
+   "claim": "7B LLM-ASR average CER versus Whisper large-v3 on FLEURS-81.",
+   "kind": "measured",
+   "source": null,
+   "metric": "CER",
+   "value": 5.6,
+   "unit": "% CER",
+   "baseline_value": 22.6,
+   "n": null,
+   "setup": "Table 5, average CER over 81 languages, test, no LM",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row 7B LLM-ASR, column FLEURS-81 test (Whisper large-v3 test 22.6)"
+  },
+  {
+   "claim": "On Common Voice 22 (76 languages) Whisper large-v3 test CER is 55.6 versus 6.4 for 7B LLM-ASR.",
+   "kind": "measured",
+   "source": null,
+   "metric": "CER",
+   "value": 6.4,
+   "unit": "% CER",
+   "baseline_value": 55.6,
+   "n": null,
+   "setup": "Table 5, CV22-76 test",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row 7B LLM-ASR, column CV22-76 test"
+  },
+  {
+   "claim": "Whisper large-v3 stays ahead on MLS-8 (high-resource languages).",
+   "kind": "measured",
+   "source": null,
+   "metric": "CER",
+   "value": 2.4,
+   "unit": "% CER",
+   "baseline_value": 2.0,
+   "n": null,
+   "setup": "Table 5, MLS-8 test",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row 7B LLM-ASR, column MLS-8 test (Whisper large-v3 2.0)"
+  },
+  {
+   "claim": "7B LLM-ASR slightly beats the best USM variant on FLEURS-102.",
+   "kind": "measured",
+   "source": null,
+   "metric": "CER",
+   "value": 6.2,
+   "unit": "% CER",
+   "baseline_value": 6.5,
+   "n": null,
+   "setup": "Test CER averaged over 102 languages; USM numbers are published values",
+   "note": "6.1 with LM fusion",
+   "where": "Section 5.2.2",
+   "quote": "which achieves a CER of 6.5%, our 7B-LLM achieves 6.2%"
+  },
+  {
+   "claim": "7B LLM-ASR beats MMS on MMS-Lab-1143, FLEURS-102 and MLS-8.",
+   "kind": "measured",
+   "source": null,
+   "metric": "CER",
+   "value": 6.2,
+   "unit": "% CER",
+   "baseline_value": 6.3,
+   "n": null,
+   "setup": "Table 7 test sets; MMS with n-gram LM, multi-domain training",
+   "note": null,
+   "where": "Table 7",
+   "table": "Table 7, row 7B LLM-ASR, column FLEURS-102 (MMS multi-domain 6.3)"
+  },
+  {
+   "claim": "The 7B LLM-ASR meets CER<=10 for most of 1,570 evaluated languages.",
+   "kind": "measured",
+   "source": null,
+   "metric": "share CER<=10",
+   "value": 78,
+   "unit": "% of languages with CER<=10",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 10, 14 language groupings, no LM fusion",
+   "note": "Table 10 total average CER 7.1",
+   "where": "Section 5.3.2",
+   "quote": "overall our model meets the CER quality threshold for 78% of the 1570 languages we evaluate on"
+  },
+  {
+   "claim": "Low-resource languages (<10 h) average CER stays high.",
+   "kind": "measured",
+   "source": null,
+   "metric": "CER",
+   "value": 18.0,
+   "unit": "% CER",
+   "baseline_value": null,
+   "n": null,
+   "setup": "7B-LLM, low bucket",
+   "note": "18.6 is 7B-CTC; text says 549 low-resource languages, Tables 8 and 9 say 546",
+   "where": "Section 5.3.1",
+   "quote": "with an average CER of 18.6 and 18.0 for 7B-CTC and"
+  },
+  {
+   "claim": "Zero-shot LLM-ASR with 10 context examples reduces unseen-language CER.",
+   "kind": "measured",
+   "source": null,
+   "metric": "CER",
+   "value": 14.4,
+   "unit": "% CER",
+   "baseline_value": 26.3,
+   "n": null,
+   "setup": "32 held-out languages, w2v2-seeded encoder, random context examples; baseline CTC",
+   "note": "Table 11 prints 26.3 for CTC and 31.0 for non-zero-shot LLM-ASR",
+   "where": "Section 5.4",
+   "quote": "reduces the overall CER on unseen languages from 26.33% to 14.4% using a context size of 10"
+  },
+  {
+   "claim": "SONAR-based context selection reduces CER over random selection.",
+   "kind": "measured",
+   "source": null,
+   "metric": "relative reduction",
+   "value": 11.2,
+   "unit": "% relative (up to)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Section 5.5, 5-example zero-shot model, 32 SONAR-supported holdout languages",
+   "note": "Table 12 reports UER; mean-pooled wav2vec 2.0 gives no clear gain; same_ex oracle gives 11.6/16.4/9.8 on MMS-lab/FLEURS/CV",
+   "where": "Section 5.5",
+   "quote": "reducing CER by up to 11.2%"
+  },
+  {
+   "claim": "Without Omnilingual+OMSF data the model's CER on its new languages is more than double.",
+   "kind": "measured",
+   "source": null,
+   "metric": "CER",
+   "value": 22.62,
+   "unit": "% CER",
+   "baseline_value": 47.03,
+   "n": null,
+   "setup": "7B LLM-ASR 150K steps on 64 GPUs; mean CER on Omnilingual+OMSF dev sets, new languages",
+   "note": null,
+   "where": "Section 5.7.4",
+   "quote": "our AllASR_OMNI model achieves a mean CER of 22.62, less than half the 47.03"
+  },
+  {
+   "claim": "On 13 overlapping languages the new data cuts CER from 39.46 to 11.50.",
+   "kind": "measured",
+   "source": null,
+   "metric": "CER",
+   "value": 11.5,
+   "unit": "% CER",
+   "baseline_value": 39.46,
+   "n": null,
+   "setup": "Same ablation, overlap languages",
+   "note": null,
+   "where": "Section 5.7.4",
+   "quote": "CERs drop from 39.46 with the holdout model to 11.50 with AllASR_OMNI"
+  },
+  {
+   "claim": "Training with language/script conditioning on 50% of samples and using it at inference lowers CV22 CER.",
+   "kind": "measured",
+   "source": null,
+   "metric": "CER",
+   "value": 7.9,
+   "unit": "% CER",
+   "baseline_value": 11.3,
+   "n": null,
+   "setup": "LLM-ASR; p=0.5 versus p=0.0 training; Table 22",
+   "note": "p=0.5 without conditioning at inference gives 11.8",
+   "where": "Table 22",
+   "table": "Table 22, row 0.5 Yes, column CV22 (p=0.0 baseline 11.3)"
+  },
+  {
+   "claim": "Uniform upsampling (0,0) gives the lowest low-resource CER in the sweep; no upsampling is worst.",
+   "kind": "measured",
+   "source": null,
+   "metric": "CER",
+   "value": 21.14,
+   "unit": "% CER (Low bucket)",
+   "baseline_value": 26.4,
+   "n": null,
+   "setup": "1B CTC, 200K steps, resource-bucket protocol",
+   "note": "Final models use (0.5, 0.25) because (0,0) hurt noisier corpora such as Babel and CV22",
+   "where": "Table 17",
+   "table": "Table 17, row cbeta_0.0_lbeta_0.0, column Low (1.0,1.0 is 26.40)"
+  },
+  {
+   "claim": "Per-language fine-tuning of a 3B CTC model from the OmniASR checkpoint gives low CER on Upper Sorbian.",
+   "kind": "measured",
+   "source": null,
+   "metric": "CER",
+   "value": 1.79,
+   "unit": "% CER",
+   "baseline_value": 4.94,
+   "n": null,
+   "setup": "hsb_Latn, 11 low-resource languages with 5-10 h train",
+   "note": null,
+   "where": "Table 21",
+   "table": "Table 21, row hsb_Latn 3b, column CTC Seed (OmniLLM 7B 4.94)"
+  },
+  {
+   "claim": "OmniASR-LLM-7B nears SeamlessM4T v1 Large on FLEURS 81-Eng and beats Whisper large-v2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": 23.5,
+   "unit": "BLEU",
+   "baseline_value": 24.0,
+   "n": null,
+   "setup": "Average BLEU X-Eng, test; decoder trained from scratch",
+   "note": null,
+   "where": "Table 14",
+   "table": "Table 14, row OmniASR-LLM-7B, column FLEURS 81-Eng (SeamlessM4T v1 Large 24.0, Whisper Large v2 17.9)"
+  },
+  {
+   "claim": "OmniASR-LLM-7B CoVoST2 21-Eng BLEU is 37.1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": 37.1,
+   "unit": "BLEU",
+   "baseline_value": 29.1,
+   "n": null,
+   "setup": "Table 14",
+   "note": null,
+   "where": "Table 14",
+   "table": "Table 14, row OmniASR-LLM-7B, column CoVoST2 21-Eng (Whisper Large v2 29.1, AudioPaLM-2-8B 37.8)"
+  },
+  {
+   "claim": "OmniASR-W2V-7B encoder beats XLS-R and MMS encoders after identical CTC fine-tuning.",
+   "kind": "measured",
+   "source": null,
+   "metric": "CER",
+   "value": 7.5,
+   "unit": "% CER",
+   "baseline_value": 10.2,
+   "n": null,
+   "setup": "CTC fine-tuned on AllASR; FLEURS-102 test CER",
+   "note": null,
+   "where": "Table 24",
+   "table": "Table 24, row OmniASR-W2V-7B, column FLEURS-102 (MMS-1B 10.2)"
+  },
+  {
+   "claim": "Size of the unlabeled pre-training set.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 3.84,
+   "unit": "M hours (1,239 languages)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "SSL corpus",
+   "note": "plus 460K hours without LID, 4.3M hours elsewhere",
+   "where": "Section 3.3.4",
+   "quote": "The final pre-training dataset comprised 3.84M hours of"
+  },
+  {
+   "claim": "Size of the commissioned corpus.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "3,350",
+   "unit": "hours, 348 languages",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Omnilingual ASR Corpus in the AllASR training split",
+   "note": "Table 3 component hours sum to 177,700 but the total row prints 120,710 hours; total languages 1,690",
+   "where": "Table 3",
+   "table": "Table 3, row Omnilingual ASR Corpus"
+  },
+  {
+   "claim": "About half of commissioned transcripts had a critical mismatch in in-depth QA.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 51.18,
+   "unit": "% of files",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Commissioned data QA",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Mismatch"
+  },
+  {
+   "claim": "Even the noisiest 1-5% of utterances give LLM-ASR CER at most 10 for all resource groups.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 10,
+   "unit": "% CER upper bound",
+   "baseline_value": null,
+   "n": null,
+   "setup": "SI-SDR percentile bins on dev sets, 7B LLM-ASR",
+   "note": null,
+   "where": "Section 5.7.3",
+   "quote": "LLM-ASR model obtains CERs ≤10 across all language groups"
+  },
+  {
+   "claim": "Speech SSL scaled to 7B parameters, beyond the roughly 2B of USM and XLS-R.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "claim in Section 4.1",
+   "note": null,
+   "where": "Section 4.1"
+  }
+ ],
+ "limits": [
+  "Zero-shot performance does not match fully trained systems (Introduction).",
+  "Zero-shot models degrade on some seen-language datasets; separate models are released for seen languages.",
+  "Zero-shot study used 32 held-out languages, half of them high-resource; 14.4 CER on unseen languages is still high; context examples were random draws from the same dataset.",
+  "Low-resource bucket (<10 h) averages CER 18.0-18.6 and only 34-36% of those languages reach CER<10.",
+  "Dev and test sets are heterogeneous; the authors caution against comparing numbers across benchmarks.",
+  "USM comparison uses published numbers because USM is not public; no seeds or repeated runs, only 95% CIs across languages; GPU type, precision and total compute not stated.",
+  "text_sim and same_ex selection are oracles using the target transcript.",
+  "Ethics: compensation is not a panacea; capabilities may be repurposed for surveillance or unwanted moderation.",
+  "Language-code validation covered only 206 languages with 1-5 audio files each; 20 had misattributed codes."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "LLM-ASR",
+   "definition": "speech encoder initialised from wav2vec 2.0 plus a Transformer decoder as found in LLMs, trained with next-token prediction",
+   "where": "Section 4.2"
+  },
+  {
+   "term": "AllASR",
+   "definition": "the unified corpus of all cleaned ASR datasets",
+   "where": "Section 3.5"
+  },
+  {
+   "term": "resource buckets",
+   "definition": "high >50 hours of labeled data, mid 10-50 h, low <10 h",
+   "where": "Section 5.3.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "wav2vec 2.0 (Baevski et al., 2020)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "SSL objective scaled from 300M to 7B",
+   "quote": null
+  },
+  {
+   "work": "Scaling Speech Technology to 1,000+ Languages (MMS; Pratap et al., 2024)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "builds on it; segmentation, alignment and sampling follow it",
+   "quote": null
+  },
+  {
+   "work": "Whisper (Radford et al., 2023)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "compared on MMS-Lab, FLEURS, MLS, CV22",
+   "quote": null
+  },
+  {
+   "work": "USM (Zhang et al., 2023)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "published FLEURS-102 numbers",
+   "quote": null
+  },
+  {
+   "work": "XLS-R (Babu et al., 2021)",
+   "year": 2021,
+   "arxiv": "2111.09296",
+   "relation": "baseline",
+   "note": "SSL encoder comparison",
+   "quote": null
+  },
+  {
+   "work": "Conformer (Gulati et al., 2020)",
+   "year": 2020,
+   "arxiv": "2005.08100",
+   "relation": "related",
+   "note": "USM encoder",
+   "quote": null
+  },
+  {
+   "work": "SONAR (Duquenne et al., 2023)",
+   "year": 2023,
+   "arxiv": "2308.11466",
+   "relation": "uses-method",
+   "note": "embeddings for context-example retrieval",
+   "quote": null
+  },
+  {
+   "work": "SeamlessM4T (SEAMLESS Communication Team, 2025)",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "S2TT comparison and X-Eng training data",
+   "quote": null
+  },
+  {
+   "work": "Segment any text (Frohmann et al., 2024)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "SAT sentence splitting",
+   "quote": null
+  },
+  {
+   "work": "Torchaudio-Squim (Kumar et al., 2023)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "SI-SDR estimates for the noise analysis",
+   "quote": null
+  },
+  {
+   "work": "Common Voice, FLEURS, MLS, Babel, VoxPopuli, African Next Voices, NaijaVoices, MMS-Lab",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "training and evaluation data",
+   "quote": null
+  },
+  {
+   "work": "Wang et al., 2024a (kNN example selection for in-context Whisper)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "related",
+   "note": "prior kNN selection",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 5",
+   "caption": "The LLM-ASR model architecture. A wav2vec 2.0 speech encoder and a text embedding matrix embed the speech and text modalities. An autoregressive Transformer decoder emits text tokens, and the system is trained with a next-token prediction objective.",
+   "page": 18,
+   "why": "Encoder plus LLM-style decoder layout"
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "The LLM-ASR model architecture with context examples. Special tokens are omitted for simplicity.",
+   "page": 18,
+   "why": "How context speech-text pairs enter the prompt for zero-shot ASR"
+  },
+  {
+   "figure": "Fig 8",
+   "caption": "ASR noise robustness across All_ASR dev sets: CER versus SI-SDR range, by resource level, for 7B CTC and 7B LLM-ASR.",
+   "page": 32,
+   "why": "Noise robustness per resource level"
+  },
+  {
+   "figure": "Table 5",
+   "caption": "Comparison against Whisper v3 and smaller variants across MMS-Lab, FLEURS, MLS, CV22.",
+   "page": 21,
+   "why": "Headline comparison with win rate"
+  },
+  {
+   "figure": "Fig 7",
+   "caption": "A German example of the zero-shot model (German was excluded from training of this model).",
+   "page": 25,
+   "why": "Concrete zero-shot transcription example"
+  }
+ ],
+ "code": [
+  {
+   "where": "Section 4.3, p17",
+   "snippet": "<c> {<cs> gs(xc_i) <cs BOS> gt(yc_i) <cs EOS> </cs>} × N </c> gs(x) <BOS> gt(y) <EOS>",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Table 3 component hours (15,000+150,100+7,200+1,940+110+3,350 = 177,700) do not add to the printed total 120,710.",
+  "Figure 3 and Figure 4 captions appear swapped (Fig 3 says labeled data used to pre-train, Fig 4 says unlabeled data used to fine-tune).",
+  "Text cites MMS-Lab-63 and FLEURS-82 for the Whisper comparison while Table 5 uses MMS-Lab-66 and FLEURS-81.",
+  "Low-resource bucket is 546 languages in Tables 8-9 and 549 in the text.",
+  "Section 5.4 text says 26.33 for CTC unseen CER, Table 11 prints 26.3.",
+  "Table 12 metric is UER (undefined), text says CER.",
+  "No embedded instructions found. figures.py captions printed nothing."
+ ]
+}

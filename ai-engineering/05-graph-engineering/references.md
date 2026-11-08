@@ -140,7 +140,7 @@ Use these as gap-detectors, not citations of record (see [recurring sources](../
 | pkhamdee, [*From Karpathy's loops to shared knowledge graphs*](https://pkhamdee.blog/2026/07/21/graph-engineering-from-karpathys-loops-to-shared-knowledge-graphs/) | loop → swarm → graph; KG as shared memory; tiered extraction; five-plane architecture | 12 |
 | youmind, [*Graph engineering vs agent loops*](https://youmind.com/landing/x-viral-articles/graph-engineering-ai-agent-loops) | the true-dependency test, verifier context isolation, swarm cost anchors | 03, 07, 12 |
 | Rathod, [*Inside n8n's AI Workflow Builder*](https://medium.com/@rajveer.rathod1301/inside-n8ns-ai-workflow-builder-a-complete-architecture-deep-dive-f2eeb2d57ec8) | supervisor-pattern case study: six agents, per-node iteration bounds, optimistic locking, context budgets | 03, 04, 05, 07, 08 |
-| *Graph Engineering: The Karpathy Loop, Improved 1000x by Itself* (2026), [PDF](sources/graph-engineering-karpathy-loop-anthropic-playbook-2026.pdf) | community-compiled playbook | 12 |
+| *Graph Engineering: The Karpathy Loop, Improved 1000x by Itself* (2026), [PDF](sources/graph-engineering-karpathy-loop-anthropic-playbook-2026.pdf) | unattributed compilation, no author or publisher; skipped, not evidence (framing only) | 12 |
 
 ---
 
@@ -151,7 +151,7 @@ Use these as gap-detectors, not citations of record (see [recurring sources](../
 | flowtivity.ai | Vendor marketing; supplies most of the hard numbers (~3× tokens, ~50% break-even, ~18% typed-edge gain, 53.4 vs 42.9% multi-hop, "~3× faster") and the OpenClaw / Codex tooling claims | Your own measurements; the GraphRAG paper; LangGraph docs |
 | youmind.com viral-article landing page | Source of the Bun $165k figure and Dynamic Workflows limits | Anthropic docs for Dynamic Workflows; Bun's own post; otherwise drop |
 | pkhamdee.blog | Personal blog synthesising primary sources | Karpathy's autoresearch repo; Anthropic's KG cookbook; Anthropic engineering posts |
-| Karpathy-loop playbook PDF | Community-compiled; carries an Anthropic logo but says "not affiliated … not endorsed" | Cite as secondary only |
+| Karpathy-loop playbook PDF | Anonymous, "independently compiled, July 2026"; Anthropic logo on the cover but its source note says it is "not affiliated with or endorsed by" Karpathy, Anthropic or anyone named. Cites Karpathy's repos and Anthropic posts but adds no primary content or measurement; its "700 experiments" and "630 lines" figures come from the repos and a Fortune article it cites | Do not cite as evidence; use Karpathy's autoresearch repo and Anthropic's engineering posts |
 | explainx.ai/post/graph-engineering | SEO aggregator | Drop; LangChain's "3 years of graph engineering" has the same line first-hand |
 | Medium, GaoDalie | Opinion piece; overstates | A quote at most, not evidence |
 | Medium, Rathod n8n deep dive | Third-party teardown | n8n's own source and `docs.n8n.io` |

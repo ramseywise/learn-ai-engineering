@@ -1,0 +1,204 @@
+{
+ "schema": 1,
+ "key": "sha1:a06f40d30974",
+ "pdf": "data-science/sources/chawla-2002-smote.pdf",
+ "bib": {
+  "title": "SMOTE: Synthetic Minority Over-sampling Technique",
+  "authors": ["Nitesh V. Chawla", "Kevin W. Bowyer", "Lawrence O. Hall", "W. Philip Kegelmeyer"],
+  "first_author": "Chawla",
+  "year": 2002,
+  "venue": "Journal of Artificial Intelligence Research 16 (2002) 321-357 (submitted 09/01; published 06/02)",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 70071,
+  "chars_total": 70071,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can over-sampling the minority class with synthetic examples, combined with under-sampling the majority class, build better classifiers on imbalanced data (in ROC space) than plain under-sampling, Ripper loss-ratio variation or Naive Bayes prior variation?",
+ "hypothesis": "Synthetic minority examples interpolated between nearest neighbours widen the minority decision region, whereas replication shrinks it, so SMOTE plus under-sampling should beat plain under-sampling and cost-based methods.",
+ "contributions": [
+  "SMOTE: over-sample the minority class by creating synthetic examples along line segments joining k minority-class nearest neighbours",
+  "Show SMOTE combined with majority under-sampling gives better ROC-space performance (AUC and ROC convex hull) than plain under-sampling, Ripper loss ratio and Naive Bayes priors on nine datasets",
+  "SMOTE-NC for mixed continuous/nominal features, and a proposed SMOTE-N for nominal features (not evaluated)"
+ ],
+ "method": {
+  "summary": "SMOTE creates synthetic minority samples by interpolating between a minority sample and one of its k=5 minority nearest neighbours (gap uniform in [0,1] per sample). ROC curves are built by fixing a SMOTE amount and sweeping majority under-sampling; C4.5, Ripper and Naive Bayes are compared with 10-fold CV, AUC by trapezoid rule and ROC convex hull.",
+  "task": "binary classification on imbalanced tabular datasets",
+  "trains": true,
+  "datasets": [
+   {"name": "Pima Indian Diabetes", "role": "both", "size": "500 majority, 268 minority (768)", "split": "10-fold CV", "source": "UCI (Blake & Merz, 1998)", "preprocessing": null},
+   {"name": "Phoneme", "role": "both", "size": "3818 class 0, 1586 class 1; 5 features", "split": "10-fold CV", "source": "ELENA project", "preprocessing": null},
+   {"name": "Adult", "role": "both", "size": "37155 majority, 11687 minority (48,842); 6 continuous, 8 nominal features", "split": "10-fold CV", "source": "UCI", "preprocessing": "for SMOTE only the continuous features were extracted; SMOTE-NC used all"},
+   {"name": "E-state", "role": "both", "size": "46869 majority, 6351 minority (Table 2); text says 53,220 samples", "split": "10-fold CV", "source": "NCI Yeast AntiCancer Drug Screen, Tripos E-state descriptors", "preprocessing": null},
+   {"name": "Satimage", "role": "both", "size": "5809 majority, 626 minority", "split": "10-fold CV", "source": "UCI", "preprocessing": "smallest of 6 classes as minority, rest collapsed"},
+   {"name": "Forest Cover", "role": "both", "size": "35754 Ponderosa Pine, 2747 Cottonwood/Willow", "split": "10-fold CV", "source": "UCI", "preprocessing": "two of 7 classes extracted"},
+   {"name": "Oil", "role": "both", "size": "896 non-oil, 41 oil slick", "split": "10-fold CV", "source": "Kubat, Holte & Matwin 1998 (provided by Holte)", "preprocessing": null},
+   {"name": "Mammography", "role": "both", "size": "10923 majority, 260 minority (11,183)", "split": "10-fold CV; training folds about 9831 majority and 233 minority", "source": "Woods et al. 1993; USF", "preprocessing": null},
+   {"name": "Can", "role": "both", "size": "435512 majority, 8360 minority (text says 443,872 total)", "split": "10-fold CV", "source": "Can ExodusII data via AVATAR / Mustafa tool", "preprocessing": null}
+  ],
+  "models": [
+   {"name": "C4.5 release 8", "role": "base", "params": null, "architecture": "decision tree", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "Ripper", "role": "base", "params": null, "architecture": "rule learner", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"loss_ratio": "varied from 0.9 to 0.001"}},
+   {"name": "Naive Bayes (Borgelt implementation)", "role": "baseline", "params": null, "architecture": "Naive Bayes", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"priors": "minority prior varied from 1 to 50 times the majority class"}}
+  ],
+  "training": {
+   "objective": "C4.5 / Ripper / Naive Bayes fitted on the resampled training set",
+   "optimizer": null, "lr": null, "lr_schedule": null, "warmup": null, "batch_size": null, "steps": null, "epochs": null, "tokens": null, "seq_len": null, "precision": null, "weight_decay": null, "dropout": null,
+   "regularisation": "C4.5 pruning used (Fig 4 reports pruned tree size); C4.5/Ripper hyperparameters otherwise not stated",
+   "hardware": null, "compute": null, "wall_clock": null, "seeds": null,
+   "other": {
+    "smote_k": "five nearest neighbours (minority-class neighbours)",
+    "smote_amounts": "minority over-sampled at 50%, 100%, 200%, 300%, 400%, 500% (1 to 5 curves per dataset, fewer for less skewed data)",
+    "undersample_amounts": "majority under-sampled at 10%, 15%, 25%, 50%, 75%, 100%, 125%, 150%, 175%, 200%, 300%, 400%, 500%, 600%, 700%, 800%, 1000%, 2000% (varied per dataset; 5% to 2000% for Mammography plain under-sampling)",
+    "undersample_definition": "under-sampling at 200% means the modified set has twice as many minority as majority elements",
+    "c4.5_leaf_thresholds": "0.5, 0.45, 0.42, 0.4, 0.35, 0.32, 0.3, 0.27, 0.25, 0.22, 0.2, 0.17, 0.15, 0.12, 0.1, 0.05, 0.0 (Phoneme only)",
+    "resampling_inside_folds": "inferred: Mammography training folds quoted as about 9831 majority / 233 minority, so resampling is applied to training folds only"
+   }
+  },
+  "inference": {
+   "decoding": null, "temperature": null, "top_p": null, "max_tokens": null,
+   "samples": "10-fold cross-validation; %TP and %FP averaged over the 10 folds; no repeats or seeds stated",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {"k": 5, "N_percent": "multiples of 100 (50% handled by random subset of minority samples)", "gap": "uniform random in [0,1]"},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "AUC", "definition": "area under ROC curve (%FP vs %TP) by trapezoid rule; point (100,100) added if missing; leftmost point is raw-data classifier", "unit": "printed as integers such as 9330 (scale not stated; AUC scaled by 10^4 is an inference)", "higher_is_better": true},
+    {"name": "ROC convex hull", "definition": "points on the hull (Graham's algorithm) are potentially optimal classifiers; judged by number of hull points per method", "unit": "qualitative", "higher_is_better": null},
+    {"name": "Acc+ / Acc-", "definition": "accuracy on minority / majority examples (Oil, comparison with Kubat et al.)", "unit": "%", "higher_is_better": true}
+   ],
+   "baselines": ["plain majority under-sampling (C4.5, Ripper)", "Ripper loss ratio 0.9 to 0.001", "Naive Bayes minority prior 1 to 50x", "C4.5 leaf decision threshold (Phoneme)", "minority over-sampling with replication (Mammography, Fig 19)", "one-sided selection and SHRINK (Kubat et al.; Oil)"],
+   "protocol": "10-fold CV; ROC per dataset from curves, one to five SMOTE curves per dataset, only the best SMOTE curve is drawn; AUC Table 3 for C4.5 only, none for Ripper or Naive Bayes; no significance tests or variance reported"
+  },
+  "availability": {"code": null, "weights": null, "data": "Mammography from http://morden.csee.usf.edu/~chawla (URL as printed); Naive Bayes code from fuzzy.cs.uni-magdeburg.de/~borgelt"},
+  "prompts": [],
+  "evidence": [
+   {"field": "training.other.smote_k", "quote": "Our implementation currently uses ﬁve nearest neighbors.", "where": "Section 4.2"},
+   {"field": "eval.metrics[AUC].unit", "quote": "AUC's [C4.5 as the base classiﬁer] with the best highlighted in bold.", "where": "Table 3 caption; values like 9330 printed with no scale (read from page image)"}
+  ]
+ },
+ "results": [
+  {
+   "claim": "Mammography, C4.5: best SMOTE + under-sampling AUC (400% SMOTE) beats plain under-sampling.",
+   "kind": "measured", "source": null, "metric": "AUC (as printed in Table 3)", "value": "9330", "unit": "as printed (scale not stated)", "baseline_value": "9260", "n": null,
+   "setup": "Mammography, 10-fold CV, C4.5; 400% SMOTE column vs Under column; best column bold. Other SMOTE amounts: 100%: 9250, 200%: 9265, 300%: 9311, 500%: 9304",
+   "quote": null,
+   "table": "Table 3, row Mammography, columns 400 SMOTE (9330, bold, read from page image) and Under (9260)",
+   "note": "100% SMOTE (9250) is below plain under-sampling; the gap of 70 points is on the printed integer scale; no variance given. The pdftext drops the 9330 cell position but the number is present in the text.",
+   "where": "Table 3, p.345"
+  },
+  {
+   "claim": "Phoneme, C4.5: best SMOTE + under-sampling AUC (200% SMOTE) vs plain under-sampling.",
+   "kind": "measured", "source": null, "metric": "AUC (as printed in Table 3)", "value": "8661", "unit": "as printed", "baseline_value": "8622", "n": null,
+   "setup": "Phoneme, 10-fold CV, C4.5; 200 SMOTE column vs Under; 100% SMOTE gives 8644",
+   "quote": null, "table": "Table 3, row Phoneme, columns 200 SMOTE (8661) and Under (8622)", "note": null, "where": "Table 3, p.345"
+  },
+  {
+   "claim": "Phoneme: the SMOTE + under-sampling ROC curve dominates the curve from varying C4.5's leaf decision threshold over the whole range; shown only as a figure with no AUC value.",
+   "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null,
+   "setup": "Phoneme only, C4.5, leaf thresholds 0.5 down to 0.0 (17 values) versus SMOTE and under-sampling; ROC in %FP/%TP, Fig 24; comparison motivated by Provost (2000)",
+   "quote": null, "table": null,
+   "note": "Text: \"The graph shows that the SMOTE and under-sampling combination ROC curve is dominating over the entire range of values.\" Qualitative claim from one dataset; the SMOTE amount used in Fig 24 is not stated in the text.",
+   "where": "Section 5.4, Fig 24, p.345-346"
+  },
+  {
+   "claim": "Adult with SMOTE-NC (and SMOTE on continuous-only features) performs no better than, and by AUC worse than, plain under-sampling; authors blame high-variance minority continuous features whose synthetic points overlap the majority space.",
+   "kind": "measured", "source": null, "metric": "AUC / ROC overlap", "value": null, "unit": null, "baseline_value": null, "n": null,
+   "setup": "Adult, 48842 samples, 11687 minority; SMOTE-NC (50% SMOTE shown) with C4.5 and Ripper, Figs 26-28; Adult is not in Table 3 so no AUC value is printed",
+   "quote": null, "table": null,
+   "note": "Quote: \"SMOTE-NC with the Adult dataset differs from our typical result: it performs worse than plain under-sampling based on AUC, as shown in Figures 26 and 27.\" Warning: \"Some of the minority class continuous features have a very high variance, so, the synthetic generation of minority class samples could be overlapping with the majority class space, thus leading to more false positives than plain under-sampling.\" The overlap explanation is a hypothesis, not tested; AUC falls as SMOTE exceeds 50%. Figure captions say curves 'overlap for most of the ROC space'.",
+   "where": "Section 6.1, Figs 26-28, p.348-350"
+  },
+  {
+   "claim": "SMOTE-classifier was not the best in only 4 of 48 experiments.",
+   "kind": "measured", "source": null, "metric": "experiments where SMOTE not best", "value": "4 of 48", "unit": "experiments", "baseline_value": null, "n": 48,
+   "setup": "9 datasets, C4.5 / Ripper / Naive Bayes comparisons judged by ROC convex hull; Pima (Naive Bayes wins), Oil (Under-Ripper wins), Can (curves overlap)",
+   "quote": "Out of a total of 48 experiments performed, SMOTE-classiﬁer does not perform the best only for 4 experiments.",
+   "table": null, "note": "Judged by hull point counts and curve inspection, not significance tests.", "where": "Section 7, p.352"
+  },
+  {
+   "claim": "Table 3 only shows the best AUC across SMOTE amounts: the paper also states it plots only the best SMOTE curve per dataset.",
+   "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null,
+   "setup": "All datasets; one to five SMOTE curves are built and only the best is drawn; Table 3 bolds the best SMOTE amount per row, selected on the same 10-fold CV results used to report it (no held-out selection)",
+   "quote": null, "table": null,
+   "note": "Quote: \"We only show the best results from SMOTE combined with under-sampling and the plain under-sampling curve in the graphs.\" So yes: the paper reports best curve across SMOTE amounts, which is an optimistic selection.",
+   "where": "Section 5.2, p.335; Table 3"
+  },
+  {
+   "claim": "Across datasets the best SMOTE AUC exceeds plain under-sampling, but gaps vary: Pima 7307 vs 7242, Oil 8537 (500%) vs 8524, E-state 6828 vs 6811, Can 9560 (50%) vs 9535; Oil at 200-400% falls below Under.",
+   "kind": "measured", "source": null, "metric": "AUC (as printed)", "value": "8537", "unit": "as printed", "baseline_value": "8524", "n": null,
+   "setup": "Oil, C4.5, Table 3; 300% SMOTE gives 8161, below Under 8524",
+   "quote": null, "table": "Table 3, row Oil, columns 500 SMOTE (8537) and Under (8524)", "note": "Text claim: for all datasets the combination improves over plain under-sampling, which holds only for the best amount per row.", "where": "Section 5.3, Table 3"
+  },
+  {
+   "claim": "Pima (least skewed): Naive Bayes dominates SMOTE-C4.5 in ROC space; Oil: Under-Ripper dominates SMOTE-Ripper.",
+   "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null,
+   "setup": "ROC convex hull comparisons, Figs 9, 16",
+   "quote": null, "table": null, "note": "Quote: \"for the Pima dataset, Naive Bayes dominates over SMOTE-C4.5; for the Oil dataset, Under-Ripper dominates over SMOTE-Ripper.\"", "where": "Section 5.3, p.339"
+  },
+  {
+   "claim": "Over-sampling with replication yields much larger pruned trees and worse minority recall than SMOTE at high amounts (100% to 500%).",
+   "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null,
+   "setup": "Mammography, C4.5, 10-fold CV, minority over-sampled 100-500%; Figs 4, 5, 19 (values only in figures)",
+   "quote": null, "table": null, "note": "Text: tree sizes for replication \"are much greater than those for SMOTE\". No numeric values in the text.", "where": "Section 4.2, Figs 4-5"
+  },
+  {
+   "claim": "On Oil, SMOTE (500%) with 50-125% under-sampling is comparable to SHRINK and better in some cases, but offers no clear improvement over one-sided selection.",
+   "kind": "measured", "source": null, "metric": "Acc+ / Acc-", "value": "89.5%", "unit": "% Acc+ at 50% under-sampling (Acc- 78.9%)", "baseline_value": "82.5%", "n": null,
+   "setup": "Oil, 500% SMOTE, Table 5 vs SHRINK Acc+ 82.5%, Acc- 60.9% and one-sided selection Acc+ 76.0%, Acc- 86.6% (Table 4, reported from Kubat et al. 1998)",
+   "quote": "SMOTE oﬀers no clear improvement over one-sided selection.", "table": null, "note": "Quote contains no number; value from Table 5, row 50%: Acc+ 89.5%, Acc- 78.9%.", "where": "Section 5.5, Tables 4-5, p.345-347"
+  }
+ ],
+ "limits": [
+  "Evaluation is entirely ranking-based (ROC, AUC, hull, Acc+/Acc-); the paper never evaluates predicted probabilities, calibration, Brier score or log loss, and does not discuss that resampling shifts the class prior and so distorts probabilities. The only probability-related item is C4.5 leaf thresholds in Section 5.4.",
+  "Best SMOTE amount is chosen per dataset on the same CV results that are reported (Table 3 bold, plotted curves); no held-out selection, no variance, standard errors or significance tests; AUC differences are often small (Oil 8537 vs 8524).",
+  "AUC reported for C4.5 only; none for Ripper or Naive Bayes; Adult has no AUC entry in Table 3; the Table 3 scale is not stated.",
+  "Threshold comparison (Section 5.4) is on Phoneme only, C4.5 only, graph only.",
+  "Binary classes only; SMOTE does not handle all-nominal data; SMOTE-N is proposed but not tested.",
+  "SMOTE can fail: Adult (high-variance continuous features, overlap with majority); Can (structural neighbourhood in mesh geometry, so SMOTE amount reduced); Pima and Oil lose to Naive Bayes or Under-Ripper.",
+  "Authors concede crowding: a minority sample may have a majority sample as nearest neighbour; adaptive k is future work. Only k=5 is used, no sensitivity analysis.",
+  "Dataset counts inconsistent: E-state 53,220 in text vs 46869+6351 in Table 2; Can 443,872 in text vs 435512+8360 in Table 2.",
+  "Sampling with majority under-sampling was compared against classic, 2002-era learners only (C4.5, Ripper, Naive Bayes); no modern learners."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "SMOTE", "definition": "over-sampling the minority class by taking each minority sample and introducing synthetic examples along the line segments joining any/all of the k minority class nearest neighbors", "where": "Section 4.2"},
+  {"term": "SMOTE-NC", "definition": "Synthetic Minority Over-sampling TEchnique-Nominal Continuous; distance adds the median of minority-class continuous-feature standard deviations for each differing nominal feature; nominal value of synthetic sample is the majority value among the k nearest neighbours", "where": "Section 6.1"},
+  {"term": "SMOTE-N", "definition": "proposed variant for nominal features using the modified Value Difference Metric for neighbours and majority vote for values (not evaluated)", "where": "Section 6.2"}
+ ],
+ "lineage": [
+  {"work": "Ha & Bunke 1997 offline handwritten numeral recognition by perturbation", "year": 1997, "arxiv": null, "relation": "uses-method", "note": "inspiration for creating extra training data by operating on real data", "quote": "This approach is inspired by a technique that proved successful in handwritten character recognition (Ha & Bunke, 1997)."},
+  {"work": "Chawla, Bowyer, Hall & Kegelmeyer 2000 (International Conference of Knowledge Based Computer Systems)", "year": 2000, "arxiv": null, "relation": "extends", "note": "earlier conference version of this paper", "quote": null},
+  {"work": "Kubat & Matwin 1997 one-sided selection", "year": 1997, "arxiv": null, "relation": "baseline", "note": "under-sampling baseline family; compared on Oil", "quote": null},
+  {"work": "Kubat, Holte & Matwin 1998 oil spill detection (SHRINK)", "year": 1998, "arxiv": null, "relation": "baseline", "note": "source of Oil data and Table 4 results", "quote": null},
+  {"work": "Ling & Li 1998", "year": 1998, "arxiv": null, "relation": "contradicts", "note": "combined over-sampling with replacement and under-sampling without gain; SMOTE differs in over-sampling method", "quote": null},
+  {"work": "Japkowicz 2000", "year": 2000, "arxiv": null, "relation": "related", "note": "over- and under-sampling on artificial data", "quote": null},
+  {"work": "Domingos 1999 MetaCost", "year": 1999, "arxiv": null, "relation": "related", "note": "found under-sampling preferable to minority over-sampling", "quote": null},
+  {"work": "Provost & Fawcett 2001 ROC convex hull", "year": 2001, "arxiv": null, "relation": "uses-method", "note": "ROC convex hull evaluation", "quote": null},
+  {"work": "Provost 2000 (threshold alternative)", "year": 2000, "arxiv": null, "relation": "related", "note": "suggested threshold changing as alternative; tested in Section 5.4 on Phoneme", "quote": null},
+  {"work": "C4.5 (Quinlan 1992), Ripper (Cohen 1995b)", "year": 1992, "arxiv": null, "relation": "evaluates", "note": "base classifiers", "quote": null},
+  {"work": "Cost & Salzberg 1993 modified VDM", "year": 1993, "arxiv": null, "relation": "uses-method", "note": "proposed distance for SMOTE-N", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 3", "caption": "Decision regions for minority samples under replication vs synthetic generation (Mammography, 2 attributes)", "page": 7, "why": "shows why replication shrinks and SMOTE widens the minority region"},
+  {"figure": "Fig 17", "caption": "Mammography. Comparison of SMOTE-C4.5, Under-C4.5, and Naive Bayes.", "page": 21, "why": "typical ROC with the best-SMOTE curve and hull"},
+  {"figure": "Fig 24", "caption": "SMOTE and Under-sampling combination against C4.5 learning by tuning the bias towards the minority class", "page": 26, "why": "the threshold-tuning comparison on Phoneme"},
+  {"figure": "Fig 26-28", "caption": "Adult SMOTE-NC, Ripper, and continuous-only SMOTE: overlap with under-sampling", "page": 29, "why": "the failure case"}
+ ],
+ "code": [
+  {"where": "Section 4.2, synthetic sample rule", "snippet": "Synthetic[newindex][attr] = Sample[i][attr] + gap * dif   (dif = Sample[nnarray[nn]][attr] - Sample[i][attr]; gap = random number between 0 and 1)", "verbatim": true}
+ ],
+ "problems": [
+  "Table 3 text extraction drops column alignment (cells are in the text but not positioned); the bold best-per-row markers and column positions were read from the rendered page image (page 25 of the PDF).",
+  "Table/section numbering in the text (Table 5.2, Table 5.3, Table 4.2) differs from the printed table captions.",
+  "No embedded instructions found."
+ ]
+}
