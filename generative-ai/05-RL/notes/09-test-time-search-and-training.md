@@ -58,6 +58,9 @@ Koenigstein builds the idea up in steps:
     one program per cluster, largest first, 10 in all.
   - The solve rate grew log-linearly with samples, and the system ranked in the top 54.3%
     across 10 Codeforces contests.
+
+    ![AlphaCode solve rate against sample budget (1 to 10^6) for five model sizes. (a) 10 submissions per problem, (b) unlimited. Both rise roughly log-linearly, and larger models climb faster.](../sources/images/li-alphacode-fig6.png)
+    *Image Source: Li et al., [Competition-Level Code Generation with AlphaCode](https://arxiv.org/abs/2203.07814) (2022), Fig. 6*
   - Without filtering, the 10-submission solve rate stays flat as samples grow. With
     filtering and clustering it still falls well short of pass@k, so **selection, not
     generation, is the bottleneck.**
@@ -104,6 +107,9 @@ scorer. Use a real verifier (tests, a checker) whenever you have one. A self-jud
 back the false-positive problem from Zhao et al.
 
 **Where the search comes from.** A rollout algorithm estimates q_π(s,a) at the current state by averaging simulated returns under a fixed rollout policy, then acts greedily. Its aim is to improve on the rollout policy (the policy improvement theorem), not to find an optimum, and the estimates are discarded after the move. Parallel trials, truncated rollouts closed by a stored evaluation function, and pruning make it cheap (*RL: An Introduction*, ch. 8, Sec. 8.10). Best-of-N with a verifier is this idea for a one-step choice. MCTS keeps a tree for the duration of the move, and each iteration has four steps: **selection** (a tree policy, ε-greedy or UCB, walks to a leaf), **expansion** (add a child), **simulation** (a cheap rollout policy plays to the end of the episode) and **backup** (the return updates the edges on the path only). The move played is the child with the largest value or the most visits (ch. 8, Sec. 8.11). The book says MCTS took computer Go from weak amateur in 2005 to 6 dan or better in 2015, without naming a source experiment.
+
+![Monte Carlo tree search. (a) Explore actions down the tree until a new leaf is reached and initialised. (b) Propagate the leaf value u back up the path to the root.](../sources/images/murphy-rl-fig4-2.png)
+*Image Source: Kevin Murphy, [Reinforcement Learning: A Comprehensive Overview](https://arxiv.org/abs/2412.05265) (2024), Fig. 4.2*
 
 The case studies in chapter 16 show what a learned value adds. All numbers there are reported from other groups' work.
 - **TD-Gammon** learned afterstate values by self-play TD(λ), with 198 inputs, 40 hidden units and reward only for a win. It matched the best earlier programs after about 300,000 games. The branching factor of about 400 rules out conventional deep search, and two- and three-ply search over the learned value changed move choice without changing training. Trajectory sampling cut live error 4× to 6× at 5 to 10 s per move.

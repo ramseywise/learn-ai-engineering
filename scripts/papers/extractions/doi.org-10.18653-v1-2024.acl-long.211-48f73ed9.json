@@ -1,0 +1,532 @@
+{
+ "schema": 1,
+ "key": "https://doi.org/10.18653/v1/2024.acl-long.211",
+ "pdf": "ai-engineering/01-prompt-engineering/sources/he-2024-olympiadbench.pdf",
+ "bib": {
+  "title": "OlympiadBench: A Challenging Benchmark for Promoting AGI with Olympiad-Level Bilingual Multimodal Scientific Problems",
+  "authors": [
+   "Chaoqun He",
+   "Renjie Luo",
+   "Yuzhuo Bai",
+   "Shengding Hu",
+   "Zhen Leng Thai",
+   "Junhao Shen",
+   "Jinyi Hu",
+   "Xu Han",
+   "Yujie Huang",
+   "Yuxiang Zhang",
+   "Jie Liu",
+   "Lei Qi",
+   "Zhiyuan Liu",
+   "Maosong Sun"
+  ],
+  "first_author": "He",
+  "year": 2024,
+  "venue": "ACL 2024 (Long Papers), pages 3828-3850",
+  "arxiv": null,
+  "doi": "10.18653/v1/2024.acl-long.211"
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 75671,
+  "chars_total": 75671,
+  "engine": "pymupdf",
+  "skipped": "References skimmed only; figure pages 22-23 (IPhO example) are image-heavy text"
+ },
+ "type": "benchmark",
+ "question": "Can a hard, bilingual, multimodal Olympiad-level math and physics benchmark with auto-scorable answers separate current LLMs and LMMs, which saturate GSM8K and MATH?",
+ "hypothesis": "Existing math and physics benchmarks are too easy and text-only; Olympiad-level problems will be far harder for frontier models and widen gaps between them.",
+ "contributions": [
+  "OlympiadBench: 8,476 Olympiad-level math and physics problems (incl. Chinese college entrance exam) with expert step-by-step solutions",
+  "An automatic scoring pipeline (SymPy-based) for numeric, expression, equation, interval and tuple answers",
+  "Evaluation of GPT-4V, Gemini-Pro-Vision, Qwen-VL-Max, Yi-VL-34B, LLaVA-NeXT-34B, DeepSeekMath-7B-RL, GPT-4 and an error analysis of GPT-4V"
+ ],
+ "method": {
+  "summary": "Problems from international and Chinese Olympiads and Gaokao mocks were OCRed (Mathpix) to markdown, checked manually, deduplicated by embedding cosine similarity, and hand-labelled by subfield and answer type. Models are evaluated zero-shot with one prompt template on the open-ended, auto-scorable subset; answers extracted from \\boxed{} and judged by a SymPy-based pipeline; metric is micro-average accuracy.",
+  "task": "Olympiad-level math and physics problem solving (open-ended, bilingual, multimodal)",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "OlympiadBench",
+    "role": "eval",
+    "size": "8,476 problems (6,142 math, 2,334 physics); 4,869 (57%) with images; 6,728 open-ended (79%), 1,748 theorem proving (21%); EN 2,125, ZH 6,351; CEE:COMP 66%:34%",
+    "split": "Full experiments on open-ended problems with auto-scorable answer types; theorem proving only manually sampled for GPT-4V",
+    "source": "Official Olympiad PDFs (IMO, RMM, ARML, EMC, EGMO, IPhO, APhO, EPhO, USAPhO, PUPC, OPhO), Chinese regional/national competitions, Gaokao mock questions from Wisdom Way AI Lab; GitHub OpenBMB/OlympiadBench",
+    "preprocessing": "Mathpix OCR to markdown, manual verification against PDF, Problem-Solution-Answer structure, dedup via cosine similarity with a small math LM (Laurie/Bloom1b7-deepspeed-chat-Chinese-math), manual labels for subfield and answer type; progressive physics problems merged into a context field. Avg question 253 tokens, max 3,745; avg solution 347, max 4,223 (images excluded)."
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT-4V (gpt-4-1106-vision-preview)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-4 (0125-preview)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "text-only comparison with GPT-4V"
+    }
+   },
+   {
+    "name": "Gemini-Pro-Vision",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "text_only_counterpart": "Gemini-Pro API"
+    }
+   },
+   {
+    "name": "Qwen-VL-Max",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Yi-VL-34B",
+    "role": "evaluated",
+    "params": "34B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "text_only_counterpart": "Yi-34B-Chat"
+    }
+   },
+   {
+    "name": "LLaVA-NeXT-34B",
+    "role": "evaluated",
+    "params": "34B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "text_only_counterpart": "Nous-Hermes-2-Yi-34B"
+    }
+   },
+   {
+    "name": "DeepSeekMath-7B-RL",
+    "role": "evaluated",
+    "params": "7B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "requires a specific CoT prompt appended to input; text-only"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "one response per problem; no repeats or seeds stated",
+   "prompting": "Zero-shot; one fixed template for all models, no per-model prompt engineering; template states subject, answer type(s) and the required closing sentence 'So the final answer is \\boxed{answer}.'; knowledge points from the dataset not included in prompt; DeepSeekMath-7B-RL gets its own CoT suffix",
+   "retrieval": null,
+   "parameters": {},
+   "other": {
+    "open_source_hardware": "NVIDIA A800 GPUs",
+    "unavailable_responses": "removed from accuracy; <1% except Qwen-VL-Max Physics-En_COMP where 26 questions exceeded max input length",
+    "image_input": "LLaVA-NeXT-34B and Yi-VL-34B accept a single image only"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "micro-average accuracy",
+     "definition": "fraction of problems whose extracted final answer is judged equivalent to ground truth by the auto-scoring pipeline (numeric tolerance default 1e-8, adjustable per physics problem; SymPy subtraction approaching zero for expressions; equations moved to one side; intervals/tuples element-wise)",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "DeepSeekMath-7B-RL (primary text-only baseline)",
+    "GPT-4 vs GPT-4V text-only comparison"
+   ],
+   "protocol": "Auto-scored on open-ended problems; manual sampling of GPT-4V for 164 failed open-ended problems (97 math: 55 EN, 42 ZH; 67 physics) for error types and 81 math ZH_COMP proof problems; no significance tests or repeats stated."
+  },
+  "availability": {
+   "code": "https://github.com/OpenBMB/OlympiadBench (also supplementary material)",
+   "weights": null,
+   "data": "https://github.com/OpenBMB/OlympiadBench"
+  },
+  "prompts": [
+   {
+    "purpose": "Open-ended question template (English)",
+    "text": "The following is a question from an International <subject> competition. Please calculate the answer according to the given requirements and the information provided. Please use LaTeX format to represent the variables and formulas used in the solution process and results. Please end your solution with [answer-type line] and give the result explicitly. Answer-type lines: single answer: 'The answer of the question should be <ans_type>.'; multiple answers single type: 'The question has multiple answers, each of them should be <ans_type>.'; multiple answers: 'The question has multiple answers, with the answers in order being <ans_type>, ...<ans_type>.' Closing: 'So the final answer is \\boxed{answer}.' or 'So the final answer is \\boxed{multiple answers connected with commas}.' (Chinese version parallel; reconstructed from Fig 3 text)",
+    "where": "Fig 3, p7"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Best model GPT-4V reaches only 17.97% average on OlympiadBench",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 17.97,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "OlympiadBench open-ended problems with auto-scorable answers, zero-shot, shared prompt template (Fig 3), micro-average accuracy; all models including images where present",
+   "where": "Abstract; Table 4",
+   "note": null,
+   "quote": "the best-performing model, GPT-4V, attains an average score of 17.97% on OlympiadBench"
+  },
+  {
+   "claim": "GPT-4V physics average is 10.74%",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 10.74,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "OlympiadBench open-ended problems with auto-scorable answers, zero-shot, shared prompt template (Fig 3), micro-average accuracy, physics",
+   "where": "Abstract; Table 4",
+   "note": null,
+   "quote": "with a mere 10.74% in physics"
+  },
+  {
+   "claim": "GPT-4V math average is 21.70%",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 21.7,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "OlympiadBench open-ended problems with auto-scorable answers, zero-shot, shared prompt template (Fig 3), micro-average accuracy, maths",
+   "where": "Table 4",
+   "note": null,
+   "table": "Table 4, row GPT-4V, column Maths Avg."
+  },
+  {
+   "claim": "GPT-4V on text-only questions scores 29.07% overall (31.01% maths, 16.24% physics)",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 29.07,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "OlympiadBench open-ended problems with auto-scorable answers, zero-shot, shared prompt template (Fig 3), micro-average accuracy, text-only subset",
+   "where": "Table 4",
+   "note": null,
+   "table": "Table 4, section Experiment with text-only, row GPT-4V, column Avg."
+  },
+  {
+   "claim": "GPT-4 (text) slightly beats GPT-4V on text-only: 29.93% vs 29.07%",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 29.93,
+   "unit": "%",
+   "baseline_value": 29.07,
+   "n": null,
+   "setup": "OlympiadBench open-ended problems with auto-scorable answers, zero-shot, shared prompt template (Fig 3), micro-average accuracy, text-only subset, GPT-4 0125-preview vs GPT-4V 1106-vision-preview",
+   "where": "Table 4",
+   "note": null,
+   "table": "Table 4, row GPT-4 (text-only), column Avg."
+  },
+  {
+   "claim": "DeepSeekMath-7B-RL scores 17.02% text-only, on par with much larger closed models (7B model)",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 17.02,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "OlympiadBench open-ended problems with auto-scorable answers, zero-shot, shared prompt template (Fig 3), micro-average accuracy, text-only subset",
+   "where": "Table 4",
+   "note": null,
+   "table": "Table 4, row DeepSeekMath-7B-RL, column Avg."
+  },
+  {
+   "claim": "Open-source Yi-VL-34B scores 3.42% and LLaVA-NeXT-34B 3.65% with images",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 3.42,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "OlympiadBench open-ended problems with auto-scorable answers, zero-shot, shared prompt template (Fig 3), micro-average accuracy, multimodal setting; Yi-VL-34B",
+   "where": "Table 4",
+   "note": null,
+   "table": "Table 4, row Yi-VL-34B, column Avg."
+  },
+  {
+   "claim": "Qwen-VL-Max scores 10.09% and Gemini-Pro-Vision 4.22% overall",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 10.09,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "OlympiadBench open-ended problems with auto-scorable answers, zero-shot, shared prompt template (Fig 3), micro-average accuracy, Qwen-VL-Max",
+   "where": "Table 4 / Table 7",
+   "note": null,
+   "table": "Table 4, row Qwen-VL-Max, column Avg."
+  },
+  {
+   "claim": "On other benchmarks GPT-4(V) scores 52.9 on MATH and 49.9 on MathVista testmini, versus 17.97 on OlympiadBench",
+   "kind": "reported",
+   "source": null,
+   "metric": "accuracy",
+   "value": 52.9,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-4(V) on MATH, values taken from Gemini and Qwen reports",
+   "where": "Table 7",
+   "note": "Intro says GPT-4 with prompting techniques reaches 97.0% GSM8K and 84.3% MATH; Table 7 prints 52.9 for MATH from Gemini report. Main text cites 'table 7' for the comparison.",
+   "table": "Table 7, row MATH, column GPT-4(V)"
+  },
+  {
+   "claim": "In the sampled theorem-proving check GPT-4V answers 6 of 81 Math-Zh_COMP proof questions correctly",
+   "kind": "measured",
+   "source": null,
+   "metric": "correct count",
+   "value": 6,
+   "unit": "questions",
+   "baseline_value": null,
+   "n": 81,
+   "setup": "OlympiadBench open-ended problems with auto-scorable answers, zero-shot, shared prompt template (Fig 3), micro-average accuracy - manual check, theorem proving, n=81",
+   "where": "Sec 5.1",
+   "note": null,
+   "quote": "GPT-4V only answers 6 out of 81 questions correctly in Math-Zh_COMP"
+  },
+  {
+   "claim": "Most common GPT-4V maths error is logical reasoning/conceptual confusion (42%), then expression calculation (27%)",
+   "kind": "measured",
+   "source": null,
+   "metric": "share of errors",
+   "value": 42,
+   "unit": "%",
+   "baseline_value": null,
+   "n": 97,
+   "setup": "Manual error analysis of 164 failed Olympiad-level open-ended problems (97 maths, 67 physics); maths panel of Fig 4",
+   "where": "Fig 4, Sec 5.2",
+   "note": "Percentages read from Fig 4 text labels; the 42% label belongs to the maths panel per label order",
+   "quote": "We manually sample and check 97 maths (55 for English and 42 for Chinese) and 67 physics"
+  },
+  {
+   "claim": "Long-context physics (long-PhO, 157 problems): GPT-4V 18.47 vs GPT-4 14.92; normal-PhO (74): GPT-4V 1.35 vs GPT-4 4.05",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 18.47,
+   "unit": "%",
+   "baseline_value": 14.92,
+   "n": null,
+   "setup": "Physics-En_COMP split; GPT-4V vs GPT-4 text-only",
+   "where": "Table 8",
+   "note": null,
+   "table": "Table 8, row GPT-4V, column long-PhO (157)"
+  },
+  {
+   "claim": "The auto-scorer can wrongly mark correct answers wrong, e.g. physics answer 5615.88 vs reference 5614.43 with manual precision set at 1e1",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": 10.0,
+   "unit": "tolerance",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Physics-En_COMP#995 manually set tolerance",
+   "where": "App C.2 item 9",
+   "note": null,
+   "quote": "the precision is manually set as 1e1"
+  }
+ ],
+ "limits": [
+  "Theorem-proving problems (21% of the data) cannot be auto-scored; only sampled manually for GPT-4V",
+  "Auto-scorer judges only the two inputs and cannot use problem-specific constraints; cannot judge equality of forms like a*sqrt(b) vs sqrt(a^2 b); tolerance for physics set manually when no official precision exists, so some correct answers are marked wrong",
+  "Annotation is manual and costly, which limits diversity and difficulty",
+  "Single zero-shot prompt per model, no decoding settings, no repeats, no variance reported; error analysis covers GPT-4V only (164 problems)",
+  "Some closed-model responses missing (<1%, but 26 Qwen-VL-Max physics questions exceeded input length); missing items removed from accuracy",
+  "Model versions (2023-2024 GPT-4V, Gemini-Pro) are dated; frontier reasoning models have since moved far beyond 17.97% (not shown in paper)"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "progressive problems",
+   "definition": "problems structured around a common material or scenario, with subsequent questions potentially relying on answers or information from previous questions; compiled into the 'context' field",
+   "where": "Sec 3.3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "AlphaGeometry (Trinh et al.)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "related",
+   "note": "credited as inspiration",
+   "quote": null
+  },
+  {
+   "work": "GSM8K (Cobbe et al.)",
+   "year": 2021,
+   "arxiv": "2110.14168",
+   "relation": "related",
+   "note": "saturated benchmark motivating this work",
+   "quote": null
+  },
+  {
+   "work": "MATH (Hendrycks et al.)",
+   "year": 2021,
+   "arxiv": "2103.03874",
+   "relation": "related",
+   "note": "saturated benchmark motivating this work",
+   "quote": null
+  },
+  {
+   "work": "DeepSeekMath (Shao et al.)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "primary text-only baseline",
+   "quote": null
+  },
+  {
+   "work": "GPT-4V system card",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "best model",
+   "quote": null
+  },
+  {
+   "work": "Gemini (Team)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "Gemini-Pro-Vision",
+   "quote": null
+  },
+  {
+   "work": "Qwen-VL (Bai et al.)",
+   "year": 2023,
+   "arxiv": "2308.12966",
+   "relation": "evaluates",
+   "note": "Qwen-VL-Max",
+   "quote": null
+  },
+  {
+   "work": "SciBench, JEEBench, TheoremQA, MMMU, MathVista, SciEval",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "compared in Table 1 and Related Work",
+   "quote": null
+  },
+  {
+   "work": "Mathpix",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "OCR of PDFs",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 3",
+   "caption": "The template of the construction of the prompt for English(left) and Chinese(right) open-ended questions",
+   "page": 7,
+   "why": "Shows a prompt template that fixes answer type and \\boxed{} format so the scorer can extract answers"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Distribution of the error occurring in GPT-4V's solving process of 164 sampled Olympic-level open-ended problems.",
+   "page": 8,
+   "why": "Two pie charts of error taxonomy, maths vs physics"
+  },
+  {
+   "figure": "Table 4",
+   "caption": "Experimental results",
+   "page": 8,
+   "why": "Main results by subject, language and text-only"
+  },
+  {
+   "figure": "Algorithm 1",
+   "caption": "Auto Scoring Judge",
+   "page": 15,
+   "why": "Decision cascade: exact match, interval/tuple, numeric, equation, SymPy expression"
+  },
+  {
+   "figure": "Fig 1",
+   "caption": "An example of IMO in OlympiadBench",
+   "page": 1,
+   "why": "Shows problem, solution, answer type metadata"
+  }
+ ],
+ "code": [
+  {
+   "where": "Algorithm 1, p15",
+   "snippet": "Judge: if GT == output -> True; elif intervals/tuples -> element-wise equal; elif numerically equal (tol 1e-8) -> True; elif both contain '=' -> EquationEqual; else ExpressionEqual (SymPy: difference approaches zero)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Table 4 columns flattened in text; physics Zh_CEE/En_COMP column order inferred from caption (Maths: Avg, En_COMP, Zh_COMP, Zh_CEE ... order in text is Maths En_COMP, Zh_COMP, Zh_CEE, Avg then Physics - verify against PDF page 8 before citing sub-columns)",
+  "Fig 4 percentages read from interleaved labels; confirm panel assignment on page 8",
+  "No embedded instructions found"
+ ]
+}

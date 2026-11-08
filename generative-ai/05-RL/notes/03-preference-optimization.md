@@ -159,6 +159,9 @@ completions is enough ([01](01-rl-foundations.md#policy-gradients-from-reinforce
 closed-form optimal policy. DPO reparameterizes the reward model in terms of the policy
 itself, eliminating the need to train a separate reward model.
 
+![RLHF fits a reward model to preference data by maximum likelihood, then runs reinforcement learning against it with the policy sampling completions. DPO skips both and fits the final language model to the preference data directly.](../sources/images/rafailov-dpo-fig1.png)
+*Image Source: Rafailov et al., [Direct Preference Optimization](https://arxiv.org/abs/2305.18290) (2023), Fig. 1*
+
 **The closed-form connection:**
 
 Given the RLHF objective `max_π E[r(x,y)] - β·KL[π||π_ref]`, the optimal policy is:
@@ -360,6 +363,9 @@ DPO has spawned a family, each member changing one thing. **KTO** takes unpaired
 | Memory cost | 4x model | 2x model | 3x model | 2x model | 1x model |
 | Reward hacking risk | High | Low | Lower, not none: the verifier can be gamed | Low | Low |
 | Best for | General alignment, complex tasks | General alignment, stable training | Reasoning (math/code) | Unpaired feedback | Compute-constrained |
+
+![The Tülu 3 recipe: curate prompts and identify core skills, then supervised finetuning, direct preference optimization and RL with verifiable rewards, each checked against development evals, with unseen evals held out.](../sources/images/lambert-tulu3-fig1.png)
+*Image Source: Lambert et al., [Tülu 3: Pushing Frontiers in Open Language Model Post-Training](https://arxiv.org/abs/2411.15124) (2024), Fig. 1*
 
 **Practitioner heuristics:**
 1. **Start with DPO.** It's cheaper, more stable, and works well for most instruction

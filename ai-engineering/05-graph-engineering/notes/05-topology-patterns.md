@@ -23,6 +23,8 @@ sources:
   - https://arxiv.org/abs/2603.26993
   - https://arxiv.org/abs/2512.20184
   - https://arxiv.org/abs/2502.14815
+  - https://arxiv.org/abs/2207.01780
+  - https://arxiv.org/abs/2307.12856
 confidence: medium
 cleaned: 2026-11-01
 ---
@@ -56,6 +58,11 @@ Albada's code also shows three wiring faults to avoid when you copy the pattern:
 - **A substring router.** Routing on `"regenerate" in content` turns any tool output that happens to contain the word into another loop. Route on a structured field (`verdict: Literal["accept", "revise"]`) instead.
 - **Off-schema state.** The actor writes `state["candidates"]`, but `AgentState` only declares `operation` and `messages`, so there is no channel for it. Both nodes also return `history + new` into a key whose reducer is `operator.add`, which appends the whole history a second time on every pass. Declare every key you write, and return only the delta ([03](03-state-and-reducers.md#reducers-decide-merges)).
 
+**A verify step pays most when it hands the error back.** CodeRL (Le et al., NeurIPS 2022, [arXiv:2207.01780](https://arxiv.org/abs/2207.01780)) is a generate-test-regenerate graph with a bounded back-edge. On APPS with CodeT5-770M it samples N = 200 programs, runs the example tests from the problem statement, then branches: if some programs pass, a critic picks prefixes of them as seeds to regenerate from (refine); if none pass, the top failures go to a repair model together with the error type and message. Pass@1000 was 17.78 with no second stage, 19.36 with refine alone and **20.98 with refine plus repair** (Table 4). One round only, a single run with no variance, and the absolute level is low (pass@1 2.69%). The example tests are weaker than the hidden ones, so CodeRL cut compile errors but raised runtime errors: the gate can only catch what its checks can see.
+
+![CodeRL's Critic Sampling at inference: generate programs, filter by example unit tests, then refine the passing ones from critic-chosen seeds or repair the failing ones with their error type and message](../sources/images/le-2022-coderl-fig4.png)
+*Image Source: Le et al., [CodeRL: Mastering Code Generation through Pretrained Models and Deep Reinforcement Learning](https://arxiv.org/abs/2207.01780) (NeurIPS 2022), Fig. 4*
+
 ### Supervisor
 
 A coordinator node classifies each incoming task and dispatches it to a specialist, then decides whether the work is done or needs another specialist. It is the settled baseline for most multi-agent work: the orchestrator holds the plan, and the workers run in isolated contexts. n8n's AI Workflow Builder is a production example: a supervisor routing to five specialist subgraphs ([08](08-governance-and-production.md#case-study-n8ns-ai-workflow-builder)).
@@ -74,6 +81,11 @@ A router over models only means something if the models behave differently. Huot
 The fix is a schema, not a firmer prompt ([02 has the code](02-graph-primitives.md#a-router-fails-silently-unless-you-make-it-fail-loudly)). Use `with_structured_output` over a `Literal["inventory", "transportation", "supplier", "unknown"]`, and route `unknown` to a clarify or escalate node that exists in the graph. Albada's prose also describes the supervisor routing a disruption to transportation "while the inventory specialist concurrently scales" the warehouse. Its code can't do that: it picks exactly one specialist, and every specialist edge goes to `END`. Concurrent specialists need fan-out ([below](#fan-out--fan-in)), not a supervisor.
 
 When the specialists outgrow one agent's tool list, Albada gives two remedies to try before splitting into agents: **hierarchical tool selection** (group tools behind a few coarse tools) and **semantic tool selection** (embed the tool descriptions and retrieve the top k per query). The supervisor split only pays once the tool count or the roles' prompts actually conflict.
+
+**A planner/executor split, and where it fails.** WebAgent (Gür et al., ICLR 2024, [arXiv:2307.12856](https://arxiv.org/abs/2307.12856)) puts a fine-tuned HTML-T5 in the planner role (one sub-instruction plus the relevant HTML snippets per step) and a frozen Flan-U-PaLM-540B in the executor role, writing a Selenium program for each sub-instruction. On three real websites (20 instructions each, human supervised) it succeeded on **65% (real estate), 70% (social media) and 80% (map)**, against 10%, 20% and 10% for one prompted Flan-U-PaLM. Ablating either half hurts: planner only reached 50% on real estate, summarizer only 0%. The planner is the weak node: **70% of the full system's real-estate failures were wrong plans**. The executor was swappable, since gpt-3.5-turbo matched the 540B model on the map task (80%) while an 8B model scored 0. Twenty episodes per site gives 5-point steps and no variance, and the authors concede the extra latency and that nothing feeds code errors back to the executor.
+
+![WebAgent: HTML-T5 encoder and decoder, fine-tuned, read the navigation history, instruction and HTML and emit a sub-instruction and HTML snippets; frozen Flan-U-PaLM with a few-shot prompt turns them into a web automation program](../sources/images/gur-2023-webagent-fig3.png)
+*Image Source: Gür et al., [A Real-World WebAgent with Planning, Long Context Understanding, and Program Synthesis](https://arxiv.org/abs/2307.12856) (ICLR 2024), Fig. 3*
 
 ### Fan-out / fan-in
 

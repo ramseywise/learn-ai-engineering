@@ -1,0 +1,99 @@
+{
+ "schema": 1,
+ "key": "2210.01240",
+ "pdf": "ai-engineering/01-prompt-engineering/sources/saparov-2022-language-models-greedy-reasoners.pdf",
+ "bib": {"title": "Language Models Are Greedy Reasoners: A Systematic Formal Analysis of Chain-of-Thought", "authors": ["Abulhair Saparov", "He He"], "first_author": "Saparov", "year": 2023, "venue": "ICLR 2023", "arxiv": "2210.01240", "doi": null},
+ "read": {"by": "source-reader", "at": "2026-11-08", "chars_read": 69993, "chars_total": 69993, "engine": "pymupdf", "skipped": "reference list skimmed; figure bar heights are not in the text layer"},
+ "type": "benchmark",
+ "question": "Can LLMs actually reason with chain-of-thought, judged by formally checking each predicted proof step rather than the final label?",
+ "hypothesis": "Label accuracy on real-world tasks may hide heuristics or retrieval, so step-level proof analysis on a synthetic fictional-ontology task will show where reasoning fails.",
+ "contributions": ["PRONTOQA, a synthetic first-order-logic QA dataset with unique parseable proofs and programmable difficulty", "A formal step-level analysis of InstructGPT/GPT-3 chains of thought (valid/atomic/misleading step taxonomy)", "Finding that models make valid individual steps but fail at proof planning when several valid steps exist"],
+ "method": {
+  "summary": "Examples are generated from random linear ontologies and modus-ponens proofs, rendered in simple natural language. OpenAI GPT-3 family models are prompted 8-shot with CoT under greedy decoding; each predicted CoT sentence is semantically parsed and classified as valid/atomic/misleading against the gold proof.",
+  "task": "synthetic deductive true/false QA with chain-of-thought proof evaluation",
+  "trains": false,
+  "datasets": [{"name": "PRONTOQA", "role": "eval", "size": "400 examples per experiment configuration, 48 experiments", "split": "no train/test split; examples generated on the fly; 8 in-context examples per prompt, all i.i.d. from the generator", "source": "generated; code at github.com/asaparov/prontoqa", "preprocessing": "distractor sentence added at a random position in the context (a new disconnected concept with the negation of the queried property) to block lookup shortcuts; ontologies are linear, 3 to 10 concepts; query is the conclusion or its negation with probability 0.5"}],
+  "models": [
+   {"name": "text-davinci-002 (InstructGPT)", "role": "evaluated", "params": null, "architecture": "GPT-3 fine-tuned with RLHF", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": "inferred: roughly twice the 2049-token limit of 001 models", "other": {}},
+   {"name": "text-ada-001, text-babbage-001, text-curie-001, davinci, text-davinci-001", "role": "evaluated", "params": "350M, 1.3B, 6.7B mentioned for the first three (text of section 5.3)", "architecture": "GPT-3 family", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "context": "2049 tokens for all except text-davinci-002", "heads": null, "other": {}}
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "greedy for main experiments",
+   "temperature": "0.7 for the self-consistency experiment only",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "400 examples per configuration; 1 greedy output each; self-consistency 40 samples per example on 100 examples",
+   "prompting": "8-shot in-context CoT: 8 fully-labeled questions then one test question; CoT sentences are atomic gold proof steps",
+   "retrieval": null,
+   "parameters": {"hops": "1, 3, 5", "traversal direction": "top-down (preorder) or bottom-up (postorder)", "ontology type": "fictional, true (3 hand-coded real ontologies), false (random real names)", "DFS experiment": "in-context CoTs follow depth-first search incl. misleading steps; 100 examples, 5 hops fictional top-down"},
+   "other": {"api_dates": "main runs 9-11 Sep 2022; self-consistency 29-30 Oct 2022; DFS 16 Nov 2022"}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "label accuracy", "definition": "predicted True/False equals gold label", "unit": "fraction", "higher_is_better": true},
+    {"name": "strict proof accuracy", "definition": "a path of canonical (strictly-valid atomic correct) steps reaches the conclusion", "unit": "fraction", "higher_is_better": true},
+    {"name": "skip proof accuracy", "definition": "path may include strictly-valid non-atomic correct steps", "unit": "fraction", "higher_is_better": true},
+    {"name": "broad proof accuracy", "definition": "path may include broadly-valid steps", "unit": "fraction", "higher_is_better": true},
+    {"name": "valid proof accuracy", "definition": "path may include strictly- or broadly-valid steps", "unit": "fraction", "higher_is_better": true}
+   ],
+   "baselines": ["model size ladder from text-ada-001 to text-davinci-002", "chance (label)"],
+   "protocol": "95% Wilson confidence intervals; number of correct proofs ~ Binomial(400, p); unparseable steps count as incorrect"
+  },
+  "availability": {"code": "github.com/asaparov/prontoqa", "weights": null, "data": "generator and all model outputs at github.com/asaparov/prontoqa"},
+  "prompts": [{"purpose": "example PRONTOQA 8-shot item format", "text": "Q: Each cat is a carnivore. Every carnivore is not herbivorous. Carnivores are mammals. All mammals are warm-blooded. Mammals are vertebrates. Every vertebrate is an animal. Animals are multicellular. Fae is a cat. True or false: Fae is not herbivorous.\nA: Fae is a cat. Cats are carnivores. Fae is a carnivore. Every carnivore is not herbivorous. Fae is not herbivorous. True", "where": "Fig 1, p2 (the actual experiments use fictional names such as wumpus)"}],
+  "evidence": []
+ },
+ "results": [
+  {"claim": "Most predicted proof steps from text-davinci-002 are strictly valid (5-hop fictional ontology).", "kind": "measured", "source": null, "metric": "share of strictly-valid steps", "value": "93.2", "unit": "%", "baseline_value": null, "n": 400, "setup": "text-davinci-002, 8-shot CoT, greedy, 5 hops, fictional ontology", "quote": "93.2% of proof steps are strictly-valid, 2.4% are broadly-valid, and 5.9% are invalid", "table": null, "note": "the three shares sum to 101.5% as printed; 2.4% of steps are also stated to be non-atomic", "where": "5.3, p7"},
+  {"claim": "Invalid steps are a small share of steps.", "kind": "measured", "source": null, "metric": "share of invalid steps", "value": "5.9", "unit": "%", "baseline_value": null, "n": 400, "setup": "same as above", "quote": "93.2% of proof steps are strictly-valid, 2.4% are broadly-valid, and 5.9% are invalid", "table": null, "note": null, "where": "5.3, p7"},
+  {"claim": "Self-consistency (40 samples, T=0.7) does not improve valid proof accuracy.", "kind": "measured", "source": null, "metric": "valid proof accuracy", "value": "0.56", "unit": "fraction", "baseline_value": "0.545", "n": 100, "setup": "text-davinci-002, 5 hops, fictional, top-down, 100 examples", "quote": "The resulting valid proof accuracy is 0.56 compared to 0.545 which is not", "table": null, "note": null, "where": "A.7.1, p19"},
+  {"claim": "In-context depth-first-search traces do not improve valid proof accuracy.", "kind": "measured", "source": null, "metric": "valid proof accuracy", "value": "0.55", "unit": "fraction", "baseline_value": "0.545", "n": 100, "setup": "text-davinci-002, 5 hops, fictional, top-down, 100 examples", "quote": "The resulting valid proof accuracy is 0.55 compared to 0.545 which", "table": null, "note": null, "where": "A.7.2, p19"},
+  {"claim": "Only text-davinci-002 beats chance; accuracy rises from 350M to 1.3B and 6.7B.", "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "GPT-3 family, Fig 8", "quote": null, "table": null, "note": "bar heights only in figure; no numbers in text", "where": "5.3, p6-7"},
+  {"claim": "With a true ontology accuracy is much higher and does not drop from 3 to 5 hops; fictional and false ontologies are comparable (false slightly worse).", "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "text-davinci-002, Fig 4", "quote": null, "table": null, "note": "figure only", "where": "5.3, p7"},
+  {"claim": "5-hop top-down fictional accuracy falls to chance; 1 and 3 hops are handled well; top-down is harder than bottom-up as hops grow.", "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "text-davinci-002, Fig 4", "quote": null, "table": null, "note": "figure only", "where": "5.3, p7"},
+  {"claim": "The first non-canonical step in incorrect proofs is most often a strictly-valid atomic misleading step; models walk valid edges but pick the wrong branch and rarely recover (planning failure).", "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "Fig 5, Fig 10", "quote": null, "table": null, "note": "figure only", "where": "5.4, p7-8"},
+  {"claim": "Label accuracy correlates poorly with strict proof accuracy and best with valid proof accuracy across the 48 experiments.", "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": 48, "setup": "Fig 3 scatter", "quote": null, "table": null, "note": "figure only", "where": "5.2, p6"}
+ ],
+ "limits": [
+  "Only modus ponens, proofs of at most 5 hops, semantically simple sentences and linear ontologies; may not extend to longer proofs, other rules or complex sentences (conclusion).",
+  "Models are 2022 OpenAI API models (GPT-3 family, text-davinci-002) and are dated; no later models evaluated.",
+  "Authors could not determine why text-davinci-002 greatly outperforms 001 versions; suggest token limit as one factor.",
+  "Most headline results are bar charts only; text gives few numbers.",
+  "Self-consistency and DFS tested on only 100 examples in one configuration.",
+  "Authors say CoT is not sufficient for harder (mathematical) reasoning and suggest neurosymbolic search, but do not test it."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "strictly-valid atomic correct step (canonical step)", "definition": "provable from previous steps with exactly one application of a gold-proof deduction rule and part of the gold proof path", "where": "Section 4, Table 2"},
+  {"term": "misleading step", "definition": "a step whose premises are part of the gold proof but whose conclusion is not", "where": "Section 4"},
+  {"term": "broadly-valid step", "definition": "provable only with a more powerful calculus than the gold proofs use (here, transitivity of subtype)", "where": "Section 4"},
+  {"term": "proof accuracy", "definition": "fraction of proofs (not steps) containing a path of allowed step types from premises to the conclusion", "where": "Section 4, Fig 3"}
+ ],
+ "lineage": [
+  {"work": "Chain-of-thought prompting (Wei et al.)", "year": 2022, "arxiv": null, "relation": "evaluates", "note": "the prompting method analysed", "quote": null},
+  {"work": "ProofWriter (Tafjord et al.)", "year": 2021, "arxiv": null, "relation": "extends", "note": "dataset design inspired by it", "quote": null},
+  {"work": "FOLIO (Han et al.)", "year": 2022, "arxiv": "2209.00840", "relation": "related", "note": "no parseable proofs", "quote": null},
+  {"work": "Language models show human-like content effects on reasoning (Dasgupta et al.)", "year": 2022, "arxiv": "2207.07051", "relation": "replicates", "note": "real-world knowledge helps reasoning; consistent with their findings", "quote": null},
+  {"work": "Self-consistency (Wang et al.)", "year": 2022, "arxiv": null, "relation": "uses-method", "note": "tested in A.7.1", "quote": null},
+  {"work": "Selection-Inference (Creswell et al.)", "year": 2022, "arxiv": "2205.09712", "relation": "related", "note": "prompting extension to CoT", "quote": null},
+  {"work": "Training verifiers to solve math word problems / GSM8K (Cobbe et al.)", "year": 2021, "arxiv": "2110.14168", "relation": "related", "note": "contrast dataset", "quote": null},
+  {"work": "Language models are few-shot learners (Brown et al.)", "year": 2020, "arxiv": null, "relation": "evaluates", "note": "GPT-3 models", "quote": null},
+  {"work": "Training language models to follow instructions (Ouyang et al.)", "year": 2022, "arxiv": null, "relation": "evaluates", "note": "InstructGPT", "quote": null},
+  {"work": "Valmeekam et al. planning in Blocksworld", "year": 2022, "arxiv": null, "relation": "related", "note": "LLM planning difficulty", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 1", "caption": "A question-answering example from PRONTOQA, with each component highlighted and labeled.", "page": 2, "why": "Shows context, query, CoT and label at a glance"},
+  {"figure": "Fig 2", "caption": "Schematic of the generative process for each example in PRONTOQA.", "page": 2, "why": "Four-step ontology-to-proof-to-text pipeline"},
+  {"figure": "Table 2", "caption": "The types of proof steps (and examples thereof) into which we categorize each step in the predicted chain-of-thought from LLMs.", "page": 5, "why": "Taxonomy of canonical, misleading, non-atomic, broadly-valid and invalid steps"},
+  {"figure": "Fig 4", "caption": "Proof accuracy versus ontology type, number of hops, and ontology traversal direction.", "page": 8, "why": "Main result: true vs fictional, hops, direction"},
+  {"figure": "Fig 5", "caption": "Proportion of incorrect proofs versus the type of the first error and model size.", "page": 9, "why": "Misleading steps dominate first errors as models grow"},
+  {"figure": "Fig 7", "caption": "An example from PRONTOQA (5 hops with fictional ontology and top-down traversal direction) along with the expected and predicted answer from InstructGPT.", "page": 14, "why": "Concrete planning failure: one misleading step leads to invalid step"},
+  {"figure": "Fig 3", "caption": "Scatter plots of label accuracy vs proof accuracy of all GPT-3 experiments in this paper.", "page": 6, "why": "Shows label accuracy vs proof accuracy gap"}
+ ],
+ "code": [
+  {"where": "Algorithm 1, p15", "snippet": "evaluate_cot / is_provable: parse each predicted sentence to a logical form, test provability from context and prior conclusions, mark misleading if premises are in the gold proof but conclusion is not; correct iff the final gold conclusion is provable", "verbatim": false},
+  {"where": "A.7.1, p19", "snippet": "exp( (1/|s_i|) * sum_{j=1..|s_i|} log p(s_{i,j} | s_{i,1..j-1}) )", "verbatim": false}
+ ],
+ "problems": ["Figure bar values are not in the text layer, so most main results carry no number.", "Ligatures (fi) appear in the text layer.", "No embedded instructions found."]
+}

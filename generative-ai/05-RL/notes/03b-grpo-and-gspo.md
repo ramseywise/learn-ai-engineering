@@ -44,6 +44,9 @@ The DeepSeekMath result: GRPO on top of the 7B instruct model, using only GSM8K-
 MATH-style chain-of-thought prompts, raised GSM8K from 82.9% to 88.2% and MATH from 46.8%
 to 51.7%. Out-of-domain benchmarks improved too.
 
+![Maj@K and Pass@K against K (1 to 64) for DeepSeekMath 7B before and after RL, on GSM8K and MATH. RL lifts Maj@K at every K but leaves Pass@K at or below the instruct model's from K = 8 on.](../sources/images/shao-deepseekmath-fig7.png)
+*Image Source: Shao et al., [DeepSeekMath](https://arxiv.org/abs/2402.03300) (2024), Fig. 7*
+
 **Algorithm:**
 1. For each prompt `x`, sample a group of `G` outputs: `{y_1, y_2, ..., y_G}`
 2. Compute rewards `{r_1, ..., r_G}` (R1-style rule-based: correctness check, format check; or a reward model, as in DeepSeekMath)
@@ -209,6 +212,9 @@ DeepSeek-R1-1.5B, AIME went 29.8 base, 23.1 GRPO, 29.4 GDPO. So "beats GRPO" is 
 the starting point". Reward weights did not reliably set priorities when the objectives
 differed in difficulty. Making the easy reward conditional on the hard one worked better.
 
+![GDPO against GRPO. Left, the advantage formulas: GRPO sums the rewards and normalizes once, GDPO normalizes each reward within the group, sums, then normalizes over the batch. Right, format and correctness reward curves on a tool-calling task, GDPO reaching higher scores sooner.](../sources/images/liu-gdpo-fig1.png)
+*Image Source: Liu et al., [GDPO](https://arxiv.org/abs/2601.05242) (2026), Fig. 1*
+
 **GRPO needs per-token log-probabilities.** Masked diffusion LMs do not factorize left to
 right, so they cannot supply them directly. d1
 ([arXiv:2504.12216](https://arxiv.org/abs/2504.12216) (Zhao et al., 2025-04, preprint))
@@ -260,6 +266,9 @@ The two claims in favour of GSPO (Zheng et al.; the book repeats them):
 - Sequence likelihoods from the inference engine can be reused, so less recomputation in the
   trainer.
 
+![Training reward against compute for GSPO and GRPO with routing replay on a cold-start Qwen3-30B-A3B-Base, plus AIME'24, LiveCodeBench and CodeForces. The GSPO curve sits above GRPO throughout.](../sources/images/zheng-gspo-fig1.png)
+*Image Source: Zheng et al., [Group Sequence Policy Optimization](https://arxiv.org/abs/2507.18071) (2025), Fig. 1*
+
 *Read with care:* both claims come from the team that built GSPO and trained Qwen3 with it.
 The evidence is thin. It consists of training curves on one cold-start model from
 Qwen3-30B-A3B-Base, scored on AIME'24 avg@32, LiveCodeBench and CodeForces, with no tables and
@@ -296,6 +305,9 @@ collapsed after about 250 steps while GMPO did not. GSPO is not among its baseli
 | GRPO | Often a frozen reference | Reward function, verifier or LLM judge | No | Token ratio, group-normalized advantage |
 | GSPO | Often a frozen reference | Same as GRPO | No | Sequence ratio, group-normalized advantage |
 | RLOO | Often a frozen reference | Reward model or verifier | No | Sequence; baseline is the mean of the other k−1 rewards (Kool et al. 2019; Ahmadian et al. 2024) |
+
+![Test reward against training steps on TL;DR and Anthropic-HH (Pythia and Llama). RLOO with k = 2 sits above RAFT, REINFORCE with a baseline, vanilla policy gradient and PPO on all three.](../sources/images/ahmadian-rloo-fig2.png)
+*Image Source: Ahmadian et al., [Back to Basics](https://arxiv.org/abs/2402.14740) (2024), Fig. 2*
 
 ---
 

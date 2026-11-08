@@ -11,6 +11,7 @@ sources:
   - https://arxiv.org/abs/2410.19803
   - https://arxiv.org/abs/2510.06105
   - https://arxiv.org/abs/2308.05374
+  - https://arxiv.org/abs/2309.00770
   - https://arxiv.org/abs/2507.07484
   - https://arxiv.org/abs/2301.10226
   - https://arxiv.org/abs/2301.11305
@@ -235,6 +236,8 @@ Keep a **benign borderline set** in your evaluation: requests that sound risky b
 ## Harm and fairness in deployed output
 
 Group harm rarely shows up in a single response. You see it by comparing responses across many of them. [arXiv:2410.19803](https://arxiv.org/abs/2410.19803) (Eloundou et al., ICLR 2025) studied this at scale in ChatGPT: because the system can store a user's name, they compare responses to the same real prompt under different names. A second language model analyses the differences privately, and they validate its annotations with human evaluation. Over random English prompts, harmful gender stereotypes were below 0.1%, with the rate varying by task, and post-training interventions significantly reduced them. It's a vendor's study using its own models as the grader, so read the number with that in mind. The method is what you can borrow, since it needs no demographic data about real users.
+
+The survey literature explains why a single bias score deserves suspicion. [arXiv:2309.00770](https://arxiv.org/abs/2309.00770) (Gallegos et al., Computational Linguistics 2024) sorts bias metrics by what they read from the model (embeddings, token probabilities or generated text) and cites work finding no reliable correlation between embedding-based bias and bias on downstream tasks. For generated-text metrics, decoding settings such as temperature and top-k can give contradicting verdicts on the same metric and dataset, and a Blodgett et al. (2021) audit found it unclear which stereotype is measured in nearly half of the instances of Winogender, WinoBias, StereoSet and CrowS-Pairs. Its practical advice matches the counterfactual test above: report the decoding parameters and prompts with every number, and keep a direct task-level evaluation beside any proxy. It also warns that a toxicity filter in decoding can suppress minority dialects, so a lower toxicity score is not proof of lower bias. It is a survey of mostly BERT-era and GPT-2-era models, with no experiments of its own, so the findings carry over as cautions and not as measurements of today's chat models.
 
 For a wider list of what to look at, [arXiv:2308.05374](https://arxiv.org/abs/2308.05374) (Liu et al., 2023-08, preprint) surveys seven categories of trustworthiness, among them reliability, safety, fairness and resistance to misuse. And some harm is neither toxic nor biased. [arXiv:2507.07484](https://arxiv.org/abs/2507.07484) (Liang et al., 2025-07, preprint) measures a disregard for truth: their Bullshit Index, one minus the absolute correlation between what a model believes and what it claims, rose from 0.379 to 0.665 after RLHF. They ran their own RLHF on LoRA models, and some numbers in their text and figures disagree, so take the direction and not the size.
 

@@ -1,0 +1,141 @@
+{
+ "schema": 1,
+ "key": "2210.02406",
+ "pdf": "ai-engineering/01-prompt-engineering/sources/khot-2022-decomposed-prompting.pdf",
+ "bib": {
+  "title": "Decomposed Prompting: A Modular Approach for Solving Complex Tasks",
+  "authors": ["Tushar Khot", "Harsh Trivedi", "Matthew Finlayson", "Yao Fu", "Kyle Richardson", "Peter Clark", "Ashish Sabharwal"],
+  "first_author": "Khot",
+  "year": 2023,
+  "venue": "ICLR 2023",
+  "arxiv": "2210.02406",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 206340,
+  "chars_total": 206340,
+  "engine": "pymupdf",
+  "skipped": "Appendix G (task prompts, text lines ~1600-3990) read in part: the letter-concatenation prompts in full, the rest (CommaQA, open-domain QA, math prompts with long context passages) skimmed from the tail and spot checks only."
+ },
+ "type": "empirical",
+ "question": "Can a complex task be solved better with few-shot LLMs by decomposing it into sub-tasks, each handled by its own prompt, further decomposition or symbolic function, than by one chain-of-thought prompt?",
+ "hypothesis": "Separate, modular sub-task prompts teach hard sub-tasks better than a single CoT prompt, and allow recursion and symbolic modules (retrieval) to be plugged in.",
+ "contributions": [
+  "Decomposed Prompting (DecomP): a decomposer prompt writes a sequence of (sub-task, sub-question) steps, each routed to a sub-task handler (few-shot prompt, further decomposer, or symbolic function)",
+  "Shows hierarchical decomposition (kth letter), recursive decomposition (list reversal), external API calls (Elasticsearch retrieval), and error-correcting post-processing of CoT (math QA)",
+  "Outperforms CoT and least-to-most prompting on four case studies with GPT-3 models"
+ ],
+ "method": {
+  "summary": "A decomposer LLM prompt is called iteratively; given the question and history of sub-answers it emits the next sub-question tagged with a handler name in square brackets, until it emits [EOQ]. A symbolic controller routes each sub-question to the handler (a separate few-shot prompt, another decomposer, or a retriever), appends the answer (#i references) to the decomposer history, and handles operators such as foreach. Compared against CoT, CoT with rollout and least-to-most with rollout on four tasks, plus a math post-processing study.",
+  "task": "multi-step reasoning by prompt decomposition: kth-letter concatenation, list reversal, long-context multi-hop QA (CommaQA-E), open-domain multi-hop QA, math QA answer extraction",
+  "trains": false,
+  "datasets": [
+   {"name": "kth letter concatenation (k=3, space or semicolon delimiter)", "role": "eval", "size": "100 examples per evaluation dataset, 4 datasets (new k=3; 4 and 5 words; new delimiter ';')", "split": "N=3 IID, N=4 and 5 OOD words; prompts show k=1, 4, last on 3-word strings", "source": "words from most popular first and last names (forebears.io)", "preprocessing": null},
+   {"name": "list reversal", "role": "eval", "size": null, "split": "prompts have 3 examples of 3-5 items; test on 4, 6, 8, 10 items", "source": "vocabulary from Wei et al. 2022 (vocabulary.com list 189583)", "preprocessing": null},
+   {"name": "CommaQA-E (reduced version)", "role": "eval", "size": null, "split": "IID and compositional generalization split", "source": "Khot et al. 2022; synthetic entities, facts, multi-hop questions", "preprocessing": "smaller regenerated version so at least four examples fit in CoT context (GPT-3 limit 2049 tokens)"},
+   {"name": "2WikiMultihopQA, MuSiQue, HotpotQA (open-domain)", "role": "eval", "size": "300 held-out dev questions each; 20 annotated train questions for prompts; 100 held-out questions for tuning K", "split": "3 prompts of 15 questions each sampled from the 20", "source": "HotpotQA fullwiki corpus; 2Wiki corpus 430,225 paragraphs and MuSiQue 139,416 paragraphs built by pooling paragraphs of train, dev and test questions", "preprocessing": "2Wiki and MuSiQue converted from reading comprehension to open-domain via pooled corpora"},
+   {"name": "GSM8K", "role": "eval", "size": "300 random test examples (API cost)", "split": "test", "source": "Cobbe et al. 2021", "preprocessing": null},
+   {"name": "MultiArith", "role": "eval", "size": "200 random test examples (API cost)", "split": "test", "source": "Roy and Roth 2015", "preprocessing": null}
+  ],
+  "models": [
+   {"name": "text-davinci-002 (InstructGPT3)", "role": "base", "params": null, "architecture": "GPT-3", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": "2049 tokens", "other": {"use": "default LLM for letter concatenation, CommaQA, math, and all decomposers"}},
+   {"name": "text-davinci-001", "role": "base", "params": null, "architecture": "GPT-3", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": "2048 tokens", "other": {"use": "list reversal; CommaQA scale study"}},
+   {"name": "text-curie-001", "role": "evaluated", "params": null, "architecture": "GPT-3", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": "2048 tokens", "other": {"use": "CommaQA scale study"}},
+   {"name": "code-davinci-002 (Codex)", "role": "base", "params": null, "architecture": "GPT-3 family", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"use": "open-domain QA, fits longer contexts"}},
+   {"name": "Flan-T5-Large / XL / XXL", "role": "base", "params": "0.7B / 3B / 11B", "architecture": "encoder-decoder T5", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"use": "open-domain QA sub-task QA models; decomposition still done by GPT3-sized models because only those reliably produce the structured output"}}
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "greedy search (approximation of MAP answer)",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "3 different prompts (example sets) per method, averaged, for letter concatenation, CommaQA and open-domain QA; single run per prompt; no seeds stated",
+   "prompting": "few-shot; decomposer prompt plus one few-shot prompt per sub-task handler. Letter task: prompts show k=1, 4, last on 3-word strings. CommaQA: each sub-task prompt has 8 QA examples (2 questions per paragraph). Open-domain: 15 questions per prompt. CoT baselines are run in the same decomposition framework with a regex answer extractor ('.* outputs \"(.*)\"\\.').",
+   "retrieval": "Elasticsearch; K paragraphs retrieved per retrieval round; K chosen by grid search on 100 held-out questions per dataset: NoDecomp-Ctxt K in {6,8,10} for GPT3 and {2,4,6,8} for Flan-T5; Decomp-Ctxt K in {2,4,6} for both. Retrieval index/BM25 settings not stated.",
+   "parameters": {
+    "operators": "select (default, substitutes #i answers); project_values (foreach: one question per list element, answers concatenated); project_values_flat_unique (foreach_merge: also flattens and keeps unique entities)",
+    "recursion": "list reversal splits list in halves (O(log n) calls), base case lists of length 3 solved by CoT; tail-split variant is O(n) calls",
+    "stop": "decomposer emits [EOQ]; last answer returned"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "Exact Match (EM)", "definition": "exact string match; set equality for order-independent list answers", "unit": "%", "higher_is_better": true},
+    {"name": "Answer F1", "definition": "prediction and ground truth treated as bags of tokens, precision and recall (Rajpurkar et al. 2016)", "unit": "%", "higher_is_better": true}
+   ],
+   "baselines": ["Chain-of-thought", "CoT w/ rollout (decomposition procedure written as one CoT)", "Least-to-most w/ rollout", "No-Ctxt QA (closed book)", "NoDecomp-Ctxt QA (single retrieval with the multi-hop question, K paragraphs)"],
+   "protocol": "Average over 3 prompt sets for most tasks (following Perez et al. 2021); std dev reported in places, zero for DecomP on letter task; no significance test; per-prompt results in App. D."
+  },
+  "availability": {
+   "code": "https://github.com/allenai/DecomP",
+   "weights": null,
+   "data": "Datasets, code and prompts at the same repo; all prompts in supplementary material"
+  },
+  "prompts": [
+   {"purpose": "decomposer prompt for kth letter concatenation", "text": "QC: Take the letters at position 1 of the words in \"Alan Mathison Turing\" and concatenate them using a space.\nQS: [split] What are the words in \"Alan Mathison Turing\"?\nA: [\"Alan\", \"Mathison\", \"Turing\"]\nQS: (project_values) [str_position] What is the letter at position 1 in \"#1\"?\nA: [\"A\", \"M\", \"T\"]\nQS: [merge] Concatenate #2 using a space.\nA: \"A M T\"\nQS: [EOQ]", "where": "App. G.1.1 (one of three examples)"},
+   {"purpose": "answer extraction after CoT for math QA", "text": "QC: There are 15 trees in the grove. ... How many trees did the grove workers plant today?\nQS: [cot] <question>\nA: <chain of thought>\nQS: [gpt_ans] <chain of thought>\nA: 6\nQS: [EOQ]", "where": "App. B"}
+  ],
+  "evidence": [
+   {"field": "inference.decoding", "quote": "such computations are approximated using greedy search in our experiments", "where": "Sec 3.2"}
+  ]
+ },
+ "results": [
+  {"claim": "DecomP reaches near-perfect EM on kth-letter concatenation (k=3, space delimiter), N=3 words, versus 22.7 for plain CoT.", "kind": "measured", "source": null, "metric": "EM", "value": "98.0", "unit": "%", "baseline_value": "22.7 (CoT); 71.3 (CoT w/ rollout); 74.7 (L2M w/ rollout)", "n": "100 examples x 3 prompts", "setup": "text-davinci-002, N=3 (IID), k=3 never shown in sub-task prompts, average of 3 prompts", "quote": null, "table": "Fig 7, bar group N=3(IID), series DecomP (values read off figure bars; 98.0, 96.0, 97.0 for N=3,4,5)", "note": "Values read from figure data labels in the text layer; series assignment follows legend order.", "where": "Fig 7, p7"},
+  {"claim": "DecomP generalises to longer inputs (N=5 words) at 97.0 EM while CoT falls to 6.0, CoT w/ rollout 53.3, L2M w/ rollout 66.0.", "kind": "measured", "source": null, "metric": "EM", "value": "97.0", "unit": "%", "baseline_value": "6.0 (CoT); 53.3 (CoT w/ rollout); 66.0 (L2M w/ rollout)", "n": "100 examples x 3 prompts", "setup": "text-davinci-002, N=5 (OOD), k=3, space delimiter", "quote": null, "table": "Fig 7, bar group N=5(OOD), series DecomP (value 97.0 from figure labels)", "note": null, "where": "Fig 7, p7"},
+  {"claim": "Recursive DecomP on list reversal keeps 42 EM at 10 items where CoT with rollout gets 1 and plain CoT 4.5 (series assignment inferred from legend order).", "kind": "measured", "source": null, "metric": "EM", "value": "42", "unit": "%", "baseline_value": "1 (CoT w/ rollout); 4.5 (CoT, inferred)", "n": null, "setup": "text-davinci-001 (weaker model), prompts with 3 examples of 3-5 items, test lengths 4, 6, 8, 10", "quote": null, "table": "Fig 8, N=10(OOD), series DecomP (figure labels 86, 59, 64, 42 for N=4, 6, 8, 10)", "note": "Fig 8 text layer lists 12 numbers without series names; grouping 5.5/3.0/6.5/4.5 (CoT), 76/53/16/1 (CoT w/ rollout), 86/59/64/42 (DecomP) is inferred from legend order and the prose that CoT does not generalise at all.", "where": "Fig 8, p7"},
+  {"claim": "On CommaQA-E IID, fine-grained DecomP beats CoT by 17.7 EM (59.7 vs 42.0).", "kind": "measured", "source": null, "metric": "EM", "value": "59.7", "unit": "%", "baseline_value": "42.0", "n": "3 prompts averaged", "setup": "text-davinci-002, reduced CommaQA-E, IID split", "quote": null, "table": "Fig 10, IID, series DecomP(fine) (values 42.0, 55.0, 59.7)", "note": "Compositional generalization split: CoT 33.8, coarse 59.7, fine 64.2 (figure labels).", "where": "Fig 10, p8"},
+  {"claim": "On open-domain QA with Codex, Decomp-Ctxt gets 64.1 F1 on 2WikiMultihopQA versus 47.1 for the NoDecomp retrieval baseline and 38.1 closed book.", "kind": "measured", "source": null, "metric": "Answer F1", "value": "64.1", "unit": "F1", "baseline_value": "47.1 (NoDecomp-Ctxt); 38.1 (No-Ctxt)", "n": "300 dev questions, 3 prompts", "setup": "code-davinci-002, direct QA prompts, Elasticsearch retrieval; K tuned on 100 held-out questions", "quote": null, "table": "Fig 12 left, 2WikiMultihopQA, series Decomp-Ctxt QA (values 25.4, 49.9, 64.1)", "note": "Codex HotpotQA: NoDecomp 50.2 vs Decomp 49.9 (comparable, the one exception). MuSiQue: 18.3 / 21.4 / 25.4 (No-Ctxt / NoDecomp / Decomp).", "where": "Fig 12, p9"},
+  {"claim": "With Flan-T5-XXL (11B) Decomp-Ctxt reaches 63.3 F1 on 2WikiMultihopQA, near Codex.", "kind": "measured", "source": null, "metric": "Answer F1", "value": "63.3", "unit": "F1", "baseline_value": "49.9 (NoDecomp-Ctxt); 32.3 (No-Ctxt)", "n": "300 dev questions, 3 prompts", "setup": "Flan-T5-XXL as QA model, GPT3-sized decomposer, direct prompts", "quote": null, "table": "Fig 12 right, 2WikiMultihopQA, series Decomp-Ctxt QA (values 29.3, 56.4, 63.3)", "note": "HotpotQA 56.4 vs 49.0 NoDecomp vs 24.8 No-Ctxt; MuSiQue 29.3 vs 23.3 vs 15.1.", "where": "Fig 12, p9"},
+  {"claim": "Replacing the regex answer extractor after CoT with a GPT-3 sub-task handler gains 14-17 pts on math QA.", "kind": "measured", "source": null, "metric": "accuracy", "value": "14-17", "unit": "pts", "baseline_value": null, "n": "GSM8K 300 test examples; MultiArith 200", "setup": "text-davinci-002, Wei et al. 2022 CoT prompts, answer extraction by GPT-3 handler (gpt_ans) instead of 'answer is' pattern", "quote": "resulting in a surprisingly high improvement of 14-17 pts", "table": null, "note": "Text Sec 4.5 says GSM8K 36 -> 50.6; Fig 16 prints 36.0 and 50.7. MultiArith 78.0 -> 95.0.", "where": "Intro, Sec 4.5, Fig 16"},
+  {"claim": "A single DecomP prompt set gives similar scores for the loop and generate decompositions of letter concatenation; tail-split list reversal is more stable at long lengths but needs O(n) calls versus O(log n) for halves.", "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "App. E, text-davinci family", "quote": "On the letter concatenation task, the results were exactly the same.", "table": null, "note": null, "where": "App. E"},
+  {"claim": "Errors of DecomP on letter concatenation were only in sub-task execution (wrong letter extraction or concatenation), not in the decomposition.", "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "App. F error analysis, qualitative", "quote": "only found errors in the sub-task execution", "table": null, "note": null, "where": "App. F.1.1"},
+  {"claim": "Scale matters: on CommaQA with weaker models all methods drop; DecomP still beats CoT until performance nears zero with curie.", "kind": "measured", "source": null, "metric": "EM", "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "curie-001, davinci-001, davinci-002, prompts shortened to 2048 tokens", "quote": "both CoT and DECOMP are effected by the model size", "table": null, "note": "Fig 17 labels: curie 7/9/8, davinci-001 10/14/19, davinci-002 33/49/56 (CoT / coarse / fine).", "where": "App. C, Fig 17"}
+ ],
+ "limits": [
+  "Decomposition and sub-task prompts are hand-written by the authors for each task; no automatic decomposition and no measure of the human effort.",
+  "Only GPT-3 era models (davinci, curie, Codex) and Flan-T5; Flan-T5 cannot produce the structured decomposition so GPT3-sized models are still needed as decomposer.",
+  "Baselines are CoT variants and least-to-most; the paper does not compare against each task-specific decomposition system.",
+  "Tasks are partly synthetic (letter concatenation, reversal, CommaQA); evaluation sets small (100 examples for letters, 300 for open-domain QA, 200-300 for math subsets).",
+  "No temperature, max tokens, retriever settings or seeds are reported; results are means over 3 prompt choices.",
+  "Cost and latency of the many sequential calls are not reported; the paper notes tail-split reversal needs O(n) calls versus O(log n)."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "decomposer prompt", "definition": "the prompt that only describes the sequence of sub-tasks needed to solve the complex task", "where": "Sec 1"},
+  {"term": "sub-task handler", "definition": "a few-shot prompted LLM, further decomposed prompt, or symbolic/learned function that implements one sub-task", "where": "Sec 1, Sec 3"},
+  {"term": "foreach / foreach_merge", "definition": "project_values and project_values_flat_unique operators that iterate a sub-question over a list answer and (for merge) flatten and keep unique entities", "where": "App. G"}
+ ],
+ "lineage": [
+  {"work": "Chain-of-thought prompting (Wei et al.)", "year": 2022, "arxiv": null, "relation": "baseline", "note": "main baseline; DecomP reuses its CoT prompts for reversal and math", "quote": null},
+  {"work": "Least-to-most prompting (Zhou et al.)", "year": 2023, "arxiv": null, "relation": "baseline", "note": "closest work; DecomP differs by iterative top-down decomposition and non-linear structures", "quote": null},
+  {"work": "Successive prompting (Dua et al.)", "year": 2022, "arxiv": null, "relation": "related", "note": "closest work; generates sub-questions iteratively", "quote": null},
+  {"work": "Text Modular Networks (Khot et al.)", "year": 2021, "arxiv": null, "relation": "extends", "note": "inspiration: decomposition in the language of existing agents; replaces supervised next-question generator with few-shot LLMs", "quote": null},
+  {"work": "Hey AI, can you solve complex tasks by talking to agents? (Khot et al.)", "year": 2022, "arxiv": null, "relation": "uses-method", "note": "operators and the CommaQA dataset", "quote": null},
+  {"work": "Language model cascades (Dohan et al.)", "year": 2022, "arxiv": "2207.10342", "relation": "related", "note": "probabilistic framing p(A | Q, D, theta)", "quote": null},
+  {"work": "Self-ask / compositionality gap (Press et al.)", "year": 2022, "arxiv": "2210.03350", "relation": "related", "note": "specialised system with predefined decomposition", "quote": null},
+  {"work": "PAL, Toolformer, TALM, Selection-Inference, Maieutic prompting", "year": 2022, "arxiv": null, "relation": "related", "note": "compose LLMs or tools with pre-defined structure", "quote": null},
+  {"work": "2WikiMultihopQA, MuSiQue, HotpotQA, GSM8K, MultiArith, CommaQA", "year": null, "arxiv": null, "relation": "uses-data", "note": "evaluation sets", "quote": null},
+  {"work": "InstructGPT (Ouyang et al.), Codex, Flan-T5", "year": 2022, "arxiv": null, "relation": "evaluates", "note": "models used as handlers", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 1", "caption": "Standard prompting vs Chain-of-Thought prompting vs Decomposed Prompting: decomposer prompt plus sub-task handlers (standard prompt, further decomposed prompt, symbolic retrieval).", "page": 2, "why": "One picture of the architecture: a decomposer calling interchangeable handlers."},
+  {"figure": "Fig 3", "caption": "The inference procedure in DECOMP iteratively calls the decomposer prompt to generate the next question and sub-task at each step, given the current history of question and answers.", "page": 4, "why": "Shows the controller loop, foreach expansion and [EOQ] stop condition concretely."},
+  {"figure": "Fig 5", "caption": "Sample prompt for recursive decomposition for reversing lists.", "page": 5, "why": "Recursive chaining with a CoT base case."},
+  {"figure": "Fig 7", "caption": "EM results on the kth letter concatenation task (k=3) using space as delimiter with different number of words in the input.", "page": 7, "why": "Main evidence that separate sub-task prompts beat a single CoT and generalise to longer inputs."},
+  {"figure": "Fig 11", "caption": "The prompt used to answer open-domain multihop questions using Elasticsearch-based retrieval.", "page": 8, "why": "Shows retrieval as a chained step feeding answers and documents to later steps."},
+  {"figure": "Fig 12", "caption": "Answer F1 on three open-domain QA datasets using two base LMs: Codex (left) and Flan-T5-XXL (right) with direct prompting.", "page": 9, "why": "Decomposed retrieval vs single-shot retrieval vs closed-book."}
+ ],
+ "code": [
+  {"where": "Sec 3, p3", "snippet": "(f1, Q1, A1), ..., (fk, Qk, Ak)", "verbatim": true},
+  {"where": "App. G, operators", "snippet": "Q = [q.replace(#i, x) for x in X]; A = [model(q) for q in Q]", "verbatim": false}
+ ],
+ "problems": [
+  "Figure values are recovered from the PDF text layer (data labels); series-to-number assignment in Fig 8 and Fig 10 is inferred from legend order, not printed.",
+  "Section map from extract.py only found some headings; appendix G prompts were skimmed.",
+  "Text says GSM8K 36 -> 50.6 (Sec 4.5) while Fig 16 prints 50.7."
+ ]
+}

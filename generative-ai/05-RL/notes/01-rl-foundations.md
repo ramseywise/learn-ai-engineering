@@ -138,6 +138,9 @@ Two worked examples make the table concrete. In a 5×5 gridworld with γ = 0.9, 
 ![Iterative policy evaluation on a 4x4 gridworld: value estimates for the random policy and the greedy policy at each iteration k](../sources/images/sutton-barto-rl-fig4-1.png)
 *Image Source: Sutton and Barto, [Reinforcement Learning: An Introduction](http://incompleteideas.net/book/the-book-2nd.html) (2nd ed., 2018), Fig. 4.1*
 
+![Jack's car rental: policies pi0 to pi4 as contour maps over cars at each location, from never moving cars to the final policy, plus the 3-D value surface of pi4 (420 to 612).](../sources/images/sutton-barto-rl-fig4-2.png)
+*Image Source: Sutton and Barto, [Reinforcement Learning: An Introduction](http://incompleteideas.net/book/the-book-2nd.html) (MIT Press, 2018), Fig. 4.2*
+
 Two facts from a short tutorial summary of RL ([arXiv:2301.01379](https://arxiv.org/abs/2301.01379) (Ahilan, 2023-01, preprint)) explain why the table's methods differ beyond bias and variance. Repeated Bellman expectation backups converge because the backup is a γ-contraction in the infinity norm, which needs γ < 1 in an infinite-horizon problem. And on a fixed batch of experience, Monte Carlo converges to the value that minimises squared error on the observed returns, while TD(0) converges to the value of the maximum-likelihood Markov model of that data, so the two can disagree. The paper is a proof-sketch summary of Sutton and Barto and Silver's course, with no experiments, and stops before PPO.
 
 ### Algorithm families, temporal difference and DQN
@@ -405,6 +408,9 @@ static noisy screen does not keep generating. Winder's caution is that all of th
 and by reshaping the reward. Before reaching for them, try a denser reward, a demonstrator or a
 simpler problem. Exploration needs prior knowledge, which is precisely what a pretrained LLM
 brings.
+
+![Winder, Fig. 9-7: three frames of a noisy television. Curiosity based on prediction error keeps rewarding the agent for staring at screens whose next frame it cannot predict.](../sources/images/winder-reinforcement-learning-fig9-7.png)
+*Image Source: Phil Winder, *Reinforcement Learning* (O'Reilly, 2020), Fig. 9-7*
 
 **Regret and bandits.** The guarantees live in [1c](01c-bandit-algorithms.md): regret and the 10-armed testbed, explore-then-commit, UCB, KL-UCB and MOSS, Exp3 for adversarial rewards, the lower bounds, and contextual and linear bandits (LinUCB, Thompson sampling with neural nets). The one idea to carry on from here is that regret grows only logarithmically in n when the gaps are fixed, and as √n in the worst case, so exploration has to be spent early and in proportion to uncertainty. A contextual bandit is the one-step case with a context and no carried state; it is the right model for recommendation, routing and prompt or model selection.
 

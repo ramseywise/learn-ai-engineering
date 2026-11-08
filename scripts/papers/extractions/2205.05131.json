@@ -1,0 +1,665 @@
+{
+ "schema": 1,
+ "key": "2205.05131",
+ "pdf": "ai-engineering/01-prompt-engineering/sources/tay-2022-ul2.pdf",
+ "bib": {
+  "title": "UL2: Unifying Language Learning Paradigms",
+  "authors": [
+   "Yi Tay",
+   "Mostafa Dehghani",
+   "Vinh Q. Tran",
+   "Xavier Garcia",
+   "Jason Wei",
+   "Xuezhi Wang",
+   "Hyung Won Chung",
+   "Siamak Shakeri",
+   "Dara Bahri",
+   "Tal Schuster",
+   "Huaixiu Steven Zheng",
+   "Denny Zhou",
+   "Neil Houlsby",
+   "Donald Metzler"
+  ],
+  "first_author": "Tay",
+  "year": 2023,
+  "venue": "ICLR 2023 (arXiv v3, 28 Feb 2023)",
+  "arxiv": "2205.05131",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 121987,
+  "chars_total": 121987,
+  "engine": "pymupdf",
+  "skipped": "References skimmed. Appendix 9.3 (SOTA finetuning run details) and 9.4 (few-shot prompts) are listed in the contents but absent from the extracted text (text ends at Table 17 caption after 9.2 code)."
+ },
+ "type": "empirical",
+ "question": "Can one pre-training recipe be universally effective across supervised, few-shot and generation tasks, independent of the architecture choice?",
+ "hypothesis": "Diverse denoising objectives mixed in pre-training (plus mode tokens) give a better trade-off than span corruption (T5) or causal LM (GPT-like) alone; the objective matters more than the backbone.",
+ "contributions": [
+  "Mixture-of-Denoisers (R, S, X denoisers) pre-training objective",
+  "Mode switching: paradigm tokens in pre-training and downstream use",
+  "Architecture-agnostic framework; ablations on decoder-only vs encoder-decoder",
+  "Scaling to 20B parameters with SOTA on 50+ supervised tasks, strong zero/one-shot and CoT; release of UL2 20B and Flan-UL2 20B checkpoints"
+ ],
+ "method": {
+  "summary": "Pre-train models on C4 with a mixture of 7 span-corruption denoisers (R: short spans, low corruption; S: prefix-LM; X: extreme long spans or high corruption), each prefixed with a mode token. Compare against CLM, PrefixLM, SC (T5), SCLM and UniLM objectives on decoder-only and encoder-decoder backbones at ~167M/335M, then scale to 1B/0.5T tokens and 20B/1T tokens.",
+  "task": "Self-supervised pre-training (denoising / inputs-to-targets), then supervised finetuning and prompt-based in-context evaluation",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "C4",
+    "role": "pretrain",
+    "size": "~32B tokens seen in ablations (500K steps x batch 128 x 512 inputs); 0.5T tokens at 1B scale; 1T tokens (2M steps) at 20B",
+    "split": null,
+    "source": "C4 corpus",
+    "preprocessing": "English 32K sentencepiece (T5 default); inputs 512 / targets 512"
+   },
+   {
+    "name": "SuperGLUE (8 sub-tasks)",
+    "role": "both",
+    "size": null,
+    "split": "finetune and one-shot",
+    "source": "Wang et al. 2019",
+    "preprocessing": null
+   },
+   {
+    "name": "GEM: XSum, ToTTo, Schema-Guided Dialog",
+    "role": "both",
+    "size": null,
+    "split": "finetune and one-shot",
+    "source": "Gehrmann et al. 2021",
+    "preprocessing": null
+   },
+   {
+    "name": "50+ supervised tasks (summarization, GENIE human eval, QA/NLI/classification, commonsense, Scrolls, UnifiedSKG, DSI-NQ, GLUE)",
+    "role": "eval",
+    "size": null,
+    "split": "test/dev as listed in Table 8",
+    "source": "many; see Sec 5.2.2",
+    "preprocessing": "Scrolls kept at 2k sequence length"
+   },
+   {
+    "name": "MMLU, BBH, GSM8K, SVAMP, ASDiv, AQuA, MAWPS, CSQA, StrategyQA, Date, Sports, ARC",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "prompts from Wei et al. 2022b for CoT",
+    "preprocessing": null
+   },
+   {
+    "name": "Flan mixture",
+    "role": "train",
+    "size": null,
+    "split": null,
+    "source": "Chung et al. 2022",
+    "preprocessing": "no mode tokens in Flan mixture"
+   }
+  ],
+  "models": [
+   {
+    "name": "UL2 decoder (ablation)",
+    "role": "proposed",
+    "params": "167M",
+    "architecture": "decoder-only, PrefixLM-style (bidirectional on inputs, autoregressive on targets) except CLM baseline",
+    "init_from": null,
+    "tokenizer": "English 32K sentencepiece",
+    "vocab": "32k",
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "512 inputs + 512 targets",
+    "other": {
+     "activation": "SwiGLU, T5 relative attention"
+    }
+   },
+   {
+    "name": "UL2 encoder-decoder (ablation)",
+    "role": "proposed",
+    "params": "335M",
+    "architecture": "encoder-decoder (T5-like with GLU)",
+    "init_from": null,
+    "tokenizer": "English 32K sentencepiece",
+    "vocab": "32k",
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "512/512",
+    "other": {
+     "note": "approx 2x params of decoder at matched compute"
+    }
+   },
+   {
+    "name": "UL2 20B",
+    "role": "proposed",
+    "params": "19.5B (~20B)",
+    "architecture": "encoder-decoder",
+    "init_from": null,
+    "tokenizer": "T5 sentencepiece",
+    "vocab": "32k",
+    "layers": "32 encoder + 32 decoder",
+    "hidden": "d_model 4096, d_ff 16384",
+    "heads": "16 (dim 256 per head)",
+    "context": "512/512 pretraining",
+    "other": {
+     "model_parallelism": 8
+    }
+   },
+   {
+    "name": "Flan-UL2 20B",
+    "role": "proposed",
+    "params": "20B",
+    "architecture": "encoder-decoder",
+    "init_from": "UL2 20B + 100K more steps without mode tokens",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "1024/1024 adaptation; Flan training at 2048/512",
+    "other": {}
+   },
+   {
+    "name": "Baselines CLM, PrefixLM, SC (T5), SCLM, UniLM",
+    "role": "baseline",
+    "params": "167M dec / 335M enc-dec",
+    "architecture": "both",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "Mixture of 7 denoisers (Table 1): R (mu=3,r=0.15),(mu=8,r=0.15); S (mu=L/4,r=0.25,n=1); X (mu=3,r=0.5),(mu=8,r=0.5),(mu=64,r=0.15),(mu=64,r=0.5); equal participation; mode token [R]/[S]/[X] prepended",
+   "optimizer": "Adafactor (pretraining); finetuning Adafactor with reset states and/or loss normalized by real target tokens",
+   "lr": "pretraining: inverse square root (value not stated); finetuning {5e-5, 1e-5, 1e-4}",
+   "lr_schedule": "inverse square root (pretraining)",
+   "warmup": null,
+   "batch_size": "128 (ablation); 1024 (20B); finetuning 32 to 128",
+   "steps": "500K (ablation); 2M (20B); 100K extra for Flan-UL2 adaptation",
+   "epochs": null,
+   "tokens": "~32B (ablation); 0.5T (1B model); 1T (20B)",
+   "seq_len": "512 inputs / 512 targets",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": "0 during 20B pretraining",
+   "regularisation": null,
+   "hardware": "64 to 128 TPUv4 chips per ablation run; 512 TPUv4 chips for 20B",
+   "compute": null,
+   "wall_clock": "slightly more than one month for ~1T tokens (20B)",
+   "seeds": "inferred: single runs; no seeds or variance reported",
+   "other": {
+    "framework": "JAX/Flax, T5X, Flaxformer, seqio",
+    "loss_spikes": "occasional loss spikes in 20B run, no mitigation",
+    "finetune_protocol": "continuous finetuning from checkpoints every 50k to 100k steps; per-task, not co-trained (some exceptions in appendix); stop once SOTA",
+    "released_checkpoints": "1.87M, 2.05M, 2.65M steps",
+    "mode_tags_in_release": "[NLG]=X-denoiser, [NLU]=R-denoiser, [S2S]=S-denoiser"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "Self-consistency used for CoT; number of sampled paths not stated",
+   "prompting": "Zero/one-shot with optional mode token; CoT prompts from Wei et al. 2022b",
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "normalized relative gain",
+     "definition": "per-task percent improvement over T5 (enc-dec SC) or GPT-like (dec CLM), averaged across 9 tasks",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "SuperGLUE score, Rouge-L/Rouge-2, accuracy, EM, F1, negative log perplexity (C4 val)",
+     "definition": "standard per task",
+     "unit": "task metric",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "CLM (GPT-like)",
+    "PrefixLM",
+    "Span Corruption (T5)",
+    "SCLM",
+    "UniLM",
+    "T5-XXL(+LM)",
+    "GPT-3",
+    "GLaM",
+    "PaLM",
+    "LaMDA",
+    "ST-MoE",
+    "T0",
+    "Flan-T5 XXL",
+    "Flan-PaLM"
+   ],
+   "protocol": "Single runs, no variance. Ablations: 9 tasks = 4 supervised + 4 one-shot + C4 perplexity. 20B comparisons against best published SOTA as of 15 April 2022; leaderboard submissions where possible."
+  },
+  "availability": {
+   "code": "https://github.com/google-research/google-research/tree/master/ul2 ; UL2 objective in seqio (Appendix 9.2)",
+   "weights": "UL2 20B and Flan-UL2 20B T5X/Flax checkpoints (gs://scenic-bucket/ul2); not guaranteed on GPUs",
+   "data": "C4 public"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.steps",
+    "quote": "We pre-train all models for 500K steps with a batch size of 128 and",
+    "where": "Sec 4.2.3"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "UL2 encoder-decoder beats the T5 span-corruption baseline by a normalized overall gain on 9 of 9 tasks.",
+   "kind": "measured",
+   "source": null,
+   "metric": "overall relative gain vs T5",
+   "value": "+43.6",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Ablation, 335M enc-dec, 32B tokens C4, single run",
+   "quote": null,
+   "table": "Table 3, row UL2 ED, column All (+43.6, Win 9/9)",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "UL2 encoder-decoder gains over the GPT-like causal-LM decoder.",
+   "kind": "measured",
+   "source": null,
+   "metric": "overall relative gain vs CLM decoder",
+   "value": "+76.1",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Ablation, 335M enc-dec vs 167M dec, 32B tokens",
+   "quote": null,
+   "table": "Table 4, row UL2 ED, column All",
+   "note": "Text in Sec 4.3.4 says +76.2% and +43.4%; Table 3 and Conclusion say +43.6% and +76.1%.",
+   "where": "Table 4"
+  },
+  {
+   "claim": "UL2 decoder-only is the only decoder to outperform T5 enc-dec overall.",
+   "kind": "measured",
+   "source": null,
+   "metric": "overall relative gain vs T5",
+   "value": "+14.1",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "167M dec vs 335M ED T5",
+   "quote": null,
+   "table": "Table 3, row UL2 Dec, column All",
+   "note": "Text Sec 4.3.1 says +14.6%.",
+   "where": "Table 3"
+  },
+  {
+   "claim": "Wrong mode token hurts one-shot XSum: [R] gives 13.5/1.5/11.1 Rouge vs [X] 8.9/0.9/7.6; SuperGLUE barely changes.",
+   "kind": "measured",
+   "source": null,
+   "metric": "1-shot XSum Rouge-L",
+   "value": "11.1 vs 7.6",
+   "unit": "Rouge-L",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Enc-dec pretrained on 7B tokens, UL2 / [R] vs UL2 / [X]",
+   "quote": null,
+   "table": "Table 5, rows UL2 / [R] and UL2 / [X], column 1Shot XSum",
+   "note": null,
+   "where": "Table 5"
+  },
+  {
+   "claim": "Using the right versus the wrong paradigm prompt can make a gap in XSum Rouge-1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "gap",
+   "value": "48",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Sec 4.4 mode switching ablation",
+   "quote": "using the right or wrong prompt can lead to a 48% gap",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.4"
+  },
+  {
+   "claim": "Small share of S-denoisers (about 20%) is preferred; 50% S-denoisers hurts.",
+   "kind": "measured",
+   "source": null,
+   "metric": "S-denoiser share",
+   "value": "20",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MoD ablation Table 6",
+   "quote": "only small amounts of S-denoisers (≈20%) are preferred",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.5"
+  },
+  {
+   "claim": "At 1B / 0.5T tokens, UL2 one-shot XSum Rouge-1/2/L far exceeds T5.",
+   "kind": "measured",
+   "source": null,
+   "metric": "1-shot XSum",
+   "value": "15.4/2.5/11.1",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "1B enc-dec, 0.5T tokens; T5 8.9/0.8/7.8",
+   "quote": null,
+   "table": "Table 7, row UL2, column In-context XS",
+   "note": null,
+   "where": "Table 7"
+  },
+  {
+   "claim": "UL2 20B one-shot XSum Rouge-2 versus LM-adapted T5-XXL (about 3x).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Rouge-2",
+   "value": "8.6",
+   "unit": null,
+   "baseline_value": "2.3",
+   "n": null,
+   "setup": "UL2 20B 1-shot XSum",
+   "quote": null,
+   "table": "Table 11, row UL2 20B, column Rouge-2",
+   "note": null,
+   "where": "Table 11"
+  },
+  {
+   "claim": "UL2 20B average zero-shot SuperGLUE (best checkpoint) exceeds GPT-3 175B.",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg score",
+   "value": "65.2",
+   "unit": null,
+   "baseline_value": "61.2",
+   "n": null,
+   "setup": "Zero-shot SuperGLUE, UL2 20B (best); GPT-3 175B 61.2",
+   "quote": null,
+   "table": "Table 10, row UL2 20B (best), column Avg",
+   "note": null,
+   "where": "Table 10"
+  },
+  {
+   "claim": "UL2 20B finetuned SuperGLUE dev average vs T5-11B.",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg",
+   "value": "90.7",
+   "unit": null,
+   "baseline_value": "89.9",
+   "n": null,
+   "setup": "SuperGLUE dev, peak validation per task",
+   "quote": null,
+   "table": "Table 9, row UL2 20B, column Avg",
+   "note": null,
+   "where": "Table 9"
+  },
+  {
+   "claim": "UL2 20B zero-shot MMLU accuracy beats T0 and LM-adapted T5-XXL.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "39.2",
+   "unit": "%",
+   "baseline_value": "36.9 (T0 Strawberry)",
+   "n": null,
+   "setup": "MMLU 0-shot",
+   "quote": null,
+   "table": "Table 14, row UL2 20B",
+   "note": null,
+   "where": "Table 14"
+  },
+  {
+   "claim": "CoT prompting improves UL2 20B average on arithmetic benchmarks; with calculator and self-consistency it reaches 36.0 vs 13.5 standard.",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg accuracy",
+   "value": "15.3",
+   "unit": null,
+   "baseline_value": "13.5",
+   "n": null,
+   "setup": "UL2 20B CoT, five arithmetic sets, prompts from Wei et al. 2022b",
+   "quote": null,
+   "table": "Table 12, row UL2 20B: CoT prompting, column Average",
+   "note": null,
+   "where": "Table 12"
+  },
+  {
+   "claim": "On commonsense benchmarks CoT improves UL2 20B average from 37.8 to 48.1 and with SC to 52.2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg accuracy",
+   "value": "52.2",
+   "unit": null,
+   "baseline_value": "37.8",
+   "n": null,
+   "setup": "UL2 20B CoT+SC, five commonsense sets",
+   "quote": null,
+   "table": "Table 13, row UL2 20B: CoT prompting + SC, column Average",
+   "note": null,
+   "where": "Table 13"
+  },
+  {
+   "claim": "Flan-UL2 20B reaches 49.1 average across MMLU/BBH direct and CoT versus Flan-PaLM 62B 49.9; CoT still below direct.",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg",
+   "value": "49.1",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "dev scores, Table 16",
+   "quote": "Flan-UL2 comes close to FLAN-PaLM 62B\n(49.1 vs 49.9)",
+   "table": null,
+   "note": "Quote spans a line break in the text; the table row for Flan-UL2 shows 49.1 (+3.2%).",
+   "where": "Sec 5.3.2"
+  },
+  {
+   "claim": "Encoder-only (autoencoding) models are called deprecated by the authors.",
+   "kind": "claim",
+   "source": null,
+   "metric": "claim",
+   "value": "none",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Opinion in Sec 2.1",
+   "quote": "we strongly do not recommend using this class of autoencoding models moving forward",
+   "table": null,
+   "note": null,
+   "where": "Sec 2.1"
+  },
+  {
+   "claim": "Causal LM (GPT-like) is the worst of the objectives; authors recommend at least training with Prefix-LM or UniLM.",
+   "kind": "claim",
+   "source": null,
+   "metric": "claim",
+   "value": "none",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Ablation",
+   "quote": "We thus make the straightforward recommendation of always at least",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.3.2"
+  }
+ ],
+ "limits": [
+  "20B run was unmonitored with loss spikes and no mitigation; authors expect results underestimate potential.",
+  "Ablations are single runs at 167M/335M and 32B tokens; no seeds or variance.",
+  "Enc-dec has ~2x params of decoder at matched compute, which may favor enc-dec (authors concede).",
+  "SOTA comparisons date to 15 April 2022; Scrolls used 2k length versus 16k in newer work.",
+  "Checkpoints trained on TPUv4; stability on GPUs not guaranteed.",
+  "Appendix 9.3/9.4 (finetuning details, few-shot prompts) missing from the extracted text; prompts not recorded.",
+  "Hypothesis that MoD enables CoT at 20B is not tested.",
+  "Pre-instruction-tuning era (2022): in-context results are for C4-only models."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "R-Denoiser",
+   "definition": "regular denoising, standard span corruption with span length 2 to 5 tokens masking about 15% of tokens",
+   "where": "Sec 3.1.2"
+  },
+  {
+   "term": "S-Denoiser",
+   "definition": "sequential denoising where targets do not depend on future information, i.e. prefix language modeling",
+   "where": "Sec 3.1.2"
+  },
+  {
+   "term": "X-Denoiser",
+   "definition": "extreme denoising with long spans (>=12 tokens) or large corruption rate (>=30%)",
+   "where": "Sec 3.1.2"
+  },
+  {
+   "term": "Mode switching",
+   "definition": "adding a paradigm token ([R],[S],[X]) to bind downstream behavior to one of the pre-training modes",
+   "where": "Sec 3.1.3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "T5 (Raffel et al.)",
+   "year": 2019,
+   "arxiv": "1910.10683",
+   "relation": "baseline",
+   "note": "span corruption objective and encoder-decoder baseline",
+   "quote": null
+  },
+  {
+   "work": "GPT-3 (Brown et al.)",
+   "year": 2020,
+   "arxiv": "2005.14165",
+   "relation": "baseline",
+   "note": "compared on zero-shot SuperGLUE",
+   "quote": null
+  },
+  {
+   "work": "UniLM (Dong et al.)",
+   "year": 2019,
+   "arxiv": "1905.03197",
+   "relation": "baseline",
+   "note": "unified objective baseline",
+   "quote": null
+  },
+  {
+   "work": "PaLM (Chowdhery et al.)",
+   "year": 2022,
+   "arxiv": "2204.02311",
+   "relation": "baseline",
+   "note": "1-shot XSum and SuperGLUE comparisons",
+   "quote": null
+  },
+  {
+   "work": "Chain-of-thought prompting (Wei et al.)",
+   "year": 2022,
+   "arxiv": "2201.11903",
+   "relation": "uses-method",
+   "note": "CoT prompts reused for UL2 20B",
+   "quote": null
+  },
+  {
+   "work": "Self-consistency (Wang et al.)",
+   "year": 2022,
+   "arxiv": "2203.11171",
+   "relation": "uses-method",
+   "note": "SC on top of CoT",
+   "quote": null
+  },
+  {
+   "work": "Scaling Instruction-Finetuned Language Models (Chung et al.)",
+   "year": 2022,
+   "arxiv": "2210.11416",
+   "relation": "uses-method",
+   "note": "Flan mixture for Flan-UL2",
+   "quote": null
+  },
+  {
+   "work": "Wang et al. 2022a (what language model architecture and pretraining objective work best for zero-shot)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "systematic study of architectures and objectives",
+   "quote": null
+  },
+  {
+   "work": "Wettig et al. (masking rates)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "contradicts",
+   "note": "UL2 slightly conflicts with its high-corruption benefit finding",
+   "quote": null
+  },
+  {
+   "work": "SuperGLUE, GEM, MMLU, BBH",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "evaluation suites",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "In both decoder-only and encoder-decoder setups, UL2 strikes a significantly improved balance in performance between fine-tuned discriminative tasks and prompt-based 1-shot open-ended text generation than previous methods.",
+   "page": 4,
+   "why": "Scatter of finetuned SuperGLUE vs 1-shot generation shows the Pareto trade-off"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "An overview of UL2 pretraining paradigm.",
+   "page": 8,
+   "why": "Overview of denoisers, architectures and task paradigms"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Mixture of denoisers for training UL2. Greyed out rectangles are masked tokens that are shifted to targets for prediction.",
+   "page": 8,
+   "why": "Shows R, X and S denoising input/target construction with mode tokens"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Configuration of UL2's mixture-of-denoisers used in the paper.",
+   "page": 10,
+   "why": "Exact (mu, r, n) settings of the 7 denoisers"
+  },
+  {
+   "figure": "Table 5",
+   "caption": "Effect of different paradigm prompts on 1-shot evaluation.",
+   "page": 15,
+   "why": "Shows mode token sensitivity, relevant to prompt-prefix effects"
+  }
+ ],
+ "code": [
+  {
+   "where": "Appendix 9.2",
+   "snippet": "def ul2_objective(dataset, sequence_length, output_features, use_prefix_lm_task=False, rates=None, mean_noise_span_lengths=(3.0,), noise_densities=(0.15,), ... optional_task_prefixes=None ...)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Appendix 9.3 and 9.4 listed in contents but absent from extracted text; prompts not recoverable.",
+  "Inconsistent numbers: +43.4/+76.2 (Sec 4.3.4) vs +43.6/+76.1 (tables, conclusion); +14.6 vs +14.1.",
+  "Table 15 and 16 values scrambled in extraction; used only quoted text.",
+  "No embedded instructions found."
+ ]
+}

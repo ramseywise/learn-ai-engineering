@@ -6,6 +6,7 @@ sources:
   - "Knowledge Graphs for RAG (DeepLearning.AI × Neo4j, 2024), L4–L7: https://www.deeplearning.ai/short-courses/knowledge-graphs-rag/"
   - Bird, Klein & Loper, Natural Language Processing with Python (O'Reilly, 2009), ch. 10
   - "Salvatore Raieli & Gabriele Iuculano, Building AI Agents with LLMs, RAG, and Knowledge Graphs (Packt, 2025), ch. 7"
+  - https://arxiv.org/abs/2011.07743
 confidence: medium-high
 cleaned: 2026-11-01
 ---
@@ -83,6 +84,11 @@ RETURN path
 (The book's text and Fig. 14.2 write the time window as `$startTime >= e.timestamp >= $endTime`. Cypher accepts chained comparisons, so this parses, but it means `$startTime >= e.timestamp AND e.timestamp >= $endTime`: with a normal window (start before end) it matches nothing, and no error tells you so. The version above is the intended filter.)
 
 Constrained traversals compose: one traversal, possibly with an aggregation, picks out a subgraph that seeds the next. That is how a complex question becomes a query. The framing shift matters: classic RAG builds context so the model can *generate an answer*. Here the model's job is to *formulate the question* precisely enough that the database returns the facts, so the answer is retrieved, not written (ch. 14).
+
+GrailQA (Gu et al., WWW 2021, [arXiv:2011.07743](https://arxiv.org/abs/2011.07743)) is the benchmark that shows why schema grounding is the hard part. It targets Freebase and writes S-expressions that convert to SPARQL, not Cypher, and its models are BERT-base, not LLMs, so read it for the failure structure and not for current accuracy. Its 64,331 questions are split into three generalization levels: **i.i.d.** (schema items and question shapes seen in training), **compositional** (known schema items in a new combination) and **zero-shot** (at least one unseen class or relation). The best model, a ranker over every logical form within two hops of the linked entities, reached EM 50.6 and F1 58.0 overall and 48.6 EM on zero-shot, with candidates covering about 80% of questions. Swapping BERT for GloVe cut the generate-the-form model's F1 by 17.5% (compositional) and 26.2% (zero-shot) by the paper's prose (its Table 3 cells imply larger drops), while the i.i.d. level barely moved, so a model that looks fine on seen schema can fail on new schema. Of 100 wrong ranker answers, 34% were candidate-coverage limits, 33% entity-linking errors and 26% wrong relations. Single runs, no variance. For text-to-Cypher: test on schema items the few-shot examples never used, and expect entity linking to cost as much as query writing.
+
+![GrailQA's three generalization levels on one knowledge base: training questions, and test questions that are i.i.d., compositional or zero-shot, each with its S-expression](../sources/images/gu-2021-grailqa-fig1.png)
+*Image Source: Gu et al., [Beyond I.I.D.: Three Levels of Generalization for Question Answering on Knowledge Bases](https://arxiv.org/abs/2011.07743) (WWW 2021), Fig. 1*
 
 ### Give the model an LLM-ready schema
 

@@ -96,6 +96,9 @@ Read the three lines against what you would expect. With no randomness at all (`
 
 The textbook version of this experiment is the 10-armed testbed: 2,000 random bandit problems, each arm's true value drawn from N(0,1) and each reward from N(true value, 1), 1,000 steps, sample-average estimates. Pure greedy plateaus near 1 reward per step against a best possible 1.54 and finds the best arm in only about a third of problems. ε = 0.1 never picks the best arm more than 91% of the time, and ε = 0.01 improves more slowly but is claimed to win in the long run (*RL: An Introduction*, ch. 2). The shape matches the table above: some randomness is essential, and too much caps the score.
 
+![Two panels over 1,000 steps on the 10-armed testbed. Average reward: epsilon 0.1 climbs to about 1.4, epsilon 0.01 to about 1.3, greedy stalls near 1. Share of optimal actions: about 82%, 54% and 36%.](../sources/images/sutton-barto-rl-fig2-2.png)
+*Image Source: Sutton and Barto, [Reinforcement Learning: An Introduction](http://incompleteideas.net/book/the-book-2nd.html) (MIT Press, 2018), Fig. 2.2*
+
 Two lines in that program deserve a second look, because they return in every chapter. `estimate[machine]` is the agent's current belief about a machine, and the update line moves that belief a little toward each new result. Everything an RL agent knows is a pile of numbers like that one, nudged a little at a time.
 
 ## Value: how good is it to be here?

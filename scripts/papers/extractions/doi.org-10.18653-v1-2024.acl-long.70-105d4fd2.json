@@ -1,0 +1,749 @@
+{
+ "schema": 1,
+ "key": "https://doi.org/10.18653/v1/2024.acl-long.70",
+ "pdf": "ai-engineering/07-inference-engineering/sources/dai-2024-deepseekmoe.pdf",
+ "bib": {
+  "title": "DeepSeekMoE: Towards Ultimate Expert Specialization in Mixture-of-Experts Language Models",
+  "authors": [
+   "Damai Dai",
+   "Chengqi Deng",
+   "Chenggang Zhao",
+   "Runxin Xu",
+   "Huazuo Gao",
+   "Deli Chen",
+   "Jiashi Li",
+   "Wangding Zeng",
+   "Xingkai Yu",
+   "Y. Wu",
+   "Zhenda Xie",
+   "Y.K. Li",
+   "Panpan Huang",
+   "Fuli Luo",
+   "Chong Ruan",
+   "Zhifang Sui",
+   "Wenfeng Liang"
+  ],
+  "first_author": "Dai",
+  "year": 2024,
+  "venue": "Proceedings of the 62nd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers), pages 1280-1297",
+  "arxiv": null,
+  "doi": "10.18653/v1/2024.acl-long.70"
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 63492,
+  "chars_total": 63492,
+  "engine": "pymupdf",
+  "skipped": "reference list skimmed only"
+ },
+ "type": "empirical",
+ "question": "Can an MoE architecture be designed so each expert acquires non-overlapping, focused knowledge (expert specialization), improving quality at fixed activated compute?",
+ "hypothesis": "Conventional top-K MoE (GShard) suffers knowledge hybridity and redundancy; fine-grained expert segmentation plus shared expert isolation should raise specialization and performance at equal parameters and compute.",
+ "contributions": [
+  "We introduce DeepSeekMoE, an innovative MoE architecture aiming at achieving ultimate expert specialization.",
+  "We conduct extensive experiments to empirically validate the effectiveness of DeepSeekMoE and reveal its high level of expert specialization.",
+  "We scale up DeepSeekMoE to train a 16B MoE model which shows strong performance.",
+  "We will release the code and model checkpoint of DeepSeekMoE 16B to the public."
+ ],
+ "method": {
+  "summary": "Replaces FFNs with MoE layers using fine-grained experts (each FFN split into m smaller ones, mK activated) plus Ks always-on shared experts. Validated at ~2B params on 100B tokens against Dense, Hash Layer, Switch, GShard, then scaled to 16.4B params on 2T tokens.",
+  "task": "MoE language model pretraining and evaluation",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "DeepSeek-AI bilingual (English/Chinese) corpus, 100B-token subset",
+    "role": "pretrain",
+    "size": "100B tokens",
+    "split": null,
+    "source": "corpus created by DeepSeek-AI (2024), diverse sources",
+    "preprocessing": "BPE tokenizer, 8K vocab, HuggingFace Tokenizers, trained on a corpus subset"
+   },
+   {
+    "name": "Same corpus, 2T-token sample (16B model)",
+    "role": "pretrain",
+    "size": "2T tokens",
+    "split": null,
+    "source": "same corpus",
+    "preprocessing": "BPE tokenizer, 100K vocab"
+   },
+   {
+    "name": "Pile test set",
+    "role": "eval",
+    "size": null,
+    "split": "test",
+    "source": "Gao et al., 2020",
+    "preprocessing": null
+   },
+   {
+    "name": "HellaSwag, PIQA, ARC-easy, ARC-challenge, RACE-middle, RACE-high, HumanEval, MBPP, TriviaQA, NaturalQuestions",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "standard benchmarks",
+    "preprocessing": null
+   },
+   {
+    "name": "DROP, GSM8K, MATH, MMLU, WinoGrande, CLUEWSC, CEval, CMMLU, CHID (16B only)",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "standard benchmarks",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "DeepSeekMoE 2B (validation)",
+    "role": "proposed",
+    "params": "2.0B total, 0.3B activated",
+    "architecture": "decoder-only Transformer, all FFNs replaced by MoE; 1 shared + 63 routed experts, each 0.25x standard FFN, 1 shared + 7 routed activated",
+    "init_from": "random (std 0.006)",
+    "tokenizer": "BPE",
+    "vocab": "8K",
+    "layers": "9",
+    "hidden": "1280",
+    "heads": "10 heads, head dim 128",
+    "context": "2K",
+    "other": {
+     "expert_params": "16x standard FFN total, 2x activated",
+     "flops_per_2K_tokens": "4.3T"
+    }
+   },
+   {
+    "name": "DeepSeekMoE 16B",
+    "role": "proposed",
+    "params": "16.4B total, 2.8B activated",
+    "architecture": "all FFNs except first layer are MoE; 2 shared + 64 routed experts (each 0.25x FFN); token goes to 2 shared + 6 of 64 routed",
+    "init_from": "random (std 0.006)",
+    "tokenizer": "BPE",
+    "vocab": "100K",
+    "layers": "28",
+    "hidden": "2048",
+    "heads": "16 heads, head dim 128",
+    "context": "4K",
+    "other": {
+     "flops_per_4K_tokens": "74.4T",
+     "deployable": "single GPU with 40GB memory"
+    }
+   },
+   {
+    "name": "Dense 0.2B",
+    "role": "baseline",
+    "params": "0.2B",
+    "architecture": "dense Transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "flops_per_2K_tokens": "2.9T"
+    }
+   },
+   {
+    "name": "Hash Layer",
+    "role": "baseline",
+    "params": "2.0B total, 0.2B activated",
+    "architecture": "top-1 fixed hash routing",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Switch Transformer",
+    "role": "baseline",
+    "params": "2.0B total, 0.2B activated",
+    "architecture": "top-1 learned routing",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GShard",
+    "role": "baseline",
+    "params": "2.0B total, 0.3B activated",
+    "architecture": "top-2 of 16 learned routing",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GShard x1.5",
+    "role": "baseline",
+    "params": "2.83B expert params, 0.35B activated expert params",
+    "architecture": "GShard with 1.5x expert size",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "flops_per_2K_tokens": "5.8T"
+    }
+   },
+   {
+    "name": "Dense x16",
+    "role": "baseline",
+    "params": "1.89B expert params",
+    "architecture": "16 shared experts each standard FFN size, mimics dense model with 16x FFN params (upper bound)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "flops_per_2K_tokens": "24.6T"
+    }
+   },
+   {
+    "name": "LLaMA2 7B",
+    "role": "baseline",
+    "params": "6.7B",
+    "architecture": "dense",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "flops_per_4K_tokens": "187.9T",
+     "tokens": "2T"
+    }
+   },
+   {
+    "name": "DeepSeek 7B",
+    "role": "baseline",
+    "params": "6.9B",
+    "architecture": "dense",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "flops_per_4K_tokens": "183.5T",
+     "tokens": "2T, same data as DeepSeekMoE 16B"
+    }
+   }
+  ],
+  "training": {
+   "objective": "next-token prediction plus expert-level balance loss L_Bal = alpha * sum_i f_i P_i",
+   "optimizer": "AdamW, beta1=0.9, beta2=0.95",
+   "lr": "validation 1.08e-3 max; 16B 4.2e-4 max",
+   "lr_schedule": "warmup-and-step-decay: linear 0 to max over first 2K steps, x0.316 at 80% of steps and again x0.316 at 90%",
+   "warmup": "2K steps",
+   "batch_size": "validation 2K sequences (4M tokens); 16B 4.5K sequences (18M tokens)",
+   "steps": "validation 25,000; 16B 106,449",
+   "epochs": null,
+   "tokens": "validation 100B; 16B 2T",
+   "seq_len": "validation 2K; 16B 4K",
+   "precision": null,
+   "weight_decay": "0.1",
+   "dropout": "none",
+   "regularisation": "gradient clipping norm 1.0; balance factor alpha 0.01 (validation), 0.001 (16B)",
+   "hardware": "NVIDIA A100 or H800 clusters, 8 GPUs per node, NVLink (+NVSwitch on H800), InfiniBand across nodes; HAI-LLM framework with custom CUDA/Triton kernels",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "parallelism_validation": "all parameters including experts on a single GPU",
+    "parallelism_16b": "pipeline parallelism, all experts of a layer on one device",
+    "framework": "HAI-LLM: tensor, ZeRO data, PipeDream pipeline, expert parallelism",
+    "init_std": "0.006"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": "few-shot counts per benchmark: 0-shot HellaSwag, PIQA, ARC, HumanEval, WinoGrande, CHID; 5-shot RACE, TriviaQA, NQ, MMLU, CLUEWSC, CEval, CMMLU; 1-shot DROP; 8-shot GSM8K; 4-shot MATH; 3-shot MBPP",
+   "retrieval": null,
+   "parameters": {
+    "m": "4 (N=16 split into 64) in validation model",
+    "Ks": "1 (validation), 2 (16B)",
+    "activated_routed": "7 (validation), 6 (16B)"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Pile loss",
+     "definition": "cross-entropy loss on Pile test set",
+     "unit": "nats",
+     "higher_is_better": false
+    },
+    {
+     "name": "Pile BPB",
+     "definition": "bits per byte, used for 16B because tokenizers differ",
+     "unit": "BPB",
+     "higher_is_better": false
+    },
+    {
+     "name": "Accuracy",
+     "definition": "HellaSwag, PIQA, ARC, RACE, MMLU, WinoGrande, CEval, CMMLU, CHID",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Pass@1",
+     "definition": "HumanEval, MBPP",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "EM",
+     "definition": "exact match for TriviaQA, NQ, DROP, GSM8K, MATH, CLUEWSC",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "FLOPs per 2K/4K tokens",
+     "definition": "compute per sequence",
+     "unit": "T FLOPs",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "Dense 0.2B",
+    "Hash Layer",
+    "Switch Transformer",
+    "GShard",
+    "GShard x1.5",
+    "Dense x16",
+    "LLaMA2 7B",
+    "DeepSeek 7B",
+    "open models on Open LLM Leaderboard"
+   ],
+   "protocol": "Single run per model; no seeds or significance reported. All validation models share corpus and hyperparameters. Ablations match total and activated parameters."
+  },
+  "availability": {
+   "code": "https://github.com/deepseek-ai/DeepSeek-MoE",
+   "weights": "DeepSeekMoE 16B checkpoint to be released (single 40GB GPU)",
+   "data": "training corpus not released (DeepSeek-AI internal)"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.lr_schedule",
+    "quote": "the learning rate is multiplied by 0.316 at 80% of the training steps, and again by 0.316 at 90% of the training steps",
+    "where": "Appendix A.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "DeepSeekMoE 16B matches 7B dense models with about 40% of the computation.",
+   "kind": "measured",
+   "source": null,
+   "metric": "FLOPs per 4K tokens",
+   "value": 74.4,
+   "unit": "T FLOPs",
+   "baseline_value": 187.9,
+   "n": null,
+   "setup": "DeepSeekMoE 16B (16.4B total, 2.8B activated) vs LLaMA2 7B and DeepSeek 7B dense, all 2T tokens; Table 2 (LLaMA2 7B 187.9T, DeepSeek 7B 183.5T)",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row FLOPs per 4K Tokens, column DeepSeekMoE 16B"
+  },
+  {
+   "claim": "The authors summarise the 16B result as comparable performance at about 40% of computation.",
+   "kind": "measured",
+   "source": null,
+   "metric": "computation share",
+   "value": "about 40%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "DeepSeekMoE 16B (16.4B total, 2.8B activated) vs LLaMA2 7B and DeepSeek 7B dense, all 2T tokens; Table 2",
+   "note": null,
+   "where": "Abstract",
+   "quote": "with only about 40% of computations"
+  },
+  {
+   "claim": "DeepSeekMoE 2B beats GShard on Pile loss at equal total and activated params.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Pile loss",
+   "value": 1.808,
+   "unit": "loss",
+   "baseline_value": 1.867,
+   "n": null,
+   "setup": "Validation: 9 layers, hidden 1280, ~2B total / 0.3B activated, 100B tokens, 8K BPE vocab; Table 1",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Pile (Loss), columns DeepSeekMoE vs GShard"
+  },
+  {
+   "claim": "DeepSeekMoE 2B Pile loss equals GShard x1.5 (1.5x expert params and computation).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Pile loss",
+   "value": 1.808,
+   "unit": "loss",
+   "baseline_value": 1.808,
+   "n": null,
+   "setup": "2B validation, 100B tokens",
+   "note": null,
+   "where": "Sec 4.3",
+   "quote": "GShard×1.5 achieves a Pile test loss of 1.808, and DeepSeekMoE also achieves the same Pile test loss"
+  },
+  {
+   "claim": "DeepSeekMoE 2B nearly matches Dense x16 upper bound on Pile loss.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Pile loss",
+   "value": 1.808,
+   "unit": "loss",
+   "baseline_value": 1.806,
+   "n": null,
+   "setup": "2B validation, Dense x16 = 16 shared experts",
+   "note": null,
+   "where": "Sec 4.3",
+   "quote": "this dense model achieves a Pile test loss of 1.806, while DeepSeekMoE achieves a close Pile test loss of 1.808"
+  },
+  {
+   "claim": "DeepSeekMoE 2B HellaSwag accuracy vs GShard.",
+   "kind": "measured",
+   "source": null,
+   "metric": "HellaSwag acc",
+   "value": 54.8,
+   "unit": "%",
+   "baseline_value": 50.5,
+   "n": null,
+   "setup": "Validation: 9 layers, hidden 1280, ~2B total / 0.3B activated, 100B tokens, 8K BPE vocab; Table 1",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row HellaSwag (Acc.), column DeepSeekMoE"
+  },
+  {
+   "claim": "DeepSeekMoE 2B TriviaQA EM vs GShard.",
+   "kind": "measured",
+   "source": null,
+   "metric": "TriviaQA EM",
+   "value": 16.6,
+   "unit": "%",
+   "baseline_value": 10.2,
+   "n": null,
+   "setup": "Validation: 9 layers, hidden 1280, ~2B total / 0.3B activated, 100B tokens, 8K BPE vocab; Table 1",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row TriviaQA (EM), column DeepSeekMoE"
+  },
+  {
+   "claim": "Disabling the shared expert (and activating one more routed expert) raises Pile loss sharply.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Pile loss",
+   "value": 2.414,
+   "unit": "loss",
+   "baseline_value": 1.808,
+   "n": null,
+   "setup": "DeepSeekMoE 2B, same compute",
+   "note": null,
+   "where": "Sec 4.5",
+   "quote": "rising from 1.808 to 2.414"
+  },
+  {
+   "claim": "DeepSeekMoE 16B Pile BPB vs LLaMA2 7B.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Pile BPB",
+   "value": 0.74,
+   "unit": "BPB",
+   "baseline_value": 0.76,
+   "n": null,
+   "setup": "DeepSeekMoE 16B (16.4B total, 2.8B activated) vs LLaMA2 7B and DeepSeek 7B dense, all 2T tokens; Table 2",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Pile (BPB), column DeepSeekMoE 16B"
+  },
+  {
+   "claim": "DeepSeekMoE 16B TriviaQA EM vs LLaMA2 7B (strength on knowledge tasks).",
+   "kind": "measured",
+   "source": null,
+   "metric": "TriviaQA EM",
+   "value": 64.8,
+   "unit": "%",
+   "baseline_value": 63.8,
+   "n": null,
+   "setup": "DeepSeekMoE 16B (16.4B total, 2.8B activated) vs LLaMA2 7B and DeepSeek 7B dense, all 2T tokens; Table 2",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row TriviaQA (EM), column DeepSeekMoE 16B"
+  },
+  {
+   "claim": "DeepSeekMoE 16B HumanEval Pass@1 vs LLaMA2 7B.",
+   "kind": "measured",
+   "source": null,
+   "metric": "HumanEval Pass@1",
+   "value": 26.8,
+   "unit": "%",
+   "baseline_value": 14.6,
+   "n": null,
+   "setup": "DeepSeekMoE 16B (16.4B total, 2.8B activated) vs LLaMA2 7B and DeepSeek 7B dense, all 2T tokens; Table 2",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row HumanEval (Pass@1), column DeepSeekMoE 16B"
+  },
+  {
+   "claim": "DeepSeekMoE 16B is weaker on MMLU than both dense 7B models (authors attribute to limited attention params).",
+   "kind": "measured",
+   "source": null,
+   "metric": "MMLU acc",
+   "value": 45.0,
+   "unit": "%",
+   "baseline_value": 48.2,
+   "n": null,
+   "setup": "DeepSeekMoE 16B (16.4B total, 2.8B activated) vs LLaMA2 7B and DeepSeek 7B dense, all 2T tokens; Table 2 (DeepSeek 7B 48.2, LLaMA2 7B 45.8)",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row MMLU (Acc.), column DeepSeekMoE 16B"
+  },
+  {
+   "claim": "DeepSeekMoE 16B activated parameters vs total.",
+   "kind": "measured",
+   "source": null,
+   "metric": "activated params",
+   "value": "2.8B",
+   "unit": "params",
+   "baseline_value": "16.4B total",
+   "n": null,
+   "setup": "DeepSeekMoE 16B (16.4B total, 2.8B activated) vs LLaMA2 7B and DeepSeek 7B dense, all 2T tokens; Table 2",
+   "note": null,
+   "where": "Sec 5.1",
+   "quote": "DeepSeekMoE 16B has approximately 16.4B total parameters, with the number of activated parameters around 2.8B"
+  },
+  {
+   "claim": "Combinatorial flexibility: top-2 of 16 gives 120 combinations, 8 of 64 gives 4,426,165,368.",
+   "kind": "measured",
+   "source": null,
+   "metric": "expert combinations",
+   "value": 4426165368,
+   "unit": "combinations",
+   "baseline_value": 120,
+   "n": null,
+   "setup": "N=16, m=4",
+   "note": "Text extraction splits the binomial; the number occurs as printed with spaces.",
+   "where": "Sec 3.1",
+   "quote": "= 4, 426, 165, 368 potential combinations"
+  },
+  {
+   "claim": "With only 3 routed experts (half activated expert params) DeepSeekMoE trained from scratch still outperforms GShard.",
+   "kind": "measured",
+   "source": null,
+   "metric": "qualitative",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "2B, 1 shared + 63 routed, 3 routed activated; Fig 5",
+   "note": null,
+   "where": "Sec 4.5, Fig 5"
+  },
+  {
+   "claim": "The 16B model can be deployed on a single 40GB GPU.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GPU memory",
+   "value": "40GB",
+   "unit": "GB",
+   "baseline_value": null,
+   "n": null,
+   "setup": "released checkpoint",
+   "note": null,
+   "where": "Conclusion",
+   "quote": "can be deployed on a single GPU with 40GB of memory"
+  }
+ ],
+ "limits": [
+  "Finer expert segmentation always helped, but 16B uses moderate granularity because too fine granularity lowers computational efficiency; no scaling law for granularity yet.",
+  "More activated experts may add cross-device communication overhead when experts are distributed; not measured or mitigated here.",
+  "Total expert params fixed at 16x FFN and activated at 2x FFN; optimal values at larger scale left open.",
+  "'Upper bound' claim holds only at ~2B params and 100B tokens.",
+  "16B weaker on multiple-choice tasks (MMLU, CEval, CMMLU), attributed to limited attention parameters.",
+  "No seeds, variance, throughput/latency or serving measurements; compute is reported as FLOPs only, no GPU hours.",
+  "Training corpus is proprietary; 2B validation vocab 8K differs from 16B vocab 100K."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "knowledge hybridity",
+   "definition": "existing MoE practices often employ a limited number of experts, and thus tokens assigned to a specific expert will be likely to cover diverse knowledge",
+   "where": "Sec 1"
+  },
+  {
+   "term": "knowledge redundancy",
+   "definition": "tokens assigned to different experts may require common knowledge, so multiple experts converge in acquiring shared knowledge",
+   "where": "Sec 1"
+  },
+  {
+   "term": "expert specialization",
+   "definition": "each expert acquires non-overlapping and focused knowledge",
+   "where": "Abstract"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "GShard (Lepikhin et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "top-2 routing MoE; main comparison and base of the ablations",
+   "quote": null
+  },
+  {
+   "work": "Switch Transformer (Fedus et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "top-1 routing",
+   "quote": null
+  },
+  {
+   "work": "Hash Layer (Roller et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "fixed hash routing",
+   "quote": null
+  },
+  {
+   "work": "Shazeer et al. sparsely-gated MoE",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "expert-level balance loss against routing collapse",
+   "quote": null
+  },
+  {
+   "work": "Rajbhandari et al. (DeepSpeed-MoE); Elbayad et al.",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "prototype of shared expert isolation",
+   "quote": "The prototype of shared expert isolation can be credited to some previous work Rajbhandari et al. (2022); Elbayad et al. (2023)"
+  },
+  {
+   "work": "DeepSeek LLM 7B (DeepSeek-AI)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "dense model trained on same data/corpus",
+   "quote": null
+  },
+  {
+   "work": "LLaMA 2 7B (Touvron et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "dense comparison",
+   "quote": null
+  },
+  {
+   "work": "Pile (Gao et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "language modeling eval",
+   "quote": null
+  },
+  {
+   "work": "AdamW (Loshchilov and Hutter)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "optimizer",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Illustration of DeepSeekMoE. (a) conventional top-2 routing. (b) fine-grained expert segmentation. (c) + shared expert isolation (DeepSeekMoE).",
+   "page": 3,
+   "why": "Shows the router and shared vs routed experts at a glance"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Evaluation results for validation experiments.",
+   "page": 5,
+   "why": "Dense/Hash/Switch/GShard/DeepSeekMoE at matched params"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Ablation studies for DeepSeekMoE; performance normalized by best.",
+   "page": 5,
+   "why": "Isolates shared expert and finer segmentation effects"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Pile test loss with regard to different ratios of disabled top routed experts.",
+   "page": 6,
+   "why": "Redundancy evidence"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Pile loss with regard to different numbers of activated routed experts in DeepSeekMoE.",
+   "page": 6,
+   "why": "Accuracy with fewer activated experts (compute-quality tradeoff)"
+  },
+  {
+   "figure": "Table 2",
+   "caption": "Comparison among LLaMA2 7B, DeepSeek 7B, and DeepSeekMoE 16B.",
+   "page": 7,
+   "why": "Total vs activated params and FLOPs vs quality"
+  },
+  {
+   "figure": "Table 3",
+   "caption": "Comparisons among DeepSeekMoE, larger GShard models, and larger dense models.",
+   "page": 16,
+   "why": "Upper-bound comparison with expert counts, params, FLOPs"
+  },
+  {
+   "figure": "Fig 7",
+   "caption": "Comparison between DeepSeekMoE 16B and open source models on the Open LLM Leaderboard.",
+   "page": 18,
+   "why": "Average performance vs activated params"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 9-11, p4",
+   "snippet": "h_t = sum_{i=1}^{Ks} FFN_i(u_t) + sum_{i=Ks+1}^{mN} g_{i,t} FFN_i(u_t) + u_t; g_{i,t}=s_{i,t} if s_{i,t} in Topk({s_{j,t}|Ks+1<=j<=mN}, mK-Ks) else 0; s_{i,t}=Softmax_i(u_t^T e_i)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Figure 7 and Open LLM Leaderboard values are only in a plot; no numbers extracted. Figures 2-5 results are plots only.",
+  "Page numbers in figures are derived from ACL page numbering (1280 = page 1)."
+ ]
+}

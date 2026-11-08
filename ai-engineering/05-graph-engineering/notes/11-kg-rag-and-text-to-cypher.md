@@ -14,6 +14,7 @@ sources:
   - https://arxiv.org/abs/2408.08921
   - https://arxiv.org/abs/2509.18063
   - https://arxiv.org/abs/2508.18260
+  - https://arxiv.org/abs/2308.11730
 confidence: medium-high
 cleaned: 2026-11-01
 ---
@@ -83,6 +84,8 @@ A figure you will see quoted is **53.4% vs. 42.9%** multi-hop accuracy for graph
 Raieli and Iuculano's account of where GraphRAG stands points the same way (*Building AI Agents with LLMs, RAG, and Knowledge Graphs*, ch. 7). There is "a lack of benchmark standards" for comparing GraphRAG methods, so published wins rarely carry over from one paper to the next. GraphRAG "underperforms in abstractive question-answering tasks or when there is no explicit entity mentioned in the question", because extraction drops the nuance of the text. And a growing graph returns more redundant facts, which then have to be compressed at the risk of losing information. Their prediction is **HybridRAG**: both stores in one system, with a router choosing between them or a step that merges their results. They cite Sarmah et al. ([arXiv 2408.04948](https://arxiv.org/abs/2408.04948), preprint), whose hybrid beat both stores on answer relevancy (0.96 vs. 0.91 and 0.89) but had the lowest context precision (0.79; earnings calls, GPT-3.5). That matches the default order below, and it adds a test: if a question names no entity, send it to vector search first.
 
 The chapter's headline application is MedGraphRAG (Wu et al., [arXiv 2408.04187](https://arxiv.org/abs/2408.04187), preprint). It builds a three-level graph. The top level holds the user's own documents (hospital medical reports). Their entities link down to a level built from medical textbooks and papers, which links down to a level of standard medical terms and relations from curated sources. That is the ontology-linking idea from [note 10](10-building-kgs-with-llms.md#ned-against-an-ontology-ch78) used for retrieval: a private fact comes with its accepted definition attached. GPT-4 scores 91.3 on MedQA vs. 88.9 with Microsoft GraphRAG (5-shot ensemble). The claim to beat tuned models like Med-PaLM 2 has no comparison table: unverified.
+
+Wang et al.'s Knowledge Graph Prompting (KGP; AAAI 2024, [arXiv:2308.11730](https://arxiv.org/abs/2308.11730)) is a different graph from the ones above: nodes are passages (plus page and table nodes) and edges are similarity or containment links, with no typed relations, so there is no Cypher. A fine-tuned LLM agent walks it, generating the next evidence passage and moving to the most similar neighbour, from TF-IDF seeds and up to a fixed passage budget. At the same budget it reached F1 66.77 on HotpotQA (MDR 65.16, TF-IDF 64.64), 41.19 F1 on MuSiQue (MDR 37.03) and 67% on structural questions about PDF pages and tables that no baseline handled, but on IIRC it trailed MDR (F1 41.54 vs. 43.47). Graph quality is the lever: denser graphs raise supporting-fact coverage but lower neighbour precision, and F1 plateaus while matching latency keeps rising. The KNN-MDR encoder was trained on HotpotQA, and prompts, sample sizes and hyperparameters sit in a supplement, so the gains are dataset-specific. Read it as evidence that a graph helps multi-document retrieval when its edges are good, which echoes the "most of the win is not the graph" caution above.
 
 ---
 

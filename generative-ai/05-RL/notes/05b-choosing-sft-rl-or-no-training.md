@@ -140,6 +140,9 @@ trajectories cut it to 61.7%. The setup is a single 7B model with an o3 teacher.
 "10–20× compression" the paper claims for skills over raw trajectories doesn't match its own
 measured prompt lengths, which fell only about 10%.
 
+![SkillRL overview. A base model's trajectories are split into successes and lessons from failures and stored in memory, distilled into general and task-specific skills, then used for cold-start SFT and RL with the skill bank updated from failures.](../sources/images/xia-skillrl-fig2.png)
+*Image Source: Xia et al., [SkillRL](https://arxiv.org/abs/2602.08234) (2026), Fig. 2*
+
 Reflexion's loop can itself be trained. Meta-RL, which goes back to RL²
 ([arXiv:1611.02779](https://arxiv.org/abs/1611.02779) (Duan et al., 2016-11, preprint)), trains
 over a *trial* of several episodes, so exploring early pays off later. LaMer applies it to

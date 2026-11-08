@@ -1,0 +1,616 @@
+{
+ "schema": 1,
+ "key": "2101.06840",
+ "pdf": "ai-engineering/07-inference-engineering/sources/ren-2021-zero-offload.pdf",
+ "bib": {
+  "title": "ZeRO-Offload: Democratizing Billion-Scale Model Training",
+  "authors": [
+   "Jie Ren",
+   "Samyam Rajbhandari",
+   "Reza Yazdani Aminabadi",
+   "Olatunji Ruwase",
+   "Shuangyan Yang",
+   "Minjia Zhang",
+   "Dong Li",
+   "Yuxiong He"
+  ],
+  "first_author": "Ren",
+  "year": 2021,
+  "venue": "USENIX ATC 2021 (text is arXiv v1 preprint, 18 Jan 2021)",
+  "arxiv": "2101.06840",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 64362,
+  "chars_total": 64362,
+  "engine": "pymupdf",
+  "skipped": "Figure bodies (7-13) are images; only captions and surrounding text read. No appendix exists."
+ },
+ "type": "system",
+ "question": "How can billion-scale transformer training fit on one or a few GPUs by offloading model states and optimizer compute to CPU without losing compute efficiency?",
+ "hypothesis": "Offloading gradients, optimizer states and the optimizer step to CPU, while keeping fp16 parameters and forward/backward on GPU, is the unique strategy that minimizes CPU compute and CPU-GPU traffic while maximizing GPU memory savings.",
+ "contributions": [
+  "A unique optimal offload strategy for GPU+CPU training enabling 10x larger models on a single GPU (Sec 3, 4.1)",
+  "Multi-GPU design combining offload with ZeRO-2 data parallelism and with model parallelism (Sec 4.2)",
+  "Fast SIMD CPU-Adam (over 6x vs PyTorch) and one-step delayed parameter update (Sec 5)",
+  "Open-source implementation in DeepSpeed",
+  "Evaluation: 13B on one GPU, 70B on a DGX-2, near-linear scaling to 128 GPUs"
+ ],
+ "method": {
+  "summary": "Training is modelled as a weighted dataflow graph and partitioned between CPU and GPU. fp16 params and forward/backward stay on GPU; fp16 gradients, fp32 params/momentum/variance and the Adam update live on CPU. Combined with ZeRO-2 partitioning for multi-GPU, plus a SIMD CPU-Adam and an optional one-step delayed parameter update.",
+  "task": "memory-efficient pretraining/fine-tuning of large transformers (systems)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "SQuAD",
+    "role": "train",
+    "size": null,
+    "split": null,
+    "source": "Rajpurkar et al. 2016",
+    "preprocessing": null
+   },
+   {
+    "name": "GPT-2 pretraining data",
+    "role": "pretrain",
+    "size": null,
+    "split": null,
+    "source": "not stated (follows GPT-2 procedure)",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT-2-like transformers (1B to 70B)",
+    "role": "proposed",
+    "params": "1B-70B",
+    "architecture": "GPT-2-like decoder transformer, hidden size and layers varied (Table 3)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "20-78 (Table 3); 69 for 70B",
+    "hidden": "2048-9216",
+    "heads": null,
+    "context": null,
+    "other": {
+     "table3": "1,2B: bs32/GPU, 20,40 layers, hidden 2048; 4B: bs32, 64, 2304; 6,8B: bs16, 53,72, 3072; 10,11B: bs 10,8, 50,55, 4096; 12,13B: bs4, 60,65, 4096; 15B: bs8, MP2, 78, 4096; 20,40,60B: bs8, MP2, 25,50,75, 8192; 70B: bs8, MP8, 69, 9216"
+    }
+   },
+   {
+    "name": "BERT-large",
+    "role": "evaluated",
+    "params": "336M",
+    "architecture": "24-layer, 1024-hidden, 16-heads",
+    "init_from": "pretrained BERT",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "24",
+    "hidden": "1024",
+    "heads": "16",
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "PyTorch DDP, Megatron, L2L, ZeRO-2",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "language modelling (GPT-2); SQuAD fine-tuning (BERT)",
+   "optimizer": "Adam, mixed precision (fp16 params/grads, fp32 master params, momentum, variance); CPU-Adam with AVX512, unroll_width 8, OMP threads",
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "total 512 (throughput experiments, micro-batch plus gradient accumulation); 8 for DPU throughput test; per-GPU micro-batch in Table 3",
+   "steps": "100K iterations (GPT-2 loss curve, Fig 12)",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": "fp16/fp32 mixed",
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "DGX-2 node: 16 V100 32GB HBM2, 2 Xeon Platinum 8168, 1.5TB DDR4-2666, 32 GBps bidirectional PCIe (Table 2); scalability: 8 DGX-2 nodes over InfiniBand (648-port Mellanox CS7500)",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "hyperparameters": "Unless otherwise stated follows the procedure and hyperparameters of BERT [6] and GPT-2 [19]; none printed",
+    "dpu": "DPU enabled after 40 iterations (first N-1 steps without DPU)",
+    "activation_checkpointing": "used to avoid activation migration (Fig 2)",
+    "offload_scope": "only model states offloaded"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Throughput",
+     "definition": "TFLOPS per GPU or aggregate",
+     "unit": "TFLOPS",
+     "higher_is_better": true
+    },
+    {
+     "name": "Largest trainable model",
+     "definition": "largest parameter count before OOM",
+     "unit": "billions of parameters",
+     "higher_is_better": true
+    },
+    {
+     "name": "Adam latency",
+     "definition": "optimizer step time",
+     "unit": "s",
+     "higher_is_better": false
+    },
+    {
+     "name": "F1",
+     "definition": "SQuAD F1",
+     "unit": "F1",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "PyTorch DDP",
+    "Megatron-LM",
+    "L2L",
+    "ZeRO-2"
+   ],
+   "protocol": "Single runs; no seeds, variances or repeats reported. Largest micro-batch without OOM used per configuration."
+  },
+  "availability": {
+   "code": "DeepSpeed (www.deepspeed.ai), tutorial /tutorials/zero-offload/",
+   "weights": null,
+   "data": null
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "model states memory",
+    "quote": "requires 16×M bytes of memory",
+    "where": "Sec 2"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "A 13B-parameter model trains on a single 32GB V100 with ZeRO-Offload, versus 1.4B for PyTorch DDP.",
+   "kind": "measured",
+   "source": null,
+   "metric": "largest trainable model",
+   "value": 13,
+   "unit": "B parameters",
+   "baseline_value": 1.4,
+   "n": null,
+   "setup": "GPT-2-like transformers, mixed-precision Adam, one 32GB V100 in a DGX-2 node",
+   "quote": "over 13 billion parameters on a single GPU, a 10x increase",
+   "table": null,
+   "note": "Baseline is 1.4B in Sec 6.2.1 but 1.2B in the Intro and contributions; 'more than 9X' in Sec 6.2.1 vs '10x' elsewhere.",
+   "where": "Abstract; Sec 6.2.1"
+  },
+  {
+   "claim": "PyTorch DDP's largest trainable model on one 32GB GPU.",
+   "kind": "measured",
+   "source": null,
+   "metric": "largest trainable model",
+   "value": 1.4,
+   "unit": "B parameters",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-2-like transformers, mixed-precision Adam, one 32GB V100 in a DGX-2 node",
+   "quote": "Torch DDP on a single GPU with 32GB memory is 1.4B,",
+   "table": null,
+   "note": "Intro says 1.2B",
+   "where": "Sec 6.2.1"
+  },
+  {
+   "claim": "Throughput of a 13B model with offload on one V100.",
+   "kind": "measured",
+   "source": null,
+   "metric": "throughput",
+   "value": 40,
+   "unit": "TFLOPS",
+   "baseline_value": 30,
+   "n": null,
+   "setup": "GPT-2-like transformers, mixed-precision Adam, one 32GB V100 in a DGX-2 node; baseline is the 1.2B model that fits without offload",
+   "quote": "at 40 TFLOPS, compared to 30 TFLOPS on the same GPU",
+   "table": null,
+   "note": null,
+   "where": "Intro"
+  },
+  {
+   "claim": "With model parallelism ZeRO-Offload trains up to 70B on a DGX-2 node at over 30 TFLOPS per GPU.",
+   "kind": "measured",
+   "source": null,
+   "metric": "largest trainable model",
+   "value": 70,
+   "unit": "B parameters",
+   "baseline_value": 15,
+   "n": null,
+   "setup": "16 V100 on one DGX-2, MP degree 8 for 70B (Table 3)",
+   "quote": "enables training up to 70B parameter models with more",
+   "table": null,
+   "note": "Megatron alone tops out at 15B",
+   "where": "Sec 6.2.2"
+  },
+  {
+   "claim": "Model scale gain on a DGX-2 over PyTorch, Megatron, ZeRO-2, L2L.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "one DGX-2 node (16 V100)",
+   "quote": "by 50X, 4.5X, 7.8X, and 4.2X than using",
+   "table": null,
+   "note": "Values in order: PyTorch 50X, Megatron 4.5X, ZeRO-2 7.8X, L2L 4.2X",
+   "where": "Sec 6.2.1"
+  },
+  {
+   "claim": "Model states take 16 bytes per parameter in mixed-precision Adam (2 fp16 param, 2 fp16 grad, 4+4+4 fp32).",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "memory per parameter",
+   "value": 16,
+   "unit": "bytes per parameter",
+   "baseline_value": null,
+   "n": null,
+   "setup": "mixed precision, Adam",
+   "quote": "requires 16×M bytes of memory",
+   "table": null,
+   "note": null,
+   "where": "Sec 2"
+  },
+  {
+   "claim": "Minimum CPU-GPU communication volume for any model-state offload is 4M (two edges of at least 2M).",
+   "kind": "claim",
+   "source": null,
+   "metric": "communication volume",
+   "value": 4,
+   "unit": "M bytes",
+   "baseline_value": null,
+   "n": null,
+   "setup": "per training iteration, M parameters, fp16 edges 2M and fp32 edges 4M",
+   "quote": "resulting in a total communication of at least 4M.",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.3"
+  },
+  {
+   "claim": "Offloading both fp16 gradients and the update to CPU gives the largest GPU memory reduction among minimum-communication strategies (4M bytes on GPU).",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "memory reduction",
+   "value": 8,
+   "unit": "x memory reduction vs 16M baseline",
+   "baseline_value": 1,
+   "n": null,
+   "setup": "Sec 3.4 partitions that achieve 4M traffic",
+   "quote": null,
+   "table": "Table 1, row gpu/gpu/cpu/cpu (FWD-BWD, p16, g16, Update), column Memory Reduction",
+   "note": "Other rows: g16 only 14M (1.14x); update only 4M (4x)",
+   "where": "Table 1"
+  },
+  {
+   "claim": "ZeRO-Offload beats L2L by 14% on average in throughput on one GPU.",
+   "kind": "measured",
+   "source": null,
+   "metric": "throughput",
+   "value": 14,
+   "unit": "% (up to 22%)",
+   "baseline_value": 0,
+   "n": null,
+   "setup": "single V100, batch 512, same micro-batches, DPU off",
+   "quote": "14% on average (up to 22%) in throughput (TFLOPS). The",
+   "table": null,
+   "note": null,
+   "where": "Sec 6.2.2, Fig 8"
+  },
+  {
+   "claim": "L2L moves 28M of data between GPU and CPU, 7x more than ZeRO-Offload's 4M.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 7,
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "per iteration, M parameters",
+   "quote": "4M, which is 7x smaller than L2L. The reduced communication volume",
+   "table": null,
+   "note": null,
+   "where": "Sec 6.2.2"
+  },
+  {
+   "claim": "Speedup vs PyTorch Adam on CPU at 1B parameters.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Adam latency",
+   "value": 6.4,
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CPU Adam latency, 1B params; over 5x at all sizes up to 10B",
+   "quote": "and 6.4X",
+   "table": "Table 4, row 1 billion, columns CPU-Adam 0.22 vs PT-CPU 1.39",
+   "note": "Table 4: 10B is 2.57 s CPU-Adam, 14.76 s PT-CPU, 1.00 s PT-GPU",
+   "where": "Sec 6.2.4"
+  },
+  {
+   "claim": "One-step delayed parameter update raises throughput at micro-batch 8.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-2, micro-batch 8, various sizes",
+   "quote": "training achieves 1.12–1.59, updated times higher throughput",
+   "table": null,
+   "note": "Abstract/Intro say up to 1.5X",
+   "where": "Sec 6.2.4, Fig 9"
+  },
+  {
+   "claim": "DPU keeps BERT-large SQuAD F1 equal to baseline.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 92.8,
+   "unit": "F1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BERT-large fine-tuning, DPU enabled after 40 iterations, no hyperparameter changes",
+   "quote": "F1 score (92.8) as the baseline",
+   "table": null,
+   "note": null,
+   "where": "Sec 6.2.4, Fig 13"
+  },
+  {
+   "claim": "Throughput per GPU stays over 30 TFLOPS with near-linear aggregate scaling to 128 GPUs for a 10B GPT-2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "throughput",
+   "value": 30,
+   "unit": "TFLOPS per GPU",
+   "baseline_value": null,
+   "n": null,
+   "setup": "10B GPT-2, 1-128 GPUs, 8 DGX-2 nodes over InfiniBand",
+   "quote": "running at over 30 TFlops per GPU",
+   "table": null,
+   "note": null,
+   "where": "Sec 6.2.3, Fig 11"
+  },
+  {
+   "claim": "ZeRO-Offload gives up to 1.33X/1.11X/1.64X the throughput of PyTorch/ZeRO-2/Megatron for 1B-15B models on 16 GPUs.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "one DGX-2 node, total batch 512",
+   "quote": "up to 1.33X, 1.11X, 1.64X higher",
+   "table": null,
+   "note": "Gain comes from larger micro-batches",
+   "where": "Sec 6.2.2, Fig 10"
+  },
+  {
+   "claim": "With 64 and 128 GPUs ZeRO-2 outperforms ZeRO-Offload, since batch sizes become similar and ZeRO-2 avoids CPU-GPU traffic.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "10B GPT-2, Fig 11",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Sec 6.2.3, Fig 11"
+  },
+  {
+   "claim": "L2L trains larger models than ZeRO-Offload on one GPU (17B) but does not scale with more GPUs.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 17,
+   "unit": "B parameters",
+   "baseline_value": null,
+   "n": null,
+   "setup": "single 32GB V100",
+   "quote": "e.g., 17B) on a",
+   "table": "Sec 6.2.1 text; Fig 7",
+   "note": null,
+   "where": "Sec 6.2.1"
+  }
+ ],
+ "limits": [
+  "Strategy is derived only for mixed-precision Adam; other optimizers are not analysed.",
+  "Activation memory is not offloaded (footnote 1); relies on checkpointing.",
+  "On 64 and 128 GPUs ZeRO-2 is faster; offload mainly helps when GPUs are scarce.",
+  "CPU compute can bottleneck at small batch sizes; DPU changes training semantics and was verified only on GPT-2 (100K iterations) and BERT-large SQuAD, delayed 40 iterations.",
+  "No seeds or variance reported; GPT-2 data, learning rate and batch details not printed.",
+  "Single hardware platform (V100 32GB, PCIe, DGX-2); PCIe 32 GBps is the cost driver and has since changed (e.g. unified memory links).",
+  "Intro baseline 1.2B conflicts with 1.4B in Sec 6.2.1."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "model states",
+   "definition": "parameters, gradients, and optimizer states (such as momentum and variances in Adam)",
+   "where": "Sec 2"
+  },
+  {
+   "term": "residual states",
+   "definition": "activations, temporary buffers, and unusable fragmented memory",
+   "where": "Sec 2"
+  },
+  {
+   "term": "DPU",
+   "definition": "one-step delayed parameter update overlapping CPU optimizer with GPU forward/backward",
+   "where": "Sec 5.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "ZeRO: Memory Optimizations Toward Training Trillion Parameter Models",
+   "year": 2020,
+   "arxiv": "1910.02054",
+   "relation": "extends",
+   "note": "ZeRO-2 partitioning is the multi-GPU basis",
+   "quote": null
+  },
+  {
+   "work": "Megatron-LM",
+   "year": 2019,
+   "arxiv": "1909.08053",
+   "relation": "baseline",
+   "note": "model parallelism baseline and combined with offload",
+   "quote": null
+  },
+  {
+   "work": "L2L (Pudipeddi et al.)",
+   "year": 2020,
+   "arxiv": "2002.05645",
+   "relation": "baseline",
+   "note": "layer-to-layer offload baseline",
+   "quote": null
+  },
+  {
+   "work": "Mixed precision training (NVIDIA AMP)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "fp16/fp32 recipe analysed",
+   "quote": null
+  },
+  {
+   "work": "Adam (Kingma and Ba)",
+   "year": 2014,
+   "arxiv": "1412.6980",
+   "relation": "uses-method",
+   "note": "optimizer offloaded",
+   "quote": null
+  },
+  {
+   "work": "Training deep nets with sublinear memory cost (Chen et al.)",
+   "year": 2016,
+   "arxiv": "1604.06174",
+   "relation": "related",
+   "note": "activation checkpointing",
+   "quote": null
+  },
+  {
+   "work": "GPT-2",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "workload architecture",
+   "quote": null
+  },
+  {
+   "work": "BERT",
+   "year": 2018,
+   "arxiv": "1810.04805",
+   "relation": "evaluates",
+   "note": "DPU convergence test",
+   "quote": null
+  },
+  {
+   "work": "SQuAD",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "BERT fine-tuning",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "The dataflow of fully connected neural networks with M parameters. We use activation checkpoint to reduce activation memory to avoid activation migration between CPU and GPU.",
+   "page": 5,
+   "why": "Edge weights 2M/4M show why the cut costs at least 4M and which nodes go where."
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Memory savings for offload strategies that minimizes communication volume compared to the baseline.",
+   "page": 5,
+   "why": "Four-row table giving 1x/1.14x/4x/8x memory reduction."
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "ZeRO-Offload training process on a single GPU.",
+   "page": 6,
+   "why": "Timeline of overlapped gradient offload, CPU update and parameter swap."
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "ZeRO-Offload data placement with multiple GPUs",
+   "page": 6,
+   "why": "Where params, grads and optimizer states live across GPUs and CPUs."
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "Delayed parameter update during the training process.",
+   "page": 9,
+   "why": "Shows the one-step staleness schedule."
+  },
+  {
+   "figure": "Fig 7",
+   "caption": "The size of the biggest model that can be trained on single GPU, 4 and 16 GPUs (one DGX-2 node).",
+   "page": 10,
+   "why": "Model-scale comparison across methods."
+  },
+  {
+   "figure": "Fig 10",
+   "caption": "Training throughput with PyTorch, ZeRO-2, Megatron-LM, ZeRO-Offload without model parallelism and ZeRO-Offload with model parallelism.",
+   "page": 10,
+   "why": "Throughput per GPU versus model size."
+  },
+  {
+   "figure": "Fig 11",
+   "caption": "Comparison of training throughput between ZeRO-Offload and ZeRO-2 using 1-128 GPUs for a 10B parameter GPT2.",
+   "page": 11,
+   "why": "Scaling and the crossover where ZeRO-2 wins."
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 5.1, Algorithm 2 (CPU-Adam), line 8-9",
+   "snippet": "mv = FMA(gv, (1 - β1), β1*mv)\nvv = FMA(gv*gv, (1 - β2), β2*vv)",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Figure 1 and Figure 5 (pseudo-code) are images; their text is not in the cache.",
+  "Algorithm is labelled 'Algorithm 2' in the PDF but referred to as 'Algorithm 1' in the text.",
+  "Figure curves/bars in Figs 7-13 not readable from text; no values taken from them.",
+  "No embedded instructions found."
+ ]
+}

@@ -80,6 +80,9 @@ Full fine-tuning updates every weight and needs optimizer state for all of them,
 
 **LoRA** ([arXiv:2106.09685](https://arxiv.org/abs/2106.09685), Hu et al., 2021) is the default. For a frozen weight matrix `W` (d × k), learn a [low-rank](02-attention-and-the-transformer-block.md#matrix-products-transpose-and-rank) update:
 
+![Diagram of LoRA: the input x passes through the frozen pretrained weight W and through two small trainable matrices A (initialised Gaussian, rank r) and B (initialised to zero), and the two outputs are summed into h](../sources/images/hu-lora-fig1.png)
+*Image Source: Hu et al., [LoRA: Low-Rank Adaptation of Large Language Models](https://arxiv.org/abs/2106.09685) (2021), Fig. 1*
+
 ```text
 W' = W + ΔW,   ΔW = B · A,   B: d × r,  A: r × k,  r ≪ min(d, k)
 ```
@@ -176,6 +179,9 @@ Quantization for *serving* (int8/int4 weights, KV-cache compression) is an infer
 | Missing or stale facts | Retrieval | Almost never; fine-tuning is a poor fact store |
 | Task needs a skill the model lacks | Decompose the task; use a stronger model | You have thousands of good examples. Phoenix & Taylor's rule of thumb (*Prompt Engineering for GenAI*, ch. 1) is that fine-tuning starts to beat prompting somewhere in the low thousands of examples |
 | Cost or latency | Smaller model plus a good prompt | Distil a large model's outputs into a small one |
+
+![Two panels plotting accuracy against number of training points on BoolQ and RTE: the prompting run sits above the classifier run at small data sizes and the two converge as the dataset grows, with the gap largest on BoolQ below about 1,000 points](../sources/images/phoenix-prompt-engineering-for-generative-ai-fig1-13.png)
+*Image Source: Author, [Prompt Engineering for Generative AI](https://www.oreilly.com/library/view/prompt-engineering-for/9781098153427/) (Phoenix & Taylor, 2024), Fig. 1-13*
 
 *Agentic Architectural Patterns* (ch. 3) lays the same choice out as a spectrum of how deep the change goes: in-context learning changes no weights and lasts one prompt (its example is three few-shot review-to-JSON demonstrations steering a feature-sentiment extractor); PEFT trains a small set of weights; full fine-tuning (FFT) changes all of them and may reach the highest ceiling at a very high cost. Its comparison table says PEFT needs less data, forgets less and iterates faster, while FFT suits the deepest specialisation. Treat those as design claims, not findings: the chapter runs no experiment and gives no figures, so "forgets less" is asserted, and its in-context example lists the tripod twice (wobbly, cheap) despite its own one-entry-per-feature demonstrations. It also separates unsupervised fine-tuning (continued pretraining on unlabeled domain text, for vocabulary and style) from SFT on input-output pairs (for tasks, instruction following and format; [chapter 07](07-sft-and-instruction-tuning.md)).
 

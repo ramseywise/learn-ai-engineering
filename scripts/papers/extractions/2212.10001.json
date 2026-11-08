@@ -1,0 +1,618 @@
+{
+ "schema": 1,
+ "key": "2212.10001",
+ "pdf": "ai-engineering/01-prompt-engineering/sources/wang-2022-towards-understanding-chain-thought-prompting.pdf",
+ "bib": {
+  "title": "Towards Understanding Chain-of-Thought Prompting: An Empirical Study of What Matters",
+  "authors": [
+   "Boshi Wang",
+   "Sewon Min",
+   "Xiang Deng",
+   "Jiaming Shen",
+   "You Wu",
+   "Luke Zettlemoyer",
+   "Huan Sun"
+  ],
+  "first_author": "Wang",
+  "year": 2023,
+  "venue": "ACL 2023 (arXiv v2, 1 Jun 2023)",
+  "arxiv": "2212.10001",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 84970,
+  "chars_total": 84970,
+  "engine": "pymupdf",
+  "skipped": "Appendix prompt Tables 17-24 only skimmed (variants of the Table 9-16 pattern)"
+ },
+ "type": "empirical",
+ "question": "What aspects of the demonstrated rationales in chain-of-thought prompts make CoT prompting effective?",
+ "hypothesis": "Valid reasoning in demonstrations is not what drives CoT; relevance to the query and correct step order are (the authors expected, and then tested, the opposite intuition that invalid reasoning would give little or negative gain over standard prompting).",
+ "contributions": [
+  "Show that CoT demonstrations with invalid reasoning retain over 80-90% of CoT performance while the model still generates coherent reasoning",
+  "Identify relevance and coherence of bridging objects and language templates as the key aspects",
+  "Argue demonstrations mostly specify output format/space and elicit pretrained reasoning, with implications for benchmarking few-shot reasoning"
+ ],
+ "method": {
+  "summary": "Ablation study of CoT exemplars: hand-write rationales with invalid reasoning, and corrupt relevance or coherence of bridging objects and language templates, then run few-shot prompting with greedy decoding and compare against CoT and standard prompting using intrinsic (bridging-object recall/F1) and extrinsic (answer accuracy/F1) metrics.",
+  "task": "Arithmetic reasoning and multi-hop factual QA with few-shot prompting",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "GSM8K",
+    "role": "eval",
+    "size": "800 sampled from 1319 test examples",
+    "split": "test",
+    "source": "Cobbe et al. 2021",
+    "preprocessing": "uniform sample of 800 for budget; derived numbers in annotated steps used as bridging-object proxy"
+   },
+   {
+    "name": "Bamboogle",
+    "role": "eval",
+    "size": "125 test samples (all)",
+    "split": "test",
+    "source": "Press et al. 2022",
+    "preprocessing": "bridging objects (intermediate entities) manually annotated"
+   }
+  ],
+  "models": [
+   {
+    "name": "InstructGPT text-davinci-002",
+    "role": "evaluated",
+    "params": "175B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "text-davinci-003",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "PaLM",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Flan-PaLM",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "greedy (sampling with zero temperature)",
+   "temperature": "0",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "1 run per setting; no seeds or significance tests stated",
+   "prompting": "Few-shot with (query, rationale, answer) exemplars from Wei 2022 (GSM8K, 8 exemplars shown in Table 9) and Press 2022 (Bamboogle, 4 exemplars in Table 10), lightly edited; settings: STD, CoT, 1 invalid reasoning, 2-7 relevance/coherence ablations",
+   "retrieval": null,
+   "parameters": {
+    "ablation_destroy_relevance": "random substitution of numbers/entities with downstream steps updated; templates replaced with a random training-set annotated rationale template (GSM8K) or manually irrelevant template (Bamboogle)",
+    "ablation_destroy_coherence": "random shuffle of components / permuted ordering",
+    "invalid_reasoning": "manually written, premise steps kept, subsequent steps drastically changed so they do not derive the answer"
+   },
+   "other": {
+    "exemplar_edits": "premise steps moved to start, templates added/expanded, unnecessary steps removed (Appendix A.1)",
+    "gpt3_base": "original GPT-3 175B without instruction tuning tried in preliminary experiments; CoT gave little gain over standard prompting"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Answer Acc. (GSM8K)",
+     "definition": "final answer correctness",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Answer F1 (Bamboogle)",
+     "definition": "F1 of final answer",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Inter. Recall / Inter. F1",
+     "definition": "recall/F1 of bridging objects the LLM must derive (not in the query); numbers derived in annotated steps for GSM8K, manually annotated intermediate entities for Bamboogle (recall only)",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "STD standard prompting",
+    "CoT (edited exemplars)"
+   ],
+   "protocol": "Single greedy run; qualitative checks on 20 random examples per setting; error-type analysis on 20+20 GSM8K examples following Wei et al. 2022 categories"
+  },
+  "availability": {
+   "code": "Stated: 'Our code and model input/output are available here' (link not in extracted text)",
+   "weights": null,
+   "data": "Public datasets; full prompts in Tables 9-24"
+  },
+  "prompts": [
+   {
+    "purpose": "CoT exemplar example (arithmetic)",
+    "text": "Q: Leah had 32 chocolates and her sister had 42. If they ate 35, how many pieces do they have left in total?\nA: Originally, Leah had 32 chocolates and her sister had 42. So in total they had 32 + 42 = 74. After eating 35, they had 74 - 35 = 39 pieces left in total. The answer is 39.",
+    "where": "Table 9 (one of 8 exemplars; all variants in Tables 9-24)"
+   },
+   {
+    "purpose": "Invalid reasoning exemplar (same query)",
+    "text": "A: Originally, Leah had 32 chocolates and her sister had 42. So her sister had 42 - 32 = 10 chocolates more than Leah has. After eating 35, since 10 + 35 = 45, they had 45 - 6 = 39 pieces left in total. The answer is 39.",
+    "where": "Table 11"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "eval GSM8K sample",
+    "quote": "we uniformly sample 800 out of the 1319 test ex- amples for GSM8K for evaluation",
+    "where": "Sec 3.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Invalid-reasoning demonstrations keep over 80-90% of CoT performance under various metrics.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "InstructGPT text-davinci-002, greedy decoding, GSM8K (800 of 1319 test) and Bamboogle (125 test), 8-shot GSM8K / 4-shot Bamboogle exemplars from Wei 2022 / Press 2022 (edited)",
+   "note": null,
+   "where": "Abstract"
+  },
+  {
+   "claim": "GSM8K answer accuracy with CoT prompting.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Answer Acc.",
+   "value": "48.5",
+   "unit": "%",
+   "baseline_value": "15.4 (STD)",
+   "n": null,
+   "setup": "InstructGPT text-davinci-002, greedy decoding, GSM8K (800 of 1319 test) and Bamboogle (125 test), 8-shot GSM8K / 4-shot Bamboogle exemplars from Wei 2022 / Press 2022 (edited)",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row CoT, column GSM8K Answer Acc."
+  },
+  {
+   "claim": "GSM8K answer accuracy with invalid-reasoning demonstrations.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Answer Acc.",
+   "value": "39.5",
+   "unit": "%",
+   "baseline_value": "48.5 (CoT)",
+   "n": null,
+   "setup": "InstructGPT text-davinci-002, greedy decoding, GSM8K (800 of 1319 test) and Bamboogle (125 test), 8-shot GSM8K / 4-shot Bamboogle exemplars from Wei 2022 / Press 2022 (edited)",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row 1 Invalid Reasoning, column GSM8K Answer Acc."
+  },
+  {
+   "claim": "GSM8K Inter. F1 with invalid reasoning vs CoT.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Inter. F1",
+   "value": "43.9",
+   "unit": "%",
+   "baseline_value": "48.3 (CoT)",
+   "n": null,
+   "setup": "InstructGPT text-davinci-002, greedy decoding, GSM8K (800 of 1319 test) and Bamboogle (125 test), 8-shot GSM8K / 4-shot Bamboogle exemplars from Wei 2022 / Press 2022 (edited)",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row 1 Invalid Reasoning, column GSM8K Inter. F1"
+  },
+  {
+   "claim": "Bamboogle Answer F1 with invalid reasoning vs CoT.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Answer F1",
+   "value": "39.4",
+   "unit": "%",
+   "baseline_value": "45.2 (CoT)",
+   "n": null,
+   "setup": "InstructGPT text-davinci-002, greedy decoding, GSM8K (800 of 1319 test) and Bamboogle (125 test), 8-shot GSM8K / 4-shot Bamboogle exemplars from Wei 2022 / Press 2022 (edited)",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row 1 Invalid Reasoning, column Bamboogle Answer F1"
+  },
+  {
+   "claim": "Standard prompting on Bamboogle Answer F1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Answer F1",
+   "value": "20.6",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "InstructGPT text-davinci-002, greedy decoding, GSM8K (800 of 1319 test) and Bamboogle (125 test), 8-shot GSM8K / 4-shot Bamboogle exemplars from Wei 2022 / Press 2022 (edited)",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row STD, column Bamboogle Answer F1"
+  },
+  {
+   "claim": "No-relevance setting on GSM8K falls below standard prompting (11.0 vs 15.4 answer acc.).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Answer Acc.",
+   "value": "11.0",
+   "unit": "%",
+   "baseline_value": "15.4 (STD)",
+   "n": null,
+   "setup": "InstructGPT text-davinci-002, greedy decoding, GSM8K (800 of 1319 test) and Bamboogle (125 test), 8-shot GSM8K / 4-shot Bamboogle exemplars from Wei 2022 / Press 2022 (edited)",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row 7 No relevance, column GSM8K Answer Acc."
+  },
+  {
+   "claim": "No-relevance setting GSM8K Inter. F1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Inter. F1",
+   "value": "11.9",
+   "unit": "%",
+   "baseline_value": "48.3 (CoT)",
+   "n": null,
+   "setup": "InstructGPT text-davinci-002, greedy decoding, GSM8K (800 of 1319 test) and Bamboogle (125 test), 8-shot GSM8K / 4-shot Bamboogle exemplars from Wei 2022 / Press 2022 (edited)",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row 7 No relevance, column GSM8K Inter. F1"
+  },
+  {
+   "claim": "Incoherent bridging objects (2) beat irrelevant bridging objects (3) on GSM8K Inter. F1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Inter. F1",
+   "value": "39.2",
+   "unit": "%",
+   "baseline_value": "26.2 (irrelevant bridging objects)",
+   "n": null,
+   "setup": "InstructGPT text-davinci-002, greedy decoding, GSM8K (800 of 1319 test) and Bamboogle (125 test), 8-shot GSM8K / 4-shot Bamboogle exemplars from Wei 2022 / Press 2022 (edited)",
+   "note": null,
+   "where": "Sec 5.2",
+   "quote": "(39.2 v.s. 26.2 Inter. F1)"
+  },
+  {
+   "claim": "Incoherent language templates (4) hurt GSM8K Inter. F1 a lot.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Inter. F1",
+   "value": "28.3",
+   "unit": "%",
+   "baseline_value": "48.3 (CoT)",
+   "n": null,
+   "setup": "InstructGPT text-davinci-002, greedy decoding, GSM8K (800 of 1319 test) and Bamboogle (125 test), 8-shot GSM8K / 4-shot Bamboogle exemplars from Wei 2022 / Press 2022 (edited)",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row 4 No coherence for language templates, column GSM8K Inter. F1"
+  },
+  {
+   "claim": "Instance level on GSM8K, CoT wrong and invalid reasoning correct in 62 of 196 discordant samples.",
+   "kind": "measured",
+   "source": null,
+   "metric": "discordant instances",
+   "value": "62/196",
+   "unit": "count",
+   "baseline_value": null,
+   "n": null,
+   "setup": "InstructGPT text-davinci-002, greedy decoding, GSM8K (800 of 1319 test) and Bamboogle (125 test), 8-shot GSM8K / 4-shot Bamboogle exemplars from Wei 2022 / Press 2022 (edited)",
+   "note": null,
+   "where": "Sec 4.2",
+   "quote": "62/196 for GSM8K"
+  },
+  {
+   "claim": "Instance level on Bamboogle, CoT wrong and invalid reasoning correct in 6 of 20 discordant samples.",
+   "kind": "measured",
+   "source": null,
+   "metric": "discordant instances",
+   "value": "6/20",
+   "unit": "count",
+   "baseline_value": null,
+   "n": null,
+   "setup": "InstructGPT text-davinci-002, greedy decoding, GSM8K (800 of 1319 test) and Bamboogle (125 test), 8-shot GSM8K / 4-shot Bamboogle exemplars from Wei 2022 / Press 2022 (edited)",
+   "note": null,
+   "where": "Sec 4.2",
+   "quote": "6/20 for Bamboogle"
+  },
+  {
+   "claim": "In no-relevance setting, LLM generated irrelevant rationales for 15 of 20 GSM8K examples checked.",
+   "kind": "measured",
+   "source": null,
+   "metric": "manual check",
+   "value": "15/20",
+   "unit": "count",
+   "baseline_value": null,
+   "n": null,
+   "setup": "InstructGPT text-davinci-002, greedy decoding, GSM8K (800 of 1319 test) and Bamboogle (125 test), 8-shot GSM8K / 4-shot Bamboogle exemplars from Wei 2022 / Press 2022 (edited)",
+   "note": null,
+   "where": "Sec 5.2",
+   "quote": "irrelevant rationales (both bridging objects and language templates) for 15 out of 20 ex- amples"
+  },
+  {
+   "claim": "Incoherent language templates seen in 14 of 20 GSM8K predicted rationales under that setting.",
+   "kind": "measured",
+   "source": null,
+   "metric": "manual check",
+   "value": "14/20",
+   "unit": "count",
+   "baseline_value": null,
+   "n": null,
+   "setup": "InstructGPT text-davinci-002, greedy decoding, GSM8K (800 of 1319 test) and Bamboogle (125 test), 8-shot GSM8K / 4-shot Bamboogle exemplars from Wei 2022 / Press 2022 (edited)",
+   "note": null,
+   "where": "Sec 5.2",
+   "quote": "(14 out of 20 examples)"
+  },
+  {
+   "claim": "text-davinci-003 GSM8K Inter. F1 with invalid reasoning slightly exceeds CoT (53.5 vs 53.1).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Inter. F1",
+   "value": "53.5",
+   "unit": "%",
+   "baseline_value": "53.1 (CoT)",
+   "n": null,
+   "setup": "text-davinci-003, greedy, same data",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row 1 Invalid Reasoning, column GSM8K Inter. F1"
+  },
+  {
+   "claim": "text-davinci-003 GSM8K answer accuracy with no relevance collapses to 16.2 vs CoT 54.5.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Answer Acc.",
+   "value": "16.2",
+   "unit": "%",
+   "baseline_value": "54.5 (CoT)",
+   "n": null,
+   "setup": "text-davinci-003, greedy",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row 7 No relevance, column GSM8K Answer Acc."
+  },
+  {
+   "claim": "Flan-PaLM GSM8K answer accuracy: no ablation matters (invalid 64.4 vs CoT 63.8).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Answer Acc.",
+   "value": "64.4",
+   "unit": "%",
+   "baseline_value": "63.8 (CoT)",
+   "n": null,
+   "setup": "Flan-PaLM, trained on CoT data in instruction tuning",
+   "note": null,
+   "where": "Table 7",
+   "table": "Table 7, row 1 Invalid Reasoning, column GSM8K Answer Acc."
+  },
+  {
+   "claim": "PaLM GSM8K answer accuracy with invalid reasoning vs CoT.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Answer Acc.",
+   "value": "31.8",
+   "unit": "%",
+   "baseline_value": "37.0 (CoT)",
+   "n": null,
+   "setup": "PaLM (non-instruction-tuned), greedy",
+   "note": null,
+   "where": "Table 8",
+   "table": "Table 8, row 1 Invalid Reasoning, column GSM8K Answer Acc."
+  },
+  {
+   "claim": "Editing the original CoT exemplars changes GSM8K accuracy only slightly (48.1 original, 48.5 edited).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Answer Acc.",
+   "value": "48.5",
+   "unit": "%",
+   "baseline_value": "48.1 (original)",
+   "n": null,
+   "setup": "InstructGPT text-davinci-002, greedy decoding, GSM8K (800 of 1319 test) and Bamboogle (125 test), 8-shot GSM8K / 4-shot Bamboogle exemplars from Wei 2022 / Press 2022 (edited)",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row Chain-of-Thought (After Editing), column Answer Acc."
+  }
+ ],
+ "limits": [
+  "Only two task types (arithmetic, multi-hop QA); symbolic tasks (last letter, coin flip) excluded because template-based steps make ablations inapplicable",
+  "Invalid reasoning rationales were hand written, no systematic treatment",
+  "Intrinsic evaluation relies on bridging-object correctness and ground-truth annotations; not general",
+  "Single greedy run, no variance or significance reported",
+  "Models are 2022 era (text-davinci-002/003, PaLM, Flan-PaLM); gains from ablations shrink as models have more prior task knowledge (Flan-PaLM unaffected)",
+  "Findings concern original CoT with few-shot exemplars; authors believe but do not test that they apply to CoT variants",
+  "PaLM and InstructGPT disagree on Bamboogle (relevance vs coherence of bridging objects flipped)"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Bridging objects",
+   "definition": "the key and necessary objects that the model needs to traverse in order to make a successful final prediction (numbers and equations for arithmetic; subject and object entities for factual QA)",
+   "where": "Sec 2"
+  },
+  {
+   "term": "Language templates",
+   "definition": "the complementary parts of bridging objects, which serve as textual hints and relations/predicates that guide the model to derive the correct bridging objects",
+   "where": "Sec 2"
+  },
+  {
+   "term": "Relevance",
+   "definition": "a component of the rationale has relevance if it is based on the corresponding component from the query",
+   "where": "Sec 5"
+  },
+  {
+   "term": "Coherence",
+   "definition": "a component of the rationale has coherence if it is in the correct order",
+   "where": "Sec 5"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Chain-of-thought prompting elicits reasoning in large language models (Wei et al.)",
+   "year": 2022,
+   "arxiv": "2201.11903",
+   "relation": "extends",
+   "note": "studies and reuses its exemplars and greedy setup",
+   "quote": null
+  },
+  {
+   "work": "Measuring and narrowing the compositionality gap (Press et al.)",
+   "year": 2022,
+   "arxiv": "2210.03350",
+   "relation": "uses-data",
+   "note": "Bamboogle dataset and exemplars",
+   "quote": null
+  },
+  {
+   "work": "Training verifiers to solve math word problems (Cobbe et al.)",
+   "year": 2021,
+   "arxiv": "2110.14168",
+   "relation": "uses-data",
+   "note": "GSM8K",
+   "quote": null
+  },
+  {
+   "work": "Rethinking the role of demonstrations (Min et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "inspiration: random labels barely hurt ICL; extended to multi-step reasoning generation",
+   "quote": null
+  },
+  {
+   "work": "Do prompt-based models really understand the meaning of their prompts? (Webson and Pavlick)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "misleading instructions only slightly harm",
+   "quote": null
+  },
+  {
+   "work": "Text and patterns: it takes two to tango (Madaan and Yazdanbakhsh)",
+   "year": 2022,
+   "arxiv": "2209.07686",
+   "relation": "related",
+   "note": "counterfactual rationales, but mostly still correct; authors differ in ablation design",
+   "quote": null
+  },
+  {
+   "work": "Complementary explanations for effective in-context learning (Ye et al.)",
+   "year": 2022,
+   "arxiv": "2211.13892",
+   "relation": "related",
+   "note": "concurrent corruption study",
+   "quote": null
+  },
+  {
+   "work": "Training language models to follow instructions (Ouyang et al.)",
+   "year": 2022,
+   "arxiv": "2203.02155",
+   "relation": "evaluates",
+   "note": "InstructGPT text-davinci-002",
+   "quote": null
+  },
+  {
+   "work": "PaLM (Chowdhery et al.)",
+   "year": 2022,
+   "arxiv": "2204.02311",
+   "relation": "evaluates",
+   "note": "PaLM",
+   "quote": null
+  },
+  {
+   "work": "Scaling instruction-finetuned language models (Chung et al.)",
+   "year": 2022,
+   "arxiv": "2210.11416",
+   "relation": "evaluates",
+   "note": "Flan-PaLM",
+   "quote": null
+  },
+  {
+   "work": "Self-consistency improves CoT (Wang et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "CoT variant",
+   "quote": null
+  },
+  {
+   "work": "Language models are greedy reasoners (Saparov and He)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "formal analysis of CoT",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Results of standard prompting, Chain-of-Thought (CoT) prompting, and our ablation setting with invalid reasoning (§4).",
+   "page": 1,
+   "why": "Side-by-side exemplar and model output for STD, CoT and invalid reasoning on one GSM8K item; shows invalid demos still yield valid reasoning"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Model performance using CoT and demonstrations with invalid reasoning for examples with different reasoning depths on GSM8K.",
+   "page": 4,
+   "why": "Shows the drop from invalid reasoning is uniform across difficulty (reasoning steps)"
+  },
+  {
+   "figure": "Table 4",
+   "caption": "Examples for all settings in our experiments.",
+   "page": 6,
+   "why": "Concrete rendering of every ablation (invalid, no coherence/relevance for bridging objects / templates) on one query"
+  },
+  {
+   "figure": "Table 2",
+   "caption": "Intrinsic and extrinsic evaluation results under InstructGPT (text-davinci-002) for all settings in our experiments.",
+   "page": 4,
+   "why": "Main results grid across the 7 settings"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Code link ('available here') is a hyperlink not present in the extracted text",
+  "Figure 2 values are in the image only, not text",
+  "No embedded instructions found"
+ ]
+}

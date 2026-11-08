@@ -1,0 +1,322 @@
+{
+ "schema": 1,
+ "key": "https://doi.org/10.18653/v1/n19-1245",
+ "pdf": "ai-engineering/01-prompt-engineering/sources/amini-2019-mathqa.pdf",
+ "bib": {
+  "title": "MathQA: Towards Interpretable Math Word Problem Solving with Operation-Based Formalisms",
+  "authors": ["Aida Amini", "Saadia Gabriel", "Shanchuan Lin", "Rik Koncel-Kedziorski", "Yejin Choi", "Hannaneh Hajishirzi"],
+  "first_author": "Amini",
+  "year": 2019,
+  "venue": "Proceedings of NAACL-HLT 2019, pages 2357-2367",
+  "arxiv": null,
+  "doi": "10.18653/v1/n19-1245"
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 40147,
+  "chars_total": 40147,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "benchmark",
+ "question": "How can math word problems be annotated with precise, interpretable operation programs at scale, and can a neural sequence-to-program model trained on them solve the problems?",
+ "hypothesis": "Training on operation-program supervision in a domain-aware representation language improves accuracy and interpretability over models trained on noisy AQuA rationales.",
+ "contributions": [
+  "We introduce a large-scale dataset of math word problems that are densely annotated with operation programs",
+  "We introduce a new representation language to model operation programs corresponding to each math problem that aim to improve both the performance and the interpretability of the learned models.",
+  "We introduce a neural architecture leveraging a sequence-to-program model with automatic problem categorization, achieving competitive results on our dataset as well as the AQuA dataset"
+ ],
+ "method": {
+  "summary": "MathQA re-annotates a solvable subset of AQuA-RAT with operation programs in a 58-operation, category-aware representation language, using crowd workers on Figure Eight with validation. An attention LSTM encoder-decoder (OpenNMT) maps problem text to an operation program; programs are executed and matched to the multiple-choice options. A variant switches decoder LSTM parameters by a hard n-gram-derived domain category.",
+  "task": "math word problem solving via operation-program generation (multiple choice)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "MathQA",
+    "role": "both",
+    "size": "37,200 problems (text); 37,259 (Table 1)",
+    "split": "random 80/12/8 % train/dev/test",
+    "source": "annotated subset of AQuA-RAT (Ling et al., 2017); crowd annotation on Figure Eight; dataset at math-qa.github.io/math-QA/",
+    "preprocessing": "Categorised into Geometry, Physics, Probability, Gain-Loss, General, Other by n-gram frequency; annotation expansion to similar AQuA problems via Levenshtein distance threshold of 4 words with numbers replaced by generic numbers"
+   },
+   {
+    "name": "AQuA-RAT",
+    "role": "both",
+    "size": "97,467 train, 254 valid (Table 2)",
+    "split": "original AQuA split; of the train set 65,991 solvable, 17,294 duplicates",
+    "source": "Ling et al., 2017",
+    "preprocessing": "Models for AQuA are trained on MathQA data; problems outside any MathQA category get a random option"
+   }
+  ],
+  "models": [
+   {
+    "name": "Seq2prog",
+    "role": "proposed",
+    "params": null,
+    "architecture": "attention-based bidirectional RNN encoder, LSTM decoder, OpenNMT",
+    "init_from": "word embeddings randomly initialized",
+    "tokenizer": null,
+    "vocab": "58 operations plus argument slots (constants, problem numbers by position, intermediate results by order)",
+    "layers": "2 (encoder and decoder)",
+    "hidden": "d = 100",
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Seq2prog + cat",
+    "role": "proposed",
+    "params": null,
+    "architecture": "Seq2prog with a separate decoder LSTM parameter set per domain category (hard switch)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "2",
+    "hidden": "d = 100",
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "AQuA Model",
+    "role": "baseline",
+    "params": null,
+    "architecture": "state-of-the-art model on AQuA (Ling et al., 2017), described as much more complex",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "negative log-likelihood of the gold operation program given the problem text",
+   "optimizer": "Adam",
+   "lr": "0.001",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {}
+  },
+  "inference": {
+   "decoding": "beam search, beam size 200 for AQuA and 100 for MathQA; each beam program executed; options within a threshold of the executed value are selected, then the program with the fewest selected options and minimum distance to an option is chosen",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "option_match_threshold": null,
+    "random_fallback": "random option for AQuA problems outside any MathQA category"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "accuracy",
+     "definition": "fraction of test problems where the option matched by the executed predicted program is correct",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": ["Random (20.0)", "AQuA Model (Ling et al., 2017)", "Seq2prog"],
+   "protocol": "single reported run per model; no seeds or significance test stated"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "https://math-qa.github.io/math-QA/"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "datasets[MathQA].size",
+    "quote": "consists of 37,200",
+    "where": "Section 4; Table 1 total prints 37,259"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Seq2prog + cat reaches 54.2% accuracy on the MathQA test set.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "54.2",
+   "unit": "%",
+   "baseline_value": "51.9 (Seq2prog)",
+   "n": null,
+   "setup": "MathQA test split (8%), trained on MathQA, beam 100, random-choice baseline 20.0",
+   "table": "Table 3, row Seq2prog + cat, column MathQA",
+   "note": null,
+   "where": "Table 3, p6"
+  },
+  {
+   "claim": "Seq2prog + cat trained on MathQA scores 37.9% on the AQuA test set, above the prior AQuA Model at 36.4.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "37.9",
+   "unit": "%",
+   "baseline_value": "36.4 (AQuA Model)",
+   "n": null,
+   "setup": "AQuA test set, trained on MathQA (smaller than AQuA train), beam 200",
+   "table": "Table 3, row Seq2prog + cat, column AQuA",
+   "note": null,
+   "where": "Table 3, p6"
+  },
+  {
+   "claim": "Base Seq2prog without categorization scores 51.9 on MathQA and 33.0 on AQuA.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "33.0",
+   "unit": "%",
+   "baseline_value": "20.0 (Random)",
+   "n": null,
+   "setup": "AQuA test set; MathQA column is 51.9",
+   "table": "Table 3, row Seq2prog, column AQuA",
+   "note": "MathQA column value 51.9",
+   "where": "Table 3, p6"
+  },
+  {
+   "claim": "Crowd alignment validation accuracy is 94.64% across categories (at least 2 of 3 validators must mark the program valid).",
+   "kind": "measured",
+   "source": null,
+   "metric": "validation accuracy",
+   "value": "94.64",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "crowd validation of problem-program alignment",
+   "quote": "The validation accuracy is 94.64% across categories.",
+   "note": null,
+   "where": "Section 4.1, p4"
+  },
+  {
+   "claim": "Expert review of 500 annotated problems judged 92% of annotations valid.",
+   "kind": "measured",
+   "source": null,
+   "metric": "valid annotations",
+   "value": "92",
+   "unit": "%",
+   "baseline_value": null,
+   "n": "500 problems",
+   "setup": "expert evaluation of annotation procedure",
+   "quote": "92% of the annotations are valid",
+   "note": "87% agreement between expert and crowd validation",
+   "where": "Section 6.2, p6"
+  },
+  {
+   "claim": "Automatically generated programs from AQuA rationales pass human validation only 61% of the time, so they were excluded.",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass rate",
+   "value": "61",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "dynamic-programming annotation from AQuA rationale numbers",
+   "quote": "only 61% of those",
+   "note": null,
+   "where": "footnote 4, p3"
+  },
+  {
+   "claim": "In 50 wrong MathQA predictions, 45% were hard multi-step problems, 25% representation-language limits, 17.5% bad problem text, 12.5% categorization errors.",
+   "kind": "measured",
+   "source": null,
+   "metric": "error share",
+   "value": "45",
+   "unit": "%",
+   "baseline_value": null,
+   "n": "50 problems",
+   "setup": "manual error analysis of Seq2prog + cat on MathQA",
+   "table": "Table 4, row Hard problems (45%)",
+   "note": null,
+   "where": "Section 7.2, Table 4"
+  },
+  {
+   "claim": "The category extractor agrees with human annotators 74.5% of the time, while humans agree with each other 84%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "agreement",
+   "value": "74.5",
+   "unit": "%",
+   "baseline_value": "84 (human-human)",
+   "n": "100 problems",
+   "setup": "human labelling of domain categories",
+   "quote": "their agreement with our model is 74.5%",
+   "note": null,
+   "where": "Section 7.2, p7"
+  },
+  {
+   "claim": "Of 97,467 AQuA training problems only 65,991 are solvable and 17,294 are duplicates.",
+   "kind": "measured",
+   "source": null,
+   "metric": "solvable problems",
+   "value": "65,991",
+   "unit": "problems",
+   "baseline_value": null,
+   "n": "97,467",
+   "setup": "AQuA train solvability breakdown (subsets overlap)",
+   "table": "Table 2, row Solvable, column Train",
+   "note": null,
+   "where": "Table 2, p5"
+  }
+ ],
+ "limits": [
+  "Evaluation is a single run per model; no seeds, variance or significance tests; batch size, epochs and hardware are not stated.",
+  "Authors concede the categorization gain is small because categories are only hard decoding constraints and the n-gram categorization is noisy.",
+  "Representation omits high-order polynomials, sequence problems, factorization and entirely nonnumeric solutions; results remain well below human performance (no human number printed).",
+  "Multiple-choice matching by executed value means accuracy can include lucky option matches; the 20.0 random baseline assumes 5 options.",
+  "Dataset size printed as 37,200 in text and 37,259 in Table 1; AQuA-derived problems carry residual noise and near-duplicates.",
+  "Models are 2019 LSTM seq2seq; LLM-era evaluation of MathQA differs from this setup."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "operation program",
+   "definition": "a sequence with n operations o1(a1)o2(a2)...on(an), each operation taking a list of arguments that may be prior step outputs",
+   "where": "Section 3"
+  }
+ ],
+ "lineage": [
+  {"work": "Program induction by rationale generation (AQuA-RAT), Ling et al.", "year": 2017, "arxiv": null, "relation": "uses-data", "note": "MathQA annotates a solvable portion of AQuA and uses its model as baseline", "quote": null},
+  {"work": "Using intermediate representations to solve math word problems, Huang et al.", "year": 2018, "arxiv": null, "relation": "extends", "note": "motivates intermediate formalisms; this work covers multivariate problems", "quote": null},
+  {"work": "Neural machine translation by jointly learning to align and translate, Bahdanau et al.", "year": 2015, "arxiv": null, "relation": "uses-method", "note": "attention NMT paradigm for Seq2prog", "quote": null},
+  {"work": "OpenNMT, Klein et al.", "year": null, "arxiv": null, "relation": "uses-method", "note": "implementation used", "quote": null},
+  {"work": "Adam, Kingma and Ba", "year": 2015, "arxiv": null, "relation": "uses-method", "note": "optimizer", "quote": null},
+  {"work": "Deep neural solver for math word problems, Wang et al.", "year": 2017, "arxiv": null, "relation": "related", "note": "Math23K neural solver", "quote": null},
+  {"work": "Dolphin18K, Huang et al.", "year": 2016, "arxiv": null, "relation": "related", "note": "large-scale math dataset", "quote": null},
+  {"work": "MAWPS, Koncel-Kedziorski et al.", "year": 2016, "arxiv": null, "relation": "related", "note": "smaller algebra datasets", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 1", "caption": "Example of a math word problem aligned with representation language by crowd-sourced annotation", "page": 1, "why": "Shows a worked problem turned into a four-step operation program with intermediate values."},
+  {"figure": "Fig 2", "caption": "Example of a math word problem with its underlying equation and intermediate steps for problem-solving", "page": 3, "why": "Shows equation versus stepwise decomposition."},
+  {"figure": "Fig 4", "caption": "Architecture of sequence-to-program model with categorization", "page": 6, "why": "Model architecture with category-switched decoder."},
+  {"figure": "Table 3", "caption": "Experimental results for accuracy on our MathQA and AQuA test sets", "page": 7, "why": "Main result table, four rows."},
+  {"figure": "Table 4", "caption": "Examples of mistakes made by our system", "page": 8, "why": "Error taxonomy with percentages and examples."}
+ ],
+ "code": [
+  {"where": "Eq. 2, p3", "snippet": "add1(85, 89)add2(174, 80) add3(254, 95)divide4(349, 4)", "verbatim": true}
+ ],
+ "problems": ["No embedded instructions found. Pymupdf text has ligature characters (e.g. 'signiﬁcantly'); figure text is fragmentary."]
+}

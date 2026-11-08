@@ -28,6 +28,7 @@ sources:
   - https://arxiv.org/abs/2511.08923
   - https://arxiv.org/abs/2607.04371
   - https://arxiv.org/abs/2508.08712
+  - https://arxiv.org/abs/2004.03844
 confidence: medium
 cleaned: 2026-11-01
 ---
@@ -172,6 +173,8 @@ If a token is easy, stop computing early (*AISPE*, ch. 19):
 - **Speculative MoE routing** predicts expert assignment ahead of time, to start all-to-all transfers early. The book reports about 30% less communication time.
 
 The book's "30–50% savings on reasoning tasks" for early exit mixes two things: cutting a chain of thought short (fewer *tokens*) and exiting layers early (fewer *layers per token*). They are different mechanisms with different risks. Cutting tokens is a lever in its own right. Reasoning models **overthink**, adding verification and alternative paths after they already have the right answer. One survey sorts the fixes into post-training ones (length penalties, and preference pairs that favour the first correct answer, which shortened responses by 30–40% in one study) and test-time ones (token budgets, early stopping of the trace) ([arXiv:2503.24377](https://arxiv.org/abs/2503.24377) (Wang et al., 2025-03, preprint)). In batched serving, per-token early exit also has a practical problem: sequences in one batch exit at different depths, which leaves the GPU partly idle unless the kernels handle ragged depth.
+
+The cheapest version is static: delete layers and fine-tune. Dropping the top 6 of 12 layers of BERT, RoBERTa or XLNet (base size, GLUE, 3 epochs) cuts parameters about 40% (BERT 110M to 66M) and inference time about 50% (QQP dev set, batch 32). The average loss is 2.91 points for BERT and 1.81 for XLNet. Top layers are the best to drop and bottom layers the worst. XLNet on QQP stayed within 1% with 9 layers dropped. Every token gets the same depth, but unlike early exit the memory shrinks too. It covers base models and GLUE only, in single runs, and the distillation comparisons use numbers copied from other papers ([arXiv:2004.03844](https://arxiv.org/abs/2004.03844) (Sajjad et al., Comput. Speech Lang. 2023)).
 
 The research designs that look promising fix the compute budget in advance, or retrofit routing onto a frozen model:
 

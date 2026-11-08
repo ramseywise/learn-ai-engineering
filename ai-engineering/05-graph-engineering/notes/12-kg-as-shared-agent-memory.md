@@ -9,6 +9,7 @@ sources:
   - https://youmind.com/landing/x-viral-articles/graph-engineering-ai-agent-loops (secondary)
   - https://flowtivity.ai/blog/graph-engineering-2026-guide-openclaw-codex/ (vendor; secondary)
   - https://arxiv.org/abs/2608.28978
+  - https://arxiv.org/abs/2404.13501
 confidence: medium
 cleaned: 2026-11-01
 ---
@@ -34,6 +35,12 @@ This is where the two tracks meet. Track A's execution graph has **state** ([not
 | Memory tier ([02-context note 06](../../02-context-engineering/notes/06-memory.md)) | Short-term / working | Semantic (facts), plus an episodic lineage of runs |
 
 The last two rows matter most for this note.
+
+
+Zhang et al.'s survey (ACM TOIS 2025, [arXiv:2404.13501](https://arxiv.org/abs/2404.13501); read as the 2024-04 v1 preprint) gives the vocabulary for the table's right-hand column. Memory has three **sources** (inside-trial, cross-trial, external knowledge), two **forms** (textual, parametric) and three **operations** (write, manage, read), and the loop is write, manage, then read before each LLM call. A KG as used here is external-knowledge, textual memory. The survey never treats graphs as a memory form: structured text means tuples and databases, and it says retrieval memory struggles with heterogeneous information. Shared memory across agents gets one paragraph of future work (synchronising into a unified knowledge base), and the authors report that **no open benchmark exists for agent memory modules**. It is a taxonomy with no numbers of its own, so it backs the framing and the evaluation gap below, not the claim that graphs are the right shared memory.
+
+![Overview of agent memory: sources (inside-trial, cross-trial, external), forms (textual: full, recent, retrieved, external; parametric: fine-tuning, editing) and operations (writing, management, reading)](../sources/images/zhang-2025-memory-survey-fig4.png)
+*Image Source: Zhang et al., [A Survey on the Memory Mechanism of Large Language Model based Agents](https://arxiv.org/abs/2404.13501) (ACM TOIS 2025), Fig. 4*
 
 ---
 

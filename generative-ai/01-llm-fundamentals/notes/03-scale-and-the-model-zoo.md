@@ -66,6 +66,9 @@ Someone on your team proposes a model for the ticket assistant and says only "it
 
 BERT masks 15% of input tokens and learns to fill them in from both sides; the two original sizes were 110M and 340M parameters (*Building AI Agents*, ch. 2). Huyen frames the same split as *masked* versus *autoregressive* language models: the first sees both directions and suits classification and embeddings, the second sees only the past and can generate (*AI Engineering*, ch. 1). Amatriain et al.'s catalog files 77 models, from ALBERT to XLNet and including non-text ones such as AlphaFold and CLIP, by these three architectures and by eight pretraining tasks: language modelling, causal, prefix and permuted language modelling, masked tokens, denoising, replaced-token detection and next-sentence prediction. It also records each model's family, size, corpus, licence and lab. It is a lookup table and measures nothing itself ([arXiv:2302.07730](https://arxiv.org/abs/2302.07730) (Amatriain et al., 2023-02, preprint)).
 
+![Two panels: an autoregressive language model predicts the next token from previous tokens only, while a masked language model predicts a missing token from the tokens on both sides](../sources/images/huyen-ai-engineering-fig1-2.png)
+*Image Source: Author, [AI Engineering](https://www.oreilly.com/library/view/ai-engineering/9781098166298/) (Huyen, 2025), Fig. 1-2*
+
 ![BERT pre-training and fine-tuning](../sources/images/devlin-bert-fig1.png)
 *Image Source: Devlin et al., [BERT](https://arxiv.org/abs/1810.04805) (2018), Fig. 1*
 
@@ -109,6 +112,9 @@ Three results explain why "large" is in the name:
 | Scaling laws | Loss falls as a smooth power law in parameters, data and compute, over more than six orders of magnitude, while depth versus width matters little | Kaplan et al. [arXiv:2001.08361](https://arxiv.org/abs/2001.08361) (2020, preprint) |
 | In-context learning | At 175B parameters, GPT-3 does new tasks from a few examples in the prompt. Few-shot accuracy grows faster with size than zero-shot | Brown et al. [arXiv:2005.14165](https://arxiv.org/abs/2005.14165) (NeurIPS 2020) |
 | Compute-optimal training | For a fixed compute budget, scale parameters and tokens equally, which works out to roughly 20 tokens per parameter. Chinchilla (70B, 1.4T tokens) beat the 280B Gopher on the same compute | Hoffmann et al. [arXiv:2203.15556](https://arxiv.org/abs/2203.15556) (NeurIPS 2022) |
+
+![Three log-log panels of test loss against compute in PF-days, dataset size in tokens and non-embedding parameters, each a straight line with a fitted power law](../sources/images/kaplan-scaling-laws-fig1.png)
+*Image Source: Kaplan et al., [Scaling Laws for Neural Language Models](https://arxiv.org/abs/2001.08361) (2020), Fig. 1*
 
 The first and third rows disagree, and the third won. Kaplan et al. fitted the optimal model size as **N ∝ C^0.73**: for 10× more compute, make the model about 5.5× bigger and give it only about 1.8× more data. Their runs went up to 1.5B non-embedding parameters on WebText2, and many were under 100M. Hoffmann et al. trained over 400 models from 70M to 16B parameters on 5B to 500B tokens. Three different fits gave model-size exponents of 0.46 to 0.50 and data exponents of 0.50 to 0.54, so parameters and tokens should grow together. Their Table 3 asks for 20.2B tokens at 1B parameters and 205.1B at 10B. The low end of that range, 0.46, came from the parametric fit (Approach 3), and **that fit was wrong**.
 

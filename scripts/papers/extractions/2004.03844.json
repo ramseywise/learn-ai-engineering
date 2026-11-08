@@ -1,0 +1,230 @@
+{
+ "schema": 1,
+ "key": "2004.03844",
+ "pdf": "ai-engineering/07-inference-engineering/sources/sajjad-2022-effect-dropping-layers-pre-trained.pdf",
+ "bib": {
+  "title": "On the Effect of Dropping Layers of Pre-trained Transformer Models",
+  "authors": ["Hassan Sajjad", "Fahim Dalvi", "Nadir Durrani", "Preslav Nakov"],
+  "first_author": "Sajjad",
+  "year": 2022,
+  "venue": "Journal of Computer Speech and Language (preprint submitted August 16, 2022)",
+  "arxiv": "2004.03844",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 45014,
+  "chars_total": 60012,
+  "engine": "pymupdf",
+  "skipped": "Reference list after offset 45014 skimmed only for lineage."
+ },
+ "type": "empirical",
+ "question": "Is the whole network of a pre-trained transformer needed for downstream GLUE tasks, and which layers can be dropped before fine-tuning with least loss?",
+ "hypothesis": "Top layers are specialised to the pre-training objective and neighbouring layers are redundant, so some layers can be dropped with little loss; lower layers are most critical.",
+ "contributions": [
+  "Six layer-dropping strategies (top, bottom, alternate, symmetric, parameter-based, contribution-based) applied to BERT, RoBERTa, ALBERT, XLNet and DistilBERT on GLUE",
+  "Dropping top layers works consistently, giving 40% size reduction while keeping up to 98.2% of performance",
+  "Pruned models are on par with knowledge-distilled models without retraining a new model",
+  "Distilled models and ALBERT can also be pruned",
+  "Models differ in learning dynamics: RoBERTa and XLNet learn task knowledge earlier than BERT"
+ ],
+ "method": {
+  "summary": "Drop K encoder layers from a pre-trained 12-layer model by one of six strategies, then fine-tune on a GLUE task for three epochs and evaluate on the official dev set. Compare strategies, tasks, models, and distilled baselines.",
+  "task": "Layer pruning of pre-trained transformers for GLUE classification and regression",
+  "trains": true,
+  "datasets": [
+   {"name": "SST-2", "role": "both", "size": "67349 train / 872 dev", "split": "official dev set used for reporting (test sets not public)", "source": "GLUE", "preprocessing": null},
+   {"name": "MRPC", "role": "both", "size": "3668 train / 408 dev", "split": "dev", "source": "GLUE", "preprocessing": null},
+   {"name": "MNLI", "role": "both", "size": "392702 train / 9815 dev", "split": "dev", "source": "GLUE", "preprocessing": null},
+   {"name": "QNLI", "role": "both", "size": "104743 train / 5463 dev", "split": "dev", "source": "GLUE", "preprocessing": null},
+   {"name": "QQP", "role": "both", "size": "363846 train / 40430 dev", "split": "dev", "source": "GLUE", "preprocessing": null},
+   {"name": "RTE", "role": "both", "size": "2490 train / 277 dev", "split": "dev", "source": "GLUE", "preprocessing": null},
+   {"name": "STS-B", "role": "both", "size": "5749 train / 1500 dev", "split": "dev", "source": "GLUE; regression task", "preprocessing": null}
+  ],
+  "models": [
+   {"name": "BERT-base", "role": "base", "params": "110M", "architecture": "encoder, auto-encoder", "init_from": "pre-trained", "tokenizer": null, "vocab": null, "layers": "12", "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "RoBERTa-base", "role": "base", "params": null, "architecture": "encoder, auto-encoder", "init_from": "pre-trained", "tokenizer": null, "vocab": null, "layers": "12", "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "XLNet-base", "role": "base", "params": "116M", "architecture": "auto-regressive", "init_from": "pre-trained", "tokenizer": null, "vocab": null, "layers": "12", "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "ALBERT", "role": "base", "params": null, "architecture": "cross-layer parameter sharing", "init_from": "pre-trained", "tokenizer": null, "vocab": null, "layers": "12", "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "DistilBERT", "role": "base", "params": null, "architecture": "distilled BERT", "init_from": "pre-trained", "tokenizer": null, "vocab": null, "layers": "6", "hidden": null, "heads": null, "context": null, "other": {}}
+  ],
+  "training": {
+   "objective": "task-specific fine-tuning with a task layer added on the last retained layer",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": "3 (more epochs gave no benefit)",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "TitanX 12GB GPU cards",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {"defaults": "transformers library default settings, parameters not optimised", "gradual_dropping": "drop one layer after every two epochs of fine-tuning; no improvement", "excluded_tasks": "WNLI (irregular dataset) and CoLA (large variance) left out", "K_values": "K = 2, 4, 6 for 12-layer models; K = 1, 2, 3 for DistilBERT"}
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single fine-tuning run per configuration is implied; no seeds reported",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "contribution_threshold": "cosine similarity of CLS before/after layer averaged over dev set; thresholds 0.95, 0.925, 0.9 (chosen empirically)",
+    "inference_timing": "QQP dev set, 40.4k instances, batch size 32",
+    "task_specific_depth": "dev set split into equal hold-out and dev halves; minimum layers kept within 1%, 2%, 3% loss"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "GLUE dev score", "definition": "task metric on official dev sets as reported (accuracy-style; STS-B regression); averages over tasks used in figures", "unit": "points", "higher_is_better": true},
+    {"name": "Fine-tuning speedup", "definition": "times faster than the original network", "unit": "x", "higher_is_better": true},
+    {"name": "Inference time reduction", "definition": "on QQP dev", "unit": "%", "higher_is_better": true}
+   ],
+   "baselines": ["Full model (0 layers dropped)", "Vanilla-KD, BERT-PKD, BERT-TH (from Xu et al.)", "DistilBERT, DistilRoBERTa", "Fan et al. LayerDrop RoBERTa-6", "GLP6 greedy layer pruning (Peer et al.)"],
+   "protocol": "McNemar test at p=0.05 on RTE difference; 5-task subset (SST-2, MNLI, QNLI, QQP, STS-B) for discussion section; default settings, no hyperparameter search"
+  },
+  "availability": {"code": "https://github.com/hsajjad/transformers/", "weights": null, "data": "GLUE public"},
+  "prompts": [],
+  "evidence": [
+   {"field": "training.epochs", "quote": "task-specific fine-tuning using GLUE training sets for three epochs", "where": "Section 4"}
+  ]
+ },
+ "results": [
+  {
+   "claim": "Dropping the top 6 of 12 layers cuts BERT/RoBERTa parameters by about 40% and speeds fine-tuning and inference by about 50% with 0.89-2.91 points average loss.",
+   "kind": "measured", "source": null, "metric": "average loss", "value": "0.89-2.91", "unit": "points",
+   "baseline_value": null, "n": null,
+   "setup": "GLUE, top-layer dropping K=6, BERT/RoBERTa/XLNet base, 3 epochs fine-tuning",
+   "quote": "average performance loss between 0.89–2.91 points",
+   "table": null, "note": null, "where": "Section 5.3"
+  },
+  {
+   "claim": "Top-6 dropping parameter counts and speedups: BERT 110M to 66M, fine-tuning 1.94x, inference 50% lower.",
+   "kind": "measured", "source": null, "metric": "parameters after dropping 6 layers", "value": "66M", "unit": "params",
+   "baseline_value": "110M", "n": null,
+   "setup": "BERT base, K=6, inference time on QQP dev 40.4k instances batch 32",
+   "quote": null, "table": "Table 3, row 6/12, columns Param. 66M, Fine-tuning 1.94, Inference 50%", "note": "XLNet: 116M to 71M, 1.96x, 49%", "where": "Table 3"
+  },
+  {
+   "claim": "RoBERTa with top 2 layers dropped scores at or above the full model on several tasks (e.g. SST-2 93.46 vs 92.20).",
+   "kind": "measured", "source": null, "metric": "SST-2 accuracy", "value": "93.46", "unit": "points",
+   "baseline_value": "92.20", "n": null,
+   "setup": "RoBERTa base, top-2 dropped, dev set",
+   "quote": null, "table": "Table 2, RoBERTa row 2/12, column SST-2", "note": null, "where": "Table 2"
+  },
+  {
+   "claim": "QQP on XLNet stays within 1% of the full model with 9 of 12 layers dropped, a 60% parameter and 80% inference-time reduction.",
+   "kind": "measured", "source": null, "metric": "inference time reduction", "value": "80", "unit": "%",
+   "baseline_value": null, "n": null,
+   "setup": "XLNet, QQP, task-specific optimal depth, top-layer dropping",
+   "quote": "This corresponds to 60% reduction in the number of parameters and 80% reduction in terms of inference time.",
+   "table": null, "note": "Table 4 XLNet QQP at 1% threshold: 9 layers, 0.60 hold-out loss", "where": "Section 5.3, Table 4"
+  },
+  {
+   "claim": "Top-6 dropping loses only 2.91 (BERT) and 1.81 (XLNet) points on average and beats other strategies at K=6; bottom dropping is worst.",
+   "kind": "measured", "source": null, "metric": "average loss", "value": "2.91", "unit": "points",
+   "baseline_value": null, "n": null,
+   "setup": "BERT, GLUE average, K=6 top-layer",
+   "quote": "with an average loss of only 2.91 and 1.81 points for BERT and XLNet",
+   "table": null, "note": null, "where": "Section 5.1, Fig 2"
+  },
+  {
+   "claim": "A distilled model (DistilBERT) can be pruned by a third with 0.75 points average loss.",
+   "kind": "measured", "source": null, "metric": "average loss", "value": "0.75", "unit": "points",
+   "baseline_value": null, "n": null,
+   "setup": "DistilBERT, 6 layers, 2 dropped, GLUE",
+   "quote": "pruned by a third, with an average loss of 0.75 points only",
+   "table": null, "note": null, "where": "Section 5.2"
+  },
+  {
+   "claim": "Pruned BERT-6 and RoBERTa-6 are competitive with KD-distilled 6-layer models, e.g. RoBERTa-6 QQP 90.91 vs DistilRoBERTa 89.40, without training a new model.",
+   "kind": "measured", "source": null, "metric": "QQP", "value": "90.91", "unit": "points",
+   "baseline_value": "89.40", "n": null,
+   "setup": "Top-6 dropped RoBERTa vs DistilRoBERTa; baselines taken from other papers",
+   "quote": null, "table": "Table 6, row 10 RoBERTa-6 column QQP vs row 9 DistilRoBERTa", "note": "BERT-6 trails on MNLI/QNLI/SST-2 vs DistilBERT? BERT-6 MNLI 81.13 vs DistilBERT 81.78", "where": "Table 6"
+  },
+  {
+   "claim": "QQP and STS-B are least affected by layer dropping; RTE/MRPC swings are statistically insignificant (McNemar, p=0.05) because dev sets are small.",
+   "kind": "measured", "source": null, "metric": "QQP loss BERT top-6", "value": "0.72", "unit": "points",
+   "baseline_value": null, "n": null,
+   "setup": "Top-6 dropped, BERT, QQP dev",
+   "quote": "a loss of 0.72 only for BERT",
+   "table": null, "note": null, "where": "Section 5.2"
+  },
+  {
+   "claim": "RoBERTa and XLNet performance matures near layer 7, while BERT improves up to layer 11.",
+   "kind": "measured", "source": null, "metric": "layer where performance matures", "value": "7", "unit": "layer",
+   "baseline_value": null, "n": null,
+   "setup": "Average layer-wise classification, Fig 3",
+   "quote": "the performance matures close to the 7th layer of the model while BERT improves with every higher layer until the 11th layer",
+   "table": null, "note": null, "where": "Section 6.2, Fig 3"
+  },
+  {
+   "claim": "ALBERT with top 6 layers dropped keeps performance (SST-2 90.14, above full 89.79) though parameters are shared so memory is not saved.",
+   "kind": "measured", "source": null, "metric": "SST-2", "value": "90.14", "unit": "points",
+   "baseline_value": "89.79", "n": null,
+   "setup": "ALBERT, top-6 dropped",
+   "quote": "6-layered model is 90.14, which is 0.35 points absolute better than the baseline",
+   "table": null, "note": null, "where": "Section 6.3, Table 5"
+  },
+  {
+   "claim": "Dropping layers after fine-tuning then re-fine-tuning is comparable to dropping from the pre-trained model; gradual dropping gave no gain.",
+   "kind": "measured", "source": null, "metric": "MNLI BERT-FT-6 vs BERT-6", "value": "80.85", "unit": "points",
+   "baseline_value": "81.13", "n": null,
+   "setup": "BERT and XLNet, top-6",
+   "quote": null, "table": "Table 7, row BERT-FT-6, column MNLI", "note": "BERT-6 SST-2 is 92.25 in Table 7 but 90.25 in Table 2 (same configuration)", "where": "Table 7"
+  }
+ ],
+ "limits": [
+  "Base-size models only; BERT-large and XLNet-large not run for memory (TitanX 12GB).",
+  "Default hyperparameters, no tuning; optimiser, lr, batch size, seeds not reported; apparently single runs.",
+  "GLUE classification only; CoLA and WNLI excluded; dev sets used for reporting, and small RTE/MRPC dev sets are noisy.",
+  "Parameter- and contribution-based strategies are task-agnostic; task-specific variants left to future work. Contribution-based worked poorly on BERT.",
+  "Dropping layers is static: unlike dynamic early exit, all inputs use the same reduced depth.",
+  "ALBERT saves speed but not memory because of parameter sharing.",
+  "Distillation and LayerDrop comparison numbers are copied from other papers, with possibly different settings."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "Top-layer dropping", "definition": "drop top K layers; output of layer L-K serves as last layer, and a task-specific layer is added on top", "where": "Section 3.1"},
+  {"term": "Contribution-based dropping", "definition": "contribution of a layer is cosine similarity between its input and output CLS representations; layers above a threshold are dropped", "where": "Section 3.4"},
+  {"term": "Symmetric dropping", "definition": "retain top and bottom X layers, drop K middle layers where 2X+K=L", "where": "Section 3.5"}
+ ],
+ "lineage": [
+  {"work": "BERT (Devlin et al.)", "year": 2019, "arxiv": null, "relation": "evaluates", "note": "model pruned", "quote": null},
+  {"work": "RoBERTa", "year": 2019, "arxiv": null, "relation": "evaluates", "note": "model pruned", "quote": null},
+  {"work": "ALBERT (Lan et al.)", "year": 2019, "arxiv": "1909.11942", "relation": "evaluates", "note": "model pruned", "quote": null},
+  {"work": "XLNet (Yang et al.)", "year": 2019, "arxiv": null, "relation": "evaluates", "note": "model pruned", "quote": null},
+  {"work": "DistilBERT (Sanh et al.)", "year": 2019, "arxiv": "1910.01108", "relation": "baseline", "note": "distilled baseline, also pruned further", "quote": null},
+  {"work": "Reducing Transformer Depth on Demand with Structured Dropout (Fan et al., LayerDrop)", "year": 2019, "arxiv": null, "relation": "baseline", "note": "RoBERTa-6 comparison", "quote": null},
+  {"work": "Peer et al., greedy layer pruning (GLP)", "year": null, "arxiv": null, "relation": "baseline", "note": "task-specific greedy layer pruning, comparable results", "quote": null},
+  {"work": "Voita et al.", "year": 2019, "arxiv": null, "relation": "extends", "note": "top layers biased toward pre-training objective", "quote": null},
+  {"work": "Michel et al., Are sixteen heads really better than one?", "year": 2019, "arxiv": "1905.10650", "relation": "related", "note": "head pruning", "quote": null},
+  {"work": "Sun et al. (BERT-PKD), Xu et al. (BERT-of-Theseus)", "year": 2019, "arxiv": null, "relation": "baseline", "note": "distilled 6-layer models", "quote": null},
+  {"work": "Schwartz et al., Xin et al., Liu et al., Zhou et al. (dynamic exit)", "year": null, "arxiv": null, "relation": "related", "note": "dynamic exiting speeds inference but keeps full memory footprint", "quote": null},
+  {"work": "GLUE (Wang et al.)", "year": 2018, "arxiv": null, "relation": "uses-data", "note": "evaluation benchmark", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 1", "caption": "Illustration of layer-dropping strategies. K represents the number of layers that are dropped.", "page": 6, "why": "Shows which layers each of the six strategies removes."},
+  {"figure": "Fig 2", "caption": "Average classification performance on GLUE tasks when using different layer-dropping strategies and when removing different numbers of layers for BERT and XLNet.", "page": 13, "why": "Compares all strategies at K=2,4,6 against the full-model line."},
+  {"figure": "Fig 3", "caption": "Average layer-wise classification results.", "page": 19, "why": "Shows RoBERTa/XLNet matured by layer 7 versus BERT, explaining why top layers are droppable."},
+  {"figure": "Table 3", "caption": "Parameters, fine-tuning speedup and inference time vs layers dropped.", "page": 17, "why": "The cost-versus-accuracy table."}
+ ],
+ "code": [],
+ "problems": [
+  "Text uses ligature characters (fi, ff) in the cache; quotes avoid them.",
+  "BERT-6 SST-2 printed as 92.25 in Table 7 and 90.25 in Table 2.",
+  "Table 6 Fan et al. row labelled RoBERTa-6 and GLP6 rows copied from other papers."
+ ]
+}

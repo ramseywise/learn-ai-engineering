@@ -1,0 +1,487 @@
+{
+ "schema": 1,
+ "key": "2106.15772",
+ "pdf": "ai-engineering/01-prompt-engineering/sources/miao-2020-diverse-corpus-evaluating-developing-english.pdf",
+ "bib": {
+  "title": "A Diverse Corpus for Evaluating and Developing English Math Word Problem Solvers",
+  "authors": [
+   "Shen-Yun Miao",
+   "Chao-Chun Liang",
+   "Keh-Yih Su"
+  ],
+  "first_author": "Miao",
+  "year": 2020,
+  "venue": "Proceedings of the 58th Annual Meeting of the Association for Computational Linguistics (ACL), pages 975-984",
+  "arxiv": "2106.15772",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 35420,
+  "chars_total": 35420,
+  "engine": "pymupdf",
+  "skipped": "Figures 1-7 are images; only captions read."
+ },
+ "type": "benchmark",
+ "question": "How can an English math word problem corpus be built and measured so that it reflects the true capability of MWP solvers rather than exaggerating it through repeated patterns?",
+ "hypothesis": "Low lexicon diversity in a corpus inflates solver accuracy, so a more diverse corpus gives a more faithful measure.",
+ "contributions": [
+  "A diverse (lexicon usage), wide-coverage (problem type), publicly available MWP corpus with annotations (ASDiv).",
+  "A lexicon usage diversity metric to measure the diversity of an MWP corpus, used to evaluate existing corpora.",
+  "Evidence that real performance of SOTA systems is far behind human performance when evaluated on a corpus that mimics a real human test."
+ ],
+ "method": {
+  "summary": "ASDiv collects 2,305 MWPs from 28 websites, pruning or revising items too similar to existing ones under a BLEU-based lexicon diversity metric, and annotates problem type, equation, answer and grade level. Three solvers (LCA++, UnitDep, GTS) are run on MathQA-C, ASDiv-A and ASDiv with 5-fold cross-validation to show accuracy falls as corpus lexicon diversity rises.",
+  "task": "English math word problem solving (benchmark construction and corpus diversity measurement)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "ASDiv",
+    "role": "eval",
+    "size": "2,305 MWPs",
+    "split": "5-fold cross-validation, split per problem type into five nearly equal subsets",
+    "source": "collected from 28 websites; annotated by one master-degree research assistant; public at github.com/chao-chun/nlu-asdiv-dataset",
+    "preprocessing": "MWPs highly similar to existing ones (by LD metric) pruned or revised; equation-answer consistency checked by program, inconsistent ones re-annotated; 480 random samples (20 per problem type) checked and all correct"
+   },
+   {
+    "name": "ASDiv-A",
+    "role": "eval",
+    "size": "1,218 MWPs",
+    "split": "5-fold cross-validation per problem type",
+    "source": "arithmetic-only subset of ASDiv",
+    "preprocessing": "only arithmetic operations, no external constants, no reused operands"
+   },
+   {
+    "name": "MathQA-C",
+    "role": "eval",
+    "size": "3,000 MWPs",
+    "split": "5-fold cross-validation",
+    "source": "from 4,117 arithmetic MathQA MWPs (Amini et al. 2019)",
+    "preprocessing": "arithmetic-only, no external constants or reused operands, inconsistent problems filtered out"
+   },
+   {
+    "name": "MathQA",
+    "role": "eval",
+    "size": "37K MWPs",
+    "split": "official train/test used for diversity analysis",
+    "source": "Amini et al. 2019",
+    "preprocessing": "arithmetic subset checked with SymPy; 27% of annotated formulas do not match labeled answers"
+   }
+  ],
+  "models": [
+   {
+    "name": "LCA++ (Roy and Roth, 2015)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "statistical model",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "UnitDep (Roy and Roth, 2017)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "statistical model",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GTS (Xie and Sun, 2019)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "neural, two-layer gate-feedforward networks, goal-driven tree-structured",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "inferred: two-layer gate-feedforward networks",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": null,
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "note": "Existing solvers are trained as in their original papers; no hyperparameters are given. GTS experiment repeated 5 times and averaged."
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "5-fold cross-validation; GTS repeated 5 times and averaged",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "LD n-gram order": "BLEU bi-directional, n-grams up to n=4",
+    "LD normalisation": "Stanford CoreNLP tokenise and POS tag, NLTK lemmatise, stop word removal, named entity and quantity replaced by meta symbols",
+    "LD histogram": "uniformly quantized into 20 intervals between 0 and 1"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Lexicon usage diversity LD_i",
+     "definition": "1 - max over j!=i of (BLEU(P_i,P_j)+BLEU(P_j,P_i))/2, among MWPs of the same problem type",
+     "unit": "0 to 1",
+     "higher_is_better": true
+    },
+    {
+     "name": "Corpus lexicon diversity (CLD)",
+     "definition": "mean of all LD_i in the corpus",
+     "unit": "0 to 1",
+     "higher_is_better": true
+    },
+    {
+     "name": "Syntactic pattern diversity SD_i",
+     "definition": "same as LD on POS sequences",
+     "unit": "0 to 1",
+     "higher_is_better": true
+    },
+    {
+     "name": "Answer accuracy",
+     "definition": "fraction of MWPs whose solver answer is correct, 5-fold cross-validation",
+     "unit": "fraction (0-1)",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "AI2",
+    "IL",
+    "KAZB",
+    "ALGES",
+    "DRAW",
+    "AllArith",
+    "MathQA",
+    "MathQA-C"
+   ],
+   "protocol": "5-fold cross-validation; significance marked p<0.01 for ASDiv-A and ASDiv vs MathQA-C for GTS (test not named)"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "https://github.com/chao-chun/nlu-asdiv-dataset"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "datasets.ASDiv.size",
+    "quote": "a new English MWP corpus with 2,305 MWPs",
+    "where": "Abstract"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "The best solver accuracy on ASDiv is only about 36%, far below human performance.",
+   "kind": "measured",
+   "source": null,
+   "metric": "answer accuracy",
+   "value": "0.36",
+   "unit": "fraction",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LCA++, UnitDep, GTS on ASDiv (CLD 0.49), 5-fold CV",
+   "quote": "the overall performance is only around 36% on ASDiv",
+   "table": null,
+   "note": "Table 3 prints 0.36, 0.37, 0.36 for L, U, G.",
+   "where": "Sec 4"
+  },
+  {
+   "claim": "GTS accuracy is 0.86 on low-diversity MathQA-C but 0.68 on ASDiv-A.",
+   "kind": "measured",
+   "source": null,
+   "metric": "answer accuracy",
+   "value": "0.86",
+   "unit": "fraction",
+   "baseline_value": "0.68",
+   "n": null,
+   "setup": "GTS, MathQA-C (CLD 0.08) vs ASDiv-A (CLD 0.50), 5-fold CV",
+   "quote": null,
+   "table": "Table 3, row G, columns MathQA-C and ASDiv-A (0.86, 0.68)",
+   "note": "L and U fail ('-') on MathQA-C. On ASDiv-A L=0.68, U=0.78.",
+   "where": "Table 3"
+  },
+  {
+   "claim": "CLD of MathQA across the whole corpus is only 0.05, with LD=0 for 85% of its MWPs.",
+   "kind": "measured",
+   "source": null,
+   "metric": "CLD",
+   "value": "0.05",
+   "unit": "0-1",
+   "baseline_value": null,
+   "n": "37K",
+   "setup": "MathQA, full corpus",
+   "quote": "Figure 1 shows that its CLD is only 0.05.",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.2"
+  },
+  {
+   "claim": "27% of arithmetic MathQA problems have annotated formulas that do not match the labeled answer.",
+   "kind": "measured",
+   "source": null,
+   "metric": "inconsistency rate",
+   "value": "27%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MathQA arithmetic subset, formulas solved with SymPy",
+   "quote": "The results show that the annotated formulas of 27% of the problems do not match their labeled answers.",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.2"
+  },
+  {
+   "claim": "Of 30 inspected inconsistent MathQA problems, 67% were incorrect formula errors.",
+   "kind": "measured",
+   "source": null,
+   "metric": "error share",
+   "value": "67%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": 30,
+   "setup": "random inspection of 30 inconsistent MWPs; others 23% problematic description, 10% valueless answer",
+   "quote": "Incorrect formula (67%)",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.2"
+  },
+  {
+   "claim": "Percentage of MWPs with LD=0 (identical after normalisation): MathQA 85%, IL 28%, AI2 22%, ALGES 20%, ASDiv none.",
+   "kind": "measured",
+   "source": null,
+   "metric": "share LD=0",
+   "value": "85%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "per-corpus, within problem type where annotated",
+   "quote": "there are about 85%, 28%, 22% and 20% identical MWPs",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.4"
+  },
+  {
+   "claim": "Accuracy falls sharply at grades 5 and 6 on ASDiv.",
+   "kind": "measured",
+   "source": null,
+   "metric": "answer accuracy",
+   "value": "0.01",
+   "unit": "fraction",
+   "baseline_value": "0.64",
+   "n": null,
+   "setup": "G6 vs G1 for GTS on ASDiv; G5 is 0.07 (G) and 0.03 (L, U)",
+   "quote": null,
+   "table": "Table 4, row G, columns G1 (0.64) and G6 (0.01)",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "CLD for MathQA-C is 0.08 and for ASDiv-A 0.50; LD=0 for 82% of MathQA-C.",
+   "kind": "measured",
+   "source": null,
+   "metric": "CLD",
+   "value": "0.50",
+   "unit": "0-1",
+   "baseline_value": "0.08",
+   "n": null,
+   "setup": "MathQA-C 3,000 MWPs; ASDiv-A 1,218 MWPs",
+   "quote": "The CLDs for MathQA-C and ASDiv-A were found to be 0.08 and 0.50, respectively.",
+   "table": null,
+   "note": null,
+   "where": "Sec 4"
+  },
+  {
+   "claim": "MathQA has the highest train-test CLD (0.85) but a low within-test CLD (0.27) versus 0.57 for ASDiv.",
+   "kind": "measured",
+   "source": null,
+   "metric": "CLD",
+   "value": "0.27",
+   "unit": "0-1",
+   "baseline_value": "0.57",
+   "n": null,
+   "setup": "MathQA official test set within-test CLD vs ASDiv-A and ASDiv means",
+   "quote": "the CLD=0.27 of MathQA measured within the test set is actually low",
+   "table": null,
+   "note": null,
+   "where": "Appendix C"
+  },
+  {
+   "claim": "Share of MWPs with SD_i=0 (identical POS patterns): MathQA 87%, IL 54%, AI2 46%, ALGES 33%, ASDiv 4%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "share SD=0",
+   "value": "4%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "syntactic pattern diversity",
+   "quote": "while ASDiv only has 4%",
+   "table": null,
+   "note": null,
+   "where": "Appendix C"
+  },
+  {
+   "claim": "48% of ASDiv-A MWPs have LD >= 0.5 vs 7% for MathQA-C.",
+   "kind": "measured",
+   "source": null,
+   "metric": "share LD>=0.5",
+   "value": "48%",
+   "unit": "%",
+   "baseline_value": "7%",
+   "n": null,
+   "setup": "ASDiv-A vs MathQA-C",
+   "quote": "the lexicon diversity indices of 48% of the MWPs in our ASDiv-A are larger than or equal to 0.5",
+   "table": null,
+   "note": null,
+   "where": "Appendix C"
+  }
+ ],
+ "limits": [
+  "Only three solvers, all arithmetic-only, tested; ASDiv-A used for the comparison with MathQA-C.",
+  "Correlation of CLD with accuracy is shown on two or three corpora, not a controlled test; corpora also differ in size and problem types.",
+  "Annotation by a single research assistant; human-level performance not measured, only asserted as higher.",
+  "Test used for significance not named; GTS hyperparameters not given.",
+  "Dated: pre-LLM solvers; no LLM or prompting evaluation."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Lexicon usage diversity (LD)",
+   "definition": "1 minus the maximum bi-directional BLEU between an MWP and any other MWP of the same type",
+   "where": "Sec 3.1"
+  },
+  {
+   "term": "Corpus lexicon diversity (CLD)",
+   "definition": "the mean of all LD_i under the same corpus",
+   "where": "Sec 3.1"
+  },
+  {
+   "term": "Problem type (PT)",
+   "definition": "indicates a crucial math operation pattern for solving an MWP",
+   "where": "Sec 2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "MathQA (Amini et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "critiques its low diversity and inconsistent annotations",
+   "quote": null
+  },
+  {
+   "work": "Huang et al. How well do computers solve math word problems?",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "related",
+   "note": "low-diversity corpora give over-optimistic results",
+   "quote": null
+  },
+  {
+   "work": "Roy and Roth, Unit Dependency Graph (UnitDep)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "solver evaluated; also shows lower performance when similar MWPs removed",
+   "quote": null
+  },
+  {
+   "work": "Roy and Roth, LCA++",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "solver evaluated",
+   "quote": null
+  },
+  {
+   "work": "Xie and Sun, GTS",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "neural solver evaluated",
+   "quote": null
+  },
+  {
+   "work": "BLEU (Papineni et al.)",
+   "year": 2002,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "basis of the LD metric",
+   "quote": null
+  },
+  {
+   "work": "AI2, IL, AllArith, KAZB, ALGES, DRAW, Dolphin, AQuA",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "existing MWP corpora compared (Table 2)",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Figure 1",
+   "caption": "Lexicon usage diversity of various corpora.",
+   "page": 3,
+   "why": "LD histograms show MathQA's skew to LD=0 against ASDiv's spread; the core picture for judging an eval set's redundancy"
+  },
+  {
+   "figure": "Table 3",
+   "caption": "Accuracies for different systems (CLD denotes the corpus lexicon diversity)",
+   "page": 5,
+   "why": "Accuracy falls as CLD rises, the central empirical result"
+  },
+  {
+   "figure": "Figure 3",
+   "caption": "Examples in MathQA with the same sentence pattern (after sentence normalization).",
+   "page": 8,
+   "why": "Concrete template duplication in a benchmark"
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 3.1",
+   "snippet": "LD_i = 1 - max_{j!=i} (BLEU(P_i,P_j) + BLEU(P_j,P_i)) / 2",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Table 3 and Table 4 cells are extracted without row/column alignment; mapping inferred from layout. Figures are images."
+ ]
+}

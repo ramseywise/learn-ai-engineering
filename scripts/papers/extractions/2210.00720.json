@@ -1,0 +1,693 @@
+{
+ "schema": 1,
+ "key": "2210.00720",
+ "pdf": "ai-engineering/01-prompt-engineering/sources/fu-2022-complexity-based-prompting-multi-step.pdf",
+ "bib": {
+  "title": "Complexity-Based Prompting for Multi-Step Reasoning",
+  "authors": [
+   "Yao Fu",
+   "Hao Peng",
+   "Ashish Sabharwal",
+   "Peter Clark",
+   "Tushar Khot"
+  ],
+  "first_author": "Fu",
+  "year": 2023,
+  "venue": "ICLR 2023 (PDF header reads 'Preprint', arXiv v2, 30 Jan 2023)",
+  "arxiv": "2210.00720",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 53161,
+  "chars_total": 53161,
+  "engine": "pymupdf",
+  "skipped": "Appendix heading present but contains only template text ('You may include other additional sections here.'); no real appendix. References skimmed."
+ },
+ "type": "empirical",
+ "question": "Which chain-of-thought examples make the most effective few-shot prompts for multi-step reasoning, and does the same criterion help when selecting among sampled outputs?",
+ "hypothesis": "Language models' reasoning performance will increase if complex instances (more reasoning steps) are used as in-context examples, since they subsume simpler instances.",
+ "contributions": [
+  "Complexity-based prompting: choose the CoT exemplars with the most reasoning steps",
+  "Complexity-based consistency: majority vote over the top K most complex of N sampled chains",
+  "New SOTA on GSM8K, MultiArith, MathQA, Date Understanding, Penguins; analysis of robustness, confounders and model scale"
+ ],
+ "method": {
+  "summary": "Select 8 CoT exemplars with the most reasoning steps (lines split by newline) from the training set (or longest questions when no chains exist, then annotate by hand) and prompt GPT-3/Codex; at decode time sample 50 chains and vote over the top-K longest chains.",
+  "task": "multi-step reasoning (math word problems, plus temporal, referential and commonsense reasoning)",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "GSM8K",
+    "role": "eval",
+    "size": "1.3K test instances",
+    "split": "200 randomly drawn from train as validation",
+    "source": "Cobbe et al., 2021",
+    "preprocessing": "human-annotated chains in train; complexity = number of newline-separated steps"
+   },
+   {
+    "name": "MultiArith",
+    "role": "eval",
+    "size": "600 test instances",
+    "split": "200 from train as validation",
+    "source": "Roy & Roth, 2015",
+    "preprocessing": "no chains; question length as complexity proxy then manual annotation of 8 longest, or transfer prompt from GSM8K"
+   },
+   {
+    "name": "MathQA",
+    "role": "eval",
+    "size": "600 test instances",
+    "split": "200 from train as validation",
+    "source": "Amini et al., 2019",
+    "preprocessing": "noisy annotations"
+   },
+   {
+    "name": "StrategyQA",
+    "role": "eval",
+    "size": "800 test instances",
+    "split": null,
+    "source": "Geva et al., 2021",
+    "preprocessing": "question length proxy, manual chain annotation"
+   },
+   {
+    "name": "Date Understanding",
+    "role": "eval",
+    "size": "250 test instances",
+    "split": null,
+    "source": "BigBench Hard (Suzgun et al., 2022)",
+    "preprocessing": "question length proxy, manual chain annotation"
+   },
+   {
+    "name": "Penguins",
+    "role": "eval",
+    "size": "146 test instances",
+    "split": null,
+    "source": "BigBench Hard (Suzgun et al., 2022)",
+    "preprocessing": "question length proxy, manual chain annotation"
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT-3 text-davinci-002",
+    "role": "evaluated",
+    "params": "175B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Codex code-davinci-002",
+    "role": "evaluated",
+    "params": "175B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "text-curie-001",
+    "role": "evaluated",
+    "params": "6.7B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Flan-T5",
+    "role": "evaluated",
+    "params": "11B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "PaLM, Minerva, LaMDA, DiVeRSe",
+    "role": "baseline",
+    "params": "540B / 540B / 137B / 175B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "numbers copied from their papers, not rerun"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "greedy (1 chain) or sampling N=50 chains then majority vote over top-K most complex",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "50 sampled chains per question for voting; 1 for greedy; number of runs/seeds not stated",
+   "prompting": "8-shot CoT (case = question + chain + answer); \"Let's think step by step\" added before the reasoning chains for all schemes; step = line separated by newline",
+   "retrieval": "Retrieval baseline: nearest training questions by Euclidean distance on Sentence-BERT embeddings (Reimers & Gurevych 2019); Centroid baseline: questions closest to the embedding centre",
+   "parameters": {
+    "N": "50",
+    "K": "10,20,30,40,50 tried; optimal typically 30-40 (K<N)",
+    "complexity": "number of reasoning steps (newline lines); alternatives question length, formula length"
+   },
+   "other": {
+    "cost": "200-instance validation costs about 6-8 USD greedy, 12-24 USD for 50 samples; Codex was free (Nov 2022)",
+    "prompt_step_stats": "complex prompt averages 9.0 steps on GSM8K vs 3.4 handcrafted and 2.8 random"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "accuracy (solve rate)",
+     "definition": "fraction of questions whose predicted final answer is correct",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Handcrafted CoT (Wei et al. 2022b)",
+    "Random CoT",
+    "Simple (short-chain) prompt",
+    "Centroid",
+    "Retrieval",
+    "self-consistency voting over all chains",
+    "fine-tuned SOTA",
+    "PaLM, Minerva, LaMDA, DiVeRSe"
+   ],
+   "protocol": "Test sets for main tables, 200-instance dev splits for analysis; single reported number per cell, no seeds, variance or significance tests stated"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": null
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "inference.parameters.N",
+    "quote": "In our experiments, we set N to 50, and observe that the optimal K is always",
+    "where": "Sec 3.2"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Complex CoT prompt lifts Codex greedy accuracy on GSM8K over handcrafted CoT",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 66.6,
+   "unit": "% accuracy",
+   "baseline_value": 61.0,
+   "n": null,
+   "setup": "GSM8K test (1.3K), code-davinci-002, 8-shot CoT, \"Let's think step by step\" added, greedy decoding",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Code-davinci-002 Complex CoT, column GSM8K"
+  },
+  {
+   "claim": "Complex CoT prompt lifts Codex greedy accuracy on MathQA by 18 points, the largest gain",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 47.3,
+   "unit": "% accuracy",
+   "baseline_value": 29.3,
+   "n": null,
+   "setup": "MathQA test (600), code-davinci-002, 8-shot, greedy",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Code-davinci-002 Complex CoT, column MathQA"
+  },
+  {
+   "claim": "Complex CoT with GPT-3 text-davinci-002 on GSM8K greedy",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 55.4,
+   "unit": "% accuracy",
+   "baseline_value": 48.1,
+   "n": null,
+   "setup": "GSM8K test, text-davinci-002, greedy",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Text-davinci-002 Complex CoT, column GSM8K"
+  },
+  {
+   "claim": "Average gains over handcrafted CoT across the three math sets",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy gain",
+   "value": 5.3,
+   "unit": "points (GPT-3 average)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-3 text-davinci-002, GSM8K/MultiArith/MathQA",
+   "note": null,
+   "where": "Abstract; Table 1 caption gives +5.3 GPT-3 and +6.2 Codex",
+   "quote": "+5.3 and up to +18 accuracy improvements."
+  },
+  {
+   "claim": "Complexity-based consistency (vote over complex chains) reaches new SOTA on GSM8K with Codex",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 82.9,
+   "unit": "% accuracy",
+   "baseline_value": 74.6,
+   "n": null,
+   "setup": "GSM8K test, code-davinci-002, N=50 samples, vote over top-K complex chains",
+   "note": "Baseline is handcrafted CoT with voting over all chains; complex CoT alone is 82.6",
+   "where": "Table 1",
+   "table": "Table 1, row Code-davinci-002 + Vote Complex, column GSM8K"
+  },
+  {
+   "claim": "Voting among complex chains on GSM8K with GPT-3",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 72.6,
+   "unit": "% accuracy",
+   "baseline_value": 64.0,
+   "n": null,
+   "setup": "GSM8K test, text-davinci-002, N=50",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Text-davinci-002 + Vote Complex, column GSM8K"
+  },
+  {
+   "claim": "Complex prompts raise StrategyQA accuracy for GPT-3 to match PaLM 540B",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 77.0,
+   "unit": "% accuracy",
+   "baseline_value": 66.9,
+   "n": null,
+   "setup": "StrategyQA test (800), text-davinci-002, greedy",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Text-davinci-002 Complex, column StrategyQA"
+  },
+  {
+   "claim": "Complex prompt on Penguins with Codex, new SOTA",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 80.8,
+   "unit": "% accuracy",
+   "baseline_value": 78.1,
+   "n": null,
+   "setup": "Penguins test (146), code-davinci-002, greedy",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Code-davinci-002 Complex, column Penguins"
+  },
+  {
+   "claim": "Complex prompt on Date Understanding with Codex",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 86.8,
+   "unit": "% accuracy",
+   "baseline_value": 86.0,
+   "n": null,
+   "setup": "Date Understanding test (250), code-davinci-002, greedy",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Code-davinci-002 Complex, column Date Understanding"
+  },
+  {
+   "claim": "Complex prompt does not help Date Understanding with GPT-3 (slightly below handcrafted)",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 82.4,
+   "unit": "% accuracy",
+   "baseline_value": 82.8,
+   "n": null,
+   "setup": "Date Understanding, text-davinci-002, greedy",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Text-davinci-002 Complex, column Date Understanding"
+  },
+  {
+   "claim": "Complex prompts average 9.0 reasoning steps on GSM8K versus 3.4 handcrafted and 2.8 random",
+   "kind": "measured",
+   "source": null,
+   "metric": "mean steps",
+   "value": 9.0,
+   "unit": "steps per case",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GSM8K training-set selection of 8 cases",
+   "note": null,
+   "where": "Sec 4.2",
+   "quote": "Complex prompt selection results in substantially more reasoning steps: it averages 9.0"
+  },
+  {
+   "claim": "Complexity-based selection beats random, centroid and retrieval selection on GSM8K (validation)",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 58.5,
+   "unit": "% accuracy",
+   "baseline_value": 52.5,
+   "n": null,
+   "setup": "GSM8K 200-example dev split, 8 annotations",
+   "note": "Baseline is Random; Retrieval (full training set annotated) 56.0",
+   "where": "Table 4",
+   "table": "Table 4, row Complexity (ours), column GSM8K"
+  },
+  {
+   "claim": "On MathQA retrieval beats complexity but needs full-training-set annotation",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 69.5,
+   "unit": "% accuracy",
+   "baseline_value": 42.5,
+   "n": null,
+   "setup": "MathQA dev split, retrieval needs >=10000 annotations",
+   "note": "Baseline value is Complexity (ours)",
+   "where": "Table 4",
+   "table": "Table 4, row Retrieval, column MathQA"
+  },
+  {
+   "claim": "Ablation: complex prompt adds 5.5 points over CoT original with greedy decoding on GSM8K dev",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 54.0,
+   "unit": "% accuracy",
+   "baseline_value": 48.5,
+   "n": null,
+   "setup": "GSM8K validation, greedy; stacked design choices",
+   "note": "Final stacked greedy 58.0 and majority vote 71.0 (voting within complex sample)",
+   "where": "Table 3",
+   "table": "Table 3, row Use complex prompt, column Greedy Decoding Acc."
+  },
+  {
+   "claim": "Gain from complex prompts vanishes on small models (GPT-3 curie 6.7B on MultiArith)",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 3.3,
+   "unit": "% accuracy",
+   "baseline_value": 3.8,
+   "n": null,
+   "setup": "text-curie-001 6.7B MultiArith, complex prompt vs handcrafted 3.8",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row Complex, column MultiArith text-curie-001 6.7B"
+  },
+  {
+   "claim": "Flan-T5 11B gets no meaningful gain from complex prompts on GSM8K",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 21.0,
+   "unit": "% accuracy",
+   "baseline_value": 19.5,
+   "n": null,
+   "setup": "Flan-T5 11B GSM8K, complex vs handcrafted 19.5",
+   "note": "Random is also 21.0",
+   "where": "Table 5",
+   "table": "Table 5, row Complex, column GSM8K Flan-T5 11B"
+  },
+  {
+   "claim": "8 complex cases (72 steps) beat 24 simple cases (72 steps) on GSM8K dev",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 58.5,
+   "unit": "% accuracy",
+   "baseline_value": 51,
+   "n": null,
+   "setup": "GSM8K dev, total steps held at 72",
+   "note": null,
+   "where": "Table 8",
+   "table": "Table 8, upper block, GSM8K, 8 cases 9 steps"
+  },
+  {
+   "claim": "Longest prompt (12.6k chars) does not beat complex prompt on GSM8K dev",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 57,
+   "unit": "% accuracy",
+   "baseline_value": 58.5,
+   "n": null,
+   "setup": "GSM8K dev, 8 cases, 59 total steps vs 72",
+   "note": "Baseline is the complex prompt",
+   "where": "Table 8",
+   "table": "Table 8, middle block, GSM8K, length 12.6k"
+  },
+  {
+   "claim": "Optimal K for complexity-based voting is below N (typically 30-40) with N=50",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "GSM8K and MathQA dev, N=50, K in 10..50",
+   "note": null,
+   "where": "Sec 3.2; Fig 6",
+   "quote": "In our experiments, we set N to 50, and observe that the optimal K is always"
+  },
+  {
+   "claim": "Voting among the simplest K chains is always worse than voting among all",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "GSM8K and MathQA dev, Fig 6",
+   "note": "Fig 6 numbers read from figure text only; GSM8K complex-vote peaks 71.5, K=50 is 69 (inferred from figure layout, not stated in prose)",
+   "where": "Sec 4.3, Fig 6",
+   "quote": "voting over simple samples always underperform full sample"
+  },
+  {
+   "claim": "Newline step format is best for complex prompts on GSM8K; complex beats simple under all four splitters",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 58.5,
+   "unit": "% accuracy",
+   "baseline_value": 43.0,
+   "n": null,
+   "setup": "GSM8K dev, complex prompt, linebreak splitter",
+   "note": "Baseline is GSM8K-Simple linebreak",
+   "where": "Table 7",
+   "table": "Table 7, row GSM8K-Complex, column Linebreak"
+  },
+  {
+   "claim": "Complex-prompt advantage shows on simple test cases, not hard ones",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "GSM8K and MathQA dev by gold step count",
+   "note": null,
+   "where": "Sec 4.2, Fig 3",
+   "quote": "complex prompts perform on par with simple prompts on hard cases, while achieving"
+  }
+ ],
+ "limits": [
+  "No variance, seeds or significance tests; single-run accuracies, dev-split (200 item) differences of 1-2 points are within noise",
+  "Gain disappears on small models (6.7B, 11B); authors call it an emergent ability of large models",
+  "Complexity helps little on Date Understanding with GPT-3 (-0.4) and StrategyQA with Codex (+0.8)",
+  "Retrieval beats complexity on MathQA (69.5 vs 42.5) because dev questions near-duplicate training questions",
+  "Mechanism for why complex prompts help simple test cases is left to future work",
+  "Tested only on GPT-3/Codex era models (text-davinci-002, code-davinci-002) and math-heavy tasks; Codex was free in Nov 2022 and code-davinci-002 is since deprecated",
+  "Optimal K tuned on dev; no rule given for choosing K",
+  "No appendix, no released prompts or code link in the text",
+  "Temperature and max tokens for sampling not stated"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "complexity-based prompting",
+   "definition": "choose examples with complex reasoning chains, i.e., chains with more reasoning steps, as the prompt",
+   "where": "Sec 1"
+  },
+  {
+   "term": "complexity-based consistency",
+   "definition": "sample N reasoning chains and vote only among the top K (K <= N) most complex chains; K = N recovers self-consistency",
+   "where": "Sec 3.2"
+  },
+  {
+   "term": "reasoning step",
+   "definition": "a line, separated by the linebreak \"\\n\"",
+   "where": "Sec 3.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Chain of thought prompting elicits reasoning in large language models (Wei et al.)",
+   "year": 2022,
+   "arxiv": "2201.11903",
+   "relation": "extends",
+   "note": "primary baseline; handcrafted 8-shot CoT",
+   "quote": null
+  },
+  {
+   "work": "Self-consistency (Wang et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "voting over all chains is the K=N special case",
+   "quote": null
+  },
+  {
+   "work": "Large language models are zero-shot reasoners (Kojima et al.)",
+   "year": 2022,
+   "arxiv": "2205.11916",
+   "relation": "uses-method",
+   "note": "\"Let's think step by step\" added to all prompts",
+   "quote": null
+  },
+  {
+   "work": "Learning to retrieve prompts for in-context learning (Rubin et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "retrieval-based example selection",
+   "quote": null
+  },
+  {
+   "work": "Training verifiers to solve math word problems (Cobbe et al.)",
+   "year": 2021,
+   "arxiv": "2110.14168",
+   "relation": "uses-data",
+   "note": "GSM8K and fine-tuned verifier SOTA",
+   "quote": null
+  },
+  {
+   "work": "On the advance of making language models better reasoners (DiVeRSe, Li et al.)",
+   "year": 2022,
+   "arxiv": "2206.02336",
+   "relation": "baseline",
+   "note": "previous GSM8K SOTA with trained verifier",
+   "quote": null
+  },
+  {
+   "work": "PaLM (Chowdhery et al.)",
+   "year": 2022,
+   "arxiv": "2204.02311",
+   "relation": "baseline",
+   "note": "540B reference numbers",
+   "quote": null
+  },
+  {
+   "work": "Minerva (Lewkowycz et al.)",
+   "year": 2022,
+   "arxiv": "2206.14858",
+   "relation": "baseline",
+   "note": "540B, LaTeX pretraining",
+   "quote": null
+  },
+  {
+   "work": "MathQA (Amini et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "noisy-annotation test",
+   "quote": null
+  },
+  {
+   "work": "MultiArith (Roy & Roth)",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "StrategyQA (Geva et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "Challenging BIG-Bench tasks (Suzgun et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Date Understanding, Penguins",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "A: Chain of thoughts are intermediate reasoning steps towards a final answer... B: complex chain, 9 steps... C: sample N chains, majority over K most complex",
+   "page": 2,
+   "why": "Shows the method end to end: complex exemplar (9 steps vs 2) and top-K complex voting"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Validation set performance. X-axis reasoning steps, y-axis accuracy.",
+   "page": 7,
+   "why": "Accuracy rises with prompt step count in-distribution, noisy and transferred"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Accuracy by reasoning steps of dev cases for simple vs complex prompts",
+   "page": 8,
+   "why": "Gains come on simple test cases, not hard ones"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Output step distribution",
+   "page": 10,
+   "why": "Complex prompts induce longer output chains"
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "Majority voting over top K complex / simple generated samples",
+   "page": 10,
+   "why": "Optimal K below N; simple-chain voting always worse than full voting"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Appendix section is empty template text",
+  "PDF header says Preprint although venue is ICLR 2023",
+  "Fig 6 values are in figure text without clear mapping to K; not recorded as results"
+ ]
+}

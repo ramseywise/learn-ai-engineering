@@ -1,0 +1,587 @@
+{
+ "schema": 1,
+ "key": "2306.02561",
+ "pdf": "ai-engineering/07-inference-engineering/sources/jiang-2023-llm-blender.pdf",
+ "bib": {
+  "title": "LLM-BLENDER: Ensembling Large Language Models with Pairwise Ranking and Generative Fusion",
+  "authors": [
+   "Dongfu Jiang",
+   "Xiang Ren",
+   "Bill Yuchen Lin"
+  ],
+  "first_author": "Jiang",
+  "year": 2023,
+  "venue": "Proceedings of the 61st Annual Meeting of the Association for Computational Linguistics (ACL 2023), Volume 1: Long Papers, pages 14165-14178",
+  "arxiv": "2306.02561",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 56234,
+  "chars_total": 56234,
+  "engine": "pymupdf",
+  "skipped": "The PDF has 14 pages and ends at the ACL checklist; the appendices the text cites (prompt template, aggregator ablation, summarization/translation/CommonGen results, hyperparameters, metrics) are not in this file, so none of it could be read."
+ },
+ "type": "empirical",
+ "question": "Can the complementary strengths of many open-source instruction-tuned LLMs be combined per input by ranking their outputs pairwise and fusing the top ones, beating any single fixed LLM?",
+ "hypothesis": "Optimal LLMs vary per example, so dynamically ensembling (rank then fuse) gives consistently better outputs than any fixed model; pairwise joint encoding discriminates subtle candidate differences better than pointwise scoring.",
+ "contributions": [
+  "A new framework: LLM-BLENDER, a post-hoc ensemble method for ranking and fusing outputs from multiple LLMs (PAIRRANKER and GENFUSER).",
+  "A new dataset: MixInstruct, a benchmark for training and evaluating LLM ensembling on instruction-following tasks.",
+  "Promising results across metrics.",
+  "Toolkit: open-sourced framework."
+ ],
+ "method": {
+  "summary": "Run N=11 open-source LLMs on every input, compare all candidate pairs with a cross-attention ranker (PairRanker, DeBERTa 400m) that jointly encodes the input and two candidates, aggregate the pairwise logit matrix into a ranking, then feed the top K=3 candidates with the input to GenFuser (Flan-T5-XL 3b) which generates the final answer. Evaluated on MixInstruct with BERTScore, BARTScore, BLEURT and a ChatGPT pairwise-comparison rank (GPT-Rank).",
+  "task": "ensembling LLM outputs for instruction following (rank-and-fuse, post-hoc)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "MixInstruct",
+    "role": "both",
+    "size": "110K examples (Alpaca-GPT4 22,862; Dolly-15K 7,584; GPT4All-LAION 76,552; ShareGPT 3,002); mean I/O tokens 20 / 66",
+    "split": "random train/dev/test 100K/5K/5K",
+    "source": "four open instruction datasets, formatted as self-instruct; candidates from 11 LLMs; oracle pairwise labels from ChatGPT on the test set",
+    "preprocessing": "curated and processed open-source data; ground truth shown to ChatGPT in pairwise comparisons; train/val use BERTScore, BLEURT, BARTScore against ground truth"
+   }
+  ],
+  "models": [
+   {
+    "name": "PairRanker",
+    "role": "proposed",
+    "params": "400m",
+    "architecture": "DeBERTa (He et al., 2021) cross-attention encoder; input '<s><source> x </s> <candidate1> yi </s> <candidate2> yj </s>'; special-token embeddings concatenated and passed to a single-head MLP whose last dimension equals the number of Q functions",
+    "init_from": "DeBERTa",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GenFuser",
+    "role": "proposed",
+    "params": "3b",
+    "architecture": "Flan-T5-XL seq2seq; input is x plus K top candidates joined by <extra_id_i> separators",
+    "init_from": "Flan-T5-XL",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "K": "3"
+    }
+   },
+   {
+    "name": "11 candidate LLMs (Open Assistant, Vicuna, Alpaca, Baize, MOSS, ChatGLM, Koala, Dolly V2, Mosaic MPT, StableLM, Flan-T5)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "sizes": "not stated in the main text"
+    }
+   },
+   {
+    "name": "ChatGPT",
+    "role": "judge",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "pairwise comparison of 55 pairs per example, ties allowed; oracle ranking and GPT-Rank"
+    }
+   }
+  ],
+  "training": {
+   "objective": "PairRanker: multi-task pairwise BCE, L_Q = -z_i log sigma(s_i^(i,j)) - (1-z_j) log sigma(s_j^(i,j)), averaged over Q functions; Q chosen as BARTScore for main runs. GenFuser: fine-tune Flan-T5-XL to generate the ground truth y.",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "candidate order shuffled within each training pair",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "pairs_per_input": "5 sampled pairs per input in training, out of N(N-1)/2",
+    "ground_truth": "ground truth y mixed into the candidate pool during training",
+    "appendix": "Checklist says hyperparameters and compute are in Appendix A, which is not in this PDF"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "one candidate per LLM per input (N=11); no seeds or repeated runs stated",
+   "prompting": "not stated for candidate generation in the main text; ChatGPT comparison prompt template is in the appendix (not in this PDF)",
+   "retrieval": null,
+   "parameters": {
+    "N": "11 candidates",
+    "K": "3 top candidates fused",
+    "default_aggregator": "MaxLogits",
+    "aggregators": "MaxLogits (s_i = sum(M_i* - M_*i)), MaxWins (count of wins), bubble-sort single pass (O(N) comparisons)",
+    "pairwise_inferences": "N(N-1) for full matrix"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "BERTScore",
+     "definition": "similarity of output to ground truth",
+     "unit": "score",
+     "higher_is_better": true
+    },
+    {
+     "name": "BARTScore",
+     "definition": "generation-likelihood based similarity to ground truth",
+     "unit": "log-likelihood score (negative)",
+     "higher_is_better": true
+    },
+    {
+     "name": "BLEURT",
+     "definition": "learned similarity to ground truth",
+     "unit": "score",
+     "higher_is_better": true
+    },
+    {
+     "name": "GPT-Rank",
+     "definition": "ChatGPT pairwise comparisons on all candidates; rank by number of wins (MaxWins); average rank",
+     "unit": "average rank (1 best)",
+     "higher_is_better": false
+    },
+    {
+     "name": "Vic / OA (%)",
+     "definition": "percent of examples where output is better than or as good as Vicuna / Open Assistant by GPT-Rank",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Top-3 (%)",
+     "definition": "percent of examples where output ranks in the top 3 by GPT-Rank",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Pearson / Spearman / Spearman's Footrule",
+     "definition": "rank correlation of a ranking method with the GPT-Rank oracle ranking",
+     "unit": "correlation x100; footrule distance",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "each of the 11 LLMs",
+    "Random",
+    "MLM-Scoring",
+    "SimCLS",
+    "SummaReranker",
+    "oracle selections by BERTScore, BLEURT, BARTScore, GPT-Rank"
+   ],
+   "protocol": "Single run on the 5k test set; no error bars or significance tests; judge is ChatGPT shown the ground truth; no human evaluation."
+  },
+  "availability": {
+   "code": "https://yuchenlin.xyz/LLM-Blender (project page; toolkit stated as open-sourced)",
+   "weights": null,
+   "data": "MixInstruct (stated as released benchmark; location not given in main text)"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.other.pairs_per_input",
+    "quote": "In practice, we found that using 5 pairs per input is sufficient for obtaining decent results.",
+    "where": "Sec 3.3"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "LLM-Blender's average GPT-Rank beats the best single LLM (Open Assistant 3.90).",
+   "kind": "measured",
+   "source": null,
+   "metric": "GPT-Rank",
+   "value": 3.01,
+   "unit": "avg rank",
+   "baseline_value": 3.9,
+   "n": null,
+   "setup": "MixInstruct test set (5k examples), N=11 open-source LLMs, ChatGPT pairwise judge; PR (K=3) + GF",
+   "quote": null,
+   "table": "Table 2, row LLM-Blender PR (K = 3) + GF, column GPT-Rank",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "LLM-Blender output is in the top 3 for 68.59% of examples versus 52.88% for Vicuna.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Top-3",
+   "value": 68.59,
+   "unit": "%",
+   "baseline_value": 52.88,
+   "n": null,
+   "setup": "MixInstruct test set (5k examples), N=11 open-source LLMs, ChatGPT pairwise judge",
+   "quote": null,
+   "table": "Table 2, row LLM-Blender, column Top-3(%)",
+   "note": "Intro text prints 'Viccuna'; the 52.88 baseline is Vicuna's Top-3 in Table 2.",
+   "where": "Sec 1; Table 2"
+  },
+  {
+   "claim": "PairRanker alone selects responses with average GPT-Rank 3.20, 0.70 better than the best model (18% relative).",
+   "kind": "measured",
+   "source": null,
+   "metric": "GPT-Rank",
+   "value": 3.2,
+   "unit": "avg rank",
+   "baseline_value": 3.9,
+   "n": null,
+   "setup": "MixInstruct test set (5k examples), N=11 open-source LLMs, ChatGPT pairwise judge",
+   "quote": null,
+   "table": "Table 2, row PairRanker, column GPT-Rank",
+   "note": null,
+   "where": "Sec 5.2; Table 2"
+  },
+  {
+   "claim": "PairRanker's rank correlation with GPT-Rank exceeds all other rankers and metrics (Pearson).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Pearson",
+   "value": 46.98,
+   "unit": "Pearson x100",
+   "baseline_value": 41.13,
+   "n": null,
+   "setup": "correlation with oracle GPT-Rank ranking over all candidates, MixInstruct",
+   "quote": null,
+   "table": "Table 3, row PairRanker, column Pearson Correlation",
+   "note": "Baseline 41.13 is SummaReranker; BARTScore is 38.49.",
+   "where": "Table 3"
+  },
+  {
+   "claim": "PairRanker top-1 selections are better than or equal to Vicuna / Open Assistant on 54.76% / 57.79% of examples and top-3 on 65.12%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Top-3",
+   "value": 65.12,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MixInstruct test set (5k examples), N=11 open-source LLMs, ChatGPT pairwise judge",
+   "quote": null,
+   "table": "Table 2, row PairRanker, column Top-3(%)",
+   "note": null,
+   "where": "Sec 5.2"
+  },
+  {
+   "claim": "MLM-Scoring fails to beat random selection (GPT-Rank 7.00 vs 6.14).",
+   "kind": "measured",
+   "source": null,
+   "metric": "GPT-Rank",
+   "value": 7.0,
+   "unit": "avg rank",
+   "baseline_value": 6.14,
+   "n": null,
+   "setup": "MixInstruct test set (5k examples), N=11 open-source LLMs, ChatGPT pairwise judge",
+   "quote": null,
+   "table": "Table 2, row MLM-Scoring, column GPT-Rank",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Pointwise rankers SimCLS and SummaReranker reach GPT-Rank 3.50 and 3.66, behind PairRanker 3.20.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GPT-Rank",
+   "value": 3.5,
+   "unit": "avg rank",
+   "baseline_value": 3.2,
+   "n": null,
+   "setup": "MixInstruct test set (5k examples), N=11 open-source LLMs, ChatGPT pairwise judge",
+   "quote": null,
+   "table": "Table 2, row SimCLS, column GPT-Rank",
+   "note": "SummaReranker 3.66.",
+   "where": "Table 2"
+  },
+  {
+   "claim": "LLM-Blender improves BERTScore, BARTScore, BLEURT over the best model by 4.41, 0.43 and 0.22.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BERTScore",
+   "value": 4.41,
+   "unit": "BERTScore points",
+   "baseline_value": 74.68,
+   "n": null,
+   "setup": "MixInstruct test set (5k examples), N=11 open-source LLMs, ChatGPT pairwise judge",
+   "quote": null,
+   "table": "Table 2, row LLM-Blender, column BERTScore (79.09 vs 74.68)",
+   "note": null,
+   "where": "Sec 5.2"
+  },
+  {
+   "claim": "Even the oracle GPT-Rank selection (1.00 by definition) shows the headroom; oracle BARTScore selection yields GPT-Rank 3.69, better than OA 3.90, supporting BARTScore as training signal.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GPT-Rank",
+   "value": 3.69,
+   "unit": "avg rank",
+   "baseline_value": 3.9,
+   "n": null,
+   "setup": "MixInstruct test set (5k examples), N=11 open-source LLMs, ChatGPT pairwise judge",
+   "quote": null,
+   "table": "Table 2, row Oracle (BARTScore), column GPT-Rank",
+   "note": null,
+   "where": "Sec 5.2"
+  },
+  {
+   "claim": "Koala (avg GPT-Rank 6.76) beats or equals both OA and Vicuna on roughly 40% of examples.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Vic(%)",
+   "value": 39.93,
+   "unit": "% (Vic column)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MixInstruct test set (5k examples), N=11 open-source LLMs, ChatGPT pairwise judge",
+   "quote": null,
+   "table": "Table 2, row Koala, column Vic(%)",
+   "note": "Text says 'approximately 40%'; table Vic 39.93, OA 39.01.",
+   "where": "Sec 5.2"
+  },
+  {
+   "claim": "The best single model ranks first on only 21.22% of examples (Vicuna), motivating per-input ensembling.",
+   "kind": "measured",
+   "source": null,
+   "metric": "share ranked first",
+   "value": 21.22,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "5,000 instructions, 11 LLMs",
+   "quote": "Although Vicuna achieves the highest percentage, it ranks ﬁrst in only 21.22% of the ex-",
+   "table": null,
+   "note": "Quote line is as in text with a line-break hyphen; Fig 1 prints 21.22%.",
+   "where": "Sec 1, Fig 1"
+  },
+  {
+   "claim": "Full pairwise comparison costs O(N^2) inferences; a single bubble-sort pass cuts it to O(N) (N-1 comparisons).",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "PairRanker inference",
+   "quote": null,
+   "table": null,
+   "note": "Appendix reports the cost/accuracy trade-off; not in this PDF.",
+   "where": "Sec 3.3"
+  }
+ ],
+ "limits": [
+  "Full PairRanker needs O(n^2) model calls; authors say they can run in parallel and bubble sort reduces cost, but no latency, cost or compute numbers are given in the main text.",
+  "Evaluation uses ChatGPT (shown ground truth) as judge, no large-scale human evaluation; authors concede automatic metrics are limited.",
+  "Only 11 open-source models of 2023; no comparison to closed models like GPT-4 or to cheaper routing; all N models must be run for every input, so it is an ensemble not a cost-saving router.",
+  "Training hyperparameters, compute, decoding settings and the judge prompt are in an appendix absent from the supplied PDF.",
+  "Single run, no seeds or significance tests."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "selection-based ensembling",
+   "definition": "Selection-based methods compare candidates in the set Y, selecting the top-ranked candidate as the final output",
+   "where": "Sec 2.1"
+  },
+  {
+   "term": "generation-based ensembling",
+   "definition": "fusing K candidates (1 < K <= N) from Y to produce an unseen response as the final output",
+   "where": "Sec 2.1"
+  },
+  {
+   "term": "GPT-Rank",
+   "definition": "ChatGPT pairwise comparisons on all candidates, ranked by number of wins (MaxWins aggregation)",
+   "where": "Sec 5.1"
+  },
+  {
+   "term": "MaxLogits",
+   "definition": "confidence that y_i is superior to all other candidates: sum of row minus column of the comparison matrix",
+   "where": "Sec 3.3"
+  },
+  {
+   "term": "MaxWins",
+   "definition": "number of victories in comparisons with other candidates",
+   "where": "Sec 3.3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "SimCLS (Liu and Liu, 2021)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "pointwise reranker, cosine similarity of input and candidate",
+   "quote": null
+  },
+  {
+   "work": "SummaReranker (Ravaut et al., 2022a)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "cross-encoder pointwise reranker",
+   "quote": null
+  },
+  {
+   "work": "MLM-Scoring (Salazar et al., 2020)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "pseudo-log-likelihood scoring",
+   "quote": null
+  },
+  {
+   "work": "Fusion-in-Decoder (Izacard and Grave, 2021)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "fusion idea; Ravaut et al. 2022b fused summaries without a prior selection step",
+   "quote": null
+  },
+  {
+   "work": "Flan-T5 (Chung et al., 2022)",
+   "year": 2022,
+   "arxiv": "2210.11416",
+   "relation": "uses-method",
+   "note": "GenFuser base, 3b",
+   "quote": null
+  },
+  {
+   "work": "DeBERTaV3 (He et al., 2021)",
+   "year": 2021,
+   "arxiv": "2111.09543",
+   "relation": "uses-method",
+   "note": "PairRanker backbone, 400m",
+   "quote": null
+  },
+  {
+   "work": "InstructGPT reward model (Ouyang et al., 2022)",
+   "year": 2022,
+   "arxiv": "2203.02155",
+   "relation": "related",
+   "note": "pointwise scoring with pairwise loss; contrasted with pairwise inference",
+   "quote": null
+  },
+  {
+   "work": "RankNet / LambdaRank (Burges 2005, 2010)",
+   "year": 2005,
+   "arxiv": null,
+   "relation": "related",
+   "note": "pairwise ranking background",
+   "quote": null
+  },
+  {
+   "work": "Chatbot Arena (Zheng et al., 2023)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "pairwise LLM evaluation",
+   "quote": null
+  },
+  {
+   "work": "BARTScore, BERTScore, BLEURT",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "metrics and training signal",
+   "quote": null
+  },
+  {
+   "work": "Self-instruct (Wang et al., 2022)",
+   "year": 2022,
+   "arxiv": "2212.10560",
+   "relation": "uses-data",
+   "note": "format of MixInstruct",
+   "quote": null
+  },
+  {
+   "work": "Alpaca-GPT4, Dolly-15K, GPT4All-LAION, ShareGPT",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "MixInstruct sources",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Motivation of ensembling LLMs. Pie chart of the percentage of examples where each LLM ranks 1st.",
+   "page": 1,
+   "why": "Shows no model dominates (Vicuna 21.22%), the core case for per-input selection/routing."
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "The LLM-BLENDER framework. N LLMs produce candidates; all pairs go to PairRanker; top K go to GenFuser.",
+   "page": 3,
+   "why": "Whole rank-and-fuse pipeline in one picture."
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "The architectures of typical reranking methods (MLM-Scoring, SimCLS, SummaReranker, PairRanker).",
+   "page": 5,
+   "why": "Pointwise vs pairwise encoding side by side."
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Aggregation methods for PAIRRANKER (MaxLogits, MaxWins, bubble sort).",
+   "page": 6,
+   "why": "Worked 5x5 comparison matrix showing how the three aggregators rank candidates."
+  },
+  {
+   "figure": "Table 2",
+   "caption": "Empirical results on MixInstruct. GPT-Rank are the most important metric.",
+   "page": 7,
+   "why": "Main result: 11 LLMs, oracles, rankers, LLM-Blender in one table."
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 3.2",
+   "snippet": "L_Q = -z_i log sigma(s_i^(i,j)) - (1 - z_j) log sigma(s_j^(i,j))",
+   "verbatim": false
+  },
+  {
+   "where": "Sec 3.3",
+   "snippet": "MaxLogits: s_i = sum(M_i* - M_*i); MaxWins: s_i = |{s_ij in M_i* | s_ij > 0}| + |{s_ji in M_*i | s_ji < 0}|",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Appendices cited in the text (Appendix A hyperparameters/compute, prompt template, aggregator ablation, other NLG tasks, metric details) are absent from this 14-page PDF.",
+  "PDF text extraction garbled the math symbols and figure labels; equations are paraphrased."
+ ]
+}

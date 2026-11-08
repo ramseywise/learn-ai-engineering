@@ -9,6 +9,7 @@ sources:
   - https://arxiv.org/abs/2210.03629
   - https://arxiv.org/abs/2206.14858
   - "Xiao & Zhu, Foundations of Large Language Models (arXiv, 2025), ch. 1–3"
+  - https://arxiv.org/abs/2501.09223
   - https://aclanthology.org/P02-1040/
   - https://aclanthology.org/W04-1013/
 confidence: high

@@ -193,6 +193,9 @@ designs bracket the space:
 | Synchronous (DD-PPO) | Every worker collects a batch, then all exchange gradients | Each update waits for the slowest worker, so stragglers are cut off preemptively. Wijmans et al. report near-linear scaling to 256 GPUs |
 | Asynchronous (IMPALA, SEED) | Actors push trajectories into a queue; the learner trains on whatever arrives | The data is slightly off-policy and needs an importance-weighted correction (V-trace) |
 
+![(a) DistBelief: replicas push gradients to a parameter server and pull parameters. (b) Gorila: separate actors fill an experience buffer, learners read from it and send gradients to the parameter server.](../sources/images/winder-reinforcement-learning-fig10-1.png)
+*Image Source: Phil Winder, *Reinforcement Learning* (O'Reilly, 2020), Fig. 10-1*
+
 Throughput is the reason to accept that staleness. Espeholt et al. priced one billion frames at
 **\$236 for IMPALA against \$54 for SEED** on DeepMind Lab, and \$899 against \$369 on Google Research
 Football. LLM RL faces the same choice in a different shape. Generation is the actor and dominates

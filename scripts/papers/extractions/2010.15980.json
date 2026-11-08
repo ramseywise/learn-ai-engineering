@@ -1,0 +1,505 @@
+{
+ "schema": 1,
+ "key": "2010.15980",
+ "pdf": "ai-engineering/01-prompt-engineering/sources/shin-2020-autoprompt.pdf",
+ "bib": {
+  "title": "AUTOPROMPT: Eliciting Knowledge from Language Models with Automatically Generated Prompts",
+  "authors": [
+   "Taylor Shin",
+   "Yasaman Razeghi",
+   "Robert L. Logan IV",
+   "Eric Wallace",
+   "Sameer Singh"
+  ],
+  "first_author": "Shin",
+  "year": 2020,
+  "venue": "EMNLP 2020",
+  "arxiv": "2010.15980",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 52296,
+  "chars_total": 52296,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can prompts for masked language models be generated automatically, so that pretrained MLMs can be probed on sentiment, NLI, fact retrieval and relation extraction without manual prompt writing or finetuning?",
+ "hypothesis": "Automatically searched trigger-token prompts elicit more knowledge from MLMs than manual prompts, and can rival finetuning in low-data settings.",
+ "contributions": [
+  "AUTOPROMPT, a gradient-guided search that builds prompts from shared trigger tokens plus automatically selected label tokens",
+  "Evidence that MLMs do sentiment analysis and NLI without finetuning",
+  "Better fact retrieval on LAMA than manual and mined prompts",
+  "A relation-extraction probe where MLMs beat a supervised RE model, with a perturbed-sentence control"
+ ],
+ "method": {
+  "summary": "Each input is put in a template with a [MASK] slot and a set of trigger tokens shared across all inputs. Trigger tokens start as [MASK] and are updated by a HotFlip-style first-order gradient candidate search, then re-scored by forward passes. Label tokens come from a logistic classifier on the [MASK] embedding projected onto output word embeddings. The MLM is frozen throughout.",
+  "task": "prompt search for MLM probing: sentiment (SST-2), NLI (SICK-E), fact retrieval (LAMA), relation extraction (T-REx)",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "SST-2",
+    "role": "both",
+    "size": null,
+    "split": "standard train/test splits",
+    "source": "Socher et al. 2013",
+    "preprocessing": null
+   },
+   {
+    "name": "SICK-E",
+    "role": "both",
+    "size": "around 10,000 sentence pairs",
+    "split": "standard, plus unbiased 2-way and 3-way variants; dev used to choose prompts",
+    "source": "Marelli et al. 2014",
+    "preprocessing": "standard set is 56.7% neutral; 2-way and 3-way variants are balanced"
+   },
+   {
+    "name": "LAMA (Original)",
+    "role": "eval",
+    "size": "41 relations",
+    "split": "original test set",
+    "source": "Petroni et al. 2019",
+    "preprocessing": null
+   },
+   {
+    "name": "T-REx (training facts for AUTOPROMPT)",
+    "role": "both",
+    "size": "at most 1000 facts per relation for 41 relations; extra from Wikidata where fewer",
+    "split": "80-20 train/dev for LAMA evaluation; separate 60-20-20 train/dev/test for the T-REx evaluation",
+    "source": "ElSahar et al. 2018",
+    "preprocessing": "no T-REx triple in the LAMA test set"
+   }
+  ],
+  "models": [
+   {
+    "name": "BERT-base",
+    "role": "evaluated",
+    "params": "110M",
+    "architecture": "masked LM",
+    "init_from": "HuggingFace pretrained weights",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "RoBERTa-large",
+    "role": "evaluated",
+    "params": "355M",
+    "architecture": "masked LM",
+    "init_from": "HuggingFace pretrained weights",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Sorokin and Gurevych (2017) RE model",
+    "role": "baseline",
+    "params": null,
+    "architecture": "LSTM relation encoder with attention",
+    "init_from": "pretrained as in Petroni et al.",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "single [MASK] fill; class probability is the sum over label tokens (Eq. 1); for fact retrieval and RE the most likely token",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "10 runs on different random data subsets (and seeds for finetuned models) for the low-data experiment; otherwise one prompt search per setting, seeds not stated",
+   "prompting": "template per task, e.g. {sentence}[T][T][T][T][T][P].",
+   "retrieval": null,
+   "parameters": {
+    "search_iteration": "each iteration: top-k candidates from a training batch, scored on a separate batch, best kept; the best prompt on withheld dev data over the whole search is returned",
+    "SST-2 grid": "|Vcand| in {10,100}, |Vy| in {1,3,5}, |xtrig| in [3,6]; prompts initialised from the template used to find the label set",
+    "SICK-E grid": "|Vcand| in {10,50}, |Vy| in {1,3,5,10}, |xtrig| in [1,5]",
+    "low-data runs": "|xtrig|=10, |Vy|=3, |Vcand|=10, random subsets of 10, 100, 1000 training instances",
+    "fact retrieval": "5 or 7 trigger tokens; proper nouns and gold objects seen in training excluded from trigger tokens",
+    "label token selection": "logistic classifier on [MASK] embedding, then top-k words by s(y,w) (Eqs. 3-5)"
+   },
+   "other": {
+    "batch_size_search": null,
+    "compute": "SST-2 search required 2 days on 8 NVIDIA 2080Ti GPUs (footnote 3)"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "accuracy",
+     "definition": "SST-2 and SICK-E classification",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "P@1, P@10, MRR",
+     "definition": "rank of the true object in the MLM label-token distribution",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "manual prompts (LAMA)",
+    "LPAQA top-1 prompt (Jiang et al. 2020)",
+    "linear probe on average-pooled frozen representations",
+    "finetuned BERT and RoBERTa",
+    "BiLSTM, BiLSTM+ELMo (GLUE)",
+    "supervised RE LSTM"
+   ],
+   "protocol": "best prompt chosen on dev; scores on a withheld test set. RE counts a prediction correct if it matches the canonical object or the surface form in any context sentence."
+  },
+  "availability": {
+   "code": "http://ucinlp.github.io/autoprompt",
+   "weights": "off-the-shelf HuggingFace models",
+   "data": "http://ucinlp.github.io/autoprompt"
+  },
+  "prompts": [
+   {
+    "purpose": "manual SST-2 template (written before automated prompts)",
+    "text": "{sentence} this movie was [P].",
+    "where": "Section 3 (labels terrible/fantastic)"
+   },
+   {
+    "purpose": "best RoBERTa SST-2 prompt found",
+    "text": "{sentence} atmosphere alot dialogue Clone totally [P].",
+    "where": "Section 3"
+   },
+   {
+    "purpose": "fact retrieval template",
+    "text": "{sub}[T]. . . [T][P].",
+    "where": "Section 5, Table 3"
+   },
+   {
+    "purpose": "relation extraction template",
+    "text": "{sent}{sub}[T]. . . [T][P].",
+    "where": "Section 6, Table 3"
+   },
+   {
+    "purpose": "NLI template",
+    "text": "{prem}[P][T]. . . [T]{hyp}",
+    "where": "Table 3"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "RoBERTa with AutoPrompt reaches 91% on SST-2 with no finetuning",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 91.4,
+   "unit": "%",
+   "baseline_value": 85.2,
+   "n": null,
+   "setup": "SST-2 test, RoBERTa-large, frozen",
+   "note": "Baseline is RoBERTa (manual) 85.2; finetuned RoBERTa 96.7. Intro rounds to 91%.",
+   "where": "Table 1",
+   "table": "Table 1, row RoBERTa (AUTOPROMPT), column Test"
+  },
+  {
+   "claim": "BERT AutoPrompt vs manual prompt on SST-2",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 82.3,
+   "unit": "%",
+   "baseline_value": 63.2,
+   "n": null,
+   "setup": "SST-2 test, BERT-base",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row BERT (AUTOPROMPT), column Test"
+  },
+  {
+   "claim": "Fact retrieval P@1 with 7-token AutoPrompt exceeds the best single mined prompt",
+   "kind": "measured",
+   "source": null,
+   "metric": "P@1",
+   "value": 43.3,
+   "unit": "%",
+   "baseline_value": 34.1,
+   "n": null,
+   "setup": "LAMA Original, BERT-base, one prompt per relation",
+   "note": "Table 4 prints 43.34 (7 tokens) and 42.94 (5 tokens); LAMA manual 31.10",
+   "where": "Intro; Table 4",
+   "quote": "Concretely, we achieve 43.3% precision-at-1, compared to the current best single-prompt result of 34.1%"
+  },
+  {
+   "claim": "On T-REx data AutoPrompt 7 tokens P@1",
+   "kind": "measured",
+   "source": null,
+   "metric": "P@1",
+   "value": 45.57,
+   "unit": "%",
+   "baseline_value": 31.16,
+   "n": null,
+   "setup": "T-REx test split, BERT-base",
+   "note": "Baseline is LPAQA (Top1)",
+   "where": "Table 4",
+   "table": "Table 4, row AUTOPROMPT 7 Tokens, column T-REx P@1"
+  },
+  {
+   "claim": "Relation extraction: BERT with AutoPrompt vs supervised RE LSTM on original sentences",
+   "kind": "measured",
+   "source": null,
+   "metric": "P@1",
+   "value": 90.73,
+   "unit": "%",
+   "baseline_value": 57.95,
+   "n": null,
+   "setup": "T-REx RE, BERT-base",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row BERT (AUTOPROMPT), column Original"
+  },
+  {
+   "claim": "On perturbed (falsified) sentences BERT AutoPrompt drops sharply",
+   "kind": "measured",
+   "source": null,
+   "metric": "P@1",
+   "value": 56.43,
+   "unit": "%",
+   "baseline_value": 90.73,
+   "n": null,
+   "setup": "T-REx RE with objects replaced at random, BERT-base",
+   "note": "Baseline value is the Original score; supervised RE LSTM stays at 58.81",
+   "where": "Table 5",
+   "table": "Table 5, row BERT (AUTOPROMPT), column Perturbed"
+  },
+  {
+   "claim": "RoBERTa AutoPrompt beats finetuned-free baselines on 3-way balanced SICK-E",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 69.3,
+   "unit": "%",
+   "baseline_value": 49.4,
+   "n": null,
+   "setup": "SICK-E 3-way test, RoBERTa-large",
+   "note": "Baseline is RoBERTa linear probing; majority 33.3; finetuned BERT 84.0",
+   "where": "Table 2",
+   "table": "Table 2, row RoBERTa (AUTOPROMPT), column 3-way"
+  },
+  {
+   "claim": "BERT beats RoBERTa on fact retrieval",
+   "kind": "measured",
+   "source": null,
+   "metric": "P@1",
+   "value": 45.23,
+   "unit": "%",
+   "baseline_value": 40.01,
+   "n": null,
+   "setup": "LAMA subset with single-token objects for both models, 5 trigger tokens",
+   "note": "Baseline is RoBERTa",
+   "where": "Table 4",
+   "table": "Table 4 right, row BERT, column P@1"
+  },
+  {
+   "claim": "Per-class precision on 3-way SICK-E: contradiction easiest for RoBERTa",
+   "kind": "measured",
+   "source": null,
+   "metric": "precision",
+   "value": 84.9,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "balanced 3-way SICK-E, RoBERTa",
+   "note": null,
+   "where": "Section 4",
+   "quote": "while RoBERTa obtains 84.9%, 65.1%, and 57.3%"
+  },
+  {
+   "claim": "Raising label set size from 1 to 3 helps SST-2 about 5% for BERT and 10% for RoBERTa; trigger length matters little",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy gain",
+   "value": 10,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "SST-2 dev, |Vcand|=100, RoBERTa",
+   "note": null,
+   "where": "Appendix A, Fig 3",
+   "quote": "(approximately +5% for BERT, and +10% for RoBERTa)"
+  },
+  {
+   "claim": "In the low-data regime AutoPrompt matches finetuned BERT on average and beats finetuned RoBERTa at 100s to 1000s of examples; finetuning can fail in the worst case",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": 10,
+   "setup": "SST-2 and 3-way SICK-E, 10, 100, 1000 training examples, 10 runs, values read only from Fig 2",
+   "note": "No numbers in the text",
+   "where": "Section 3, Fig 2"
+  }
+ ],
+ "limits": [
+  "Authors: prompts were near chance on QQP and RTE (preliminary)",
+  "Needs labeled training data",
+  "Prompts are not interpretable",
+  "Search is greedy over a large discrete space and sometimes brittle",
+  "Struggles with imbalanced training data; prompts often just raise the majority label",
+  "Only MLMs (BERT-base, RoBERTa-large) tested; autoregressive LMs said to be a trivial extension, not tested",
+  "Low-data comparison uses dev-set accuracy, finetuning hyperparameters not given",
+  "Search cost: 2 days on 8 2080Ti GPUs for SST-2",
+  "Perturbed RE shows much of MLM accuracy comes from stored facts, not extraction",
+  "Seeds and batch sizes for the search not stated"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "trigger tokens",
+   "definition": "tokens shared across all inputs, initialised to [MASK] and updated by the gradient-based search",
+   "where": "Sec 2.2"
+  },
+  {
+   "term": "label tokens",
+   "definition": "set V_y of vocabulary tokens whose summed MASK probability gives the class probability",
+   "where": "Sec 2.1, 2.3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Universal adversarial triggers for attacking and analyzing NLP (Wallace et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "gradient-based trigger search that AutoPrompt adapts",
+   "quote": null
+  },
+  {
+   "work": "Language models as knowledge bases? (LAMA, Petroni et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "fact retrieval benchmark and manual prompts baseline",
+   "quote": null
+  },
+  {
+   "work": "How can we know what language models know? (LPAQA, Jiang et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "mined and paraphrased prompts",
+   "quote": null
+  },
+  {
+   "work": "Exploiting cloze questions for few-shot text classification (Schick and Schutze)",
+   "year": 2020,
+   "arxiv": "2001.07676",
+   "relation": "related",
+   "note": "manual prompts plus semi-supervised learning",
+   "quote": null
+  },
+  {
+   "work": "Language models are few-shot learners (Brown et al.)",
+   "year": 2020,
+   "arxiv": "2005.14165",
+   "relation": "related",
+   "note": "cited as motivation for prompting",
+   "quote": null
+  },
+  {
+   "work": "T-REx (ElSahar et al.)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "training facts and RE contexts",
+   "quote": null
+  },
+  {
+   "work": "SICK (Marelli et al.)",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "NLI",
+   "quote": null
+  },
+  {
+   "work": "SST-2 (Socher et al.)",
+   "year": 2013,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "sentiment",
+   "quote": null
+  },
+  {
+   "work": "Sorokin and Gurevych relation extraction",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "supervised RE model",
+   "quote": null
+  },
+  {
+   "work": "BERT; RoBERTa models",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "BERT-base and RoBERTa-large",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Illustration of AUTOPROMPT applied to probe a masked language model's ability to perform sentiment analysis.",
+   "page": 2,
+   "why": "Shows template, trigger tokens, MASK and label-token marginalisation in one picture"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Effect of Training Data on sentiment analysis and NLI for AUTOPROMPT vs. finetuning.",
+   "page": 5,
+   "why": "Low-data accuracy curves with min/max over 10 runs"
+  },
+  {
+   "figure": "Table 3",
+   "caption": "Example Prompts by AUTOPROMPT for each task.",
+   "page": 6,
+   "why": "Shows what generated prompts look like for each task (a table, not in the figure extractor)"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Effect of Label and Trigger Set Sizes on sentiment analysis.",
+   "page": 11,
+   "why": "Hyperparameter sensitivity"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq. 2, p3",
+   "snippet": "Vcand = top-k_{w in V} [ w_in^T grad log p(y|x_prompt) ]",
+   "verbatim": false
+  },
+  {
+   "where": "Eq. 1, p2",
+   "snippet": "p(y|x_prompt) = sum_{w in V_y} p([MASK]=w | x_prompt)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "No embedded instructions seen",
+  "Figure pages from caption tool (p2, p5, p11); Table 3 is on text page 4228, i.e. PDF page 7 by EMNLP numbering offset, unchecked",
+  "Fig 2 values only readable from plots; the text omits them"
+ ]
+}
