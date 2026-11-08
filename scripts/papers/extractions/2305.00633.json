@@ -1,0 +1,552 @@
+{
+ "schema": 1,
+ "key": "2305.00633",
+ "pdf": "generative-ai/03-agentic-foundations/sources/xie-2023-self-evaluation-guided-beam-search.pdf",
+ "bib": {
+  "title": "Self-Evaluation Guided Beam Search for Reasoning",
+  "authors": [
+   "Yuxi Xie",
+   "Kenji Kawaguchi",
+   "Yiran Zhao",
+   "James Xu Zhao",
+   "Min-Yen Kan",
+   "Junxian He",
+   "Michael Qizhe Xie"
+  ],
+  "first_author": "Xie",
+  "year": 2023,
+  "venue": "NeurIPS 2023 (37th Conference on Neural Information Processing Systems)",
+  "arxiv": "2305.00633",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 102882,
+  "chars_total": 102882,
+  "engine": "pymupdf",
+  "skipped": "References skimmed; GPT-4 qualitative appendix figure text and prompt tables 7-15 only skimmed"
+ },
+ "type": "empirical",
+ "question": "Can stepwise LLM self-evaluation guide a stochastic beam search over reasoning steps to reduce error accumulation in multi-step reasoning?",
+ "hypothesis": "Step-level self-evaluated correctness confidence is a better-calibrated criterion than generation probability alone, and guiding decoding with it improves multi-step reasoning, especially for long chains.",
+ "contributions": [
+  "Stepwise self-evaluation (multiple-choice P(A)) as a constraint combined with LM probability in a decoding objective",
+  "Stochastic beam search with temperature tau and decay alpha over reasoning steps",
+  "Gains on arithmetic, symbolic and commonsense benchmarks with Codex; cost-matched gains with Llama-2 13B",
+  "Analysis showing self-evaluation pinpoints logic failures and helps more on longer chains"
+ ],
+ "method": {
+  "summary": "Each reasoning step (a CoT sentence or PAL line) is a decoding unit. For each of k beams, n step candidates are sampled from the generator; the same LLM, prompted with few-shot multiple-choice evaluation exemplars, scores each step's correctness C = P(option A). Candidates are scored by E = prod P^lambda C^(1-lambda) and k beams are sampled without replacement from softmax(E/tau). Final answer by majority vote over final beam.",
+  "task": "multi-step reasoning decoding (arithmetic, symbolic, commonsense)",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "GSM8K",
+    "role": "eval",
+    "size": null,
+    "split": "test",
+    "source": "Cobbe et al. 2021",
+    "preprocessing": "Table 4 bins sum to 1319 test instances (inferred)"
+   },
+   {
+    "name": "AQuA",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Ling et al. 2017",
+    "preprocessing": null
+   },
+   {
+    "name": "SVAMP",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Patel et al. 2021",
+    "preprocessing": null
+   },
+   {
+    "name": "ASDiv",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Miao et al. 2020",
+    "preprocessing": null
+   },
+   {
+    "name": "TabMWP",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Lu et al. 2023",
+    "preprocessing": null
+   },
+   {
+    "name": "BIG-Bench Date Understanding and Object Counting",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Srivastava et al. 2022",
+    "preprocessing": null
+   },
+   {
+    "name": "StrategyQA",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Geva et al. 2021",
+    "preprocessing": "Table 4 bins sum to 2289 instances (inferred)"
+   },
+   {
+    "name": "CommonsenseQA",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Talmor et al. 2019",
+    "preprocessing": null
+   },
+   {
+    "name": "Sports Understanding (BIG-Bench)",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Srivastava et al. 2022",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Codex (code-davinci-002)",
+    "role": "base",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Llama-2 13B",
+    "role": "base",
+    "params": "13B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "ChatGPT (gpt-3.5-turbo)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "baseline only; no logits, results obtained 20 March 2023"
+    }
+   },
+   {
+    "name": "GPT-4",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "CoT baseline and qualitative step scoring with binary values, mean of 3"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "stepwise stochastic beam search; beam pruning by sampling k without replacement from P_beam proportional to exp(E/tau)",
+   "temperature": "generation gamma: Codex PAL 0.4-0.8, Codex CoT 0.1-0.5, Llama-2 PAL <=0.5, CoT >0.5; sampling tau=0.5 PAL, 0.2 CoT; tau=0 deterministic single chain",
+   "top_p": null,
+   "max_tokens": "max 16 decoding steps",
+   "samples": "Codex k=5, n=16 rollouts per beam; Llama-2 n=2, k in [3,4] (k up to 10 in Fig 6a); majority vote over final beam from <=10 searches",
+   "prompting": "Generation: baseline CoT/PAL few-shot exemplars (GSM8K CoT 8-shot). Evaluation: multiple-choice 'Is the above step of reasoning (A) Correct (B) Incorrect', manual few-shot exemplars from baseline outputs on training data (GSM8K CoT 5-shot). Same backend LLM for both.",
+   "retrieval": null,
+   "parameters": {
+    "lambda": "0.5 for all datasets",
+    "alpha (tau decay)": "0.5",
+    "tau": "0.5 PAL, 0.2 CoT",
+    "k": "5 (Codex)",
+    "n": "16 (Codex), 2 (Llama-2)",
+    "max_steps": "16"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "accuracy",
+     "definition": "final-answer accuracy",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "# Tokens",
+     "definition": "generated tokens for baselines; plus extra input tokens for self-evaluation for the method",
+     "unit": "tokens",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "CoT",
+    "PoT",
+    "PAL",
+    "self-consistency variants (CoT-SC, PoT-SC, PAL-SC)",
+    "Diverse (verifier)"
+   ],
+   "protocol": "single run per setting as far as stated; no seeds or significance tests reported"
+  },
+  "availability": {
+   "code": "https://guideddecoding.github.io/",
+   "weights": null,
+   "data": null
+  },
+  "prompts": [
+   {
+    "purpose": "step self-evaluation (multiple choice, Fig 2)",
+    "text": "# Is the above step of reasoning:\n# (A) Correct\n# (B) Incorrect\n# The above step of reasoning is:",
+    "where": "Fig 2, p4"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "inference.parameters.k,n",
+    "quote": "We set k = 5, n = 16 with Codex backbone to balance the quality and efficiency.",
+    "where": "A.3"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Codex PAL guided beam search beats PAL-SC on GSM8K in multi-chain setting",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 85.5,
+   "unit": "%",
+   "baseline_value": 80.4,
+   "n": null,
+   "setup": "GSM8K, Codex, multiple chains, k=5 n=16",
+   "quote": "by guiding the reasoning decoding process of the Codex model (Chen et al., 2021), we achieve accuracies of 85.5%, 64.2%, and 77.2% on the GSM8K, AQuA, and StrategyQA benchmarks, compared to the vanilla reasoning-enhanced Codex performance of 80.4%, 58.6%, and 73.2%, respectively.",
+   "table": null,
+   "note": null,
+   "where": "p2 intro"
+  },
+  {
+   "claim": "StrategyQA with Codex CoT",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 77.2,
+   "unit": "%",
+   "baseline_value": 73.2,
+   "n": null,
+   "setup": "Codex, CoT, single chain",
+   "quote": "on StrategyQA, we achieve an accuracy of 77.2% compared with 73.2% of the baseline.",
+   "table": null,
+   "note": null,
+   "where": "3.2"
+  },
+  {
+   "claim": "Single-chain PAL gain on GSM8K",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy delta",
+   "value": "+5.3",
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Codex, tau=0 single chain vs PAL 72.0 -> 80.2",
+   "quote": "we observe absolute increases in accuracy of 5.3%, 8.3%, and 0.7% on GSM8K, AQuA, and SVAMP,",
+   "table": null,
+   "note": "Table 1: 80.2 vs 72.0 (8.2 points); text says 5.3 which appears to compare against another baseline, unclear",
+   "where": "3.2"
+  },
+  {
+   "claim": "Cost cost-matched: Llama-2 13B PAL GSM8K beats PAL-SC at lower token cost",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 46.1,
+   "unit": "%",
+   "baseline_value": 41.8,
+   "n": null,
+   "setup": "Llama-2 13B, PAL, multiple chains, n=2; 12.6k tokens vs 13.9k",
+   "quote": "we achieve 46.1% on GSM8K with a cost of 12.6k tokens, compared with the accuracy of 41.8% of self-consistency which costs 13.9k tokens.",
+   "table": null,
+   "note": null,
+   "where": "3.3"
+  },
+  {
+   "claim": "Overhead: single-chain PAL costs about 3x self-consistency on GSM8K at n=16",
+   "kind": "measured",
+   "source": null,
+   "metric": "tokens",
+   "value": "27.7k",
+   "unit": "tokens",
+   "baseline_value": "7.4k",
+   "n": null,
+   "setup": "Codex PAL GSM8K single chain",
+   "quote": null,
+   "table": "Table 1, row Ours-PAL single reasoning chain, column # Tokens",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "StrategyQA cost: 11.6k tokens vs CoT 0.06k",
+   "kind": "measured",
+   "source": null,
+   "metric": "tokens",
+   "value": "11.6k",
+   "unit": "tokens",
+   "baseline_value": "0.06k",
+   "n": null,
+   "setup": "Codex CoT",
+   "quote": null,
+   "table": "Table 2, row Ours-CoT, column # Tokens",
+   "note": null,
+   "where": null
+  },
+  {
+   "claim": "Gains grow with chain length on GSM8K (>=9 steps)",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy delta",
+   "value": "+9.78",
+   "unit": "points",
+   "baseline_value": "+5.49 for <7 steps",
+   "n": null,
+   "setup": "GSM8K, 358 instances with >=9 steps, PAL 72.9 -> 82.6",
+   "quote": null,
+   "table": "Table 4, GSM8K row >=9, column DeltaAccu.",
+   "note": null,
+   "where": null
+  },
+  {
+   "claim": "StrategyQA gain concentrated in long chains (>=5 steps)",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy delta",
+   "value": "+3.42",
+   "unit": "points",
+   "baseline_value": "+0.31 for <4 steps",
+   "n": null,
+   "setup": "StrategyQA, 351 instances, CoT 68.4 -> 71.8",
+   "quote": null,
+   "table": "Table 4, StrategyQA row >=5, column DeltaAccu.",
+   "note": null,
+   "where": null
+  },
+  {
+   "claim": "Using only correctness confidence (lambda=1) lowers GSM8K accuracy",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 74.5,
+   "unit": "%",
+   "baseline_value": 80.2,
+   "n": null,
+   "setup": "Codex PAL GSM8K, vs 80.2 at lambda=0.5; lambda=0 gives 77.1",
+   "quote": "when setting \u03bb to 1 (E = C) or 0 (E = P), the performance on GSM8K decreases from 80.2% to 74.5% and 77.1%, respectively.",
+   "table": null,
+   "note": null,
+   "where": null
+  },
+  {
+   "claim": "Beam size: multi-chain majority over final beam 42.8% at k=10 vs 35.7% single",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "42.8",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Llama-2 13B PAL GSM8K, k=10",
+   "quote": "(e.g., 42.8% compared with 35.7% when k = 10)",
+   "table": null,
+   "note": null,
+   "where": "3.4"
+  },
+  {
+   "claim": "Method lags CoT baseline on short commonsense chains with Llama-2 StrategyQA",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 70.6,
+   "unit": "%",
+   "baseline_value": 71.0,
+   "n": null,
+   "setup": "Llama-2 13B CoT multi-chain, equal cost",
+   "quote": null,
+   "table": "Table 3, row Ours, column StrategyQA",
+   "note": null,
+   "where": null
+  },
+  {
+   "claim": "Codex+method outperforms ChatGPT on StrategyQA",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 77.2,
+   "unit": "%",
+   "baseline_value": 65.9,
+   "n": null,
+   "setup": "vs ChatGPT CoT 65.9",
+   "quote": "StrategyQA (77.2% vs. 65.9%)",
+   "table": null,
+   "note": null,
+   "where": "A.4"
+  },
+  {
+   "claim": "No gain when baseline strong: Object Counting",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 96.8,
+   "unit": "%",
+   "baseline_value": 96.7,
+   "n": null,
+   "setup": "Codex PAL, baseline 96.7",
+   "quote": "when the baseline itself performs well on the task (e.g., 96.7% on Object Counting), our approach may not",
+   "table": null,
+   "note": null,
+   "where": "3.2"
+  }
+ ],
+ "limits": [
+  "Needs token logits, so unusable with GPT-4/ChatGPT-style APIs (authors)",
+  "Extra cost from candidate sampling and self-evaluation; best for longer chains (authors)",
+  "Little gain when baseline already confident/low diversity (Object Counting, Sports)",
+  "Weaker on short chains: below CoT at equal cost on commonsense with Llama-2",
+  "Correctness confidence barely separates correct from wrong on StrategyQA; plausible-but-wrong chains score high (Fig 7b R41)",
+  "Self-evaluation is by the same model; no seeds or significance tests; Codex deprecated",
+  "Only two Llama-2 13B cost studies; k=5, n=16 headline results cost ~3x to ~75x baseline tokens"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "self-evaluation score",
+   "definition": "C(st)=P_LMC(A | promptC, Q, s1:t), token probability of option (A) Correct",
+   "where": "Eq 5"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Self-consistency (Wang et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "majority voting baseline",
+   "quote": null
+  },
+  {
+   "work": "PAL (Gao et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "program-aided prompting",
+   "quote": null
+  },
+  {
+   "work": "Language models (mostly) know what they know (Kadavath et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "multiple-choice self-evaluation",
+   "quote": null
+  },
+  {
+   "work": "Chain-of-thought (Wei et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "Tree of Thoughts (Yao et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "alternative search over thoughts",
+   "quote": null
+  },
+  {
+   "work": "Stochastic beams (Kool et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "stochastic beam search",
+   "quote": null
+  },
+  {
+   "work": "Reflexion (Shinn et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "self-evaluation",
+   "quote": null
+  },
+  {
+   "work": "Self-Refine (Madaan et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "self-evaluation",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Self-Evaluation can calibrate the decoding direction in multi-step reasoning.",
+   "page": 2,
+   "why": "PAL example where greedy gives 8,800 vs guided 8,000"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Our framework of self-evaluation guided stochastic beam search for multi-step reasoning.",
+   "page": 3,
+   "why": "timestep t gen/eval/select loop and the multiple-choice eval prompt"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Accuracy curves on GSM8K of different methods with the change of the cost.",
+   "page": 7,
+   "why": "cost-accuracy against self-consistency"
+  },
+  {
+   "figure": "Fig 7",
+   "caption": "Comparisons among predictions of high and low self-evaluation scores",
+   "page": 9,
+   "why": "per-step C/P/E on correct vs wrong chains"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "No embedded instructions found. Table 1 text says PAL single-chain gain 5.3 on GSM8K but table gives 80.2 vs 72.0; Figure text partly garbled."
+ ]
+}

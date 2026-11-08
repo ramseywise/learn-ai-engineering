@@ -1,0 +1,573 @@
+{
+ "schema": 1,
+ "key": "https://doi.org/10.18653/v1/2023.acl-long.546",
+ "pdf": "generative-ai/02-rag-retrieval/sources/mallen-2023-when-not-trust-language-models.pdf",
+ "bib": {
+  "title": "When Not to Trust Language Models: Investigating Effectiveness of Parametric and Non-Parametric Memories",
+  "authors": [
+   "Alex Mallen",
+   "Akari Asai",
+   "Victor Zhong",
+   "Rajarshi Das",
+   "Daniel Khashabi",
+   "Hannaneh Hajishirzi"
+  ],
+  "first_author": "Mallen",
+  "year": 2023,
+  "venue": "Proceedings of the 61st Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers), pages 9802-9822",
+  "arxiv": "2212.10511",
+  "doi": "10.18653/v1/2023.acl-long.546"
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 69499,
+  "chars_total": 69499,
+  "engine": "pymupdf",
+  "skipped": "Reference list skimmed only; Table 3/4 qualitative example rows not read in detail."
+ },
+ "type": "empirical",
+ "question": "When do LMs memorize factual knowledge, how much do scale and retrieval help, and can retrieval be used only when needed?",
+ "hypothesis": "Factual knowledge frequently discussed on the web is easily memorized by LMs, while less discussed knowledge is not and needs retrieved non-parametric memory.",
+ "contributions": [
+  "POPQA: 14k entity-centric questions over long-tail entities",
+  "Large-scale probing of 10 LMs showing memorization depends on subject popularity and relation type, and that scaling mostly helps popular facts",
+  "Adaptive Retrieval: retrieve only when subject popularity is below a per-relation threshold"
+ ],
+ "method": {
+  "summary": "Probe ten LMs (GPT-Neo, OPT, GPT-3) closed-book on POPQA and EntityQuestions, add top-1 retrieved paragraph (BM25, Contriever) or generated context (GenRead), then gate retrieval by Wikipedia page-view popularity thresholds tuned per relation.",
+  "task": "open-domain entity-centric factual QA",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "POPQA",
+    "role": "eval",
+    "size": "14k questions (14,267 in Fig 4; 14,282 in Appendix B), 16 relation types",
+    "split": "75% / 25% random split repeated 100 times for threshold selection and evaluation",
+    "source": "Wikidata triples verbalised with manual templates; popularity = Wikipedia monthly page views",
+    "preprocessing": "Triples sampled with weight to popularity: keep iff f > exp(8R-6), R~U(0,1), f = exact-match frequency of subject aliases in an 800 MB random sample of C4; cap 2000 triples per relation"
+   },
+   {
+    "name": "EntityQuestions",
+    "role": "eval",
+    "size": "82% of questions (unique subject entity match to Wikidata); 24 relation types in Fig 18",
+    "split": null,
+    "source": "Sciavolino et al. 2021",
+    "preprocessing": null
+   },
+   {
+    "name": "NQ-open",
+    "role": "eval",
+    "size": null,
+    "split": "dev set",
+    "source": "Kwiatkowski et al. 2019",
+    "preprocessing": "Used only for the popularity distribution in Fig 3 (TagMe, score threshold 0.22)"
+   }
+  ],
+  "models": [
+   {
+    "name": "OPT",
+    "role": "evaluated",
+    "params": "1.3B, 2.7B, 6.7B, 13B",
+    "architecture": "decoder-only",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-Neo / GPT-J / GPT-NeoX",
+    "role": "evaluated",
+    "params": "1.3B, 2.7B, 6B, 20B",
+    "architecture": "decoder-only",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-3 davinci-002, davinci-003",
+    "role": "evaluated",
+    "params": "~175B",
+    "architecture": "decoder-only",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Contriever",
+    "role": "retriever",
+    "params": null,
+    "architecture": "dense retriever pretrained on unlabeled corpora, fine-tuned on MS MARCO",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "BM25",
+    "role": "retriever",
+    "params": null,
+    "architecture": "static term-based retriever, no training",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "one pass per question; no seeds stated; thresholds averaged over 100 random 75/25 splits",
+   "prompting": "Template 'Q: <question> A:'; zero-shot for GPT-3 (cost), 15-shot for GPT-Neo/OPT; POPQA shots: one random QA pair from each of the 15 other relations; EntityQuestions: simple random 15",
+   "retrieval": "Top-1 Wikipedia paragraph (Dec 2018 dump), concatenated with question; BM25 or Contriever; GenRead prompts LM to generate a context document",
+   "parameters": {
+    "popularity_threshold": "per relation type, brute-force search maximising adaptive accuracy on 75% of POPQA",
+    "adaptive_accuracy": "retrieval-augmented prediction below threshold, parametric prediction above"
+   },
+   "other": {
+    "quantisation": "int8 for OPT 13B and GPT-Neo 20B; single V100 32GB for models >2B",
+    "api_cost": "$275 total",
+    "decoding_note": "decoding settings not stated"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "accuracy",
+     "definition": "correct if any substring of the prediction exact-matches any gold answer",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "recall@1",
+     "definition": "whether a gold answer is in the top-1 retrieved document",
+     "unit": "fraction",
+     "higher_is_better": true
+    },
+    {
+     "name": "correlation",
+     "definition": "correlation between log-popularity bin centre and bin accuracy, uniform bins",
+     "unit": "r",
+     "higher_is_better": null
+    }
+   ],
+   "baselines": [
+    "vanilla LM",
+    "GenRead",
+    "always-retrieve BM25",
+    "always-retrieve Contriever"
+   ],
+   "protocol": "Wilson 95% CIs on binned accuracy; bins under 40 (Fig 8) or 5 (Figs 20-21) samples dropped; no significance tests"
+  },
+  "availability": {
+   "code": "https://github.com/AlexTMallen/adaptive-retrieval",
+   "weights": null,
+   "data": "same repository (POPQA)"
+  },
+  "prompts": [
+   {
+    "purpose": "closed-book QA format",
+    "text": "Q: <question> A:",
+    "where": "Section 4.1"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "The 4,000 least popular POPQA questions stay near 16-19% accuracy from GPT-j 6B to GPT-3 davinci-003, so scaling does not fix the long tail.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "16% (GPT-j 6B) vs 19% (davinci-003)",
+   "unit": "% accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "POPQA (14k questions, 16 relations), closed-book, Q:/A: template, exact-match-substring accuracy; 4,000 least popular questions; GPT-3 zero-shot, others 15-shot",
+   "quote": "for the 4,000 least popular questions in POPQA, GPT-j 6B has 16% accuracy and GPT-3 davinci-003 has 19% accuracy",
+   "table": null,
+   "note": "Section 4.2 gives GPT-Neo 6B 15%, 20B 16%, davinci-003 19% for the same slice.",
+   "where": "Intro, p.2"
+  },
+  {
+   "claim": "Contriever-augmented GPT-Neo 2.7B beats vanilla GPT-3 davinci-003 on the 4,000 least popular questions.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "POPQA, top-1 Wikipedia paragraph (Dec 2018 dump) from Contriever, 15-shot GPT-Neo vs zero-shot davinci-003",
+   "quote": "a neural dense retriever (Izacard et al., 2022a)-augmented GPT-neo 2.7B outperforms GPT-3 davinci-003 on the 4,000 least popular questions",
+   "table": null,
+   "note": null,
+   "where": "Intro, p.2"
+  },
+  {
+   "claim": "Retrieval gives GPT-3 davinci-003 a 7% accuracy gain even though it is the largest model.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "7%",
+   "unit": "% accuracy points (as printed)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "POPQA, top-1 Contriever paragraph, zero-shot davinci-003",
+   "quote": "Contriever gives 7% accuracy gains on top of GPT-3 davinci-003",
+   "table": null,
+   "note": null,
+   "where": "Section 5.2, p.5"
+  },
+  {
+   "claim": "For 10% of questions retrieval flips a correct GPT-3 answer to wrong, and Contriever recall@1 there is 0.14 against 0.42 overall.",
+   "kind": "measured",
+   "source": null,
+   "metric": "recall@1",
+   "value": "0.14 vs 0.42",
+   "unit": "recall@1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "POPQA, GPT-3 davinci-003 with vs without Contriever top-1 paragraph; 10% of questions in the 'LM succeeded, retrieval failed' cell",
+   "quote": "recall@1 is significantly lower than the overall recall@1 (0.14 vs 0.42 overall)",
+   "table": null,
+   "note": null,
+   "where": "Section 5.2, Table 1"
+  },
+  {
+   "claim": "For 17% of questions retrieval rescues a wrong GPT-3 answer, with recall@1 of 0.88.",
+   "kind": "measured",
+   "source": null,
+   "metric": "recall@1",
+   "value": "0.88",
+   "unit": "recall@1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "POPQA, davinci-003 plus Contriever",
+   "quote": "the 17% of questions for which retrieval causes the LM to correctly answer a question it would otherwise have failed to answer, the recall@1 is 0.88",
+   "table": null,
+   "note": "Quote text is in the same sentence as 'for' after line break; number 0.88 also in Table 1.",
+   "where": "Section 5.2, Table 1"
+  },
+  {
+   "claim": "Popularity-gated Adaptive Retrieval with GenRead and Contriever on davinci-003 reaches 46.5% on POPQA, 5.3% above any non-adaptive method.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "46.5%",
+   "unit": "% accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "POPQA, GPT-3 davinci-003, per-relation popularity thresholds tuned on 75% of data, tested on remaining 25%, mean over 100 random splits",
+   "quote": "yielding 46.5% accuracy, 5.3% higher than any non-adaptive method",
+   "table": null,
+   "note": null,
+   "where": "Section 6.2, p.7"
+  },
+  {
+   "claim": "Adaptive Retrieval improves POPQA performance by up to 10% and halves GPT-3 API cost.",
+   "kind": "measured",
+   "source": null,
+   "metric": "API cost",
+   "value": "about 50% API cost reduction",
+   "unit": "cost",
+   "baseline_value": null,
+   "n": null,
+   "setup": "POPQA, GPT-3, popularity-threshold gating",
+   "quote": "reducing GPT-3 API costs by half",
+   "table": null,
+   "note": null,
+   "where": "Intro, p.2"
+  },
+  {
+   "claim": "Large models retrieve for few questions: davinci-003 with BM25 retrieves for only 40% of POPQA questions.",
+   "kind": "measured",
+   "source": null,
+   "metric": "retrieval rate",
+   "value": "40%",
+   "unit": "% of questions that trigger retrieval",
+   "baseline_value": null,
+   "n": null,
+   "setup": "POPQA, Adaptive Vanilla/BM25",
+   "quote": "GPT-3 davinci-003 only retrieves for 40% of ques-",
+   "table": null,
+   "note": "Text breaks across a hyphenated line; GPT-neox 20B reported at <20%.",
+   "where": "Section 6.2, p.7"
+  },
+  {
+   "claim": "Adaptive retrieval reduces inference time by up to 9% versus always retrieving.",
+   "kind": "measured",
+   "source": null,
+   "metric": "latency",
+   "value": "9%",
+   "unit": "% latency",
+   "baseline_value": null,
+   "n": null,
+   "setup": "POPQA, GPT-J 6B and GPT-neox 20B on one V100 32GB",
+   "quote": "reducing inference time up to 9% from standard",
+   "table": null,
+   "note": null,
+   "where": "Section 6.2, p.7"
+  },
+  {
+   "claim": "On EntityQuestions Adaptive Retrieval cuts API cost 15% at equal accuracy to always retrieving.",
+   "kind": "measured",
+   "source": null,
+   "metric": "API cost",
+   "value": "15%",
+   "unit": "% API cost",
+   "baseline_value": null,
+   "n": null,
+   "setup": "EntityQuestions, GPT-3 davinci-003, BM25",
+   "quote": "Adaptive Re-",
+   "table": null,
+   "note": null,
+   "where": "Fig 12 caption, p.7"
+  },
+  {
+   "claim": "Overall POPQA closed-book accuracy: GPT-3 35%, GPT-Neo 20B 25%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "35% / 25%",
+   "unit": "% accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "POPQA (14k questions, 16 relations), closed-book, Q:/A: template, exact-match-substring accuracy; GPT-3 zero-shot, GPT-Neo 15-shot",
+   "quote": "GPT-3 achieves 35% accuracy, and GPT-Neo 20B achieves 25% accuracy",
+   "table": null,
+   "note": null,
+   "where": "Section 4.2, p.4"
+  },
+  {
+   "claim": "Popularity-accuracy correlation grows with scale: roughly 0.4 for davinci-003, about 0.1 for GPT-Neo 1.3B.",
+   "kind": "measured",
+   "source": null,
+   "metric": "correlation",
+   "value": "0.4 vs 0.1",
+   "unit": "correlation of log-popularity bin centre with bin accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "POPQA, per relationship type",
+   "quote": "GPT-3 003 shows the highest positive correlation (roughly 0.4) while GPT-Neo-1.3B shows relatively weak positive cor-",
+   "table": null,
+   "note": null,
+   "where": "Section 4.2, Fig 4"
+  },
+  {
+   "claim": "Scaling improves accuracy only for questions with log10 popularity above 4; the tail stays flat.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "log10(popularity) > 4",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "POPQA and EntityQuestions, Fig 5, error bars 95% CI",
+   "quote": "there is an improvement in accuracy as model size in-",
+   "table": null,
+   "note": "Qualitative threshold read from text; not a headline accuracy.",
+   "where": "Section 4.2, Fig 5"
+  },
+  {
+   "claim": "GenRead (generate context) costs 70 seconds per query on GPT-NeoX 20B and helps little for small models.",
+   "kind": "measured",
+   "source": null,
+   "metric": "latency",
+   "value": "70 s/query",
+   "unit": "seconds",
+   "baseline_value": null,
+   "n": null,
+   "setup": "POPQA, GPT-NeoX 20B, int8, single V100 32GB",
+   "quote": "GenRead has potentially prohibitive inference time costs, with GPT-NeoX 20B taking 70 seconds per query",
+   "table": null,
+   "note": null,
+   "where": "Section 5.2, p.5"
+  },
+  {
+   "claim": "Retrieved passages mislead on popular entities mostly by fetching a document about a wrong entity (e.g. same-name person).",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "POPQA qualitative examples, Table 3, davinci-003 + Contriever",
+   "quote": "retrieves a document about a mistaken entity",
+   "table": null,
+   "note": "Qualitative, no number.",
+   "where": "Appendix C.3"
+  },
+  {
+   "claim": "Total GPT-3 API spend was $275 for 14,282 questions across two davinci models and four methods.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "$275",
+   "unit": "USD",
+   "baseline_value": null,
+   "n": null,
+   "setup": "POPQA, davinci-002 and davinci-003; vanilla $0.46, Contriever $3.08, BM25 $2.80, GenRead $3.25 per 1000 questions",
+   "quote": "GPT-3 API usage totaled to $275",
+   "table": null,
+   "note": null,
+   "where": "Appendix B"
+  }
+ ],
+ "limits": [
+  "Relies on two synthetic, template-based entity datasets; transfer to naturally occurring knowledge not established (Limitations).",
+  "Adaptive Retrieval effectiveness depends on QA pipeline details; popularity is time-dependent and page views are one proxy.",
+  "Only entity-centric factual knowledge; commonsense is an open question.",
+  "Only top-1 retrieved paragraph, Dec 2018 Wikipedia, models up to ~175B (2022-era); GenRead and BM25 run on fewer models for EntityQuestions due to compute.",
+  "Gate needs subject entity and relation type linked from the question; the popularity threshold is tuned per relation on labelled data.",
+  "No decoding settings stated; no seeds."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Adaptive Retrieval",
+   "definition": "decides when to retrieve passages only based on input query information and augments the input with retrieved non-parametric memories only when necessary",
+   "where": "Section 6"
+  },
+  {
+   "term": "parametric knowledge",
+   "definition": "knowledge stored in LM parameters",
+   "where": "Intro"
+  },
+  {
+   "term": "non-parametric knowledge",
+   "definition": "retrieved text chunks",
+   "where": "Intro"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Kandpal et al., Large language models struggle to learn long-tail knowledge",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "concurrent; co-occurrence frequency predicts QA accuracy",
+   "quote": null
+  },
+  {
+   "work": "EntityQuestions (Sciavolino et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "second benchmark",
+   "quote": null
+  },
+  {
+   "work": "Contriever (Izacard et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "dense retriever",
+   "quote": null
+  },
+  {
+   "work": "BM25 (Robertson et al.)",
+   "year": 2009,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "sparse retriever",
+   "quote": null
+  },
+  {
+   "work": "GenRead (Yu et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "generate-then-read",
+   "quote": null
+  },
+  {
+   "work": "Roberts et al., closed-book QA with T5",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "related",
+   "note": "finding that scaling helps memorisation is dampened here",
+   "quote": null
+  },
+  {
+   "work": "He et al., kNN-LM token-level retrieval decision",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "this paper moves the decision to the query level",
+   "quote": null
+  },
+  {
+   "work": "Lewis et al. RAG; Borgeaud et al. RETRO",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "related",
+   "note": "retrieval-augmented LMs",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Relationship between subject entity popularity in a question and GPT-3 performance in open-domain QA, with and without retrieved passages. Adaptive Retrieval only retrieves when necessary.",
+   "page": 1,
+   "why": "One picture of the whole argument: retrieval wins on the tail, parametric wins on popular entities, threshold between."
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "POPQA scaling results, broken down by question popularity level.",
+   "page": 5,
+   "why": "Shows scaling lifting only high-popularity lines."
+  },
+  {
+   "figure": "Fig 8",
+   "caption": "GPT-3 davinci-003 accuracy versus relative popularity; retrieval-augmented (dashed) vs parametric (solid).",
+   "page": 7,
+   "why": "Crossover curve that motivates a popularity gate."
+  },
+  {
+   "figure": "Fig 9",
+   "caption": "POPQA performance of GPT-neo models and GPT3 davinci-003 with different retrieval methods.",
+   "page": 8,
+   "why": "Adaptive vs always-retrieve vs vanilla."
+  },
+  {
+   "figure": "Fig 11",
+   "caption": "POPQA latency for large GPT-neo models and API costs for GPT3.",
+   "page": 9,
+   "why": "Cost side of selective retrieval."
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Text cache hyphen line-breaks in some quotes; a few result quotes are truncated at line ends to match the cache.",
+  "Question counts differ: 14,267 in Fig 4, 14,282 in Appendix B, '14k' elsewhere.",
+  "Page numbers are PDF page indexes from figures.py; page 1 is the ACL page 9802."
+ ]
+}

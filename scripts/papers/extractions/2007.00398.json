@@ -1,0 +1,569 @@
+{
+ "schema": 1,
+ "key": "2007.00398",
+ "pdf": "ai-engineering/08-multimodal-engineering/sources/mathew-2021-docvqa.pdf",
+ "bib": {
+  "title": "DocVQA: A Dataset for VQA on Document Images",
+  "authors": [
+   "Minesh Mathew",
+   "Dimosthenis Karatzas",
+   "C.V. Jawahar"
+  ],
+  "first_author": "Mathew",
+  "year": 2021,
+  "venue": "preprint",
+  "arxiv": "2007.00398",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 49501,
+  "chars_total": 49501,
+  "engine": "pymupdf",
+  "skipped": "references after [32] skimmed only; no supplementary included in PDF"
+ },
+ "type": "benchmark",
+ "question": "How well can existing scene-text VQA and reading-comprehension models answer questions about real document images, and how far are they from humans?",
+ "hypothesis": "Answering document questions needs reading text and interpreting it within layout and structure, which existing models handle poorly.",
+ "contributions": [
+  "DocVQA, 12,767 document images with 50,000 questions and answers, categorised by reasoning requirement",
+  "Baselines: heuristics, upper bounds, human performance, scene-text VQA models and NLP models"
+ ],
+ "method": {
+  "summary": "Pages from UCSF Industry Documents Library were hand-picked and annotated by remote workers in three stages with extractive answers. Baselines are heuristics, LoRRA and M4C trained via MMF, and BERT QA models fine-tuned on SQuAD-style serialized OCR text.",
+  "task": "extractive document visual question answering",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "DocVQA",
+    "role": "both",
+    "size": "50,000 questions on 12,767 images from 6,071 documents",
+    "split": "80-10-10 random: train 39,463 q / 10,194 images; val 5,349 q / 1,286 images; test 5,188 q / 1,287 images",
+    "source": "UCSF Industry Documents Library; licence not stated",
+    "preprocessing": "OCR from a commercial OCR application, serialized top-left to bottom-right, space-separated; answer span approximated by first match of answer string (TriviaQA approach)"
+   },
+   {
+    "name": "SQuAD 1.1",
+    "role": "pretrain",
+    "size": null,
+    "split": null,
+    "source": "used via bert-large-uncased-whole-word-masking-finetuned-squad",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "LoRRA",
+    "role": "baseline",
+    "params": null,
+    "architecture": "bottom-up/top-down attention with OCR-token attention and copy from OCR",
+    "init_from": "GloVe, ResNet-152 (ImageNet), Faster R-CNN (Visual Genome), FastText",
+    "tokenizer": null,
+    "vocab": "4,341 answers (occur more than once in train)",
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "M4C",
+    "role": "baseline",
+    "params": null,
+    "architecture": "multimodal transformer with iterative answer decoding and OCR pointer",
+    "init_from": "BERT question embedding, Faster R-CNN, FastText, PHOC",
+    "tokenizer": null,
+    "vocab": "5,000 most frequent answer words in train",
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "bert-base / bert-large / bert-large-squad",
+    "role": "baseline",
+    "params": null,
+    "architecture": "BERT extractive QA (start/end span head)",
+    "init_from": "bert-base-uncased, bert-large-uncased-whole-word-masking, bert-large-uncased-whole-word-masking-finetuned-squad",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "extractive span prediction (BERT); LoRRA/M4C as original works",
+   "optimizer": "Adam (BERT)",
+   "lr": "5e-05 (bert-base); 2e-05 (bert-large, bert-large-squad)",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "32 (bert-base); 8 (bert-large, bert-large-squad)",
+   "steps": null,
+   "epochs": "2 (bert-base); 6 (bert-large, bert-large-squad)",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "2x Nvidia GeForce 1080 Ti (bert-base); 4 GPUs (bert-large, unspecified type)",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "LoRRA_M4C": "official MMF implementations, training settings and hyperparameters same as original works"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "dynamic_vocab_size": "LoRRA 50/150/500; M4C 50/150/300/500 OCR tokens",
+    "fixed_vocab": "with/without",
+    "object_features": "with/without"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "ANLS",
+     "definition": "Average Normalized Levenshtein Similarity, from ST-VQA; soft match so OCR errors are not severely penalized; primary metric",
+     "unit": "0-1",
+     "higher_is_better": true
+    },
+    {
+     "name": "Accuracy",
+     "definition": "percentage of questions where prediction exactly matches any target answer",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Random answer",
+    "Random OCR token",
+    "Longest OCR token",
+    "Majority answer",
+    "Vocab UB",
+    "OCR substring UB",
+    "OCR subsequence UB",
+    "Human"
+   ],
+   "protocol": "single run per config on val and test; human answers on all test questions from a few volunteers; no seeds or significance tests reported"
+  },
+  "availability": {
+   "code": "docvqa.org",
+   "weights": null,
+   "data": "docvqa.org"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.lr",
+    "quote": "We use Adam optimizer [24] with a learning rate of 5e −05.",
+    "where": "5.2"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Human accuracy on test is far above all models",
+   "kind": "measured",
+   "source": null,
+   "metric": "Accuracy",
+   "value": 94.36,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "DocVQA test split, 5,188 questions; volunteers from the authors' institution",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Human, column test Acc."
+  },
+  {
+   "claim": "Human ANLS on test",
+   "kind": "measured",
+   "source": null,
+   "metric": "ANLS",
+   "value": 0.981,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "DocVQA test split, 5,188 questions",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Human, column test ANLS"
+  },
+  {
+   "claim": "Best baseline (bert-large-squad fine-tuned on DocVQA) test ANLS",
+   "kind": "measured",
+   "source": null,
+   "metric": "ANLS",
+   "value": 0.665,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "DocVQA test split, 5,188 questions; BERT-large whole-word-masking, SQuAD 1.1 then DocVQA, OCR text only",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row bert-large-squad with DocVQA finetune, column test ANLS"
+  },
+  {
+   "claim": "Best baseline test accuracy",
+   "kind": "measured",
+   "source": null,
+   "metric": "Accuracy",
+   "value": 55.77,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "DocVQA test split, 5,188 questions",
+   "note": "Text says around 55% exactly matching; table gives 55.77",
+   "where": "5.3",
+   "table": "Table 3, row bert-large-squad with DocVQA finetune, column test Acc."
+  },
+  {
+   "claim": "Without DocVQA fine-tuning, bert-large-squad scores far lower",
+   "kind": "measured",
+   "source": null,
+   "metric": "ANLS",
+   "value": 0.475,
+   "unit": null,
+   "baseline_value": 0.665,
+   "n": null,
+   "setup": "DocVQA test split, 5,188 questions; SQuAD-only",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row bert-large-squad without DocVQA finetune, column test ANLS"
+  },
+  {
+   "claim": "bert-base fine-tuned on DocVQA test ANLS",
+   "kind": "measured",
+   "source": null,
+   "metric": "ANLS",
+   "value": 0.574,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "DocVQA test split, 5,188 questions",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row bert-base, column test ANLS"
+  },
+  {
+   "claim": "bert-large fine-tuned on DocVQA test ANLS",
+   "kind": "measured",
+   "source": null,
+   "metric": "ANLS",
+   "value": 0.61,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "DocVQA test split, 5,188 questions",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row bert-large, column test ANLS"
+  },
+  {
+   "claim": "Best M4C variant test ANLS (dynamic vocab 500)",
+   "kind": "measured",
+   "source": null,
+   "metric": "ANLS",
+   "value": 0.391,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "DocVQA test split, 5,188 questions; M4C, dynamic vocab size 500",
+   "note": "Which rows omit object features is not recoverable from the cached text (checkmarks lost)",
+   "where": "Table 2",
+   "table": "Table 2, row M4C, dynamic vocab 500, column test ANLS"
+  },
+  {
+   "claim": "Best M4C variant test accuracy",
+   "kind": "measured",
+   "source": null,
+   "metric": "Accuracy",
+   "value": 24.81,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "DocVQA test split, 5,188 questions",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row M4C, dynamic vocab 500, column test Acc."
+  },
+  {
+   "claim": "LoRRA original setting test ANLS",
+   "kind": "measured",
+   "source": null,
+   "metric": "ANLS",
+   "value": 0.112,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "DocVQA test split, 5,188 questions; dynamic vocab 50",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row LoRRA, first row, column test ANLS"
+  },
+  {
+   "claim": "Random OCR token test ANLS",
+   "kind": "measured",
+   "source": null,
+   "metric": "ANLS",
+   "value": 0.014,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "DocVQA test split, 5,188 questions",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Rnadom OCR token, column test ANLS"
+  },
+  {
+   "claim": "Majority answer test accuracy",
+   "kind": "measured",
+   "source": null,
+   "metric": "Accuracy",
+   "value": 0.89,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "DocVQA test split, 5,188 questions",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Majority answer, column test Acc."
+  },
+  {
+   "claim": "OCR substring upper bound on test",
+   "kind": "measured",
+   "source": null,
+   "metric": "Accuracy",
+   "value": 87.0,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "DocVQA test split, 5,188 questions; answer is substring of serialized OCR",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row OCR substring UB, column test Acc."
+  },
+  {
+   "claim": "OCR subsequence upper bound on test",
+   "kind": "measured",
+   "source": null,
+   "metric": "Accuracy",
+   "value": 77.0,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "DocVQA test split, 5,188 questions",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row OCR subsequence UB, column test Acc."
+  },
+  {
+   "claim": "Vocab upper bound on test",
+   "kind": "measured",
+   "source": null,
+   "metric": "Accuracy",
+   "value": 33.78,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "DocVQA test split, 5,188 questions; vocabulary of 4,341 answers occurring more than once in train",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Vocab UB, column test Acc."
+  },
+  {
+   "claim": "Dataset size",
+   "kind": "measured",
+   "source": null,
+   "metric": "questions",
+   "value": 50000,
+   "unit": "questions",
+   "baseline_value": null,
+   "n": null,
+   "setup": "12,767 images, 6,071 documents",
+   "note": null,
+   "where": "3.2",
+   "quote": "The DocVQA comprises 50, 000 questions framed on\n12, 767 images."
+  },
+  {
+   "claim": "Average OCR tokens per image",
+   "kind": "measured",
+   "source": null,
+   "metric": "tokens",
+   "value": 182.75,
+   "unit": "tokens",
+   "baseline_value": null,
+   "n": null,
+   "setup": "DocVQA vs SQuAD 1.1 contexts 117.23",
+   "note": null,
+   "where": "3.2",
+   "quote": "Average number of text tokens in an image\nor context is the highest in the case of DocVQA (182.75)."
+  },
+  {
+   "claim": "Share of unique questions",
+   "kind": "measured",
+   "source": null,
+   "metric": "unique questions",
+   "value": 70.72,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "50,000 questions",
+   "note": null,
+   "where": "3.2",
+   "quote": "35, 362 (70.72%) questions are unique."
+  },
+  {
+   "claim": "M4C ANLS improves about 50% when dynamic vocab goes 50 to 500; LoRRA does not benefit",
+   "kind": "measured",
+   "source": null,
+   "metric": "relative ANLS gain",
+   "value": 50,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "M4C val",
+   "note": null,
+   "where": "5.3",
+   "quote": "Increasing the size of the dynamic\nvocabulary from 50 to 500 improves the ANLS by around\n50%."
+  }
+ ],
+ "limits": [
+  "Answers are extractive spans copied verbatim from the page, so abstractive and numeric-reasoning questions are not covered.",
+  "All baselines depend on one commercial OCR; OCR substring UB of 87% caps text-only models.",
+  "Baselines are scene-text VQA and text-only BERT models; no layout-aware pretrained document models.",
+  "Human performance from a few volunteers at the authors' institution.",
+  "Per-question-type scores are shown only as a bar chart (Fig 8), no numbers.",
+  "Single runs, no seeds or variance; GPU type for bert-large not stated; licence not stated.",
+  "Authors note models fall short specifically on questions needing document structure, figures, photographs and handwriting."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "ANLS",
+   "definition": "Average Normalized Levenshtein Similarity, so minor answer mismatches stemming from OCR errors are not severely penalized",
+   "where": "5.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "ST-VQA / ICDAR 2019 scene text VQA competition",
+   "year": 2019,
+   "arxiv": "1907.00490",
+   "relation": "uses-method",
+   "note": "source of ANLS metric",
+   "quote": null
+  },
+  {
+   "work": "TextVQA / LoRRA (Singh et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "LoRRA baseline",
+   "quote": null
+  },
+  {
+   "work": "M4C (Hu et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "iterative answer prediction with pointer-augmented multimodal transformers",
+   "quote": null
+  },
+  {
+   "work": "BERT (Devlin et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "extractive QA models",
+   "quote": null
+  },
+  {
+   "work": "SQuAD 1.1 (Rajpurkar et al.)",
+   "year": 2016,
+   "arxiv": "1606.05250",
+   "relation": "uses-data",
+   "note": "fine-tuned BERT checkpoint and format",
+   "quote": null
+  },
+  {
+   "work": "TriviaQA (Joshi et al.)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "first-match answer span approximation",
+   "quote": null
+  },
+  {
+   "work": "UCSF Industry Documents Library",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "document images",
+   "quote": null
+  },
+  {
+   "work": "MMF framework",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "official LoRRA/M4C implementations",
+   "quote": null
+  },
+  {
+   "work": "OCR-VQA, DVQA, FigureQA",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "domain-specific VQA datasets",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Example question-answer pairs from DocVQA.",
+   "page": 1,
+   "why": "shows layout-dependent extractive questions"
+  },
+  {
+   "figure": "Fig 8",
+   "caption": "Best baselines from VQA space and reading comprehension space pitted against the human performance for different question types.",
+   "page": 8,
+   "why": "per-question-type gap to humans"
+  },
+  {
+   "figure": "Fig 7",
+   "caption": "Qualitative results from our experiments.",
+   "page": 8,
+   "why": "M4C wins layout, BERT wins form, both fail on illustrations"
+  },
+  {
+   "figure": "Table 3",
+   "caption": "Performance of BERT question answering models.",
+   "page": 7,
+   "why": "SQuAD then DocVQA fine-tune ablation"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Table 2 checkmark columns lost in text extraction; rows identified only by dynamic vocab size",
+  "Typo 'Rnadom OCR token' in Table 1",
+  "Fig 8 numbers not in text"
+ ]
+}

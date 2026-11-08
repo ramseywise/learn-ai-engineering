@@ -1,0 +1,465 @@
+{
+ "schema": 1,
+ "key": "2301.12050",
+ "pdf": "generative-ai/03-agentic-foundations/sources/nottingham-2023-do-embodied-agents-dream-pixelated.pdf",
+ "bib": {
+  "title": "Do Embodied Agents Dream of Pixelated Sheep?: Embodied Decision Making using Language Guided World Modelling",
+  "authors": [
+   "Kolby Nottingham",
+   "Prithviraj Ammanabrolu",
+   "Alane Suhr",
+   "Yejin Choi",
+   "Hannaneh Hajishirzi",
+   "Sameer Singh",
+   "Roy Fox"
+  ],
+  "first_author": "Nottingham",
+  "year": 2023,
+  "venue": "ICML 2023 (PMLR 202)",
+  "arxiv": "2301.12050",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 56619,
+  "chars_total": 56619,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can few-shot LLM-hypothesized subgoal graphs, verified through environment experience, make RL exploration in Minecraft item crafting more sample efficient while tolerating LLM errors?",
+ "hypothesis": "If LLMs are used to improve exploration during training rather than to generate plans at execution time, the resulting policies will not be constrained by LLM accuracy.",
+ "contributions": [
+  "DECKARD: Dream/Wake loop that hypothesizes an Abstract World Model (AWM) DAG of subgoals with a few-shot LLM and verifies/corrects it with experience",
+  "Modular subgoal policies via adapters on VPT",
+  "Order-of-magnitude sample efficiency gain and robustness to injected AWM errors"
+ ],
+ "method": {
+  "summary": "Codex is prompted once at the start of training to write a python dict of recipes for 391 Minecraft items, giving a hypothesized DAG (AWM). Dream phase samples a branch to a frontier node on the predicted path to the goal; Wake phase runs per-subgoal VPT+adapter PPO policies, verifies or corrects edges, and trains a new subgoal policy for each newly verified node.",
+  "task": "Minecraft item crafting/collecting (RL exploration) and open-ended exploration",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Minecraft via MineDojo 'creative' metatask",
+    "role": "both",
+    "size": "391 items; 37 in tool tech tree",
+    "split": "subgoal training on a single world seed where target is nearby; evaluation on random world seeds",
+    "source": "MineDojo (Fan et al., 2022)",
+    "preprocessing": "AWM parsed from Codex python dict; plank/wood variants mapped to planks, cane to reeds; 4 circular dependencies removed"
+   }
+  ],
+  "models": [
+   {
+    "name": "Codex code-davinci-002",
+    "role": "proposed",
+    "params": null,
+    "architecture": "LLM prompted few-shot",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "generates AWM once before training; no LLM forward passes during training or inference"
+    }
+   },
+   {
+    "name": "VPT-a (VPT bc-house-3x + Houlsby adapters)",
+    "role": "proposed",
+    "params": "0.5B VPT; 9.5M trainable adapter params per subgoal",
+    "architecture": "transformer with two adapter modules per layer, 16x hidden reduction",
+    "init_from": "VPT bc-house-3x",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "obs": "128x128x3 pixels + 391 inventory quantities",
+     "actions": "121 camera, 8714 keyboard/crafting (254 crafting actions)"
+    }
+   }
+  ],
+  "training": {
+   "objective": "PPO with value head, KL loss to non-finetuned VPT replacing entropy, MineClip reward shaping plus +1 on target item",
+   "optimizer": null,
+   "lr": "0.0001",
+   "lr_schedule": "KL coefficient decays .999 per iteration",
+   "warmup": null,
+   "batch_size": "40",
+   "steps": "limit 6 million environment steps per agent (stone pickaxe task: 2.6M DECKARD, 32M No LLM, Table 2)",
+   "epochs": "5 iteration epochs",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "KL to VPT, initial coefficient .1",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": "robustness runs: at least three random seeds per error type and rate; otherwise not stated",
+   "other": {
+    "actors": "4",
+    "env_steps_per_actor_per_iteration": "500",
+    "gamma": "0.999",
+    "value_loss_coef": "1",
+    "adapter_downsize": "16",
+    "episode_len": "1,000 env steps during subgoal training",
+    "MineClip": "clip_low=21, clip_alpha=0.005, smooth=50",
+    "c0": "exploration hyperparameter, value not stated"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "one AWM generation over 391 items; Codex generated parsable entries for all but one (brown mushroom block)",
+   "prompting": "code-comment instruction plus two examples (diamond pickaxe, diamond) in a python dict",
+   "retrieval": null,
+   "parameters": {
+    "c0": "visit-count threshold, value null",
+    "max_steps_eval": "1,000 for collectables (log, sand), 5,000 for craftables"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "AWM accuracy",
+     "definition": "fraction of items with correct collectable/craftable label, workbench, recipe ingredients, exact recipe",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Task success rate",
+     "definition": "obtaining target item within step cap, random world seeds",
+     "unit": "fraction",
+     "higher_is_better": true
+    },
+    {
+     "name": "Environment steps to craft stone pickaxe",
+     "definition": "training samples until task learned",
+     "unit": "steps",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "VPT (no finetuning)",
+    "VPT-a",
+    "DECKARD (No LLM)",
+    "Align-RUDDER",
+    "VPT+RL",
+    "DreamerV3"
+   ],
+   "protocol": "Random world seeds for evaluation; AWM error injection robustness over >=3 seeds; no significance test stated"
+  },
+  "availability": {
+   "code": "https://deckardagent.github.io/ (project page)",
+   "weights": null,
+   "data": null
+  },
+  "prompts": [
+   {
+    "purpose": "Generate AWM recipes",
+    "text": "# Create a nested python dictionary containing crafting recipes and requirements for minecraft items.\n# Each crafting item should have a recipe and booleans indicating whether a furnace or crafting table is required.\n# Non craftable blocks should have their recipe set to an empty list and indicate which tool is required to mine.\nminecraft_info = {  (examples: diamond_pickaxe, diamond; then [insert item name])",
+    "where": "Appendix A.1"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "LLM guidance cuts steps to craft a stone pickaxe from 32M to 2.6M.",
+   "kind": "measured",
+   "source": null,
+   "metric": "env steps to stone pickaxe",
+   "value": "2.6M",
+   "unit": "steps",
+   "baseline_value": "32M (DECKARD No LLM)",
+   "n": null,
+   "setup": "Minecraft MineDojo, random seeds, discrete crafting actions, 6M step training cap, Table 2",
+   "quote": null,
+   "table": "Table 2, row DECKARD, column Steps (2.6M); row DECKARD (No LLM), 32M",
+   "note": "Text says 12x vs ablation (about 12.3x from table).",
+   "where": "Table 2"
+  },
+  {
+   "claim": "Compared agents: Align-RUDDER 2M, VPT+RL 2.4B, DreamerV3 6M steps for stone pickaxe, with different shortcuts and spaces.",
+   "kind": "reported",
+   "source": "Patil 2020; Baker 2022; Hafner 2023",
+   "metric": "steps",
+   "value": "2.4B",
+   "unit": "steps",
+   "baseline_value": null,
+   "n": null,
+   "setup": "VPT+RL uses dense rewards; not comparable action/observation spaces",
+   "quote": null,
+   "table": "Table 2, row VPT+RL, column Steps",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "LLM guidance improves sample efficiency by an order of magnitude (Fig 5) because Deckard without LLM finetunes about fifteen collectable-item policies for stone pickaxe.",
+   "kind": "measured",
+   "source": null,
+   "metric": "sample efficiency",
+   "value": "15",
+   "unit": "collectable-item subgoal policies finetuned (No LLM average)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "craft stone pickaxe",
+   "quote": "DECKARD ﬁnetunes subgoal policies for an\naverage of ﬁfteen different collectable items when learn-\ning to craft a stone pickaxe.",
+   "table": null,
+   "note": "The number is spelled 'ﬁfteen' in the text.",
+   "where": "Sec 6.2"
+  },
+  {
+   "claim": "Codex AWM exact-match recipe accuracy (ingredients and quantities) is 55% over all 391 items, 69% on 37 tool items.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Recipe Exact Match",
+   "value": "55",
+   "unit": "%",
+   "baseline_value": "69 (tools only)",
+   "n": 391,
+   "setup": "Codex code-davinci-002, 2-shot python dict prompt",
+   "quote": null,
+   "table": "Table 1, row Recipe Exact Match, columns All Items / Tools Only",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Collectable-vs-craftable label accuracy is 57% over all items, 100% on tools.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Collectable vs Craftable",
+   "value": "57",
+   "unit": "%",
+   "baseline_value": "100 (tools only)",
+   "n": 391,
+   "setup": "same",
+   "quote": null,
+   "table": "Table 1, row Collectable vs. Craftable",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Recipe ingredients correct 66% (all) and 81% (tools); workbench correct 84% and 96%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Recipe Correct Items",
+   "value": "66",
+   "unit": "%",
+   "baseline_value": "81 (tools only)",
+   "n": 391,
+   "setup": "same",
+   "quote": null,
+   "table": "Table 1, row Recipe Correct Items",
+   "note": "Workbench row 84 / 96.",
+   "where": "Table 1"
+  },
+  {
+   "claim": "Items with incorrectly inserted dependencies 42% and missing dependencies 35% across all items.",
+   "kind": "measured",
+   "source": null,
+   "metric": "inserted/missing dependencies",
+   "value": "42",
+   "unit": "%",
+   "baseline_value": null,
+   "n": 391,
+   "setup": "Codex AWM, all items (tools: 8% inserted, 26% missing)",
+   "quote": null,
+   "table": "Table 4, rows % Items w/ Incorrectly Inserted Dependencies and Missing Dependencies",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "Without LLM guidance, learning to use a wooden pickaxe for cobblestone takes 2x (No LLM) and 3x (VPT) longer.",
+   "kind": "measured",
+   "source": null,
+   "metric": "relative time to cobblestone",
+   "value": "2x",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "open-ended exploration, Fig 2",
+   "quote": "it takes\nDECKARD without LLM guidance and the VPT baseline\n2x and 3x longer respectively",
+   "table": null,
+   "note": "Intro says No LLM takes over twice as long to craft most items.",
+   "where": "Sec 6.1"
+  },
+  {
+   "claim": "Codex wrongly predicted glass is collectable without tools; DECKARD corrected it by experience and added the right recipe.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "open-ended exploration",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Sec 6.1"
+  },
+  {
+   "claim": "DECKARD with LLM guidance beat No LLM even under large injected edge insertion/deletion errors in the AWM (qualitative, Fig 6, no numbers in text).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "ground-truth AWM with artificially inserted (sand ingredient) or deleted edges, stone pickaxe, >=3 seeds",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Sec 6.3, Fig 6"
+  },
+  {
+   "claim": "Most common LLM error was ingredient quantity; DECKARD often ended with a surplus of ingredients.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Sec 6.3",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Sec 6.3"
+  }
+ ],
+ "limits": [
+  "Requires an environment already grounded in language (textual state, here inventory).",
+  "Assumes a given state abstraction; automatic discovery left to future work.",
+  "Only deterministic AWM transitions; keeps first experienced edge between nodes.",
+  "Comparison to other Minecraft agents is loose: different action/observation spaces, pretraining and shortcuts; uses discrete crafting actions.",
+  "Robustness evidence is injected synthetic errors, shown in a figure without numbers in text; LLM not queried during training so cannot re-plan.",
+  "Subgoal training on a single world seed; c0 value not stated; no compute or wall-clock reported."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Abstract World Model (AWM)",
+   "definition": "a DAG over textual state abstractions (inventory) whose nodes are subgoals and edges are dependencies",
+   "where": "Sec 4.1"
+  },
+  {
+   "term": "Dream phase",
+   "definition": "sample a branch to a node on the verified frontier on the predicted path to the goal",
+   "where": "Sec 4.2.1"
+  },
+  {
+   "term": "Wake phase",
+   "definition": "execute subgoal policies along the branch, explore, verify nodes",
+   "where": "Sec 4.2.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Video Pretraining (VPT)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "starting policy finetuned with adapters",
+   "quote": null
+  },
+  {
+   "work": "MineDojo",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "environment and MineClip reward",
+   "quote": null
+  },
+  {
+   "work": "Houlsby et al. adapters",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "modular subgoal policies",
+   "quote": null
+  },
+  {
+   "work": "Valmeekam et al. LLMs still can't plan",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "LLM plans lack grounding",
+   "quote": null
+  },
+  {
+   "work": "SayCan (Ichter 2022), Inner Monologue (Huang 2022b), LLM-Planner (Song 2022b), ProgPrompt (Singh 2022), Code as Policies (Liang 2022b)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "LLM action planning at execution time",
+   "quote": null
+  },
+  {
+   "work": "DreamerV3",
+   "year": 2023,
+   "arxiv": "2301.04104",
+   "relation": "baseline",
+   "note": "Table 2",
+   "quote": null
+  },
+  {
+   "work": "Align-RUDDER",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Table 2",
+   "quote": null
+  },
+  {
+   "work": "Tam et al. semantic exploration",
+   "year": 2022,
+   "arxiv": "2204.05080",
+   "relation": "related",
+   "note": "language abstractions for exploration",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "During the Dream phase, DECKARD uses the LLM-predicted DAG of subgoals, the hypothesized AWM, to sample a node on the path to the current task. Then, during the Wake phase, the agent executes subgoals and explores until reaching the sampled node.",
+   "page": 2,
+   "why": "Dream/Wake loop"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "LLM guidance improves environment timestep efficiency by an order of magnitude",
+   "page": 7,
+   "why": "headline gain"
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "Effect of errors in the initial AWM",
+   "page": 8,
+   "why": "robustness to LLM errors"
+  }
+ ],
+ "code": [
+  {
+   "where": "Algorithm 1",
+   "snippet": "F <- Frontier(G,V); if any(C(F)<=c0): x_bar <- SampleBranch(F | C(F)<=c0) else x_bar <- SampleBranch(F u V); Wake: execute subgoals, add edge and verify new node",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "None; no embedded instructions. Text has ligature characters (fi). Table 2 checkmark columns (Demos/Dense rewards/Auto-crafting) lost in extraction."
+ ]
+}

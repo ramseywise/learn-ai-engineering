@@ -1,6 +1,7 @@
 ---
 origin: web-authored
 sources:
+  - https://arxiv.org/abs/2306.17492 (PRO, Song et al., AAAI 2024)
   - https://arxiv.org/abs/2402.01306 (KTO)
   - https://arxiv.org/abs/2310.12036 (IPO)
   - https://arxiv.org/abs/2407.13647 (Weak-to-strong reasoning)
@@ -188,6 +189,10 @@ MT-Bench loss did not transfer to held-out tasks. AlpacaEval 2 win rate against 
 tune this way. **Validation reward accuracy did not predict MT-Bench**: DiscoPOP had the worst
 accuracy of the four losses plotted. And the loss only worked near the β it was found at: on
 GPT-2 IMDb it failed to converge at β ≤ 0.01 and collapsed to NaN at β ≥ 2.5.
+
+## PRO — ranking a list, not a pair
+
+**PRO** ([arXiv:2306.17492](https://arxiv.org/abs/2306.17492) (Song et al., AAAI 2024)) trains on a ranked list of n responses. At each rank k it asks the model to prefer response k over all those below it, using the mean token log-probability as the score, and it adds an SFT term on the best response. LLaMA-7B on raw two-candidate HH-RLHF gained 6.52 reward points over SFT and 2.6 over DPO (55.35 against 48.83 and 52.75, scored by an open reward model). With ChatGPT-expanded rankings of length 3 it reached 67.97 against zero-shot ChatGPT's 68.48, while DPO was ahead on the Alpaca-expanded rankings (59.27 against 58.72). Dropping the SFT term cut BLEU from 21.54 to 9.85. Single runs, LLaMA-7B and HH-RLHF only. The GPT-4 and human comparisons were against the dataset's reference reply, not against DPO, and the human result was mostly ties (22.5 wins, 56.3 ties, 21.3 losses).
 
 ## Self-play: SPIN, SPPO, DITTO
 

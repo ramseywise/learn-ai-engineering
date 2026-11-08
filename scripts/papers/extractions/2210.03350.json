@@ -1,0 +1,623 @@
+{
+ "schema": 1,
+ "key": "2210.03350",
+ "pdf": "generative-ai/08-eval/sources/press-2023-measuring-narrowing-compositionality-gap-language.pdf",
+ "bib": {
+  "title": "Measuring and Narrowing the Compositionality Gap in Language Models",
+  "authors": [
+   "Ofir Press",
+   "Muru Zhang",
+   "Sewon Min",
+   "Ludwig Schmidt",
+   "Noah A. Smith",
+   "Mike Lewis"
+  ],
+  "first_author": "Press",
+  "year": 2023,
+  "venue": "Findings of the Association for Computational Linguistics: EMNLP 2023",
+  "arxiv": "2210.03350",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 79031,
+  "chars_total": 79031,
+  "engine": "pymupdf",
+  "skipped": "References skimmed only."
+ },
+ "type": "empirical",
+ "question": "How often can language models answer all sub-questions of a 2-hop question yet fail the composed question, does this gap shrink with scale, and can prompting narrow it?",
+ "hypothesis": "Scaling improves memorised fact recall faster than compositional reasoning, and prompts that make the model state and answer sub-questions explicitly (self-ask) improve over chain of thought.",
+ "contributions": [
+  "Define the compositionality gap and show it stays about 40% for GPT-3 sizes",
+  "Compositional Celebrities (CC) dataset of 8.6k 2-hop questions",
+  "Bamboogle, 125 hand-written 2-hop questions",
+  "Self-ask prompting, improving on chain of thought",
+  "Self-ask + search engine, plugging search results into follow-up answers without changing the prompt"
+ ],
+ "method": {
+  "summary": "Evaluates GPT-3 family models with few-shot prompting on 2-hop QA. Measures the compositionality gap on CC, then compares direct, chain of thought, search and self-ask (with and without a search engine) on Bamboogle, 2WikiMultiHopQA and Musique. No models trained.",
+  "task": "multi-hop (2-hop) open-domain question answering, no context passages",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "Compositional Celebrities (CC)",
+    "role": "eval",
+    "size": "8.6k 2-hop questions, 17 categories",
+    "split": "1.2k questions sampled for the self-ask runs (Fig 6); 2 examples per category removed for prompts",
+    "source": "Generated from celebrity lists (thefamouspeople.com), country properties (mledoze/countries); new here",
+    "preprocessing": "Random sample manually checked for answer correctness"
+   },
+   {
+    "name": "Bamboogle",
+    "role": "eval",
+    "size": "125 questions",
+    "split": "all",
+    "source": "Hand-written 2-hop questions from random Wikipedia vital articles; kept only if a search engine returned an incorrect featured snippet",
+    "preprocessing": null
+   },
+   {
+    "name": "2WikiMultiHopQA",
+    "role": "eval",
+    "size": "1.2k questions",
+    "split": "subset of dev set",
+    "source": "Ho et al. 2020; QA pairs only, open-domain",
+    "preprocessing": null
+   },
+   {
+    "name": "Musique",
+    "role": "both",
+    "size": "1252 2-hop questions (dev); training set used to develop prompts",
+    "split": "dev 2-hop only for test; train for prompt development (a few dozen experiments)",
+    "source": "Trivedi et al. 2022; QA pairs only, open-domain",
+    "preprocessing": "3- and 4-hop questions dropped"
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT-3 Ada",
+    "role": "evaluated",
+    "params": "0.35B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-3 Babbage",
+    "role": "evaluated",
+    "params": "1.3B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-3 Curie",
+    "role": "evaluated",
+    "params": "6.7B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-3 Davinci / InstructGPT davinci-001, -002, -003",
+    "role": "evaluated",
+    "params": "175B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "main_model": "davinci-002 for Tables 1, 2, 14"
+    }
+   },
+   {
+    "name": "ChatGPT / GPT-4",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "gap estimated only, in footnote 2"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "inferred: one run per question; no seeds or repeats reported",
+   "prompting": "Few-shot always. Direct, chain of thought, self-ask: 4-shot for 2Wiki and Bamboogle (same 4 examples as Ho et al. 2020 Table 3), 6-shot for Musique; CC uses 2-shot category-specific prompts (1-shot for self-ask in Fig 6). Self-ask appends 'Are follow up questions needed here:'. Chain of thought states the answer type before the final answer.",
+   "retrieval": "Search engine via SerpAPI (popular internet search engine); LM generation is stopped at 'Intermediate answer:', the sub-question goes to search, and the result (featured snippet or first-result text) is inserted into the prompt as if the LM had written it.",
+   "parameters": {
+    "search_postprocessing": "Davinci-002 extracts the short answer from search results for Search + postproc.",
+    "least_to_most_comparison": "Zhou et al. 2022, multiple forward passes"
+   },
+   "other": {
+    "prompt_development": "a few dozen experiments on Musique training set; dev set used once",
+    "bamboogle_prompt": "same prompt as 2WikiMultiHopQA"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Compositionality gap",
+     "definition": "Fraction of compositional questions answered incorrectly out of all those whose sub-questions are both answered correctly",
+     "unit": "%",
+     "higher_is_better": false
+    },
+    {
+     "name": "Accuracy (Bamboogle)",
+     "definition": "Manually judged by the authors",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Exact match",
+     "definition": "EM on 2WikiMultiHopQA and Musique",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "F1 / Cover-EM",
+     "definition": "Cover-EM: ground truth contained in generated answer (Rosset et al. 2020)",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Avg tokens in generated answer",
+     "definition": "Speed proxy",
+     "unit": "tokens",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "Direct prompting",
+    "Chain of thought",
+    "Search engine",
+    "Search engine + LM postprocessing",
+    "Least-to-most (Table 2 only)",
+    "Let's think step by step (CC only)"
+   ],
+   "protocol": "Single run; same questions for all systems; Bamboogle judged manually by authors; no significance tests."
+  },
+  "availability": {
+   "code": "https://github.com/ofirpress/self-ask",
+   "weights": null,
+   "data": "https://github.com/ofirpress/self-ask (CC and Bamboogle)"
+  },
+  "prompts": [
+   {
+    "purpose": "Self-ask prompt, 2WikiMultiHopQA (also used for Bamboogle) (first example only; three more in Table 13)",
+    "text": "Question: Who lived longer, Theodor Haecker or Harry Vaughan Watkins?\nAre follow up questions needed here: Yes.\nFollow up: How old was Theodor Haecker when he died?\nIntermediate answer: Theodor Haecker was 65 years old when he died.\nFollow up: How old was Harry Vaughan Watkins when he died?\nIntermediate answer: Harry Vaughan Watkins was 69 years old when he died.\nSo the final answer is: Harry Vaughan Watkins.",
+    "where": "Appendix Table 13"
+   },
+   {
+    "purpose": "CC 1-hop 2-shot prompt",
+    "text": "Question: What is the currency in Venezuela?\nAnswer: Venezuelan bolívar soberano\nQuestion: What is the currency in Czechia?\nAnswer: Czech koruna",
+    "where": "Appendix Table 4"
+   },
+   {
+    "purpose": "Direct, chain of thought and self-ask prompts for Musique (first example only; six per prompt in Tables 8-10)",
+    "text": "Question: When does monsoon season end in the state the area code 575 is located?",
+    "where": "Appendix Tables 8-10"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "inference.prompting",
+    "quote": "Our prompt has 4 examples, the same ones presented in Table 3 of Ho et al. (2020), in the same order",
+    "where": "Sec 3.5"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "The compositionality gap stays roughly constant at about 40% across GPT-3 model sizes and training techniques.",
+   "kind": "measured",
+   "source": null,
+   "metric": "compositionality gap",
+   "value": "40",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Compositional Celebrities (8.6k 2-hop questions), GPT-3 Ada to Davinci and InstructGPT 001/002/003, 2-shot direct prompt",
+   "note": null,
+   "where": "Sec 1, Fig 1",
+   "quote": "we find that the compositionality gap remains at a roughly constant 40% between different model sizes and training techniques"
+  },
+  {
+   "claim": "Davinci-002 answers 45.4% of CC 2-hop questions correctly with direct 2-shot prompting.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "45.4",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CC, davinci-002, 2-shot direct",
+   "note": null,
+   "where": "Sec 2",
+   "quote": "GPT-3 (davinci-002) correctly answers 45.4% of the 2-hop questions."
+  },
+  {
+   "claim": "On Birth Year/Literature Nobel Winner Davinci-002 gets 1.2% of 2-hop right though it answers 80% of sub-questions.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "1.2",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CC hardest category, davinci-002, 2-shot direct",
+   "note": "Table 6 prints 1.1% (both subquestions right) for this category; 1.2% is the text figure for all 2-hop answers in the category.",
+   "where": "Sec 2",
+   "quote": "GPT-3 answers only 1.2% of the questions correctly."
+  },
+  {
+   "claim": "Compositional accuracy rises from 42.6% to 81.1% as the worse sub-answer perplexity falls (confident facts compose better).",
+   "kind": "measured",
+   "source": null,
+   "metric": "2-hop accuracy",
+   "value": "81.1",
+   "unit": "%",
+   "baseline_value": "42.6",
+   "n": null,
+   "setup": "Davinci-002, CC, questions where both sub-questions are right; maximal perplexity bin 1.000-1.002 versus 1.232-6.738 (42.6%)",
+   "note": null,
+   "where": "Sec 2, Fig 5",
+   "quote": "when the maximal perplexity is between 1.000 and 1.002, the model answers 81.1% of the compositional question correctly"
+  },
+  {
+   "claim": "ChatGPT shows an estimated compositionality gap of 42.9% and GPT-4 23.0%, with a contamination caveat for GPT-4.",
+   "kind": "measured",
+   "source": null,
+   "metric": "compositionality gap",
+   "value": "23.0",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CC; GPT-4 may have seen CC since it was released before GPT-4 launched",
+   "note": "ChatGPT value is 42.9%.",
+   "where": "Footnote 2",
+   "quote": "exhibit a compositionality gap, estimated at 42.9% for ChatGPT and 23.0% for GPT-4"
+  },
+  {
+   "claim": "Self-ask beats chain of thought on Bamboogle by 11.2 points absolute (57.6 vs 46.4).",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "57.6",
+   "unit": "%",
+   "baseline_value": "46.4",
+   "n": null,
+   "setup": "Bamboogle, 125 questions, davinci-002, 4-shot, manually judged",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Self-ask, column Bamb."
+  },
+  {
+   "claim": "Self-ask + search engine reaches 60.0% on Bamboogle.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "60.0",
+   "unit": "%",
+   "baseline_value": "57.6",
+   "n": null,
+   "setup": "Bamboogle, davinci-002, manually judged by authors",
+   "note": "Baseline is self-ask without search.",
+   "where": "Table 1",
+   "table": "Table 1, row Self-ask + Search, column Bamb."
+  },
+  {
+   "claim": "Direct prompting scores 17.6% on Bamboogle.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "17.6",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Bamboogle, davinci-002",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Direct prompting, column Bamb."
+  },
+  {
+   "claim": "Self-ask + search gets 40.1% EM on 2WikiMultiHopQA versus 30.0% for self-ask and 29.8% for chain of thought.",
+   "kind": "measured",
+   "source": null,
+   "metric": "exact match",
+   "value": "40.1",
+   "unit": "%",
+   "baseline_value": "30.0",
+   "n": null,
+   "setup": "2WikiMultiHopQA dev subset of 1.2k questions, davinci-002, exact match",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Self-ask + Search, column 2Wiki."
+  },
+  {
+   "claim": "Self-ask + search gets 15.2% EM on Musique 2-hop dev versus 13.8% for self-ask.",
+   "kind": "measured",
+   "source": null,
+   "metric": "exact match",
+   "value": "15.2",
+   "unit": "%",
+   "baseline_value": "13.8",
+   "n": null,
+   "setup": "Musique dev, 1252 2-hop questions, davinci-002, exact match",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Self-ask + Search, column Musique"
+  },
+  {
+   "claim": "Search engine alone gets 0.0% on Bamboogle (by construction of the filter).",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "0.0",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Bamboogle, featured snippet or first-result text",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Search, column Bamb."
+  },
+  {
+   "claim": "Self-ask runs more than 30% faster than least-to-most with similar or better accuracy.",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg tokens in generated answer",
+   "value": "569",
+   "unit": "tokens",
+   "baseline_value": "844",
+   "n": null,
+   "setup": "Avg generated tokens on 2Wiki; least-to-most 844. 2Wiki acc 35.5 vs 29.0; Musique 16.3 vs 16.8 (self-ask slightly lower, 663 vs 1020 tokens). Later davinci-002 deployment than Table 1.",
+   "note": "Table 2 self-ask accuracy (35.5, 16.3) differs from Table 1 (30.0, 13.8) because of a newer davinci-002 deployment (footnote 6).",
+   "where": "Table 2",
+   "table": "Table 2, row Self-ask, column # Toks (2Wiki)"
+  },
+  {
+   "claim": "Zero-shot 'Let's think step by step' scores 45.7% on CC with Davinci-002 and 1.1% with Davinci, versus self-ask 79.6% and 54.2%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "45.7",
+   "unit": "%",
+   "baseline_value": "79.6",
+   "n": null,
+   "setup": "CC, InstructGPT-Davinci-002",
+   "note": "79.6 is self-ask on Davinci-002.",
+   "where": "Sec 3",
+   "quote": "it obtained 45.7%/1.1% accuracy with InstructGPT-Davinci-002/Davinci whereas self-ask obtains 79.6%/54.2% accuracy"
+  },
+  {
+   "claim": "40% of chain of thought final answers on Bamboogle are not short form, versus 17% for self-ask and 3% for self-ask + search.",
+   "kind": "measured",
+   "source": null,
+   "metric": "share of non-short-form final answers",
+   "value": "40",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Bamboogle, davinci-002",
+   "note": null,
+   "where": "Sec 3.1",
+   "quote": "In Bamboogle, 40% of chain of thought’s final answers were not in short form, while that metric was 17% for self-ask and 3% for self-ask + search engine"
+  },
+  {
+   "claim": "Across all CC categories, Davinci-002 gets 33.4% of 2-hop wrong when both sub-questions are right and 41.8% right.",
+   "kind": "measured",
+   "source": null,
+   "metric": "share of all questions",
+   "value": "33.4",
+   "unit": "%",
+   "baseline_value": "41.8",
+   "n": null,
+   "setup": "CC, davinci-002, direct 2-shot",
+   "note": "Implied gap = 33.4/(41.8+33.4) = 44%, computed from the table.",
+   "where": "Table 6",
+   "table": "Table 6, row ALL, column Both Subquestions Right / 2-hop Wrong"
+  },
+  {
+   "claim": "Self-ask narrows and sometimes closes the compositionality gap on CC (1-shot prompt), and chain of thought performs within 1% of self-ask; stated in Fig 6 caption, no table value.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "CC, 1.2k sampled questions, 1-shot self-ask",
+   "note": "Read from figure caption; quote is truncated by line break.",
+   "where": "Fig 6"
+  }
+ ],
+ "limits": [
+  "Only GPT-3 models up to 175B tested; larger models might behave differently (authors).",
+  "Only English 2-hop QA; other task types tried only in limited manual experiments (authors).",
+  "No temperature, decoding or max-token settings reported; one run, no significance tests.",
+  "Bamboogle accuracy is manually judged by the authors, and has only 125 questions (less statistical power).",
+  "Table 2 uses a later davinci-002 deployment than Table 1, so numbers are not comparable across tables.",
+  "Compositionality gap only measurable on CC since other datasets lack sub-questions.",
+  "CC may be in GPT-4 training data; GPT-4 and ChatGPT estimates are indicative.",
+  "Prompt format was tuned on Musique train; davinci-002 deployments have since been retired (inferred)."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "compositionality gap",
+   "definition": "the fraction of compositional questions that the model answers incorrectly out of all the compositional questions for which the model answers the sub-questions correctly",
+   "where": "Sec 1"
+  },
+  {
+   "term": "elicitive prompts",
+   "definition": "prompts that let the model 'talk things through' before answering, such as chain of thought and scratchpad",
+   "where": "Sec 3"
+  },
+  {
+   "term": "self-ask",
+   "definition": "prompt where the model explicitly states the next follow-up question before answering it, with scaffolds like 'Follow up:' and 'Intermediate answer:'",
+   "where": "Sec 3.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Chain of thought prompting",
+   "year": 2022,
+   "arxiv": "2201.11903",
+   "relation": "extends",
+   "note": "self-ask builds on it (Wei et al. 2022b)",
+   "quote": null
+  },
+  {
+   "work": "Language Models are Few-Shot Learners (Brown et al.)",
+   "year": 2020,
+   "arxiv": "2005.14165",
+   "relation": "baseline",
+   "note": "direct prompting baseline; GPT-3 models evaluated",
+   "quote": null
+  },
+  {
+   "work": "Large Language Models are Zero-Shot Reasoners (Kojima et al.)",
+   "year": 2022,
+   "arxiv": "2205.11916",
+   "relation": "baseline",
+   "note": "'Let's think step by step' compared on CC; answer-type extraction inspired CoT variant",
+   "quote": null
+  },
+  {
+   "work": "Least-to-most prompting (Zhou et al.)",
+   "year": 2022,
+   "arxiv": "2205.10625",
+   "relation": "baseline",
+   "note": "Table 2 comparison",
+   "quote": null
+  },
+  {
+   "work": "Show your work: scratchpads (Nye et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "related",
+   "note": "elicitive prompt category",
+   "quote": null
+  },
+  {
+   "work": "2WikiMultiHopQA (Ho et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "eval data and prompt examples",
+   "quote": null
+  },
+  {
+   "work": "Musique (Trivedi et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "eval and prompt development data",
+   "quote": null
+  },
+  {
+   "work": "Khot et al. 2023 (decomposed prompting) and Yao et al. 2023 (ReAct)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "concurrent, similar to self-ask",
+   "quote": null
+  },
+  {
+   "work": "Nakano et al. (WebGPT)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "related",
+   "note": "fine-tuned search use, versus no fine-tuning here",
+   "quote": null
+  },
+  {
+   "work": "Srivastava et al. (BIG-bench)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "canary string source",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "The compositionality gap does not decrease with scale.",
+   "page": 3,
+   "why": "Shows 2-hop and sub-question accuracy both rising with size while the gap stays about 40%."
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Direct prompting compared to chain of thought and our self-ask method on a question from Bamboogle.",
+   "page": 5,
+   "why": "Side-by-side of the three prompt formats."
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Self-ask + Search Engine: prompt on white background, LM-generated text in green.",
+   "page": 6,
+   "why": "Shows the stop-and-insert loop for search integration."
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "As the LM correctly answers sub-questions with more confidence, it answers the compositional questions about them correctly with higher probability.",
+   "page": 23,
+   "why": "Perplexity deciles versus compositional accuracy."
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "Self-ask is able to narrow and sometimes close the compositionality gap on CC.",
+   "page": 24,
+   "why": "Gap before versus after self-ask."
+  }
+ ],
+ "code": [
+  {
+   "where": "Fig 2 / Table 13",
+   "snippet": "Are follow up questions needed here: Yes.\nFollow up: ...\nIntermediate answer: ...\nSo the final answer is: ...",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Extraction text dropped the answer columns of Tables 3, 7, 15 (and Fig 2 answers), so those are not recorded.",
+  "Fig 1 and Fig 6 values are in the plot; only the printed percentages in Fig 1 text are noted.",
+  "No embedded instructions found."
+ ]
+}

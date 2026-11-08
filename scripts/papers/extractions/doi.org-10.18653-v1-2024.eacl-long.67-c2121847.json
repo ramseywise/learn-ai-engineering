@@ -1,0 +1,724 @@
+{
+ "schema": 1,
+ "key": "https://doi.org/10.18653/v1/2024.eacl-long.67",
+ "pdf": "generative-ai/03-agentic-foundations/sources/paul-2024-refiner.pdf",
+ "bib": {
+  "title": "REFINER: Reasoning Feedback on Intermediate Representations",
+  "authors": [
+   "Debjit Paul",
+   "Mete Ismayilzada",
+   "Maxime Peyrard",
+   "Beatriz Borges",
+   "Antoine Bosselut",
+   "Robert West",
+   "Boi Faltings"
+  ],
+  "first_author": "Paul",
+  "year": 2024,
+  "venue": "Proceedings of the 18th Conference of the European Chapter of the Association for Computational Linguistics (EACL), Volume 1: Long Papers, pages 1100-1126",
+  "arxiv": null,
+  "doi": "10.18653/v1/2024.eacl-long.67"
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 85108,
+  "chars_total": 85108,
+  "engine": "pymupdf",
+  "skipped": "reference list skimmed only"
+ },
+ "type": "empirical",
+ "question": "Does fine-grained structured feedback from a trained critic on a generator's intermediate reasoning steps improve reasoning performance?",
+ "hypothesis": "Generating better intermediate steps through structured, fine-grained critic feedback yields better final answers, and beats scalar reward feedback.",
+ "contributions": [
+  "REFINER, a generator-critic interaction framework that refines intermediate reasoning via feedback; outperforms comparably-sized fine-tuned baselines by +13.1, +3.2, +15 pts on MWP, sNLR, MS",
+  "The trained critic alone helps few-shot GPT-3.5 (+3.5, +6.8 pts) and structured feedback beats scalar feedback",
+  "REFINER outperforms Self-refine style methods using LLM feedback",
+  "Analyses: better intermediate steps improve task performance; training with a noisy critic still helps"
+ ],
+ "method": {
+  "summary": "A critic (UnifiedQA-T5-base) is trained supervised on automatically perturbed implausible hypotheses paired with templated error-type feedback. A generator is warmed up on 10% of data, then trained for T=3 iterations to condition on context, its previous hypothesis and critic feedback (oracle critic in training, exploration by nucleus sampling). At inference the trained critic gives feedback until it says 'No hint'.",
+  "task": "intermediate-step reasoning with critic feedback: math word problems, synthetic natural language reasoning, moral norm and action generation",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "MAWPs / SVAMP (MWP)",
+    "role": "both",
+    "size": "train 3,138; test 1000 (Table 10)",
+    "split": "train MAWPs, test SVAMP",
+    "source": "Koncel-Kedziorski 2016; Patel 2021 (MIT)",
+    "preprocessing": "numeric values replaced by variable names number0, number1"
+   },
+   {
+    "name": "GSM8K",
+    "role": "eval",
+    "size": "test 1319",
+    "split": "test",
+    "source": "Cobbe 2021b (MIT)",
+    "preprocessing": null
+   },
+   {
+    "name": "sNLR (HELM, hard)",
+    "role": "both",
+    "size": "train 1000, dev 5000, test 5000",
+    "split": "hard difficulty",
+    "source": "Liang 2022 (Apache)",
+    "preprocessing": null
+   },
+   {
+    "name": "Moral Stories (MS)",
+    "role": "both",
+    "size": "train 10000, dev 1000, test 1000",
+    "split": "human eval on 100 random test examples",
+    "source": "Emelin 2021 (MIT)",
+    "preprocessing": null
+   },
+   {
+    "name": "Critic feedback data",
+    "role": "train",
+    "size": "GPT-3.5 synthetic: 30K MWP, 20K sNLR, 30K MS implausible hypotheses",
+    "split": null,
+    "source": "rule-based perturbation (used for main results) or GPT-3.5 few-shot generation",
+    "preprocessing": "MS: random verb phrases from context for semantic misalignment, inverse judgments plus WordNet synonyms for contradiction"
+   }
+  ],
+  "models": [
+   {
+    "name": "UnifiedQA-T5-base (critic)",
+    "role": "proposed",
+    "params": "220M",
+    "architecture": "T5 encoder-decoder",
+    "init_from": "UnifiedQA-T5-base (Khashabi 2020)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "REFINER base generator",
+    "role": "proposed",
+    "params": "220M generator (440M listed as REFINER base in Table 11)",
+    "architecture": "UQA-base",
+    "init_from": "UnifiedQA-T5-base",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "REFINER large": "990M listed in Table 11 (770M UQA-large + 220M critic)"
+    }
+   },
+   {
+    "name": "UQA-large",
+    "role": "baseline",
+    "params": "770M",
+    "architecture": "T5",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-3.5 (text-davinci-003 / 002, code-davinci-002) and ChatGPT",
+    "role": "evaluated",
+    "params": "175B (GPT-3.5)",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-Neo",
+    "role": "base",
+    "params": "1.3B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "GSM8K Self-Correct comparison, App A.2"
+    }
+   }
+  ],
+  "training": {
+   "objective": "Critic: cross-entropy L(beta) = -log p_beta(f(u)|x,u), u in {z,z'}. Generator: cross-entropy L(theta) = -sum_t log p_theta(z_t|x,z'_t,f_t(z')) over T iterations",
+   "optimizer": "Adam",
+   "lr": "1e-4",
+   "lr_schedule": null,
+   "warmup": "generator warm-up on 10% of training data (supervised); no LR warmup stated",
+   "batch_size": null,
+   "steps": null,
+   "epochs": "20, early stopping on validation loss",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "early stopping",
+   "hardware": "one A100 GPU",
+   "compute": null,
+   "wall_clock": "critic 8 hours, generator 12 hours",
+   "seeds": "3 random seeds, averaged",
+   "other": {
+    "iterations_T": "3",
+    "exploration": "nucleus sampling p=0.5, critic randomly picks one of multiple sampled hypotheses",
+    "critic_in_generator_training": "oracle critic",
+    "hyperparameter_selection": "validation loss"
+   }
+  },
+  "inference": {
+   "decoding": "greedy for generator and critic",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "3 seeds; T=1 with automatic critic, T=3 with oracle critic; self-consistency sample size 5; ReACT 3 reasoning steps",
+   "prompting": "GPT-3.5: 2 demonstrations per class, CoT 'Let's think step by step'; refinement prompt includes prior equation plus feedback",
+   "retrieval": null,
+   "parameters": {
+    "stop": "stop when generator repeats or critic outputs 'No hint'",
+    "feedback_format": "<error type, position (optional), hint (optional)> converted to templated text"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Exact match (EM)",
+     "definition": "match of generated equation (MWP) or inference rules (sNLR); order-insensitive for critic feedback",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Accuracy",
+     "definition": "final answer (MWP, sNLR consequent)",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Human relevance",
+     "definition": "3 AMT judges, 5-point Likert, >=4 relevant, <=2 irrelevant, 3 unsure, majority vote; Krippendorff alpha",
+     "unit": "count of 100",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "UQA-base/large",
+    "UQA + PPO (Ramamurthy 2022)",
+    "GPT-3.5 + CoT",
+    "ChatGPT",
+    "Self-refine",
+    "Self-reflection",
+    "Self-correct",
+    "ReACT",
+    "Self-consistency"
+   ],
+   "protocol": "3 runs averaged; binomial sign test p<0.05 vs all baselines; human study on 100 Moral Stories examples, US AMT workers paid $0.10 per task"
+  },
+  "availability": {
+   "code": "https://github.com/debjitpaul/refiner",
+   "weights": null,
+   "data": "public datasets; critic feedback data generated by scripts"
+  },
+  "prompts": [
+   {
+    "purpose": "GPT-3.5 initial MWP prompt",
+    "text": "You are a helpful assistant for math word problems. We will provide you with a math word problem, and your task is to generate the intermediate mathematical equations as a step for solving the problem and the final correct answer. Here are two examples:",
+    "where": "Appendix Table 16"
+   },
+   {
+    "purpose": "GPT-3.5 MWP refinement prompt",
+    "text": "You are a helpful assistant for math word problems. We will provide you with a math word problem a solution (containing an equation and an answer), and feedback on the solution. Your task is to generate a refined intermediate equation as a step and the final correct answer. Here are two examples:",
+    "where": "Appendix Table 17"
+   },
+   {
+    "purpose": "Synthetic incorrect instance generation",
+    "text": "You are a helpful assistant for generating counterfactual reasoning steps. We will provide you with a problem, an error type and a correct intermediate reasoning step. Your task is to generate an incorrect reasoning step based on the error type. Here are a few examples for each error type:",
+    "where": "Appendix Table 18"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training.wall_clock",
+    "quote": "We trained the critic model for 8 hours and trained the generator model for 12 hours.",
+    "where": "Appendix D"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Fine-tuned UQA-base with the critic in the loop gains +13.1 EM on SVAMP equation generation over the baseline UQA-base",
+   "kind": "measured",
+   "source": null,
+   "metric": "equation EM",
+   "value": "+13.1",
+   "unit": "EM points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MAWPs train, SVAMP test, UnifiedQA-T5-base generator, T=1 automatic critic, greedy, 3 runs",
+   "note": null,
+   "where": "Sec 5",
+   "quote": "Notably, UQA-base benefits most (+13.1 EM) when adding a critic in the loop."
+  },
+  {
+   "claim": "REFINER base reaches 47.2 EM on SVAMP equations versus 34.1 for UQA-base",
+   "kind": "measured",
+   "source": null,
+   "metric": "equation EM",
+   "value": "47.2",
+   "unit": "EM",
+   "baseline_value": "34.1",
+   "n": null,
+   "setup": "SVAMP, UQA-base 220M generator (440M with critic), average of 3 runs",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row REFINER base, column Eq. (z)"
+  },
+  {
+   "claim": "REFINER large reaches 53.8 EM versus 48.2 for UQA-large + PPO and 46.7 for UQA-large",
+   "kind": "measured",
+   "source": null,
+   "metric": "equation EM",
+   "value": "53.8",
+   "unit": "EM",
+   "baseline_value": "46.7",
+   "n": null,
+   "setup": "SVAMP, UQA-large 770M generator, 3 runs",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row REFINER large, column Eq. (z)"
+  },
+  {
+   "claim": "A trained critic lifts few-shot GPT-3.5 + CoT answer accuracy on SVAMP from 67.1 to 70.6",
+   "kind": "measured",
+   "source": null,
+   "metric": "answer accuracy",
+   "value": "70.6",
+   "unit": "% accuracy",
+   "baseline_value": "67.1",
+   "n": null,
+   "setup": "SVAMP, GPT-3.5 (text-davinci), 2 demos per class, critic trained on MAWPs, 3 runs",
+   "note": "Table 13 lists a different GPT-3.5 (code-davinci-002) at 63.5 -> 66.4; main text names GPT-3.5-text-DaVinci-003 as baseline while Table 13 says text-DaVinci-002",
+   "where": "Table 2",
+   "table": "Table 2, row GPT-3.5 + CoT + REFINERcritic, column Ans. (y)"
+  },
+  {
+   "claim": "On sNLR, REFINER base improves inference-rule exact match over UQA-base",
+   "kind": "measured",
+   "source": null,
+   "metric": "inference rule EM",
+   "value": "93.5",
+   "unit": "EM %",
+   "baseline_value": "90.6",
+   "n": null,
+   "setup": "sNLR hard (Liang et al. 2022), UQA-base, 3 runs",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row REFINER base, column IR (z)"
+  },
+  {
+   "claim": "On sNLR, the critic gives GPT-3.5 + CoT +6.8 EM on inference rules but only +1.5 on the consequent",
+   "kind": "measured",
+   "source": null,
+   "metric": "IR EM gain",
+   "value": "+6.8",
+   "unit": "EM points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "sNLR, GPT-3.5 + CoT, trained critic",
+   "note": null,
+   "where": "Sec 5",
+   "quote": "Notably, on the sNLR task, for GPT-3.5, we observe that by adding a critic, there is an improvement of +6.8 in inference step generation; however, only +1.5 in the consequent prediction."
+  },
+  {
+   "claim": "Human evaluation on Moral Stories: relevant norms rise from 49 to 69 (of 100) and relevant actions from 58 to 73 over UQA-large",
+   "kind": "measured",
+   "source": null,
+   "metric": "relevant count",
+   "value": "69",
+   "unit": "% relevant of 100 examples",
+   "baseline_value": "49",
+   "n": null,
+   "setup": "100 Moral Stories test examples, 3 AMT judges, majority vote, UQA-large baseline",
+   "note": "Krippendorff alpha 0.33 for norm and 0.55 for action (low to moderate); baseline PPO relevant 52 for both",
+   "where": "Table 4",
+   "table": "Table 4, row REFINER, column R (Norm)"
+  },
+  {
+   "claim": "Fine-grained text feedback beats PPO with BLEU reward on MWP: UQA-large + PPO 48.2 versus REFINER large 53.8",
+   "kind": "measured",
+   "source": null,
+   "metric": "equation EM",
+   "value": "53.8",
+   "unit": "EM",
+   "baseline_value": "48.2",
+   "n": null,
+   "setup": "SVAMP, UQA-large, PPO from Ramamurthy et al. 2022",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row REFINER large, column Eq. (z)"
+  },
+  {
+   "claim": "REFINER beats Self-refine on SVAMP with GPT-3.5 (70.6 vs 67.6) and on GSM8K with ChatGPT (75.9 vs 74.7)",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "70.6",
+   "unit": "% accuracy",
+   "baseline_value": "67.6",
+   "n": null,
+   "setup": "SVAMP and GSM8K test, GPT-3.5 and ChatGPT, 3 runs, binomial sign test p<0.05",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row REFINER, column SVAMP GPT-3.5"
+  },
+  {
+   "claim": "Text claims REFINER improves GPT-3.5 and ChatGPT by +3.3 and +2.2 over self-refine style baselines on SVAMP and GSM8K",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "+3.3",
+   "unit": "accuracy points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Sec 5 comparison with Self-refine and Self-reflection",
+   "note": "Table 5 differences do not clearly reproduce +3.3 and +2.2 for the stated pairs (GPT-3.5 SVAMP 70.6 vs CoT 67.1 is +3.5); attribution unclear",
+   "where": "Sec 5",
+   "quote": "we find that REFINER significantly improves the performance of GPT-3.5 and ChatGPT by +3.3 and +2.2 on SVAMP and GSM8K datasets, respectively."
+  },
+  {
+   "claim": "Self-refine and Self-reflection give almost no gain on MWP (GPT-3.5 SVAMP CoT 67.1 vs Self-refine 67.6)",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "67.6",
+   "unit": "% accuracy",
+   "baseline_value": "67.1",
+   "n": null,
+   "setup": "SVAMP, GPT-3.5, LLM-generated feedback",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row Self-refine, column SVAMP GPT-3.5"
+  },
+  {
+   "claim": "Self-consistency (5 samples) + REFINER reaches 72.1 on SVAMP with GPT-3.5, above self-consistency alone at 69.5",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "72.1",
+   "unit": "% accuracy",
+   "baseline_value": "69.5",
+   "n": null,
+   "setup": "SVAMP, GPT-3.5, sample size 5",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row Self-consistency + REFINER, column SVAMP GPT-3.5"
+  },
+  {
+   "claim": "ReACT + REFINER reaches 67.8 on GSM8K with GPT-3.5 versus 64.7 for ReACT alone",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "67.8",
+   "unit": "% accuracy",
+   "baseline_value": "64.7",
+   "n": null,
+   "setup": "GSM8K, GPT-3.5, 3 reasoning steps for ReACT",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row ReACT + REFINER, column GSM8K GPT-3.5"
+  },
+  {
+   "claim": "Without the critic at inference, REFINER base drops from 47.2 to 39.8 EM",
+   "kind": "measured",
+   "source": null,
+   "metric": "equation EM",
+   "value": "39.8",
+   "unit": "EM",
+   "baseline_value": "47.2",
+   "n": null,
+   "setup": "MWP ablation, UQA-base",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row REFINER base - critic inference"
+  },
+  {
+   "claim": "An oracle critic at inference raises REFINER base to 66.0 EM, showing the ceiling from perfect feedback",
+   "kind": "measured",
+   "source": null,
+   "metric": "equation EM",
+   "value": "66.0",
+   "unit": "EM",
+   "baseline_value": "47.2",
+   "n": null,
+   "setup": "MWP ablation, UQA-base, oracle critic",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row REFINER base + critic Oracle"
+  },
+  {
+   "claim": "A critic trained on GPT-3.5 synthetic data gives 44.1 EM, below rule-based perturbation data (47.2) but above no critic (39.8)",
+   "kind": "measured",
+   "source": null,
+   "metric": "equation EM",
+   "value": "44.1",
+   "unit": "EM",
+   "baseline_value": "47.2",
+   "n": null,
+   "setup": "MWP ablation, 30K GPT-3.5-generated implausible hypotheses",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row REFINER base + critic data synthetic"
+  },
+  {
+   "claim": "Removing the exploration phase lowers EM from 39.8 to 37.4, a gain of +3.3 over the no-critic-training model is attributed to exploration",
+   "kind": "measured",
+   "source": null,
+   "metric": "equation EM",
+   "value": "37.4",
+   "unit": "EM",
+   "baseline_value": "39.8",
+   "n": null,
+   "setup": "MWP ablation, no critic at inference, no exploration",
+   "note": "Text says exploration improves +3.3 over the baseline model; the table shows 39.8 vs 37.4 (+2.4), 37.4 vs 34.1 (+3.3)",
+   "where": "Table 6",
+   "table": "Table 6, row REFINER base - critic inference - exp"
+  },
+  {
+   "claim": "Training with a critic with under 50% noise is not statistically different from the oracle, while noise above 75% teaches the generator to ignore the critic",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "75%",
+   "unit": "noise level",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MWP noise-sensitivity, critic replaced by random feedback with probability epsilon",
+   "note": null,
+   "where": "Sec 6, Fig 4a",
+   "quote": "Fig. 4 (a) shows that when training with a very noisy critic (> 75% noise), the generator LM learns to ignore the critic, as there is no difference between using the trained critic or the oracle during inference."
+  },
+  {
+   "claim": "At inference, even 25% critic noise makes the generator worse than the trained critic, and over 50% noise significantly harms it",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "50%",
+   "unit": "noise level",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MWP, generator trained with oracle critic",
+   "note": null,
+   "where": "Sec 6, Fig 4b",
+   "quote": "With more than 50% noise, the critic significantly harms the generator."
+  },
+  {
+   "claim": "The trained UQA critic comprehensively beats GPT-3.5 at producing structured feedback (Table 7: MWP 69.5 UQA-220M vs 63.5 GPT-3 175B; sNLR 95.5 vs 34.5)",
+   "kind": "measured",
+   "source": null,
+   "metric": "critic feedback EM",
+   "value": "95.5",
+   "unit": "EM",
+   "baseline_value": "34.5",
+   "n": null,
+   "setup": "500 instances per task, GPT-3.5 given 2 shots per error type plus 2 'No' examples",
+   "note": null,
+   "where": "Table 7",
+   "table": "Table 7, row sNLR, column UQA (220M)"
+  },
+  {
+   "claim": "With GPT-Neo 1.3B on GSM8K, REFINER gets 23.4 accuracy versus 21.2 for Self-Correct and 8.5 base",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "23.4",
+   "unit": "% accuracy",
+   "baseline_value": "21.2",
+   "n": null,
+   "setup": "GSM8K, GPT-Neo 1.3B generator, UQA-base critic, as in Welleck et al. 2022",
+   "note": "The main text points to Table 8 for feedback quality, but the Table 8 printed in Appendix A is the GSM8K Self-Correct comparison; feedback quality is in Table 7",
+   "where": "App A.2",
+   "table": "Table 8 (appendix), row GPT-Neo + REFINER, column Accuracy"
+  },
+  {
+   "claim": "Error analysis: most frequent errors are Incorrect Numbers for MWP and Semantic Misalignment for MS, and REFINER reduces errors in both",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "100 random test instances per dataset",
+   "note": null,
+   "where": "Sec 6, Fig 3",
+   "quote": "We note that the most frequent errors are Incorrect Numbers for MWP and Semantic Misalignment for MS."
+  }
+ ],
+ "limits": [
+  "Only three tasks (MWP, sNLR, moral stories), authors concede coverage is limited",
+  "Critic is task-specific, not general; error types are hand-designed per task",
+  "Feedback only helps when critic is accurate: noise above 50% at inference harms; critic fails on outputs with multiple mistakes",
+  "Generator sometimes ignores or misapplies correct feedback; for GPT-3.5 sNLR the consequent barely improves (+1.5)",
+  "Human evaluation on 100 examples with low-to-moderate agreement (alpha 0.33 to 0.64)",
+  "Training uses an oracle critic with gold hypotheses; inference uses T=1 with the trained critic, so gap to oracle (66.0 vs 47.2) remains",
+  "Moral Stories skews Western; models may keep biases"
+ ],
+ "practices": [],
+ "terms": [],
+ "lineage": [
+  {
+   "work": "Self-Refine",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Madaan et al. 2023, LLM-generated feedback",
+   "quote": null
+  },
+  {
+   "work": "Self-reflection (Reflexion)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Shinn et al. 2023",
+   "quote": null
+  },
+  {
+   "work": "Self-correct",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Welleck et al. 2022 corrector model; compared on GSM8K with GPT-Neo",
+   "quote": null
+  },
+  {
+   "work": "Chain-of-thought prompting",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Wei et al. 2022, intermediate steps",
+   "quote": null
+  },
+  {
+   "work": "ReAct",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Yao et al. 2023, REFINER critic applied on top",
+   "quote": null
+  },
+  {
+   "work": "Self-consistency",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Wang et al. 2023",
+   "quote": null
+  },
+  {
+   "work": "RL4LMs / PPO",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Ramamurthy et al. 2022 PPO implementation, BLEU reward",
+   "quote": null
+  },
+  {
+   "work": "ROSCOE",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Golovneva et al. 2023 fine-grained reasoning error types",
+   "quote": null
+  },
+  {
+   "work": "UnifiedQA",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Khashabi et al. 2020 base models",
+   "quote": null
+  },
+  {
+   "work": "SVAMP",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Patel et al. 2021",
+   "quote": null
+  },
+  {
+   "work": "GSM8K",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Cobbe et al. 2021b",
+   "quote": null
+  },
+  {
+   "work": "Moral Stories",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Emelin et al. 2021",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "REFINER example. The critic model provides the generator model with feedback on its reasoning errors after evaluating the generated intermediate steps.",
+   "page": 1,
+   "why": "Shows the generator-critic loop on a math word problem across three iterations"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Overview of REFINER interaction loop. Left side: Training the critic model. Right side: In each iteration, the generator generates multiple hypotheses.",
+   "page": 4,
+   "why": "Two-step training: critic first, then generator with exploration"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Noisy-critics analysis.",
+   "page": 7,
+   "why": "Shows the critic-noise sensitivity at training and at inference"
+  },
+  {
+   "figure": "Fig 7",
+   "caption": "REFINER on MWP. The generator's output improves step-wise.",
+   "page": 16,
+   "why": "Concrete three-iteration refine trace with critic messages ending in 'No Hint'"
+  }
+ ],
+ "code": [
+  {
+   "where": "App B, Algorithm 2",
+   "snippet": "for (turn) t <- 1 to T do: y_hat <- pi_theta(y_i|c_i,h_{t-1}, y_hat_{i,t-1}); h_t <- pi_beta(c_i, y_hat_i); if h_t == No then answers.append(y_hat); break",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Main text points to Table 8 for feedback quality but the printed Table 8 (App A.2) is the GSM8K Self-Correct comparison; the quality comparison is Table 7 and text conflicts",
+  "Model size table lists REFINER base as 440M while the critic and generator are each 220M",
+  "Baseline GPT-3.5 version differs between text (text-davinci-003) and Table 13 (text-davinci-002 and code-davinci-002); two sets of GPT-3.5 numbers (59.3/63.5 and 64.1/67.1)",
+  "Algorithm 1 and 2 pseudo-code garbled in extraction",
+  "No embedded instructions found"
+ ]
+}

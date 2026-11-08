@@ -1,0 +1,648 @@
+{
+ "schema": 1,
+ "key": "2311.16502",
+ "pdf": "ai-engineering/08-multimodal-engineering/sources/xiang-2024-mmmu.pdf",
+ "bib": {
+  "title": "MMMU: A Massive Multi-discipline Multimodal Understanding and Reasoning Benchmark for Expert AGI",
+  "authors": [
+   "Xiang Yue",
+   "Yuansheng Ni",
+   "Kai Zhang",
+   "Tianyu Zheng",
+   "Ruoqi Liu",
+   "Ge Zhang",
+   "Samuel Stevens",
+   "Dongfu Jiang",
+   "Weiming Ren",
+   "Yuxuan Sun",
+   "Cong Wei",
+   "Botao Yu",
+   "Ruibin Yuan",
+   "Renliang Sun",
+   "Ming Yin",
+   "Boyuan Zheng",
+   "Zhenzhu Yang",
+   "Yibo Liu",
+   "Wenhao Huang",
+   "Huan Sun",
+   "Yu Su",
+   "Wenhu Chen"
+  ],
+  "first_author": "Yue",
+  "year": 2024,
+  "venue": "preprint (arXiv v4, 13 Jun 2024; CVPR 2024 version)",
+  "arxiv": "2311.16502",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 270087,
+  "chars_total": 270087,
+  "engine": "pymupdf",
+  "skipped": "Case-study figures (Appendix C, about chars 99000-252700, 100+ GPT-4V examples) and per-discipline Tables 5-10 were skimmed, not read line by line; they are qualitative examples and subject-level repeats of Table 4."
+ },
+ "type": "benchmark",
+ "question": "Can a college-level, multi-discipline, multimodal benchmark measure expert-level perception, knowledge and reasoning in large multimodal models?",
+ "hypothesis": "Existing multimodal benchmarks test commonsense and basic perception, so a benchmark needing college-level knowledge and reasoning will expose a large gap between current models and human experts.",
+ "contributions": [
+  "MMMU: 11.5K college-level multimodal questions across 6 disciplines, 30 subjects, 183 subfields, 30 image types, with interleaved text and images",
+  "Evaluation of 28 open-source LMMs plus GPT-4V and Gemini, text-only and OCR/caption baselines, and human experts",
+  "Error analysis of 150 GPT-4V failures"
+ ],
+ "method": {
+  "summary": "Annotators (50+ college students) collected 13K questions from textbooks, quizzes and exams, deduplicated and cleaned them to 11.5K, and split into dev/validation/test. Models are evaluated zero-shot with micro-averaged accuracy using rule-based answer extraction.",
+  "task": "multimodal multiple-choice and short open-ended question answering",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "MMMU",
+    "role": "eval",
+    "size": "11,550 questions (10,861 MC = 94.03%, 689 open = 5.97%)",
+    "split": "dev 150 : validation 900 : test 10,500",
+    "source": "college exams, quizzes, textbooks and lecture materials; annotators avoided sources prohibiting copying/redistribution",
+    "preprocessing": "lexical overlap and source URL similarity to find duplicates, author review, format/typo check, difficulty labelling in 4 levels, about 10% very easy removed"
+   }
+  ],
+  "models": [
+   {
+    "name": "28 open-source LMMs (e.g. LLaVA-1.5, BLIP-2, InstructBLIP, Qwen-VL, CogVLM, Fuyu-8B, OpenFlamingo, Kosmos2, mPLUG-Owl2)",
+    "role": "evaluated",
+    "params": "1.6B (Kosmos2) up to 34B (Yi-VL, LLaVA-1.6)",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-4V(ision), Gemini 1.0/1.5, Claude 3, GPT-4o, Reka",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "proprietary",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "several of these numbers come from vendor reports, not authors' runs"
+    }
+   },
+   {
+    "name": "Text-only LLMs: GPT-4, Llama2-7B, FLAN-T5-XXL, Vicuna-13B",
+    "role": "baseline",
+    "params": "7B / 13B / XXL",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "OCR": "MMOCR",
+     "caption": "LLaVA-1.5"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": "zero-shot; each model's default prompt for MC or open QA if available, otherwise prompt engineering on the validation set and the best prompt used; few-shot (1/3/5 shot from dev set) only for OpenFlamingo and Otter",
+   "retrieval": null,
+   "parameters": {},
+   "other": {
+    "hardware": "NVIDIA A100 GPUs",
+    "answer_extraction": "regex for numbers and conclusion phrases; invalid MC answer replaced by random option; invalid open answer counted wrong"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "micro-averaged accuracy",
+     "definition": "correct / total over all questions, MC and open, via rule-based matching",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Random Choice",
+    "Frequent Choice (most frequent option per subject in validation)",
+    "text-only LLMs",
+    "human experts"
+   ],
+   "protocol": "validation (900) and test (10,500, via EvalAI leaderboard); humans: 90 seniors, 3 per subject, 30 questions each, textbooks allowed, no internet; no seeds, runs or significance tests stated"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "https://mmmu-benchmark.github.io/"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "GPT-4V reaches 55.7% on the MMMU test set (10,500 questions).",
+   "kind": "measured",
+   "source": null,
+   "metric": "test accuracy",
+   "value": "55.7",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Zero-shot, default prompts, micro-averaged accuracy, GPT-4V (Playground).",
+   "note": null,
+   "where": "Sec 1",
+   "quote": "GPT-4V only achieves an accuracy of 55.7%"
+  },
+  {
+   "claim": "GPT-4V scores 56.8% on the 900-question validation set.",
+   "kind": "measured",
+   "source": null,
+   "metric": "val accuracy",
+   "value": "56.8",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Zero-shot, GPT-4V (Playground), validation.",
+   "note": "Abstract says 56%, Gemini Ultra 59%.",
+   "where": "Table 2",
+   "table": "Table 2, row GPT-4V(ision) (Playground), column Validation Overall"
+  },
+  {
+   "claim": "Best human expert (college seniors, textbooks allowed, no internet) reaches 88.6% on validation; medium 82.6, worst 76.2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "val accuracy",
+   "value": "88.6",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "90 college senior students, 3 per subject, 30 validation questions each.",
+   "note": null,
+   "where": "Sec 4.2",
+   "quote": "The Best human expert achieves a validation accuracy of 88.6%"
+  },
+  {
+   "claim": "GPT-4o scores 69.1% on validation (author-provided/OpenAI report).",
+   "kind": "reported",
+   "source": "GPT-4o report [61]",
+   "metric": null,
+   "value": "69.1",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Validation set; reported from OpenAI report, not run by authors.",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row GPT-4o*, column Validation Overall"
+  },
+  {
+   "claim": "Gemini 1.5 Pro 62.2% and Claude 3 Opus 59.4% on validation.",
+   "kind": "reported",
+   "source": "Gemini 1.5 report [23]",
+   "metric": null,
+   "value": "62.2",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Validation set; reported from vendor reports.",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Gemini 1.5 Pro*, column Validation Overall"
+  },
+  {
+   "claim": "Random choice 22.1% val / 23.9% test; frequent choice 26.8% val / 25.8% test.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "22.1",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Random picks an option; frequent picks the most frequent option per subject in the validation set.",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Random Choice, column Validation Overall"
+  },
+  {
+   "claim": "Leading early open-source models (BLIP2-FLAN-T5-XXL, LLaVA-1.5) reach about 34% on test.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "34.0",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BLIP-2 FLAN-T5-XXL test accuracy, zero-shot.",
+   "note": null,
+   "where": "Sec 1 / Table 2",
+   "quote": "approximately 34% in accuracy",
+   "table": "Table 2, row BLIP-2 FLAN-T5-XXL, column Test Overall"
+  },
+  {
+   "claim": "Later open-source models narrow the gap: LLaVA-1.6-34B 44.7% and InternVL-Chat-V1.2 46.2% test.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "46.2",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Test set; results provided by model authors (starred).",
+   "note": null,
+   "where": "Sec 4.2",
+   "quote": "LLaVA-1.6-34B and InternVL-Chat-V1.2 achieve test accuracies of 44.7% and 46.2%"
+  },
+  {
+   "claim": "Adding OCR or LLaVA captions to text-only LLMs gives little gain: FLAN-T5-XXL 31.2 test, +OCR 31.9, +caption 31.9.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "31.9",
+   "unit": "%",
+   "baseline_value": "31.2",
+   "n": null,
+   "setup": "Text-only LLMs given MMOCR text or LLaVA-1.5 captions; test set.",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row FLAN-T5-XXL + OCR, column Test Overall"
+  },
+  {
+   "claim": "GPT-4 text-only scores 33.8% on test, near open-source LMMs.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "33.8",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-4 Text, no image, test set.",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row GPT-4 Text, column Test Overall"
+  },
+  {
+   "claim": "By difficulty on test, GPT-4V gets 76.1 easy, 55.6 medium, 31.2 hard; open models stay near 27-41 and the gap vanishes on hard.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "31.2",
+   "unit": "%",
+   "baseline_value": "26.4 (Fuyu-8B hard)",
+   "n": null,
+   "setup": "Test set, 2946/4917/2637 easy/medium/hard questions; GPT-4V hard accuracy shown.",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row GPT-4V, column Hard"
+  },
+  {
+   "claim": "GPT-4V error analysis: 35% perceptual, 29% lack of knowledge, 26% reasoning.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "35",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "150 randomly sampled GPT-4V errors, labeled by expert annotators.",
+   "note": "Text lists Textual Understanding Error as 6% in Sec 5 but Fig 5 shows 4%; with 6% the shares sum to 102%.",
+   "where": "Sec 1, Fig 5",
+   "quote": "35% of errors are perceptual, 29% stem from a lack of knowledge, and 26% are due to flaws in the reasoning process"
+  },
+  {
+   "claim": "Open models do well on photos/paintings but near random on geometric shapes, sheet music, chemical structures.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "25.3",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Test set; LLaVA-1.5-13B on Geometric Shapes (336 questions); GPT-4V 40.2.",
+   "note": "Table 13 prints GPT-4V overall as 557 (typo for 55.7).",
+   "where": "Table 13 / Fig 4",
+   "table": "Table 13, row Geometric Shapes, column LLaVA-1.5-13B"
+  },
+  {
+   "claim": "GPT-4V by discipline on test: Art&Design 65.3, Business 64.3, Science 48.4, Health&Med 63.5, Hum&Soc 76.3, Tech&Eng 41.7.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "41.7",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Test set, GPT-4V Tech & Engineering (2,784 questions).",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row GPT-4V(ision) (Playground), column Tech. & Eng."
+  },
+  {
+   "claim": "Few-shot prompting does not help open models: OpenFlamingo 0.263 0-shot to 0.264 5-shot; Otter 0.291 to 0.258.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "0.258",
+   "unit": "accuracy fraction",
+   "baseline_value": "0.291",
+   "n": null,
+   "setup": "Dev-set examples as in-context shots; OpenFlamingo and Otter.",
+   "note": null,
+   "where": "Appendix G",
+   "table": "Table 14, row Otter, column 5shot"
+  },
+  {
+   "claim": "MMMU holds 11,550 questions: dev 150, validation 900, test 10,500; 94.03% multiple choice.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "11550",
+   "unit": "questions",
+   "baseline_value": null,
+   "n": null,
+   "setup": "30 subjects, 183 subfields, 30 image types.",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Total Questions"
+  },
+  {
+   "claim": "Difficulty split is 28% easy, 45% medium, 27% hard.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "28%:45%:27%",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Authors' own difficulty labels after removing about 10% very easy items.",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Difficulties (Easy: Medium: Hard)"
+  },
+  {
+   "claim": "About 10% of collected problems were dropped as very easy; 13K collected, 11.5K kept.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "10%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Curation stage three.",
+   "note": null,
+   "where": "Sec 3.2",
+   "quote": "Approximately 10% of the problems, classified as very easy"
+  },
+  {
+   "claim": "Closest prior benchmark ScienceQA is mostly elementary to middle school level; CogVLM scores 85% VQA-v2, 92% ScienceQA-IMG, 93% RefCOCO.",
+   "kind": "reported",
+   "source": "CogVLM [77]",
+   "metric": null,
+   "value": "92",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Cited from CogVLM paper as evidence of saturation of older benchmarks.",
+   "note": null,
+   "where": "Sec 1",
+   "quote": "92% on ScienceQA-IMG"
+  }
+ ],
+ "limits": [
+  "Authors concede manual curation may carry biases and college-level subjects are not sufficient to test Expert AGI.",
+  "No mapping from MMMU score to 90th percentile of skilled adults is established.",
+  "Many leaderboard entries (starred) are author-provided outputs, not run by the MMMU team; prompts differ per model (default prompt or tuned on validation).",
+  "Human expert baseline uses 90 students on validation only, textbooks allowed; no test-set human score.",
+  "Error analysis covers 150 GPT-4V errors only; no error analysis for other models.",
+  "Answer extraction is rule-based regex; unparseable multiple-choice responses get a random guess, which inflates low scores toward chance.",
+  "Benchmark is English-only and image-required; public test labels are not released (test via EvalAI), but contamination is addressed only by annotator selection of questions with answers not readily available.",
+  "Scores dated: top is GPT-4o 69.1 val at v4 (June 2024); later models have exceeded this (not in paper)."
+ ],
+ "practices": [],
+ "terms": [],
+ "lineage": [
+  {
+   "work": "Morris et al. levels of AGI",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Expert AGI (Level 3) framing motivates the benchmark.",
+   "quote": null
+  },
+  {
+   "work": "MMLU",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Text-only college-exam benchmark; MMMU adds images.",
+   "quote": null
+  },
+  {
+   "work": "AGIEval",
+   "year": 2023,
+   "arxiv": "2304.06364",
+   "relation": "extends",
+   "note": "Human-exam benchmark, text only.",
+   "quote": null
+  },
+  {
+   "work": "ScienceQA",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Closest prior; elementary to middle school level.",
+   "quote": null
+  },
+  {
+   "work": "MathVista",
+   "year": 2023,
+   "arxiv": "2310.02255",
+   "relation": "related",
+   "note": "Visual math only.",
+   "quote": null
+  },
+  {
+   "work": "MMBench",
+   "year": 2023,
+   "arxiv": "2307.06281",
+   "relation": "related",
+   "note": "Holistic LMM benchmark, basic perception.",
+   "quote": null
+  },
+  {
+   "work": "SEED-Bench",
+   "year": 2023,
+   "arxiv": "2307.16125",
+   "relation": "related",
+   "note": "Same.",
+   "quote": null
+  },
+  {
+   "work": "MM-Vet",
+   "year": 2023,
+   "arxiv": "2308.02490",
+   "relation": "related",
+   "note": "Same.",
+   "quote": null
+  },
+  {
+   "work": "GPT-4V(ision)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "Best model at v1.",
+   "quote": null
+  },
+  {
+   "work": "LLaVA-1.5",
+   "year": 2023,
+   "arxiv": "2310.03744",
+   "relation": "evaluates",
+   "note": "Open-source LMM.",
+   "quote": null
+  },
+  {
+   "work": "BLIP-2",
+   "year": 2023,
+   "arxiv": "2301.12597",
+   "relation": "evaluates",
+   "note": "Open-source LMM.",
+   "quote": null
+  },
+  {
+   "work": "InstructBLIP",
+   "year": 2023,
+   "arxiv": "2305.06500",
+   "relation": "evaluates",
+   "note": "Open-source LMM.",
+   "quote": null
+  },
+  {
+   "work": "Qwen-VL",
+   "year": 2023,
+   "arxiv": "2308.12966",
+   "relation": "evaluates",
+   "note": "Open-source LMM.",
+   "quote": null
+  },
+  {
+   "work": "CogVLM",
+   "year": 2023,
+   "arxiv": "2311.03079",
+   "relation": "evaluates",
+   "note": "Open-source LMM.",
+   "quote": null
+  },
+  {
+   "work": "Fuyu-8B",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "Open-source LMM.",
+   "quote": null
+  },
+  {
+   "work": "OpenFlamingo",
+   "year": 2023,
+   "arxiv": "2308.01390",
+   "relation": "evaluates",
+   "note": "Few-shot tests.",
+   "quote": null
+  },
+  {
+   "work": "Otter",
+   "year": 2023,
+   "arxiv": "2305.03726",
+   "relation": "evaluates",
+   "note": "Few-shot tests.",
+   "quote": null
+  },
+  {
+   "work": "MMOCR",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "OCR text fed to text-only LLMs.",
+   "quote": null
+  },
+  {
+   "work": "Holistic analysis of hallucination in GPT-4V",
+   "year": 2023,
+   "arxiv": "2311.03287",
+   "relation": "related",
+   "note": "Text bias over visual input, cited in error analysis.",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Overview of the MMMU dataset.",
+   "page": 1,
+   "why": "Discipline shares and four challenges at a glance"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Sampled MMMU examples from each discipline.",
+   "page": 2,
+   "why": "Shows what expert-level interleaved questions look like"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Comparison between MMMU and other existing benchmarks.",
+   "page": 5,
+   "why": "Breadth vs depth positioning and size/format table"
+  },
+  {
+   "figure": "Table 2",
+   "caption": "Selected results of different models on the MMMU validation and test set.",
+   "page": 6,
+   "why": "Leaderboard with human experts, chance, text-only baselines"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Performance of models on different types of images.",
+   "page": 7,
+   "why": "Weak image types"
+  },
+  {
+   "figure": "Table 3",
+   "caption": "Result decomposition across question difficulty levels.",
+   "page": 7,
+   "why": "Gap closes on hard"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Error distribution over 150 annotated GPT-4V errors.",
+   "page": 8,
+   "why": "Perception/knowledge/reasoning split"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Key statistics of the MMMU benchmark.",
+   "page": 4,
+   "why": "Split sizes and format stats"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Table 13 prints GPT-4V overall as 557 (typo for 55.7).",
+  "Section 5 gives Textual Understanding Error 6% but Fig 5 shows 4%.",
+  "Many Table 2/4 entries are author-provided or vendor-reported, so protocols differ across rows.",
+  "No embedded instructions found. Case-study pages were skimmed."
+ ]
+}

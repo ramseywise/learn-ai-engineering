@@ -1,0 +1,329 @@
+{
+ "schema": 1,
+ "key": "https://doi.org/10.18653/v1/2023.emnlp-demo.49",
+ "pdf": "ai-engineering/08-multimodal-engineering/sources/zhang-2023-video-llama.pdf",
+ "bib": {
+  "title": "Video-LLaMA: An Instruction-tuned Audio-Visual Language Model for Video Understanding",
+  "authors": [
+   "Hang Zhang",
+   "Xin Li",
+   "Lidong Bing"
+  ],
+  "first_author": "Zhang",
+  "year": 2023,
+  "venue": "EMNLP 2023 System Demonstrations",
+  "arxiv": "2306.02858",
+  "doi": "10.18653/v1/2023.emnlp-demo.49"
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 35720,
+  "chars_total": 35720,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "system",
+ "question": "How can a frozen LLM be made to understand both the visual (with temporal change) and auditory content of a video?",
+ "hypothesis": "Bootstrapping from frozen visual and audio encoders and a frozen LLM, with a Video Q-Former and Audio Q-Former, aligns video and audio to the LLM; ImageBind's shared embedding space lets an audio interface trained only on visual-text data work on audio at inference.",
+ "contributions": [
+  "Video-LLaMA, a multi-modal framework enabling an LLM to process both visual and auditory content of a video and converse about it",
+  "A multi-branch cross-modal pre-training framework for vision-language and audio-language alignment",
+  "Open-sourced code, weights of all variants, and demos"
+ ],
+ "method": {
+  "summary": "Two branches map video frames (frozen BLIP-2 ViT-G/14 + Q-Former, then a new Video Q-Former with frame position embeddings) and audio (frozen ImageBind, then an Audio Q-Former) through linear layers into soft prompts for a frozen Vicuna/LLaMA. The vision branch is pre-trained on WebVid-2M plus CC595k captions, then instruction-tuned; the audio branch is trained on the same visual-text data, relying on ImageBind's shared space for zero-shot audio.",
+  "task": "video-grounded conversation / audio-visual instruction following",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "WebVid-2M",
+    "role": "pretrain",
+    "size": "2M short videos with text descriptions (name implies 2M; size not otherwise stated)",
+    "split": null,
+    "source": "Bain et al. 2021, stock footage sites",
+    "preprocessing": null
+   },
+   {
+    "name": "CC595k",
+    "role": "pretrain",
+    "size": null,
+    "split": null,
+    "source": "from CC3M (Sharma et al. 2018), filtered by Liu et al. 2023 (LLaVA)",
+    "preprocessing": "image treated as a one-frame video"
+   },
+   {
+    "name": "MiniGPT-4 image-detail-description",
+    "role": "train",
+    "size": null,
+    "split": null,
+    "source": "Zhu et al. 2023",
+    "preprocessing": null
+   },
+   {
+    "name": "LLaVA image-instruction",
+    "role": "train",
+    "size": null,
+    "split": null,
+    "source": "Liu et al. 2023",
+    "preprocessing": null
+   },
+   {
+    "name": "VideoChat video-instruction",
+    "role": "train",
+    "size": null,
+    "split": null,
+    "source": "Li et al. 2023c",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Video-LLaMA",
+    "role": "proposed",
+    "params": null,
+    "architecture": "frozen encoders + trainable position embedding, Q-Former and linear layer per branch, frozen LLM",
+    "init_from": "Vision: BLIP-2 vision component (EVA-CLIP ViT-G/14 + pre-trained Q-Former), frozen; position embedding, Video Q-Former, Linear randomly initialised. Audio: pre-trained ImageBind, frozen",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "LLM": "Vicuna/LLaMA, frozen (size not stated)",
+     "audio_input": "M segments of 2-second clips uniformly sampled, 128 mel-spectrogram bins",
+     "video_input": "N frames, Kf embeddings each; Video Q-Former outputs kV vectors (values of N, M, kV, Ka not given)"
+    }
+   }
+  ],
+  "training": {
+   "objective": "video-to-text generation (caption) in stage 1; instruction tuning in stage 2; audio branch trained on visual-text data with same process",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "stages": "branches trained separately; stage 1 large-scale caption pretraining, stage 2 instruction fine-tuning",
+    "note": "after stage 1 the model's instruction following decreased, motivating stage 2"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": "conversation format, e.g. 'Describe this video:' with video soft prompt concatenated to text embeddings",
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [],
+   "baselines": [],
+   "protocol": "Qualitative example conversations only (Fig 2-6); no quantitative evaluation."
+  },
+  "availability": {
+   "code": "https://github.com/DAMO-NLP-SG/Video-LLaMA",
+   "weights": "open-sourced, all variants (HF space demo)",
+   "data": "public datasets as listed"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Qualitative: the model answers both a visual and an audio question about the same video (e.g. dog barking and glasses), shown only as examples.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Qualitative cases, Fig 2(a) and Fig 3; no benchmark",
+   "quote": "Video-LLaMA accurately responds to both visual and auditory questions in both cases.",
+   "table": null,
+   "note": null,
+   "where": "Section 4"
+  },
+  {
+   "claim": "Audio understanding emerges zero-shot although the audio interface was never trained on audio data, via ImageBind's shared embedding space.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Audio-language branch trained on visual-text data only",
+   "quote": "Video-LLaMA exhibits the ability to comprehend audio during inference, even though the audio interface has never been trained on audio data.",
+   "table": null,
+   "note": null,
+   "where": "Section 2.2.2"
+  },
+  {
+   "claim": "Video-LLaMA is the only model in the paper's comparison table with static image, silent video and audio abilities together.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 1 vs BLIP2, MiniGPT4, LLaVA, mPLUG-Owl, VideoChat, AudioGPT, Video-ChatGPT",
+   "quote": "Video-LLaMA has the unique ability to comprehend auditory and visual information simultaneously.",
+   "table": null,
+   "note": null,
+   "where": "Table 1"
+  }
+ ],
+ "limits": [
+  "Early-stage prototype; perception limited by quality and scale of training data (audio-video-text alignment dataset in construction)",
+  "Limited ability on long videos (movies, TV shows)",
+  "Inherits hallucination from the frozen LLM",
+  "No quantitative evaluation, no baselines compared, no ablations; only cherry-pickable example conversations",
+  "Most training hyperparameters, LLM size, frame count and dataset sizes are not stated",
+  "Audio branch never sees real audio-text data; audio quality is asserted from examples only"
+ ],
+ "practices": [],
+ "terms": [],
+ "lineage": [
+  {
+   "work": "BLIP-2",
+   "year": 2023,
+   "arxiv": "2301.12597",
+   "relation": "extends",
+   "note": "Q-Former and frozen-encoder/frozen-LLM bootstrapping; its vision component is the frozen visual encoder",
+   "quote": null
+  },
+  {
+   "work": "ImageBind",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "audio encoder with shared embedding space (Girdhar et al. 2023)",
+   "quote": null
+  },
+  {
+   "work": "EVA-CLIP / EVA",
+   "year": 2022,
+   "arxiv": "2211.07636",
+   "relation": "uses-method",
+   "note": "ViT-G/14",
+   "quote": null
+  },
+  {
+   "work": "Vicuna",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "frozen LLM (Chiang et al.), also LLaMA 2302.13971",
+   "quote": null
+  },
+  {
+   "work": "WebVid (Frozen in time)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "WebVid-2M video captions",
+   "quote": null
+  },
+  {
+   "work": "CC3M / CC595k via LLaVA",
+   "year": 2023,
+   "arxiv": "2304.08485",
+   "relation": "uses-data",
+   "note": "image captions and image instructions",
+   "quote": null
+  },
+  {
+   "work": "MiniGPT-4",
+   "year": 2023,
+   "arxiv": "2304.10592",
+   "relation": "uses-data",
+   "note": "image-detail-description data",
+   "quote": null
+  },
+  {
+   "work": "VideoChat",
+   "year": 2023,
+   "arxiv": "2305.06355",
+   "relation": "uses-data",
+   "note": "video-instruction data; also related",
+   "quote": null
+  },
+  {
+   "work": "Video-ChatGPT",
+   "year": 2023,
+   "arxiv": "2306.05424",
+   "relation": "related",
+   "note": "visual-only video LLM",
+   "quote": null
+  },
+  {
+   "work": "AudioGPT",
+   "year": 2023,
+   "arxiv": "2304.12995",
+   "relation": "related",
+   "note": "audio-only, LLM-as-controller",
+   "quote": null
+  },
+  {
+   "work": "PandaGPT",
+   "year": 2023,
+   "arxiv": "2305.16355",
+   "relation": "related",
+   "note": "ImageBind encoders trained on image-instruction only",
+   "quote": null
+  },
+  {
+   "work": "Flamingo",
+   "year": 2022,
+   "arxiv": "2204.14198",
+   "relation": "related",
+   "note": "perceiver resampler with gated cross-attention",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Overall architecture of Video-LLaMA.",
+   "page": 3,
+   "why": "Shows the two-branch frozen-encoder, Q-Former, linear, frozen LLM pipeline"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Some examples generated by Video-LLaMA.",
+   "page": 6,
+   "why": "Four qualitative cases: audio+visual, temporal, static image, landmark"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Comparison with popular multi-modal large language models.",
+   "page": 2,
+   "why": "Capability matrix for image, silent video, audio"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "No quantitative results exist, so results carry no values",
+  "Text order of table 1 marks (check marks) lost in extraction; capability per model not recoverable from text",
+  "Section map misplaced 'Training of Audio-Language Branch' heading; harmless"
+ ]
+}

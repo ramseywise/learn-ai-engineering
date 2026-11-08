@@ -1,0 +1,653 @@
+{
+ "schema": 1,
+ "key": "1803.05355",
+ "pdf": "generative-ai/02-rag-retrieval/sources/thorne-2018-fever.pdf",
+ "bib": {
+  "title": "FEVER: a large-scale dataset for Fact Extraction and VERification",
+  "authors": [
+   "James Thorne",
+   "Andreas Vlachos",
+   "Christos Christodoulopoulos",
+   "Arpit Mittal"
+  ],
+  "first_author": "Thorne",
+  "year": 2018,
+  "venue": "NAACL-HLT 2018",
+  "arxiv": "1803.05355",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 42655,
+  "chars_total": 42655,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "benchmark",
+ "question": "Can a large-scale dataset of claims verified against Wikipedia, with sentence-level evidence, be built and how hard is it for a retrieval plus entailment pipeline?",
+ "hypothesis": null,
+ "contributions": [
+  "FEVER dataset of 185,445 claims labelled SUPPORTED, REFUTED or NOTENOUGHINFO with sentence-level evidence",
+  "Annotation interfaces and guidelines",
+  "Pipeline baseline (document retrieval, sentence selection, RTE) with oracle analyses"
+ ],
+ "method": {
+  "summary": "Annotators extract and mutate claims from Wikipedia intro sentences (June 2017 dump), then a separate group labels each claim and records evidence sentences. A three-stage baseline (DrQA TF-IDF document retrieval, TF-IDF sentence selection, entailment classifier) is evaluated with oracle ablations.",
+  "task": "claim verification against Wikipedia (retrieval of evidence plus 3-way classification)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "FEVER",
+    "role": "both",
+    "size": "185,445 claims; Table 1: train 80,035+29,775+35,639, dev 3,333 per class, test 3,333 per class, reserved 6,666 per class",
+    "split": "Table 1; each Wikipedia page occurs in exactly one split; dev/test balanced 3,333 per class",
+    "source": "June 2017 Wikipedia dump, intro sections of ~50,000 popular pages, processed with Stanford CoreNLP",
+    "preprocessing": "Claims written by annotators with a dictionary of linked terms; six mutation types; NEI instances get simulated evidence (NEARESTP or RANDOMS) for RTE training"
+   }
+  ],
+  "models": [
+   {
+    "name": "DrQA document retrieval",
+    "role": "retriever",
+    "params": null,
+    "architecture": "cosine similarity of binned unigram and bigram TF-IDF vectors",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "k": "5 documents (grid search)"
+    }
+   },
+   {
+    "name": "Sentence selection (DrQA bigram TF-IDF, or NLTK unigram TF-IDF)",
+    "role": "retriever",
+    "params": null,
+    "architecture": "TF-IDF similarity ranking of sentences to claim",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "l": "5 sentences (grid search)"
+    }
+   },
+   {
+    "name": "Decomposable attention (DA)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "Parikh et al. 2016 decomposable attention between claim and evidence",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "SNLI variant": "AllenNLP pre-trained SNLI model used for comparison"
+    }
+   },
+   {
+    "name": "MLP (Riedel et al. 2017)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "single hidden layer MLP on term frequencies and TF-IDF cosine similarity",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "1 hidden layer",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "3-way classification of claim given concatenated evidence sentences",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": "5 random initialisations per model, best on dev reported (learning curve experiment)",
+   "other": {
+    "NEI training evidence": "NEARESTP (sentence from top-ranked retrieved page) or RANDOMS (random Wikipedia sentence)"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single pipeline run on test; 5 initialisations in learning-curve study",
+   "prompting": null,
+   "retrieval": "k=5 documents, l=5 sentences, concatenated for RTE",
+   "parameters": {
+    "k": 5,
+    "l": 5
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Label accuracy (ScoreEv)",
+     "definition": "3-way accuracy; SUPPORTED/REFUTED correct only if a complete correct evidence set is returned",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Label accuracy (NoScoreEv)",
+     "definition": "3-way accuracy ignoring evidence",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Evidence precision/recall/F1",
+     "definition": "predicted sentences vs annotated sentences for claims requiring evidence",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Fully supported",
+     "definition": "proportion of claims whose full evidence is in retrieved documents/sentences",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "random (~33%)",
+    "MLP",
+    "SNLI-trained DA",
+    "no sentence selection"
+   ],
+   "protocol": "Oracle evaluations on dev per component; final pipeline on test; manual error analysis of 961 predictions; agreement by Fleiss kappa, super-annotators, author check of 227"
+  },
+  "availability": {
+   "code": "https://github.com/sheffieldnlp/fever-baselines; annotation interfaces https://github.com/awslabs/fever",
+   "weights": null,
+   "data": "http://fever.ai"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Best pipeline label accuracy requiring correct evidence on test",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 31.87,
+   "unit": "%",
+   "baseline_value": 33,
+   "n": null,
+   "setup": "FEVER test set (3,333 per class), full pipeline: DrQA TF-IDF top 5 documents, top 5 sentences, decomposable attention RTE trained with NEARESTP",
+   "quote": "The classiﬁcation\naccuracy is 31.87%",
+   "table": null,
+   "note": null,
+   "where": "5.7"
+  },
+  {
+   "claim": "Same pipeline ignoring evidence correctness",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 50.91,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "FEVER test set (3,333 per class), full pipeline: DrQA TF-IDF top 5 documents, top 5 sentences, decomposable attention RTE trained with NEARESTP",
+   "quote": "the accuracy is\n50.91%",
+   "table": null,
+   "note": null,
+   "where": "5.7"
+  },
+  {
+   "claim": "Evidence retrieval on test: recall of complete evidence groups",
+   "kind": "measured",
+   "source": null,
+   "metric": "recall",
+   "value": 45.89,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "FEVER test set (3,333 per class), full pipeline: DrQA TF-IDF top 5 documents, top 5 sentences, decomposable attention RTE trained with NEARESTP",
+   "quote": "was 45.89% (considering",
+   "table": null,
+   "note": null,
+   "where": "5.7"
+  },
+  {
+   "claim": "Evidence retrieval on test: precision",
+   "kind": "measured",
+   "source": null,
+   "metric": "precision",
+   "value": 10.79,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "FEVER test set (3,333 per class), full pipeline: DrQA TF-IDF top 5 documents, top 5 sentences, decomposable attention RTE trained with NEARESTP",
+   "quote": "the precision\n10.79%",
+   "table": null,
+   "note": null,
+   "where": "5.7"
+  },
+  {
+   "claim": "Evidence F1 on test",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 17.47,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "FEVER test set (3,333 per class), full pipeline: DrQA TF-IDF top 5 documents, top 5 sentences, decomposable attention RTE trained with NEARESTP",
+   "quote": "17.47%",
+   "table": null,
+   "note": null,
+   "where": "5.7"
+  },
+  {
+   "claim": "Inter-annotator agreement over 5 annotators",
+   "kind": "measured",
+   "source": null,
+   "metric": "Fleiss kappa",
+   "value": 0.6841,
+   "unit": "kappa",
+   "baseline_value": null,
+   "n": null,
+   "setup": "4% of claims (n = 7506) annotated by 5 annotators",
+   "quote": "0.6841",
+   "table": null,
+   "note": null,
+   "where": "3.4.1"
+  },
+  {
+   "claim": "Regular annotators vs super-annotators evidence precision",
+   "kind": "measured",
+   "source": null,
+   "metric": "precision",
+   "value": 95.42,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "1% of data annotated by super-annotators searching all Wikipedia",
+   "quote": "95.42% and 72.36% respectively",
+   "table": null,
+   "note": null,
+   "where": "3.4.2"
+  },
+  {
+   "claim": "Regular annotators vs super-annotators evidence recall",
+   "kind": "measured",
+   "source": null,
+   "metric": "recall",
+   "value": 72.36,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "same",
+   "quote": "72.36%",
+   "table": null,
+   "note": null,
+   "where": "3.4.2"
+  },
+  {
+   "claim": "Author validation: share of 227 examples annotated correctly",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 91.2,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "227 examples checked by authors",
+   "quote": "91.2%",
+   "table": null,
+   "note": null,
+   "where": "3.4.3"
+  },
+  {
+   "claim": "Claims needing multiple sentences of evidence",
+   "kind": "measured",
+   "source": null,
+   "metric": "share",
+   "value": 16.82,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "whole dataset",
+   "quote": "16.82%",
+   "table": null,
+   "note": null,
+   "where": "1"
+  },
+  {
+   "claim": "Claims with evidence from multiple pages",
+   "kind": "measured",
+   "source": null,
+   "metric": "share",
+   "value": 12.15,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "whole dataset",
+   "quote": "12.15%",
+   "table": null,
+   "note": null,
+   "where": "1"
+  },
+  {
+   "claim": "Claims where more than one sentence set counts as evidence",
+   "kind": "measured",
+   "source": null,
+   "metric": "share",
+   "value": 31.75,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "whole dataset",
+   "quote": "31.75%",
+   "table": null,
+   "note": null,
+   "where": "1"
+  },
+  {
+   "claim": "Document retrieval, k=5: claims fully supported by retrieved documents",
+   "kind": "measured",
+   "source": null,
+   "metric": "fully supported",
+   "value": 55.3,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "dev, DrQA TF-IDF, excluding NEI",
+   "quote": "55.30% of claims",
+   "table": "Table 2, row k=5, column Fully Supported (%)",
+   "note": null,
+   "where": "5.4"
+  },
+  {
+   "claim": "Document retrieval, k=100 reaches 86.59% fully supported, k=1 only 25.31%",
+   "kind": "measured",
+   "source": null,
+   "metric": "fully supported",
+   "value": 86.59,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "dev, DrQA TF-IDF",
+   "quote": null,
+   "table": "Table 2, row k=100, column Fully Supported (%)",
+   "note": "k=1: 25.31; oracle accuracy 91.06 at k=100",
+   "where": "Table 2"
+  },
+  {
+   "claim": "After sentence selection (k=5,l=5), DrQA ranking supports 44.22% of claims fully versus 34.03% for NLTK unigram",
+   "kind": "measured",
+   "source": null,
+   "metric": "fully supported",
+   "value": 44.22,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "dev",
+   "quote": "44.22% of claims can be fully supported",
+   "table": null,
+   "note": "NLTK 34.03; oracle accuracies 62.81 and 56.02",
+   "where": "5.4"
+  },
+  {
+   "claim": "Oracle RTE accuracy with gold sentences, DA with RANDOMS training",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 88.0,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "dev, gold evidence",
+   "quote": null,
+   "table": "Table 3, row DA, column RANDOMS",
+   "note": "NEARESTP 80.82; MLP 65.13/73.81; SNLI-trained DA 38.54",
+   "where": "Table 3"
+  },
+  {
+   "claim": "Full pipeline dev ScoreEv: DA/NP",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 32.57,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "dev, k=5, l=5",
+   "quote": null,
+   "table": "Table 4, row DA / NP, column ScoreEv",
+   "note": "NoScoreEv 52.09; DA/RS 23.53 ScoreEv; MLP/NP 19.04",
+   "where": "Table 4"
+  },
+  {
+   "claim": "Removing sentence selection drops pipeline NoScoreEv accuracy about 10%",
+   "kind": "measured",
+   "source": null,
+   "metric": "drop",
+   "value": 10,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "dev, k=5 documents fed to RTE",
+   "quote": "approximately 10% for both",
+   "table": null,
+   "note": null,
+   "where": "5.6"
+  },
+  {
+   "claim": "Error analysis: IR failed to find any correct evidence",
+   "kind": "measured",
+   "source": null,
+   "metric": "share",
+   "value": 58.27,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "961 sampled wrong test predictions",
+   "quote": "58.27% (n = 560)",
+   "table": null,
+   "note": null,
+   "where": "5.8"
+  },
+  {
+   "claim": "Error analysis: correct label but evidence requirement unmet",
+   "kind": "measured",
+   "source": null,
+   "metric": "share",
+   "value": 28.51,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "961 sampled wrong test predictions",
+   "quote": "28.51% (n = 274)",
+   "table": null,
+   "note": null,
+   "where": "5.8"
+  },
+  {
+   "claim": "Error analysis: pipeline found new valid evidence not annotated",
+   "kind": "measured",
+   "source": null,
+   "metric": "share",
+   "value": 21.85,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "961 sampled",
+   "quote": "21.85% (n = 210)",
+   "table": null,
+   "note": null,
+   "where": "5.8"
+  },
+  {
+   "claim": "Error analysis: RTE misclassified despite suitable evidence",
+   "kind": "measured",
+   "source": null,
+   "metric": "share",
+   "value": 13.84,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "961 sampled",
+   "quote": "13.84% (n = 133)",
+   "table": null,
+   "note": null,
+   "where": "5.8"
+  },
+  {
+   "claim": "DA accuracy unstable with fewer than about 6000 training instances, then exceeds MLP",
+   "kind": "measured",
+   "source": null,
+   "metric": "threshold",
+   "value": 6000,
+   "unit": "instances",
+   "baseline_value": null,
+   "n": null,
+   "setup": "learning curve, 5 initialisations, test oracle accuracy",
+   "quote": "6000 training in-",
+   "table": null,
+   "note": "quote line-broken in text",
+   "where": "5.9"
+  }
+ ],
+ "limits": [
+  "Evidence annotation is incomplete (annotator recall 72.36% vs super-annotators), so precision is penalised for valid extra evidence; authors advocate crowd-sourcing false positives later",
+  "Wikipedia intro sections only; authors say Wikipedia is not the only source and avoid TRUE/FALSE labels",
+  "NEI training evidence must be simulated; RANDOMS inflates oracle accuracy but hurts pipeline",
+  "Baseline is deliberately simple TF-IDF plus 2017 RTE models; dated by later neural retrievers and LLMs",
+  "Claims that were mis-specified: 3% of claims, 4.05% in error analysis, did not meet guidelines",
+  "No hyperparameters (optimizer, lr, epochs) reported for RTE models"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "NEARESTP",
+   "definition": "sampling a sentence from the nearest page to the claim as evidence for NOTENOUGHINFO training",
+   "where": "Section 4"
+  },
+  {
+   "term": "RANDOMS",
+   "definition": "sampling a sentence from Wikipedia uniformly at random as NOTENOUGHINFO evidence",
+   "where": "Section 4"
+  },
+  {
+   "term": "ScoreEv / NoScoreEv",
+   "definition": "accuracy with / without the requirement of correct evidence for SUPPORTED/REFUTED",
+   "where": "Section 5.6"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Reading Wikipedia to answer open-domain questions (DrQA), Chen et al.",
+   "year": 2017,
+   "arxiv": "1704.00051",
+   "relation": "uses-method",
+   "note": "document retrieval and sentence selection component",
+   "quote": null
+  },
+  {
+   "work": "A decomposable attention model for natural language inference, Parikh et al.",
+   "year": 2016,
+   "arxiv": "1606.01933",
+   "relation": "uses-method",
+   "note": "RTE model",
+   "quote": null
+  },
+  {
+   "work": "Riedel et al. Fake News Challenge baseline",
+   "year": 2017,
+   "arxiv": "1707.03264",
+   "relation": "baseline",
+   "note": "MLP RTE",
+   "quote": null
+  },
+  {
+   "work": "SNLI, Bowman et al.",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "related",
+   "note": "comparison for agreement and claim length; SNLI-trained model evaluated",
+   "quote": null
+  },
+  {
+   "work": "NaturalLI, Angeli and Manning",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "related",
+   "note": "inspired mutation types",
+   "quote": null
+  },
+  {
+   "work": "Vlachos and Riedel; Wang 2017 (LIAR); Fake News Challenge",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "related",
+   "note": "earlier small fact-checking datasets",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Figure 1",
+   "caption": "Manually verified claim requiring evidence from multiple Wikipedia pages.",
+   "page": 2,
+   "why": "shows multi-hop evidence (Rodney King riots / LA County)"
+  },
+  {
+   "figure": "Figure 2",
+   "caption": "Screenshot of Task 2 - Claim Labeling",
+   "page": 5,
+   "why": "annotation interface"
+  },
+  {
+   "figure": "Table 2",
+   "caption": "Dev. set document retrieval evaluation.",
+   "page": 7,
+   "why": "retrieval depth k vs evidence coverage"
+  },
+  {
+   "figure": "Table 4",
+   "caption": "Full pipeline results on development set",
+   "page": 8,
+   "why": "ScoreEv vs NoScoreEv gap"
+  },
+  {
+   "figure": "Figure 3",
+   "caption": "Learning curves for the RTE models.",
+   "page": 9,
+   "why": "data size vs accuracy"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "PDF has ligature characters (fi as ﬁ); some quotes copied with them",
+  "Page numbers derived as printed page minus 808"
+ ]
+}

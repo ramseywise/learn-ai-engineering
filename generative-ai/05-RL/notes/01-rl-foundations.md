@@ -3,6 +3,7 @@ origin: curated  # was: notion-export
 confidence: medium
 cleaned: 2026-11-01
 sources:
+  - https://arxiv.org/abs/1502.05477 (Schulman et al., TRPO, ICML 2015)
   - "Sutton & Barto, \"Reinforcement Learning: An Introduction\" (2nd ed., MIT Press, 2018), ch. 1–4, 13"
   - https://arxiv.org/abs/2412.05265 (Murphy, RL overview, 2024 preprint, ch. 1, 3, 7)
   - "Lattimore & Szepesvári, \"Bandit Algorithms\" (Cambridge University Press, 2020), ch. 7"
@@ -254,7 +255,7 @@ simpler but β is hard to tune (*Reinforcement Learning*, ch. 6). RLHF keeps tha
 against the frozen reference model rather than the previous iterate
 ([02](02-rlhf-pipeline.md); why the penalty is *reverse* KL: [12](12-rlhf-failure-modes.md#overoptimization)).
 
-Murphy derives where the trust region comes from (*RL: A Comprehensive Overview*, ch. 3, Sec. 3.3). The new policy's return is bounded below by a surrogate minus a penalty proportional to the total-variation distance between old and new policies, scaled by 2γC/(1−γ)². A KL bound δ implies a TV bound through δ = ε²/2, so maximising the surrogate under a KL limit improves the policy monotonically in theory. TRPO expands the surrogate to first order and the KL to second order, steps along the natural gradient `F⁻¹g` with size √(2δ/vᵀFv), solves for it by conjugate gradient and backtracks until the constraint holds. The step is measured in KL, not parameter distance, because the same shift in a Gaussian's mean matters far more when its variance is small:
+Murphy derives where the trust region comes from (*RL: A Comprehensive Overview*, ch. 3, Sec. 3.3). The new policy's return is bounded below by a surrogate minus a penalty proportional to the total-variation distance between old and new policies, scaled by 2γC/(1−γ)². A KL bound δ implies a TV bound through δ = ε²/2, so maximising the surrogate under a KL limit improves the policy monotonically in theory. The original paper ([arXiv:1502.05477](https://arxiv.org/abs/1502.05477) (Schulman et al., ICML 2015)) says the theory's penalty coefficient gives very small steps, so the algorithm uses a hard average-KL constraint with δ = 0.01 in all experiments. The monotonic-improvement guarantee holds only for the penalised form with exact advantages. On MuJoCo locomotion (five runs) single-path and vine TRPO solved every task, while natural gradient with a fixed penalty failed to produce hopping or walking; on seven Atari games (one run each, about 30 hours for 500 iterations on 16 cores) it beat the baselines only on some. TRPO expands the surrogate to first order and the KL to second order, steps along the natural gradient `F⁻¹g` with size √(2δ/vᵀFv), solves for it by conjugate gradient and backtracks until the constraint holds. The step is measured in KL, not parameter distance, because the same shift in a Gaussian's mean matters far more when its variance is small:
 
 ![Two pairs of Gaussians whose means differ by the same amount: with a small shared variance the two curves overlap little, with a large shared variance they overlap a lot.](../sources/images/murphy-rl-fig3-1.png)
 *Image Source: Murphy, [*Reinforcement Learning: A Comprehensive Overview*](https://arxiv.org/abs/2412.05265) (2024), Fig. 3.1 (reproduced from Honkela et al.)*

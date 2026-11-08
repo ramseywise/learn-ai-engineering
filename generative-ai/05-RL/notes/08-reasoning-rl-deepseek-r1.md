@@ -1,6 +1,8 @@
 ---
 origin: synthesis
 sources:
+  - https://arxiv.org/abs/2305.20050 (Lightman et al., Let's Verify Step by Step, NeurIPS 2023)
+  - https://arxiv.org/abs/2103.03874 (MATH, Hendrycks et al., NeurIPS 2021)
   - https://arxiv.org/abs/2501.12948
   - https://arxiv.org/abs/2412.18319
   - https://arxiv.org/abs/2501.12599
@@ -92,7 +94,7 @@ Key findings ([arXiv:2501.12948](https://arxiv.org/abs/2501.12948) (DeepSeek-AI,
 - **Full R1.** A cold start of "thousands" of long-CoT examples, then reasoning RL with a
   language-consistency reward, rejection sampling (about 600k reasoning + 200k other samples),
   and a final all-scenario RL.
-  - R1 reached 79.8% AIME 2024 and 97.3% MATH-500, against 79.2% and 96.4% for o1-1217.
+  - R1 reached 79.8% AIME 2024 and 97.3% MATH-500, against 79.2% and 96.4% for o1-1217. MATH-500 is a subset of MATH ([arXiv:2103.03874](https://arxiv.org/abs/2103.03874) (Hendrycks et al., NeurIPS 2021 Datasets and Benchmarks)): 12,500 competition problems scored by exact match on the boxed answer, where GPT-2 1.5B reached 6.9% in 2021. The 500 problems come from its test set, chosen by Lightman et al. ([arXiv:2305.20050](https://arxiv.org/abs/2305.20050), NeurIPS 2023).
   - It trails o1-1217 on GPQA Diamond (71.5 vs 75.7).
   - The o1 numbers are copied from OpenAI's reports, not rerun.
   - Process reward models and MCTS were tried and abandoned.

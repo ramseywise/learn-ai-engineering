@@ -173,7 +173,7 @@ PM lower; larger PMs held up longer, and crowdworker Elo did not track the PMs' 
 proxy-vs-proxy divergence, not a human-judged peak. OpenAI
 measured the shape as a scaling law in a synthetic setup, with a large "gold" RM standing in for
 humans ([arXiv:2210.10760](https://arxiv.org/abs/2210.10760) (Gao, Schulman & Hilton, ICML 2023)):
-proxy reward climbs monotonically while gold reward rises, then falls. This is Goodhart's law,
+proxy reward climbs monotonically while gold reward rises, then falls. The gold reward follows fitted forms in d = √KL: R(d) = d(α − βd) for best-of-n and R(d) = d(α − β log d) for PPO with no KL penalty. The best-of-n form was fitted on n up to 1,000 (about 6 nats) and predicted n = 60,000 (about 10 nats). RL spends far more KL than best-of-n for the same gain, and the KL penalty did not move the gold-versus-KL frontier; it acted like early stopping. Setup: 6B gold RM, proxy RMs of 3M to 3B, 1.2B and 6B policies, one environment, and a synthetic gold that humans never labelled. The 6B policy overoptimized about as much as the 1.2B one, and RM data below about 2,000 comparisons gave almost no gain. This is Goodhart's law,
 and it shows up as verbose, ingratiating, rigorous-sounding filler.
 
 ![Line chart against KL from the supervised baseline (0 to 250, log scale). The dashed "RM prediction" line rises steadily from about 0.37 to 1.0 fraction preferred to the reference. The solid "Actual preference" line rises from about 0.24 to a peak near 0.47 at KL 10, stays near 0.42 to KL 75, then falls to about 0.05 at KL 250.](../sources/images/stiennon-learning-summarize-fig5.png)

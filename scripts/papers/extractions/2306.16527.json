@@ -1,0 +1,698 @@
+{
+ "schema": 1,
+ "key": "2306.16527",
+ "pdf": "ai-engineering/08-multimodal-engineering/sources/laurencon-2023-obelics.pdf",
+ "bib": {
+  "title": "OBELICS: An Open Web-Scale Filtered Dataset of Interleaved Image-Text Documents",
+  "authors": [
+   "Hugo Laurençon",
+   "Lucile Saulnier",
+   "Léo Tronchon",
+   "Stas Bekman",
+   "Amanpreet Singh",
+   "Anton Lozhkov",
+   "Thomas Wang",
+   "Siddharth Karamcheti",
+   "Alexander M. Rush",
+   "Douwe Kiela",
+   "Matthieu Cord",
+   "Victor Sanh"
+  ],
+  "first_author": "Laurençon",
+  "year": 2023,
+  "venue": "preprint (arXiv v2, 'Under review')",
+  "arxiv": "2306.16527",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 137705,
+  "chars_total": 137705,
+  "engine": "pymupdf",
+  "skipped": "Lists of references, domain table (Table 4) and LDA topic tables (5, 6) were skimmed, not read word by word; Table 10 and part of Table 11 prompts were partly truncated in display"
+ },
+ "type": "benchmark",
+ "question": "Can an open, web-scale dataset of filtered interleaved image-text documents be built from Common Crawl and used to train competitive large multimodal models?",
+ "hypothesis": "Models trained on interleaved web documents outperform models trained on image-text pairs, and an open dataset can match closed ones (implied by the introduction).",
+ "contributions": [
+  "OBELICS dataset: 141M documents, 353M images, 115B tokens",
+  "full description of the creation and filtering pipeline",
+  "content analysis (perplexity, LDA, manual inspection)",
+  "IDEFICS 9B and 80B models trained on it, released with code"
+ ],
+ "method": {
+  "summary": "Pipeline: 25 Common Crawl dumps -> English/dedup/quality text filters -> simplified HTML -> extract interleaved text and images -> node, paragraph and document filters -> dedup and responsible filtering. A Flamingo-style model (frozen LLaMA + frozen OpenCLIP ViT-H, trainable Perceiver resampler and cross-attention) is trained on mixtures to validate it.",
+  "task": "dataset construction; multimodal next-token pretraining",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "OBELICS",
+    "role": "pretrain",
+    "size": "141M docs, 353M images (298M unique), 114.9B tokens",
+    "split": null,
+    "source": "Common Crawl Feb 2020-Jan/Feb 2023, CC-BY licence with terms of use",
+    "preprocessing": "see summary; thresholds in Table 3 (min 4 words per paragraph, 10 per doc; max 30 images per doc; image side 150 to 20,000 px; aspect ratio within 1/2 to 2; images seen more than 10 times removed)"
+   },
+   {
+    "name": "Wikipedia multimodal documents",
+    "role": "pretrain",
+    "size": "3.192B tokens, 39M images",
+    "split": "3 epochs",
+    "source": "same extraction strategy",
+    "preprocessing": null
+   },
+   {
+    "name": "LAION (deduplicated)",
+    "role": "pretrain",
+    "size": "29.9B tokens, 1.120B images",
+    "split": "1 epoch",
+    "source": "Schuhmann 2022; dedup by Webster 2023",
+    "preprocessing": null
+   },
+   {
+    "name": "PMD",
+    "role": "pretrain",
+    "size": "1.6B tokens, 70M images",
+    "split": "3 epochs",
+    "source": "Singh 2022",
+    "preprocessing": null
+   },
+   {
+    "name": "mmc4",
+    "role": "baseline",
+    "size": "103M docs, 585M images, 43B tokens",
+    "split": null,
+    "source": "Zhu 2023",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "IDEFICS-80B",
+    "role": "proposed",
+    "params": "80B (14B trainable)",
+    "architecture": "Flamingo-like: LLaMA-65B, OpenCLIP ViT-H-14 630M, Perceiver 126M, cross-attention 13.9B",
+    "init_from": "frozen laion/CLIP-ViT-H-14-laion2B-s32B-b79K and Llama-65b",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": "Perceiver 16 heads",
+    "context": "1024 sequence length",
+    "other": {
+     "perceiver": "6 layers, 64 latents, head dim 96",
+     "cross_layer_interval": 4
+    }
+   },
+   {
+    "name": "IDEFICS-9B",
+    "role": "proposed",
+    "params": "9B (1.5B trainable)",
+    "architecture": "same, Llama-7b backbone, cross-attention 1.4B",
+    "init_from": "frozen Llama-7b and OpenCLIP ViT-H",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "1024 sequence length",
+    "other": {}
+   },
+   {
+    "name": "9B ablation models (LAION only, OBELICS only, OBELICS+LAION 50/50)",
+    "role": "proposed",
+    "params": "9B",
+    "architecture": "same",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Flamingo / OpenFlamingo v2",
+    "role": "baseline",
+    "params": "9B and 80B",
+    "architecture": "Flamingo",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "next token prediction plus z-loss 1e-3 x log2(Z)",
+   "optimizer": "AdamW (0.9, 0.999)",
+   "lr": "initial max 5e-5 (80B), 1e-5 (9B); final 3e-5 (80B), 6e-6 (9B)",
+   "lr_schedule": "linear decay",
+   "warmup": "2K linear warmup steps",
+   "batch_size": "3.67M tokens (80B), 1.31M tokens (9B)",
+   "steps": "200K max",
+   "epochs": "OBELICS 1, LAION 1, Wikipedia 3, PMD 3",
+   "tokens": null,
+   "seq_len": "1024",
+   "precision": "mixed-precision bf16",
+   "weight_decay": "0.1",
+   "dropout": null,
+   "regularisation": "gradient clipping 1.0; gradient checkpointing; ZeRO stage 3",
+   "hardware": "80GB A100: 32 (OBELICS-only, LAION-only) or 64 (mixture) for 9B ablations; 512 for IDEFICS; 128 for IDEFICS-9B; AWS Oregon",
+   "compute": null,
+   "wall_clock": "about 6 days (9B ablations); about 14 days (IDEFICS, IDEFICS-9B)",
+   "seeds": null,
+   "other": {
+    "mixture": "IDEFICS: OBELICS 73.85%, Wikipedia 6.15%, LAION 17.18%, PMD 2.82% (Table 10)",
+    "loss_spikes": "IDEFICS and 9B LAION+OBELICS each had exactly three restarts from a pre-spike checkpoint with reshuffled data and optionally lower LR",
+    "qk_norm": "layer norm on projected queries and keys in Perceiver and cross-attention"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "random in-context examples; 0, 4, 8, 16, 32 shots; no seeds or repeats reported",
+   "prompting": "in-context learning; 0-shot uses 2 priming examples without images; prompts per task chosen from a pool by evaluating 5 intermediate checkpoints (Table 11); rank classification for HatefulMemes and IIIT5k",
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "CIDEr",
+     "definition": "captioning on COCO test and Flickr30k test (Karpathy)",
+     "unit": "score",
+     "higher_is_better": true
+    },
+    {
+     "name": "VQA accuracy",
+     "definition": "VQAv2 testdev, OKVQA val, TextVQA val, VizWiz testdev, open-ended",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "NDCG",
+     "definition": "VisDial val",
+     "unit": "score",
+     "higher_is_better": true
+    },
+    {
+     "name": "ROC-AUC",
+     "definition": "HatefulMemes test seen",
+     "unit": "score",
+     "higher_is_better": true
+    },
+    {
+     "name": "perplexity under Wikipedia KenLM",
+     "definition": "on 100,000 docs per dataset",
+     "unit": "perplexity",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "Flamingo",
+    "OpenFlamingo v2 (trained on mmc4)",
+    "mmc4",
+    "LAION"
+   ],
+   "protocol": "no error bars (checklist N/A); single run per config; same eval splits as Flamingo; manual inspection of 250 documents for data quality"
+  },
+  "availability": {
+   "code": "https://github.com/huggingface/OBELICS",
+   "weights": "https://huggingface.co/HuggingFaceM4/idefics-80b",
+   "data": "https://huggingface.co/datasets/HuggingFaceM4/OBELICS"
+  },
+  "prompts": [
+   {
+    "purpose": "COCO/Flickr30k captioning (IDEFICS)",
+    "text": "{bos_token}Image:{token_around_image}{image_token}{token_around_image}Caption: {caption}\\n",
+    "where": "Table 11"
+   },
+   {
+    "purpose": "VizWiz",
+    "text": "{bos_token}Task: Answer the questions based on the image when possible, otherwise say unanswerable.\\n",
+    "where": "Table 11 (prefix)"
+   },
+   {
+    "purpose": "HatefulMemes",
+    "text": "{token_around_image}{image_token}{token_around_image}is an image with written \"{context}\" on it. Is it hateful? Answer: {class_name}",
+    "where": "Table 11"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "OBELICS holds 141M English multimodal web documents.",
+   "kind": "measured",
+   "source": null,
+   "metric": "documents",
+   "value": "141 million",
+   "unit": "documents",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Common Crawl Feb 2020-Jan/Feb 2023, after all filtering and dedup",
+   "note": null,
+   "where": "Abstract",
+   "quote": "comprising 141 million web pages extracted"
+  },
+  {
+   "claim": "OBELICS has 353M images, of which 298M are unique (84.3% unique).",
+   "kind": "measured",
+   "source": null,
+   "metric": "images",
+   "value": "353 million",
+   "unit": "images",
+   "baseline_value": null,
+   "n": null,
+   "setup": "final dataset",
+   "note": null,
+   "where": "Sec 3.5 / A.1.5",
+   "quote": "the final dataset contains 141 million documents and 353 million images, of which 298 million are unique"
+  },
+  {
+   "claim": "OBELICS has 115B text tokens, versus 43B for mmc4.",
+   "kind": "measured",
+   "source": null,
+   "metric": "tokens",
+   "value": "115 billion",
+   "unit": "tokens",
+   "baseline_value": "43B (mmc4)",
+   "n": null,
+   "setup": "Table 1 comparison",
+   "note": null,
+   "where": "Abstract",
+   "quote": "115 billion text"
+  },
+  {
+   "claim": "Only 60.6% of mmc4 images are unique versus 84.3% for OBELICS.",
+   "kind": "measured",
+   "source": null,
+   "metric": "% unique images",
+   "value": "84.3%",
+   "unit": "% unique images",
+   "baseline_value": "60.6% (mmc4)",
+   "n": null,
+   "setup": "dedup analysis vs mmc4",
+   "note": null,
+   "where": "Sec 4.1",
+   "quote": "with only 60.6% being unique compared to 84.3% for OBELICS"
+  },
+  {
+   "claim": "Training 9B models on web documents reaches the same aggregated 4-shot performance with an order of magnitude fewer images than on image-text pairs.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "about 10x fewer images",
+   "unit": "factor",
+   "baseline_value": null,
+   "n": null,
+   "setup": "9B Flamingo-style models, LAION only vs OBELICS only vs mix, aggregated 4-shot over 8 benchmarks (read from Fig 6, qualitative)",
+   "note": null,
+   "where": "Sec 5, Fig 6",
+   "quote": "Training on multimodal web documents allows reaching the same performance using an order of magnitude fewer images than training on image-text pairs"
+  },
+  {
+   "claim": "The LAION-only model degrades on VQA benchmarks during training while the OBELICS model does not.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": "",
+   "baseline_value": null,
+   "n": null,
+   "setup": "9B models, 4-shot, Fig 6/11",
+   "note": null,
+   "where": "Sec 5",
+   "quote": "the model trained on image-text pairs slowly degrades through the training"
+  },
+  {
+   "claim": "The image-text-pair model has a slight edge on captioning, classification and OCR.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": "",
+   "baseline_value": null,
+   "n": null,
+   "setup": "9B models",
+   "note": null,
+   "where": "Sec 5",
+   "quote": "has a slight advantage performance-wise in captioning, classification, and OCR tasks"
+  },
+  {
+   "claim": "Mixing OBELICS and LAION beats either alone for a given number of images, tokens or compute.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": "",
+   "baseline_value": null,
+   "n": null,
+   "setup": "9B models, 50/50 mixture",
+   "note": null,
+   "where": "Sec 5",
+   "quote": "combining the two types of datasets leads to increased performance for a given number of images, tokens, or training compute"
+  },
+  {
+   "claim": "IDEFICS-9B beats OpenFlamingo-9B (trained on mmc4) on aggregated performance, still behind Flamingo-9B.",
+   "kind": "measured",
+   "source": null,
+   "metric": "aggregated performance",
+   "value": "56.5",
+   "unit": "aggregated score",
+   "baseline_value": "55.8 (OpenFlamingo-9B)",
+   "n": null,
+   "setup": "best over numbers of shots per task, 8 tasks",
+   "note": null,
+   "where": "Sec 5",
+   "quote": "We achieved a score of 56.5, compared to their score of 55.8"
+  },
+  {
+   "claim": "IDEFICS-80B 32-shot COCO CIDEr 116.6 vs Flamingo-80B 113.8.",
+   "kind": "measured",
+   "source": null,
+   "metric": "CIDEr",
+   "value": "116.6",
+   "unit": "CIDEr",
+   "baseline_value": "113.8 (Flamingo)",
+   "n": null,
+   "setup": "COCO test, 32 in-context examples, random examples",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, rows IDEFICS vs Flamingo, shot 32, column COCO"
+  },
+  {
+   "claim": "IDEFICS-80B 0-shot VQAv2 60.0 vs Flamingo 56.3.",
+   "kind": "measured",
+   "source": null,
+   "metric": "VQA acc.",
+   "value": "60.0",
+   "unit": "VQA acc.",
+   "baseline_value": "56.3 (Flamingo)",
+   "n": null,
+   "setup": "VQAv2 testdev, 0-shot, open-ended",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, rows IDEFICS vs Flamingo, shot 0, column VQAv2"
+  },
+  {
+   "claim": "IDEFICS-80B trails Flamingo on HatefulMemes at 32-shot.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ROC-AUC",
+   "value": "52.5",
+   "unit": "ROC-AUC",
+   "baseline_value": "70.0 (Flamingo)",
+   "n": null,
+   "setup": "HatefulMemes test seen, 32-shot",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row IDEFICS, shot 32, column HatefulMemes"
+  },
+  {
+   "claim": "IDEFICS-9B 32-shot COCO CIDEr 98.0 vs OpenFlamingo-9B 99.5, Flamingo-9B 106.3.",
+   "kind": "measured",
+   "source": null,
+   "metric": "CIDEr",
+   "value": "98.0",
+   "unit": "CIDEr",
+   "baseline_value": "99.5 (OpenFlamingo-9B)",
+   "n": null,
+   "setup": "COCO test, 32-shot",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row IDEFICS-9B, shot 32, column COCO"
+  },
+  {
+   "claim": "Manual inspection of 250 documents: 90% have all images clearly related to the text.",
+   "kind": "measured",
+   "source": null,
+   "metric": "% docs",
+   "value": "90%",
+   "unit": "% documents",
+   "baseline_value": null,
+   "n": null,
+   "setup": "250 manually inspected OBELICS documents",
+   "note": null,
+   "where": "Sec 4.3",
+   "quote": "90% of the documents have all images clearly related to the text content"
+  },
+  {
+   "claim": "30% of inspected documents have images containing written words and 5% structured text.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "30%",
+   "unit": "% documents",
+   "baseline_value": null,
+   "n": null,
+   "setup": "250 inspected docs",
+   "note": null,
+   "where": "Sec 4.3",
+   "quote": "30% of documents have images containing at least one written word"
+  },
+  {
+   "claim": "46% of inspected documents contain faces; 7% have content missed by the filters.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "46%",
+   "unit": "% documents",
+   "baseline_value": null,
+   "n": null,
+   "setup": "250 inspected docs",
+   "note": null,
+   "where": "Sec 4.3",
+   "quote": "46% of documents contain images with faces"
+  },
+  {
+   "claim": "Paragraph dedup across same-domain documents removes about 15% of the text.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "15%",
+   "unit": "% text",
+   "baseline_value": null,
+   "n": null,
+   "setup": "paragraphs appearing at least 3 times identically within a domain",
+   "note": null,
+   "where": "Sec 3.5 / A.1.5",
+   "quote": "approximately 15% of the text"
+  },
+  {
+   "claim": "Opt-out filtering through the Spawning API removed only 0.047% of images.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "0.047%",
+   "unit": "% images",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Spawning API check",
+   "note": null,
+   "where": "A.1.5",
+   "quote": "removing only 0.047% of the images"
+  },
+  {
+   "claim": "Document filtering funnel: 41.2B docs -> 1.1B -> 365M docs (1.4B images) -> 141M docs (353M images).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "141 million",
+   "unit": "documents",
+   "baseline_value": null,
+   "n": null,
+   "setup": "pipeline stages, Fig 2",
+   "note": null,
+   "where": "Fig 2, Sec 3",
+   "quote": "This process results in 41.2 billion documents"
+  },
+  {
+   "claim": "Only 55% of 3.6B image links downloaded successfully (about 2B images).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "55%",
+   "unit": "% download success",
+   "baseline_value": null,
+   "n": null,
+   "setup": "img2dataset, 20 VMs, a few days",
+   "note": null,
+   "where": "Sec 3.3",
+   "quote": "successfully download 55% of them"
+  },
+  {
+   "claim": "Median OBELICS document has 1 image and 677 tokens; cap is 30 images.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "677",
+   "unit": "tokens (median)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "OBELICS documents",
+   "note": null,
+   "where": "Sec 4.1",
+   "quote": "a median number of tokens of 677"
+  },
+  {
+   "claim": "Stricter filters yield fewer documents without higher quality, so users should start from a random subset.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": "",
+   "baseline_value": null,
+   "n": null,
+   "setup": "filter stringency",
+   "note": null,
+   "where": "Sec 3.5",
+   "quote": "using stricter values for the filtering steps yields fewer multimodal documents, although not of higher quality"
+  },
+  {
+   "claim": "About 3% of docs contain watermarks and 2% logos; no NSFW images found in 250 sampled.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "3%",
+   "unit": "% documents",
+   "baseline_value": null,
+   "n": null,
+   "setup": "250 inspected docs",
+   "note": null,
+   "where": "Sec 4.3",
+   "quote": "Only 3% of documents contain images with watermarks"
+  }
+ ],
+ "limits": [
+  "No error bars or repeated seeds; training runs are single runs.",
+  "IDEFICS-9B stays behind Flamingo-9B; at 80B it wins or ties on only 4 of 8 tasks at 32 shots.",
+  "The image-text-pair model is better on captioning, classification and OCR; the mixture is best overall.",
+  "Filters are heuristic; 7% of sampled documents still had spam or non-English content; PII not intentionally removed; NSFW classifier misflags portraits of women and people of color.",
+  "Opt-out cannot be exhaustive; no explicit consent from site authors.",
+  "Bias evaluation (FairFace, StableBias) is released with the model, not shown in the paper; men associated more with financial and software terms.",
+  "Model comparison confounds data and size: IDEFICS mixture also includes Wikipedia documents, LAION and PMD."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "multimodal document",
+   "definition": "A succession of text paragraphs interleaved by images, such as web pages that contain images.",
+   "where": "Sec 1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Flamingo",
+   "year": 2022,
+   "arxiv": "2204.14198",
+   "relation": "extends",
+   "note": "architecture followed closely; baseline; M3W dataset it used was closed",
+   "quote": null
+  },
+  {
+   "work": "Multimodal C4 (mmc4)",
+   "year": 2023,
+   "arxiv": "2304.06939",
+   "relation": "baseline",
+   "note": "concurrent dataset; OBELICS compared on duplicates, image cap, recency",
+   "quote": null
+  },
+  {
+   "work": "OpenFlamingo",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "9B model trained on mmc4",
+   "quote": null
+  },
+  {
+   "work": "KOSMOS-1",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "trained on 71M closed multimodal docs",
+   "quote": null
+  },
+  {
+   "work": "LAION",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "image-text pairs in mixtures",
+   "quote": null
+  },
+  {
+   "work": "BigScience ROOTS (Laurençon et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "text filters adapted",
+   "quote": null
+  },
+  {
+   "work": "MassiveText (Rae et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "repetition filters",
+   "quote": null
+  },
+  {
+   "work": "Dehghani et al. scaling ViT to 22B",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "QK layer norm",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "A comparison of extraction from the same web document: image-text pairs vs multimodal document",
+   "page": 2,
+   "why": "Shows what interleaving keeps that alt-text pairs lose"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Overview of the steps involved in creating OBELICS",
+   "page": 3,
+   "why": "Funnel with counts at each stage (41.2B -> 1.1B -> 365M -> 141M docs)"
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "Aggregated 4-shot performance through the training using LAION only, OBELICS only and a mixture of both",
+   "page": 8,
+   "why": "Core evidence for documents over pairs and the VQA degradation"
+  },
+  {
+   "figure": "Table 2",
+   "caption": "Performance of IDEFICS against OpenFlamingo and Flamingo",
+   "page": 9,
+   "why": "Per-benchmark, per-shot comparison"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Distribution of images",
+   "page": 6,
+   "why": "Why mmc4 is spam-heavy: images concentrated in docs with many images"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Table 2 and Table 10/11 flatten into one number per line; row-to-column mapping was done by position and checked against the printed totals (IDEFICS-9B aggregate not rechecked).",
+  "Table 2 has a column ordering of 8 tasks; HatefulMemes cell for IDEFICS 32-shot read as 52.5.",
+  "No embedded instructions found.",
+  "Hypothesis was inferred, not stated."
+ ]
+}

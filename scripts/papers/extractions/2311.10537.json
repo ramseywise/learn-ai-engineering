@@ -1,0 +1,512 @@
+{
+ "schema": 1,
+ "key": "2311.10537",
+ "pdf": "generative-ai/03-agentic-foundations/sources/tang-2024-medagents.pdf",
+ "bib": {
+  "title": "MEDAGENTS: Large Language Models as Collaborators for Zero-shot Medical Reasoning",
+  "authors": [
+   "Xiangru Tang",
+   "Anni Zou",
+   "Zhuosheng Zhang",
+   "Ziming Li",
+   "Yilun Zhao",
+   "Xingyao Zhang",
+   "Arman Cohan",
+   "Mark Gerstein"
+  ],
+  "first_author": "Tang",
+  "year": 2024,
+  "venue": "Findings of the Association for Computational Linguistics: ACL 2024, pages 599-621",
+  "arxiv": "2311.10537",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 71147,
+  "chars_total": 71147,
+  "engine": "pymupdf",
+  "skipped": "Reference list skimmed; Appendix B case-study tables (Tables 9-11) not read in detail"
+ },
+ "type": "empirical",
+ "question": "Can role-playing LLM agents holding a multi-disciplinary consultation improve zero-shot medical question answering without training or retrieval?",
+ "hypothesis": "Role-playing agents from different medical disciplines, discussing until consensus, surface latent medical knowledge and improve reasoning over CoT and self-consistency.",
+ "contributions": [
+  "First multi-agent framework in the medical domain, with consensus through multi-agent communication",
+  "Role-playing gives faithfulness and interpretability and reasons with accurate knowledge without RAG",
+  "Experiments on nine datasets, plus error categorisation by human evaluation"
+ ],
+ "method": {
+  "summary": "Training-free five-stage pipeline: recruit question and option domain experts, each writes analyses, a summary report is made, experts vote yes/no and propose edits until unanimous (max 5 rounds), then a decision maker picks the answer. Run on GPT-3.5-Turbo and GPT-4.",
+  "task": "medical multiple-choice QA",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "MedQA (USMLE)",
+    "role": "eval",
+    "size": "1273 test",
+    "split": "300 random sampled",
+    "source": "Jin et al. 2021",
+    "preprocessing": null
+   },
+   {
+    "name": "MedMCQA",
+    "role": "eval",
+    "size": "6.1K test",
+    "split": "300 random sampled",
+    "source": "Pal et al. 2022",
+    "preprocessing": null
+   },
+   {
+    "name": "PubMedQA",
+    "role": "eval",
+    "size": "500 test",
+    "split": "300 random sampled",
+    "source": "Jin et al. 2019",
+    "preprocessing": null
+   },
+   {
+    "name": "MMLU medical subtasks (anatomy, clinical knowledge, college medicine, medical genetics, professional medicine, college biology)",
+    "role": "eval",
+    "size": "1089 test",
+    "split": "300 random sampled per dataset",
+    "source": "Hendrycks et al. 2020, following Singhal et al. 2023a",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT-3.5-Turbo (Azure OpenAI)",
+    "role": "base",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-4 (Azure OpenAI)",
+    "role": "base",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "MedAlpaca-7B",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "BioMedGPT-10B",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "BioMedLM-2.7B",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Flan-PaLM (numbers from Singhal et al.)",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": "1.0 (SC: 0.7)",
+   "top_p": "1.0",
+   "max_tokens": null,
+   "samples": "One run on 300 sampled examples per dataset; 5 repetitions in App E for MedQA and MedMCQA; SC uses 5 samples",
+   "prompting": "Zero-shot; role system prompts and guideline prompts per stage (Table 12)",
+   "retrieval": "none",
+   "parameters": {
+    "question_experts_m": "5 (PubMedQA 4)",
+    "option_experts_n": 2,
+    "max_consultation_rounds_t": 5,
+    "options_k": "4 (PubMedQA 3)"
+   },
+   "other": {
+    "cost": "$1.41 per 100 QA examples",
+    "latency": "about 40s per example",
+    "vote_format": "YES/NO per expert"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Accuracy",
+     "definition": "fraction of multiple-choice questions answered correctly",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Zero-shot",
+    "Zero-shot CoT",
+    "Zero-shot CoT + SC",
+    "Few-shot",
+    "Few-shot CoT",
+    "Few-shot CoT + SC",
+    "Flan-PaLM",
+    "open-source medical models"
+   ],
+   "protocol": "Single sampled subset of 300 per dataset; no significance test; error analysis by human categorisation of 40 error cases"
+  },
+  "availability": {
+   "code": "https://github.com/gersteinlab/MedAgents",
+   "weights": null,
+   "data": "public benchmarks"
+  },
+  "prompts": [
+   {
+    "purpose": "Consultation vote",
+    "text": "Here is a medical report: synthesized_report. As a medical expert specialized in domain, please carefully read the report and decide whether your opinions are consistent with this report. Please respond only with: [YES or NO].",
+    "where": "Table 12, promptvote"
+   },
+   {
+    "purpose": "Decision making",
+    "text": "Here is a synthesized report: syn_report. Based on the above report, select the optimal choice to answer the question.",
+    "where": "Table 12, promptdm (truncated; full text in the table)"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "eval sample size",
+    "quote": "We randomly sample 300 examples for each dataset and conduct experiments on them.",
+    "where": "Sec 3.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "MedAgents (GPT-4) averages 86.7 across nine datasets vs 83.0 for zero-shot CoT+SC and 80.6 zero-shot",
+   "kind": "measured",
+   "source": null,
+   "metric": "Accuracy",
+   "value": 86.7,
+   "unit": "% avg acc",
+   "baseline_value": "83.0 (zero-shot CoT + SC)",
+   "n": null,
+   "setup": "Nine medical QA sets, 300 random examples each, zero-shot, temperature 1.0, top_p 1.0, GPT-4 via Azure",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, GPT-4 MedAgents (Ours), column Avg."
+  },
+  {
+   "claim": "MedAgents (GPT-3.5) averages 72.1 vs 70.9 for zero-shot CoT+SC and 71.6 for few-shot CoT+SC",
+   "kind": "measured",
+   "source": null,
+   "metric": "Accuracy",
+   "value": 72.1,
+   "unit": "% avg acc",
+   "baseline_value": "70.9 (zero-shot CoT + SC)",
+   "n": null,
+   "setup": "Nine medical QA sets, 300 random examples each, zero-shot, temperature 1.0, top_p 1.0, GPT-3.5-Turbo",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, GPT-3.5 MedAgents (Ours), column Avg."
+  },
+  {
+   "claim": "On MedQA, MedAgents with GPT-4 reaches 83.7 vs 74.5 zero-shot CoT+SC and 82.9 few-shot CoT+SC",
+   "kind": "measured",
+   "source": null,
+   "metric": "Accuracy",
+   "value": 83.7,
+   "unit": "% acc",
+   "baseline_value": "74.5 (zero-shot CoT+SC)",
+   "n": null,
+   "setup": "MedQA, 300 samples, GPT-4",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, GPT-4 MedAgents, column MedQA"
+  },
+  {
+   "claim": "Zero-shot CoT lowers accuracy below plain zero-shot for GPT-3.5 (avg 58.3 vs 67.8) and on MedQA GPT-4 (61.8 vs 73.0)",
+   "kind": "measured",
+   "source": null,
+   "metric": "Accuracy",
+   "value": 58.3,
+   "unit": "% avg acc",
+   "baseline_value": "67.8 (zero-shot)",
+   "n": null,
+   "setup": "GPT-3.5, nine datasets, zero-shot CoT",
+   "note": null,
+   "where": "Table 2; Sec 3.2",
+   "table": "Table 2, GPT-3.5 Zero-shot CoT, column Avg."
+  },
+  {
+   "claim": "Ablation on MedQA: direct 49.0, CoT 55.0, +Analysis 62.0, +Summarization 65.0, +Consultation 67.0",
+   "kind": "measured",
+   "source": null,
+   "metric": "Accuracy",
+   "value": 67.0,
+   "unit": "% acc",
+   "baseline_value": "55.0 (CoT prompting)",
+   "n": null,
+   "setup": "MedQA, ablation of MedAgents stages (model and sample count not stated for this table)",
+   "note": null,
+   "where": "Table 3; Sec 4.1",
+   "table": "Table 3, row + Anal & Summ & Cons"
+  },
+  {
+   "claim": "Cost of the method is about $1.41 per 100 QA examples and about 40s per example",
+   "kind": "measured",
+   "source": null,
+   "metric": "Accuracy",
+   "value": 1.41,
+   "unit": "$ per 100 questions",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MedAgents pipeline",
+   "note": null,
+   "where": "Sec 3.1",
+   "quote": "the cost of our method is $1.41 for 100 QA examples (about ¢1.4 per question) and the inference time per example is about 40s"
+  },
+  {
+   "claim": "Same-domain agents are worse than six different domains: 6 different 64.1 vs 6 same 59.2, 5 same 57.5, 4 same 55.9 on MedQA",
+   "kind": "measured",
+   "source": null,
+   "metric": "Accuracy",
+   "value": 64.1,
+   "unit": "% acc",
+   "baseline_value": "59.2 (6 same domains)",
+   "n": null,
+   "setup": "MedQA, GPT-3.5, 300 samples, k=6 agents",
+   "note": "Same-domain accuracy falls with fewer agents (59.2, 57.5, 55.9)",
+   "where": "Table 7; Sec 4.5",
+   "table": "Table 7, row w/ 6 different domains, column MedQA"
+  },
+  {
+   "claim": "Removing the least relevant domain expert raises MedQA accuracy (66.2) above the full set (63.8); removing the most relevant lowers it (60.5)",
+   "kind": "measured",
+   "source": null,
+   "metric": "Accuracy",
+   "value": 66.2,
+   "unit": "% acc",
+   "baseline_value": "63.8 (full MedAgents)",
+   "n": null,
+   "setup": "GPT-3.5, only 20 samples, manual relevance labels",
+   "note": "Full-pipeline value 63.8 here differs from 64.1 in Table 2 (20-sample subset)",
+   "where": "Table 6; Sec 4.4",
+   "table": "Table 6, row Remove least relevant, column MedQA"
+  },
+  {
+   "claim": "Any number of expert agents beats the baseline; optimal counts are 5 question and 2 option agents (4 question agents for PubMedQA)",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "MedQA, question and option agent counts varied 1-8 and 1-5; read from Fig 3 and Table 5",
+   "note": null,
+   "where": "Fig 3; Table 5; Sec 4.3",
+   "table": "Table 5"
+  },
+  {
+   "claim": "77% of 40 sampled error cases come from lack or mis-retrieval of domain knowledge, 8% from CoT errors",
+   "kind": "measured",
+   "source": null,
+   "metric": "error share",
+   "value": 77,
+   "unit": "% of errors",
+   "baseline_value": null,
+   "n": null,
+   "setup": "40 error cases from MedQA and MedMCQA, human categorisation",
+   "note": null,
+   "where": "Sec 4.6, App A, Fig 4",
+   "quote": "the majority (77%) of the error examples are due to confusion about the domain knowledge"
+  },
+  {
+   "claim": "Repeated runs are stable: GPT-4 MedQA 83.7 single vs 83.5 over 5 repetitions",
+   "kind": "measured",
+   "source": null,
+   "metric": "Accuracy",
+   "value": 83.5,
+   "unit": "% acc",
+   "baseline_value": "83.7 (single try)",
+   "n": null,
+   "setup": "300 samples, 5 repetitions",
+   "note": null,
+   "where": "Table 13",
+   "table": "Table 13, row MC framework GPT-4 (5 repetitions), column MedQA"
+  },
+  {
+   "claim": "Open-source medical models trail: MedAlpaca-7B gets 55.2 on MedQA vs 83.7 for MedAgents (GPT-4)",
+   "kind": "measured",
+   "source": null,
+   "metric": "Accuracy",
+   "value": 55.2,
+   "unit": "% acc",
+   "baseline_value": "83.7",
+   "n": null,
+   "setup": "MedQA",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row MedAlpaca-7B, column MedQA"
+  }
+ ],
+ "limits": [
+  "Parametric knowledge may go stale",
+  "Models mixed across stages untested",
+  "Limited applicability to low-resource languages",
+  "Authors concede cost exceeds CoT or direct prompting",
+  "77% of errors are domain-knowledge gaps, a bottleneck the pipeline cannot fix",
+  "Only 300 samples per dataset, no seeds or significance tests; domain-relevance study on 20 samples",
+  "Ablation table 3 does not state the model or sample count",
+  "Same-domain agent comparison confounds agent count with domain diversity but uses same-domain duplicates, not equal-cost single-agent sampling; SC (5 samples) baseline is the only compute-matched-ish comparison and is not matched in cost",
+  "Medical QA benchmarks only; GPT-3.5/GPT-4 era"
+ ],
+ "practices": [],
+ "terms": [],
+ "lineage": [
+  {
+   "work": "Self-consistency (Wang et al. 2022)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "SC with 5 samples at temp 0.7",
+   "quote": null
+  },
+  {
+   "work": "Zero-shot CoT (Kojima et al. 2022)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "Few-shot CoT (Wei et al. 2022)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "Flan-PaLM / Med-PaLM (Singhal et al. 2023a)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Evaluation setting and reported numbers",
+   "quote": null
+  },
+  {
+   "work": "Solo Performance Prompting (Wang et al. 2023d)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Multi-persona prompting",
+   "quote": null
+  },
+  {
+   "work": "Multi-agent debate (Du et al. 2023; Liang et al. 2023)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Adversarial collaboration, MedAgents uses consensus instead",
+   "quote": null
+  },
+  {
+   "work": "Camel (Li et al. 2023b)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Role-playing chat agents",
+   "quote": null
+  },
+  {
+   "work": "MedQA, MedMCQA, PubMedQA, MMLU",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Eval sets",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Diagram of our proposed MEDAGENTS framework... five stages",
+   "page": 2,
+   "why": "Pipeline at a glance"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Influence of the number of question and option agents on various datasets.",
+   "page": 5,
+   "why": "Accuracy vs agent count"
+  },
+  {
+   "figure": "Table 7",
+   "caption": "Agent quantity study. The results are based on GPT-3.5.",
+   "page": 5,
+   "why": "Distinct domains beat identical ones: 64.1 vs 59.2/57.5/55.9"
+  },
+  {
+   "figure": "Table 3",
+   "caption": "Ablation study for different processes on MedQA.",
+   "page": 5,
+   "why": "Most of the gain comes from the first analysis stage"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Text extraction of Table 2 is one value per line; columns inferred by order (Avg last)",
+  "Table 6 full-pipeline row (63.8/58.9) differs from Table 2 (64.1/59.3)",
+  "Table 3 does not say which model or sample size",
+  "No instructions embedded in the PDF"
+ ]
+}

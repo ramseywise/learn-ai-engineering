@@ -1,0 +1,821 @@
+{
+ "schema": 1,
+ "key": "https://doi.org/10.18653/v1/2023.emnlp-main.741",
+ "pdf": "generative-ai/08-eval/sources/min-2023-factscore.pdf",
+ "bib": {
+  "title": "FACTSCORE: Fine-grained Atomic Evaluation of Factual Precision in Long Form Text Generation",
+  "authors": [
+   "Sewon Min",
+   "Kalpesh Krishna",
+   "Xinxi Lyu",
+   "Mike Lewis",
+   "Wen-tau Yih",
+   "Pang Wei Koh",
+   "Mohit Iyyer",
+   "Luke Zettlemoyer",
+   "Hannaneh Hajishirzi"
+  ],
+  "first_author": "Min",
+  "year": 2023,
+  "venue": "Proceedings of EMNLP 2023, pages 12076-12100",
+  "arxiv": "2305.14251",
+  "doi": "10.18653/v1/2023.emnlp-main.741"
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 96823,
+  "chars_total": 96823,
+  "engine": "pymupdf",
+  "skipped": "Reference list skimmed only"
+ },
+ "type": "benchmark",
+ "question": "How can the factual precision of long-form LM generations be measured at fine granularity, by humans and automatically?",
+ "hypothesis": "Atomic facts scored against a given knowledge source give a finer, more informative precision measure than binary or sentence-level judgments, and retrieval plus a strong LM can estimate it closely.",
+ "contributions": [
+  "FACTSCORE: fraction of atomic facts supported by a given knowledge source, with human evaluation of InstructGPT, ChatGPT and PerplexityAI",
+  "An automatic estimator of FACTSCORE with error rate under 2%",
+  "Open-sourced FACTSCORE and annotated data (pip install factscore)"
+ ],
+ "method": {
+  "summary": "Generations are split into atomic facts (InstructGPT few-shot, human-revised) and each is labelled Supported, Not-supported or Irrelevant against English Wikipedia; FACTSCORE is the fraction supported. An estimator retrieves passages (GTR) and asks an LM True or False, optionally ensembled with a nonparametric masked-LM probability, and is applied to 13 subjects.",
+  "task": "Factual precision evaluation of long-form biography generation",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "Human-annotated biographies",
+    "role": "eval",
+    "size": "183 people entities x 3 LMs (InstructGPT, ChatGPT, PerplexityAI)",
+    "split": "entities sampled uniformly over 20 categories (5 frequency x 4 nationality)",
+    "source": "Wikidata entities with Wikipedia pages; annotated by Upwork freelancers",
+    "preprocessing": null
+   },
+   {
+    "name": "Unlabeled biographies for 13 subjects",
+    "role": "eval",
+    "size": "500 bios per subject, 6,500 generations total",
+    "split": "no entity overlap with the 183 annotated entities",
+    "source": "12 LMs plus human-written bios from DBPedia (unavailable for 11% of entities, counted as abstain)",
+    "preprocessing": null
+   },
+   {
+    "name": "English Wikipedia (knowledge source)",
+    "role": "eval",
+    "size": null,
+    "split": "dump of 04/01/2023",
+    "source": "Wikipedia",
+    "preprocessing": "pages split into passages up to 256 tokens; retrieval restricted to topic entity's page"
+   },
+   {
+    "name": "NLP-paper summaries (proof of concept)",
+    "role": "eval",
+    "size": "10 manually written prompts",
+    "split": "n/a",
+    "source": "ACL anthology as knowledge source",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "InstructGPT (text-davinci-003)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "also_atomic_fact_generator": true
+    }
+   },
+   {
+    "name": "ChatGPT",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "also_LMEVAL": true
+    }
+   },
+   {
+    "name": "PerplexityAI",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "search engine plus LM",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-4, Alpaca 7B/13B/65B, Vicuna 7B/13B, Dolly 12B, Oasst-pythia 12B, StableLM-tuned-alpha 7B, MPT Chat 7B",
+    "role": "evaluated",
+    "params": "7B to 65B for open models",
+    "architecture": null,
+    "init_from": "LLAMA, Pythia 12B, StableLM-base, MPT 7B (Table 4)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Inst-LLAMA 7B (LLAMA 7B trained on Super Natural Instructions)",
+    "role": "judge",
+    "params": "7B",
+    "architecture": null,
+    "init_from": "LLAMA 7B",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "LLAMA 65B",
+    "role": "judge",
+    "params": "65B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "used_in": "ablation Table 10"
+    }
+   },
+   {
+    "name": "ChatGPT as LMEVAL",
+    "role": "judge",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GTR large (Generalizable T5-based Retriever)",
+    "role": "retriever",
+    "params": null,
+    "architecture": "T5-based dense retriever",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "ablation": "BM25, GTR xLarge"
+    }
+   },
+   {
+    "name": "NPM single-mask variant with BM25",
+    "role": "judge",
+    "params": null,
+    "architecture": "nonparametric masked LM",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "threshold": 0.3
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "One generation per entity per subject; 500 entities for new LMs; Fig 5 resampling: N in {40,100,200} of 500, M=100 repeats",
+   "prompting": "Subject prompt 'Tell me a bio of <entity>'. Evaluator: zero-shot '<atomic-fact> True or False?' with retrieved passages prepended for Retrieve->LM; prediction compares logits of True/False, or checks generated text for True/False when logits unavailable (ChatGPT). Atomic fact generation uses 8 few-shot exemplars on InstructGPT (Table 15).",
+   "retrieval": "GTR large, restricted to topic entity's Wikipedia page, k=5 passages, up to 256 tokens each (k=3 for editing)",
+   "parameters": {
+    "NP threshold": 0.3,
+    "k": 5,
+    "passage_len": "256 tokens",
+    "evaluator_variants": "No-context LM, Retrieve->LM, NP, Retrieve->LM + NP (Supported only if both agree)"
+   },
+   "other": {
+    "abstention": "rule-based filter of abstaining generations",
+    "editing_experiment": "ChatGPT editor, 4 exemplars, 3 passages"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "FACTSCORE",
+     "definition": "f(y)=1/|Ay| sum over atomic facts of I[a supported by C]; averaged over prompts where model responds",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Error Rate (ER)",
+     "definition": "difference between ground-truth and estimated FACTSCORE (sign shown by +/- over 5% over/under-estimation)",
+     "unit": "points",
+     "higher_is_better": false
+    },
+    {
+     "name": "F1micro",
+     "definition": "F1 for detecting Not-supported atomic facts with oracle atomic facts, per-fact decisions",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "ErrLoc / EditCorr(ErrCorr) / SimAl",
+     "definition": "Editing metrics: token preservation macro-F1; token F1 of added tokens vs gold edit; normalized SIM paraphrase similarity",
+     "unit": "points",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Always Supported",
+    "Always Not-supported",
+    "Random",
+    "No-context LM",
+    "Self-check LM (Manakul et al. 2023)",
+    "NP only",
+    "Retrieve->LM only"
+   ],
+   "protocol": "Human labels from fact-checking freelancers (2-hour qualification, 10% of HITs double-annotated; agreement 96/90/88%); estimator compared against human FACTSCORE by ER and ranking preservation across 3 subjects; variance by 100 random subsets"
+  },
+  "availability": {
+   "code": "https://github.com/shmsw25/FActScore (pip install factscore)",
+   "weights": null,
+   "data": "Annotated data open-sourced"
+  },
+  "prompts": [
+   {
+    "purpose": "Generate bio",
+    "text": "Tell me a bio of <entity>",
+    "where": "Sec 3.3 Step 1"
+   },
+   {
+    "purpose": "Evaluator no-context",
+    "text": "<atomic-fact> True or False?",
+    "where": "Sec 4.1"
+   },
+   {
+    "purpose": "Evaluator Retrieve->LM",
+    "text": "concatenation of k retrieved passages, the atomic fact, and 'True or False?'",
+    "where": "Sec 4.1"
+   },
+   {
+    "purpose": "Atomic fact decomposition (InstructGPT)",
+    "text": "Please breakdown the following sentence into independent facts: <sentence> followed by 8 exemplars (Table 15)",
+    "where": "App A.2, Table 15"
+   },
+   {
+    "purpose": "Editing no-context",
+    "text": "Input: <sentence> Edit:",
+    "where": "App C.1"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "ChatGPT FACTSCORE by human evaluation",
+   "kind": "measured",
+   "source": null,
+   "metric": "FACTSCORE",
+   "value": 58.3,
+   "unit": "%",
+   "baseline_value": null,
+   "n": 183,
+   "setup": "183 people entities, 'Tell me a bio of <entity>', human-labelled atomic facts against English Wikipedia",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row FACTSCORE, column ChatGPT"
+  },
+  {
+   "claim": "InstructGPT FACTSCORE by human evaluation",
+   "kind": "measured",
+   "source": null,
+   "metric": "FACTSCORE",
+   "value": 42.5,
+   "unit": "%",
+   "baseline_value": null,
+   "n": 183,
+   "setup": "183 people entities, 'Tell me a bio of <entity>', human-labelled atomic facts against English Wikipedia",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row FACTSCORE, column InstGPT"
+  },
+  {
+   "claim": "PerplexityAI (search-augmented) FACTSCORE by human evaluation",
+   "kind": "measured",
+   "source": null,
+   "metric": "FACTSCORE",
+   "value": 71.5,
+   "unit": "%",
+   "baseline_value": null,
+   "n": 183,
+   "setup": "183 people entities, 'Tell me a bio of <entity>', human-labelled atomic facts against English Wikipedia",
+   "note": "Abstract/intro round to 42%, 58%, 71%",
+   "where": "Table 1",
+   "table": "Table 1, row FACTSCORE, column PPLAI"
+  },
+  {
+   "claim": "ChatGPT FACTSCORE falls from 80% to 16% as entity rarity increases",
+   "kind": "measured",
+   "source": null,
+   "metric": "FACTSCORE",
+   "value": "80% →16%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ChatGPT, entity frequency buckets very frequent to very rare, human labels",
+   "note": null,
+   "where": "Sec 1",
+   "quote": "80% →16% for ChatGPT"
+  },
+  {
+   "claim": "PerplexityAI with retrieval still drops with rarer entities: relative drop at atomic and sentence level",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "50% and 64%",
+   "unit": "relative drop",
+   "baseline_value": null,
+   "n": null,
+   "setup": "PerplexityAI, rare vs frequent entities",
+   "note": null,
+   "where": "Sec 3.4",
+   "quote": "a relative drop of 50% and 64% observed at the atomic-level and sentence-level, respectively"
+  },
+  {
+   "claim": "Citations barely correlate with correctness: share of supported vs unsupported PerplexityAI sentences with citations",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "36.0% and 37.6%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "PerplexityAI sentences",
+   "note": null,
+   "where": "Sec 3.4",
+   "quote": "36.0% and 37.6% of supported and unsupported sentences have citations, respectively"
+  },
+  {
+   "claim": "Annotator agreement on 10% double-annotated data (InstructGPT)",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 96,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "183 people entities, 'Tell me a bio of <entity>', human-labelled atomic facts against English Wikipedia",
+   "note": "Appendix A.5 says overall agreement is fairly high (91%); no per-model figure there",
+   "where": "Sec 3.3",
+   "quote": "96%, 90% and 88% for InstructGPT, ChatGPT and Per-"
+  },
+  {
+   "claim": "Retrieve->LM + NP with Inst-LLAMA 7B gives error rate on ChatGPT subject",
+   "kind": "measured",
+   "source": null,
+   "metric": "Error Rate",
+   "value": 0.4,
+   "unit": "ER points (abs diff of FACTSCORE)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Inst-LLAMA 7B as LMEVAL, GTR retrieval k=5, NP threshold 0.3, vs human FACTSCORE",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row I-LLAMA Retrieve→LM + NP, column SUBJ: ChatGPT ER"
+  },
+  {
+   "claim": "Inst-LLAMA Retrieve->LM overestimates FACTSCORE on InstructGPT with ER 14.1 versus 1.4 for + NP",
+   "kind": "measured",
+   "source": null,
+   "metric": "Error Rate",
+   "value": 14.1,
+   "unit": "ER points",
+   "baseline_value": 1.4,
+   "n": null,
+   "setup": "Inst-LLAMA 7B, SUBJ InstructGPT",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row I-LLAMA Retrieve→LM, column SUBJ: InstGPT ER"
+  },
+  {
+   "claim": "ChatGPT no-context evaluator has large error rate on InstructGPT, so retrieval matters",
+   "kind": "measured",
+   "source": null,
+   "metric": "Error Rate",
+   "value": 39.6,
+   "unit": "ER points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ChatGPT as LMEVAL, no retrieval, SUBJ InstructGPT",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row ChatGPT No-context LM, column SUBJ: InstGPT ER"
+  },
+  {
+   "claim": "ChatGPT Retrieve->LM evaluator on PerplexityAI subject has lowest error",
+   "kind": "measured",
+   "source": null,
+   "metric": "Error Rate",
+   "value": 0.8,
+   "unit": "ER points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ChatGPT as LMEVAL with retrieval, SUBJ PerplexityAI",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row ChatGPT Retrieve→LM, column SUBJ: PPLAI ER"
+  },
+  {
+   "claim": "Estimator error rate is under 2% for best variants",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Best variant per subject, see Table 3; abstract wording",
+   "note": "Table 3 best ERs are 1.4/0.4/0.8 for the best variants per subject, not a uniform 2%",
+   "where": "Abstract",
+   "quote": "with less than a 2% error rate"
+  },
+  {
+   "claim": "Scores of the two best estimators correlate across 13 subjects",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "0.99",
+   "unit": "Pearson r",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ChatGPT+retrieval vs LLAMA+NP, 500 bios per subject",
+   "note": null,
+   "where": "Sec 4.3.2",
+   "quote": "Pearson’s r of 0.99"
+  },
+  {
+   "claim": "Cost avoided by automatic evaluation of 6,500 generations",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "26K",
+   "unit": "USD",
+   "baseline_value": null,
+   "n": null,
+   "setup": "13 subjects x 500 bios at $4 per generation",
+   "note": "Conclusion says 12 LMs 'could have cost $65K'; $4 x 6,500 = $26K, so $65K is inconsistent",
+   "where": "Abstract",
+   "quote": "would have cost $26K if evalu-"
+  },
+  {
+   "claim": "Human annotation cost per generation",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 4,
+   "unit": "USD",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Upwork freelancers paid 15-25 USD per hour",
+   "note": null,
+   "where": "Sec 3.3",
+   "quote": "leading to the cost of $4 per generation"
+  },
+  {
+   "claim": "Retrieval for estimator: F1micro with Inst-LLAMA 7B Retrieve->LM + NP on InstructGPT vs no-context",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1micro",
+   "value": 83.2,
+   "unit": "F1micro %",
+   "baseline_value": 61.2,
+   "n": null,
+   "setup": "Inst-LLAMA 7B, detecting Not-supported facts with oracle atomic facts",
+   "note": null,
+   "where": "Table 9",
+   "table": "Table 9, row Retrieve→LM + NP, column InstGPT"
+  },
+  {
+   "claim": "ChatGPT Retrieve->LM F1micro on InstructGPT (best of the evaluators)",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1micro",
+   "value": 87.5,
+   "unit": "F1micro %",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ChatGPT as LMEVAL, GTR k=5",
+   "note": null,
+   "where": "Table 10",
+   "table": "Table 10, row ChatGPT Retrieve→LM, column InstGPT"
+  },
+  {
+   "claim": "True/False prompting beats QA prompting: Retrieve->LM F1micro on InstructGPT",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1micro",
+   "value": 78.9,
+   "unit": "F1micro %",
+   "baseline_value": 65.3,
+   "n": null,
+   "setup": "Inst-LLAMA 7B",
+   "note": null,
+   "where": "Table 11",
+   "table": "Table 11, row TF Prompting Retrieve→LM, column InstGPT"
+  },
+  {
+   "claim": "Choice of retriever barely matters: BM25 F1micro on InstructGPT vs GTR Large 78.9",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1micro",
+   "value": 78.5,
+   "unit": "F1micro %",
+   "baseline_value": 78.9,
+   "n": null,
+   "setup": "Retrieve->LM, Inst-LLAMA 7B",
+   "note": null,
+   "where": "Table 12",
+   "table": "Table 12, row BM25, column InstGPT"
+  },
+  {
+   "claim": "Most Retrieve->LM errors (ChatGPT) come from retrieved passages lacking direct evidence",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 70,
+   "unit": "% of 30 errors",
+   "baseline_value": null,
+   "n": 30,
+   "setup": "30 incorrect predictions of ChatGPT Retrieve->LM",
+   "note": null,
+   "where": "Table 13",
+   "table": "Table 13, row No direct evidence from retrieved passages"
+  },
+  {
+   "claim": "Of 30 ChatGPT unsupported facts about rare entities, share actually supported elsewhere on the web",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "10% (3 out of 30)",
+   "unit": "%",
+   "baseline_value": null,
+   "n": 30,
+   "setup": "Wikipedia coverage check, rare and very rare people",
+   "note": null,
+   "where": "App A.5",
+   "quote": "We found 10% (3 out of 30 facts) are in fact supported"
+  },
+  {
+   "claim": "GPT-4 generates more atomic facts per response than ChatGPT (61 vs 37) and abstains less (12% vs 16%) with comparable FACTSCORE",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "500 bios per subject, estimated FACTSCORE",
+   "note": "Text wording 'GPT-\\n4' broken across lines in source; value in claim only",
+   "where": "Sec 4.3.2",
+   "quote": "GPT-4 abstains from responding less (12% vs. 16%)"
+  },
+  {
+   "claim": "Vicuna generates more atomic facts than Alpaca per response (51 vs 17) with similar FACTSCORE",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Sec 4.3.2, Table 5",
+   "note": "Table 5: Vicuna 13B 50.9, Alpaca 13B 16.6 facts/response",
+   "where": "Sec 4.3.2",
+   "quote": "Vicuna generates sig-"
+  },
+  {
+   "claim": "Within 7B public models, Alpaca and Vicuna ~40%, MPT-Chat 30%, StableLM 17% FACTSCORE",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "~40% / 30% / 17%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Estimated FACTSCORE, 500 bios each",
+   "note": null,
+   "where": "Sec 4.3.2",
+   "quote": "Chat (30%) and StableLM (17%)"
+  },
+  {
+   "claim": "Proof of concept on NLP papers: estimator error rate with ChatGPT, 10 prompts, ACL anthology",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 7.41,
+   "unit": "ER points",
+   "baseline_value": null,
+   "n": 10,
+   "setup": "Tell me a summary of <paper-title>, FACTSCORE human 66.20 vs model 73.61",
+   "note": null,
+   "where": "App B.5",
+   "quote": "The ER is 7.41"
+  },
+  {
+   "claim": "Editing: ChatGPT Retrv->LM + atomic facts reaches ErrCorr when correcting its own outputs",
+   "kind": "measured",
+   "source": null,
+   "metric": "ErrCorr",
+   "value": 28.3,
+   "unit": "ErrCorr F1",
+   "baseline_value": 16.8,
+   "n": null,
+   "setup": "Gold FACTSCORE labels given to editor, ChatGPT as editor, 4 in-context exemplars, 3 passages",
+   "note": null,
+   "where": "App C.3",
+   "quote": "16.8 →28.3"
+  },
+  {
+   "claim": "Atomic-fact labels cut editor verbatim-copy or 'no errors' rate",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "37.3% to 3.9%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Editing experiment, ChatGPT editor",
+   "note": null,
+   "where": "App C.3",
+   "quote": "from 37.3% to 3.9%"
+  }
+ ],
+ "limits": [
+  "Only people biographies and English Wikipedia; NLP-paper proof of concept is 10 prompts",
+  "Assumes undebatable, equal-weight, non-conflicting facts; 70% of annotator disagreements were inherent debatability",
+  "Precision only: no recall, abstention and fewer facts raise the score; authors recommend reporting abstention rate and facts per response",
+  "Estimator is not perfect on individual judgments and best variant depends on the subject",
+  "Wikipedia coverage gaps penalize true facts (3 of 30 checked)",
+  "Human results on only 183 entities per model; pre-2023 models and commercial systems"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Atomic fact",
+   "definition": "a short sentence conveying one piece of information",
+   "where": "Sec 3.1"
+  },
+  {
+   "term": "FACTSCORE",
+   "definition": "percentage of atomic facts supported by a given knowledge source",
+   "where": "Abstract"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Manakul et al. 2023 SelfCheckGPT",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Self-check LM baseline",
+   "quote": null
+  },
+  {
+   "work": "Kandpal et al. 2022 / Mallen et al. 2023",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "entity frequency vs accuracy",
+   "quote": null
+  },
+  {
+   "work": "Liu et al. 2023a Evaluating verifiability in generative search engines",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "concurrent work on PerplexityAI",
+   "quote": null
+  },
+  {
+   "work": "Min et al. 2023 NPM",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "nonparametric masked LM",
+   "quote": null
+  },
+  {
+   "work": "Ni et al. 2022 GTR",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "retriever",
+   "quote": null
+  },
+  {
+   "work": "Touvron et al. 2023 LLaMA; Wang et al. 2022 Super-NaturalInstructions",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Inst-LLAMA evaluator",
+   "quote": null
+  },
+  {
+   "work": "Nenkova and Passonneau 2004 summarization content units",
+   "year": 2004,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "atomic unit idea",
+   "quote": null
+  },
+  {
+   "work": "Chen et al. 2022 / Kamoi et al. 2023 fact verification by decomposition",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "decomposition into atomic facts",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "An overview of FACTSCORE",
+   "page": 1,
+   "why": "Shows atomic-fact decomposition and 66.7% vs 10.0% scoring vs 0.0 for binary"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "FACTSCORE across varying frequency levels of human entities (top) and relative positions in a generation (bottom)",
+   "page": 5,
+   "why": "Precision falls with rarity and later position"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Ranking between 13 subjects rated by the two best estimator variants",
+   "page": 8,
+   "why": "Leaderboard of models"
+  },
+  {
+   "figure": "Table 3",
+   "caption": "Results on Error Rate along with FACTSCOREs estimated by each model",
+   "page": 7,
+   "why": "Compares estimator variants"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "A case in which F1micro and ER rank two evaluators differently",
+   "page": 13,
+   "why": "Segment vs system-level evaluation"
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 3.1",
+   "snippet": "f(y) = 1/|Ay| * sum_{a in Ay} I[a is supported by C];  FACTSCORE(M) = E_{x in X}[f(Mx) | Mx responds]",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Conclusion says 12 LMs would have cost $65K; abstract and Sec 4.3.1 say 13 subjects, 6,500 generations, $26K",
+  "Agreement rate 91% in App A.5 vs 96/90/88% per model in Sec 3.3",
+  "Sec 4.3.1 says 'ten new LMs'; Table 4 titled twelve LMs",
+  "Figures 6 and 7 (annotation instructions/interface) are images; not readable in text",
+  "No embedded instructions found"
+ ]
+}

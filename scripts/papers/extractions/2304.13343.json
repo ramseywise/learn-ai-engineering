@@ -1,0 +1,377 @@
+{
+ "schema": 1,
+ "key": "2304.13343",
+ "pdf": "generative-ai/03-agentic-foundations/sources/wang-2026-scm.pdf",
+ "bib": {
+  "title": "Enhancing Large Language Model with Self-Controlled Memory Framework",
+  "authors": [
+   "Bing Wang",
+   "Xinnian Liang",
+   "Jian Yang",
+   "Hui Huang",
+   "Shuangzhi Wu",
+   "Peihao Wu",
+   "Lu Lu",
+   "Zejun Ma",
+   "Zhoujun Li"
+  ],
+  "first_author": "Wang",
+  "year": 2025,
+  "venue": "preprint",
+  "arxiv": "2304.13343",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 51845,
+  "chars_total": 51845,
+  "engine": "pymupdf",
+  "skipped": "References skimmed only"
+ },
+ "type": "system",
+ "question": "How can an LLM with a limited context window keep long-term memory and recall relevant history over arbitrarily long inputs without fine-tuning?",
+ "hypothesis": "A controller that decides when to retrieve memory and whether to use full text or summary reduces noise and beats feeding all history.",
+ "contributions": [
+  "Self-Controlled Memory (SCM) framework for unlimited-length input without modification or fine-tuning",
+  "An annotated evaluation dataset for long-term dialogue, book summarization and meeting summarization",
+  "Plug-and-play with any instruction-following LLM"
+ ],
+ "method": {
+  "summary": "Agent LLM plus memory stream (interaction index, observation, response, summary, ada-002 embedding) plus a prompted LLM controller that decides whether to activate memory, retrieves top-k by recency+relevance, and chooses full text or summary per memory. Six-step loop per turn; flash memory holds the previous turn, activation memory the retrieved history.",
+  "task": "long-term dialogue QA; book and meeting summarization",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "Annotated long-text benchmark (ShareChat, Project Gutenberg, VCSUM)",
+    "role": "eval",
+    "size": "Dialogue 18 instances (max 34k tokens, 420k total, max 200 turns, En+Zh); Book 10 (max 2M, 8M total, En+Zh); Meeting 20 (max 50k, 632k total, Zh); 105 probing questions (49 single, 56 multi-turn)",
+    "split": "eval only",
+    "source": "ShareChat, gutenberg.org, VCSUM (Wu et al., 2023); human annotated probing questions and summaries",
+    "preprocessing": "manually verified and screened for ethical risk"
+   }
+  ],
+  "models": [
+   {
+    "name": "text-davinci-003",
+    "role": "base",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "gpt-3.5-turbo-0301",
+    "role": "base",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "text-embedding-ada-002",
+    "role": "retriever",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": "Zero-shot prompts for memory necessity (A/B), summary sufficiency (A/B), turn summarization, and generation (Figs 3,5,6,7; Chinese Figs 11-13)",
+   "retrieval": "Top-k by rank_score = recency_score + relevance_score (cosine of ada-002 embeddings); k from 3 to 10 depending on length limit; embedding from concatenated observation and response summaries; stored in cache/vector DB (Redis, Pinecone)",
+   "parameters": {
+    "summary_check_threshold_per_memory": "800 tokens",
+    "summary_check_total_activation_threshold": "2000 tokens",
+    "no_controller_truncation": "2500 tokens",
+    "k": "3 to 10"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Answer Acc.",
+     "definition": "accuracy of answers to probing questions",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Memory Retrieval Recall",
+     "definition": "whether related memory is retrieved by the controller",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Single/Multi Turn Acc.",
+     "definition": "accuracy on questions needing one turn or multi-turn history",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Coverage, Coherence",
+     "definition": "human side-by-side win rate vs RecursiveSum",
+     "unit": "win rate",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "RecursiveSum (Wu et al., 2021)",
+    "vanilla ChatGPT (qualitative)",
+    "ablations: w/o memory controller, flash memory, activation memory"
+   ],
+   "protocol": "Single run reported, no seeds or significance tests stated; summaries judged by blind human annotators (number of annotators not stated)"
+  },
+  "availability": {
+   "code": "https://github.com/wbbeyourself/SCM4LLMs",
+   "weights": null,
+   "data": null
+  },
+  "prompts": [
+   {
+    "purpose": "memory necessity",
+    "text": "Given a user command, determine whether executing the command requires historical or previous information, or whether it requires recalling the conversation content. Simply answer yes (A) or no (B) without explaining the information:\nUser Command: {User Input}\nAnswer:",
+    "where": "Fig 5"
+   },
+   {
+    "purpose": "summary sufficiency",
+    "text": "Given the conversation content and the user question, please answer the command question.\nConversation Content: ```{content}```\nUser Question: ```{query}```\nCommand Question: Based on the conversation content, can the user question be answered by conversation content? Respond with (A) for yes, (B) for no.\nPlease strictly follow the format below to answer the questions:\n[Answer]: (A) / (B).",
+    "where": "Fig 6"
+   },
+   {
+    "purpose": "dialogue memory summarization",
+    "text": "Below is a conversation between a user and an AI assistant. Please provide a summary of the user's question and the assistant's response in one sentence each, with separate paragraphs, while preserving key information as much as possible.\nConversation:\nUser: {user input}\nAssistant: {system response}\nSummary:",
+    "where": "Fig 3"
+   },
+   {
+    "purpose": "generation",
+    "text": "Here is a conversation between a user and an AI assistant. Please answer the user's current question based on the history of the conversation:\nHistory of the conversation: {history_turn}\nPrevious conversation: {last_turn}\n###\nUser: {user_input}\nAssistant:",
+    "where": "Fig 7"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "SCM on text-davinci-003 reaches 77.1 answer accuracy, above SCM on gpt-3.5-turbo (68.3).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Answer Acc.",
+   "value": "77.1",
+   "unit": "%",
+   "baseline_value": "68.3 (SCM turbo)",
+   "n": null,
+   "setup": "Long-term dialogue probing set, 105 questions (49 single-turn, 56 multi-turn), En+Zh, up to 200 turns / 34k tokens; SCM over text-davinci-003, no fine-tuning",
+   "where": "Table 2",
+   "note": null,
+   "table": "Table 2, row SCM davinci003, column Answer Acc."
+  },
+  {
+   "claim": "Removing activation memory collapses answer accuracy to 10.5 and retrieval recall and multi-turn accuracy to 0.0.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Answer Acc.",
+   "value": "10.5",
+   "unit": "%",
+   "baseline_value": "77.1",
+   "n": null,
+   "setup": "Long-term dialogue probing set, 105 questions (49 single-turn, 56 multi-turn), En+Zh, up to 200 turns / 34k tokens; SCM over text-davinci-003, no fine-tuning (ablation)",
+   "where": "Table 2",
+   "note": null,
+   "table": "Table 2, row w/o activation memory, column Answer Acc."
+  },
+  {
+   "claim": "Removing the memory controller drops multi-turn accuracy by 25.6 points, more than single-turn (7.9).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Multi Turn Acc.",
+   "value": "49.4",
+   "unit": "%",
+   "baseline_value": "75.0",
+   "n": null,
+   "setup": "Long-term dialogue probing set, 105 questions (49 single-turn, 56 multi-turn), En+Zh, up to 200 turns / 34k tokens; SCM over text-davinci-003, no fine-tuning (ablation; full retrieved content concatenated, truncated at 2500 tokens)",
+   "where": "Table 2",
+   "note": null,
+   "table": "Table 2, row w/o memory controller, column Multi Turn Acc."
+  },
+  {
+   "claim": "Removing the memory controller lowers answer accuracy to 59.3 (-17.8).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Answer Acc.",
+   "value": "59.3",
+   "unit": "%",
+   "baseline_value": "77.1",
+   "n": null,
+   "setup": "Long-term dialogue probing set, 105 questions (49 single-turn, 56 multi-turn), En+Zh, up to 200 turns / 34k tokens; SCM over text-davinci-003, no fine-tuning (ablation)",
+   "where": "Table 2",
+   "note": null,
+   "table": "Table 2, row w/o memory controller, column Answer Acc."
+  },
+  {
+   "claim": "Removing flash memory costs little: answer accuracy 72.9 (-4.2).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Answer Acc.",
+   "value": "72.9",
+   "unit": "%",
+   "baseline_value": "77.1",
+   "n": null,
+   "setup": "Long-term dialogue probing set, 105 questions (49 single-turn, 56 multi-turn), En+Zh, up to 200 turns / 34k tokens; SCM over text-davinci-003, no fine-tuning (ablation)",
+   "where": "Table 2",
+   "note": null,
+   "table": "Table 2, row w/o flash memory, column Answer Acc."
+  },
+  {
+   "claim": "Memory retrieval recall is about 94 for both backbones.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Memory Retrieval Recall",
+   "value": "94.0",
+   "unit": "%",
+   "baseline_value": "93.5 (SCM turbo)",
+   "n": null,
+   "setup": "Long-term dialogue probing set, 105 questions (49 single-turn, 56 multi-turn), En+Zh, up to 200 turns / 34k tokens; SCM over text-davinci-003, no fine-tuning",
+   "where": "Table 2",
+   "note": null,
+   "table": "Table 2, row SCM davinci003, column Memory Retrieval Recall"
+  },
+  {
+   "claim": "Stated purpose: summary used only for activated memories over 800 tokens, and only when total activation memory exceeds 2000 tokens.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "800",
+   "unit": "tokens",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Memory controller settings",
+   "where": "Sec 2.4",
+   "note": null,
+   "quote": "We perform this evaluation for each activated memory that exceeds 800 tokens."
+  },
+  {
+   "claim": "SCM davinci003 wins over SCM turbo and over the RecursiveSum baseline in human side-by-side summarization; numeric win rates appear only in Fig 8, not in text.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Book (10) and meeting (20) summarization, blind human annotators, coverage and coherence vs RecursiveSum (Wu et al., 2021)",
+   "where": "Sec 3.3, Fig 8",
+   "note": "Fig 8 values not in extracted text"
+  }
+ ],
+ "limits": [
+  "Evaluated only up to 200 turns and 34k tokens of dialogue despite claiming infinite length (authors concede)",
+  "Needs strong instruction-following LLMs such as text-davinci-003 and gpt-3.5-turbo-0301 (authors concede)",
+  "Small benchmark (18 dialogues, 105 questions); no seeds, variance, or decoding settings; annotator count not stated; dataset release not stated",
+  "SCM turbo underperforms davinci003, attributed to conservatism on privacy questions (authors' conjecture)",
+  "Summarization win rates are only in Fig 8; no ChatGPT quantitative comparison, RQ1-3 are single examples",
+  "PDF prints no venue (arXiv v4, 18 Mar 2025); ledger's DASFAA 2026 is not verifiable from the PDF"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Activation memory",
+   "definition": "long-term memory that retains historical information, retrieved by the controller",
+   "where": "Sec 1, 2.3"
+  },
+  {
+   "term": "Flash memory",
+   "definition": "short-term memory capturing the interaction of the preceding turn T-1",
+   "where": "Sec 1, 2.3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "RecursiveSum: Recursively summarizing books with human feedback",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Wu et al. 2021",
+   "quote": null
+  },
+  {
+   "work": "MemoryBank",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Zhong et al. 2023, long-term memory for LLMs",
+   "quote": null
+  },
+  {
+   "work": "VCSUM",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Wu et al. 2023 meeting data",
+   "quote": null
+  },
+  {
+   "work": "text-davinci-003 / gpt-3.5-turbo",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "backbones",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "The workflow of our proposed Self-Controlled Memory(SCM) framework",
+   "page": 3,
+   "why": "six-step loop with activation and flash memory"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Workflow of the Memory Controller.",
+   "page": 4,
+   "why": "two-gate decision: retrieve? summary or full?"
+  },
+  {
+   "figure": "Table 2",
+   "caption": "Long-term dialogue evaluation results",
+   "page": 6,
+   "why": "ablation shows controller and activation memory carry the result"
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 2.4",
+   "snippet": "rank_score = recency_score + relevance_score",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "No venue printed in PDF; year taken from arXiv v4 stamp (2025), ledger year 2026 unverified",
+  "Fig 8 win-rate values are graphic, not text"
+ ]
+}

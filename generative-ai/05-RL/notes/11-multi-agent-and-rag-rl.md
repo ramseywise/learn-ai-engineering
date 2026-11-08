@@ -1,6 +1,7 @@
 ---
 origin: synthesis
 sources:
+  - https://arxiv.org/abs/2108.00573 (MuSiQue, Trivedi et al., TACL 2022)
   - "Phil Winder, \"Reinforcement Learning: Industrial Applications of Intelligent Agents\" (O'Reilly, 2020)"
   - https://arxiv.org/abs/2412.05265 (Murphy, RL overview, 2024 preprint, ch. 5)
   - https://arxiv.org/abs/2112.09332
@@ -224,7 +225,7 @@ hard: [0.21 0.44 0.75] -> rewrite, then retrieve
 
 The bandit learns not to pay for retrieval on easy questions and to pay more on hard ones. Change the cost and you change the behaviour, and so the cost is a product decision.
 
-SEM ([arXiv:2505.07903](https://arxiv.org/abs/2505.07903) (Sha et al., 2025-05, preprint)) trains that decision with a gate instead of a per-call cost. The model answers once before it may search. If that answer is already right (F1 above a threshold) and it searches anyway, the reward is zero. If the answer is wrong, the post-search answer is scored. Trained with GRPO on a mix of MuSiQue (needs search) and MMLU (doesn't), **Qwen2.5-7B-Instruct searched on 1.8% of MMLU questions against 48% for naive RAG, and on 97.5% of HotpotQA questions with 35.8 EM against 18.0**. These are single runs with no ablations. The 7B ReSearch baseline almost never searched (0.08% of HotpotQA questions) while the 14B one searched on all of them, and the prose overstates the tables in places.
+SEM ([arXiv:2505.07903](https://arxiv.org/abs/2505.07903) (Sha et al., 2025-05, preprint)) trains that decision with a gate instead of a per-call cost. The model answers once before it may search. If that answer is already right (F1 above a threshold) and it searches anyway, the reward is zero. If the answer is wrong, the post-search answer is scored. Trained with GRPO on a mix of MuSiQue (needs search; [arXiv:2108.00573](https://arxiv.org/abs/2108.00573) (Trivedi et al., TACL 2022), 2 to 4 hop questions built by composing single-hop ones. Its own baseline is one fine-tuned Longformer reader trained on 20K examples per dataset, scoring 42.3 answer F1 on MuSiQue (20 given paragraphs) against 72.9 on HotpotQA (10), which do not transfer to retrieval-based EM) and MMLU (doesn't), **Qwen2.5-7B-Instruct searched on 1.8% of MMLU questions against 48% for naive RAG, and on 97.5% of HotpotQA questions with 35.8 EM against 18.0**. These are single runs with no ablations. The 7B ReSearch baseline almost never searched (0.08% of HotpotQA questions) while the 14B one searched on all of them, and the prose overstates the tables in places.
 
 ### Pattern 1 — Online RL over retrieval and tool actions
 

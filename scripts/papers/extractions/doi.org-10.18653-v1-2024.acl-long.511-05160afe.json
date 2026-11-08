@@ -1,0 +1,383 @@
+{
+ "schema": 1,
+ "key": "https://doi.org/10.18653/v1/2024.acl-long.511",
+ "pdf": "generative-ai/08-eval/sources/wang-2024-large-language-models-not-fair.pdf",
+ "bib": {
+  "title": "Large Language Models are not Fair Evaluators",
+  "authors": ["Peiyi Wang", "Lei Li", "Liang Chen", "Zefan Cai", "Dawei Zhu", "Binghuai Lin", "Yunbo Cao", "Lingpeng Kong", "Qi Liu", "Tianyu Liu", "Zhifang Sui"],
+  "first_author": "Wang",
+  "year": 2024,
+  "venue": "Proceedings of the 62nd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers), pages 9440-9450",
+  "arxiv": null,
+  "doi": "10.18653/v1/2024.acl-long.511"
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 43292,
+  "chars_total": 43292,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Are LLM judges such as GPT-4 and ChatGPT sensitive to the order in which candidate responses are presented, and can that bias be calibrated away?",
+ "hypothesis": "LLM evaluators have a positional bias that can be exploited to flip rankings, and averaging over evidence samples and both orderings brings them closer to human judgments.",
+ "contributions": [
+  "Reveal that LLMs exhibit severe positional bias, compromising their fairness as evaluators",
+  "Develop a calibration framework with three strategies (MEC, BPC, HITLC)",
+  "Manually annotate win/tie/lose outcomes of ChatGPT vs Vicuna-13B on the Vicuna benchmark and show closer alignment with human judgments"
+ ],
+ "method": {
+  "summary": "Pairwise LLM-as-judge evaluation with the Vicuna template is probed by swapping response order (conflict rate). Calibration: evidence-first prompting sampled k times (MEC), averaging over both orderings (BPC), and routing high-entropy examples to humans (HITLC via BPDE). Judged against majority vote of three author annotators on 80 questions.",
+  "task": "pairwise response evaluation by LLM judge (win/tie/lose)",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "Vicuna Benchmark (Zheng et al. 2023) with new human win/tie/lose annotations",
+    "role": "eval",
+    "size": "80 questions, 9 categories",
+    "split": "all 80",
+    "source": "Vicuna benchmark; annotations by three authors, released with FairEval",
+    "preprocessing": "Responses of Vicuna-13B and ChatGPT shown to annotators in random order; majority opinion of three annotators is the label; about 3 minutes per example"
+   }
+  ],
+  "models": [
+   {"name": "GPT-4 (OpenAI API gpt-4)", "role": "judge", "params": null, "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "ChatGPT (OpenAI API gpt-3.5-turbo)", "role": "judge", "params": null, "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "Vicuna-13B", "role": "evaluated", "params": "13B", "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "Alpaca-13B", "role": "evaluated", "params": "13B", "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}}
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "temperature 0 for methods without multiple sampling; sampling for MEC",
+   "temperature": "0 (vanilla, EC, BPC single); 1 for MEC; ablation over 0.2, 0.6, 1.0, 1.4 (Fig 4b)",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "MEC k = 3 evidence samples per ordering (k = 6 compared); BPC doubles to 2k scores; methods without BPC average over 100 runs with randomized response order",
+   "prompting": "Zero-shot pairwise templates: Vicuna scoring template (score 1-10 first, explanation after) as VANILLA; evidence-first template (explanation, then scores) for EC; a COMPARING template outputs Assistant 1 / Assistant 2 / Same",
+   "retrieval": null,
+   "parameters": {
+    "k": "3 (default; 1, 3, 5, 7 in ablation, 6 in Table 4)",
+    "beta (HITLC)": "20% of examples sent to humans; swept in Fig 5",
+    "final score": "CS_R = sum_{i=1..k} (S_R^i + S'_R^i) / 2k, higher average wins"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "Conflict Rate", "definition": "fraction of examples where the evaluator's win/tie/lose result changes when the two responses swap positions", "unit": "%", "higher_is_better": false},
+    {"name": "Accuracy", "definition": "agreement of evaluator's win/tie/lose with the majority human annotation", "unit": "%", "higher_is_better": true},
+    {"name": "Kappa correlation coefficient", "definition": "Cohen-style kappa (McHugh 2012) with the final majority human annotation", "unit": "kappa", "higher_is_better": true},
+    {"name": "Cost", "definition": "API cost for 80 examples; human cost $30 per annotator at about $7.5/hour and 3 min/example", "unit": "$", "higher_is_better": false},
+    {"name": "BPDE", "definition": "entropy over win/tie/lose of the 2k evaluation results; higher means more likely to need human correction", "unit": "nats (log base not stated)", "higher_is_better": null}
+   ],
+   "baselines": ["VANILLA evaluation (conclusion first, then explanation)", "EC (k=1)", "Random selection for HITLC", "Vanilla Diversity Entropy (one position only)", "individual human annotators"],
+   "protocol": "Judge outputs compared with majority of 3 human annotators on 80 questions; no-BPC methods averaged over 100 randomized-order runs; no significance tests reported."
+  },
+  "availability": {
+   "code": "https://github.com/i-Eval/FairEval",
+   "weights": null,
+   "data": "Human annotations released with FairEval toolkit"
+  },
+  "prompts": [
+   {
+    "purpose": "VANILLA evaluation template from Zheng et al. 2023 (Table 1)",
+    "text": "[Question]\n{Q}\n[The Start of Assistant 1's response]\n{R1}\n[The End of Assistant 1's response]\n[The Start of Assistant 2's response]\n{R2}\n[The End of Assistant 2's response]\n[System]\nWe would like to request your feedback on the performance of two AI assistants in response to the user question displayed above.\nPlease rate the helpfulness, relevance, accuracy, level of details of their responses. Each assistant receives an overall score on a scale of 1 to 10, where a higher score indicates better overall performance.\nPlease first output a single line containing only two values indicating the scores for Assistant 1 and 2, respectively.\nThe two scores are separated by a space. In the subsequent line, please provide a comprehensive explanation of your evaluation, avoiding any potential bias and ensuring that the order in which the responses were presented does not affect your judgment.",
+    "where": "Table 1, p.2"
+   },
+   {
+    "purpose": "Evidence calibration template (Table 3); the middle of the system text is elided with '......' in the paper",
+    "text": "[Question]\n{Q}\n[The Start of Assistant 1's response]\n{R1}\n[The End of Assistant 1's response]\n[The Start of Assistant 2's response]\n{R2}\n[The End of Assistant 2's response]\n[System]\n......\nPlease first provide a comprehensive explanation of your evaluation, avoiding any potential bias and ensuring that the order in which the responses were presented does not affect your judgment. Then, output two lines indicating the scores for Assistant 1 and 2, respectively.\nOutput with the following format:\nEvaluation evidence: <evaluation explanation here>\nThe score of Assistant 1: <score>\nThe score of Assistant 2: <score>",
+    "where": "Table 3, p.4"
+   }
+  ],
+  "evidence": [
+   {"field": "inference.temperature", "quote": "For the multiple evidence strategy, we set the temperature to 1 and k = 3.", "where": "Sec 3.2"}
+  ]
+ },
+ "results": [
+  {
+   "claim": "ChatGPT as judge: Vicuna-13B beats ChatGPT on 66 of 80 queries just by reordering the responses.",
+   "kind": "measured",
+   "source": null,
+   "metric": "queries where Vicuna-13B wins under one ordering",
+   "value": "66 of 80",
+   "unit": "queries",
+   "baseline_value": null,
+   "n": 80,
+   "setup": "Vicuna benchmark, ChatGPT evaluator, vanilla template",
+   "quote": "Vicuna-13B could beat ChatGPT on 66 over 80 tested queries with ChatGPT as an evaluator.",
+   "table": null,
+   "note": "Table 2 lists 66/80 (82.5%) as the conflict rate and 82.5% win rate when Vicuna is Assistant 2",
+   "where": "Abstract"
+  },
+  {
+   "claim": "GPT-4 conflict rate for Vicuna-13B vs ChatGPT when the order is swapped.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Conflict Rate",
+   "value": "46.3",
+   "unit": "%",
+   "baseline_value": null,
+   "n": 80,
+   "setup": "GPT-4 evaluator, vanilla template, Vicuna benchmark, Vicuna-13B vs ChatGPT",
+   "quote": "We found that GPT-4 exhibited conflict rates of 46.3% and 5.0%, respectively.",
+   "table": "Table 2, row GPT-4 Vicuna-13B v.s. ChatGPT, column Conflict Rate",
+   "note": "5.0% is for Vicuna-13B vs Alpaca-13B",
+   "where": "Sec 2.2, Table 2"
+  },
+  {
+   "claim": "ChatGPT conflict rate for Vicuna-13B vs ChatGPT (82.5%) and vs Alpaca-13B (52.5%), higher than GPT-4.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Conflict Rate",
+   "value": "82.5",
+   "unit": "%",
+   "baseline_value": "46.3",
+   "n": 80,
+   "setup": "ChatGPT evaluator, vanilla template, Vicuna benchmark; baseline value is GPT-4 on same pair",
+   "quote": "ChatGPT displayed considerably higher conflict rates, with figures of 82.5% and 52.5%, respectively.",
+   "table": "Table 2, row ChatGPT Vicuna-13B v.s. ChatGPT, column Conflict Rate",
+   "note": null,
+   "where": "Sec 2.2"
+  },
+  {
+   "claim": "GPT-4 favours the first position: Vicuna-13B win rate vs ChatGPT is 51.3% as Assistant 1 and 23.8% as Assistant 2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Vicuna-13B win rate as Assistant 1",
+   "value": "51.3",
+   "unit": "%",
+   "baseline_value": "23.8",
+   "n": 80,
+   "setup": "GPT-4 evaluator, vanilla template; baseline is win rate as Assistant 2",
+   "quote": "GPT-4 yields Win Rates of 51.3% and 23.8% for Vicuna-13B when it is positioned as Assistant 1 and Assistant 2, respectively.",
+   "table": null,
+   "note": null,
+   "where": "Sec 2.2"
+  },
+  {
+   "claim": "ChatGPT favours the second position: Vicuna-13B win rate vs ChatGPT is 2.5% as Assistant 1 and 82.5% as Assistant 2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Vicuna-13B win rate as Assistant 1",
+   "value": "2.5",
+   "unit": "%",
+   "baseline_value": "82.5",
+   "n": 80,
+   "setup": "ChatGPT evaluator, vanilla template; baseline is win rate as Assistant 2",
+   "quote": "Conversely, ChatGPT indicates Win Rates of only 2.5% and up to 82.5% for Vicuna-13B",
+   "table": null,
+   "note": null,
+   "where": "Sec 2.2"
+  },
+  {
+   "claim": "Bias is weaker when quality gap is large: GPT-4 conflict is 5.0% for Vicuna vs the much weaker Alpaca-13B, and conflicts concentrate at score gap of 1 or less.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Conflict Rate (Vicuna-13B vs Alpaca-13B, GPT-4)",
+   "value": "5.0",
+   "unit": "%",
+   "baseline_value": "46.3",
+   "n": 80,
+   "setup": "GPT-4 evaluator, vanilla template; baseline is Vicuna vs ChatGPT",
+   "quote": "4 / 80 (5.0%)",
+   "table": "Table 2, row GPT-4 Vicuna-13B v.s. Alpaca-13B, column Conflict Rate",
+   "note": null,
+   "where": "Sec 2.2, Fig 2"
+  },
+  {
+   "claim": "GPT-4 accuracy vs human majority rises from 52.7% (vanilla) to 62.5% with MEC (k=3) + BPC (k=3).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Accuracy",
+   "value": "62.5",
+   "unit": "%",
+   "baseline_value": "52.7",
+   "n": 80,
+   "setup": "GPT-4 evaluator, 80 Vicuna questions, ChatGPT vs Vicuna-13B responses, majority of 3 human annotators as reference; cost $6.38 vs $2.00",
+   "quote": null,
+   "table": "Table 4, row GPT-4 MEC (k = 3) + BPC (k = 3), column Accuracy (vanilla 52.7%)",
+   "note": "Intro says MEC and BPC improve GPT-4 and ChatGPT by 9.8% and 14.3% accuracy; 62.5-52.7 = 9.8",
+   "where": "Table 4"
+  },
+  {
+   "claim": "ChatGPT accuracy rises from 44.4% (vanilla) to 58.8% with MEC (k=3) + BPC (k=3); kappa 0.06 to 0.31.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Accuracy",
+   "value": "58.8",
+   "unit": "%",
+   "baseline_value": "44.4",
+   "n": 80,
+   "setup": "ChatGPT evaluator, same protocol; cost $0.34 vs $0.10",
+   "quote": "Specifically, the accuracy is improved by 14.3%, and the kappa correlation coefficient is increased from 0.06 to 0.31;",
+   "table": "Table 4, row ChatGPT MEC (k = 3) + BPC (k = 3), column Accuracy",
+   "note": null,
+   "where": "Sec 3.3, Table 4"
+  },
+  {
+   "claim": "Average human annotator accuracy against the majority vote is 71.7% (kappa 0.54), the ceiling the judges are measured against.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Accuracy",
+   "value": "71.7",
+   "unit": "%",
+   "baseline_value": null,
+   "n": 80,
+   "setup": "Each of three annotators against their own majority vote (not independent of the label)",
+   "quote": "the average accuracy and the kappa correlation coefficient of human annotations are 71.7% and 0.54, respectively",
+   "table": null,
+   "note": "Individual humans: 68.8%, 76.3%, 70.0%",
+   "where": "Sec 3.3"
+  },
+  {
+   "claim": "With 20% of examples sent to humans (HITLC), GPT-4 reaches 73.8% accuracy (kappa 0.56) at $23.1, above the human average.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Accuracy",
+   "value": "73.8",
+   "unit": "%",
+   "baseline_value": "62.5",
+   "n": 80,
+   "setup": "GPT-4, MEC (k=3) + BPC (k=3) + HITLC (beta = 20%); baseline is without HITLC",
+   "quote": null,
+   "table": "Table 4, row GPT-4 MEC (k = 3) + BPC (k = 3) + HITLC (β = 20%), column Accuracy",
+   "note": "Human labels used for the selected 20% come from the same majority annotations used as ground truth, which inflates this accuracy",
+   "where": "Table 4"
+  },
+  {
+   "claim": "ChatGPT with 20% human assistance matches human average accuracy (71.3%) and cuts annotation cost from $30 to $18.3, a 39% reduction.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Cost reduction",
+   "value": "39",
+   "unit": "%",
+   "baseline_value": null,
+   "n": 80,
+   "setup": "ChatGPT, MEC + BPC + HITLC (beta = 20%)",
+   "quote": "while reducing the annotation cost from $30 to $18.3, a 39% reduction.",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.3"
+  },
+  {
+   "claim": "MEC (k=3) + BPC (k=3) beats MEC (k=6) for GPT-4 at similar sample count (62.5% vs 60.9%), showing the gain is from position balancing, not just more samples.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Accuracy",
+   "value": "60.9",
+   "unit": "%",
+   "baseline_value": "62.5",
+   "n": 80,
+   "setup": "GPT-4, 6 samples each; value is MEC (k=6), baseline value is MEC+BPC",
+   "quote": null,
+   "table": "Table 4, row GPT-4 MEC (k = 6), column Accuracy",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "Evidence-first prompting alone (EC, k=1) lifts ChatGPT accuracy from 44.4% to 52.6%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Accuracy",
+   "value": "52.6",
+   "unit": "%",
+   "baseline_value": "44.4",
+   "n": 80,
+   "setup": "ChatGPT evaluator, single evidence sample, no BPC",
+   "quote": null,
+   "table": "Table 4, row ChatGPT EC (k = 1), column Accuracy",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "A scoring vs comparing template changes vanilla ChatGPT accuracy by nearly 6 points (44.4% vs 50.2%), with conflict rates of 82.5% and 50.0%; calibration narrows the gap (58.8% vs 60.0% with MEC+BPC).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Accuracy (COMPARING MEC+BPC)",
+   "value": "60.0",
+   "unit": "%",
+   "baseline_value": "50.2",
+   "n": 80,
+   "setup": "ChatGPT evaluator, COMPARING template; baseline is COMPARING VANILLA",
+   "quote": null,
+   "table": "Table 5, row COMPARING MEC + BPC, column ACC.",
+   "note": null,
+   "where": "Sec 4.3, Table 5"
+  },
+  {
+   "claim": "Sampling temperature for MEC: 0.2 and 1.4 are sub-optimal, 0.6 or 1.0 work; k = 3 is a good cost/accuracy point and gains plateau beyond.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Accuracy and kappa vs k and temperature",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": 80,
+   "setup": "ChatGPT evaluator, k in 1,3,5,7, t in 0.2,0.6,1.0,1.4 (values read from Fig 4, not in text)",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Sec 4.1, Fig 4"
+  },
+  {
+   "claim": "BPDE selects examples for human review better than random or one-position diversity entropy.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Accuracy vs top-beta threshold",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": 80,
+   "setup": "ChatGPT evaluator, 6 evaluation results for both BPDE and Vanilla DE",
+   "quote": null,
+   "table": null,
+   "note": "Only shown in Fig 5; no numbers in text",
+   "where": "Sec 4.2, Fig 5"
+  }
+ ],
+ "limits": [
+  "Authors concede they did not investigate the underlying causes of the positional bias.",
+  "Only one benchmark (80 Vicuna questions), only one model pair for human labels (ChatGPT vs Vicuna-13B), and only GPT-4 and ChatGPT as judges.",
+  "Ground truth is the majority of three authors; human accuracy is measured against that same majority, and HITLC reuses it as the human correction, so HITLC numbers are optimistic.",
+  "Individual human annotators reach only 68.8 to 76.3% accuracy and kappa 0.50 to 0.62; the best calibrated automatic judge without humans (GPT-4, 62.5%) stays below that.",
+  "No significance tests or confidence intervals; with n = 80 one example is 1.25 points.",
+  "Models are 2023 API snapshots (gpt-4, gpt-3.5-turbo) with unstated versions; max_tokens and top_p not given."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "Conflict Rate", "definition": "the proportion of conflicting results given by the same evaluator when simply changing the position of two models", "where": "Table 2 caption, Eq 1"},
+  {"term": "Multiple Evidence Calibration (MEC)", "definition": "prompt the model to generate evaluation evidence before scores and sample k such results", "where": "Sec 2.3.1"},
+  {"term": "Balanced Position Calibration (BPC)", "definition": "evaluate each candidate in both positions across two runs and average the scores", "where": "Sec 2.3.2"},
+  {"term": "Human-in-the-Loop Calibration (HITLC)", "definition": "send the top-beta examples ranked by BPDE to human annotators", "where": "Sec 2.3.3"},
+  {"term": "Balanced Position Diversity Entropy (BPDE)", "definition": "entropy of the win/tie/lose outcomes across the 2k evaluations from both positions", "where": "Eq 4-5"}
+ ],
+ "lineage": [
+  {"work": "Judging LLM-as-a-judge with MT-Bench and Chatbot Arena", "year": 2023, "arxiv": "2306.05685", "relation": "extends", "note": "Provides the Vicuna benchmark and evaluation template whose positional bias is examined", "quote": null},
+  {"work": "Vicuna benchmark / Vicuna-13B", "year": 2023, "arxiv": null, "relation": "uses-data", "note": "80 questions, 9 categories", "quote": null},
+  {"work": "PandaLM", "year": 2023, "arxiv": "2306.05087", "relation": "related", "note": "Another LLM-judge using the evidence template idea", "quote": null},
+  {"work": "Turpin et al. 2023, Language Models Don't Always Say What They Think", "year": 2023, "arxiv": "2305.04388", "relation": "related", "note": "Cited for LLM sensitivity to inputs", "quote": null},
+  {"work": "McHugh 2012, Interrater reliability: the kappa statistic", "year": 2012, "arxiv": null, "relation": "uses-method", "note": "Kappa metric", "quote": null},
+  {"work": "GPT-4 Technical Report", "year": 2023, "arxiv": "2303.08774", "relation": "evaluates", "note": "Judge model", "quote": null},
+  {"work": "Alpaca-13B", "year": 2023, "arxiv": null, "relation": "evaluates", "note": "Weaker comparator", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 1", "caption": "Simply changing the order of candidate responses leads to overturned comparison results, even though we add the command \"ensuring that the order in which the responses were presented does not affect your judgment\" into the prompt.", "page": 1, "why": "Shows the bias in one picture: GPT-4 scores 9 vs 7 then 7 vs 9 after a swap."},
+  {"figure": "Fig 2", "caption": "The conflict rate is negatively correlated with the score gap between the two responses.", "page": 3, "why": "Conflicts concentrate in close contests; large quality gaps are stable."},
+  {"figure": "Fig 3", "caption": "Demonstration of our calibration framework with three calibration methods.", "page": 4, "why": "Pipeline for MEC, BPC and HITLC with BPDE routing; best diagram to teach position-swap averaging."},
+  {"figure": "Table 2", "caption": "The Win Rate of Vicuna-13B significantly fluctuates when positioned as Assistant 1 and Assistant 2, with GPT-4 and ChatGPT serving as evaluators.", "page": 3, "why": "Core evidence of opposite biases in GPT-4 (first) and ChatGPT (second)."},
+  {"figure": "Table 4", "caption": "Accuracy and kappa correlation coefficient of different methods and annotators with the final voting human annotations.", "page": 6, "why": "Accuracy, kappa and cost ladder from vanilla to calibrated to human-in-the-loop."},
+  {"figure": "Fig 6", "caption": "Fine-grained analysis of evaluation quality.", "page": 8, "why": "Per-category gains; biggest for common sense, coding and math with ChatGPT."}
+ ],
+ "code": [
+  {"where": "Eq 1", "snippet": "Conflict Rate = sum_{i=1..N} I(ER_i^{r12} != ER_i^{r21}) / N", "verbatim": false},
+  {"where": "Eq 2", "snippet": "CS_R = sum_{i=1..k} (S_R^i + S'_R^i) / 2k, R = r1, r2", "verbatim": false},
+  {"where": "Eq 4-5", "snippet": "BPDE = sum_{er in {win,tie,lose}} -p_er log p_er ; p_er = sum_{i=1..k} [I(ER_i = er) + I(ER'_i = er)] / 2k", "verbatim": false}
+ ],
+ "problems": [
+  "No arXiv id printed in the PDF.",
+  "The text layer gives figure data for Fig 6 as bare numbers; they are not recorded as results.",
+  "No embedded instructions found."
+ ]
+}

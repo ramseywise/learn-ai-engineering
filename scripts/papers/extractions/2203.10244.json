@@ -1,0 +1,658 @@
+{
+ "schema": 1,
+ "key": "2203.10244",
+ "pdf": "ai-engineering/08-multimodal-engineering/sources/masry-2022-chartqa.pdf",
+ "bib": {
+  "title": "ChartQA: A Benchmark for Question Answering about Charts with Visual and Logical Reasoning",
+  "authors": [
+   "Ahmed Masry",
+   "Do Xuan Long",
+   "Jia Qing Tan",
+   "Shafiq Joty",
+   "Enamul Hoque"
+  ],
+  "first_author": "Masry",
+  "year": 2022,
+  "venue": "Findings of the Association for Computational Linguistics: ACL 2022, pages 2263-2279",
+  "arxiv": "2203.10244",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 61914,
+  "chars_total": 61914,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "benchmark",
+ "question": "Can models answer human-written visual and logical reasoning questions about real-world charts, and how well do table-QA and vision-language models do when the chart's data table is extracted from the image?",
+ "hypothesis": "Combining visual features with an extracted data table, and training on human-written questions, handles visual and compositional chart questions better than fixed-vocabulary classification or table-only approaches; the new dataset is harder than earlier ones.",
+ "contributions": [
+  "A large-scale ChartQA dataset with real-world charts and human-authored question-answer pairs",
+  "A pipeline approach that combines visual features and automatically extracted data from charts in transformer-based QA models",
+  "An extensive analysis and evaluation of the performance of the models"
+ ],
+ "method": {
+  "summary": "Benchmark of 4,804 charts / 9,608 human-written questions (ChartQA-H) plus 17,141 charts / 23,111 T5-generated questions from Statista summaries (ChartQA-M). Pipeline: extend ChartOCR (plus CRAFT text recognition) to extract a structured data table from the chart image, then feed table, question and optionally image features to T5, VL-T5, TaPas or the new VisionTaPas (ViT + TaPas + 4-layer cross-modality encoder).",
+  "task": "chart question answering (open-vocabulary, numeric and label answers)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "ChartQA-H",
+    "role": "both",
+    "size": "4,804 charts / 9,608 questions",
+    "split": "train 3,699 charts/7,398 q; val 480/960; test 625/1,250",
+    "source": "AMT annotators on charts from Statista (2,484), Pew (1,303), OWID (786), OECD (231)",
+    "preprocessing": "Pew has no underlying tables; two questions per chart (compositional and visual); second annotator answers, disagreements manually resolved"
+   },
+   {
+    "name": "ChartQA-M",
+    "role": "both",
+    "size": "17,141 charts / 23,111 questions",
+    "split": "train 15,474 charts/20,901 q; val 680/960; test 987/1,250",
+    "source": "T5 answer-extraction and answer-aware question-generation models fine-tuned on SQuAD, applied to Statista human-written summaries",
+    "preprocessing": "filtered out questions whose answer is not in the chart data table; test set manually cleaned of invalid questions; 86.64% of 1,250 inspected pairs valid"
+   },
+   {
+    "name": "FigureQA",
+    "role": "eval",
+    "size": "180K charts / 2.3M QA (Table 1)",
+    "split": "Val1, Val2, Test1, Test2",
+    "source": "Kahou et al. 2017",
+    "preprocessing": null
+   },
+   {
+    "name": "DVQA",
+    "role": "eval",
+    "size": "300K charts / 3.4M QA (Table 1)",
+    "split": "Test-Familiar, Test-Novel; Oracle and OCR",
+    "source": "Kafle et al. 2018",
+    "preprocessing": null
+   },
+   {
+    "name": "PlotQA",
+    "role": "both",
+    "size": "224K charts / 28M QA (Table 1)",
+    "split": "Test V1, V2; also pretraining for ChartQA",
+    "source": "Methani et al. 2020",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "VisionTaPas",
+    "role": "proposed",
+    "params": "inferred: roughly TaPas-base + ViT-base + cross-modal layers (total not stated)",
+    "architecture": "ViT encoder + TaPas encoder + 4-block cross-modality encoder; aggregation head extended with difference, ratio and fixed-vocabulary classes",
+    "init_from": "ViT pretrained weights (Dosovitskiy 2021); TaPas weights pretrained on WikiTQ",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "TaPas-Base 12, ViT-Base 12, 4 cross-modality",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "VL-T5",
+    "role": "evaluated",
+    "params": "220M",
+    "architecture": "T5-base encoder-decoder with visual features",
+    "init_from": "VL-T5-Base pretrained (Cho et al. 2021)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "12",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "visual_input": "Mask R-CNN (ResNet-101, detectron2, COCO init) mark features, zero-padded to 36"
+    }
+   },
+   {
+    "name": "T5",
+    "role": "evaluated",
+    "params": "220M",
+    "architecture": "T5-base, flattened table as text",
+    "init_from": "T5-Base",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "12",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "input_format": "Question: <q> Table: <flattened table>"
+    }
+   },
+   {
+    "name": "TaPas",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "BERT with row/column embeddings",
+    "init_from": "TaPas-base-wtq",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "PReFIL",
+    "role": "baseline",
+    "params": null,
+    "architecture": "classification, parallel fusion of question and image",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "PlotQA*",
+    "role": "baseline",
+    "params": null,
+    "architecture": "SEMPRE table-QA on extracted table (reimplementation)",
+    "init_from": "PlotQA checkpoint",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "ChartOCR extension",
+    "role": "retriever",
+    "params": null,
+    "architecture": "CornerNet-style keypoint detectors + CRAFT OCR + color/position heuristics",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "mask_rcnn_classes": "15 object classes"
+    }
+   }
+  ],
+  "training": {
+   "objective": "T5/VL-T5: generate answer text; TaPas/VisionTaPas: aggregation and cell-selection heads, difference/ratio trained with heuristic (24% noisy) cell supervision",
+   "optimizer": null,
+   "lr": "VisionTaPas 1e-5 (0.00001); T5 and VL-T5 1e-4 (0.0001); TaPas FigureQA 1e-5; PReFIL 1e-3; Mask R-CNN 0.00025",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "VisionTaPas 64; T5 40; VL-T5 96; TaPas 24 (48 FigureQA); PReFIL 128; PlotQA* 1; Mask R-CNN 8",
+   "steps": "TaPas 40K iterations; Mask R-CNN 50K iterations",
+   "epochs": "On ChartQA: VisionTaPas 30, T5 30, VL-T5 30, PlotQA* 20; VisionTaPas 4 (FigureQA, DVQA), 1 (PlotQA); T5 4 (FigureQA/DVQA/PlotQA); VL-T5 20 (FigureQA/DVQA), 10 (PlotQA); PReFIL 100",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "PlotQA*: L1 coefficient 0.00003",
+   "hardware": "one 4-V100 GPU machine and one 4-A100 GPU machine",
+   "compute": "longest run VL-T5 on PlotQA, about 64-70 hours on 4 V100",
+   "wall_clock": "64-70 hours (VL-T5 on PlotQA)",
+   "seeds": null,
+   "other": {
+    "pretraining_transfer": "VisionTaPas and VL-T5 pretrained on PlotQA then fine-tuned on ChartQA"
+   }
+  },
+  "inference": {
+   "decoding": "T5 beam search size 4; VL-T5 beam search size 5",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single run per model, no seeds or variance reported",
+   "prompting": "not applicable (fine-tuned)",
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Relaxed accuracy",
+     "definition": "numeric answers correct if within 5% of gold; non-numeric need exact match",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Data extraction score",
+     "definition": "1/L sum over charts of 1 - cost/K, with D(gt,pr)=min(1,|gt-pr|/gt) and linear-sum assignment matching of values",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "PReFIL",
+    "PlotQA*",
+    "STL-CQA (as reported)",
+    "TaPas",
+    "T5"
+   ],
+   "protocol": "Two settings: gold data table provided or extracted by ChartOCR; per-subset, per-chart-type and 200-question per-type breakdown; no seeds or significance tests."
+  },
+  "availability": {
+   "code": "https://github.com/vis-nlp/ChartQA",
+   "weights": null,
+   "data": "https://github.com/vis-nlp/ChartQA"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "eval.metrics[0]",
+    "quote": "We consider an answer to be correct if it is within 5% of the gold answer.",
+    "where": "Sec 5.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "VisionTaPas is best of the four benchmark models on ChartQA overall test when no gold table is given",
+   "kind": "measured",
+   "source": null,
+   "metric": "relaxed accuracy",
+   "value": 45.52,
+   "unit": "%",
+   "baseline_value": 41.56,
+   "n": null,
+   "setup": "ChartQA test set (ChartQA-H 1,250 + ChartQA-M 1,250 questions), extracted data table (ChartOCR), relaxed accuracy (5% tolerance on numerics); fine-tuned 30 epochs",
+   "note": "baseline_value is VL-T5 (41.56%), T5 41.04%, TaPas 41.28%",
+   "where": "Table 5/6",
+   "table": "Table 5, row VisionTaPas (Gold Data Table Not Provided), column ChartQA Test; also Table 6 row VisionTaPas, column Overall"
+  },
+  {
+   "claim": "Pretraining VL-T5 on PlotQA then fine-tuning on ChartQA lifts overall accuracy from 41.56% to 51.84%, the best number in the paper",
+   "kind": "measured",
+   "source": null,
+   "metric": "relaxed accuracy",
+   "value": 51.84,
+   "unit": "%",
+   "baseline_value": 41.56,
+   "n": null,
+   "setup": "ChartQA test set (ChartQA-H 1,250 + ChartQA-M 1,250 questions), extracted data table (ChartOCR), relaxed accuracy (5% tolerance on numerics); VL-T5-Base 220M pretrained on PlotQA first",
+   "note": null,
+   "where": "Sec 5.2, Table 6",
+   "quote": "the accuracy increased from 41.56% to 51.84% for VL-"
+  },
+  {
+   "claim": "The human-written half (ChartQA-H) is far harder than the machine-generated half: VisionTaPas scores 29.60% on H and 61.44% on M",
+   "kind": "measured",
+   "source": null,
+   "metric": "relaxed accuracy",
+   "value": 29.6,
+   "unit": "%",
+   "baseline_value": 61.44,
+   "n": null,
+   "setup": "VisionTaPas, extracted tables, ChartQA test split by subset",
+   "note": "baseline_value is ChartQA-M accuracy",
+   "where": "Table 6",
+   "table": "Table 6, row VisionTaPas, column ChartQA-H"
+  },
+  {
+   "claim": "With the gold data table, VisionTaPas reaches 61.84% on ChartQA test versus 45.52% with the extracted table, a 16.3 point cost of chart-to-table extraction",
+   "kind": "measured",
+   "source": null,
+   "metric": "relaxed accuracy",
+   "value": 61.84,
+   "unit": "%",
+   "baseline_value": 45.52,
+   "n": null,
+   "setup": "VisionTaPas, ChartQA test, gold table provided",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row VisionTaPas (Gold Data Table Provided), column ChartQA Test"
+  },
+  {
+   "claim": "PReFIL, a classification model with fixed-vocabulary answers, scores only 4.8% on ChartQA test",
+   "kind": "measured",
+   "source": null,
+   "metric": "relaxed accuracy",
+   "value": 4.8,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "PReFIL trained 100 epochs, ChartQA test",
+   "note": null,
+   "where": "Sec 5.2",
+   "quote": "PReFIL performs pooly (4.8%) as it"
+  },
+  {
+   "claim": "Chart-to-table extraction accuracy on ChartQA test is 83.85%, lower than FigureQA 95.05% and DVQA 89.98%",
+   "kind": "measured",
+   "source": null,
+   "metric": "data extraction score",
+   "value": 83.85,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Extended ChartOCR plus CRAFT, ChartOCR-adapted distance metric; FigureQA measured on Validation2",
+   "note": null,
+   "where": "Table 9, A.3",
+   "table": "Table 9, row ChartQA, column Accuracy"
+  },
+  {
+   "claim": "VisionTaPas on DVQA test reaches 94.54% with OCR, a 14.5% margin over PReFIL",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 94.54,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "DVQA test, OCR setup, no gold table",
+   "note": null,
+   "where": "Sec 5.2",
+   "quote": "VisionTaPas achieves 94.54% accuracy in the DVQA"
+  },
+  {
+   "claim": "PReFIL drops 16.49% when using OCR instead of oracle on DVQA, VisionTaPas only 0.92%",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy drop",
+   "value": 0.92,
+   "unit": "%",
+   "baseline_value": 16.49,
+   "n": null,
+   "setup": "DVQA, Oracle vs OCR",
+   "note": "the 0.92% is on a following line: 'VisionTaPas only witnessed a marginal decrease in performance (0.92%)'",
+   "where": "Sec 5.2",
+   "quote": "nificantly dropped by 16.49% when using OCR out-"
+  },
+  {
+   "claim": "VisionTaPas trained on PlotQA and evaluated directly on ChartQA falls from 45.52% to 31.96%",
+   "kind": "measured",
+   "source": null,
+   "metric": "relaxed accuracy",
+   "value": 31.96,
+   "unit": "%",
+   "baseline_value": 45.52,
+   "n": null,
+   "setup": "zero fine-tune transfer, ChartQA test",
+   "note": "VL-T5 star: 20.96%",
+   "where": "Table 6",
+   "table": "Table 6, row VisionTaPas star, column Overall"
+  },
+  {
+   "claim": "Removing difference and ratio supervision lowers VisionTaPas overall accuracy by 1.80% and ChartQA-H by 4.76%",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy drop",
+   "value": 1.8,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ablation, VisionTaPas dagger variant, 43.72% overall",
+   "note": null,
+   "where": "Sec 5.3, Table 6",
+   "quote": "The overall accuracy dropped by 1.80% and the"
+  },
+  {
+   "claim": "Compositional-plus-visual questions are hardest: VisionTaPas gets 16.21% vs 60.00% on data retrieval",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 16.21,
+   "unit": "%",
+   "baseline_value": 60.0,
+   "n": null,
+   "setup": "200 random ChartQA-H test questions, VisionTaPas",
+   "note": "column header is split across lines ('Compositional / Visual'); the 16.21 is the 'both' type. Overall 34.00% on this sample",
+   "where": "Table 11",
+   "table": "Table 11, row VisionTaPas, column Compositional Visual"
+  },
+  {
+   "claim": "By chart type VisionTaPas gets 49.80% on bar, 38.20% on line and 24.41% on pie charts",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 24.41,
+   "unit": "%",
+   "baseline_value": 49.8,
+   "n": null,
+   "setup": "ChartQA test by chart type",
+   "note": "baseline_value is bar",
+   "where": "Table 10",
+   "table": "Table 10, row VisionTaPas, column Pie"
+  },
+  {
+   "claim": "Annotator exact-match agreement was 61.04%, 78.55% when typos and lexical variants are tolerated (500 samples)",
+   "kind": "measured",
+   "source": null,
+   "metric": "agreement",
+   "value": 61.04,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "AMT, two workers per question",
+   "note": "quote partially matches; see 61.04% in text",
+   "where": "Sec 3.2",
+   "quote": "the crowd workers based on exact matches was",
+   "table": "text Sec 3.2; 78.55% from manual check of 500 samples"
+  },
+  {
+   "claim": "86.64% of 1,250 inspected machine-generated QA pairs were complete, answerable and correct",
+   "kind": "measured",
+   "source": null,
+   "metric": "validity rate",
+   "value": 86.64,
+   "unit": "%",
+   "baseline_value": null,
+   "n": 1250,
+   "setup": "T5 question generation from Statista summaries after answer-in-table heuristic filter",
+   "note": null,
+   "where": "Sec 3.2",
+   "quote": "them were complete, answerable, and correct given"
+  },
+  {
+   "claim": "76.33% of 300 sampled questions are compositional or both visual and compositional",
+   "kind": "measured",
+   "source": null,
+   "metric": "share",
+   "value": 76.33,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "300 random QA pairs",
+   "note": null,
+   "where": "Sec 3.3, Table 4",
+   "quote": "(76.33% in total)"
+  },
+  {
+   "claim": "The 4.8K/9.6K ChartQA-H and 17.1K/23.1K ChartQA-M benchmark covers 20,882 charts from four sources",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 20882,
+   "unit": "charts",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Statista, Pew, OWID, OECD",
+   "note": null,
+   "where": "Intro",
+   "quote": "20,882"
+  },
+  {
+   "claim": "24% of heuristic cell supervision for difference/ratio is noisy",
+   "kind": "measured",
+   "source": null,
+   "metric": "noise",
+   "value": 24,
+   "unit": "%",
+   "baseline_value": null,
+   "n": 100,
+   "setup": "manual check of 100 questions",
+   "note": null,
+   "where": "Sec 4.2",
+   "quote": "shows 24% noise with our heuristics"
+  }
+ ],
+ "limits": [
+  "Models cannot handle nested operations (add then subtract); VisionTaPas has only single difference and ratio ops.",
+  "Data table and visual features are combined separately, so chart structure is not fully captured.",
+  "Pipeline is modular and error-prone: 83.85% extraction accuracy on ChartQA and a 16 point drop vs gold tables; extraction metric ignores textual tokens.",
+  "Only bar, line and pie charts; logarithmic-scale charts unsupported by ChartOCR.",
+  "Pew charts have no gold tables so data extraction cannot be scored there.",
+  "No seeds, variance or significance tests; single run per model.",
+  "Authors note the models could be abused to mislead about chart content.",
+  "Dated: pipeline (extract table then table-QA) predates end-to-end multimodal LLMs; numbers are 2022 baselines.",
+  "Inconsistency: text says 79.4% of bar charts simple and 29.6% complex (sums to 109%)."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "compositional questions",
+   "definition": "questions that contain at least two mathematical/logical operations like sum, difference and average",
+   "where": "Sec 3.2"
+  },
+  {
+   "term": "visual questions",
+   "definition": "questions that refer to the visual attributes such as color, height, and length of graphical marks",
+   "where": "Sec 3.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "ChartOCR: Data extraction from charts images via a deep hybrid framework",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "extended to output fully-structured tables with labels",
+   "quote": null
+  },
+  {
+   "work": "TaPas: Weakly supervised table parsing via pre-training",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "VisionTaPas adds ViT, cross-modal encoder, difference/ratio ops",
+   "quote": null
+  },
+  {
+   "work": "VL-T5 (Unifying vision-and-language tasks via text generation)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "used with Mask R-CNN mark features",
+   "quote": null
+  },
+  {
+   "work": "T5 (Raffel et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "model and question generator",
+   "quote": null
+  },
+  {
+   "work": "ViT (Dosovitskiy et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "image encoder in VisionTaPas",
+   "quote": null
+  },
+  {
+   "work": "PlotQA: Reasoning over scientific plots",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "closest prior open-vocabulary dataset; PlotQA* reimplemented",
+   "quote": null
+  },
+  {
+   "work": "PReFIL (Kafle et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "classification baseline",
+   "quote": null
+  },
+  {
+   "work": "FigureQA",
+   "year": 2017,
+   "arxiv": "1710.07300",
+   "relation": "uses-data",
+   "note": "evaluation dataset",
+   "quote": null
+  },
+  {
+   "work": "DVQA",
+   "year": 2018,
+   "arxiv": "1801.08163",
+   "relation": "uses-data",
+   "note": "evaluation dataset",
+   "quote": null
+  },
+  {
+   "work": "SQuAD (Rajpurkar et al.)",
+   "year": 2016,
+   "arxiv": "1606.05250",
+   "relation": "uses-data",
+   "note": "trains the question generator T5",
+   "quote": null
+  },
+  {
+   "work": "Kim, Hoque, Agrawala: Answering questions about charts and generating visual explanations",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "related",
+   "note": "formative study motivating compositional/visual questions",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "Our approach for question answering over charts.",
+   "page": 5,
+   "why": "Pipeline: chart image to ChartOCR table, then table + question + image features to the QA model"
+  },
+  {
+   "figure": "Fig 1",
+   "caption": "Sample questions in our benchmark.",
+   "page": 1,
+   "why": "Shows a compositional question and a visual-reference question"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "TaPas and VisionTaPas models.",
+   "page": 6,
+   "why": "Architecture of the cross-modality encoder"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Example of errors from VisionTaPas",
+   "page": 9,
+   "why": "Nested-operation and multi-stage failure modes"
+  },
+  {
+   "figure": "Table 5",
+   "caption": "Evaluation results for different models.",
+   "page": 7,
+   "why": "Gold table vs extracted table gap across five datasets"
+  }
+ ],
+ "code": [
+  {
+   "where": "A.3",
+   "snippet": "D(gt, pr) = min(1, |(gt - pr)/gt|)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text extraction splits table cells over lines; Table 5/11 column alignment inferred from order.",
+  "Bar chart simple/complex percentages sum to 109% in the paper text (79.4 + 29.6)."
+ ]
+}

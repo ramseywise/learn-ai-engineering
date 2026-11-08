@@ -1,0 +1,683 @@
+{
+ "schema": 1,
+ "key": "2005.00661",
+ "pdf": "generative-ai/08-eval/sources/maynez-2020-faithfulness-factuality-abstractive-summarization.pdf",
+ "bib": {
+  "title": "On Faithfulness and Factuality in Abstractive Summarization",
+  "authors": [
+   "Joshua Maynez",
+   "Shashi Narayan",
+   "Bernd Bohnet",
+   "Ryan McDonald"
+  ],
+  "first_author": "Maynez",
+  "year": 2020,
+  "venue": "Proceedings of the 58th Annual Meeting of the Association for Computational Linguistics (ACL 2020), pages 1906-1919",
+  "arxiv": "2005.00661",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 64199,
+  "chars_total": 64199,
+  "engine": "pymupdf",
+  "skipped": "References skimmed only"
+ },
+ "type": "empirical",
+ "question": "How often do neural abstractive summarizers hallucinate content unfaithful to the source, how much of it is factual, and can automatic metrics detect it?",
+ "hypothesis": "Pretrained models hallucinate less and are more faithful/factual, and semantic-inference metrics (entailment) correlate with faithfulness better than ROUGE/BERTScore (implied by the abstract).",
+ "contributions": [
+  "Large-scale human evaluation of intrinsic and extrinsic hallucinations in five XSum systems",
+  "Human assessment of whether hallucinated content is factual",
+  "Comparison of ROUGE, BERTScore, QA and textual entailment against human faithfulness/factuality",
+  "Preliminary use of entailment for model selection"
+ ],
+ "method": {
+  "summary": "Human annotators marked hallucinated spans (intrinsic or extrinsic) and factuality in summaries from four models and the gold references on 500 XSum test articles. Automatic metrics (ROUGE, BERTScore, a BERT-Large MNLI entailment classifier, round-trip-consistency QA) were correlated with the annotations. Entailment was also tried as a selection criterion over four candidate summaries.",
+  "task": "extreme single-sentence abstractive summarization; hallucination evaluation",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "XSum",
+    "role": "eval",
+    "size": "226,711 BBC articles with single-sentence summaries",
+    "split": "train 204,045 (90%), val 11,332 (5%), test 11,334 (5%); 500 random test articles for human evaluation",
+    "source": "Narayan et al. 2018a",
+    "preprocessing": null
+   },
+   {
+    "name": "Multi-NLI",
+    "role": "train",
+    "size": null,
+    "split": null,
+    "source": "Williams et al. 2018; used to fine-tune the BERT-Large entailment classifier",
+    "preprocessing": "sentence-sentence pairs, applied here to document-summary pairs"
+   },
+   {
+    "name": "Natural Questions",
+    "role": "train",
+    "size": null,
+    "split": null,
+    "source": "Kwiatkowski et al. 2019; used to fine-tune BERT-Base QG, answer extraction and reading comprehension models",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "PTGEN",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "RNN pointer-generator seq2seq (See et al. 2017)",
+    "init_from": null,
+    "tokenizer": "Stanford tokenized",
+    "vocab": "50k",
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "predictions": "from Narayan et al. 2018a"
+    }
+   },
+   {
+    "name": "TCONVS2S",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "topic-aware convolutional seq2seq",
+    "init_from": null,
+    "tokenizer": "Stanford tokenized",
+    "vocab": "50k",
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "predictions": "from Narayan et al. 2018a"
+    }
+   },
+   {
+    "name": "TRANS2S",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "Transformer encoder-decoder",
+    "init_from": "random",
+    "tokenizer": "WordPiece",
+    "vocab": "~30k",
+    "layers": "12",
+    "hidden": "768",
+    "heads": "12",
+    "context": null,
+    "other": {
+     "filter size": "3072",
+     "predictions": "from Rothe et al. 2020"
+    }
+   },
+   {
+    "name": "BERTS2S",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "Transformer encoder-decoder, shared params",
+    "init_from": "BERT-Base checkpoints (encoder and decoder); only encoder-decoder attention random",
+    "tokenizer": "WordPiece",
+    "vocab": "~30k",
+    "layers": "12",
+    "hidden": "768",
+    "heads": "12",
+    "context": null,
+    "other": {
+     "filter size": "3072",
+     "predictions": "from Rothe et al. 2020"
+    }
+   },
+   {
+    "name": "GPT-TUNED",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "decoder-only Transformer, TL;DR prompt",
+    "init_from": "public GPT-2 checkpoint (Radford et al. 2019), fine-tuned on XSum",
+    "tokenizer": "SentencePiece",
+    "vocab": "~50k",
+    "layers": "12",
+    "hidden": "768",
+    "heads": "12",
+    "context": null,
+    "other": {
+     "filter size": "3072",
+     "note": "dropped from human study after poor ROUGE"
+    }
+   },
+   {
+    "name": "Entailment classifier",
+    "role": "judge",
+    "params": null,
+    "architecture": "BERT-Large fine-tuned on Multi-NLI",
+    "init_from": "BERT-Large",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "QA round-trip models",
+    "role": "judge",
+    "params": null,
+    "architecture": "BERT-Base fine-tuned on Natural Questions (QG, answer extraction, reading comprehension; Alberti et al. 2019)",
+    "init_from": "BERT-Base",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "beam search; beam 10 for PTGEN and TCONVS2S, beam 4 for the Transformer models",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "one summary per article per system; 500 articles; 3 annotators per item (2500 pairs for hallucination, 1869 for factuality)",
+   "prompting": "GPT-TUNED: document then TL;DR prompt",
+   "retrieval": "annotators could use Wikipedia and Google Search for factuality",
+   "parameters": {
+    "QA pairs generated (PTGEN, TCONVS2S, TRANS2S, BERTS2S, GOLD)": "731, 708, 720, 725, 820",
+    "entailment model selection": "choose among 4 candidate summaries by entailment probability",
+    "ENTAIL->FAITH": "entailment model further fine-tuned on faithful annotations (faithful=entailment, else neutral), 5-fold cross-validation; learning rate etc. not stated"
+   },
+   "other": {
+    "annotators": "trained, fluent English, two pilot studies, pilot documents excluded",
+    "hallucination criterion": "a summary counts as hallucinated if at least one word was marked by all three annotators"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Hallucinated I / E / I-union-E",
+     "definition": "% of summaries with at least one word annotated by all three annotators as intrinsic/extrinsic hallucination",
+     "unit": "%",
+     "higher_is_better": false
+    },
+    {
+     "name": "Faithful",
+     "definition": "100 minus I-union-E",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Faithful+Factual",
+     "definition": "faithful summaries plus unfaithful summaries marked factual by all three annotators",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "ROUGE-1/2/L",
+     "definition": "overlap with reference; R1,R2 informativeness, RL fluency",
+     "unit": "F1",
+     "higher_is_better": true
+    },
+    {
+     "name": "BERTScore",
+     "definition": "contextual-embedding token similarity to reference",
+     "unit": "F1",
+     "higher_is_better": true
+    },
+    {
+     "name": "Textual entailment",
+     "definition": "BERT-Large MNLI entailment probability between document and summary; entail/neutral/contradict shares",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "QA",
+     "definition": "% of questions generated from summary that are answered correctly from the document",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Spearman |rs|",
+     "definition": "correlation of metric with faithful and factual human labels",
+     "unit": "|rs|",
+     "higher_is_better": true
+    },
+    {
+     "name": "Fleiss kappa",
+     "definition": "word-level annotator agreement",
+     "unit": "kappa",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "PTGEN",
+    "TCONVS2S",
+    "TRANS2S",
+    "GPT-TUNED",
+    "BERTS2S",
+    "GOLD references"
+   ],
+   "protocol": "One-way ANOVA with post-hoc Tukey HSD, p<0.01, for pairwise system comparisons; Fleiss kappa for agreement; 5-fold CV for ENTAIL->FAITH."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "https://github.com/google-research-datasets/xsum hallucination annotations (as printed, URL split by extraction)"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "inference.decoding",
+    "quote": "beam search with beam size 10, the Transformer models use beam size of 4",
+    "where": "Appendix A"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Hallucinations (intrinsic or extrinsic) occur in more than 70% of single-sentence XSum summaries.",
+   "kind": "measured",
+   "source": null,
+   "metric": "hallucinated summaries",
+   "value": 70,
+   "unit": "% (lower bound)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "XSum, 500 test articles sampled, 5 systems (PTGEN, TCONVS2S, TRANS2S, BERTS2S, GOLD), 3 annotators per pair",
+   "quote": "in more than 70% of single-sentence sum-",
+   "table": null,
+   "note": null,
+   "where": "Sec 1"
+  },
+  {
+   "claim": "Over 90% of extrinsic hallucinations were erroneous.",
+   "kind": "measured",
+   "source": null,
+   "metric": "erroneous extrinsic share",
+   "value": 90,
+   "unit": "% (lower bound)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "XSum, 500 test articles sampled, 5 systems (PTGEN, TCONVS2S, TRANS2S, BERTS2S, GOLD), 3 annotators per pair",
+   "quote": "over 90% of extrinsic halluci-",
+   "table": null,
+   "note": null,
+   "where": "Sec 1"
+  },
+  {
+   "claim": "BERTS2S has the most faithful+factual summaries.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Faith.+Fact.",
+   "value": 34.7,
+   "unit": "%",
+   "baseline_value": 27.3,
+   "n": null,
+   "setup": "XSum, 500 test articles sampled, 5 systems (PTGEN, TCONVS2S, TRANS2S, BERTS2S, GOLD), 3 annotators per pair; faithful 26.9%",
+   "quote": null,
+   "table": "Table 2, row BERTS2S, column +Fact.",
+   "note": "baseline is PTGEN, next best; 7.4 points absolute",
+   "where": "Table 2"
+  },
+  {
+   "claim": "PTGEN faithful share.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Faithful",
+   "value": 24.7,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "XSum, 500 test articles sampled, 5 systems (PTGEN, TCONVS2S, TRANS2S, BERTS2S, GOLD), 3 annotators per pair",
+   "quote": null,
+   "table": "Table 2, row PTGEN, column Faith.",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Gold references have only 7.4% intrinsic hallucination but 73.1% extrinsic.",
+   "kind": "measured",
+   "source": null,
+   "metric": "intrinsic hallucination, GOLD",
+   "value": 7.4,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "XSum, 500 test articles sampled, 5 systems (PTGEN, TCONVS2S, TRANS2S, BERTS2S, GOLD), 3 annotators per pair",
+   "quote": null,
+   "table": "Table 2, row GOLD, column I",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "PTGEN has the lowest extrinsic hallucination rate.",
+   "kind": "measured",
+   "source": null,
+   "metric": "extrinsic hallucination, PTGEN",
+   "value": 63.3,
+   "unit": "%",
+   "baseline_value": 64.1,
+   "n": null,
+   "setup": "XSum, 500 test articles sampled, 5 systems (PTGEN, TCONVS2S, TRANS2S, BERTS2S, GOLD), 3 annotators per pair",
+   "quote": null,
+   "table": "Table 2, row PTGEN, column E",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "BERTS2S has the lowest intrinsic hallucination among systems.",
+   "kind": "measured",
+   "source": null,
+   "metric": "intrinsic hallucination, BERTS2S",
+   "value": 16.9,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "XSum, 500 test articles sampled, 5 systems (PTGEN, TCONVS2S, TRANS2S, BERTS2S, GOLD), 3 annotators per pair",
+   "quote": null,
+   "table": "Table 2, row BERTS2S, column I",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "BERTS2S leads on ROUGE-1 on the 500-item sample.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ROUGE-1",
+   "value": 38.42,
+   "unit": "F1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "XSum 500-item human eval set",
+   "quote": null,
+   "table": "Table 1, row BERTS2S, column R1",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "GPT-TUNED had the lowest ROUGE-1 and was dropped from the human study.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ROUGE-1",
+   "value": 21.82,
+   "unit": "F1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "XSum 500-item set",
+   "quote": null,
+   "table": "Table 1, row GPT-TUNED, column R1",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Textual entailment correlates best with faithfulness (moderate).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Spearman |rs| vs faithful",
+   "value": 0.431,
+   "unit": "|rs|",
+   "baseline_value": null,
+   "n": null,
+   "setup": "XSum 500 items, all systems",
+   "quote": null,
+   "table": "Table 4, row Entailment, column Faithful",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "Entailment correlation with factuality is weak.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Spearman |rs| vs factual",
+   "value": 0.264,
+   "unit": "|rs|",
+   "baseline_value": null,
+   "n": null,
+   "setup": "as above",
+   "quote": null,
+   "table": "Table 4, row Entailment, column Factual",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "ROUGE-1 correlates very weakly with faithfulness.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Spearman |rs| vs faithful",
+   "value": 0.197,
+   "unit": "|rs|",
+   "baseline_value": null,
+   "n": null,
+   "setup": "as above",
+   "quote": null,
+   "table": "Table 4, row ROUGE-1, column Faithful",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "QA-based score correlates almost not at all with faithfulness.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Spearman |rs| vs faithful",
+   "value": 0.044,
+   "unit": "|rs|",
+   "baseline_value": null,
+   "n": null,
+   "setup": "as above",
+   "quote": null,
+   "table": "Table 4, row QA, column Faithful",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "Selecting among four systems' outputs by entailment raises faithfulness by almost 5 points absolute, costing ROUGE.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Faith. (ENTAIL)",
+   "value": 31.5,
+   "unit": "%",
+   "baseline_value": 26.9,
+   "n": null,
+   "setup": "BERTS2S/PTGEN/TCONVS2S/TRANS2S candidates, entailment probability selection",
+   "quote": null,
+   "table": "Table 5, row ENTAIL, column Faith.",
+   "note": "R1 35.93 vs 38.42; +Fact. 38.6 vs 34.7",
+   "where": "Table 5"
+  },
+  {
+   "claim": "Fine-tuning the entailment model on faithful annotations gives a small further gain with better ROUGE.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Faith. (ENTAIL->FAITH)",
+   "value": 31.7,
+   "unit": "%",
+   "baseline_value": 31.5,
+   "n": null,
+   "setup": "5-fold CV",
+   "quote": null,
+   "table": "Table 5, row ENTAIL→FAITH, column Faith.",
+   "note": "R1 37.31, +Fact. 38.8",
+   "where": "Table 5"
+  },
+  {
+   "claim": "BERTS2S gold-contradiction rate in entailment is lowest among systems, at par with GOLD.",
+   "kind": "measured",
+   "source": null,
+   "metric": "contradiction share, BERTS2S",
+   "value": 20.4,
+   "unit": "%",
+   "baseline_value": 20.0,
+   "n": null,
+   "setup": "XSum 500 items",
+   "quote": null,
+   "table": "Table 3, row BERTS2S, column cont.",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Annotator agreement on hallucination is substantial.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Fleiss kappa, PTGEN hallucination",
+   "value": 0.7,
+   "unit": "kappa",
+   "baseline_value": null,
+   "n": null,
+   "setup": "word-level, 3 annotators",
+   "quote": null,
+   "table": "Table 6, row PTGEN, column Hall.",
+   "note": null,
+   "where": "Table 6"
+  }
+ ],
+ "limits": [
+  "Only XSum, whose gold summaries are introductory sentences with many extrinsic additions, so gold counts as unfaithful.",
+  "Only 500 test articles and five systems from 2017-2020; no models larger than BERT-Base/GPT-2-small scale.",
+  "Entailment is reference-less and can be gamed (first sentence is always entailed), so must be paired with ROUGE.",
+  "Entailment classifier trained on sentence pairs, not document-summary pairs; QA metric correlated very weakly, authors blame error compounding.",
+  "ENTAIL->FAITH trained on small annotation set (5-fold CV); authors expect larger gains with more data.",
+  "Does not propose a solution to hallucination.",
+  "Dated: LLM-era summarization not covered."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "intrinsic hallucination",
+   "definition": "consequences of synthesizing content using the information present in the input document (misrepresents it)",
+   "where": "Sec 2.1"
+  },
+  {
+   "term": "extrinsic hallucination",
+   "definition": "model generations that ignore the source material altogether (information not in the document)",
+   "where": "Sec 2.1"
+  },
+  {
+   "term": "factual hallucination",
+   "definition": "a summary contains information not found in D that is factually correct",
+   "where": "Sec 2.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Don't Give Me the Details, Just the Summary (XSum)",
+   "year": 2018,
+   "arxiv": "1808.08745",
+   "relation": "uses-data",
+   "note": "dataset and PTGEN/TCONVS2S predictions",
+   "quote": null
+  },
+  {
+   "work": "Leveraging Pre-trained Checkpoints for Sequence Generation Tasks",
+   "year": 2020,
+   "arxiv": "1907.12461",
+   "relation": "evaluates",
+   "note": "TRANS2S, BERTS2S, GPT-TUNED predictions (Rothe et al. 2020)",
+   "quote": null
+  },
+  {
+   "work": "Get To The Point (pointer-generator)",
+   "year": 2017,
+   "arxiv": "1704.04368",
+   "relation": "evaluates",
+   "note": "PTGEN",
+   "quote": null
+  },
+  {
+   "work": "BERTScore",
+   "year": 2020,
+   "arxiv": "1904.09675",
+   "relation": "baseline",
+   "note": "compared metric",
+   "quote": null
+  },
+  {
+   "work": "Synthetic QA corpora generation with roundtrip consistency (Alberti et al.)",
+   "year": 2019,
+   "arxiv": "1906.05416",
+   "relation": "uses-method",
+   "note": "QA metric",
+   "quote": null
+  },
+  {
+   "work": "Multi-NLI (Williams et al.)",
+   "year": 2018,
+   "arxiv": "1704.05426",
+   "relation": "uses-data",
+   "note": "entailment training",
+   "quote": null
+  },
+  {
+   "work": "Evaluating the Factual Consistency of Abstractive Text Summarization (Kryscinski et al.)",
+   "year": 2019,
+   "arxiv": "1910.12840",
+   "relation": "related",
+   "note": "parallel NLI-based fact checking",
+   "quote": null
+  },
+  {
+   "work": "Ranking Generated Summaries by Correctness (Falke et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "related",
+   "note": "NLI reranking improves correctness",
+   "quote": null
+  },
+  {
+   "work": "Asking and Answering Questions to Evaluate Factual Consistency (Wang et al.)",
+   "year": 2020,
+   "arxiv": "2004.04228",
+   "relation": "related",
+   "note": "QA-based factual inconsistency",
+   "quote": null
+  },
+  {
+   "work": "Handling divergent reference texts (Dhingra et al.)",
+   "year": 2019,
+   "arxiv": "1906.01081",
+   "relation": "related",
+   "note": "PARENT; source-target divergence",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Hallucinations in extreme document summarization: article, gold summary and model summaries with ROUGE",
+   "page": 2,
+   "why": "One article with five system summaries shows intrinsic and extrinsic hallucinations and fluent, high-ROUGE but wrong output."
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Human assessment annotation interface",
+   "page": 4,
+   "why": "Shows how span-level annotation was done."
+  },
+  {
+   "figure": "Table 2",
+   "caption": "Intrinsic vs. Extrinsic Hallucinations",
+   "page": 6,
+   "why": "Core result: hallucination and faithful/factual rates by system."
+  },
+  {
+   "figure": "Table 4",
+   "caption": "Spearman's correlation of different metrics with faithful and factual annotations",
+   "page": 8,
+   "why": "Entailment 0.431 vs ROUGE/BERTScore under 0.2."
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Question-answer pairs from hallucinated summaries that are correctly answered by sources",
+   "page": 8,
+   "why": "Explains why QA metric fails."
+  }
+ ],
+ "code": [],
+ "problems": [
+  "No embedded instructions found. Table text flattened by extraction; table cells mapped by row order.",
+  "Table 2 column headers: I, E, I-union-E under Hallucinated then Faith. and +Fact.; row order assumed from Table 10 which matches.",
+  "Training hyperparameters of the evaluated models are not given in this paper (delegated to Narayan 2018a and Rothe 2020)."
+ ]
+}

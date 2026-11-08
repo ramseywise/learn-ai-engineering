@@ -1,0 +1,221 @@
+{
+ "schema": 1,
+ "key": "https://doi.org/10.18653/v1/d18-1259",
+ "pdf": "generative-ai/08-eval/sources/yang-2018-hotpotqa.pdf",
+ "bib": {
+  "title": "HOTPOTQA: A Dataset for Diverse, Explainable Multi-hop Question Answering",
+  "authors": ["Zhilin Yang", "Peng Qi", "Saizheng Zhang", "Yoshua Bengio", "William W. Cohen", "Ruslan Salakhutdinov", "Christopher D. Manning"],
+  "first_author": "Yang",
+  "year": 2018,
+  "venue": "Proceedings of the 2018 Conference on Empirical Methods in Natural Language Processing (EMNLP), pages 2369-2380",
+  "arxiv": null,
+  "doi": "10.18653/v1/d18-1259"
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 48365,
+  "chars_total": 48365,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "benchmark",
+ "question": "How can a QA dataset be built that requires reasoning over multiple documents in natural language, gives sentence-level supporting facts, and is not limited to a knowledge-base schema?",
+ "hypothesis": "Existing QA datasets fail to train systems for multi-hop reasoning and explanation; a crowdsourced dataset with supporting-fact supervision will be hard for current QA systems and the supporting facts will help them.",
+ "contributions": [
+  "Questions that require finding and reasoning over multiple supporting documents",
+  "Diverse questions not constrained to any pre-existing knowledge base or schema",
+  "Sentence-level supporting facts for strong supervision and explainable predictions",
+  "A new type of factoid comparison questions"
+ ],
+ "method": {
+  "summary": "Crowd workers on Mechanical Turk write multi-hop questions over pairs of Wikipedia first paragraphs chosen via the hyperlink graph (bridge entities) or from curated lists (comparison), and mark supporting sentences. A reimplemented Clark and Gardner (2017) reader with a supporting-fact classifier is trained as baseline in distractor and full wiki settings.",
+  "task": "multi-hop extractive question answering with supporting fact prediction",
+  "trains": true,
+  "datasets": [
+   {"name": "HotpotQA train-easy", "role": "train", "size": "18,089 examples", "split": "single-hop, part of combined training set", "source": "crowdsourced on Amazon Mechanical Turk via ParlAI over English Wikipedia dump of October 1, 2017", "preprocessing": "WikiExtractor for text and hyperlinks; Stanford CoreNLP 3.8.0 for word and sentence tokenization"},
+   {"name": "HotpotQA train-medium", "role": "train", "size": "56,814 examples", "split": "multi-hop questions the baseline answered correctly with high confidence in three-fold cross validation (60% of multi-hop examples)", "source": "same", "preprocessing": null},
+   {"name": "HotpotQA train-hard", "role": "train", "size": "15,661 examples", "split": "hard multi-hop", "source": "same", "preprocessing": null},
+   {"name": "HotpotQA dev", "role": "dev", "size": "7,405 examples", "split": "hard multi-hop", "source": "same", "preprocessing": null},
+   {"name": "HotpotQA test-distractor", "role": "eval", "size": "7,405 examples", "split": "hard multi-hop; 2 gold + 8 bigram tf-idf distractor paragraphs, shuffled", "source": "same", "preprocessing": null},
+   {"name": "HotpotQA test-fullwiki", "role": "eval", "size": "7,405 examples", "split": "hard multi-hop; first paragraphs of all Wikipedia articles (5,000,000+ paragraphs)", "source": "same", "preprocessing": null}
+  ],
+  "models": [
+   {"name": "Baseline reader (reimplementation of Clark and Gardner 2017)", "role": "proposed", "params": null, "architecture": "character-level RNN and word embeddings, RNN encoders, bi-attention, self-attention, residual RNN, linear start/end token heads, 3-way yes/no/span classifier, plus binary supporting-fact classifier on concatenated first and last self-attention outputs of each sentence", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": "10 paragraphs (2 gold + 8 distractors) or top 10 retrieved", "other": {"squad_gap": "about 1 point worse in F1 than Clark and Gardner reported on SQuAD, without weight averaging"}}
+  ],
+  "training": {
+   "objective": "answer span/yes-no loss jointly with binary cross entropy on per-sentence supporting-fact classification (multi-task, shared low-level representations)",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {"default_training_set": "train-easy + train-medium + train-hard combined", "full_wiki": "model trained in the distractor setting is applied to the retrieved 10 paragraphs"}
+  },
+  "inference": {
+   "decoding": "3-way output decides yes / no / span; for span, search the most probable span",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single run; no seeds reported",
+   "prompting": null,
+   "retrieval": "distractor: bigram tf-idf (Chen et al. 2017) retrieves 8 distractors with the question as query. Full wiki: inverted-index filtering to at most 5,000 candidate paragraphs (threshold N = 5000), then top 10 by bigram tf-idf.",
+   "parameters": {"r1_bridge_ratio": "0.75", "r2_yesno_ratio": "0.5", "inverted_index_N": "5000"},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "Answer EM / F1", "definition": "exact match and token F1 of answer span, as in SQuAD", "unit": "%", "higher_is_better": true},
+    {"name": "Supporting fact EM / F1", "definition": "EM and F1 on the set of predicted supporting sentences against the gold set", "unit": "%", "higher_is_better": true},
+    {"name": "Joint EM / F1", "definition": "P(joint)=P(ans)P(sup), R(joint)=R(ans)R(sup), Joint F1 = 2PR/(P+R); Joint EM is 1 only if both are exact; averaged over examples", "unit": "%", "higher_is_better": true},
+    {"name": "Retrieval MAP, Mean Rank, Hits@2, Hits@10", "definition": "rank of the two gold paragraphs in the full wiki candidate pool; missing gold paragraph ranked |Scand|+1 so values are upper bounds for MAP and Mean Rank", "unit": "% for MAP and Hits, rank for Mean Rank", "higher_is_better": true}
+   ],
+   "baselines": ["gold only context", "sup fact only (oracle) context", "ablations without supporting-fact supervision, self-attention, char model, train-easy, train-medium", "human performance"],
+   "protocol": "Human performance: 1,000 random samples from dev and test, at least three additional Turkers answer; original Turker treated as prediction, reference maximising F1 is chosen; upper bound uses each Turker against all others. No significance tests or seeds."
+  },
+  "availability": {"code": null, "weights": null, "data": "https://HotpotQA.github.io"},
+  "prompts": [],
+  "evidence": [
+   {"field": "datasets.size", "quote": "We collected 112,779 valid examples in total on Amazon Mechanical Turk", "where": "Section 3"}
+  ]
+ },
+ "results": [
+  {
+   "claim": "The baseline reaches 44.44 answer EM and 58.28 answer F1 on the distractor dev set.",
+   "kind": "measured", "source": null, "metric": "Answer F1", "value": 58.28, "unit": "%", "baseline_value": null, "n": 7405,
+   "setup": "Distractor setting, dev, baseline trained with supporting-fact supervision on combined training set",
+   "table": "Table 4, row distractor dev, column Answer F1", "note": null, "where": "Table 4"
+  },
+  {
+   "claim": "In the full wiki setting the baseline drops to 34.36 answer F1 on dev.",
+   "kind": "measured", "source": null, "metric": "Answer F1", "value": 34.36, "unit": "%", "baseline_value": 58.28, "n": 7405,
+   "setup": "Full wiki dev; distractor-trained model applied to top 10 tf-idf paragraphs",
+   "table": "Table 4, row full wiki dev, column Answer F1", "note": "Test full wiki answer F1 is 34.40", "where": "Table 4"
+  },
+  {
+   "claim": "Joint F1 is 40.86 in the distractor setting and 17.73 in full wiki on dev.",
+   "kind": "measured", "source": null, "metric": "Joint F1", "value": 40.86, "unit": "%", "baseline_value": null, "n": 7405,
+   "setup": "Distractor dev; full wiki dev value is 17.73",
+   "table": "Table 4, row distractor dev, column Joint F1", "note": "Text says about 40 joint F1", "where": "Table 4"
+  },
+  {
+   "claim": "Supporting fact EM is only 21.95 on distractor dev despite F1 of 66.66.",
+   "kind": "measured", "source": null, "metric": "Supporting fact EM", "value": 21.95, "unit": "%", "baseline_value": 66.66, "n": 7405,
+   "setup": "Distractor dev; baseline value is supporting fact F1",
+   "table": "Table 4, row distractor dev, column Sup Fact EM", "note": null, "where": "Table 4"
+  },
+  {
+   "claim": "Human answer F1 on 1,000 samples is 91.40 versus 68.99 for the baseline in the distractor setting.",
+   "kind": "measured", "source": null, "metric": "Answer F1", "value": 91.4, "unit": "%", "baseline_value": 68.99, "n": 1000,
+   "setup": "1,000 random dev/test samples; original Turker scored against additional Turkers' answers",
+   "table": "Table 8, row Human, column Answer F1", "note": "Baseline on this subset differs from the Table 4 full-dev figure", "where": "Table 8"
+  },
+  {
+   "claim": "Human upper bound on joint F1 is 96.37, showing high inter-annotator agreement.",
+   "kind": "measured", "source": null, "metric": "Joint F1", "value": 96.37, "unit": "%", "baseline_value": null, "n": 1000,
+   "setup": "Each Turker evaluated against all others, maximum per example",
+   "table": "Table 8, row Human UB, column Joint F1", "note": null, "where": "Table 8"
+  },
+  {
+   "claim": "Full wiki retrieval of the gold paragraphs is poor: Hits@10 is 56.06 on dev.",
+   "kind": "measured", "source": null, "metric": "Hits@10", "value": 56.06, "unit": "%", "baseline_value": null, "n": 7405,
+   "setup": "Full wiki dev, bigram tf-idf over a candidate pool of at most 5,000 paragraphs, top 10",
+   "table": "Table 5, row dev, column Hits@10", "note": "MAP 43.93; Hits@2 39.43; MAP and Mean Rank are upper bounds", "where": "Table 5"
+  },
+  {
+   "claim": "Removing supporting-fact supervision costs about 2 F1 (58.28 to 56.19).",
+   "kind": "measured", "source": null, "metric": "Answer F1", "value": 56.19, "unit": "%", "baseline_value": 58.28, "n": 7405,
+   "setup": "Distractor dev ablation, Table 7",
+   "table": "Table 7, row - sup fact, column F1", "note": null, "where": "Table 7"
+  },
+  {
+   "claim": "Using only the supporting facts as context gives 66.98 answer F1, over 10 F1 above not using them.",
+   "kind": "measured", "source": null, "metric": "Answer F1", "value": 66.98, "unit": "%", "baseline_value": 56.19, "n": 7405,
+   "setup": "Distractor dev, oracle context input",
+   "table": "Table 7, row sup fact only, column F1", "note": null, "where": "Table 7"
+  },
+  {
+   "claim": "Dropping train-easy and train-medium collapses answer F1 to 43.61.",
+   "kind": "measured", "source": null, "metric": "Answer F1", "value": 43.61, "unit": "%", "baseline_value": 55.12, "n": 7405,
+   "setup": "Distractor dev ablation, without supporting-fact supervision, without train-easy and train-medium",
+   "table": "Table 7, row - sup fact, train-easy, train-medium, column F1", "note": "baseline_value is the row without train-easy only", "where": "Table 7"
+  },
+  {
+   "claim": "In full wiki, bridge-question F1 drops from 59.09 to 30.42 while comparison questions drop from 55.05 to 50.70.",
+   "kind": "measured", "source": null, "metric": "Answer F1 (bridge)", "value": 30.42, "unit": "%", "baseline_value": 59.09, "n": 7405,
+   "setup": "Dev set, bridge questions, full wiki versus distractor",
+   "table": "Table 6, row full wiki, column Br F1", "note": null, "where": "Table 6"
+  },
+  {
+   "claim": "42% of sampled dev/test questions need chain reasoning through a bridge entity.",
+   "kind": "measured", "source": null, "metric": "share of Type I questions", "value": 42, "unit": "%", "baseline_value": null, "n": 100,
+   "setup": "100 manually classified dev/test examples",
+   "quote": "A ma-\njority of sampled questions (42%) require chain\nreasoning", "table": null, "note": null, "where": "Section 4"
+  },
+  {
+   "claim": "Type II questions are 32.0% of train-medium versus 15.0% of dev.",
+   "kind": "measured", "source": null, "metric": "Type II share", "value": 32.0, "unit": "%", "baseline_value": 15.0, "n": null,
+   "setup": "Manual analysis of train-medium versus dev",
+   "quote": "Type II: 32.0% in train-medium vs. 15.0% in dev", "table": null, "note": null, "where": "Section 3"
+  },
+  {
+   "claim": "The baseline answered 60% of multi-hop examples correctly with high confidence, which became train-medium (56,814).",
+   "kind": "measured", "source": null, "metric": "share correctly answered", "value": 60, "unit": "%", "baseline_value": null, "n": 56814,
+   "setup": "Three-fold cross validation on multi-hop examples after removing train-easy",
+   "quote": "the models were able to\ncorrectly answer 60% of the questions with high\nconﬁdence", "table": null, "note": null, "where": "Section 3"
+  }
+ ],
+ "limits": [
+  "Baseline hyperparameters (optimizer, learning rate, batch size, epochs, hardware, seeds) are not stated; only one baseline architecture is evaluated.",
+  "Authors concede their way of incorporating supporting-fact supervision is 'most likely suboptimal'.",
+  "Full wiki MAP and Mean Rank are upper bounds because missing gold paragraphs are ranked |Scand|+1.",
+  "Dev and test are filtered to be hard for the 2018 baseline; train-medium shares model-biased selection. About 6% of sampled questions are single-hop and 2% unanswerable.",
+  "Supporting-fact agreement among Turkers is lower than for answers, so that task is partly subjective.",
+  "Full wiki uses only first paragraphs of Wikipedia articles; results are for 2018 models and have long since been surpassed."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "bridge entity", "definition": "the entity that connects two paragraphs via a hyperlink and must be inferred to answer a multi-hop question", "where": "Section 2"},
+  {"term": "distractor setting", "definition": "2 gold paragraphs plus 8 bigram tf-idf distractors, shuffled", "where": "Section 3"},
+  {"term": "full wiki setting", "definition": "answer from the first paragraphs of all Wikipedia articles without gold paragraphs specified", "where": "Section 3"},
+  {"term": "Joint EM / F1", "definition": "answer and supporting-fact precision and recall multiplied, then F1; EM is 1 only if both are exact", "where": "Section 5.2"}
+ ],
+ "lineage": [
+  {"work": "Clark and Gardner 2017, Simple and effective multi-paragraph reading comprehension", "year": 2017, "arxiv": null, "relation": "uses-method", "note": "baseline architecture reimplemented", "quote": null},
+  {"work": "SQuAD (Rajpurkar et al. 2016)", "year": 2016, "arxiv": null, "relation": "related", "note": "single-hop dataset; EM/F1 metrics and human-eval protocol follow it", "quote": null},
+  {"work": "TriviaQA (Joshi et al. 2017)", "year": 2017, "arxiv": null, "relation": "related", "note": "multi-document but questions answerable from nearby sentences", "quote": null},
+  {"work": "SearchQA (Dunn et al. 2017)", "year": 2017, "arxiv": "1704.05179", "relation": "related", "note": "same critique as TriviaQA", "quote": null},
+  {"work": "QAngaroo (Welbl et al. 2018)", "year": 2018, "arxiv": null, "relation": "related", "note": "KB-based multi-hop; limited by schema", "quote": null},
+  {"work": "ComplexWebQuestions (Talmor and Berant 2018)", "year": 2018, "arxiv": null, "relation": "related", "note": "KB-based multi-hop", "quote": null},
+  {"work": "MS MARCO (Nguyen et al. 2016)", "year": 2016, "arxiv": null, "relation": "related", "note": "free-form answers with questionable metrics", "quote": null},
+  {"work": "Reading Wikipedia to answer open-domain questions (Chen et al. 2017)", "year": 2017, "arxiv": null, "relation": "uses-method", "note": "bigram tf-idf retrieval", "quote": null},
+  {"work": "ParlAI (Miller et al. 2017)", "year": 2017, "arxiv": "1705.06476", "relation": "uses-method", "note": "crowd worker interface", "quote": null},
+  {"work": "Mastering the dungeon (Yang et al. 2018)", "year": 2018, "arxiv": null, "relation": "uses-method", "note": "bonus structures", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 1", "caption": "An example of the multi-hop questions in HOTPOTQA. We also highlight the supporting facts in blue italics, which are also part of the dataset.", "page": 1, "why": "Shows a two-paragraph bridge question with sentence-level supporting facts"},
+  {"figure": "Fig 3", "caption": "Our model architecture. Strong supervision over supporting facts is used in a multi-task setting.", "page": 5, "why": "Baseline architecture with the supporting-fact branch"},
+  {"figure": "Table 3", "caption": "Types of multi-hop reasoning required to answer questions in the HOTPOTQA dev and test sets.", "page": 4, "why": "Taxonomy of reasoning types with examples and shares"},
+  {"figure": "Table 4", "caption": "Main results: the performance of question answering and supporting fact prediction in the two benchmark settings.", "page": 6, "why": "Distractor versus full wiki gap in one table"},
+  {"figure": "Fig 2", "caption": "Types of questions covered in HOTPOTQA.", "page": 3, "why": "Sunburst of question-type diversity"}
+ ],
+ "code": [
+  {"where": "Section 5.2", "snippet": "P(joint) = P(ans)P(sup), R(joint) = R(ans)R(sup), Joint F1 = 2 P(joint) R(joint) / (P(joint) + R(joint))", "verbatim": false}
+ ],
+ "problems": [
+  "No embedded instructions found. Text has ligature characters (fi shown as ﬁ). Figure and table cell values come from extracted text with row order inferred from layout.",
+  "Hyperparameters of training are absent from the paper."
+ ]
+}

@@ -11,6 +11,7 @@ sources:
   - https://arxiv.org/abs/2411.03766
   - https://arxiv.org/abs/2303.11315
   - https://arxiv.org/abs/2511.00617
+  - https://arxiv.org/abs/2205.05131
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -66,6 +67,8 @@ Each step fixed the previous one's bottleneck, and the last two steps created pr
 6. **GPT-3 (2020)** — 175B parameters trained on 499B tokens, over 100× GPT-2's parameter count. A handful of examples *in the prompt* reproduces almost any task, with no weight updates. **This is the origin of the discipline**: task behavior became something you elicit by changing the input.
 
 The book describes each step as "an order-of-magnitude increase", but its own Table 1-1 shows faster growth. Training compute went from 1.7e19 FLOP (GPT-1) to 1.5e21 (GPT-2) to 3.1e23 (GPT-3), roughly 100× per generation, and GPT-4 is estimated at 2.1e25 (its 1.8T parameters are a rumor, not a published figure). What to watch is that pairing of a large scale-up with a qualitative capability jump, not any one model's specs.
+
+The pretraining objective decides which prompt styles a model handles, not only its size. UL2 mixes three denoising tasks in one pretraining run: *R* (short-span corruption, as in T5), *X* (long spans or high corruption) and *S* (prefix language modelling, GPT-style), and tags each training example with a mode token (`[R]`, `[S]`, `[X]`) that can be put in front of a prompt at inference. In the paper's ablations (335M encoder-decoder, 32B C4 tokens, single runs), the mixture beat a T5 span-corruption baseline by 43.6% on a normalized overall score and a GPT-like causal decoder by 76.1%; the UL2 decoder-only model was the only decoder to beat the T5 encoder-decoder (+14.1%). Using the wrong mode token hurt: one-shot XSum Rouge-L was 11.1 with `[R]` against 7.6 with `[X]` on a model pretrained on 7B tokens, while SuperGLUE barely moved. About 20% S-denoisers was preferred, and 50% hurt. At 1B parameters and 0.5T tokens UL2 scored 15.4/2.5/11.1 Rouge-1/2/L on one-shot XSum against 8.9/0.8/7.8 for T5. The encoder-decoder has about twice the parameters of the decoder at matched compute, which may favour it, the ablations are single runs, and the 20B run was unmonitored with loss spikes. Our extrapolation: mode-style prefixes are prompt engineering baked into pretraining, and today's chat models inherit the same sensitivity to which format they were trained on ([arXiv:2205.05131](https://arxiv.org/abs/2205.05131) (Tay et al., ICLR 2023)).
 
 ---
 
