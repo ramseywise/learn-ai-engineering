@@ -22,6 +22,7 @@ sources:
 confidence: high
 cleaned: 2026-11-01
   - Nair et al. 2023, DERA: Enhancing Large Language Model Completions with Dialog-Enabled Resolving Agents — https://arxiv.org/abs/2303.17071
+  - "Dong et al., Self-collaboration Code Generation via ChatGPT (ACM TOSEM) — https://arxiv.org/abs/2304.07590"
 ---
 
 # 4 — Multi-agent design patterns
@@ -238,6 +239,12 @@ Covered in [02 — code execution](02c-mcp-code-and-safe-tool-calls.md#code-exec
 ![Coding agent with executor](../sources/images/wang-wu-autogen-patterns-fig5.png)
 
 *Figure: code writer and executor (AutoGen course, L5).*
+
+Role-split code generation without an executor is a different bet, and it has a number. [arXiv:2304.07590](https://arxiv.org/abs/2304.07590) (Dong et al., ACM TOSEM) gives three `gpt-3.5-turbo-0301` agents the roles analyst (plans), coder and tester (writes a test report), run in sequence with at most 4 interactions between roles, temperature 0. On HumanEval **Pass@1 rises from 57.3 for single-agent ChatGPT to 74.4** (Table 1), above self-planning (65.2) and self-debugging (61.6) under the same model. The role ablation (Table 4) puts the coder alone at 45.1 and the coder with analyst and tester at 63.5; the same configuration is 64.4 on the role-instruction row of that table, so quote one table by name. With GPT-4 the same wrapper moves HumanEval from 67.7 to 90.2 (Table 5). The gain emerges at around 7B parameters and above. The limits: the comparison is against one agent, not against the same token budget spent on resampling (see the equal-compute baseline in [04b](04b-when-more-agents-pay.md#the-equal-compute-baseline)), and in the main configuration the tester is an LLM reading the code, so no test is run.
+
+![Self-collaboration framework and its analyst-coder-tester instance](../sources/images/dong-self-collaboration-fig2.png)
+
+*Image Source: Dong et al., [Self-collaboration Code Generation via ChatGPT](https://arxiv.org/abs/2304.07590) (2023), Fig. 2*
 
 ---
 

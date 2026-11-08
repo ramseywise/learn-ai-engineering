@@ -3,6 +3,7 @@ origin: curated  # split from 01-rag-pipeline.md (2026-11-07) so each part stays
 confidence: medium
 sources:
   - https://arxiv.org/abs/2305.15294
+  - https://doi.org/10.18653/v1/2023.emnlp-main.151
   - https://arxiv.org/abs/2011.01060
   - https://arxiv.org/abs/2408.04259
   - https://arxiv.org/abs/2509.10697
@@ -85,6 +86,11 @@ ITER-RETGEN keeps the loop but drops the interleaving. Each round retrieves with
 
 ![ITER-RETGEN: iteration 1 retrieves with the question alone and answers 198 cm; iteration 2 retrieves with the question plus that answer and corrects it to 1.95 m](../sources/images/shao-iter-retgen-fig1.png)
 *Image Source: Shao et al., [Enhancing Retrieval-Augmented Large Language Models with Iterative Retrieval-Generation Synergy](https://arxiv.org/abs/2305.15294) (2023), Fig. 1*
+
+The same loop works on code, where the unfinished text is a poor query because the missing part is not in it. RepoCoder retrieves repository snippets with a Jaccard bag-of-words retriever, completes with a frozen code model, then rebuilds the query from the last 10 lines of the unfinished code (window 20 minus step 10) plus the first 10 lines of its own prediction ([Zhang et al., EMNLP 2023](https://doi.org/10.18653/v1/2023.emnlp-main.151)). On their RepoEval benchmark with GPT-3.5-Turbo, zero-shot, window 20 lines (50 for function bodies), step 10 and at most 10 snippets, **exact match on line completion is 40.56 with no retrieval, 55.31 after one retrieval round and 56.81 after two** (1,600 lines from 8 repositories; Oracle retrieval with the true completion reaches 57.75). On API calls the figures are 34.06, 47.69 and 49.19. For function bodies judged by the repository's unit tests (373 functions, 6 other repositories), pass rate goes 23.32, 38.34 and 42.63, which equals the Oracle. Most of the gain is the first retrieval; the second round nearly closes the gap to Oracle on lines and API calls (56.81 against 57.75; 49.19 against 50.13), as in ITER-RETGEN above. Rounds are not monotone: function-body pass rate dips from 42.63 at round two to 41.82 at round three, and from round 3 to 4 on API completion GPT-3.5-Turbo fixed 10 completions and broke 14. The paper has no stopping rule, did not time the extra round, and reports little gain in repositories with few repeated lines. One run per cell is implied but not stated.
+
+![In-file completion, repository-level RAG and RepoCoder, which loops retrieval and generation](../sources/images/zhang-repocoder-fig1.png)
+*Image Source: Zhang et al., [RepoCoder: Repository-Level Code Completion Through Iterative Retrieval and Generation](https://doi.org/10.18653/v1/2023.emnlp-main.151) (2023), Fig. 1*
 
 2WikiMultiHopQA is one of the multi-hop sets these loops are scored on. Its 192,606 questions come from Wikipedia and Wikidata triples in four types (compositional, comparison, bridge-comparison, inference), and each question carries its evidence triples as a third thing to predict. Single-hop BERT scored 8.7 F1 lower than on HotpotQA (55.9 against 64.6), so more of it needs two hops. On the test split a 2018-style baseline reached answer F1 43.93 but evidence F1 14.94 and joint F1 5.41, and on 100 samples evidence F1 was 16.74 for the model against 78.81 for the best human. Answer accuracy hides how little of the reasoning path is recovered. The templates are hand-written, 8 of 100 checked samples had a Wikipedia and Wikidata mismatch, and no retriever or LLM was evaluated ([arXiv:2011.01060](https://arxiv.org/abs/2011.01060), Ho et al., COLING 2020).
 

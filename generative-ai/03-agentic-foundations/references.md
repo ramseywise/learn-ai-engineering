@@ -31,6 +31,7 @@ cleaned: 2026-11-01
 
 | | Paper | arXiv | Notes |
 |---|---|---|---|
+| | Dong et al., *Self-collaboration Code Generation via ChatGPT* (ACM TOSEM): analyst, coder and tester roles on gpt-3.5-turbo-0301 lift HumanEval Pass@1 57.3 to 74.4 (GPT-4: 67.7 to 90.2); no equal-compute baseline, tester is LLM-simulated | [2304.07590](https://arxiv.org/abs/2304.07590) · [PDF](sources/dong-2024-self-collaboration-code-generation-chatgpt.pdf) | [04](notes/04-multi-agent-design-patterns.md#l5--coding-agents) |
 | ★ | Yao et al., *ReAct: Synergizing Reasoning and Acting in Language Models* (2022) | [2210.03629](https://arxiv.org/abs/2210.03629) | 01, 02 |
 | ★ | Packer et al., *MemGPT: Towards LLMs as Operating Systems* (2023) | [2310.08560](https://arxiv.org/abs/2310.08560) | 03 |
 | | Schick et al., *Toolformer: Language Models Can Teach Themselves to Use Tools* (2023) | [2302.04761](https://arxiv.org/abs/2302.04761) | 02 |

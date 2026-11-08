@@ -22,6 +22,8 @@ sources:
   - https://arxiv.org/abs/2208.03299
   - https://arxiv.org/abs/2002.08910
   - https://arxiv.org/abs/1704.00051
+  - https://arxiv.org/abs/1611.01603
+  - https://arxiv.org/abs/1710.10723
   - https://doi.org/10.18653/v1/d19-1250
   - https://arxiv.org/abs/2210.01296
   - https://arxiv.org/abs/2209.10063
@@ -108,6 +110,16 @@ The retrieve-then-read pattern is older than the name. Huyen traces it to Chen e
 
 ![DrQA pipeline: a document retriever over Wikipedia passes an article to a document reader that extracts the answer to a question about Warsaw](../sources/images/chen-reading-wikipedia-answer-fig1.png)
 *Image Source: Chen et al., [Reading Wikipedia to Answer Open-Domain Questions](https://arxiv.org/abs/1704.00051) (2017), Fig. 1*
+
+The reader DrQA used descends from BiDAF, a span-extraction reader that never saw a retriever. Passage and question attend to each other, and the attended vectors go on to a BiLSTM instead of being squashed into one vector. A start/end softmax picks the span. Trained on SQuAD (each question paired with its gold paragraph) a single 2.6M-parameter BiDAF scored 68.0 EM and 77.3 F1 on the hidden test set, and an ensemble of 12 runs 73.3 and 81.1. On dev, removing the context-to-query attention cost 10 EM points (67.7 to 57.2, single runs, no variance reported). The paper prints the dev single model as 67.7 EM in Table 1b but 68.0 in Table 5 ([arXiv:1611.01603](https://arxiv.org/abs/1611.01603), Seo et al., ICLR 2017).
+
+![BiDAF: character and word embeddings feed a contextual BiLSTM, a bi-directional attention flow layer joins question and context, a modeling BiLSTM reads the result, and start and end softmaxes mark the answer span](../sources/images/seo-bidaf-fig1.png)
+*Image Source: Seo et al., [Bidirectional Attention Flow for Machine Comprehension](https://arxiv.org/abs/1611.01603) (2017), Fig. 1*
+
+That setup hides a problem. A reader trained only on paragraphs that contain the answer has never learned to say "not here", so when it reads several retrieved paragraphs its top span score is not comparable across them. DrQA took the highest-scoring span anyway. Clark and Gardner trained for the comparison instead. Each epoch they sampled two of the top four TF-IDF-ranked paragraphs per question, one containing an answer, and normalised the span softmax across all sampled paragraphs of the same document ("shared-norm"). At test time the top pre-softmax span score wins. Their reader is BiDAF plus self-attention. On SQuAD with every paragraph of an article concatenated into one document, the base model started to lose F1 beyond two paragraphs, falling to about 60 at 15 (plot-read), while shared-norm reached 72.37 F1 and 64.08 EM at 15 paragraphs. On Chen et al.'s article set it scored 59.14 EM against 49.7 reported for DrQA. On TriviaQA web test, it reached 66.37 EM and 71.32 F1 against 53.75 EM for the prior best (Neural Cascade). About 10% of SQuAD questions are paragraph-dependent (500 hand-labelled), which caps the document-level number. Single runs, no variance reported ([arXiv:1710.10723](https://arxiv.org/abs/1710.10723), Clark & Gardner, ACL 2018).
+
+![SQuAD F1 against the number of paragraphs read: the naively trained model peaks at two paragraphs and then declines, while the shared-norm model rises and stays near 0.72](../sources/images/clark-multi-paragraph-reading-fig5.png)
+*Image Source: Clark and Gardner, [Simple and Effective Multi-Paragraph Reading Comprehension](https://arxiv.org/abs/1710.10723) (2018), Fig. 5*
 
 How the two halves can be trained, from training-free (this course) to joint (REALM, Atlas), with RETRO and kNN-LM between, is in [02b](02b-training-the-retriever-and-the-reader.md).
 
