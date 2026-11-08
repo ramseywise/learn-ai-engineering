@@ -1,0 +1,359 @@
+{
+ "schema": 1,
+ "key": "2406.09308",
+ "pdf": "ai-engineering/05-graph-engineering/sources/bounsi-2024-transformers-meet-neural-algorithmic-reasoners.pdf",
+ "bib": {
+  "title": "Transformers meet Neural Algorithmic Reasoners",
+  "authors": [
+   "Wilfried Bounsi",
+   "Borja Ibarz",
+   "Andrew Dudzik",
+   "Jessica B. Hamrick",
+   "Larisa Markeeva",
+   "Alex Vitvitskyi",
+   "Razvan Pascanu",
+   "Petar Veličković"
+  ],
+  "first_author": "Bounsi",
+  "year": 2024,
+  "venue": "preprint",
+  "arxiv": "2406.09308",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 38400,
+  "chars_total": 38400,
+  "engine": "pymupdf",
+  "skipped": "Figures 4-6 are plots; their values are not in the text."
+ },
+ "type": "empirical",
+ "question": "Can a Transformer language model be made robust at out-of-distribution algorithmic reasoning by letting its tokens cross-attend to embeddings from a pre-trained GNN-based neural algorithmic reasoner?",
+ "hypothesis": "Uniting Transformers with NARs leads to fruitful returns on both sides: NAR embeddings make the Transformer more robust out of distribution.",
+ "contributions": [
+  "A hybrid architecture (TransNAR) combining a Transformer's language understanding with a pre-trained GNN-based NAR, which the Transformer uses as a high-dimensional tool that modulates its token embeddings.",
+  "An evaluation on CLRS-Text showing improved and more robust OOD reasoning versus Transformer-only baselines."
+ ],
+ "method": {
+  "summary": "A 70M decoder-only Chinchilla-family Transformer has gated cross-attention layers interleaved (Flamingo style) that attend to node and edge embeddings of a frozen, pre-trained Triplet-GMPNN NAR run on the graph version of the same problem. Trained with next-token prediction on CLRS-Text problem sizes 4-8 and 12, evaluated on sizes 10, 12 and 14.",
+  "task": "algorithmic reasoning in text (CLRS-Text, 30 CLRS algorithms), size generalisation",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "CLRS-Text",
+    "role": "both",
+    "size": "10,000 samples per algorithm per input size; 2,400,000 data points total",
+    "split": "70% train / 30% validation; train sizes [4, 8] and 12; eval sizes 10 (OOD interpolation), 12 (in-distribution), 14 (OOD extrapolation)",
+    "source": "Markeeva et al. 2024, text version of CLRS-30 derived deterministically from the graph version",
+    "preprocessing": "Text and graph versions carry identical information; randomized positional encoding max length 8,192 on top of RoPE"
+   },
+   {
+    "name": "CLRS-30 (NAR pre-training)",
+    "role": "pretrain",
+    "size": null,
+    "split": "input problem sizes up to 16",
+    "source": "Velickovic et al. 2022",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "TransNAR",
+    "role": "proposed",
+    "params": "70M Transformer (NAR size not stated)",
+    "architecture": "decoder-only Transformer with interleaved gated cross-attention to frozen NAR node and edge embeddings",
+    "init_from": "two variants: Pretrained (Chinchilla 70M pretrained on MassiveText) and Untrained (random init)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "6",
+    "hidden": null,
+    "heads": null,
+    "context": "2,048",
+    "other": {
+     "cross_attention_gate": "initially closed for pre-trained Transformer",
+     "node_edge_combination": "concatenate node and edge cross-attention outputs then a linear layer; sum, 2-layer MLP and Gram-Schmidt orthogonalisation gave no improvement",
+     "edge_flattening": "edge features E in R^{NxNxk} flattened over first two axes"
+    }
+   },
+   {
+    "name": "NAR (Triplet-GMPNN)",
+    "role": "base",
+    "params": null,
+    "architecture": "multi-task Triplet-GMPNN with triplet interactions and gating, shared function per step, frozen during TransNAR training",
+    "init_from": "pre-trained on CLRS-30, sizes up to 16, following Ibarz et al. 2022",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Transformer baseline",
+    "role": "baseline",
+    "params": "70M",
+    "architecture": "same Chinchilla decoder-only 6-layer model, no NAR, with randomized positional encoding; Pretrained and Untrained variants",
+    "init_from": "same two inits",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "6",
+    "hidden": null,
+    "heads": null,
+    "context": "2,048",
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "standard next-token prediction",
+   "optimizer": "Adam",
+   "lr": "10^-4",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "256",
+   "steps": null,
+   "epochs": "seven epochs of the training data",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "randomized positional encoding (max length 8,192) on top of RoPE",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": "4 random seeds per model",
+   "other": {
+    "nar_frozen": "NAR parameters frozen during fine-tuning to preserve robustness"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "4 random seeds per model; error bars +-1 std",
+   "prompting": "CLRS-Text format, e.g. 'binary search: key: [...], target: 0.122 return: 2'; no prompt modification or tool use",
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "CLRS score",
+     "definition": "percentage of elements in the output matching ground truth; 0 if shape score is 0",
+     "unit": "fraction/%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Shape score",
+     "definition": "binary: output has the right shape for input and task",
+     "unit": "binary, averaged",
+     "higher_is_better": true
+    },
+    {
+     "name": "Parse score",
+     "definition": "binary: output free of illicit characters",
+     "unit": "binary, averaged",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Transformer-only Chinchilla 70M, Pretrained and Untrained, with randomized positional encoding"
+   ],
+   "protocol": "Per-algorithm scores over 8 algorithm families at sizes 10, 12, 14; 4 seeds, +-1 std error bars. Exact string match deliberately not used."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "CLRS-Text benchmark (Markeeva et al. 2024)"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.epochs",
+    "quote": "We train all models over seven epochs of the training data with a batch size of 256",
+    "where": "Sec 4 Training details"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "TransNAR gives over 20% absolute OOD improvement on several algorithm classes versus the Transformer baseline.",
+   "kind": "measured",
+   "source": null,
+   "metric": "CLRS score (average execution accuracy)",
+   "value": "20",
+   "unit": "% absolute (lower bound, several classes)",
+   "baseline_value": null,
+   "n": "4 seeds",
+   "setup": "CLRS-Text, 70M Chinchilla Transformer vs TransNAR, OOD sizes (Figure 1 caption)",
+   "quote": "with over 20% abso-",
+   "table": null,
+   "note": "Only a threshold is stated; per-algorithm numbers are in Fig 4, not in text.",
+   "where": "Figure 1 caption"
+  },
+  {
+   "claim": "TransNAR significantly outperforms the baseline overall and on most algorithms, in and out of distribution, and makes capabilities emerge where the baseline scored zero or near-zero.",
+   "kind": "measured",
+   "source": null,
+   "metric": "CLRS score",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": "4 seeds",
+   "setup": "Sizes 10, 12, 14; Pretrained and Untrained variants",
+   "quote": null,
+   "table": null,
+   "note": "Qualitative; values only in Fig 4",
+   "where": "Sec 4.1"
+  },
+  {
+   "claim": "TransNAR raises the share of outputs with correct shape OOD, a main failure mode of the plain Transformer, though not always to perfect scores.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Shape score",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": "4 seeds",
+   "setup": "Fig 5",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Sec 4.1, Fig 5"
+  },
+  {
+   "claim": "TransNAR does not beat the baseline on Binary Search, Find Maximum Subarray, Minimum and Quickselect, all index-search tasks.",
+   "kind": "measured",
+   "source": null,
+   "metric": "CLRS score",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "interpolation and extrapolation",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Sec 4.1"
+  },
+  {
+   "claim": "Randomized positional encoding helped both models; without it the hybrid was capped by a near-zero base LLM.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Appendix 6; no ablation numbers given",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Appendix 6"
+  }
+ ],
+ "limits": [
+  "Requires both text and graph inputs, so only usable where a ground-truth executor or simulator exists (Sec 4.2).",
+  "Authors suggest distilling TransNAR into a vanilla Transformer to remove the second stream; not done.",
+  "Parse score: TransNAR falls behind baseline on a few algorithms in extrapolation, attributed to insufficient cross-attention capacity (Fig 6).",
+  "Only a 70M model, sizes up to 14; no results in text as numbers (all in figures); no compute, hardware, schedule or code stated.",
+  "Search-index tasks failed to generalise to unseen index boundaries; index hints proposed but not tested."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "NAR",
+   "definition": "neural algorithmic reasoner: GNN-based system trained as a generic solver for algorithmic tasks in graph form",
+   "where": "Sec 1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "A generalist neural algorithmic learner (Triplet-GMPNN)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "NAR architecture and pre-training recipe",
+   "quote": null
+  },
+  {
+   "work": "Flamingo",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "gated cross-attention interleaving",
+   "quote": null
+  },
+  {
+   "work": "The CLRS-Text algorithmic reasoning language benchmark",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "evaluation data",
+   "quote": null
+  },
+  {
+   "work": "The CLRS algorithmic reasoning benchmark",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "source graph benchmark",
+   "quote": null
+  },
+  {
+   "work": "Training compute-optimal large language models (Chinchilla)",
+   "year": 2022,
+   "arxiv": "2203.15556",
+   "relation": "uses-method",
+   "note": "70M base Transformer",
+   "quote": null
+  },
+  {
+   "work": "Randomized positional encodings boost length generalization of transformers",
+   "year": 2023,
+   "arxiv": "2305.16843",
+   "relation": "uses-method",
+   "note": "used in all experiments",
+   "quote": null
+  },
+  {
+   "work": "Neural execution of graph algorithms",
+   "year": 2019,
+   "arxiv": "1910.10593",
+   "relation": "related",
+   "note": "max-MPNN",
+   "quote": null
+  },
+  {
+   "work": "Dual algorithmic reasoning",
+   "year": 2023,
+   "arxiv": "2302.04496",
+   "relation": "related",
+   "note": "NAR scaling motivation",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 3",
+   "caption": "TransNAR hybrid architecture ... interleave existing Transformer layers with gated cross-attention layers",
+   "page": 4,
+   "why": "shows dataflow from NAR to tokens"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "TransNAR significantly outperforms the baseline Transformer (CLRS score, 4 seeds)",
+   "page": 6,
+   "why": "main per-algorithm results"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Results are in figures only; no tabulated numbers, so only the >20% threshold is quoted.",
+  "NAR parameter count, hardware, LR schedule not stated."
+ ]
+}

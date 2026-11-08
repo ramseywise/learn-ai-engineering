@@ -1,0 +1,96 @@
+{
+ "schema": 1,
+ "key": "2404.08865",
+ "pdf": "ai-engineering/02-context-engineering/sources/machlab-2024-llm-context-recall-prompt-dependent.pdf",
+ "bib": {"title": "LLM In-Context Recall is Prompt Dependent", "authors": ["Daniel Machlab", "Rick Battle"], "first_author": "Machlab", "year": 2024, "venue": "preprint", "arxiv": "2404.08865", "doi": null},
+ "read": {"by": "source-reader", "at": "2026-11-08", "chars_read": 35295, "chars_total": 35295, "engine": "pymupdf", "skipped": "Appendix D heatmaps are images; no text"},
+ "type": "empirical",
+ "question": "How well do LLMs recall a fact placed in their prompt, and how does that depend on prompt content, model size, architecture, training and fine-tuning?",
+ "hypothesis": "Recall measured by a single needle-in-a-haystack test is not representative of a model's overall ability; it depends on the prompt.",
+ "contributions": ["Needle-in-a-haystack recall across nine LLMs with three different needles", "Analysis of effects of training-data conflict, parameter count, architecture/training strategy and fine-tuning on recall"],
+ "method": {
+  "summary": "Insert one factoid (needle) into Paul Graham essay filler (haystack) at varied lengths and depths, ask a near-trivial question, and score the answer 1-5 with GPT-4 Turbo as judge. Three needles (PistachioAI, San Francisco, Thornfield Hollow) are run on nine models.",
+  "task": "in-context factoid recall (needle in a haystack)",
+  "trains": false,
+  "datasets": [
+   {"name": "Paul Graham Essays (haystack filler)", "role": "eval", "size": null, "split": null, "source": "https://paulgraham.com/articles.html", "preprocessing": "Haystack length and needle position adjusted to coincide with sentence breaks"}
+  ],
+  "models": [
+   {"name": "Llama 2 13B Chat", "role": "evaluated", "params": "13B", "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": "4,096 Tokens", "other": {}},
+   {"name": "Llama 2 70B Chat", "role": "evaluated", "params": "70B", "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": "4,096 Tokens", "other": {}},
+   {"name": "WizardLM 70B", "role": "evaluated", "params": "70B", "architecture": null, "init_from": "instruction fine-tuned version of Llama 2 70B", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": "4,096 Tokens", "other": {}},
+   {"name": "GPT-3.5-Turbo-1106", "role": "evaluated", "params": null, "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": "16,385 Tokens", "other": {}},
+   {"name": "GPT-3.5-Turbo-0125", "role": "evaluated", "params": null, "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": "16,385 Tokens", "other": {}},
+   {"name": "Mistral 7B Instruct v0.1", "role": "evaluated", "params": "7B", "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": "32,768 Tokens", "other": {"note": "base trained with 8k window and sliding window attention per text"}},
+   {"name": "Mistral 7B Instruct v0.2", "role": "evaluated", "params": "7B", "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": "32,768 Tokens", "other": {"note": "base trained at 32k, rope-theta 1e6, no sliding window attention"}},
+   {"name": "Mixtral 8x7B Instruct v0.1", "role": "evaluated", "params": "8x7B (13B used at inference)", "architecture": "sparse mixture of experts", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": "32,768 Tokens", "other": {}},
+   {"name": "GPT-4 Turbo 0125", "role": "evaluated", "params": null, "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": "128,000 Tokens", "other": {}},
+   {"name": "GPT-4 Turbo (32k evaluations)", "role": "judge", "params": null, "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}}
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null, "temperature": null, "top_p": null, "max_tokens": null,
+   "samples": "one response per (haystack length, depth) cell; 35x35=1225 cells per test per model, 25x25=625 for GPT-4 Turbo; 31,275 responses graded in total",
+   "prompting": "System message constant, then haystack with needle, then question. Model-specific templates (Llama, Mistral, OpenAI) in Appendix A.",
+   "retrieval": null,
+   "parameters": {"haystack_length_distribution": "linear across the context window", "needle_depth_distribution": "sigmoid, 0% = start and 100% = end", "lengths_and_depths": "35 each, 25 each for GPT-4 Turbo", "length_unit": "tokens from each model's own tokenizer"},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [{"name": "Recall", "definition": "Sum of judge scores (1-5) over all length/depth cells divided by total possible score (5 per cell)", "unit": "%", "higher_is_better": true}],
+   "baselines": [],
+   "protocol": "GPT-4 Turbo judge scores each response 1-5 against reference (Table 4, Appendix C prompt, via LangChain evaluations). No repeated runs or seeds stated. Judge scoring anomalies noted in Section 5."
+  },
+  "availability": {"code": null, "weights": null, "data": null},
+  "prompts": [
+   {"purpose": "system message, constant", "text": "You are a helpful AI assistant that answers a question using only the provided information.", "where": "Section 3.2"},
+   {"purpose": "PistachioAI needle", "text": "PistachioAI received a patent before its Series A. / What did PistachioAI receive before its Series A?", "where": "Table 2"},
+   {"purpose": "San Francisco needle", "text": "The best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day. / What is the best thing to do in San Francisco?", "where": "Table 2"},
+   {"purpose": "Thornfield Hollow needle", "text": "The best thing to do in Thornfield Hollow is eat a sandwich and sit in Harmony Glen Nature Preserve on a sunny day. / What is the best thing to do in Thornfield Hollow?", "where": "Table 2"},
+   {"purpose": "Llama template", "text": "<s><<SYS>>{system_message}<</SYS>>{document}[INST]{question}[/INST]", "where": "Appendix A, Table 6"},
+   {"purpose": "Mistral template", "text": "[INST]{system_message}{document}{question}[/INST]", "where": "Appendix A, Table 6"},
+   {"purpose": "judge prompt", "text": "Please act as an impartial judge and evaluate the quality of the response provided by an AI assistant ... accuracy: Score 1 ... Score 5 ... rate the response on a scale of 1 to 5 by strictly following this format: \"[[rating]]\"", "where": "Appendix C (abridged)"}
+  ],
+  "evidence": []
+ },
+ "results": [
+  {"claim": "GPT-4 Turbo recall on the San Francisco needle (which conflicts with training knowledge) is far below its recall on the made-up Thornfield Hollow needle.", "kind": "measured", "source": null, "metric": "recall", "value": "68.22", "unit": "%", "baseline_value": "93.70", "n": 625, "setup": "GPT-4 Turbo 0125, 25x25 length/depth grid, San Francisco vs Thornfield Hollow, haystack up to 128k", "quote": null, "table": "Table 5, row GPT-4 Turbo 0125, columns San Francisco (68.22%) and Thornfield Hollow (93.70%)", "note": "text rounds to 68.2% and 93.7%", "where": "Table 5, Section 4.2"},
+  {"claim": "GPT-4 Turbo recalls the PistachioAI needle perfectly at every length and depth.", "kind": "measured", "source": null, "metric": "recall", "value": "100.00", "unit": "%", "baseline_value": null, "n": 625, "setup": "GPT-4 Turbo 0125, PistachioAI needle", "quote": null, "table": "Table 5, row GPT-4 Turbo 0125, column PistachioAI", "note": null, "where": "Table 5, Section 4.1"},
+  {"claim": "As haystack length passes 32k tokens, GPT-4 Turbo failures on San Francisco rise at all depths except the very top and bottom.", "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "GPT-4 Turbo, San Francisco test, Figure 1 heatmap", "quote": null, "table": null, "note": null, "where": "Section 4.2"},
+  {"claim": "Mistral 7B Instruct v0.1 has very low recall on Thornfield Hollow, unreliable beyond roughly 1k tokens.", "kind": "measured", "source": null, "metric": "recall", "value": "40.93", "unit": "%", "baseline_value": "94.09", "n": 1225, "setup": "Mistral v0.1 vs Llama 2 13B (baseline), Thornfield Hollow", "quote": null, "table": "Table 5, row Mistral 7B Instruct v0.1, column Thornfield Hollow; baseline row Llama 2 13B Chat", "note": null, "where": "Table 5, Section 4.4"},
+  {"claim": "Mistral v0.2 (same 7B size) recalls much better than v0.1 on Thornfield Hollow after changes to context length, rope-theta and attention.", "kind": "measured", "source": null, "metric": "recall", "value": "94.78", "unit": "%", "baseline_value": "40.93", "n": 1225, "setup": "Mistral v0.2 vs v0.1, Thornfield Hollow; no ablation of the three changes", "quote": null, "table": "Table 5, row Mistral 7B Instruct v0.2, column Thornfield Hollow", "note": "text rounds to 94.8%", "where": "Table 5, Section 4.4"},
+  {"claim": "Llama 2 70B recalls better than Llama 2 13B on Thornfield Hollow.", "kind": "measured", "source": null, "metric": "recall", "value": "99.43", "unit": "%", "baseline_value": "94.09", "n": 1225, "setup": "Llama 2 70B Chat vs 13B Chat, 4k context", "quote": null, "table": "Table 5, rows Llama 2 70B Chat and Llama 2 13B Chat, column Thornfield Hollow", "note": "text: 99.4% vs 94.1%", "where": "Table 5, Section 4.3"},
+  {"claim": "Mixtral 8x7B reaches 96.72% on Thornfield Hollow.", "kind": "measured", "source": null, "metric": "recall", "value": "96.72", "unit": "%", "baseline_value": null, "n": 1225, "setup": "Mixtral 8x7B Instruct v0.1", "quote": null, "table": "Table 5, row Mixtral 8x7B Instruct v0.1, column Thornfield Hollow", "note": "text: 96.7%", "where": "Table 5, Section 4.4"},
+  {"claim": "WizardLM (instruction fine-tune of Llama 2 70B) outperforms Llama 2 70B Chat on Thornfield Hollow.", "kind": "measured", "source": null, "metric": "recall", "value": "99.79", "unit": "%", "baseline_value": "99.43", "n": 1225, "setup": "WizardLM-70B-V1.0 vs Llama 2 70B Chat", "quote": null, "table": "Table 5, row WizardLM-70B-V1.0, column Thornfield Hollow", "note": "tiny gap; Llama 2 70B Chat is not the raw base model", "where": "Table 5, Section 4.5.1"},
+  {"claim": "Llama 2 13B has perfect recall below 500 tokens, degrading from 500 to 4k tokens.", "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "Llama 2 13B Chat heatmap", "quote": null, "table": null, "note": null, "where": "Section 4.3"},
+  {"claim": "Total responses graded by the GPT-4 Turbo judge.", "kind": "measured", "source": null, "metric": "responses graded", "value": "31,275", "unit": "responses", "baseline_value": null, "n": null, "setup": "three tests across nine models", "quote": "requiring grading of 31,275 responses following the criteria in Table 4", "table": null, "note": null, "where": "Section 2"}
+ ],
+ "limits": [
+  "Single run per cell, no seeds, decoding settings and temperature not stated.",
+  "No ablation of Mistral v0.2 changes, so the cause of its gain is speculation (authors concede).",
+  "GPT-3.5 version difference inferred from an OpenAI blog, not verified.",
+  "Judge (GPT-4 Turbo) can misscore: haystack artifacts altering the prompt meaning gave a low score to a sensible answer (Section 5).",
+  "GPT-4 Turbo tested on a smaller grid (25x25) to control cost.",
+  "Needle questions are near-trivial single-fact retrieval; says nothing about multi-fact reasoning.",
+  "Scores are near ceiling for most models, so differences are small except Mistral v0.1 and GPT-4 Turbo San Francisco.",
+  "Models from early 2024; Gemini 1.5 context figure cited only as background."
+ ],
+ "practices": [],
+ "terms": [{"term": "in-context recall", "definition": "a metric used to evaluate a model's ability to retrieve a factoid from its prompt at various locations", "where": "Section 2"}],
+ "lineage": [
+  {"work": "Pressure Testing GPT-4-128K With Long Context Recall (Kamradt)", "year": 2023, "arxiv": null, "relation": "extends", "note": "needle-in-a-haystack method; extended from one needle to three and nine models", "quote": null},
+  {"work": "Lost in the Middle", "year": 2023, "arxiv": "2307.03172", "relation": "related", "note": "motivates sigmoid sampling of needle positions near the start and end", "quote": null},
+  {"work": "Instruction Tuning with GPT-4 (Peng et al.)", "year": 2023, "arxiv": "2304.03277", "relation": "uses-method", "note": "GPT-4 as judge", "quote": null},
+  {"work": "Mistral 7B", "year": 2023, "arxiv": "2310.06825", "relation": "contradicts", "note": "Mistral paper claims it beats Llama 2 13B on all benchmarks; here v0.1 is the worst model on all three tests", "quote": null},
+  {"work": "Mixtral of Experts", "year": 2024, "arxiv": "2401.04088", "relation": "evaluates", "note": "model evaluated", "quote": null},
+  {"work": "Gemini 1.5", "year": 2024, "arxiv": "2403.05530", "relation": "related", "note": "context window sizes and recall definition", "quote": null},
+  {"work": "Multi Needle in a Haystack (LangChain)", "year": 2024, "arxiv": null, "relation": "related", "note": "new evaluation method cited", "quote": null},
+  {"work": "JudgeLM", "year": 2023, "arxiv": "2310.17631", "relation": "related", "note": "cost of human grading", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Figure 1", "caption": "GPT-4 Turbo performs worse in the needle-in-a-haystack test when the needle conflicts with training data in the San Francisco test (top) versus in the Thornfield Hollow (middle) and PistachioAI tests (bottom).", "page": 3, "why": "Heatmaps show where in length/depth the failures fall"},
+  {"figure": "Table 5", "caption": "Recall scores for each LLM on the three needle-in-a-haystack tests.", "page": 4, "why": "All nine models by three needles in one table"}
+ ],
+ "code": [],
+ "problems": ["Appendix D heatmaps are images and were not readable as text.", "Per-test recall for Llama 2 13B being higher on San Francisco (97.42) than Thornfield Hollow (94.09) is an exception the paper notes without explanation.", "No embedded instructions found."]
+}

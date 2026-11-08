@@ -1,6 +1,7 @@
 ---
 origin: synthesis
 sources:
+  - https://arxiv.org/abs/2410.01792
   - https://arxiv.org/abs/2303.10420
   - https://arxiv.org/abs/2411.00640
   - https://arxiv.org/abs/2509.04664
@@ -230,6 +231,8 @@ The same arithmetic applies to testing several fixes at once. At 95% confidence 
 **When the difference is smaller than the noise, don't switch.** 100 tasks at 70% gives a standard error of about 4.6 points, so the 95% interval is ±9. "73% vs 70%" is inside the noise. Run the paired test first ([above](#compare-on-the-same-tasks-paired-differences)). Grow the sample only if that's still inconclusive.
 
 ---
+
+**A flat accuracy can hide a difficulty gap.** [arXiv:2410.01792](https://arxiv.org/abs/2410.01792) (McCoy et al., 2024-10, preprint) tests o1-preview-2024-09-12 on tasks where earlier LLMs did better on high-probability outputs. o1 still showed it: shift-cipher accuracy rose from 47% in the lowest-probability bin to 92% in the highest. On acronyms accuracy was almost identical for the common and rare variant (100% against 99.9%), yet o1 spent more thinking tokens on the rare one. When a reasoning model's score looks flat across slices, log its reasoning-token count per slice too, because cost can show a gap the pass rate hides. The sample sizes, runs and prompts are not reported, and the o1 figures are single-snapshot.
 
 ## Read the transcripts
 

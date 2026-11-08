@@ -1,0 +1,57 @@
+{
+ "schema": 1,
+ "key": "2301.09627",
+ "pdf": "data-science/sources/karbasi-2023-impossibility-parallelizing-boosting.pdf",
+ "bib": {"title": "The Impossibility of Parallelizing Boosting", "authors": ["Amin Karbasi", "Kasper Green Larsen"], "first_author": "Karbasi", "year": 2023, "venue": "preprint", "arxiv": "2301.09627", "doi": null},
+ "read": {"by": "source-reader", "at": "2026-11-08", "chars_read": 47094, "chars_total": 47094, "engine": "pymupdf", "skipped": null},
+ "type": "theory",
+ "question": "Can boosting be parallelized, i.e. run in few rounds of weak-learner calls, without an exponential increase in total work?",
+ "hypothesis": null,
+ "contributions": [
+  "Theorem 1: lower bound on the parallel complexity (p rounds, t queries per round) of any weak-to-strong learner.",
+  "Theorem 2: a single-round weak-to-strong learner using exp(O(d gamma^-2 ln m)) parallel weak-learner queries whose generalization matches AdaBoost, showing the lower bound is near tight."
+ ],
+ "method": null,
+ "results": [
+  {"claim": "AdaBoost needs Theta(gamma^-2 ln m) sequential iterations, so its parallel complexity is (Theta(gamma^-2 ln m), 1).", "kind": "reported", "source": "known AdaBoost analysis, cited via Shalev-Shwartz and Ben-David 2014", "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "gamma-weak learner, VC-dimension d hypothesis set, m training samples", "quote": "It thus has parallel complexity (Θ(γ−2 ln m), 1).", "table": null, "note": null, "where": "Sec 1"},
+  {"claim": "Main lower bound: any weak-to-strong learner either uses exp(Omega(d)) rounds, or at least min{exp(Omega(d/gamma^2)), exp(exp(Omega(d)))} queries per round, or has expected error at least exp(-O(p max{gamma, ln(tp) gamma^2/d})).", "kind": "measured", "source": null, "metric": "lower bound on expected error", "value": "exp(-O(p max{gamma, ln(tp) gamma^2/d}))", "unit": null, "baseline_value": null, "n": null, "setup": "Theorem 1, worst-case domain, concept and gamma-weak learner with hypothesis set of VC-dimension d; learner A has parallel complexity (p,t); queries may be arbitrary distributions computable from data and earlier hypotheses", "quote": "ν = e−O(p max{γ,ln(tp)γ2/d})", "table": null, "note": "Theorem 1 itself is typeset with ligature/math characters; the proof setup restates the bound as nu.", "where": "Thm 1, Sec 2"},
+  {"claim": "With constant rounds, matching AdaBoost's error needs t = exp(Omega(d gamma^-2 ln m)) queries per round.", "kind": "measured", "source": null, "metric": "queries per round", "value": "exp(Omega(d gamma^-2 ln m))", "unit": null, "baseline_value": null, "n": null, "setup": "p = O(1) rounds, error target comparable to AdaBoost bound (1)", "quote": "requires t = exp(Ω(dγ−2 ln m))", "table": null, "note": null, "where": "after Thm 1"},
+  {"claim": "To reach AdaBoost-comparable error with error exp(-O(p gamma)), rounds must be Omega(gamma^-1 ln m), only a factor gamma fewer than AdaBoost.", "kind": "measured", "source": null, "metric": "rounds", "value": "Omega(gamma^-1 ln m)", "unit": null, "baseline_value": "Theta(gamma^-2 ln m)", "n": null, "setup": "Theorem 1 with polynomially many queries per round", "quote": "requires p = Ω(γ−1 ln m). This is only a γ factor less than AdaBoost.", "table": null, "note": null, "where": "after Thm 1; Conclusion"},
+  {"claim": "A single-round algorithm exists with parallel complexity (1, exp(O(d gamma^-2 ln m))) and AdaBoost-matching generalization error.", "kind": "measured", "source": null, "metric": "parallel complexity", "value": "(1, exp(O(d gamma^-2 ln m)))", "unit": null, "baseline_value": null, "n": null, "setup": "Theorem 2; any concept, gamma-weak learner with VC-dimension d hypothesis set, any distribution, m samples", "quote": "A has parallel complexity (1, exp(O(dγ−2 ln m)))", "table": null, "note": null, "where": "Thm 2, Sec 1"},
+  {"claim": "Sampled Boosting queries the weak learner on every uniform distribution over multisets of size a*d*gamma^-2 drawn from the training set, giving at most m^(a d gamma^-2) queries.", "kind": "measured", "source": null, "metric": "number of weak-learner queries", "value": "exp(O(d gamma^-2 ln m))", "unit": null, "baseline_value": null, "n": null, "setup": "Algorithm 1, a is a large enough constant", "quote": "there are no more than madγ−2 = exp(O(dγ−2 ln m)) such queries", "table": null, "note": null, "where": "Sec 3"},
+  {"claim": "Sampled Boosting runs K = 16 gamma^-2 ln m rounds and yields a voting classifier with every training margin at least gamma/16.", "kind": "measured", "source": null, "metric": "min training margin", "value": "gamma/16", "unit": null, "baseline_value": null, "n": null, "setup": "Algorithm 1 with K = 16 gamma^-2 ln m, w = 1/2 ln((1/2+gamma/4)/(1/2-gamma/4)), sample size n = a d gamma^-2; Lemmas 4 and 5", "quote": "We invoke Algorithm 1 with the training data set S as well as a number of rounds K = 16γ−2 ln m.", "table": null, "note": "Margin gamma/16 is stated in the Sec 3 intro and Lemma 4.", "where": "Sec 3"},
+  {"claim": "Long and Servedio's earlier bound p = Omega(gamma^-2 ln m) holds only for filtering-based query distributions and a weak-learner hypothesis set whose VC-dimension grows with m; the new single-round algorithm circumvents it.", "kind": "reported", "source": "Long and Servedio 2013", "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "comparison of assumptions", "quote": "regardless of the number of calls per round t", "table": null, "note": null, "where": "Sec 1"}
+ ],
+ "limits": [
+  "Purely theoretical: no experiments, no code, no runtime measurements.",
+  "Lower bound is worst case over a constructed domain, concept and weak learner; it says nothing about specific data or practical boosters.",
+  "Gap remains between rounds lower bound gamma^-1 ln m and AdaBoost's gamma^-2 ln m; authors leave partial parallelization open.",
+  "The single-round algorithm still does sequential work in O(gamma^-2 ln m) post-processing rounds (inference only), and its query count is exponential, so it is not practical.",
+  "The weak-learner query model abstracts training; it does not cover parallelism inside one weak learner (for example parallel tree construction in XGBoost/LightGBM)."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "gamma-weak learner", "definition": "given a constant number of samples m0 from any unknown distribution D, with constant probability returns h with L_D(h) <= 1/2 - gamma", "where": "Sec 1"},
+  {"term": "strong learner", "definition": "for any 0 < eps, delta < 1 there is m(eps, delta) such that with probability at least 1 - delta it returns h with L_D(h) <= eps", "where": "Sec 1"},
+  {"term": "parallel complexity (p, t)", "definition": "a weak-to-strong learner invokes its weak learner in only p rounds, querying up to t distributions per round; queries may depend only on S, c(S) and hypotheses from earlier rounds", "where": "Sec 1"},
+  {"term": "epsilon-approximation", "definition": "a sample T such that for all h in H the empirical error on T is within epsilon of the error under D", "where": "Sec 3"}
+ ],
+ "lineage": [
+  {"work": "Freund and Schapire 1997 (AdaBoost)", "year": 1997, "arxiv": null, "relation": "extends", "note": "Algorithm 1 is a variant of AdaBoost with uniform weight updates and equal hypothesis weights", "quote": null},
+  {"work": "Long and Servedio 2013, Algorithms and hardness results for parallel large margin learning", "year": 2013, "arxiv": null, "relation": "extends", "note": "prior parallel lower bound under filtering assumption; this paper drops it", "quote": null},
+  {"work": "Freund 1995, Boosting a weak learning algorithm by majority", "year": 1995, "arxiv": null, "relation": "related", "note": "earlier parallel-rounds lower bound strengthened by Long and Servedio", "quote": null},
+  {"work": "Larsen and Ritzert 2022, Optimal weak to strong learning", "year": 2022, "arxiv": null, "relation": "uses-method", "note": "optimal sample complexity for weak-to-strong learning", "quote": null},
+  {"work": "Larsen 2022, Bagging is an optimal PAC learner", "year": 2022, "arxiv": "2212.02264", "relation": "uses-method", "note": "bootstrap sub-sample trick to remove log factors", "quote": null},
+  {"work": "Breiman 1999, Prediction games and arcing algorithms", "year": 1999, "arxiv": null, "relation": "uses-method", "note": "min-margin generalization bound (Theorem 5)", "quote": null},
+  {"work": "Gronlund et al. 2019, Margin-based generalization lower bounds for boosted classifiers", "year": 2019, "arxiv": null, "relation": "uses-method", "note": "AdaBoost with identical weights gives margins Omega(gamma)", "quote": null},
+  {"work": "Montgomery-Smith 1990, The distribution of Rademacher sums", "year": 1990, "arxiv": null, "relation": "uses-method", "note": "anti-concentration of Rademacher sums used for concentrated queries", "quote": null},
+  {"work": "Natekin and Knoll 2013, Gradient boosting machines, a tutorial", "year": 2013, "arxiv": null, "relation": "related", "note": "highlights sequential nature as a drawback; best gradient boosting results after hundreds or thousands of iterations", "quote": null},
+  {"work": "Schapire 1990, The strength of weak learnability", "year": 1990, "arxiv": null, "relation": "related", "note": "answered Kearns-Valiant weak-to-strong question affirmatively", "quote": null},
+  {"work": "Chen and Guestrin 2016 (XGBoost); Ke et al. 2017 (LightGBM); Friedman 2001", "year": 2016, "arxiv": null, "relation": "related", "note": "modern gradient boosters share the sequential structure", "quote": null}
+ ],
+ "figures": [],
+ "code": [
+  {"where": "Algorithm 1 (Sec 3)", "snippet": "D_1 uniform; w = 1/2 ln((1/2+gamma/4)/(1/2-gamma/4)); n = a d gamma^-2; for k=1..K: draw T_k ~ D_k^n; h_k = h_{T_k}; while L_{D_k}(h_k) > 1/2 - gamma/4 redraw; D_{k+1}(i) = D_k(i) exp(-w c(x_i) h_k(x_i)) / Z_k; return g(x) = (1/K) sum_i h_i(x)", "verbatim": false}
+ ],
+ "problems": ["Math symbols and ligatures are partly garbled in the text cache; quotes were chosen to avoid ligatures.", "No ledger-independent problems; no embedded instructions found."]
+}

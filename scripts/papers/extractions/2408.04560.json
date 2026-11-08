@@ -1,0 +1,475 @@
+{
+ "schema": 1,
+ "key": "2408.04560",
+ "pdf": "ai-engineering/01-prompt-engineering/sources/ein-dor-2024-conversational-prompt-engineering.pdf",
+ "bib": {
+  "title": "Conversational Prompt Engineering",
+  "authors": [
+   "Liat Ein-Dor",
+   "Orith Toledo-Ronen",
+   "Artem Spector",
+   "Shai Gretz",
+   "Lena Dankin",
+   "Alon Halfon",
+   "Yoav Katz",
+   "Noam Slonim"
+  ],
+  "first_author": "Ein-Dor",
+  "year": 2024,
+  "venue": "preprint",
+  "arxiv": "2408.04560",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 34929,
+  "chars_total": 34929,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "system",
+ "question": "Can a chat model help users who have only unlabeled data and no seed prompt build a personalized prompt for a repetitive task?",
+ "hypothesis": "A brief chat that surfaces data-aware output preferences and uses feedback on outputs yields a prompt whose zero-shot form matches its few-shot form.",
+ "contributions": [
+  "CPE, a chat tool that builds a few-shot prompt from unlabeled user data and user feedback, with no labeled data or initial prompt",
+  "A three-party chat design (user, system, model) with context filtering, side-chats, CoT and API calls",
+  "A user study on summarization (12 sessions, 112 examples)"
+ ],
+ "method": {
+  "summary": "CPE is a web chat in which Llama-3-70B analyses three user-provided unlabeled examples, asks data-aware preference questions, drafts an instruction, shows target-model outputs for the three examples, and revises the instruction and outputs from user feedback. The final deliverable is a few-shot prompt whose examples are the user-approved outputs. A user study compared a generic baseline prompt, the CPE zero-shot prompt and the CPE few-shot prompt on summarization.",
+  "task": "interactive prompt creation; evaluated on summarization",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "Space class of 20 Newsgroups",
+    "role": "eval",
+    "size": "3 chat examples + up to 8 eval examples per dataset",
+    "split": "2 splits: training (3 examples used in chat), evaluation (up to 8)",
+    "source": "Lang 1995",
+    "preprocessing": null
+   },
+   {
+    "name": "TL;DR",
+    "role": "eval",
+    "size": "same",
+    "split": "same",
+    "source": "Volske et al. 2017",
+    "preprocessing": null
+   },
+   {
+    "name": "Debate speeches",
+    "role": "eval",
+    "size": "same",
+    "split": "same",
+    "source": "Orbach et al. 2020",
+    "preprocessing": null
+   },
+   {
+    "name": "Wikipedia movies articles (curated)",
+    "role": "eval",
+    "size": "same",
+    "split": "same",
+    "source": "curated by authors",
+    "preprocessing": null
+   },
+   {
+    "name": "Wikipedia animals articles (curated)",
+    "role": "eval",
+    "size": "same",
+    "split": "same",
+    "source": "curated by authors",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Llama-3-70B",
+    "role": "proposed",
+    "params": "70B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "drives the CPE chat; paper says 'Out implementation uses Llama-3-70B'; three examples used 'due to the limited context length'"
+    }
+   },
+   {
+    "name": "Llama-3-70B-instruct",
+    "role": "base",
+    "params": "70B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "used to generate the baseline prompt"
+    }
+   },
+   {
+    "name": "Target model (user selected)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "which target model produced the study summaries is not stated"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "inferred: one summary per prompt per test example; 3 summaries per example; 12 chat sessions, 112 test examples in total (up to 8 per session)",
+   "prompting": "Multiple system instructions injected dynamically through the chat; model replies only as Python API calls; CoT in side-chats (summarise user comments, then propose new instruction); filtered context per example; final prompt is few-shot with 3 user-approved outputs",
+   "retrieval": null,
+   "parameters": {
+    "input_examples_in_chat": "3 (minimum 3 user examples required)",
+    "api_calls": "submit_message_to_user, submit_prompt, switch_to_example, show_original_text, output_accepted, end_outputs_discussion, conversation_end"
+   },
+   "other": {
+    "system_instructions": "Remaining system instructions (Initialization, Outputs intro, Example switch, etc.) are in Appendix B"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Best/middle/worst rank frequency",
+     "definition": "per test example, participant picks best and worst of 3 blinded, randomly ordered summaries",
+     "unit": "fraction of examples",
+     "higher_is_better": true
+    },
+    {
+     "name": "Likert survey",
+     "definition": "agreement with 4 statements, 1 (strongly disagree) to 5 (strongly agree)",
+     "unit": "1-5",
+     "higher_is_better": true
+    },
+    {
+     "name": "Turns to convergence",
+     "definition": "chat turns until instruction and outputs approved",
+     "unit": "turns",
+     "higher_is_better": false
+    },
+    {
+     "name": "Instruction distance",
+     "definition": "distance between initial and final CPE instruction (distance type not stated)",
+     "unit": "characters",
+     "higher_is_better": null
+    }
+   ],
+   "baselines": [
+    "Generic one-sentence summarization prompt generated by Llama-3-70B-instruct"
+   ],
+   "protocol": "12 participants each ran one chat then ranked summaries on a held-out unlabeled test split; ZS vs FS best-rate compared with a one-sample T-test (Drummond and Tom 2011); no significance reported for baseline vs CPE; no inter-annotator measure, one rater per session"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": null
+  },
+  "prompts": [
+   {
+    "purpose": "Baseline generator",
+    "text": "Generate a concise and general prompt for a summarization task in one sentence.",
+    "where": "Appendix A"
+   },
+   {
+    "purpose": "Baseline prompt produced",
+    "text": "Summarize the main points and key information from the provided text in a concise and clear manner, preserving the original meaning and content.",
+    "where": "Appendix A"
+   },
+   {
+    "purpose": "Outputs CoT end",
+    "text": "Analyze the conversation above, and share the comments made by the user on Examples 1-3. Any comment should be shared, even if minor. If no comment has been made, accept the prompt. If any comment has been made, recommend how to improve the prompt so it would produce the accepted outputs directly.",
+    "where": "Appendix B"
+   },
+   {
+    "purpose": "User data analysis",
+    "text": "Before suggesting the prompt, briefly discuss the text examples with the user and ask them relevant questions regarding their output requirements and preferences. Please take into account the specific characteristics of the data. Your suggested prompt should reflect the user's expectations from the task output as expressed during the chat. Share the suggested prompt with the user before submitting it. Remember to communicate only via API calls.",
+    "where": "Appendix B"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "models",
+    "quote": "Out implementation uses Llama-3-70B.",
+    "where": "Section 4.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Participants ranked CPE ZS summaries best in 53% and CPE FS summaries best in 47% of instances, a difference not statistically significant.",
+   "kind": "measured",
+   "source": null,
+   "metric": "share ranked best, CPE ZS",
+   "value": "53",
+   "unit": "%",
+   "baseline_value": null,
+   "n": 112,
+   "setup": "12 sessions, 112 test examples, summarization on 5 datasets, one rater per session",
+   "quote": "their summaries were ranked as the best in 53% and 47% of instances, respec-",
+   "table": null,
+   "note": "The 47% FS figure is in the same sentence. Fig 3 gives baseline bars but no numbers in the text.",
+   "where": "Section 5 Results"
+  },
+  {
+   "claim": "Participants preferred summaries from CPE prompts over the baseline prompt.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": 112,
+   "setup": "same; shown only in Fig 3, no numbers or test in text",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Fig 3"
+  },
+  {
+   "claim": "Average convergence time to the CPE FS prompt was 25 minutes.",
+   "kind": "measured",
+   "source": null,
+   "metric": "convergence time",
+   "value": "25",
+   "unit": "minutes",
+   "baseline_value": null,
+   "n": 12,
+   "setup": "12 sessions",
+   "quote": "it took 25 minutes on aver-",
+   "table": null,
+   "note": null,
+   "where": "Section 5 Results"
+  },
+  {
+   "claim": "Chats needed 32 turns on average to converge (std 9.6).",
+   "kind": "measured",
+   "source": null,
+   "metric": "turns",
+   "value": "32",
+   "unit": "turns",
+   "baseline_value": null,
+   "n": 12,
+   "setup": "12 sessions",
+   "quote": "these chats re-",
+   "table": null,
+   "note": "quote given as in text: 'required 32(±9.6) turns'",
+   "where": "Analysis"
+  },
+  {
+   "claim": "Survey: satisfaction with the CPE instruction scored 4.6 of 5.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Likert",
+   "value": "4.6",
+   "unit": "1-5",
+   "baseline_value": null,
+   "n": 12,
+   "setup": "Likert agreement, 12 participants",
+   "quote": null,
+   "table": "Table 1, row Satisfaction from CPE instruction",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Survey: benefit from joint conversation 4.5, chat pleasantness 4.8, convergence time 3.8.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Likert",
+   "value": "3.8",
+   "unit": "1-5",
+   "baseline_value": null,
+   "n": 12,
+   "setup": "convergence time item is the lowest",
+   "quote": null,
+   "table": "Table 1, row Convergence time (also 4.5, 4.8)",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "In 4 of 12 chats the final instruction was the one made at initialization; the rest were refined over iterations.",
+   "kind": "measured",
+   "source": null,
+   "metric": "chats with unchanged instruction",
+   "value": "4/12",
+   "unit": "chats",
+   "baseline_value": null,
+   "n": 12,
+   "setup": "12 sessions",
+   "quote": "In 4/12 chats, the final instruction was the one cre-",
+   "table": null,
+   "note": null,
+   "where": "Analysis"
+  },
+  {
+   "claim": "For 7 of 12 chats the initial and final instructions differ by at least 50 characters; mean distance 96.3 (std 108.3).",
+   "kind": "measured",
+   "source": null,
+   "metric": "instruction distance",
+   "value": "96.3",
+   "unit": "characters",
+   "baseline_value": null,
+   "n": 12,
+   "setup": "distance type not defined",
+   "quote": "average distance of 96.3(±108.3) across all 12 chats",
+   "table": null,
+   "note": null,
+   "where": "Analysis"
+  }
+ ],
+ "limits": [
+  "Only 12 sessions and one summarization user study; authors say limited annotators prevented evaluating other tasks.",
+  "Participants were researchers well-versed in prompt engineering, not typical users.",
+  "No comparison against automatic prompt optimisers (APE, OPRO, ProTeGi); no labeled-metric evaluation, deliberately.",
+  "Baseline is a single generic prompt, not a hand-written expert prompt.",
+  "Convergence is slow (25 min, 32 turns); authors defer improving it.",
+  "Target model, decoding settings and temperature not stated; no code or data released.",
+  "ZS vs FS test is a one-sample T-test; ZS~FS claim rests on non-significance (absence of evidence).",
+  "Open question whether CPE prompts improve as seeds for automatic prompt engineering."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "CPE ZS prompt",
+   "definition": "The prompt that includes the final instruction proposed by CPE and approved by the user, excluding input-output examples.",
+   "where": "Section 3.1"
+  },
+  {
+   "term": "CPE FS prompt",
+   "definition": "Similar to the CPE ZS prompt, but includes input-output examples that have been approved by the user.",
+   "where": "Section 3.1"
+  },
+  {
+   "term": "Side-chat",
+   "definition": "A chat including only specific parts of the full chat, e.g. only the target model and the examined prompt, to mimic real usage.",
+   "where": "Section 4.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Large language models are human-level prompt engineers (APE)",
+   "year": 2022,
+   "arxiv": "2211.01910",
+   "relation": "related",
+   "note": "automatic PE needing labeled data",
+   "quote": null
+  },
+  {
+   "work": "Automatic prompt optimization with gradient descent and beam search",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "automatic PE needing labeled data and seed prompts (Pryzant et al.)",
+   "quote": null
+  },
+  {
+   "work": "Large language models as optimizers",
+   "year": 2023,
+   "arxiv": "2309.03409",
+   "relation": "related",
+   "note": "iterative LLM prompt generation",
+   "quote": null
+  },
+  {
+   "work": "Prompt engineering a prompt engineer",
+   "year": 2023,
+   "arxiv": "2311.05661",
+   "relation": "related",
+   "note": "meta-prompt; suggested as a follow-on from CPE prompts",
+   "quote": null
+  },
+  {
+   "work": "Promptbreeder",
+   "year": 2023,
+   "arxiv": "2309.16797",
+   "relation": "related",
+   "note": "prompt evolution",
+   "quote": null
+  },
+  {
+   "work": "EvalLM",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "related",
+   "note": "closest human-in-the-loop prompt refinement; CPE differs by chat interface and suggested criteria",
+   "quote": null
+  },
+  {
+   "work": "Chain-of-thought prompting",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "CoT in side-chats",
+   "quote": null
+  },
+  {
+   "work": "Llama-3-70B",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "CPE backbone",
+   "quote": null
+  },
+  {
+   "work": "20 Newsgroups / TL;DR / debate speeches",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Lang 1995; Volske 2017; Orbach 2020",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "CPE Workflow from the user's perspective. Each step can be a multi-turn conversation between the user and CPE.",
+   "page": 3,
+   "why": "six-stage flow with loop over stages 3-5"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Messages exchanged between the different actors in a chat with CPE...",
+   "page": 4,
+   "why": "shows user/system/model message flow and filtered context"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Evaluation results. The frequency of the three generated summaries across the three ranking categories: Best/Middle/Worst.",
+   "page": 6,
+   "why": "only place the baseline vs CPE ranking appears"
+  },
+  {
+   "figure": "Table 2",
+   "caption": "An example of how an instruction was refined throughout a chat with CPE.",
+   "page": 6,
+   "why": "concrete instruction growth across turns 6, 24, 34"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Participant count inconsistent: Section 5 says 12 participants, Appendix A says 11 researchers (12 chat sessions).",
+  "Fig 3 bar heights are not in the text, so baseline win-rates are unrecoverable from the extraction.",
+  "Distance metric for instructions unspecified."
+ ]
+}

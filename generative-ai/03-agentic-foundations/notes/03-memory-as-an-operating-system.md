@@ -312,7 +312,7 @@ This is agentic RAG: the agent decides whether to retrieve, what query to send a
 
 ## Memory types in other frameworks
 
-Lakshmanan and Hapke (P28 Long-Term Memory) and LangMem use a cognitive-science vocabulary. It maps onto MemGPT's stores like this:
+Lakshmanan and Hapke (*Generative AI Design Patterns*, ch. 8, Pattern 28) and LangMem use a cognitive-science vocabulary. It maps onto MemGPT's stores like this:
 
 | P28 type | Meaning | MemGPT/Letta | LangMem / Mem0 |
 |---|---|---|---|
@@ -321,7 +321,7 @@ Lakshmanan and Hapke (P28 Long-Term Memory) and LangMem use a cognitive-science 
 | Procedural | instructions, user profile, how to behave | persona block, system prompt | `create_prompt_optimizer` rewrites the prompt |
 | Semantic | facts extracted from conversations | human block, archival memory | `create_memory_manager` with schemas; Mem0 graph + vectors |
 
-The book's working-memory rule: trim to the token limit but keep the system prompt, and keep the trimmed list valid (never drop a tool call while keeping its result). Mem0's `memory.add(messages, user_id=...)` uses an LLM to extract facts, resolve contradictions with what is stored, and drop small talk and general knowledge; `memory.search(query, user_id=...)` returns ranked memories across types.
+The book's working-memory rule: trim to the token limit but keep the system prompt, and keep the trimmed list valid (never drop a tool call while keeping its result). Mem0's `memory.add(messages, user_id=...)` uses an LLM to extract facts, resolve contradictions with what is stored, and drop small talk and general knowledge; `memory.search(query, user_id=...)` returns ranked memories across types. The book's Mem0 example configures ChromaDB as the vector store, gpt-4o-mini at temperature 0.1 for extraction and text-embedding-3-small (1,536 dimensions) for embeddings, and recommends writing memories in a background thread and running Mem0 as a microservice. Its design advice, to prefer semantic over episodic memory because retrieving raw messages adds latency and cache-miss errors are hard to debug, is covered in [context engineering 06](../../../ai-engineering/02-context-engineering/notes/06-memory.md#memory-types) (*Generative AI Design Patterns*, ch. 8, Pattern 28).
 
 "Trimmed to fit" covers four strategies. LangChain's legacy memory classes, as Phoenix and Taylor present them, give each one a name (*Prompt Engineering for Generative AI*, ch. 6):
 

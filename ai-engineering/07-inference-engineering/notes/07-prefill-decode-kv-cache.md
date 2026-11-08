@@ -4,8 +4,10 @@ sources:
   - "Fregly, AI Systems Performance Engineering (O'Reilly, 2025), ch. 17–18, 19"
   - "Huyen, AI Engineering (O'Reilly, 2025), ch. 9"
   - "Iusztin & Labonne, LLM Engineer's Handbook (Packt, 2024), ch. 8"
+  - "Lakshmanan & Hapke, Generative AI Design Patterns (O'Reilly, 2025), ch. 8"
   - https://arxiv.org/abs/2401.09670
   - https://arxiv.org/abs/2309.06180
+  - https://arxiv.org/abs/2411.17116
   - https://arxiv.org/abs/2308.16369
   - https://arxiv.org/abs/2311.18677
   - https://arxiv.org/abs/2407.00079
@@ -66,6 +68,8 @@ R1 keeps decoding every step while R2, R3 and R4 prefill in two or three chunks 
 Chunked prefill is on by default in vLLM V1, and it is what the TGI `MAX_BATCH_PREFILL_TOKENS` knob approximates ([06](06-serving-at-scale.md#monolith-or-microservice)). It is the right first answer to interference on a single pool.
 
 **POD-Attention** goes one level lower: a single attention kernel whose thread blocks decide at runtime, per SM, whether to do prefill or decode work, so compute-bound and bandwidth-bound work share each SM. Fregly quotes "up to about 29%" (*AISPE*, ch. 18). The paper reports up to 59% faster attention, with a mean around 28%. The book appears to have reported the mean as the peak.
+
+**Star Attention** attacks the other end of prefill: a context of 128K to 1M tokens that no single GPU holds. Phase 1 splits the context into blocks across hosts and each host attends only to its own block plus the first block as an *anchor* (same position ids), with no cross-host communication; Phase 2 broadcasts the short query and each host attends over its local KV, merged with an online softmax that sends one vector and one scalar per token. It needs no fine-tuning. On RULER with Llama-3.1-8B-Instruct (block about 1/4 of the length, A100s, compared with Ring Attention, which is exact) it is 1.1× faster at 16K and 2.7× at 128K, with 128K accuracy 74.41 against 76.31 for full attention; 20 s against 53 s per sample at 128K on 8 GPUs. With Llama-3-8B-Instruct-1048K at 1M tokens it reaches 16.9× for a 5.32% accuracy drop. The anchor's content is what matters, not its position: without it RULER-NIAH at 64K falls from 99.50 to 60.11. Below about 32K there is no gain, multi-hop tracing degrades because blocks cannot see each other, and the speedups are measured only against Ring Attention, on a long context followed by a short query ([arXiv:2411.17116](https://arxiv.org/abs/2411.17116) (Acharya et al., ICML 2025)).
 
 ---
 
@@ -207,6 +211,8 @@ The same mechanism, sold as a feature. From Huyen (*AI Engineering*, ch. 9), wit
 | Chat with a book (100k-token cached prompt) | 11.5 s → 2.4 s (−79%) | −90% |
 | Many-shot prompting (10k-token prompt) | 1.6 s → 1.1 s (−31%) | −86% |
 | Multi-turn conversation (long system prompt) | ~10 s → ~2.5 s (−75%) | −53% |
+
+Lakshmanan and Hapke give the application-side view (*Generative AI Design Patterns*, ch. 8, Pattern 25). Server-side prefix caching generally needs a prompt over 1,024 tokens, mainly cuts TTFT rather than total latency, and has a default lifetime they put at 5 minutes. Their quoted vendor figures are uncited and set up unstated: Anthropic "up to 90% cost reduction and 85% latency improvement for long prompts" (Huyen's 75% latency above differs), OpenAI up to 80% latency and 50% cost. Client-side caches sit in front of the model instead: an exact-match cache keyed on a hash of the prompt, a canonical key after normalizing the query, a multi-key cache where an LLM writes about 10 rephrasings, or an embedding-similarity cache (GPTCache) that needs a tuned similarity threshold and loses nuance on near-hits. Two risks apply to both: **cross-tenant leakage** (put the user or tenant ID in the cache key or the cached prefix) and **stale entries** (flush on a model-version change). A cache hit skips the model call, so it needs no GPU at all; a prefix hit still pays for decode.
 
 The trend holds in 2026; the prices don't. Check current pricing and minimum cacheable lengths before using these numbers.
 

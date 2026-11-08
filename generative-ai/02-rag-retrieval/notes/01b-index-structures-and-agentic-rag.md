@@ -12,6 +12,7 @@ sources:
   - Raieli & Iuculano, *Building AI Agents with LLMs, RAG, and Knowledge Graphs* (Packt, 2025), ch. 6
   - Oshin & Campos, *Learning LangChain* (O'Reilly, 2025), ch. 2
   - Rothman, *Context Engineering for Multi-Agent Systems* (Packt, 2025), ch. 3
+  - Lakshmanan & Hapke, *Generative AI Design Patterns* (O'Reilly, 2025), ch. 4
 cleaned: 2026-11-07
 ---
 
@@ -74,6 +75,8 @@ IRCoT uses each chain-of-thought sentence as the next BM25 query. With GPT-3 (co
 ### Agentic vs. single-pass: Li Experiment 3-9
 
 Li runs the two side by side on legal Q&A. A simple question ("rules on self-defense") gives the same quality either way, and the single pass is faster. A compound question (sentencing for negligent serious injury while intoxicated, with a prior theft conviction) separates them. Single-pass retrieval with the wrong first keywords misses the link. The agent searches the three sub-questions in parallel, sees that what joins them is missing (how an unrelated prior conviction affects sentencing), and runs a second, targeted round on recidivism. Use agentic RAG when questions decompose; keep the single pass for narrow ones. Lab: upstream [3-9 agentic-rag](https://github.com/bojieli/ai-agent-book/tree/main/chapter3/agentic-rag).
+
+Lakshmanan and Hapke call the loop *Deep Search*: retrieve, think, generate, repeat until the answer is good enough or the budget runs out, with tools beyond the index (web search, APIs) and state carried between rounds. *Deep research* is the same loop when the output accumulates into a long report rather than one concise answer. Their demo recurses `deep_search(query, depth)` over Wikipedia with LLM page ranking and gap-finding follow-up queries, run at depth 1. They report no latency figure, only that "the overall system is very slow", and suggest parallel sub-queries and early stopping (*Generative AI Design Patterns*, ch. 4, Pattern 12).
 
 When it pays, and the checks to run before shipping it, are in [08 § when agentic RAG pays](08b-routing-sub-agents-and-evaluation.md#when-agentic-rag-pays).
 

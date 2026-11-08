@@ -1,6 +1,7 @@
 ---
 origin: synthesis
 sources:
+  - https://arxiv.org/abs/2306.13651
   - https://www.aibuilderclub.com/blog/how-to-evaluate-ai-agents
   - https://arxiv.org/abs/2307.09009
   - https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents
@@ -172,6 +173,8 @@ window 7: false alarms before the change 0, first true alert day 35, days alerti
 The thumbs-down sample is good at finding failures and useless for estimating a rate, which is why the random sample stays separate. On the alerts, the daily rate at a strict margin fires on only 7 of the 30 bad days, and the rolling window holds the alert on 25 of them.
 
 ---
+
+When no labels exist, the drift signal can be a behaviour probe instead of a score. [arXiv:2306.13651](https://arxiv.org/abs/2306.13651) (Jain et al., 2023, preprint) scores a model by how much its output changes when the input is transformed, e.g. perplexity before and after inserting "not" into a Wikipedia sentence. On 1,000 sentences per metric across about 25 open and API models (up to 7B open), the negation score tracked TriviaQA accuracy and the long-range-sensitivity score tracked LAMBADA accuracy in scatter plots, at under 30 minutes per model for most tests. **No correlation coefficients are reported, validation is on Wikipedia only, and the paper proposes monitoring live streams but runs no deployment experiment.** Treat it as a cheap tripwire to compare against a fixed corpus, not as a substitute for the labelled sample above.
 
 ## Online experiments
 

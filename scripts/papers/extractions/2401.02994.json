@@ -1,0 +1,290 @@
+{
+ "schema": 1,
+ "key": "2401.02994",
+ "pdf": "generative-ai/07-agentic-applications/sources/lu-2024-blending-all-you-need.pdf",
+ "bib": {
+  "title": "Blending Is All You Need: Cheaper, Better Alternative to Trillion-Parameters LLM",
+  "authors": ["Xiaoding Lu", "Zongyi Liu", "Adian Liusie", "Vyas Raina", "Vineet Mudupalli", "Yuwen Zhang", "William Beauchamp"],
+  "first_author": "Lu",
+  "year": 2024,
+  "venue": "preprint",
+  "arxiv": "2401.02994",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 33866,
+  "chars_total": 33866,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can a group of moderately sized chat LLMs, combined by randomly choosing which one writes each reply, match or beat a single much larger chat LLM on user retention and engagement?",
+ "hypothesis": "A blend of small chat AIs gives more engaging and diverse conversations than any component, and can match or beat a 175B+ model at the inference cost of one small model.",
+ "contributions": [
+  "Blended: per-turn uniform random selection of the responding chat AI from a set, so later turns condition on earlier turns written by other models",
+  "Large-scale A/B tests on the Chai platform comparing Blended (three 6-13B models) to GPT-3.5 (175B) and to its components",
+  "Retention and engagement summary statistics from log-log fits (delta-zeta, delta-beta, delta-alpha, delta-gamma)"
+ ],
+ "method": {
+  "summary": "Three fine-tuned open chat models (Pygmalion 6B, Chai Model 6B, Vicuna 13B) and OpenAI Davinci (GPT-3.5, 175B) were each served to separate groups of new Chai users in A/B tests over 30 days. Blended picks one of the three components uniformly at random for every response in a conversation. Retention and engagement are reported relative to Pygmalion 6B as control.",
+  "task": "open-domain entertainment chat, evaluated by user retention and engagement in live A/B tests",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "Chai Research platform live users",
+    "role": "eval",
+    "size": "at least 10000 users in each group (text); 5,000 unique new users per model (Fig 1 caption)",
+    "split": "independent randomly selected groups of new users, each served one chat AI",
+    "source": "Chai Research platform",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Pygmalion 6B",
+    "role": "base",
+    "params": "6B",
+    "architecture": null,
+    "init_from": "PygmalionAI/pygmalion-6b, further finetuned on conversational data with rejection sampling from a trained reward model",
+    "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null,
+    "other": {"role_in_test": "control (baseline) for all ratios"}
+   },
+   {
+    "name": "Chai Model 6B (ChaiLLM)",
+    "role": "base",
+    "params": "6B",
+    "architecture": null,
+    "init_from": "ChaiML/edit_sft_pyg_v2e_cp_17515, further finetuned on conversational data with rejection sampling from a reward model",
+    "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null,
+    "other": {}
+   },
+   {
+    "name": "Vicuna 13B (Vicuna+)",
+    "role": "base",
+    "params": "13B",
+    "architecture": null,
+    "init_from": "lmsys/vicuna-13b-v1.3, further finetuned on conversational data with rejection sampling from a reward model",
+    "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null,
+    "other": {}
+   },
+   {
+    "name": "Blended (13,6,6B)",
+    "role": "proposed",
+    "params": "25B total (Pygmalion + Chai Model + Vicuna)",
+    "architecture": "ensemble; one component chosen uniformly at random per response",
+    "init_from": null,
+    "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null,
+    "other": {"inference_cost": "each response from a single component, so cost equals one 6B/13B system"}
+   },
+   {
+    "name": "OpenAI Davinci (GPT-3.5)",
+    "role": "baseline",
+    "params": "175B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null,
+    "other": {"access": "closed API"}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "inferred: each component samples its reply; components use rejection sampling from a reward model (Irvine et al., 2023); no further detail",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "one A/B deployment per model; Blended draws theta_n uniformly (1/N, N=3) at every turn; no repeats or seeds stated",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {"selection_distribution": "uniform, P(theta_n)=1/N", "components_N": 3},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "k-day user retention R(k) and test-to-control ratio q_n(k)",
+     "definition": "R(k)=S_n(k)/|G_n|, fraction of the cohort active on day k; q_n(k)=R_n(k)/R_c(k)",
+     "unit": "ratio; Fig 1 shows % improvement over control",
+     "higher_is_better": true
+    },
+    {
+     "name": "user engagement E_n(t) and ratio r_n(t)",
+     "definition": "fraction of cohort interacting in window t-delta to t+delta; proxy for average time spent per visiting user; r_n(t)=E_n(t)/E_c(t)",
+     "unit": "ratio; Fig 1 shows % improvement over control",
+     "higher_is_better": true
+    },
+    {
+     "name": "delta-zeta, delta-beta (retention) and delta-alpha, delta-gamma (engagement)",
+     "definition": "intercept and slope of log-log best-fit lines of test-to-control ratio against day, with R*(k)=R(1)k^-beta and E*(t)=alpha t^gamma",
+     "unit": "unitless",
+     "higher_is_better": true
+    },
+    {
+     "name": "Inference cost (FLOP)",
+     "definition": "total floating point operations at test time divided by control (Pygmalion)",
+     "unit": "x control",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": ["Pygmalion 6B (control)", "Chai Model 6B", "Vicuna 13B", "GPT-3.5 175B"],
+   "protocol": "independent A/B groups of real new users over 30 days; compared only through ratios to the control to cancel platform popularity and holiday effects; no significance test, confidence intervals or repeats reported"
+  },
+  "availability": {
+   "code": null,
+   "weights": "all trained models at https://huggingface.co/ChaiML",
+   "data": null
+  },
+  "prompts": [],
+  "evidence": [
+   {"field": "datasets.size", "quote": "Each model is assigned to 5,000 unique new users, graphs report the day 30 retention and engagement improvement with respect to the baseline.", "where": "Fig 1 caption"},
+   {"field": "datasets.size", "quote": "We conduct a large-scale evaluation with at least 10000 users in each group, and we monitor the user engagement on the platform over a 30-day period.", "where": "Sec 5.1"}
+  ]
+ },
+ "results": [
+  {
+   "claim": "A Blended ensemble of three 6-13B models out-competes 175B+ GPT-3.5 on user retention and engagement in live A/B tests.",
+   "kind": "measured",
+   "source": null,
+   "metric": "retention and engagement vs Pygmalion 6B control",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Chai platform, new users, A/B, Blended (Pygmalion 6B, Chai 6B, Vicuna 13B) vs GPT-3.5; exact bars only in Fig 1 (not extractable from text)",
+   "quote": "our results show that a Blended ensemble with three 6-13B parameter LLMs, out-competes OpenAI’s 175B+ parameter ChatGPT.",
+   "table": null,
+   "note": "Text does not give the Fig 1/2/3 bar values; Fig 1 axis runs 0 to about 120 % improvement over control.",
+   "where": "Sec 1"
+  },
+  {
+   "claim": "Blended has the highest initial engagement ratio, delta-alpha 1.7, against GPT-3.5 0.5.",
+   "kind": "measured",
+   "source": null,
+   "metric": "delta-alpha (engagement intercept vs Pygmalion control)",
+   "value": "1.7",
+   "unit": "unitless",
+   "baseline_value": "0.5 (GPT-3.5)",
+   "n": null,
+   "setup": "Chai A/B, 30 days, control Pygmalion 6B",
+   "quote": null,
+   "table": "Table 1, row Blended, column delta-alpha; row GPT3.5 0.5",
+   "note": "Column order in the extracted text is chai, delta-zeta, delta-beta, delta-gamma, delta-alpha, FLOP.",
+   "where": "Table 1"
+  },
+  {
+   "claim": "Blended has the best engagement decay rate, delta-gamma 2.1, against GPT-3.5 1.4.",
+   "kind": "measured",
+   "source": null,
+   "metric": "delta-gamma",
+   "value": "2.1",
+   "unit": "unitless",
+   "baseline_value": "1.4 (GPT-3.5)",
+   "n": null,
+   "setup": "Chai A/B, 30 days, control Pygmalion 6B",
+   "quote": null,
+   "table": "Table 1, row Blended, column delta-gamma; row GPT3.5 1.4",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Blended retention: delta-zeta 0.2 and delta-beta 0.5; GPT-3.5 delta-zeta 0.0 and delta-beta 0.3; Vicuna delta-zeta -0.4 and delta-beta 0.9; Chai 0.1 and 0.0.",
+   "kind": "measured",
+   "source": null,
+   "metric": "delta-zeta (initial retention ratio), delta-beta (retention decay)",
+   "value": "0.2",
+   "unit": "unitless",
+   "baseline_value": "0.0 (GPT-3.5)",
+   "n": null,
+   "setup": "Chai A/B, 30 days, control Pygmalion 6B; delta-zeta shown for Blended",
+   "quote": "Vicuna has a significantly lower initial retention ratio",
+   "table": "Table 1, row Blended, columns delta-zeta 0.2 and delta-beta 0.5; row Vicuna -0.4 and 0.9; row GPT3.5 0.0 and 0.3",
+   "note": null,
+   "where": "Table 1, Sec 5.2"
+  },
+  {
+   "claim": "Blended has 25B total parameters against 175B for GPT-3.5.",
+   "kind": "measured",
+   "source": null,
+   "metric": "total parameters",
+   "value": "25B",
+   "unit": "parameters",
+   "baseline_value": "175B",
+   "n": null,
+   "setup": "13B + 6B + 6B components",
+   "quote": "We highlight that Blended has a total of 25B parameters compared to OpenAIs 175B parame-",
+   "table": null,
+   "note": "Line break in source; 175B continues 'parameters'.",
+   "where": "Sec 5.2"
+  },
+  {
+   "claim": "Inference cost of Blended is 1.4x the Pygmalion control, against 29.2x for GPT-3.5 and 2.2x for Vicuna.",
+   "kind": "measured",
+   "source": null,
+   "metric": "total FLOPs at test time / control",
+   "value": "1.4",
+   "unit": "x control",
+   "baseline_value": "29.2 (GPT-3.5)",
+   "n": null,
+   "setup": "Table 1 FLOP column, control Pygmalion 6B = 1.0",
+   "quote": null,
+   "table": "Table 1, row Blended, column FLOP 1.4; row GPT3.5 29.2; row Vicuna 2.2",
+   "note": "Text claims Blended cost is 'equivalent to that of a single 6B/13B system'; the table value 1.4 sits between the 6B (1.0) and 13B (2.2) models, consistent with a random mix.",
+   "where": "Table 1, Sec 5.2"
+  },
+  {
+   "claim": "Retention-gap estimate: Vicuna would need about a year to reach Blended's retention score.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "extrapolation from fitted log-log lines; no method shown",
+   "quote": "This period of time is estimated to be around one year.",
+   "table": null,
+   "note": null,
+   "where": "footnote 6"
+  }
+ ],
+ "limits": [
+  "No confidence intervals, significance tests, repeats or seeds; each model is one deployment.",
+  "Group size is inconsistent: 'at least 10000 users in each group' in Sec 5.1 but 5,000 unique new users per model in the Fig 1 caption.",
+  "Day is inconsistent: Fig 1 caption says day 30; Sec 5.2 says the k=20 ratio.",
+  "Headline comparison appears only in Figs 1-3; bar values are not in the text, so only Table 1 fit parameters are citable numbers.",
+  "Table 1 has delta-zeta 0.0 for GPT-3.5 and no raw retention percentages are given; ratios are relative to Pygmalion 6B, and absolute retention or time spent are never reported.",
+  "Single platform (Chai, entertainment character chat) with its own audience; components were tuned on that platform's data and reward model, so the comparison with off-the-shelf GPT-3.5 is not like for like (no stated prompt or finetune for GPT-3.5).",
+  "GPT-3.5 is called 'Davinci (ChatGPT)'; model version, prompt and decoding for it are not given.",
+  "Cost shown as FLOPs only; no latency, memory, dollar cost, or serving setup is reported. Blending requires hosting all three models.",
+  "No ablation over number of components, selection distribution, or component pairs; uniform selection and larger selection sets are left as future work (Sec 6).",
+  "Mechanism ('best of all' characteristics through conditioning on history) is asserted, not tested."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "Blended", "definition": "randomly (and uniformly) selects the chat AI that generates the current response each turn", "where": "Sec 3.3"},
+  {"term": "test to control retention ratio", "definition": "q_n(k)=R_n(k)/R_c(k)", "where": "Sec 4.1"}
+ ],
+ "lineage": [
+  {"work": "Rewarding chatbots for real-world engagement with millions of users (Irvine et al.)", "year": 2023, "arxiv": null, "relation": "uses-method", "note": "reward-model rejection sampling pipeline used by the base models", "quote": null},
+  {"work": "LLM-Blender (Jiang et al.)", "year": 2023, "arxiv": null, "relation": "related", "note": "ensembling black-box LLM outputs by PairRanker plus GenFuser; Blended needs no per-turn ranking", "quote": null},
+  {"work": "Training language models to follow instructions with human feedback (InstructGPT)", "year": 2022, "arxiv": "2203.02155", "relation": "related", "note": "three-stage pipeline inspiration", "quote": null},
+  {"work": "Towards a human-like open-domain chatbot (Meena)", "year": 2020, "arxiv": "2001.09977", "relation": "related", "note": "cited as an example of scaling-up chat models", "quote": null},
+  {"work": "Pygmalion 6B; Vicuna 13B v1.3; OpenAI Davinci GPT-3.5", "year": 2023, "arxiv": null, "relation": "evaluates", "note": "models in the A/B test", "quote": null},
+  {"work": "Minimum Bayes Risk decoding (Kumar and Byrne)", "year": 2004, "arxiv": null, "relation": "related", "note": "output-only ensembling alternative", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 1", "caption": "Model performance comparisons, setting the baseline as Pygmalion 6B. Each model is assigned to 5,000 unique new users, graphs report the day 30 retention and engagement improvement with respect to the baseline.", "page": 3, "why": "Holds the headline Blended vs GPT-3.5 bars"},
+  {"figure": "Fig 2 / Fig 3", "caption": "User Engagement / User Retention (improvement over baseline vs relative inference speed 1/FLOPs)", "page": 4, "why": "Shows quality against cost: Blended near small-model speed with GPT-3.5-level or better gains"},
+  {"figure": "Table 1", "caption": "Test to Control Retention and Engagement summary statistics and inference time (total Floating Point Operations / control)", "page": 4, "why": "Only place with numbers for all models"}
+ ],
+ "code": [
+  {"where": "Algorithm 1", "snippet": "k <- 1; while true: u_k <- user's current input turn; sample theta_n ~ P_Theta; generate r_k ~ P(r | u_1:k, r_1:k-1; theta_n); k <- k+1", "verbatim": false}
+ ],
+ "problems": [
+  "Fig 1-3 values are not in the text layer; no figure data extracted.",
+  "Text refers to 'Figures 2 and 2' (typo) and 'Figure 1a' that does not exist.",
+  "Table 1 text order is column-wise; row assignment inferred from the caption and prose (Blended best delta-alpha and delta-gamma; Vicuna better delta-beta).",
+  "No embedded instructions found."
+ ]
+}

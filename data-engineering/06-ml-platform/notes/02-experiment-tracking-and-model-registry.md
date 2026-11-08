@@ -8,6 +8,7 @@ sources:
   - https://doi.org/10.1109/ICSE-SEIP.2019.00042
   - https://arxiv.org/abs/2209.09125
   - https://arxiv.org/abs/2011.09926
+  - https://arxiv.org/abs/2301.11316
   - "Iusztin & Labonne, LLM Engineer's Handbook (Packt, 2024), ch. 2"
 confidence: high
 cleaned: 2026-11-02
@@ -16,7 +17,7 @@ cleaned: 2026-11-02
 
 Six months after a model ships, someone asks why it predicted what it did, and the honest answer is that nobody knows which data it was trained on, which parameters it used, or which of a dozen files in a bucket is the one in production. Wilson tells this story about a model of his own in [*Machine Learning Engineering in Action* (Manning, 2022)](https://www.manning.com/books/machine-learning-engineering-in-action): an unsaved artifact he could not explain three months later. Two tools prevent it. An experiment tracker records every training run as it happens. A model registry names the few runs that matter and says which one is in use. Neither trains a better model. They make it possible to answer questions about the model you have, and to go back to the one you had.
 
-The evidence that this is an engineering need, rather than tidiness, comes from the studies of working teams. [Microsoft's study by Amershi and colleagues (ICSE-SEIP 2019)](https://doi.org/10.1109/ICSE-SEIP.2019.00042), which interviewed 14 people and surveyed 551, reports teams tagging each model with its data and model version, and each dataset with its origin and code version, and it names data as harder to version than code. [Shankar and colleagues' interviews (2022)](https://arxiv.org/abs/2209.09125) put versioning next to velocity and validation as the three things that decide whether an ML effort works in production.
+The evidence that this is an engineering need, rather than tidiness, comes from the studies of working teams. [Microsoft's study by Amershi and colleagues (ICSE-SEIP 2019)](https://doi.org/10.1109/ICSE-SEIP.2019.00042), which interviewed 14 people and surveyed 551, reports teams tagging each model with its data and model version, and each dataset with its origin and code version, and it names data as harder to version than code. [Shankar and colleagues' interviews (2022)](https://arxiv.org/abs/2209.09125) put versioning next to velocity and validation as the three things that decide whether an ML effort works in production. Raissi frames the same loop as the expensive part of the workflow: the iteration step, in which experiment tracking, dataset versioning and model management all sit, is "usually the most time and resource consuming step while often being overlooked" ([arXiv:2301.11316](https://arxiv.org/abs/2301.11316) (Raissi, 2023-01, preprint)). That is an assertion in a position paper with no measurement behind it, and its cost figures (32,400 to 43,200 GPU-hours for neural architecture search on image classification) are quoted from Pham et al. and Liu et al. (2018), not measured by Raissi.
 
 ## Tracking with MLflow
 

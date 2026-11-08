@@ -1,0 +1,454 @@
+{
+ "schema": 1,
+ "key": "2306.13651",
+ "pdf": "generative-ai/08-eval/sources/jain-2023-bring-your-own-data-self.pdf",
+ "bib": {
+  "title": "Bring Your Own Data! Self-Supervised Evaluation of Large Language Models",
+  "authors": [
+   "Neel Jain",
+   "Khalid Saifullah",
+   "Yuxin Wen",
+   "John Kirchenbauer",
+   "Manli Shu",
+   "Aniruddha Saha",
+   "Micah Goldblum",
+   "Jonas Geiping",
+   "Tom Goldstein"
+  ],
+  "first_author": "Jain",
+  "year": 2023,
+  "venue": "preprint (under review)",
+  "arxiv": "2306.13651",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 71608,
+  "chars_total": 71608,
+  "engine": "pymupdf",
+  "skipped": "References skimmed only"
+ },
+ "type": "empirical",
+ "question": "Can LLM behaviour be evaluated without labels or curated benchmarks by measuring invariance or sensitivity of outputs to simple text transformations on any corpus, including live production data?",
+ "hypothesis": "Self-supervised sensitivity scores track existing human-labelled benchmarks (TriviaQA, LAMBADA, Perspective API) closely enough to complement them.",
+ "contributions": [
+  "A framework for self-supervised evaluation: SCORE = A{M(f(x), f(x')) for (x,x') in X}",
+  "Five case-study metrics: knowledge via negations, toxicity (F-bomb), long-range context (LRS), word order (word salad), tokenization (broken token)",
+  "Empirical comparison against TriviaQA, LAMBADA and Perspective API across model families and instruction-tuning variants"
+ ],
+ "method": {
+  "summary": "Build pairs (original, transformed) from a corpus (Wikipedia sentences), run both through a model, compare perplexity, next-token distributions (Jensen-Shannon divergence) or generated text, and aggregate into a sensitivity score. Five transformations are validated against existing benchmarks on about 15-25 open and API models. No training.",
+  "task": "label-free LLM evaluation by invariance/sensitivity to input transformations",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "Wikipedia (topic sentences / sentences)",
+    "role": "eval",
+    "size": "1000 examples (negation, LRS, tokenization); 5000 examples (word order); toxicity count not stated",
+    "split": null,
+    "source": "Wikipedia; benign corpus for normalization: bookcorpus",
+    "preprocessing": "nltk for sentence/word parsing; negation inserts 'not' after first is/was/were if no negation present; F-bomb appends trigger words; LRS replaces first two of three sentences with random corpus sentences; word order swaps two random words; tokenization chops every 5th character and tokenizes pieces independently"
+   },
+   {
+    "name": "TriviaQA unfiltered-web-dev",
+    "role": "eval",
+    "size": null,
+    "split": "unfiltered-web-dev",
+    "source": "Joshi et al. 2017",
+    "preprocessing": "correct if any gold answer is a substring of output; answers that appear in the question excluded"
+   },
+   {
+    "name": "LAMBADA (OpenAI)",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "via EleutherAI LM Evaluation Harness",
+    "preprocessing": null
+   },
+   {
+    "name": "Perspective API toxicity",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Perspective API, toxic if score >= 0.5",
+    "preprocessing": null
+   },
+   {
+    "name": "LDNOOBW bad-word list",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "github LDNOOBW",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Open models: GPT-2 (small/medium/large/XL), GPT-Neo 125M/1.3B/2.7B, GPT-J 6B, Pythia 70M-6.9B, OPT 1.3B/2.7B/6.7B, MPT-7B and -instruct, LLaMA-7B, Vicuna-7B, WizardLM-7B, Dolly v1-6B, Dolly v2 3B/7B",
+    "role": "evaluated",
+    "params": "70M to 7B",
+    "architecture": "decoder-only transformers",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "API models: OpenAI ada, babbage, curie, davinci, text-ada-001, text-babbage-001, text-curie-001, text-davinci-003; Cohere xlarge, command-xlarge-beta",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "1000 pairs per metric (5000 for word order); single pass, no seeds stated",
+   "prompting": "TriviaQA template 'Question: [input question]\\nAnswer:'; other metrics feed raw text",
+   "retrieval": null,
+   "parameters": {
+    "negation rule": "insert 'not' after first is/was/were unless negation present",
+    "toxicity trigger": "append 'F** F**' style trigger words; ablation 1-7 repeats",
+    "LRS": "replace first 2 of 3 sentences; ablation 0-6 swapped",
+    "word order": "swap 2 random words (ablation up to 10 swaps)",
+    "tokenization split stride": "5 characters (ablation 2.5-20)",
+    "precision": "models >6B run in FP16"
+   },
+   "other": {
+    "hardware": "NVIDIA RTX A4000 GPUs, under 30 min per model for most tests",
+    "generation settings for toxicity text score": "not stated"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Negation sensitivity score",
+     "definition": "mean over n of log ppl(x') - log ppl(x); normalized version subtracts mean |log ppl(y')-log ppl(y)| on benign corpus",
+     "unit": "log-perplexity",
+     "higher_is_better": true
+    },
+    {
+     "name": "Percent PPL drops",
+     "definition": "fraction of inputs where perplexity decreases after negation",
+     "unit": "fraction",
+     "higher_is_better": false
+    },
+    {
+     "name": "Toxicity (text)",
+     "definition": "fraction of generations containing LDNOOBW word minus fraction of prompts containing one",
+     "unit": "fraction",
+     "higher_is_better": false
+    },
+    {
+     "name": "Toxicity (softmax)",
+     "definition": "change in average probability of profane word between x' and x",
+     "unit": "probability",
+     "higher_is_better": false
+    },
+    {
+     "name": "LRS score",
+     "definition": "mean over samples and last-sentence positions of JSD(f(x_j)||f(x'_j))",
+     "unit": "JSD",
+     "higher_is_better": true
+    },
+    {
+     "name": "Word order score",
+     "definition": "median JSD of next-token distribution, original vs word-swapped",
+     "unit": "JSD",
+     "higher_is_better": true
+    },
+    {
+     "name": "Tokenization sensitivity score",
+     "definition": "mean JSD of next-token distribution, original vs broken tokenization",
+     "unit": "JSD",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "TriviaQA accuracy",
+    "LAMBADA (OpenAI)",
+    "Perspective API toxicity (>=0.5)",
+    "LRS score (as reference for word order)"
+   ],
+   "protocol": "Compare score against benchmark across models visually via scatter plots; no correlation coefficient is reported. Standard errors given: <0.002 (negation, 1000), 2e-3 (LRS), 2e-3 (word order mean), ~5e-3 (tokenization). Human check of 100 negated samples."
+  },
+  "availability": {
+   "code": "https://github.com/neelsjain/BYOD",
+   "weights": null,
+   "data": null
+  },
+  "prompts": [
+   {
+    "purpose": "TriviaQA accuracy",
+    "text": "Question: [input question]\\nAnswer:",
+    "where": "Appendix A.1"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Negation sensitivity score tracks TriviaQA accuracy closely (square-root-like), and normalizing for the benign-corpus effect of 'not' improves the fit; no correlation coefficient is reported.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "none",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Wikipedia topic sentences, 1000 examples, ~25 open and API models vs TriviaQA unfiltered-web-dev accuracy",
+   "quote": "In summary, we find that we can predict benchmark performance exceedingly well with a simple",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2, Fig 3"
+  },
+  {
+   "claim": "Percent of inputs where perplexity drops after negation correlates negatively with TriviaQA accuracy.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "none",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Same setup as Fig 3",
+   "quote": "We observe a reliable",
+   "table": null,
+   "note": null,
+   "where": "Fig 4 caption"
+  },
+  {
+   "claim": "Cohere command rarely changes its answer under negation while text-ada-001 nearly always flips it; TriviaQA does not expose this.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "none",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Negation applied to TriviaQA questions; qualitative examples in Table 1",
+   "quote": "Cohere command model rarely changed its answer when a negation was introduced",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2"
+  },
+  {
+   "claim": "Toxicity metric from LDNOOBW words correlates closely with Perspective API toxicity fractions; no model-size relation.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "none",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Wikipedia sentences with appended F-bomb trigger, models of several families; toxic = Perspective >= 0.5",
+   "quote": "The figures clearly demonstrate a close correlation between our metric, which measures the",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.2, Fig 7"
+  },
+  {
+   "claim": "LRS score rises with LAMBADA accuracy; bigger models are more sensitive to context changes.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "none",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "1000 Wikipedia examples, standard error 2e-3, vs LAMBADA (OpenAI)",
+   "quote": "we see that as our LRS Score increases, the model performs better on LAM-",
+   "table": null,
+   "note": null,
+   "where": "Sec 6.2, Fig 8"
+  },
+  {
+   "claim": "Instruction finetuning on average raises negation, LRS and word-order sensitivity, has no reliable effect on tokenization sensitivity, and no average effect on toxicity.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "none",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Base vs instruction-tuned pairs (Pythia/Dolly, MPT, LLaMA/Vicuna, GPT-J, OpenAI, Cohere)",
+   "quote": "In general, we find that instruction-tuned models are more",
+   "table": null,
+   "note": null,
+   "where": "Secs 4.2-8.2"
+  },
+  {
+   "claim": "Tokenization sensitivity falls with training FLOPs/tokens; OPT trained on 180B tokens is a strong outlier.",
+   "kind": "measured",
+   "source": null,
+   "metric": "tokens",
+   "value": "180B",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Split stride 5, 1000 Wikipedia sentences, mean JSD, standard error about 5e-3",
+   "quote": "Each of these models was trained on only 180B tokens",
+   "table": null,
+   "note": null,
+   "where": "Sec 8.2, Fig 10, Fig 22"
+  },
+  {
+   "claim": "Evaluating most models on 1000 examples takes under 30 minutes on an RTX A4000.",
+   "kind": "measured",
+   "source": null,
+   "metric": "min",
+   "value": "30",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Most tests; local inference",
+   "quote": "with compute requirements of less than 30 min per model for",
+   "table": null,
+   "note": null,
+   "where": "Appendix A.6"
+  },
+  {
+   "claim": "Human inspection found the negation transform yields grammatical counterfactuals.",
+   "kind": "measured",
+   "source": null,
+   "metric": "samples",
+   "value": "100",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "100 samples inspected",
+   "quote": "A human inspection of 100 samples verified that the proposed transformation resulted in grammatically correct",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.1"
+  },
+  {
+   "claim": "Self-supervised scores can be computed on novel text such as latest news, removing memorization/contamination risk.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "none",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Argument, not tested",
+   "quote": "With this strategy, the possibility of memorization can",
+   "table": null,
+   "note": null,
+   "where": "Sec 9"
+  }
+ ],
+ "limits": [
+  "Agreement with benchmarks is shown by scatter plots only; no correlation coefficients or significance tests.",
+  "Only validated on Wikipedia; production-stream use is proposed, not run.",
+  "Negation metric needs mostly-true sentences; toxicity covers explicit profanity from a word list only; tokenization covers only character splits; word order assumes next-token JSD is a proxy.",
+  "Sensitivity may be low simply because a model has low entropy (LLaMA) or be a byproduct of other behaviour (text-ada-001); tiny models give meaningless scores.",
+  "Effect of memorization on scores left unstudied; models are 2023-era, at most 7B open plus OpenAI/Cohere API models, which have since been retired or changed."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "self-supervised evaluation",
+   "definition": "metrics are defined as invariances and sensitivities that can be checked in a self-supervised fashion using interventions based only on the model in question rather than external labels",
+   "where": "Sec 1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "HELM",
+   "year": 2022,
+   "arxiv": "2211.09110",
+   "relation": "related",
+   "note": "multi-metric benchmark the paper complements",
+   "quote": null
+  },
+  {
+   "work": "CheckList",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "behavioural testing via input augmentation, here data-agnostic",
+   "quote": null
+  },
+  {
+   "work": "TriviaQA",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "validation target for negation metric",
+   "quote": null
+  },
+  {
+   "work": "LAMBADA",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "validation target for LRS",
+   "quote": null
+  },
+  {
+   "work": "RealToxicityPrompts / Perspective API",
+   "year": 2020,
+   "arxiv": "2009.11462",
+   "relation": "baseline",
+   "note": "toxicity comparison",
+   "quote": null
+  },
+  {
+   "work": "Pythia",
+   "year": 2023,
+   "arxiv": "2304.01373",
+   "relation": "evaluates",
+   "note": "model suite",
+   "quote": null
+  },
+  {
+   "work": "LM Evaluation Harness (Gao et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "used for LAMBADA",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Figure 1",
+   "caption": "Pairs are created from a corpus; outputs compared and aggregated into a sensitivity score.",
+   "page": 2,
+   "why": "Shows the whole pipeline."
+  },
+  {
+   "figure": "Figure 3",
+   "caption": "Sensitivity Score (negations) compared to accuracy on TriviaQA.",
+   "page": 5,
+   "why": "Main validation plot."
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 2, Eq 1",
+   "snippet": "SCORE = A{M(f(x), f(x')) for all (x, x') in X}",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text has no embedded instructions. Figure axis text is interleaved in extraction; no tables with numeric results."
+ ]
+}

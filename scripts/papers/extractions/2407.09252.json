@@ -1,0 +1,756 @@
+{
+ "schema": 1,
+ "key": "2407.09252",
+ "pdf": "generative-ai/02-rag-retrieval/sources/rau-2024-context-embeddings-efficient-answer-generation.pdf",
+ "bib": {
+  "title": "Context Embeddings for Efficient Answer Generation in RAG",
+  "authors": [
+   "David Rau",
+   "Shuai Wang",
+   "Hervé Déjean",
+   "Stéphane Clinchant"
+  ],
+  "first_author": "Rau",
+  "year": 2024,
+  "venue": "preprint (arXiv:2407.09252v3 [cs.CL], 29 Oct 2024; ACM template placeholder 'Conference'17, July 2017, Washington, DC, USA')",
+  "arxiv": "2407.09252",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 64757,
+  "chars_total": 64757,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can multiple retrieved passages be compressed into a few context embeddings so RAG answer generation is much faster while keeping answer quality?",
+ "hypothesis": "Freezing the decoder hinders use of compressed contexts; tuning the decoder jointly with the compressor gives higher effectiveness than frozen-decoder compression methods.",
+ "contributions": [
+  "COCOM, a context compression method reducing long contexts to a handful of context embeddings, speeding generation with higher performance than other methods",
+  "An efficiency study of efficiency-effectiveness trade-offs at different compression rates, including compression time and memory (up to 5.69x inference time and 22x GFLOPs reduction)",
+  "Ablations on pretraining collection, pretraining, fine-tuning data and freezing or tuning the decoder"
+ ],
+ "method": {
+  "summary": "COCOM compresses each retrieved passage independently into k=ceil(n/xi) context embeddings (last-hidden-layer states of <CTX> tokens from the same Mistral-7B LLM used as decoder; COCOM-light uses bert-base-uncased plus a learned block-wise linear projection). The LLM is LoRA-pretrained on auto-encoding and language-modeling-from-context-embeddings, then LoRA fine-tuned on a 493k multi-QA mix with 5 compressed passages as input.",
+  "task": "open-domain / knowledge-intensive QA with RAG; context compression",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Wikipedia-KILT chunks (kilt-128)",
+    "role": "pretrain",
+    "size": "10m samples",
+    "split": "128-token chunks (Llama-2-7b tokenizer)",
+    "source": "KILT Wikipedia, published as HF dataset dmrau/kilt-128",
+    "preprocessing": "split into chunks of 128 tokens"
+   },
+   {
+    "name": "Multi-QA fine-tuning mix (NQ, MS MARCO, AdversarialQA, HotpotQA, WikiQA, SciQ, ASQA, FreebaseQA, SQuAD)",
+    "role": "train",
+    "size": "493,473 examples total",
+    "split": "train samples; MS MARCO first 100k queries",
+    "source": "HF dataset dmrau/multi_qa",
+    "preprocessing": "filtered out queries >128 tokens and labels >64 tokens"
+   },
+   {
+    "name": "NQ, TriviaQA, HotpotQA, ASQA, PopQA",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "FineWeb sample-10BT",
+    "role": "pretrain",
+    "size": "10 million tokens (as printed in ablation)",
+    "split": "non-overlapping 128-token passages",
+    "source": "Penedo et al. 2024",
+    "preprocessing": null
+   },
+   {
+    "name": "kilt-100w index",
+    "role": "eval",
+    "size": "24m contexts",
+    "split": null,
+    "source": "used for compression-cost Table 4",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "COCOM",
+    "role": "proposed",
+    "params": "7B (Mistral-7B-Instruct-v0.2 backbone, LoRA)",
+    "architecture": "decoder-only LLM; compressor = decoder",
+    "init_from": "Mistral-7B-Instruct-v0.2",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "compression_rates": "xi = 4, 16, 128 in tables (text in 4.1 says 1, 16, 128)",
+     "special_tokens": "<AE>, <CTX>, [SEP] between passages"
+    }
+   },
+   {
+    "name": "COCOM-light",
+    "role": "proposed",
+    "params": "bert-base-uncased compressor + linear projection W (xi*b x d); decoder Mistral-7B",
+    "architecture": "BERT encoder compressor, blockwise projection of blocks of xi token states to one embedding",
+    "init_from": "bert-base-uncased; Mistral-7B-Instruct-v0.2",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "RAG (no compression), fine-tuned Mistral-7B-v0.2",
+    "role": "baseline",
+    "params": "7B",
+    "architecture": null,
+    "init_from": "Mistral-7B-Instruct-v0.2",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "role": "upper bound, top-5 contexts"
+    }
+   },
+   {
+    "name": "LLM without context, fine-tuned",
+    "role": "baseline",
+    "params": "7B",
+    "architecture": null,
+    "init_from": "Mistral-7B-Instruct-v0.2",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "role": "lower bound"
+    }
+   },
+   {
+    "name": "AutoCompressor",
+    "role": "baseline",
+    "params": "7B",
+    "architecture": "Llama-2-7b, 50 summary vectors",
+    "init_from": "princeton-nlp/AutoCompressor-Llama-2-7b-6k",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "setting": "top-1 document only"
+    }
+   },
+   {
+    "name": "ICAE",
+    "role": "baseline",
+    "params": "7B",
+    "architecture": "Mistral-7B-Instruct-v0.2 LoRA checkpoint, frozen decoder",
+    "init_from": "sggetao/icae",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "setting": "top-5 concatenated, truncated to 512 tokens, 128 compressed tokens (~x4)"
+    }
+   },
+   {
+    "name": "xRAG-7b and xRAG Mixtral-8x7B",
+    "role": "baseline",
+    "params": "7B; 8x7B",
+    "architecture": "SFR 7B ranking model as compressor, linear projection, frozen decoder",
+    "init_from": "Hannibal046/xrag-7b; Mixtral-8x7B-Instruct-v0.1",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "setting": "top-1 context, one embedding (x128), their stopping criteria"
+    }
+   },
+   {
+    "name": "SPLADE-v3 + DeBERTa-v3 reranker (top-50)",
+    "role": "retriever",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "Pretraining: auto-encoding (recover input tokens from context embeddings) and language modelling from context embeddings (continue X_B given compressed X_A), sampled with equal probability; fine-tuning: instruction-tuning next-token loss on target response only given compressed contexts and question (Eq. 9)",
+   "optimizer": "AdamW",
+   "lr": "1e-4 (pretraining and fine-tuning)",
+   "lr_schedule": "linear",
+   "warmup": "warmup ratio 0.05",
+   "batch_size": "256 (pretraining), 64 (fine-tuning)",
+   "steps": null,
+   "epochs": "1 (pretraining), 2 (fine-tuning)",
+   "tokens": null,
+   "seq_len": "context max length 128 (pretraining)",
+   "precision": null,
+   "weight_decay": "0.1",
+   "dropout": "LoRA dropout 0.1",
+   "regularisation": null,
+   "hardware": "8 x A100 80GB (pretraining and fine-tuning)",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "lora": "all linear layers, r=16, alpha=32, bias none",
+    "library": "BERGEN for fine-tuning",
+    "pretraining_samples": "10m"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": "Instruction combining question and context embeddings (Fig 2 'Model Prompt'); [SEP] between passages' embeddings",
+   "retrieval": "SPLADE-v3, rerank top-50 with DeBERTa-v3, top-5 passages as context in all experiments",
+   "parameters": {
+    "compression_rate_xi": "k = ceil(n/xi); xi in {4,16,128}"
+   },
+   "other": {
+    "efficiency_measurement": "single A100 40GB, batch size 16 (max that fits), half precision, PyTorch inference mode, torch profiler, first warm-up batch discarded; compression cost on single A100 80GB"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Exact Match (EM)",
+     "definition": "standard exact match for fine-tuned models",
+     "unit": "fraction (0-1)",
+     "higher_is_better": true
+    },
+    {
+     "name": "Match (M)",
+     "definition": "label contained as exact match in generated answer",
+     "unit": "fraction (0-1)",
+     "higher_is_better": true
+    },
+    {
+     "name": "Decoding time",
+     "definition": "answer generation time, forward pass",
+     "unit": "ms",
+     "higher_is_better": false
+    },
+    {
+     "name": "GPU memory",
+     "definition": "max GPU memory",
+     "unit": "GB",
+     "higher_is_better": false
+    },
+    {
+     "name": "GFLOPs",
+     "definition": "operations per generated token via torch profiler",
+     "unit": "GFLOPs",
+     "higher_is_better": false
+    },
+    {
+     "name": "Rouge-L",
+     "definition": "pretraining task quality (AE, LMCE)",
+     "unit": "fraction",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "RAG no compression (upper bound)",
+    "LLM without context (lower bound)",
+    "AutoCompressor",
+    "ICAE",
+    "xRAG (7B and Mixtral-8x7B)"
+   ],
+   "protocol": "Paired t-test (p<0.05) versus COCOM xi=4; single run per setting apparently, seeds not stated"
+  },
+  "availability": {
+   "code": "BERGEN library (Rau et al. 2024, arXiv:2407.01102); no COCOM code link in text",
+   "weights": "https://huggingface.co/naver/cocom-v1-128-mistral-7b and HF collection naver/cocom",
+   "data": "HF datasets dmrau/kilt-128 and dmrau/multi_qa"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "models[COCOM].other.compression_rates",
+    "quote": "We apply three different compression rates: 𝜉= 1, 16, 128.",
+    "where": "4.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "COCOM xi=4 average EM across five QA datasets",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": 0.585,
+   "unit": "EM",
+   "baseline_value": 0.623,
+   "n": null,
+   "setup": "Mistral-7B-v0.2, top-5 passages, avg over NQ/TriviaQA/HotpotQA/ASQA/PopQA",
+   "quote": null,
+   "table": "Table 2, row COCOM x4, column Average",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "COCOM xi=128 average EM (up to 128x context reduction)",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": 0.54,
+   "unit": "EM",
+   "baseline_value": 0.623,
+   "n": null,
+   "setup": "as above, xi=128",
+   "quote": null,
+   "table": "Table 2, row COCOM x128, column Average",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Performance drop vs uncompressed RAG averaged over datasets for xi=4",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 4,
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "COCOM xi=4 vs fine-tuned RAG upper bound",
+   "quote": "Performance decreases on average 4 points for our strongest",
+   "table": null,
+   "note": null,
+   "where": "5.1"
+  },
+  {
+   "claim": "Performance drop vs uncompressed RAG for xi=128",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 10,
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "COCOM xi=128 vs RAG upper bound",
+   "quote": "10 points for the highest compression rate",
+   "table": null,
+   "note": null,
+   "where": "5.1"
+  },
+  {
+   "claim": "Inference time speed-up over uncompressed RAG at xi=128",
+   "kind": "measured",
+   "source": null,
+   "metric": "decoding time speed-up",
+   "value": 5.69,
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "NQ, Mistral-7b-v0.2, A100 40GB, batch 16",
+   "quote": "up to 5.69 × less inference time cost, 1.27 ×",
+   "table": null,
+   "note": null,
+   "where": "5.3"
+  },
+  {
+   "claim": "Decoding time at xi=128 versus uncompressed RAG",
+   "kind": "measured",
+   "source": null,
+   "metric": "decoding time",
+   "value": 187,
+   "unit": "ms",
+   "baseline_value": 1064,
+   "n": null,
+   "setup": "NQ; RAG no compression is 1064 ms",
+   "quote": null,
+   "table": "Table 3, row COCOM (-light) xi=128, column Decoding Time",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "GFLOPs reduction at xi=128",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 22,
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "NQ; 1138 vs 25031 GFLOPs",
+   "quote": "22 × GFLOPs compared to no compression",
+   "table": null,
+   "note": null,
+   "where": "5.3"
+  },
+  {
+   "claim": "GPU memory reduction at xi=128 (text 1.27x; Table 3 prints 1.27 at xi=128 but 14.2 GB vs 18.1 GB)",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 1.27,
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "NQ, A100 40GB",
+   "quote": "1.27 ×",
+   "table": null,
+   "note": "Table 3 prints 14.2 GB (x1.27) at xi=128",
+   "where": "5.3"
+  },
+  {
+   "claim": "COCOM-light average EM at xi=4",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": 0.531,
+   "unit": "EM",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Mistral-7B-v0.2 decoder, BERT compressor",
+   "quote": null,
+   "table": "Table 2, row COCOM-light x4, column Average",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "xRAG Mixtral-8x7b zero-shot average EM, far below COCOM",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": 0.372,
+   "unit": "EM",
+   "baseline_value": null,
+   "n": null,
+   "setup": "single top-1 context, xi=128",
+   "quote": null,
+   "table": "Table 2, row xRAG Mixtral-8x7b, column Average",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "ICAE average EM (frozen decoder, x4)",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": 0.3,
+   "unit": "EM",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Mistral-7B-v0.2, concatenated top-5 truncated to 512 tokens",
+   "quote": null,
+   "table": "Table 2, row ICAE, column Average",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Freezing the decoder (COCOM-light xi=128) on NQ EM",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": 0.353,
+   "unit": "EM",
+   "baseline_value": 0.444,
+   "n": null,
+   "setup": "ablation, xi=128; with tuned decoder 0.444",
+   "quote": null,
+   "table": "Table 6, row w/o tuning decoder (COCOM-light), column NQ",
+   "note": null,
+   "where": "Table 6"
+  },
+  {
+   "claim": "Freezing the decoder (COCOM xi=128) on NQ EM",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": 0.421,
+   "unit": "EM",
+   "baseline_value": 0.519,
+   "n": null,
+   "setup": "ablation, xi=128; baseline 0.519",
+   "quote": null,
+   "table": "Table 6, row w/o tuning decoder (COCOM), column NQ",
+   "note": "Table 6 COCOM baseline NQ 0.519 vs Table 2 COCOM x128 NQ 0.511",
+   "where": "Table 6"
+  },
+  {
+   "claim": "Without pre-training COCOM-light xi=128 NQ EM",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": 0.423,
+   "unit": "EM",
+   "baseline_value": 0.444,
+   "n": null,
+   "setup": "ablation, baseline 0.444",
+   "quote": null,
+   "table": "Table 6, row w/o pre-training (COCOM-light), column NQ",
+   "note": null,
+   "where": "Table 6"
+  },
+  {
+   "claim": "Using 5 passages instead of 1 improves COCOM xi=4 NQ EM",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": 0.554,
+   "unit": "EM",
+   "baseline_value": 0.499,
+   "n": null,
+   "setup": "k=5 vs k=1 (0.499), NQ",
+   "quote": null,
+   "table": "Table 5, row COCOM xi=4, column NQ k=5",
+   "note": null,
+   "where": "Table 5"
+  },
+  {
+   "claim": "Compressing 24m contexts takes 89 h with COCOM vs 1 h with COCOM-light (xi=4)",
+   "kind": "measured",
+   "source": null,
+   "metric": "compression time",
+   "value": 89,
+   "unit": "hours",
+   "baseline_value": 1,
+   "n": null,
+   "setup": "single A100 80GB, kilt-100w",
+   "quote": null,
+   "table": "Table 4, row COCOM xi=4, column Time (h)",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "Index size at xi=4 versus xi=128",
+   "kind": "measured",
+   "source": null,
+   "metric": "index size",
+   "value": 6.06,
+   "unit": "TB",
+   "baseline_value": null,
+   "n": null,
+   "setup": "24m contexts; xi=128 is 0.19 TB",
+   "quote": null,
+   "table": "Table 4, row COCOM xi=4, column Index size (TB)",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "Auto-encoding Rouge-L collapses for COCOM at xi=128",
+   "kind": "measured",
+   "source": null,
+   "metric": "Rouge-L",
+   "value": 0.5545,
+   "unit": "Rouge-L",
+   "baseline_value": 0.9979,
+   "n": null,
+   "setup": "pretraining evaluation; xi=4 gives 0.9979",
+   "quote": null,
+   "table": "Table 7, row COCOM xi=128, column AE",
+   "note": null,
+   "where": "Table 7"
+  },
+  {
+   "claim": "Fine-tuned uncompressed RAG average Match",
+   "kind": "measured",
+   "source": null,
+   "metric": "Match",
+   "value": 0.661,
+   "unit": "M",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 9 appendix; COCOM xi=4 gets 0.614",
+   "quote": null,
+   "table": "Table 9, row RAG (no compression), column Average",
+   "note": null,
+   "where": "Table 9"
+  }
+ ],
+ "limits": [
+  "Only a 7B model (Mistral-7B-Instruct-v0.2) tested for compute reasons; no Llama-70B or similar.",
+  "Only 5 passages used; gains with many more documents not tested.",
+  "Only English QA tasks evaluated; no other tasks or multilingual data.",
+  "Baselines use frozen decoders and single contexts (AutoCompressor, xRAG top-1) so comparison mixes tuning regime with method; authors argue they sit between zero-shot and full tuning.",
+  "Efficiency measured only on NQ with batch 16; no seeds or variance reported.",
+  "Text and tables disagree on rates (xi=1 in 4.1 vs xi=4 in tables); FineWeb subset described as 10 million tokens vs 10m samples; Table 6 COCOM xi=128 NQ 0.519 vs Table 2 0.511.",
+  "Higher compression degrades auto-encoding sharply, especially COCOM decoder-based compressor."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Context Embeddings",
+   "definition": "a smaller set of embeddings {e1..ek}, k<<n, each in R^d with d the LLM hidden dimension, produced by the compressor from n context tokens",
+   "where": "3.2"
+  },
+  {
+   "term": "Compression rate xi",
+   "definition": "number of context embeddings per context is ceil(n/xi)",
+   "where": "3.2.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "xRAG: Extreme Context Compression for RAG with One Token",
+   "year": 2024,
+   "arxiv": "2405.13792",
+   "relation": "baseline",
+   "note": "frozen-decoder, single-vector compressor",
+   "quote": null
+  },
+  {
+   "work": "In-context Autoencoder for Context Compression (ICAE)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "extends idea but unfreezes decoder",
+   "quote": null
+  },
+  {
+   "work": "Adapting Language Models to Compress Contexts (AutoCompressor)",
+   "year": 2023,
+   "arxiv": "2305.14788",
+   "relation": "baseline",
+   "note": "summary vectors, min 50",
+   "quote": null
+  },
+  {
+   "work": "GRIT: Generative Representational Instruction Tuning",
+   "year": 2024,
+   "arxiv": "2402.09906",
+   "relation": "related",
+   "note": "GridLM; single context, large storage",
+   "quote": null
+  },
+  {
+   "work": "Text Embeddings Reveal (Almost) As Much As Text (Morris et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "initial motivation",
+   "quote": null
+  },
+  {
+   "work": "LLMLingua",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "lexical compression",
+   "quote": null
+  },
+  {
+   "work": "BERGEN benchmarking library",
+   "year": 2024,
+   "arxiv": "2407.01102",
+   "relation": "uses-method",
+   "note": "fine-tuning library",
+   "quote": null
+  },
+  {
+   "work": "SPLADE-v3",
+   "year": 2024,
+   "arxiv": "2403.06789",
+   "relation": "uses-method",
+   "note": "first-stage retriever",
+   "quote": null
+  },
+  {
+   "work": "DeBERTa-v3",
+   "year": 2021,
+   "arxiv": "2111.09543",
+   "relation": "uses-method",
+   "note": "reranker",
+   "quote": null
+  },
+  {
+   "work": "Mistral-7B-Instruct-v0.2",
+   "year": null,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "backbone",
+   "quote": null
+  },
+  {
+   "work": "KILT",
+   "year": 2020,
+   "arxiv": "2009.02252",
+   "relation": "uses-data",
+   "note": "Wikipedia corpus",
+   "quote": null
+  },
+  {
+   "work": "FineWeb",
+   "year": 2024,
+   "arxiv": "2406.17557",
+   "relation": "uses-data",
+   "note": "alternative pretraining corpus",
+   "quote": null
+  },
+  {
+   "work": "Natural Questions, TriviaQA, HotpotQA, ASQA, PopQA",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "eval sets",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "COCOM: Compressing multiple contexts for RAG into a small set (xi=4,16,128) of Context Embeddings leads to a massive speed up in answer generation while maintaining higher performance compared to other methods. Results are shown for the ASQA dataset.",
+   "page": 1,
+   "why": "EM versus decoding time Pareto plot"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Overview of our COCOM (-light) model pipeline.",
+   "page": 3,
+   "why": "pipeline of compressor, context embeddings, decoder"
+  },
+  {
+   "figure": "Table 3",
+   "caption": "Decoding efficiency in generation Time, GPU Memory, and GFLOPs for COCOM (-light) on NQ",
+   "page": 6,
+   "why": "speed-ups at each rate"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq. 4 Sec 3.2.1",
+   "snippet": "k = ceil(n / xi)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Fig 2 and Eq. 4 text garbled in extraction (notation reuse of xi for count and rate); no embedded instructions found.",
+  "Venue is an unfilled ACM template placeholder (Conference'17), so listed as preprint."
+ ]
+}

@@ -1,0 +1,676 @@
+{
+ "schema": 1,
+ "key": "2407.19813",
+ "pdf": "generative-ai/02-rag-retrieval/sources/xia-2024-improving-retrieval-augmented-language-model.pdf",
+ "bib": {
+  "title": "Improving Retrieval Augmented Language Model with Self-Reasoning",
+  "authors": [
+   "Yuan Xia",
+   "Jingbo Zhou",
+   "Zhenhui Shi",
+   "Jun Chen",
+   "Haifeng Huang"
+  ],
+  "first_author": "Xia",
+  "year": 2024,
+  "venue": "AAAI 2025 (inferred from 'Copyright © 2025, Association for the Advancement of Artificial Intelligence'; no venue name printed; arXiv:2407.19813v3 [cs.CL], 19 Dec 2024)",
+  "arxiv": "2407.19813",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 64424,
+  "chars_total": 64424,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can an LLM be trained to produce its own reasoning trajectories (relevance judgement, cited evidence snippets, analysis) so a RAG model is more robust to irrelevant retrieval and gives traceable citations, without external modules?",
+ "hypothesis": "Explicit self-generated reasoning trajectories over retrieved documents improve retrieval robustness and answer accuracy.",
+ "contributions": [
+  "End-to-end Self-Reasoning framework needing no external tools",
+  "Three processes (RAP, EAP, TAP) giving interpretability and traceability via snippets and citations",
+  "Evaluation on four public datasets beating prior SOTA with only 2,000 training samples"
+ ],
+ "method": {
+  "summary": "LLaMA2 7B/13B is fine-tuned on 2,000 GPT-4 generated, filtered trajectories. In one pass the model emits a relevance judgement (RAP), cited evidence snippets with reasons (EAP), then an analysis (long answer) and short answer (TAP). Training is staged with masking (gradual learning).",
+  "task": "retrieval-augmented QA (short-form, long-form with citations) and fact verification",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Self-reasoning training set",
+    "role": "train",
+    "size": "10,000 GPT-4 samples generated, 2,000 kept after filtering",
+    "split": null,
+    "source": "GPT-4 generated; questions drawn from training sets of the evaluated tasks (not stated in detail)",
+    "preprocessing": "RAP negatives: random other question's top-k docs paired with the question; document order shuffled; filtered by answer correctness and, for long-form, citation recall and precision >= 0.8"
+   },
+   {
+    "name": "NaturalQuestions",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Kwiatkowski et al. 2019",
+    "preprocessing": null
+   },
+   {
+    "name": "PopQA",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Mallen et al. 2023; Dec 2020 Wikipedia corpus from Izacard et al. 2022",
+    "preprocessing": null
+   },
+   {
+    "name": "ASQA",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Stelmakh et al. 2022",
+    "preprocessing": null
+   },
+   {
+    "name": "FEVER",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Thorne et al. 2018; 3-class Supported/Refuted/NotEnoughInfo",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Self-Reasoning 7B / 13B",
+    "role": "proposed",
+    "params": "7B, 13B",
+    "architecture": "decoder-only (LLaMA2)",
+    "init_from": "LLaMA-2 7B and 13B (base, per 'fine-tune the LLaMA-2 model')",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-4",
+    "role": "teacher",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "also": "baseline"
+    }
+   },
+   {
+    "name": "DPR",
+    "role": "retriever",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "NQ"
+    }
+   },
+   {
+    "name": "Contriever-MS MARCO",
+    "role": "retriever",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "PopQA"
+    }
+   },
+   {
+    "name": "GTR",
+    "role": "retriever",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "ASQA"
+    }
+   }
+  ],
+  "training": {
+   "objective": "max E log p(y | tau, q) p(tau | q), standard LM likelihood over trajectory plus answer; stage-wise masking: stage 1 masks EAP and TAP, stage 2 masks TAP, stage 3 trains on all",
+   "optimizer": null,
+   "lr": "5e-5 (stage 1, ra), 3e-5 (stage 2, rb), 1e-5 (stage 3, rc)",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "32",
+   "steps": null,
+   "epochs": "3",
+   "tokens": null,
+   "seq_len": null,
+   "precision": "float16",
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "NVIDIA Tesla 8 x V100 32GB",
+   "compute": null,
+   "wall_clock": "13B: 4 hours; 7B: 2 hours",
+   "seeds": null,
+   "other": {
+    "framework": "DeepSpeed ZeRO stage 3 parameter partitioning",
+    "epochs_note": "unclear whether 3 epochs per stage or total"
+   }
+  },
+  "inference": {
+   "decoding": "greedy",
+   "temperature": "0.2 (tested 0.2,0.4,0.6,0.8,1.0)",
+   "top_p": null,
+   "max_tokens": "2048",
+   "samples": "Table 1 averaged over five runs, std <= 2%",
+   "prompting": "Baselines zero-shot on short-form QA, one-shot on long-form QA and FEVER",
+   "retrieval": "top-5 docs from Wikipedia; DPR (NQ), Contriever-MS MARCO (PopQA, Dec 2020 Wikipedia), GTR (ASQA)",
+   "parameters": {
+    "quality_control_thresholds": "citation recall >= 0.8, citation precision >= 0.8",
+    "k": "5"
+   },
+   "other": {
+    "engine": "vLLM",
+    "note": "greedy decoding with temperature 0.2 both stated"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "accuracy (short-form QA)",
+     "definition": "ground-truth answer included in prediction, not exact match",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "accuracy (FEVER)",
+     "definition": "three-class classification accuracy",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "EM recall",
+     "definition": "ASQA correctness metric from Gao et al. 2023b",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "citation recall / precision",
+     "definition": "ALCE NLI-based automatic citation metrics; human version on 100 ASQA samples, 2 annotators each",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "LLaMA2 7B/13B (+chat) with and without retrieval",
+    "Vicuna 7B/13B",
+    "LLaMA2-FT 7B",
+    "ReAct",
+    "RECOMP",
+    "Self-RAG 7B/13B",
+    "GPT-4"
+   ],
+   "protocol": "Five runs averaged; noise test shuffles order and replaces 50% of retrieved docs with docs from another question; human citation eval on 100 ASQA samples"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": null
+  },
+  "prompts": [
+   {
+    "purpose": "GPT-4 instruction to generate trajectories for short-form and long-form QA",
+    "text": "# Role\nYou are an experienced expert, skilled in answering various questions.\n# Task\nPlease answer the question according to the provided reference evidence as required.\n# Reference Evidence\n[1] Retrieved Document {{DOCUMENT 1}} ... [5] Retrieved Document {{DOCUMENT 5}}\n# Requirements\n1. First, please judge whether the provided documents are relevant with the question, and put it in the relevant field. If the provided content is irrelevant to the question, explain the reason in the relevant reason field, then you can give the answer with your internal knowledge.\n2. If possible, answer the question in points and provide explanations.\n3. If the content in the answer comes from different pieces of evidence, you need to cite the sequence number of the evidence at the end of the sentence. The citation format is shown below: [1], [1,3].\n4. Place each cited piece of evidence in the cite_list field, cite content field to store each paragraph of cited content (omitted words can be replaced by ...), cite reason is used to store your thoughts and analysis of this content, how this paragraph can answer the question.\n5. Put the long answer content in the analysis field, and put the short answer(no more than 10 words) in the answer field.\n# Question\n{{QUESTION}}",
+    "where": "Appendix Figure 5"
+   },
+   {
+    "purpose": "GPT-4 trajectory generation for fact verification",
+    "text": "Same as Figure 5 with 'claim' instead of question and short answer in SUPPORT/REFUTE/NOT ENOUGH INFO; see Appendix Figure 6",
+    "where": "Appendix Figure 6"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training.lr",
+    "quote": "The learning rate ra for the first stage is set to 5e-5, the learning rate rb for the second stage is set to 3e-5, and the learning rate rc for the final stage is set to 1e-5.",
+    "where": "Appendix, Training settings"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Self-Reasoning 13B reaches 83.9 FEVER accuracy vs 72.1 for Self-RAG 13B",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 83.9,
+   "unit": "%",
+   "baseline_value": 72.1,
+   "n": null,
+   "setup": "FEVER, LLaMA2 13B fine-tuned, top-5 retrieved docs, greedy decoding, avg of 5 runs",
+   "note": null,
+   "where": "Main Results",
+   "quote": "Our method achieves a much higher accuracy rate than the Self-RAG model (83.9 vs. 72.1)"
+  },
+  {
+   "claim": "Self-Reasoning 13B NQ accuracy 41.4 vs Self-RAG 13B 38.8",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 41.4,
+   "unit": "%",
+   "baseline_value": 38.8,
+   "n": null,
+   "setup": "NQ, DPR retriever top-5, zero-shot baselines, avg of 5 runs",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row SELF-REASONING 13B, column NaturalQuestion (acc)"
+  },
+  {
+   "claim": "Self-Reasoning 13B PopQA accuracy 57.3 vs Self-RAG 13B 55.8",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 57.3,
+   "unit": "%",
+   "baseline_value": 55.8,
+   "n": null,
+   "setup": "PopQA, Contriever, Dec 2020 Wikipedia, top-5",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row SELF-REASONING 13B, column PopQA (acc)"
+  },
+  {
+   "claim": "Self-Reasoning 13B ASQA EM recall 35.2 vs Self-RAG 13B 31.7",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM recall",
+   "value": 35.2,
+   "unit": "%",
+   "baseline_value": 31.7,
+   "n": null,
+   "setup": "ASQA, GTR retriever, one-shot, top-5",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row SELF-REASONING 13B, column ASQA (em-recall)"
+  },
+  {
+   "claim": "Self-Reasoning 13B ASQA citation recall 72.3 exceeds GPT-4 68.5",
+   "kind": "measured",
+   "source": null,
+   "metric": "citation recall",
+   "value": 72.3,
+   "unit": "%",
+   "baseline_value": 68.5,
+   "n": null,
+   "setup": "ASQA, automatic ALCE citation metrics",
+   "note": null,
+   "where": "Main Results",
+   "quote": "the SELF-REASONING RAG can achieve better results than GPT-4 in ASQA citation recall metrics (72.3 vs. 68.5)"
+  },
+  {
+   "claim": "GPT-4 stays ahead on NQ (46.6), PopQA (62.5), FEVER (87.7), ASQA EM recall (41.3) and citation precision (75.6)",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy (NQ)",
+   "value": 46.6,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 1 GPT-4 row",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row GPT-4, column NaturalQuestion (acc)"
+  },
+  {
+   "claim": "Trained on only 2,000 filtered samples (from 10,000 GPT-4 generated)",
+   "kind": "measured",
+   "source": null,
+   "metric": "training samples",
+   "value": 2000,
+   "unit": "samples",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Quality-controlled self-reasoning set",
+   "note": null,
+   "where": "Data Generation and Quality Control",
+   "quote": "We totally generate 10,000 training samples by GPT-4, after the filtering strategy by quality control, we finally keep 2,000 training samples with high quality."
+  },
+  {
+   "claim": "Self-RAG needs an additional 46,000 GPT-4 critic instances; Self-Reasoning uses 2,000",
+   "kind": "measured",
+   "source": null,
+   "metric": "critic training instances (Self-RAG)",
+   "value": 46000,
+   "unit": "instances",
+   "baseline_value": 46000,
+   "n": null,
+   "setup": "Comparison of training data cost",
+   "note": null,
+   "where": "Main Results",
+   "quote": "using an additional 46,000 instances generated by GPT-4"
+  },
+  {
+   "claim": "Removing RAP drops FEVER accuracy from 83.9 to 72.2 (largest ablation drop)",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 72.2,
+   "unit": "%",
+   "baseline_value": 83.9,
+   "n": null,
+   "setup": "13B, ablation w/o RAP",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row w/o (RAP), column FEVER (acc)"
+  },
+  {
+   "claim": "Removing EAP lowers NQ accuracy to 37.2 from 41.4",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 37.2,
+   "unit": "%",
+   "baseline_value": 41.4,
+   "n": null,
+   "setup": "13B, ablation w/o EAP",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row w/o (EAP), column NQ (acc)"
+  },
+  {
+   "claim": "Average accuracy over three datasets falls from 60.9 to 56.3 without EAP",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg accuracy",
+   "value": 56.3,
+   "unit": "%",
+   "baseline_value": 60.9,
+   "n": null,
+   "setup": "13B, mean over NQ, PopQA, FEVER",
+   "note": "Text calls all three 'short-form QA'; FEVER is fact verification. Table 2 means: ORIGIN (41.4+57.3+83.9)/3=60.9; w/o EAP (37.2+53.2+78.4)/3=56.3",
+   "where": "Effectiveness of EAP",
+   "quote": "decline from 60.9 to 56.3 in three short-form QA datasets"
+  },
+  {
+   "claim": "Removing TAP: NQ 38.2, PopQA 53.4, FEVER 81.2",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy (NQ)",
+   "value": 38.2,
+   "unit": "%",
+   "baseline_value": 41.4,
+   "n": null,
+   "setup": "13B, w/o TAP",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row w/o (TAP), column NQ (acc)"
+  },
+  {
+   "claim": "Without gradual learning NQ is 39.5",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 39.5,
+   "unit": "%",
+   "baseline_value": 41.4,
+   "n": null,
+   "setup": "13B, single-stage end-to-end training",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row w/o (GL), column NQ (acc)"
+  },
+  {
+   "claim": "Without quality control (2,000 random unfiltered samples) NQ is 37.7",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 37.7,
+   "unit": "%",
+   "baseline_value": 41.4,
+   "n": null,
+   "setup": "13B",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row w/o (QC), column NQ (acc)"
+  },
+  {
+   "claim": "Feeding Self-Reasoning trajectories to LLaMA2 13B-chat baseline raises FEVER from 53.4 to 79.2",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 79.2,
+   "unit": "%",
+   "baseline_value": 53.4,
+   "n": null,
+   "setup": "Trajectories generated by the Self-Reasoning model given as prompt to original baseline, 13B",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row + trajectory (LLaMA2), column FEVER (acc)"
+  },
+  {
+   "claim": "Same trajectory transfer to Vicuna 13B: FEVER 60.6 to 79.6",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 79.6,
+   "unit": "%",
+   "baseline_value": 60.6,
+   "n": null,
+   "setup": "Vicuna 13B + trajectory",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row + trajectory (Vicuna), column FEVER (acc)"
+  },
+  {
+   "claim": "Latency per question on NQ is 2.19 (Self-Reasoning) vs 2.08 (Self-RAG) vs 35.5 (GPT-4)",
+   "kind": "measured",
+   "source": null,
+   "metric": "latency",
+   "value": 2.19,
+   "unit": "unit not stated",
+   "baseline_value": 2.08,
+   "n": null,
+   "setup": "7B models, average per question; unit not printed",
+   "note": "Unit of latency not printed in Table 5 caption",
+   "where": "Table 5",
+   "table": "Table 5, row SELF-REASONING, column NQ"
+  },
+  {
+   "claim": "Noisy retrieval (50% of docs swapped) hurts all models; Self-Reasoning degrades least; document shuffling has minimal effect",
+   "kind": "measured",
+   "source": null,
+   "metric": "none",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "NQ, PopQA, FEVER; 13B Self-RAG, Vicuna comparators; values only in Fig 3",
+   "note": "Numbers only in Figure 3, not recorded",
+   "where": "Retrieval Robustness Analysis"
+  }
+ ],
+ "limits": [
+  "Optimizer, LR schedule, warmup, seq length, seeds and code/weights release not stated",
+  "Latency unit not stated in Table 5",
+  "Trajectory supervision comes from GPT-4, so quality depends on the teacher; 8 of 10 filtered out",
+  "Only Wikipedia-based QA and FEVER, LLaMA2 7B/13B only",
+  "Citation precision/recall automatic NLI misses partial support (authors use human eval)",
+  "Hyperparameter text says greedy decoding yet temperature 0.2 selected",
+  "Noise-robustness numbers only in Fig 3"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "RAP",
+   "definition": "Relevance-Aware Process: LLM judges whether retrieved documents are relevant and gives a reason",
+   "where": "Method"
+  },
+  {
+   "term": "EAP",
+   "definition": "Evidence-Aware Selective Process: LLM chooses and cites relevant documents, selects key-sentence snippets and gives reason",
+   "where": "Method"
+  },
+  {
+   "term": "TAP",
+   "definition": "Trajectory Analysis Process: LLM synthesizes analysis (long answer) and short answer from previous trajectories",
+   "where": "Method"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Self-RAG",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Most similar; needs critic and reflection tokens, 46K extra instances",
+   "quote": null
+  },
+  {
+   "work": "ALCE (Gao et al. Enabling LLMs to Generate Text with Citations)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Citation metrics and tools for quality control",
+   "quote": null
+  },
+  {
+   "work": "RECOMP",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Compresses docs with external module",
+   "quote": null
+  },
+  {
+   "work": "ReAct",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "DPR",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "retriever",
+   "quote": null
+  },
+  {
+   "work": "Contriever",
+   "year": 2021,
+   "arxiv": "2112.09118",
+   "relation": "uses-method",
+   "note": "retriever",
+   "quote": null
+  },
+  {
+   "work": "GTR (Ni et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "ASQA retriever",
+   "quote": null
+  },
+  {
+   "work": "LLaMA 2",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "base model (Touvron et al.)",
+   "quote": null
+  },
+  {
+   "work": "Vicuna",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Chiang et al.",
+   "quote": null
+  },
+  {
+   "work": "GPT-4",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Teacher and baseline",
+   "quote": null
+  },
+  {
+   "work": "NQ, PopQA, ASQA, FEVER",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "evaluation sets",
+   "quote": null
+  },
+  {
+   "work": "Zhou et al. 2023 (LIMA: quality over quantity)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Cited for quality over quantity of training data",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "An illustration of the SELF-REASONING framework.",
+   "page": 2,
+   "why": "Shows the three-stage output format versus raw LLM and standard RAG"
+  },
+  {
+   "figure": "Table 2",
+   "caption": "The ablation study ...",
+   "page": 5,
+   "why": "Per-component contribution"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Noise robustness experiment results",
+   "page": 5,
+   "why": "Robustness under shuffled and noisy docs"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq. 1",
+   "snippet": "max_phi E_(q,tau,y)~D_sr log p_phi(y | tau, q) p_phi(tau | q)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "No venue name printed; AAAI 2025 inferred from copyright line",
+  "Table text flattened by extraction, cell alignment inferred from row order",
+  "Figure 3 and 4 values not in text"
+ ]
+}

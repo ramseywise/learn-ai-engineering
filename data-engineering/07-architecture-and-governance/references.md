@@ -10,25 +10,26 @@ cleaned: 2026-11-02
 ---
 # References: Architecture and governance
 
-★ marks a reading that changed a claim in the notes. Links were checked on 2026-11-02 unless noted. The O'Reilly and Towards Data Science sites refuse automated checks, so those works are listed without a checked web link. Attribution of the three Serra excerpts is inferred from their content, as they have no title page.
+★ marks a reading that changed a claim in the notes. Links were checked on 2026-11-02 unless noted. The O'Reilly and Towards Data Science sites refuse automated checks, so those works are listed without a checked web link. Attribution of the three Serra excerpts is inferred: they have no title page and print no author or title, and the book's name appears only in the PDF metadata.
 
 ## Books
 
 | Book | Chapters | PDF | Maps to |
 |---|---|---|---|
 | ★ Kleppmann, [*Designing Data-Intensive Applications*](https://dataintensive.net/) (O'Reilly, 2017) | Ch. 11 (deletion on immutable logs, pp. 463-464), ch. 12 (derived data, federation and unbundling, timeliness and integrity, auditing, privacy pp. 490-543) | [PDF](../sources/kleppmann-designing-data-intensive-applications.pdf) | [01](notes/01-data-architectures-mesh-fabric-mdw.md), [02](notes/02-access-control-pii-gdpr.md) |
-| ★ James Serra, *Deciphering Data Architectures* (O'Reilly, 2024) | Ch. 10 modern data warehouse | [PDF](../sources/serra-deciphering-data-architectures-ch10-modern-data-warehouse.pdf) | [01](notes/01-data-architectures-mesh-fabric-mdw.md) |
-| ★ Same | Ch. 11 data fabric | [PDF](../sources/serra-deciphering-data-architectures-ch11-data-fabric.pdf) | [01](notes/01-data-architectures-mesh-fabric-mdw.md) |
-| ★ Same | Ch. 13 data mesh foundation | [PDF](../sources/serra-deciphering-data-architectures-ch13-data-mesh-foundation.pdf) | [01](notes/01-data-architectures-mesh-fabric-mdw.md) |
+| ★ James Serra, *Deciphering Data Architectures* (O'Reilly, 2024) | Ch. 10 modern data warehouse (pp. 135-149; this PDF also holds all of ch. 11, pp. 151-157). Read in full; opinion, no data | [PDF](../sources/serra-deciphering-data-architectures-ch10-modern-data-warehouse.pdf) | [01](notes/01-data-architectures-mesh-fabric-mdw.md) |
+| ★ Same | Ch. 11 data fabric (pp. 151-157). Read in full; opinion, no data | [PDF](../sources/serra-deciphering-data-architectures-ch11-data-fabric.pdf) | [01](notes/01-data-architectures-mesh-fabric-mdw.md) |
+| ★ Same | Ch. 13 data mesh foundation (pp. 169-185). Read in full; opinion, Gartner 2023 figures second-hand, anecdotal poll | [PDF](../sources/serra-deciphering-data-architectures-ch13-data-mesh-foundation.pdf) | [01](notes/01-data-architectures-mesh-fabric-mdw.md) |
 
 ## Core papers
 
 | Paper | Venue | PDF | Maps to |
 |---|---|---|---|
+| Armbrust, Ghodsi, Xin and Zaharia, [*Lakehouse: A New Generation of Open Platforms*](https://www.cidrdb.org/cidr2021/papers/cidr2021_paper17.pdf) | CIDR 2021. Position paper, read in full; its benchmark is vendor-run, see [04](../04-warehouse-lakehouse-streaming/references.md) | [PDF](../sources/zaharia-2021-lakehouse.pdf) | [01](notes/01-data-architectures-mesh-fabric-mdw.md) |
 | ★ Narayanan and Shmatikov, *Robust De-anonymization of Large Sparse Datasets* | IEEE S&P 2008 | [Link](https://www.cs.cornell.edu/~shmat/shmat_oak08netflix.pdf) | [02](notes/02-access-control-pii-gdpr.md) |
 | Samarati and Sweeney, *Protecting Privacy when Disclosing Information: k-Anonymity and Its Enforcement through Generalization and Suppression* | Technical report, 1998 | [Link](https://dataprivacylab.org/dataprivacy/projects/kanonymity/paper3.pdf) | [02](notes/02-access-control-pii-gdpr.md) |
 | Paleyes, Urma and Lawrence, *Challenges in Deploying Machine Learning: a Survey of Case Studies* | ACM Computing Surveys, 2022 | [PDF](../sources/paleyes-2020-challenges-deploying-machine-learning.pdf) | [02](notes/02-access-control-pii-gdpr.md) |
-| ★ Piethein Strengholt, *Data Mesh: Topologies and domain granularity* | Towards Data Science (article, not peer reviewed) | [PDF](../sources/strengholt-data-mesh-topologies.pdf) | [01](notes/01-data-architectures-mesh-fabric-mdw.md) |
+| ★ Piethein Strengholt, *Data Mesh: Topologies and domain granularity* | Towards Data Science (article, not peer reviewed; saved page, undated). Six topologies from his Microsoft customer sessions, no counts; read in full, diagrams are images and unread | [PDF](../sources/strengholt-data-mesh-topologies.pdf) | [01](notes/01-data-architectures-mesh-fabric-mdw.md) |
 | ★ Halevy et al., *Goods: Organizing Google's Datasets* | SIGMOD 2016 | [Link](https://doi.org/10.1145/2882903.2903730) ([copy read](https://static.aminer.org/pdf/20170130/pdfs/sigmod/zawvzadb9lb8xexcqvnr41prh5tmk7jc.pdf)) | [03](notes/03-catalog-semantic-layer-and-contracts.md) |
 | Sequeda, Allemang and Jacob, *A Benchmark to Understand the Role of Knowledge Graphs on Large Language Model's Accuracy for Question Answering on Enterprise SQL Databases*, data.world | GRADES-NDA 2024; arXiv v1 read in full | [Link](https://arxiv.org/abs/2311.07509) | [03](notes/03-catalog-semantic-layer-and-contracts.md) |
 | ⚑ Allemang and Sequeda, *Increasing the LLM Accuracy for Question Answering: Ontologies to the Rescue!*, data.world | arXiv preprint, v1 read in full; a chapter with a different title is at ISWC 2024, not read | [Link](https://arxiv.org/abs/2405.11706) | [03](notes/03-catalog-semantic-layer-and-contracts.md) |

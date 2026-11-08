@@ -1,0 +1,116 @@
+{
+ "schema": 1,
+ "key": "2311.13581",
+ "pdf": "ai-engineering/07-inference-engineering/sources/monea-2023-pass.pdf",
+ "bib": {"title": "PaSS: Parallel Speculative Sampling", "authors": ["Giovanni Monea", "Armand Joulin", "Edouard Grave"], "first_author": "Monea", "year": 2023, "venue": "3rd Workshop on Efficient Natural Language and Speech Processing (NeurIPS 2023)", "arxiv": "2311.13581", "doi": null},
+ "read": {"by": "source-reader", "at": "2026-11-08", "chars_read": 19409, "chars_total": 19409, "engine": "pymupdf", "skipped": null},
+ "type": "empirical",
+ "question": "Can speculative sampling drafts come from the target model itself, via parallel decoding with a few learned look-ahead embeddings, instead of a second draft model?",
+ "hypothesis": "Learning only L new input embeddings lets one forward pass of the frozen LLM draft L tokens well enough to speed up lossless decoding.",
+ "contributions": ["PaSS: speculative sampling whose draft comes from the target model through look-ahead embeddings, with no second model", "Only O(d_emb) new parameters (L x d_emb), versus O(d_emb K) for look-ahead heads", "Up to 30% speed-up on text and code completion with a 7B LLaMa"],
+ "method": {
+  "summary": "Append L learned [LA] embeddings to the input so one forward pass of a frozen LLaMa-7B yields L draft tokens; a second pass validates them with the standard speculative-sampling rejection rule. Only the embeddings are trained.",
+  "task": "lossless acceleration of autoregressive sampling (text and code completion)",
+  "trains": true,
+  "datasets": [
+   {"name": "English Wikipedia dump 2023/02/20", "role": "both", "size": null, "split": "train/test split (proportions not stated); 200 random test examples for evaluation", "source": "Wikimedia Foundation", "preprocessing": "first 32 tokens of each test example used as prompt"},
+   {"name": "The Stack (Python split)", "role": "both", "size": null, "split": "train/test split (proportions not stated); 200 random test examples for evaluation", "source": "Kocetkov et al. 2022", "preprocessing": "first 32 tokens of each test example used as prompt"},
+   {"name": "HumanEval", "role": "eval", "size": null, "split": null, "source": "Chen et al. 2021", "preprocessing": null}
+  ],
+  "models": [
+   {"name": "LLaMa 7B (re-implementation)", "role": "base", "params": "7B", "architecture": "decoder-only transformer", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"frozen": "all parameters frozen except the new embeddings"}},
+   {"name": "look-ahead embeddings [LA]1..[LA]L", "role": "proposed", "params": "L x d_emb", "architecture": "L new input token embeddings", "init_from": "UNK token embedding", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}}
+  ],
+  "training": {
+   "objective": "next-token loss on outputs at the look-ahead positions only; for each batch a random position is chosen to insert the look-ahead embeddings",
+   "optimizer": "AdamW",
+   "lr": "0.01",
+   "lr_schedule": "cosine",
+   "warmup": "2k steps",
+   "batch_size": "8 sequences",
+   "steps": "10k",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": "bfloat16",
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {"which_L_trained": "not stated whether one embedding set per L was trained for the L sweep"}
+  },
+  "inference": {
+   "decoding": "top-k sampling with k = 10 (k = 25 for HumanEval Pass@10)",
+   "temperature": "0.8 default; 0.5 and 0.2 in Table 1; 0.1 for Pass@1 and 0.8 for Pass@10 on HumanEval",
+   "top_p": null,
+   "max_tokens": "512 generated tokens",
+   "samples": "200 test examples per dataset; number of repeats or seeds not stated",
+   "prompting": "first 32 tokens of the example as prompt",
+   "retrieval": null,
+   "parameters": {"look_ahead_tokens_L": "4 by default; 2, 4, 6, 8 swept on The Stack", "kv_cache": "used and updated after each call by drafted and accepted counts"},
+   "other": {"speedup_bounds": "lower bound is autoregressive wall time; upper bound (L+2)/2 x", "calls_per_iteration": "two LLM calls per iteration (draft, validate)"}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "generation time", "definition": "time to generate a 512-token sequence from a 32-token prompt (Table 1); average time per HumanEval completion (Table 2)", "unit": "seconds in Table 2 (sec); Table 1 unit not printed", "higher_is_better": false},
+    {"name": "Pass@1 / Pass@10", "definition": "HumanEval functional correctness", "unit": "%", "higher_is_better": true}
+   ],
+   "baselines": ["Autoregressive generation with KV cache", "PaSS with a fixed [UNK] token as look-ahead instead of trained embeddings"],
+   "protocol": "200 random test examples per dataset; no seeds, variance or significance test stated; hardware for timing not stated"
+  },
+  "availability": {"code": null, "weights": null, "data": null},
+  "prompts": [],
+  "evidence": [
+   {"field": "training.lr", "quote": "We use the AdamW optimizer, with a learning rate of 0.01 and a batch size of 8 sequences.", "where": "5.2"},
+   {"field": "eval.metrics.unit", "quote": "Time for generating a sequence of length 512 tokens", "where": "Table 1 caption; no unit printed"}
+  ]
+ },
+ "results": [
+  {"claim": "PaSS gives up to 30% speed-up with only O(d_emb) added parameters.", "kind": "measured", "source": null, "metric": "speed-up", "value": "30", "unit": "%", "baseline_value": null, "n": 200, "setup": "LLaMa 7B, 4 look-ahead tokens, Wikipedia and The Stack, 512 generated tokens", "quote": "We show promising performance (up to 30% speed-up) while requiring only as few", "table": null, "note": "Authors' headline figure; Table 1 lowest-temperature Wikipedia gives 12.55 to 9.43 (about 25% less time), Stack T=0.2 gives 12.72 to 8.96 (about 30% less time).", "where": "Abstract"},
+  {"claim": "HumanEval Pass@1 time falls from 10.52 sec to 7.17 sec with PaSS, with quality unchanged.", "kind": "measured", "source": null, "metric": "time per completion", "value": "7.17", "unit": "sec", "baseline_value": "10.52", "n": null, "setup": "HumanEval, temperature 0.1, 4 look-ahead tokens; Pass@1 13.2% vs 13.4%", "quote": null, "table": "Table 2, row PaSS, column PASS@1 Time (7.17 sec; autoregressive 10.52 sec)", "note": null, "where": "Table 2"},
+  {"claim": "HumanEval Pass@10 time falls from 10.15 sec to 8.17 sec with identical Pass@10 of 22.5%.", "kind": "measured", "source": null, "metric": "time per completion", "value": "8.17", "unit": "sec", "baseline_value": "10.15", "n": null, "setup": "HumanEval, temperature 0.8, k=25, 4 look-ahead tokens", "quote": null, "table": "Table 2, row PaSS, column PASS@10 Time (8.17 sec; autoregressive 10.15 sec; Perf. 22.5 % both)", "note": null, "where": "Table 2"},
+  {"claim": "The Stack, temperature 0.2: PaSS 8.96 vs autoregressive 12.72.", "kind": "measured", "source": null, "metric": "generation time", "value": "8.96", "unit": "unit not printed", "baseline_value": "12.72", "n": 200, "setup": "512 tokens from 32-token prompt, top-k 10, 4 LA tokens", "quote": null, "table": "Table 1, row PaSS, column The Stack temperature 0.2", "note": null, "where": "Table 1"},
+  {"claim": "Wikipedia, temperature 0.8: PaSS 10.23 vs autoregressive 12.45.", "kind": "measured", "source": null, "metric": "generation time", "value": "10.23", "unit": "unit not printed", "baseline_value": "12.45", "n": 200, "setup": "512 tokens, top-k 10, 4 LA tokens", "quote": null, "table": "Table 1, row PaSS, column Wikipedia temperature 0.8", "note": null, "where": "Table 1"},
+  {"claim": "Speed-up is larger at lower temperature, where distributions are peakier.", "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "Table 1 temperatures 0.8, 0.5, 0.2", "quote": "As expected, the speed-up is more important for lower temperatures, where the distribution of tokens", "table": null, "note": null, "where": "3.3"},
+  {"claim": "A fixed [UNK] look-ahead token gives almost no gain (The Stack T=0.8: 12.25 vs 12.52), so the trained embeddings carry the gain.", "kind": "measured", "source": null, "metric": "generation time", "value": "12.25", "unit": "unit not printed", "baseline_value": "12.52", "n": 200, "setup": "The Stack, temperature 0.8", "quote": null, "table": "Table 1, row [UNK] look-ahead, column The Stack temperature 0.8", "note": null, "where": "Table 1"},
+  {"claim": "Time decreases up to 6 look-ahead tokens (9.66) and rises again at 8 (9.94).", "kind": "measured", "source": null, "metric": "generation time", "value": "9.66", "unit": "unit not printed", "baseline_value": "10.03 at L=2", "n": 200, "setup": "The Stack, temperature 0.8; L=2: 10.03, L=4: 9.79, L=6: 9.66, L=8: 9.94", "quote": "Running time decreases steadily up to 6 look-ahead steps, but more look-ahead steps annihilate the benefits of this approach.", "table": null, "note": null, "where": "3.3, Table 1 right"},
+  {"claim": "Lossless guarantee: every LLM call adds at least one token; speed-up upper bound is (L+2)/2.", "kind": "claim", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "L = tokens generated in the drafting phase", "quote": null, "table": null, "note": "Stated, not measured.", "where": "2.2"}
+ ],
+ "limits": [
+  "Table 1 gives no time unit; no variance, seeds, or significance test; hardware not stated.",
+  "Only LLaMa 7B, one training set per task; dataset sizes and train/test split proportions not given.",
+  "No acceptance-rate or tokens-per-call numbers reported; speed-up is wall time only.",
+  "Gain saturates at about 6 look-ahead tokens; authors say draft quality of parallel generation is the main thing to improve.",
+  "Two model calls per iteration, so the (L+2)/2 upper bound is below the L+1 of classic speculative sampling.",
+  "HumanEval quality claim rests on equal Pass@k within 'margin of error' without an error estimate.",
+  "No comparison with a draft-model speculative sampling baseline or Medusa; only autoregressive and [UNK] baselines."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "look-ahead embeddings", "definition": "new tokens [LA]i appended to the input so the model predicts L positions ahead in one pass, with outputs from the original dictionary", "where": "2.2.1"},
+  {"term": "PaSS", "definition": "a variant of speculative sampling that drafts candidate tokens via parallel decoding with look-ahead embeddings, needing no second model", "where": "1"}
+ ],
+ "lineage": [
+  {"work": "Accelerating large language model decoding with speculative sampling (Chen et al.)", "year": 2023, "arxiv": null, "relation": "extends", "note": "rejection scheme and algorithm 2 reused", "quote": null},
+  {"work": "Fast inference from transformers via speculative decoding (Leviathan et al.)", "year": 2023, "arxiv": null, "relation": "extends", "note": "same lossless rejection scheme", "quote": null},
+  {"work": "Blockwise parallel decoding for deep autoregressive models (Stern et al.)", "year": 2018, "arxiv": null, "relation": "related", "note": "look-ahead heads, greedy only, O(d_emb K) overhead", "quote": null},
+  {"work": "Medusa (Cai et al.)", "year": 2023, "arxiv": null, "relation": "related", "note": "look-ahead heads, not lossless", "quote": null},
+  {"work": "Draft & verify (Zhang et al.)", "year": 2023, "arxiv": null, "relation": "related", "note": "drops second model but drafts autoregressively", "quote": null},
+  {"work": "Mask-predict (Ghazvininejad et al.)", "year": 2019, "arxiv": null, "relation": "related", "note": "parallel decoding with masked LM", "quote": null},
+  {"work": "Non-autoregressive neural machine translation (Gu et al.)", "year": 2018, "arxiv": null, "relation": "related", "note": "parallel decoding by copying encoder input", "quote": null},
+  {"work": "LLaMA (Touvron et al.)", "year": 2023, "arxiv": null, "relation": "evaluates", "note": "7B target model", "quote": null},
+  {"work": "The Stack (Kocetkov et al.)", "year": 2022, "arxiv": null, "relation": "uses-data", "note": "Python split", "quote": null},
+  {"work": "Evaluating large language models trained on code (Chen et al.)", "year": 2021, "arxiv": "2107.03374", "relation": "uses-data", "note": "HumanEval", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Table 1", "caption": "Time for generating a sequence of length 512 tokens, given a prompt of 32 tokens, as a function of temperature (left) and number of look-ahead tokens (right).", "page": 4, "why": "Shows speed-up grows as temperature falls and saturates near 6 LA tokens."},
+  {"figure": "Table 2", "caption": "Average time for generating one completion on the HumanEval dataset, as well as the PASS@N metric.", "page": 4, "why": "Shows quality unchanged while time drops."}
+ ],
+ "code": [
+  {"where": "Algorithm 1", "snippet": "accept draft x~_t if r < min(1, q(x~_t | x_1..x_{n+t-1}) / q(x~_t | x_1..x_{n-1}, [LA]_1..[LA]_t)); else sample from (q(.|...) - q(.|..., [LA]_1..[LA]_t))_+ and exit", "verbatim": false}
+ ],
+ "problems": ["Text extraction renders the literal [LA]-baseline token as [UNK] in places; the extraction file keeps the paper's meaning. No embedded instructions found."]
+}

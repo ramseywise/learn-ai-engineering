@@ -1,0 +1,860 @@
+{
+ "_comment": "Schema 1",
+ "schema": 1,
+ "key": "2409.11055",
+ "pdf": "ai-engineering/07-inference-engineering/sources/lee-2024-exploring-trade-offs.pdf",
+ "bib": {
+  "title": "Exploring the Trade-Offs: Quantization Methods, Task Difficulty, and Model Size in Large Language Models From Edge to Giant",
+  "authors": [
+   "Jemin Lee",
+   "Sihyeong Park",
+   "Jinse Kwon",
+   "Jihun Oh",
+   "Yongin Kwon"
+  ],
+  "first_author": "Lee",
+  "year": 2024,
+  "venue": "preprint",
+  "arxiv": "2409.11055",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 91688,
+  "chars_total": 91688,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "How do four post-training quantization methods (GPTQ, AWQ, SmoothQuant, FP8) affect instruction-tuned models from 1B to 405B across 13 benchmarks and an LLM-judged chat benchmark?",
+ "hypothesis": null,
+ "contributions": [
+  "Evaluation of 12 instruction-tuned models (1B-405B) under GPTQ, AWQ, SmoothQuant and FP8 on OpenLLM Leaderboard v1 and v2 tasks plus MT-Bench",
+  "Analysis by model size, method, task difficulty, and MT-Bench category with manual inspection of GPT-4 judgements"
+ ],
+ "method": {
+  "summary": "Applies off-the-shelf PTQ tools (AutoGPTQ, llmcompressor, AutoRound, AutoAWQ) to 12 Hugging Face instruction-tuned models, then evaluates with lm-eval (Leaderboard v1/v2 tasks) and FastChat MT-Bench (GPT-4 judge) on a four-server multi-GPU cluster using vLLM or Accelerate. No training.",
+  "task": "Evaluation of quantized LLM accuracy across tasks",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "ARC-Challenge",
+    "role": "eval",
+    "size": "1,172 test samples",
+    "split": "25-shot, acc_norm",
+    "source": "Clark et al., 2018",
+    "preprocessing": null
+   },
+   {
+    "name": "HellaSwag",
+    "role": "eval",
+    "size": "10,003 test samples",
+    "split": "10-shot, acc_norm",
+    "source": "Zellers et al., 2019",
+    "preprocessing": null
+   },
+   {
+    "name": "Winogrande",
+    "role": "eval",
+    "size": "1,767 test samples",
+    "split": "5-shot, acc",
+    "source": "Sakaguchi et al., 2021",
+    "preprocessing": null
+   },
+   {
+    "name": "MMLU",
+    "role": "eval",
+    "size": "14,042 test samples, 57 tasks",
+    "split": "5-shot, acc",
+    "source": "Hendrycks et al., 2021a",
+    "preprocessing": null
+   },
+   {
+    "name": "GPQA",
+    "role": "eval",
+    "size": "448 test samples, 3 tasks",
+    "split": "0-shot, normalized acc",
+    "source": "Rein et al., 2023",
+    "preprocessing": null
+   },
+   {
+    "name": "MMLU-PRO",
+    "role": "eval",
+    "size": "12,032 test samples, 13 tasks",
+    "split": "5-shot, 10 options",
+    "source": "Wang et al., 2024",
+    "preprocessing": null
+   },
+   {
+    "name": "BBH",
+    "role": "eval",
+    "size": "6,511 test samples, 23 tasks",
+    "split": "3-shot, normalized acc",
+    "source": "Suzgun et al., 2022",
+    "preprocessing": null
+   },
+   {
+    "name": "MuSR",
+    "role": "eval",
+    "size": "756 test samples, 3 tasks",
+    "split": "0-shot, normalized acc",
+    "source": "Sprague et al., 2023",
+    "preprocessing": null
+   },
+   {
+    "name": "IFEval",
+    "role": "eval",
+    "size": "541 test samples",
+    "split": "0-shot, strict accuracy (instance- and prompt-level)",
+    "source": "Zhou et al., 2023",
+    "preprocessing": null
+   },
+   {
+    "name": "TruthfulQA",
+    "role": "eval",
+    "size": "817 test samples, 38 tasks",
+    "split": "0-shot, MC2",
+    "source": "Lin et al., 2021",
+    "preprocessing": null
+   },
+   {
+    "name": "GSM8K",
+    "role": "eval",
+    "size": "1,319 test samples",
+    "split": "5-shot, strict-match",
+    "source": "Cobbe et al., 2021",
+    "preprocessing": null
+   },
+   {
+    "name": "MATH-Lvl-5",
+    "role": "eval",
+    "size": "12,000 test samples, 7 tasks",
+    "split": "4-shot, exact match",
+    "source": "Hendrycks et al., 2021b; Lewkowycz et al., 2022",
+    "preprocessing": null
+   },
+   {
+    "name": "MT-Bench",
+    "role": "eval",
+    "size": "80 questions, 8 categories, 2 turns",
+    "split": "GPT-4 single-answer grading, score 0-10",
+    "source": "Zheng et al., 2023",
+    "preprocessing": null
+   },
+   {
+    "name": "Wikitext2",
+    "role": "dev",
+    "size": "128 samples x 2,048 tokens (GPTQ via AutoGPTQ)",
+    "split": "calibration",
+    "source": "mindchain/wikitext2 on Hugging Face",
+    "preprocessing": null
+   },
+   {
+    "name": "mit-han-lab/pile-val-backup",
+    "role": "dev",
+    "size": "128 samples x 512 tokens (AutoAWQ)",
+    "split": "calibration",
+    "source": "Pile subset",
+    "preprocessing": null
+   },
+   {
+    "name": "HuggingFaceH4/ultrachat-200k",
+    "role": "dev",
+    "size": "512 samples x 4,096 tokens (FP8 for Llama-3.1)",
+    "split": "calibration",
+    "source": "Hugging Face",
+    "preprocessing": null
+   },
+   {
+    "name": "LLM-compression-calibration",
+    "role": "dev",
+    "size": "512 x 8,192 (also 256 x 8,192 for some)",
+    "split": "calibration",
+    "source": "neuralmagic, 10k samples from OpenPlatypus",
+    "preprocessing": null
+   },
+   {
+    "name": "NeelNanda/pile-10k",
+    "role": "dev",
+    "size": "128 samples x 512 tokens (AutoRound GPTQ, Llama-3.2 and 3.3 AWQ/GPTQ)",
+    "split": "calibration",
+    "source": "Hugging Face",
+    "preprocessing": null
+   },
+   {
+    "name": "Random tokens from tokenizer vocab",
+    "role": "dev",
+    "size": "256 sequences x 8,192 tokens (Llama-3.1-8B GPTQ 8/16 and SmoothQuant)",
+    "split": "calibration",
+    "source": "generated",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Vicuna-7B-v1.3",
+    "role": "evaluated",
+    "params": "7B",
+    "architecture": "decoder-only transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Gemma-2B-it",
+    "role": "evaluated",
+    "params": "2B",
+    "architecture": "decoder-only transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Gemma-7B-it",
+    "role": "evaluated",
+    "params": "7B",
+    "architecture": "decoder-only transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Llama-2-7B-Chat",
+    "role": "evaluated",
+    "params": "7B",
+    "architecture": "decoder-only transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Llama-2-13B-Chat",
+    "role": "evaluated",
+    "params": "13B",
+    "architecture": "decoder-only transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Llama-2-70B-Chat",
+    "role": "evaluated",
+    "params": "70B",
+    "architecture": "decoder-only transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Llama-3.1-8B-it",
+    "role": "evaluated",
+    "params": "8B",
+    "architecture": "decoder-only transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Llama-3.1-70B-it",
+    "role": "evaluated",
+    "params": "70B",
+    "architecture": "decoder-only transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Llama-3.1-405B-it",
+    "role": "evaluated",
+    "params": "405B",
+    "architecture": "decoder-only transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Llama-3.2-1B-it",
+    "role": "evaluated",
+    "params": "1B",
+    "architecture": "decoder-only transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Llama-3.2-3B-it",
+    "role": "evaluated",
+    "params": "3B",
+    "architecture": "decoder-only transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Llama-3.3-70B-it",
+    "role": "evaluated",
+    "params": "70B",
+    "architecture": "decoder-only transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "greedy (lm-eval default; vLLM temperature, top_k, top_p set to greedy defaults)",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single run per config; lm-eval seeds: python 0, numpy 1234, torch 1234, few-shot 1234; no repeats or significance tests stated",
+   "prompting": "Leaderboard v1/v2 few-shot settings per task (ARC 25, HellaSwag 10, TruthfulQA 0, MMLU 5, Winogrande 5, GSM8k 5; BBH 3, GPQA 0, IFEval 0, Math 4, MMLU-PRO 5, MuSR 0)",
+   "retrieval": null,
+   "parameters": {
+    "GPTQ (AutoGPTQ)": "bits=4, group_size=128, desc_act=True, sym=True, damp_percent=0.1",
+    "GPTQ (llmcompressor)": "scheme W4A16 or W8A16, targets Linear, ignore lm_head, dampening_frac=0.01, group size 128, symmetric per-channel",
+    "AWQ (AutoAWQ 0.2.7.post3)": "w_bit=4, q_group_size=128, zero_point=True (asymmetric), version GEMM",
+    "SmoothQuant (llmcompressor)": "smoothing_strength=0.8 default (0.7 with custom mappings for Llama-3.2), then GPTQModifier W8A8 targets Linear ignore lm_head dampening_frac 0.01, INT8 weights and activations symmetric per-channel",
+    "FP8 (llmcompressor)": "E4M3, weights and activations per-tensor symmetric static (dynamic false), ignore lm_head",
+    "GPTQ (AutoRound)": "used for Llama-3.2-1B/3B and Llama-3.3-70B (config not given)"
+   },
+   "other": {
+    "serving": "vLLM 0.6.6.post1; HF Accelerate 1.2.1 fallback when vLLM unusable",
+    "judge": "GPT-4 (version not stated) via fschat 0.2.36",
+    "package_versions": "Transformers 4.47.1, llmcompressor 0.3.1, auto-gptq 0.7.1, autoawq 0.2.7.post3, bitsandbytes 0.45.0, lm_eval 0.4.4"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Leaderboard v1 per-task accuracy and Avg.",
+     "definition": "acc/acc_norm/mc2 per task, mean of six",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Leaderboard v2 per-task normalized score and Avg.",
+     "definition": "100*(raw-lower)/(1-lower), lower=1/num_choices; generative tasks lower=0; mean of six",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "MT-Bench score",
+     "definition": "GPT-4 single-answer grade 0-10 per turn, per category and averaged",
+     "unit": "points 0-10",
+     "higher_is_better": true
+    },
+    {
+     "name": "Delta vs FP16",
+     "definition": "quantized minus FP16, printed in parentheses in tables",
+     "unit": "points",
+     "higher_is_better": null
+    }
+   ],
+   "baselines": [
+    "FP16 original model",
+    "smaller FP16 models of the same family (RQ1)"
+   ],
+   "protocol": "One run per model-method pair, greedy decoding, no variance estimate; LLM judge plus manual inspection of selected MT-Bench cases (Appendix C.4, C.5). Hardware: H100-80Gx8, A100-80Gx4, RTX6000-48Gx4, A6000-48Gx4."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "Colab normalization code linked in D.2; benchmarks are public"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "inference.decoding",
+    "quote": "In lm-eval, if no specific settings are provided, decoding defaults to greedy decoding, which we used.",
+    "where": "D.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Llama-3.2-1B 4-bit GPTQ loses 25.32 points on GSM8k",
+   "kind": "measured",
+   "source": null,
+   "metric": "GSM8k acc delta",
+   "value": "-25.32",
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Llama-3.2-1B-it, GPTQ W4A16 (AutoRound), OpenLLM v1 GSM8k 5-shot acc, vs FP16",
+   "note": null,
+   "where": "5.3 RQ3",
+   "quote": "(e.g., -25.32% on GSM8k and -16.01% on IFEval)"
+  },
+  {
+   "claim": "Llama-3.2-1B 4-bit GPTQ loses 16.01 points on IFEval",
+   "kind": "measured",
+   "source": null,
+   "metric": "IFEval delta",
+   "value": "-16.01",
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Llama-3.2-1B-it, GPTQ W4A16 (AutoRound), IFEval 0-shot strict acc, vs FP16",
+   "note": null,
+   "where": "5.3 RQ3",
+   "quote": "-16.01% on IFEval"
+  },
+  {
+   "claim": "SmoothQuant W8A8 on Llama-3.1-405B drops the Leaderboard-v2 average by up to 10.86 points vs FP8",
+   "kind": "measured",
+   "source": null,
+   "metric": "v2 average delta vs FP8",
+   "value": "10.86",
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Llama-3.1-405B-it, SmoothQuant (llmcompressor) vs FP8, OpenLLM v2 average",
+   "note": null,
+   "where": "5.2 RQ2",
+   "quote": "an average decrease of up to 10.86% compared to FP8"
+  },
+  {
+   "claim": "FP8 on Llama-3.1-70B is within 0.21 of FP16 on v1 average",
+   "kind": "measured",
+   "source": null,
+   "metric": "v1 Avg.",
+   "value": "78.55",
+   "unit": "% avg acc",
+   "baseline_value": "78.76",
+   "n": null,
+   "setup": "Llama-3.1-70B-it FP8 E4M3 W8A8, OpenLLM v1 average",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Llama-3.1-70B-it FP8, column Avg."
+  },
+  {
+   "claim": "FP8 on Llama-3.1-70B is within 0.03 of FP16 on v2 average",
+   "kind": "measured",
+   "source": null,
+   "metric": "v2 Avg.",
+   "value": "40.61",
+   "unit": "% avg",
+   "baseline_value": "40.64",
+   "n": null,
+   "setup": "Llama-3.1-70B-it FP8, OpenLLM v2 average",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Llama-3.1-70B-it FP8, column Avg."
+  },
+  {
+   "claim": "AWQ 4-bit on Llama-3.1-405B loses 28.66 points on IFEval (v2) though average is down 5.04",
+   "kind": "measured",
+   "source": null,
+   "metric": "IFEval",
+   "value": "47.52",
+   "unit": "% strict acc",
+   "baseline_value": "76.18",
+   "n": null,
+   "setup": "Llama-3.1-405B-it AWQ W4A16, IFEval 0-shot",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Llama-3.1-405B-it AWQ, column IFEval"
+  },
+  {
+   "claim": "A 4-bit Llama-3.1-405B (202.5 GB) exceeds FP16 Llama-3.1-70B (140 GB) on v1 average (GPTQ 81.76, AWQ 82.20 vs 78.76)",
+   "kind": "measured",
+   "source": null,
+   "metric": "v1 Avg.",
+   "value": "82.20",
+   "unit": "% avg acc",
+   "baseline_value": "78.76",
+   "n": null,
+   "setup": "Table 1 averages",
+   "note": null,
+   "where": "Table 1, 5.1",
+   "table": "Table 1, row Llama-3.1-405B-it AWQ, column Avg."
+  },
+  {
+   "claim": "Quantizing Llama-3.2-3B with SmoothQuant gives +13.32 on v1 and +8.72 on v2 over FP16 Llama-3.2-1B",
+   "kind": "measured",
+   "source": null,
+   "metric": "v1 avg gain (8.72 on v2)",
+   "value": "13.32",
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Llama-3.2-3B-it SmoothQuant W8A8 vs FP16 Llama-3.2-1B-it, OpenLLM v1/v2 averages",
+   "note": null,
+   "where": "5.1 RQ1",
+   "quote": "improves accuracy by 13.32% on OpenLLM Leaderboard-v1 and 8.72% on OpenLLM Leaderboard-v2"
+  },
+  {
+   "claim": "At 70B, 4-bit GPTQ beats 8-bit GPTQ by 1.89 on v2; at 8B 8-bit beats 4-bit by 2.51 (v1) and 2.11 (v2)",
+   "kind": "measured",
+   "source": null,
+   "metric": "v2 avg, 4-bit minus 8-bit at 70B",
+   "value": "1.89",
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Llama-3.1-70B and 8B, llmcompressor GPTQ W4A16 vs W8A16",
+   "note": "Text says +2.51% and +2.11% for 8B 8-bit over 4-bit. Check against Tables 1-2: 69.42-66.91=2.51 (v1), 22.94-20.83=2.11 (v2); 70B v2 38.77-36.88=1.89. The 70B v2 8-bit row has IFEval 66.66 and GPQA 2.81, which drive the gap.",
+   "where": "5.3 RQ3",
+   "quote": "4-bit outperformed 8-bit by +1.89%"
+  },
+  {
+   "claim": "Llama-3.2-1B GPTQ 4-bit v1 average falls 10.14 points; AWQ 5.72",
+   "kind": "measured",
+   "source": null,
+   "metric": "v1 Avg.",
+   "value": "37.67",
+   "unit": "% avg acc",
+   "baseline_value": "47.81",
+   "n": null,
+   "setup": "Llama-3.2-1B-it, AutoRound GPTQ and AutoAWQ, 4-bit g128, OpenLLM v1 average",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Llama-3.2-1B-it GPTQ***, column Avg."
+  },
+  {
+   "claim": "Llama-3.3-70B 4-bit: GPTQ loses 2.32 and AWQ 1.06 on v2 average; AWQ loses 0.83 and GPTQ 0.70 on v1",
+   "kind": "measured",
+   "source": null,
+   "metric": "v2 Avg.",
+   "value": "42.14",
+   "unit": "% avg",
+   "baseline_value": "43.20",
+   "n": null,
+   "setup": "Llama-3.3-70B-it, AutoRound GPTQ, AutoAWQ",
+   "note": "On v1 GPTQ (78.63) is slightly better than AWQ (78.50); on v2 AWQ is better. So 'AWQ consistently outperforms GPTQ' does not hold on every row.",
+   "where": "Table 2",
+   "table": "Table 2, row Llama-3.3-70B-it AWQ, column Avg."
+  },
+  {
+   "claim": "MMLU stays nearly unchanged under AWQ across 12 models while easier tasks sometimes fall more than 3 points",
+   "kind": "measured",
+   "source": null,
+   "metric": "MMLU delta (qualitative)",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "12 models, AWQ W4A16, v1",
+   "note": null,
+   "where": "5.4 RQ4",
+   "quote": "MMLU accuracy remained largely unchanged, with some models even exhibiting slight improvements"
+  },
+  {
+   "claim": "MT-Bench Reasoning improves after quantization for 9 of 12 models",
+   "kind": "measured",
+   "source": null,
+   "metric": "MT-Bench Reasoning",
+   "value": "9",
+   "unit": "models of 12",
+   "baseline_value": null,
+   "n": null,
+   "setup": "12 models x GPTQ and AWQ, GPT-4 judge, single-answer grading",
+   "note": "Main text says the largest MT-Bench drops are in Coding and STEM; Appendix C.1 says Coding, Humanities and Extraction are most often in the top-3 drops (16, 12, 10 of 24 configs) and then Math, Coding, Reasoning. Table 6 does not clearly support STEM.",
+   "where": "C.1",
+   "quote": "the Reasoning category improves for 9 out of 12 models after quantization"
+  },
+  {
+   "claim": "Llama-3.2-3B AWQ MT-Bench Reasoning rises +1.65, attributed to GPT-4 favouring concise answers and some misjudged wrong answers",
+   "kind": "measured",
+   "source": null,
+   "metric": "MT-Bench Reasoning delta",
+   "value": "+1.65",
+   "unit": "points",
+   "baseline_value": "3.90",
+   "n": null,
+   "setup": "Llama-3.2-3B-it AWQ, MT-Bench Reasoning",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row Llama-3.2-3B-it AWQ, column Reasoning"
+  },
+  {
+   "claim": "MT-Bench overall: Llama-3.3-70B AWQ 8.94 vs FP16 9.13; GPTQ 9.04",
+   "kind": "measured",
+   "source": null,
+   "metric": "MT-Bench Avg.",
+   "value": "8.94",
+   "unit": "score 0-10",
+   "baseline_value": "9.13",
+   "n": null,
+   "setup": "Table 7 average over two turns",
+   "note": null,
+   "where": "Table 7",
+   "table": "Table 7, row Llama-3.3-70B-it, Avg. AWQ"
+  },
+  {
+   "claim": "Second-turn MT-Bench scores fall more under quantization",
+   "kind": "measured",
+   "source": null,
+   "metric": "MT-Bench turn 2",
+   "value": "4.27",
+   "unit": "score 0-10",
+   "baseline_value": "4.74",
+   "n": null,
+   "setup": "Table 7 turn 2, e.g. Llama-3.2-1B GPTQ 4.27 vs FP16 4.74",
+   "note": null,
+   "where": "Table 7",
+   "table": "Table 7, row Llama-3.2-1B-it, Turn 2, column GPTQ"
+  },
+  {
+   "claim": "Quantized 4-bit Llama-2-13B (6.5 GB) beats FP16 Llama-2-7B (14 GB) on most tasks but not TruthfulQA and IFEval",
+   "kind": "measured",
+   "source": null,
+   "metric": "qualitative",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Llama-2 chat, GPTQ/AWQ 4-bit g128",
+   "note": null,
+   "where": "5.1",
+   "quote": "a 4-bit Llama-2-13B (6.5 GB) outperforms an FP16 Llama-2-7B (14 GB) on most tasks"
+  },
+  {
+   "claim": "FP8 on both weights and activations halves KV cache size (vLLM supports FP8 KV cache)",
+   "kind": "claim",
+   "source": null,
+   "metric": "KV cache size",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Claim, not measured here",
+   "note": null,
+   "where": "5.2",
+   "quote": "allows for a reduction of the KV cache size by half"
+  },
+  {
+   "claim": "GPT-4 judge cost for MT-Bench is $4 to $7 per model, about $200 total",
+   "kind": "measured",
+   "source": null,
+   "metric": "API cost",
+   "value": "200",
+   "unit": "USD",
+   "baseline_value": null,
+   "n": null,
+   "setup": "12 models",
+   "note": null,
+   "where": "C.3",
+   "quote": "a cost ranging from $4 to $7 each, totaling about $200"
+  },
+  {
+   "claim": "Original FP16 accuracy and all GPTQ configs for Llama-3.1-405B were not measured because runtime exceeded 30 days",
+   "kind": "claim",
+   "source": null,
+   "metric": "runtime",
+   "value": "30",
+   "unit": "days",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Llama-3.1-405B",
+   "note": "Yet Tables 1-2 print an FP16 row for 405B (810 GB). Source of those numbers is not stated.",
+   "where": "4.4",
+   "quote": "due to runtime limitations (over 30 days)"
+  }
+ ],
+ "limits": [
+  "Single run per configuration, no seeds, error bars or significance tests; many deltas are under 1 point and may be noise.",
+  "Calibration data, tools and group sizes differ across rows (AutoGPTQ vs llmcompressor vs AutoRound; different calibration sets), so method and tool effects are confounded; authors say calibration study is out of scope.",
+  "Llama-3.1-405B original accuracy and most GPTQ configs not measured (30-day runtime) though FP16 row is printed.",
+  "No latency, throughput or memory measurements; storage GB only. Claims about FP8 speed and KV cache halving are asserted, not measured.",
+  "GPT-4 judge mis-scores answers (authors show misjudged cases); MT-Bench has only 80 questions (10 per category), and near-ceiling scores for 70B+ hide differences.",
+  "Main text and Appendix C.1 disagree on which MT-Bench categories drop most (Coding and STEM vs Coding, Humanities, Extraction); abstract says 13 datasets while Appendix A says 12 plus MT-Bench.",
+  "Only Llama, Vicuna, Gemma families; Vicuna and Gemma only get GPTQ and AWQ (no FP8, SmoothQuant). INT4 only for weight-only; no 3-bit or KV-cache quantization evaluated.",
+  "Software versions are late 2024 (vLLM 0.6.6, llmcompressor 0.3.1); results may shift with newer kernels."
+ ],
+ "practices": [],
+ "terms": [],
+ "lineage": [
+  {
+   "work": "GPTQ (Frantar et al., OPTQ)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "weight-only 4/8-bit method",
+   "quote": null
+  },
+  {
+   "work": "AWQ (Lin et al.)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "weight-only 4-bit",
+   "quote": null
+  },
+  {
+   "work": "SmoothQuant (Xiao et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "W8A8 INT8",
+   "quote": null
+  },
+  {
+   "work": "FP8 formats for deep learning (Micikevicius et al.)",
+   "year": 2022,
+   "arxiv": "2209.05433",
+   "relation": "evaluates",
+   "note": "E4M3",
+   "quote": null
+  },
+  {
+   "work": "The Llama 3 herd of models (Dubey et al.)",
+   "year": 2024,
+   "arxiv": "2407.21783",
+   "relation": "evaluates",
+   "note": "Llama 3.1/3.2/3.3 and Llama 2 models",
+   "quote": null
+  },
+  {
+   "work": "Judging LLM-as-a-judge with MT-Bench (Zheng et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "MT-Bench and Vicuna",
+   "quote": null
+  },
+  {
+   "work": "Give me BF16 or give me death (Kurtic et al.)",
+   "year": 2024,
+   "arxiv": "2411.02355",
+   "relation": "related",
+   "note": "contemporary FP8/INT8/INT4 accuracy-performance study",
+   "quote": null
+  },
+  {
+   "work": "Evaluating quantized large language models (Li et al.)",
+   "year": 2024,
+   "arxiv": "2402.18158",
+   "relation": "related",
+   "note": "prior quantization benchmark",
+   "quote": null
+  },
+  {
+   "work": "Accuracy is not all you need (Dutta et al.)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "related",
+   "note": "flip metric",
+   "quote": null
+  },
+  {
+   "work": "HF OpenLLM Leaderboard v1/v2 and lm-eval",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "task set and normalization",
+   "quote": null
+  },
+  {
+   "work": "LLMC benchmarking toolkit (Gong et al.)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "related",
+   "note": "same-environment evaluation reference",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Figure 1",
+   "caption": "Overview of the evaluation pipeline for quantized LLMs, using a multi-node cluster setup",
+   "page": 2,
+   "why": "shows models, methods, benchmarks and cluster in one view"
+  },
+  {
+   "figure": "Figure 2",
+   "caption": "Category-wise MT-Bench scores of three quantized LLMs (Llama-3.3, Llama-3.2, Llama-3.1) evaluated using AWQ and GPTQ",
+   "page": 5,
+   "why": "shows which categories drop"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Evaluation of Llama families on OpenLLM Leaderboard-v1",
+   "page": 3,
+   "why": "the core size/method/delta table"
+  },
+  {
+   "figure": "Table 2",
+   "caption": "Evaluation of Llama families on OpenLLM Leaderboard-v2",
+   "page": 4,
+   "why": "harder tasks; shows SmoothQuant 405B collapse and AWQ IFEval drop"
+  }
+ ],
+ "code": [
+  {
+   "where": "Figure 3 (D.4)",
+   "snippet": "quantize_config = BaseQuantizeConfig(bits=4,group_size=128,desc_act=True,sym=True,damp_percent=0.1)",
+   "verbatim": true
+  },
+  {
+   "where": "Figure 4 (D.4)",
+   "snippet": "quant_config={\"zero_point\": True,\"q_group_size\": 128,\"w_bit\": 4,\"version\": \"GEMM\"}",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Table cells flattened to one value per line by the extractor; numbers matched by row order.",
+  "Table 3 / Appendix A text says 12 datasets while abstract says 13 (MT-Bench counted separately)."
+ ]
+}

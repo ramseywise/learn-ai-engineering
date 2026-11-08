@@ -7,6 +7,7 @@ sources:
   - Bojie Li, AI Agents in Depth (2026), ch. 3 — https://github.com/bojieli/ai-agent-book
   - https://huggingface.co/intfloat/multilingual-e5-large
   - https://arxiv.org/abs/1603.09320
+  - https://arxiv.org/abs/2308.14963
 confidence: medium
 cleaned: 2026-11-01
 ---
@@ -62,6 +63,8 @@ flowchart TD
 | **Streaming ingest** | COPY or INSERT | `upsert()` | psycopg batch insert | Bulk API | Bulk API | upsert API | Data source sync |
 
 The "Hybrid search" row means what you get from one query with no extra work. Reading it as "cannot do hybrid" is a mistake: you can always run two searches and fuse them with RRF, as in the DuckDB example below. Pinecone's row is a correction to an earlier version of this table: its [hybrid search guide](https://docs.pinecone.io/guides/search/hybrid-search) describes dense and sparse vectors in one index, separate indexes, and client-side fusion.
+
+**Do you need a dedicated store at all?** Lin et al. argue that a search engine you already run is enough. Lucene 9.5.0's HNSW (through Anserini) over OpenAI ada2 embeddings (1,536 dimensions) on MS MARCO passages (8.8M) matched the best listed dense model on dev recall@1000 (0.984, tied with ColBERT-v2). Its dev RR@10 was 0.343 against 0.184 for BM25 and 0.397 for ColBERT-v2, and nDCG@10 was 0.704 on TREC DL19 and 0.676 on DL20 against 0.731 and 0.720 for SPLADE++ ED. Serving ran at 9.8 queries per second (16 threads, 1,000 hits per query, efSearch 1000, two 2017-era Xeon Platinum 8160s), and indexing took about three hours at M=16, efC=100. The authors concede Lucene is slower than Faiss (about half the throughput, a figure they cite from Ma et al., not measured). The paper benchmarks no dedicated vector store, so it is a cost-benefit argument, not a head-to-head. Its 1,536-dimension vectors needed a patched Lucene because the release then capped vectors at 1,024 dimensions, which has since dated ([arXiv:2308.14963](https://arxiv.org/abs/2308.14963), Lin et al., 2023-08, preprint).
 
 ---
 

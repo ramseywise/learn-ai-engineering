@@ -30,6 +30,11 @@ sources:
   - https://arxiv.org/abs/2602.16154
   - https://arxiv.org/abs/2608.01347
   - https://arxiv.org/abs/2608.07885
+  - https://arxiv.org/abs/2405.12939
+  - https://arxiv.org/abs/2305.00833
+  - https://arxiv.org/abs/2312.11562
+  - https://arxiv.org/abs/2507.06203
+  - https://arxiv.org/abs/2509.02350
 confidence: medium
 cleaned: 2026-11-01
 ---
@@ -112,6 +117,8 @@ If you run the decoder yourself, the model's own token log-probabilities can sta
 
 The same arithmetic explains why "think longer" stalls. Wen et al. capped a single DeepSeek-R1-Distill-Qwen-1.5B chain on AIME 2024 at 16K, 32K, 64K and 128K tokens and got 26.1%, 28.3%, 27.1% and 27.4%: **past 32K, more sequential budget bought nothing**. Their diagnosis is "Tunnel Vision": made to continue from the first 100 to 1,600 tokens of one of its own wrong chains, the model recovered less often the longer the flawed prefix. The same budget spent on width did better. Majority voting over 8 chains of 16K (the self-consistency idea of Wang et al., ICLR 2023) reached 41.0%, and ParaThinker, the same model fine-tuned on 6.2K problems to write 8 chains in parallel and fuse them in a summary that reuses their KV caches, 48.1%; at 7B the figures are 51.9% for one 16K chain and 68.8% for both maj@8 and ParaThinker 8×16K. On one A800 at batch size 1, decoding 16 paths took under twice the latency of one. Two cautions for a prompt engineer. The fusion needs the fine-tune: the untrained baseline that re-read its 8 sampled chains and wrote a summary fell to 14.2% at 1.5B and 43.3% at 7B, below a single chain (the authors blame positional decay over the long concatenation), so "sample N chains and ask the model to synthesize them" is not a free version of this. And the evidence is math benchmarks on open 1.5B and 7B models, with no coding or open-ended tasks, which is where voting cannot be used ([arXiv:2509.04475](https://arxiv.org/abs/2509.04475) (Wen et al., 2025-09, preprint)).
 
+A plain vote also discards information: in over 80% of majority-vote failures the right answer was among the samples, and having the model score the chains instead averaged 90.57 against 87.48 for 40-chain voting (GPT-3.5-Turbo-0301, six math sets, one run, same-family scorer, pre-reasoning-model) ([arXiv:2405.12939](https://arxiv.org/abs/2405.12939) (Yin et al., 2024-05, preprint)).
+
 **Optimize for accuracy first, then latency and cost.**
 
 **Some of the thinking budget buys procedure the domain repeats, and that part can be paid once.** Singh et al. had a coding agent read 35 to 50 existing no-think trajectories per domain and write a 40 to 130 line skill file, then put it in the non-reasoning model's system prompt. On GPT-5.4-mini (reasoning effort none against medium, 3 evaluation seeds, 40 to 50 held-out tasks), thinking cost 3.0× to 5.1× the output tokens per episode; the skill recovered 55% to over 100% of the think gap and beat thinking outright on ALFWorld (0.787 against 0.713) and τ²-bench retail (0.408 against 0.350) at 2.9× to 4.5× fewer output tokens. On ALFWorld the skill cut stall loops from 28.7% to 5.3% of episodes. Thinking still won on telecom (0.450 against 0.333) and SpreadsheetBench-Verified (0.613 against 0.560), which the authors read as instance-specific work no fixed prompt can carry. Each skill was distilled once, so distillation variance is unmeasured, no intervals are given, and on Qwen3.6-27B the skill regressed retail by 4.2 points ([arXiv:2608.07885](https://arxiv.org/abs/2608.07885) (Singh et al., COLM 2026 Efficient Reasoning Workshop)). The hybrid rule follows: distil the invariants into the prompt, and escalate to thinking for the instances that remain.
@@ -173,6 +180,8 @@ A related caution for non-reasoning models: asking for "think, reflect, backtrac
 
 The converse also holds: the visible chain is not the only place the computation happens. Baherwani et al. prefilled about 200 semantically empty tokens (the numbers 1 to 100, animal names, "pause pause pause") after the question and before an `Answer:` prefix that blocks any chain of thought, with 10 few-shot examples laid out the same way. On 1,000 four-digit multiplications Claude Opus 4.5 went from 71.8% to 81.8% and on nested arithmetic from 45.8% to 57.0%; Gemini 3 Flash gained 10.7 points on arithmetic, Sonnet 4.5 8.7, and 13 frontier models in all were tested. **The filler must follow the question** (placed before it, +1.6 instead of +8.9 on multiplication), which type of filler helps depends on the model, the task and the number of shots (for Qwen3-235B the best zero-shot fillers were the worst at 10-shot, and on Qwen3.5-397B word fillers collapsed accuracy from 90.6% to near 0 by breaking the answer format), and with filler Opus 4.5 satisfied a hidden "answer N/A when the product is odd" rule 44.5% of the time against 33.5%, with no loss on the main task. The tasks are synthetic, the gains are small next to a real chain of thought, and the authors do not claim the trick evades a monitor in practice. For prompting it means two things: a no-reasoning answer can be helped a little by giving the model tokens to compute over, but the effect is model-specific, so measure it; and a chain-of-thought monitor sees only part of the work ([arXiv:2607.22925](https://arxiv.org/abs/2607.22925) (Baherwani et al., 2026-07, preprint)).
 
+Content matters, not only compute: inline Self-Notes beat dummy "_" tokens in the same positions (Chess Piecetype 94.8% against 84.8%, GPT-2 fine-tuned), and prompted on Llama 2 70B they scored 59.9% on GSM8K against 55.9% for CoT ([arXiv:2305.00833](https://arxiv.org/abs/2305.00833) (Lanchantin et al., NeurIPS 2023)).
+
 ---
 
 ## Prompting deep-research agents
@@ -227,6 +236,7 @@ The book's closing lessons hold for reasoning models too — maybe more so:
 - DAIR *Reasoning LLMs Guide*, Anthropic extended-thinking tips, and the reasoning papers: [references.md](../references.md#reasoning-models)
 - Book: [Ch 11 PDF](../sources/prompt-eng-for-llms/reading/11-looking-ahead.pdf) (intelligence trends, the two durable lessons)
 - A short map of where reasoning comes from: Bandyopadhyay et al. sort the methods into reinforcement learning (verbal, reward-based, search), test-time compute (feedback-guided improvement, scaling) and self-training (STaR, v-STaR, ReFT, Self-Explore), with one diagram per family. The prompting you do in this chapter sits in the test-time branch; everything in the other two is baked into the model before you see it. The survey runs no experiments and its few numbers are relayed from the papers it cites, so use it to find the original paper, not as evidence ([arXiv:2503.10814](https://arxiv.org/abs/2503.10814) (Bandyopadhyay et al., 2025-03, preprint)).
+- Three preprint surveys with no experiments: Sun et al., on in-context reasoning up to October 2023 ([arXiv:2312.11562](https://arxiv.org/abs/2312.11562) (Sun et al., 2023-12, preprint)); Zhu et al., on reasoning kept in hidden states ([arXiv:2507.06203](https://arxiv.org/abs/2507.06203) (Zhu et al., 2025-07, preprint)); and Li et al., who relay that prompted implicit CoT hardly computes intermediate results ([arXiv:2509.02350](https://arxiv.org/abs/2509.02350) (Li et al., 2025-09, preprint)). None covers prompting API reasoning models.
 
 ---
 

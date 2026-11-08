@@ -1,0 +1,672 @@
+{
+ "schema": 1,
+ "key": "2406.13892",
+ "pdf": "ai-engineering/01-prompt-engineering/sources/zhang-2024-adaptable-logical-control-large-language.pdf",
+ "bib": {
+  "title": "Adaptable Logical Control for Large Language Models",
+  "authors": [
+   "Honghua Zhang",
+   "Po-Nien Kung",
+   "Masahiro Yoshida",
+   "Guy Van den Broeck",
+   "Nanyun Peng"
+  ],
+  "first_author": "Zhang",
+  "year": 2024,
+  "venue": "preprint (arXiv:2406.13892v2, 16 Aug 2024)",
+  "arxiv": "2406.13892",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 60753,
+  "chars_total": 60753,
+  "engine": "pymupdf",
+  "skipped": "none; reference list skimmed"
+ },
+ "type": "empirical",
+ "question": "How can an LLM be made to follow arbitrary logical constraints at inference time with guaranteed satisfaction and without retraining per constraint?",
+ "hypothesis": "A distilled HMM can approximate the LLM well enough, even at 7B scale, to guide generation toward DFA-specified constraints while keeping fluency.",
+ "contributions": [
+  "Ctrl-G: distill an HMM from the LLM, specify constraints as DFAs, guide decoding with p_hmm(alpha | x_t, x_<t)",
+  "Exact O(nmh^2) algorithm for marginalising an HMM over any DFA constraint",
+  "Human evaluation on interactive text editing with TULU2-7B beating GPT3.5 and GPT4 on constraint satisfaction",
+  "Benchmarks on CommonGen and text infilling with GPT2 models; proof-of-concept on GSM"
+ ],
+ "method": {
+  "summary": "Ctrl-G distills a Hidden Markov Model from a frozen LLM by training on unconditional LLM samples, compiles a logical constraint into a DFA, and at each decoding step multiplies the LLM next-token probability by the HMM's probability that the DFA will end in an accept state. Applied to GPT2-large/small for benchmarks and to a finetuned TULU2-7B for interactive text editing.",
+  "task": "constrained text generation (keyphrase, word-length, infilling constraints)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "CommonGen",
+    "role": "eval",
+    "size": "3 to 5 concepts per example; test size not stated",
+    "split": "dev and test",
+    "source": "Lin et al. 2020",
+    "preprocessing": "Aho-Corasick DFA per keyword over inflections, intersected across keywords"
+   },
+   {
+    "name": "CommonGen+",
+    "role": "eval",
+    "size": "100 test examples",
+    "split": "test",
+    "source": "built from CommonGen 5-concept test examples",
+    "preprocessing": "100 random 5-concept examples augmented with extra keywords sampled from reference sentences; 5 to 9 concepts"
+   },
+   {
+    "name": "ROC stories text infilling (Donahue et al. 2020)",
+    "role": "eval",
+    "size": "4 test sets by masking ratio (13%, 21%, 32%, 40%); sizes not stated",
+    "split": "test",
+    "source": "Donahue, Lee, Liang 2020, based on ROC stories",
+    "preprocessing": "mask function of Donahue et al. with changed hyperparameters"
+   },
+   {
+    "name": "CoAuthor-based text editing set",
+    "role": "eval",
+    "size": "800 test examples (8 settings x 100)",
+    "split": "test",
+    "source": "CoAuthor (Lee et al. 2022); stories by humans and GPT3.5-turbo-instruct, ten topics",
+    "preprocessing": "each story randomly split into prefix, infix, suffix; infix is gold reference; 1 to 3 keyphrases; length a to b words with 1<=a<=b<=32"
+   },
+   {
+    "name": "WritingPrompt (Fan et al. 2018)",
+    "role": "train",
+    "size": "3000 examples for TULU2 continuation finetune; 1000 examples for the insertion-finetuned baseline",
+    "split": null,
+    "source": "Fan et al. 2018",
+    "preprocessing": null
+   },
+   {
+    "name": "GSM8K",
+    "role": "eval",
+    "size": "1319 test examples (293 subset where model skips numbers)",
+    "split": "test",
+    "source": "Cobbe et al. 2021",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Ctrl-G HMM (text editing)",
+    "role": "proposed",
+    "params": "approx. 2 billion",
+    "architecture": "Hidden Markov Model, 32768 hidden states",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": "32768 hidden states",
+    "heads": null,
+    "context": null,
+    "other": {
+     "distillation_data": "5 million samples drawn from the finetuned TULU2-7B with prompt 'Continue the given text:'"
+    }
+   },
+   {
+    "name": "Ctrl-G HMM (CommonGen)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "HMM, 32768 hidden states",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": "32768 hidden states",
+    "heads": null,
+    "context": null,
+    "other": {
+     "pipeline": "same as GeLaTo (Zhang et al. 2023)"
+    }
+   },
+   {
+    "name": "TULU2-7B",
+    "role": "base",
+    "params": "7B",
+    "architecture": "instruction-tuned Llama2",
+    "init_from": "Llama2 (Ivison et al. 2023)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "finetune": "3000 WritingPrompt examples, prompt 'Continue the given text:'"
+    }
+   },
+   {
+    "name": "GPT2-large (domain-adapted, from GeLaTo)",
+    "role": "base",
+    "params": null,
+    "architecture": "GPT2-large",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT2-small (domain-adapted, from Donahue et al.)",
+    "role": "base",
+    "params": null,
+    "architecture": "GPT2-small",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT3.5",
+    "role": "baseline",
+    "params": "175B (as stated in text)",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "version": "not stated"
+    }
+   },
+   {
+    "name": "GPT4",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "version": "not stated"
+    }
+   },
+   {
+    "name": "TULU2-7B finetuned for insertion",
+    "role": "baseline",
+    "params": "7B",
+    "architecture": null,
+    "init_from": "TULU2-7B",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "prompt": "Generate the text at [INSERT_TEXT] tag:\\n{prefix}[INSERT_TEXT]{suffix}.",
+     "train_examples": "1000"
+    }
+   }
+  ],
+  "training": {
+   "objective": "HMM trained on LLM samples to minimise KL divergence to the LLM (distillation)",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "note": "HMM distillation follows Zhang et al. 2023 (GeLaTo); no optimizer, lr, steps or compute given here. TULU2 finetune on 3000 examples has no hyperparameters either."
+   }
+  },
+  "inference": {
+   "decoding": "sample from p_ctrl-g(x_t | x_<t, alpha) proportional to p_lm * p_hmm(alpha | x_t, x_<t); 128 samples reranked by base-model likelihood, highest kept (text editing, all baselines too)",
+   "temperature": "0.7 (text editing)",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "128 per test example (text editing); ILM run 10 times; GSM: 16 outputs, majority vote",
+   "prompting": "TULU2 base sees 'Continue the given text:' plus prefix; for insertion the suffix is carried in the constraint, not the prompt. GPT models use OpenAI-docs-style templates (Table 5).",
+   "retrieval": null,
+   "parameters": {
+    "hmm_hidden_states": "32768 (also 4096 in runtime plot)",
+    "complexity": "O(nmh^2)",
+    "dfa_construction": "KMP for single phrases, Aho-Corasick for inflection sets, intersection for AND, concatenation (Prop 4.1) for ordered fragments"
+   },
+   "other": {
+    "gpt_sampling_settings": "temperature and other API settings for GPT3.5/GPT4 not stated"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "BLEU-4 / ROUGE-L / CIDEr / SPICE",
+     "definition": "standard overlap metrics against references",
+     "unit": "points",
+     "higher_is_better": true
+    },
+    {
+     "name": "Constraint satisfaction (Success)",
+     "definition": "percentage of generations containing all required concepts / meeting keyphrase and length constraints",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Quality",
+     "definition": "human rating 1 to 5 on Q3 overall quality (Q1 fluency, Q2 coherency)",
+     "unit": "1-5",
+     "higher_is_better": true
+    },
+    {
+     "name": "Overall satisfaction",
+     "definition": "proportion of examples meeting logical constraints with Quality score above 3",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "FUDGE",
+    "NADO",
+    "NeuroLogic A*esque",
+    "GeLaTo",
+    "ILM",
+    "TULU2 prompt only",
+    "GPT3.5",
+    "GPT4",
+    "TULU2-7B finetuned for insertion"
+   ],
+   "protocol": "Human evaluation on MTurk: three annotators per example see all four models' outputs side by side, unaware of the constraints; Kendall's W averaged 0.449 (moderate). ILM mean and std over 10 runs. Single run for Ctrl-G otherwise; no significance tests."
+  },
+  "availability": {
+   "code": "https://github.com/joshuacnf/Ctrl-G",
+   "weights": null,
+   "data": null
+  },
+  "prompts": [
+   {
+    "purpose": "GPT3.5/GPT4 continuation with constraints",
+    "text": "Below is the opening of a story. Continue the narrative by writing the next few sentences that includes the specified keywords. Your continuation should naturally follow the themes, tone, and setting established in the opening. Aim to write a compelling and coherent continuation that could lead the story forward. Your answer must consist of at least (WordRangeStart) words and no more than (WordRangeEnd) words. Please make sure to incorporate the given keywords in to your answer. Keywords: (Keyword).\nStory: (Prefix)",
+    "where": "Table 5, appendix"
+   },
+   {
+    "purpose": "GPT3.5/GPT4 insertion with constraints",
+    "text": "Fill in the text at the [INSERT] in the following story with an appropriate sentence that includes the specified keywords. Feel free to use your knowledge, guesses, or interpretations to craft your answer, but ensure it is relevant to the context provided by the prefix and suffix. Your answer must consist of at least (WordRangeStart) words and no more than (WordRangeEnd) words. Please make sure to incorporate the given keywords in to your answer. Keywords: (Keyword).\nStory: (Prefix)[INSERT](Suffix)",
+    "where": "Table 5, appendix"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Ctrl-G on TULU2-7B reaches 100% constraint success in every constrained text-editing setting, while GPT4 tops out at 60%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "success rate",
+   "value": 100,
+   "unit": "%",
+   "baseline_value": null,
+   "n": 800,
+   "setup": "Table 3, 800 CoAuthor-based examples, continuation and insertion, K/L/K&L constraints; GPT4 highest is 59% (continuation) and 60% (insertion K)",
+   "table": "Table 3, row Success Ctrl-G, columns K, L, K&L, both Continuation and Insertion",
+   "note": null,
+   "where": "5.2"
+  },
+  {
+   "claim": "Average overall satisfaction (fluent and constraint-satisfying) for continuation: Ctrl-G 92% vs GPT4 56%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "overall satisfaction (continuation avg)",
+   "value": 92,
+   "unit": "%",
+   "baseline_value": 56,
+   "n": null,
+   "setup": "Table 3, human eval, quality>3 and constraint met, averaged over K, L, K&L",
+   "table": "Table 3, row Overall Ctrl-G, column Continuation Avg. (92%); row GPT4 56%",
+   "note": null,
+   "where": "5.2"
+  },
+  {
+   "claim": "Average overall satisfaction for insertion: Ctrl-G 79% vs GPT4 24%, GPT3.5 2%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "overall satisfaction (insertion avg)",
+   "value": 79,
+   "unit": "%",
+   "baseline_value": 24,
+   "n": null,
+   "setup": "Table 3, human eval, averaged over K, L, K&L",
+   "table": "Table 3, row Overall Ctrl-G, column Insertion Avg. (79%); row GPT4 24%",
+   "note": null,
+   "where": "5.2"
+  },
+  {
+   "claim": "Abstract claims over 30% higher satisfaction than GPT4 on interactive text editing.",
+   "kind": "measured",
+   "source": null,
+   "metric": "satisfaction gain vs GPT4",
+   "value": 30,
+   "unit": "% (lower bound)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "TULU2-7B + Ctrl-G vs GPT4, human evaluation",
+   "quote": "Ctrl-G achieves over 30% higher satisfaction rate in human evaluation compared to GPT4",
+   "note": null,
+   "where": "Abstract"
+  },
+  {
+   "claim": "Prompt-only GPT models rarely satisfy combined keyphrase and length constraints; GPT3.5 insertion K&L success is 10%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "success rate",
+   "value": 10,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 3, GPT3.5 insertion, K&L column",
+   "table": "Table 3, row Success GPT3.5, column Insertion K&L",
+   "note": null,
+   "where": "5.2"
+  },
+  {
+   "claim": "GPT4 generation quality drops as constraints get more complex on insertion (None 3.79 to K&L 3.10) while Ctrl-G stays 3.77 to 3.59.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Quality (1-5)",
+   "value": 3.1,
+   "unit": "score",
+   "baseline_value": 3.59,
+   "n": null,
+   "setup": "Table 3 Quality, insertion, GPT4 K&L vs Ctrl-G K&L",
+   "table": "Table 3, row Quality GPT4, column Insertion K&L",
+   "note": null,
+   "where": "5.2"
+  },
+  {
+   "claim": "For continuation without constraints GPT4 quality (4.48) beats Ctrl-G (4.13), so Ctrl-G does not win on fluency for continuation.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Quality (1-5)",
+   "value": 4.13,
+   "unit": "score",
+   "baseline_value": 4.48,
+   "n": null,
+   "setup": "Table 3 Quality, continuation, None column",
+   "table": "Table 3, row Quality Ctrl-G, column Continuation None",
+   "note": null,
+   "where": "5.2"
+  },
+  {
+   "claim": "CommonGen (GPT2-large): Ctrl-G test BLEU-4 31.5 vs GeLaTo 29.0, with 100% constraint satisfaction.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU-4 test",
+   "value": 31.5,
+   "unit": "points",
+   "baseline_value": 29.0,
+   "n": null,
+   "setup": "Table 1, unsupervised base; HMM 32768 hidden states",
+   "table": "Table 1, row Ctrl-G, column BLEU-4 test",
+   "note": null,
+   "where": "4.1"
+  },
+  {
+   "claim": "Text infilling: BLEU-4 gap over ILM grows with masking ratio, +0.2 at 13% to +3.4 at 40%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU-4 diff vs ILM at 40% masking",
+   "value": 3.4,
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 2, GPT2-small; ILM is fully supervised, mean of 10 runs",
+   "table": "Table 2, row diff., column BLEU-4 40%",
+   "note": null,
+   "where": "4.2"
+  },
+  {
+   "claim": "GSM proof of concept: forcing use of the problem's numbers lifts accuracy on the 293 hard examples to 28.3%, 3.4% higher than without.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy on 293-example subset",
+   "value": 28.3,
+   "unit": "%",
+   "baseline_value": null,
+   "n": 293,
+   "setup": "TULU2-7B, chain-of-thought, 16 samples majority vote, subset of 1319 where model skips given numbers",
+   "quote": "with Ctrl-G, the model achieves 28.3% accuracy, which is 3.4% higher than the accuracy without Ctrl-G",
+   "note": "baseline accuracy on the subset is not printed directly; implied 24.9 only by subtraction (inferred, 3.4 may be points or relative)",
+   "where": "6"
+  },
+  {
+   "claim": "Without Ctrl-G the model fails to use all numbers in 293 of 1319 GSM problems, and accuracy there is 14.6% vs 34.6% overall.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy on subset",
+   "value": 14.6,
+   "unit": "%",
+   "baseline_value": 34.6,
+   "n": null,
+   "setup": "TULU2-7B CoT, GSM test",
+   "quote": "14.6% vs. 34.6%",
+   "note": "14.6% on subset conflicts with the later 24.9% implied baseline for the same subset when majority vote of 16 is used; the 14.6% is likely a single-sample figure, paper does not say",
+   "where": "6"
+  },
+  {
+   "claim": "Time complexity of sampling n tokens is O(nmh^2) (m = DFA edges, h = HMM hidden states).",
+   "kind": "measured",
+   "source": null,
+   "metric": "time complexity",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Theorem 3.2",
+   "quote": "the time complexity for sampling a sequence of n tokens from pctrl-g(x1:n | α) is O(nmh2)",
+   "note": null,
+   "where": "3.2"
+  },
+  {
+   "claim": "Per-token Ctrl-G overhead scales roughly linearly with DFA size and is constant in sequence length.",
+   "kind": "measured",
+   "source": null,
+   "metric": "runtime",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 6, A100 80GB, naive implementation, DFA size about 900 for the length sweep",
+   "quote": "the generation time per token scales linearly w/ respect to DFA size",
+   "note": null,
+   "where": "5.3, Fig 6"
+  },
+  {
+   "claim": "Inter-annotator agreement is only moderate: Kendall's W averaged 0.449.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Kendall coefficient of concordance",
+   "value": 0.449,
+   "unit": "W",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MTurk human eval, 3 workers per item",
+   "quote": "The average coefficient was 0.449, indicating a moderate level of agreement among the annotators.",
+   "note": null,
+   "where": "Appendix B"
+  }
+ ],
+ "limits": [
+  "Constraints must be expressible as DFAs over a bounded-length token sequence; DFA concatenation can blow up exponentially, handled only in a special case (Prop 4.1).",
+  "An HMM must be distilled per base LLM (5M samples, 32768 states, ~2B params for the 7B model); needs access to logits and sampling, so it does not work through closed APIs.",
+  "Runtime numbers are from a naive implementation; authors leave efficiency to future work.",
+  "Human evaluators rated only fluency and coherence, not constraint compliance; agreement only moderate (W=0.449); no significance tests; GPT3.5/GPT4 versions and API settings not given.",
+  "Baselines are prompt-only GPT models; no comparison to API-level structured output or grammar-constrained decoding with a strong LLM.",
+  "GSM result is a small proof of concept on a self-selected 293-example subset.",
+  "Text editing evaluated on one domain (stories) and constraint family (keyphrase, word length)."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Ctrl-G",
+   "definition": "framework that combines an LLM with a distilled HMM so outputs satisfy logical constraints given as DFAs",
+   "where": "Abstract"
+  },
+  {
+   "term": "probabilistic reasoning over constraints",
+   "definition": "estimating how likely each next token is to eventually lead to the constraint being satisfied, rather than only discarding tokens that make it unsatisfiable (pure logical reasoning as in regex-based guidance)",
+   "where": "3.3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Tractable control for autoregressive language generation (GeLaTo)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Ctrl-G generalises GeLaTo from keyword constraints to any DFA and from 0.1B to 7B models",
+   "quote": "Significantly generalizing the GeLaTo framework, we propose Ctrl-G"
+  },
+  {
+   "work": "Efficient guided generation for large language models (Willard & Louf)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "regex-based structured generation; logical reasoning only, contrasted in 3.3"
+  },
+  {
+   "work": "Guidance (Lundberg et al.)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "qualitative comparison only in 3.3 example, no numbers"
+  },
+  {
+   "work": "FUDGE",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "CommonGen baseline"
+  },
+  {
+   "work": "NADO",
+   "year": null,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "CommonGen baseline (Meng et al.? cited as [25])"
+  },
+  {
+   "work": "NeuroLogic A*esque decoding",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "CommonGen baseline"
+  },
+  {
+   "work": "Enabling language models to fill in the blanks (ILM)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "text infilling benchmark and baseline"
+  },
+  {
+   "work": "CommonGen",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "benchmark"
+  },
+  {
+   "work": "CoAuthor",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "stories for text editing set; interface extended"
+  },
+  {
+   "work": "Tulu 2 (Camels in a changing climate)",
+   "year": 2023,
+   "arxiv": "2311.10702",
+   "relation": "evaluates",
+   "note": "base model for Ctrl-G"
+  },
+  {
+   "work": "GSM8K (Cobbe et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "proof-of-concept"
+  },
+  {
+   "work": "GPT-4 technical report",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "GPT3.5 and GPT4 baselines"
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Ctrl-G pipeline; both the LLM and the HMM are frozen once trained.",
+   "page": 1,
+   "why": "three-step distill, specify DFA, guide decoding"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "An example usage of Ctrl-G for text insertion with multiple constraints.",
+   "page": 2,
+   "why": "5-line API usage with keyphrase and word-count constraints"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Example of a DFA representing the logical constraint that the phrase 'gets cold' must appear, with pseudo-code for representing this DFA in Ctrl-G.",
+   "page": 3,
+   "why": "shows what a constraint DFA looks like"
+  },
+  {
+   "figure": "Table 3",
+   "caption": "Human evaluation of interactive text editing.",
+   "page": 9,
+   "why": "the headline comparison: quality vs success vs overall satisfaction against GPT3.5/GPT4"
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "Runtime analysis of Ctrl-G.",
+   "page": 10,
+   "why": "overhead linear in DFA size, constant in sequence length"
+  }
+ ],
+ "code": [
+  {
+   "where": "Fig 2",
+   "snippet": "dfa_list = [ DFA_all_of(\"alien mothership\", \"far from over\"), DFA_word_count(25, 30), ]\ndfa = DFA_logical_and(dfa_list)\nlp = CtrlGLogitsProcessor(dfa, hmm, prefix, suffix)\nllm.generate(logits_processor=lp)",
+   "verbatim": false
+  },
+  {
+   "where": "Eq 1",
+   "snippet": "p_ctrl-g(x_t | x_<t, alpha) ∝ p_lm(x_t | x_<t) · p_hmm(alpha | x_t, x_<t)",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Figure text in the cached PDF is fragmentary; no embedded instructions found.",
+  "Inconsistent GSM baseline: 14.6% on the 293-subset (Sec 6) vs implied 24.9% after majority vote of 16; paper does not reconcile."
+ ]
+}

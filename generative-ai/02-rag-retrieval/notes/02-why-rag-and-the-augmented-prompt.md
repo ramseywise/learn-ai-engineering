@@ -31,6 +31,7 @@ sources:
   - https://arxiv.org/abs/2004.13637
   - Huyen, *AI Engineering* (O'Reilly, 2025), ch. 6
   - Raieli & Iuculano, *Building AI Agents with LLMs, RAG, and Knowledge Graphs* (Packt, 2025), ch. 6
+  - Lakshmanan & Hapke, *Generative AI Design Patterns* (O'Reilly, 2025), ch. 3
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -123,6 +124,8 @@ The retriever's job is hard because the two sides look nothing alike: prompts ar
 | Stays up to date | Update the knowledge base, not the model. Atlas, trained on 2017 answers, scored 57.7% with a 2017 Wikipedia index. Swapped to a 2020 index with no retraining, it scored 53.1% on the 2020 answers, against 2.9% for a closed-book T5 of the same size (806 TempLAMA-derived cloze questions whose answer changed, 11B models) ([arXiv:2208.03299](https://arxiv.org/abs/2208.03299), Izacard et al., JMLR 2023) |
 | Citations | Each retrieved doc has a source the answer can point to |
 | LLM does what it is good at | Writing and reasoning; the retriever does lookup |
+
+Lakshmanan and Hapke's Basic RAG pattern lists the same gains (knowledge past the cutoff, private data, citations) and puts the hallucination claim at its honest size: RAG works because "an LLM will preferentially use information that is present in the prompt", and so is "reducing (but not eliminating) the likelihood of hallucinations" (*Generative AI Design Patterns*, ch. 3, Pattern 6). The chapter measures none of it; the evidence is in the table's rows.
 
 The cost: **latency**. Every request now pays for a retrieval step before generation starts.
 

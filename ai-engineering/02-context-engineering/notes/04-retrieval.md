@@ -22,6 +22,7 @@ sources:
   - https://arxiv.org/abs/2606.32025
   - https://arxiv.org/abs/2608.14036
   - https://arxiv.org/abs/2409.07429
+  - https://arxiv.org/abs/2405.15318
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -65,6 +66,8 @@ A third option moves retrieval inside the model. **Unlimiformer** replaces a pre
 These combine. A common shape is a cached prefix (instructions, tool definitions, a corpus index) plus retrieval or tool calls for the long tail. Albada reaches the same verdict from practice, without measurements: a million-token window costs compute and latency and doesn't guarantee the model finds the one relevant passage, so production systems pair long context with selective retrieval (*Building Applications with AI Agents*, ch. 6). Retrieval also wins whenever **permissions** matter, whatever the size: a cached corpus is visible to everyone who hits the cache.
 
 ---
+
+**Retrieval can beat the long window it replaces, but not on every task.** LC-Boost ([arXiv:2405.15318](https://arxiv.org/abs/2405.15318) (Qian et al., 2024-05, preprint)) lets GPT-3.5-turbo-16K work through a long input in 4K pieces, choosing per piece among seven actions (retrieve, move on, append or merge evidence, answer, aggregate). Averaged over 12 mostly LongBench datasets it scored **56.4 on multi-document QA against 38.7 for the same model reading everything**, and 47.8 vs 39.8 on single-document QA. It lost on code completion (59.0 vs 72.1 for Yi-9B-200K) and gained little on summarization (31.8 vs 28.1). Cost followed the task: 34.1% of brute-force tokens on NarrativeQA, but **112% on GovReport**, because summarization needs every part. Choosing the action per query beat any fixed strategy in the ablation, except few-shot SAMSum. The caveats: GPT-3.5 as the only base model, no variance, a 32-query set of the authors' own for the whole-context test, and 2024 baselines.
 
 ## Just-in-time context
 

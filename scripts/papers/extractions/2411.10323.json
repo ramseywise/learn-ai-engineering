@@ -1,0 +1,474 @@
+{
+ "schema": 1,
+ "key": "2411.10323",
+ "pdf": "generative-ai/07-agentic-applications/sources/hu-2024-dawn-gui-agent.pdf",
+ "bib": {
+  "title": "The Dawn of GUI Agent: A Preliminary Case Study with Claude 3.5 Computer Use",
+  "authors": [
+   "Siyuan Hu",
+   "Mingyu Ouyang",
+   "Difei Gao",
+   "Mike Zheng Shou"
+  ],
+  "first_author": "Hu",
+  "year": 2024,
+  "venue": "preprint",
+  "arxiv": "2411.10323",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 125183,
+  "chars_total": 125183,
+  "engine": "pymupdf",
+  "skipped": "References skimmed only."
+ },
+ "type": "empirical",
+ "question": "What can Claude 3.5 Computer Use, the first frontier API-based GUI agent, and cannot do on real desktop tasks across web, office, workflow and game software, judged on planning, action and critic?",
+ "hypothesis": null,
+ "contributions": [
+  "A case study of Claude 3.5 Computer Use on desktop task automation covering web search, professional software and games",
+  "An out-of-the-box, cross-platform (Windows/macOS, Docker-free) agent framework, Computer Use OOTB, for deploying API-based GUI automation models",
+  "Human evaluations and analyses of advances and limitations, with a Planning/Action/Critic error taxonomy"
+ ],
+ "method": {
+  "summary": "Authors hand-wrote user queries and initial states for a set of desktop tasks, ran Claude 3.5 Computer Use on real Windows and macOS machines through their PyAutoGUI-based OOTB framework, and manually judged the final state of each run as Success or Failed. Each run is narrated by planning, action and critic; four failures are analysed.",
+  "task": "GUI desktop task automation from natural-language instruction using screenshots only",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "Hand-curated case-study tasks (Table 1)",
+    "role": "eval",
+    "size": "20 tasks across 12 software or websites stated in text; Table 1 lists 19 rows",
+    "split": "none; one run per task apparently",
+    "source": "authors' own queries and initial states; not released as a dataset",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Claude 3.5 Computer Use (Claude 3.5 Sonnet, beta computer-use API)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "tools": "Anthropic-defined Computer, Text Editor and Bash tools",
+     "observation": "vision-only screenshots, no HTML or GUI parsing",
+     "history": "retained history screenshots (Eq. 1-2)"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "inferred: one run per task; no repeats or seeds reported",
+   "prompting": "Anthropic computer-use system prompt (reproduced in Sec 3.1.1) plus the task query; some game tasks add a system message describing the game and very detailed step-by-step user instructions",
+   "retrieval": null,
+   "parameters": {
+    "screen_resolution_windows": "1366x768",
+    "screen_resolution_macos": "1344x756",
+    "framework": "Computer Use OOTB, PyAutoGUI, Windows and macOS, no Docker",
+    "max_steps": null
+   },
+   "other": {
+    "human_in_loop": "human monitors the whole run for safety"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Task outcome",
+     "definition": "Authors manually observe the final state on completion and label Success or Failed",
+     "unit": "binary per task",
+     "higher_is_better": true
+    },
+    {
+     "name": "Planning/Action/Critic",
+     "definition": "Qualitative assessment of plan correctness, GUI grounding and execution, and self-awareness/termination",
+     "unit": "qualitative",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [],
+   "protocol": "Single human judge (the authors), manual final-state check, no repeats, no baseline model, no inter-rater or significance statistics"
+  },
+  "availability": {
+   "code": "https://github.com/showlab/computer_use_ootb",
+   "weights": null,
+   "data": "test cases claimed triable through the project repo"
+  },
+  "prompts": [
+   {
+    "purpose": "Anthropic computer-use system prompt, as reproduced by the authors (opening sentence only; full text in Sec 3.1.1)",
+    "text": "You have access to a set of functions that allow you to interact with a sandboxed computing environment.",
+    "where": "Sec 3.1.1, pp 4-5"
+   },
+   {
+    "purpose": "Honkai: Star Rail system message for game tasks",
+    "text": "You are currently playing Honkai: Star Rail, a turn-based role-playing game. Honkai: Star Rail follows the gameplay style of classic Japanese role-playing games: players build up a lineup of characters and control a team of up to four in turn-based combat.",
+    "where": "Fig 20-21"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "The case study covers 20 tasks over 12 software or websites in 3-4 domains (text); Table 1 lists 19 rows.",
+   "kind": "measured",
+   "source": null,
+   "metric": "tasks",
+   "value": "20",
+   "unit": "tasks",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Hand-picked tasks on Windows and macOS with Claude 3.5 Computer Use",
+   "quote": "include 20 tasks across 12 software or websites in the following 3 domains",
+   "table": null,
+   "note": "Table 1 has 19 task rows (3 web, 3 workflow, 9 office, 4 games); text says 3 domains but lists 4.",
+   "where": "Sec 4.1"
+  },
+  {
+   "claim": "By Table 1 count, 15 of 19 listed tasks are Success and 4 Failed (about 79%); the paper reports no aggregate rate.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "success count",
+   "value": "15 of 19",
+   "unit": "tasks",
+   "baseline_value": null,
+   "n": 19,
+   "setup": "Counted from Table 1 Outcome column; single run, human-judged, hand-picked tasks, not a benchmark",
+   "quote": null,
+   "table": "Table 1, column Outcome: Failed on Fox Sports Subscription, Update Name and Phone Number on Resume Template, Insert Numbering Symbol, Insert a Sum Equation over Cells",
+   "note": "Derived by the extractor; the paper states no total.",
+   "where": "Table 1"
+  },
+  {
+   "claim": "Failures by domain: Web Search 1 of 3, Workflow 0 of 3, Office Productivity 3 of 9, Video Games 0 of 4.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "failures per domain",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Counted from Table 1",
+   "quote": null,
+   "table": null,
+   "note": "Extractor tally.",
+   "where": "Table 1"
+  },
+  {
+   "claim": "Model uses a vision-only observation with ReAct-like reasoning but observes selectively, only when its reasoning requires it, saving cost.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Qualitative description of Claude Computer Use",
+   "quote": "It monitors the GUI state only when necessary,",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.1.3"
+  },
+  {
+   "claim": "Excel find-and-replace of $ with SGD succeeded, with Excel reporting 190 replacements.",
+   "kind": "measured",
+   "source": null,
+   "metric": "replacements",
+   "value": "190",
+   "unit": "replacements",
+   "baseline_value": null,
+   "n": 1,
+   "setup": "Excel wedding-budget template, Ctrl+H, Replace All",
+   "quote": "that 190 replacements were made.",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.4.8, Fig 16"
+  },
+  {
+   "claim": "Screen resolution used was 1366x768 on Windows and 1344x756 on macOS, as suggested by the Anthropic API document; authors say resolution is vital for GUI agents.",
+   "kind": "measured",
+   "source": null,
+   "metric": "resolution",
+   "value": "1366x768 / 1344x756",
+   "unit": "px",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Evaluation setup",
+   "quote": "the resolution is set to (1366, 768) and (1344, 756) for Windows",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.1"
+  },
+  {
+   "claim": "Fox Sports failure is a planning error: model did not scroll the nav panel and detoured to the Account tab (login wall).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Add Formula 1 to followed sports, Fox Sports site",
+   "quote": "the model gives incorrect plan that go to the “Account” tab.",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2.3, Fig 4"
+  },
+  {
+   "claim": "Word resume failure is an action error plus critic error: double_click selected only 'Gardner' and part of the phone number, yet the model declared success (hallucinated confirmation).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Change name to 'Sonnet' and phone to 7355608 in a Word resume template",
+   "quote": "but incorrectly assuming that both replacements were executed as",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.4.4, Fig 12"
+  },
+  {
+   "claim": "PowerPoint numbering failure: applied bullets, then failed to drag-select all text and to find the numbering button, then misjudged the final result.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Add numbering symbols to slide 2",
+   "quote": "limitations in the model’s accuracy of precise selection or",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.4.7, Fig 15"
+  },
+  {
+   "claim": "Excel SUM failure: model summed C6:C15 instead of D6:D16 (wrong column, dropped 'Other Expenses' row) and its verification did not catch it.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Insert SUM over ACTUAL column in wedding-budget template",
+   "quote": "instead of the correct range, D6 to D16, for the \"ACTUAL\" column.",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.4.9, Fig 17"
+  },
+  {
+   "claim": "Authors name three error sources: Planning Error, Action Error, Critic Error; critic errors are frequent, with the model assuming task completion.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Discussion over the four failure cases",
+   "quote": "particularly assuming a task has been completed.",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.1-5.2"
+  },
+  {
+   "claim": "Page Up/Down scrolling loses coherence and gives fragmented interface information, unlike human scrolling.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Discussion",
+   "quote": "page scrolling based on ‘Page Up/Down‘ shortcuts",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.2"
+  },
+  {
+   "claim": "In Honkai: Star Rail tasks success depended on very detailed step-by-step user instructions (10-warp pull; Calyx daily clean-up with attempts raised to 6).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Two game tasks, detailed instructions supplied",
+   "quote": "This finding also emphasizes the importance of user instructions,",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.5.3"
+  },
+  {
+   "claim": "GoodNotes install task stopped at an authentication prompt; model reported size 1.39 GB and recognised that user intervention was needed, yet Table 1 marks it Success.",
+   "kind": "measured",
+   "source": null,
+   "metric": "app size",
+   "value": "1.39 GB",
+   "unit": "GB",
+   "baseline_value": null,
+   "n": null,
+   "setup": "macOS App Store",
+   "quote": "I can see that GoodNotes 6 is 1.39 GB in",
+   "table": null,
+   "note": "Text says 'the task is not fully executed'.",
+   "where": "Sec 4.3.4, Fig 8"
+  }
+ ],
+ "limits": [
+  "Preliminary case study: about 19-20 hand-picked tasks, one run each, no baseline model, no benchmark, no aggregate success rate.",
+  "Success judged manually by the authors on the final state; no inter-rater check or criteria beyond that.",
+  "Only Claude 3.5 Computer Use (October 2024 beta) is tested; the authors call for more dynamic benchmarks that track software versions.",
+  "No decoding settings, step caps, token/cost or latency numbers reported.",
+  "Task set skews to successes; failures are 4 of 19 and each analysed from a single trace.",
+  "Games tested are turn-based only; real-time action games are excluded.",
+  "Likely dated: the model is the first public beta; later computer-use models and benchmarks supersede it.",
+  "Authors concede page scrolling via Page Up/Down and critic over-confidence are unresolved."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Planning Error (PE)",
+   "definition": "the model generates an incorrect plan from task queries, often due to misinterpretation of the task instructions or incorrect current computer state understanding",
+   "where": "Sec 5.1"
+  },
+  {
+   "term": "Action Error (AE)",
+   "definition": "the agent fails to perform the correct action, given the plan itself is accurate",
+   "where": "Sec 5.1"
+  },
+  {
+   "term": "Critic Error (CE)",
+   "definition": "the agent incorrectly assesses its own actions or computer state, leading to erroneous action completion feedback",
+   "where": "Sec 5.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "ReAct (Yao et al.)",
+   "year": 2023,
+   "arxiv": "2210.03629",
+   "relation": "related",
+   "note": "Claude's reason-act loop compared to ReAct, with selective observation",
+   "quote": null
+  },
+  {
+   "work": "Claude 3.5 Computer Use (Anthropic computer-use API)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "The model studied",
+   "quote": null
+  },
+  {
+   "work": "CogAgent",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "related",
+   "note": "GUI agent background",
+   "quote": null
+  },
+  {
+   "work": "AppAgent",
+   "year": 2023,
+   "arxiv": "2312.13771",
+   "relation": "related",
+   "note": "GUI agent background",
+   "quote": null
+  },
+  {
+   "work": "AutoWebGLM",
+   "year": 2024,
+   "arxiv": "2404.03648",
+   "relation": "related",
+   "note": "web agent background",
+   "quote": null
+  },
+  {
+   "work": "WebGPT",
+   "year": 2021,
+   "arxiv": "2112.09332",
+   "relation": "related",
+   "note": "GUI agent background",
+   "quote": null
+  },
+  {
+   "work": "AssistGUI",
+   "year": 2023,
+   "arxiv": "2312.13108",
+   "relation": "related",
+   "note": "desktop GUI automation background",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Overview of representative evaluation tasks (left), categorized by Web Search, Productivity, Workflow, and Entertainment. Our Computer Use Out-of-the-Box framework (right)",
+   "page": 1,
+   "why": "Shows the task spread and the OOTB framework architecture."
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Summary of case studies in the report",
+   "page": 11,
+   "why": "Only success/fail tally: 15 of 19 succeed."
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Representative failure task in Web Search (Fox Sports)",
+   "page": 14,
+   "why": "Planning-error example: detour to Account tab instead of scrolling."
+  },
+  {
+   "figure": "Fig 12",
+   "caption": "Representative failure task in Office Productivity Software (Word resume)",
+   "page": 24,
+   "why": "Action error compounded by hallucinated critic."
+  },
+  {
+   "figure": "Fig 17",
+   "caption": "Representative failure task in Office Productivity Software (Excel SUM)",
+   "page": 29,
+   "why": "Wrong range and failed self-verification."
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Representative task in Web Search (Apple Pro Display XDR)",
+   "page": 13,
+   "why": "Best long-horizon Plan/Action/Critic annotated trace, 10 steps."
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 3.1.6, Eq 1-2",
+   "snippet": "Y_action^t = Theta_model(X_instr, I^t, I_history^(t-1)); Y_history^(t-1) = I^(t-1) U I_history^(t-2)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text says 20 tasks and 3 domains (then lists 4); Table 1 has 19 rows.",
+  "Fig 6 prose cites '165hz' for the AOC monitor, the figure says 180Hz; both monitors recorded at $129.99, unverified; model also narrates 'numbering' in a monitor task (caption copy-paste artifacts).",
+  "Fig 9 and others contain stray text 'I see the Excel is opened' in Outlook task.",
+  "Figure text is extracted OCR-like; no embedded instructions found."
+ ]
+}

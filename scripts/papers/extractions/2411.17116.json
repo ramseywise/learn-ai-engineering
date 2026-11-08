@@ -1,0 +1,610 @@
+{
+ "schema": 1,
+ "key": "2411.17116",
+ "pdf": "ai-engineering/07-inference-engineering/sources/acharya-2024-star-attention.pdf",
+ "bib": {
+  "title": "Star Attention: Efficient LLM Inference over Long Sequences",
+  "authors": [
+   "Shantanu Acharya",
+   "Fei Jia",
+   "Boris Ginsburg"
+  ],
+  "first_author": "Acharya",
+  "year": 2025,
+  "venue": "Proceedings of the 42nd International Conference on Machine Learning (ICML), Vancouver, PMLR 267, 2025",
+  "arxiv": "2411.17116",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 52500,
+  "chars_total": 54066,
+  "engine": "pymupdf",
+  "skipped": "Reference list (about chars 37000-43000) skimmed only; no body or appendix text skipped."
+ },
+ "type": "empirical",
+ "question": "Can long-context inference be sped up across multiple hosts, with no fine-tuning, by encoding the context with blockwise-local attention and using global attention only for the query and generated tokens?",
+ "hypothesis": "Context tokens need only attend to nearby tokens while query tokens need to attend to all prior tokens, so a two-phase block-sparse approximation keeps accuracy close to global attention.",
+ "contributions": [
+  "Star Attention: a two-phase block-sparse approximation (blockwise-local context encoding with anchor blocks, then sequence-global query encoding and generation) that shards attention across hosts",
+  "Distributed softmax aggregation that communicates one vector and one scalar per token per host instead of moving KV cache",
+  "Evaluation on RULER, BABILong and InfiniteBench with Llama-3/3.1 8B and 70B, up to 1M tokens, against Ring Attention, StreamingLLM and MInference",
+  "Ablation of anchor block position, content and size"
+ ],
+ "method": {
+  "summary": "Phase 1 splits the context into contiguous blocks of b tokens, prefixes each block except the first with the first block (anchor block, original position ids kept), has each host compute attention over its 2b tokens without cross-host communication, keeps the KV of the non-anchor block and discards anchor KV. Phase 2 broadcasts the query to all hosts, each attends to its local KV, and a designated query host combines local outputs A_h and softmax denominators s_h via online softmax (log-sum-exp) into global attention, generates tokens and is the only host that appends to its KV cache. Applied to pretrained Llama models with no fine-tuning, using Flash Attention per host.",
+  "task": "long-context inference efficiency (prefill and decode over 16K to 1M token inputs)",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "RULER",
+    "role": "eval",
+    "size": "13 tasks, 500 samples each",
+    "split": "16K, 32K, 64K, 128K sequence lengths (up to 1M for Llama-3-8B-Instruct-1048K)",
+    "source": "Hsieh et al., 2024",
+    "preprocessing": "Ablations use four NIAH tasks (Single 2, Single 3, MultiKey 1, MultiQuery) with Paul Graham essays as haystack"
+   },
+   {
+    "name": "BABILong",
+    "role": "eval",
+    "size": "5 tasks (qa1 to qa5), 1000 samples each",
+    "split": "16K to 128K",
+    "source": "Kuratov et al., 2024",
+    "preprocessing": null
+   },
+   {
+    "name": "InfiniteBench",
+    "role": "eval",
+    "size": "10 tasks as evaluated in Table 3 (Table 10 lists 12 rows)",
+    "split": "average input from 43.9k to 2068.6k tokens by task",
+    "source": "Zhang et al., 2024",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Llama-3.1-8B-Instruct",
+    "role": "evaluated",
+    "params": "8B",
+    "architecture": "decoder-only transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "128K",
+    "other": {}
+   },
+   {
+    "name": "Llama-3.1-8B base",
+    "role": "evaluated",
+    "params": "8B",
+    "architecture": "decoder-only transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "128K",
+    "other": {}
+   },
+   {
+    "name": "gradientai-Llama-3-8B-Instruct-262K",
+    "role": "evaluated",
+    "params": "8B",
+    "architecture": "decoder-only transformer",
+    "init_from": "Llama-3-8B (context extended by Gradient.ai)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "256K",
+    "other": {}
+   },
+   {
+    "name": "gradientai-Llama-3-8B-Instruct-1048K",
+    "role": "evaluated",
+    "params": "8B",
+    "architecture": "decoder-only transformer",
+    "init_from": "Llama-3-8B (context extended by Gradient.ai)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "1M",
+    "other": {}
+   },
+   {
+    "name": "Llama-3.1-70B-Instruct",
+    "role": "evaluated",
+    "params": "70B",
+    "architecture": "decoder-only transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "128K",
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": "Base models: {context}{query}{answer prefix}. Instruct models: Llama-3 chat template with system message 'You are a helpful assistant.'; context goes in Phase 1, query and answer prefix in Phase 2 (answer prefix only for RULER).",
+   "retrieval": null,
+   "parameters": {
+    "block_size": "one-quarter of sequence length (4K at 16K, 8K at 32K, 16K at 64K, 32K at 128K); fixed 32K for sequences over 128K",
+    "anchor_block_size": "equal to context block size; first block of the sequence; position ids kept as 0..b-1",
+    "anchor_kv": "discarded after Phase 1",
+    "kernel": "Flash Attention per host with log-sum-exp online softmax aggregation",
+    "streamingllm_baseline": "1000 global sink tokens plus 8000 token sliding window",
+    "minference_baseline": "three sparse patterns, best pattern per head chosen by offline search",
+    "precision": "bfloat16",
+    "gpus_and_workers": "8B: 16K-128K 8 GPUs 4 workers; 256K-512K 16 GPUs 8 workers; 1M 32 GPUs 16 workers. 70B: 16K-32K 8 GPUs 4 workers; 64K 16 GPUs 4 workers; 128K 32 GPUs 8 workers"
+   },
+   "other": {
+    "implementation": "HuggingFace Transformers (reported) and NVIDIA TRT-LLM (similar relative trends)",
+    "hardware": "NVIDIA A100 GPUs"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "benchmark accuracy",
+     "definition": "task accuracy on RULER, BABILong, InfiniteBench; Star Attention reported as absolute difference from Ring Attention (Table 1)",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "relative speedup",
+     "definition": "inference speed of Star Attention relative to Ring Attention",
+     "unit": "x",
+     "higher_is_better": true
+    },
+    {
+     "name": "time per sample",
+     "definition": "wall-clock seconds per sample on 8 A100 GPUs",
+     "unit": "s",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "Ring Attention (Liu et al., 2024a)",
+    "StreamingLLM (Xiao et al., 2024b)",
+    "MInference (Jiang et al., 2024)",
+    "vanilla autoregressive generation (Table 6)"
+   ],
+   "protocol": "Single reported number per setting; no seeds, variance or significance test stated. Speedup measured only against Ring Attention; accuracy against all three baselines."
+  },
+  "availability": {
+   "code": "https://github.com/NVIDIA/Star-Attention",
+   "weights": "uses public Llama and Gradient.ai checkpoints",
+   "data": "public benchmarks"
+  },
+  "prompts": [
+   {
+    "purpose": "base model template",
+    "text": "{context}{query}{answer prefix}",
+    "where": "Appendix B.3"
+   },
+   {
+    "purpose": "Llama-3 / Llama-3.1 Instruct template",
+    "text": "<|begin of text|><|start header id|>system<|end header id|>\n\nYou are a helpful assistant.<|eot id|><|start header id|>user<|end header id|>\n\n{context}{query}<|eot id|><|start header id|>assistant<|end header id|>\n\n{answer prefix}",
+    "where": "Appendix B.3 (text as printed, underscores in special tokens lost in extraction)"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Star Attention reaches up to 11x speedup over Ring Attention while keeping 97-100% of accuracy.",
+   "kind": "measured",
+   "source": null,
+   "metric": "speedup",
+   "value": "11",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "RULER, Llama-3-8B-Instruct-1048K, block size 32K fixed, sequence lengths above 128K; accuracy retention 97-100% stated in abstract for the main configs",
+   "quote": "reducing memory requirements and inference time by up to 11x while preserving 97-100% of accuracy",
+   "table": null,
+   "note": "Abstract says 11x; Section 3.4 and Table 5 report 10.8x at 256K and 16.9x at 1M.",
+   "where": "Abstract"
+  },
+  {
+   "claim": "At 1M tokens speedup rises to 16.9x with a 5.32% accuracy drop.",
+   "kind": "measured",
+   "source": null,
+   "metric": "speedup",
+   "value": "16.9",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "RULER, Llama-3-8B-Instruct-1048K, 1M tokens, block size 32K, vs Ring Attention, 32 A100 GPUs 16 workers",
+   "quote": "At 1M tokens, the speedup increases to 16.9× with an accuracy drop of just 5.32%.",
+   "table": null,
+   "note": null,
+   "where": "Section 3.4"
+  },
+  {
+   "claim": "On Llama-3.1-70B-Instruct at 64K, Star Attention is 4.7x faster than Ring Attention with a 1.44% accuracy drop.",
+   "kind": "measured",
+   "source": null,
+   "metric": "speedup",
+   "value": "4.7",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "RULER, 64K, block size 16K, anchor 16K, 16 GPUs 4 workers",
+   "quote": "the Llama-3.1-70B-Instruct model exhibits a 4.7× acceleration at 64K tokens with minimal accuracy drop",
+   "table": null,
+   "note": null,
+   "where": "Section 3.2, Table 1"
+  },
+  {
+   "claim": "At 128K on the 70B model speedup is 8.7x but accuracy drops 7.47%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "speedup",
+   "value": "8.7",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "RULER, Llama-3.1-70B-Instruct, 128K, block size 16K (one-eighth of length), 32 GPUs 8 workers; Ring Attention accuracy 65.29",
+   "quote": null,
+   "table": "Table 5, row Llama-3.1-70B-Instruct 128K, columns Seq. Len. 128, Block Size 16, Ring-Attn 65.29, DAcc -7.47%, DSpeedup 8.7x",
+   "note": null,
+   "where": "Table 5"
+  },
+  {
+   "claim": "On Llama-3.1-8B-Instruct, speedup over Ring Attention grows from 1.1x at 16K to 2.7x at 128K, with accuracy changes between -1.90% and +1.17%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "speedup at 128K",
+   "value": "2.7",
+   "unit": "x",
+   "baseline_value": "76.31",
+   "n": null,
+   "setup": "RULER, block size 1/4 of length; Ring-Attn accuracy at 128K 76.31%, Star delta -1.90%",
+   "quote": null,
+   "table": "Table 1, row Llama-3.1-8B-Instruct, Seq. Len. 128, Block Size 32, columns Ring-Attn Acc 76.31, DAcc -1.90%, DSpeedup 2.7x",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Star Attention averages 84.44 on RULER versus 85.21 for full attention, 45.07 for StreamingLLM and 80.71 for MInference.",
+   "kind": "measured",
+   "source": null,
+   "metric": "RULER average accuracy",
+   "value": "84.44",
+   "unit": "%",
+   "baseline_value": "85.21",
+   "n": null,
+   "setup": "Llama-3.1-8B-Instruct, 16K-128K averaged",
+   "quote": null,
+   "table": "Table 2, row Star Attention, column Average",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "At 128K on RULER, Star Attention scores 74.41 versus MInference 58.17 and full attention 76.31.",
+   "kind": "measured",
+   "source": null,
+   "metric": "RULER accuracy at 128K",
+   "value": "74.41",
+   "unit": "%",
+   "baseline_value": "76.31",
+   "n": null,
+   "setup": "Llama-3.1-8B-Instruct",
+   "quote": null,
+   "table": "Table 2, row Star Attention, column 128K",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "On InfiniteBench Star Attention averages 46.51 versus 48.06 full attention, 34.07 MInference and 14.72 StreamingLLM.",
+   "kind": "measured",
+   "source": null,
+   "metric": "InfiniteBench average accuracy",
+   "value": "46.51",
+   "unit": "%",
+   "baseline_value": "48.06",
+   "n": null,
+   "setup": "Llama-3.1-8B-Instruct, 10 tasks",
+   "quote": null,
+   "table": "Table 3, row Star Attention, column Avg.",
+   "note": "Full attention beats Star Attention on average and on PassKey (99.15 vs 93.22), Num (99.66 vs 96.27) and KV (60 vs 45.8); Star wins Code.Debug (24.37 vs 16.75) and Math.Find (26.29 vs 24.29). The text claims Star Attention 'excels especially in retrieval-heavy tasks' but it is below full attention there.",
+   "where": "Table 3"
+  },
+  {
+   "claim": "Time per sample at 128K on 8 A100 GPUs: vanilla runs out of memory, Ring takes 53 s, Star takes 20 s.",
+   "kind": "measured",
+   "source": null,
+   "metric": "time per sample at 128K",
+   "value": "20",
+   "unit": "s",
+   "baseline_value": "53",
+   "n": null,
+   "setup": "Llama3.1-8B-Instruct, 8 A100 GPUs, bf16",
+   "quote": null,
+   "table": "Table 6, row 128, columns Vanilla OOM, Ring 53, Star 20",
+   "note": null,
+   "where": "Table 6"
+  },
+  {
+   "claim": "Below about 32K tokens, vanilla (non-distributed) inference is as fast or faster than Ring and Star because of GPU communication overhead; at 16K vanilla 7 s, Ring 10 s, Star 9 s.",
+   "kind": "measured",
+   "source": null,
+   "metric": "time per sample at 16K",
+   "value": "9",
+   "unit": "s",
+   "baseline_value": "7",
+   "n": null,
+   "setup": "Llama3.1-8B-Instruct, 8 A100 GPUs",
+   "quote": null,
+   "table": "Table 6, row 16, columns Vanilla 7, Ring 10, Star 9",
+   "note": null,
+   "where": "Table 6; Appendix B.1"
+  },
+  {
+   "claim": "Removing anchor blocks drops RULER-NIAH accuracy by 39.59% at 64K.",
+   "kind": "measured",
+   "source": null,
+   "metric": "RULER-NIAH accuracy",
+   "value": "60.11",
+   "unit": "%",
+   "baseline_value": "99.50",
+   "n": null,
+   "setup": "Llama-3.1-8B-Instruct, 64K, block 16K; global attention 99.50",
+   "quote": null,
+   "table": "Table 4, row No anchor block, column 64K",
+   "note": "At 128K: 73.75 vs 98.49 (-25.12%).",
+   "where": "Table 4"
+  },
+  {
+   "claim": "Anchor content matters, position ids do not: first-block content with first-block position ids gets 97.61 at 64K, while a constant-token anchor gets 0.00.",
+   "kind": "measured",
+   "source": null,
+   "metric": "RULER-NIAH accuracy at 64K",
+   "value": "97.61",
+   "unit": "%",
+   "baseline_value": "99.50",
+   "n": null,
+   "setup": "Llama-3.1-8B-Instruct, 64K, anchor size equals block size",
+   "quote": "In summary, we found that while the positional placement of the anchor block is not important , its content is critical for optimal performance.",
+   "table": null,
+   "note": "Random tokens 90.55, shuffled first-block tokens 92.96, previous block as anchor 94.20 at 64K.",
+   "where": "Section 4.1, Table 4"
+  },
+  {
+   "claim": "Shrinking the anchor block below the context block size causes a substantial accuracy drop; best accuracy when anchor equals context block.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Llama-3.1-8B-Instruct, 128K, block 32K, RULER-NIAH; values only in Fig 5b",
+   "quote": null,
+   "table": null,
+   "note": "Read from Fig 5b, not given numerically in the text.",
+   "where": "Section 4.2, Fig 5b"
+  },
+  {
+   "claim": "By category, Star Attention gains 16.15% on Aggregation and loses 6.52% on Multi-Hop Tracing relative to global attention.",
+   "kind": "measured",
+   "source": null,
+   "metric": "RULER category accuracy delta (Aggregation)",
+   "value": "+16.15",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Llama-3.1-8B-Instruct, 32K, block 8K",
+   "quote": null,
+   "table": "Fig 7, label above Agg. (+16.15%)",
+   "note": "Fig 7 labels: Single-NIAH +0.00%, Multi-NIAH -1.63%, Multi-Hop -6.52%, Agg +16.15%, QA -1.20%. Read from Fig 7 labels; the number +16.15% is in the extracted figure text.",
+   "where": "Fig 7, Section 3.5"
+  },
+  {
+   "claim": "Larger block size improves accuracy; one-quarter of sequence length is the recommended trade-off, and accuracy degrades with smaller blocks on longer sequences.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "RULER, Llama-3.1-8B-Instruct, 128K (Fig 5a)",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Section 3.4, Section 6"
+  },
+  {
+   "claim": "Without instruction tuning the Llama-3.1-8B base model shows anomalies on BABILong under Star Attention, at longer sequence lengths.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "BABILong, Fig 4",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Section 3.2"
+  }
+ ],
+ "limits": [
+  "Multi-hop tracing degrades because context blocks cannot attend to each other during Phase 1; the authors call cross-block communication future work.",
+  "Accuracy degrades when blocks are small relative to long sequences (-6.73% at 512K, -7.47% at 128K on 70B with block 16K).",
+  "Why anchor size must equal context block size is not explained; authors say it is left for future work.",
+  "The attention-sink explanation for anchors is a conjecture; the anchor size ablation suggests other factors.",
+  "Speedups are measured only against Ring Attention; vanilla causal generation OOMs beyond 64K on 8 A100s in the HF implementation, which lacks multi-node support.",
+  "Below about 32K tokens distributed methods are not faster than vanilla.",
+  "No variance, seeds or significance tests; decoding settings not stated.",
+  "Speedup applies to context encoding and query decoding on a multi-host setup; single-GPU benefits not evaluated.",
+  "Prompt structure assumes a long context followed by a short query and short answer."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "anchor block",
+   "definition": "the first block c1 of the sequence, prefixed to every other context block during Phase 1 so attention sinks shift to anchor tokens; its KV is discarded after encoding",
+   "where": "Section 2.1"
+  },
+  {
+   "term": "query host",
+   "definition": "the designated host that aggregates local attention outputs and softmax sums from all hosts in Phase 2, generates tokens and is the only host updating its KV cache",
+   "where": "Section 2.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Ring Attention (Liu et al.)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "distributed global attention baseline for speedups; Star Attention drops the ring communication during context encoding",
+   "quote": null
+  },
+  {
+   "work": "StreamingLLM / attention sinks (Xiao et al.)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "sparse attention baseline and source of the attention sink explanation",
+   "quote": null
+  },
+  {
+   "work": "MInference (Jiang et al.)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "dynamic sparse attention baseline",
+   "quote": null
+  },
+  {
+   "work": "Flash Attention (Dao et al.; Dao)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "used per host for local attention",
+   "quote": null
+  },
+  {
+   "work": "Online softmax (Milakov & Gimelshein)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "log-sum-exp aggregation across hosts",
+   "quote": null
+  },
+  {
+   "work": "RULER (Hsieh et al.)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "main benchmark",
+   "quote": null
+  },
+  {
+   "work": "BABILong (Kuratov et al.)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "generalization benchmark",
+   "quote": null
+  },
+  {
+   "work": "InfiniteBench (Zhang et al.)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "real-world long tasks",
+   "quote": null
+  },
+  {
+   "work": "Llama 3.1 (Meta-AI)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "8B and 70B",
+   "quote": null
+  },
+  {
+   "work": "Gradient.ai Llama-3-8B-Instruct 262K and 1048K",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "long-context extended models",
+   "quote": null
+  },
+  {
+   "work": "Longformer (Beltagy et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "related",
+   "note": "sliding window with global tokens",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Star Attention inference flow across two phases.",
+   "page": 2,
+   "why": "Shows anchor-block local encoding then query-host aggregation across hosts."
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Block sparsity pattern in Star Attention for a sequence partitioned into 5 context blocks ci and a query block q.",
+   "page": 2,
+   "why": "The attention mask at a glance."
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Attention distribution across the sequence during context encoding under different strategies in Phase 1.",
+   "page": 3,
+   "why": "Shows that anchors move attention sinks and recover the global attention shape."
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "Accuracy vs speed trade-off for Star Attention on RULER with Llama3-8B-Instruct-1048K as sequence length increases from 128K to 1M with block size fixed at 32K.",
+   "page": 7,
+   "why": "Speedup grows with length while accuracy loss stays moderate."
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq. 4, Section 2.2",
+   "snippet": "A_global = sum_{h=1..H} (s_h / s_global) A_h, with s_global = sum_h s_h",
+   "verbatim": false
+  },
+  {
+   "where": "Algorithm 2, line 18",
+   "snippet": "s_global <- s_global + log(1 + exp(s_h - s_global))",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Table 1 has no Llama-3.1-70B 128K row (it is in Table 5); Table 1 and Table 5 print the same rows with consistent numbers.",
+  "Year: arXiv file name says 2024, the PDF is v3 dated 30 May 2025 and is the ICML 2025 version.",
+  "Special-token underscores in the Appendix B.3 prompt were lost in extraction.",
+  "Table 10 lists 12 InfiniteBench rows while text says 10 tasks.",
+  "No embedded instructions found."
+ ]
+}

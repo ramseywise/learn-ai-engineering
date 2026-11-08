@@ -1,0 +1,632 @@
+{
+ "schema": 1,
+ "key": "2407.09025",
+ "pdf": "ai-engineering/02-context-engineering/sources/dong-2024-spreadsheetllm.pdf",
+ "bib": {
+  "title": "SPREADSHEETLLM: Encoding Spreadsheets for Large Language Models",
+  "authors": [
+   "Haoyu Dong",
+   "Jianbo Zhao",
+   "Yuzhang Tian",
+   "Junyu Xiong",
+   "Shiyu Xia",
+   "Mengyu Zhou",
+   "Yun Lin",
+   "José Cambronero",
+   "Yeye He",
+   "Shi Han",
+   "Dongmei Zhang"
+  ],
+  "first_author": "Dong",
+  "year": 2024,
+  "venue": "preprint (arXiv v2, 2 Apr 2025)",
+  "arxiv": "2407.09025",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 72047,
+  "chars_total": 72047,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "system",
+ "question": "How can large, multi-table spreadsheets be serialized for LLMs within token limits while preserving the layout and structure needed for table detection and QA?",
+ "hypothesis": "Most rows and columns in big spreadsheets are homogeneous and uninformative for layout, so dropping them and compacting the rest improves accuracy and cuts tokens.",
+ "contributions": [
+  "SPREADSHEETLLM and SHEETCOMPRESSOR, an encoding framework that compresses spreadsheets for LLMs",
+  "Fine-tune several LLMs for spreadsheet table detection and show high accuracy",
+  "Chain of Spreadsheet (CoS) for downstream tasks, validated on spreadsheet QA"
+ ],
+ "method": {
+  "summary": "Cells are serialized as address, value, format in a Markdown-like text. SheetCompressor then (1) keeps only rows/columns within k=4 of heuristically proposed structural anchors and re-maps coordinates, (2) inverts the index into {value: address/range} dropping empty cells, (3) replaces numeric cells with number-format strings or type tags and merges adjacent same-type cells into ranges. Chain of Spreadsheet runs table detection on the compressed sheet, then answers on the detected table re-encoded without extraction.",
+  "task": "spreadsheet table detection and spreadsheet QA",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "TableSense spreadsheet table detection data (Dong et al., 2019b)",
+    "role": "both",
+    "size": "train 7000 items, valid 200 items, test 188 spreadsheets with 311 tables",
+    "split": "test partitioned by vanilla token count: small <4k, medium 4-8k, large 8-32k, huge >32k, 64:32:70:22",
+    "source": "real-world spreadsheets; test relabelled by five annotators (Fleiss Kappa 0.830 before cleaning)",
+    "preprocessing": "Test: drop non-English sheets, drop sheets sharing a workbook with training, three-type annotation (167 sheets/268 tables type 1; 21/43 type 2; 10 type 3), types 1 and 2 kept = 188"
+   },
+   {
+    "name": "Spreadsheet QA (new)",
+    "role": "eval",
+    "size": "307 (Q,A,S) items, 64 spreadsheets, 4-6 questions each",
+    "split": "test only",
+    "source": "sampled from authors' collection; five annotators plus two cross-verifiers (Fleiss Kappa 0.846)",
+    "preprocessing": "English only, no non-ASCII; questions limited to search, comparison, basic arithmetic; answer is a cell address or formula; 9 single-table, 35 two-table, 11 three-table, 9 four-plus-table sheets"
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT4 (fine-tuned and ICL, GPT4-0125-preview for ICL)",
+    "role": "proposed",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT3.5",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Llama-2-7b-chat-hf",
+    "role": "evaluated",
+    "params": "7B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Meta-Llama-3-8B-Instruct",
+    "role": "evaluated",
+    "params": "8B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Mistral-v2-7B-Instruct-v0.2",
+    "role": "evaluated",
+    "params": "7B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Phi-3-mini-128k-instruct",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "128k",
+    "other": {}
+   },
+   {
+    "name": "TableSense-CNN",
+    "role": "baseline",
+    "params": null,
+    "architecture": "CNN",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "TAPEX, Binder",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "single-table QA baselines fed the detected table, truncated if over their limit"
+    }
+   }
+  ],
+  "training": {
+   "objective": "fine-tuning on table boundary detection (output ranges like A2:D5)",
+   "optimizer": "AdamW (open-source models)",
+   "lr": "5e-05",
+   "lr_schedule": "cosine",
+   "warmup": "0 steps",
+   "batch_size": "5 per device, gradient accumulation 8",
+   "steps": null,
+   "epochs": "15.0",
+   "tokens": null,
+   "seq_len": "cutoff len 5800",
+   "precision": "fp16",
+   "weight_decay": null,
+   "dropout": "lora dropout 0.01",
+   "regularisation": "max grad norm 1.0",
+   "hardware": "workstation with 8 A100 GPUs, Deepspeed",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "lora": "rank 32, alpha 64",
+    "val_size": "0.0008",
+    "eval_steps": 50,
+    "gpt_finetune": "lora_dim=32, n_epochs=-1, batch_size=-1, learning_rate_multiplier=1, weight_decay_multiplier=1e-05, prompt_loss_weight=0, trim_mode=right"
+   }
+  },
+  "inference": {
+   "decoding": "temperature 0 for GPT4/3.5",
+   "temperature": "0",
+   "top_p": "0.95",
+   "max_tokens": "300",
+   "samples": null,
+   "prompting": "Instruction plus encoded spreadsheet; table detection one-shot instruction; QA is two-stage CoS (stage 1 compressed sheet -> table range; stage 2 uncompressed table -> cell address). Tables over 4096 tokens split with header repeated and 3 body rows per chunk (Algorithm 2).",
+   "retrieval": null,
+   "parameters": {
+    "k": "4 (ablation 2, 4, 8)",
+    "data_types": "Year, Integer, Float, Percentage, Scientific notation, Date, Time, Currency, Email, Others; first nine cover about 55% of cells",
+    "frequency_penalty": 0,
+    "presence_penalty": 0,
+    "stop": null
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "micro F1 under EoB-0",
+     "definition": "Error-of-Boundary 0: predicted table must match top, left, bottom and right boundary exactly",
+     "unit": "F1 (0-1)",
+     "higher_is_better": true
+    },
+    {
+     "name": "compression ratio",
+     "definition": "r = n/n', token count before over after",
+     "unit": "x",
+     "higher_is_better": true
+    },
+    {
+     "name": "QA accuracy",
+     "definition": "answer correct if cell address or cell combination/calculation is correct",
+     "unit": "fraction",
+     "higher_is_better": true
+    },
+    {
+     "name": "cost",
+     "definition": "ICL price proportional to input tokens, output ignored",
+     "unit": "% reduction",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "TableSense-CNN",
+    "vanilla encoding of each LLM",
+    "TAPEX",
+    "Binder"
+   ],
+   "protocol": "Single run per configuration apparently; no seeds, variance or significance reported."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": null
+  },
+  "prompts": [
+   {
+    "purpose": "Vanilla table detection",
+    "text": "Now you should tell me the range of the table in a format like A2:D5, and the range of the table should only CONTAIN HEADER REGION and the data region, DON’T include the title or comments.",
+    "where": "App. L.1 (abridged here) - verbatim excerpt only"
+   },
+   {
+    "purpose": "Compressed encoding table detection",
+    "text": "Some cells with empty content in the spreadsheet are not entered.",
+    "where": "App. L.2 (abridged; full text in the PDF) - verbatim excerpt only"
+   },
+   {
+    "purpose": "CoS stage 1 and 2 for QA",
+    "text": "DON’T ADD OTHER WORDS OR EXPLANATION.",
+    "where": "App. L.3 (paraphrased/abridged) - verbatim excerpt only"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Full SheetCompressor reaches 24.79x average token compression on the test set.",
+   "kind": "measured",
+   "source": null,
+   "metric": "compression ratio r=n/n'",
+   "value": 24.79,
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Test set, vanilla encoding as 1.00, all three modules",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, column Module 1&2&3, row Compression Ratio"
+  },
+  {
+   "claim": "Compression cuts GPT4/GPT3.5-turbo ICL cost by 96%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "cost reduction",
+   "value": 96,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Test set, ICL prices, output tokens ignored",
+   "note": null,
+   "where": "5.2.1 and App. I",
+   "quote": "we reduced 96% cost in our test set"
+  },
+  {
+   "claim": "Fine-tuned GPT4 with compression but without the aggregation module reaches the best F1 on table detection.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1 (EoB-0)",
+   "value": 0.789,
+   "unit": "F1",
+   "baseline_value": 0.666,
+   "n": null,
+   "setup": "Spreadsheet table detection, test set 188 spreadsheets / 311 tables, EoB-0 micro F1, fine-tuned GPT4, All",
+   "note": "Abstract's 78.9% F1 is this no-aggregation variant; the full pipeline (GPT4-compress) gets 0.759. Baseline value is TableSense-CNN.",
+   "where": "Table 2",
+   "table": "Table 2, row -w/o Aggregation, column All"
+  },
+  {
+   "claim": "Full-pipeline fine-tuned GPT4-compress F1 on table detection.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1 (EoB-0)",
+   "value": 0.759,
+   "unit": "F1",
+   "baseline_value": 0.52,
+   "n": null,
+   "setup": "Spreadsheet table detection, test set 188 spreadsheets / 311 tables, EoB-0 micro F1, fine-tuned GPT4, all three modules, All",
+   "note": "Baseline is fine-tuned GPT4 on vanilla encoding (0.520).",
+   "where": "Table 2",
+   "table": "Table 2, row GPT4-compress (Fine-tune), column All"
+  },
+  {
+   "claim": "Without compression, fine-tuned GPT4 scores 0.000 F1 on Huge spreadsheets (over 32k tokens); compression gives 0.690.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1 (EoB-0), Huge",
+   "value": 0.69,
+   "unit": "F1",
+   "baseline_value": 0.0,
+   "n": null,
+   "setup": "Spreadsheet table detection, test set 188 spreadsheets / 311 tables, EoB-0 micro F1, fine-tuned GPT4, Huge bucket (22 sheets)",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row GPT4-compress (Fine-tune), column Huge"
+  },
+  {
+   "claim": "In-context GPT4 table detection rises from 0.154 to 0.410 F1 with compression.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1 (EoB-0)",
+   "value": 0.41,
+   "unit": "F1",
+   "baseline_value": 0.154,
+   "n": null,
+   "setup": "Spreadsheet table detection, test set 188 spreadsheets / 311 tables, EoB-0 micro F1, ICL GPT4-0125-preview, All",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row GPT4-compress (ICL), column All"
+  },
+  {
+   "claim": "Extraction module is the most important: removing it drops fine-tuned GPT4 from 0.759 to 0.655 F1 and Huge from 0.690 to 0.321.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1 (EoB-0), All",
+   "value": 0.655,
+   "unit": "F1",
+   "baseline_value": 0.759,
+   "n": null,
+   "setup": "Spreadsheet table detection, test set 188 spreadsheets / 311 tables, EoB-0 micro F1, fine-tuned GPT4 ablation",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row -w/o Extraction, column All"
+  },
+  {
+   "claim": "Removing translation lowers F1 to 0.743 but removing aggregation raises it to 0.789; aggregation trades accuracy for tokens.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1 (EoB-0), All",
+   "value": 0.743,
+   "unit": "F1",
+   "baseline_value": 0.759,
+   "n": null,
+   "setup": "Spreadsheet table detection, test set 188 spreadsheets / 311 tables, EoB-0 micro F1, fine-tuned GPT4 ablation",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row -w/o Translation, column All"
+  },
+  {
+   "claim": "Inverted-index translation alone raises compression from 4.41 to 14.91 (with extraction); format aggregation raises it to 24.79.",
+   "kind": "measured",
+   "source": null,
+   "metric": "compression ratio",
+   "value": 14.91,
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Test set, Module 1&2",
+   "note": "Table 9 prints per-stage ratios (3.38, 1.66) relative to the previous stage, which differ from the cumulative figures in Table 1.",
+   "where": "3.3",
+   "quote": "remarkably increases SHEETCOMPRESSOR’s compression ratio from 4.41 to 14.91"
+  },
+  {
+   "claim": "Structural-anchor extraction filters out 75% of spreadsheet content but keeps 97% of rows and columns at table edges (k=4).",
+   "kind": "measured",
+   "source": null,
+   "metric": "edge rows/columns preserved",
+   "value": 97,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Heuristic anchors with neighbourhood k=4",
+   "note": null,
+   "where": "3.2",
+   "quote": "This method filters out 75% spreadsheet content but preserves 97% rows and columns at the edges of table boundaries."
+  },
+  {
+   "claim": "Anchor neighbourhood k=4 is best: F1 0.759 vs 0.712 (k=2) and 0.744 (k=8) on fine-tuned GPT4.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1 (EoB-0), All",
+   "value": 0.759,
+   "unit": "F1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fine-tuned GPT4, k in {2,4,8}",
+   "note": "k=8 collapses on Huge (0.400) because of token limits.",
+   "where": "Table 7",
+   "table": "Table 7, row 4, column All"
+  },
+  {
+   "claim": "Chain of Spreadsheet with compression and fine-tuned detection model reaches 0.743 accuracy on spreadsheet QA, vs 0.466 for plain GPT4.",
+   "kind": "measured",
+   "source": null,
+   "metric": "QA accuracy",
+   "value": 0.743,
+   "unit": "accuracy",
+   "baseline_value": 0.466,
+   "n": null,
+   "setup": "Own Spreadsheet QA set, 307 questions over 64 spreadsheets, GPT4, answer = cell address or formula",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row GPT4-compress-FT, column Accuracy"
+  },
+  {
+   "claim": "TAPEX and Binder (given detected tables, truncated) score 0.378 and 0.622 on spreadsheet QA.",
+   "kind": "measured",
+   "source": null,
+   "metric": "QA accuracy",
+   "value": 0.622,
+   "unit": "accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Same QA set; Binder shown",
+   "note": "TAPEX 0.378.",
+   "where": "Table 4",
+   "table": "Table 4, row Binder, column Accuracy"
+  },
+  {
+   "claim": "Region-identification accuracy in CoS stage 1 is 0.974 with full compression, 0.892 without extraction.",
+   "kind": "measured",
+   "source": null,
+   "metric": "region accuracy",
+   "value": 0.974,
+   "unit": "accuracy",
+   "baseline_value": 0.892,
+   "n": null,
+   "setup": "Spreadsheet QA, GPT4-compress",
+   "note": null,
+   "where": "Table 12",
+   "table": "Table 12, row GPT4-compress, column Region"
+  },
+  {
+   "claim": "Among traditional encodings, GPT4 ICL table detection F1 is Markdown 0.175, XML 0.142, HTML 0.031.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1 (EoB-0), All",
+   "value": 0.175,
+   "unit": "F1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT4 ICL, vanilla encodings without compression",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row Markdown, column All"
+  },
+  {
+   "claim": "Open-source models in ICL without fine-tuning score near zero on table detection (Llama3 0.027).",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1 (EoB-0), All",
+   "value": 0.027,
+   "unit": "F1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ICL, compressed encoding",
+   "note": null,
+   "where": "Table 11",
+   "table": "Table 11, row Llama3, column All"
+  }
+ ],
+ "limits": [
+  "Cell formats (colour, borders, bold) are not used because they cost too many tokens and LLMs use them poorly (Limitations, App. A).",
+  "No semantic compression of natural-language cells (e.g. grouping countries as 'Country').",
+  "Anchor extraction is lossy; CoS re-encodes the detected table without extraction to recover detail.",
+  "Full pipeline slightly lowers F1 versus no aggregation (0.759 vs 0.789): aggregation trades accuracy for compression.",
+  "QA set is small (307 items), single-operation questions only; no repeated runs, seeds or significance tests; no code or data release stated in text.",
+  "Table 2 fine-tuned GPT4 row and ICL results use different GPT4 versions; GPT4 and baselines not run through the same budgets, and the QA baselines were truncated when over their limits.",
+  "Abstract headline 78.9% F1 is the variant without aggregation, not the 25x-compression pipeline."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "structural anchors",
+   "definition": "heterogeneous rows and columns at possible table boundaries",
+   "where": "1, 3.2"
+  },
+  {
+   "term": "inverted-index translation",
+   "definition": "lossless dictionary mapping cell values to addresses or address regions, merging identical values and dropping empty cells",
+   "where": "3.3"
+  },
+  {
+   "term": "Chain of Spreadsheet (CoS)",
+   "definition": "table identification and boundary detection on the compressed sheet, then response generation on the identified table",
+   "where": "3.5"
+  },
+  {
+   "term": "EoB-0",
+   "definition": "Error-of-Boundary 0, exact match of all four table boundaries",
+   "where": "4.1.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "TableSense: Spreadsheet table detection with CNNs",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Baseline and source of the dataset",
+   "quote": null
+  },
+  {
+   "work": "Lost in the middle (Liu et al.)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Cited for accuracy dropping with context length",
+   "quote": null
+  },
+  {
+   "work": "LLMLingua (Jiang et al.)",
+   "year": 2023,
+   "arxiv": "2310.05736",
+   "relation": "related",
+   "note": "Prompt compression for natural language, said not to suit tables",
+   "quote": null
+  },
+  {
+   "work": "TAPEX (Liu et al.)",
+   "year": 2022,
+   "arxiv": "2107.07653",
+   "relation": "baseline",
+   "note": "QA baseline",
+   "quote": null
+  },
+  {
+   "work": "Binder (Cheng et al.)",
+   "year": 2022,
+   "arxiv": "2210.02875",
+   "relation": "baseline",
+   "note": "QA baseline",
+   "quote": null
+  },
+  {
+   "work": "Chain of Thought (Zheng et al., 2023; Jiang et al., 2023b)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "CoS inspired by CoT",
+   "quote": null
+  },
+  {
+   "work": "Table-GPT (Li et al.)",
+   "year": 2023,
+   "arxiv": "2310.09263",
+   "relation": "related",
+   "note": "Table-tuned GPT",
+   "quote": null
+  },
+  {
+   "work": "DBCopilot (Wang et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Schema routing, judged impractical for spreadsheets",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "Illustration of the SHEETCOMPRESSOR framework (576x23 sheet, 61,240 tokens -> 24x8 skeleton -> 708 tokens)",
+   "page": 3,
+   "why": "Shows the three compression steps on one worked example"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Average Compression Ratio on test datasets",
+   "page": 5,
+   "why": "Per-module token counts and ratios"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 2, 6",
+   "snippet": "T = \"|Address_i,j, Value_i,j, Format|... \\n\"; T_t = invert(T) := {Value : Address or Address_Region, ...}",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Table 9 per-stage ratios (3.38, 1.66) are relative to the previous stage and differ from cumulative Table 1 figures.",
+  "Prompts abridged in the JSON; full text in App. L.",
+  "Text says 'approximately 76%' for fine-tuned GPT4 and 'approximately 79%' without aggregation; 27% improvement is relative to 0.520 not points (0.759 vs 0.520 = 23.9 pts)."
+ ]
+}

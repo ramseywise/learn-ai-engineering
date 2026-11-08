@@ -1,0 +1,546 @@
+{
+ "schema": 1,
+ "key": "2408.16967",
+ "pdf": "ai-engineering/02-context-engineering/sources/liu-2024-memlong.pdf",
+ "bib": {
+  "title": "MemLong: Memory-Augmented Retrieval for Long Text Modeling",
+  "authors": [
+   "Weijie Liu",
+   "Zecheng Tang",
+   "Juntao Li",
+   "Kehai Chen",
+   "Min Zhang"
+  ],
+  "first_author": "Liu",
+  "year": 2024,
+  "venue": "preprint",
+  "arxiv": "2408.16967",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 42558,
+  "chars_total": 42558,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can an explicit external retriever over a frozen-lower-layer memory bank of chunk-level K-V pairs extend a decoder-only LLM's usable context cheaply, without the distribution shift of earlier memory models?",
+ "hypothesis": "Explicit chunk retrieval can approximate the implicit retrieval inside the model, and caching K-V from frozen lower layers keeps the cached distribution consistent.",
+ "contributions": [
+  "Ret-mem module: non-differentiable retriever plus memory of chunk K-V pairs and embeddings, with a frequency-counter dynamic update",
+  "Retrieval causal attention in upper layers with a LLaMA-adapter style gate",
+  "Experiments on long-context language modeling and retrieval-augmented in-context learning, extending context to 80k on one 3090"
+ ],
+ "method": {
+  "summary": "OpenLLaMA-3B is split into frozen lower layers and trainable upper layers (LoRA). After memory layer 13, each text chunk is embedded by a frozen dense retriever and its K-V pairs are cached. Top-k chunks by cosine similarity are retrieved and their K-V pairs are fused with local context in upper retrieval layers via retrieval causal attention.",
+  "task": "long-context language modeling and retrieval-augmented in-context learning",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "SlimPajama (as sampled by Fu et al., 2024)",
+    "role": "train",
+    "size": "0.5B tokens",
+    "split": null,
+    "source": "Fu et al. 2024",
+    "preprocessing": "sequence length 1024"
+   },
+   {
+    "name": "PG-19",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Rae et al. 2019",
+    "preprocessing": "perplexity on last 2048 tokens of each sequence, lengths 1k to 32k"
+   },
+   {
+    "name": "BookCorpus",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Zhu et al. 2015",
+    "preprocessing": null
+   },
+   {
+    "name": "Wikitext-103",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Merity et al. 2016",
+    "preprocessing": null
+   },
+   {
+    "name": "Proof-pile",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Azerbayev et al. 2023",
+    "preprocessing": null
+   },
+   {
+    "name": "SST-2, MR, Subj, SST-5, MPQA",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": null,
+    "preprocessing": "4-shot and 20-shot ICL; demonstrations held in memory"
+   }
+  ],
+  "models": [
+   {
+    "name": "MemLong-3B",
+    "role": "proposed",
+    "params": "3B (about 200M trainable)",
+    "architecture": "decoder-only, OpenLLaMA-3B with ret-mem module and retrieval causal attention",
+    "init_from": "OpenLLaMA-3B",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "26",
+    "hidden": null,
+    "heads": "32",
+    "context": "local context up to 2048 tokens; memory sizes 4K/32K evaluated, up to 80k claimed",
+    "other": {
+     "memory_layer": "13",
+     "retrieval_layers": "[14,18,22,26]",
+     "trainable_layers": "14 to 26",
+     "head_dim": "inferred: paper prints d = 100 in 'L = 26, H = 32, d = 100'",
+     "retriever": "frozen FlagEmbedding (Xiao et al. 2023b; Zhang et al. 2023a), exact-search faiss index on GPU",
+     "chunk_size": null,
+     "top_k": null
+    }
+   },
+   {
+    "name": "OpenLLaMA-3B",
+    "role": "base",
+    "params": "3B",
+    "architecture": "decoder-only",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "26",
+    "hidden": null,
+    "heads": "32",
+    "context": "2048",
+    "other": {}
+   },
+   {
+    "name": "LongLLaMA-3B",
+    "role": "baseline",
+    "params": "3B",
+    "architecture": "Focused Transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "finetune_tokens": "5B",
+     "trainable": "0.3B"
+    }
+   },
+   {
+    "name": "LLaMA-2-7B, LongLoRA-7B-32k, YARN-128k-7b, Phi3-128k",
+    "role": "baseline",
+    "params": "7B (Phi3 not stated)",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "next-token prediction with retrieval, p(x_i | R(t_i), x_<i)",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": "0.5B",
+   "seq_len": "1024",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "LoRA; lower layers frozen",
+   "hardware": "eight 3090 GPUs",
+   "compute": null,
+   "wall_clock": "eight hours (3B version, 0.5B tokens)",
+   "seeds": null,
+   "other": {
+    "lora_rank_alpha": null,
+    "position_remapping": "local context up to 2048 tokens gets standard rotary encoding; memory keys encoded as if at position 0",
+    "gate": "zero-init style gate g_l following LLaMA-adapter"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": "ICL: 4-shot and 20-shot; additional demonstrations stored in memory (In-Memory #Demons 4 or 18)",
+   "retrieval": "cosine similarity of chunk embedding to stored embeddings, top-k chunks, k not stated; K-V of chunk indices retrieved from memory layer",
+   "parameters": {
+    "dynamic_memory_update": "on overflow keep latest 10%, drop oldest 10%, prune middle 80% by retrieval frequency until memory usage is 50%",
+    "memory_sizes_evaluated": "4K, 32K; ablation to 65536"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Perplexity",
+     "definition": "on last 2048 tokens of each sequence, following Yen et al. 2024",
+     "unit": "PPL",
+     "higher_is_better": false
+    },
+    {
+     "name": "ICL accuracy",
+     "definition": "accuracy on 5 NLU tasks",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "OpenLLaMA-3B",
+    "LongLLaMA-3B",
+    "LLaMA-2-7B",
+    "LongLoRA-7B-32k",
+    "YARN-128k-7b",
+    "Phi3-128k",
+    "OpenLLaMA w/ RAG"
+   ],
+   "protocol": "single run, no seeds or significance reported; all perplexity runs on one 3090 24GB GPU"
+  },
+  "availability": {
+   "code": "https://github.com/Bui1dMySea/MemLong",
+   "weights": null,
+   "data": null
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "MemLong gains up to 10.2 percentage points over OpenLLaMA in retrieval-augmented ICL (abstract of intro).",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy gain",
+   "value": "10.2",
+   "unit": "percentage points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ICL on 5 NLU tasks, OpenLLaMA-3B comparison",
+   "quote": "MemLong achieves an improvement of up to 10.2 percentage points over OpenLLaMA.",
+   "table": null,
+   "note": "Conclusion says 10.4 points versus the full-context model. Table 2 Subj 20-shot is 65.8 vs 55.4, which is 10.4; no cell gives 10.2.",
+   "where": "Section 1; Section 7"
+  },
+  {
+   "claim": "On 20-shot ICL with 18 in-memory demonstrations MemLong averages 73.4 vs OpenLLaMA 69.0 and LongLLaMA 72.7.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Avg accuracy",
+   "value": "73.4",
+   "unit": "%",
+   "baseline_value": "69.0",
+   "n": null,
+   "setup": "20 in-context + 18 in-memory demos, SST-2 MR Subj SST-5 MPQA, OpenLLaMA-3B base",
+   "quote": null,
+   "table": "Table 2, row MemLong (20, 18), column Avg.",
+   "note": "OpenLLaMA 20-shot avg 69.0; LongLLaMA 72.7; OpenLLaMA w/ Rag 71.3",
+   "where": "Table 2"
+  },
+  {
+   "claim": "At 4 in-context demos with 18 in-memory demos MemLong averages 71.0 vs OpenLLaMA 68.9.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Avg accuracy",
+   "value": "71.0",
+   "unit": "%",
+   "baseline_value": "68.9",
+   "n": null,
+   "setup": "4-shot ICL plus 18 in-memory demos",
+   "quote": null,
+   "table": "Table 2, row MemLong (4, 18), column Avg.",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "MemLong keeps lowering perplexity past the 2048 pretrained length where OpenLLaMA-3B explodes (>10^3 at 4k); with 32K memory PG19 PPL at 16k is 9.73.",
+   "kind": "measured",
+   "source": null,
+   "metric": "PG19 PPL at 16k",
+   "value": "9.73",
+   "unit": "PPL",
+   "baseline_value": null,
+   "n": null,
+   "setup": "OpenLLaMA-3B backbone, w/ 32K Memory, perplexity on last 2048 tokens, one 3090 24GB",
+   "quote": null,
+   "table": "Table 1, row w/ 32K Memory, PG19 column 16k",
+   "note": "w/ 4K Memory gives 9.64 at 16k, lower than 32K memory on PG19; 32K memory is better on BookCorpus and Wikitext-103 at 4k",
+   "where": "Table 1"
+  },
+  {
+   "claim": "On PG19 at 4k, MemLong with 32K memory has PPL 9.83 vs LongLLaMA-3B with infinite memory 9.87 and Phi3-128k 9.66.",
+   "kind": "measured",
+   "source": null,
+   "metric": "PG19 PPL at 4k",
+   "value": "9.83",
+   "unit": "PPL",
+   "baseline_value": "9.87",
+   "n": null,
+   "setup": "as Table 1",
+   "quote": null,
+   "table": "Table 1, row w/ 32K Memory, PG19 column 4k",
+   "note": "Phi3-128k is lower (9.66), so MemLong is not best on PG19 at 4k",
+   "where": "Table 1"
+  },
+  {
+   "claim": "Training cost: 3B MemLong fine-tuned on 0.5B tokens with eight 3090s for eight hours.",
+   "kind": "measured",
+   "source": null,
+   "metric": "training time",
+   "value": "eight hours",
+   "unit": "hours on 8x3090",
+   "baseline_value": null,
+   "n": null,
+   "setup": "OpenLLaMA-3B, LoRA",
+   "quote": "finetuning a 3B parameter version of MemLong on 0.5B tokens requires only eight 3090 GPUs for eight hours",
+   "table": null,
+   "note": null,
+   "where": "Section 1"
+  },
+  {
+   "claim": "Context extended on a single 3090 GPU from 4k to 80k.",
+   "kind": "claim",
+   "source": null,
+   "metric": "context length",
+   "value": "80k",
+   "unit": "tokens",
+   "baseline_value": null,
+   "n": null,
+   "setup": "single 3090",
+   "quote": "MemLong can ex-",
+   "table": null,
+   "note": "Abstract says 4k to 80k; conclusion says 2k to 80k. The 80k figure is not tested in a table; Table 1 goes to 16k (text mentions up to 32768).",
+   "where": "Abstract; Section 7"
+  },
+  {
+   "claim": "Trainable parameters and fine-tune data are lower than LongLLaMA.",
+   "kind": "measured",
+   "source": null,
+   "metric": "trainable params",
+   "value": "200M",
+   "unit": null,
+   "baseline_value": "0.3B",
+   "n": null,
+   "setup": "vs LongLLaMA, 0.5B vs 5B fine-tuning tokens",
+   "quote": "(200M V. S.",
+   "table": null,
+   "note": null,
+   "where": "Section 4.3"
+  },
+  {
+   "claim": "Retrieval in every upper layer hurts; sparser retrieval layers [14,18,22,26] with frozen half is best (PG19 2k PPL 9.85 vs 11.43 for RA+TA).",
+   "kind": "measured",
+   "source": null,
+   "metric": "PG19 2k PPL",
+   "value": "9.85",
+   "unit": "PPL",
+   "baseline_value": "11.43",
+   "n": null,
+   "setup": "memory size 32768",
+   "quote": null,
+   "table": "Table 3, row w. RLP + TH, column PG19 2k",
+   "note": "Text says best layers are [13,17,21,25] while Section 4.1 says [14,18,22,26] for the retrieval layers; likely a 0-index difference",
+   "where": "Table 3; Section 5.2"
+  },
+  {
+   "claim": "A memory size of 65536 is a threshold beyond which performance jumps (read from Fig 5, not tabulated).",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "ablation of memory size, Fig 5",
+   "quote": null,
+   "table": null,
+   "note": "Text: a critical threshold is identified at a memory size of 65536",
+   "where": "Section 5.2 Q1"
+  }
+ ],
+ "limits": [
+  "Only OpenLLaMA-3B tested; other sizes left to future work (Limitations)",
+  "Single-layer K-V pairs give additional semantic information but it is unstable (Limitations)",
+  "Fixed FlagEmbedding retriever only; no retriever ablation",
+  "No optimizer, LR, batch size, chunk size, top-k, LoRA rank, seeds reported",
+  "80k context claim is not backed by a results table; no downstream long-document tasks (QA, summarisation) evaluated",
+  "Perplexity is the main metric; ICL tasks are classification sentiment-style tasks",
+  "Compared models differ in fine-tuning data (5B vs 0.5B)"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Ret-mem",
+   "definition": "module of a Retriever and a Memory component for information exchange, memory holding K-V pairs and representation embeddings",
+   "where": "Section 2.2"
+  },
+  {
+   "term": "Memory layer",
+   "definition": "the final layer of the frozen lower layers, whose K-V pairs are cached",
+   "where": "Section 3.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Memorizing Transformers (MemTrm)",
+   "year": 2022,
+   "arxiv": "2203.08913",
+   "relation": "extends",
+   "note": "Memory bank; MemLong avoids its distribution shift by freezing lower layers",
+   "quote": null
+  },
+  {
+   "work": "LongMEM (Wang et al.)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Side-network memory, adds overhead",
+   "quote": null
+  },
+  {
+   "work": "Focused Transformer / LongLLaMA",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Also stores K-V; position remapping follows it",
+   "quote": null
+  },
+  {
+   "work": "LongLoRA",
+   "year": 2023,
+   "arxiv": "2309.12307",
+   "relation": "baseline",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "YaRN",
+   "year": 2023,
+   "arxiv": "2309.00071",
+   "relation": "baseline",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "Phi-3",
+   "year": 2024,
+   "arxiv": "2404.14219",
+   "relation": "baseline",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "LLaMA-Adapter",
+   "year": 2023,
+   "arxiv": "2303.16199",
+   "relation": "uses-method",
+   "note": "gated attention",
+   "quote": null
+  },
+  {
+   "work": "kNN-LM",
+   "year": 2019,
+   "arxiv": "1911.00172",
+   "relation": "related",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "REALM",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "related",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "Retrieval-augmented generation (Lewis et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "related",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "SlimPajama sample from Data engineering for scaling LMs to 128k context",
+   "year": 2024,
+   "arxiv": "2402.10171",
+   "relation": "uses-data",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "Long-context LM with parallel context encoding (Yen et al.)",
+   "year": 2024,
+   "arxiv": "2402.16617",
+   "relation": "uses-method",
+   "note": "perplexity on last 2048 tokens",
+   "quote": null
+  },
+  {
+   "work": "LoRA",
+   "year": 2021,
+   "arxiv": "2106.09685",
+   "relation": "uses-method",
+   "note": null,
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Illustration of RAG and Memory-Retrieval flow of MemLong",
+   "page": 1,
+   "why": "RAG feeds text, MemLong feeds retrieved K-V"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "An example of MemLong",
+   "page": 3,
+   "why": "Frozen lower layers, memory layer, trainable upper layers"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Illustration of retrieval causal attention",
+   "page": 4,
+   "why": "Local causal attention plus retrieved chunk K-V"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq. 1",
+   "snippet": "p(x1,...,xn) = sum_i p_theta(xi | R(ti), x<i)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Table 1 and 2 numbers are split one per line in cached text; read by column order",
+  "Abstract and conclusion disagree on the base context (4k vs 2k) and gain (10.2 vs 10.4 points)",
+  "Memory layer 13 / retrieval [14,18,22,26] in 4.1 vs [13,17,21,25] in 5.2",
+  "Figure 4 and 5 values not extractable from text",
+  "No embedded instructions found"
+ ]
+}

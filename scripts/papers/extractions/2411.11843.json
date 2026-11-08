@@ -1,0 +1,673 @@
+{
+ "schema": 1,
+ "key": "2411.11843",
+ "pdf": "ai-engineering/07-inference-engineering/sources/tang-2024-bi-mamba.pdf",
+ "bib": {
+  "title": "Bi-Mamba: Towards Accurate 1-Bit State Space Models",
+  "authors": [
+   "Shengkun Tang",
+   "Liqun Ma",
+   "Haonan Li",
+   "Mingjie Sun",
+   "Zhiqiang Shen"
+  ],
+  "first_author": "Tang",
+  "year": 2025,
+  "venue": "Transactions on Machine Learning Research (09/2025)",
+  "arxiv": "2411.11843",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 80399,
+  "chars_total": 80399,
+  "engine": "pymupdf",
+  "skipped": "References skimmed; weight-distribution histogram figures (Figs 7-10) not interpretable from text"
+ },
+ "type": "empirical",
+ "question": "Can Mamba-2 state space models be binarized to 1-bit weights and trained from scratch while keeping performance close to full precision?",
+ "hypothesis": "Binarization-aware training with autoregressive distillation preserves Mamba quality where post-training quantization and binarization fail.",
+ "contributions": [
+  "First work to binarize the Mamba architecture to 1-bit from scratch while maintaining strong performance",
+  "Explore the parameter space for binarization in Mamba",
+  "Pretrained Bi-Mamba usable as a base model for resource-limited downstream tasks"
+ ],
+ "method": {
+  "summary": "Replaces the input and output projection linears of Mamba-2 (780M, 1.3B, 2.7B) with FBI-Linear (sign weights in {1,-1} with learnable column-wise scale alpha and shift beta), trained with STE and a cross-entropy distillation loss from a LLaMA2-7B teacher on 105B Amber tokens. Embedding/head, conv1d, A, D, norm and delta_bias stay at 16 bits.",
+  "task": "language-model pretraining via binarization-aware autoregressive distillation",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Amber",
+    "role": "pretrain",
+    "size": "1.26 Trillion tokens total, 360 chunks of about 3.5B tokens; 30 chunks (105B tokens) used",
+    "split": "first 30 chunks (inferred: from 'train with 30 data chunks')",
+    "source": "Liu et al., 2023; RefinedWeb, StarCoder, RedPajama-v1",
+    "preprocessing": null
+   },
+   {
+    "name": "OpenOrca",
+    "role": "train",
+    "size": "3.3B tokens",
+    "split": null,
+    "source": "Lian et al., 2023",
+    "preprocessing": "instruction tuning of base Bi-Mamba"
+   },
+   {
+    "name": "BoolQ, PIQA, HellaSwag, WinoGrande, ARC-e, ARC-c, OpenbookQA",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "zero-shot via lm-evaluation-harness",
+    "preprocessing": null
+   },
+   {
+    "name": "Wikitext2, PTB, C4",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "perplexity",
+    "preprocessing": null
+   },
+   {
+    "name": "HumanEval, GSM8K, Xwinograd",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": null,
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Bi-Mamba 780M",
+    "role": "proposed",
+    "params": "780M",
+    "architecture": "Mamba-2 with binarized In_Proj and Out_Proj",
+    "init_from": "inferred: random (trained from scratch)",
+    "tokenizer": "LLaMA2",
+    "vocab": "32,000",
+    "layers": "48",
+    "hidden": "1536",
+    "heads": null,
+    "context": null,
+    "other": {
+     "batch_size_tokens": "0.5M"
+    }
+   },
+   {
+    "name": "Bi-Mamba 1.3B",
+    "role": "proposed",
+    "params": "1.3B",
+    "architecture": "Mamba-2 with binarized In_Proj and Out_Proj",
+    "init_from": "inferred: random (trained from scratch)",
+    "tokenizer": "LLaMA2",
+    "vocab": "32,000",
+    "layers": "48",
+    "hidden": "2,048",
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Bi-Mamba 2.7B",
+    "role": "proposed",
+    "params": "2.7B",
+    "architecture": "Mamba-2 with binarized In_Proj and Out_Proj",
+    "init_from": "inferred: random (trained from scratch)",
+    "tokenizer": "LLaMA2",
+    "vocab": "32,000",
+    "layers": "64",
+    "hidden": "2,560",
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "LLaMA2-7B",
+    "role": "teacher",
+    "params": "7B",
+    "architecture": "transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Phi-3.5-instruct-mini",
+    "role": "teacher",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "ablation teacher"
+    }
+   },
+   {
+    "name": "Mamba-2 FP16 780M/1.3B/2.7B (+130M, 370M)",
+    "role": "baseline",
+    "params": "130M-2.7B",
+    "architecture": "Mamba-2",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "pretrain": "300B tokens on Pile"
+    }
+   },
+   {
+    "name": "GPTQ, SqueezeLLM, AQLM, BiLLM, OneBit, BitNet-1.58bit, FBI-LLM, TinyLLaMA, OPT",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "PTQ methods applied by authors to Mamba-2; BitNet and FBI-LLM numbers from original papers; OneBit only 7B released"
+    }
+   }
+  ],
+  "training": {
+   "objective": "cross-entropy between teacher and student next-token distributions (Eq 6), STE through sign()",
+   "optimizer": "Adam, beta1=0.9, beta2=0.95",
+   "lr": "2.5e-4",
+   "lr_schedule": "cosine, decreasing to 2.5e-5",
+   "warmup": "2,000 warm-up steps",
+   "batch_size": "0.5M tokens",
+   "steps": null,
+   "epochs": null,
+   "tokens": "105B (30 chunks)",
+   "seq_len": null,
+   "precision": "BF16",
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "gradient clipping 1.0",
+   "hardware": "32x NVIDIA A100 GPUs",
+   "compute": "GPU hours on A100 80G: 4640 (780M), 5780 (1.3B), 7822 (2.7B)",
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "convergence": "'trained until convergence' in text but Appendix A.1 says models have not yet fully converged",
+    "alpha_beta": "learnable per-column scale and shift in FBI-Linear",
+    "binarized": "only In_Proj and Out_Proj; embedding (tied to head), conv1d, A, D, norm, delta_bias kept high precision; activations 16-bit",
+    "simulated": "binarized params simulated with high-precision values in experiments"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": "128 generated tokens for throughput/energy",
+   "samples": "throughput over 5 runs, 8 CPU threads; accuracy std over 10 runs on different test subsets",
+   "prompting": "zero-shot; generation case prompt format 'Question?\\nAnswer: '",
+   "retrieval": null,
+   "parameters": {},
+   "other": {
+    "deploy": "llama.cpp on Mac M4 Pro CPU; memory measured at 2,048 tokens, batch 128; energy via asitop"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "zero-shot accuracy",
+     "definition": "lm-evaluation-harness over BoolQ, PIQA, HS, WG, ARC-e, ARC-c, OBQA; Avg. of seven",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "perplexity",
+     "definition": "Wiki2, PTB, C4",
+     "unit": "ppl",
+     "higher_is_better": false
+    },
+    {
+     "name": "throughput",
+     "definition": "tokens/s generating 128 tokens",
+     "unit": "tokens/s",
+     "higher_is_better": true
+    },
+    {
+     "name": "energy",
+     "definition": "average CPU power x run time",
+     "unit": "J per 128 tokens",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "Mamba-2 FP16",
+    "GPTQ 3/2-bit",
+    "SqueezeLLM 3/2-bit",
+    "AQLM ~2-bit",
+    "BiLLM",
+    "OneBit",
+    "BitNet-1.58bit",
+    "FBI-LLM",
+    "TinyLLaMA",
+    "OPT"
+   ],
+   "protocol": "std over 10 runs on different test subsets for Bi-Mamba; baselines single values; no seeds stated"
+  },
+  "availability": {
+   "code": "https://github.com/Tangshengku/Bi-Mamba",
+   "weights": "pre-trained weights stated available at the same repo",
+   "data": "Amber (public); footnote promises training datasets"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.lr_schedule",
+    "quote": "follows a cosine schedule, decreasing to 2.5e−5 over 2,000 warm-up steps",
+    "where": "Sec 4.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Bi-Mamba 2.7B (1-bit weights) averages 50.6 zero-shot accuracy over 7 tasks vs 59.6 for FP16 Mamba-2 2.7B and 35.8 for GPTQ-2bit.",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg zero-shot accuracy (7 tasks)",
+   "value": "50.6",
+   "unit": "%",
+   "baseline_value": "59.6",
+   "n": null,
+   "setup": "Mamba-2 binarized (input+output projections) via binarization-aware training, Amber data, LLaMA2-7B teacher; weights simulated in high precision during eval; zero-shot, lm-evaluation-harness; mean +- std over 10 runs on different test subsets",
+   "quote": "achieving an average downstream accuracy of 50.6",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2 / Table 3"
+  },
+  {
+   "claim": "Bi-Mamba 2.7B reaches Wiki2 perplexity 10.0 vs 9.1 for FP16 Mamba-2 and 8707.0 for BiLLM.",
+   "kind": "measured",
+   "source": null,
+   "metric": "perplexity Wiki2",
+   "value": "10.0",
+   "unit": "ppl",
+   "baseline_value": "9.1",
+   "n": null,
+   "setup": "Mamba-2 binarized (input+output projections) via binarization-aware training, Amber data, LLaMA2-7B teacher; weights simulated in high precision during eval; Wikitext2 perplexity",
+   "quote": null,
+   "table": "Table 3, 2.7B block, row Bi-Mamba, column Wiki2",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Bi-Mamba 2.7B C4 perplexity 11.3 vs 13.3 for FP16 Mamba-2 (lower than full precision).",
+   "kind": "measured",
+   "source": null,
+   "metric": "perplexity C4",
+   "value": "11.3",
+   "unit": "ppl",
+   "baseline_value": "13.3",
+   "n": null,
+   "setup": "Mamba-2 binarized (input+output projections) via binarization-aware training, Amber data, LLaMA2-7B teacher; weights simulated in high precision during eval; C4 perplexity",
+   "quote": null,
+   "table": "Table 3, 2.7B block, row Bi-Mamba, column C4",
+   "note": "Authors say C4 final perplexity of Bi-Mamba is even lower than full-precision",
+   "where": "Table 3"
+  },
+  {
+   "claim": "Bi-Mamba 780M averages 45.3 zero-shot vs 42.6 GPTQ-3bit, 38.1 BiLLM, 52.5 FP16 Mamba-2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg zero-shot accuracy",
+   "value": "45.3",
+   "unit": "%",
+   "baseline_value": "52.5",
+   "n": null,
+   "setup": "Mamba-2 binarized (input+output projections) via binarization-aware training, Amber data, LLaMA2-7B teacher; weights simulated in high precision during eval at 780M",
+   "quote": "Bi-Mamba demonstrates an average downstream performance of 45.3",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2"
+  },
+  {
+   "claim": "Bi-Mamba 1.3B averages 48.4 zero-shot vs 55.8 FP16 Mamba-2 and 46.3 FBI-LLM.",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg zero-shot accuracy",
+   "value": "48.4",
+   "unit": "%",
+   "baseline_value": "55.8",
+   "n": null,
+   "setup": "Mamba-2 binarized (input+output projections) via binarization-aware training, Amber data, LLaMA2-7B teacher; weights simulated in high precision during eval at 1.3B",
+   "quote": "Bi-Mamba achieves a notable downstream accuracy of 48.4 on average",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2"
+  },
+  {
+   "claim": "On Mac M4 Pro CPU (llama.cpp), Bi-Mamba 2.7B uses 1.04GB vs 5.03GB for 16-bit Mamba-2 (>5x less memory).",
+   "kind": "measured",
+   "source": null,
+   "metric": "memory",
+   "value": "1.04GB",
+   "unit": "GB",
+   "baseline_value": "5.03GB",
+   "n": null,
+   "setup": "llama.cpp on Mac M4 Pro CPU, 8 threads, memory measured with 2,048 tokens and batch size 128",
+   "quote": null,
+   "table": "Table 8, row Bi-Mamba, column Memory",
+   "note": "Table 7 gives 0.55GB theoretical storage for full Bi-Mamba 2.7B; Table 8 memory is runtime",
+   "where": "Table 8"
+  },
+  {
+   "claim": "Inference throughput of Bi-Mamba 2.7B is 77.81 tokens/s vs 24.59 for 16-bit (3.16x).",
+   "kind": "measured",
+   "source": null,
+   "metric": "tokens/s",
+   "value": "77.81",
+   "unit": "tokens/s",
+   "baseline_value": "24.59",
+   "n": null,
+   "setup": "Mac M4 Pro CPU, llama.cpp, 128 generated tokens, 5 runs, 8 threads",
+   "quote": "from 24.59 to 77.81",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.5 / Table 8"
+  },
+  {
+   "claim": "Energy per 128 generated tokens falls from 148.4 J to 44.9 J.",
+   "kind": "measured",
+   "source": null,
+   "metric": "energy per 128 tokens",
+   "value": "44.9",
+   "unit": "J",
+   "baseline_value": "148.4",
+   "n": null,
+   "setup": "Mac M4 Pro CPU; energy = average CPU power (asitop) x run time",
+   "quote": "from 148.4 J to 44.9 J for 128-token generation",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.5"
+  },
+  {
+   "claim": "Theoretical storage of fully binarized Bi-Mamba 2.7B is 0.55GB vs 5.03GB (89.0% compression).",
+   "kind": "measured",
+   "source": null,
+   "metric": "storage",
+   "value": "0.55GB",
+   "unit": "GB",
+   "baseline_value": "5.03GB",
+   "n": null,
+   "setup": "Storage computed following Bi-LLM, not measured files",
+   "quote": null,
+   "table": "Table 7, row Bi-Mamba (Full) 2.7B, column Storage Size",
+   "note": null,
+   "where": "Table 7"
+  },
+  {
+   "claim": "Binarizing only In_Proj gives 53.1 avg at 2.7B vs 50.6 for In_Proj+Out_Proj.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "2.7B, same data",
+   "quote": null,
+   "table": null,
+   "note": "Text says full binarization reduces to 50.4 while Table 5 and Table 3 print 50.6; text says 780M full-binarized C4 ppl is 15.0 while Tables 3/5 print 14.5",
+   "where": "Sec 5.2 / Table 5"
+  },
+  {
+   "claim": "Ablation at 780M: removing KD gives 42.7 avg vs 45.3 with LLaMA2-7B teacher; KL-Div loss 43.3; Phi-3.5 teacher 43.4.",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg zero-shot accuracy",
+   "value": "42.7",
+   "unit": "%",
+   "baseline_value": "45.3",
+   "n": null,
+   "setup": "780M, zero-shot avg",
+   "quote": null,
+   "table": "Table 10, rows Bi-Mamba (No KD), (KL-Div), (Phi-3.5), Bi-Mamba, column Avg.",
+   "note": "Text says Phi-3.5 gives 'similar performance' as LLaMA2 teacher while text elsewhere says better teacher gives better student",
+   "where": "Table 10 / Sec 5.7"
+  },
+  {
+   "claim": "Bi-Mamba 1.3B and 2.7B beat FP16 Mamba-2-370M (48.4 avg, 300B tokens) with 105B tokens; GPU hours 5780 and 7822 vs 2360.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GPU hours (2.7B)",
+   "value": "7822",
+   "unit": "h",
+   "baseline_value": "2360",
+   "n": null,
+   "setup": "Table 6, A100 80G GPU hours",
+   "quote": null,
+   "table": "Table 6, rows Bi-Mamba (1.3B, 1-bit) and Mamba-2 (370M, 16-bit), columns GPU Hours",
+   "note": "1.3B ties 370M at 48.4 in text ('higher' is claimed); 780M=4640 h",
+   "where": "Table 6"
+  },
+  {
+   "claim": "HumanEval/GSM8K scores are near zero for all models; Bi-Mamba 2.7B scores 0.91 and 1.29 vs FP16 1.07 and 0.91; instruct-tuned 6.10 and 3.94.",
+   "kind": "measured",
+   "source": null,
+   "metric": "HumanEval (Instruct 2.7B)",
+   "value": "6.10",
+   "unit": "score as printed",
+   "baseline_value": "1.07",
+   "n": null,
+   "setup": "Table 4, no instruction tuning for base; instruct = OpenOrca 3.3B tokens",
+   "quote": null,
+   "table": "Table 4, 2.7B rows Bi-Mamba and Bi-Mamba (Instruct), columns HumanEval and GSM8K",
+   "note": "Metric unit not stated (pass@1 and percent not specified)",
+   "where": "Table 4"
+  },
+  {
+   "claim": "Naive 2-3 bit and BiLLM PTQ collapses on Mamba-2: BiLLM 2.7B Wiki2 ppl 8707.0, GPTQ-2bit 2.1e+5.",
+   "kind": "measured",
+   "source": null,
+   "metric": "perplexity Wiki2",
+   "value": "8707.0",
+   "unit": "ppl",
+   "baseline_value": "9.1",
+   "n": null,
+   "setup": "Post-training baselines applied by authors to Mamba-2",
+   "quote": null,
+   "table": "Table 3, 2.7B block, row BiLLM, column Wiki2",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Xwinograd at 2.7B: Bi-Mamba 68.0 vs 75.2 FP16 and 64.8 GPTQ-3bit.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "68.0",
+   "unit": "%",
+   "baseline_value": "75.2",
+   "n": null,
+   "setup": "Multilingual benchmark",
+   "quote": null,
+   "table": "Table 9, row Bi-Mamba, column Xwinograd",
+   "note": null,
+   "where": "Table 9"
+  },
+  {
+   "claim": "In Mamba-2-2.7B the linear modules (excluding the causal head) hold 95.2% of parameters, which is what Bi-Mamba binarizes.",
+   "kind": "measured",
+   "source": null,
+   "metric": "fraction of params in linear modules",
+   "value": "95.2",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Mamba-2",
+   "quote": "in Mamba-2-2.7B, these parameters account for 95.2% of the entire model",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.2"
+  }
+ ],
+ "limits": [
+  "Weights are simulated with high-precision values in accuracy experiments; real 1-bit packing is only evaluated on CPU via llama.cpp (Table 8) and storage is theoretical (Table 7)",
+  "Authors concede possible accuracy trade-offs on complex tasks and that specialized hardware is needed to maximize gains",
+  "Training from scratch with distillation is compute-intensive (4640-7822 A100 hours)",
+  "Mamba base models are weak on HumanEval and GSM8K (near zero) so those comparisons are uninformative",
+  "1-bit models still trail FP16 Mamba-2 on average accuracy by about 7-9 points; 2.7B downstream is comparable to OneBit",
+  "No training seeds, no sequence length or context length stated; text 'until convergence' conflicts with appendix",
+  "Only tested on Mamba-2; BitNet comparison not matched in size (700M, 3B)"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "FBI-Linear",
+   "definition": "a matrix W^b of {1,-1} with high-precision scale alpha and shift beta, applied column-wise",
+   "where": "Sec 3.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "FBI-LLM (Ma et al.)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "FBI-Linear module and autoregressive distillation",
+   "quote": null
+  },
+  {
+   "work": "Mamba-2 / SSD (Dao & Gu)",
+   "year": 2024,
+   "arxiv": "2405.21060",
+   "relation": "extends",
+   "note": "base architecture",
+   "quote": null
+  },
+  {
+   "work": "Mamba (Gu & Dao)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "related",
+   "note": "selective SSM",
+   "quote": null
+  },
+  {
+   "work": "GPTQ (Frantar et al.)",
+   "year": 2023,
+   "arxiv": "2210.17323",
+   "relation": "baseline",
+   "note": "PTQ",
+   "quote": null
+  },
+  {
+   "work": "SqueezeLLM (Kim et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "PTQ",
+   "quote": null
+  },
+  {
+   "work": "AQLM (Egiazarian et al.)",
+   "year": 2024,
+   "arxiv": "2401.06118",
+   "relation": "baseline",
+   "note": "PTQ",
+   "quote": null
+  },
+  {
+   "work": "BiLLM (Huang et al.)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "post-training binarization",
+   "quote": null
+  },
+  {
+   "work": "OneBit (Xu et al.)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "QAT",
+   "quote": null
+  },
+  {
+   "work": "BitNet 1.58bit (Ma et al.)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "ternary QAT",
+   "quote": null
+  },
+  {
+   "work": "Straight Through Estimator (Bengio et al.)",
+   "year": 2013,
+   "arxiv": "1308.3432",
+   "relation": "uses-method",
+   "note": "gradient through sign",
+   "quote": null
+  },
+  {
+   "work": "Amber dataset (Liu et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "pretraining data",
+   "quote": null
+  },
+  {
+   "work": "Pierro & Abreu",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "related",
+   "note": "concurrent PTQ of Mamba",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Perplexity comparison of Bi-Mamba, GPTQ and Bi-LLM on Wiki2, PTB and C4",
+   "page": 2,
+   "why": "perplexity versus bit-width shows PTQ collapse below 3 bits against Bi-Mamba at 1 bit"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Illustration of the Bi-Mamba framework",
+   "page": 3,
+   "why": "shows which Mamba-2 modules are binarized"
+  },
+  {
+   "figure": "Table 8",
+   "caption": "Resource consumption analysis of Bi-Mamba",
+   "page": 12,
+   "why": "the only deployment measurements"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 4-5",
+   "snippet": "y = W~b x; W~b_{.,i} = alpha_i W^b_{.,i} + beta_i",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text/table inconsistencies noted in results (50.4 vs 50.6, 15.0 vs 14.5)",
+  "Table 3 text extraction places OneBit 6.7B row inside the 2.7B block",
+  "No embedded instructions found"
+ ]
+}

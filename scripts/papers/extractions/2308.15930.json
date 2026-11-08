@@ -1,0 +1,346 @@
+{
+ "schema": 1,
+ "key": "2308.15930",
+ "pdf": "ai-engineering/08-multimodal-engineering/sources/shu-2023-llasm.pdf",
+ "bib": {
+  "title": "LLaSM: Large Language and Speech Model",
+  "authors": [
+   "Yu Shu",
+   "Siwei Dong",
+   "Guangyao Chen",
+   "Wenhao Huang",
+   "Ruihua Zhang",
+   "Daochen Shi",
+   "Qiqi Xiang",
+   "Yemin Shi"
+  ],
+  "first_author": "Shu",
+  "year": 2023,
+  "venue": "preprint",
+  "arxiv": "2308.15930",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 25283,
+  "chars_total": 25283,
+  "engine": "pymupdf",
+  "skipped": "figures (1-7) are images; their text is not in the cache, only captions and the Figure 4/5 caption text"
+ },
+ "type": "system",
+ "question": "Can an LLM be given the ability to follow speech-and-language instructions end to end, cheaply, by reusing a pretrained speech encoder and LLM?",
+ "hypothesis": "Feeding speech embeddings directly to the LLM (no ASR cascade) avoids information loss and ASR errors and gives a more natural interface.",
+ "contributions": [
+  "A speech-language multi-modal model that understands and follows speech-language instructions.",
+  "LLaSM-Audio-Instructions, a large Chinese and English speech-text cross-modal instruction-following dataset.",
+  "Released code and demo."
+ ],
+ "method": {
+  "summary": "Whisper encodes audio to embeddings; a modal adaptor maps them into the text embedding space of Chinese-LLAMA2-7B; audio and text embeddings are interleaved. Stage 1 trains only the adaptor on public ASR data; stage 2 trains adaptor and LLM on TTS-synthesised speech instructions.",
+  "task": "speech-and-text instruction following (speech-input chat)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Aishell, LibriSpeech, Magicdata, Primewords (ASR)",
+    "role": "pretrain",
+    "size": null,
+    "split": null,
+    "source": "public ASR datasets, English and Chinese",
+    "preprocessing": "each sample formatted as (simple ASR instruction, audio, text label); instruction randomly placed before or after the audio tokens; target is the transcript"
+   },
+   {
+    "name": "LLaSM-Audio-Instructions",
+    "role": "train",
+    "size": "199k conversations, 508k samples (428k English, 80k Chinese)",
+    "split": null,
+    "source": "human turns from WizardLM (80k conv, 160k samples), ShareGPT (23k conv, 155k samples), GPT-4-LLM (96k conv, 192k samples), voiced with Microsoft Azure TTS API",
+    "preprocessing": "removed conversations unsuitable for vocalisation (code, many symbols, URLs, non-readable text); chatbot answers filtered again to drop those without valuable information; multi-round dialogues concatenated with EOS"
+   }
+  ],
+  "models": [
+   {
+    "name": "LLaSM",
+    "role": "proposed",
+    "params": null,
+    "architecture": "Whisper encoder + modal adaptor + Chinese-LLAMA2-7B",
+    "init_from": "Whisper, Chinese-LLAMA2-7B",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "audio_token_len": "64 by default",
+     "special_tokens": "<au_start>, <au_end>, <au_patch>",
+     "prompt_format": "Llama-2 chat format with a system prompt"
+    }
+   },
+   {
+    "name": "Whisper",
+    "role": "base",
+    "params": null,
+    "architecture": "speech encoder, frozen in both stages",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "size_variant": "not stated"
+    }
+   },
+   {
+    "name": "Chinese-LLAMA2-7B",
+    "role": "base",
+    "params": "7B",
+    "architecture": "LLaMA-2 derived LLM",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "predict text label (stage 1: transcript; stage 2: chatbot response); loss only on response tokens",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "stage_1": "Whisper and LLM frozen, only modal adaptor trained",
+    "stage_2": "Whisper frozen, modal adaptor and LLM trained jointly",
+    "adaptor_architecture": "not stated"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": "Llama-2 chat format; SYSTEM = 'You are a helpful language and speech assistant. You are able to understand the speech content that the user provides, and assist the user with a variety of tasks using natural language.'",
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [],
+   "baselines": [],
+   "protocol": "qualitative examples only (Figure 7); no quantitative evaluation"
+  },
+  "availability": {
+   "code": "https://github.com/LinkSoul-AI/LLaSM",
+   "weights": "demo at https://huggingface.co/spaces/LinkSoul/LLaSM; weights not stated",
+   "data": "https://huggingface.co/datasets/LinkSoul/LLaSM-Audio-Instructions"
+  },
+  "prompts": [
+   {
+    "purpose": "system prompt for both stages",
+    "text": "You are a helpful language and speech assistant. You are able to understand the speech content that the user provides, and assist the user with a variety of tasks using natural language.",
+    "where": "Figures 4 and 5 captions, p4"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "datasets[1].size",
+    "quote": "Table 1 shows the specific details of the dataset, which contains 199k conversation data and 508k samples in total.",
+    "where": "3.2"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "The released instruction dataset has 199k conversations and 508k samples.",
+   "kind": "measured",
+   "source": null,
+   "metric": "dataset size",
+   "value": "508k",
+   "unit": "samples",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LLaSM-Audio-Instructions built from WizardLM, ShareGPT and GPT-4-LLM with Azure TTS",
+   "quote": "which contains 199k conversation data and 508k samples in total",
+   "table": null,
+   "note": "Intro says '80k Chinese audio samples and 428k English audio samples', consistent with Table 1.",
+   "where": "3.2, Table 1"
+  },
+  {
+   "claim": "English samples dominate the dataset (428k English vs 80k Chinese).",
+   "kind": "measured",
+   "source": null,
+   "metric": "English samples",
+   "value": "428k",
+   "unit": "samples",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LLaSM-Audio-Instructions",
+   "quote": "there are 80k Chinese audio samples and 428k English audio samples",
+   "table": null,
+   "note": null,
+   "where": "Introduction"
+  },
+  {
+   "claim": "Authors call it the largest Chinese and English speech-text cross-modal instruction-following dataset; no comparison is shown.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "authors' knowledge",
+   "quote": "which is the largest Chinese and English speech-text cross-modal instruction-following dataset to our knowledge",
+   "table": null,
+   "note": null,
+   "where": "Introduction"
+  },
+  {
+   "claim": "LLaSM responds to Chinese and English speech directly, without ASR preprocessing, shown only through example conversations; no metrics.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Figure 7 examples",
+   "quote": "LLaSM can directly process speech inputs, which improves its execution efficiency",
+   "table": null,
+   "note": "efficiency claim not measured",
+   "where": "4"
+  }
+ ],
+ "limits": [
+  "No quantitative evaluation: Section 4 is a paragraph pointing at example conversations (Figure 7); no ASR WER, no benchmark, no baseline comparison (cascade or SpeechGPT).",
+  "No training hyperparameters, hardware, compute, adaptor architecture, Whisper size, or training sizes of the ASR data are given.",
+  "Speech inputs in the instruction data are synthetic TTS (Azure), not real human speech; model outputs are text only, no speech generation.",
+  "The claim that cascades lose paralinguistic information and add ASR errors is asserted, not tested.",
+  "Future work: add vision encoder to combine vision and audio."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "modal adaptor",
+   "definition": "module trained to align audio embeddings from the speech encoder with the LLM text embeddings",
+   "where": "3.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "LLaVA (Visual instruction tuning)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "follows its recipe of pretrained encoder + LLM with a two-stage adaptor then instruction tuning",
+   "quote": "Following the manner of LLaVA [6]"
+  },
+  {
+   "work": "Whisper (Robust speech recognition via large-scale weak supervision)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "speech encoder",
+   "quote": null
+  },
+  {
+   "work": "Chinese-LLAMA2-7B",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "base LLM (authors' own release)",
+   "quote": null
+  },
+  {
+   "work": "SpeechGPT",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "discrete speech tokens added to vocabulary; LLaSM contrasts by using continuous embeddings",
+   "quote": null
+  },
+  {
+   "work": "AudioPaLM",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "discrete speech tokens approach",
+   "quote": null
+  },
+  {
+   "work": "HuggingGPT; AudioGPT",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "cascade paradigm with ASR",
+   "quote": null
+  },
+  {
+   "work": "WizardLM; ShareGPT; GPT-4-LLM (Instruction tuning with GPT-4)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "text dialogues voiced by TTS",
+   "quote": null
+  },
+  {
+   "work": "Aishell-1; LibriSpeech; Magicdata; Primewords",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "ASR data for stage 1",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Figure 1",
+   "caption": "Model framework of the LLaSM",
+   "page": 2,
+   "why": "shows Whisper, adaptor and LLM and which parts are frozen"
+  },
+  {
+   "figure": "Figure 5",
+   "caption": "The sample sequence format for the cross-modal instruction fine-tuning",
+   "page": 4,
+   "why": "exact token layout and loss mask"
+  },
+  {
+   "figure": "Figure 7",
+   "caption": "Examples of experiments.",
+   "page": 6,
+   "why": "the only evidence of performance"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "LLaSM-Audio-Instructions Data.",
+   "page": 5,
+   "why": "per-source counts by language"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "No instructions embedded in the text.",
+  "Figures are images; Figures 2 and 3 (ASR instruction lists) are not in the text, so prompts are not recorded verbatim."
+ ]
+}

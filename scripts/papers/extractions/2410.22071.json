@@ -1,0 +1,560 @@
+{
+ "schema": 1,
+ "key": "2410.22071",
+ "pdf": "generative-ai/08-eval/sources/simhi-2024-distinguishing-ignorance-error-llm-hallucinations.pdf",
+ "bib": {
+  "title": "Distinguishing Ignorance from Error in LLM Hallucinations",
+  "authors": [
+   "Adi Simhi",
+   "Jonathan Herzig",
+   "Idan Szpektor",
+   "Yonatan Belinkov"
+  ],
+  "first_author": "Simhi",
+  "year": 2025,
+  "venue": "preprint (arXiv:2410.22071v2, 18 Feb 2025)",
+  "arxiv": "2410.22071",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 85843,
+  "chars_total": 85843,
+  "engine": "pymupdf",
+  "skipped": "Appendix figure-only pages (Figs 8-21 axes) and parts of the reference list skimmed; Table 11 numbers not extractable from text."
+ },
+ "type": "empirical",
+ "question": "Do hallucinations where the model lacks the knowledge (HK-) differ from hallucinations despite the model holding the knowledge (HK+), and does separating them help detection and mitigation?",
+ "hypothesis": "The two hallucination types need different mitigations and are represented differently in model states, so model-specific datasets that separate them detect HK+ better than generic ones.",
+ "contributions": [
+  "Indicate the prevalence of HK+ hallucinations, consistent under varying prompts including factuality-encouraging ones",
+  "Demonstrate that mitigation benefits from separating the two types",
+  "Propose WACK, an approach for constructing model-specific datasets with factually correct, HK- and HK+ examples",
+  "Show the importance of model-specific datasets for HK+ detection and the ability for preemptive detection"
+ ],
+ "method": {
+  "summary": "WACK labels closed-book QA questions per model: HK- if the model never produces the gold answer in 6 generations under a 3-shot prompt, else high-knowledge; high-knowledge questions are re-asked under four hallucination-inducing prompt settings (Truthful, Persona, Alice-Bob, Snowballing) and labelled HK+ if the answer becomes wrong. Linear SVM probes on hidden states then classify the labels, compared with generic datasets built from (question, gold, Mistral-written wrong answer) triples.",
+  "task": "closed-book QA (short answers) hallucination typing, detection and prompt mitigation",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "TriviaQA",
+    "role": "eval",
+    "size": "30K random training-set examples, answers <=5 Mistral tokens",
+    "split": "random 30K from train",
+    "source": "Joshi et al., 2017",
+    "preprocessing": "lower-case variants of upper-case answers added if >3 letters and no digits or '/'"
+   },
+   {
+    "name": "Natural Questions",
+    "role": "eval",
+    "size": "30K random examples",
+    "split": "random 30K",
+    "source": "Kwiatkowski et al., 2019",
+    "preprocessing": "dropped answers >5 tokens, no answer or more than one answer; lower-case variants added"
+   },
+   {
+    "name": "WACK probe data",
+    "role": "both",
+    "size": "1000 examples per label per dataset (all if fewer)",
+    "split": "70%/30% train/test",
+    "source": "built by the authors; Table 8 snowballing counts e.g. TriviaQA-Llama3 14154 correct / 1675 HK+ / 7356 HK-",
+    "preprocessing": "Snowballing 3-shot prompt at start in generic and specific comparison"
+   }
+  ],
+  "models": [
+   {
+    "name": "Mistral-7B-v0.3",
+    "role": "evaluated",
+    "params": "7B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "also writes wrong answers for generic dataset; layer axis up to ~30 in figures (read from Fig 2)"
+    }
+   },
+   {
+    "name": "Llama-3.1-8B",
+    "role": "evaluated",
+    "params": "8B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Gemma-2-9B",
+    "role": "evaluated",
+    "params": "9B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "layer axis up to ~40 in figures (read from Fig 2)"
+    }
+   },
+   {
+    "name": "ChatGPT / ChatGPT 3.5",
+    "role": "teacher",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "paraphrases of Truthful and Persona prompts, 20 false QA pairs for snowballing"
+    }
+   }
+  ],
+  "training": {
+   "objective": "linear SVM classifier on hidden states (probes); base LLMs not trained",
+   "optimizer": "sklearn LinearSVC",
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "NVIDIA RTX 6000 Ada (49GB) with 4 CPUs",
+   "compute": "approximately 2-4 weeks on one GPU (all datasets and results)",
+   "wall_clock": null,
+   "seeds": "three seeds (42,100,200)",
+   "other": {
+    "svm": "1000000 max iterations, tolerance 1e-5",
+    "features": "normalized hidden-state vectors at last answer token (last question token for preemptive); residual stream after each block; MLP and attention in Appendix I",
+    "split": "70/30"
+   }
+  },
+  "inference": {
+   "decoding": "knowledge test: one greedy generation plus five at temperature 0.5; labelling generations: greedy, 5 tokens",
+   "temperature": "0.5 for the five sampled knowledge-test generations",
+   "top_p": null,
+   "max_tokens": "5 tokens",
+   "samples": "6 generations per question for knowledge test (1 greedy + 5 sampled); exact match to gold answer",
+   "prompting": "3-shot in-context for knowledge test; Truthful and Persona use a one-shot example with a prompt permutation; Alice-Bob prefix plus one-shot; Snowballing prepends k=3 random false QA shots (20 bad shots)",
+   "retrieval": null,
+   "parameters": {
+    "snowballing_k": "3 (Appendix K: results consistent with other k, including 5)",
+    "mitigation_prompt": "Generate answers that are entirely factual and precise, regardless of any issues in the text",
+    "mitigation_eval": "500 random HK+ and 500 random HK- examples per setting"
+   },
+   "other": {
+    "knowledge_robustness": "8 configs (shots, temperature {0.5,1,1.5}, generations {5,10}, length {5,10,20}) agree 92.2-93.6% on 1000 TriviaQA; ~80% for zero-shot; ~5% of questions fall in between and are left out"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "HK+ rate",
+     "definition": "share of high-knowledge examples whose answer becomes wrong under a setting",
+     "unit": "%",
+     "higher_is_better": false
+    },
+    {
+     "name": "Mitigation success",
+     "definition": "QA accuracy improvement after prepending the factuality prompt, 5 generated tokens, on 500 HK+ or HK- examples",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Probe accuracy",
+     "definition": "SVM classification accuracy per layer; chance 33% for 3-way, 50% binary",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Jaccard similarity",
+     "definition": "intersection over union of example sets between models or settings",
+     "unit": "0-1",
+     "higher_is_better": null
+    }
+   ],
+   "baselines": [
+    "random classifier (33% 3-way)",
+    "generic dataset classifier (triplet with Mistral-written wrong answer)",
+    "post-answer model-specific classifier (for preemptive)"
+   ],
+   "protocol": "three seeds, mean with standard deviations; 70/30 split; exact-match labelling; no significance test named for 'significantly higher' mitigation claim"
+  },
+  "availability": {
+   "code": "https://github.com/technion-cs-nlp/hallucination-mitigation",
+   "weights": null,
+   "data": "same repo; 'We will release the datasets'; Apache licence for datasets"
+  },
+  "prompts": [
+   {
+    "purpose": "Generic dataset wrong-answer generation (Mistral)",
+    "text": "Question: {question}\nCorrect Answer: {correct answer}\nIncorrect Answer:",
+    "where": "Appendix B.1"
+   },
+   {
+    "purpose": "Prompt mitigation prefix",
+    "text": "Generate answers that are entirely factual and precise, regardless of any issues in the text",
+    "where": "Section 4.1"
+   },
+   {
+    "purpose": "Alice-Bob prefix",
+    "text": "Alice and Bob are students studying for a test on general world knowledge that requires a vast amount of understanding and knowledge. Alice is the smarter of the two. They are given four questions in total. As it is such a hard test, most students acheive at most 75 (3 out of 4) where the minimum required to pass is only 50 (2 out of 4). It is better to guss then to not answer at all as you can achieve partial points for trying. Bob and Alice only need to pass the test. Alice will ask the questions and Bob will try his best.",
+    "where": "Section 3.2"
+   },
+   {
+    "purpose": "Truthful base instruction (10 paraphrases in App B.2)",
+    "text": "Generate answers that are entirely factual and precise",
+    "where": "Section 3.2, Appendix B.2"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "inference.samples",
+    "quote": "we perform one greedy generation plus five generations with a temperature of 0.5",
+    "where": "footnote 2"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "HK+ hallucinations occur across all settings in a range of 4 to 24 percent of high-knowledge cases",
+   "kind": "measured",
+   "source": null,
+   "metric": "HK+ rate",
+   "value": "4%-24%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "TriviaQA and Natural Questions, Mistral-7B-v0.3, Llama-3.1-8B, Gemma-2-9B, four settings",
+   "note": "Full range text split across lines: '4%–24% HK+ hallucinations out of all cases of high knowledge'",
+   "where": "Sec 3.3",
+   "quote": "the models generate 4%–"
+  },
+  {
+   "claim": "Snowballing yields the highest HK+ rate (Gemma, Natural Questions)",
+   "kind": "measured",
+   "source": null,
+   "metric": "HK+ rate",
+   "value": "23.52%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Gemma-2-9B, Natural Questions, Snowballing k=3",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Gemma, column Natural Questions Snowballing"
+  },
+  {
+   "claim": "Even the Truthful setting yields HK+ on TriviaQA (Gemma)",
+   "kind": "measured",
+   "source": null,
+   "metric": "HK+ rate",
+   "value": "3.97%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Gemma-2-9B, TriviaQA, Truthful",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Gemma, column TriviaQA Truthful"
+  },
+  {
+   "claim": "Prompt mitigation recovers far more HK+ than HK- examples (Mistral, Natural Questions, Snowballing)",
+   "kind": "measured",
+   "source": null,
+   "metric": "mitigation success",
+   "value": "51.0 vs 2.8",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Mistral-7B-v0.3, Natural Questions, 500 examples each, factuality prefix",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row Mistral Natural Questions, Snowballing column"
+  },
+  {
+   "claim": "Mitigation success on HK+ for Gemma TriviaQA ranges 9.0-23.4 vs 1.8-2.6 for HK-",
+   "kind": "measured",
+   "source": null,
+   "metric": "mitigation success",
+   "value": "23.4",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Gemma-2-9B, TriviaQA, Alice-Bob setting",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row Gemma TriviaQA, Alice-Bob"
+  },
+  {
+   "claim": "Alternative mitigation prompt gives the same pattern (Mistral TriviaQA Truthful HK+ vs HK-)",
+   "kind": "measured",
+   "source": null,
+   "metric": "mitigation success",
+   "value": "24.6 vs 1.8",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Mistral-7B-v0.3, TriviaQA, alternative prompt",
+   "note": null,
+   "where": "Table 12",
+   "table": "Table 12, row Mistral TriviaQA, Truthful"
+  },
+  {
+   "claim": "3-way probe accuracy at the top layer is 60-70% for snowballing and about 50% for other settings, versus 33% chance",
+   "kind": "measured",
+   "source": null,
+   "metric": "probe accuracy",
+   "value": "60%–70%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "SVM on residual states, TriviaQA, three models, three seeds",
+   "note": "Accuracy read from text; per-layer curves only in Fig 2",
+   "where": "Sec 4.2",
+   "quote": "The accuracy at the highest layer is 60%–70% for snow-"
+  },
+  {
+   "claim": "HK+ examples overlap little between models (Jaccard 0.1-0.36)",
+   "kind": "measured",
+   "source": null,
+   "metric": "Jaccard",
+   "value": "0.1–0.36",
+   "unit": "index",
+   "baseline_value": null,
+   "n": null,
+   "setup": "HK+ examples among shared-knowledge examples, between model pairs",
+   "note": null,
+   "where": "Sec 5.1",
+   "quote": "0.1–0.36 Jaccard scores"
+  },
+  {
+   "claim": "High-knowledge sets overlap about 0.8 on TriviaQA and about 0.6 on Natural Questions",
+   "kind": "measured",
+   "source": null,
+   "metric": "Jaccard",
+   "value": "0.6",
+   "unit": "index",
+   "baseline_value": null,
+   "n": null,
+   "setup": "pairs of the three models",
+   "note": null,
+   "where": "Sec 5.1",
+   "quote": "is approximately 0.6, indicating significant"
+  },
+  {
+   "claim": "A probe trained on Snowballing and tested on Alice-Bob loses only about 5% at layer 15",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy drop",
+   "value": "5%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "HK+ vs factually correct, binary, TriviaQA and NQ",
+   "note": null,
+   "where": "Sec 5.2",
+   "quote": "lower by an average of 5% at the 15th layer"
+  },
+  {
+   "claim": "Model-specific preemptive HK+ detection reaches 60-70% at some layers on TriviaQA (Mistral, post-answer specific line); generic detectors are near or below random",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "60%–70%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Mistral, Snowballing; generic dataset classifiers at answer last token",
+   "note": "The 60-70% sentence refers to model-specific detection at the answer's last token on TriviaQA; the preemptive claim is read from Fig 6",
+   "where": "Sec 6.2",
+   "quote": "detection rates of 60%–70%"
+  },
+  {
+   "claim": "Knowledge-classification labels stay consistent across eight sampling configurations",
+   "kind": "measured",
+   "source": null,
+   "metric": "agreement",
+   "value": "93.6%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Llama, 1000 random TriviaQA, 8 configs (28 pairs)",
+   "note": null,
+   "where": "Appendix A",
+   "quote": "93.6% for Llama, 92.7% for Mistral, and 92.2%"
+  }
+ ],
+ "limits": [
+  "Three models only (Mistral-7B-v0.3, Llama-3.1-8B, Gemma-2-9B); patterns may differ elsewhere",
+  "Only four synthetic settings to induce HK+",
+  "Only the two ends of the knowledge spectrum; middle (~5% of questions) excluded; one way of quantifying knowledge, exact match, which may hurt recall",
+  "Short-answer closed-book QA only",
+  "Probe accuracy is moderate (about 50% for mild settings, 60-70% snowballing); authors say more research is needed",
+  "Mitigation tested with one prompt prefix (plus one paraphrase); HK- non-zero rate attributed to HK- mislabelling",
+  "HK+ is labelled by prompt perturbation, so a question 'known' under a 3-shot prompt may reflect prompt sensitivity, not stored knowledge"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "HK-",
+   "definition": "The model lacks the required information for a correct answer, leading it to hallucinate.",
+   "where": "Sec 1"
+  },
+  {
+   "term": "HK+",
+   "definition": "Although the model generates correct answers under certain prompts, it still produces incorrect responses in different but similar prompt settings.",
+   "where": "Sec 1"
+  },
+  {
+   "term": "WACK",
+   "definition": "Wrong Answers despite having Correct Knowledge: an automatic approach to build model-specific hallucination datasets labelled HK-, HK+, factually correct.",
+   "where": "Sec 1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Does fine-tuning LLMs on new knowledge encourage hallucinations?",
+   "year": 2024,
+   "arxiv": "2405.05904",
+   "relation": "uses-method",
+   "note": "knowledge categorisation via multiple generations follows Gekhman et al.",
+   "quote": null
+  },
+  {
+   "work": "Inference-Time Intervention (Li et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "linear probes and generic dataset construction follow Li et al. 2023",
+   "quote": null
+  },
+  {
+   "work": "Do androids know they're only dreaming of electric sheep?",
+   "year": 2023,
+   "arxiv": "2312.17249",
+   "relation": "extends",
+   "note": "model-specific hallucination datasets; adds HK-/HK+ typing",
+   "quote": null
+  },
+  {
+   "work": "The internal state of an LLM knows when it's lying",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "probing hidden states for hallucination",
+   "quote": null
+  },
+  {
+   "work": "How language model hallucinations can snowball (Zhang et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "inspiration for snowballing setting",
+   "quote": null
+  },
+  {
+   "work": "Scaling synthetic data creation with 1,000,000,000 personas",
+   "year": 2024,
+   "arxiv": "2406.20094",
+   "relation": "uses-data",
+   "note": "personas for Persona setting",
+   "quote": null
+  },
+  {
+   "work": "TriviaQA",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "eval data",
+   "quote": null
+  },
+  {
+   "work": "Natural Questions",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "eval data",
+   "quote": null
+  },
+  {
+   "work": "The Llama 3 herd of models",
+   "year": 2024,
+   "arxiv": "2407.21783",
+   "relation": "evaluates",
+   "note": "Llama-3.1-8B",
+   "quote": null
+  },
+  {
+   "work": "Mistral 7B",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "Mistral-7B-v0.3",
+   "quote": null
+  },
+  {
+   "work": "Gemma 2",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "Gemma-2-9B",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "WACK Setup: (a) knowledge detection, (b) hallucination prompting, (c) hallucination labeling",
+   "page": 2,
+   "why": "shows the labelling pipeline in one picture"
+  },
+  {
+   "figure": "Table 2",
+   "caption": "Percentage of HK+ in TriviaQA and Natural Questions datasets with different settings",
+   "page": 4,
+   "why": "prevalence by model and setting"
+  },
+  {
+   "figure": "Table 3",
+   "caption": "Comparison of HK+ and HK- mitigation success percentage",
+   "page": 5,
+   "why": "core evidence that prompting fixes HK+ but not HK-"
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "Preemptive HK+ detection using model-specific vs generic classifiers on Mistral",
+   "page": 8,
+   "why": "shows pre-answer detection works only with model-specific data"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Table 11 (Truthful label counts) numbers not recoverable from the text layer",
+  "Figure curves (probe accuracy per layer) are not in text; only prose summaries recorded",
+  "No embedded instructions found"
+ ]
+}

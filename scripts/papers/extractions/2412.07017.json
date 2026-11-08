@@ -1,0 +1,124 @@
+{
+"schema": 1,
+"key": "2412.07017",
+"pdf": "ai-engineering/01-prompt-engineering/sources/gim-2024-asynchronous-llm-function-calling.pdf",
+"bib": {"title": "Asynchronous LLM Function Calling", "authors": ["In Gim", "Seung-seob Lee", "Lin Zhong"], "first_author": "Gim", "year": 2024, "venue": "preprint (Preliminary work. Under review.)", "arxiv": "2412.07017", "doi": null},
+"read": {"by": "source-reader", "at": "2026-11-08", "chars_read": 60103, "chars_total": 60103, "engine": "pymupdf", "skipped": null},
+"type": "system",
+"question": "Can LLM function calling be made asynchronous so the LLM keeps generating while calls execute, cutting end-to-end task completion latency without hurting call accuracy?",
+"hypothesis": "Overlapping function-call generation and execution via in-flight interrupts lowers latency versus synchronous (and synchronous-parallel) calling while keeping accuracy.",
+"contributions": [
+ "CML, a token-efficient in-context protocol ([CALL], [INTR], [TRAP], [END], [HEAD]) for asynchronous function calls and interrupts",
+ "A fine-tuning strategy that teaches LLMs to emit async calls, handle interrupts and emit traps",
+ "An inference-side implementation (token monitor, executor, interrupt manager, trap handler) plus a Chat-Completion-API emulation",
+ "Latency analysis with theorems for Async vs Sync and the LPT heuristic, and evaluation on BFCL tasks"
+],
+"method": {
+ "summary": "AsyncLM intercepts autoregressive decoding: a CML parser spots function calls, runs them in background workers, and the interrupt manager injects [INTR] result blocks into the token stream when not inside a call block (critical section). Llama-3.2 1B/3B are fine-tuned on simulated DAG traces scheduled with longest-processing-time-first; GPT-4o and GPT-4o-mini are adapted by one-shot prompting.",
+ "task": "function calling (latency and AST-match accuracy) on BFCL",
+ "trains": true,
+ "datasets": [
+  {"name": "BFCL v1-parallel + v2-parallel-live", "role": "both", "size": "400 parallel function calling scenarios", "split": "part of 800 total; 200 for fine-tuning, 600 for evaluation", "source": "Berkeley Function Calling Leaderboard (Yan et al., 2024)", "preprocessing": "DAGs of function calls extracted by a Python program; estimated execution times 1 ms to 1 s assigned randomly per simulation run"},
+  {"name": "BFCL v3-base-multi-turn", "role": "both", "size": "200 multi-step scenarios", "split": "part of 800 total; 200 fine-tune, 600 eval", "source": "BFCL", "preprocessing": null},
+  {"name": "v3-multi-step-parallel (new)", "role": "eval", "size": "200 scenarios", "split": "see above", "source": "built by randomly combining three multi-step samples from the first round of v3-base-multi-turn", "preprocessing": null},
+  {"name": "Training traces (task descriptions and function definitions from public function-calling datasets)", "role": "train", "size": null, "split": "inferred: the 200 fine-tuning samples of the 800", "source": "BFCL, ToolSandbox (Lu et al. 2024), tau-bench (Yao et al. 2024) cited as trace sources", "preprocessing": "user-triggered interrupts also injected from multi-turn conversation datasets (not detailed)"}
+ ],
+ "models": [
+  {"name": "Llama-3.2-3B", "role": "proposed", "params": "3B", "architecture": "decoder-only transformer", "init_from": "Llama-3.2 (Dubey et al., 2024)", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"adaptation": "fine-tuned (FT) and few-shot (ICL)"}},
+  {"name": "Llama-3.2-1B", "role": "proposed", "params": "1B", "architecture": "decoder-only transformer", "init_from": "Llama-3.2", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+  {"name": "GPT-4o", "role": "proposed", "params": null, "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"adaptation": "few-shot prompting only"}},
+  {"name": "GPT-4o-mini", "role": "proposed", "params": null, "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}}
+ ],
+ "training": {
+  "objective": "inferred: supervised fine-tuning on simulated ideal LLM-executor traces (CML calls, interrupts, traps) so as to minimise makespan; paper states the objective as minimising total task completion time with LPT call ordering",
+  "optimizer": null, "lr": null, "lr_schedule": null, "warmup": null, "batch_size": null, "steps": null, "epochs": null, "tokens": null, "seq_len": null, "precision": null, "weight_decay": null, "dropout": null, "regularisation": null,
+  "hardware": "NVIDIA RTX 4090 GPU (local deployment, inference and function execution on same machine; fine-tuning hardware not stated)",
+  "compute": null, "wall_clock": null, "seeds": null,
+  "other": {"fine_tune_config": "default configurations in LlamaFactory (Zheng et al., 2024)", "fine_tune_samples": "200 of 800", "simulated_exec_time": "1 ms to 1 s random per call per run", "simulated_TPOT": "random 5 ms to 30 ms per simulation"}
+ },
+ "inference": {
+  "decoding": "next-token distribution constrained by a finite-state machine to valid CML syntax; [INTR] token blocked so the model cannot hallucinate interrupts (Geng et al., 2023 grammar-constrained decoding)",
+  "temperature": null, "top_p": null, "max_tokens": null,
+  "samples": null,
+  "prompting": "function definitions as JSON in prompt with estimated completion times; GPT-4o models: one example per dataset plus detailed instructions on interpreting CML; latency runs include a 'cheat sheet' with ground-truth answers in the prompt",
+  "retrieval": null,
+  "parameters": {"call_block_format": "[CALL] id [HEAD] function call [END]", "interrupt_block_format": "[INTR] id [HEAD] value [END]", "trap_format": "[TRAP][END]", "call_language_in_prototype": "Python", "scheduling": "Longest-Processing-Time-first (LPT)", "trap_handler_rule": "keep KV cache in GPU if both recompute and swap time exceed estimated wait; else recompute if recompute latency lower, else swap", "cloud_Async_emulation": "5 ms per output token from OpenAI API statistics (emulated, not measured)", "function_exec_time": "measured 30 ms to 500 ms, average 110 ms"},
+  "other": {"serving": "Text-Generation-Interface (Hugging-Face, 2023) for local models; implementation on Python transformers library", "Async-Naive": "chat completion API, new request per interrupt, previous session discarded"}
+ },
+ "eval": {
+  "metrics": [
+   {"name": "Task completion latency", "definition": "time between the first and last token generation, end to end", "unit": "ms (speedups as x relative to Sync)", "higher_is_better": false},
+   {"name": "Function composition accuracy (AST matching)", "definition": "exact AST match of each function call to ground truth, plus execution order", "unit": "%", "higher_is_better": true}
+  ],
+  "baselines": ["Sync (sequential function calling)", "Sync-Parallel (parallel function calling, OpenAI 2023; Kim et al. 2023)", "Async-Naive (chat completion API without serving changes)", "Sync (in CML)"],
+  "protocol": "Latency figures have error bars of 10th to 90th percentile; number of runs and seeds not stated; no significance tests; Async cloud latency is emulated"
+ },
+ "availability": {"code": null, "weights": null, "data": "BFCL is public; the new v3-multi-step-parallel dataset is not stated as released"},
+ "prompts": [],
+ "evidence": [
+  {"field": "datasets.split", "quote": "From the total of 800 samples, we use 200 for fine-tuning and the remaining 600 for evaluation.", "where": "Section 6 Workloads"}
+ ]
+},
+"results": [
+ {"claim": "AsyncLM cuts end-to-end task completion latency by up to 5.4x versus synchronous function calling across BFCL tasks.", "kind": "measured", "source": null, "metric": "latency speedup vs Sync", "value": "5.4", "unit": "x", "baseline_value": "1.0", "n": null, "setup": "v3-multi-step-parallel, local Llama-3B, Async vs Sync", "quote": "AsyncLM can reduce end-to-end task completion latency from 1.6×-5.4× compared to synchronous", "table": null, "note": "Per Fig 6 text the 5.4x is the local setting; Fig 6 shows 3.2x, 1.6x, 1.7x, 1.8x, 5.4x, 2.4x annotations", "where": "Abstract; Sec 6.2"},
+ {"claim": "On simple parallel calls, Async is 1.6x faster than Sync locally and 2.1x on cloud.", "kind": "measured", "source": null, "metric": "latency speedup vs Sync", "value": "1.6", "unit": "x", "baseline_value": null, "n": null, "setup": "v1-parallel and v2-parallel-live, local Llama-3B; cloud GPT-4o 2.1x is emulated at 5 ms/token", "quote": "Async completes tasks faster than Sync by 1.6×", "table": null, "note": "cloud 2.1x: 'for the local deployment and 2.1× for cloud'", "where": "Sec 6.1"},
+ {"claim": "On the same parallel tasks, Sync-Parallel is 1.3x faster than Sync locally and 1.7x on cloud.", "kind": "measured", "source": null, "metric": "latency speedup vs Sync", "value": "1.3", "unit": "x", "baseline_value": null, "n": null, "setup": "as above, local Llama-3B", "quote": "Sync-Parallel is 1.3× faster than Sync for local and 1.7×", "table": null, "note": null, "where": "Sec 6.1"},
+ {"claim": "In multi-step parallel tasks Sync-Parallel reduces latency by 3.2x over Sync; Async goes further.", "kind": "measured", "source": null, "metric": "latency speedup vs Sync", "value": "3.2", "unit": "x", "baseline_value": null, "n": null, "setup": "v3-multi-step-parallel, three independent tasks of 1-5 sequential calls each", "quote": "while Sync-Parallel reduces latency by 3.2× compared to Sync.", "table": null, "note": null, "where": "Sec 6.2"},
+ {"claim": "Fine-tuned Llama-3B reaches 65.97% AST accuracy under Async versus 57.33% under Sync.", "kind": "measured", "source": null, "metric": "AST-match function composition accuracy", "value": "65.97", "unit": "%", "baseline_value": "57.33", "n": null, "setup": "multi-step parallel dataset, Llama-3B fine-tuned (FT); Sync in CML is 66.07%", "quote": null, "table": "Table 1, row LLAMA-3B (FT), columns SYNC / ASYNC: 57.33% / 65.97%", "note": "Sync-in-CML 66.07% suggests the gain comes from CML fine-tuning format, not asynchrony", "where": "Table 1"},
+ {"claim": "GPT-4o with few-shot prompting keeps accuracy under Async (59.61%) versus Sync (57.84%).", "kind": "measured", "source": null, "metric": "AST-match accuracy", "value": "59.61", "unit": "%", "baseline_value": "57.84", "n": null, "setup": "GPT-4o (ICL), multi-step parallel dataset", "quote": null, "table": "Table 1, row GPT-4O (ICL), columns SYNC / ASYNC: 57.84% / 59.61%", "note": null, "where": "Table 1"},
+ {"claim": "Few-shot prompted small models degrade under Async: GPT-4o-mini 55.08% to 41.44%, Llama-3B 16.98% to 5.46%.", "kind": "measured", "source": null, "metric": "AST-match accuracy", "value": "41.44", "unit": "%", "baseline_value": "55.08", "n": null, "setup": "GPT-4o-mini (ICL), multi-step parallel; Llama-3B ICL 16.98 to 5.46", "quote": null, "table": "Table 1, row 4O-MINI (ICL), columns SYNC / ASYNC: 55.08% / 41.44%", "note": null, "where": "Table 1"},
+ {"claim": "Async adds about 20 tokens on average versus Sync, costing about 90 ms and 27.5 MB extra KV cache on the 3B model (under 5% of memory).", "kind": "measured", "source": null, "metric": "additional tokens", "value": "20", "unit": "tokens", "baseline_value": null, "n": null, "setup": "v3-multi-step-parallel, Llama-3B", "quote": "Async incurs an average of 20 additional tokens compared to Sync", "table": null, "note": null, "where": "Sec 6.4"},
+ {"claim": "Async-Naive on the OpenAI API is impractical: 1.5x higher latency than Sync-Parallel due to 310 ms average TTFT per interrupt.", "kind": "measured", "source": null, "metric": "TTFT", "value": "310", "unit": "ms", "baseline_value": "59 (local Llama-3B)", "n": null, "setup": "GPT-4o Async-Naive, new API request per interrupt", "quote": "TTFT of 310 ms.", "table": null, "note": null, "where": "Sec 6.4"},
+ {"claim": "LPT scheduling is 8% faster on average than choosing the next function at random.", "kind": "measured", "source": null, "metric": "latency improvement vs random", "value": "8", "unit": "%", "baseline_value": null, "n": null, "setup": "local Async, Fig 6 workload", "quote": "LPT was 8% faster (on", "table": null, "note": "LPT not optimal with dependencies (NP-hard scheduling); counterexample a,b,c given", "where": "Sec 6.4"},
+ {"claim": "With tasks arriving as user-triggered interrupts, Async reduces latency 2.4x versus Sync while Sync-Parallel gets only 1.1x.", "kind": "measured", "source": null, "metric": "latency speedup vs Sync", "value": "2.4", "unit": "x", "baseline_value": "1.1 (Sync-Parallel)", "n": null, "setup": "multi-step parallel tasks injected as interrupts at 0, 200, 400 ms", "quote": "latency by 2.4× compared to Sync, whereas Sync-Parallel", "table": null, "note": "Fig 8 annotations include 5.3x for the other (cloud) bar", "where": "Sec 6.6, Fig 8"},
+ {"claim": "Theory: Async latency is at most Sync-Parallel latency, which is below Sync latency, for independent functions.", "kind": "claim", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "assumes same generated token count and no overhead beyond G and E; proof sketches in Appendix A", "quote": null, "table": null, "note": "Theorem 6.2 estimates speedup about 1 + E/G (avg exec time over avg generation time) for large |F| assuming normal E", "where": "Sec 6.3, App A"}
+],
+"limits": [
+ "Latency evaluation puts ground-truth answers in the prompt (cheat sheet) to avoid biases from wrong calls; the official BFCL accuracy is 62% for GPT-4o and 43% for Llama-3.2-3B",
+ "Cloud (GPT-4o) Async latency is emulated from 5 ms/token, not measured; Async-Naive on real API is slower than Sync-Parallel",
+ "Few-shot Llama and GPT-4o-mini lose accuracy under Async; fine-tuned Llama gain is matched by Sync-in-CML so asynchrony itself is accuracy-neutral at best",
+ "LPT is not guaranteed optimal with dependencies (NP-hard); theory covers independent functions only",
+ "Fine-tuning hyperparameters, seeds, run counts and code release are not stated; training set is 200 simulated samples; assumes finite calls per task",
+ "Workload is BFCL with function times 30-500 ms; short-execution tasks benefit little (speedup about 1 + E/G)",
+ "Human-LLM and LLM-LLM interrupt applications are discussed only briefly; user-triggered dataset details not given",
+ "Preliminary, under review preprint"
+],
+"practices": [],
+"terms": [
+ {"term": "CML (Context Markup Language)", "definition": "a simple domain-specific language to represent asynchronous function calls and interrupts", "where": "Sec 3"},
+ {"term": "Interrupt", "definition": "[INTR] id [HEAD] value [END] block the executor inserts at the end of the token stream when a call with a registered identifier completes", "where": "Sec 3.2"},
+ {"term": "Trap", "definition": "self-initiated interrupt [TRAP][END] that notifies the serving system the LLM is pausing until a function result arrives", "where": "Sec 3.2"},
+ {"term": "Critical section", "definition": "flag, false while a function call block is being generated, that defers interrupts until the LLM exits the block", "where": "Sec 3.2"},
+ {"term": "LPT", "definition": "Longest-Processing-Time-first: call the ready function with the longest estimated execution time", "where": "Sec 4.1"}
+],
+"lineage": [
+ {"work": "Berkeley Function Calling Leaderboard (Yan et al.)", "year": 2024, "arxiv": null, "relation": "uses-data", "note": "workloads v1, v2, v3", "quote": null},
+ {"work": "Llama 3 herd of models (Dubey et al.)", "year": 2024, "arxiv": "2407.21783", "relation": "uses-method", "note": "Llama-3.2 1B/3B fine-tuned", "quote": null},
+ {"work": "LLMCompiler (Kim et al.)", "year": 2023, "arxiv": null, "relation": "baseline", "note": "parallel function calling (Sync-Parallel)", "quote": null},
+ {"work": "OpenAI parallel function calling", "year": 2023, "arxiv": null, "relation": "baseline", "note": "Sync-Parallel", "quote": null},
+ {"work": "ReWOO (Xu et al.)", "year": 2023, "arxiv": "2305.18323", "relation": "related", "note": "conceptually aligned, decouples reasoning from observation", "quote": "Our work is conceptually aligned with ReWOO"},
+ {"work": "InferCept (Abhyankar et al.)", "year": 2024, "arxiv": null, "relation": "related", "note": "KV cache management during waits; recompute vs swap scaling", "quote": null},
+ {"work": "Conveyor (Xu et al.)", "year": 2024, "arxiv": "2406.00059", "relation": "related", "note": "partial execution of function calls", "quote": null},
+ {"work": "Grammar-constrained decoding (Geng et al.)", "year": 2023, "arxiv": null, "relation": "uses-method", "note": "token monitor constrains next-token distribution", "quote": null},
+ {"work": "LlamaFactory (Zheng et al.)", "year": 2024, "arxiv": null, "relation": "uses-method", "note": "fine-tuning defaults", "quote": null},
+ {"work": "Toolformer; Gorilla", "year": 2024, "arxiv": null, "relation": "related", "note": "learning to generate function calls", "quote": null},
+ {"work": "ToolSandbox (Lu et al.); tau-bench (Yao et al.)", "year": 2024, "arxiv": "2408.04682", "relation": "uses-data", "note": "multi-turn traces for training samples", "quote": null}
+],
+"figures": [
+ {"figure": "Fig 1", "caption": "Synchronous vs. asynchronous function calling.", "page": 1, "why": "Timeline showing the LLM continuing independent work while a call runs"},
+ {"figure": "Fig 2", "caption": "Comparison of LLM-executor interactions (sync, sync-parallel, async) for the summarize-and-email task.", "page": 3, "why": "Shows where each scheme idles and how LPT schedules"},
+ {"figure": "Fig 3", "caption": "Asynchronous function execution workflow.", "page": 4, "why": "CML call, interrupt and trap flow on the florist example"},
+ {"figure": "Fig 4", "caption": "Overview of AsyncLM's LLM inference process.", "page": 6, "why": "Architecture: token monitor, executor, interrupt manager, trap handler"},
+ {"figure": "Fig 5", "caption": "Parallel function calling latencies.", "page": 8, "why": "Speedups 1.6x/2.1x etc. by baseline"},
+ {"figure": "Fig 6", "caption": "Multi-step parallel function calling latencies.", "page": 8, "why": "Headline 5.4x result"},
+ {"figure": "Fig 7", "caption": "Trap handling strategy that minimizes idle KV cache without sacrificing latency.", "page": 9, "why": "Keep/recompute/swap regions by context length and time to next interrupt"},
+ {"figure": "Table 1", "caption": "Average function composition accuracy (AST matching) of Sync and Async in multi-step parallel function calling.", "page": 9, "why": "Accuracy cost of async by model and adaptation method"},
+ {"figure": "Fig 8", "caption": "Evaluation on user-triggered interrupts.", "page": 10, "why": "Interrupt mechanism for interruptible assistants"}
+],
+"code": [
+ {"where": "Sec 3.1", "snippet": "[CALL] job1 [HEAD] function call [END]", "verbatim": true},
+ {"where": "Sec 3.2", "snippet": "[INTR] id [HEAD] value [END]", "verbatim": true},
+ {"where": "Sec 6.3", "snippet": "L_Async(F) = max_{f in F} ( E(f) + sum_{g in pred(f,F)} G(g) ), pred(f,F) = {g in F | E(f) <= E(g)}", "verbatim": false}
+],
+"problems": ["Text is clean; figure and table numbers read from flattened text. No embedded instructions found. Fig 8 bar annotations ambiguous in text order."]
+}

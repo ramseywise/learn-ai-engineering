@@ -301,6 +301,10 @@ Only Safari is short. The likely causes are now a redirect that drops a cookie o
 
 Because this runs on every experiment, a platform usually alerts at a p-value far below 0.05 to avoid constant false alarms. Set the threshold based on how many tests you run and what an investigation costs.
 
+The same check applies one level down, to the users behind a metric. Dmitriev and colleagues opened MSN.com links in a new tab and saw Page Load Time rise 8.32%, but the treatment arm had 7.8% fewer homepage loads. The two arms were averaging different page loads, so the metric had a sample ratio mismatch the user counts did not show ([KDD 2017](https://doi.org/10.1145/3097983.3098024), §5.1, a single Microsoft experiment). Report the numerator and denominator counts next to every ratio metric, and run the SRM test per segment too.
+
+The reverse also happens: a result that looks too bad can be fine. Moving a module higher on the page cut its per-user click-through 40%, yet impressions rose 200% and clicks 74%, whole-page click-through was flat and revenue rose (§5.2). The same paper warns against reading "no change" from an underpowered metric: a 0.5% rise in page views per user had a confidence interval of about ±5%, so only a change of 7.8% or more was detectable at 80% power (§5.4).
+
 ### A/A tests
 
 Run the whole pipeline with no change. Kohavi and colleagues recommend running A/A tests continuously, alongside the live ones: about 5% should be significant at 0.05, and p-values should be uniform. Results that don't match point to a broken variance estimate, usually because the analysis unit doesn't match the randomisation unit, and that was the pageview bug in chapter 1. Their §5.1.2 reports a harder failure. They ran five simulated experiments over a million sequential user IDs, and only MD5 generated no correlations between experiments, with SHA256 coming close. The non-cryptographic hashes failed, which is why an assignment hash deserves its own test.

@@ -1,0 +1,871 @@
+{
+ "schema": 1,
+ "key": "2306.07179",
+ "pdf": "data-science/sources/dahl-2023-benchmarking-neural-network-training-algorithms.pdf",
+ "bib": {
+  "title": "Benchmarking Neural Network Training Algorithms",
+  "authors": [
+   "George E. Dahl",
+   "Frank Schneider",
+   "Zachary Nado",
+   "Naman Agarwal",
+   "Chandramouli Shama Sastry",
+   "Philipp Hennig",
+   "Sourabh Medapati",
+   "Runa Eschenhagen",
+   "Priya Kasimbeg",
+   "Daniel Suo",
+   "Juhan Bae",
+   "Justin Gilmer",
+   "Abel L. Peirson",
+   "Bilal Khan",
+   "Rohan Anil",
+   "Mike Rabbat",
+   "Shankar Krishnan",
+   "Daniel Snider",
+   "Ehsan Amid",
+   "Kongtao Chen",
+   "Chris J. Maddison",
+   "Rakshith Vasudev",
+   "Michal Badura",
+   "Ankush Garg",
+   "Peter Mattson"
+  ],
+  "first_author": "Dahl",
+  "year": 2023,
+  "venue": "preprint",
+  "arxiv": "2306.07179",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 295334,
+  "chars_total": 295334,
+  "engine": "pymupdf",
+  "skipped": "Reference list (last ~185 lines) skimmed only; Tables 29-32 (OptList hyperparameter rows) and Tables 23-24 per-seed rows read but not transcribed."
+ },
+ "type": "benchmark",
+ "question": "How can neural network training algorithms (update rules, tuning protocols, schedules, data selection) be compared reliably, so that real speedups can be identified and a state of the art established?",
+ "hypothesis": "A competitive time-to-result benchmark on fixed hardware, with multiple fixed workloads, randomized held-out workload variants, and explicit accounting for hyperparameter tuning, resolves the three challenges (when training is done, workload sensitivity, fair tuning) that make current optimizer comparisons unreliable.",
+ "contributions": [
+  "Articulate the challenges of benchmarking training algorithms with concrete experiments (Section 2).",
+  "Introduce the AlgoPerf: Training Algorithms benchmark: time-to-result on 8 fixed workloads on fixed hardware, with target setting, held-out randomized workloads, external and self-tuning rulesets, and performance-profile scoring (Section 4).",
+  "Construct baselines from eight optimizers (AdamW, NadamW, Heavy Ball, Nesterov, LAMB, Adafactor, SAM (w. Adam), Distributed Shampoo) with search spaces, setting a provisional state of the art (Section 7).",
+  "Build 24 workload variants (3 per fixed workload) and show the need for research on hyperparameter transfer (Section 6)."
+ ],
+ "method": {
+  "summary": "A competitive time-to-result benchmark: a submission defines four API functions (init_optimizer_state, update_params, data_selection, get_batch_size) and optionally a hyperparameter search space, and is timed on wall clock until it reaches validation and test targets on 8 fixed workloads (plus 8 held-out workload variants used as a penalty). Targets are set by tuning four optimizers with 200 quasirandom trials per workload, rerunning the best 20 times. Eight baseline optimizers are scored with performance profiles integrated to a 0-1 benchmark score. Section 2 supports the design with small experiments on stride, extra batch norm, Pre/Post-LN, hyperparameter sensitivity, search-space and tuning-goal effects.",
+  "task": "benchmarking training algorithms (optimizers, schedules, regularisation, data selection) for time to a target out-of-sample error across image classification, speech recognition, machine translation, MRI reconstruction, click-through rate prediction and molecular property prediction",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Criteo 1TB Click Logs",
+    "role": "both",
+    "size": "4,195,197,692 training examples; 89,137,319 validation; 89,137,318 test",
+    "split": "first 23 days train; first half of day 24 test; second half of day 24 validation",
+    "source": "Criteo AI Lab 2014",
+    "preprocessing": "13 numerical features log-transformed; 26 categorical features hashed into one embedding table; training files of 5,000,000 lines shuffled; metric is sigmoid binary cross entropy not AUC; budget allows about 60% of an epoch"
+   },
+   {
+    "name": "fastMRI (single-coil knee)",
+    "role": "both",
+    "size": "34,742 training slices (973 volumes); validation set of 7,135 slices (199 volumes) split into 3,554 validation (first 100 files) and 3,581 test slices (final 99 files)",
+    "split": "official validation split roughly in half into validation and test",
+    "source": "NYU Langone / FAIR (Zbontar et al. 2018)",
+    "preprocessing": "fixed random column mask, 4x down-sampling, inverse Fourier transform, normalisation by mean and std"
+   },
+   {
+    "name": "ImageNet (ILSVRC 2012) with ImageNet-v2 test",
+    "role": "both",
+    "size": null,
+    "split": "ILSVRC 2012 train and validation; ImageNet-v2 as test",
+    "source": "Deng et al. 2009; Recht et al. 2019",
+    "preprocessing": "random crop and flip for training, center crop for eval, inputs in [0,1]; RandAugment and mixup used for ViT but not ResNet"
+   },
+   {
+    "name": "LibriSpeech",
+    "role": "both",
+    "size": "960 hours of raw audio training (train-clean-100, train-clean-360, train-other-500); 5567 validation examples",
+    "split": "validation = dev-clean + dev-other; test = test-clean",
+    "source": "Panayotov et al. 2015",
+    "preprocessing": "drop examples with audio length > 320k or target length > 256; log-mel spectrograms; SentencePiece vocab 1024"
+   },
+   {
+    "name": "OGBG-MOLPCBA",
+    "role": "both",
+    "size": "350,343 training examples; 43,793 each in validation and test (text says 'the train and validation splits both contain 43,793 examples')",
+    "split": "standard OGB split",
+    "source": "Hu et al. 2020",
+    "preprocessing": "dynamic batching with max nodes = BatchSize*AvgNumNodes and max edges = 2*BatchSize*AvgNumEdges"
+   },
+   {
+    "name": "WMT 2017 De->En (train), WMT 2014 De->En (dev/test)",
+    "role": "both",
+    "size": "about 5.9 million parallel sentence pairs; validation 3000 and test 3003 sentence pairs (newstest2014)",
+    "split": "train WMT17; validation = WMT14 dev; test = newstest2014",
+    "source": "Bojar et al. 2017, 2014",
+    "preprocessing": "SentencePiece 32k shared vocab; sentences > 256 tokens removed; no monolingual data or augmentation"
+   },
+   {
+    "name": "CIFAR-10 (Section 2 experiments)",
+    "role": "both",
+    "size": null,
+    "split": null,
+    "source": "Krizhevsky and Hinton 2009",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "DLRMsmall (Criteo 1TB)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "DLRM: one 4M-entry embedding table of dim 128; dense MLP 512-256-128; cross-interaction; top MLP 1024-1024-512-256-1; ReLU; dropout after the 512 layer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": "4,194,304 (embedding rows)",
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "U-Net (fastMRI)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "U-Net, 32 channels, 4 down-sampling conv blocks and 4 up-sampling blocks, dropout default 0.0",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "ResNet-50 (ImageNet)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "ResNet-50 per He et al. 2016a Sec 4.1, ghost batch norm virtual batch size 64, final BN scale in each residual block initialised to zero",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "50",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "ViT S/16 (ImageNet)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "Vision Transformer S/16, width 384, depth 12, MLP dim 1536, 6 heads, 16x16 patches, no regularisation, light2 augmentation (mixup alpha 0.2, RandAugment 2 layers magnitude 15)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "12",
+    "hidden": "384",
+    "heads": "6",
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Conformer (LibriSpeech)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "4-layer Conformer, encoder dim 512, Xavier uniform init, CTC loss, greedy decoding",
+    "init_from": null,
+    "tokenizer": "SentencePiece",
+    "vocab": "1024",
+    "layers": "4",
+    "hidden": "512",
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "DeepSpeech (LibriSpeech)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "DeepSpeech variant with residual connections, dropout, layer norm, SpecAugment; conv subsampling by 4, 6 bi-LSTM layers, 3 feed-forward layers, dim 512, batch norm in LSTM/FF layers, CTC loss",
+    "init_from": null,
+    "tokenizer": "word piece (differs from Conformer's SentencePiece)",
+    "vocab": null,
+    "layers": "6 bi-LSTM + 3 FF",
+    "hidden": "512",
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GNN (OGBG)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "Jraph GNN: linear embedding size 256, global features 128, 5 message passing steps, update fns are 1-layer FC (256, layer norm, ReLU, dropout default 0.1), LeCun normal init",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "5 message-passing steps",
+    "hidden": "256",
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Transformer-big (WMT)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "Transformer-big (Vaswani 2017) with modifications: 6 encoder and 6 decoder layers, model dim 1024, hidden dim 4096, 16 heads, shared embeddings; Pre-LN in base workload; default label smoothing 0.1 and dropout 0.1",
+    "init_from": null,
+    "tokenizer": "SentencePiece",
+    "vocab": "32k shared",
+    "layers": "6+6",
+    "hidden": "1024",
+    "heads": "16",
+    "context": "256 tokens max (longer sentences removed)",
+    "other": {}
+   },
+   {
+    "name": "Wide ResNet 28-10 (CIFAR-10, Section 2)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "3 groups of 4 residual blocks, 2 conv layers each; default strides 1x1, 2x2, 2x2; variant sets group-3 stride to 1x1 (final dense layer fan-in grows 81x, 640x10 to 51840x10)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "28",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "ResNetV2-200 with extra batch norm (Section 2)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "200-layer ResNetV2 with BN added after every residual connection (each block returns BN(x+F(x))), all BN scales initialised to 1, virtual batch size 64",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "200",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "per workload: cross-entropy (Criteo, ImageNet, OGBG, WMT), L1 (fastMRI), CTC (LibriSpeech); evaluation metrics CE, SSIM, error rate, WER, mAP, BLEU",
+   "optimizer": "Baselines: AdamW, NadamW, Nesterov, Heavy Ball, LAMB, Adafactor, SAM (w. Adam), Distributed Shampoo. Target-setting used AdamW, NadamW, Nesterov, Heavy Ball.",
+   "lr": "tuned: target-setting Base LR Log[1e-5,1e-1] (AdamW, NadamW), Log[1e-3,10] (Heavy Ball, Nesterov); baseline Log[1e-4,1e-2] (Adam-family) and Log[1e-1,10] (Heavy Ball, Nesterov) (Tables 8, 12)",
+   "lr_schedule": "AdamW/NadamW/LAMB/Adafactor/SAM/Shampoo: linear warmup + cosine decay. Heavy Ball/Nesterov: linear warmup + linear decay + constant (decay factor {1e-2,1e-3}, decay steps 0.9 in baselines). Formulas in Appendix A.1.",
+   "warmup": "target-setting {2%,5%,10%} for Adam-family, 5% for momentum methods; baselines fixed 5% linear warmup from 0.0",
+   "batch_size": "chosen per workload by the submission (get_batch_size); not tabulated in the paper. WMT: batch size 128 corresponds to about 280K tokens each on source and target side.",
+   "steps": "inferred: max steps per workload equal Table 28 'Steps' row (reading from Table 28): Criteo 10,667; fastMRI 36,189; ResNet-50 186,667; ViT 186,667; Conformer 133,333; DeepSpeech 80,000; OGBG 80,000; WMT 133,333. Target-setting used 0.75x these budgets.",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": "tuned: target-setting Log[1e-5,1] (Adam-family), Log[1e-7,1e-2] (momentum); baseline Log[5e-3,1] (AdamW/NadamW), Log[1e-7,1e-5] (Heavy Ball/Nesterov)",
+   "dropout": "tuned {0.0, 0.1} (aux. dropout tied in baselines)",
+   "regularisation": "label smoothing {0.0,0.1,0.2} in target-setting, {0.1,0.2} in baselines; dropout; aux dropout; only on workloads that support them",
+   "hardware": "official benchmark system 8x NVIDIA V100 16GB; most baseline tuning runs on Google TPUs",
+   "compute": "Table 15 estimates: one hyperparameter on all 16 workloads 232.23 h; scoring a submission 1161.13 h; tuning a submission 23,222.61 h (external tuning ruleset, 8xV100 hours). Combined fixed-workload runtime budget targeted at 100 hours.",
+   "wall_clock": "Max runtimes in seconds (Table 7): Criteo 7703; fastMRI 8859; ResNet-50 63,008; ViT 77,520; Conformer 101,780; DeepSpeech 92,509; OGBG 18,477; WMT 48,151. Self-tuning ruleset allows 3x.",
+   "seeds": "target-setting: best trial rerun with 20 seeds; external tuning scoring: 5 independent studies of 20 trials each (100 trials)",
+   "other": {
+    "tuning_search": "quasirandom search (Bousquet 2017); target-setting 200 trials per algorithm per workload; external tuning 20 trials per study x 5 studies",
+    "target_setting_rule": "validation target = median best validation over 20 reruns; test target = worst test error among the 10 reruns that hit the validation target",
+    "baseline_timing": "each algorithm (except Distributed Shampoo) run for 20% of steps on the official system, extrapolated, averaged over two machines",
+    "section2_experiments": "Wide ResNet: Nesterov vs AdamW with a simple LR sweep and cosine decay (details limited); Pre-LN vs Post-LN: 100 random-search trials per optimizer, 133K steps each, bootstrap sample size 20; Phi(H): 100 quasirandom settings, one run each, 8 workloads; AdamW narrow vs broad: 100 quasirandom points each, simulated tuning with T trials over 1000 simulations; Fig 4: step budgets 186,666 vs 233,333, 100 trials, 20 seeds for best trial",
+    "adamw_narrow_space": "LR [2e-4,5e-3], WD [2e-2,0.5], 1-beta1 0.1, beta2 0.999 (Table 5)",
+    "adamw_broad_space": "LR [5e-6,2e-2], WD [5e-6,2.0], 1-beta1 [1e-3,1.0], beta2 0.999 (Table 5)",
+    "optlist_baselines": "20 configurations built greedily round-robin across workloads from the top configs of the 200-trial searches"
+   }
+  },
+  "inference": {
+   "decoding": "WMT: beam search beam size 4, length penalty 0.6; LibriSpeech Conformer: greedy decoding",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "n/a for the generative models; see training.seeds",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "time-to-result",
+     "definition": "wall-clock time to first reach the validation and test targets on a workload; infinity if not reached within the max runtime",
+     "unit": "seconds",
+     "higher_is_better": false
+    },
+    {
+     "name": "benchmark score B",
+     "definition": "integral of the performance profile rho(tau) from tau=1 to r_max=4, normalised by r_max-1; performance ratio = time of submission / best time on that workload",
+     "unit": "score in [0,1]",
+     "higher_is_better": true
+    },
+    {
+     "name": "Phi(H)",
+     "definition": "min over h in H of max over workloads of |val(w,h)-val_H(w)|/val_H(w); best worst-case relative degradation from sharing one hyperparameter setting across workloads",
+     "unit": "relative fraction",
+     "higher_is_better": false
+    },
+    {
+     "name": "workload metrics",
+     "definition": "CE (Criteo), SSIM (fastMRI), error rate (ImageNet), WER (LibriSpeech), mAP (OGBG), BLEU (sacreBLEU, WMT)",
+     "unit": "per metric",
+     "higher_is_better": null
+    }
+   ],
+   "baselines": [
+    "AdamW",
+    "NadamW",
+    "Nesterov",
+    "Heavy Ball",
+    "LAMB",
+    "Adafactor",
+    "SAM (w. Adam)",
+    "Distributed Shampoo"
+   ],
+   "protocol": "External tuning: 20 trials drawn quasirandomly per study, 5 studies, per workload median of 5 study times (hyperparameters selected by time to validation target, scored by time to test target). Self-tuning: no tuning trials, 3x runtime, 5 studies. Held-out workload variants penalise submissions that fail them (Section 4.5.3); baselines in the paper ignore the held-out criterion."
+  },
+  "availability": {
+   "code": "github.com/mlcommons/algorithmic-efficiency (rules at .../RULES.md); JAX and PyTorch implementations; paper-experiment codebase init2winit (Gilmer et al. 2023b, github.com/google/init2winit)",
+   "weights": null,
+   "data": "public datasets listed above"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.steps",
+    "quote": "Table 28: Runtime measurements (rounded to the nearest second) for different training algorithms used in baselines.",
+    "where": "Table 28, row Steps (read from table; also Fig 4 uses 186,666 for ResNet-50)"
+   },
+   {
+    "field": "datasets[OGBG].size",
+    "quote": "The train split contains 350, 343 examples, and the train and validation splits both contain 43, 793 examples.",
+    "where": "Appendix D.5 (wording says train and validation; test count inferred as 43,793)"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Swapping a Wide ResNet's final stride from 2x2 to 1x1 raises Nesterov's CIFAR-10 test error from 0.0376 to 0.0726 while AdamW is nearly unchanged; adding warmup restores Nesterov.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test error rate (Nesterov, stride 1x1)",
+   "value": "0.0726",
+   "unit": "error rate",
+   "baseline_value": "0.0376 (stride 2x2)",
+   "n": null,
+   "setup": "Wide ResNet 28-10 on CIFAR-10, best learning rate per optimizer from a sweep with cosine decay; AdamW 0.0407 vs 0.0420; Nesterov + warmup 0.0380 vs 0.0378.",
+   "table": "Table 1, row Nesterov, column Stride 1x1",
+   "note": "Text says 'a large 3.5% increase in test error'.",
+   "where": "Table 1, Section 2.2.1"
+  },
+  {
+   "claim": "Largest Hessian eigenvalue at initialisation rises from 32 to 1052 with the stride change, explaining Nesterov's early instability.",
+   "kind": "measured",
+   "source": null,
+   "metric": "largest eigenvalue of loss Hessian",
+   "value": "1052",
+   "unit": "eigenvalue",
+   "baseline_value": "32",
+   "n": null,
+   "setup": "Wide ResNet CIFAR-10, stride 2x2 vs 1x1 at initialisation.",
+   "quote": "eigenvalue of the loss Hessian changes from 32 to 1052",
+   "note": null,
+   "where": "Section 2.2.1"
+  },
+  {
+   "claim": "With extra batch norm layers, a 200-layer ResNet becomes untrainable with Nesterov at any learning rate in the sweep; gradient clipping recovers 0.2094 error.",
+   "kind": "measured",
+   "source": null,
+   "metric": "validation error (Nesterov + grad clip, ResNet-200 Extra-BN)",
+   "value": "0.2094",
+   "unit": "error rate",
+   "baseline_value": "0.2091 (standard architecture with grad clip); plain Nesterov standard 0.2090; AdamW 0.2626 standard, 0.2722 Extra-BN",
+   "n": null,
+   "setup": "ResNet-200 (ResNetV2) on ImageNet-style setup per Appendix D.3.1, learning rate sweep, warmup alone insufficient.",
+   "table": "Table 2, row Nesterov + Grad Clip, column ResNet-200 Extra-BN",
+   "note": "Table 2 metric is not named in the caption; the text says 'validation error and stability'.",
+   "where": "Table 2, Section 2.2.1"
+  },
+  {
+   "claim": "Switching a WMT Transformer from Pre-LN to Post-LN costs Nesterov 2.974 BLEU but AdamW only 0.5208 and Shampoo 0.2569.",
+   "kind": "measured",
+   "source": null,
+   "metric": "best-trial test BLEU difference (Pre-LN minus Post-LN)",
+   "value": "2.9740",
+   "unit": "BLEU",
+   "baseline_value": "0.5208 (AdamW)",
+   "n": 100,
+   "setup": "WMT De->En Transformer, 100 random-search trials per optimizer per architecture, 133K steps, best BLEU per trial; Nesterov best 29.2951 (Pre-LN) vs 26.3211 (Post-LN).",
+   "table": "Table 3, row Nesterov, column Difference",
+   "note": "Nesterov Post-LN mean over bootstrap of 20: 20.0433 +- 7.0693 versus AdamW 29.6819 +- 1.1374.",
+   "where": "Table 3, Section 2.2.1"
+  },
+  {
+   "claim": "Even for the best of 100 sampled settings, no single hyperparameter setting is within 16.9% of per-workload-tuned results on all 8 workloads; Phi is 0.169197 for NadamW and 0.195425 for AdamW.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Phi(H) (best worst-case relative degradation)",
+   "value": "0.169197",
+   "unit": "relative fraction",
+   "baseline_value": "0.195425 (AdamW)",
+   "n": 100,
+   "setup": "8 fixed workloads, 100 quasirandom settings per optimizer from Table 8 spaces, single run per setting. Nesterov 0.230001; Heavy Ball 0.239372.",
+   "table": "Table 4, row NadamW, column Phi(H)",
+   "note": "Text states 'at least 0.169' as the minimum across algorithms.",
+   "where": "Table 4, Section 2.3.1"
+  },
+  {
+   "claim": "A narrower AdamW search space beats a broader one containing it at a 20-trial budget on the workloads shown; e.g. ImageNet ResNet-50 validation error 0.23256 vs 0.24334.",
+   "kind": "measured",
+   "source": null,
+   "metric": "median best validation error over 1000 simulated tuning runs, T=20",
+   "value": "0.23256",
+   "unit": "error rate",
+   "baseline_value": "0.24334 (AdamW Broad)",
+   "n": 1000,
+   "setup": "100 quasirandom points per search space, simulated tuning by resampling 20 trials over 1000 simulations. Conformer WER 0.075989 vs 0.080673. OGBG mAP columns read 0.28214 (Narrow) vs 0.276307 (Broad), higher is better. Criteo and fastMRI gaps are tiny. Direction of each cell was mapped by hand from the flattened table; recheck before citing.",
+   "table": "Table 6, row ImageNet ResNet-50, column AdamW Narrow Median",
+   "note": "Caption says Narrow is significantly better on all test workloads; at T=5 (Table 21) the fastMRI result flips (Narrow 0.734512 vs Broad 0.733791).",
+   "where": "Table 6, Section 2.3.2"
+  },
+  {
+   "claim": "Two AdamW ResNet-50 runs with the same hyperparameters but different step budgets (186,666 vs 233,333) reach nearly identical validation error, so comparing results tuned for different goals is unfair.",
+   "kind": "measured",
+   "source": null,
+   "metric": "validation error across 20 seeds",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": 20,
+   "setup": "ImageNet ResNet-50, AdamW, same 100 quasirandom points, cosine schedule stretched to the budget; best hyperparameters identical in both studies (Table 22).",
+   "quote": "Both trials achieve nearly identical validation errors",
+   "note": "Range 22.4%-23.0% across seeds; medians 22.6% vs 22.7% per text.",
+   "where": "Section 2.3.3, Fig 4"
+  },
+  {
+   "claim": "NadamW with tuned beta1 gets the top runtime benchmark score among the strict-budget baselines (0.849960), ahead of AdamW (0.600141).",
+   "kind": "measured",
+   "source": null,
+   "metric": "benchmark score (runtime)",
+   "value": "0.849960",
+   "unit": "score in [0,1]",
+   "baseline_value": "0.600141 (AdamW)",
+   "n": 8,
+   "setup": "8 fixed workloads, external tuning ruleset, 20 trials x 5 studies, official-system timing; held-out criterion ignored; performance profile over all baselines in the paper together.",
+   "table": "Table 13, row NadamW, column Runtime",
+   "note": "Table 27 prints NadamW tuned-beta1 as 0.849960 (runtime) / 0.595478 (steps) and fixed-beta1 as 0.599691 / 0.830414, which looks swapped relative to Tables 13 and 14 (0.849960 / 0.830414 for tuned; 0.599691 / 0.595478 for fixed).",
+   "where": "Table 13, Section 7.3"
+  },
+  {
+   "claim": "Distributed Shampoo gets the highest step-based benchmark score (0.854210) but runs 1.5x-2x slower per step, so no runtime score is reported.",
+   "kind": "measured",
+   "source": null,
+   "metric": "benchmark score (steps)",
+   "value": "0.854210",
+   "unit": "score in [0,1]",
+   "baseline_value": "0.830414 (NadamW steps)",
+   "n": 8,
+   "setup": "Same as above; Shampoo run for the same step count as others on TPU because it could not be run on all workloads on the official system.",
+   "table": "Table 13, row Distributed Shampoo, column Steps",
+   "note": "Text calls Shampoo's budget advantage 'unfair'.",
+   "where": "Table 13, Section 7.2-7.3"
+  },
+  {
+   "claim": "NadamW with the tuned-beta1 search space reaches the target on 7 of 8 fixed workloads and is the provisional state of the art.",
+   "kind": "measured",
+   "source": null,
+   "metric": "workloads reaching target (of 8)",
+   "value": "7",
+   "unit": "workloads",
+   "baseline_value": null,
+   "n": 8,
+   "setup": "External tuning, 20 trials x 5 studies, median over studies; NadamW misses ImageNet ResNet-50 (Table 25).",
+   "quote": "reached the target on seven out of the eight fixed workloads",
+   "note": "Text says NadamW misses ImageNet ResNet-50. The per-optimizer count for AdamW was not reconciled against Table 25; do not cite the AdamW count.",
+   "where": "Section 8.3"
+  },
+  {
+   "claim": "Heavy Ball and Nesterov with the standard box search spaces hit the target on no workload (score 0.0); with 20-point OptLists they score 0.230504 and 0.233373.",
+   "kind": "measured",
+   "source": null,
+   "metric": "benchmark score (runtime), Nesterov OptList",
+   "value": "0.233373",
+   "unit": "score in [0,1]",
+   "baseline_value": "0.0 (Nesterov tuned beta1)",
+   "n": 8,
+   "setup": "Search spaces from Table 12; OptList = 20 configs built from the best 200-trial settings per workload.",
+   "table": "Table 14, row Nesterov opt-list, column Runtime",
+   "note": "Authors attribute the failure to search-space construction, not to the update rules.",
+   "where": "Table 14, Section 7.3.1"
+  },
+  {
+   "claim": "NadamW with beta1 fixed to 0.9 scores 0.599691, about the same as AdamW (0.596985), versus 0.849960 when beta1 is tuned.",
+   "kind": "measured",
+   "source": null,
+   "metric": "benchmark score (runtime)",
+   "value": "0.599691",
+   "unit": "score in [0,1]",
+   "baseline_value": "0.849960 (NadamW tuned beta1)",
+   "n": 8,
+   "setup": "External tuning, Table 12 search spaces, fixed beta1 (1-beta1 = 0.1).",
+   "table": "Table 14, row NadamW fixed beta1, column Runtime",
+   "note": "NadamW OptList 0.835602; AdamW OptList 0.725260.",
+   "where": "Table 14, Section 7.3.1"
+  },
+  {
+   "claim": "LAMB hits the target on only 2 workloads but is fastest on WMT Transformer, by a 7% margin; its benchmark score is 0.248619.",
+   "kind": "measured",
+   "source": null,
+   "metric": "margin to second-fastest on WMT",
+   "value": "7%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": 1,
+   "setup": "WMT Transformer, external tuning baselines (LAMB steps 79,980 in Table 26 vs NadamW 85,312 and runtime 29,962 s in Table 25 vs NadamW 30,822).",
+   "quote": "the target (by a 7% margin)",
+   "note": "Table 25 shows LAMB finite on DeepSpeech (78,966) and WMT (29,962).",
+   "where": "Section 7.3"
+  },
+  {
+   "claim": "The authors' Adafactor implementation took 10-20% more time per step than AdamW on GPUs, costing it targets within the runtime cap; SAM and Distributed Shampoo cost 1.5x-2x per step.",
+   "kind": "measured",
+   "source": null,
+   "metric": "extra step time vs AdamW",
+   "value": "10-20%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "8x V100 official system, multiple workloads.",
+   "quote": "took around 10-20% more time per step than AdamW",
+   "note": null,
+   "where": "Section 7.2"
+  },
+  {
+   "claim": "Re-running the best target-setting configuration 20 times shows large seed variance on LibriSpeech: validation WER varies 36.77% (Conformer) and 51.25% (DeepSpeech) of the minimum.",
+   "kind": "measured",
+   "source": null,
+   "metric": "(max-min)/min of validation metric over 20 seeds",
+   "value": "51.25",
+   "unit": "%",
+   "baseline_value": "0.13 (Criteo)",
+   "n": 20,
+   "setup": "Best algorithm+hyperparameters per workload from the 200-trial search, 20 seeds.",
+   "table": "Table 23, row (max-min)/min (%), column DeepSpeech",
+   "note": "Other columns: fastMRI 0.22, ResNet-50 1.17, ViT 2.20, Conformer 36.77, OGBG 4.72, WMT 1.18. Authors note 'reversion to the mean' versus the best trial in Table 9.",
+   "where": "Table 23, Appendix B"
+  },
+  {
+   "claim": "Finding workload variants that change NadamW's optimal hyperparameters was hard; on WMT, NadamW's best base point ranks 76th (of 200) on the Post-LN variant, but on ImageNet ViT MAP and GLU variants the rank was 0.",
+   "kind": "measured",
+   "source": null,
+   "metric": "rank of base-optimal hyperparameters on variant (of 200)",
+   "value": "76",
+   "unit": "rank",
+   "baseline_value": null,
+   "n": 200,
+   "setup": "NadamW, the same 200 target-setting hyperparameter points on each candidate variant.",
+   "table": "Table 40, row Post-LN, column Base to Variant Rank",
+   "note": "Table 36 (ViT) ranks: Post-LN 14, MAP 0, GLU 0; ResNet BN Init Scale rank 1.",
+   "where": "Tables 33-40, Section 6.2-6.3"
+  },
+  {
+   "claim": "Of 60 randomly sampled OGBG GNN workload variants, roughly 30% were trainable within 10% of the base mAP target; nearly all trainable ones shared the base's optimal hyperparameters, so the random-variant approach was abandoned.",
+   "kind": "measured",
+   "source": null,
+   "metric": "fraction trainable",
+   "value": "30%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": 60,
+   "setup": "Nesterov, 100 hyperparameter points per sample (6000 trials for one distribution version); 16 surviving candidates checked against the base optimum.",
+   "quote": "We found that roughly 30 % of the samples were trainable",
+   "note": null,
+   "where": "Appendix E"
+  },
+  {
+   "claim": "Scoring a submission on the official system takes about 1161 machine-hours (external tuning) and fully tuning it about 23,223 hours.",
+   "kind": "measured",
+   "source": null,
+   "metric": "machine-hours, tuning a submission (external ruleset)",
+   "value": "23,222.61",
+   "unit": "hours (8xV100)",
+   "baseline_value": "1161.13 (scoring)",
+   "n": null,
+   "setup": "8 fixed + 8 held-out workloads, 5 studies x 20 trials; provisional, likely a slight overestimate.",
+   "table": "Table 15, row Tuning a submission (External Tuning Ruleset)",
+   "note": "Qualification set (3 workloads) is about an order of magnitude cheaper: 103.24 h scoring.",
+   "where": "Table 15, Section 8.4"
+  },
+  {
+   "claim": "The target-setting budget was chosen so that all fixed workloads together fit in about 100 hours on the benchmark hardware.",
+   "kind": "claim",
+   "source": null,
+   "metric": "combined runtime of fixed workloads",
+   "value": "100 hours",
+   "unit": "hours",
+   "baseline_value": null,
+   "n": 8,
+   "setup": "Design target for maximum runtimes (Table 7); target-setting uses 0.75x.",
+   "quote": "the combined runtime of all fixed workloads to 100 hours on the benchmarking hardware",
+   "note": null,
+   "where": "Section 4.1"
+  }
+ ],
+ "limits": [
+  "Authors concede the target-setting procedure needed manual trial-and-error on search spaces, uses 200 trials (not a valid submission), and yields targets that are generally not state-of-the-art error rates (Section 8.1).",
+  "Randomized workload variants were designed by hand (only three per workload), may not be mutually distinct, and often repeat similar changes such as activation swaps; hyperparameter transfer is not predicted by any theory (Sections 6.2, 8.2, 8.4).",
+  "Only one hardware class (8x V100) and one batch-size regime; relative optimizer performance may vary with batch size and scale. Baselines were mostly run on TPUs and extrapolated from 20% of steps on GPUs (Sections 7.2, 8.4).",
+  "Heavy Ball and Nesterov failures reflect the box search spaces, not the update rules; Distributed Shampoo could not be run on the official system and has a step-budget advantage; the authors' Adafactor was slower than expected (Sections 7.2, 7.3, 8.3).",
+  "Three of eight workloads (Criteo, fastMRI, OGBG) are data-pipeline-bound on the official system, favoring more expensive optimizers (Section 7.2).",
+  "Baselines ignore the held-out workload criterion; the scores depend on the full set of baselines in the performance profile, so they are relative, not absolute (Sections 4.5, 7.3).",
+  "Submissions are limited by the API (no model parallelism, no K-FAC-style architectural access, random search only for external tuning, JAX/PyTorch only); no language modelling, video or image generation workloads (Section 8.4).",
+  "Section 2 experiments are small: Phi uses one run per hyperparameter setting; the Wide ResNet and Extra-BN experiments are single-sweep demonstrations with few details; DeepSpeech validation target expected to change from 0.1162 to 0.111825 before the call for submissions (Appendix D.4.3).",
+  "Compute cost of scoring (about 1161 machine-hours) is a barrier; the benchmark is all-or-nothing across workloads (Section 8.4)."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "time-to-result",
+   "definition": "wall-clock time for a run to first reach workload-specific validation and test error targets; infinity if the maximum runtime is exceeded",
+   "where": "Section 4.1"
+  },
+  {
+   "term": "workload",
+   "definition": "a dataset (including preprocessing), model, and loss function, along with a target defined using some evaluation metric",
+   "where": "Section 4.3"
+  },
+  {
+   "term": "performance profile",
+   "definition": "a plot of the fraction of workloads where a given method is within some ratio of the best per-workload training time",
+   "where": "Section 4.5.1"
+  },
+  {
+   "term": "external tuning ruleset",
+   "definition": "20 quasirandom trials from a submission-supplied workload-agnostic search space (or a fixed OptList), repeated in 5 studies, median per-workload time scored",
+   "where": "Section 4.4.1"
+  },
+  {
+   "term": "self-tuning ruleset",
+   "definition": "no user-defined hyperparameters or external tuning; all adaptation happens on the clock, with 3x the runtime budget",
+   "where": "Section 4.4.2"
+  },
+  {
+   "term": "OptList",
+   "definition": "a fixed list of 20 hyperparameter points sampled without replacement in lieu of a search space (after Metz et al. 2020 'learned optimizer list')",
+   "where": "Section 4.4.1, footnote 12"
+  },
+  {
+   "term": "held-out workload",
+   "definition": "a concrete workload variant sampled after submissions are frozen from a randomized workload (a distribution over three hand-designed variants of a fixed workload)",
+   "where": "Section 4.3.1"
+  },
+  {
+   "term": "Phi(H)",
+   "definition": "the best worst-case relative performance degradation from using a single shared hyperparameter setting in H instead of per-workload tuning",
+   "where": "Section 2.3.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Choi et al. 2019b, On Empirical Comparisons of Optimizers for Deep Learning",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Tuning protocols as the main factor behind contradicting optimizer comparisons; Adam with tuned beta2/epsilon and decay matches SGD momentum.",
+   "quote": "argue that they are the single most important factor explaining contradicting results"
+  },
+  {
+   "work": "Wilson et al. 2017, The Marginal Value of Adaptive Gradient Methods",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Cited as an example of contentious optimizer claims later contradicted by Choi et al.",
+   "quote": null
+  },
+  {
+   "work": "Nado et al. 2021, large-batch ResNet-50/BERT training baselines",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Nesterov with tuning matches LARS up to batch 32,768; stronger Adam baselines beat LAMB; also cited for brittle implementation details.",
+   "quote": null
+  },
+  {
+   "work": "DeepOBS (Schneider et al. 2019)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Prior fixed-workload optimizer benchmarking suite; mostly small-scale, no aggregate score, leaves tuning budget to the user.",
+   "quote": null
+  },
+  {
+   "work": "Schmidt et al. 2021, empirical comparison of fifteen optimizers on DeepOBS",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Compares optimizers at four tuning budgets; not a competitive benchmark, small-scale problems.",
+   "quote": null
+  },
+  {
+   "work": "MLPerf Training (Mattson et al. 2020) / DAWNBench",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Time-to-result systems benchmark; Open Division allows arbitrary hardware and model changes so cannot isolate algorithm gains.",
+   "quote": null
+  },
+  {
+   "work": "Benchopt (Moreau et al. 2022)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Software suite for optimization benchmarks; only one deep net workload.",
+   "quote": null
+  },
+  {
+   "work": "Sivaprasad et al. 2020",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Argues new optimizers should ship workload-agnostic priors over hyperparameters; ranking changes with tuning budget.",
+   "quote": null
+  },
+  {
+   "work": "Dolan and More 2002, Benchmarking optimization software with performance profiles",
+   "year": 2002,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Basis of the aggregate scoring.",
+   "quote": null
+  },
+  {
+   "work": "Bousquet et al. 2017, Critical Hyper-Parameters: No Random, No Cry",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Quasirandom search used for all tuning.",
+   "quote": null
+  },
+  {
+   "work": "Gilmer et al. 2021, A Loss Curvature Perspective on Training Instabilities",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Warmup fixes curvature-driven early instability (Section 2.2.1).",
+   "quote": null
+  },
+  {
+   "work": "Godbole et al. 2023, Deep Learning Tuning Playbook",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Closest systematisation of the tuning workflow, but not a mechanical target-setting procedure.",
+   "quote": null
+  },
+  {
+   "work": "Xiong et al. 2020 (Pre-LN Transformer)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Pre-LN vs Post-LN architecture comparison.",
+   "quote": null
+  },
+  {
+   "work": "Kingma and Ba 2015 (Adam); Loshchilov and Hutter 2019 (AdamW); Dozat 2016 (NadamW); Nesterov 1983; Polyak 1964; You et al. 2020 (LAMB); Shazeer and Stern 2018 (Adafactor); Foret et al. 2021 (SAM); Gupta et al. 2018 and Anil et al. 2020 (Shampoo)",
+   "year": null,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "The eight baseline optimizer families.",
+   "quote": null
+  },
+  {
+   "work": "Datasets/models: Criteo 1TB, fastMRI, ImageNet, ImageNet-v2, LibriSpeech, OGBG-MOLPCBA, WMT 2017/2014; DLRM, U-Net, ResNet-50, ViT S/16, Conformer, DeepSpeech, Jraph GNN, Transformer-big",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Workload definitions in Appendix D.",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "A direct comparison of training curves is ill-posed if they intersect.",
+   "page": 10,
+   "why": "Shows why a target-based time-to-result definition is needed."
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Small architectural changes can result in different rankings between training algorithms.",
+   "page": 12,
+   "why": "Learning-rate sweeps for AdamW vs Nesterov on two Wide ResNet strides, with warmup rescue."
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "For a fair comparison, training curves need to be tuned for the same criterion.",
+   "page": 19,
+   "why": "Same hyperparameters, two step budgets: nearly identical error but different speed."
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Performance profiles of our baseline submissions.",
+   "page": 53,
+   "why": "Fraction of workloads within tau of the best time, per optimizer, by runtime and by steps."
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "Performance profiles of our baseline submissions with different search spaces.",
+   "page": 54,
+   "why": "Shows tuned beta1 vs fixed beta1 vs OptList effects."
+  },
+  {
+   "figure": "Fig 7",
+   "caption": "The two learning rate schedules used in our experiments.",
+   "page": 67,
+   "why": "Warmup + cosine decay and warmup + linear decay + constant."
+  },
+  {
+   "figure": "Table 7",
+   "caption": "Summary of the fixed workloads used in our benchmark.",
+   "page": 32,
+   "why": "One table with task, dataset, model, loss, metric, validation and test targets, max runtime."
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 1-3, Section 4.5",
+   "snippet": "r_{s,w} = t_{s,w} / min_{s in S} t_{s,w};  rho_s(tau) = (1/n) |{w : r_{s,w} <= tau}|;  B_s = 1/(r_max - 1) * integral_1^{r_max} rho_s(tau) dtau, r_max = 4",
+   "verbatim": false
+  },
+  {
+   "where": "Section 2.3.1",
+   "snippet": "Phi(H) = min_{h in H} max_w | val(w,h) - val_H(w) | / val_H(w)",
+   "verbatim": false
+  },
+  {
+   "where": "Appendix A.1.1",
+   "snippet": "LR(t) = BaseLR * t/WarmupSteps for t <= WarmupSteps; else BaseLR/2 * (1 + cos(pi * (t-WarmupSteps)/(NumSteps-WarmupSteps)))",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Table 27 prints NadamW runtime/steps scores that look swapped against Tables 13 and 14 (see result note).",
+  "Section 7.3 says Adafactor hits 4/8 targets and AdamW hits the same plus Criteo; Table 25 appears to show more finite AdamW entries; not reconciled.",
+  "PDF text extraction renders superscripts oddly (the 10^10 loss curvature appears as '1010', ranges as 'P'); numbers from tables were taken from the flattened column order and mapped to rows by hand.",
+  "arXiv stamp on the PDF is v2 dated 18 Jun 2025; the ledger/filename year is 2023 (v1). No venue is printed in the text.",
+  "No embedded instructions found in the PDF text."
+ ]
+}

@@ -1,0 +1,145 @@
+{
+ "schema": 1,
+ "key": "2410.04343",
+ "pdf": "generative-ai/02-rag-retrieval/sources/yue-2024-inference-scaling-long-context-retrieval.pdf",
+ "bib": {
+  "title": "Inference Scaling for Long-Context Retrieval Augmented Generation",
+  "authors": ["Zhenrui Yue", "Honglei Zhuang", "Aijun Bai", "Kai Hui", "Rolf Jagerman", "Hansi Zeng", "Zhen Qin", "Dong Wang", "Xuanhui Wang", "Michael Bendersky"],
+  "first_author": "Yue",
+  "year": 2025,
+  "venue": "preprint",
+  "arxiv": "2410.04343",
+  "doi": null
+ },
+ "read": {"by": "source-reader", "at": "2026-11-08", "chars_read": 84413, "chars_total": 84413, "engine": "pymupdf", "skipped": null},
+ "type": "empirical",
+ "question": "How does RAG performance scale with inference computation when the compute is allocated optimally across documents, in-context examples and generation steps, and can the best allocation for a budget be predicted?",
+ "hypothesis": "For long-context RAG, test-time scaling properties can be modelled (computation allocation model) to choose inference parameters from the maximum effective context length.",
+ "contributions": [
+  "Systematic study of inference scaling for long-context RAG with two strategies, DRAG and IterDRAG.",
+  "DRAG and IterDRAG reach state-of-the-art and scale better than only adding documents.",
+  "With optimal allocation, RAG performance scales almost linearly with the order of magnitude of the compute budget (inference scaling laws for RAG).",
+  "A computation allocation model relating performance to documents, shots and iterations, which matches experiments and generalises."
+ ],
+ "method": {
+  "summary": "Gemini 1.5 Flash is prompted with k retrieved documents and m in-context RAG demonstrations (DRAG), or with interleaved sub-query retrieval and generation in Self-Ask format (IterDRAG, up to 5 iterations). Compute is measured as effective context length (total input tokens over all calls). A grid over (k, m, n) gives the best configuration per budget, and a regression on log(theta) predicts performance.",
+  "task": "multi-hop open-domain QA with retrieval over Wikipedia (KILT passages)",
+  "trains": false,
+  "datasets": [
+   {"name": "Bamboogle", "role": "eval", "size": "sampled up to 1.2k examples per dataset (Bamboogle size not stated)", "split": null, "source": "Press et al., 2023", "preprocessing": null},
+   {"name": "HotpotQA", "role": "eval", "size": "1.2k sampled examples", "split": null, "source": "Yang et al., 2018", "preprocessing": null},
+   {"name": "MuSiQue", "role": "eval", "size": "1.2k sampled examples", "split": null, "source": "Trivedi et al., 2022", "preprocessing": null},
+   {"name": "2WikiMultiHopQA", "role": "eval", "size": "1.2k sampled examples", "split": null, "source": "Ho et al., 2020", "preprocessing": null},
+   {"name": "TriviaQA, Natural Questions, StrategyQA", "role": "eval", "size": null, "split": null, "source": "Appendix C extra datasets", "preprocessing": null},
+   {"name": "KILT Wikipedia passages", "role": "eval", "size": null, "split": null, "source": "Petroni et al., 2020; retrieval corpus", "preprocessing": "each document truncated on the right to max 1024 tokens using whitespace tokenization"}
+  ],
+  "models": [
+   {"name": "Gemini 1.5 Flash", "role": "proposed", "params": null, "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": "up to 1M tokens", "other": {"note": "generator, used with default generation parameters"}},
+   {"name": "Gecko-1B (en)", "role": "retriever", "params": "1B", "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "GTR XXL", "role": "retriever", "params": null, "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"note": "alternative retriever in Appendix D, 100 MuSiQue examples"}}
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "default generation parameters; IterDRAG uses constrained decoding to the Self-Ask format (responses start with Follow up:, Intermediate answer: or So the final answer is:)",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single generation per query; seeds and repeats not stated",
+   "prompting": "instruction plus m demonstrations each with k retrieved documents, then test documents and query; documents in reverse rank order (best nearest the query)",
+   "retrieval": "top-k nearest neighbours by Gecko-1B embeddings over KILT Wikipedia; IterDRAG retrieves again per sub-query and appends to initial documents",
+   "parameters": {
+    "k_documents": "{0, 1, 2, 5, 10, 20, 50, 100, 200, 500, 1000}",
+    "m_shots": "0, 2^0, 2^1, ..., 2^8",
+    "n_iterations": "up to 5 (IterDRAG)",
+    "L_max_budgets": "16k, 32k, 128k, 1M, 5M tokens",
+    "epsilon_shift": "0.01 added to theta to avoid log(0)"
+   },
+   "other": {
+    "allocation_model": "sigma^-1(P(theta)) ~ (a + b*i)^T log(theta) + c, theta=(k,m,n); i=(i_doc,i_shot,0); fit by ordinary least squares; last element of b constrained so six free parameters; i_doc = P(k=1,m=0,n=1)-P(k=0,m=0,n=1); i_shot = P(k=0,m=1,n=1)-P(k=0,m=0,n=1)",
+    "fitted_params": "Table 8: a = 0.325, 0.101, 0.177; b = -0.067, -0.008, 0; c = -0.730; R2 0.903, MSE 0.085",
+    "sigmoid": "sigma(x) = 3.30/(1+e^{-1.81(x+0.46)}) - 2.18",
+    "normalisation": "metrics normalised by subtracting mean and dividing by std per dataset and metric",
+    "outliers": "peak and valley outliers excluded for R2/MSE; all points included for domain generalisation and length extrapolation",
+    "compute_accounting": "output tokens and retrieval cost excluded"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {"name": "EM", "definition": "exact match", "unit": "%", "higher_is_better": true},
+    {"name": "F1", "definition": "token F1", "unit": "%", "higher_is_better": true},
+    {"name": "Acc", "definition": "whether the ground truth is located within the prediction", "unit": "%", "higher_is_better": true},
+    {"name": "Recall / NDCG / MRR", "definition": "retrieval quality of Gecko-1B", "unit": "score 0-1", "higher_is_better": true},
+    {"name": "R2 / MSE", "definition": "fit of allocation model to measured metrics", "unit": null, "higher_is_better": null}
+   ],
+   "baselines": ["zero-shot QA", "many-shot QA (demonstrations without documents)", "standard RAG (k documents, no demonstrations)", "8-shot baseline configuration scaled by documents (generalisation and extrapolation)", "chain-of-thought (Trivedi et al., 2023) vs IterDRAG"],
+   "protocol": "For each L_max, best average metric over all configurations with effective length <= L_max (Eq. 1). Domain generalisation: leave one dataset out, only i from target. Length extrapolation: fit on shorter lengths, predict longer. No significance tests or seeds."
+  },
+  "availability": {"code": null, "weights": null, "data": null},
+  "prompts": [
+   {"purpose": "DRAG prompt", "text": "You are an expert in question answering. I am going to give you one or more example triples of context, question and answer, in which the context may or may not be relevant to the question. The examples will be written. Context (which may or may not be relevant): <Retrieved documents> Question: ... Answer: ... <Further demonstrations> After the examples, I am going to provide another pair of context and question, in which the context may or may not be relevant to the question. I want you to answer the question. Give only the answer, and no extra commentary, formatting, or chattiness. Answer the question.", "where": "Figure 16, p29"},
+   {"purpose": "IterDRAG prompt", "text": "You are an expert in question answering. I am going to give you one or more example sets of context, question, potential follow up questions and their respective answers, in which the context may or may not be relevant to the questions. ... When needed, generate follow up question(s) using the format 'Follow up: X', where X is the follow up question. Then, answer each follow up question using 'Intermediate answer: X' with X being the answer. Finally, answer to the main question with the format 'So the final answer is: X', where X is the final answer.", "where": "Figure 17, p30 (abridged here; full text in paper)"}
+  ],
+  "evidence": []
+ },
+ "results": [
+  {"claim": "Abstract headline: optimal inference scaling on long-context LLMs gives up to this gain over standard RAG.", "kind": "measured", "source": null, "metric": "relative gain over standard RAG", "value": "58.9", "unit": "%", "baseline_value": null, "n": null, "setup": "Gemini 1.5 Flash, benchmark QA datasets, optimal configurations", "quote": "achieves up to 58.9% gains on benchmark datasets compared to standard RAG", "table": null, "note": "Which dataset/metric gives 58.9% is not stated in the text.", "where": "Abstract"},
+  {"claim": "Optimal performance scales nearly linearly with the order of magnitude of inference compute (inference scaling laws for RAG).", "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "DRAG and IterDRAG, Gemini 1.5 Flash, four multi-hop datasets, L_max 16k to 5M", "quote": "The optimal performance scales nearly linearly with the order of magnitude of the inference compute.", "table": null, "note": null, "where": "Sec 4.3"},
+  {"claim": "IterDRAG at 5M tokens on MuSiQue reaches accuracy well above standard RAG at 128k.", "kind": "measured", "source": null, "metric": "MuSiQue Acc", "value": "30.5", "unit": "%", "baseline_value": "16.8", "n": 1200, "setup": "Gemini 1.5 Flash, L_max 5M (IterDRAG) vs 128k (RAG, its best row)", "quote": null, "table": "Table 1, MuSiQue Acc: IterDRAG 5M row 30.5; RAG 128k row 16.8", "note": null, "where": "Table 1"},
+  {"claim": "On 2WikiMultiHopQA IterDRAG at 5M reaches accuracy far above standard RAG.", "kind": "measured", "source": null, "metric": "2WikiMultiHopQA Acc", "value": "76.9", "unit": "%", "baseline_value": "48.4", "n": 1200, "setup": "Gemini 1.5 Flash, IterDRAG at L_max 5M vs RAG at 128k", "quote": null, "table": "Table 1, 2WikiMultiHopQA Acc: IterDRAG 5M row 76.9; RAG 128k row 48.4", "note": null, "where": "Table 1"},
+  {"claim": "On Bamboogle IterDRAG at 128k has much higher accuracy than RAG at 128k.", "kind": "measured", "source": null, "metric": "Bamboogle Acc", "value": "68.8", "unit": "%", "baseline_value": "52.8", "n": 1200, "setup": "Gemini 1.5 Flash, L_max 128k", "quote": null, "table": "Table 1, Bamboogle Acc, 128k rows: IterDRAG 68.8; RAG 52.8", "note": null, "where": "Table 1"},
+  {"claim": "RAG plateaus at about 128k; DRAG improves until 1M; IterDRAG further at 5M; DRAG wins at 16k and 32k, IterDRAG at 128k and above.", "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "Table 1 across four datasets", "quote": "At 16k and 32k, DRAG typically delivers the best performance, while at 128k and beyond, IterDRAG achieves superior results overall", "table": null, "note": null, "where": "Sec 4.2"},
+  {"claim": "Gains diminish beyond 1M tokens, possibly from long-context modelling limits.", "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "1M to 5M, IterDRAG", "quote": "Gains on optimal performance gradually diminish beyond an effective context length of 1M.", "table": null, "note": null, "where": "Sec 4.3"},
+  {"claim": "Documents help more than shots for a fixed configuration; shots 0 to 1 matter more for IterDRAG than DRAG.", "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "grid over k and m, Fig 5", "quote": "Documents and in-context examples are not equally helpful.", "table": null, "note": null, "where": "Sec 4.4"},
+  {"claim": "Allocation model with sigmoidal scaling fits best in ablation.", "kind": "measured", "source": null, "metric": "R2", "value": "0.903", "unit": null, "baseline_value": "0.866", "n": null, "setup": "full model vs Exclude b variant, Gemini 1.5 Flash", "quote": null, "table": "Table 2, column Sigmoidal sigma R2 0.903 (MSE 0.085); Exclude b R2 0.866 (MSE 0.116)", "note": null, "where": "Table 2"},
+  {"claim": "Allocation model reaches 96.6% of oracle on unseen datasets at 1M tokens.", "kind": "measured", "source": null, "metric": "fraction of oracle performance", "value": "96.6", "unit": "%", "baseline_value": null, "n": null, "setup": "leave-one-dataset-out, 1M effective context, vs 8-shot baseline scaled by documents", "quote": "closely aligns with the oracle results (96.6% of the optimal performance)", "table": null, "note": null, "where": "Sec 5.2, Table 3"},
+  {"claim": "Length extrapolation from 128k to 1M differs from oracle by only a small amount; 5M is less predictable.", "kind": "measured", "source": null, "metric": "average gap predicted vs oracle", "value": "2.8", "unit": "%", "baseline_value": null, "n": null, "setup": "fit on shorter lengths, predict 128k to 1M", "quote": "the average difference between the predicted and oracle results from 128k to 1M tokens is just 2.8%", "table": null, "note": "5M gap is 5.6%: 'average performance difference between predicted and oracle metrics observed at a substantial 5.6%'", "where": "Sec 5.2"},
+  {"claim": "IterDRAG improves retrieval recall, NDCG and MRR over DRAG by merging sub-query retrievals.", "kind": "measured", "source": null, "metric": "average retrieval gain", "value": "30.5", "unit": "%", "baseline_value": null, "n": null, "setup": "k=50 documents per step, m=2 shots, Gecko-1B, four datasets", "quote": "With IterDRAG, the performance gains are consistent and reach the average of 30.5%.", "table": null, "note": "Up to 57.1% on 2WikiMultiHopQA; NDCG 30.7%, MRR 39.9%, recall 21.7%.", "where": "Appendix A, Table 5"},
+  {"claim": "Recall rises toward near-perfect with ~1k documents, but NDCG and MRR plateau around 100 documents, so more documents add noise.", "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "Gecko-1B, 1 to 2k documents, DRAG", "quote": "NDCG and MRR metrics plateau early at around 100 documents", "table": null, "note": null, "where": "Appendix A"},
+  {"claim": "IterDRAG beats chain-of-thought on 2WikiMultiHopQA accuracy at fixed 5 documents, 4 shots.", "kind": "measured", "source": null, "metric": "2WikiMultiHopQA Acc", "value": "72.3", "unit": "%", "baseline_value": "36.7", "n": null, "setup": "Gemini 1.5 Flash, k=5, m=4", "quote": null, "table": "Table 6, row IterDRAG, column 2WikiMultiHopQA Acc (72.3); row CoT 36.7", "note": null, "where": "Table 6"},
+  {"claim": "StrategyQA accuracy: IterDRAG highest.", "kind": "measured", "source": null, "metric": "StrategyQA Acc", "value": "83.4", "unit": "%", "baseline_value": "61.1", "n": null, "setup": "zero-shot QA 61.1; many-shot QA 74.7; RAG 74.7; DRAG 79.0", "quote": "the performance is boosted with 83.4 accuracy using the iterative IterDRAG", "table": null, "note": null, "where": "Appendix C, Table 7"},
+  {"claim": "On one-hop datasets, gains plateau early: TriviaQA peaks at 50 documents, Natural Questions at 20 documents in 1-shot.", "kind": "measured", "source": null, "metric": "TriviaQA Acc", "value": "69.0", "unit": "%", "baseline_value": null, "n": null, "setup": "DRAG, Gemini 1.5 Flash", "quote": "the highest accuracy of 69.0% is achieved with 50 documents", "table": null, "note": "NQ best 54.6% at 20 documents, 1-shot.", "where": "Appendix C, Fig 9"},
+  {"claim": "DRAG performance peaks around 10^5 tokens while IterDRAG peaks around 10^6 tokens.", "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "per-iteration context", "quote": "DRAG performance peaks at around 105 tokens, while IterDRAG achieves optimal performance at around 106 tokens", "table": null, "note": "Superscripts flattened in extraction (10^5, 10^6).", "where": "Sec 6"}
+ ],
+ "limits": [
+  "Only Gemini 1.5 Flash is used as generator; allocation model parameters are model-specific.",
+  "Evaluation is on 1.2k sampled examples per dataset and a single run with no seeds or significance tests reported; GTR check uses just 100 MuSiQue examples.",
+  "Compute counts input tokens only, excluding output tokens and retrieval cost.",
+  "Authors concede it is unknown how scaling behaviour changes with a re-ranking or refining component.",
+  "5M-token and 32k-to-128k extrapolation are less predictable; HotpotQA and 2Wiki become sigmoidal above 100k tokens.",
+  "Errors persist in retrieval, reasoning, hallucination; EM/F1/Acc mis-score abbreviations and date formats; abstention not handled.",
+  "Optimal theta depends on method, metric and dataset; one-hop datasets saturate early."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "effective context length", "definition": "the total number of input tokens across all iterations before the LLM outputs the final answer", "where": "Sec 3.1"},
+  {"term": "DRAG", "definition": "demonstration-based RAG: multiple RAG examples with retrieved documents given in-context, answer in one call", "where": "Sec 3.2"},
+  {"term": "IterDRAG", "definition": "iterative demonstration-based RAG: decompose query into sub-queries with interleaved retrieval and intermediate answers", "where": "Sec 3.3"},
+  {"term": "computation allocation model for RAG", "definition": "sigma^-1(P(theta)) ~ (a + b*i)^T log(theta) + c predicting performance from documents, shots and iterations", "where": "Sec 5.1"}
+ ],
+ "lineage": [
+  {"work": "Many-shot in-context learning (Agarwal et al.)", "year": 2024, "arxiv": null, "relation": "uses-method", "note": "prompt template follows it", "quote": null},
+  {"work": "Measuring and narrowing the compositionality gap (Self-Ask)", "year": 2023, "arxiv": null, "relation": "uses-method", "note": "IterDRAG sub-query format", "quote": null},
+  {"work": "Automata-based constraints for language model decoding", "year": 2024, "arxiv": "2407.08103", "relation": "uses-method", "note": "constrained decoding", "quote": null},
+  {"work": "Lost in the middle / ChatQA reversed document order (Liu et al.)", "year": 2024, "arxiv": "2401.10225", "relation": "uses-method", "note": "best documents nearest query", "quote": null},
+  {"work": "Interleaving retrieval with chain-of-thought (IRCoT)", "year": 2023, "arxiv": null, "relation": "baseline", "note": "CoT examples generated following it", "quote": null},
+  {"work": "Scaling LLM test-time compute optimally (Snell et al.)", "year": 2024, "arxiv": "2408.03314", "relation": "related", "note": "motivation for test-time scaling", "quote": null},
+  {"work": "LongRAG", "year": 2024, "arxiv": "2406.15319", "relation": "related", "note": "concurrent long-document RAG", "quote": null},
+  {"work": "Gecko", "year": 2024, "arxiv": "2403.20327", "relation": "uses-method", "note": "retriever Gecko-1B", "quote": null},
+  {"work": "GTR (Large dual encoders)", "year": 2021, "arxiv": "2112.07899", "relation": "uses-method", "note": "alternate retriever", "quote": null},
+  {"work": "KILT", "year": 2020, "arxiv": "2009.02252", "relation": "uses-data", "note": "Wikipedia passages", "quote": null},
+  {"work": "Bamboogle, HotpotQA, MuSiQue, 2WikiMultiHopQA, TriviaQA, NQ, StrategyQA", "year": null, "arxiv": null, "relation": "uses-data", "note": "evaluation sets", "quote": null},
+  {"work": "Gemini 1.5", "year": 2024, "arxiv": "2403.05530", "relation": "evaluates", "note": "Flash variant as generator", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 1", "caption": "Normalized performance vs. effective context lengths on MuSiQue.", "page": 2, "why": "Shows standard RAG plateauing near 10^4 tokens while DRAG and IterDRAG keep rising near-linearly."},
+  {"figure": "Fig 2", "caption": "Evaluation accuracy of Gemini 1.5 Flash using zero-shot QA, many-shot QA, RAG, DRAG and IterDRAG.", "page": 3, "why": "One-glance comparison of the five strategies per dataset."},
+  {"figure": "Fig 3", "caption": "DRAG vs. IterDRAG.", "page": 6, "why": "Diagram of single-call versus sub-query retrieve-and-generate loop."},
+  {"figure": "Fig 5", "caption": "RAG performance changes with varying number of documents and in-context examples.", "page": 9, "why": "Heatmap and curves showing document and shot saturation."},
+  {"figure": "Fig 6", "caption": "Estimated performance using the observational scaling laws vs. actual metric values in DRAG.", "page": 11, "why": "Predicted vs actual validation of the allocation model."}
+ ],
+ "code": [
+  {"where": "Eq. 1, p6", "snippet": "P*(L_max) := max_{theta in Theta} { (1/|X|) sum_i P(y_i, f(x_i; theta)) for all i, l(x_i; theta) <= L_max }", "verbatim": false},
+  {"where": "Eq. 2, p10", "snippet": "sigma^-1(P(theta)) ~ (a + b (.) i)^T log(theta) + c", "verbatim": false}
+ ],
+ "problems": ["Superscripts in text flattened (10^5 appears as 105).", "Abstract's 58.9% is not traceable to a table cell."]
+}

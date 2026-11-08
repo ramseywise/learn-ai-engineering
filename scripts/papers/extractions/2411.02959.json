@@ -1,0 +1,583 @@
+{
+ "schema": 1,
+ "key": "2411.02959",
+ "pdf": "generative-ai/02-rag-retrieval/sources/tan-2024-htmlrag.pdf",
+ "bib": {
+  "title": "HtmlRAG: HTML is Better Than Plain Text for Modeling Retrieved Knowledge in RAG Systems",
+  "authors": [
+   "Jiejun Tan",
+   "Zhicheng Dou",
+   "Wen Wang",
+   "Mang Wang",
+   "Weipeng Chen",
+   "Ji-Rong Wen"
+  ],
+  "first_author": "Tan",
+  "year": 2025,
+  "venue": "WWW '25 (Proceedings of the ACM Web Conference 2025)",
+  "arxiv": "2411.02959",
+  "doi": "10.1145/3696410.3714546"
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 89753,
+  "chars_total": 89753,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Does keeping retrieved web pages as (cleaned, pruned) HTML instead of plain text improve RAG answer quality?",
+ "hypothesis": "HTML preserves structural and semantic information lost in plain-text conversion, and LLMs can already read it without fine-tuning.",
+ "contributions": [
+  "Propose HTML as the format of knowledge in RAG systems",
+  "A simple but effective HTML cleaning algorithm",
+  "A two-stage (embedding then generative) block-tree HTML pruning algorithm"
+ ],
+ "method": {
+  "summary": "Retrieved web pages are cleaned by rules (drop CSS/JS/comments, long attributes, merge single-nested tags, drop empty tags), parsed to a block tree (max words per block), pruned greedily by BGE similarity at 256-word blocks, then by a fine-tuned Phi-3.5-mini path-generation model at 128-word blocks that scores blocks by token-tree generation probability. The pruned HTML (4K tokens) is fed to Llama-3.1 readers.",
+  "task": "Open-domain QA over Bing-retrieved web HTML (post-retrieval refinement)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "ASQA, HotpotQA, NQ, TriviaQA, MuSiQue, ELI5 (eval)",
+    "role": "eval",
+    "size": "400 randomly sampled questions per dataset",
+    "split": "test set if any, else validation",
+    "source": "Original public datasets; web pages via Bing search API (US-EN) with static HTML scraped from result URLs; URLs and HTML released",
+    "preprocessing": "HTML cleaning; 20 HTML documents retrieved per query (stated as 'suppose we retrieve 20')"
+   },
+   {
+    "name": "Pruner SFT data",
+    "role": "train",
+    "size": "2635 samples, 2K to 32K tokens long",
+    "split": "queries from training sets of several open-source QA datasets (which not named)",
+    "source": "Bing-retrieved HTML, cleaned, embedding-pruned to 2K-32K tokens; samples with no block exactly matching gold answer discarded",
+    "preprocessing": "block tree built; blocks scored by exact match with gold answer"
+   }
+  ],
+  "models": [
+   {
+    "name": "Phi-3.5-Mini-Instruct (generative pruner)",
+    "role": "proposed",
+    "params": "3B (also described 3.8B)",
+    "architecture": "decoder-only LLM",
+    "init_from": "Phi-3.5-mini-instruct",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "max training context 35000 tokens",
+    "other": {
+     "storage": "7.2G (Table 4)"
+    }
+   },
+   {
+    "name": "BGE-Large-EN",
+    "role": "retriever",
+    "params": "200M",
+    "architecture": "encoder-only embedding model",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Llama-3.1-8B-Instruct and Llama-3.1-70B-Instruct (reader)",
+    "role": "evaluated",
+    "params": "8B, 70B",
+    "architecture": "decoder-only",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "4K main, 128K for cleaning comparison",
+    "other": {}
+   },
+   {
+    "name": "Llama-3.2-1B-Instruct (smaller pruner)",
+    "role": "baseline",
+    "params": "1.5B (named 1B)",
+    "architecture": "decoder-only",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "SFT: given HTML+query+instruction, generate the block path followed by block content of the most relevant block",
+   "optimizer": "Adam (beta1 0.9, beta2 0.98, eps 1e-8)",
+   "lr": "2e-5",
+   "lr_schedule": "constant",
+   "warmup": "warmup_ratio 0.01",
+   "batch_size": "per_device_train_batch_size 1, gradient_accumulation_steps 8",
+   "steps": null,
+   "epochs": "3",
+   "tokens": null,
+   "seq_len": "35000 tokens max",
+   "precision": "bfloat16 set to auto in DeepSpeed",
+   "weight_decay": "1e-4",
+   "dropout": null,
+   "regularisation": "max_grad_norm 1.0",
+   "hardware": "4 nodes, 32 Nvidia A800 80G GPUs",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "deepspeed": "ZeRO stage 3, gradient clipping 1.0, gradient checkpointing",
+    "seq_parallel_size": 8,
+    "effective_batch": "inferred: 1 x 8 accum x 32 GPUs / 8 seq-parallel = 32 sequences, not stated"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": "Reader prompt not given. Pruner prompt in Figure 4.",
+   "retrieval": "Bing search API, US-EN; 20 HTML docs per query inferred from the token-count example; context budget 4K tokens (128K for no-prune comparison)",
+   "parameters": {
+    "maxWords block tree for embedding pruning": "256 words",
+    "maxWords block tree for generative pruning": "128 words",
+    "granularity range tested": "64 to 512 words",
+    "embedding model": "BGE-Large-EN",
+    "HTML-to-text baselines": "BeautifulSoup plain text, Markdownify",
+    "chunking for baselines": "LangChain, split on h1/h2 headings"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Exact Match (EM)",
+     "definition": "answer string match",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Hit@1",
+     "definition": "at least one annotated short answer exactly matches in the response (ASQA, NQ, Trivia-QA)",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "ROUGE-L",
+     "definition": "ELI5",
+     "unit": "score",
+     "higher_is_better": true
+    },
+    {
+     "name": "BLEU",
+     "definition": "ELI5",
+     "unit": "score",
+     "higher_is_better": true
+    },
+    {
+     "name": "Latency / params / in-out tokens",
+     "definition": "Table 4 cost analysis",
+     "unit": "ms",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "BM25, BGE, E5-Mistral chunk+rerank (LangChain chunks)",
+    "LongLLMLingua (Llama-7B)",
+    "JinaAI Reader (1.5B HTML-to-Markdown)",
+    "Vanilla HTML, Plain Text, Markdown at 128K"
+   ],
+   "protocol": "Single run per cell (seeds not stated); t-test p<0.05 marks significance vs baselines; 400 questions per dataset"
+  },
+  "availability": {
+   "code": "https://github.com/plageon/HtmlRAG",
+   "weights": null,
+   "data": "URLs and scraped HTML released (said in 4.1)"
+  },
+  "prompts": [
+   {
+    "purpose": "Pruner prompt (path generation)",
+    "text": "**HTML**:\n\"{HTML}\"\n**Question**:\n**{Question}**\nYour task is to identify the most relevant text piece to the given question in the HTML document. This text piece could either be a direct paraphrase to the fact, or a supporting evidence that can be used to infer the fact. The overall length of the text piece should be more than 20 words and less than 300 words. You should provide the path to the text piece in the HTML document. An example for the output is: <html1><body><div2><p>Some key information...",
+    "where": "Figure 4"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "models.Phi-3.5.params",
+    "quote": "Phi-3.5-Mini-Instruct [1] with 3B parameters",
+    "where": "4.4"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Under a 4K window with Llama-3.1-8B, HtmlRAG beats the best baseline (BGE chunk+rerank) on ASQA Hit@1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ASQA Hit@1",
+   "value": "71.75",
+   "unit": "%",
+   "baseline_value": "68.50",
+   "n": null,
+   "setup": "Table 1: Llama-3.1-8B-Instruct, 4K context, 400 sampled questions per dataset, Bing-retrieved web HTML",
+   "table": "Table 1, Llama-3.1-8B-Instruct-4K, row HtmlRAG, column ASQA Hit@1 (BGE 68.50)",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Under a 4K window with Llama-3.1-70B, HtmlRAG wins on MuSiQue EM over BGE but is within 0.1 point on ASQA EM and Trivia-QA EM.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MuSiQue EM",
+   "value": "13.25",
+   "unit": "%",
+   "baseline_value": "12.50",
+   "n": null,
+   "setup": "Table 1: Llama-3.1-70B-Instruct, 4K context, 400 questions",
+   "table": "Table 1, Llama-3.1-70B-Instruct-4K, row HtmlRAG, column MuSiQue EM (BGE 12.50)",
+   "note": "HtmlRAG ASQA EM 30.53 vs BGE 30.57 and Trivia-QA EM 27.03 vs BGE 27.04: the lead is not uniform at 70B.",
+   "where": "Table 1"
+  },
+  {
+   "claim": "HtmlRAG without pruning, 70B at 128K, roughly ties plain text overall: it wins on NQ/Trivia/MuSiQue, loses on ASQA Hit@1 and ELI5.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MuSiQue EM",
+   "value": "10.75",
+   "unit": "%",
+   "baseline_value": "8.75",
+   "n": null,
+   "setup": "Table 2: Llama-3.1-70B-Instruct, 128K context, rule-cleaned full HTML vs plain text",
+   "table": "Table 2, row HtmlRAG w/o Prune, column MuSiQue EM (Plain Text 8.75)",
+   "note": "ASQA Hit@1 58.75 vs plain text 59.75; ELI5 ROUGE-L 16.57 vs 16.88.",
+   "where": "Table 2"
+  },
+  {
+   "claim": "Vanilla (uncleaned) HTML is far worse than any cleaned format at 128K.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ASQA Hit@1",
+   "value": "44.00",
+   "unit": "%",
+   "baseline_value": "59.75",
+   "n": null,
+   "setup": "Table 2: Llama-3.1-70B-Instruct-128K, Vanilla HTML vs Plain Text",
+   "table": "Table 2, row Vanilla HTML, column ASQA Hit@1 (Plain Text 59.75)",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "HTML cleaning removes over 94% of tokens.",
+   "kind": "measured",
+   "source": null,
+   "metric": "token reduction",
+   "value": "94.07",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Cleaning on the retrieved web pages of the six datasets",
+   "quote": "HTML-Clean drops over 94.07% tokens of the original HTML, while the number for plain text and Markdown conversion are 96.71% and 90.32% respectively.",
+   "table": null,
+   "note": null,
+   "where": "4.6.1"
+  },
+  {
+   "claim": "Raw web HTML averages over 80K tokens, over 90% of it CSS, JS, comments.",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg tokens per raw HTML doc",
+   "value": "80K",
+   "unit": "tokens",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Authors' preliminary experiments, no dataset named",
+   "quote": "a real HTML document from the Web contains over 80K tokens on average, among which over 90% of the tokens are CSS styles, JavaScript, Comments, or other meaningless tokens.",
+   "table": null,
+   "note": null,
+   "where": "1 Introduction"
+  },
+  {
+   "claim": "Token budget through the pipeline for 20 retrieved docs: 1.6M raw, 135K after cleaning, 8K after embedding pruning, 4K after generative pruning.",
+   "kind": "measured",
+   "source": null,
+   "metric": "tokens",
+   "value": "1.6M",
+   "unit": "tokens",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Suppose 20 retrieved HTML documents",
+   "quote": "HTML cleaning reduces the token count to 135K, HTML pruning based on text embedding reduces it to 8K, and generative HTML pruning reduces it to 4K.",
+   "table": null,
+   "note": null,
+   "where": "4.6.4"
+  },
+  {
+   "claim": "Removing the block tree (using the DOM tree) hurts ASQA Hit@1 by 9 points.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ASQA Hit@1",
+   "value": "59.50",
+   "unit": "%",
+   "baseline_value": "68.50",
+   "n": null,
+   "setup": "Table 3 ablation, 70B-4K setting (full row matches Table 1 70B)",
+   "table": "Table 3, row w/o Block Tree, column ASQA Hit@1 (9.00%↓)",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Removing embedding pruning (generative pruner alone on cleaned HTML) costs 11.75 ASQA Hit@1 points.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ASQA Hit@1",
+   "value": "56.75",
+   "unit": "%",
+   "baseline_value": "68.50",
+   "n": null,
+   "setup": "Table 3 ablation",
+   "table": "Table 3, row w/o Prune-Embed, column ASQA Hit@1 (11.75%↓)",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Removing generative pruning (embedding only) costs 6.5 ASQA Hit@1 points.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ASQA Hit@1",
+   "value": "62.00",
+   "unit": "%",
+   "baseline_value": "68.50",
+   "n": null,
+   "setup": "Table 3 ablation",
+   "table": "Table 3, row w/o Prune-Gen, column ASQA Hit@1 (6.50%↓)",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "The generative pruner is 3B/3.8B yet adds little cost: Prune-Gen latency 6.15ms vs 30.8ms for Prune-Embed and 915ms for the 70B reader.",
+   "kind": "measured",
+   "source": null,
+   "metric": "latency",
+   "value": "6.15ms",
+   "unit": "ms",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 4, ELI5; BGE 10.5ms, Prune-Embed 30.8ms, LLM Chat 915ms",
+   "table": "Table 4, row Prune-Gen, column Latency",
+   "note": "Over 45% of token-tree nodes are skipped (text 4.6.4). Hardware for latency not stated.",
+   "where": "Table 4"
+  },
+  {
+   "claim": "Over 45% of nodes can be skipped in generative scoring, so the 3B pruner is cheap.",
+   "kind": "measured",
+   "source": null,
+   "metric": "skipped nodes",
+   "value": "45%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Additional experiment, details not given",
+   "quote": "there are over 45% of nodes that can be skipped",
+   "table": null,
+   "note": null,
+   "where": "4.6.4"
+  },
+  {
+   "claim": "Pruner trained on 2635 samples; a 1.5B Llama pruner is slightly worse than 3.8B Phi.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MuSiQue EM, 1.5B pruner",
+   "value": "10.00",
+   "unit": "%",
+   "baseline_value": "13.25",
+   "n": null,
+   "setup": "Table 7, pruners trained on same data; very preliminary",
+   "table": "Table 7, row 1.5B, column MuSiQue EM (3.8B: 13.25)",
+   "note": "Table 7 labels columns EM for ASQA (68.50), which is Hit@1 in Table 1.",
+   "where": "Appendix D, Table 7"
+  },
+  {
+   "claim": "Final 4K HtmlRAG context keeps the most reference-answer information among 4K methods on ASQA.",
+   "kind": "measured",
+   "source": null,
+   "metric": "reference-text EM on ASQA",
+   "value": "52.80",
+   "unit": "%",
+   "baseline_value": "52.17",
+   "n": null,
+   "setup": "Table 5; 4K pruned contexts; BGE 52.17",
+   "table": "Table 5, row ASQA, column HtmlRAG (BGE 52.17)",
+   "note": null,
+   "where": "Appendix C, Table 5"
+  }
+ ],
+ "limits": [
+  "Weaker pruner scaling study (Appendix D) is 'very preliminary'; only two pruners tried.",
+  "The 70B gain over BGE is small or null on several metrics (Table 1); ELI5 ROUGE/BLEU show no advantage (HtmlRAG 15.51/5.84 vs BGE 15.87/6.30 at 8B).",
+  "At 128K, HTML without pruning ties plain text rather than beating it; HTML costs extra tokens under 4K windows.",
+  "Retrieval was Bing only, 400 questions per dataset, one run; no decoding settings or reader prompt reported.",
+  "Authors note the 70B reader is sometimes worse than 8B, attributing it to distraction by noise (Appendix E).",
+  "Training-data source datasets are not named."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "block tree",
+   "definition": "a coarser tree built from the DOM tree by merging fragmented child nodes into parents under a maxWords limit",
+   "where": "3.3"
+  },
+  {
+   "term": "block path",
+   "definition": "the sequence of tags from the root tag down to a block's tag, used to identify the block for generative scoring",
+   "where": "3.4.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "LongLLMLingua",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "abstractive plain-text refiner",
+   "quote": null
+  },
+  {
+   "work": "JinaAI Reader",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "HTML to Markdown 1.5B model",
+   "quote": null
+  },
+  {
+   "work": "BGE (Xiao et al. 2023)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "embedding model for pruning and baseline",
+   "quote": null
+  },
+  {
+   "work": "E5-Mistral",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "LLM-based embedding reranker",
+   "quote": null
+  },
+  {
+   "work": "BM25",
+   "year": null,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "sparse reranker",
+   "quote": null
+  },
+  {
+   "work": "CFIC and Generative Retrieval",
+   "year": null,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "sequence generation probability as chunk score",
+   "quote": null
+  },
+  {
+   "work": "LangChain chunking",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "heading-based chunker for baselines",
+   "quote": null
+  },
+  {
+   "work": "Phi-3 Technical Report",
+   "year": 2024,
+   "arxiv": "2404.14219",
+   "relation": "uses-method",
+   "note": "Phi-3.5-mini backbone for pruner",
+   "quote": null
+  },
+  {
+   "work": "Llama 3.1",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "8B and 70B readers",
+   "quote": null
+  },
+  {
+   "work": "ASQA, HotpotQA, NQ, TriviaQA, MuSiQue, ELI5",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "evaluation sets",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Information loss in HTML to plain text conversion.",
+   "page": 1,
+   "why": "Shows a table flattening to disordered text"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Overview of the HtmlRAG pipeline.",
+   "page": 3,
+   "why": "Four-stage flow: clean, block tree, embedding prune, generative prune"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Block score calculation. The block tree is transformed into the token tree with a tokenizer.",
+   "page": 4,
+   "why": "Shows shared-prefix token tree and skipped tokens"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "The prompt for the generative model.",
+   "page": 4,
+   "why": "Exact pruner prompt"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Experimental results for the impact of block tree granularity.",
+   "page": 6,
+   "why": "Granularity 64-512 for embed vs gen pruning"
+  },
+  {
+   "figure": "Table 4",
+   "caption": "Analysis of inference cost on ELI5 dataset",
+   "page": 6,
+   "why": "Pruner cost vs reader cost"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 3",
+   "snippet": "Score(b) = sum_{i=1..N} log(P(t_i))",
+   "verbatim": false
+  },
+  {
+   "where": "Eq 2",
+   "snippet": "P(t_n^k) = 1.0 if n=1 or K=1; else exp(Logits(t_n^k)) / sum_{i=1..K} exp(Logits(t_n^i))",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text extraction of figures is jumbled; Table cells read in order of columns, mapped by position.",
+  "Table 7 labels ASQA column EM but values equal Table 1 Hit@1.",
+  "Algorithm 1 uses maxTokens where text says maxWords."
+ ]
+}

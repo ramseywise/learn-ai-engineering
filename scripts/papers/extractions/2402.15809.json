@@ -1,0 +1,514 @@
+{
+ "schema": 1,
+ "key": "2402.15809",
+ "pdf": "ai-engineering/04-loop-engineering/sources/zhao-2024-empowering-large-language-model-agents.pdf",
+ "bib": {
+  "title": "Empowering Large Language Model Agents through Action Learning",
+  "authors": [
+   "Haiteng Zhao",
+   "Chang Ma",
+   "Guoyin Wang",
+   "Jing Su",
+   "Lingpeng Kong",
+   "Jingjing Xu",
+   "Zhi-Hong Deng",
+   "Hongxia Yang"
+  ],
+  "first_author": "Zhao",
+  "year": 2024,
+  "venue": "Published as a conference paper at COLM 2024",
+  "arxiv": "2402.15809",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 64357,
+  "chars_total": 64357,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can an LLM agent learn from trial and error by creating and iteratively revising its own actions (Python functions) on a few training tasks, so that it performs better on unseen tasks of the same type?",
+ "hypothesis": "The limitation of language agents lies in the integration of planning with the action space, so an adaptable, learned action space unlocks latent planning capability.",
+ "contributions": [
+  "Propose the action learning framework by generating and updating learnable actions, enabling a customized action space that better fits the LLM's planning capacity.",
+  "LearnAct uses Python functions as new actions and an iterative strategy where the LLM refines the available actions from errors in failed tasks.",
+  "Experiments show LearnAct learns action spaces within a few trials and outperforms SOTA agents by a significant margin."
+ ],
+ "method": {
+  "summary": "LearnAct has an LLM learner (GPT-4) create high-level actions as Python functions over the basic actions, then repeatedly run an Act agent on 3 training instances, pick a failed case with an action error, and let the learner either update a function or write a note on its description. K=4 candidates are sampled per iteration and the best by success rate plus step accuracy is kept. At test time the agent is a plain Act agent with the learned action space and instructions.",
+  "task": "LLM agent sequential decision making: Robotic Planning (Gripper, Blockworld, Barman, Tyreworld) and AlfWorld",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "Robotic Planning (AgentBoard / LLM+P implementation)",
+    "role": "both",
+    "size": null,
+    "split": "3 randomly selected instances per task for training, remaining instances for test",
+    "source": "Ma et al. 2024 AgentBoard; Liu et al. 2023 LLM+P",
+    "preprocessing": null
+   },
+   {
+    "name": "AlfWorld",
+    "role": "both",
+    "size": null,
+    "split": "3 randomly selected instances per task for training, remaining for test; six task types (Put, Clean, Heat, Cool, Look, Put 2)",
+    "source": "Shridhar et al. 2020",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT-4",
+    "role": "proposed",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "learner F for action creation/improvement (also for Reflexion and Voyager learning) and test-time agent"
+    }
+   },
+   {
+    "name": "GPT-3.5 Turbo",
+    "role": "proposed",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "test-time agent only; GPT-4 is its learner"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": "0.0",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "Sampling number K=4 candidate action revisions per learning iteration; each experiment conducted three times per task and averaged",
+   "prompting": "Act agent format (instruction, goal, history); a single in-context example provided to LearnAct and all baselines; CodeAsPolicy and Voyager action creation use the identical code example",
+   "retrieval": null,
+   "parameters": {
+    "K": "4",
+    "train_instances_per_task": "3",
+    "selection_score": "mu = p_succ + p_stepacc",
+    "stop_rule": "until all training instances solved with no action errors or maximum optimization steps exceeded",
+    "max_iterations": "not stated as a single value; Fig 3 sweeps 1 to 4 iteration steps (read from Fig 3), best at about 2",
+    "learning_complexity": "O(MKI)",
+    "maxsteps_per_episode": null
+   },
+   "other": {
+    "api": "openai.ChatCompletion.create via Azure platform",
+    "reward": "outcome-based binary reward (ORM)"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "task success rate",
+     "definition": "fraction of test instances solved (binary outcome reward), averaged over three runs",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "action success rate / calling rate",
+     "definition": "Fig 3 left: frequency of use and accuracy of learned actions before vs after learning",
+     "unit": "ratio",
+     "higher_is_better": true
+    },
+    {
+     "name": "pstepacc",
+     "definition": "ratio of successfully executed actions to total steps taken by the agent (used in the selection score)",
+     "unit": "ratio",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Act",
+    "ReAct",
+    "Act+Reflexion",
+    "ReAct+Reflexion (adapted to train-test setting)",
+    "CodeAsPolicy (Robotic only)",
+    "Voyager (reimplemented as Wong et al. 2023)"
+   ],
+   "protocol": "Learn on 3 training instances per task, report test-set success rate, mean of three runs; temperature 0.0; no significance test or variance reported."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": null
+  },
+  "prompts": [
+   {
+    "purpose": "Action creation",
+    "text": "{basic task instruction}\nPlease propose several high-level steps for this task.\nEach high-level step should be a Python function encompassing multiple (at least two) basic actions. All the values used in the function should be given as input rather than fixed in the function.",
+    "where": "Appendix A.4, Figure 4 (continues with basic action example, created action example)"
+   },
+   {
+    "purpose": "Action learning (error analysis and Update or Plan choice)",
+    "text": "The high-level steps are executed but failed. Please analyze why the execution failed, and give one of the following improvement: Update, Plan.",
+    "where": "Appendix A.4, Figure 7"
+   },
+   {
+    "purpose": "Action description generation",
+    "text": "Now here are some Python function encompassing multiple basic actions to serve as high-level interface in this task. Please write interface instruction for the given Python function.",
+    "where": "Appendix A.4, Figure 5"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "inference.parameters.K",
+    "quote": "The sampling number in our method is set to 4.",
+    "where": "5.3 Setting"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "LearnAct beats ReAct+Reflexion on AlfWorld with GPT-4 as agent.",
+   "kind": "measured",
+   "source": null,
+   "metric": "task success rate",
+   "value": 72.2,
+   "unit": "%",
+   "baseline_value": 54.7,
+   "n": null,
+   "setup": "AlfWorld average over six task types, GPT-4 agent, GPT-4 learner, 3 training instances, mean of 3 runs",
+   "note": "Abstract says 32% over ReAct+Reflexion; 72.2/54.7 is about 1.32 so this is a relative gain, the absolute gap is 17.5 points",
+   "where": "Table 3",
+   "table": "Table 3, row LearnAct, column GPT-4 Avg."
+  },
+  {
+   "claim": "LearnAct beats ReAct+Reflexion on AlfWorld with GPT-3.5 Turbo as agent.",
+   "kind": "measured",
+   "source": null,
+   "metric": "task success rate",
+   "value": 35.8,
+   "unit": "%",
+   "baseline_value": 18.6,
+   "n": null,
+   "setup": "AlfWorld average, GPT-3.5 Turbo agent, GPT-4 learner",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row LearnAct, column GPT-3.5 Avg."
+  },
+  {
+   "claim": "LearnAct average on Robotic Planning with GPT-4, versus best baseline Voyager.",
+   "kind": "measured",
+   "source": null,
+   "metric": "task success rate",
+   "value": 82.8,
+   "unit": "%",
+   "baseline_value": 72.1,
+   "n": null,
+   "setup": "Robotic Planning average over blockworld, gripper, barman, tyreworld, GPT-4 agent",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row LearnAct, column GPT-4 Avg."
+  },
+  {
+   "claim": "LearnAct average on Robotic Planning with GPT-3.5 Turbo, versus Voyager.",
+   "kind": "measured",
+   "source": null,
+   "metric": "task success rate",
+   "value": 23.2,
+   "unit": "%",
+   "baseline_value": 11.5,
+   "n": null,
+   "setup": "Robotic Planning average, GPT-3.5 Turbo agent",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row LearnAct, column GPT-3.5 Avg."
+  },
+  {
+   "claim": "Plain Act with GPT-4 on Robotic Planning, the no-learning reference.",
+   "kind": "measured",
+   "source": null,
+   "metric": "task success rate",
+   "value": 60.7,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Robotic Planning average, GPT-4",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Act, column GPT-4 Avg."
+  },
+  {
+   "claim": "ReAct+Reflexion gain over Act on Robotic Planning with GPT-4 is small.",
+   "kind": "measured",
+   "source": null,
+   "metric": "task success rate",
+   "value": 66.7,
+   "unit": "%",
+   "baseline_value": 60.7,
+   "n": null,
+   "setup": "Robotic Planning average, GPT-4, Reflexion adapted to learn non-instance-specific policy",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row ReAct+Reflexion, column GPT-4 Avg."
+  },
+  {
+   "claim": "Function updating is the learner's dominant choice in Robotic Planning.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ratio of learning choice",
+   "value": 0.86,
+   "unit": "fraction of learning steps",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Robotic Planning, function update vs note writing",
+   "note": "Text says function updating occurs about 90% of the time; AlfWorld 0.92",
+   "where": "Table 4",
+   "table": "Table 4, row Function Updating, column Robotic Planning"
+  },
+  {
+   "claim": "Learned action count grows slightly after learning in AlfWorld.",
+   "kind": "measured",
+   "source": null,
+   "metric": "average number of learned actions",
+   "value": 3.5,
+   "unit": "actions",
+   "baseline_value": 3.44,
+   "n": null,
+   "setup": "AlfWorld average number of actions after learning, initial 3.44",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row After Learning, column AlfWorld"
+  },
+  {
+   "claim": "Removing the usage example lowers AlfWorld success most among action-format ablations.",
+   "kind": "measured",
+   "source": null,
+   "metric": "task success rate",
+   "value": 65.4,
+   "unit": "%",
+   "baseline_value": 72.2,
+   "n": null,
+   "setup": "GPT-4 agent, AlfWorld, ablation w.o. usage example",
+   "note": "Without description AlfWorld is 72.4 (slightly above full); Robotic Planning 78.5 without description, 77.4 without usage example. The paper notes usage examples are often incorrect yet still help.",
+   "where": "Table 6",
+   "table": "Table 6, row w.o. usage example, column Alfworld"
+  },
+  {
+   "claim": "Sampling is vital: without sampling AlfWorld success drops sharply.",
+   "kind": "measured",
+   "source": null,
+   "metric": "task success rate",
+   "value": 62.4,
+   "unit": "%",
+   "baseline_value": 72.2,
+   "n": null,
+   "setup": "GPT-4 agent, AlfWorld, w.o. sampling (single action proposal per iteration)",
+   "note": "Robotic Planning 73.2 without sampling",
+   "where": "Table 7",
+   "table": "Table 7, row w.o. sampling, column Alfworld"
+  },
+  {
+   "claim": "Sampling alone without the learning step is much worse than full LearnAct on AlfWorld.",
+   "kind": "measured",
+   "source": null,
+   "metric": "task success rate",
+   "value": 60.2,
+   "unit": "%",
+   "baseline_value": 72.2,
+   "n": null,
+   "setup": "GPT-4 agent, AlfWorld, sampling only",
+   "note": "Robotic Planning 73.4",
+   "where": "Table 7",
+   "table": "Table 7, row sampling only, column Alfworld"
+  },
+  {
+   "claim": "Removing function updating hurts more than removing note writing.",
+   "kind": "measured",
+   "source": null,
+   "metric": "task success rate",
+   "value": 62.0,
+   "unit": "%",
+   "baseline_value": 72.2,
+   "n": null,
+   "setup": "GPT-4 agent, AlfWorld, w.o. updating function",
+   "note": "w.o. writing notes: 80.8 Robotic, 71.5 AlfWorld",
+   "where": "Table 7",
+   "table": "Table 7, row w.o. updating function, column Alfworld"
+  },
+  {
+   "claim": "Learning reaches optimal results within about two iterations and longer learning degrades performance through overfitting to training cases.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 3 right, iteration steps 1 to 4, AlfWorld and Robotic Planning, GPT-3.5 and GPT-4",
+   "quote": "LearnAct’s learning markedly enhances performance, achieving optimal results within just two iterations.",
+   "note": "Values only in a figure; no numbers extracted",
+   "where": "5.5"
+  }
+ ],
+ "limits": [
+  "Only two domains (Robotic Planning, AlfWorld); both are text-based environments with fixed original action spaces and shared rules between train and test.",
+  "Learner is GPT-4 for every agent; the paper says strong model capacity is necessary for learning, and no open model is tested.",
+  "Only 3 training instances per task and 3 runs; no variance, confidence intervals or significance tests reported; test set sizes not stated.",
+  "Excessive iterations overfit to training cases and misdiagnose the failure cause (Appendix A.6.3, Fig 10), so max iterations must be tuned; best at about 2 per Fig 3.",
+  "Learned usage examples are often incorrect yet still help, which the authors note without explanation beyond encouraging use.",
+  "Reflexion was adapted to a train-test setting and Voyager reimplemented after Wong et al. 2023, so baselines differ from the originals.",
+  "Abstract's 32% over ReAct+Reflexion is relative, not absolute points.",
+  "Code, data and weights release not stated."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "open-action learning",
+   "definition": "learning to expand and iteratively refine the action space of a language agent, with newly learned actions as Python functions",
+   "where": "Abstract / 1"
+  },
+  {
+   "term": "ActionCreation / SelectErrorCase / ActionLearn",
+   "definition": "create initial action functions plus descriptions and usage examples; pick error-inducing steps from failed training runs; fix by function update or by writing a note",
+   "where": "4.1, Algorithm 1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "ReAct / Act",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Act agent is the test-time agent format; ReAct adds Think action",
+   "quote": null
+  },
+  {
+   "work": "Reflexion",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "verbal policy learning, adapted to train-test setting",
+   "quote": null
+  },
+  {
+   "work": "Voyager",
+   "year": 2023,
+   "arxiv": "2305.16291",
+   "relation": "baseline",
+   "note": "code skills as actions; reimplemented as Wong et al. 2023 without curriculum",
+   "quote": null
+  },
+  {
+   "work": "Code as Policies",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "open-loop code generation",
+   "quote": null
+  },
+  {
+   "work": "AgentBoard",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Robotic Planning environments",
+   "quote": null
+  },
+  {
+   "work": "AlfWorld",
+   "year": 2020,
+   "arxiv": "2010.03768",
+   "relation": "uses-data",
+   "note": "household tasks",
+   "quote": null
+  },
+  {
+   "work": "LLM+P",
+   "year": 2023,
+   "arxiv": "2304.11477",
+   "relation": "uses-data",
+   "note": "environment implementation",
+   "quote": null
+  },
+  {
+   "work": "Large language models as tool makers",
+   "year": 2023,
+   "arxiv": "2305.17126",
+   "relation": "related",
+   "note": "tool creation by LLMs",
+   "quote": null
+  },
+  {
+   "work": "ExpeL",
+   "year": 2023,
+   "arxiv": "2308.10144",
+   "relation": "related",
+   "note": "experiential learning with retrieval",
+   "quote": null
+  },
+  {
+   "work": "Retroformer",
+   "year": 2023,
+   "arxiv": "2308.02151",
+   "relation": "related",
+   "note": "prompt-based training of reflections",
+   "quote": null
+  },
+  {
+   "work": "Uesato et al. outcome-based feedback",
+   "year": 2022,
+   "arxiv": "2211.14275",
+   "relation": "uses-method",
+   "note": "outcome-based reward",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Illustration of the training and test stage of LearnAct",
+   "page": 2,
+   "why": "shows create-then-revise training loop and Act test stage on one page"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Left: learning stage with action usage and optimization repeated; best of K samples selected. Right: case of action updating and note writing.",
+   "page": 5,
+   "why": "shows the Update vs Note choice with a concrete Barman example"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Left: frequency of use and accuracy of learned actions before and after learning. Right: performance with different maximum learning iteration steps.",
+   "page": 8,
+   "why": "shows gains peak at iteration two then drop"
+  },
+  {
+   "figure": "Fig 10",
+   "caption": "The failed cases of LearnAct (left) and Reflexion (right).",
+   "page": 19,
+   "why": "shows how learning overfits one instance"
+  }
+ ],
+ "code": [
+  {
+   "where": "Algorithm 1 / Eq 3",
+   "snippet": "mu = p_succ + p_stepacc",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Table cells extracted one per line; row/column mapping inferred from order (checked against Avg. columns).",
+  "Figure 3 values exist only in plot form.",
+  "No embedded instructions found."
+ ]
+}

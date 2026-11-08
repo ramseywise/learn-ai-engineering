@@ -1,0 +1,642 @@
+{
+ "schema": 1,
+ "key": "2405.12939",
+ "pdf": "ai-engineering/01-prompt-engineering/sources/yin-2024-aggregation-reasoning.pdf",
+ "bib": {
+  "title": "Aggregation of Reasoning: A Hierarchical Framework for Enhancing Answer Selection in Large Language Models",
+  "authors": [
+   "Zhangyue Yin",
+   "Qiushi Sun",
+   "Qipeng Guo",
+   "Zhiyuan Zeng",
+   "Xiaonan Li",
+   "Tianxiang Sun",
+   "Cheng Chang",
+   "Qinyuan Cheng",
+   "Ding Wang",
+   "Xiaofeng Mou",
+   "Xipeng Qiu",
+   "Xuanjing Huang"
+  ],
+  "first_author": "Yin",
+  "year": 2024,
+  "venue": "preprint",
+  "arxiv": "2405.12939",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 72443,
+  "chars_total": 72443,
+  "engine": "pymupdf",
+  "skipped": "Reference list skimmed only"
+ },
+ "type": "empirical",
+ "question": "When an LLM can generate the correct answer among sampled reasoning chains but wrong answers are more frequent, how can the right one be selected?",
+ "hypothesis": "Evaluating the reasoning chains themselves, not just answer frequency, selects the correct answer more often than majority voting.",
+ "contributions": [
+  "Show that frequency-based ensembling is insufficient and design AoR, a hierarchical aggregation of reasoning chains",
+  "Use evaluation scores of the best chains to sample dynamically and cut overhead",
+  "Show better performance and cost efficiency than existing ensemble methods"
+ ],
+ "method": {
+  "summary": "AoR samples CoT chains, buckets them by answer, has an LLM score chains within each bucket (local scoring), then jointly scores the top chains of different buckets (global evaluation, k rounds) and picks the bucket with highest mean score. Dynamic sampling adds chains in batches while the top-two score margin is below a threshold.",
+  "task": "reasoning answer selection / chain ensembling (math, commonsense, symbolic)",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "GSM8K",
+    "role": "eval",
+    "size": "1,319 test samples",
+    "split": "test",
+    "source": "MIT License",
+    "preprocessing": null
+   },
+   {
+    "name": "MultiArith",
+    "role": "eval",
+    "size": "600 test samples",
+    "split": "test",
+    "source": "Unspecified",
+    "preprocessing": null
+   },
+   {
+    "name": "SingleEQ",
+    "role": "eval",
+    "size": "508 test samples",
+    "split": "test",
+    "source": "Unspecified",
+    "preprocessing": null
+   },
+   {
+    "name": "AddSub",
+    "role": "eval",
+    "size": "395 test samples",
+    "split": "test",
+    "source": "Unspecified",
+    "preprocessing": null
+   },
+   {
+    "name": "SVAMP",
+    "role": "eval",
+    "size": "1,000 test samples",
+    "split": "test",
+    "source": "MIT License",
+    "preprocessing": null
+   },
+   {
+    "name": "AQuA",
+    "role": "eval",
+    "size": "254 test samples",
+    "split": "test",
+    "source": "Apache-2.0",
+    "preprocessing": null
+   },
+   {
+    "name": "StrategyQA",
+    "role": "eval",
+    "size": "2,290 test samples",
+    "split": "test",
+    "source": "MIT license",
+    "preprocessing": null
+   },
+   {
+    "name": "CommonsenseQA",
+    "role": "eval",
+    "size": "1,221 test samples",
+    "split": "test",
+    "source": "Unspecified",
+    "preprocessing": null
+   },
+   {
+    "name": "BoolQ",
+    "role": "eval",
+    "size": "3,270 test samples",
+    "split": "test",
+    "source": "CC BY-SA 3.0",
+    "preprocessing": null
+   },
+   {
+    "name": "ARC-C",
+    "role": "eval",
+    "size": "299 test samples",
+    "split": "test",
+    "source": "CC BY-SA 4.0",
+    "preprocessing": null
+   },
+   {
+    "name": "Date Understanding",
+    "role": "eval",
+    "size": "250 test samples",
+    "split": "test",
+    "source": "MIT license",
+    "preprocessing": null
+   },
+   {
+    "name": "Penguins in a Table",
+    "role": "eval",
+    "size": "146 test samples",
+    "split": "test",
+    "source": "MIT license",
+    "preprocessing": null
+   },
+   {
+    "name": "Colored Objects",
+    "role": "eval",
+    "size": "250 test samples",
+    "split": "test",
+    "source": "MIT license",
+    "preprocessing": null
+   },
+   {
+    "name": "Object Counting",
+    "role": "eval",
+    "size": "250 test samples",
+    "split": "test",
+    "source": "MIT license",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT-3.5-Turbo-0301",
+    "role": "base",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "main backbone and evaluator"
+    }
+   },
+   {
+    "name": "GPT-4-0314",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Claude-2",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "LLaMA-2-70B-Chat",
+    "role": "evaluated",
+    "params": "70B",
+    "architecture": "dense",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Mixtral-8x7B",
+    "role": "evaluated",
+    "params": "8x7B",
+    "architecture": "mixture-of-experts",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "temperature sampling of reasoning chains",
+   "temperature": "1 for GPT-3.5-Turbo, GPT-4, Claude-2; 0.6 for LLaMA-2; 0.7 for Mistral",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "AoR(20,40): 20 initial chains, dynamic sampling to nmax=40; baselines 40 chains; at most 500 samples per analysis run; single run, no seeds stated",
+   "prompting": "Few-shot CoT exemplars from Wei et al. 2022 and Fu et al. 2023 (3 to 8 per dataset); scoring prompts with 4 criteria (10 points) plus manual demonstrations, and statistics (chains per bucket, number of candidate answers) in the prompt",
+   "retrieval": null,
+   "parameters": {
+    "k (representatives per bucket)": "3",
+    "epsilon (local score threshold)": "6",
+    "theta (termination margin)": "2",
+    "batch size b / chains added per round": "5",
+    "initial chains": "20",
+    "nmax": "40",
+    "local criteria": "Logical Consistency 3, Appropriateness of Method 3, Completeness and Clarity 2, Application of Knowledge 2",
+    "global criteria": "Validity of Approach 3, Consistency of Steps and Answer 3, Completeness and Clarity 2, Application of Knowledge 2",
+    "new-chain benchmark": "best and worst chain in same answer bucket as demonstrations"
+   },
+   "other": {
+    "cost formula": "Input Tokens x 0.0015/1000 + Output Tokens x 0.002/1000",
+    "experiment dates": "main July to September 2023; discussion October to December 2023"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "accuracy",
+     "definition": "Regex extract after 'the answer is', compare numerically, by option, or yes/no; chains with no extractable answer are dropped",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "cost",
+     "definition": "API price from token counts",
+     "unit": "$",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "CoT",
+    "ComplexCoT",
+    "CoT-SC(40)",
+    "CoT-CC(40)",
+    "CoT-PHP",
+    "DiVeRSe(40)"
+   ],
+   "protocol": "Single run per setting as far as stated; no seeds or significance tests stated. ComplexCoT and ComplexCoT-PHP numbers taken from Zheng et al. 2023. DiVeRSe verifiers fine-tuned per task."
+  },
+  "availability": {
+   "code": "Github repository mentioned for full prompts; URL not printed in the text",
+   "weights": null,
+   "data": "public benchmarks"
+  },
+  "prompts": [
+   {
+    "purpose": "local-scoring and global-evaluation prompts (abbreviated in Fig 3)",
+    "text": "Evaluate the solution process for the problem using the criteria below, with a maximum score of 10 points: Logical Consistency (3 points), Appropriateness of Method (3 points), Completeness and Clarity (2 points), Application of Knowledge (2 points)",
+    "where": "Fig 3"
+   },
+   {
+    "purpose": "global evaluation (abbreviated)",
+    "text": "Multiple solution processes are presented below, each leading to a different answer. Only one of these answers is correct. Evaluate each solution process based on:",
+    "where": "Fig 3"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "inference.parameters",
+    "quote": "a representative count of k = 3 and a scoring threshold of ϵ = 6",
+    "where": "Sec 5.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "On AQuA, AoR(20,40) beats CoT-SC(40) by 7.2 points while costing about 20% less.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy gain",
+   "value": "7.2",
+   "unit": "% points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "AQuA, GPT-3.5, cost from API pricing, AoR(20,40) vs CoT-SC(40)",
+   "note": null,
+   "where": "Sec 5.3",
+   "quote": "a 7.2% boost in performance but also"
+  },
+  {
+   "claim": "Across six math datasets, CoT-AoR(20,40) averages 90.57 accuracy vs 87.48 for CoT-SC(40).",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "90.57",
+   "unit": "% accuracy",
+   "baseline_value": "87.48",
+   "n": null,
+   "setup": "GPT-3.5-Turbo-0301, CoT prompts, sampling temperature 1; six math datasets",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row CoT-AoR (20, 40), column Avg"
+  },
+  {
+   "claim": "ComplexCoT-AoR(20,40) averages 90.70 vs 88.78 for ComplexCoT-DiVeRSe(40) and 88.25 for ComplexCoT-SC(40).",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "90.70",
+   "unit": "% accuracy",
+   "baseline_value": "88.78",
+   "n": null,
+   "setup": "GPT-3.5-Turbo-0301, CoT prompts, sampling temperature 1; six math datasets",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row ComplexCoT-AoR (20, 40), column Avg"
+  },
+  {
+   "claim": "On AQuA, CoT-AoR reaches 75.9 vs 68.7 for CoT-SC(40).",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "75.9",
+   "unit": "% accuracy",
+   "baseline_value": "68.7",
+   "n": null,
+   "setup": "GPT-3.5-Turbo-0301, CoT prompts, sampling temperature 1",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row CoT-AoR (20, 40), column AQuA"
+  },
+  {
+   "claim": "On GSM8K, CoT-AoR reaches 91.8 vs 88.9 for CoT-SC(40).",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "91.8",
+   "unit": "% accuracy",
+   "baseline_value": "88.9",
+   "n": null,
+   "setup": "GPT-3.5-Turbo-0301, CoT prompts, sampling temperature 1",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row CoT-AoR (20, 40), column GSM8K"
+  },
+  {
+   "claim": "Pilot analysis: where majority voting is wrong, the correct answer was still among the samples in over 80% of cases, over 95% on AQuA and Penguins.",
+   "kind": "measured",
+   "source": null,
+   "metric": "share with correct answer present",
+   "value": "80",
+   "unit": "% of majority-vote-failed samples",
+   "baseline_value": null,
+   "n": null,
+   "setup": "AQuA, CSQA, Date Understanding, Penguins; Fig 2 reads AQuA 96.1%, CSQA 81.6%, Date 93.0%, Penguins 96.3%",
+   "note": null,
+   "where": "Sec 1, Fig 2",
+   "quote": "over 80% of the samples that LLM has the potential to an"
+  },
+  {
+   "claim": "Commonsense: average gain of 8.45% over SC and 8.27% over CC.",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg accuracy gain over SC",
+   "value": "8.45",
+   "unit": "% points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CSQA, StrategyQA, BoolQ, ARC-C, GPT-3.5 CoT",
+   "note": null,
+   "where": "Sec 5.2",
+   "quote": "average performance improvement of 8.45% and 8.27%"
+  },
+  {
+   "claim": "Symbolic: gains over SC of 5.8% on Date Understanding and 8.9% on Penguins.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy gain over SC",
+   "value": "8.9",
+   "unit": "% points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Penguins in a Table, GPT-3.5",
+   "note": "Quote spans a line break in the PDF",
+   "where": "Sec 5.2",
+   "quote": "improve- ments of 5.8% and 8.9%"
+  },
+  {
+   "claim": "Across four LLMs, AoR improves over SC by 8.1% and over CC by 7.6% on average; with LLaMA-2 the gain over SC is 16.6%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg gain over SC",
+   "value": "8.1",
+   "unit": "% points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-4, Claude-2, LLaMA-2-70B-Chat, Mixtral-8x7B; AQuA (Fig 7)",
+   "note": "Text says Figure 9 for this result but the model comparison is Figure 7 (Figure 9 is cost); text labelled by authors",
+   "where": "Sec 5.3",
+   "quote": "AoR achieves an average improvement of 8.1% and 7.6%"
+  },
+  {
+   "claim": "Using GPT-4 as the evaluator for local scoring and global evaluation adds 2.4%, 3.6% and 5.1% on Claude-2, LLaMA-2 and Mistral backbones.",
+   "kind": "measured",
+   "source": null,
+   "metric": "gain from stronger evaluator",
+   "value": "5.1",
+   "unit": "% points (largest, Mistral)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "AoR with GPT-4 evaluator, AQuA",
+   "note": null,
+   "where": "Sec 5.3",
+   "quote": "2.4%, 3.6% and 5.1%"
+  },
+  {
+   "claim": "SC saturates beyond about 60 chains; AoR still improves at 40 and 60 chains.",
+   "kind": "measured",
+   "source": null,
+   "metric": "saturation point",
+   "value": "60",
+   "unit": "chains",
+   "baseline_value": null,
+   "n": null,
+   "setup": "AQuA, GPT-3.5, Fig 9 cost-accuracy",
+   "note": null,
+   "where": "Sec 5.3",
+   "quote": "there is no significant performance improvement when the number of reasoning chains exceeds 60"
+  },
+  {
+   "claim": "Batch size b: accuracy improves up to 6 chains evaluated at once, then fluctuates; b=5 chosen.",
+   "kind": "measured",
+   "source": null,
+   "metric": "best batch size",
+   "value": "6",
+   "unit": "chains per evaluation call",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GSM8K and AQuA, GPT-3.5",
+   "note": null,
+   "where": "App A.3",
+   "quote": "until it reaches a batch size of 6"
+  },
+  {
+   "claim": "Score threshold epsilon=3 lets over 95% of chains reach global evaluation; epsilon=8 lets fewer than 10%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass-through share",
+   "value": "95",
+   "unit": "% of chains",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GSM8K local scoring, GPT-3.5",
+   "note": null,
+   "where": "App A.3",
+   "quote": "setting ϵ to 3 results in over 95% of reasoning chains moving to global evaluation"
+  },
+  {
+   "claim": "With termination threshold theta=4, more than 15% of GSM8K samples reach nmax without a final answer.",
+   "kind": "measured",
+   "source": null,
+   "metric": "no-answer share",
+   "value": "15",
+   "unit": "% of samples",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GSM8K, GPT-3.5",
+   "note": null,
+   "where": "App A.3",
+   "quote": "more than 15% of samples in the GSM8K dataset fail to produce a final answer"
+  },
+  {
+   "claim": "Demonstrating best and worst chain when scoring new chains works best; two-worst demonstrations bias scores low.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "GSM8K, ARC-C, Date, Penguin, Fig 10 (read from figure, no numbers in text)",
+   "note": null,
+   "where": "Sec 5.3"
+  }
+ ],
+ "limits": [
+  "Relies on manually written demonstrations so the evaluator emits scores in a parseable format; unstable if the model deviates",
+  "Context window limits how many chains can be scored together; small models can score only single chains, raising cost",
+  "Main experiments use GPT-3.5-Turbo-0301 only; single run, no variance or significance reported; at most 500 samples per analysis",
+  "Evaluator is the same LLM family as the generator, scoring quality rests on LLM self-judgment; GPT-4 evaluator helps",
+  "Full prompts are in a GitHub repo, not the paper; dated 2023 models and pre-reasoning-model methods"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "AoR",
+   "definition": "Aggregation of Reasoning: hierarchical framework with local-scoring, global-evaluation and dynamic sampling",
+   "where": "Sec 4"
+  },
+  {
+   "term": "local-scoring",
+   "definition": "chains yielding identical answers are scored on soundness of reasoning; top k above threshold epsilon kept",
+   "where": "Sec 4.1"
+  },
+  {
+   "term": "global-evaluation",
+   "definition": "top chains from different answer buckets are jointly scored; bucket with highest mean score over k rounds wins",
+   "where": "Sec 4.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Self-Consistency (Wang et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "majority vote over sampled chains; AoR's main foil",
+   "quote": null
+  },
+  {
+   "work": "Chain-of-Thought prompting (Wei et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "chains and exemplars",
+   "quote": null
+  },
+  {
+   "work": "Complexity-based prompting (Fu et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "ComplexCoT and CC",
+   "quote": null
+  },
+  {
+   "work": "Progressive-Hint Prompting (Zheng et al.)",
+   "year": 2023,
+   "arxiv": "2304.09797",
+   "relation": "baseline",
+   "note": "PHP",
+   "quote": null
+  },
+  {
+   "work": "DiVeRSe (Li et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "trained step-aware verifier",
+   "quote": null
+  },
+  {
+   "work": "Roth and Small",
+   "year": 2006,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "score-margin confidence idea behind dynamic sampling",
+   "quote": null
+  },
+  {
+   "work": "GSM8K, AQuA, StrategyQA, CSQA, BIG-Bench Hard tasks etc.",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "14 datasets",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 3",
+   "caption": "An illustrative example detailing the AoR workflow.",
+   "page": 3,
+   "why": "Shows bucketing, local scoring and global evaluation in one worked example"
+  },
+  {
+   "figure": "Fig 1",
+   "caption": "An illustrative example from AQuA, with 5 reasoning chains... majority voting ultimately selects an incorrect answer",
+   "page": 1,
+   "why": "Shows the failure mode of majority voting"
+  },
+  {
+   "figure": "Fig 9",
+   "caption": "Analysis of cost and performance.",
+   "page": 7,
+   "why": "Cost-accuracy curve of AoR vs SC"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Illustration of the dynamic sampling process",
+   "page": 4,
+   "why": "Adaptive sampling stop rule"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 6",
+   "snippet": "j* = argmax_j (1/k) sum_{t=1..k} Z_t^(j)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text cache has NUL bytes; read via shell/Read worked",
+  "Venue not printed in the PDF (arXiv v1 stamp only)",
+  "Figure-only data (Fig 5, 7, 8, 10) not available as numbers"
+ ]
+}

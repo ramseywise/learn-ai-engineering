@@ -1,6 +1,8 @@
 ---
 origin: synthesis
 sources:
+  - https://arxiv.org/abs/2312.07910
+  - https://arxiv.org/abs/2410.01748
   - https://arxiv.org/abs/2603.24621
   - https://arxiv.org/abs/2511.01846
   - https://arxiv.org/abs/2307.11088
@@ -85,6 +87,8 @@ Rewording published problems is a weaker defence than writing new ones. IMO-Benc
 For non-English suites, Iusztin & Labonne recommend human-translated versions of general benchmarks over machine-translated ones, plus tasks written in the native language (*LLM Engineer's Handbook*, ch. 7). How to detect contamination after the fact is in [12](12-failure-modes.md#contamination).
 
 ---
+
+Two more papers sharpen the rewording test. [arXiv:2410.01748](https://arxiv.org/abs/2410.01748) (Hosseini et al., 2024-10, preprint) chains two GSM8K questions into 1,200 compositional pairs and defines the reasoning gap as the pair score minus the product of the two single scores. At 8-shot, temperature 0, pass@1 (best of with or without a formatting preamble), **the gap is 1.1 points for GPT-4o but 14.2 for GPT-4o mini, and 4.9 for Llama-3-70B-Instruct but 27.5 for the 8B**, so the same GSM8K score hides very different compositional skill. Its leakage check (accuracy on number-modified questions close to the originals) points away from contamination as the main cause. The check is indirect, and the gap assumes the two hops are independent. [arXiv:2312.07910](https://arxiv.org/abs/2312.07910) (Zhu et al., JMLR 2024) is the library that packages this kind of check: standard, dynamic (DyVal, freshly generated samples) and semantic (MSTemp) evaluation protocols over 22 public datasets. Its benchmark results are shown only in figures, so cite it for the tooling, not for a number.
 
 ## Lessons from public benchmarks
 

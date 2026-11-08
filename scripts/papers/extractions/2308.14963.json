@@ -1,0 +1,88 @@
+{
+ "schema": 1,
+ "key": "2308.14963",
+ "pdf": "generative-ai/02-rag-retrieval/sources/lin-2023-vector-search-openai-embeddings.pdf",
+ "bib": {"title": "Vector Search with OpenAI Embeddings: Lucene Is All You Need", "authors": ["Jimmy Lin","Ronak Pradeep","Tommaso Teofili","Jasper Xian"], "first_author": "Lin", "year": 2023, "venue": "preprint", "arxiv": "2308.14963", "doi": null},
+ "read": {"by": "source-reader", "at": "2026-11-08", "chars_read": 32990, "chars_total": 32990, "engine": "pymupdf", "skipped": null},
+ "type": "empirical",
+ "question": "Is a dedicated vector store necessary for dense retrieval, or can Lucene HNSW indexes with an off-the-shelf embedding API do the job?",
+ "hypothesis": "Lucene's HNSW indexes are adequate for bi-encoder vector search, so the cost of a separate vector store is not justified by its benefits.",
+ "contributions": ["A reproducible end-to-end demonstration of vector search with OpenAI ada2 embeddings indexed in Lucene (Anserini) on MS MARCO passage ranking", "A cost-benefit argument against dedicated vector stores for brownfield search deployments", "Release of the OpenAI embeddings for the MS MARCO corpus"],
+ "method": {
+  "summary": "Encoded all MS MARCO v1 passages and queries with OpenAI ada2 embeddings via API, indexed the vectors with Lucene 9.5.0 HNSW through Anserini (with a patch to lift the 1024-dim limit), and evaluated retrieval effectiveness and throughput.",
+  "task": "passage retrieval (dense bi-encoder, MS MARCO passage ranking)",
+  "trains": false,
+  "datasets": [
+   {"name": "MS MARCO passage corpus", "role": "eval", "size": "approximately 8.8 million passages", "split": "corpus; queries: dev, TREC DL19, TREC DL20", "source": "web passages (Bajaj et al., 2018)", "preprocessing": "passages truncated to 512 tokens; average 75.2 tiktoken tokens per passage, approx. 660 million tokens total"}
+  ],
+  "models": [
+   {"name": "OpenAI ada2 (text-embedding-ada-002)", "role": "evaluated", "params": null, "architecture": "embedding API, bi-encoder", "init_from": null, "tokenizer": "tiktoken", "vocab": null, "layers": null, "hidden": null, "heads": null, "context": "8191 tokens input limit", "other": {"embedding_dim": "1536"}}
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null, "temperature": null, "top_p": null, "max_tokens": null,
+   "samples": "throughput averaged over four separate trials after a warmup run, on MS MARCO dev queries",
+   "prompting": null,
+   "retrieval": "Lucene 9.5.0 HNSW via Anserini; M=16, efC=100, no final segment optimization; efSearch=1000; 1000 hits per query; dot-product scoring",
+   "parameters": {"M": "16", "efC": "100", "efSearch": "1000", "hits_per_query": "1000", "indexing_threads": "16", "search_threads": "16"},
+   "other": {"api_rate_limit": "3500 calls per minute", "encoding_time": "two days for corpus and queries", "hardware": "two Intel Xeon Platinum 8160 (24 cores each, 2.10 GHz), 1 TB RAM, Ubuntu 18.04, ZFS", "lucene_workaround": "Lucene HNSW capped vectors at 1024 dims; copied Lucene trunk source files into the Anserini tree and patched vector size so local class files override in the fatjar", "nondeterminism": "HNSW indexing is non-deterministic, so effectiveness may vary slightly between runs"}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "RR@10", "definition": "reciprocal rank at cutoff 10 (dev)", "unit": "score 0-1", "higher_is_better": true},
+    {"name": "R@1k", "definition": "recall at rank cutoff 1000", "unit": "score 0-1", "higher_is_better": true},
+    {"name": "AP", "definition": "average precision (DL19, DL20)", "unit": "score 0-1", "higher_is_better": true},
+    {"name": "nDCG@10", "definition": "nDCG at rank cutoff 10 (DL19, DL20)", "unit": "score 0-1", "higher_is_better": true},
+    {"name": "QPS", "definition": "queries per second, 16 threads", "unit": "queries/s", "higher_is_better": true}
+   ],
+   "baselines": ["BM25", "BM25+RM3", "uniCOIL", "SPLADE++ ED", "TAS-B", "TCT-ColBERTv2", "ColBERT-v2", "Aggretriever"],
+   "protocol": "Baseline numbers are Pyserini two-click reproductions (marked *) or copied from original papers; no significance testing; single ada2 run for effectiveness."
+  },
+  "availability": {"code": "Anserini; instructions at github.com/castorini/anserini docs/experiments-msmarco-passage-openai-ada2.md", "weights": null, "data": "OpenAI embeddings for MS MARCO freely downloadable (stated)"},
+  "prompts": [],
+  "evidence": [
+   {"field": "inference.retrieval", "quote": "Indexing took around three hours with 16 threads, with the parameters M set to 16 and efC set to 100, without final segment optimization.", "where": "Section 3"}
+  ]
+ },
+ "results": [
+  {"claim": "ada2 with Lucene HNSW reaches R@1k of 0.984 on MS MARCO dev, tied with ColBERT-v2 and above the other listed dense models.", "kind": "measured", "source": null, "metric": "R@1k", "value": "0.984", "unit": "recall", "baseline_value": "0.984 (ColBERT-v2)", "n": null, "setup": "MS MARCO dev queries, ada2 1536-d embeddings, Lucene 9.5.0 HNSW", "quote": null, "table": "Table 1, row OpenAI ada2, column dev R@1k", "note": null, "where": "Table 1"},
+  {"claim": "ada2 RR@10 on MS MARCO dev is 0.343, below SPLADE++ ED (0.383), ColBERT-v2 (0.397) and TCT-ColBERTv2 (0.358), slightly above TAS-B (0.340).", "kind": "measured", "source": null, "metric": "RR@10", "value": "0.343", "unit": "reciprocal rank", "baseline_value": "0.184 (BM25)", "n": null, "setup": "MS MARCO dev queries, ada2, Lucene HNSW", "quote": null, "table": "Table 1, row OpenAI ada2, column dev RR@10", "note": null, "where": "Table 1"},
+  {"claim": "On DL19 ada2 gets nDCG@10 0.704 and on DL20 0.676.", "kind": "measured", "source": null, "metric": "nDCG@10", "value": "0.704", "unit": "nDCG", "baseline_value": "0.506 (BM25, DL19)", "n": null, "setup": "TREC DL19 queries (DL20: 0.676), ada2, Lucene HNSW", "quote": null, "table": "Table 1, row OpenAI ada2, columns DL19 nDCG@10 and DL20 nDCG@10 (0.676)", "note": "SPLADE++ ED scores 0.731 (DL19) and 0.720 (DL20)", "where": "Table 1"},
+  {"claim": "Query throughput of the Lucene HNSW index is 9.8 QPS with 16 threads on a dated high-end server.", "kind": "measured", "source": null, "metric": "QPS", "value": "9.8", "unit": "queries per second", "baseline_value": null, "n": null, "setup": "MS MARCO dev queries, 1000 hits per query, efSearch=1000, 16 threads, 2x Xeon 8160, mean of four trials after warmup", "quote": "we were able to achieve 9.8 queries per second (QPS), fetching 1000 hits per query with the efSearch parameter set to 1000", "table": null, "note": null, "where": "Section 3"},
+  {"claim": "Indexing the corpus took about three hours with 16 threads.", "kind": "measured", "source": null, "metric": "indexing time", "value": "three hours", "unit": "hours", "baseline_value": null, "n": null, "setup": "M=16, efC=100, 16 threads, no segment optimization, same server", "quote": "Indexing took around three hours with 16 threads", "table": null, "note": null, "where": "Section 3"},
+  {"claim": "Raw 32-bit float vectors would need 54 GB, but the JSON text representation used takes 109 GB gzip-compressed.", "kind": "measured", "source": null, "metric": "storage", "value": "109 GB", "unit": "GB", "baseline_value": "54 GB", "n": null, "setup": "8.8M x 1536-d vectors; JSON text, gzip", "quote": "our collection of vectors takes up 109 GB as compressed text files (using gzip)", "table": null, "note": "54 GB is the paper's estimate for raw float32, not measured", "where": "Section 3"},
+  {"claim": "Corpus is about 660 million tokens, average 75.2 per passage, encoded in two days under a 3500 calls/min rate limit.", "kind": "measured", "source": null, "metric": "avg tokens per passage", "value": "75.2", "unit": "tokens", "baseline_value": null, "n": null, "setup": "MS MARCO passages, tiktoken, truncated to 512 tokens", "quote": "we computed the average token count per passage in our corpus to be 75.2, resulting in a total of approximately 660 million tokens", "table": null, "note": null, "where": "Section 3"},
+  {"claim": "Lucene reaches only about half the query throughput of Faiss under comparable settings but scales better with multiple threads.", "kind": "reported", "source": "Ma, Teofili and Lin 2023 (Anserini Gets Dense Retrieval)", "metric": "relative throughput", "value": "half", "unit": null, "baseline_value": null, "n": null, "setup": "Lucene 9.5.0 vs Faiss HNSW, comparable settings", "quote": "Lucene achieves only around half the query throughput of Faiss under comparable settings", "table": null, "note": null, "where": "Section 4, Performance"},
+  {"claim": "Authors argue the capability gap between Lucene and dedicated vector stores is mainly performance, not features, so a separate store is not justified for existing Lucene shops.", "kind": "claim", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "Argument, no head-to-head vector store comparison", "quote": null, "table": null, "note": null, "where": "Section 2"},
+  {"claim": "Authors find pgvector compelling: for an enterprise already on Postgres it adds vector search with minimal extra complexity.", "kind": "claim", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "Discussion, no data", "quote": null, "table": null, "note": null, "where": "Section 4, Alternatives"}
+ ],
+ "limits": [
+  "No dedicated vector store (Pinecone, Weaviate, Milvus, Qdrant, Chroma) is benchmarked; the claim is a cost-benefit argument, not a measured comparison.",
+  "Authors concede Lucene is unequivocally slower than Faiss and lags in indexing speed, latency and throughput.",
+  "Required patching Lucene to lift the 1024-dim limit; no release supported 1536 dims as of early August 2023 (dated: later Lucene releases changed this).",
+  "Possible MS MARCO leakage into ada2 training is unknown.",
+  "Only 9.8 QPS on one dated server; single dataset; HNSW non-determinism means numbers vary slightly; no scale beyond 8.8M passages.",
+  "Vespa and pgvector are discussed but not evaluated."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "brownfield application", "definition": "a term commonly used in the information technology industry to describe problem spaces needing the development and deployment of new software systems in the immediate presence of existing (legacy) software applications/systems", "where": "Section 2"}
+ ],
+ "lineage": [
+  {"work": "Efficient and Robust ANN Search Using HNSW Graphs", "year": 2020, "arxiv": null, "relation": "uses-method", "note": "HNSW index used by Lucene", "quote": null},
+  {"work": "Anserini: Reproducible Ranking Baselines Using Lucene", "year": 2018, "arxiv": null, "relation": "uses-method", "note": "toolkit for all experiments", "quote": null},
+  {"work": "Text and Code Embeddings by Contrastive Pre-Training", "year": 2022, "arxiv": "2201.10005", "relation": "evaluates", "note": "OpenAI ada2 embedding model", "quote": null},
+  {"work": "MS MARCO", "year": 2018, "arxiv": "1611.09268", "relation": "uses-data", "note": "passage ranking collection", "quote": null},
+  {"work": "Anserini Gets Dense Retrieval: Integration of Lucene's HNSW Indexes", "year": 2023, "arxiv": null, "relation": "extends", "note": "Lucene vs Faiss benchmark", "quote": null},
+  {"work": "A Proposed Conceptual Framework for a Representational Approach to IR", "year": 2021, "arxiv": "2110.01529", "relation": "uses-method", "note": "logical scoring vs physical retrieval model split", "quote": null},
+  {"work": "Evaluating Embedding APIs for Information Retrieval", "year": 2023, "arxiv": null, "relation": "related", "note": "also evaluated ada2 on other collections", "quote": null},
+  {"work": "Aligning the Research and Practice of Building Search Applications: Elasticsearch and Pyserini", "year": 2022, "arxiv": null, "relation": "related", "note": "Lucene work transfers to Elasticsearch", "quote": null},
+  {"work": "Billion-scale similarity search with GPUs (Faiss)", "year": 2019, "arxiv": null, "relation": "baseline", "note": "standard HNSW implementation", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 1", "caption": "A standard bi-encoder architecture, where encoders generate dense vector representations (embeddings) from queries and documents (passages). Retrieval is framed as k-nearest neighbor search in vector space.", "page": 3, "why": "Shows query/doc encoder to top-k retrieval; maps to the embedding API plus Lucene split"},
+  {"figure": "Table 1", "caption": "Effectiveness of OpenAI ada2 embeddings on the MS MARCO development set queries (dev) and queries from the TREC 2019/2020 Deep Learning Tracks (DL19/DL20), compared to a selection of other models.", "page": 5, "why": "Places ada2 among sparse, learned sparse and dense retrievers on three query sets"}
+ ],
+ "code": [],
+ "problems": ["Table 1 extracted one cell per line; column assignment was reconstructed from column order (dev RR@10, R@1k; DL19 AP, nDCG@10, R@1k; DL20 AP, nDCG@10, R@1k). Figure 1 labels only partly extracted."]
+}

@@ -1,0 +1,575 @@
+{
+ "schema": 1,
+ "key": "2312.10003",
+ "pdf": "generative-ai/03-agentic-foundations/sources/aksitov-2023-rest-meets-react.pdf",
+ "bib": {
+  "title": "ReST meets ReAct: Self-Improvement for Multi-Step Reasoning LLM Agent",
+  "authors": [
+   "Renat Aksitov",
+   "Sobhan Miryoosefi",
+   "Zonglin Li",
+   "Daliang Li",
+   "Sheila Babayan",
+   "Kavya Kopparapu",
+   "Zachary Fisher",
+   "Ruiqi Guo",
+   "Sushant Prakash",
+   "Pranesh Srinivasan",
+   "Manzil Zaheer",
+   "Felix Yu",
+   "Sanjiv Kumar"
+  ],
+  "first_author": "Aksitov",
+  "year": 2023,
+  "venue": "preprint",
+  "arxiv": "2312.10003",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 55837,
+  "chars_total": 55837,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can a ReAct-style multi-step search agent be improved, and distilled into much smaller models, by iterative fine-tuning on its own trajectories using only AI feedback and no human labels?",
+ "hypothesis": "A ReST-like grow/improve loop with LLM-based ranking of per-step samples can improve a process-based agent and transfer to smaller models.",
+ "contributions": [
+  "A flavor of ReAct agent with self-critique for long-form question answering",
+  "A proxy evaluation metric based on Bamboogle and BamTwoogle with emphasis on auto-eval",
+  "ReST-style iterative fine-tuning on the agent's reasoning traces improves the agent",
+  "Improvement from stepwise AI feedback only, no human-labeled training data",
+  "Synthetic data distils the agent into one or two orders of magnitude smaller models with comparable performance"
+ ],
+ "method": {
+  "summary": "A five-step Search Agent state machine (decide, search, summarize, answer, relevance and grounding self-checks) is prompted as Python code on PaLM 2-L. Trajectories from 2000 questions are split into per-step examples, best samples chosen by perplexity or an LLM ranker, and PaLM 2 XS/S/L are fully fine-tuned on them. The process repeats with the fine-tuned L to give a 2nd generation, and small models are trained on the same data (self-distillation).",
+  "task": "long-form, attributable question answering with web search as a tool; evaluated on multi-hop compositional QA",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "HotpotQA",
+    "role": "train",
+    "size": "500 questions sampled from the training split",
+    "split": "train",
+    "source": "Yang et al., 2018",
+    "preprocessing": "only questions used; no labels, no answer-matching filter"
+   },
+   {
+    "name": "Eli5",
+    "role": "train",
+    "size": "500 questions sampled from the training split",
+    "split": "train",
+    "source": "Fan et al., 2019",
+    "preprocessing": "only questions used"
+   },
+   {
+    "name": "Eli5-askH",
+    "role": "train",
+    "size": "500 questions sampled from the training split",
+    "split": "train",
+    "source": "Blagojevic, 2022 (r/askhistorians)",
+    "preprocessing": "only questions used"
+   },
+   {
+    "name": "Eli5-askS",
+    "role": "train",
+    "size": "500 questions sampled from the training split",
+    "split": "train",
+    "source": "Blagojevic, 2022 (r/askscience)",
+    "preprocessing": "only questions used"
+   },
+   {
+    "name": "Pilot set",
+    "role": "train",
+    "size": "500 trajectories (3015 examples after human filter, 4518 unfiltered)",
+    "split": "questions from HotpotQA and Eli5 only",
+    "source": "PaLM 2-L prompted trajectories",
+    "preprocessing": "min-perplexity actions, no RM re-ranking; human filter removed about 30% of examples"
+   },
+   {
+    "name": "Bamboogle",
+    "role": "dev",
+    "size": "125 2-hop questions",
+    "split": "all; used as validation analog (temperature, checkpoint, self-check choices)",
+    "source": "Press et al., 2023",
+    "preprocessing": "never used for prompt tuning or training trajectories"
+   },
+   {
+    "name": "BamTwoogle",
+    "role": "eval",
+    "size": "100 handcrafted questions",
+    "split": "test; used only for final performance",
+    "source": "written by the authors",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "PaLM 2-L",
+    "role": "base",
+    "params": null,
+    "architecture": "PaLM 2 base model",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "uses": "prompted teacher, fine-tuned agent, auto-eval judge (base), ranker (instruction-tuned)"
+    }
+   },
+   {
+    "name": "PaLM 2-S",
+    "role": "proposed",
+    "params": null,
+    "architecture": "PaLM 2 base model",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "PaLM 2-XS",
+    "role": "proposed",
+    "params": null,
+    "architecture": "PaLM 2 base model",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "abstract claims two orders of magnitude fewer parameters than L; no parameter counts given"
+    }
+   }
+  ],
+  "training": {
+   "objective": "full fine-tuning on per-reasoning-step examples from completed trajectories (next-token on step outputs, inferred)",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "checkpoints_chosen": "step 9K for XS, 5K for S, 3.5K for L (chosen by Bamboogle auto-eval)",
+    "mixture_sizes": "pilot 500 trajectories; 1st gen 2000 trajectories (17970 examples); 2nd gen 8000 trajectories = 2000 questions x4 (72424 examples), 1x 18007, 2x 36238",
+    "iteration": "1st gen from prompted PaLM 2-L; 2nd gen trajectories from PaLM 2-L fine-tuned on 1st gen; each size fine-tuned on each mixture",
+    "fine_tune_from": "inferred: each model fine-tuned from its pre-trained checkpoint on each mixture (text says 'fine-tune the new model (of the same size)')",
+    "ranking": "instruction-tuned PaLM 2-L ranks 4 sampled outputs per step (0-shot, Listing 8); used off-policy for fine-tuning data; on-policy rollouts use min perplexity; one iteration of 'improve'"
+   }
+  },
+  "inference": {
+   "decoding": "sampling; per step choose lowest-perplexity sample",
+   "temperature": "0.5",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "per reasoning step: 4 samples for L and S, 16 for XS; evaluation over 10 trajectories per Bamboogle question",
+   "prompting": "few-shot prompts formatted as Python code, per step: decision 9-shot, summarization 6-shot, answer generation 5-shot, relevance self-check 6-shot, grounding self-check 5-shot, auto-eval 5-shot, reward model 0-shot",
+   "retrieval": "internal Google Q&A API, top-3 snippets per query, at most 10 searches per trajectory (REMAINING SEARCHES field)",
+   "parameters": {
+    "state": "PAST_ACTIONS field stores all actions so far",
+    "self_revision_calls": 2
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Bamboogle auto-eval accuracy",
+     "definition": "separate PaLM 2-L base call (5-shot prompt) checks whether the final answer implies the reference answer; mean and std over 10 runs",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Human accuracy",
+     "definition": "manual correctness judgement of a single run",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Prompted pre-trained PaLM 2-L",
+    "Pilot data (human filtered / unfiltered) fine-tuned models"
+   ],
+   "protocol": "auto-eval validated against human ratings (Pearson 0.98, Spearman 0.83); BamTwoogle held out as test; human eval single run; no significance tests beyond std"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "BamTwoogle not stated as released; prompts in Appendix Listings 1-8"
+  },
+  "prompts": [
+   {
+    "purpose": "Reward model ranking of 4 sampled outputs",
+    "text": "Rater Instructions:\n- The goal of this rating is to filter out bad actions, so that they’ll be excluded from the fine-tuning dataset.\n- Overall, we want to the agent to produce relevant and grounded answers with minimal steps. Anything that deviates from this goal is considered bad.\n- If any element (thoughts, comments etc.) is empty, then it’s automatically bad.\n(then: Model Can See {inputs}; Model Output #1-#4; instructions to output Explanation, Answer: #X, Ranking: #X > #Y > ...)",
+    "where": "Appendix Listing 8"
+   },
+   {
+    "purpose": "Decision step (fragment, Python-code prompt)",
+    "text": "\"\"\"Implement an agent capable of answering complex queries by potentially search multiple times.\"\"\" with dataclasses ActionWrapper(thoughts, action), Search(query), Terminate; exemplars with ORIGINAL_QUESTION, PAST_ACTIONS, REMAINING_SEARCHES, ACTION_SELECTED",
+    "where": "Appendix Listing 1 (abridged)"
+   },
+   {
+    "purpose": "Self-check prefix",
+    "text": "\"\"\"Check whether the ANSWER addresses the ORIGINAL_QUESTION and whether the ANSWER is based on SelectLinks in PAST_ACTIONS.\"\"\"",
+    "where": "Appendix Listing 4"
+   },
+   {
+    "purpose": "Auto-eval",
+    "text": "\"\"\"Check whether the ANSWER implies the REF_ANSWER to the question.\"\"\" def Check_Answer(ORIGINAL_QUESTION, ANSWER, REF_ANSWER) ... 5 exemplars returning True/False",
+    "where": "Appendix Listing 7 (abridged)"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "inference.temperature",
+    "quote": "What is the optimal sampling temperature for the agent? (T = 0.5)",
+    "where": "Sec 4.2"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Fine-tuned PaLM 2-XS after two ReST-style iterations nearly matches the prompted PaLM 2-L teacher on Bamboogle.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Bamboogle auto-eval",
+   "value": "65.9",
+   "unit": "% accuracy",
+   "baseline_value": "70.3",
+   "n": null,
+   "setup": "Bamboogle (125 2-hop questions) auto-eval by PaLM 2-L, mean accuracy over 10 runs, PaLM 2 Search Agent, T=0.5; XS 2nd gen vs prompted pre-trained L (70.3)",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Self-improvement 2nd gen, column XS"
+  },
+  {
+   "claim": "Prompted pre-trained PaLM 2-L baseline on Bamboogle auto-eval.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Bamboogle auto-eval",
+   "value": "70.3",
+   "unit": "% accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Bamboogle (125 2-hop questions) auto-eval by PaLM 2-L, mean accuracy over 10 runs, PaLM 2 Search Agent, T=0.5",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Pre-trained, column L"
+  },
+  {
+   "claim": "Fine-tuned PaLM 2-L 2nd gen beats the prompted teacher.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Bamboogle auto-eval",
+   "value": "76.1",
+   "unit": "% accuracy",
+   "baseline_value": "70.3",
+   "n": null,
+   "setup": "Bamboogle (125 2-hop questions) auto-eval by PaLM 2-L, mean accuracy over 10 runs, PaLM 2 Search Agent, T=0.5",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Self-improvement 2nd gen, column L"
+  },
+  {
+   "claim": "PaLM 2-S 2nd gen reaches 69.7 on Bamboogle auto-eval.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Bamboogle auto-eval",
+   "value": "69.7",
+   "unit": "% accuracy",
+   "baseline_value": "70.3",
+   "n": null,
+   "setup": "Bamboogle (125 2-hop questions) auto-eval by PaLM 2-L, mean accuracy over 10 runs, PaLM 2 Search Agent, T=0.5",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Self-improvement 2nd gen, column S"
+  },
+  {
+   "claim": "XS 1st gen self-improvement result.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Bamboogle auto-eval",
+   "value": "54.4",
+   "unit": "% accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Bamboogle (125 2-hop questions) auto-eval by PaLM 2-L, mean accuracy over 10 runs, PaLM 2 Search Agent, T=0.5",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Self-improvement 1st gen, column XS"
+  },
+  {
+   "claim": "Human eval on Bamboogle: 2nd gen L vs pre-trained L.",
+   "kind": "measured",
+   "source": null,
+   "metric": "human accuracy",
+   "value": "74.4",
+   "unit": "% accuracy",
+   "baseline_value": "68.8",
+   "n": null,
+   "setup": "Human eval, single run, Bamboogle; pre-trained L = 68.8; 2nd gen XS 67.2, S 68.0",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Bamboogle, column 2nd gen (L)"
+  },
+  {
+   "claim": "Human eval on held-out BamTwoogle (100 questions): 2nd gen XS and S at 63.0 vs pre-trained L at 68.0.",
+   "kind": "measured",
+   "source": null,
+   "metric": "human accuracy",
+   "value": "63.0",
+   "unit": "% accuracy",
+   "baseline_value": "68.0",
+   "n": null,
+   "setup": "Human eval, single run, BamTwoogle (test set, used only for final performance)",
+   "note": "2nd gen L is 74.0 on BamTwoogle",
+   "where": "Table 2",
+   "table": "Table 2, row BamTwoogle, column 2nd gen (XS)"
+  },
+  {
+   "claim": "Auto-eval agrees with human ratings (Pearson).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Pearson correlation",
+   "value": "0.98",
+   "unit": "Pearson r",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Auto-eval vs human evals on Bamboogle trajectories across a diverse set of agents",
+   "note": "Spearman 0.83, p=0.0015; number of agents compared not stated",
+   "where": "Sec 4.2",
+   "quote": "Specifically, the Pearson correlation is 0.98 with p = 6.6 × 10−8"
+  },
+  {
+   "claim": "Human filtering of ~30% of pilot examples lowered XS performance versus unfiltered.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Bamboogle auto-eval",
+   "value": "44.7",
+   "unit": "% accuracy",
+   "baseline_value": "47.2",
+   "n": null,
+   "setup": "XS, pilot data 500 trajectories; filtered 44.7 vs unfiltered 47.2",
+   "note": "Text says drop of 2.5%; 47.2-44.7=2.5",
+   "where": "Table 3",
+   "table": "Table 3, row Bamboogle auto-eval, column Pilot, human filtered"
+  },
+  {
+   "claim": "Using two trajectories per question instead of one gives a 2.2% gain; four adds little.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Bamboogle auto-eval",
+   "value": "65.6",
+   "unit": "% accuracy",
+   "baseline_value": "63.4",
+   "n": null,
+   "setup": "XS, 2nd gen mixtures: 1x 63.4, 2x 65.6, 4x 65.9",
+   "note": "Training examples 18007 / 36238 / 72424",
+   "where": "Table 3",
+   "table": "Table 3, row Bamboogle auto-eval, column 2nd gen (2x)"
+  },
+  {
+   "claim": "Data quality matters more than quantity: about 9% gain from 1st gen to 2nd gen (1x) at roughly equal data size.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Bamboogle auto-eval",
+   "value": "63.4",
+   "unit": "% accuracy",
+   "baseline_value": "54.4",
+   "n": null,
+   "setup": "XS; 1st gen 17970 examples at 54.4 vs 2nd gen 1x 18007 examples at 63.4",
+   "note": null,
+   "where": "Table 3 / Sec 5.3",
+   "table": "Table 3, row Bamboogle auto-eval, column 2nd gen (1x)"
+  },
+  {
+   "claim": "Self-critique steps give a small positive boost, about 0.5-1.0% for most models.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "0.5-1.0",
+   "unit": "% points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Auto-eval at Answer Generation step vs Final Answer, same Bamboogle trajectories",
+   "note": "Table 4 deltas range -2.2 (S pilot) to +0.4 (XS 1st gen); sign convention is evaluation before critique minus after",
+   "where": "Sec 5.3, Table 4",
+   "quote": "the self-critique results in a small but measurable positive boost (on the order of 0.5-1.0% for most models)"
+  },
+  {
+   "claim": "Only PaLM 2-L performed the code-as-prompt format consistently well among pre-trained models tried.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Prompted pre-trained models, sizes not enumerated",
+   "note": null,
+   "where": "Sec 3.1",
+   "quote": "Out of the (pre-trained) models we’ve tried, only the PaLM 2-L (Anil et al., 2023) can perform it consistently well."
+  }
+ ],
+ "limits": [
+  "Authors concede: manually constructed prompts, small evals, a limited set of models, and only a single tool.",
+  "Only two self-improvement iterations; saturation point unknown.",
+  "Whether the loop works with multiple tools or unseen tools is untested.",
+  "Bamboogle and BamTwoogle are small (125 and 100 questions); human evals are single runs.",
+  "No learning rate, optimizer, batch size, hardware or compute reported; PaLM 2 sizes and the search API are not public, so not reproducible.",
+  "Teacher-capped: small models are distilled from prompted L data; whether they exceed it is left open.",
+  "Auto-eval is run by PaLM 2-L; number of agents behind the 0.98 correlation is not stated."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Search Agent",
+   "definition": "a flavor of ReAct agent with Reflexion that uses web search as a tool to generate long-form, explicitly attributable answers",
+   "where": "Sec 2"
+  },
+  {
+   "term": "code as the prompt",
+   "definition": "prompts formatted as Python code, the LLM is expected to understand the code in the input and continue it as valid Python in the output",
+   "where": "Sec 3.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "ReAct: Synergizing reasoning and acting in language models",
+   "year": 2022,
+   "arxiv": "2210.03629",
+   "relation": "extends",
+   "note": "Search Agent follows the ReAct thought-action-observation format",
+   "quote": null
+  },
+  {
+   "work": "Reflexion",
+   "year": 2023,
+   "arxiv": "2303.11366",
+   "relation": "uses-method",
+   "note": "self-revision steps",
+   "quote": null
+  },
+  {
+   "work": "Reinforced Self-Training (ReST)",
+   "year": 2023,
+   "arxiv": "2308.08998",
+   "relation": "extends",
+   "note": "grow/improve loop adapted to agents; LLM ranking replaces threshold RM",
+   "quote": null
+  },
+  {
+   "work": "RAFT: Reward ranked finetuning",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "RM ranking to select fine-tuning samples",
+   "quote": null
+  },
+  {
+   "work": "FireAct",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "closest fine-tuning setup; but this work uses no human labels",
+   "quote": null
+  },
+  {
+   "work": "WebGPT",
+   "year": 2021,
+   "arxiv": "2112.09332",
+   "relation": "related",
+   "note": "long-form QA with web search; imitation learning and RL from human demonstrations",
+   "quote": null
+  },
+  {
+   "work": "Large language models cannot self-correct reasoning yet (Huang et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "contradicts",
+   "note": "self-critique helps slightly here in a process-based setup",
+   "quote": null
+  },
+  {
+   "work": "STaR; ReST-EM",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "outcome-based self-training; this work does not use answer correctness",
+   "quote": null
+  },
+  {
+   "work": "Measuring and narrowing the compositionality gap (Bamboogle)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Bamboogle eval set",
+   "quote": null
+  },
+  {
+   "work": "HotpotQA; ELI5; Eli5-askH/askS",
+   "year": 2018,
+   "arxiv": "1809.09600",
+   "relation": "uses-data",
+   "note": "question sources",
+   "quote": null
+  },
+  {
+   "work": "PaLM 2 technical report",
+   "year": 2023,
+   "arxiv": "2305.10403",
+   "relation": "evaluates",
+   "note": "base models",
+   "quote": null
+  },
+  {
+   "work": "DSP (Demonstrate-search-predict)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "auto-tunes few-shot demos using labels",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "A state machine of the Search Agent flow. Each blue shape corresponds to a single LLM call and defines a separate type of the reasoning step.",
+   "page": 3,
+   "why": "Shows the five-LLM-call agent structure"
+  },
+  {
+   "figure": "Fig 1",
+   "caption": "Agent self-improvement and self-distillation. Bamboogle auto-eval, mean accuracy and standard deviation over 10 runs, (%)",
+   "page": 1,
+   "why": "Headline result across model sizes and iterations"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "No embedded instructions found. Figures 1 and 4 data not in text beyond Table 1 and Table 4."
+ ]
+}

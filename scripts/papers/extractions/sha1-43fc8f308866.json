@@ -1,0 +1,433 @@
+{
+ "schema": 1,
+ "key": "sha1:43fc8f308866",
+ "pdf": "generative-ai/03-agentic-foundations/sources/lakshmanan-hapke-genai-design-patterns-ch04-adding-knowledge-syncopation.pdf",
+ "bib": {
+  "title": "Chapter 4. Adding Knowledge: Syncopation (Generative AI Design Patterns)",
+  "authors": [
+   "Valliappa Lakshmanan",
+   "Martin Hapke"
+  ],
+  "first_author": "Lakshmanan",
+  "year": 2025,
+  "venue": "O'Reilly Media (book chapter)",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 94065,
+  "chars_total": 94065,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "How can a basic RAG pipeline be extended so it retrieves better, ranks and cleans retrieved chunks, earns user trust, and handles complex multi-hop questions?",
+ "hypothesis": null,
+ "contributions": [
+  "Pattern 9 Index-Aware Retrieval (hypothetical answers/HyDE, query expansion, hybrid search, GraphRAG)",
+  "Pattern 10 Node Postprocessing (reranking, hybrid fusion, query expansion/decomposition, obsolete filtering, contextual compression, disambiguation, personalization)",
+  "Pattern 11 Trustworthy Generation (out-of-domain detection, citations, guardrails, observability, human feedback, CRAG, Self-RAG, UI)",
+  "Pattern 12 Deep Search (iterative retrieve-think-generate loop; deep research as a variant)"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "HyDE and query expansion fix retrieval that semantic indexing misses: with chunk size 100 the Diogenes question is answered, with LlamaIndex's default 1,024 it fails, and HyDE recovers it at 1,024.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "default chunk size at which retrieval of Diogenes detail failed",
+   "value": 1024,
+   "unit": "chunk size (units not stated)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "One book (second-century history of Alexander the Great), LlamaIndex semantic RAG, single illustrative query; no metric or repeat runs",
+   "quote": "the chunk size is 1,024—which is the default size in LlamaIndex.",
+   "table": null,
+   "note": null,
+   "where": "Pattern 9, Example"
+  },
+  {
+   "claim": "Hybrid search weight alpha runs from pure BM25 (0.0) to pure vector search (1.0) in LlamaIndex.",
+   "kind": "claim",
+   "source": null,
+   "metric": "alpha",
+   "value": 1.0,
+   "unit": "weight",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LlamaIndex vector_store_query_mode='hybrid'; the code's alpha value is cut off in the PDF",
+   "quote": "An alpha of 0.0 is purely BM25, whereas an alpha of 1.0 is purely vector",
+   "table": null,
+   "note": null,
+   "where": "Pattern 9, Component 3"
+  },
+  {
+   "claim": "Geology example: top_k=2 retrieval returns a table-of-contents chunk plus a topically similar but non-answering chunk, giving a wrong answer; top_k=4 still gives the wrong answer; compressing and reranking the nodes fixes it.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "top_k",
+   "value": 2,
+   "unit": "nodes",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Two old geology textbooks, semantic RAG, query 'Describe the geology of the Grand Canyon.'; single qualitative example",
+   "quote": "Retrieve top_k=2 nodes for the following query:",
+   "table": null,
+   "note": null,
+   "where": "Pattern 10, Example"
+  },
+  {
+   "claim": "Pairwise LLM conflict detection needs N*(N-1) calls, while disambiguation against the first chunk needs only N-1.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Node Postprocessing, N retrieved chunks",
+   "quote": "( N * (N-1) ) may make it cost prohibitive in practi-",
+   "table": null,
+   "note": null,
+   "where": "Pattern 10, Filtering/Disambiguation"
+  },
+  {
+   "claim": "Zero-shot multi-category out-of-domain detection can require at least 30% confidence before answering.",
+   "kind": "claim",
+   "source": null,
+   "metric": "classifier confidence threshold",
+   "value": 30,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Suggested threshold in an example with four categories; no evaluation given",
+   "quote": "[“Finance,” “Health”, “Technology,” “Other”], you could require at least 30%",
+   "table": null,
+   "note": null,
+   "where": "Pattern 11, Out-of-domain detection"
+  },
+  {
+   "claim": "Reranking adds an LLM or model call per retrieved node, raising latency and cost; folding compression, disambiguation and scoring into one structured-output call limits calls but rules out a fine-tuned reranker like BGE.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Qualitative; no timings given",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Pattern 10, Considerations"
+  },
+  {
+   "claim": "Citation by source-level tracking tends to over-cite; classification-based citation is more precise but needs a classifier; token-level attribution has no production-ready open source implementation at time of writing.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Qualitative design comparison",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Pattern 11, Citations"
+  },
+  {
+   "claim": "Observability is claimed to improve user trust and adoption, with no data or citation.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Authors' experience, unquantified",
+   "quote": "We’ve observed that implementing rigorous observability for query-response",
+   "table": null,
+   "note": null,
+   "where": "Pattern 11, Observability"
+  },
+  {
+   "claim": "Deep Search is an iterative retrieve, think, generate loop that stops when the answer is good enough or the time/cost budget is spent; the main drawback is that it is slow.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Wikipedia-based demo with depth=1 on 'famous victories of Napoleon' and 'causes of the Liberian civil war'; no timings or accuracy",
+   "quote": "The key drawback of inserting a thinking stage iteratively is that the overall",
+   "table": null,
+   "note": null,
+   "where": "Pattern 12, Example/Considerations"
+  }
+ ],
+ "limits": [
+  "Every worked example is a single illustrative query on one corpus (Alexander history book, geology textbooks, Bach articles, Wikipedia); no benchmark, metric, baseline comparison, or repeat runs. Nothing is measured.",
+  "Hallucinated, obsolete or irrelevant content in HyDE/query expansion is conceded to risk losing RAG's grounding (Pattern 9 Considerations); query expansion may change user intent; GraphRAG may bring conflicting or old document versions.",
+  "HyDE benefit is conditioned on the LLM already knowing the domain; the chapter says it works for fine details only 'in a domain (such as well-known history) in which the foundational model can generate a plausible answer'.",
+  "Thresholds (out-of-domain, relevance) are domain-specific and need continuing tuning; strict guardrails lose information; human verification does not scale (Pattern 11 Limitations).",
+  "The trust-from-observability claim, the 'rerankers are much more accurate than embedding models' claim, and the 'six months old' freshness example have no cited evidence.",
+  "Several code listings are truncated in the PDF (long lines cut), e.g. the hybrid alpha value and KnowledgeGraphRAGRetriever args. Pattern 11 Considerations call Self-RAG a prompt-based reflection scheme, whereas Asai et al. is a fine-tuned model with reflection tokens.",
+  "Chapter text refers to 'Node Preprocessing' once where Node Postprocessing is meant. Some products named (BGE reranker via Pinecone, Perplexity, NotebookLM, node-DeepResearch) will have dated."
+ ],
+ "practices": [
+  "Treat HyDE, query expansion, hybrid search and GraphRAG as separate options to test per content type and question type, not a bundle (Pattern 9 Solution).",
+  "Use HyDE when the answer involves logic or fine details in a domain the LLM knows; HyDE can also generate one hypothetical answer per perspective and restrict RAG to matching documents (Pattern 9).",
+  "Use query expansion when users write non-technical language over a technical knowledge base, and to disambiguate (Pattern 9).",
+  "When hybrid search is unsupported by the vector store, run two retrievers, merge, and pass the merged list to a reranker, then take top-K by relevance score (Pattern 10).",
+  "Rerank with an LLM or a fine-tuned reranker like BGE since an embedding must compress a chunk into one vector (Pattern 10).",
+  "Filter obsolete chunks by metadata (e.g., keep latest publication year) rather than pairwise LLM conflict checks (Pattern 10).",
+  "Fold contextual compression, disambiguation and relevance scoring into one structured-output call to limit LLM calls (Pattern 10).",
+  "Check disambiguation against the first chunk only: N-1 calls (Pattern 10).",
+  "Add conversation summary and user history in postprocessing for personalization (Pattern 10).",
+  "Short-circuit retrieval and generation for out-of-domain queries using embedding distance, zero-shot classification, keyword requirements, or a weighted mix (Pattern 11).",
+  "Citations are the most effective trust measure; use a classifier to find claims needing citation, look them up in the store, and mark claims with no source such as '[Citation needed]' (Pattern 11 Example).",
+  "Apply guardrails before retrieval, after retrieval, before generation and after generation, and on failure rewrite the query and regenerate (Pattern 11).",
+  "Use CRAG to evaluate retrieved chunks and fall back to web or enterprise search or decompose-then-recompose; use Self-RAG for self-evaluation, adaptive retrieval and controlled generation (Pattern 11).",
+  "Maintain state across Deep Search iterations, start from a simple question, fill gaps iteratively, parallelise subqueries, and cap budget (Pattern 12).",
+  "Evaluate Deep Search with an open-source framework such as Ragas, with a weighted score over relevance, comprehensiveness, accuracy, coherence, citation quality, efficiency (Pattern 12)."
+ ],
+ "terms": [
+  {
+   "term": "HyDE",
+   "definition": "hypothetical document embedding: match chunks to an LLM-generated hypothetical answer instead of the question",
+   "where": "Pattern 9"
+  },
+  {
+   "term": "Query expansion",
+   "definition": "use an LLM to add context and translate query terms to those used in the chunks",
+   "where": "Pattern 9"
+  },
+  {
+   "term": "GraphRAG",
+   "definition": "having found a chunk with a partial answer, retrieve related chunks via graph relationships; the document store is a graph database",
+   "where": "Pattern 9"
+  },
+  {
+   "term": "Node Postprocessing",
+   "definition": "inserts a step between retrieval and generation to increase relevance, reduce ambiguity, and handle content updates and personalization",
+   "where": "Pattern 10"
+  },
+  {
+   "term": "Contextual compression",
+   "definition": "reduce a retrieved chunk to only the text relevant to the query",
+   "where": "Pattern 10"
+  },
+  {
+   "term": "CRAG",
+   "definition": "corrective RAG: an evaluator scores retrieved chunks and triggers web/enterprise search or decompose-then-recompose",
+   "where": "Pattern 11"
+  },
+  {
+   "term": "Self-RAG",
+   "definition": "reflection in RAG: self-evaluation, adaptive retrieval, controlled generation",
+   "where": "Pattern 11"
+  },
+  {
+   "term": "Token-level attribution",
+   "definition": "metadata tracked through the attention mechanism to attribute every generated token to sources",
+   "where": "Pattern 11"
+  },
+  {
+   "term": "Deep Search",
+   "definition": "iterative process of searching, reading and reasoning with a thinking step and external tools",
+   "where": "Pattern 12"
+  },
+  {
+   "term": "Deep research",
+   "definition": "variation of Deep Search that outputs a long-form report of answers to the original and follow-up questions",
+   "where": "Pattern 12"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Gao et al. (HyDE)",
+   "year": 2022,
+   "arxiv": "2212.10496",
+   "relation": "uses-method",
+   "note": "Pattern 9 HyDE component",
+   "quote": null
+  },
+  {
+   "work": "Azad and Deepak, query expansion survey",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "related",
+   "note": "query expansion survey",
+   "quote": null
+  },
+  {
+   "work": "Song and Zheng, query optimization",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "related",
+   "note": "LLM-era renewal of query expansion, decomposition, disambiguation, abstraction",
+   "quote": null
+  },
+  {
+   "work": "Peng et al., Graph RAG survey (source of Fig 4-2)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "surveys",
+   "note": "GraphRAG survey",
+   "quote": null
+  },
+  {
+   "work": "Guo et al., neural ranking models survey",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "related",
+   "note": "reranking background",
+   "quote": null
+  },
+  {
+   "work": "Ma et al., RepLLaMA/RankLLaMA",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "fine-tuned LLaMA dense retriever and pointwise reranker",
+   "quote": null
+  },
+  {
+   "work": "Sourav Verma, contextual compression",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "related",
+   "note": "contextual compression",
+   "quote": null
+  },
+  {
+   "work": "Chen et al., entity disambiguation benchmark",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "related",
+   "note": "ambiguity as RAG error source",
+   "quote": null
+  },
+  {
+   "work": "Yan et al., Corrective Retrieval Augmented Generation",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "CRAG",
+   "quote": null
+  },
+  {
+   "work": "Asai et al., Self-RAG",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Self-RAG; arXiv id not printed in chapter",
+   "quote": null
+  },
+  {
+   "work": "Qi et al., model internals-based answer attribution",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "related",
+   "note": "token-level attribution",
+   "quote": null
+  },
+  {
+   "work": "Phukan et al., attribution in contextual QA",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "related",
+   "note": "token-level attribution",
+   "quote": null
+  },
+  {
+   "work": "Huang et al., Citation: a key to responsible LLMs",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "related",
+   "note": "pre- vs post-generation citation",
+   "quote": null
+  },
+  {
+   "work": "STORM (Stanford)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "related",
+   "note": "deep research model writing Wikipedia articles",
+   "quote": null
+  },
+  {
+   "work": "DeepSeek-R1",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "related",
+   "note": "thinking mode to improve search",
+   "quote": null
+  },
+  {
+   "work": "Chapter 3 Patterns 6-8 (Basic RAG, Semantic Indexing, Indexing at Scale)",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "builds on earlier chapter of the same book",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 4-1",
+   "caption": "Index-aware retrieval",
+   "page": null,
+   "why": "Shows the four add-ons to semantic indexing"
+  },
+  {
+   "figure": "Fig 4-3",
+   "caption": "Node Postprocessing",
+   "page": null,
+   "why": "Pipeline with LLM-capable operations between retrieval and generation"
+  },
+  {
+   "figure": "Fig 4-10",
+   "caption": "CRAG workflow",
+   "page": null,
+   "why": "Evaluator-driven correct/ambiguous/incorrect branches"
+  },
+  {
+   "figure": "Fig 4-14",
+   "caption": "Deep Search adds iteration, external tools, and a thinking stage to traditional RAG.",
+   "page": null,
+   "why": "Single diagram of the loop that separates Deep Search from RAG"
+  },
+  {
+   "figure": "Fig 4-8",
+   "caption": "Guardrail workflow",
+   "page": null,
+   "why": "Where guardrails sit in the pipeline"
+  },
+  {
+   "figure": "Fig 4-4",
+   "caption": "Out-of-domain detection workflow",
+   "page": null,
+   "why": "Three signals feeding a short-circuit"
+  }
+ ],
+ "code": [
+  {
+   "where": "Pattern 9, HyDE",
+   "snippet": "def hyde_rag(question):    \nanswer = create_hypothetical_answer(question)\nreturn semantic_rag(answer)",
+   "verbatim": true
+  },
+  {
+   "where": "Pattern 12, orchestration",
+   "snippet": "def deep_search(query: str, depth: int, report=None) -> Section",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Code listings and Table 4-1 are partly truncated or fragmented in the PDF text; the page footer includes navigation text that is not content. No embedded instructions seen."
+ ]
+}

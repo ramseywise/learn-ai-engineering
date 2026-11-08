@@ -1,0 +1,527 @@
+{
+ "schema": 1,
+ "key": "2406.07138",
+ "pdf": "ai-engineering/02-context-engineering/sources/wu-2024-efficient-recipe-long-context-extension.pdf",
+ "bib": {
+  "title": "An Efficient Recipe for Long Context Extension via Middle-Focused Positional Encoding",
+  "authors": [
+   "Tong Wu",
+   "Yanpeng Zhao",
+   "Zilong Zheng"
+  ],
+  "first_author": "Wu",
+  "year": 2024,
+  "venue": "NeurIPS 2024 (38th Conference)",
+  "arxiv": "2406.07138",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 54506,
+  "chars_total": 54506,
+  "engine": "pymupdf",
+  "skipped": "Reference list skimmed; Appendix A/B derivations (RoPE, truncated Gaussian proof) not recorded in detail; LongBench subtask tables 9-11 not transcribed."
+ },
+ "type": "empirical",
+ "question": "Can a pre-trained LLM be extended to a much longer context by fine-tuning only at its pre-trained window while still using information in the middle of the context?",
+ "hypothesis": "Sampling the middle-segment position indices from a truncated Gaussian, while keeping both continuity and relativity of position indices, improves middle-of-context retrieval at no extra fine-tuning length.",
+ "contributions": [
+  "CREAM: position-index manipulation balancing continuity (short head/tail k=32) and relativity (head/tail N/3) with truncated Gaussian middle sampling",
+  "Fine-tunes at 4K and extends Llama-2-7B to 32K, up to 256K; CREAM-Chat needs 100 steps",
+  "Outperforms PoSE/RandPos on Lost-in-the-Middle, LongChat-Lines, LongBench"
+ ],
+ "method": {
+  "_comment": "Required for empirical, system and benchmark. Put every number the paper gives; a field it does not give is null. `trains` says whether the work trains or fine-tunes anything: when false, the training block stays null and the reproducibility score counts the inference and eval fields instead. `other` holds anything that matters for a rerun and has no slot.",
+  "summary": "Fine-tunes Llama-2-7B (Base on Pile samples >4K tokens, 1,000 steps; Chat on concatenated ShareGPT, 100 steps) with position indices rewritten so a 4K sequence covers head, middle, tail segments spread over the target length L. Middle segment position drawn from a truncated Gaussian; combined with Linear, NTK or YaRN interpolation.",
+  "task": "context window extension via positional interpolation fine-tuning",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "The Pile (subset from Zhu et al. 2023)",
+    "role": "train",
+    "size": "1,000 steps x batch 32",
+    "split": "samples with token length >4K",
+    "source": "Zhu et al. [2023] provided data",
+    "preprocessing": null
+   },
+   {
+    "name": "ShareGPT (Vicuna unfiltered)",
+    "role": "train",
+    "size": "3.2K data points",
+    "split": "100 steps",
+    "source": "huggingface Aeala/ShareGPT_Vicuna_unfiltered",
+    "preprocessing": "Vicuna prompt template, concatenated until each point >=4K tokens; loss only on ASSISTANT part"
+   },
+   {
+    "name": "Lost in the Middle key-value retrieval",
+    "role": "eval",
+    "size": "500 samples per position; 75 keys (~5K tokens) and 140 keys (~10K tokens)",
+    "split": null,
+    "source": "Liu et al. 2024",
+    "preprocessing": null
+   },
+   {
+    "name": "LongChat-Lines",
+    "role": "eval",
+    "size": "50 samples per length",
+    "split": null,
+    "source": "Pal et al. 2023",
+    "preprocessing": null
+   },
+   {
+    "name": "LongBench",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Bai et al. 2023",
+    "preprocessing": null
+   },
+   {
+    "name": "Needle-in-a-Haystack",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "gkamradt",
+    "preprocessing": "scored with GPT-3.5-Turbo-0125 (1-10)"
+   },
+   {
+    "name": "GovReport, Proof-pile",
+    "role": "eval",
+    "size": "50 samples per cell",
+    "split": null,
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "PG-19 (train subset), Book3",
+    "role": "eval",
+    "size": "20 samples",
+    "split": null,
+    "source": null,
+    "preprocessing": "sliding window 32,768, step 4,096"
+   }
+  ],
+  "models": [
+   {
+    "name": "Llama-2-7B / CREAM-Base",
+    "role": "base",
+    "params": "7B",
+    "architecture": "decoder-only, RoPE",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "4K pre-trained; target 32K (up to 256K)",
+    "other": {}
+   },
+   {
+    "name": "Llama-2-7B-Chat / CREAM-Chat",
+    "role": "base",
+    "params": "7B",
+    "architecture": "decoder-only, RoPE",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "4K; target 32K",
+    "other": {}
+   },
+   {
+    "name": "Baichuan2-7B, Llama-3-8B",
+    "role": "base",
+    "params": "7B / 8B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "Llama-3 native 8K, fine-tuned on 4K",
+    "other": {}
+   },
+   {
+    "name": "RandPos, PoSE",
+    "role": "baseline",
+    "params": "7B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "causal language modeling",
+   "optimizer": "AdamW (PyTorch default config)",
+   "lr": "2e-5",
+   "lr_schedule": "linear",
+   "warmup": "10 steps",
+   "batch_size": "32 (total)",
+   "steps": "1,000 (Base); 100 (Chat)",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "4K",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "2x A100-80G, DeepSpeed ZeRO stage 1, Flash Attention-2",
+   "compute": null,
+   "wall_clock": "about 6 hours (Base, 1,000 steps); about 2 hours (Chat, 100 steps)",
+   "seeds": null,
+   "other": {
+    "k": "32",
+    "sigma": "3 (mean set by expansion factor)",
+    "head_tail_modes": "k and N/3 sampled with equal probability",
+    "interpolation": "Linear unless stated; NTK, YaRN also"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "50 samples per length (LongChat-Lines), 500 per position (Lost in the Middle)",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "sigma": "3",
+    "k": "32"
+   },
+   "other": {
+    "hardware": "single A100-80G"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Accuracy",
+     "definition": "key-value / line retrieval accuracy",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Perplexity",
+     "definition": "sliding window",
+     "unit": "ppl",
+     "higher_is_better": false
+    },
+    {
+     "name": "LongBench score",
+     "definition": "per category and average",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "GPT score",
+     "definition": "GPT-3.5-Turbo-0125 recall 1-10 on Needle-in-a-Haystack",
+     "unit": "1-10",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "RandPos",
+    "PoSE",
+    "SkipAlign",
+    "LongChat-v1.5-7B-32k",
+    "Original Llama-2"
+   ],
+   "protocol": "single run; no seeds or significance tests stated"
+  },
+  "availability": {
+   "code": "https://github.com/bigai-nlco/cream",
+   "weights": null,
+   "data": null
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.lr",
+    "quote": "A learning rate of 2 \u00d7 10\u22125 with a linear scheduler is adopted",
+    "where": "Appendix C"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "CREAM-YaRN beats PoSE-YaRN on Lost in the Middle by over 20% on average",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy gain",
+   "value": "over 20%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Llama-2-7B fine-tuned at 4K, YaRN interpolation, 75 keys",
+   "quote": "by over 20% on average",
+   "table": null,
+   "note": null,
+   "where": "Intro"
+  },
+  {
+   "claim": "CREAM-YaRN average accuracy, 75 keys (~5K tokens) Lost in the Middle",
+   "kind": "measured",
+   "source": null,
+   "metric": "AVG accuracy",
+   "value": "73.4",
+   "unit": "%",
+   "baseline_value": "50.0 (PoSE-YaRN)",
+   "n": null,
+   "setup": "Llama-2-7B, 4K fine-tune, middle positions 18/37/54",
+   "quote": null,
+   "table": "Table 1, row CREAM-YaRN, column AVG (75 keys); PoSE-YaRN 50.0",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "CREAM-Linear beats PoSE-Linear by 21.2% when answer at position 18 (75 keys)",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy gain",
+   "value": "21.2",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Llama-2-7B, linear interpolation",
+   "quote": "CREAM-Linear surpasses PoSE-Linear by 21.2% when the relevant information is placed at 18",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.2"
+  },
+  {
+   "claim": "CREAM-YaRN at 140 keys (~10K tokens), middle position 34 only 8.0 accuracy; mid positions remain weak",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy at middle position",
+   "value": "8.0",
+   "unit": "%",
+   "baseline_value": "0.6 (PoSE-YaRN)",
+   "n": null,
+   "setup": "140 keys, position 34, YaRN",
+   "quote": null,
+   "table": "Table 1, row CREAM-YaRN, 140 keys position 34",
+   "note": "Middle positions still far below 99-100 at the edges, so the U shape remains",
+   "where": "Table 1"
+  },
+  {
+   "claim": "CREAM outperforms PoSE by 16% on LongChat-Lines averaged over lengths",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg accuracy",
+   "value": "69.9",
+   "unit": "%",
+   "baseline_value": "54.0 (PoSE)",
+   "n": null,
+   "setup": "Llama-2-7B, linear, 4K fine-tune, 2.5K-32K",
+   "quote": "CREAM outperforms PoSE by 16%",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.2, Fig 3"
+  },
+  {
+   "claim": "Truncated Gaussian vs uniform middle sampling on LongChat-Lines",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg accuracy",
+   "value": "69.9",
+   "unit": "%",
+   "baseline_value": "60.7 (Uniform)",
+   "n": null,
+   "setup": "Linear, Llama-2-7B",
+   "quote": "Uniform (Avg:60.7)",
+   "table": null,
+   "note": null,
+   "where": "Fig 5a"
+  },
+  {
+   "claim": "Sigma = 3 is best among five values",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg accuracy",
+   "value": "69.9",
+   "unit": "%",
+   "baseline_value": "50.6 (sigma 2.0)",
+   "n": null,
+   "setup": "LongChat-Lines, linear",
+   "quote": "sigma=3.0 (Avg:69.9)",
+   "table": null,
+   "note": null,
+   "where": "Fig 6"
+  },
+  {
+   "claim": "CREAM-7B-32k LongBench average above LongChat-v1.5-7B-32k",
+   "kind": "measured",
+   "source": null,
+   "metric": "LongBench AVG",
+   "value": "35.9",
+   "unit": "%",
+   "baseline_value": "34.3",
+   "n": null,
+   "setup": "Llama-2-7B-Chat, 100 steps at 4K",
+   "quote": null,
+   "table": "Table 2, row CREAM-7B-32k, column AVG",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Perplexity stays flat from 64K to 256K target lengths",
+   "kind": "measured",
+   "source": null,
+   "metric": "PG-19 ppl",
+   "value": "7.8 to 8.2",
+   "unit": "ppl",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CREAM-Linear-256K, 64K to 256K eval",
+   "quote": null,
+   "table": "Table 6, row CREAM-Linear-256K",
+   "note": null,
+   "where": "Table 6"
+  }
+ ],
+ "limits": [
+  "Position interpolation loses information when fine-tuning only at the pre-trained length.",
+  "Authors concede decoder-only models inherently show a U-shaped curve, so lost-in-the-middle is not solved.",
+  "Single runs, no seeds or significance tests; evaluation mostly on 7B Llama-2 models.",
+  "Table 1 shows middle accuracy still far below edges, notably at 140 keys.",
+  "PoSE numbers in Table 6 come from a different base (LLaMa 1-7B, 2K) so are reference only."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "CREAM",
+   "definition": "Continuity-Relativity indExing with gAussian Middle",
+   "where": "Abstract"
+  },
+  {
+   "term": "Lost-in-the-Middle",
+   "definition": "LLMs are generally good at retrieving relevant information appearing at the beginning/end of the input context",
+   "where": "Sec 3.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "PoSE (Zhu et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Position skip-wise training; main baseline",
+   "quote": null
+  },
+  {
+   "work": "RandPos (Ruoss et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Random position baseline",
+   "quote": null
+  },
+  {
+   "work": "Lost in the Middle (Liu et al.)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Key-value retrieval task",
+   "quote": null
+  },
+  {
+   "work": "Positional Interpolation (Chen et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Linear interpolation",
+   "quote": null
+  },
+  {
+   "work": "YaRN (Peng et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Interpolation variant",
+   "quote": null
+  },
+  {
+   "work": "NTK (Peng and Quesnelle)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Interpolation variant",
+   "quote": null
+  },
+  {
+   "work": "Llama 2 (Touvron et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "Base models",
+   "quote": null
+  },
+  {
+   "work": "LongBench (Bai et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Eval",
+   "quote": null
+  },
+  {
+   "work": "LongChat-Lines (Pal et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Eval",
+   "quote": null
+  },
+  {
+   "work": "SkipAlign (Wu et al.)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Needle-in-a-Haystack comparison",
+   "quote": null
+  },
+  {
+   "work": "RoPE (Su et al.)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Positional encoding",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Results of applying different position interpolation methods to the Lost-in-the-Middle task on CREAM and PoSE",
+   "page": 1,
+   "why": "Shows gain concentrated in the middle positions"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Results (%) on Lost in the Middle",
+   "page": 6,
+   "why": "Per-position accuracy exposes the U shape"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Illustration of CREAM position interpolation",
+   "page": 3,
+   "why": "Head/middle/tail index layout"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Text cache has NUL bytes; figure data (Fig 3,5,6,7,8) is numbers without labels.",
+  "No embedded instructions found."
+ ]
+}

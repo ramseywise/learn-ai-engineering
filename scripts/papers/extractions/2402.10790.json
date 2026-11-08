@@ -1,0 +1,441 @@
+{
+ "schema": 1,
+ "key": "2402.10790",
+ "pdf": "ai-engineering/02-context-engineering/sources/kuratov-2024-search-needles-11m-haystack.pdf",
+ "bib": {
+  "title": "In Search of Needles in a 11M Haystack: Recurrent Memory Finds What LLMs Miss",
+  "authors": [
+   "Yuri Kuratov",
+   "Aydar Bulatov",
+   "Petr Anokhin",
+   "Dmitry Sorokin",
+   "Artyom Sorokin",
+   "Mikhail Burtsev"
+  ],
+  "first_author": "Kuratov",
+  "year": 2024,
+  "venue": "preprint",
+  "arxiv": "2402.10790",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 65898,
+  "chars_total": 65898,
+  "engine": "pymupdf",
+  "skipped": "Figure 9 (main RMT/RMT-R results) is an image; its numbers are not in the text layer, so they are not recorded."
+ },
+ "type": "benchmark",
+ "question": "How well do GPT-4-Turbo, Mistral, RAG and a recurrent-memory GPT-2 find and reason over facts hidden in very long distractor text?",
+ "hypothesis": "Recurrent memory excels at filtering out irrelevant information compared to relying solely on attention; attention-based LLMs use only part of their long window.",
+ "contributions": [
+  "BABILong, a generative benchmark for processing arbitrarily long documents with distributed facts",
+  "Evaluation of GPT-4 and RAG on needle-in-a-haystack QA up to millions of tokens",
+  "Evaluation of a recurrent memory transformer on inputs up to 11 million tokens"
+ ],
+ "method": {
+  "summary": "BABILong hides bAbI task sentences inside PG19 book text, padded sentence by sentence to a target length. GPT-4-Turbo, Mistral and GPT-4+RAG are prompted; GPT-2 with Recurrent Memory Transformer (RMT) and a self-retrieval variant (RMT-R) is fine-tuned per task with curriculum on up to 32 segments.",
+  "task": "synthetic multi-fact question answering in long distractor context (bAbI qa1-qa10)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "BABILong (bAbI qa1-qa10 hidden in PG19)",
+    "role": "both",
+    "size": "10000 train and 1000 test samples per task; 2 to 320 facts per sample depending on task",
+    "split": "train 10000 / eval 1000 per task; 10M-token eval on first 100 samples only",
+    "source": "bAbI (Weston et al., 2016) facts, background PG19 (Rae et al., 2020); Wikipedia embeddings used in one RAG test",
+    "preprocessing": "Background sentences added in natural order until target length reached"
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT-4-Turbo",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "128k tokens",
+    "other": {
+     "tasks": "qa1-qa5"
+    }
+   },
+   {
+    "name": "Mistral (Mistral-Medium per Fig 4 caption)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "32k tokens",
+    "other": {
+     "tasks": "qa1-qa10"
+    }
+   },
+   {
+    "name": "GPT-3.5 fine-tuned via OpenAI API",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": "GPT-3.5",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "16k tokens evaluated",
+    "other": {
+     "fine_tune": "100 qa1 tasks, 3 epochs, 16k tokens each"
+    }
+   },
+   {
+    "name": "RMT and RMT-R (GPT-2 backbone)",
+    "role": "proposed",
+    "params": "137M",
+    "architecture": "GPT-2 decoder with recurrent memory tokens; RMT-R adds single-head cross-attention over all past memory states",
+    "init_from": "pretrained GPT-2 137M (HuggingFace)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "segment size 512",
+    "other": {
+     "memory_size": "16 memory tokens",
+     "segments_trained": "up to 32 (about 16k tokens)"
+    }
+   }
+  ],
+  "training": {
+   "objective": null,
+   "optimizer": "AdamW",
+   "lr": "selected from {5e-05, 3e-05}",
+   "lr_schedule": "linear with warmup",
+   "warmup": null,
+   "batch_size": "64 (total)",
+   "steps": "{5000, 10000} with early stopping if metrics stop increasing",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "curriculum: RMT 1-2-4-6-8-16-32 segments, RMT-R 2-4-6-8-16-32; per stage n, segments sampled from 1 to n; segment 512 tokens",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "up to 4 Nvidia A100 80Gb per experiment",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "per_task": "each task trained individually",
+    "seed_note": "seed for background text fixed for test set, not fixed in training"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "Fig 3, 4, 5: averages of 25 samples; RAG (Fig 6): 50 samples per length per task; RMT: full 1000-sample test set up to 1M tokens, first 100 for 10M",
+   "prompting": "Task description, 2 to 3 examples in <example> tags, context in <context> tags, question duplicated with QUESTION mark, output format instruction (Appendix B)",
+   "retrieval": "FAISS via Langchain, text-embedding-ada-002; chunking by NLTK sentences or 512-token segments; top 5 chunks; GPT-4-Turbo reads retrieved facts",
+   "parameters": {
+    "rag_top_k": "5",
+    "rag_lengths": "8k, 64k, 128k for qa1-qa5; plus 4k, 16k, 32k, 500k, 1M, 10M for qa1"
+   },
+   "other": {
+    "rmt_eval_time_minutes_per_1000_samples": "4K:4, 32K:30, 128K:80, 1M:315 (Table 2, single A100 80Gb)"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "accuracy",
+     "definition": "percent of BABILong questions answered correctly",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "retrieval accuracy (top 5)",
+     "definition": "binary: relevant fact(s) present in the top 5 retrieved chunks",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "GPT-4-Turbo",
+    "Mistral",
+    "GPT-4-Turbo + RAG (sentence and 512-token chunks)",
+    "fine-tuned GPT-3.5"
+   ],
+   "protocol": "Single run per setting; no significance tests stated"
+  },
+  "availability": {
+   "code": "https://github.com/booydar/babilong",
+   "weights": null,
+   "data": "https://github.com/booydar/babilong"
+  },
+  "prompts": [
+   {
+    "purpose": "qa1 prompt for GPT-4-Turbo and Mistral",
+    "text": "I will give you context with the facts about positions of different persons hidden in some random text and a question. You need to answer the question based only on the information from the facts. If a person was in different locations, use the latest location to answer the question.\n<example>...</example>\n<context>\n{qa1 query with noise}\n</context>\nQUESTION: {qa1 question}\nAlways return your answer in the following format: The most recent location of 'person' is 'location'. Do not write anything else after that.",
+    "where": "Appendix B (qa2-qa5 prompts also given there)"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "GPT-4-Turbo fails needle tasks for most of its 128K window.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": 25,
+   "setup": "BABILong qa1-qa5, GPT-4-Turbo 128K, 0k to 128k, 25 samples per cell",
+   "quote": "GPT-4 fails to solve needle in a haystack tasks for 75",
+   "note": "Figure 3 caption: fails for 75 % of available context window; per-cell values only in figure.",
+   "where": "Fig 3"
+  },
+  {
+   "claim": "Conclusion says GPT-4 and RAG rely heavily on the first 25 percent of the input.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-4-Turbo qa1 with facts placed in input quarters (Fig 11)",
+   "quote": "Their performance heavily relies on the first 25 % of the input,",
+   "note": "Appendix C instead says the hardest location is the middle (depth = 50); the two statements are not reconciled.",
+   "where": "Conclusions; Appendix C"
+  },
+  {
+   "claim": "Facts in the middle of context are hardest for GPT-4-Turbo to find.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": 25,
+   "setup": "GPT-4-Turbo qa1, all facts in same quarter of input, 4k to 64k",
+   "quote": "The most difficult location to identify the facts is in the middle of context which corresponds to the depts = 50 in the Fig. 11.",
+   "note": null,
+   "where": "Appendix C"
+  },
+  {
+   "claim": "RAG with sentence chunks beats 512-token chunks on retrieval; sentence retrieval falls notably only at 10M tokens.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": 50,
+   "setup": "qa1, ada-002 embeddings, FAISS, top 5, PG19 background",
+   "quote": "with a notable decrease in accuracy observed only at the 10M token context",
+   "note": null,
+   "where": "Sec 3, Fig 6a"
+  },
+  {
+   "claim": "RAG fails on qa2 and qa3, which need two or three supporting facts, because the second fact is not similar to the question.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": 50,
+   "setup": "qa2-qa10 vector retrieval, sentence vs 512-token chunks",
+   "quote": "both methods were unsuccessful in tasks 'qa2' and 'qa3'",
+   "note": null,
+   "where": "Sec 3, Fig 7"
+  },
+  {
+   "claim": "RMT and RMT-R trained at about 16k tokens keep performance out to 128k with marginal degradation and beat GPT-4.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-2 137M with RMT/RMT-R, 32 segments of 512 tokens training, per-task models",
+   "quote": "reaching 128k tokens, with only",
+   "note": "Per-length accuracies are in Fig 9 (image), not in the text.",
+   "where": "Sec 5"
+  },
+  {
+   "claim": "Recurrent models still beat RAG at 1M and 10M tokens, over 600 times the training length.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "600",
+   "unit": "times training length",
+   "baseline_value": null,
+   "n": null,
+   "setup": "RMT/RMT-R vs GPT-4 RAG, qa1-qa5, up to 10M tokens",
+   "quote": "which is over 600 times of",
+   "note": null,
+   "where": "Sec 5"
+  },
+  {
+   "claim": "Fine-tuning GPT-3.5 on 100 qa1 samples helps at 16k but accuracy still falls as noise grows.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": 25,
+   "setup": "GPT-3.5, 100 qa1 tasks of 16k tokens, 3 epochs",
+   "quote": "fine-tuned with 100 'qa1' tasks for 3 epochs",
+   "note": null,
+   "where": "Fig 5"
+  },
+  {
+   "claim": "RMT evaluation time grows linearly with context: 315 minutes per 1000 samples at 1M tokens on one A100.",
+   "kind": "measured",
+   "source": null,
+   "metric": "processing time",
+   "value": "315",
+   "unit": "minutes per 1000 samples",
+   "baseline_value": null,
+   "n": 1000,
+   "setup": "RMT, single A100 80Gb, includes data processing",
+   "table": "Table 2, column 1M, row PROCESSING TIME, MINUTES",
+   "quote": null,
+   "note": null,
+   "where": "Appendix A, Table 2"
+  }
+ ],
+ "limits": [
+  "Only PG19 and Wikipedia used as background; similar-fact interference could make it harder",
+  "Retrieval component not optimised (only OpenAI embeddings) and GPT-4/Mistral prompts may be suboptimal",
+  "Tasks are simple algorithmic bAbI tasks, chosen intentionally",
+  "RMT models are trained per task with a small GPT-2; RMT-R storage grows linearly with segments; RMT has finite storage",
+  "Main RMT results are in an image (Fig 9); 10M-token evaluation uses only 100 samples",
+  "No seeds, decoding settings or temperature stated for GPT-4/Mistral; RAG fails partly because default retrieval ignores temporal order",
+  "Models are early-2024 (GPT-4-Turbo, Mistral)"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "BABILong",
+   "definition": "Benchmark that hides sentences of a bAbI task between sentences of irrelevant PG19 text to reach a desired length",
+   "where": "Sec 2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Recurrent Memory Transformer (Bulatov et al., 2022)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "adds self-retrieval over past memory states",
+   "quote": null
+  },
+  {
+   "work": "Scaling transformer to 1M tokens and beyond with RMT (Bulatov et al., 2023)",
+   "year": 2023,
+   "arxiv": "2304.11062",
+   "relation": "extends",
+   "note": "prior RMT scaling",
+   "quote": null
+  },
+  {
+   "work": "bAbI (Weston et al., 2016)",
+   "year": 2016,
+   "arxiv": "1502.05698",
+   "relation": "uses-data",
+   "note": "source tasks",
+   "quote": null
+  },
+  {
+   "work": "PG19 / Compressive Transformers (Rae et al., 2020)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "background text",
+   "quote": null
+  },
+  {
+   "work": "GPT-4 technical report (Achiam et al., 2023)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "GPT-4-Turbo",
+   "quote": null
+  },
+  {
+   "work": "Mistral 7B (Jiang et al., 2023)",
+   "year": 2023,
+   "arxiv": "2310.06825",
+   "relation": "evaluates",
+   "note": "Mistral",
+   "quote": null
+  },
+  {
+   "work": "GPT-2 (Radford et al., 2019)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "backbone",
+   "quote": null
+  },
+  {
+   "work": "LongBench (Bai et al., 2023)",
+   "year": 2023,
+   "arxiv": "2308.14508",
+   "relation": "related",
+   "note": "long-context benchmark, lengths up to 4e4",
+   "quote": null
+  },
+  {
+   "work": "Activation Beacon (Zhang et al., 2024)",
+   "year": 2024,
+   "arxiv": "2401.03462",
+   "relation": "related",
+   "note": "up to 400k tokens",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 3",
+   "caption": "GPT-4 fails to solve needle in a haystack tasks for 75 % of available context window.",
+   "page": 3,
+   "why": "heatmap of accuracy by task and length"
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "Retrieval augmentation does not help to solve needle in a haystack QA task.",
+   "page": 4,
+   "why": "RAG recall and accuracy vs length"
+  },
+  {
+   "figure": "Fig 9",
+   "caption": "RMT and RMT-R significantly outperform LLMs with and without retrieval on extremely long needle in a haystack tasks.",
+   "page": 6,
+   "why": "main comparison to 10M tokens"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Figure data (Figs 3-9, 11) is not in the text layer except as scattered numbers; Fig 9 numbers are absent",
+  "Abstract exponents garbled (104, 11 x 106)",
+  "No embedded instructions found"
+ ]
+}

@@ -1,0 +1,618 @@
+{
+ "schema": 1,
+ "key": "2303.17071",
+ "pdf": "generative-ai/03-agentic-foundations/sources/nair-2023-dera.pdf",
+ "bib": {
+  "title": "DERA: Enhancing Large Language Model Completions with Dialog-Enabled Resolving Agents",
+  "authors": [
+   "Varun Nair",
+   "Elliot Schumacher",
+   "Geoffrey Tso",
+   "Anitha Kannan"
+  ],
+  "first_author": "Nair",
+  "year": 2023,
+  "venue": "preprint",
+  "arxiv": "2303.17071",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 110128,
+  "chars_total": 110128,
+  "engine": "pymupdf",
+  "skipped": "Appendix QA example chats (A.1) and the rewrite/care-plan prompt bodies were skimmed, not read line by line."
+ },
+ "type": "empirical",
+ "question": "Can two role-scoped GPT-4 agents (a Researcher and a Decider) that converse iteratively improve the accuracy and completeness of GPT-4 outputs on clinical text tasks?",
+ "hypothesis": "Pairing an information-focused Researcher with a decision-making Decider, working iteratively in dialog, yields higher-quality output than a single prompt or chaining, especially for long-form generation.",
+ "contributions": [
+  "DERA (Sec 2): a framework for agent-agent dialog to improve performance on natural language tasks.",
+  "Evaluation on three clinical tasks: medical conversation summarization, care plan generation, open-ended medical QA.",
+  "Human-expert and quantitative evidence that DERA beats base GPT-4 on summarization and care plans, with little to no gain on QA.",
+  "Release of an open-ended version of MedQA (NEJM set not releasable)."
+ ],
+ "method": {
+  "summary": "Two GPT-4 prompts play Decider and Researcher and converse. The Decider drafts an output, the Researcher points out problems, the Decider accepts or rejects each and writes accepted ones to a shared scratchpad, and a final prompt rewrites the output from draft plus scratchpad. For QA the Decider is seeded with the self-consistency vote distribution and a Researcher that only points to question parts, ending in a 5-sample vote.",
+  "task": "clinical text generation: medical chat summarization, care plan generation, open-ended and multiple-choice medical QA",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "Telehealth chat encounters (summarization)",
+    "role": "eval",
+    "size": "500 encounters; 50-encounter random subset for human evaluation",
+    "split": "500 for quantitative corruption study, 50 for physician study",
+    "source": "chat-based telehealth platform (Curai), de-identified; not released",
+    "preprocessing": "De-identified and scrubbed of PHI. 27 dialog turns on average (min 9, max 82); 646 unigram tokens on average (min 42, max 2031)."
+   },
+   {
+    "name": "Care plan encounters",
+    "role": "eval",
+    "size": "50 encounters",
+    "split": "same 50 as the summarization human evaluation",
+    "source": "same telehealth platform",
+    "preprocessing": null
+   },
+   {
+    "name": "MedQA US (open-ended rewrite)",
+    "role": "both",
+    "size": "1178 dev questions (sampled from train), 1273 test questions",
+    "split": "dev = sample of training set; test as formulated by the MedQA authors",
+    "source": "Jin et al. 2021 (USMLE); open-ended version released at github.com/curai/curai-research",
+    "preprocessing": "GPT-4 rewrote the final sentence (Prompt 13) or full question (Prompt 12) to be open-ended, temperature 0; automated, may contain errors; images not excluded."
+   },
+   {
+    "name": "NEJM continuing-education questions (open-ended rewrite)",
+    "role": "both",
+    "size": "639 dev, 1112 test",
+    "split": "split by area; 7 areas (Reproductive, Gastrointestinal, Neurologic/Psychogenic, Special Sensory, Endocrine, Musculoskeletal, Maternity Care) reserved as dev",
+    "source": "New England Journal of Medicine; cannot be released for licensing",
+    "preprocessing": "same GPT-4 rewrite as MedQA"
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT-4 (OpenAI API)",
+    "role": "proposed",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "version": "GPT-4 as available Feb 2023 for the MCQ and dev-set QA runs; the 'latest version at the time' otherwise; exact snapshot not named",
+     "roles": "same model plays Decider, Researcher, corruptor, metric extractor/verifier and answer-similarity judge"
+    }
+   },
+   {
+    "name": "PaLM (Singhal et al. 2022)",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "reported MedQA MCQ accuracy only"
+    }
+   },
+   {
+    "name": "scibert-basevocab-uncased",
+    "role": "judge",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "BERTScore model"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "OpenAI chat API sampling; per-prompt temperature, max tokens, top_p, frequency penalty (Tables 5 and 6)",
+   "temperature": "Summarization/care plan: 1 for generation prompts, 0 for GPT-F1 extractor and verifier. QA: 0.7 for 1-shot, 0 for Decider initial message, 0.3 for Researcher-Decider turns, 0 for final answer and similarity",
+   "top_p": "1 for every prompt",
+   "max_tokens": "Summarization/care plan: 512 (200 for GPT-F1 prompts). QA: 50 (1-shot), 400 (Decider initial msg), 250 (Researcher/Decider turns), 100 (final answer, similarity)",
+   "samples": "QA baseline: 5 completions of the 1-shot prompt, majority vote (ties: first completion of highest-ranking answers). DERA final: 5 completions with chat history, majority vote. Single run only ('we only report single runs').",
+   "prompting": "Summarization/care plan: zero-shot role prompts (Prompts 1-11); care plan initial prompt includes an example. QA: 1-shot prompt (Prompt 14); Researcher and Decider prompts act as expert doctors; MCQ variant gives options and asks for letter A-D.",
+   "retrieval": "None. Researcher uses the encounter text (summarization) or GPT-4 internal knowledge and the question only (QA).",
+   "parameters": {
+    "max_conversation_turns_summarization_and_care_plan": "15 total",
+    "max_turns_QA": "n = 3 (Researcher may stop earlier)",
+    "termination": "Researcher emits [STOP] when satisfied",
+    "scratchpad": "Decider appends accepted corrections; final prompt applies them to the original output",
+    "corruption_levels": "low 3/10, medium 5/10, high 7/10",
+    "frequency_penalty": "0.5 for QA Researcher-Decider turns, 0 elsewhere",
+    "qa_decider_init": "vote distribution over 5 one-shot answers turned into a 3-4 sentence rationale (Prompt 15)"
+   },
+   "other": {
+    "scratchpad_size": "2-3 suggestions per encounter on average"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "GPT-F1",
+     "definition": "Harmonic mean of GPT-Recall and GPT-Precision. Medical entities extracted (Prompt 6) per summary section from predicted and ground-truth text; a verification prompt (Prompt 7) checks presence incl. rephrasings. Recall = tp_gt/(tp_gt+fn), Precision = tp_pred/(tp_pred+fp). Ground truth is the uncorrupted GPT-4 summary.",
+     "unit": "score 0-100",
+     "higher_is_better": true
+    },
+    {
+     "name": "Physician preference",
+     "definition": "4 licensed physicians pick Initial or Final summary / care plan per encounter",
+     "unit": "% of encounters",
+     "higher_is_better": true
+    },
+    {
+     "name": "Information captured",
+     "definition": "Physician rating All/Most/Some/None of clinical info (or care steps) captured",
+     "unit": "% of encounters rated All",
+     "higher_is_better": true
+    },
+    {
+     "name": "Accuracy (MCQ)",
+     "definition": "Correct option selected, MedQA 4-option",
+     "unit": "fraction",
+     "higher_is_better": true
+    },
+    {
+     "name": "GPT-4 Exact",
+     "definition": "GPT-4 binary judge whether predicted and gold answers are the same medical concept (Prompt 20)",
+     "unit": "fraction",
+     "higher_is_better": true
+    },
+    {
+     "name": "GPT-4 Sim",
+     "definition": "GPT-4 relatedness score 0-1 of predicted vs gold answer (Prompt 19); out-of-range outputs set to 0 unless all are 100",
+     "unit": "0-1",
+     "higher_is_better": true
+    },
+    {
+     "name": "BERTScore F1",
+     "definition": "Average BERTScore F1 between gold and generated answers, scibert-basevocab-uncased",
+     "unit": "0-1",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Initial GPT-4 summary / care plan",
+    "GPT-4 1-shot with 5-vote self-consistency (open-ended QA)",
+    "GPT-4 0-shot (MCQ)",
+    "PaLM (Singhal et al. 2022)",
+    "Nori et al. 2023 (GPT-4 MedQA)"
+   ],
+   "protocol": "Summarization quantitative: GPT-4 summaries on 500 encounters treated as ground truth, synthetically corrupted, DERA asked to repair. Human study: 4 physicians on 50 encounters, not the treating clinicians for care plans. Single run for QA, no significance tests reported."
+  },
+  "availability": {
+   "code": "https://github.com/curai/curai-research/tree/main/DERA",
+   "weights": null,
+   "data": "open-ended MedQA released; NEJM and telehealth chats not released"
+  },
+  "prompts": [
+   {
+    "purpose": "Summarization Decider (Prompt 3)",
+    "text": "You (Person A) are a very good summary writer for medical dialogues between physicians and patients. ... You are generally very confident about the summary you wrote, however, when presented with compelling arguments by the verifying summary writer, you add to the correction scratchpad. You also suggest any edits of your own in case you notice a mistake. ... Question: What do you say next? Respond to Person B in the tag [RESPONSE: \"<your_response_here>\"] and output any corrections to add to the scratchpad in the tag [SCRATCHPAD: \"<things_to_add_to_the_scratchpad_here>\"].",
+    "where": "Appendix, Prompt 3 (abridged)"
+   },
+   {
+    "purpose": "Summarization Researcher (Prompt 4)",
+    "text": "You (Person B) are a very good summary editer for medical dialogues between physicians and patients. ... Go through each section of the summary one at a time and point out any text that does not have a grounding in the dialogue. It must be possible to directly tie any span of the summary to the dialogue. ... Person A may not initially agree with you, but if you are confident there is an error do your best to convince Person A of the mistake. ... output the tag \"[STOP]\".",
+    "where": "Appendix, Prompt 4 (abridged)"
+   },
+   {
+    "purpose": "Final summary from scratchpad (Prompt 5)",
+    "text": "Make all changes mentioned in the scratchpad to the original summary to output the corrected summary. Output the tag \"[STOP]\" when finished writing the corrected summary.",
+    "where": "Appendix, Prompt 5"
+   },
+   {
+    "purpose": "Corruption (Prompt 2)",
+    "text": "Using the above dialogue and provided summary, corrupt the summary slightly. This could include moving a positive symptom to be a negative symptom, making up medical history mentioned, etc. ... Note that any changes/corruption should make the summary less factual. Desired Corruption Level: {corruption_level}/10",
+    "where": "Appendix, Prompt 2 (abridged)"
+   },
+   {
+    "purpose": "QA Researcher (Prompt 16)",
+    "text": "You are an expert medical doctor who is guiding a medical student through thinking about which of several answers is best for a given question. You cannot give the student the answer. Your role is to help the student think through the question, specifically by pointing out portions of the question that are important in understanding the problem. Rules; - All responses should include a quote from the question. ... - Responses should be at most 4 sentences long.",
+    "where": "Appendix, Prompt 16 (abridged)"
+   },
+   {
+    "purpose": "QA Decider (Prompt 17)",
+    "text": "You are an expert doctor who is trying to select the answer to a medical question, and is willing to be open-minded about their answer. ... You can change your answer at any point, but do not assume that the expert knows the exact answer and is providing leading questions. ... Respond with the option you believe most likely to be the right answer (\"Answer:<SHORT ANSWER>\") and a response to that message (\"Response:<MESSAGE>\"):",
+    "where": "Appendix, Prompt 17 (abridged)"
+   },
+   {
+    "purpose": "Decider initial message from vote distribution (Prompt 15)",
+    "text": "You think the relative likelihood of each option is {relative_likelihood}. Write a 3-4 sentence message explaining why you rate the options in that way, without taking a decisive stand.",
+    "where": "Appendix, Prompt 15"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "inference.parameters.max_conversation_turns_summarization_and_care_plan",
+    "quote": "a maximum conversation length is reached (set to 15 turns total)",
+    "where": "Sec 3, DERA Setup"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Physicians prefer the DERA-corrected summary over the initial GPT-4 summary.",
+   "kind": "measured",
+   "source": null,
+   "metric": "physician preference",
+   "value": 90,
+   "unit": "%",
+   "baseline_value": 10,
+   "n": 50,
+   "setup": "50 encounters, 4 physicians, summarization, GPT-4.",
+   "quote": "Physicians notably choose the summary produced after DERA over the initially generated summary 90% - 10%.",
+   "table": null,
+   "note": null,
+   "where": "Sec 3, Fig 2"
+  },
+  {
+   "claim": "Final DERA summaries are rated as capturing All clinical information far more often.",
+   "kind": "measured",
+   "source": null,
+   "metric": "info captured (All)",
+   "value": 86,
+   "unit": "% of encounters",
+   "baseline_value": 56,
+   "n": 50,
+   "setup": "Same human study.",
+   "quote": "rated as capturing \"All\" medical information from the patient-physician dialog in 86% of encounters",
+   "table": null,
+   "note": "Initial summaries rated All in 56% of encounters (Fig 2 caption).",
+   "where": "Sec 3"
+  },
+  {
+   "claim": "Physicians prefer the DERA care plan over the initial GPT-4 care plan.",
+   "kind": "measured",
+   "source": null,
+   "metric": "physician preference",
+   "value": 84,
+   "unit": "%",
+   "baseline_value": 16,
+   "n": 50,
+   "setup": "50 encounters, 4 physicians, care plans.",
+   "quote": "the physicians prefer the ﬁnal care plan produced by DERA 84% of the time",
+   "table": null,
+   "note": null,
+   "where": "Sec 4"
+  },
+  {
+   "claim": "Care plans rated as capturing All necessary steps: DERA vs initial.",
+   "kind": "measured",
+   "source": null,
+   "metric": "care steps captured (All)",
+   "value": 92,
+   "unit": "% of encounters",
+   "baseline_value": 64,
+   "n": 50,
+   "setup": "Same care plan study.",
+   "quote": "they rated 92% of care plans as complete, compared to 64% of initial care plans",
+   "table": null,
+   "note": null,
+   "where": "Sec 4"
+  },
+  {
+   "claim": "Synthetic corruption study: at high corruption (7/10) GPT-F1 average rises from the corrupted initial to DERA.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GPT-F1 average",
+   "value": 93.45,
+   "unit": "GPT-F1",
+   "baseline_value": 66.12,
+   "n": 500,
+   "setup": "500 encounters, GPT-4 summaries as ground truth, corruption 7/10.",
+   "quote": null,
+   "table": "Table 1, row high (7/10) DERA, column Average (initial 66.12)",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Medium corruption (5/10) GPT-F1 average: DERA vs initial.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GPT-F1 average",
+   "value": 95.97,
+   "unit": "GPT-F1",
+   "baseline_value": 77.42,
+   "n": 500,
+   "setup": "Same, corruption 5/10.",
+   "quote": null,
+   "table": "Table 1, row medium (5/10) DERA, column Average (initial 77.42)",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Low corruption (3/10) GPT-F1 average: DERA vs initial.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GPT-F1 average",
+   "value": 96.71,
+   "unit": "GPT-F1",
+   "baseline_value": 85.18,
+   "n": 500,
+   "setup": "Same, corruption 3/10.",
+   "quote": null,
+   "table": "Table 1, row low (3/10) DERA, column Average (initial 85.18)",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Multiple-choice MedQA: DERA barely beats GPT-4 0-shot, and both beat PaLM and Nori et al.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 0.84,
+   "unit": "fraction",
+   "baseline_value": 0.834,
+   "n": null,
+   "setup": "MedQA 4-option test, GPT-4 Feb 2023 version, single run.",
+   "quote": null,
+   "table": "Table 2, row DERA, column Accuracy (GPT-4 0-shot 0.834, Nori 0.814, PaLM 0.676)",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Open-ended MedQA: DERA matches 1-shot GPT-4; GPT-4 Exact 0.703 vs 0.698.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GPT-4 Exact",
+   "value": 0.703,
+   "unit": "fraction",
+   "baseline_value": 0.698,
+   "n": 1273,
+   "setup": "MedQA open-ended test (1273), single run.",
+   "quote": null,
+   "table": "Table 3, row DERA, MedQA column GPT-4 Exact (1-shot 0.698)",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Open-ended MedQA BERTScore is slightly lower for DERA.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BERTScore",
+   "value": 0.744,
+   "unit": "0-1",
+   "baseline_value": 0.746,
+   "n": 1273,
+   "setup": "MedQA open-ended.",
+   "quote": null,
+   "table": "Table 3, row DERA, MedQA column BERTScore (1-shot 0.746)",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Open-ended MedQA similarity score: DERA's largest gain.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GPT-4 Sim",
+   "value": 0.67,
+   "unit": "0-1",
+   "baseline_value": 0.65,
+   "n": 1273,
+   "setup": "MedQA open-ended.",
+   "quote": null,
+   "table": "Table 3, row DERA, MedQA column GPT-4 Sim (1-shot 0.65)",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Open-ended NEJM GPT-4 Exact: DERA vs 1-shot.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GPT-4 Exact",
+   "value": 0.711,
+   "unit": "fraction",
+   "baseline_value": 0.703,
+   "n": 1112,
+   "setup": "NEJM open-ended test (1112).",
+   "quote": null,
+   "table": "Table 3, row DERA, NEJM column GPT-4 Exact (1-shot 0.703)",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "GPT-4 open-ended MedQA performance is well above the 60% pass level.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy (open-ended)",
+   "value": 70,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Abstract claim; GPT-4 on open-ended MedQA.",
+   "quote": "GPT-4’s performance (70%) on an open-ended version of",
+   "table": null,
+   "note": "Abstract says 70%; Table 3 GPT-4 Exact is 0.698 (1-shot) and 0.703 (DERA).",
+   "where": "Abstract"
+  },
+  {
+   "claim": "Only 542 of 1273 MedQA examples have identical answers between DERA and one-shot.",
+   "kind": "measured",
+   "source": null,
+   "metric": "same-answer count",
+   "value": 542,
+   "unit": "questions",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MedQA open-ended, per the text.",
+   "quote": "only 542 of the 1273 MedQA training examples",
+   "table": null,
+   "note": "Text says 'training examples' while 1273 is the test set size; likely a wording slip.",
+   "where": "Sec 5 Qualitative Analysis"
+  },
+  {
+   "claim": "Harmful content in summaries falls from 2% to 0% (authors caution against generalising).",
+   "kind": "measured",
+   "source": null,
+   "metric": "harmful summaries",
+   "value": 0,
+   "unit": "%",
+   "baseline_value": 2,
+   "n": 50,
+   "setup": "50 encounters, physician judgement.",
+   "quote": "drops from 2% in the initial summary to 0% in the ﬁnal",
+   "table": null,
+   "note": null,
+   "where": "Sec 3"
+  },
+  {
+   "claim": "Physicians agree with All scratchpad suggestions in 63% of summarization encounters (18% None).",
+   "kind": "measured",
+   "source": null,
+   "metric": "agreement with scratchpad (All)",
+   "value": 63,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "50 encounters, summarization.",
+   "quote": "they agreed with \"All\" corrections suggested",
+   "table": null,
+   "note": "63% appears in the Fig 2 caption: 'agreement with \"All\" suggestions in 63% of encounters'.",
+   "where": "Sec 3"
+  }
+ ],
+ "limits": [
+  "QA shows little to no improvement over GPT-4 self-consistency baseline; authors attribute it to the need for a single granular answer.",
+  "Single runs only for QA (cost); no significance tests.",
+  "GPT-4 grades itself (GPT-F1, Exact, Sim); authors flag this as problematic.",
+  "Corruption study treats GPT-4 summaries as ground truth and the corruptions are synthetic and generated by GPT-4.",
+  "Human studies: 50 encounters, 4 physicians, one telehealth population; harmfulness numbers too small to generalise.",
+  "Possible MedQA contamination; GPT-4 snapshots not persisted so results hard to reproduce.",
+  "Open-ended rewrites are automated with only quality checks; NEJM and telehealth data not released.",
+  "Role ablations (single agent vs two, no scratchpad, turn count) are not reported, so the Researcher's contribution is not isolated from simply a second revision pass."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "DERA",
+   "definition": "Dialog-Enabled Resolving Agents: a framework for agent-agent dialog to improve output on natural language tasks",
+   "where": "Sec 1-2"
+  },
+  {
+   "term": "Researcher",
+   "definition": "agent that reviews information and suggests what is likely crucial; not treated as the source of truth",
+   "where": "Sec 2"
+  },
+  {
+   "term": "Decider",
+   "definition": "agent that starts the conversation, responds to the Researcher, and has final authority over the output; never has to defer",
+   "where": "Sec 2"
+  },
+  {
+   "term": "Scratchpad",
+   "definition": "shared memory to which the Decider writes accepted corrections, used to produce the final output instead of regenerating each turn",
+   "where": "Sec 3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Chain-of-thought prompting (Wei et al.)",
+   "year": 2022,
+   "arxiv": "2201.11903",
+   "relation": "related",
+   "note": "contrasted: CoT performs researcher and decider roles jointly",
+   "quote": null
+  },
+  {
+   "work": "AI Chains (Wu et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "chaining sub-tasks, which DERA replaces with iterative holistic refinement",
+   "quote": null
+  },
+  {
+   "work": "Can large language models reason about medical questions? (Liévin et al.)",
+   "year": 2022,
+   "arxiv": "2207.08143",
+   "relation": "related",
+   "note": "source of the 60% MedQA pass level; CoT with GPT-3",
+   "quote": null
+  },
+  {
+   "work": "Large language models encode clinical knowledge (Singhal et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "self-consistency voting adopted; PaLM MedQA baseline",
+   "quote": null
+  },
+  {
+   "work": "Capabilities of GPT-4 on Medical Challenge Problems (Nori et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "MedQA MCQ 0.814 reference",
+   "quote": null
+  },
+  {
+   "work": "MedQA (Jin et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "USMLE questions, rewritten open-ended",
+   "quote": null
+  },
+  {
+   "work": "BERTScore (Zhang et al.)",
+   "year": 2019,
+   "arxiv": "1904.09675",
+   "relation": "uses-method",
+   "note": "answer similarity metric",
+   "quote": null
+  },
+  {
+   "work": "GPT-4 (OpenAI)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "the only LLM used for all agents",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Overview of DERA: Researcher and Decider; Decider generates initial output (1), conversation (2), Decider makes final judgments (3).",
+   "page": 2,
+   "why": "Shows the three-step control flow."
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Qualitative example of care plan generation with DERA.",
+   "page": 6,
+   "why": "Shows dialog to scratchpad to final plan."
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Quantitative GPT-F1 of corrupted initial vs DERA summaries at three corruption levels.",
+   "page": 4,
+   "why": "Core quantitative evidence."
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Text extraction fine. PDF text contains no embedded instructions.",
+  "Figure 2 and 4 bars are summarised only in captions; 'Prompt 8-11' care plan bodies abridged in the extraction.",
+  "Paper mixes 'training examples' with the 1273 test set count (Sec 5 qualitative analysis)."
+ ]
+}

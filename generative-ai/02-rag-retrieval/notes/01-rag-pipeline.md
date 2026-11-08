@@ -19,6 +19,7 @@ sources:
   - Iusztin & Labonne, *LLM Engineer's Handbook* (Packt, 2024), ch. 4, ch. 9
   - Oshin & Campos, *Learning LangChain* (O'Reilly, 2025), ch. 2, ch. 3
   - Rothman, *Context Engineering for Multi-Agent Systems* (Packt, 2025), ch. 3
+  - Lakshmanan & Hapke, *Generative AI Design Patterns* (O'Reilly, 2025), ch. 3, ch. 4
 cleaned: 2026-11-01
 ---
 
@@ -126,6 +127,7 @@ Stage notes:
 
 - **Metadata filtering first.** Permission checks and freshness filters are near-free compared with embedding search, and dropping candidates early makes every later stage cheaper. Push the filter *into* the vector query rather than applying it to the results (see the funnel in [PRINCE](#a-tuned-pipeline-bayers-prince)). Permission filtering here is a security control, not just an optimisation.
 - **Ranking ≠ retrieval.** Bi-encoder vector search is fast and approximate; a cross-encoder reranker is slow and accurate. Retrieve wide, rerank, send narrow: order-of-magnitude k=50→5, though real numbers are corpus-specific.
+- **Ranking, dedup and compression can be one call.** Lakshmanan and Hapke group the stages after search as *node postprocessing* (rerank, compress, drop obsolete chunks by metadata, disambiguate) and fold scoring and compression into one structured-output LLM call per chunk, which rules out a small fine-tuned reranker such as BGE for that step. The call count is what limits it: checking every pair of N chunks for conflicts costs N(N−1) calls, checking that each chunk names the same entity as the first costs N−1. On "Describe the geology of the Grand Canyon" over two old geology textbooks, top-k of 2 put a table-of-contents chunk first, top-k of 4 still answered wrongly, and compression plus reranking fixed it. That is one query with no baseline (*Generative AI Design Patterns*, ch. 4, Pattern 10).
 - **Deduplication has a trap.** A chunk retrieved by several sub-queries is often the *most* relevant one, not redundant noise. Collapse duplicates but treat multi-retrieval as a positive ranking signal.
 - **Compression is query-conditional.** Reduce each document to the part that answers the current question, not a generic summary, which discards the specific detail the query needed.
 - **Structured formatting.** Wrap in tags with source attribution so the model can cite, and so injected content stays distinguishable from instructions ([framing](../../../ai-engineering/02-context-engineering/notes/04-retrieval.md#framing-retrieved-content)).
@@ -207,7 +209,7 @@ clean parse   {'bm25': 0.0, 'dense': 1.0, 'hybrid': 1.0}
 failed parse  {'bm25': 0.0, 'dense': 0.0, 'hybrid': 0.0}
 ```
 
-Dense and hybrid search drop from 1.0 to 0.0, and no rerank stage can bring the page back. BM25 scores 0.0 in both rows for a different reason: "money back" shares no word with the page, the paraphrase gap of [03](03-keyword-semantic-and-hybrid-search.md).
+Dense and hybrid search drop from 1.0 to 0.0, and no rerank stage can bring the page back. BM25 scores 0.0 in both rows for a different reason: "money back" shares no word with the page, the paraphrase gap of [03](03-keyword-semantic-and-hybrid-search.md). Ingestion can narrow it: Lakshmanan and Hapke expand jargon with a synonym dictionary on the documents at index time or on the query, and warn that some synonyms work one way only: "An ETF is an index fund, but an index fund isn't automatically an ETF", so the dictionary must store the direction. LLM-generated expansions can also be hallucinated (*Generative AI Design Patterns*, ch. 3, Pattern 7).
 
 **Multimodal ingestion.** Non-text content (charts, PDF layout, audio) enters here, and the path sets the ceiling. **Native multimodal** keeps layout and charts but costs the most. **Extract-to-text** (OCR, transcription) is cheap and cacheable, but anything visual is lost. **Extract plus an analysis tool** (`analyze_image`, `analyze_pdf`) answers most questions from the text and goes back to the original only when needed (Li, ch. 3; lab: upstream [multimodal-agent](https://github.com/bojieli/ai-agent-book/tree/main/chapter4/multimodal-agent)).
 
@@ -249,6 +251,8 @@ print("chunks left:", len(index))
 {'added': 0, 'deleted': 2, 'unchanged': 0}
 chunks left: 0
 ```
+
+Two changes that sync can't absorb chunk by chunk. **An embedding-model change forces a full reindex**, because vectors from different model versions are not comparable; Lakshmanan and Hapke advise open-weights embedders partly so a vendor deprecation can't force one on you. And for content that has gone stale they give three remedies with different costs: filter at query time on metadata, prune the store (smaller index, faster retrieval, but the history is gone), or demote old chunks at rerank (*Generative AI Design Patterns*, ch. 3, Pattern 8). The chapter's example is a ChromaDB `where` prefilter on `created_at` dropping a 2024 duplicate; it measures none of the three.
 
 Scheduling, change detection, LangChain's indexing API and asynchronous deletes are in [07 § keeping a live index in sync](07-rag-in-production.md#keeping-a-live-index-in-sync).
 

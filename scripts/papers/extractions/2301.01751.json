@@ -1,0 +1,618 @@
+{
+ "schema": 1,
+ "key": "2301.01751",
+ "pdf": "ai-engineering/01-prompt-engineering/sources/reppert-2023-iterated-decomposition.pdf",
+ "bib": {
+  "title": "Iterated Decomposition: Improving Science Q&A by Supervising Reasoning Processes",
+  "authors": [
+   "Justin Reppert",
+   "Ben Rachbach",
+   "Charlie George",
+   "Luke Stebbing",
+   "Jungwon Byun",
+   "Maggie Appleton",
+   "Andreas Stuhlmüller"
+  ],
+  "first_author": "Reppert",
+  "year": 2023,
+  "venue": "preprint",
+  "arxiv": "2301.01751",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 121187,
+  "chars_total": 121187,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can a human-in-the-loop workflow of inspecting and refining task decompositions of LM calls beat less compositional baselines on real science Q&A tasks?",
+ "hypothesis": "Decomposing tasks into inspectable subtasks and iteratively fixing the failing ones (starting from selection) can beat less compositional approaches while keeping the process supervisable.",
+ "contributions": [
+  "A review of the literature on process supervision, highlighting gaps in workflows and tooling",
+  "Iterated decomposition, a human-in-the-loop workflow for developing compositional language model programs",
+  "ICE, an open-source visualizer for language model execution traces",
+  "Case studies on placebo extraction, participant flow in RCTs, and QASPER NLP QA"
+ ],
+ "method": {
+  "summary": "Five-step loop: start with a minimal decomposition, run on inputs with gold answers, evaluate, inspect failures in the ICE trace viewer, fix failing subtasks (decompose further, add CoT/retrieval, edit prompts), repeat. Applied to select-then-generate pipelines on three tasks; the main wins came from better paragraph selection (zero-shot perplexity cross-encoder) and few-shot demonstrations for generation.",
+  "task": "Question answering over full-text papers (RCT placebo, participant flow, QASPER)",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "Placebo RCT set",
+    "role": "eval",
+    "size": "61 experiments across 47 papers; classification n=48, description n=20 (held-out test)",
+    "split": "held-out test set; separate validation set used for iteration (size not given)",
+    "source": "Gold standards written by two Surge workers, reviewed and finalised by an Ought worker",
+    "preprocessing": null
+   },
+   {
+    "name": "Participant flow RCT set",
+    "role": "eval",
+    "size": "experiments n=50, arms n=50, adherence n=135 answers (56/135 with adherence info)",
+    "split": "held-out test set; development set size not stated (n=9 mentioned for one failure analysis)",
+    "source": "Same gold-standard procedure as placebo",
+    "preprocessing": null
+   },
+   {
+    "name": "QASPER subset",
+    "role": "eval",
+    "size": "100 questions sampled from 5,049 questions over 1,585 NLP papers",
+    "split": "sample",
+    "source": "Dasigi et al. 2021",
+    "preprocessing": "Replaced cross-reference tokens (BIBREF0 -> [1]); omitted questions needing tables or figures"
+   }
+  ],
+  "models": [
+   {
+    "name": "text-davinci-002",
+    "role": "base",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "4096 tokens prompt plus completion",
+    "other": {}
+   },
+   {
+    "name": "monoT5 (castorini/monot5-base-msmarco-10k)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "T5 reranker",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "T0-3B",
+    "role": "base",
+    "params": "3B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "T-Few fine-tuned paragraph classifier"
+    }
+   },
+   {
+    "name": "T0pp",
+    "role": "base",
+    "params": "11B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "inferred: single run per item; no seeds or repeats reported",
+   "prompting": "Zero-shot select-then-generate prompt (Elicit); step-by-step reasoning prompts in placebo decomposition; few-shot demonstration prompts (positive examples only, randomly sampled from dev set) for generation; textbook-style and StatsExchange-style prompts tried but not systematically evaluated.",
+   "retrieval": "Elicit baseline: monoT5 ranks paragraphs, top-1 fed to LM. Improved: text-davinci-002 inverse-perplexity of 'The answer to the question is not mentioned in the excerpt', one threshold across all tasks (slightly favouring recall); multiple paragraphs above threshold passed in paper order. Placebo: pairwise paragraph ranking (rank-and-answer).",
+   "parameters": {
+    "perplexity_threshold": "chosen empirically, same across tasks, value not given",
+    "T-Few": "Liu et al. 2022 recipe, prescribed hyperparameters, no separate validation set; zero-shot prompts left in fine-tuning data"
+   },
+   "other": {
+    "ensemble_rule_placebo": "Yes if either arms or paragraphs say yes and the other does not contradict, else No"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "accuracy",
+     "definition": "Judgement that answer matches gold standard; for placebo description, a no-placebo classification counts as wrong",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "F1",
+     "definition": "QASPER answer F1, and paragraph-level F1 for selection",
+     "unit": "F1",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Elicit select-then-generate (monoT5 top-1 + text-davinci-002)",
+    "Select-then-generate with 'not mentioned' perplexity selection",
+    "Stuff paper in prompt",
+    "Keyword decision tree"
+   ],
+   "protocol": "Fisher's exact test, answers treated independent (p-values understated); decompositions iterated on a dev set, reported on held-out test; no repeated runs."
+  },
+  "availability": {
+   "code": "https://github.com/oughtinc/ice (ICE); trace at ought.org/placebo-trace",
+   "weights": null,
+   "data": null
+  },
+  "prompts": [
+   {
+    "purpose": "Elicit baseline answer prompt (also base of perplexity selector, ending 'Answer: The answer to the question is not mentioned in the excerpt')",
+    "text": "Answer the question \"{{ question}} \" based on the excerpt from a research paper.\nTry to answer, but say \"The answer to the question is not mentioned in the excerpt\" if you don't know how to answer.\nInclude everything that the paper excerpt has to say about the answer. Make sure everything you say is supported by the excerpt.\nThe excerpt may cite other papers; answer about the paper you're reading the excerpt from, not the papers that it cites.\nAnswer in one phrase or sentence:\nPaper title: {{ title}}\nPaper excerpt: {{ paragraph}}\nQuestion: {{ question}}\nAnswer:",
+    "where": "Sec 4.2.1"
+   },
+   {
+    "purpose": "Placebo classification from arms",
+    "text": "Classify whether the paper used a placebo or not. Err on the side of caution: If you are unsure, answer \"Unclear\".",
+    "where": "App 9.5.4"
+   },
+   {
+    "purpose": "Stuff-paper baseline follow-up",
+    "text": "So, to sum up, was this a placebo-controlled study? Answer \"Yes\", \"No\", or \"Unclear\".",
+    "where": "App 9.5.5"
+   },
+   {
+    "purpose": "Decontextualization few-shot",
+    "text": "Instructions: Enrich each Passage with the Context. (four examples) Context: {{ context}} Passage: {{ passage}} Rewrite:",
+    "where": "App 9.6.6"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Final placebo decomposition raises description accuracy from the Elicit select-then-generate baseline to 65%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "description accuracy",
+   "value": "65",
+   "unit": "%",
+   "baseline_value": "25",
+   "n": 20,
+   "setup": "Placebo case study, held-out test set, text-davinci-002 + monoT5 baseline from Elicit; final = rank-and-answer over paragraphs",
+   "note": null,
+   "where": "Sec 4.2.3",
+   "quote": "25% correct →65%; p = 0.025",
+   "table": "Table 2, row Final decomposition, column Description (n=20)"
+  },
+  {
+   "claim": "Final placebo decomposition raises classification accuracy from 71% to 98%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "classification accuracy",
+   "value": "98",
+   "unit": "%",
+   "baseline_value": "71",
+   "n": 48,
+   "setup": "Placebo case study, held-out test set, text-davinci-002 + monoT5 baseline from Elicit; ensemble of trial-arm and per-paragraph classification",
+   "note": null,
+   "where": "Sec 4.2.2",
+   "quote": "71% correct →98%; p=0.0004"
+  },
+  {
+   "claim": "Adherence accuracy rises from 53% to 70% with perplexity selection plus auto-few-shot generation.",
+   "kind": "measured",
+   "source": null,
+   "metric": "adherence accuracy",
+   "value": "70",
+   "unit": "%",
+   "baseline_value": "53",
+   "n": 135,
+   "setup": "Participant flow case study, held-out test set, text-davinci-002; Fisher's exact test treating answers as independent",
+   "note": "Footnote 5: answers are clustered by trial and paper, so the true p-value is somewhat higher.",
+   "where": "Sec 5.3.4",
+   "quote": "53% correct →70% for adherence, p=0.0065"
+  },
+  {
+   "claim": "Experiment extraction accuracy rises from 40% to 70% (perplexity selection + auto-few-shot generation).",
+   "kind": "measured",
+   "source": null,
+   "metric": "experiments accuracy",
+   "value": "70",
+   "unit": "%",
+   "baseline_value": "40",
+   "n": 50,
+   "setup": "Participant flow case study, held-out test set, text-davinci-002",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row + perplexity selection + auto-few-shot generation, column Experiments"
+  },
+  {
+   "claim": "Trial arm extraction accuracy rises from 55% to 86% with the same configuration.",
+   "kind": "measured",
+   "source": null,
+   "metric": "arms accuracy",
+   "value": "86",
+   "unit": "%",
+   "baseline_value": "55",
+   "n": 50,
+   "setup": "Participant flow case study, held-out test set, text-davinci-002",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row + perplexity selection + auto-few-shot generation, column Arms"
+  },
+  {
+   "claim": "The decomposition transfers: QASPER accuracy rises from 38% to 69% with perplexity selection + few-shot demonstrations (F1 15 to 32).",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "69",
+   "unit": "%",
+   "baseline_value": "38",
+   "n": 100,
+   "setup": "QASPER NLP QA, 100 sampled questions, participant-flow decomposition reused unchanged; semantic-equivalence accuracy",
+   "note": "F1 column is 15% to 32%; decompositions were not adapted to maximise F1.",
+   "where": "Table 4",
+   "table": "Table 4, row + perplexity selection + auto-few-shot generation, column Accuracy"
+  },
+  {
+   "claim": "In the baseline, 51 of 51 adherence false negatives came from the selection step, so failures were in selection, not generation.",
+   "kind": "measured",
+   "source": null,
+   "metric": "false negatives from selection",
+   "value": "51/51",
+   "unit": "count",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Participant flow case study, held-out test set, text-davinci-002, baseline Elicit top-1 monoT5 paragraph",
+   "note": null,
+   "where": "Sec 5.3.1",
+   "quote": "all (51/51) of these false negatives resulted from errors at the selection stage"
+  },
+  {
+   "claim": "With an oracle for selection, baseline generation reaches only 77% adherence accuracy, showing generation also needs work.",
+   "kind": "measured",
+   "source": null,
+   "metric": "adherence accuracy, oracle selection",
+   "value": "77",
+   "unit": "%",
+   "baseline_value": "53",
+   "n": 135,
+   "setup": "Participant flow case study, held-out test set, text-davinci-002",
+   "note": null,
+   "where": "Sec 5.3.1",
+   "quote": "accuracy on the adherence task rose to 77%"
+  },
+  {
+   "claim": "Zero-shot perplexity selection with text-davinci-002 lifts paragraph recall on adherence from 0.09 to 0.76.",
+   "kind": "measured",
+   "source": null,
+   "metric": "paragraph recall",
+   "value": "0.76",
+   "unit": "recall",
+   "baseline_value": "0.09",
+   "n": null,
+   "setup": "Participant flow case study, held-out test set, text-davinci-002; score = inverse perplexity of the 'not mentioned' completion",
+   "note": null,
+   "where": "Sec 5.3.2",
+   "quote": "from 0.09 to 0.76 on the adherence task"
+  },
+  {
+   "claim": "Fine-tuned T-Few classifier reaches paragraph classification F1 0.77 against 0.10 for the Elicit top-1 approach.",
+   "kind": "measured",
+   "source": null,
+   "metric": "paragraph classification F1",
+   "value": "0.77",
+   "unit": "F1",
+   "baseline_value": "0.10",
+   "n": null,
+   "setup": "Participant flow case study, held-out test set, text-davinci-002; T0-3B with T-Few on weakly bootstrapped, expert-moderated labels",
+   "note": null,
+   "where": "Sec 5.3.2",
+   "quote": "F1 = 0.10 for Elicit top-1 approach versus F1 = 0.77 via T-Few"
+  },
+  {
+   "claim": "Regex keyword decision tree scores 94% on placebo classification, nearly matching the 98% decomposition, but only 10% on description.",
+   "kind": "measured",
+   "source": null,
+   "metric": "classification accuracy",
+   "value": "94",
+   "unit": "%",
+   "baseline_value": "98",
+   "n": 48,
+   "setup": "Placebo case study, held-out test set, text-davinci-002 + monoT5 baseline from Elicit",
+   "note": null,
+   "where": "Table 2 / Sec 4.2.4",
+   "table": "Table 2, row Keyword decision tree, column Classification (n=48)"
+  },
+  {
+   "claim": "Stuffing as much of the paper as fits (4096 tokens incl. completion) with step-by-step prompting scores 69% classification, 30% description, about the Elicit baseline.",
+   "kind": "measured",
+   "source": null,
+   "metric": "classification accuracy",
+   "value": "69",
+   "unit": "%",
+   "baseline_value": "71",
+   "n": 48,
+   "setup": "Placebo case study, held-out test set, text-davinci-002 + monoT5 baseline from Elicit",
+   "note": null,
+   "where": "Table 2, App 9.5.5",
+   "table": "Table 2, row Stuff paper in prompt, column Classification (n=48)"
+  },
+  {
+   "claim": "Pruning raised paragraph precision from 0.14 to 0.29 but cut recall from 0.77 to 0.54; answer accuracy rose only from 0.55 to 0.6.",
+   "kind": "measured",
+   "source": null,
+   "metric": "precision",
+   "value": "0.29",
+   "unit": "precision",
+   "baseline_value": "0.14",
+   "n": null,
+   "setup": "Participant flow case study, held-out test set, text-davinci-002, experiments task",
+   "note": null,
+   "where": "Sec 5.3.2",
+   "quote": "pruning improved precision from 0.14 to 0.29 while reducing recall from 0.77 to 0.54"
+  },
+  {
+   "claim": "Decontextualization helped experiments and arms (0.65, 0.75) but not adherence (0.54).",
+   "kind": "measured",
+   "source": null,
+   "metric": "experiments accuracy",
+   "value": "0.65",
+   "unit": "accuracy",
+   "baseline_value": "0.40",
+   "n": 50,
+   "setup": "Participant flow case study, held-out test set, text-davinci-002; few-shot decontextualization prompt, not systematically evaluated",
+   "note": null,
+   "where": "Sec 5.3.3",
+   "quote": "0.65 for experiments and 0.75 for arms, compared to 0.40 and 0.55 for the baselines"
+  },
+  {
+   "claim": "Few-shot prompts built from expert demonstrations (positive examples only) improve adherence accuracy from 0.53 to 0.70.",
+   "kind": "measured",
+   "source": null,
+   "metric": "adherence accuracy",
+   "value": "0.70",
+   "unit": "accuracy",
+   "baseline_value": "0.53",
+   "n": 135,
+   "setup": "Participant flow case study, held-out test set, text-davinci-002",
+   "note": null,
+   "where": "Sec 5.3.3",
+   "quote": "from 0.53 to 0.70 overall for this task"
+  },
+  {
+   "claim": "Information about adherence is present for only 56 of 135 arms (41%), so adherence is mostly a mentioned vs not-mentioned classification.",
+   "kind": "measured",
+   "source": null,
+   "metric": "arms with adherence info",
+   "value": "56/135",
+   "unit": "count",
+   "baseline_value": null,
+   "n": 135,
+   "setup": "Participant flow case study, held-out test set, text-davinci-002",
+   "note": null,
+   "where": "Sec 5.2",
+   "quote": "information about adherence is only available for 56/135 arms"
+  },
+  {
+   "claim": "Press et al. (2022) report a compositionality gap of around 40%.",
+   "kind": "reported",
+   "source": "Press et al. (2022), Measuring and narrowing the compositionality gap in language models",
+   "metric": "compositionality gap",
+   "value": "40",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Quoted from prior work",
+   "note": null,
+   "where": "Sec 2.1",
+   "quote": "to be around 40%"
+  }
+ ],
+ "limits": [
+  "Process supervision here means the developer checking steps with gold answers available; no claim for settings without ground truth.",
+  "Small test sets (n=20 to 135); 100 QASPER questions; p-values assume independent answers and are understated.",
+  "Models are text-davinci-002 and monoT5; authors expect simulation-style prompts to matter less with instruction-tuned models.",
+  "Decontextualization context quality not systematically evaluated; textbook and StatsExchange prompts not evaluated.",
+  "Keyword regex nearly matches decomposition on placebo classification, so the task is easy; authors note it does not generalise to adherence.",
+  "Decompositions are simple; cost of many LM calls vs end-to-end not measured (distillation listed as future work).",
+  "Missing: temperature, max tokens, seeds, perplexity threshold value, dev set sizes."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "iterated decomposition",
+   "definition": "a human-in-the-loop workflow that incrementally improves a task decomposition through error diagnosis and amendment",
+   "where": "Sec 2.2"
+  },
+  {
+   "term": "process supervision",
+   "definition": "approaches to LM training and deployment that rely on human-understandable intermediate steps",
+   "where": "Sec 2"
+  },
+  {
+   "term": "compositionality gap",
+   "definition": "the fraction of questions that the model answers incorrectly out of the questions for which the model answers all of the sub-questions correctly (Press et al. 2022)",
+   "where": "Sec 2.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Elicit select-then-generate (monoT5 + text-davinci-002)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Deployed baseline",
+   "quote": null
+  },
+  {
+   "work": "Press et al., compositionality gap",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Gap about 40%",
+   "quote": null
+  },
+  {
+   "work": "Liu et al., T-Few",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Low-rank fine-tuning for selection classifiers",
+   "quote": null
+  },
+  {
+   "work": "Choi et al., Decontextualization",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Inspiration for decontextualization stage",
+   "quote": null
+  },
+  {
+   "work": "Eisenstein et al., Honest Students from Untrusted Teachers",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Few-shot decontextualization prompt basis",
+   "quote": null
+  },
+  {
+   "work": "QASPER (Dasigi et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Generalisation test",
+   "quote": null
+  },
+  {
+   "work": "Creswell et al., Selection-Inference",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Alternating selection and inference",
+   "quote": null
+  },
+  {
+   "work": "Wu et al., Recursively Summarizing Books",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Recursive decomposition with human feedback",
+   "quote": null
+  },
+  {
+   "work": "Yao et al., ReAct",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Interleaved reasoning/acting",
+   "quote": null
+  },
+  {
+   "work": "Khot et al., Decomposed Prompting",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Modular decomposition",
+   "quote": null
+  },
+  {
+   "work": "Dohan et al., Language Model Cascades",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Formal framing of LM programs",
+   "quote": null
+  },
+  {
+   "work": "Uesato et al., process- and outcome-based feedback",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Process vs outcome feedback on math",
+   "quote": null
+  },
+  {
+   "work": "LangChain (Chase)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Chaining library",
+   "quote": null
+  },
+  {
+   "work": "PromptChainer / AI Chains (Wu et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Visual chaining tools",
+   "quote": null
+  },
+  {
+   "work": "Factored Cognition Primer",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Tutorial from same group",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "Iterated decomposition is a workflow for human-in-the-loop language model programming.",
+   "page": 5,
+   "why": "The five-step loop: decompose, run, evaluate, inspect failing subtasks, improve, repeat"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "The Interactive Composition Explorer (ICE) is an open-source debugger for language model execution traces.",
+   "page": 6,
+   "why": "Shows call tree, table and detail pane"
+  },
+  {
+   "figure": "Table 3",
+   "caption": "Through iteration on the participant flow decomposition, accuracy improved",
+   "page": 14,
+   "why": "Ablation of every selection/generation change; shows which tricks helped which task"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 1, Sec 5.3.2",
+   "snippet": "score = exp( (1/t) * sum_{i=1..t} log p_theta(x_i | x_<i) ) over the tokens of 'The answer to the question is not mentioned in the excerpt'; ranked by inverse perplexity",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Ligature characters (fi, fl) in the cached text; equation 1 garbled in layout. No embedded instructions found."
+ ]
+}

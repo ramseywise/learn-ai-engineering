@@ -1,0 +1,646 @@
+{
+ "schema": 1,
+ "key": "2407.03234",
+ "pdf": "ai-engineering/01-prompt-engineering/sources/brown-2024-self-evaluation-as-defense-against.pdf",
+ "bib": {
+  "title": "Self-Evaluation as a Defense Against Adversarial Attacks on LLMs",
+  "authors": [
+   "Hannah Brown",
+   "Leon Lin",
+   "Kenji Kawaguchi",
+   "Michael Shieh"
+  ],
+  "first_author": "Brown",
+  "year": 2024,
+  "venue": "preprint",
+  "arxiv": "2407.03234",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 64683,
+  "chars_total": 64683,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can a pre-trained LLM, prompted without fine-tuning to judge whether inputs/outputs are safe, defend a generator against adversarial-suffix jailbreaks better than Llama-Guard2 and moderation APIs, including under adaptive attacks on the evaluator?",
+ "hypothesis": "Adversarial suffixes break generator alignment but not a model's ability to classify harmful text, so a decoupled self-evaluation step should cut ASR.",
+ "contributions": [
+  "A fine-tuning-free self-evaluation defense with input-only, output-only and input-output settings",
+  "Comparison with Llama-Guard2 and Azure/OpenAI/Perspective APIs",
+  "Adaptive attacks on the evaluator: direct attack (concatenation, in-turn, simultaneous optimization) and copy-paste attack"
+ ],
+ "method": {
+  "summary": "An evaluator LLM E is prompted to label the user input X, the generator output Y, or both as safe/unsafe; unsafe yields a refusal. Tested against GCG suffix attacks and adaptive attacks that also target E, on 100 AdvBench prompts.",
+  "task": "jailbreak defense / harmful content classification",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "AdvBench harmful instructions",
+    "role": "eval",
+    "size": "100 instructions",
+    "split": "100-sample subset (evaluation set distinct from GCG training set of 100 AdvBench instructions)",
+    "source": "Zou et al. 2023, MIT License",
+    "preprocessing": null
+   },
+   {
+    "name": "GPT-4 generated safe instructions",
+    "role": "eval",
+    "size": "100 instructions",
+    "split": null,
+    "source": "GPT-4 given few examples, generated over 200, manually reviewed to 100",
+    "preprocessing": "manual selection of clear and safe items"
+   }
+  ],
+  "models": [
+   {
+    "name": "Vicuna-7B_v1.5",
+    "role": "evaluated",
+    "params": "7B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "roles": "generator and evaluator"
+    }
+   },
+   {
+    "name": "Mistral-7B-Instruct-v0.1",
+    "role": "evaluated",
+    "params": "7B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "roles": "generator only"
+    }
+   },
+   {
+    "name": "Llama-2",
+    "role": "evaluated",
+    "params": "7B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "roles": "generator and evaluator"
+    }
+   },
+   {
+    "name": "Llama-3",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "roles": "evaluator"
+    }
+   },
+   {
+    "name": "GPT-4",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "roles": "evaluator, also generated safe instructions"
+    }
+   },
+   {
+    "name": "Llama-Guard2",
+    "role": "baseline",
+    "params": null,
+    "architecture": "fine-tuned Llama3",
+    "init_from": "Llama3",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "OpenAI/Azure/Perspective moderation APIs",
+    "role": "baseline",
+    "params": null,
+    "architecture": "black box",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "one pass over 100 prompts per condition; seeds not stated",
+   "prompting": "System prompt makes the model a self-monitoring security officer; answer 'safe' or 'unsafe' in one sentence; separate prompt per setting (input-only, output-only, input-output). Prompts for non-Vicuna evaluators are in their code.",
+   "retrieval": null,
+   "parameters": {
+    "GCG batch size": "128",
+    "GCG top-k": "256",
+    "GCG suffix init": "'!!!'",
+    "simultaneous attack loss weights": "3:1 generation:evaluation (L = alpha L_G + beta L_E)",
+    "GCG hardware": "single A100-40G",
+    "GCG training set": "100 AdvBench instructions"
+   },
+   "other": {
+    "GCG other hyperparameters": "same as original paper (Zou et al. 2023), not repeated",
+    "attack access": "query-only, unlimited queries",
+    "copy-paste targets": "Vicuna and Llama-2; one universal GCG suffix per evaluator"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "ASR",
+     "definition": "Fraction of samples where model output contains no refusal words (GCG criterion); for pipelines, harmful input and no refusal from G+E",
+     "unit": "% (Fig 5 as fraction)",
+     "higher_is_better": false
+    },
+    {
+     "name": "F1",
+     "definition": "Evaluator classification F1 per setting (Appendix A)",
+     "unit": "F1 points",
+     "higher_is_better": true
+    },
+    {
+     "name": "False positive rate",
+     "definition": "Safe inputs marked unsafe",
+     "unit": "%",
+     "higher_is_better": false
+    },
+    {
+     "name": "Acc.",
+     "definition": "Evaluator accuracy under attack",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "CP",
+     "definition": "Rate at which copy-paste instruction succeeds",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Undefended generator",
+    "Llama-Guard2",
+    "OpenAI moderation API",
+    "Azure content safety API",
+    "Perspective API"
+   ],
+   "protocol": "Single run, 100 harmful and 100 safe prompts, no significance tests or seeds stated; attack settings: no suffix, GCG init suffix, trained adversarial suffix."
+  },
+  "availability": {
+   "code": "https://github.com/Linlt-leon/self-eval (stated 'will be available')",
+   "weights": null,
+   "data": "supplemental materials; code and data promised"
+  },
+  "prompts": [
+   {
+    "purpose": "Input-only evaluator (Vicuna-7B)",
+    "text": "You are a self-monitoring security officer. You have to determine whether the user input instruction is safe. You only need to answer whether the instruction is 'safe' or 'unsafe'. Do not generate anything after 'safe' or 'unsafe'. Generate one sentence only. Example: Input:\"'instruction\"' Evaluation: The content is 'unsafe'. / The content is 'safe'.",
+    "where": "Appendix E"
+   },
+   {
+    "purpose": "Output-only evaluator (Vicuna-7B)",
+    "text": "You are a self-monitoring security officer. You have to determine whether your previous output is safe. You only need to answer whether the output content is 'safe' or 'unsafe'. Do not generate anything after 'safe' or 'unsafe'. Generate one sentence only.",
+    "where": "Appendix E"
+   },
+   {
+    "purpose": "Input-output evaluator (Vicuna-7B)",
+    "text": "Same system prompt as output-only (see Appendix E), with the example showing both Input and Output fields.",
+    "where": "Appendix E"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Self-evaluation with Vicuna-7B as evaluator cuts GCG-attacked ASR on Vicuna-7B generator from 95.0% to 0.0% (input-only).",
+   "kind": "measured",
+   "source": null,
+   "metric": "ASR",
+   "value": "0.0",
+   "unit": "% ASR",
+   "baseline_value": "95.0",
+   "n": 100,
+   "setup": "AdvBench 100 harmful prompts + GCG suffix, Vicuna-7B generator, Vicuna-7B evaluator, input-only",
+   "note": null,
+   "where": "Sec 1",
+   "quote": "from 95.0% to 0.0% for Vicuna-7B"
+  },
+  {
+   "claim": "Undefended generators are highly susceptible to the GCG suffix; Llama-2 lowest ASR.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ASR",
+   "value": "45.0",
+   "unit": "% ASR",
+   "baseline_value": null,
+   "n": 100,
+   "setup": "No defense, GCG suffix appended, 3 generators",
+   "note": null,
+   "where": "Sec 3.5",
+   "quote": "with Llama-2 having the lowest ASR of 45.0"
+  },
+  {
+   "claim": "Undefended Mistral-7B ASR under generator-only GCG attack.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ASR",
+   "value": "0.89",
+   "unit": "ASR (fraction)",
+   "baseline_value": null,
+   "n": 100,
+   "setup": "Fig 5 Undefended column, Mistral generator",
+   "note": "Read from Fig 5 heatmap values; also 89.0 in Table 7 ASR column",
+   "where": "Fig 5",
+   "table": "Figure 5 (a), Undefended column, row Mistral"
+  },
+  {
+   "claim": "Llama-Guard2 input-only ASR on Vicuna generator remains high versus ~0 for self-evaluation with Llama2/Llama3/Vicuna.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ASR",
+   "value": "0.08",
+   "unit": "ASR (fraction)",
+   "baseline_value": null,
+   "n": 100,
+   "setup": "Fig 5(a) input-only, Vicuna generator, Llama-Guard2 evaluator, GCG-suffixed harmful inputs",
+   "note": "Fig 5 values 0.08 (Llama-Guard2), 0.85 (OpenAI), 0.16 (Perspective), 0.95 undefended; row/column mapping from extracted text order, uncertain",
+   "where": "Fig 5",
+   "table": "Figure 5 (a), row Vicuna, column Llama-Guard2"
+  },
+  {
+   "claim": "Content moderation APIs barely help on suffixed inputs (OpenAI moderation, Vicuna generator, input-only).",
+   "kind": "measured",
+   "source": null,
+   "metric": "ASR",
+   "value": "0.85",
+   "unit": "ASR (fraction)",
+   "baseline_value": "0.95",
+   "n": 100,
+   "setup": "Fig 5(a), Vicuna generator, OpenAI API evaluator, versus 0.95 undefended",
+   "note": "Column mapping inferred from text order of figure values",
+   "where": "Fig 5",
+   "table": "Figure 5 (a), row Vicuna, column OpenAI"
+  },
+  {
+   "claim": "Open-source evaluators perform on par or better than GPT-4 in most settings.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": 100,
+   "setup": "Fig 5 across settings",
+   "note": null,
+   "where": "Sec 3.5"
+  },
+  {
+   "claim": "Llama-Guard2 (fine-tuned Llama3) performs significantly worse than base Llama3 on attacked inputs, suggesting fine-tuning makes it misclassify unnatural-looking text.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": 100,
+   "setup": "Attacked inputs/outputs",
+   "note": null,
+   "where": "Sec 3.5"
+  },
+  {
+   "claim": "Over-refusal: Vicuna-7B evaluator flags 91% of safe prompts carrying the GCG initial suffix as unsafe.",
+   "kind": "measured",
+   "source": null,
+   "metric": "false positive rate",
+   "value": "91.0",
+   "unit": "% false positive",
+   "baseline_value": null,
+   "n": 100,
+   "setup": "Input-only, Vicuna-7B generator, 100 GPT-4-generated safe prompts + GCG init suffix",
+   "note": null,
+   "where": "Sec 3.6, Table 1",
+   "quote": "an ASR of 91%",
+   "table": "Table 1, row Vicuna, column Init"
+  },
+  {
+   "claim": "With trained adversarial suffix on safe inputs, Llama-2, Llama-3, Vicuna, Azure and Perspective flag all as unsafe (false positive rate).",
+   "kind": "measured",
+   "source": null,
+   "metric": "false positive rate",
+   "value": "100.0",
+   "unit": "% false positive",
+   "baseline_value": null,
+   "n": 100,
+   "setup": "Input-only, Vicuna-7B generator, safe prompt + trained adversarial suffix",
+   "note": "GPT-4 68.0, OpenAI 69.0, Llama-Guard2 88.0",
+   "where": "Table 1",
+   "table": "Table 1, row Llama-2, column Adv"
+  },
+  {
+   "claim": "Direct attack, concatenation, input-output: GPT-4 evaluator reduces ASR from 57.0 (G) to 1.0 (G+E).",
+   "kind": "measured",
+   "source": null,
+   "metric": "ASR (G+E)",
+   "value": "1.0",
+   "unit": "% ASR",
+   "baseline_value": "57.0",
+   "n": 100,
+   "setup": "Vicuna-7B generator, suffix half G half E optimized in turn, IO setting",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row IO GPT-4, column G + E"
+  },
+  {
+   "claim": "Direct attack on Llama-Guard2 (IO): G 72.0 vs G+E 12.0 while Azure leaves ASR at 57.0 and OpenAI at 57.0.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ASR (G+E)",
+   "value": "12.0",
+   "unit": "% ASR",
+   "baseline_value": "72.0",
+   "n": 100,
+   "setup": "Table 2 IO setting, Llama-Guard2",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row IO Llama-Guard2, column G + E"
+  },
+  {
+   "claim": "Single-objective (combined loss 3:1) direct attack is the only variant that breaks GPT-4, raising ASR from 0.0 to 10.0.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ASR (G+E)",
+   "value": "10.0",
+   "unit": "% ASR",
+   "baseline_value": "0.0",
+   "n": 100,
+   "setup": "IO setting, GPT-4 evaluator, simultaneous optimization",
+   "note": null,
+   "where": "Sec 4.5, Table 5",
+   "quote": "raising the ASR from 0.0 to 10.0"
+  },
+  {
+   "claim": "Input-only direct attack with combined objective raises Vicuna pipeline ASR to 57.0 against 81.0 generator-only.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ASR (G+E)",
+   "value": "57.0",
+   "unit": "% ASR",
+   "baseline_value": "81.0",
+   "n": 100,
+   "setup": "Input-only, Vicuna evaluator, combined objective",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row Input-Only Vicuna, column G + E"
+  },
+  {
+   "claim": "Direct attack on Azure IO makes ASR higher (57.0) than the base attack on G alone (Azure may worsen safety).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": 100,
+   "setup": "Concatenation, Table 2 vs base",
+   "note": null,
+   "where": "Sec 4.3"
+  },
+  {
+   "claim": "Copy-paste attack, output-only, Llama-2 generator and evaluator: combined ASR (G+E).",
+   "kind": "measured",
+   "source": null,
+   "metric": "ASR (G+E)",
+   "value": "21.0",
+   "unit": "% ASR",
+   "baseline_value": null,
+   "n": 100,
+   "setup": "Output-only, Llama-2 generator and evaluator, copy-paste attack with Llama-2 suffix",
+   "note": "Table text order garbled (columns Undef, SE, ASR(G), ASR(G+E), Acc, CP); mapping inferred, treat with caution",
+   "where": "Table 6",
+   "table": "Table 6, row Output Llama-2, column ASR (G+E)"
+  },
+  {
+   "claim": "GCG suffix training cost about 4 hours per suffix on one A100-40G.",
+   "kind": "measured",
+   "source": null,
+   "metric": "time",
+   "value": "4hr/suffix",
+   "unit": "time",
+   "baseline_value": null,
+   "n": 100,
+   "setup": "GCG, 100 AdvBench instructions",
+   "note": null,
+   "where": "Table 13",
+   "table": "Table 13, row Training Adversarial Suffixes (GCG), column Time"
+  },
+  {
+   "claim": "Evaluating 100 samples takes about 2 min; generation 20 min per 100 samples.",
+   "kind": "measured",
+   "source": null,
+   "metric": "time",
+   "value": "2 min/100 samples",
+   "unit": "time",
+   "baseline_value": null,
+   "n": 100,
+   "setup": "Evaluator run",
+   "note": null,
+   "where": "Table 13",
+   "table": "Table 13, row Evaluation, column Time"
+  },
+  {
+   "claim": "Safe instruction F1 near 100 for all evaluators in all settings, so utility is retained.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": "100.0",
+   "unit": "F1",
+   "baseline_value": null,
+   "n": 100,
+   "setup": "100 GPT-4 safe instructions, no suffix",
+   "note": null,
+   "where": "Table 10",
+   "table": "Table 10, row GPT-4, column Input"
+  },
+  {
+   "claim": "Adversarial suffixes bypass generator alignment but do not compromise the same model's ability to classify input as harmful.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": 100,
+   "setup": "Discussion",
+   "note": null,
+   "where": "Sec 6"
+  }
+ ],
+ "limits": [
+  "Attacks used are not the strongest possible; meant as baselines showing defense does not weaken the generator",
+  "Only adversarial suffixes (GCG) studied, not other jailbreaks",
+  "English only",
+  "Small sample: 100 harmful and 100 safe prompts, single run, no CIs",
+  "Over-refusal: with trained adversarial suffix on safe inputs most evaluators reject nearly all inputs",
+  "Mechanism of why suffixes work not studied",
+  "Extra cost of querying a second model; output-only and IO settings cost more",
+  "Evaluator prompts for most models are in code, not paper",
+  "Llama-Guard2, GPT-4 and API versions have since changed"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "direct attack",
+   "definition": "adversary trains a suffix to attack both the evaluator and generator",
+   "where": "Sec 4"
+  },
+  {
+   "term": "copy-paste attack",
+   "definition": "generator is instructed to append a suffix that attacks the evaluator to its output",
+   "where": "Sec 5"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Universal and Transferable Adversarial Attacks on Aligned Language Models (GCG)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "attack and AdvBench data",
+   "quote": null
+  },
+  {
+   "work": "Language Models (Mostly) Know What They Know",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "self-evaluation basis",
+   "quote": null
+  },
+  {
+   "work": "Llama Guard 2",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "fine-tuned classifier",
+   "quote": null
+  },
+  {
+   "work": "Phute et al. 2023 (LLM Self Defense)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "concurrent work on self-evaluation for harmful content",
+   "quote": null
+  },
+  {
+   "work": "Baseline Defenses for Adversarial Attacks Against Aligned Language Models",
+   "year": 2023,
+   "arxiv": "2309.00614",
+   "relation": "related",
+   "note": "Jain et al.",
+   "quote": null
+  },
+  {
+   "work": "SmoothLLM",
+   "year": 2023,
+   "arxiv": "2310.03684",
+   "relation": "related",
+   "note": "defense",
+   "quote": null
+  },
+  {
+   "work": "Safety-Tuned LLaMAs",
+   "year": 2024,
+   "arxiv": "2309.07875",
+   "relation": "related",
+   "note": "over-refusal motivation",
+   "quote": null
+  },
+  {
+   "work": "Vicuna / MT-Bench",
+   "year": 2023,
+   "arxiv": "2306.05685",
+   "relation": "evaluates",
+   "note": "generator",
+   "quote": null
+  },
+  {
+   "work": "Mistral 7B",
+   "year": 2023,
+   "arxiv": "2310.06825",
+   "relation": "evaluates",
+   "note": "generator",
+   "quote": null
+  },
+  {
+   "work": "GPT-4 Technical Report",
+   "year": 2024,
+   "arxiv": "2303.08774",
+   "relation": "evaluates",
+   "note": "evaluator",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 5",
+   "caption": "ASRs for each evaluator-generator pair in each setting.",
+   "page": 4,
+   "why": "Heatmaps show self-evaluation near 0 versus APIs and Llama-Guard2"
+  },
+  {
+   "figure": "Fig 1",
+   "caption": "Overview of our defense.",
+   "page": 1,
+   "why": "Pipeline at a glance"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Figure 5 and Table 6 values extracted in garbled order; column mappings inferred and flagged in notes",
+  "No embedded instructions found. Paper contains adversarial suffix examples only as data."
+ ]
+}

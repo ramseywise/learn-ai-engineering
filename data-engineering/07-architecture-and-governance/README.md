@@ -37,7 +37,7 @@
 - Measure first. Run a representative query on one machine before buying a cluster, and remember that it tests volume and not concurrency.
 - A mesh is an ownership model, not a storage choice. Each domain still runs an MDW, a fabric or a lakehouse.
 - Contracts before decentralisation: ownership without contracts moves the breakage around.
-- Start with a shared platform and domain ownership of data (Serra's Type 1, Strengholt's topology 2). Decentralise technology last, if ever.
+- Start with a shared platform and domain ownership of data (Serra's Type 1, close to Strengholt's topology 2; the pairing and the advice are ours). Decentralise technology last, if ever.
 - A standard takes effect only where a step can fail it, with the failure routed to a named owner.
 - A control the user can alter is no control. Attack your own masking as the user.
 - Hashed is not anonymous. Pseudonymised data stays personal data, so use a keyed hash with the key outside the lake.

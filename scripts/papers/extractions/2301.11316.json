@@ -1,0 +1,217 @@
+{
+ "schema": 1,
+ "key": "2301.11316",
+ "pdf": "data-engineering/sources/raissi-2023-open-problems-applied-deep-learning.pdf",
+ "bib": {
+  "title": "Open Problems in Applied Deep Learning",
+  "authors": [
+   "Maziar Raissi"
+  ],
+  "first_author": "Raissi",
+  "year": 2023,
+  "venue": "preprint",
+  "arxiv": "2301.11316",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 53659,
+  "chars_total": 110931,
+  "engine": "pymupdf",
+  "skipped": "Reference list (offset 53659 onward) skimmed only for lineage."
+ },
+ "type": "position",
+ "question": "What open problems arise when the model-iteration step of machine learning (hyper-parameter, architecture and data-augmentation search) is formulated as a bi-level optimization and extended from supervised learning to other learning settings?",
+ "hypothesis": "Automating the iteration step (AutoML), which has shown promise on image classification, may not carry over to harder settings; the paper says this remains to be tested.",
+ "contributions": [
+  "Formulates the ML mechanism as a bi-level optimization: an inner training loop and an outer iteration loop over hyper-parameters (Eq. 1).",
+  "Surveys, task by task from supervised to physics-informed learning, which performance metrics and design spaces make the iteration step an open problem."
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "Hyper-parameter and architecture search by RL or evolution is very expensive, costing tens of thousands of GPU-hours.",
+   "kind": "reported",
+   "source": "Pham et al. 2018 [34]; Liu et al. 2018 [35] (as cited)",
+   "metric": "GPU-hours",
+   "value": "32,400-43,200",
+   "unit": "GPU-hours",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Neural architecture search for image classification; the paper equates this to 450 GPUs for 3-4 days.",
+   "quote": "32,400-43,200\nGPU-Hours, the equivalent of using 450 GPUs for 3-4 days",
+   "table": null,
+   "note": null,
+   "where": "Sec. 2, p. 4"
+  },
+  {
+   "claim": "Parameter sharing (warm-starting from shared weights held in memory) can cut the cost of solving Eq. 1 by up to 1000x.",
+   "kind": "reported",
+   "source": "Pham et al. 2018 [34] (as cited)",
+   "metric": "speed-up",
+   "value": "1000x",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Parameter sharing trades computation for memory; 'in some cases', about 16 GPU-hours.",
+   "quote": "This could result in up to 1000x faster solutions to Eq. 1\n(e.g., 16 GPU-Hours) in some cases.",
+   "table": null,
+   "note": "Source page 4-5 line break; the 16 GPU-hours figure is given as an example, not as a measured baseline comparison.",
+   "where": "Sec. 2, p. 4-5"
+  },
+  {
+   "claim": "The iteration step (steps 1-4 repeated) is described as the most time- and resource-consuming part of the ML pipeline and is often overlooked.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "General statement about building ML solutions; steps 1-4 'repeated tens of thousands of times'. No data given.",
+   "quote": "The iteration step is a crucial piece\nof the machine learning pipeline and is usually the most time and resource\nconsuming step while often being overlooked.",
+   "table": null,
+   "note": null,
+   "where": "Sec. 1, p. 2"
+  },
+  {
+   "claim": "The paper frames ML as a bi-level optimization: inner loop minimizes training loss over weights w, outer loop optimizes validation metric over hyper-parameters alpha.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Eq. 1: min_alpha M_val(w*(alpha), alpha) s.t. w*(alpha)=argmin_w L_train(w, alpha).",
+   "quote": "The inner level optimization loop entails minimizing a\nproperly chosen loss function evaluated on the training data.",
+   "table": null,
+   "note": null,
+   "where": "Abstract"
+  },
+  {
+   "claim": "AutoML has shown promise on simple supervised problems such as image classification, but success on harder problems is untested.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Concluding remark; no experiments in the paper.",
+   "quote": "It remains to be seen and tested in practice.",
+   "table": null,
+   "note": null,
+   "where": "Sec. 4, p. 21"
+  }
+ ],
+ "limits": [
+  "Position paper: no experiments, datasets or measurements of its own; all numbers are cited from other work.",
+  "Scope is the training/iteration step (step 5 of 7); serving, monitoring and retraining get one sentence in the introduction and are not analysed.",
+  "Proposed directions (differentiable metric proxies, uncertainty-weighted multi-objective losses, human-in-the-loop RL) are suggestions, untested here.",
+  "Dated: written January 2023, before most LLM-era evaluation, RLHF and LLMOps practice; mentions ChatGPT only in passing."
+ ],
+ "practices": [
+  "Treat the ML workflow as 7 steps: data as 'source code', model, training, validation, iteration, test, then serving with constant monitoring and retraining (Sec. 1, Fig. 1).",
+  "Use experiment tracking, dataset versioning and model management (e.g. Weights & Biases) to support the manual iteration process (Sec. 2).",
+  "Keep the data split to train, validation and test; avoid fragmenting data further to tune hyper-hyper-parameters (Sec. 3.1).",
+  "Choose the performance metric for the iteration loop deliberately: accuracy is discrete and non-differentiable, and metrics are ill-defined for unsupervised, generative and physics-informed settings (Sec. 2-3).",
+  "When one metric is insufficient, combine several (accuracy plus FLOPs, latency, memory) as a weighted multi-objective, but the weights are an open problem (Sec. 3.1).",
+  "Reduce the computational cost of iteration to reduce carbon footprint (Sec. 1)."
+ ],
+ "terms": [
+  {
+   "term": "iteration process",
+   "definition": "the outer level optimization loop that maximizes a performance metric on validation data to pursue optimal model hyper-parameters, including model engineering, experiment tracking, dataset versioning and augmentation",
+   "where": "Abstract"
+  },
+  {
+   "term": "hyper-hyper-parameters",
+   "definition": "additional hyper-parameters, such as objective weights, introduced for the outer optimization problem",
+   "where": "Sec. 2"
+  },
+  {
+   "term": "AutoML",
+   "definition": "Automatic Machine Learning: automating the iteration process rather than leaving it to practitioner intuition",
+   "where": "Abstract"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "DARTS: Differentiable Architecture Search (Liu, Simonyan, Yang)",
+   "year": 2018,
+   "arxiv": "1806.09055",
+   "relation": "related",
+   "note": "Cited [35] as model for differentiable gradient-based bi-level solution; recommended approach.",
+   "quote": null
+  },
+  {
+   "work": "Efficient Neural Architecture Search via Parameters Sharing (Pham et al.)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Cited [34] for parameter-sharing speed-up.",
+   "quote": null
+  },
+  {
+   "work": "Energy and Policy Considerations for Deep Learning in NLP (Strubell et al.)",
+   "year": 2019,
+   "arxiv": "1906.02243",
+   "relation": "related",
+   "note": "Cited [2] for carbon footprint of model development.",
+   "quote": null
+  },
+  {
+   "work": "Multi-Task Learning using Uncertainty to Weigh Losses (Kendall, Gal, Cipolla)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Cited [50] as the proposed way to weigh multi-objective losses.",
+   "quote": null
+  },
+  {
+   "work": "Neural architecture search with reinforcement learning (Zoph, Le)",
+   "year": 2016,
+   "arxiv": "1611.01578",
+   "relation": "related",
+   "note": "Cited [29] among RL-based search methods.",
+   "quote": null
+  },
+  {
+   "work": "AutoAugment (Cubuk et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Cited [31] for learned augmentation policies.",
+   "quote": null
+  },
+  {
+   "work": "Domain-Adversarial Training of Neural Networks (Ganin et al.)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Cited [11] for reverse-validation hyper-parameter selection in domain adaptation.",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "The general mechanism for building machine learning solutions.",
+   "page": 3,
+   "why": "Shows the data-model-train-validate-iterate-test-serve loop with the iteration step as the repeated outer cycle."
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec. 2, Eq. 1",
+   "snippet": "min_alpha M_val(w*(alpha), alpha)  s.t.  w*(alpha) = argmin_w L_train(w, alpha)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text uses ligatures (fi, ff) in the cache; quotes were chosen to avoid them.",
+  "No instructions embedded in the PDF text."
+ ]
+}

@@ -1,0 +1,747 @@
+{
+ "schema": 1,
+ "key": "2402.10890",
+ "pdf": "generative-ai/03-agentic-foundations/sources/chen-2024-when-tree-search-useful-llm.pdf",
+ "bib": {
+  "title": "When is Tree Search Useful for LLM Planning? It Depends on the Discriminator",
+  "authors": [
+   "Ziru Chen",
+   "Michael White",
+   "Raymond Mooney",
+   "Ali Payani",
+   "Yu Su",
+   "Huan Sun"
+  ],
+  "first_author": "Chen",
+  "year": 2024,
+  "venue": "preprint",
+  "arxiv": "2402.10890",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 73622,
+  "chars_total": 73622,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "How does the accuracy of an LLM-based discriminator affect language agents using re-ranking, iterative correction or tree search, and can current LLM discriminators meet the needs of advanced planning?",
+ "hypothesis": "The discriminator may be the deciding factor in agent performance, more than the planning method.",
+ "contributions": [
+  "A unified generator-discriminator-planning-method framework for language agents",
+  "Oracle simulation showing discrimination accuracy strongly correlates with agent performance for all three planning methods",
+  "Environmental observations (executability check, execution result) that improve LLM discriminators by up to 30.2 points",
+  "End-to-end evaluation showing advanced planning gives no significant gain over re-ranking with LLM discriminators, and tree search is 10-20x slower"
+ ],
+ "method": {
+  "summary": "A CodeLlama-13B-Instruct generator samples programs; a discriminator scores them as P(Yes) for 'is the program correct'. Re-ranking, iterative correction (up to 10 rounds) and a heap-based MCTS tree search are compared with oracle-simulated discriminators (accuracy capped by tau) and real LLM discriminators, on text-to-SQL (Spider, Bird) and GSM8K program-of-thought.",
+  "task": "text-to-SQL parsing and mathematical reasoning (program of thoughts); planning with a generator and discriminator",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Spider",
+    "role": "both",
+    "size": "400 dev examples evaluated (100 per difficulty level, 4 levels); full training split used for prompting/fine-tuning",
+    "split": "random database then example per difficulty level",
+    "source": "Yu et al., 2018",
+    "preprocessing": null
+   },
+   {
+    "name": "Bird",
+    "role": "both",
+    "size": "300 dev examples evaluated (100 per difficulty level, 3 levels); full training split used minus database retail_world",
+    "split": "as Spider",
+    "source": "Li et al., 2023a",
+    "preprocessing": "excluded retail_world training examples for annotation errors"
+   },
+   {
+    "name": "GSM8K",
+    "role": "eval",
+    "size": "500 random dev examples (tree search on 100 of them)",
+    "split": "random",
+    "source": "Cobbe et al., 2021",
+    "preprocessing": "no fine-tuning: training set has no program-of-thought annotation"
+   },
+   {
+    "name": "Intrinsic evaluation sets",
+    "role": "eval",
+    "size": "Programs/pairs/batches: Spider 1,221/409/400; Bird 1,291/269/300; GSM8K 2,453/1,238/500",
+    "split": "built from tau=1.0 re-ranking generations, relabelled",
+    "source": "derived from the oracle-simulation outputs",
+    "preprocessing": "pairs enumerated within batch only"
+   },
+   {
+    "name": "Discriminator training data",
+    "role": "train",
+    "size": "wrong SQL synthesised by 2-fold cross-validation on training sets; GSM8K: two hand-annotated wrong programs for the two prompt examples",
+    "split": "full Spider/Bird train",
+    "source": "Chen et al., 2023a method",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "CodeLlama-13B-Instruct",
+    "role": "base",
+    "params": "13B",
+    "architecture": "decoder-only",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "generator in all experiments; also discriminator"
+    }
+   },
+   {
+    "name": "CodeLlama-7B-Instruct",
+    "role": "evaluated",
+    "params": "7B",
+    "architecture": "decoder-only",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "discriminator"
+    }
+   },
+   {
+    "name": "CodeLlama-7B/13B-Instruct-FT",
+    "role": "proposed",
+    "params": "7B / 13B",
+    "architecture": "decoder-only, LoRA fine-tuned",
+    "init_from": "CodeLlama-7B/13B-Instruct",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "discriminator, Spider and Bird only"
+    }
+   },
+   {
+    "name": "GPT-3.5-Turbo (gpt-3.5-turbo-1106)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "discriminator via API"
+    }
+   },
+   {
+    "name": "GPT-4-Turbo (gpt-4-1106-preview)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "discriminator in intrinsic eval only (cost)"
+    }
+   }
+  ],
+  "training": {
+   "objective": "classify program correctness by generating one token, Yes or No",
+   "optimizer": null,
+   "lr": "1e-5",
+   "lr_schedule": "cosine",
+   "warmup": "3% warmup ratio",
+   "batch_size": "128",
+   "steps": null,
+   "epochs": "1",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "LoRA (Hu et al., 2022); rank/alpha not stated",
+   "hardware": "up to four NVIDIA RTX A6000 48GB (Spider, GSM8K); up to four A100 80GB (Bird)",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "framework": "HuggingFace checkpoints and trainer"
+   }
+  },
+  "inference": {
+   "decoding": "temperature sampling for generator",
+   "temperature": "0.6",
+   "top_p": null,
+   "max_tokens": "max_length 300",
+   "samples": "5 sequences per step/problem (num_return_sequences=5); single run, no seeds stated",
+   "prompting": "Generator: 1-shot BM25-retrieved example (SQL), fixed 2-shot (GSM8K, from Ni et al. 2023b). Iterative correction revision: 0-shot. Discriminator: same shot setup, Yes/No question; fine-tuned ones use no in-context example",
+   "retrieval": "BM25 for in-context examples (Robertson and Zaragoza 2009)",
+   "parameters": {
+    "iterative_correction_max_rounds": "10",
+    "early_exit_score": "> 0.99",
+    "early_exit_no_improvement": "3 consecutive iterations",
+    "tree_search_step": "one SQL clause or one line of Python",
+    "tree_search_termination": "stop when a complete plan is in the heap",
+    "tree_search_step_score": "max over Monte-Carlo simulations from the step",
+    "oracle_tau": "probability tau of returning score s, else 1-s; tau swept up to 1.0 (0.6, 0.8, 0.9, 1.0 named in text)",
+    "sql_execution": "first 5 rows only, 60-second timeout",
+    "gpt_score": "P(Yes) from top-5 logprobs; 1-P(No) if Yes missing; 0 if both missing",
+    "executability_check": "non-executable program gets score 0"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Execution accuracy / answer accuracy",
+     "definition": "end-to-end correctness of final plan (SQL execution or GSM8K answer)",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Discrimination accuracy (Acc)",
+     "definition": "% of correct/wrong pairs where correct program scores higher",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Classification macro F1",
+     "definition": "macro F1 over correct and wrong classes",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Hit@1",
+     "definition": "% of batches whose top-scoring candidate is correct",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "MRR",
+     "definition": "mean reciprocal rank of highest-ranking correct program in batch",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Inference time",
+     "definition": "average end-to-end time per example",
+     "unit": "seconds",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "greedy generation",
+    "re-ranking",
+    "oracle-simulated discriminator"
+   ],
+   "protocol": "Single run; exact McNemar's test (p<0.05) between planning methods with the same discriminator; no seeds or confidence intervals."
+  },
+  "availability": {
+   "code": "https://github.com/OSU-NLP-Group/llm-planning-eval",
+   "weights": null,
+   "data": "same repository (stated as 'Code and data')"
+  },
+  "prompts": [
+   {
+    "purpose": "1-shot discrimination, text-to-SQL",
+    "text": "Answer the following Yes/No question: Is the SQL correct given the utterance?",
+    "where": "Table D.3 (full prompt with correct/wrong example pair)"
+   },
+   {
+    "purpose": "discrimination with execution result, text-to-SQL",
+    "text": "Answer the following Yes/No question: Is the SQL correct given the utterance and its result?",
+    "where": "Table D.4"
+   },
+   {
+    "purpose": "0-shot iterative correction, text-to-SQL",
+    "text": "Given database schema and a question in natural language, correct the buggy SQL query and generate a fixed SQL query.",
+    "where": "Table D.2"
+   },
+   {
+    "purpose": "generation, text-to-SQL",
+    "text": "Given database schema and a question in natural language, generate the corresponding SQL query.",
+    "where": "Table D.1"
+   },
+   {
+    "purpose": "2-shot discrimination, GSM8K",
+    "text": "## Answer the following Yes/No question: Is the python program correct given the problem in the comment?",
+    "where": "Table D.7"
+   },
+   {
+    "purpose": "0-shot iterative correction, GSM8K",
+    "text": "## Given the question in the comment, correct the buggy python program and generate a fixed python program to produce the correct answer with the 'answer' variable.",
+    "where": "Table D.6"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Advanced planning methods (iterative correction, tree search) need discriminators of at least 90% accuracy to significantly beat re-ranking.",
+   "kind": "measured",
+   "source": null,
+   "metric": "required discriminator accuracy",
+   "value": "90",
+   "unit": "% discrimination accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Oracle-simulated discriminator with accuracy threshold tau; Spider, Bird, GSM8K; CodeLlama-13B-Instruct generator, 5 samples",
+   "note": null,
+   "where": "Abstract",
+   "quote": "advanced planning methods demand discriminators with at least 90% accuracy to achieve significant improvements over re-ranking"
+  },
+  {
+   "claim": "Tree search is at least 10-20 times slower than re-ranking and iterative correction.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "10-20",
+   "unit": "x slower",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Oracle simulation, all three datasets; slowness mainly from Monte-Carlo simulations",
+   "note": null,
+   "where": "Abstract; Sec 5.2",
+   "quote": "tree search is at least 10–20 times slower but leads to negligible performance gains"
+  },
+  {
+   "claim": "Environmental observations (executability check plus execution result) raise CodeLlama-13B discrimination accuracy on Bird by 30.2 points.",
+   "kind": "measured",
+   "source": null,
+   "metric": "discrimination accuracy",
+   "value": "30.2",
+   "unit": "points absolute",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Intrinsic eval set, Bird, CodeLlama-13B",
+   "note": null,
+   "where": "Sec 1",
+   "quote": "we improve the discrimination accuracy of LLMs by up to 30.2 and 8.4 absolute points on text-to-SQL parsing and mathematical reasoning, respectively"
+  },
+  {
+   "claim": "CodeLlama-13B-FT with observations is best on Spider with re-ranking, 70.3 execution accuracy, versus 62.3 greedy.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "70.3",
+   "unit": "% execution accuracy",
+   "baseline_value": "62.3",
+   "n": null,
+   "setup": "Spider 400-example dev subset, re-ranking, CodeLlama-13B-FT enhanced discriminator",
+   "note": null,
+   "where": "Sec 7.1",
+   "quote": "on Spider with re-ranking (70.3)"
+  },
+  {
+   "claim": "With the best naive discriminator, re-ranking on Spider (61.5) stays below greedy generation (62.3).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "61.5",
+   "unit": "% execution accuracy",
+   "baseline_value": "62.3",
+   "n": null,
+   "setup": "Spider, CodeLlama-13B-FT naive discriminator, re-ranking",
+   "note": null,
+   "where": "Sec 7.1",
+   "quote": "has the best accuracy (61.5), which is still lower than greedy generation (62.3)"
+  },
+  {
+   "claim": "With an oracle discriminator (tau=1.0) on Spider, tree search reaches 76.2 and iterative correction 76.0 versus 71.0 for re-ranking.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "76.2",
+   "unit": "% execution accuracy",
+   "baseline_value": "71.0",
+   "n": null,
+   "setup": "Spider, oracle tau=1.0, tree search",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row Oracle Simulation (τ = 1.0), column Spider Tree Search"
+  },
+  {
+   "claim": "Only with the oracle does any advanced method significantly beat re-ranking on text-to-SQL; no non-oracle discriminator does.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 3, McNemar's p<0.05",
+   "note": null,
+   "where": "Table 3 caption",
+   "quote": "We only observe such improvement with the oracle discriminator."
+  },
+  {
+   "claim": "Tree search with CodeLlama-13B-FT enhanced is worse than re-ranking on Spider (67.5 vs 70.3) and Bird (21.7 vs 23.7).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "67.5",
+   "unit": "% execution accuracy",
+   "baseline_value": "70.3",
+   "n": null,
+   "setup": "CodeLlama-13B-FT with observations",
+   "note": null,
+   "where": "Sec 7.3",
+   "quote": "(Table 3: 67.5 vs 70.3 on Spider; 21.7 vs 23.7 on Bird)"
+  },
+  {
+   "claim": "In 25 of 50 sampled wrong pairs on Bird, CodeLlama-13B scores a non-executable SQL query higher.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "25",
+   "unit": "of 50 pairs",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Error analysis, 50 sampled incorrect pairs, Bird intrinsic set",
+   "note": null,
+   "where": "Sec 6.2",
+   "quote": "In 25 of the 50 pairs (50%), CodeLlama-13B assigns a higher score to non-executable SQL queries."
+  },
+  {
+   "claim": "Naive GPT-4-Turbo discrimination accuracy on GSM8K is 93.8, the highest of all discriminators.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "93.8",
+   "unit": "% Acc",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Intrinsic eval, GSM8K, 2-shot",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row GPT-4-Turbo, column GSM8K Acc"
+  },
+  {
+   "claim": "Naive GPT-4-Turbo discrimination accuracy on Spider is 76.5 and on Bird 76.2.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "76.5",
+   "unit": "% Acc",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Intrinsic eval",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row GPT-4-Turbo, column Spider Acc"
+  },
+  {
+   "claim": "GPT-3.5-Turbo with executability check and execution result reaches 89.2 discrimination accuracy on Bird, from 64.3.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "89.2",
+   "unit": "% Acc",
+   "baseline_value": "64.3",
+   "n": null,
+   "setup": "Bird intrinsic set",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row ++ Execution Result, column GPT-3.5-Turbo Bird"
+  },
+  {
+   "claim": "Tree search takes 296.0 s per Bird example against 17.3 s for re-ranking with naive CodeLlama-13B.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "296.0",
+   "unit": "s per example",
+   "baseline_value": "17.3",
+   "n": null,
+   "setup": "Bird, CodeLlama-13B naive discriminator",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row CodeLlama-13B, column Tree Search"
+  },
+  {
+   "claim": "Executability check cuts tree-search latency on Bird by 142.4 s with GPT-3.5-Turbo.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "-142.4",
+   "unit": "s",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Bird, GPT-3.5-TurboE vs GPT-3.5-Turbo",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row GPT-3.5-TurboE, column Tree Search"
+  },
+  {
+   "claim": "Iterative correction with CodeLlama-13B judging its own output gets only 10.2 on GSM8K, versus 39.4 greedy, because revisions turn into non-executable natural language that scores high.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "10.2",
+   "unit": "% answer accuracy",
+   "baseline_value": "39.4",
+   "n": null,
+   "setup": "GSM8K 500 examples, CodeLlama-13B as generator and discriminator",
+   "note": null,
+   "where": "Sec 7.2",
+   "quote": "our iterative correction agent only has 10.2 answer accuracy"
+  },
+  {
+   "claim": "On GSM8K tree search with GPT-3.5-TurboE gets 51.0 versus 47.6 re-ranking, not significant.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "51.0",
+   "unit": "% answer accuracy",
+   "baseline_value": "47.6",
+   "n": null,
+   "setup": "Tree search on only 100 of the 500 examples",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row GPT-3.5-TurboE, column Tree Search"
+  },
+  {
+   "claim": "Oracle tree search on GSM8K reaches 73.0 vs re-ranking 64.1, still not significant by McNemar.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "73.0",
+   "unit": "% answer accuracy",
+   "baseline_value": "64.1",
+   "n": null,
+   "setup": "Oracle tau=1.0, tree search on 100 examples",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row Oracle Simulation, column Tree Search"
+  },
+  {
+   "claim": "Discrimination errors dominate failures of advanced methods: 29 of 37 (78.4%) for iterative correction on Spider.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "78.4",
+   "unit": "% of error cases",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Cases where re-ranking is correct but iterative correction is not; CodeLlama-13B-FTE on Spider",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row Discrimination, column Spider Iter. Correct."
+  },
+  {
+   "claim": "In 15 of the 29 Spider discrimination errors iterative correction had already found the correct SQL but overwrote it.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "15",
+   "unit": "cases",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Spider, iterative correction",
+   "note": null,
+   "where": "Sec 7.3",
+   "quote": "iterative correction has already found the correct SQL queries for 15 (40.5% of the total 37 errors)"
+  },
+  {
+   "claim": "Search instability: in 12 of 25 Bird cases where iterative correction succeeded and tree search failed, tree search could not choose among tied scores.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "12",
+   "unit": "of 25 examples",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Bird, oracle tau=1.0; IC 32.7 vs TS 29.3, McNemar p>0.05",
+   "note": null,
+   "where": "Sec 5.2",
+   "quote": "In 12 out of the 25 examples (48%), tree search fails"
+  },
+  {
+   "claim": "Tree search consistently underperforms the other two planning methods when tau is 0.8 or lower.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Oracle simulation, Fig 3",
+   "note": null,
+   "where": "Sec 5.2",
+   "quote": "tree search agents consistently underperform the other two when the discrimination accuracy threshold τ ≤0.8"
+  },
+  {
+   "claim": "About 80% discrimination accuracy is needed before agents beat greedy generation on text-to-SQL.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "80",
+   "unit": "% discrimination accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Oracle simulation, Spider and Bird",
+   "note": null,
+   "where": "Sec 5.2",
+   "quote": "it takes around 80%"
+  }
+ ],
+ "limits": [
+  "Only instruction-tuned code LLMs (CodeLlama generator) tested; other generators and instruction-tuning effect not ablated (authors).",
+  "Only formal-language plans (programs); natural-language plans not studied (authors).",
+  "Generator perplexity excluded from scoring; generator influence on planning not studied (authors).",
+  "Tree search on GSM8K evaluated on only 100 examples; McNemar often non-significant at these sample sizes.",
+  "Single run with one sampling configuration (5 samples, T=0.6); tree-search MCTS implementation is one variant and unstable early with tied scores.",
+  "Fine-tuned discriminators not available for GSM8K; GPT-4-Turbo used only in intrinsic eval.",
+  "Models (CodeLlama, GPT-3.5/4-Turbo 1106) have since dated; the 90% threshold is from oracle simulation with random label flipping, which may not reflect structured LLM errors.",
+  "Evaluation subsets are difficulty-balanced so absolute scores are below standard dev-set numbers."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "discrimination accuracy",
+   "definition": "percentage of correct/wrong program pairs where the correct program obtains a higher discrimination score",
+   "where": "Sec 4.4"
+  },
+  {
+   "term": "discrimination error",
+   "definition": "The discriminator assigns a higher score for wrong programs than correct ones, which is not recoverable by any planning method.",
+   "where": "Sec 7.3"
+  },
+  {
+   "term": "exploration error",
+   "definition": "The planning method has not found the correct program before termination.",
+   "where": "Sec 7.3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Huang et al. 2024, Large language models cannot self-correct reasoning yet",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "agrees that high-quality external feedback is key to iterative correction; this paper generalises to tree search",
+   "quote": null
+  },
+  {
+   "work": "West et al. 2024, Generative AI paradox",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "related",
+   "note": "hypothesis that LLM discrimination lags generation",
+   "quote": null
+  },
+  {
+   "work": "Tree of Thoughts (Yao et al. 2023a); RAP (Hao et al. 2023); LATS (Zhou et al. 2023); Pangu (Gu et al. 2023)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "tree-search planning family represented by the MCTS implementation",
+   "quote": null
+  },
+  {
+   "work": "Self-Refine (Madaan et al. 2023); Reflexion (Shinn et al. 2023); Self-Debug (Chen et al. 2024)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "iterative correction/self-correction family",
+   "quote": null
+  },
+  {
+   "work": "Ni et al. 2023a, LEVER",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "re-ranking and execution results in discriminator",
+   "quote": null
+  },
+  {
+   "work": "Chen et al. 2023a, Error detection for text-to-SQL",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "2-fold cross-validation to synthesise wrong SQL",
+   "quote": null
+  },
+  {
+   "work": "Chen et al. 2023b, Program of Thoughts",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "GSM8K as Python programs",
+   "quote": null
+  },
+  {
+   "work": "Zhang et al. 2023, Planning with LLMs for code generation",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "MCTS design",
+   "quote": null
+  },
+  {
+   "work": "Spider; Bird; GSM8K",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Yu et al. 2018; Li et al. 2023a; Cobbe et al. 2021",
+   "quote": null
+  },
+  {
+   "work": "CodeLlama (Rozière et al. 2024); GPT-3.5-Turbo; GPT-4-Turbo",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "generator and discriminators",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "A generator-discriminator framework of language agents, where planning methods control the interaction between a generator and a discriminator.",
+   "page": 1,
+   "why": "Shows the three-component decomposition."
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Illustration of three categories of planning methods: re-ranking, iterative correction, tree search.",
+   "page": 3,
+   "why": "Control flow of each method."
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "End-to-end evaluation results and average inference time (log scale) of oracle simulation experiments on Spider, Bird, GSM8K.",
+   "page": 5,
+   "why": "Accuracy and time against tau; the source of the 90% claim and 10-20x slowdown."
+  }
+ ],
+ "code": [
+  {
+   "where": "Appendix A.4",
+   "snippet": "oracle score = 2 * P * R / (P + R) over first-5-row table cell overlap; example 2*0.375*0.5/(0.375+0.5) = 0.43",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Fig 3 values (accuracy vs tau curves) are only in a figure and not extracted as numbers.",
+  "No embedded instructions found."
+ ]
+}

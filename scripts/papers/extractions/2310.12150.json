@@ -1,0 +1,597 @@
+{
+ "schema": 1,
+ "key": "2310.12150",
+ "pdf": "generative-ai/02-rag-retrieval/sources/chen-2023-understanding-retrieval-augmentation-long-form.pdf",
+ "bib": {
+  "title": "Understanding Retrieval Augmentation for Long-Form Question Answering",
+  "authors": [
+   "Hung-Ting Chen",
+   "Fangyuan Xu",
+   "Shane Arora",
+   "Eunsol Choi"
+  ],
+  "first_author": "Chen",
+  "year": 2024,
+  "venue": "Published as a conference paper at COLM 2024",
+  "arxiv": "2310.12150",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 87733,
+  "chars_total": 87733,
+  "engine": "pymupdf",
+  "skipped": "Appendix model-output example tables (Tables 10, 12) and annotation guideline links only skimmed; reference list skimmed"
+ },
+ "type": "empirical",
+ "question": "How does retrieval augmentation (in-context evidence documents) change long-form answer generation by LMs, and how attributable are the generated answers to those documents?",
+ "hypothesis": null,
+ "contributions": [
+  "Two controlled studies on LFQA: fix the LM and vary evidence documents, fix documents and vary LMs",
+  "SALAD: a dataset of sentence-level human attribution annotations (12k judgements over 4k answer sentences)",
+  "Evaluation of existing automatic attribution methods (NLI models, QAFactEval) on SALAD",
+  "Analysis of attribution patterns: document order effects, last-sentence unsupportedness, error types"
+ ],
+ "method": {
+  "summary": "Prepend 3-4 evidence snippets (human, WebGPT, Bing, random) to an ELI5 question and sample long-form answers from GPT-3.5, Alpaca-7b and WebGPT. Measure surface statistics and have MTurk workers label each answer sentence Supported/Partially/Not Supported; then test NLI models and QAFactEval as automatic attribution judges.",
+  "task": "long-form question answering with in-context retrieval; attribution evaluation",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "ELI5 (WebGPT test release)",
+    "role": "eval",
+    "size": "271 questions",
+    "split": "test set released by WebGPT; 100 questions randomly sampled for manual attribution annotation",
+    "source": "Fan et al. 2019 (Reddit ELI5); WebGPT outputs from Nakano et al. 2021",
+    "preprocessing": null
+   },
+   {
+    "name": "SALAD",
+    "role": "eval",
+    "size": "3,857 answer sentences with attribution labels (abstract: 12k human judgements over 4k sentences); 100 questions x 6 model-document configurations",
+    "split": "three annotations per example, majority label; 3.4% discarded for no majority",
+    "source": "collected on Amazon Mechanical Turk by the authors; released",
+    "preprocessing": "Documents split into sentences; SimCSE similarity shown to annotators"
+   },
+   {
+    "name": "Evidence document sets (Human, WebGPT, Bing, Random)",
+    "role": "eval",
+    "size": "3-4 snippets of roughly 100 words each; avg docs 3.5/3.5/4.0/3.5, avg words 308.9/388.0/400.0/388.0 (Human/WebGPT/Bing/Random)",
+    "split": null,
+    "source": "Human and WebGPT from Nakano et al. 2021; Bing via Bing Search API v7.0; Random = WebGPT docs of another random test question",
+    "preprocessing": "Bing: raw HTML processed with html2text and readability, split into 100-word segments, merged across top 10 pages, top four segments by BM25"
+   }
+  ],
+  "models": [
+   {
+    "name": "WebGPT",
+    "role": "evaluated",
+    "params": "175B",
+    "architecture": "GPT-3 fine-tuned to use Bing and compose LFQA answers",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "model not released; outputs taken from OpenAI answer viewer"
+    }
+   },
+   {
+    "name": "GPT-3.5 (text-davinci-003)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "also": "GPT-4 (gpt-4-0613), davinci-001/002 in appendix"
+    }
+   },
+   {
+    "name": "Alpaca-7b",
+    "role": "evaluated",
+    "params": "7B",
+    "architecture": null,
+    "init_from": "Llama 7B (inferred: Alpaca instruction-tuned Llama)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "selection": "best by manual examination among GPT-J 6B, Flan-T5 11B, Llama 7B/13B/30B, Alpaca 7B"
+    }
+   },
+   {
+    "name": "T5-11B NLI (Honovich et al. 2022)",
+    "role": "judge",
+    "params": "11B",
+    "architecture": "T5 trained on MNLI, SNLI, FEVER, VitaminC",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "threshold": "0.03"
+    }
+   },
+   {
+    "name": "RoBERTa-large (M,S,A,F), RoBERTa-large DocNLI, ALBERT-xlarge (M,V), QAFactEval",
+    "role": "judge",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "thresholds": "0.1, 0.5, 0.2 respectively"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "sampling",
+   "temperature": "Alpaca 0.9; GPT-3.5 0.7",
+   "top_p": "1 (both)",
+   "max_tokens": "Alpaca 1024; GPT-3.5 512",
+   "samples": "3 answers per example per setting (for variability); WebGPT answers pre-generated",
+   "prompting": "Zero-shot instruction; documents line-separated and prepended to question",
+   "retrieval": "Not an end-to-end retriever: fixed document sets; Bing top-10 pages, BM25 selects top four 100-word segments; 3-4 snippets in context",
+   "parameters": {
+    "nli_aggregation": "max entailment over document-sentence/answer-sentence pairs; supported if score > threshold",
+    "threshold_grid": "{0.01,0.03,0.05,0.07,0.1,0.2,0.3,0.4,0.5,0.6,0.7}, chosen on the evaluation data itself"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Length",
+     "definition": "number of sentences and words per answer",
+     "unit": "count",
+     "higher_is_better": null
+    },
+    {
+     "name": "Self-BLEU",
+     "definition": "lexical diversity; higher means more repetition",
+     "unit": "score",
+     "higher_is_better": false
+    },
+    {
+     "name": "RankGen",
+     "definition": "T5-XXL contrastive encoder score of answer as continuation of question prefix",
+     "unit": "score",
+     "higher_is_better": true
+    },
+    {
+     "name": "Perplexity",
+     "definition": "GPT-2-XL perplexity of answer",
+     "unit": "ppl",
+     "higher_is_better": false
+    },
+    {
+     "name": "Attribution label",
+     "definition": "per-sentence Supported / Partially Supported / Not Supported w.r.t. evidence set (AIS framework)",
+     "unit": "% of sentences",
+     "higher_is_better": true
+    },
+    {
+     "name": "F1 on detecting unsupported sentences",
+     "definition": "micro-F1, Partially+Not Supported merged as positive class, per generation setting",
+     "unit": "F1",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "random baseline (label distribution)",
+    "majority baseline",
+    "human agreement (pairwise annotator F1)",
+    "RoBERTa-large NLI x2",
+    "ALBERT-xlarge NLI",
+    "T5-11B NLI",
+    "QAFactEval"
+   ],
+   "protocol": "3 MTurk annotators per sentence, majority vote, Krippendorff alpha 0.71; no significance tests stated; thresholds tuned on test data."
+  },
+  "availability": {
+   "code": "https://github.com/timchen0618/LFQA-Verification",
+   "weights": null,
+   "data": "https://github.com/timchen0618/LFQA-Verification (SALAD)"
+  },
+  "prompts": [
+   {
+    "purpose": "answer generation, no documents",
+    "text": "Generate a long answer to the following question.\nQuestion: {Question}\nAnswer:",
+    "where": "Table 5"
+   },
+   {
+    "purpose": "answer generation, with documents",
+    "text": "Documents: {Documents}\nGenerate a long answer to the following question, using information from the documents.\nQuestion: {Question}\nAnswer:",
+    "where": "Table 5"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "inference.parameters.threshold_grid",
+    "quote": "choose the value that gives the highest F1 score on the test set",
+    "where": "A.4"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "With the same WebGPT documents, Alpaca has 32% unsupported sentences versus 3% for WebGPT (fine-tuned with retrieval).",
+   "kind": "measured",
+   "source": null,
+   "metric": "% Not Supported",
+   "value": "3% vs 32%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ELI5 test set (WebGPT release, 271 questions); 100 questions annotated; GPT-3.5 (text-davinci-003), Alpaca-7b, WebGPT-175B; 3 samples per setting",
+   "quote": null,
+   "table": "Table 2, rows WebGPT + WebGPT docs and Alpaca + WebGPT docs, column No (3% vs 32%)",
+   "note": null,
+   "where": "Table 2, Sec 6.1"
+  },
+  {
+   "claim": "GPT-3.5 with WebGPT docs has 85% supported sentences and 11% unsupported.",
+   "kind": "measured",
+   "source": null,
+   "metric": "% Supported",
+   "value": "85%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ELI5 test set (WebGPT release, 271 questions); 100 questions annotated; GPT-3.5 (text-davinci-003), Alpaca-7b, WebGPT-175B; 3 samples per setting",
+   "quote": null,
+   "table": "Table 2, row GPT-3.5 + WebGPT docs, columns Yes/No (85%, 11%)",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Without documents, only 22% (GPT-3.5) and 23% (Alpaca) of sentences are supported by the WebGPT docs.",
+   "kind": "measured",
+   "source": null,
+   "metric": "% Supported",
+   "value": "22%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ELI5 test set (WebGPT release, 271 questions); 100 questions annotated; GPT-3.5 (text-davinci-003), Alpaca-7b, WebGPT-175B; 3 samples per setting",
+   "quote": null,
+   "table": "Table 2, rows GPT-3.5 without docs, Alpaca without docs, column Yes (22%, 23%)",
+   "note": "Alpaca 23%",
+   "where": "Table 2"
+  },
+  {
+   "claim": "Overall 59% of annotated sentences supported, 6% partial, 35% unsupported.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "59% supported",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ELI5 test set (WebGPT release, 271 questions); 100 questions annotated; GPT-3.5 (text-davinci-003), Alpaca-7b, WebGPT-175B; 3 samples per setting",
+   "quote": null,
+   "table": "Table 2, row Total (59%, 6%, 35%)",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "The last answer sentence is almost twice as likely to be unsupported as other sentences.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "ELI5 test set (WebGPT release, 271 questions); 100 questions annotated; GPT-3.5 (text-davinci-003), Alpaca-7b, WebGPT-175B; 3 samples per setting",
+   "quote": "We find that the last sentence is almost twice as likely to be unsupported compared to other",
+   "table": null,
+   "note": null,
+   "where": "Sec 6.3, Fig 2(c)(d)"
+  },
+  {
+   "claim": "Generated content order follows evidence document order (linear correspondence), and the later half of the documents, except the last 10%, is cited less.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "ELI5 test set (WebGPT release, 271 questions); 100 questions annotated; GPT-3.5 (text-davinci-003), Alpaca-7b, WebGPT-175B; 3 samples per setting",
+   "quote": "we identify a linear correspondence pattern, with information mentioned earlier in the document tend to",
+   "table": null,
+   "note": null,
+   "where": "Sec 6.3, Fig 2(a)"
+  },
+  {
+   "claim": "Shuffling documents weakens but does not remove the order correspondence (Pearson avg 0.1445 unshuffled vs 0.1359 shuffled by T5).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Pearson r",
+   "value": "0.1445 vs 0.1359",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-3.5 + WebGPT/Human docs, Alpaca + WebGPT docs; supporting sentences from T5",
+   "quote": null,
+   "table": "Table 13, column Average, rows unshuffled and shuffled (0.1445, 0.1359)",
+   "note": null,
+   "where": "Table 13, App B.7"
+  },
+  {
+   "claim": "Unsupported-sentence error types: retrieval failure 54%, hallucinated facts 72%, incorrect synthesis 14% (not mutually exclusive); about 14% of errors were annotation error.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "54% / 72% / 14%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "30 unsupported sentences per setting (17 for WebGPT)",
+   "quote": "Hallucinated",
+   "table": "Table 3, categories Retrieval Failure (54%), Hallucinated Facts (72%), Incorrect Synthesis (14%)",
+   "note": null,
+   "where": "Table 3, Sec 6.4"
+  },
+  {
+   "claim": "Only 85% of WebGPT, 50% of human and 45% of Bing document sets were sufficient to answer the question.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "85% / 50% / 45%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "20 manually checked ELI5 questions",
+   "quote": "85%, 50% and 45% of the examples",
+   "table": null,
+   "note": "Table 11 counts 17, 10, 9 of 20",
+   "where": "Sec 3, App B.6"
+  },
+  {
+   "claim": "Relevant documents change surface statistics more than random ones; for GPT-3.5 documents shorten answers (219 to ~172-185 words), for Alpaca they lengthen them (113 to 138-187).",
+   "kind": "measured",
+   "source": null,
+   "metric": "# Words",
+   "value": "219 -> 172 (human docs)",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "ELI5 test set (WebGPT release, 271 questions); 100 questions annotated; GPT-3.5 (text-davinci-003), Alpaca-7b, WebGPT-175B; 3 samples per setting",
+   "quote": null,
+   "table": "Table 1, GPT-3.5 and Alpaca rows, column # Words",
+   "note": null,
+   "where": "Table 1, Sec 4"
+  },
+  {
+   "claim": "Relevant documents raise perplexity (GPT-3.5 6.13 to 11.63 with WebGPT docs) while random docs barely change it (6.76).",
+   "kind": "measured",
+   "source": null,
+   "metric": "GPT-2-XL perplexity",
+   "value": "6.13 -> 11.63",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "ELI5 test set (WebGPT release, 271 questions); 100 questions annotated; GPT-3.5 (text-davinci-003), Alpaca-7b, WebGPT-175B; 3 samples per setting",
+   "quote": null,
+   "table": "Table 1, GPT-3.5 rows, column Perplexity (6.13, 11.63, 6.76)",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "GPT-4 with random documents frequently abstains (1.6 sentences, 37 words on average).",
+   "kind": "measured",
+   "source": null,
+   "metric": "# Words",
+   "value": "37 words",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "gpt-4-0613, same ELI5 setup",
+   "quote": null,
+   "table": "Table 8, row GPT-4 +Random docs (1.6, 37)",
+   "note": null,
+   "where": "Table 8, App B.4"
+  },
+  {
+   "claim": "T5-11B NLI is the best automatic attribution detector: avg F1 60.1 / accuracy 82.6, versus human 71.2 / 88.6 and random 21.3 / 68.0.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": "60.1 F1",
+   "unit": "F1",
+   "baseline_value": 71.2,
+   "n": null,
+   "setup": "ELI5 test set (WebGPT release, 271 questions); 100 questions annotated; GPT-3.5 (text-davinci-003), Alpaca-7b, WebGPT-175B; 3 samples per setting",
+   "quote": null,
+   "table": "Table 7, row T5-11B (M,S,F,V), column Avg. (60.1/82.6)",
+   "note": "baseline_value = human F1; text says average F1 over 60 and accuracy over 80%; intro says NLI models fall behind human agreement by 15% in accuracy (82.6 vs 88.6 is 6 points in Table 7)",
+   "where": "Table 7"
+  },
+  {
+   "claim": "Inter-annotator agreement is Krippendorff's alpha 0.71.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Krippendorff alpha",
+   "value": "0.71",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "ELI5 test set (WebGPT release, 271 questions); 100 questions annotated; GPT-3.5 (text-davinci-003), Alpaca-7b, WebGPT-175B; 3 samples per setting",
+   "quote": "(Krippendorff’s alpha = 0.71)",
+   "table": null,
+   "note": null,
+   "where": "Sec 5"
+  },
+  {
+   "claim": "T5 judge: with Bing docs in context, supportedness w.r.t. Bing docs rises to 48.53% (from 23.06% with random docs).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "48.53%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "T5 NLI judge on 271 questions",
+   "quote": null,
+   "table": "Figure 3b, row GPT-3.5 +Bing docs, column Bing (48.53)",
+   "note": null,
+   "where": "Fig 3b"
+  },
+  {
+   "claim": "Random documents leave attribution to relevant docs nearly unchanged, suggesting the models ignore irrelevant documents.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "ELI5 test set (WebGPT release, 271 questions); 100 questions annotated; GPT-3.5 (text-davinci-003), Alpaca-7b, WebGPT-175B; 3 samples per setting",
+   "quote": "This suggests that models successfully ignore",
+   "table": null,
+   "note": null,
+   "where": "Sec 7.2"
+  }
+ ],
+ "limits": [
+  "Only ELI5 (one domain), 100 questions annotated, 3 samples per setting",
+  "Models are old: text-davinci-003, Alpaca-7b, WebGPT-175B (outputs only, not released); GPT-4 only in surface stats",
+  "Attribution is not factuality: a sentence unsupported by the given documents may still be true (authors note this)",
+  "NLI thresholds were tuned on the evaluation data itself, no dev set",
+  "Each LM was fed concatenated documents without positional manipulation beyond a shuffle control judged by the T5 model, not humans",
+  "Authors state their finding diverges from Krishna et al. 2021 and give possible reasons (low-relevance retrieval during their fine-tuning, ELI5 train-test overlap)"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Attribution",
+   "definition": "how much of the generated answer can be entailed from the evidence documents (AIS framework, Rashkin et al. 2021)",
+   "where": "Sec 5"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "WebGPT: Browser-assisted question-answering with human feedback",
+   "year": 2021,
+   "arxiv": "2112.09332",
+   "relation": "uses-data",
+   "note": "documents, answers and 271-question test set; WebGPT model evaluated",
+   "quote": null
+  },
+  {
+   "work": "Lost in the Middle (Liu et al. 2023a)",
+   "year": 2023,
+   "arxiv": "2307.03172",
+   "relation": "related",
+   "note": "positional effects in factoid QA; this paper finds order effects in LFQA",
+   "quote": null
+  },
+  {
+   "work": "Krishna et al. 2021 Hurdles to progress in LFQA",
+   "year": 2021,
+   "arxiv": "2103.06332",
+   "relation": "contradicts",
+   "note": "found random and relevant docs make no difference for smaller fine-tuned models; here LLMs distinguish them",
+   "quote": null
+  },
+  {
+   "work": "Bohnet et al. 2022 Attributed question answering",
+   "year": 2022,
+   "arxiv": "2212.08037",
+   "relation": "extends",
+   "note": "NLI for attribution in factoid QA; extended to LFQA",
+   "quote": null
+  },
+  {
+   "work": "Liu et al. 2023b Evaluating verifiability in generative search engines",
+   "year": 2023,
+   "arxiv": "2304.09848",
+   "relation": "related",
+   "note": "attribution on black-box search engines; their data reanalysed in Fig 2(d)",
+   "quote": null
+  },
+  {
+   "work": "Rashkin et al. 2021 AIS",
+   "year": 2021,
+   "arxiv": "2112.12870",
+   "relation": "uses-method",
+   "note": "attribution framework",
+   "quote": null
+  },
+  {
+   "work": "Alpaca (Taori et al. 2023)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "open model",
+   "quote": null
+  },
+  {
+   "work": "Gao et al. 2023b ALCE",
+   "year": 2023,
+   "arxiv": "2305.14627",
+   "relation": "related",
+   "note": "citation quality of generations",
+   "quote": null
+  },
+  {
+   "work": "Min et al. 2023 FActScore",
+   "year": 2023,
+   "arxiv": "2305.14251",
+   "relation": "related",
+   "note": "same last-sentence trend for biographies",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "We study (A) how differing LMs use the same in-context evidence documents ... and (B) how in-context documents of various degree of relevance affect the answer generation.",
+   "page": 2,
+   "why": "Shows the two-axis design"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Distribution of location of supporting sentences in document set for Nth answer sentence chunk; unsupported sentences by relative position",
+   "page": 7,
+   "why": "Order following and last-sentence weakness"
+  },
+  {
+   "figure": "Table 2",
+   "caption": "Attribution Annotation Results",
+   "page": 6,
+   "why": "Core human attribution numbers"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "No embedded instructions found",
+  "Table 1 and Figure 3b extracted as flat columns; subscript std values lose layout",
+  "Intro says NLI falls behind humans by 15% accuracy; Table 7 average gap is 6 points (82.6 vs 88.6) - possibly per-setting max gap",
+  "Appendix B.1 says lower bound 0.19 for bigram overlap, but Fig 4 caption says 0.03"
+ ]
+}

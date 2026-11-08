@@ -1,0 +1,649 @@
+{
+ "schema": 1,
+ "key": "2411.18478",
+ "pdf": "generative-ai/03-agentic-foundations/sources/wu-2024-beyond-examples.pdf",
+ "bib": {
+  "title": "Beyond Examples: High-level Automated Reasoning Paradigm in In-Context Learning via MCTS",
+  "authors": [
+   "Jinyang Wu",
+   "Mingkuan Feng",
+   "Shuai Zhang",
+   "Feihu Che",
+   "Zhengqi Wen",
+   "Chonghua Liao",
+   "Jianhua Tao"
+  ],
+  "first_author": "Wu",
+  "year": 2024,
+  "venue": "preprint",
+  "arxiv": "2411.18478",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 104715,
+  "chars_total": 104715,
+  "engine": "pymupdf",
+  "skipped": "Reference list (arXiv v2, 2 Jun 2025) skimmed only for lineage."
+ },
+ "type": "empirical",
+ "question": "Can in-context learning be improved by supplying abstract, automatically searched reasoning patterns instead of concrete demonstration examples?",
+ "hypothesis": "Teaching a model high-level reasoning patterns (thought cards) matched to problem complexity generalises better and costs less than example-based ICL or per-question tree search.",
+ "contributions": [
+  "Extend ICL 'context' from specific examples to abstract high-level reasoning patterns",
+  "MCTS-powered framework that builds diverse reasoning patterns and applies them adaptively by problem attributes",
+  "80.6% MATH and 62.5% AMC with Qwen2.5-7B-Instruct, above GPT-4o, with about 10x lower time cost than leading test-time inference methods"
+ ],
+ "method": {
+  "summary": "Offline, MCTS over five atomic reasoning actions (SA, OST, CoT, DC, SRR) runs on 200 seed training questions; the best path per question (reward minus cost) is distilled into thought cards keyed by problem complexity. Online, the 5 nearest cards by complexity attributes guide the model's generation, candidates are scored by a process reward model, and the top 3 get a self-consistency vote.",
+  "task": "multi-step reasoning (math, arithmetic, commonsense, science QA) by inference-time prompting with searched reasoning templates",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "GSM8K",
+    "role": "eval",
+    "size": "1319 test",
+    "split": "200 random train samples as seed",
+    "source": "Cobbe et al. [38]",
+    "preprocessing": null
+   },
+   {
+    "name": "SVAMP",
+    "role": "eval",
+    "size": "300 test",
+    "split": "200 seed from 700-sample train; remaining 300 test",
+    "source": "HF ChilleD/SVAMP",
+    "preprocessing": null
+   },
+   {
+    "name": "MATH500",
+    "role": "eval",
+    "size": "500 test",
+    "split": "200 seed from train",
+    "source": "MATH [40], MATH500 subset",
+    "preprocessing": null
+   },
+   {
+    "name": "AMC",
+    "role": "eval",
+    "size": "40 problems",
+    "split": "seed 200 from MATH training set",
+    "source": "AMC [41]",
+    "preprocessing": "subset of 40 'carefully selected' problems"
+   },
+   {
+    "name": "StrategyQA",
+    "role": "eval",
+    "size": "687 test",
+    "split": "200 seed from train",
+    "source": "[42]",
+    "preprocessing": null
+   },
+   {
+    "name": "GPQA Diamond",
+    "role": "eval",
+    "size": "198 questions",
+    "split": "seed 200 from MATH training set",
+    "source": "[43]",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Qwen2.5-7B-Instruct",
+    "role": "proposed",
+    "params": "7B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Qwen2.5-14B-Instruct",
+    "role": "proposed",
+    "params": "14B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Qwen2-7B-Instruct, Yi-1.5-6B-Chat, Llama3-8B-Instruct, Llama3.1-8B-Instruct",
+    "role": "evaluated",
+    "params": "6B-8B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Llama3-8B-Instruct",
+    "role": "evaluated",
+    "params": "8B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "computes SC, PCC, PS attributes of test questions (Sec 2.2)"
+    }
+   },
+   {
+    "name": "Llama3.1-8B-PRM-Mistral-Data (PRM) and Llama3.1-8B-ORM-Mistral-Data (ORM)",
+    "role": "reward",
+    "params": "8B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "off-the-shelf RLHFlow checkpoints; PRM is default"
+    }
+   },
+   {
+    "name": "Llama2-7B",
+    "role": "teacher",
+    "params": "7B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "weak model building cards in weak-to-strong test"
+    }
+   },
+   {
+    "name": "GPT-4o, Claude-3.5, Llama3.1-405B",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "vLLM sampling",
+   "temperature": "0.8",
+   "top_p": "0.9",
+   "max_tokens": "1024",
+   "samples": "MCTS-time details: expansion samples n actions (n not stated); inference uses 5 nearest thought cards, top-3 paths after PRM go to self-consistency; no repeated runs or seeds stated; baseline CoT+SC@4",
+   "prompting": "Thought card (sequence of atomic actions, e.g. SA->OST->CoT) given as natural-language instruction; model must end with 'The answer is'",
+   "retrieval": "Nearest-neighbour match of test question's PCC (default), SC or PS against card averages; abs. difference for SC and PCC, cosine similarity for PS; 5 cards",
+   "parameters": {
+    "top_k": "40",
+    "repetition_penalty": "1.0",
+    "MCTS max depth d_max": "5",
+    "exploration weight w": "2.0",
+    "early-termination consistency threshold c": "0.90",
+    "VOC balance factor k": "0.95",
+    "cards per question": "5",
+    "paths into self-consistency": "3",
+    "seed samples": "200 per dataset (150 = 3x50 for multi-task)",
+    "discount alpha in Q update": null,
+    "MCTS rollouts/iterations": null,
+    "children per expansion n": null
+   },
+   "other": {
+    "reward": "leaf reward = confidence (likelihood) of self-consistency majority vote; no learned reward in search",
+    "time cost": "t_avg = offline construction/n + online inference/n"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "accuracy",
+     "definition": "strict match of final answer ('The answer is') to ground truth",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "average time cost per sample",
+     "definition": "offline card construction time plus online inference time, per test sample (Eq 8)",
+     "unit": "s",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "zero-shot CoT",
+    "few-shot CoT",
+    "CoT+SC@4",
+    "ToT",
+    "RAP",
+    "ReST-MCTS*",
+    "LLaMA-Berry",
+    "rStar",
+    "Reinforced ICL (10-shot)",
+    "CoT+AS (action sequence in instruction)",
+    "GPT-4o",
+    "Claude-3.5",
+    "Llama3.1-405B"
+   ],
+   "protocol": "Single reported number per cell; no seeds, variance or significance tests stated. Tree-method and closed-model numbers mostly copied from original papers; ICL baselines run by the authors; others reproduced with official code when available."
+  },
+  "availability": {
+   "code": "https://github.com/jinyangwu/HiARICL",
+   "weights": null,
+   "data": "code and data at the same repo (per abstract)"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "inference.temperature",
+    "quote": "temperature 0.8, top-p 0.9, top-k 40, repetition penalty 1.0, and max tokens 1024",
+    "where": "Sec 3 Implementation Details"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "HiAR-ICL lifts Qwen2.5-7B-Instruct to 80.6% on MATH500, above GPT-4o's 77.2% (GPT-4o with CoT+SC@4).",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "80.6",
+   "unit": "% accuracy",
+   "baseline_value": "77.2",
+   "n": null,
+   "setup": "MATH500, Qwen2.5-7B-Instruct, 200 seed samples, thought cards + PRM/SC verification",
+   "note": "Table 1 gives GPT-4o few-shot CoT 76.6 and CoT+SC@4 77.2 on MATH; the 77.2 baseline is the SC@4 row, while Sec 4.1 calls it 'few-shot GPT-4o'.",
+   "where": "Abstract; Table 1",
+   "quote": "achieves 80.6% accuracy on MATH and 62.5% on AMC, exceeding GPT-4o’s 77.2% and 57.5%"
+  },
+  {
+   "claim": "On AMC (40 problems) Qwen2.5-7B-Instruct reaches 62.5% with HiAR-ICL vs 57.5% for GPT-4o CoT+SC@4.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "62.5",
+   "unit": "% accuracy",
+   "baseline_value": "57.5",
+   "n": null,
+   "setup": "AMC40, Qwen2.5-7B-Instruct; 40 problems so one problem = 2.5 points",
+   "note": null,
+   "where": "Abstract; Table 1",
+   "quote": "exceeding GPT-4o’s 77.2% and 57.5%"
+  },
+  {
+   "claim": "Llama3-8B-Instruct MATH accuracy rises from 17.8% (few-shot CoT) to 46.6%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "46.6",
+   "unit": "% accuracy",
+   "baseline_value": "17.8",
+   "n": null,
+   "setup": "MATH500, Llama3-8B-Instruct, 200 seeds",
+   "note": null,
+   "where": "Sec 4.1",
+   "quote": "Llama3-8B-Instruct’s accuracy on MATH improved from 17.8% (few-shot CoT) to 46.6% (HiAR-ICL)"
+  },
+  {
+   "claim": "Against rStar, HiAR-ICL cuts end-to-end time per sample 21.8x on GSM8K, 21.0x on StrategyQA and 7.0x on MATH (offline card construction amortised in).",
+   "kind": "measured",
+   "source": null,
+   "metric": "time cost per sample",
+   "value": "7.0",
+   "unit": "x speedup (MATH)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Llama3-8B, A100-80GB; time = offline construction/n + online inference/n",
+   "note": "Fig 4 labels -21.8x, -7.0x, -21.0x. Abstract-level claim is 'approximately 10x'.",
+   "where": "Sec 4.2, Fig 4",
+   "quote": "HiAR-ICL achieves substantial time reductions of 21.8× on GSM8K and 21.0× on StrategyQA through adaptive pattern selection"
+  },
+  {
+   "claim": "Table 16 time per sample for HiAR-ICL on MATH is 159.5s (off 50.8 + on 108.7) vs rStar 1105.8s.",
+   "kind": "measured",
+   "source": null,
+   "metric": "time per sample",
+   "value": "159.5",
+   "unit": "s per sample",
+   "baseline_value": "1105.8",
+   "n": null,
+   "setup": "Llama3-8B, MATH, A100",
+   "note": null,
+   "where": "Table 16",
+   "quote": "159.5s (off: 50.8 + on: 108.7)"
+  },
+  {
+   "claim": "Replacing the thought cards with random action chains drops the Llama3-8B-Instruct four-task average by 10.4 points.",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg accuracy delta",
+   "value": "-10.4",
+   "unit": "points (avg of MATH, GSM8K, SVAMP, StrategyQA)",
+   "baseline_value": "75.6",
+   "n": null,
+   "setup": "Llama3-8B-Instruct ablation, Table 4 row 2",
+   "note": null,
+   "where": "Sec 4.5, Table 4",
+   "quote": "results in a 10.4% accuracy drop"
+  },
+  {
+   "claim": "Random card instead of complexity-matched card costs 5.0 points average.",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg accuracy delta",
+   "value": "-5.0",
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Llama3-8B-Instruct, Table 4 row 3",
+   "note": null,
+   "where": "Sec 4.5",
+   "quote": "we observe a performance drop of 5.0% in Table 4"
+  },
+  {
+   "claim": "Random solution selection (no verification) costs 4.8 points; SC alone costs 2.5; PRM alone 1.2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg accuracy delta",
+   "value": "-4.8",
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Llama3-8B-Instruct, Table 4",
+   "note": null,
+   "where": "Sec 4.5, Table 4",
+   "quote": "even random selection shows only a 4.8% accuracy drop"
+  },
+  {
+   "claim": "Cards built by a weak model (Llama2-7B) improve GPT-4o on MATH from 77.2 to 79.6.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "79.6",
+   "unit": "% accuracy",
+   "baseline_value": "77.2",
+   "n": null,
+   "setup": "Weak-to-strong: Llama2-7B builds cards, GPT-4o answers, MATH500",
+   "note": null,
+   "where": "Sec 4.4, Table 3",
+   "quote": "MATH (79.6% vs. 77.2%)"
+  },
+  {
+   "claim": "On GPQA-Diamond, Qwen2.5-7B goes from 34.3 (few-shot CoT) to 43.4 with HiAR-ICL.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "43.4",
+   "unit": "% accuracy",
+   "baseline_value": "34.3",
+   "n": null,
+   "setup": "GPQA Diamond 198 questions, seeds from MATH training set",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Qwen2.5-7B Ours, column GPQA"
+  },
+  {
+   "claim": "HiAR-ICL stacked on a GRPO-trained Qwen2.5-1.5B raises MATH 43.8 -> 52.8 and GSM8K 71.9 -> 79.5.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "52.8",
+   "unit": "% accuracy (MATH)",
+   "baseline_value": "43.8",
+   "n": null,
+   "setup": "Qwen2.5-1.5B, GRPO trained on MATH train set (details not given)",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row GRPO+HiAR-ICL, column MATH"
+  },
+  {
+   "claim": "Combined with QwQ-32B-Preview, HiAR-ICL reaches 93.6% on MATH vs 90.6% for QwQ alone.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "93.6",
+   "unit": "% accuracy",
+   "baseline_value": "90.6",
+   "n": null,
+   "setup": "MATH, QwQ-32B-Preview as the reasoner",
+   "note": null,
+   "where": "Table 12",
+   "table": "Table 12, row HiAR-ICL (QwQ-32B-Preview), column MATH Acc (%)"
+  },
+  {
+   "claim": "Removing actions shrinks the average: CoT only 43.1, all five 60.0 on MATH+StrategyQA.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "60.0",
+   "unit": "% avg",
+   "baseline_value": "43.1",
+   "n": null,
+   "setup": "Llama3-8B-Instruct, Table 17",
+   "note": "Row label prints 'a4' twice (a1+a2+a3+a4+a4), a typo for a5.",
+   "where": "Table 17",
+   "table": "Table 17, row All, column Average"
+  },
+  {
+   "claim": "A 150-sample multi-task card set (50 each from math, arithmetic, commonsense) gives 73.7 average vs 75.6 task-specific.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "73.7",
+   "unit": "% avg",
+   "baseline_value": "75.6",
+   "n": null,
+   "setup": "Llama3-8B-Instruct",
+   "note": null,
+   "where": "Table 13",
+   "table": "Table 13, row HiAR-ICL-MT, column Average"
+  },
+  {
+   "claim": "Against tree methods on MATH with Llama3-8B, HiAR-ICL (46.6) beats rStar (42.9) but rStar is higher on GSM8K (91.1 vs 89.6).",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "46.6",
+   "unit": "% accuracy",
+   "baseline_value": "42.9",
+   "n": null,
+   "setup": "Llama3-8B-Instruct; baseline numbers taken from original papers where available",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Llama3-8B Ours, column MATH"
+  },
+  {
+   "claim": "Test-time scaling: more selected thought cards keeps improving Llama3-8B-Instruct, with MATH rising to 46.6 against a Pass@5 of 59.6.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Pass@5",
+   "value": "59.6",
+   "unit": "% Pass@5 (MATH)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Llama3-8B-Instruct, number of cards varied (Fig 6)",
+   "note": "Cost of extra cards is not quantified.",
+   "where": "Fig 6, read from figure labels",
+   "quote": "Pass@5: 59.6"
+  }
+ ],
+ "limits": [
+  "No variance, seeds or repeated runs are reported; AMC has 40 problems (one problem = 2.5 points).",
+  "Comparisons to GPT-4o and tree methods mix self-run and copied numbers; 'few-shot GPT-4o 77.2' in Sec 4.1 is actually the CoT+SC@4 row in Table 1 (few-shot CoT is 76.6).",
+  "Number of MCTS iterations, children per expansion n, the discount alpha, and the GRPO/SFT recipes behind Tables 5 and 14 are not given.",
+  "Authors concede: more thought cards improve accuracy but add overhead and 'finding an optimal balance' is future work; SC, PCC and PS contribute 'minimal statistical variations' so PCC is used and richer combinations are left open; action space tuning per domain left for future work.",
+  "Offline cost is fixed per seed set (200 samples) and amortised; time comparison is against rStar etc. on Llama3-8B only.",
+  "Distilling a single best path per question into an average-attribute template discards the question content; AMC and GPQA seeds come from the MATH training set (cross-domain).",
+  "Seed questions at test-time come from the train split of the same benchmark, so cards are task-tuned except in the OOD and weak-to-strong tests."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "thought card",
+   "definition": "structured reasoning template: a high-level action chain (e.g. SA->OST->CoT) with the average SC, PCC and PS of questions that share it",
+   "where": "Sec 2.1"
+  },
+  {
+   "term": "atomic reasoning actions",
+   "definition": "System Analysis, One-Step Thought, Chain-of-Thought, Divide and Conquer, Self-Reflection and Refinement",
+   "where": "Sec 2.1, App C.1"
+  },
+  {
+   "term": "PCC",
+   "definition": "Problem Condition Complexity: number of prior known conditions in the question",
+   "where": "Sec 2.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "rStar",
+   "year": 2024,
+   "arxiv": "2408.06195",
+   "relation": "baseline",
+   "note": "main efficiency comparison; reward = self-consistency likelihood follows it",
+   "quote": null
+  },
+  {
+   "work": "Buffer of Thoughts (BoT)",
+   "year": 2024,
+   "arxiv": "2406.04271",
+   "relation": "extends",
+   "note": "most relevant prior work; HiAR-ICL builds templates by MCTS with small models and selects by complexity",
+   "quote": null
+  },
+  {
+   "work": "Reasoning with Language Model is Planning with World Model (RAP)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "tree-based baseline; MCTS formulation",
+   "quote": null
+  },
+  {
+   "work": "Tree of Thoughts",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "tree baseline",
+   "quote": null
+  },
+  {
+   "work": "ReST-MCTS*",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "tree baseline",
+   "quote": null
+  },
+  {
+   "work": "LLaMA-Berry",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "tree baseline",
+   "quote": null
+  },
+  {
+   "work": "Chain-of-Thought prompting",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "zero/few-shot CoT",
+   "quote": null
+  },
+  {
+   "work": "Self-consistency",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "reward, early termination and final vote",
+   "quote": null
+  },
+  {
+   "work": "Many-shot ICL (Reinforced ICL)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "10-shot variant in Table 11",
+   "quote": null
+  },
+  {
+   "work": "GSM8K, SVAMP, MATH, AMC, StrategyQA, GPQA",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "evaluation sets",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "Flowchart of our method HiAR-ICL. This framework consists of two main parts: (1) MCTS-Powered Thought Card Construction; and (2) Adaptive Reasoning and Verification.",
+   "page": 3,
+   "why": "Shows the offline/online split and how seeds become cards."
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Comparison with leading tree-based method, rStar. (a) Performance Comparison. (b) Total Time Cost Per Sample",
+   "page": 7,
+   "why": "Shows 21.8x, 7.0x, 21.0x speedups."
+  },
+  {
+   "figure": "Table 4",
+   "caption": "Ablation results on Llama3-8B-Instruct.",
+   "page": 9,
+   "why": "Each component's contribution in one table."
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 2, Sec 2.1",
+   "snippet": "UCT(s) = Q(s) + w * sqrt(ln N(p) / N(s))",
+   "verbatim": false
+  },
+  {
+   "where": "Eq 3, Sec 2.1",
+   "snippet": "Score(q, p_q) = k * R(p_q|q) - (1-k) * C(p_q)   # R = leaf Q-value, C = number of actions; k = 0.95",
+   "verbatim": false
+  },
+  {
+   "where": "Eq 1, Sec 2.1",
+   "snippet": "Q(p) <- (1-alpha) Q(p) + alpha Q(s)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Table 1 caption says six benchmarks while Sec 4.1 text says four.",
+  "Table 17 last row label prints a4 twice (typo for a5).",
+  "Page numbers in figures are approximate, taken from text markers."
+ ]
+}

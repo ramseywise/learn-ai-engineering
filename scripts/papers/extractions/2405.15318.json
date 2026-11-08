@@ -1,0 +1,519 @@
+{
+ "schema": 1,
+ "key": "2405.15318",
+ "pdf": "ai-engineering/02-context-engineering/sources/qian-2024-long-llms-necessity-long-context.pdf",
+ "bib": {
+  "title": "Are Long-LLMs A Necessity For Long-Context Tasks?",
+  "authors": [
+   "Hongjin Qian",
+   "Zheng Liu",
+   "Peitian Zhang",
+   "Kelong Mao",
+   "Yujia Zhou",
+   "Xu Chen",
+   "Zhicheng Dou"
+  ],
+  "first_author": "Qian",
+  "year": 2024,
+  "venue": "preprint (under review)",
+  "arxiv": "2405.15318",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 63990,
+  "chars_total": 63990,
+  "engine": "pymupdf",
+  "skipped": "reference list skimmed only"
+ },
+ "type": "empirical",
+ "question": "Can long-context tasks be solved with a short-context LLM by strategically accessing and using parts of the input, instead of a long-context LLM?",
+ "hypothesis": "Most long-context tasks are short-context solvable: they can be solved from oracle short contexts within the input.",
+ "contributions": [
+  "Identify the problem of solving long-context tasks with short-LLMs",
+  "Propose LC-Boost, which adaptively reasons about how to access and utilize long context",
+  "Empirically verify effectiveness with superior performance at low resource consumption"
+ ],
+ "method": {
+  "summary": "LC-Boost splits a long input into chunks and has a short-context LLM (GPT-3.5-turbo-16K, limited to 4K working context) pick a processing strategy via a [Task Understanding] prompt, then run a loop of discrete actions (Retrieve, Move, Append, Merge, Answer, Aggregation) over chunks, accumulating extracted evidence, then answer. Compared with short, long and closed-source LLMs on 12 datasets, mostly LongBench.",
+  "task": "long-context QA, summarization, few-shot learning, synthetic counting, code completion",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "LongBench subsets (NarrativeQA, Qasper, MultiFieldQA, HotpotQA, 2WikiMQA, MuSiQue, GovReport, MultiNews, SAMSum, PassageCount, LCC)",
+    "role": "eval",
+    "size": "200 samples each except MultiFieldQA 150 and LCC 500; avg length 1,235 (LCC) to 18,409 (Narrative)",
+    "split": null,
+    "source": "LongBench (Bai et al. 2023)",
+    "preprocessing": "context truncated from the middle when exceeding a model's limit (following LongBench)"
+   },
+   {
+    "name": "Self-constructed dataset",
+    "role": "eval",
+    "size": "32 queries over 6 sources (ACL 2023 paper list 44,490, Diamond Sutra 19,993, 2024 Olympics schedule 15,844, Big Bang Theory S3E14 subtitle 11,136, The Little Prince 22,471, Harry Potter 2 122,591); avg length 39,420",
+    "split": null,
+    "source": "manually annotated by the authors",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT-3.5-turbo-16K",
+    "role": "proposed",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "16K, LC-Boost restricted to 4K",
+    "other": {
+     "note": "foundation model of LC-Boost; also baseline"
+    }
+   },
+   {
+    "name": "GPT-4-128K",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "128K",
+    "other": {
+     "note": "pilot study only"
+    }
+   },
+   {
+    "name": "BGE-Reranker-Large",
+    "role": "retriever",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Llama2-7B-Chat-4K, Llama3-8B-Instruct-8K, Vicuna-v1.5-7B-16K",
+    "role": "baseline",
+    "params": "7B-8B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "4K/8K/16K",
+    "other": {}
+   },
+   {
+    "name": "LongChat-v1.5-7B-32K, Mistral-7B-Instruct-v0.2-32K, Llama3-8B-80K, Phi-3-mini-128K, Yi-9B-200K",
+    "role": "baseline",
+    "params": "7B-9B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "32K-200K",
+    "other": {}
+   },
+   {
+    "name": "DeepSeek-v2 (32K), Claude-3-Haiku (200K)",
+    "role": "baseline",
+    "params": "DeepSeek-v2 236B MoE",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "32K/200K",
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": "Prompt-only LC-Boost: [Task Understanding] prompt with few-shot examples chooses option 1-4; chunk prompts [Append] (select up to ten key sentences by id), [Merge] (supplement previous summary), LongBench task prompt with 'null' instruction for scan. Final answer uses LongBench prompt with surrogate context.",
+   "retrieval": "BGE-Reranker-Large ranks all chunks (option 1); top-k not stated. Chunk size not stated beyond 4K working context. Code completion browses context in reverse (near to far).",
+   "parameters": {
+    "working_context": "4K",
+    "action_space": "7 actions",
+    "k_retrieved": null,
+    "chunk_size": null
+   },
+   "other": {
+    "energy_theory": "FLOPs/312 TFLOPS x 400W (A100, BF16)",
+    "energy_practice": "Llama2-7B-128K (brute-force) vs Llama2-7B-chat-4K (LC-Boost), GPU time and power recorded",
+    "hardware": "one node with 8 A100 80G GPUs"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "F1",
+     "definition": "LongBench F1 for QA",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Rouge-L",
+     "definition": "summarization and SAMSum",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Accuracy",
+     "definition": "Passage Count",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Edit Sim",
+     "definition": "code completion (LCC)",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Energy",
+     "definition": "Joules, theoretical and measured",
+     "unit": "J",
+     "higher_is_better": false
+    },
+    {
+     "name": "Token consumption",
+     "definition": "end-to-end tokens relative to brute force",
+     "unit": "%",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "short LLMs",
+    "long LLMs",
+    "closed-source LLMs",
+    "ablation action-space variants incl. Retrieve only, Merge only, Append only, Random, Brute-force"
+   ],
+   "protocol": "Baselines run with LongBench settings; single numbers, no seeds or significance tests reported."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": null
+  },
+  "prompts": [
+   {
+    "purpose": "[Task Understanding]",
+    "text": "You need to process a task with a long context that greatly exceeds your context limit.\nThe only feasible way to handle this is by processing the long context chunk by chunk.\nBelow is the original task prompt:\n{task_prompt}\nBelow is the query:\n{input_query}\nYou have the following options to process the long context. Choose one of them:\n[1]. Retrieve the chunk most relevant to the input query to support answer generation.\n[2]. Summarize each chunk and then aggregate the summaries after processing all chunks.\n[3]. Extract key sentences from each chunk and then aggregate them after processing all chunks.\n[4]. Sequentially scan chunks and produce the answer as soon as the query can be answered.\nBelow are some examples for reference:\nThe examples begin as follows:\n{examples}\nThe examples conclude here.\nPlease learn the examples and select one of the options by only outputting the corresponding index number.",
+    "where": "Table 6"
+   },
+   {
+    "purpose": "[Append]",
+    "text": "You are given an article and a question. Read the article carefully and follow my instructions to process it.\nArticle:\nThe article begins as follows:\n{article}\nThe article concludes here.\nQuestion:\n{question}\nInstructions:\nEach sentence in the article is marked with a sentence identifier [si], for example [s1].\nSelect up to ten key sentences from the article that are most likely to answer the question.\nOnly output the selected sentence identifiers, separated by commas.\nExample: [s39],[s54]\nIf no sentences are relevant, please output \"null\".",
+    "where": "Table 8"
+   },
+   {
+    "purpose": "[Merge]",
+    "text": "You are provided with a portion of an article, a question, and summarization of the article's previous portions. Read the article portion and follow my instructions to process it.\n...\nInstruction:\nSummarize the partial article to supplement the previous summarization, which can better support the task.\nIf no content needs to be supplemented, please output \"null\".",
+    "where": "Table 10 (abridged)"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "models.GPT-3.5",
+    "quote": "we employ GPT-3.5 as the foundation model for LC-Boost in the subsequent experiments",
+    "where": "Sec 2.3"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "LC-Boost with a 4K context beats all baselines on multi-doc QA, 56.4 vs next best 49.1 (DeepSeek-v2).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Multi-doc QA avg",
+   "value": 56.4,
+   "unit": "%",
+   "baseline_value": "GPT-3.5-turbo-16K 38.7",
+   "n": null,
+   "setup": "12 datasets, GPT-3.5-turbo-16K as LC-Boost base, 4K context",
+   "quote": null,
+   "table": "Table 1, row LC-Boost (4K), column Multi-Doc",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "LC-Boost improves single-doc QA over its own base model GPT-3.5-turbo-16K.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Single-doc QA avg",
+   "value": 47.8,
+   "unit": "%",
+   "baseline_value": "39.8",
+   "n": null,
+   "setup": "same",
+   "quote": null,
+   "table": "Table 1, row LC-Boost (4K), column Single-Doc",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "LC-Boost on the synthetic tasks vs GPT-3.5-turbo-16K.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Synthetic avg",
+   "value": 27.5,
+   "unit": "%",
+   "baseline_value": "18.7",
+   "n": null,
+   "setup": "same",
+   "quote": null,
+   "table": "Table 1, row LC-Boost (4K), column Synthetic",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "LC-Boost does not win code completion; Yi-9B-200K scores higher.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Code (edit sim)",
+   "value": 59.0,
+   "unit": "%",
+   "baseline_value": "Yi-9B-200K 72.1",
+   "n": null,
+   "setup": "same",
+   "quote": null,
+   "table": "Table 1, row LC-Boost (4K), column Code",
+   "note": "Table 3 prints Yi-9B-200K LCC as 72.0, Table 1 as 72.1",
+   "where": "Table 1"
+  },
+  {
+   "claim": "Summarization gain over GPT-3.5-turbo-16K is small.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Summ. avg",
+   "value": 31.8,
+   "unit": "%",
+   "baseline_value": "28.1",
+   "n": null,
+   "setup": "same",
+   "quote": null,
+   "table": "Table 1, row LC-Boost (4K), column Summ.",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "On the self-constructed whole-context reasoning set LC-Boost scores 47.7 vs GPT-3.5-turbo-16K 32.9.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Self (F1&Acc)",
+   "value": 47.7,
+   "unit": "%",
+   "baseline_value": "32.9",
+   "n": null,
+   "setup": "32 queries, avg length 39,420",
+   "quote": null,
+   "table": "Table 3, row LC-Boost (4K), column Self",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Token consumption of LC-Boost on NarrativeQA is a third of brute force; on GovReport it is higher.",
+   "kind": "measured",
+   "source": null,
+   "metric": "token ratio vs brute force",
+   "value": 34.1,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "NarrativeQA, GovReport, LCC",
+   "quote": "LC-Boost’s token consumption was 34.1% of the brute-force method’s consumption in NarrativeQA, 112% in GovReport, and 29.5% in LCC",
+   "table": null,
+   "note": "GovReport 112%, LCC 29.5%",
+   "where": "Appendix C"
+  },
+  {
+   "claim": "Pilot study: LC-Boost with 4K context performs as well as or better than GPT-4-128K brute force on all task groups (bar heights not given in text).",
+   "kind": "measured",
+   "source": null,
+   "metric": "pilot comparison",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-4 and GPT-3.5 as base, LongBench task groups",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Fig 2, Sec 2.2"
+  },
+  {
+   "claim": "Dynamic action selection beats fixed strategies in ablation, especially for single and multi-doc QA, but not for few-shot SAMSum (values only in Fig 3).",
+   "kind": "measured",
+   "source": null,
+   "metric": "ablation",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "NarrativeQA, HotpotQA, SAMSum",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Sec 3.3, Fig 3"
+  },
+  {
+   "claim": "Long LLMs are inconsistent across tasks, e.g. Yi-9B-200K scores 14.6 on few-shot but 72.1 on code; authors infer long-context adaptation may harm general ability.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Few-shot avg",
+   "value": 14.6,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Yi-9B-200K",
+   "quote": null,
+   "table": "Table 1, row Yi-9B-200K, column Few-shot",
+   "note": null,
+   "where": "Table 1, Sec 3.2"
+  },
+  {
+   "claim": "Case: counting single-author ACL 2023 papers (45K context), LC-Boost answers 8 (correct) while Phi-3-mini-128K says 11, GPT-3.5-turbo-16K 0, Claude-3-Haiku 1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 1,
+   "unit": "score",
+   "baseline_value": null,
+   "n": null,
+   "setup": "one query",
+   "quote": "LC-Boost: 8 papers (Acc. Score: 1)",
+   "table": null,
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Brute-force energy grows markedly with context length, LC-Boost at 4K grows only mildly; no numeric values in text.",
+   "kind": "measured",
+   "source": null,
+   "metric": "energy",
+   "value": null,
+   "unit": "J",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Llama2-7B-128K vs Llama2-7B-chat-4K, A100",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Fig 4, Sec 3.5"
+  }
+ ],
+ "limits": [
+  "Authors concede some tasks may need the full context and LC-Boost may fail there.",
+  "Discrete action space; free-form action prediction was unstable with GPT-3.5.",
+  "Only GPT-3.5 used as base model; open-source LLMs lacked zero-shot instruction following.",
+  "Token cost can exceed brute force for aggregation tasks (112% on GovReport).",
+  "No seeds, variance or significance tests; chunk size, top-k and decoding settings not stated; no code release stated.",
+  "Self-constructed set has only 32 queries.",
+  "Theory (DPI) is argued with conditions (independent chunks, optimal compression) that rarely hold; the pilot study reports bar charts without numbers in text.",
+  "Energy comparison compares different models (7B-128K vs 7B-4K) and includes multi-GPU effects."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "short-context solvable",
+   "definition": "long-context tasks can be solved by purely working with oracle short-contexts within the long-context tasks' inputs",
+   "where": "Abstract"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "LongBench",
+   "year": 2023,
+   "arxiv": "2308.14508",
+   "relation": "uses-data",
+   "note": "12 datasets, prompts and truncation protocol",
+   "quote": null
+  },
+  {
+   "work": "BGE-Reranker / BGE M3-Embedding (Chen et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "retriever for [Retrieve]",
+   "quote": null
+  },
+  {
+   "work": "Lost in the Middle (Liu et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "cited to explain missed mid-context details",
+   "quote": null
+  },
+  {
+   "work": "Xu et al. 2023a (RAG vs long context)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "RAG as surrogate for long context",
+   "quote": null
+  },
+  {
+   "work": "Ratner et al. 2022; Xu et al. 2023a",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "sequential context processing",
+   "quote": null
+  },
+  {
+   "work": "Qian et al. 2024 (chunking-free refinement)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "same group's context refinement",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Illustration for LC-Boost: brute-force vs naive RAG vs LC-Boost RAG vs divide-and-conquer",
+   "page": 2,
+   "why": "Shows naive RAG fails on aggregation questions while sequential scan succeeds"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Energy consumption analysis",
+   "page": 9,
+   "why": "Theoretical and practical Joules vs context length"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Figure 2, 3 and 4 values are only in charts; not extractable from text.",
+  "Table 1 and Table 3 print Yi-9B-200K code score as 72.1 and 72.0.",
+  "No embedded instructions found.",
+  "Query-rewrite prompt (Table 7) not recorded verbatim."
+ ]
+}

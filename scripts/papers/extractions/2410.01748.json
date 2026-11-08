@@ -1,0 +1,740 @@
+{
+ "schema": 1,
+ "key": "2410.01748",
+ "pdf": "generative-ai/08-eval/sources/hosseini-2024-not-all-llm-reasoners-created.pdf",
+ "bib": {
+  "title": "Not All LLM Reasoners Are Created Equal",
+  "authors": [
+   "Arian Hosseini",
+   "Alessandro Sordoni",
+   "Daniel Toyama",
+   "Aaron Courville",
+   "Rishabh Agarwal"
+  ],
+  "first_author": "Hosseini",
+  "year": 2024,
+  "venue": "preprint",
+  "arxiv": "2410.01748",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 57519,
+  "chars_total": 57519,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "How deep is LLMs' grade-school math reasoning when two GSM8K questions are chained so the second depends on the first answer?",
+ "hypothesis": "A model that solves Q1 and Q2 independently with accuracies S1 and S2 should score S1*S2 on the chained problem.",
+ "contributions": [
+  "Compositional GSM: two-hop chaining of GSM8K test questions at same difficulty",
+  "Reasoning-gap measure across ~23 open and closed LLMs",
+  "Analysis of size/cost, instruction tuning, math specialization, finetuning overfitting, code vs NL, leakage and distraction"
+ ],
+ "method": {
+  "summary": "Pairs of GSM8K test questions are chained (Q1 answer becomes variable X in a modified Q2). Models are evaluated 8-shot at temperature 0 on original, modified and compositional sets; the gap is S_comp - S1*S2. Extra experiments: rejection finetuning of Gemma2 27B PT, code-vs-CoT prompting.",
+  "task": "grade-school math word problems, compositional two-hop",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "GSM8K test (original, Q1 set)",
+    "role": "eval",
+    "size": "1200 examples",
+    "split": "subset of test",
+    "source": "Cobbe et al., 2021",
+    "preprocessing": null
+   },
+   {
+    "name": "Modified GSM8K (Q2 set)",
+    "role": "eval",
+    "size": "1200 examples",
+    "split": "derived from test",
+    "source": "a number in Q2 replaced by X; new answer a positive integer near old; computed by editing code-form solutions from Gao et al. 2023; 16 samples each from GPT-4o and Gemini 1.5 Pro, dropped if fewer than 4 of 16 agree, manual check/edit about 25%",
+    "preprocessing": "number substitution"
+   },
+   {
+    "name": "Compositional GSM",
+    "role": "eval",
+    "size": "1200 examples",
+    "split": "test",
+    "source": "this work",
+    "preprocessing": "Q1+Q2 chained"
+   },
+   {
+    "name": "GSM8K train",
+    "role": "train",
+    "size": "not stated (full train set, inferred from 'all GSM8K training queries')",
+    "split": "train",
+    "source": "Cobbe et al., 2021",
+    "preprocessing": "rejection finetuning: 10 solutions per question from Gemma2 27B PT 8-shot, keep correct"
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT-4o",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-4o mini",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "LLAMA3 8B/70B (PT, IT)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Phi-2",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Phi-3-mini-4k-IT",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Gemini 1.0 Pro",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Gemini 1.5 Flash",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Gemini 1.5 Pro",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Gemma2 9B/27B (PT, IT)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Mistral-7B (PT, IT)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Mixtral-8x7B (PT, IT)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "NuminaMath-7B-CoT",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Mathstral-7B",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Qwen2.5-Math-7B-IT",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Qwen2.5-Math-72B-IT",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Gemma2 27B PT",
+    "role": "base",
+    "params": "27B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "supervised finetuning on GSM8K human solutions, or on self-generated correct solutions (rejection finetuning)",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": "checkpoints evaluated at 50, 100 and 400 steps",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "note": "Only Gemma2 27B PT is trained; hyperparameters not given"
+   }
+  },
+  "inference": {
+   "decoding": "greedy-like, temperature 0",
+   "temperature": "0",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "1 sample per item, pass@1",
+   "prompting": "standard 8-shot for original/modified; 8-shot compositional prompt; 8-shot code prompt (two functions solve_q1, solution). Optional preamble prefixed; both with and without tested, best reported.",
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "pass@1 accuracy",
+     "definition": "fraction correct, single greedy sample; compositional requires final Q2 answer correct",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "reasoning gap",
+     "definition": "S_comp - S1*S2, where S1 is accuracy on Q1 (original) set and S2 on modified Q2 set",
+     "unit": "points",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "expected S1*S2 (y=x^2 trend)",
+    "original GSM8K accuracy"
+   ],
+   "protocol": "single run per model; no seeds or significance tests; Fig 1 x-axis is sqrt(S1*S2)"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": null
+  },
+  "prompts": [
+   {
+    "purpose": "GSM8K preamble",
+    "text": "I am going to give you a series of demonstrations of math Problems and Solutions. When you respond, respond only with the Solution of the final Problem, thinking step by step. At the end of the Solution, when you give your final answer, write it in the form “The final answer is ANSWER.”",
+    "where": "Appendix B"
+   },
+   {
+    "purpose": "Compositional GSM preamble",
+    "text": "I am going to give you a series of demonstrations of compositional math questions and solutions. Respond by thinking step by step. Solve the first question and write the intermediate answer as “The Q1 answer is ANSWER1.“ Then solve Q2. At the end of the solution, when you give your final answer, write it in the form “The final answer is ANSWER2.”",
+    "where": "Appendix B"
+   },
+   {
+    "purpose": "Compositional query template",
+    "text": "Let X be the answer to Q1:\nQ1: {QUESTION_1}\nsolve it and use the value of X to solve Q2.\nExplain your answer step by step.\nQ2: {QUESTION_2}\nA:",
+    "where": "Appendix E"
+   },
+   {
+    "purpose": "Code prompt header",
+    "text": "Write two functions ‘solve_q1‘ and ‘solution‘ to solve Q1 and Q2 problems.",
+    "where": "Appendix F"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "GPT-4o mini has a much larger reasoning gap than GPT-4o despite near-equal GSM8K accuracy.",
+   "kind": "measured",
+   "source": null,
+   "metric": "reasoning gap (S_comp - S1*S2)",
+   "value": "14.2",
+   "unit": "points",
+   "baseline_value": null,
+   "n": 1200,
+   "setup": "Compositional GSM, 1200 GSM8K test pairs, 8-shot, temperature 0, pass@1",
+   "quote": null,
+   "table": "Figure 4, GPT-4o mini bar label (14.2) vs GPT-4o (1.1)",
+   "note": null,
+   "where": "Fig 4, p4"
+  },
+  {
+   "claim": "GPT-4o reasoning gap is small.",
+   "kind": "measured",
+   "source": null,
+   "metric": "reasoning gap",
+   "value": "1.1",
+   "unit": "points",
+   "baseline_value": null,
+   "n": 1200,
+   "setup": "Compositional GSM, 1200 GSM8K test pairs, 8-shot, temperature 0, pass@1",
+   "quote": null,
+   "table": "Figure 4, GPT-4o label 1.1",
+   "note": null,
+   "where": "Fig 4"
+  },
+  {
+   "claim": "Gemma2-9B-IT has the largest gap among the four cost pairs.",
+   "kind": "measured",
+   "source": null,
+   "metric": "reasoning gap",
+   "value": "37.3",
+   "unit": "points",
+   "baseline_value": null,
+   "n": 1200,
+   "setup": "Compositional GSM, 1200 GSM8K test pairs, 8-shot, temperature 0, pass@1",
+   "quote": null,
+   "table": "Figure 4, Gemma2 9B-IT label 37.3 (27B-IT 18)",
+   "note": null,
+   "where": "Fig 4"
+  },
+  {
+   "claim": "LLAMA3-8B-IT gap vs 70B-IT.",
+   "kind": "measured",
+   "source": null,
+   "metric": "reasoning gap",
+   "value": "27.5",
+   "unit": "points",
+   "baseline_value": null,
+   "n": 1200,
+   "setup": "Compositional GSM, 1200 GSM8K test pairs, 8-shot, temperature 0, pass@1",
+   "quote": null,
+   "table": "Figure 4, LLAMA3 8B-IT label 27.5 (70B-IT 4.9)",
+   "note": null,
+   "where": "Fig 4"
+  },
+  {
+   "claim": "Gemini 1.5 Flash gap vs 1.5 Pro.",
+   "kind": "measured",
+   "source": null,
+   "metric": "reasoning gap",
+   "value": "11.3",
+   "unit": "points",
+   "baseline_value": null,
+   "n": 1200,
+   "setup": "Compositional GSM, 1200 GSM8K test pairs, 8-shot, temperature 0, pass@1",
+   "quote": null,
+   "table": "Figure 4, Gemini 1.5 Flash label 11.3 (1.5 Pro 5.8)",
+   "note": null,
+   "where": "Fig 4"
+  },
+  {
+   "claim": "Cheaper models perform comparably on GSM8K but show a 2-12x worse reasoning gap on compositional GSM.",
+   "kind": "measured",
+   "source": null,
+   "metric": "gap ratio",
+   "value": "2-12",
+   "unit": "x",
+   "baseline_value": null,
+   "n": 1200,
+   "setup": "Compositional GSM, 1200 GSM8K test pairs, 8-shot, temperature 0, pass@1",
+   "quote": "they exhibit a 2 −12× worse reasoning gap on compositional GSM",
+   "table": null,
+   "note": null,
+   "where": "3.1"
+  },
+  {
+   "claim": "GPT-4o mini and Gemini 1.5 Flash exceed 90% on GSM while priced 25-35x cheaper than their larger siblings.",
+   "kind": "reported",
+   "source": null,
+   "metric": "GSM accuracy",
+   "value": ">90",
+   "unit": "%",
+   "baseline_value": null,
+   "n": 1200,
+   "setup": "GPT-4o mini, Gemini 1.5 Flash vs GPT-4o, 1.5 Pro",
+   "quote": "both achieve above 90% accuracy on GSM, while priced 25−35× cheaper than GPT-4o and Gemini 1.5 Pro respectively",
+   "table": null,
+   "note": null,
+   "where": "3.1"
+  },
+  {
+   "claim": "Math-specialized models show gaps like same-size general models: Qwen2.5-Math-7B-IT solves under 60% of compositional problems yet scores above 80% on MATH.",
+   "kind": "measured",
+   "source": null,
+   "metric": "compositional GSM accuracy",
+   "value": "<60",
+   "unit": "%",
+   "baseline_value": null,
+   "n": 1200,
+   "setup": "Qwen2.5-Math-7B-IT",
+   "quote": "solves less than 60% of the compositional grade-school math problems",
+   "table": null,
+   "note": null,
+   "where": "3.3"
+  },
+  {
+   "claim": "Math-specialized gaps: Numina-7B 12.1, Mathstral-7B 14, Qwen2.5-7B 21.9, Qwen2.5-72B 2.6.",
+   "kind": "measured",
+   "source": null,
+   "metric": "reasoning gap",
+   "value": "21.9",
+   "unit": "points (Qwen2.5-7B)",
+   "baseline_value": null,
+   "n": 1200,
+   "setup": "Compositional GSM, 1200 GSM8K test pairs, 8-shot, temperature 0, pass@1",
+   "quote": null,
+   "table": "Figure 6, label Qwen2.5-7B (Math-IT) 21.9; others 12.1, 14, 2.6",
+   "note": "Label-to-model order read from Fig 6 layout; verify against image.",
+   "where": "Fig 6"
+  },
+  {
+   "claim": "Instruction tuning on small models helps GSM8K much more than compositional GSM (e.g. LLAMA3-8B +25.1 vs +12.6); for large models the pattern reverses (LLAMA3-70B +8.6 vs +19.0).",
+   "kind": "measured",
+   "source": null,
+   "metric": "IT gain over PT",
+   "value": "25.1 vs 12.6",
+   "unit": "points",
+   "baseline_value": null,
+   "n": 1200,
+   "setup": "LLAMA3-8B PT vs IT",
+   "quote": null,
+   "table": "Figure 5, LLAMA3-8B labels +25.1 (GSM8K), +12.6 (Comp GSM); LLAMA3-70B +8.6, +19.0",
+   "note": null,
+   "where": "Fig 5"
+  },
+  {
+   "claim": "Mistral-7B IT gains: +14.1 GSM8K but +4.3 compositional.",
+   "kind": "measured",
+   "source": null,
+   "metric": "IT gain",
+   "value": "14.1 vs 4.3",
+   "unit": "points",
+   "baseline_value": null,
+   "n": 1200,
+   "setup": "Mistral-7B PT vs IT",
+   "quote": null,
+   "table": "Figure 5, Mistral-7B labels +14.1, +4.3",
+   "note": null,
+   "where": "Fig 5"
+  },
+  {
+   "claim": "Gemma2-9B IT gains: +22.8 GSM8K but +4.8 compositional.",
+   "kind": "measured",
+   "source": null,
+   "metric": "IT gain",
+   "value": "22.8 vs 4.8",
+   "unit": "points",
+   "baseline_value": null,
+   "n": 1200,
+   "setup": "Gemma2-9B PT vs IT",
+   "quote": null,
+   "table": "Figure 5, Gemma2-9B labels +22.8, +4.8",
+   "note": null,
+   "where": "Fig 5"
+  },
+  {
+   "claim": "Finetuning Gemma2 27B PT on GSM8K: compositional accuracy rises up to 100 steps then drops at 400 while GSM8K keeps improving (task overfitting); synthetic (rejection-sampled) data beats human data.",
+   "kind": "measured",
+   "source": null,
+   "metric": "step checkpoints",
+   "value": "100 then 400",
+   "unit": "steps",
+   "baseline_value": null,
+   "n": 1200,
+   "setup": "Gemma2 27B PT, human vs self-generated solutions",
+   "quote": "compositional GSM performance increases with some training (up to 100 steps), but drops with more training steps (400 steps) while GSM8K test performance keeps increasing",
+   "table": null,
+   "note": null,
+   "where": "3.4, Fig 7"
+  },
+  {
+   "claim": "Generating Python code instead of NL CoT helps small models more on compositional GSM (relative gains: Mistral 7B +149%, Mixtral +71%; LLAMA3 8B +69%, 70B +2%; Gemma2 9B +74%, 27B +27%).",
+   "kind": "measured",
+   "source": null,
+   "metric": "relative improvement of code over CoT",
+   "value": "149",
+   "unit": "%",
+   "baseline_value": null,
+   "n": 1200,
+   "setup": "Mistral-7B-IT, 8-shot code prompt",
+   "quote": null,
+   "table": "Figure 8, labels +2%, +69%, +27%, +74%, +71%, +149% (pairing read from figure layout)",
+   "note": "Which label belongs to which model is read from figure layout.",
+   "where": "Fig 8"
+  },
+  {
+   "claim": "Modified (Q2) GSM8K questions are solved at about the original rate, so test-set leakage is not the main cause of the gap.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": 1200,
+   "setup": "Compositional GSM, 1200 GSM8K test pairs, 8-shot, temperature 0, pass@1",
+   "quote": "most LLMs obtain similar accuracy on modified GSM problems, suggesting that test-set leakage is not a major concern in our setup",
+   "table": null,
+   "note": null,
+   "where": "3.6, Fig 9"
+  },
+  {
+   "claim": "Models are distracted by having Q2 in the prompt: several solve Q1 less often in compositional format than standalone, and fail on Q2 even after correct Q1 (poor second hop).",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": 1200,
+   "setup": "Compositional GSM, 1200 GSM8K test pairs, 8-shot, temperature 0, pass@1",
+   "quote": "Examining the responses from models with greater deviations from the trendline in Figure 10, we find that they often overlook important details",
+   "table": null,
+   "note": null,
+   "where": "3.6, Fig 10-12"
+  },
+  {
+   "claim": "About 25% of modified questions needed manual edits after filtering where fewer than 4 of 16 GPT-4o/Gemini 1.5 Pro samples agreed with the code-executed answer.",
+   "kind": "measured",
+   "source": null,
+   "metric": "manually modified",
+   "value": "25",
+   "unit": "%",
+   "baseline_value": null,
+   "n": 1200,
+   "setup": "dataset construction",
+   "quote": "We checked these questions manually and modified them if needed so that they are logical (about 25% of questions).",
+   "table": null,
+   "note": null,
+   "where": "2"
+  }
+ ],
+ "limits": [
+  "Authors say it is a case study, not a new benchmark to be solved.",
+  "Single run, temperature 0, no confidence intervals; 1200 items only.",
+  "Hyperparameters of the finetuning experiment are not given; dataset and code release not stated.",
+  "Leakage conclusion rests on Q1 vs modified-Q2 accuracy similarity, which is indirect.",
+  "Figure-derived numbers (gaps, deltas) are not in a table; models are mid-2024 and dated.",
+  "Gap definition S1*S2 assumes independence of the two hops."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "reasoning gap",
+   "definition": "Δ = S_comp − S1 × S2",
+   "where": "Eq 1, p3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "A careful examination of LLM performance on grade school arithmetic (GSM1K)",
+   "year": 2024,
+   "arxiv": "2405.00332",
+   "relation": "extends",
+   "note": "inspired; this work finds leakage not a major cause; also supplies 8-shot protocol",
+   "quote": null
+  },
+  {
+   "work": "GSM8K, Cobbe et al.",
+   "year": 2021,
+   "arxiv": "2110.14168",
+   "relation": "uses-data",
+   "note": "source of questions",
+   "quote": null
+  },
+  {
+   "work": "PAL: program-aided language models",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "code-form solutions used to compute new answers and for code prompting",
+   "quote": null
+  },
+  {
+   "work": "Functional benchmarks for robust evaluation of reasoning performance, and the reasoning gap",
+   "year": 2024,
+   "arxiv": "2402.19450",
+   "relation": "related",
+   "note": "functional MATH variants",
+   "quote": null
+  },
+  {
+   "work": "Measuring and narrowing the compositionality gap in language models",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "contradicts",
+   "note": "Press et al. found gap does not shrink with GPT-3 size; here frontier models show smaller gaps",
+   "quote": null
+  },
+  {
+   "work": "Rejection finetuning (Yuan et al. 2023)",
+   "year": 2023,
+   "arxiv": "2308.01825",
+   "relation": "uses-method",
+   "note": "synthetic data",
+   "quote": null
+  },
+  {
+   "work": "Large language models can be easily distracted by irrelevant context",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "distraction",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Reasoning Gap: GSM8K vs compositional GSM accuracy per model, trend y=x^2",
+   "page": 1,
+   "why": "shows the gap across all models"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Cost efficient LLMs reason differently",
+   "page": 4,
+   "why": "gaps per high/low-cost pair"
+  },
+  {
+   "figure": "Fig 7",
+   "caption": "Overfitting with supervised fine-tuning",
+   "page": 6,
+   "why": "compositional accuracy falls while GSM8K rises"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Figure values (gaps, deltas) read from labels in figure text; pairing with models inferred from layout.",
+  "Appendix D/E/F prompts abbreviated by the authors."
+ ]
+}

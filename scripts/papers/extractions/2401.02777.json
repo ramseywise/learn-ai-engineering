@@ -1,0 +1,534 @@
+{
+ "schema": 1,
+ "key": "2401.02777",
+ "pdf": "generative-ai/03-agentic-foundations/sources/liu-2024-llm-conversational-agent.pdf",
+ "bib": {
+  "title": "From LLM to Conversational Agent: A Memory Enhanced Architecture with Fine-Tuning of Large Language Models",
+  "authors": [
+   "Na Liu",
+   "Liangyu Chen",
+   "Xiaoyu Tian",
+   "Wei Zou",
+   "Kaijiang Chen",
+   "Ming Cui"
+  ],
+  "first_author": "Liu",
+  "year": 2024,
+  "venue": "preprint",
+  "arxiv": "2401.02777",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 65056,
+  "chars_total": 65056,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "system",
+ "question": "How can an LLM be turned into a controllable multi-turn conversational agent by extending ReAct with a scratchpad and retrieved examples as working memory, and by fine-tuning on a small curated dataset?",
+ "hypothesis": "Adding a Scratchpad (short-term memory) and retrieved Examples (long-term memory) to ReAct, and fine-tuning instead of prompting, improves quality, controllability and efficiency.",
+ "contributions": [
+  "RAISE, an enhancement of ReAct that uses scratchpad and retrieved examples to augment the agent's capabilities.",
+  "A fine-tuning scenario for LLMs within RAISE that, compared with prompts alone, enhances controllability, effectiveness and efficiency.",
+  "Experiments on an in-house real-estate sales dataset showing RAISE's superiority as a conversational agent."
+ ],
+ "method": {
+  "summary": "RAISE keeps a working memory of system prompt, conversation history, task trajectory, scratchpad (dialogue-level key-value store of tool observations and entities) and top-k retrieved examples (turn-level, vector retrieval from an example pool of <Q,A> pairs) in a ReAct loop with 12 tools. Training data are built from real conversations by selection, scene extraction, GPT-4 CoT completion with manual validation, and scene augmentation, then Qwen-14B-Chat is fully fine-tuned. Five frameworks (Act-Only, ReAct, +Scratchpad, +Examples, RAISE) are compared under prompting (GPT-4, GPT-3.5, Qwen) and fine-tuning (Qwen).",
+  "task": "multi-turn conversational agent with tool use (real estate sales IM)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "In-house Beike real-estate IM scenes",
+    "role": "both",
+    "size": "948 scenes (<1K)",
+    "split": "100 random for evaluation, 848 for fine-tuning",
+    "source": "Authentic anonymised dialogues from Beike; in-house, not stated as public",
+    "preprocessing": "Conversation selection (scene completion, minimum turns, quality, user-message ratio), anonymisation, one scene per turn, sampling by turn count and intent, GPT-4 CoT generation plus manual validation, augmentation with Information Missing and Capability Mismatch scenes. Scratchpad and Examples content varied 20% empty, 30% partial, 50% full."
+   }
+  ],
+  "models": [
+   {
+    "name": "Qwen-14B-Chat",
+    "role": "base",
+    "params": "14B",
+    "architecture": "decoder-only chat LLM",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "model_max_length 4096 in SFT",
+    "other": {
+     "use": "full-parameter SFT and prompting"
+    }
+   },
+   {
+    "name": "GPT-4",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "prompting; also generates all fine-tuning CoT data; ChatCompletion mode, as of November 2023, temperature 0.5"
+    }
+   },
+   {
+    "name": "GPT-3.5",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "prompting; ChatCompletion mode, November 2023, temperature 0.5"
+    }
+   }
+  ],
+  "training": {
+   "objective": "Supervised fine-tuning on Sample = SystemPrompt + History + Query + CoT (Thought, Action, Observation) + Response; full-parameter",
+   "optimizer": null,
+   "lr": "5e-6",
+   "lr_schedule": "cosine",
+   "warmup": "warmup ratio 0.03",
+   "batch_size": "64",
+   "steps": null,
+   "epochs": "3",
+   "tokens": null,
+   "seq_len": "4096 (model_max_length)",
+   "precision": "bfloat16",
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "training_hardware_note": "only inference hardware (1x A100 80GB) is stated",
+    "one_shot": "prompting uses a one-shot example for structured output; fine-tuning omits it"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": "0.5",
+   "top_p": "0.85",
+   "max_tokens": "300 (max_new_tokens)",
+   "samples": "inferred: one run per scene; not stated",
+   "prompting": "System prompt with profile, task instruction, 12 tool descriptions, one-shot example, then history and query (Tables 5-9). Steps per framework: Act-Only (Action, Observation, Finish); ReAct (Thought, Action, Observation, Finish); +Scratchpad; +Examples; RAISE (Scratchpad, Examples, Thought, Action, Observation, Finish).",
+   "retrieval": "top-k relevant examples recalled from the Example Pool by vector retrieval over history and current query; k and embedding model not stated",
+   "parameters": {
+    "repetition_penalty": "1.1",
+    "stop_criteria": "enough information, preset loop limit exceeded, or system error (limit value not stated)"
+   },
+   "other": {
+    "hardware": "NVIDIA A100 80GB for Qwen inference"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Specificity",
+     "definition": "0-2 human score: vague (0), some specifics (1), detailed and direct (2)",
+     "unit": "score 0-2",
+     "higher_is_better": true
+    },
+    {
+     "name": "Factuality",
+     "definition": "0-2: false (0), minor inaccuracies (1), fully accurate (2)",
+     "unit": "score 0-2",
+     "higher_is_better": true
+    },
+    {
+     "name": "Coherence",
+     "definition": "0-2: disorganized (0), some inconsistencies (1), very coherent (2)",
+     "unit": "score 0-2",
+     "higher_is_better": true
+    },
+    {
+     "name": "Naturalness",
+     "definition": "0-2: mechanical (0), somewhat stiff (1), smooth and human-like (2)",
+     "unit": "score 0-2",
+     "higher_is_better": true
+    },
+    {
+     "name": "Ov. Qual. Score",
+     "definition": "inferred: sum of the four quality scores (max 8)",
+     "unit": "score",
+     "higher_is_better": true
+    },
+    {
+     "name": "Plan Steps",
+     "definition": "Number of planning steps",
+     "unit": "count",
+     "higher_is_better": false
+    },
+    {
+     "name": "Action Steps",
+     "definition": "Number of action steps",
+     "unit": "count",
+     "higher_is_better": false
+    },
+    {
+     "name": "Inference Speed",
+     "definition": "Average time to process each user query",
+     "unit": "s",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "Act-Only",
+    "ReAct",
+    "ReAct+Scratchpad",
+    "ReAct+Examples",
+    "prompting GPT-3.5, GPT-4, Qwen-14B-Chat vs fine-tuned Qwen-14B-Chat"
+   ],
+   "protocol": "Quality scored by human annotation; efficiency by statistics. GPT API speed omitted. Annotator count, agreement, blinding, seeds and significance tests are not stated."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": null
+  },
+  "prompts": [
+   {
+    "purpose": "RAISE inference prompt (Table 5)",
+    "text": "You are a proficient real estate consultant working for Beike Zhaofang, a company that provides real estate brokerage services. [...] You need to respond to client queries using the steps of Scratchpad, Examples, Thought, Action, Observation, Finish, based on historical conversations and the client's questions. Avoid repeating actions that have been used before. Each tool in the toolset is defined as follows: {tool descriptions} Here is an example: (Omit in the fine-tuning method.) [...] Let's get started: Conversation History: {Conversation History} Current Query: {Current Query}",
+    "where": "Appendix, Table 5 (Tables 6-9 give the other four frameworks)"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training.lr",
+    "quote": null,
+    "where": "Table 1 (SFT: bfloat16, 4096, 3 epochs, batch 64, 5e-6, warmup 0.03, cosine)"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Fine-tuned Qwen-14B-Chat with RAISE reaches the highest overall quality score among all configurations.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Ov. Qual. Score",
+   "value": 7.71,
+   "unit": "score",
+   "baseline_value": 7.69,
+   "n": 100,
+   "setup": "Real-estate IM dialogue, 100 held-out scenes, human-annotated quality 0-2 per dimension (4 dimensions, summed to Ov. Qual. Score out of 8), single run; Qwen-14B-Chat SFT on 848 scenes",
+   "note": "Text also says 'overall quality score reached 7.71'.",
+   "where": "Table 3",
+   "table": "Table 3, row Fine-tuning (Qwen-14B-Chat) RAISE, column Ov. Qual. Score"
+  },
+  {
+   "claim": "Under prompting with GPT-4, RAISE (7.69) scores slightly below ReAct+Examples (7.72), so the ranking RAISE first holds on quality only for the fine-tuned model.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Ov. Qual. Score",
+   "value": 7.69,
+   "unit": "score",
+   "baseline_value": 7.72,
+   "n": 100,
+   "setup": "Real-estate IM dialogue, 100 held-out scenes, human-annotated quality 0-2 per dimension (4 dimensions, summed to Ov. Qual. Score out of 8), single run; GPT-4 prompting, RAISE",
+   "note": "Text ranks RAISE > ReAct+Examples > ReAct+Scratchpad > ReAct > Act-Only; GPT-4 prompting has ReAct+Examples at 7.72 and ReAct 7.57 above ReAct+Scratchpad 7.5.",
+   "where": "Table 3",
+   "table": "Table 3, row Prompting (GPT-4) RAISE, column Ov. Qual. Score"
+  },
+  {
+   "claim": "Fine-tuned RAISE is faster per query than fine-tuned ReAct.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Inference Speed",
+   "value": 3.227,
+   "unit": "s",
+   "baseline_value": 4.315,
+   "n": 100,
+   "setup": "Real-estate IM dialogue, 100 held-out scenes, human-annotated quality 0-2 per dimension (4 dimensions, summed to Ov. Qual. Score out of 8), single run; Qwen-14B-Chat SFT on 1x A100 80GB",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row Fine-tuning (Qwen-14B-Chat) RAISE, column Inf. Speed(s)"
+  },
+  {
+   "claim": "Fine-tuned RAISE needs the fewest action steps.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Act. Steps",
+   "value": 0.26,
+   "unit": "count",
+   "baseline_value": 0.88,
+   "n": 100,
+   "setup": "Real-estate IM dialogue, 100 held-out scenes, human-annotated quality 0-2 per dimension (4 dimensions, summed to Ov. Qual. Score out of 8), single run; Qwen-14B-Chat SFT",
+   "note": "Baseline is fine-tuned ReAct (0.88).",
+   "where": "Table 3",
+   "table": "Table 3, row Fine-tuning (Qwen-14B-Chat) RAISE, column Act. Steps"
+  },
+  {
+   "claim": "Fine-tuned RAISE needs the fewest plan steps.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Plan Steps",
+   "value": 1.26,
+   "unit": "count",
+   "baseline_value": 1.88,
+   "n": 100,
+   "setup": "Real-estate IM dialogue, 100 held-out scenes, human-annotated quality 0-2 per dimension (4 dimensions, summed to Ov. Qual. Score out of 8), single run",
+   "note": "Baseline is fine-tuned ReAct (1.88).",
+   "where": "Table 3",
+   "table": "Table 3, row Fine-tuning (Qwen-14B-Chat) RAISE, column Plan Steps"
+  },
+  {
+   "claim": "Fine-tuning lifts Qwen-14B-Chat with RAISE far above prompting the same model.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Ov. Qual. Score",
+   "value": 7.71,
+   "unit": "score",
+   "baseline_value": 6.68,
+   "n": 100,
+   "setup": "Real-estate IM dialogue, 100 held-out scenes, human-annotated quality 0-2 per dimension (4 dimensions, summed to Ov. Qual. Score out of 8), single run; RAISE, Qwen-14B-Chat fine-tuned vs prompted",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row RAISE Fine-tuning (Qwen-14B-Chat), column Ov. Qual. Score"
+  },
+  {
+   "claim": "Fine-tuned Qwen-14B-Chat RAISE matches prompted GPT-4 RAISE on quality.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Ov. Qual. Score",
+   "value": 7.71,
+   "unit": "score",
+   "baseline_value": 7.69,
+   "n": 100,
+   "setup": "Real-estate IM dialogue, 100 held-out scenes, human-annotated quality 0-2 per dimension (4 dimensions, summed to Ov. Qual. Score out of 8), single run",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row RAISE Fine-tuning (Qwen-14B-Chat), column Ov. Qual. Score"
+  },
+  {
+   "claim": "Prompted GPT-3.5 with RAISE scores well below GPT-4 and uses many more action steps.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Ov. Qual. Score",
+   "value": 6.7,
+   "unit": "score",
+   "baseline_value": 7.69,
+   "n": 100,
+   "setup": "Real-estate IM dialogue, 100 held-out scenes, human-annotated quality 0-2 per dimension (4 dimensions, summed to Ov. Qual. Score out of 8), single run; GPT-3.5 prompting RAISE",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row RAISE Prompting (GPT-3.5), column Ov. Qual. Score"
+  },
+  {
+   "claim": "Removing the thought step (Act-Only) lowers fine-tuned quality relative to ReAct.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Ov. Qual. Score",
+   "value": 7.11,
+   "unit": "score",
+   "baseline_value": 7.52,
+   "n": 100,
+   "setup": "Real-estate IM dialogue, 100 held-out scenes, human-annotated quality 0-2 per dimension (4 dimensions, summed to Ov. Qual. Score out of 8), single run; Qwen-14B-Chat SFT",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row Fine-tuning (Qwen-14B-Chat) Act-Only, column Ov. Qual. Score"
+  },
+  {
+   "claim": "Fine-tuned ReAct+Scratchpad improves on ReAct in quality and efficiency; adding Examples improves further.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Ov. Qual. Score",
+   "value": 7.61,
+   "unit": "score",
+   "baseline_value": 7.52,
+   "n": 100,
+   "setup": "Real-estate IM dialogue, 100 held-out scenes, human-annotated quality 0-2 per dimension (4 dimensions, summed to Ov. Qual. Score out of 8), single run; Qwen SFT ReAct+Scratchpad (ReAct+Examples 7.66)",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row Fine-tuning (Qwen-14B-Chat) ReAct+Scratchpad, column Ov. Qual. Score"
+  },
+  {
+   "claim": "The usable fine-tuning set is under 1K scenes: 948 generated, 100 held out.",
+   "kind": "measured",
+   "source": null,
+   "metric": "scenes",
+   "value": 948,
+   "unit": "scenes",
+   "baseline_value": null,
+   "n": 100,
+   "setup": "Dataset construction",
+   "note": null,
+   "where": "Section 4.1",
+   "quote": "scenes were generated. Out of these, 100 were"
+  }
+ ],
+ "limits": [
+  "Evaluation is on one in-house real-estate dataset of 100 held-out scenes; dataset, code and weights are not released.",
+  "Quality scores are human annotations with no stated annotator count, agreement, blinding or significance test; single run, no seeds.",
+  "Fine-tuning data were generated by GPT-4 and the GPT-4 prompting baseline shares that origin; training hardware, optimiser, retrieval k and embedding model are not stated.",
+  "The memory components are ablated only as a bundle per framework; memory is not tested over long conversations or against other memory designs.",
+  "The authors concede 'potential hallucination issues and challenges in handling complex logic problems'.",
+  "Speed claims for fine-tuned vs prompted are asserted in prose; GPT API speed was omitted and prompting-Qwen speed is not tabulated.",
+  "Quality differences between frameworks are small (7.5 to 7.72 under GPT-4), so the ranking may be within noise."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Scratchpad",
+   "definition": "Logs background information, knowledge generated by reasoning and observations from previous tool usage; dialogue-level; likened to short-term memory",
+   "where": "Section 2.3"
+  },
+  {
+   "term": "Examples",
+   "definition": "Query-response pairs recalled from the Example Pool to supplement knowledge gaps and customise behaviour; turn-level; the retrieval module acts as long-term memory",
+   "where": "Section 2.3"
+  },
+  {
+   "term": "Working memory",
+   "definition": "System prompt, conversation history, task trajectory, scratchpad and examples together",
+   "where": "Section 2.3"
+  },
+  {
+   "term": "Role Hallucination",
+   "definition": "The tuned agent retains broad LLM skills (e.g. Python coding) that conflict with its role; countered with Capability Mismatch scenes",
+   "where": "Section 3.1.4"
+  },
+  {
+   "term": "Knowledge Hallucination",
+   "definition": "Incorrect statements from inadequate or misapplied pretraining knowledge; countered with Information Missing scenes",
+   "where": "Section 3.1.4"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "ReAct: Synergizing reasoning and acting in language models",
+   "year": 2022,
+   "arxiv": "2210.03629",
+   "relation": "extends",
+   "note": "RAISE adds scratchpad and examples to ReAct",
+   "quote": null
+  },
+  {
+   "work": "Chain of thought prompting elicits reasoning in large language models",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "CoT completion of training scenes",
+   "quote": null
+  },
+  {
+   "work": "Cognitive architectures for language agents (Sumers et al.)",
+   "year": 2023,
+   "arxiv": "2309.02427",
+   "relation": "related",
+   "note": "agent architecture background",
+   "quote": null
+  },
+  {
+   "work": "AgentTuning (Zeng et al.)",
+   "year": 2023,
+   "arxiv": "2310.12823",
+   "relation": "related",
+   "note": "agent fine-tuning",
+   "quote": null
+  },
+  {
+   "work": "FireAct (Chen et al.)",
+   "year": 2023,
+   "arxiv": "2310.05915",
+   "relation": "related",
+   "note": "language agent fine-tuning",
+   "quote": null
+  },
+  {
+   "work": "Qwen technical report",
+   "year": 2023,
+   "arxiv": "2309.16609",
+   "relation": "evaluates",
+   "note": "Qwen-14B-Chat base model",
+   "quote": null
+  },
+  {
+   "work": "GPT-4 technical report",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "prompting baseline and data generator",
+   "quote": null
+  },
+  {
+   "work": "Can generalist foundation models outcompete special-purpose tuning? (Nori et al.)",
+   "year": 2023,
+   "arxiv": "2311.16452",
+   "relation": "uses-method",
+   "note": "GPT-4 generates high-quality CoT",
+   "quote": null
+  },
+  {
+   "work": "AgentBench (Liu et al.)",
+   "year": 2023,
+   "arxiv": "2308.03688",
+   "relation": "related",
+   "note": "open-source LLMs lag GPT-3.5/4 as agents",
+   "quote": null
+  },
+  {
+   "work": "ExpeL (Zhao et al.)",
+   "year": 2023,
+   "arxiv": "2308.10144",
+   "relation": "related",
+   "note": "experience-based agents",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "The overview of RAISE.",
+   "page": 2,
+   "why": "Shows memory (working memory, example pool), tool pool and LLM in the agent loop."
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Comparison of 5 Agent Frameworks.",
+   "page": 6,
+   "why": "Same query traced under Act-Only, ReAct, +Examples, +Scratchpad and RAISE."
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Dataset Construction Pipeline for Agent Training.",
+   "page": 5,
+   "why": "Four-stage data pipeline with the two augmentation scene types."
+  },
+  {
+   "figure": "Table 3",
+   "caption": "The evaluation results of different frameworks",
+   "page": 9,
+   "why": "Main ablation across frameworks."
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq. 3",
+   "snippet": "Sample = {SystemPrompt: Profile, Instruction, ...; History_t: Q1, A1, ..., Q_{t-1}, A_{t-1}; Query_t: Q_t; CoT_t: Thought, Action, Observation; Response_t: A_t}",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Table 3 plan/action step values for GPT-4 ReAct are '2' and '1' with no decimals; Act-Only plan steps are '-'.",
+  "Tables flattened by extraction; cell-to-column mapping inferred from order.",
+  "No embedded instructions found."
+ ]
+}

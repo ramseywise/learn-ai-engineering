@@ -1,0 +1,607 @@
+{
+ "schema": 1,
+ "key": "2411.07396",
+ "pdf": "generative-ai/02-rag-retrieval/sources/leto-2024-toward-optimal-search-retrieval-rag.pdf",
+ "bib": {
+  "title": "Toward Optimal Search and Retrieval for RAG",
+  "authors": [
+   "Alexandria Leto",
+   "Cecilia Aguerrebere",
+   "Ishwar Bhati",
+   "Ted Willke",
+   "Mariano Tepper",
+   "Vy Ai Vo"
+  ],
+  "first_author": "Leto",
+  "year": 2024,
+  "venue": "preprint",
+  "arxiv": "2411.07396",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 52464,
+  "chars_total": 52464,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "How do retriever properties (number of documents, gold document recall, ANN search accuracy, noise documents) affect downstream RAG performance on QA and attributed QA?",
+ "hypothesis": "The ideal number of documents in a RAG prompt is directly related to the number of gold documents retrieved within that k.",
+ "contributions": [
+  "Show how QA and citation metrics vary with number of retrieved documents.",
+  "Describe how RAG performance changes when fewer gold documents are in context.",
+  "Show that decreasing ANN search accuracy has only a minor effect on task performance.",
+  "Show that injecting noise degrades performance; no setting beats the gold ceiling, contrary to a prior report."
+ ],
+ "method": {
+  "summary": "Frozen retrievers (BGE-base with Intel SVS graph ANN; ColBERTv2) feed frozen Mistral-7B-Instruct-v0.3 or Llama-2-7b-chat, with few-shot ALCE-style prompts. Authors vary k, force gold document recall to 0.5/0.7/0.9, tune ANN search recall to 0.7/0.9/0.95, and inject noise documents by similarity percentile.",
+  "task": "open-domain QA and attributed QA (RAG)",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "ASQA",
+    "role": "eval",
+    "size": "948 queries",
+    "split": "full set",
+    "source": "12/20/2018 Wikipedia dump, 21M passages; 5 gold docs from ALCE (Gao et al.)",
+    "preprocessing": null
+   },
+   {
+    "name": "QAMPARI",
+    "role": "eval",
+    "size": "1000 queries",
+    "split": "full set",
+    "source": "2018 Wikipedia dump; 5 gold docs from ALCE",
+    "preprocessing": null
+   },
+   {
+    "name": "Natural Questions (KILT)",
+    "role": "eval",
+    "size": "2837 queries, 112M passages",
+    "split": "KILT version",
+    "source": "2019 Wikipedia dump",
+    "preprocessing": "adapted to attributed QA by prompting to cite documents"
+   }
+  ],
+  "models": [
+   {
+    "name": "Mistral-7B-Instruct-v0.3",
+    "role": "evaluated",
+    "params": "7B",
+    "architecture": "decoder-only",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Llama-2-7b-chat",
+    "role": "evaluated",
+    "params": "7B",
+    "architecture": "decoder-only",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "shorter context window than Mistral, per paper"
+    }
+   },
+   {
+    "name": "bge-base-en-v1.5",
+    "role": "retriever",
+    "params": null,
+    "architecture": "single-vector dense",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "BEIR15": "0.533"
+    }
+   },
+   {
+    "name": "ColBERTv2",
+    "role": "retriever",
+    "params": null,
+    "architecture": "multi-vector late interaction",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "BEIR15": "0.499"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "sampling",
+   "temperature": "1",
+   "top_p": "0.95",
+   "max_tokens": null,
+   "samples": "inferred: one generation per query; bootstrap CIs over queries (1000 resamples)",
+   "prompting": "Order: system instruction, retrieved documents, query. 2-shot for Mistral, 1-shot for LLaMA for attributed QA; 0-shot for plain QA.",
+   "retrieval": "BGE-base via Intel SVS graph ANN (search_window_size sets recall); ColBERTv2; k in {1,2,3,4,5,10,20,100}; main analyses use 5-10 docs; ANN search recall targets 0.95/0.9/0.7 vs exact 1.0",
+   "parameters": {
+    "gold_doc_recall_targets": "0.9, 0.7, 0.5 (non-gold nearest neighbours fill the rest of 10 docs)",
+    "ann_search_recall_targets": "0.95, 0.9, 0.7 vs exact 1.0",
+    "noise": "5 random docs from each of ten similarity-decile bins, or from 5th-10th / 95th-100th neighbours; appended after gold or retrieved docs",
+    "ann_knob": "search_window_size"
+   },
+   "other": {
+    "hardware_retrieval": "2-socket Intel Xeon 8280L 2.70GHz, 28 cores, 384GB DDR4 per socket, Ubuntu 22.04",
+    "hardware_llm": "NVIDIA Titan Xp / X Pascal / A40",
+    "runtime": "ASQA/QAMPARI ~30 min Mistral, ~20 min LLaMA; NQ ~1.5 h Mistral, ~1 h LLaMA"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "recall@k (gold document recall)",
+     "definition": "percentage of gold passages retrieved in k documents",
+     "unit": "fraction/%",
+     "higher_is_better": true
+    },
+    {
+     "name": "search recall@k",
+     "definition": "percentage of k exact nearest neighbours found among k approximate neighbours",
+     "unit": "fraction",
+     "higher_is_better": true
+    },
+    {
+     "name": "EM recall",
+     "definition": "percentage of dataset short answers appearing as exact substrings of output (NQ: top five gold answers)",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "citation recall",
+     "definition": "whether each generated statement has citations that entail it (ALCE)",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "citation precision",
+     "definition": "whether each citation is necessary to support a statement (ALCE)",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "closed-book (k=0)",
+    "gold-only ceiling (5 gold docs)",
+    "exact search (recall 1.0)"
+   ],
+   "protocol": "Per-query metrics averaged; 95% bootstrap CIs over queries (1000 iterations, 2.5/97.5 percentiles); non-overlap used for significance."
+  },
+  "availability": {
+   "code": "https://www.github.com/intellabs/rag-retrieval-study",
+   "weights": null,
+   "data": null
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Mistral on ASQA with BGE-base peaks in EM recall at k=10 documents.",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM recall",
+   "value": 38.703,
+   "unit": "EM recall %",
+   "baseline_value": 27.286,
+   "n": null,
+   "setup": "ASQA, Mistral-7B-Instruct-v0.3, BGE-base, 2-shot, k docs in prompt",
+   "note": "baseline = closed book k=0 (27.286); gold-only ceiling 50.725",
+   "where": "Table 1",
+   "table": "Table 1, row k=10, column EM Recall Mean"
+  },
+  {
+   "claim": "ColBERTv2 peaks at 41.553 EM recall at k=10, slightly above BGE-base.",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM recall",
+   "value": 41.553,
+   "unit": "EM recall %",
+   "baseline_value": 38.703,
+   "n": null,
+   "setup": "ASQA, Mistral, ColBERTv2, k=10",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row k=10, column EM Recall Mean"
+  },
+  {
+   "claim": "Gold-only ceiling on ASQA with Mistral is far above any retrieved setting.",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM recall",
+   "value": 50.725,
+   "unit": "EM recall %",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ASQA, Mistral, 5 gold docs",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row gold, column EM Recall Mean"
+  },
+  {
+   "claim": "Citation recall on ASQA peaks at k=5 (BGE-base) while correctness peaks at k=10.",
+   "kind": "measured",
+   "source": null,
+   "metric": "citation recall",
+   "value": 61.563,
+   "unit": "citation recall %",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ASQA, Mistral, BGE-base, k=5",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row k=5, column Citation Recall Mean"
+  },
+  {
+   "claim": "Citation precision falls as k grows (BGE-base, k=1 to k=100).",
+   "kind": "measured",
+   "source": null,
+   "metric": "citation precision",
+   "value": 24.009,
+   "unit": "citation precision % at k=100",
+   "baseline_value": 63.695,
+   "n": null,
+   "setup": "ASQA, Mistral, BGE-base, k=100",
+   "note": "baseline = k=1 precision 63.695; paper says precision peaks at much lower k",
+   "where": "Table 1",
+   "table": "Table 1, row k=100, column Citation Precision Mean"
+  },
+  {
+   "claim": "Gold documents typically rank 7th to 13th among nearest neighbours (median).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "ASQA, NQ, QAMPARI; BGE-base, BGE-large, ColBERTv2",
+   "note": null,
+   "where": "Section 4, Table 6",
+   "quote": "We found that gold documents typically ranked between 7-13th nearest neighbor"
+  },
+  {
+   "claim": "Lowering ANN search recall@10 to 0.7 costs only 2-3% of gold document recall vs exhaustive search.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "BGE-base, Intel SVS graph ANN, ASQA and NQ",
+   "note": null,
+   "where": "Section 4.1, Table 3",
+   "quote": "Setting the search recall@10 to 0.7 only results in a 2-3% drop in gold"
+  },
+  {
+   "claim": "Gold doc recall@10 on NQ at exact search vs search recall 0.7.",
+   "kind": "measured",
+   "source": null,
+   "metric": "doc recall@10",
+   "value": 0.245,
+   "unit": "recall@10",
+   "baseline_value": 0.278,
+   "n": null,
+   "setup": "NQ, BGE-base, search recall@10 = 0.7",
+   "note": "baseline = exact search 0.278",
+   "where": "Table 3",
+   "table": "Table 3, row 0.7, column NQ"
+  },
+  {
+   "claim": "Gold document recall matters far more for QA than ANN search recall.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Mistral and LLaMA, BGE-base, ASQA and NQ, 10 docs in prompt",
+   "note": null,
+   "where": "Section 4.1",
+   "quote": "gold document recall (Fig. 12, left) is a far bigger factor for QA performance than search recall"
+  },
+  {
+   "claim": "Including one gold document sharply raises EM recall vs none; gains plateau near retriever recall 0.5.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "ASQA, Mistral and LLaMA, k=10",
+   "note": null,
+   "where": "Section 4",
+   "quote": "begins to plateau around a retrieval recall of 0.5"
+  },
+  {
+   "claim": "NQ citation recall for Mistral drops from 75.041 at doc recall 1.0 to 60.827 at 0.5.",
+   "kind": "measured",
+   "source": null,
+   "metric": "citation recall",
+   "value": 60.827,
+   "unit": "citation recall %",
+   "baseline_value": 75.041,
+   "n": null,
+   "setup": "NQ, Mistral, BGE-base, gold doc recall 0.5",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row 0.5 (Doc. Recall@10), column Mean"
+  },
+  {
+   "claim": "NQ citation recall at ANN search recall 0.7 is 49.856, lower than at doc recall 0.5, though docs recall difference is small.",
+   "kind": "measured",
+   "source": null,
+   "metric": "citation recall",
+   "value": 49.856,
+   "unit": "citation recall %",
+   "baseline_value": 75.041,
+   "n": null,
+   "setup": "NQ, Mistral, BGE-base, search recall@10=0.7",
+   "note": "Paper says doc recall affects citation more than search recall, but in Table 4 as printed search-recall rows (55.340, 52.443, 49.856) are lower than doc-recall rows; the two sets use different manipulations. Reader should check against Table 17.",
+   "where": "Table 4",
+   "table": "Table 4, row 0.7 (Search Recall@10), column Mean"
+  },
+  {
+   "claim": "Adding 5 noise docs at 5th-10th neighbours to gold lowers EM recall by under 1 point and citation recall by ~6 points.",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM recall",
+   "value": 49.91,
+   "unit": "EM recall %",
+   "baseline_value": 50.73,
+   "n": null,
+   "setup": "ASQA, Mistral, 5 gold + neighbours 5th-10th",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row gold + 5th-10th, column EM Recall Mean"
+  },
+  {
+   "claim": "Farther noise (95th-100th) degrades EM recall about as much as closer noise.",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM recall",
+   "value": 49.24,
+   "unit": "EM recall %",
+   "baseline_value": 50.73,
+   "n": null,
+   "setup": "ASQA, Mistral, gold + 95th-100th neighbours",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row gold + 95th-100th, column EM Recall Mean"
+  },
+  {
+   "claim": "No noise setting beats the gold-only ceiling, contradicting Cuconasu et al. 2024.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "ASQA, Mistral, 5 random docs from each similarity decile added",
+   "note": null,
+   "where": "Section 4.2",
+   "quote": "we find that adding noisy documents, regardless of their noise percentile, degrades correctness"
+  },
+  {
+   "claim": "With random noise from deciles, Mistral EM recall on gold + noise falls from 50.673 to roughly 40-44.",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM recall",
+   "value": 40.5,
+   "unit": "EM recall %",
+   "baseline_value": 50.673,
+   "n": null,
+   "setup": "ASQA, Mistral, 5 gold + noise at 10th percentile",
+   "note": null,
+   "where": "Table 19",
+   "table": "Table 19(a), row 10, column EM Rec."
+  },
+  {
+   "claim": "LLaMA also degrades with noise: gold-only 47.426 to 43.070 with 5th-10th neighbours.",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM recall",
+   "value": 43.07,
+   "unit": "EM recall %",
+   "baseline_value": 47.426,
+   "n": null,
+   "setup": "ASQA, Llama-2-7b-chat, 5 gold + 5th-10th neighbours",
+   "note": null,
+   "where": "Table 20",
+   "table": "Table 20(a), row gold + 5th-10th, column EM Rec."
+  },
+  {
+   "claim": "LLaMA performs best at k=4 or 5 on ASQA and NQ, k=10 on QAMPARI, attributed to shorter context.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Llama-2-7b-chat, BGE-base and ColBERT",
+   "note": null,
+   "where": "Section 4",
+   "quote": "LLaMA performs best when k = 4 or 5 for ASQA and NQ, but k = 10 for QAMPARI"
+  },
+  {
+   "claim": "Run time for generating answers on ASQA is ~30 min for Mistral and ~20 min for LLaMA.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 30,
+   "unit": "minutes",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ASQA and QAMPARI, Mistral, GPUs Titan Xp/X Pascal/A40",
+   "note": null,
+   "where": "A.1",
+   "quote": "Run time for generating answers for all queries in ASQA and QAMPARI was approximately 30 minutes for Mistral"
+  }
+ ],
+ "limits": [
+  "Only one dense retriever (BGE-base) used for the ANN experiments; multi-vector ANN untested (authors).",
+  "Retriever and reader trained separately; end-to-end systems such as FiD may rely less on gold docs (authors).",
+  "Only 7B models; no fine-tuning.",
+  "Single run per condition; no seeds reported, temperature 1.",
+  "Noise effect on citation metrics inconsistent; authors say it needs further study.",
+  "No ANN latency or memory measurements reported; speed/memory benefit is asserted, not measured.",
+  "Prompt texts only in Figure 1 image, not in extracted text."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "gold document recall",
+   "definition": "percentage of gold passages that have been retrieved in k documents (also retriever recall)",
+   "where": "Section 3.3"
+  },
+  {
+   "term": "search recall@k",
+   "definition": "percentage of the k exact nearest neighbors that have been retrieved in the k approximate nearest neighbors",
+   "where": "Section 3.3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Enabling large language models to generate text with citations (ALCE)",
+   "year": 2023,
+   "arxiv": "2305.14627",
+   "relation": "uses-method",
+   "note": "prompt format, gold docs and citation metrics",
+   "quote": null
+  },
+  {
+   "work": "The power of noise: Redefining retrieval for RAG systems",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "contradicts",
+   "note": "finds no noise setting above gold ceiling",
+   "quote": "contrary to a prior study (7)"
+  },
+  {
+   "work": "RAGGED",
+   "year": 2024,
+   "arxiv": "2403.09040",
+   "relation": "related",
+   "note": "same one-gold-document trend; NQ KILT setup",
+   "quote": null
+  },
+  {
+   "work": "Retrieval-augmented generation for knowledge-intensive NLP tasks",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "related",
+   "note": "RAG origin",
+   "quote": null
+  },
+  {
+   "work": "ColBERTv2",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "multi-vector retriever",
+   "quote": null
+  },
+  {
+   "work": "Mistral 7B",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "reader",
+   "quote": null
+  },
+  {
+   "work": "Llama 2",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "reader (cited as Llama: Open and efficient foundation language models, Touvron 2023)",
+   "quote": null
+  },
+  {
+   "work": "Similarity Search in the Blink of an Eye with Compressed Indices (SVS)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "ANN library",
+   "quote": null
+  },
+  {
+   "work": "ASQA / QAMPARI / Natural Questions / KILT",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "eval datasets",
+   "quote": null
+  },
+  {
+   "work": "Making retrieval-augmented language models robust to irrelevant context",
+   "year": 2024,
+   "arxiv": "2310.01558",
+   "relation": "related",
+   "note": "LLM use of irrelevant context",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "Correctness achieved by Mistral with various numbers of documents retrieved with BGE-base and ColBERT. Optimal performance is observed with k = 10 or 20.",
+   "page": 4,
+   "why": "Shows the plateau in k against the gold ceiling"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "The per-query relationship between the number of gold documents included in the prompt and the QA accuracy achieved with Mistral on ASQA.",
+   "page": 6,
+   "why": "One gold doc gives most of the gain"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Gold document recall (left) has a greater impact on RAG QA performance compared to search recall (right).",
+   "page": 6,
+   "why": "Core evidence that ANN accuracy can be lowered cheaply"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "ASQA Mistral performance after injecting noisy documents from various percentiles of similarity to the query.",
+   "page": 7,
+   "why": "Noise never beats the gold ceiling"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Figure 1 prompts are an image; text not extracted.",
+  "Table 15 rows for k=20 and k=100 are identical to Table 14 values and Table 11/12 k=20,100 also look duplicated, likely a copy error in the paper.",
+  "Table 4 mixes doc-recall rows (75.041 to 60.827) with search-recall rows (55.340 to 49.856) in a single column; the search-recall values are lower than doc-recall rows despite the text saying doc recall matters more.",
+  "Table 1/2 gold ceiling row and Table 19 gold-only value differ slightly (50.725 vs 50.673) across runs.",
+  "No embedded instructions found."
+ ]
+}

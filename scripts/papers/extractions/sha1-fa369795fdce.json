@@ -1,0 +1,506 @@
+{
+ "schema": 1,
+ "key": "sha1:fa369795fdce",
+ "pdf": "generative-ai/03-agentic-foundations/sources/lakshmanan-hapke-genai-design-patterns-ch02-controlling-content-style.pdf",
+ "bib": {
+  "title": "2. Controlling Content Style (Generative AI Design Patterns)",
+  "authors": [],
+  "first_author": "Lakshmanan",
+  "year": 2025,
+  "venue": "book chapter (O'Reilly), authorship and year inferred from filename and in-text dates June/July 2025; not printed in the PDF text",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 138999,
+  "chars_total": 138999,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "How can an application control the style, format and content constraints of foundation-model output more robustly than prompt engineering?",
+ "hypothesis": null,
+ "contributions": [
+  "Five patterns: Logits Masking, Grammar, Style Transfer, Reverse Neutralization, Content Optimization"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "Try-and-try-again is acceptable only when failure rate is under about 10 percent.",
+   "kind": "claim",
+   "source": null,
+   "metric": "max tolerable regeneration rate",
+   "value": "<10",
+   "unit": "% regenerated",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Regenerating LLM output until it passes style rules",
+   "quote": "only works for edge cases when very few responses (less than 10% or so) need to be regenerated",
+   "table": null,
+   "note": null,
+   "where": "Pattern 1 Problem"
+  },
+  {
+   "claim": "With 30% success, expected attempts are about 3.3 and mean latency rises 230%.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "expected attempts at p=30",
+   "value": "3.3",
+   "unit": "attempts",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Geometric distribution of attempts, p=30% success",
+   "quote": "you will need 100/30, or 3.3, attempts on average, and the average latency goes up by 230%",
+   "table": null,
+   "note": null,
+   "where": "Pattern 1 sidebar"
+  },
+  {
+   "claim": "With 10% failure, expected attempts are about 1.1 and mean latency rises 10%.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "expected attempts at p=90",
+   "value": "1.1",
+   "unit": "attempts",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Geometric distribution, p=90% success",
+   "quote": "you will need 100/90, or 1.1, attempts on average, and the average latency goes up by 10%",
+   "table": null,
+   "note": null,
+   "where": "Pattern 1 sidebar"
+  },
+  {
+   "claim": "99th percentile attempts: 2 at 90% success versus 13 at 30% success.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "P99 attempts",
+   "value": "2 vs 13",
+   "unit": "attempts",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Geometric distribution, eStat calculator",
+   "quote": "The 99th per-\ncentile of the number of attempts required is 2 if p = 90 and 13 if p = 30!",
+   "table": null,
+   "note": null,
+   "where": "Pattern 1 sidebar"
+  },
+  {
+   "claim": "Zero-shot prompt for supplement copy produced three banned words; logits masking removed them.",
+   "kind": "measured",
+   "source": null,
+   "metric": "banned words",
+   "value": "3",
+   "unit": "banned words in zero-shot output",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Llama 3.2, protein-drink description, positive/negative keyword count, num_beams=10",
+   "quote": "it also includes three words that increase the odds of being banned: quality,\ngrowth, and perfect",
+   "table": null,
+   "note": "Single anecdotal sample, no repeated runs.",
+   "where": "Pattern 1 Sequence selection"
+  },
+  {
+   "claim": "One-shot prompting Llama 3.2 for a tiger acrostic spelled PORE instead of POWER.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Llama 3.2, one-shot rabbit example in system prompt",
+   "quote": "The model probably tried to generate POWER as the starting letters for the lines\nof the poem but failed and instead came up with PORE.",
+   "table": null,
+   "note": null,
+   "where": "Pattern 1 Sequence regeneration"
+  },
+  {
+   "claim": "Claude models did not expose logits as of June 2025; OpenAI, Google (Flash not Pro) and Meta do.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Provider logit access, June 2025",
+   "quote": "As we write this in June 2025, Anthropic’s Claude family of models don’t\nprovide such access",
+   "table": null,
+   "note": null,
+   "where": "Pattern 1 Caveats"
+  },
+  {
+   "claim": "Grammar-constrained decoding can never emit tokens outside the grammar: '>' was impossible so the model output two sums instead of a comparison.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Llama 3.2 with BNF arithmetic grammar, do_sample=False, max_new_tokens=256",
+   "quote": "but our grammar string doesn’t allow >, so\nthe model cannot output it.",
+   "table": null,
+   "note": null,
+   "where": "Pattern 2 Arithmetic expressions"
+  },
+  {
+   "claim": "LangGraph structured output used an extra LLM call to post-process, not constrained decoding, as of June 2025.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "LangGraph structured outputs, June 2025",
+   "quote": "LangGraph implements support for\nstructured outputs by using an additional LLM call to postprocess the original re-\nsponse into the desired format.",
+   "table": null,
+   "note": null,
+   "where": "Pattern 2 Caveats"
+  },
+  {
+   "claim": "Few-shot style transfer uses 1 to 10 examples; fine-tuning typically a hundred or so to thousands.",
+   "kind": "claim",
+   "source": null,
+   "metric": "few-shot example count",
+   "value": "1 to 10",
+   "unit": "examples in prompt",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Style Transfer variants",
+   "quote": "you should typically add 1 to 10 examples to your\nprompts",
+   "table": null,
+   "note": null,
+   "where": "Pattern 3 Option 1"
+  },
+  {
+   "claim": "Reverse Neutralization needs a hundred to a thousand pairs; authors used 200 with good results.",
+   "kind": "measured",
+   "source": null,
+   "metric": "fine-tuning examples used",
+   "value": "200",
+   "unit": "training pairs",
+   "baseline_value": null,
+   "n": null,
+   "setup": "OpenAI managed fine-tuning of gpt-3.5-turbo on personal-style emails",
+   "quote": "You typically need a hundred to a thousand examples of input-output pairs\nfor\nfine-tuning. Here, we used two hundred examples and achieved good results.",
+   "table": null,
+   "note": "Line break position in the source text differs; quote taken from extraction text.",
+   "where": "Pattern 4 Step 2"
+  },
+  {
+   "claim": "DPO on 100 preference pairs took about three minutes on 8 vCPUs and an L4 GPU.",
+   "kind": "measured",
+   "source": null,
+   "metric": "DPO training wall clock",
+   "value": "3",
+   "unit": "minutes",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Qwen2-0.5B-Instruct, DPOTrainer defaults, ad preference dataset",
+   "quote": "The training process for a hundred examples, when we did it, took about three\nminutes on a machine with eight vCPUs and an L4 GPU.",
+   "table": null,
+   "note": "Later text says 'DPO training on a hundred examples takes only seconds'.",
+   "where": "Pattern 5 Step 4"
+  },
+  {
+   "claim": "Tuned 0.5B Qwen2 produced a concise ad with price and contact placeholder zero-shot for an unseen item (qualitative only).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Pachinko book at $5, after DPO on LLM-judge preferences",
+   "quote": "Zero-shot learning with the tuned model works!",
+   "table": null,
+   "note": "One qualitative example, no quantitative evaluation.",
+   "where": "Pattern 5 Inference"
+  },
+  {
+   "claim": "Gemini 2.0 Flash scored an Amazon Kindle article 6 of 7 on the 4Ps and 3Cs rubric.",
+   "kind": "measured",
+   "source": null,
+   "metric": "judge score",
+   "value": "6",
+   "unit": "points of 7",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LLM-as-judge, single article, rubric prompt 0-7",
+   "quote": "The\nresult was a score of 6 because the article",
+   "table": null,
+   "note": null,
+   "where": "Pattern 5 Variant 2"
+  },
+  {
+   "claim": "Two nonzero-temperature samples from Mistral-7B-Instruct-v0.2 differ strongly in style even on a factual question.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Same prompt sent twice",
+   "quote": "yet their styles vary quite dramatically",
+   "table": null,
+   "note": null,
+   "where": "Pattern 5 Step 1"
+  },
+  {
+   "claim": "Prompting for style is brittle across models and attempts.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 2-1: six models, one question, answers retrieved February 2025",
+   "quote": "but such an approach is extremely brittle—the results\nwill vary from model to model and from one attempt to another",
+   "table": null,
+   "note": null,
+   "where": "Chapter intro"
+  }
+ ],
+ "limits": [
+  "Examples are single anecdotal outputs with no repeated runs, metrics or baselines.",
+  "Logits Masking requires logit access; Claude lacks it (June 2025) and per-token client round trips add latency, so mostly local models.",
+  "Grammar can cause endless whitespace, increased refusals on nested or long structures, and inaccurate results when too restrictive.",
+  "Style Transfer by few-shot or fine-tuning gives only implicit enforcement.",
+  "Content Optimization depends entirely on evaluator quality and the in-distribution requirement; gaming of metrics is possible.",
+  "Provider support statements are dated June/July 2025 and may have changed; the Claude footnote says it used prefilling, not constrained decoding, as of July 2025."
+ ],
+ "practices": [
+  "Use Logits Masking (zero logits of rule-violating continuations, set to -inf) when rules are dynamic, logic-based, fetched from a database or depend on user input (Pattern 1, Pattern 2 Alternatives).",
+  "Do not rely on try-and-try-again unless the success rate is very high; latency grows as 100/p and tail latency is unbounded (Pattern 1 sidebar).",
+  "For format constraints prefer provider-side structured outputs (Pydantic or dataclass schema) over BNF unless rules go beyond data format or logprobs are available (Pattern 2 Variations).",
+  "State JSON explicitly in the prompt even when using JSON mode (Pattern 2 Option 2).",
+  "Do not beg for compliance in the prompt; use Grammar, e.g. Literal[\"YES\",\"NO\"] (Pattern 2 sidebar).",
+  "Give a restrictive grammar an escape value such as Literal[\"Unknown\"] (Pattern 2 Caveats).",
+  "Check that structured-output support is real constrained decoding rather than an extra post-processing LLM call (Pattern 2 Caveats).",
+  "Use few-shot examples (1 to 10) first; move to fine-tuning for higher fidelity, shorter prompts and cheaper inference (Pattern 3).",
+  "Use standardized placeholders such as {name} and {deadline} so downstream code can substitute values (Pattern 3 Problem).",
+  "For image style transfer add a depth-map control image to preserve spatial layout (Pattern 3 images).",
+  "Choose a repeatable neutral form and check neutralization with embedding cosine similarity, avoiding over-neutralization (Pattern 4 Considerations).",
+  "Cover the topic range of inputs and outputs in the fine-tuning set, using topic modeling (Pattern 4 Dataset considerations).",
+  "Build preference pairs by repeated generation, changed settings or prompt rewriting; the latter two cover more style space (Pattern 5).",
+  "Invest most effort in the evaluation step; avoid narrow proxy metrics and separate metric from true objective (Pattern 5 Evaluation matters).",
+  "Use DPO rather than RL for preference tuning; quality of preference data trumps quantity; iterate until saturation (Pattern 5).",
+  "Satisfy the in-distribution requirement by using the same LLM to generate and tune, or SFT first (Pattern 5)."
+ ],
+ "terms": [
+  {
+   "term": "Logits Masking",
+   "definition": "intercept the generation at this sampling stage and zero out the probability associated with continuations that do not meet the rules",
+   "where": "Pattern 1"
+  },
+  {
+   "term": "Grammar",
+   "definition": "ensure that generated text conforms to style rules that can be represented as a context-free metasyntax",
+   "where": "Pattern 2"
+  },
+  {
+   "term": "Style Transfer",
+   "definition": "teach a GenAI model to convert content in a readily available form into content in some desired style using example input-and-output pairs",
+   "where": "Pattern 3"
+  },
+  {
+   "term": "Reverse Neutralization",
+   "definition": "generate content in a desired style by using a fine-tuned model to postprocess the output of a GenAI model (in neutral form) into the desired style",
+   "where": "Pattern 4"
+  },
+  {
+   "term": "Content Optimization",
+   "definition": "uses preference tuning to produce optimally performing content",
+   "where": "Pattern 5"
+  },
+  {
+   "term": "In-distribution requirement",
+   "definition": "LLM-generated content has to be text that the LLM being trained, through preference tuning, can produce",
+   "where": "Pattern 5"
+  },
+  {
+   "term": "Over-neutralization",
+   "definition": "neutralizing the text too much can cause it to lose clarity",
+   "where": "Pattern 4"
+  },
+  {
+   "term": "Invalid action masking",
+   "definition": "in reinforcement learning, the idea of zeroing out logits",
+   "where": "Pattern 1 References"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Vinyals et al. 2019 (StarCraft II)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "related",
+   "note": "first recorded use of invalid action masking",
+   "quote": null
+  },
+  {
+   "work": "Huang and Ontañón 2020",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "related",
+   "note": "theory for invalid action masking",
+   "quote": null
+  },
+  {
+   "work": "Wang et al. 2024, Grammar Prompting for Domain-Specific Language Generation",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "related",
+   "note": "prompt-based grammar found error-prone",
+   "quote": null
+  },
+  {
+   "work": "Netz, Reimar and Rumpe 2024",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "related",
+   "note": "grammar masking and constrained decoding",
+   "quote": null
+  },
+  {
+   "work": "Gatys, Ecker and Bethge 2015",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "related",
+   "note": "content/style separation with CNNs",
+   "quote": null
+  },
+  {
+   "work": "Reif et al. 2021",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "related",
+   "note": "text style transfer with LLMs",
+   "quote": null
+  },
+  {
+   "work": "Edunov et al. 2018",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "related",
+   "note": "back translation, analogue of Reverse Neutralization",
+   "quote": null
+  },
+  {
+   "work": "Direct Preference Optimization (Rafailov et al., printed 'Raifalov') 2023",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "DPO used for Content Optimization",
+   "quote": null
+  },
+  {
+   "work": "Christiano et al. 2017; Ouyang et al. 2022",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "related",
+   "note": "RLHF",
+   "quote": null
+  },
+  {
+   "work": "Zinkevich, Rules of Machine Learning",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "separate metrics from objectives",
+   "quote": null
+  },
+  {
+   "work": "Qwen2-0.5B-Instruct, Mistral-7B-Instruct-v0.2, Llama 3.2, Gemini 2.0 Flash, GPT-3.5-turbo, Stable Diffusion v1.5",
+   "year": null,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "models used in examples",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Table 2-1",
+   "caption": "Answers to the same question in different styles (answers retrieved from the models in February 2025)",
+   "page": null,
+   "why": "Shows six models giving different one-sentence answers to the same pierogi question."
+  },
+  {
+   "figure": "Fig 2-1",
+   "caption": "An antipattern: the try-and-try-again approach of applying style rules to content",
+   "page": null,
+   "why": "Generate-test-regenerate loop that logits masking replaces."
+  },
+  {
+   "figure": "Fig 2-2",
+   "caption": "How to implement Logits Masking",
+   "page": null,
+   "why": "Flow of sample, mask, select or backtrack."
+  },
+  {
+   "figure": "Fig 2-3 / 2-4",
+   "caption": "Using Grammar to constrain the tokens that are output by the model; Implementing the structured outputs feature",
+   "page": null,
+   "why": "Grammar as client-side versus provider-side logits masking."
+  },
+  {
+   "figure": "Fig 2-9 / 2-10",
+   "caption": "Reverse Neutralization during creation of the training dataset; inference with two LLM calls",
+   "page": null,
+   "why": "Reversed pairs for training, then foundation model then fine-tuned model."
+  },
+  {
+   "figure": "Fig 2-12",
+   "caption": "The four steps of Content Optimization",
+   "page": null,
+   "why": "Pair generation, judge, dataset, DPO."
+  },
+  {
+   "figure": "Table 2-2",
+   "caption": "Patterns for controlling style",
+   "page": null,
+   "why": "One-table decision summary of the five patterns."
+  }
+ ],
+ "code": [
+  {
+   "where": "Pattern 1 Step 2",
+   "snippet": "def __call__(self, input_ids, input_logits):\n    output_logits = input_logits.clone()\n    for idx, input_id in enumerate(input_ids):\n        seq = self.tokenizer.decode(input_id)\n        if not self.apply_rules(seq, self.rules):\n            output_logits[idx] = -np.inf # zero out\n    return output_logits",
+   "verbatim": false
+  },
+  {
+   "where": "Pattern 2 arithmetic example",
+   "snippet": "root  ::= (expr \"=\" ws term \"\\n\")+\nexpr  ::= term ([-+*/] term)*\nterm  ::= ident | num | \"(\" ws expr \")\" ws\nident ::= [a-z] [a-z0-9_]* ws\nnum   ::= [0-9]+ ws\nws    ::= [ \\t\\n]*",
+   "verbatim": true
+  },
+  {
+   "where": "Pattern 2 caveats",
+   "snippet": "currency_rate: float | Literal[\"Unknown\"]",
+   "verbatim": true
+  },
+  {
+   "where": "Pattern 5 step 3",
+   "snippet": "{\"prompt\": ..., \"chosen\": ..., \"rejected\": ...}",
+   "verbatim": false
+  },
+  {
+   "where": "Pattern 5 step 4",
+   "snippet": "training_args = DPOConfig(output_dir=\"Qwen-DPO\")\ntrainer = DPOTrainer(model=model, args=training_args,\nprocessing_class=tokenizer, train_dataset=train_dataset)\ntrainer.train()",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Authors, year and book edition are not printed in the PDF text; taken from filename and ledger.",
+  "Code listings are truncated at line width in the PDF text; snippets marked verbatim=false were reassembled.",
+  "Page numbers unavailable in text cache; figure pages null.",
+  "Source describes a hypothesis-free pattern chapter; no embedded instructions found."
+ ]
+}

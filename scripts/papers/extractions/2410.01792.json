@@ -1,0 +1,298 @@
+{
+ "schema": 1,
+ "key": "2410.01792",
+ "pdf": "generative-ai/08-eval/sources/mccoy-2024-when-language-model-optimized-reasoning.pdf",
+ "bib": {
+  "title": "When a language model is optimized for reasoning, does it still show embers of autoregression? An analysis of OpenAI o1",
+  "authors": [
+   "R. Thomas McCoy",
+   "Shunyu Yao",
+   "Dan Friedman",
+   "Mathew D. Hardy",
+   "Thomas L. Griffiths"
+  ],
+  "first_author": "McCoy",
+  "year": 2024,
+  "venue": "preprint",
+  "arxiv": "2410.01792",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 20272,
+  "chars_total": 20272,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Does o1, a model optimized for reasoning, still show the sensitivity to output probability and task frequency that earlier LLMs showed?",
+ "hypothesis": "Optimizing for reasoning may reduce the limitations from next-word prediction, but o1's training likely also involved next-word prediction so the effects may persist.",
+ "contributions": [
+  "Evaluates o1-preview on a subset of the Embers of Autoregression tasks",
+  "Shows o1 improves quantitatively but keeps output-probability sensitivity and some task-frequency sensitivity",
+  "Uses thinking-token counts as a second difficulty measure"
+ ],
+ "method": {
+  "summary": "o1-preview-2024-09-12 was run with default settings on a subset of the tasks and datasets of McCoy et al. 2023, and compared with previously reported results for GPT-3.5, GPT-4, Claude 3, Llama 3 and Gemini 1.0. Accuracy and median thinking tokens are compared across output-probability bins and common versus rare task variants, plus two harder variants to avoid ceiling effects.",
+  "task": "Output-probability and task-frequency sensitivity on algorithmic string tasks",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "Embers of Autoregression task datasets (subset)",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "McCoy et al. 2023; large datasets excluded because of o1 cost per example",
+    "preprocessing": "Harder sorting: all words start with the letter i. Shift cipher: examples binned by output log probability."
+   }
+  ],
+  "models": [
+   {
+    "name": "o1-preview-2024-09-12",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-3.5, GPT-4, Claude 3, Llama 3, Gemini 1.0",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "results taken from McCoy et al. 2023"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "default settings",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": "not stated; refers to McCoy et al. 2023",
+   "retrieval": null,
+   "parameters": {
+    "tasks_output_probability": "shift cipher decoding, Pig Latin decoding, article swapping, word-list reversal",
+    "tasks_task_frequency": "shift cipher decoding (13 vs 12), Pig Latin encoding, acronyms (first vs second letter), linear function, sorting (alphabetical vs reverse)"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Accuracy",
+     "definition": "fraction of examples answered correctly; error bars one standard error",
+     "unit": "fraction (0-1)",
+     "higher_is_better": true
+    },
+    {
+     "name": "Thinking tokens",
+     "definition": "median number of tokens in o1's chain of thought per group of examples",
+     "unit": "tokens",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "GPT-3.5",
+    "GPT-4",
+    "Claude 3",
+    "Llama 3",
+    "Gemini 1.0"
+   ],
+   "protocol": "One standard error intervals; no significance tests stated; number of examples and runs not stated."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": null
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "models.o1",
+    "quote": "The version of o1 used for all results below is o1-preview-2024-09-12, which we tested with its default settings.",
+    "where": "Sec 3"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "o1 shift cipher accuracy rises with output probability, from lowest to highest bin.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "47% to 92%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "o1-preview, shift cipher decoding, lowest vs highest output-probability bin",
+   "quote": "its accuracy ranges from 47% in the lowest-probability case to 92% in the highest-probability case",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.1"
+  },
+  {
+   "claim": "On acronyms o1 scored near-identically on common and rare variants, yet used far more tokens on the rare one.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "100% common, 99.9% rare",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "o1-preview, first-letter (common) vs second-letter (rare) acronyms",
+   "quote": "for acronyms, o1 achieved 100% accuracy on the common variant and 99.9% accuracy on the rare variant",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.2"
+  },
+  {
+   "claim": "o1 uses more thinking tokens on low-probability outputs across all four tasks.",
+   "kind": "measured",
+   "source": null,
+   "metric": "median tokens",
+   "value": null,
+   "unit": "tokens",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 2, four output-probability tasks",
+   "quote": null,
+   "table": null,
+   "note": "Magnitudes only in the figure (axis to 6000)",
+   "where": "Sec 3.1, Fig 2"
+  },
+  {
+   "claim": "On the standard datasets o1 is far better than other LLMs on rare variants and shows similar scores on common and rare; this may be a ceiling effect.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 3 left, five task pairs",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Sec 3.2, Fig 3"
+  },
+  {
+   "claim": "With harder sorting (all words start with i) and medium/low-probability shift cipher examples, o1 does better on the common variant than the rare one.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 3 right",
+   "quote": null,
+   "table": null,
+   "note": "Values only in the figure",
+   "where": "Sec 3.2, Fig 3"
+  }
+ ],
+ "limits": [
+  "Only a subset of tasks, excluding large datasets because of o1 cost per example",
+  "o1 internals are not public; the explanations for probability sensitivity are speculation",
+  "Chain-of-thought contents are hidden; only token counts are visible",
+  "Ceiling effects on standard datasets limit conclusions about task frequency",
+  "Only o1-preview tested; other models' results are copied from 2023",
+  "No example counts, runs, prompts or significance tests are given; most numbers are in figures only"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "embers of autoregression",
+   "definition": "behavioral patterns that result from the influence of being optimized to perform next-word prediction",
+   "where": "Sec 1"
+  },
+  {
+   "term": "teleological perspective",
+   "definition": "analyze the system through the lens of the pressures that have shaped it",
+   "where": "Sec 1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Embers of Autoregression (McCoy et al. 2023)",
+   "year": 2023,
+   "arxiv": "2309.13638",
+   "relation": "extends",
+   "note": "tasks, datasets and non-o1 results come from it",
+   "quote": null
+  },
+  {
+   "work": "Prabhakar et al. 2024, Deciphering the factors influencing the efficacy of chain-of-thought",
+   "year": 2024,
+   "arxiv": "2407.01687",
+   "relation": "related",
+   "note": "CoT is susceptible to probability effects",
+   "quote": null
+  },
+  {
+   "work": "OpenAI o1-preview",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "model studied",
+   "quote": null
+  },
+  {
+   "work": "Wei et al. 2022 chain-of-thought prompting",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "background",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Across the four tasks all six LLMs including o1 show sensitivity to output probability",
+   "page": 2,
+   "why": "Accuracy vs output log probability for six models"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "o1 tends to use more tokens for low-probability answers",
+   "page": 3,
+   "why": "Thinking tokens as a difficulty measure"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Common vs rare task variants; harder sorting and shift cipher",
+   "page": 4,
+   "why": "Shows ceiling effect and how it was probed"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Tokens by task variant",
+   "page": 4,
+   "why": "Token difference without accuracy difference"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "No embedded instructions found",
+  "Almost all numbers are in figures, not text"
+ ]
+}

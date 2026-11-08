@@ -1,0 +1,578 @@
+{
+ "schema": 1,
+ "key": "2303.01500",
+ "pdf": "data-science/sources/liu-2023-dropout-reduces-underfitting.pdf",
+ "bib": {
+  "title": "Dropout Reduces Underfitting",
+  "authors": [
+   "Zhuang Liu",
+   "Zhiqiu Xu",
+   "Joseph Jin",
+   "Zhiqiang Shen",
+   "Trevor Darrell"
+  ],
+  "first_author": "Liu",
+  "year": 2023,
+  "venue": "ICML 2023 (PMLR 202)",
+  "arxiv": "2303.01500",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 65386,
+  "chars_total": 65386,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can dropout, normally a regulariser against overfitting, reduce underfitting if applied only early in training, and can the mirror (late dropout) reduce overfitting?",
+ "hypothesis": "Early in training dropout lowers mini-batch gradient direction variance and error against the whole-dataset gradient, so switching it on early (then off) helps underfitting models fit better.",
+ "contributions": [
+  "Analysis showing dropout reduces gradient direction variance and error early in training (GDV and GDE metrics)",
+  "Early dropout for underfitting models",
+  "Late dropout for overfitting models",
+  "Evaluation on ImageNet-1K and downstream tasks"
+ ],
+ "method": {
+  "summary": "Train vision models on ImageNet-1K with dropout or stochastic depth active only for the first epochs (early) or only after the first epochs (late), compared with no dropout and standard dropout at 0.1. Gradient direction variance and error are measured on ViT-T/16 to explain the effect.",
+  "task": "ImageNet-1K image classification, plus fine-tuning on COCO, ADE20K and five classification sets",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "ImageNet-1K",
+    "role": "both",
+    "size": "1.2M training images, 1,000 classes",
+    "split": "train / validation, top-1 validation accuracy",
+    "source": "Deng et al., 2009",
+    "preprocessing": "ConvNeXt recipe augmentations (Table 8)"
+   },
+   {
+    "name": "COCO",
+    "role": "eval",
+    "size": null,
+    "split": "MMDetection 1x schedule, Mask-RCNN",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "ADE20K",
+    "role": "eval",
+    "size": null,
+    "split": "UperNet, 80k iterations, MMSegmentation",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "CIFAR-100, Flowers, Pets, STL-10, Food-101",
+    "role": "eval",
+    "size": null,
+    "split": "fine-tuning per MoCo v3 and SLIP settings",
+    "source": null,
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "ViT-T/16",
+    "role": "proposed",
+    "params": "inferred: 5-20M range (paper gives a range for small models)",
+    "architecture": "Vision Transformer tiny, patch 16",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Mixer-S/32, ConvNeXt-Femto, Swin-F",
+    "role": "proposed",
+    "params": "5-20M",
+    "architecture": "MLP-Mixer, ConvNeXt, Swin Transformer small variants",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "ViT-B and Mixer-B",
+    "role": "proposed",
+    "params": "59M and 86M",
+    "architecture": "overfitting-regime models, trained with late s.d.",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "paper text says ViT-B and Mixer-B have 59M and 86M respectively"
+    }
+   }
+  ],
+  "training": {
+   "objective": "inferred: cross-entropy classification with label smoothing 0.1",
+   "optimizer": "AdamW, beta1,beta2=0.9,0.999",
+   "lr": "4e-3 base",
+   "lr_schedule": "cosine decay",
+   "warmup": "50 epochs linear",
+   "batch_size": "4096 (ablation 1024 to 8192 with linear lr scaling)",
+   "steps": null,
+   "epochs": "300 basic recipe; 600 improved recipe",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": "0.05",
+   "dropout": "0.0 baseline; early dropout rate 0.1-0.7 by model (Table 9), 50 epochs, linear decreasing to 0; standard comparison 0.1",
+   "regularisation": "randaugment (9, 0.5), mixup 0.8, cutmix 1.0, random erasing 0.25, label smoothing 0.1, layer scale 1e-6, gradient clip None, EMA None; improved recipe mixup and cutmix 0.3",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": "3 seeds, average standard deviation 0.142%",
+   "other": {
+    "weight_init": "trunc. normal (0.2)",
+    "early_sd_rates": "searched {0.3,0.5,0.7}; dropout {0.1,0.2,0.3}, Swin-F also {0.5,0.7}",
+    "late_sd": "no s.d. for first 50 epochs then constant rate (ViT-B 0.4, Mixer-B 0.2)",
+    "constant_early_dropout": "best at 20 epochs rather than 50 (Appendix D)"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "3 seeds per ImageNet result",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "top-1 accuracy",
+     "definition": "ImageNet-1K validation top-1",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "train loss",
+     "definition": "final training loss",
+     "unit": "nats (unit not stated)",
+     "higher_is_better": false
+    },
+    {
+     "name": "GDV",
+     "definition": "average pairwise cosine distance among mini-batch gradients",
+     "unit": "unitless",
+     "higher_is_better": false
+    },
+    {
+     "name": "GDE",
+     "definition": "average cosine distance of mini-batch gradients to whole-dataset gradient; Table 1 reports AUC over first 1500 iterations",
+     "unit": "unitless",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "no dropout",
+    "standard dropout / s.d. at 0.1",
+    "linear increasing, decreasing, curriculum (Morerio 2017), annealed (Rennie 2014) schedules"
+   ],
+   "protocol": "3 seeds, mean reported; drop rate and epochs lightly swept per model"
+  },
+  "availability": {
+   "code": "https://github.com/facebookresearch/dropout",
+   "weights": null,
+   "data": "public benchmarks"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.epochs",
+    "quote": "we increase the number of epochs to 600",
+    "where": "Appendix A"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Early dropout lifts ViT-T top-1 on ImageNet-1K over no-dropout baseline while lowering train loss; standard dropout 0.1 hurts.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1",
+   "value": 74.3,
+   "unit": "% top-1",
+   "baseline_value": 73.9,
+   "n": null,
+   "setup": "ViT-T/16, basic recipe, 300 epochs, 3 seeds",
+   "quote": null,
+   "table": "Table 2, rows ViT-T and + early dropout, column top-1 acc.",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Standard dropout at 0.1 reduces ViT-T accuracy by 6.0 points in the underfitting regime.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1",
+   "value": 67.9,
+   "unit": "% top-1",
+   "baseline_value": 73.9,
+   "n": null,
+   "setup": "ViT-T/16, basic recipe",
+   "quote": null,
+   "table": "Table 2, row ViT-T + standard dropout, column change",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Early dropout still helps with improved 600-epoch recipe on ViT-T.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1",
+   "value": 76.7,
+   "unit": "% top-1",
+   "baseline_value": 76.3,
+   "n": null,
+   "setup": "ViT-T/16, improved recipe",
+   "quote": null,
+   "table": "Table 2, rows ViT-T improved, + early dropout, column top-1 acc.",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Early dropout in Swin-F gives +0.4 on the basic recipe, early s.d. +0.9.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1",
+   "value": 75.2,
+   "unit": "% top-1",
+   "baseline_value": 74.3,
+   "n": null,
+   "setup": "Swin-F, basic recipe",
+   "quote": null,
+   "table": "Table 2, row Swin-F + early s.d., column top-1 acc.",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Dropout reduced the GDE area under the curve (first 1500 iterations) by 13.60% for ViT-T with AdamW.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GDE",
+   "value": 135.3,
+   "unit": "GDE AUC",
+   "baseline_value": 156.6,
+   "n": null,
+   "setup": "ViT-T, AdamW, ImageNet-1K, dropout 0.1",
+   "quote": null,
+   "table": "Table 1, row ViT-T (standard dropout) AdamW, column change",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Dropout-trained model has lower gradient variance and error only up to roughly 1000 iterations, then higher error.",
+   "kind": "measured",
+   "source": null,
+   "metric": "crossover point",
+   "value": 1000,
+   "unit": "iterations",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ViT-T/16 AdamW, dropout 0.1",
+   "quote": "Up to a certain iteration (approximately 1000),",
+   "table": null,
+   "note": "read approximately from Fig 7 and 8; text says 'approximately 1000 iterations'",
+   "where": "Sec 3"
+  },
+  {
+   "claim": "Early dropout benefit is broad over duration: 5 to 300 of 600 epochs all beat baseline 76.3.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "ViT-T improved recipe, 3 seeds",
+   "quote": "ranging from as few as 5 epochs to as many as 300, out of a total of 600 epochs",
+   "table": null,
+   "note": null,
+   "where": "Fig 9; Sec 5.2"
+  },
+  {
+   "claim": "Early dropout gain disappears at batch size 8192, consistent with larger batches approximating the full gradient.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "ViT-T, lr scaled linearly",
+   "quote": "early dropout becomes less beneficial as the batch size increases to 8192",
+   "table": null,
+   "note": null,
+   "where": "Fig 12; Sec 5.2"
+  },
+  {
+   "claim": "Existing dropout schedules (increasing, decreasing, curriculum, annealed) are equal or worse than no dropout for underfitting; curriculum scores 70.4.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1",
+   "value": 70.4,
+   "unit": "% top-1",
+   "baseline_value": 76.3,
+   "n": null,
+   "setup": "ViT-T, improved recipe, rate swept",
+   "quote": null,
+   "table": "Table 3a, row curriculum, column acc.",
+   "note": null,
+   "where": "Table 3a"
+  },
+  {
+   "claim": "Early dropout does not help ViT-B, an overfitting-regime model.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "ViT-B baseline 78.7 with best standard dropout 0.1",
+   "quote": "was not effective in the case of the larger ViT-B",
+   "table": "Table 3c, row ViT-B",
+   "note": null,
+   "where": "Table 3c"
+  },
+  {
+   "claim": "Late s.d. improves ViT-B top-1 over standard s.d.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1",
+   "value": 82.3,
+   "unit": "% top-1",
+   "baseline_value": 81.6,
+   "n": null,
+   "setup": "ViT-B, basic recipe, s.d. rate 0.4, off for first 50 epochs",
+   "quote": null,
+   "table": "Table 4, row ViT-B + late s.d., column top-1 acc.",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "Late s.d. improves Mixer-B top-1 over standard s.d.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1",
+   "value": 78.6,
+   "unit": "% top-1",
+   "baseline_value": 78.0,
+   "n": null,
+   "setup": "Mixer-B, basic recipe, s.d. 0.2",
+   "quote": null,
+   "table": "Table 4, row Mixer-B + late s.d., column top-1 acc.",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "Early dropout/s.d. pre-training transfers: COCO APbox Swin-F 36.4 to 37.1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "APbox",
+   "value": 37.1,
+   "unit": "AP",
+   "baseline_value": 36.4,
+   "n": null,
+   "setup": "Mask-RCNN 1x, Swin-F + early dropout",
+   "quote": null,
+   "table": "Table 5, row Swin-F + early dropout, column APbox",
+   "note": null,
+   "where": "Table 5"
+  },
+  {
+   "claim": "ADE20K mIoU improves for ViT-B with late s.d.",
+   "kind": "measured",
+   "source": null,
+   "metric": "mIoU",
+   "value": 45.7,
+   "unit": "mIoU",
+   "baseline_value": 44.3,
+   "n": null,
+   "setup": "UperNet 80k iterations",
+   "quote": null,
+   "table": "Table 6, row + late s.d., column ViT-B",
+   "note": null,
+   "where": "Table 6"
+  },
+  {
+   "claim": "Early dropout does not find a flatter minimum: loss-landscape curvature delta 0.250 vs 0.258.",
+   "kind": "measured",
+   "source": null,
+   "metric": "curvature delta",
+   "value": 0.25,
+   "unit": "delta",
+   "baseline_value": 0.258,
+   "n": null,
+   "setup": "ViT-T, Li et al. loss landscape visualisation",
+   "quote": "0.250 for early dropout",
+   "table": null,
+   "note": null,
+   "where": "Appendix F"
+  },
+  {
+   "claim": "Early dropout training loss is not lower during the early phase; it drops sharply once dropout ends.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "ViT-T, 50 early epochs, constant rate",
+   "quote": "Early dropout does not result in a lower training loss during the early dropout phase",
+   "table": null,
+   "note": null,
+   "where": "Fig 13; Appendix G"
+  }
+ ],
+ "limits": [
+  "Only supervised vision tasks; self-supervised pre-training and NLP untested (Appendix G).",
+  "Interaction with training duration and optimizer not explored (Appendix G).",
+  "Why training loss only falls after dropout ends is unexplained; authors suggest a better local optimum.",
+  "Gains are small (0.2 to 0.9 points) compared with seed std ~0.14%.",
+  "Late s.d. found no improvement on ConvNeXt-B and Swin-B.",
+  "Early dropout is rate-sensitive for dropout (not s.d.) and fails for ViT-B.",
+  "Hardware and compute not stated.",
+  "The regime (under/overfit) is defined operationally: better with standard dropout means overfitting."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "early dropout",
+   "definition": "using dropout before a certain iteration, and then disabling it for the rest of training",
+   "where": "Sec 4"
+  },
+  {
+   "term": "late dropout",
+   "definition": "not using dropout before a certain iteration, and then using it for the rest of training",
+   "where": "Sec 4"
+  },
+  {
+   "term": "gradient direction variance (GDV)",
+   "definition": "average pairwise cosine distance among mini-batch gradients",
+   "where": "Sec 3"
+  },
+  {
+   "term": "gradient direction error (GDE)",
+   "definition": "average cosine distance from mini-batch gradients to the whole-dataset gradient",
+   "where": "Sec 3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Improving neural networks by preventing co-adaptation (Hinton et al.)",
+   "year": 2012,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "original dropout",
+   "quote": null
+  },
+  {
+   "work": "Dropout (Srivastava et al.)",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "related",
+   "note": "dropout reference",
+   "quote": null
+  },
+  {
+   "work": "Deep networks with stochastic depth (Huang et al.)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "s.d. variant",
+   "quote": null
+  },
+  {
+   "work": "A ConvNet for the 2020s (ConvNeXt, Liu et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "basic training recipe",
+   "quote": null
+  },
+  {
+   "work": "Curriculum dropout (Morerio et al.)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "increasing schedule baseline",
+   "quote": null
+  },
+  {
+   "work": "Annealed dropout (Rennie et al.)",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "decreasing schedule baseline",
+   "quote": null
+  },
+  {
+   "work": "ImageNet (Deng et al.)",
+   "year": 2009,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "ImageNet-1K",
+   "quote": null
+  },
+  {
+   "work": "DeiT, MLP-Mixer, Swin",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "ViT-T, Mixer, Swin-F models",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Dropout in early training helps the model produce mini-batch gradient directions that are more consistent and aligned with the overall gradient of the entire dataset.",
+   "page": 2,
+   "why": "Shows the core mechanism in one picture."
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Standard, early and late dropout.",
+   "page": 2,
+   "why": "Shows the three schedules."
+  },
+  {
+   "figure": "Fig 13",
+   "caption": "Training Curves. When early dropout ends, the model experiences a significant decrease in training loss and a corresponding increase in test accuracy.",
+   "page": 8,
+   "why": "Shows the delayed payoff."
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 3",
+   "snippet": "GDV = 2/(|G|(|G|-1)) * sum_{i!=j} 1/2 (1 - <g_i,g_j>/(||g_i||2 ||g_j||2)); GDE = 1/|G| * sum 1/2 (1 - <g_step, g_hat>/(||g_step||2 ||g_hat||2))",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "No embedded instructions found.",
+  "Table cells are read from flattened text; param counts for small models given only as a 5-20M range."
+ ]
+}

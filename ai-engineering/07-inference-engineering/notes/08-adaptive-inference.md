@@ -4,6 +4,7 @@ sources:
   - "Fregly, AI Systems Performance Engineering (O'Reilly, 2025), ch. 15, 16, 19"
   - "Huyen, AI Engineering (O'Reilly, 2025), ch. 9"
   - "Iusztin & Labonne, LLM Engineer's Handbook (Packt, 2024), ch. 8"
+  - "Lakshmanan & Hapke, Generative AI Design Patterns (O'Reilly, 2025), ch. 8"
   - https://arxiv.org/abs/2302.01318
   - https://arxiv.org/abs/2208.07339
   - https://pytorch.org/blog/accelerating-generative-ai-2/
@@ -27,6 +28,13 @@ sources:
   - https://arxiv.org/abs/2308.07633
   - https://arxiv.org/abs/2306.03078
   - https://arxiv.org/abs/2304.13013
+  - https://arxiv.org/abs/2311.13581
+  - https://arxiv.org/abs/2310.18313
+  - https://arxiv.org/abs/2409.11055
+  - https://arxiv.org/abs/2411.11843
+  - https://arxiv.org/abs/2401.15347
+  - https://arxiv.org/abs/2312.00678
+  - https://arxiv.org/abs/2409.04833
   - https://arxiv.org/abs/2402.17764
   - https://arxiv.org/abs/1308.3432
   - https://arxiv.org/abs/2406.02528
@@ -77,6 +85,8 @@ Huyen's caveat applies to the whole note: if your batches already saturate compu
 
 A small **draft model** proposes *K* tokens. The large **target model** scores all *K* in one forward pass, accepts the longest prefix that matches what it would have sampled, and adds one token of its own. With the standard rejection-sampling rule, the output distribution is **identical to the target's** (Chen et al., 2023), so quality is unchanged by construction. In the figure the draft proposes four tokens and the target rejects "there", so the step yields the accepted prefix plus the target's correction.
 
+The same chapter demos it in vLLM with Gemma 2 9B as target and Gemma 2 2B as draft, `num_speculative_tokens=5`: about 14.2% faster than the target alone (read from their Fig. 8-10; single run, hardware in their repo). They warn it can be slower than the target alone if the speculation length is set too high, which fits the acceptance-rate dependence in the table below (*Generative AI Design Patterns*, ch. 8, Pattern 26). Their `speculative_model` argument is dated in current vLLM.
+
 Huyen gives three reasons it works (*AI Engineering*, ch. 9):
 
 1. Verifying *K* tokens is parallel, like prefill; generating them is sequential.
@@ -113,6 +123,7 @@ out = model.generate(**inputs, prompt_lookup_num_tokens=4)         # no draft mo
 | **Medusa** | Extra decoding heads, each predicting token *t+k*; candidates checked with tree attention | Up to 1.9× on Llama 3.1, HGX H200 (*AI Engineering*, ch. 9, citing NVIDIA); 2.2–3.6× published, ~2–3× in practice (*AISPE*, ch. 15). The paper: >2.2× with heads trained on a frozen backbone, 2.3–2.8× when trained jointly, on Vicuna 7–33B at batch 1. Its "typical acceptance" is not lossless at temperature > 0 ([arXiv:2401.10774](https://arxiv.org/abs/2401.10774) (Cai et al., ICML 2024)) |
 | **Multi-token prediction (MTP)** | Heads trained with the model in pretraining draft for it at serving time | Nemotron 3 Super reuses one shared MTP head recursively and accepts 3.45 tokens per verification at draft length 7 on SPEED-Bench; acceptance still decays with draft depth, but more slowly than with separate per-offset heads ([arXiv:2604.12374](https://arxiv.org/abs/2604.12374) (NVIDIA, 2026-04, preprint)) |
 | **Self-speculative** | The target with half its layers skipped acts as its own draft | ~2× (*AISPE*, ch. 15) |
+| **PaSS** (parallel speculative sampling) | No draft model and no new heads on the target: L learned look-ahead embeddings are appended to the input, the frozen target drafts L tokens in one call, and the next call verifies them with the usual rejection rule | Up to 30% faster on a LLaMA 7B re-implementation, 4 look-ahead tokens, 512 generated tokens, Wikipedia and The Stack; HumanEval Pass@1 time 10.52 to 7.17 s at 13.2% vs 13.4% Pass@1. Gains are larger at low temperature and saturate near 6 look-ahead tokens. The bound is (L+2)/2 because each iteration makes two target calls. One model size, no seeds, no comparison against a draft-model or Medusa baseline ([arXiv:2311.13581](https://arxiv.org/abs/2311.13581) (Monea et al., NeurIPS 2023 Workshop on Efficient NLP and Speech Processing)) |
 | **Prompt lookup / inference with reference** | N-gram matches copied from the prompt | 2× when output overlaps input: RAG, code edits, multi-turn (*AI Engineering*, ch. 9, citing Yang et al. 2023). In RL rollouts, sibling responses to the same prompt make a better reference: Seer's per-group suffix tree gains up to 1.3× over other drafting strategies, inside a system that raises rollout throughput up to 2.04× on Moonshot's production RL jobs ([arXiv:2511.14617](https://arxiv.org/abs/2511.14617) (Qin et al., OSDI 2026)) |
 | **Lookahead (Jacobi) decoding** | The same model guesses several future positions and iterates until they are consistent | (*AI Engineering*, ch. 9); no number given. Plain Jacobi rarely gets more than one token right per iteration. CLLMs fine-tune the model to jump to the fixed point, giving 2.4–3.4× on GSM8K, Spider and code, from ~1M training tokens on LLaMA-7B and with no extra heads. Because the model itself changes, the output is not that of the original model ([arXiv:2403.00835](https://arxiv.org/abs/2403.00835) (Kou et al., ICML 2024)) |
 
@@ -178,7 +189,7 @@ On Hopper and Blackwell, the main path is low-precision *floating point* with ha
 - **FP4 / NVFP4** (Blackwell): the book gives an effective ~1.8× over FP8 and ~3.5× over FP16, with no model or batch size. The book says "per-block microscaling". To be precise, NVFP4 uses 16-element blocks with an FP8 scale, while the OCP MXFP4 format uses 32-element blocks.
 - **SmoothQuant**: activations have outliers and weights do not, so it moves scale from activations into weights with a per-channel factor. That makes W8A8 (8-bit weights *and* activations) work.
 
-Fregly is inconsistent about how ready FP4 is. Ch. 17 says to prefer it where supported; ch. 18 calls it "maturing" (*AISPE*, ch. 17–18). Treat FP8 as the safe default and FP4 as something to validate per model, against your eval suite. Models that are *trained* in low precision make the inference conversion easier. Nemotron 3 Super (120B total, 12B active) was pretrained in NVFP4 on 25T tokens ([arXiv:2604.12374](https://arxiv.org/abs/2604.12374) (NVIDIA, 2026-04, preprint)). Outliers are partly a training artifact. On CLIP ViT-Huge, Wortsman et al. found that standard FP8 recipes (only simulated, at the time) work once training keeps feature magnitudes small, here via layer-scale initialized at zero ([arXiv:2304.13013](https://arxiv.org/abs/2304.13013) (Wortsman et al., NeurIPS 2023)).
+Fregly is inconsistent about how ready FP4 is. Ch. 17 says to prefer it where supported; ch. 18 calls it "maturing" (*AISPE*, ch. 17–18). Treat FP8 as the safe default and FP4 as something to validate per model, against your eval suite. Models that are *trained* in low precision make the inference conversion easier. Nemotron 3 Super (120B total, 12B active) was pretrained in NVFP4 on 25T tokens ([arXiv:2604.12374](https://arxiv.org/abs/2604.12374) (NVIDIA, 2026-04, preprint)). Outliers are partly a training artifact. On CLIP ViT-Huge, Wortsman et al. found that standard FP8 recipes (only simulated, at the time) work once training keeps feature magnitudes small, here via layer-scale initialized at zero ([arXiv:2304.13013](https://arxiv.org/abs/2304.13013) (Wortsman et al., NeurIPS 2023)). FP8-LM is the end-to-end training version of this: GPT-175B on H100s (TP8, PP4, DP4) trains 75% faster than BF16 Megatron-LM with 39% less real memory, using FP8 gradients and all-reduce, an FP8 first Adam moment and FP16 master weights and second moment (6 bytes per parameter against 16). The 75% compares FP8 at micro-batch 4 with BF16 at micro-batch 1; at equal micro-batch 1 the gain is 21%. Loss curves overlap BF16 at 7B and 13B on 100B tokens (zero-shot average 58.0 vs 58.4 at 7B), but the 175B run saw only 40B tokens. The second moment in FP8 diverges, so the optimizer state is where precision still matters. It is a training paper and says nothing about FP8 serving ([arXiv:2310.18313](https://arxiv.org/abs/2310.18313) (Peng et al., 2023-10, preprint)).
 
 ### Below 2 bits: ternary weights
 
@@ -186,7 +197,13 @@ Going below 4 bits usually means training the model that way, not converting it 
 
 BitNet b1.58 2B4T tested the recipe at a larger scale: 2B parameters trained from scratch on 4T tokens, ternary weights with int8 activations. After instruction tuning its average over 16 benchmarks is 54.19, against 55.23 for Qwen2.5-1.5B, and it trails that model on MMLU (53.17 vs 60.25) and HumanEval+ (38.40 vs 50.60). Non-embedding memory is 0.4 GB against 2.6 GB for Qwen2.5-1.5B. Against that model quantized after training, on three benchmarks (MMLU, GSM8K, IFEval) it averages 55.01 against 52.15 for GPTQ INT4 and 51.17 for AWQ INT4 (both 0.7 GB), and 55.72 for bf16. CPU decoding takes 29 ms per token on a laptop Core i7-13800H, against 41 to 124 ms for the peers. That compares bitnet.cpp with llama.cpp for the others. The 0.028 J per token energy figure is an arithmetic-only estimate at 7 nm, not a measurement. The report gives no GPU latency, and the authors list scaling to 7B and 13B as future work ([arXiv:2504.12285](https://arxiv.org/abs/2504.12285) (Ma et al., 2025-04, preprint)).
 
+Binary weights are possible for state-space models too, with the same training-based recipe. Bi-Mamba binarizes the In_Proj and Out_Proj layers of Mamba-2 (95.2% of its parameters) and trains them against a LLaMA2-7B teacher on 105B tokens (32 A100s, 4,640 to 7,822 GPU hours). At 2.7B it averages 50.6 on seven zero-shot tasks against 59.6 for FP16 Mamba-2 and 35.8 for GPTQ at 2 bits; BiLLM post-training collapses to Wiki2 perplexity 8,707, against 10.0 for Bi-Mamba and 9.1 for FP16. Accuracy is simulated with high-precision values; the only real packed run is llama.cpp on an M4 Pro CPU (128 tokens), where memory falls from 5.03 GB to 1.04 GB and decode rises from 24.59 to 77.81 tokens/s. Binarizing only In_Proj keeps 53.1, so Out_Proj is where the last points go ([arXiv:2411.11843](https://arxiv.org/abs/2411.11843) (Tang et al., TMLR 2025)).
+
 How long the model was trained changes what quantization costs. Kumar et al. trained 465 OLMo-style Transformer++ runs on Dolma (30M to 220M non-embedding parameters, up to 26B tokens, 3 to 16 bits) and quantized after training with GPTQ. The loss that post-training quantization adds grows as a power law in tokens per parameter and exponentially as bits fall (fit R² 0.97, INT3 to INT6). Past some data size, extra pretraining makes the quantized model worse, and at equal data larger models lose less. For training precision, fitted on integer-type runs, the compute-optimal value is about 7 to 8 bits, under a cost model that is linear in bits. Real kernels give under 2× for halving the bits. It measures loss only, on small models, and the authors call the fitted constants unlikely to be reusable ([arXiv:2411.04330](https://arxiv.org/abs/2411.04330) (Kumar et al., 2024-11, preprint)).
+
+Lee et al. give the cleanest recent map of where 4-bit breaks, on instruction-tuned Llama 3.x models quantized with GPTQ, AWQ, SmoothQuant and FP8, one run per configuration against FP16 (OpenLLM Leaderboards v1 and v2, plus MT-Bench with a GPT-4 judge; calibration sets and tools differ by row, so method and tool effects are mixed). **Size decides how safe 4-bit is:** Llama-3.2-1B with GPTQ W4A16 loses 25.32 points on GSM8k and 16.01 on IFEval, while Llama-3.1-70B FP8 W8A8 is level with FP16 (v1 average 78.55 vs 78.76). **Averages hide collapses:** Llama-3.1-405B with AWQ W4A16 averages 82.20 on v1, above the FP16 70B's 78.76 at 202.5 GB against 140 GB, yet its IFEval falls from 76.18 to 47.52. SmoothQuant W8A8 fails at 405B, up to 10.86 points under FP8 on the v2 average. Task difficulty does not predict the loss: MMLU barely moves while ARC-c, TruthfulQA and Winogrande sometimes drop more than 3 points, and MT-Bench Reasoning scores rise after quantization for 9 of 12 models, which the authors trace to shorter answers and a fallible judge. The paper measures accuracy and storage only, no latency or throughput, so cite it for quality, not speed ([arXiv:2409.11055](https://arxiv.org/abs/2409.11055) (Lee et al., 2024-09, preprint)).
+
+The surveys agree on the shape but are dated and mostly quote other papers. Park et al. (to January 2024) report weight-only PTQ as the low-cost route for LLMs, with AWQ up to 3.9× faster on LLaMA2-70B and OPTQ 3.20× on OPT-175B (WikiText2 perplexity 8.34 to 8.68), and note that structured pruning of LLMs is still poor (LLM-Pruner on LLaMA-7B at 20%: perplexity 12.62 to 17.37, 1.18× speedup) ([arXiv:2401.15347](https://arxiv.org/abs/2401.15347) (Park et al., 2024-01, preprint)). Ding et al. (literature to September 2023) cover only compression at inference: one-shot pruning to at least 50% sparsity, with the speedup hard to realise without 2:4 hardware support ([arXiv:2312.00678](https://arxiv.org/abs/2312.00678) (Ding et al., 2023-12, preprint)). Rostam et al. (65 papers, 2017 to December 2023) restate per-system headline numbers on unlike hardware and baselines, and have no speculative decoding, KV quantization or prefix caching, so the numbers are not comparable across rows ([arXiv:2409.04833](https://arxiv.org/abs/2409.04833) (Rostam et al., 2024-09, preprint)). None covers adaptive or dynamic precision.
 
 Quantization changes outputs, unlike exact speculative decoding. Every format change needs an eval run ([the Eval pillar](../../../generative-ai/08-eval/README.md)), not just a perplexity check.
 
@@ -266,6 +283,18 @@ Activation sparsity skips neurons instead of layers. PowerInfer finds that in Re
 Ch. 19 closes with an **RL-based runtime tuner** that adjusts batch size, precision and parallelism on the fly. It insists on a **kill switch** that reverts to a known-good static configuration. That is the right shape for any adaptive controller: bounded actions, monitored rewards, and a fast fallback.
 
 ---
+
+## Small models: distillation and the quantization shortcut
+
+The cheapest inference is a smaller model. Lakshmanan and Hapke (*Generative AI Design Patterns*, ch. 8, Pattern 24) show the size effect on identical hardware (2 x A100-40 GB): Gemma 3 1B generated 8.82 tokens/s against 3.26 for 27B (Table 8-1; prompt, decoding settings and run count are not given). Their distillation recipe trains a student (Gemma 3 1B) against a teacher (Gemma 3 12B) with a blended loss: `(1 - alpha) * task_loss + alpha * KL`, where the KL term compares the student's temperature-scaled log-softmax with the teacher's softmax and is multiplied by T^2 to keep gradient scale. alpha = 1 is teacher only, alpha = 0 is data only.
+
+```python
+kd = F.kl_div(F.log_softmax(student_logits / T, -1), F.softmax(teacher_logits / T, -1),
+              reduction="batchmean") * T**2
+loss = (1 - alpha) * task_loss + alpha * kd
+```
+
+Their run used 1,000 Claude-generated Python prompts, 10 epochs, one A100-80 GB, about an hour. Quality is reported only as "significantly improved", with no metric, so read it as a recipe and not a result. They quantized the distilled model to 4 bits (NF4 with double quantization via bitsandbytes) in 19 seconds against "several minutes" at 32 bits (baseline and hardware unstated). Weight memory arithmetic: a 70B model in FP32 is about 280 GB (4 bytes per weight); their "about 8x" smaller at 4 bits holds against 32-bit weights, not 16-bit (that is 4x). They skip pruning as lower quality, which matches the section above. Costs they concede: the student loses generality and inherits the teacher's bias, and quantization speedups depend on hardware kernel support. The pattern is the application-level counterpart of Kim & Rush's sequence-level distillation ([01](01-why-inference-is-its-own-discipline.md#three-levels-one-bill)).
 
 ## Where the books disagree
 

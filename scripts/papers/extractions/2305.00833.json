@@ -1,0 +1,667 @@
+{
+ "schema": 1,
+ "key": "2305.00833",
+ "pdf": "ai-engineering/01-prompt-engineering/sources/lanchantin-2023-learning-reason-memorize-self-notes.pdf",
+ "bib": {
+  "title": "Learning to Reason and Memorize with Self-Notes",
+  "authors": [
+   "Jack Lanchantin",
+   "Shubham Toshniwal",
+   "Jason Weston",
+   "Arthur Szlam",
+   "Sainbayar Sukhbaatar"
+  ],
+  "first_author": "Lanchantin",
+  "year": 2023,
+  "venue": "37th Conference on Neural Information Processing Systems (NeurIPS 2023)",
+  "arxiv": "2305.00833",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 80320,
+  "chars_total": 80320,
+  "engine": "pymupdf",
+  "skipped": "References skimmed only"
+ },
+ "type": "empirical",
+ "question": "Can a language model reason and keep state better by writing notes interleaved with the context as it reads, rather than only after reading the whole context as in scratchpad or chain-of-thought?",
+ "hypothesis": "Interleaving reasoning with the input context puts reasoning closer to relevant facts and acts as recurrent working memory, so it generalises better than post-context scratchpad/CoT.",
+ "contributions": [
+  "Self-Notes: model may deviate from the context at any time (start token) to write a note that is appended in place",
+  "Four learning paradigms: supervised, semi-supervised, unsupervised, few-shot prompted",
+  "New synthetic Toy-Story task; experiments on 7 datasets"
+ ],
+ "method": {
+  "summary": "The LM generates note tokens inline whenever the next token is in a start-token set; notes end at an end token or a fixed length and are inserted into the context before reading continues. Trained (GPT-2 fine-tuning) or prompted (GPT-J, GPT-3, Llama 2) and compared to Vanilla and Scratchpad/CoT.",
+  "task": "multi-step reasoning and state tracking in text (synthetic, chess, math word problems)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Toy-Story",
+    "role": "both",
+    "size": "10k train, 1k valid, 1k test",
+    "split": "train 1-2 hop; test in-domain 1/2-hop, OOD 3 and 4-hop",
+    "source": "introduced here, inspired by bAbI",
+    "preprocessing": null
+   },
+   {
+    "name": "Algorithmic",
+    "role": "both",
+    "size": "10k train, 1k valid, 1k test",
+    "split": "train 2-100 statements; OOD 101-200",
+    "source": "Algorithmic task adopted from reference [11] of the paper",
+    "preprocessing": "input and label tokens unified into one sequence"
+   },
+   {
+    "name": "Boolean Variable",
+    "role": "both",
+    "size": "524k train, 1k valid, 1k test",
+    "split": "train 3-8 statements; OOD 9-19",
+    "source": "chain-like split, Anil et al. 2022",
+    "preprocessing": null
+   },
+   {
+    "name": "Chess Piecetype",
+    "role": "both",
+    "size": "200k train, 1k valid, 1k test",
+    "split": "<=80 moves in-domain, >=81 OOD",
+    "source": "real chess games, UCI notation [17]",
+    "preprocessing": "moves split c2c4 to c2 c4; 64 board squares added to vocabulary"
+   },
+   {
+    "name": "Chess Move",
+    "role": "both",
+    "size": "200k train, 1k valid, 1k test",
+    "split": "same as Piecetype",
+    "source": "[17]",
+    "preprocessing": null
+   },
+   {
+    "name": "MultiArith",
+    "role": "eval",
+    "size": "600 test; 8-shot prompt",
+    "split": "full 600",
+    "source": "Roy and Roth [18]; prompts from Wei et al.",
+    "preprocessing": null
+   },
+   {
+    "name": "GSM8K",
+    "role": "eval",
+    "size": "1319 test; 5-shot prompt",
+    "split": "5 random train samples as demonstrations",
+    "source": "Cobbe et al. [19]",
+    "preprocessing": "calculation annotations in << >> removed for CoT"
+   },
+   {
+    "name": "WikiText-103",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "dummy-token perplexity ablation only",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT-2 base",
+    "role": "proposed",
+    "params": null,
+    "architecture": "decoder-only transformer",
+    "init_from": "pretrained Hugging Face GPT-2 base",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "1024 tokens",
+    "other": {}
+   },
+   {
+    "name": "GPT-J",
+    "role": "evaluated",
+    "params": "6B",
+    "architecture": "decoder-only transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-3 (text-davinci-003)",
+    "role": "evaluated",
+    "params": "175B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "access": "OpenAI API, no token probabilities over prompt"
+    }
+   },
+   {
+    "name": "Llama 2",
+    "role": "evaluated",
+    "params": "70B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "standard LM loss on context and answer tokens (Vanilla, Self-Notes); Scratchpad trained on context+answer for Toy-Story, answer only for other tasks",
+   "optimizer": null,
+   "lr": "2e-5",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "32",
+   "steps": null,
+   "epochs": "30",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "random offset of positional embedding IDs in 0-128 during training for length-generalisation tasks",
+   "hardware": "8 NVIDIA V100 GPUs",
+   "compute": "GSM8K API experiments cost around $300",
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "semi_supervised": "samples without notes get a special prefix token s",
+    "unsupervised": "train on varying-length QA, test-time notes are model-generated questions with answers inserted; start token boosted by B=5; multi-sample then pick most confident; then finetune on note-enriched data"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "mean \u00b1 std reported in Table 2; number of runs not stated; unsupervised multi-sample count not stated",
+   "prompting": "few-shot: MultiArith 8-shot (Wei et al.), GSM8K 5-shot, Algorithmic 5-shot (6-33 statements); notes in parentheses inline; Llama 2 uses the 8-shot Wei prompt",
+   "retrieval": null,
+   "parameters": {
+    "start_tokens": "Algorithmic/Boolean ' print', end ' ;'; chess: piece tokens, no end token; math: start ' (' end ')'; Toy-Story: 'SQ:'",
+    "boost_B": "5 (unsupervised Toy-Story)",
+    "api_note_positions": "GPT-3 notes allowed only after '.', ',' or '?'"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "accuracy",
+     "definition": "exact match of final answer",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "perplexity",
+     "definition": "WikiText-103 LM, dummy tokens excluded",
+     "unit": "ppl",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "Vanilla (GPT-2 fine-tuned to answer directly)",
+    "Scratchpad/CoT (post-context reasoning, Nye et al.)",
+    "Few-shot CoT (Wei et al.)"
+   ],
+   "protocol": "in-distribution and OOD test sets; mean \u00b1 std; no validation set for prompting"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": null
+  },
+  "prompts": [
+   {
+    "purpose": "MultiArith Self-Notes few-shot example",
+    "text": "Q: If there are 3 cars in the parking lot and 2 more cars arrive, (3 + 2 = 5 total) how many cars are in the parking lot?\nA: The answer is 5.",
+    "where": "Table 12"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training.lr",
+    "quote": "we train for a fixed 30 epochs with a learning rate of 2e-5 and batch size of 32",
+    "where": "App A.2"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Supervised Self-Notes beat Scratchpad on OOD Algorithmic (101-200 statements) with GPT-2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "85.0",
+   "unit": "%",
+   "baseline_value": "11.6 (Scratchpad); 24.4 (Vanilla)",
+   "n": null,
+   "setup": "GPT-2 base fine-tuned, Algorithmic task, OOD 101-200 statements, supervised notes, mean \u00b1 std",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Algorithmic 101-200*, column Self-Notes"
+  },
+  {
+   "claim": "Self-Notes in-distribution Algorithmic (2-100 statements).",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "95.5",
+   "unit": "%",
+   "baseline_value": "72.2 (Scratchpad); 44.6 (Vanilla)",
+   "n": null,
+   "setup": "GPT-2, Algorithmic 2-100, supervised",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Algorithmic 2-100, column Self-Notes"
+  },
+  {
+   "claim": "Toy-Story 4-hop OOD (trained on 1/2-hop): Self-Notes vs Scratchpad vs Vanilla.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "97.8",
+   "unit": "%",
+   "baseline_value": "94.2 (Scratchpad); 37.4 (Vanilla)",
+   "n": null,
+   "setup": "GPT-2, Toy-Story, train 10k 1-2 hop, test 4-hop, supervised",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Toy-Story 4-hop*, column Self-Notes"
+  },
+  {
+   "claim": "Toy-Story 3-hop OOD.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "98.5",
+   "unit": "%",
+   "baseline_value": "96.4 (Scratchpad); 57.0 (Vanilla)",
+   "n": null,
+   "setup": "GPT-2, Toy-Story 3-hop, supervised",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Toy-Story 3-hop*, column Self-Notes"
+  },
+  {
+   "claim": "Scratchpad falls below Vanilla on OOD Algorithmic because it copies the context and exceeds GPT-2's 1024-token limit.",
+   "kind": "measured",
+   "source": null,
+   "metric": "explanation",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-2 Algorithmic 101-200",
+   "note": null,
+   "where": "Sec 4.1",
+   "quote": "Scratchpad fails at most examples since the context length exceeds the maximum length of GPT-2 (1024 tokens)."
+  },
+  {
+   "claim": "Boolean Variable OOD (9-19 statements) gain is small.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "75.2",
+   "unit": "%",
+   "baseline_value": "73.7 (Scratchpad); 71.3 (Vanilla)",
+   "n": null,
+   "setup": "GPT-2, Boolean Variable chain-like split, train 3-8, test 9-19",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Boolean Variable 9-19*, column Self-Notes"
+  },
+  {
+   "claim": "Chess Piecetype OOD (>=81 moves): Self-Notes roughly equal to Scratchpad, both far above Vanilla.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "94.8",
+   "unit": "%",
+   "baseline_value": "94.7 (Scratchpad); 82.9 (Vanilla)",
+   "n": null,
+   "setup": "GPT-2, 200k train samples up to 80 moves",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Chess Piecetype >=81*, column Self-Notes"
+  },
+  {
+   "claim": "Chess Move OOD: Self-Notes slightly above Vanilla; Scratchpad worse.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "41.8",
+   "unit": "%",
+   "baseline_value": "29.9 (Scratchpad); 39.8 (Vanilla)",
+   "n": null,
+   "setup": "GPT-2, Chess Move exact match, >=81 moves",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Chess Move >=81*, column Self-Notes"
+  },
+  {
+   "claim": "Semi-supervised: 1% Self-Note supervision (100 samples) already beats Vanilla on Toy-Story; saturates near 25%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "supervision fraction",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-2, Toy-Story, Fig 2a",
+   "note": null,
+   "where": "Sec 4.2",
+   "quote": "even Self-Note supervision using as little as 1% of the training set (100 samples), leads to performance gains over the Vanilla model"
+  },
+  {
+   "claim": "Unsupervised Self-Notes on Toy-Story 4-hop with notes, boosting, multi-sample and finetune.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "85.8",
+   "unit": "%",
+   "baseline_value": "57.9 (Vanilla)",
+   "n": null,
+   "setup": "GPT-2, 100k samples of 1-2 hop with no notes, boost B=5, multi-sample select most confident, finetune on generated notes",
+   "note": "3-hop: 94.2 vs Vanilla 79.4. Unsupervised notes alone: 79.7 / 61.8.",
+   "where": "Table 3",
+   "table": "Table 3, row + Finetune, column 4-hop"
+  },
+  {
+   "claim": "Unsupervised 1-variable Algorithmic reaches near 100% with 20k samples.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-2, 1-variable Algorithmic, Fig 3",
+   "note": null,
+   "where": "Sec 4.3",
+   "quote": "With 20k samples, the unsupervised Self-Notes method achieves near 100% accuracy, with a significant increase over the Vanilla model."
+  },
+  {
+   "claim": "Few-shot GPT-J (6B) on MultiArith: Self-Notes vs CoT vs Vanilla.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "21.0",
+   "unit": "%",
+   "baseline_value": "13.5 (CoT); 6.0 (Vanilla)",
+   "n": null,
+   "setup": "GPT-J 6B, 8-shot from Wei et al., 600 MultiArith test samples",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row GPT-J 6B, column Self-Notes"
+  },
+  {
+   "claim": "Few-shot GPT-3 175B (text-davinci-003) on GSM8K: Self-Notes slightly above CoT.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "13.4",
+   "unit": "%",
+   "baseline_value": "11.4 (CoT)",
+   "n": null,
+   "setup": "GPT-3 175B via API, 5-shot, 1319 test, notes only after '.', ',' '?'",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row GPT-3 175B, column Self-Notes"
+  },
+  {
+   "claim": "Llama 2 70B few-shot GSM8K.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "59.9",
+   "unit": "%",
+   "baseline_value": "55.9 (CoT); 16.5 (Vanilla)",
+   "n": null,
+   "setup": "Llama 2 70B, 8-shot prompt from Wei et al.",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row GSM8K, column Self-Notes"
+  },
+  {
+   "claim": "Llama 2 70B few-shot MultiArith.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "96.2",
+   "unit": "%",
+   "baseline_value": "94.5 (CoT); 33.3 (Vanilla)",
+   "n": null,
+   "setup": "Llama 2 70B, 8-shot",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row MultiArith, column Self-Notes"
+  },
+  {
+   "claim": "Llama 2 70B few-shot Algorithmic (2-100 statements).",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "40.3",
+   "unit": "%",
+   "baseline_value": "37.4 (CoT); 23.3 (Vanilla)",
+   "n": null,
+   "setup": "Llama 2 70B, 5-shot, 6-33 statement examples",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row Algorithmic, column Self-Notes"
+  },
+  {
+   "claim": "10k Self-Notes Toy-Story samples (~80k QA pairs) beat Vanilla given 1500% more samples.",
+   "kind": "measured",
+   "source": null,
+   "metric": "sample efficiency",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-2 Toy-Story, Fig 4",
+   "note": null,
+   "where": "Sec 4.5",
+   "quote": "The Self-Notes model with 10k samples still vastly outperforms the Vanilla model with a 1500% increase in training samples"
+  },
+  {
+   "claim": "Without notes at inference, a model trained with 100% Self-Notes collapses on OOD Algorithmic.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "9.2",
+   "unit": "%",
+   "baseline_value": "100.0 (oracle notes)",
+   "n": null,
+   "setup": "GPT-2, train 100% notes, test no notes, Algorithmic 101-200",
+   "note": null,
+   "where": "Table 11",
+   "table": "Table 11, row 100% none, column 101-200*"
+  },
+  {
+   "claim": "Dummy tokens help only slightly on Chess Piecetype OOD; real note content matters more than extra compute.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "84.8",
+   "unit": "%",
+   "baseline_value": "82.9 (Vanilla); 94.8 (Self-Notes)",
+   "n": null,
+   "setup": "GPT-2, Chess Piecetype >=81 moves, dummy '_' between positions",
+   "note": null,
+   "where": "App A.3",
+   "table": "Table 10, row Chess Piecetype, column Dummy",
+   "quote": "suggesting that the content of the intermediate notes matters more than just the additional compute"
+  }
+ ],
+ "limits": [
+  "Supervised and few-shot variants need hand-written notes; same annotation burden as scratchpad/CoT (authors concede).",
+  "Only small GPT-2 fine-tuning for most tasks; mostly synthetic tasks.",
+  "GSM8K gain over CoT with GPT-3 is small (13.4 vs 11.4); used older davinci-003, not the stronger GPT-3 version of Wei et al.",
+  "Boolean Variable and Chess Piecetype gains over Scratchpad are within noise.",
+  "Chess Move accuracies stay below 51%.",
+  "No code release stated; optimizer, seeds count, decoding not stated.",
+  "Authors leave RL discovery of notes and out-of-the-box note generation to future work.",
+  "Dummy-token ablation: note content matters more than extra compute, but position (mid-context) also helps."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Self-Notes",
+   "definition": "note tokens generated by the model that interleave the input context and question",
+   "where": "Sec 2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Show Your Work: Scratchpads (Nye et al.)",
+   "year": 2021,
+   "arxiv": "2112.00114",
+   "relation": "extends",
+   "note": "closest; Self-Notes is an online variant of Scratchpad",
+   "quote": null
+  },
+  {
+   "work": "Chain-of-Thought Prompting (Wei et al.)",
+   "year": 2022,
+   "arxiv": "2201.11903",
+   "relation": "baseline",
+   "note": "CoT baseline and few-shot prompts reused",
+   "quote": null
+  },
+  {
+   "work": "STaR (Zelikman et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "bootstrapping rationales",
+   "quote": null
+  },
+  {
+   "work": "Toolformer (Schick et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "concurrent inline API-call insertion",
+   "quote": null
+  },
+  {
+   "work": "Trivedi et al. IRCoT",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "CoT interleaved with retrieval, after context",
+   "quote": null
+  },
+  {
+   "work": "bAbI (Weston et al.)",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "inspiration for Toy-Story",
+   "quote": null
+  },
+  {
+   "work": "Anil et al. length generalisation",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Boolean Variable chain-like split",
+   "quote": null
+  },
+  {
+   "work": "GSM8K (Cobbe et al.)",
+   "year": 2021,
+   "arxiv": "2110.14168",
+   "relation": "uses-data",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "MultiArith (Roy and Roth)",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "GPT-2, GPT-J, GPT-3, Llama 2",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "Kiyono et al. shifted positional embeddings",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "random position offset 0-128",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Vanilla vs Scratchpad/CoT vs Self-Notes (notes interleave the input context)",
+   "page": 1,
+   "why": "shows the core idea in one diagram"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Comparison of Vanilla vs Self-Notes inference",
+   "page": 17,
+   "why": "concrete <SN> ... </SN> generation mid-context"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Input-Output pairs for Vanilla, Scratchpad and Self-Notes on Toy-Story and Algorithmic",
+   "page": 3,
+   "why": "side-by-side format of the three methods"
+  },
+  {
+   "figure": "Table 2",
+   "caption": "Test accuracy (%) supervised setup",
+   "page": 5,
+   "why": "main results incl OOD"
+  },
+  {
+   "figure": "Table 12",
+   "caption": "MultiArith CoT vs Self-Notes prompts",
+   "page": 20,
+   "why": "prompt-format comparison, fewer generated tokens"
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "Ablation: extra compute vs position of additional tokens",
+   "page": 17,
+   "why": "separates content from compute"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "No embedded instructions found.",
+  "Algorithmic dataset citation [11] not resolved by name in the extraction."
+ ]
+}

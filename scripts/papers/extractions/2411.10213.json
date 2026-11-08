@@ -1,0 +1,518 @@
+{
+ "schema": 1,
+ "key": "2411.10213",
+ "pdf": "ai-engineering/03-harness-engineering/sources/meng-2024-empirical-study-llm-based-agents.pdf",
+ "bib": {
+  "title": "LLM-based Agents for Automated Bug Fixing: How Far Are We?",
+  "authors": [
+   "Xiangxin Meng",
+   "Zexiong Ma",
+   "Pengfei Gao",
+   "Chao Peng"
+  ],
+  "first_author": "Meng",
+  "year": 2024,
+  "venue": "preprint (arXiv v2, 19 Oct 2025; template text reads 'Conference acronym XX, June 03-05, 2018')",
+  "arxiv": "2411.10213",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 77506,
+  "chars_total": 77506,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "How do top LLM-based bug-fixing agent systems differ in which SWE-bench Verified issues they solve, in fault localization, and in the value of bug reproduction?",
+ "hypothesis": "Cases solved by all systems have higher-quality issue descriptions than cases solved by none; related reproduction scripts are more likely when the issue has better reproduction info.",
+ "contributions": [
+  "First study of the effectiveness of LLM-based agents in automatic bug fixing for code repositories",
+  "Examines fault localization effectiveness across agents and their differences",
+  "Investigates the impact of bug reproduction on bug fixing",
+  "Summarizes current issues and future research directions"
+ ],
+ "method": {
+  "summary": "Post-hoc analysis of the submitted patches and trajectories of six leaderboard systems on SWE-bench Verified: overlap of solved cases, issue-quality scoring with DeepSeek-R1, file and symbol-level fault localization from final patches, and a purpose-built two-agent system (RepoFixer, Claude 3.5 Sonnet) whose reproduction scripts are run before and after the golden patch.",
+  "task": "Automated bug fixing on SWE-bench Verified (repository-level issue resolution)",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "SWE-bench Verified",
+    "role": "eval",
+    "size": "500 instances",
+    "split": "all 500",
+    "source": "Human-annotated subset of SWE-bench (2,294 instances, 12 Python repos), from OpenAI with SWE-bench authors",
+    "preprocessing": "Golden-patch files and symbols extracted via AST; delta used to make show-line golden patch for line-level scoring"
+   }
+  ],
+  "models": [
+   {
+    "name": "W&B Programmer",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "OpenAI o1 high-reasoning, GPT-4o memory compression, 5 parallel rollouts with o1 crosscheck tie-breaker",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Blackbox AI Agent",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "ReAct with repo tools and bash",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "CodeStory Midwit Agent",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "Monte Carlo Tree Search, trajectory filtering by mean step reward",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Learn-by-interact",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "Offline-collected interaction trajectories used as in-context examples",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Devlo",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "Tools incl. reproduction_test and edge_case_test to filter candidate patches",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Emergent E1",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "Multiple expert agents, then select final patch from candidates",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "RepoFixer (Searcher + Fixer)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "Two-agent ReAct-like; Searcher returns suspicious code symbols; Fixer writes reproduction script, runs it, patches, re-runs",
+    "init_from": "Claude 3.5 Sonnet (October 2024 version)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "tools": "Claude official bash and str_replace_editor; standard Function Call interface",
+     "max_dialogue_turns": "not stated ('predefined number')"
+    }
+   },
+   {
+    "name": "DeepSeek-R1",
+    "role": "judge",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "scores issue quality on five metrics; five annotations per metric per instance, majority option kept"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "Six leaderboard systems: one submission each as submitted, no reruns. RepoFixer: one run per instance (500 reproduction scripts). DeepSeek-R1 judge: 5 annotations per metric per instance, majority vote.",
+   "prompting": "RepoFixer system prompt tells Fixer to write reproduction script, run it, self-assess reproduction, then patch and re-run script until resolved or turn limit. Full issue-quality prompts only on the authors' homepage.",
+   "retrieval": null,
+   "parameters": {
+    "issue_quality_scale": "scores -1..3 (Resolve Solutions) and 0..3 (others)",
+    "reproduction_check": "script run before and after golden patch in separate Docker instances; status change = 'related reproduction script'"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Resolved cases",
+     "definition": "count of the 500 instances whose submitted patch passes the Fail-to-Pass tests",
+     "unit": "cases",
+     "higher_is_better": true
+    },
+    {
+     "name": "File/symbol-level FL hit",
+     "definition": "cases where at least one (or all) golden-patch files or code symbols appear in files/symbols modified by the final submitted patch",
+     "unit": "cases",
+     "higher_is_better": true
+    },
+    {
+     "name": "Related reproduction script rate",
+     "definition": "share of reproduction scripts whose output status differs before vs after golden patch",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "The six systems compared against each other"
+   ],
+   "protocol": "Single submitted result per system; manual trajectory inspection of 5 + 5 extreme cases plus 10 more by two authors who reconciled by discussion; DeepSeek-R1 judge cross-checked against regex rules on 500 issues (34 disagreements); no significance test on resolve rates."
+  },
+  "availability": {
+   "code": "https://github.com/ResearchOpenRepos/bug_fixing_agent_empirical_study",
+   "weights": null,
+   "data": "same repository (experimental data and issue quality annotation prompts)"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "W&B Programmer resolves the most SWE-bench Verified cases of the six systems.",
+   "kind": "measured",
+   "source": null,
+   "metric": "resolved cases",
+   "value": 323,
+   "unit": "cases",
+   "baseline_value": null,
+   "n": 500,
+   "setup": "Six top SWE-bench Verified leaderboard systems (W&B Programmer, Blackbox AI Agent, CodeStory Midwit, Learn-by-interact, Devlo, Emergent E1), 500 instances, submitted patches/trajectories; no reruns; ranked E1 286, Devlo 291, Learn-by-interact 301, Midwit 311, Blackbox 314, W&B 323",
+   "quote": "W&B Programmer performs the best, achieving a 13.0% performance improvement over",
+   "table": "",
+   "note": null,
+   "where": "Sec 4.1"
+  },
+  {
+   "claim": "W&B Programmer resolve rate.",
+   "kind": "measured",
+   "source": null,
+   "metric": "resolve rate",
+   "value": 64.6,
+   "unit": "%",
+   "baseline_value": null,
+   "n": 500,
+   "setup": "Six top SWE-bench Verified leaderboard systems (W&B Programmer, Blackbox AI Agent, CodeStory Midwit, Learn-by-interact, Devlo, Emergent E1), 500 instances, submitted patches/trajectories; no reruns",
+   "quote": "addressing 64.6% of the total 500 cases in the SWE-",
+   "table": "",
+   "note": null,
+   "where": "Sec 4.1"
+  },
+  {
+   "claim": "404 of 500 cases are solved by at least one tool; 96 by none.",
+   "kind": "measured",
+   "source": null,
+   "metric": "solved by any tool",
+   "value": 404,
+   "unit": "cases",
+   "baseline_value": null,
+   "n": 500,
+   "setup": "Six top SWE-bench Verified leaderboard systems (W&B Programmer, Blackbox AI Agent, CodeStory Midwit, Learn-by-interact, Devlo, Emergent E1), 500 instances, submitted patches/trajectories; no reruns",
+   "quote": "bench Verified, 404 cases are solvable by at least one of the six",
+   "table": "",
+   "note": null,
+   "where": "Sec 4.1"
+  },
+  {
+   "claim": "Only 181 of 500 cases are solved by all six tools.",
+   "kind": "measured",
+   "source": null,
+   "metric": "solved by all tools",
+   "value": 181,
+   "unit": "cases",
+   "baseline_value": null,
+   "n": 500,
+   "setup": "Six top SWE-bench Verified leaderboard systems (W&B Programmer, Blackbox AI Agent, CodeStory Midwit, Learn-by-interact, Devlo, Emergent E1), 500 instances, submitted patches/trajectories; no reruns",
+   "quote": "cases can be solved by all six tools (represented by the last column",
+   "table": "",
+   "note": null,
+   "where": "Sec 4.1"
+  },
+  {
+   "claim": "Resolve Solutions quality is 1.95x higher in the all-resolve set than the no-one-resolve set, the largest gap; the average score ratio is 125%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "issue quality ratio (Resolve Solutions)",
+   "value": 195,
+   "unit": "% (all-resolve / no-one-resolve)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "DeepSeek-R1 scored issue descriptions; all-resolve 181 cases vs no-one-resolve 96 cases; Resolve Solutions 1.276 vs 0.656",
+   "quote": null,
+   "table": "Table 1, row All-resolve Set / No-one-resolve Set, column Quality of Resolve Solutions",
+   "note": "Text says 1.95 times, table prints 195%",
+   "where": "Table 1"
+  },
+  {
+   "claim": "Reproducible Examples quality barely differs between solved-by-all and solved-by-none sets.",
+   "kind": "measured",
+   "source": null,
+   "metric": "issue quality ratio (Reproducible Examples)",
+   "value": 101,
+   "unit": "% (all-resolve / no-one-resolve)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Same Table 1 setup; scores 2.022 vs 2.01",
+   "quote": null,
+   "table": "Table 1, row All-resolve Set / No-one-resolve Set, column Quality of Reproducible Examples (101%); scores 2.022 vs 2.01",
+   "note": "Text says 1.01-time difference, table prints 101%",
+   "where": "Sec 4.1"
+  },
+  {
+   "claim": "Learn-by-interact ranks last in file localization (342 cases hit >=1 file) yet 4th in resolving; conditional on hitting a file it resolves 82.2%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "P(resolve | >=1 file hit)",
+   "value": 82.2,
+   "unit": "%",
+   "baseline_value": null,
+   "n": 342,
+   "setup": "Learn-by-interact: 281 of 342 cases",
+   "quote": "281/342 = 82.2%",
+   "table": "",
+   "note": null,
+   "where": "Sec 4.2"
+  },
+  {
+   "claim": "W&B Programmer, the top system, resolves 69.6% of cases where it hit at least one buggy file (72.7% for symbol), lower than Learn-by-interact's 82.2% and 85.1%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "P(resolve | >=1 file hit), W&B Programmer",
+   "value": 69.6,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "W&B Programmer, file-level hit",
+   "quote": "these probabilities for W&B Programmer are",
+   "table": "",
+   "note": "text: 69.6% and 72.7% (file, symbol)",
+   "where": "Sec 4.2"
+  },
+  {
+   "claim": "W&B Programmer localises at least one buggy file in 448 cases.",
+   "kind": "measured",
+   "source": null,
+   "metric": "files hit >=1",
+   "value": 448,
+   "unit": "cases",
+   "baseline_value": null,
+   "n": 500,
+   "setup": "Six top SWE-bench Verified leaderboard systems (W&B Programmer, Blackbox AI Agent, CodeStory Midwit, Learn-by-interact, Devlo, Emergent E1), 500 instances, submitted patches/trajectories; no reruns",
+   "quote": "successfully localizing at least one buggy file in 448",
+   "table": "",
+   "note": null,
+   "where": "Sec 4.2"
+  },
+  {
+   "claim": "RepoFixer (Claude 3.5 Sonnet, bash + str_replace_editor, no heavy sampling, no self-reflection) resolves 255 issues.",
+   "kind": "measured",
+   "source": null,
+   "metric": "resolved cases",
+   "value": 255,
+   "unit": "cases",
+   "baseline_value": null,
+   "n": 500,
+   "setup": "RepoFixer single run on SWE-bench Verified",
+   "quote": "resolved a total of 255 issues, accounting for 51% of all samples",
+   "table": "",
+   "note": null,
+   "where": "Sec 4.3"
+  },
+  {
+   "claim": "76.8% of RepoFixer's reproduction scripts change status when the golden patch is applied (384 of 500).",
+   "kind": "measured",
+   "source": null,
+   "metric": "related reproduction script rate",
+   "value": 76.8,
+   "unit": "%",
+   "baseline_value": null,
+   "n": 500,
+   "setup": "RepoFixer; script run once before and once after golden patch in fresh Docker instances; change in output = related",
+   "quote": "384 scripts produced",
+   "table": "",
+   "note": "Output divergence can misclassify non-triggering scripts (authors' own threat to validity)",
+   "where": "Sec 4.3"
+  },
+  {
+   "claim": "Related reproduction scripts are more likely when the issue has a runnable reproduction example (80.4%) than when it has not enough info (64%).",
+   "kind": "measured",
+   "source": null,
+   "metric": "related script rate, Contains REs",
+   "value": 80.4,
+   "unit": "%",
+   "baseline_value": null,
+   "n": 194,
+   "setup": "194 issues with Contains REs, 156 related; 'Not Enough Info' 50 issues, 32 related = 64%; Partial REs 79.9%; Info in NL 70.1%",
+   "quote": "156 produced related reproduction scripts, accounting for 80.4%",
+   "table": "",
+   "note": null,
+   "where": "Sec 4.3"
+  },
+  {
+   "claim": "Agent runs involving self-assessed reproduction then verification of the patch with the reproduction script is the process of the most effective systems (qualitative claim).",
+   "kind": "claim",
+   "source": null,
+   "metric": "none",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Authors' insight 9 from the six systems' designs",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Sec 4.3 insight 9"
+  }
+ ],
+ "limits": [
+  "Differences in LLM backbone across closed-source systems are uncontrolled; no ablation with identical backbones",
+  "One submitted run per system; stochasticity not measured, assumes leaderboard results are best performance",
+  "Pass/fail via Fail-to-Pass tests only, which may be incomplete; patch correctness may be overstated",
+  "Reproduction-script quality is judged by output divergence before/after golden patch, which can misclassify scripts that do not trigger the bug",
+  "Issue quality is scored by DeepSeek-R1, checked against humans only on a subset; only 34 disagreements against regex checked",
+  "Python-only repos; manual analysis limited to 5 + 5 + 10 cases",
+  "No experiment isolates the effect of reproduction or patch verification on resolve rate: the reproduction claim is correlational with issue quality, and RepoFixer has no ablation",
+  "FL derived from final patches, not intermediate FL results",
+  "Leaderboard systems and models (o1, Claude 3.5 Sonnet Oct 2024) are late-2024 era and have dated"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "related reproduction script",
+   "definition": "a reproduction script whose output status differs before and after the golden patch is applied",
+   "where": "Sec 4.3"
+  },
+  {
+   "term": "All-resolve Set / No-one-resolve Set",
+   "definition": "the 181 cases solved by all six tools / the 96 cases solved by none",
+   "where": "Sec 4.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "SWE-bench (Jimenez et al.)",
+   "year": 2023,
+   "arxiv": "2310.06770",
+   "relation": "uses-data",
+   "note": "benchmark origin",
+   "quote": null
+  },
+  {
+   "work": "SWE-bench Verified (OpenAI)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "500-instance eval set",
+   "quote": null
+  },
+  {
+   "work": "Agentless: Demystifying LLM-based Software Engineering Agents",
+   "year": 2024,
+   "arxiv": "2407.01489",
+   "relation": "extends",
+   "note": "issue-quality criteria adapted from it (SWE-bench Lite 300 instances)",
+   "quote": null
+  },
+  {
+   "work": "SWE-agent",
+   "year": 2024,
+   "arxiv": "2405.15793",
+   "relation": "related",
+   "note": "RepoFixer is closer to its multi-step ReAct design",
+   "quote": null
+  },
+  {
+   "work": "Learn-by-interact",
+   "year": 2025,
+   "arxiv": "2501.10893",
+   "relation": "evaluates",
+   "note": "one of six systems",
+   "quote": null
+  },
+  {
+   "work": "AutoCodeRover",
+   "year": 2024,
+   "arxiv": "2404.05427",
+   "relation": "related",
+   "note": "agent for issue fixing",
+   "quote": null
+  },
+  {
+   "work": "OpenDevin",
+   "year": 2024,
+   "arxiv": "2407.16741",
+   "relation": "related",
+   "note": "agent framework",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Figure 1",
+   "caption": "Analysis of Performance of State-of-the-art Techniques on Issue Resolve Task",
+   "page": 4,
+   "why": "UpSet-style overlap of which systems solve which cases (181 all, 96 none)"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Issue Quality Analysis for All-resolve Cases and No-one-resolve Cases.",
+   "page": 4,
+   "why": "Per-metric issue quality gap between solved-by-all and solved-by-none"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Title printed in the PDF is 'LLM-based Agents for Automated Bug Fixing: How Far Are We?'; the filename and ledger label say 'empirical study'",
+  "ACM template placeholder venue text ('Conference acronym XX, 2018') is not a real venue",
+  "No embedded instructions found",
+  "Figure data (Figs 1-3 bars) not in text; only the numbers quoted in prose are recorded"
+ ]
+}

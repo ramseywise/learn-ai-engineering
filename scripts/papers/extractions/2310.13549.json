@@ -1,0 +1,424 @@
+{
+ "schema": 1,
+ "key": "2310.13549",
+ "pdf": "generative-ai/02-rag-retrieval/sources/quelle-2023-perils-promises-fact-checking-large.pdf",
+ "bib": {
+  "title": "The Perils & Promises of Fact-checking with Large Language Models",
+  "authors": [
+   "Dorian Quelle",
+   "Alexandre Bovet"
+  ],
+  "first_author": "Quelle",
+  "year": 2023,
+  "venue": "preprint (arXiv:2310.13549v2 [cs.CL], 7 Feb 2024; no venue printed)",
+  "arxiv": "2310.13549",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 52143,
+  "chars_total": 52143,
+  "engine": "pymupdf",
+  "skipped": "reference list skimmed only"
+ },
+ "type": "empirical",
+ "question": "How well do GPT-3.5 and GPT-4 fact-check claims, with and without agent-driven web-search context, and across languages?",
+ "hypothesis": "Retrieved context improves LLM fact-checking accuracy, and GPT-4 outperforms GPT-3.5 (implied by the design).",
+ "contributions": [
+  "Evaluation of GPT-3.5 and GPT-4 on fact-checking with and without external context",
+  "A ReAct-based iterative agent that queries Google, explains its reasoning and cites retrieved sources",
+  "First assessment of GPT-3.5 fact-checking across multiple languages"
+ ],
+ "method": {
+  "summary": "A LangChain ReAct agent lets GPT-3.5 or GPT-4 issue Google search queries (up to three iterations, 10 results each, previews only) before giving a verdict; fact-checking domains are filtered from results. It is compared with a no-context prompt on PolitiFact claims and, for GPT-3.5, on multilingual Data Commons claims in original language versus English translation.",
+  "task": "claim veracity classification with evidence retrieval",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "PolitiFact fact-checks",
+    "role": "eval",
+    "size": "21,152 fact-checks (2007-2022); 3000 sampled",
+    "split": "500 per label across six labels (True, Mostly-True, Half-True, Mostly-False, False, Pants-Fire)",
+    "source": "PolitiFact [47]",
+    "preprocessing": "Balanced sampling by label"
+   },
+   {
+    "name": "Data Commons fact-check dump",
+    "role": "eval",
+    "size": "78 languages, 454 organisations; up to 500 per language kept",
+    "split": "languages with >=50 observations and >=10 true/mostly-true kept",
+    "source": "Data Commons",
+    "preprocessing": "Verdicts translated to English, 468 verdicts appearing at least twice mapped by hand to 4 levels (False, Mostly False, Mostly True, True); unmappable (Sarcasm, Satire, unconfirmed) removed; claims translated to English with Googletrans"
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT-3.5",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "decoder-only transformer, RLHF",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "16k",
+    "other": {
+     "exact_version": "not stated",
+     "training_cutoff": "September 2021"
+    }
+   },
+   {
+    "name": "GPT-4",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "decoder-only transformer, RLHF",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "16k (stated as the standard GPT API window; applied to both)",
+    "other": {
+     "exact_version": "not stated",
+     "training_cutoff": "September 2021"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "one run per claim; no seeds or repeats stated",
+   "prompting": "No Context: statement, originator and date; model may answer 'uncertain'. Context: ReAct agent in LangChain, may issue Google queries or answer.",
+   "retrieval": "Google Search API, 10 results per iteration, previews (title, link, snippet); results from fact-checking domains in the dataset removed",
+   "parameters": {
+    "max_search_iterations": "3 (then forced final answer from all searches)",
+    "results_per_iteration": 10,
+    "bm25_on_full_html": "tried, no improvement, not used"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Accuracy (binary)",
+     "definition": "PolitiFact labels grouped into false (pants-fire, false, mostly-false) and true (half-true, mostly-true, true); correct if grouped category matches",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Accuracy (exact six-way)",
+     "definition": "correct only if exact PolitiFact category predicted",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Accuracy and F1 (multilingual)",
+     "definition": "4-level verdict mapped scores; F1 added because class distribution differs by language",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "No-context condition",
+    "Original-language claims vs English translation"
+   ],
+   "protocol": "F1 confidence intervals are bootstrapped standard errors (Fig 7); 'significant' differences asserted without a named test; time analysis against the Sept 2021 cutoff."
+  },
+  "availability": {
+   "code": "not stated; LangChain library cited; full transcripts said to be in supplementary material",
+   "weights": null,
+   "data": "PolitiFact and Data Commons datasets (public sources)"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "With context, non-ambiguous verdicts reach above 80% and 89% accuracy; without context 63-75% average accuracy.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "PolitiFact, 3000 claims (500 per six-way label), GPT-3.5 / GPT-4 via ReAct Google-search agent (Context) or plain prompt (No Context)",
+   "note": "Aggregation behind '80% and 89%' not defined.",
+   "where": "Sec 4",
+   "quote": "demon-\nstrate good performance of 63-75% accuracy on average, which further improves to above 80% and 89%\nfor non-ambiguous verdicts when context is incorporated"
+  },
+  {
+   "claim": "GPT-4 with context reaches 84.92% on 'true' claims versus 71.30% without context (binary accuracy).",
+   "kind": "measured",
+   "source": null,
+   "metric": "binary accuracy, label true",
+   "value": 84.92,
+   "unit": "%",
+   "baseline_value": 71.3,
+   "n": null,
+   "setup": "PolitiFact, GPT-4",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1 left, row true, columns GPT-4 Context (84.92) vs GPT-4 No Context (71.30)"
+  },
+  {
+   "claim": "GPT-3.5 without context predicts false in 58.2% of cases versus 22.89% for GPT-4.",
+   "kind": "measured",
+   "source": null,
+   "metric": "share of false predictions",
+   "value": 58.2,
+   "unit": "%",
+   "baseline_value": 22.89,
+   "n": null,
+   "setup": "PolitiFact no-context",
+   "note": null,
+   "where": "Sec 3.1",
+   "quote": "GPT-3.5 predicts the veracity of a claim to be false in 58.2% of the cases (compared to 22.89%\nfor GPT-4)"
+  },
+  {
+   "claim": "Context raises GPT-4's accuracy on true-label categories by 10.19 points on average.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 10.19,
+   "unit": "percentage points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "PolitiFact, GPT-4 true categories, context vs no context",
+   "note": null,
+   "where": "Sec 3.1",
+   "quote": "where it achieves an increase of 10.19 percentage points on average"
+  },
+  {
+   "claim": "Both models fall in the middle categories: GPT-4 with context gets 55.82% on mostly-false, below its 68.70% without context.",
+   "kind": "measured",
+   "source": null,
+   "metric": "binary accuracy, mostly false",
+   "value": 55.82,
+   "unit": "%",
+   "baseline_value": 68.7,
+   "n": null,
+   "setup": "PolitiFact GPT-4",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1 left, row mostly false, GPT-4 Context vs No Context"
+  },
+  {
+   "claim": "Exact six-way accuracy is very low: the authors say models cannot predict the exact shade of truth.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "PolitiFact, both models, both conditions, exact-category accuracy",
+   "note": null,
+   "where": "Table 1 right",
+   "quote": "The extremely low scores show that the models are unable to predict the exact shade of\ntruth that PolitiFact assigned to the statement."
+  },
+  {
+   "claim": "No sudden accuracy drop after the September 2021 training cutoff, interpreted as RLHF possibly adding knowledge.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "PolitiFact, rolling yearly accuracy (Fig 5)",
+   "note": null,
+   "where": "Sec 3.1",
+   "quote": "We do not observe any sudden decrease in accuracy after the\nofficial training cutoff for GPT-3.5 and GPT-4."
+  },
+  {
+   "claim": "Translating non-English claims to English raised F1 in all languages except Thai without context.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Data Commons multilingual fact-checks, GPT-3.5, up to 500 claims per language, 13 languages besides English, no context",
+   "note": null,
+   "where": "Sec 3.2",
+   "quote": "In all languages, except for Thai, we see an increase in the F1 score of the model when fact-checking the\ntranslated claim as compared to the original."
+  },
+  {
+   "claim": "With context, translation raised F1 in all but three languages (Portuguese, Thai, Italian).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Data Commons multilingual fact-checks, GPT-3.5, up to 500 claims per language, 13 languages besides English, with context",
+   "note": null,
+   "where": "Sec 3.2",
+   "quote": "In all but three languages (Portugese, Thai, and Italian), translating increased the\nF1 score of the model."
+  },
+  {
+   "claim": "Telugu without context: accuracy 26.99 on original-language claims versus 59.79 on English translation.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 26.99,
+   "unit": "%",
+   "baseline_value": 59.79,
+   "n": null,
+   "setup": "Telugu, GPT-3.5, no context, 500 samples; baseline is English translation",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Telugu, columns Accuracy Multilingual (26.99) and Accuracy English (59.79)"
+  },
+  {
+   "claim": "Tamil with context: F1 62.95 English versus 34.86 original.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 34.86,
+   "unit": "%",
+   "baseline_value": 62.95,
+   "n": null,
+   "setup": "Tamil, GPT-3.5, with context, 500 samples",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row Tamil, columns F1 Multilingual (34.86), F1 English (62.95)"
+  },
+  {
+   "claim": "BM25 distillation of full web pages gave no improvement over Google result previews.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Informal pre-experiment, no numbers reported",
+   "note": null,
+   "where": "Sec 2.1",
+   "quote": "We found no\nimprovement to the performance of the LLMs,\nas Google already uses machine learning methods"
+  }
+ ],
+ "limits": [
+  "No exact model versions, temperature, decoding settings or prompts printed; single run, no seeds.",
+  "Data leakage of fact-checks into training data cannot be excluded; the cutoff test is indirect.",
+  "Cross-language comparison is confounded: fact-checking organisations differ in topics and timeliness, so low-resource languages may do better than reported.",
+  "Only GPT-3.5 and GPT-4 tested; authors note newer, possibly fine-tuned models.",
+  "Models cannot replace human fact-checkers; wrong verdicts can be costly.",
+  "Retrieval relies on Google previews and assumes retrieved information is trustworthy; Google also differs by language and date.",
+  "'Significant' is stated without naming a test; the PolitiFact accuracy tables do not include variance.",
+  "16k context limited how much search content could be passed."
+ ],
+ "practices": [],
+ "terms": [],
+ "lineage": [
+  {
+   "work": "ReAct: Synergizing Reasoning and Acting in Language Models (Yao et al.)",
+   "year": 2023,
+   "arxiv": "2210.03629",
+   "relation": "uses-method",
+   "note": "Agent framework for search-and-reason loop",
+   "quote": null
+  },
+  {
+   "work": "LangChain (Chase)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Library to build the agent",
+   "quote": null
+  },
+  {
+   "work": "Hoes, Altay & Bermeo, Leveraging ChatGPT for Efficient Fact-Checking",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Tested GPT-3.5 on PolitiFact with no context; this work adds context and GPT-4",
+   "quote": null
+  },
+  {
+   "work": "Caramancion, News verifiers showdown",
+   "year": 2023,
+   "arxiv": "2306.17176",
+   "relation": "related",
+   "note": "Bard, BingAI, GPT-3.5, GPT-4 on 100 items, 64-71% accuracy",
+   "quote": null
+  },
+  {
+   "work": "Choi & Ferrara, Automated Claim Matching with LLMs",
+   "year": 2023,
+   "arxiv": "2310.09223",
+   "relation": "related",
+   "note": "Synthetic entailment dataset with GPT-4",
+   "quote": null
+  },
+  {
+   "work": "BM25 (Robertson, Zaragoza et al.)",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Tried to distil web pages; no gain",
+   "quote": null
+  },
+  {
+   "work": "PolitiFact dataset",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "21,152 fact-checks 2007-2022",
+   "quote": null
+  },
+  {
+   "work": "Data Commons fact-check dump",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Multilingual fact-checks",
+   "quote": null
+  },
+  {
+   "work": "FEVER / ClaimBuster / CLEF CheckThat!",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Background fact-checking tasks and pipelines",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Workflow showing how we enable LLM agents to interact with a context to assess the veracity of a claim (top). Example of the treatment of a specific claim (bottom)",
+   "page": 6,
+   "why": "Shows the search loop with at most three iterations and the answer step"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Comparison of accuracy of all conditions on the PolitiFact dataset",
+   "page": 10,
+   "why": "Per-label accuracy across the four model x context conditions"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Accuracy of GPT-3.5 & GPT-4 over time on the PolitiFact dataset",
+   "page": 11,
+   "why": "Shows no drop after the training cutoff"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Table 1 and Tables 2-3 are flattened in the text; Table 1 right-hand row labels are lost, so exact-category cells are ambiguous.",
+  "No venue printed; recorded as preprint.",
+  "No embedded instructions found."
+ ]
+}

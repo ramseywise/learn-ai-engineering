@@ -1,0 +1,513 @@
+{
+ "schema": 1,
+ "key": "2004.09936",
+ "pdf": "generative-ai/07-agentic-applications/sources/bunk-2020-diet.pdf",
+ "bib": {
+  "title": "DIET: Lightweight Language Understanding for Dialogue Systems",
+  "authors": [
+   "Tanja Bunk",
+   "Daksh Varshneya",
+   "Vladimir Vlasov",
+   "Alan Nichol"
+  ],
+  "first_author": "Bunk",
+  "year": 2020,
+  "venue": "preprint",
+  "arxiv": "2004.09936",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 36008,
+  "chars_total": 36008,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "How well can a lightweight joint intent and entity model do on dialogue NLU, and does it need large pre-trained language models?",
+ "hypothesis": "Large pre-trained models are not needed for dialogue NLU; a modular architecture with sparse features and optional embeddings can match or beat them (stated as a surprise in the abstract).",
+ "contributions": [
+  "Introduce DIET, a configurable multi-task transformer for intent classification and entity recognition that mixes sparse n-gram features with optional pre-trained dense embeddings",
+  "Study the effect of ConveRT, BERT and GloVe embeddings and of a mask loss",
+  "Show state of the art on NLU-Benchmark even without pre-trained embeddings, and better than fine-tuned BERT at about 6x less training time"
+ ],
+ "method": {
+  "summary": "DIET featurizes tokens with sparse one-hot and character n-gram (n<=5) features plus optional frozen dense embeddings (ConveRT, BERT, GloVe), runs a 2-layer transformer with relative position attention, predicts entities with a CRF and intent with a dot-product similarity loss, plus an optional masked-token loss. Evaluated by 10-fold CV on NLU-Benchmark and on ATIS and SNIPS.",
+  "task": "joint intent classification and entity recognition",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "NLU-Benchmark (Liu et al. 2019b)",
+    "role": "both",
+    "size": "25,716 utterances; 64 intents; 54 entity types",
+    "split": "10 folds, each 9960 train / 1076 test; some utterances appear in multiple folds; fold 1 used for hyperparameters with 250 train utterances held out as dev",
+    "source": "github.com/xliuhw/NLU-Evaluation-Data",
+    "preprocessing": "intent = scenario + action label concatenated"
+   },
+   {
+    "name": "ATIS",
+    "role": "both",
+    "size": "4,478 train / 500 dev / 893 test; 21 intents; 79 entities",
+    "split": "split of Goo et al. 2018 as used by Chen et al. 2019",
+    "source": "Hemphill et al. 1990; github.com/MiuLab/SlotGated-SLU",
+    "preprocessing": "BILOU tagging"
+   },
+   {
+    "name": "SNIPS",
+    "role": "both",
+    "size": "13,784 train / 700 test; 7 intents; 39 entities",
+    "split": "same as Chen et al. 2019; 700 training examples used as dev",
+    "source": "Coucke et al. 2018",
+    "preprocessing": "BILOU tagging"
+   }
+  ],
+  "models": [
+   {
+    "name": "DIET",
+    "role": "proposed",
+    "params": null,
+    "architecture": "sparse+dense featurizer, 2-layer transformer with relative position attention, CRF entity head, dot-product intent head, optional mask loss",
+    "init_from": "none for the transformer; dense embeddings frozen from ConveRT, BERT or GloVe",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "2 transformer layers",
+    "hidden": "256",
+    "heads": null,
+    "context": null,
+    "other": {
+     "intent/token embedding space dim": "20",
+     "ConveRT sentence embedding": "1024-d; word embeddings 512-d tiled to 1024",
+     "mask rate": "15% of tokens: 70% mask token, 10% random, 20% kept (as printed)",
+     "parameter count": "not stated"
+    }
+   },
+   {
+    "name": "BERT fine-tuned inside DIET",
+    "role": "baseline",
+    "params": null,
+    "architecture": "BERT in the featurization pipeline, whole model fine-tuned",
+    "init_from": "pre-trained BERT",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "HERMIT (Vanzo et al. 2019)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "hierarchical BiLSTM multi-task",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Joint BERT (Chen et al. 2019)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "BERT with [CLS] intent head and token slot head",
+    "init_from": "BERT",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "L_total = L_I + L_E + L_M (dot-product intent loss, CRF negative log-likelihood, masked-token dot-product loss); any term can be switched off",
+   "optimizer": "Adam",
+   "lr": "0.001 (initial)",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "increased incrementally from 64 to 128; balanced batching",
+   "steps": null,
+   "epochs": "200",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": "applied to sparse features (rate not stated)",
+   "regularisation": "dropout on sparse features, mask loss, growing batch size",
+   "hardware": "4 CPUs, 15 GB memory, one NVIDIA Tesla K80",
+   "compute": null,
+   "wall_clock": "about 1 hour on fold 1; 10 hours for all 10 folds (sparse + ConveRT); 60 hours for all 10 folds with BERT fine-tuned",
+   "seeds": "10 independent models, one per fold, averaged (NLU-Benchmark); 5 runs averaged (ATIS, SNIPS); seeds themselves not stated",
+   "other": {
+    "framework": "TensorFlow"
+   }
+  },
+  "inference": {
+   "decoding": "intent: dot-product similarity ranks all intent labels; entities: CRF",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "not applicable",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {
+    "latency": "around 80ms per utterance"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "micro-averaged F1 (also P and R) on NLU-Benchmark",
+     "definition": "intent as multi-class; entity true positive if predicted and gold spans overlap and labels match",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "intent accuracy and entity micro-F1 on ATIS/SNIPS",
+     "definition": "entity counts only on exact span and label match (stricter)",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "HERMIT",
+    "Joint BERT",
+    "BERT fine-tuned inside DIET"
+   ],
+   "protocol": "10-fold average on NLU-Benchmark following Vanzo et al.; mean of 5 runs on ATIS and SNIPS; +/- values printed; no significance test"
+  },
+  "availability": {
+   "code": "https://github.com/RasaHQ/DIET-paper",
+   "weights": null,
+   "data": "public datasets"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.batch_size",
+    "quote": "The batch size increased incrementally from 64 to 128",
+    "where": "Sec 4.2"
+   },
+   {
+    "field": "models[DIET].params",
+    "quote": null,
+    "where": "No parameter count is printed anywhere in the paper"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Fine-tuning BERT inside DIET on all 10 NLU-Benchmark folds takes 60 hours versus 10 hours for DIET with frozen ConveRT plus sparse features (the 'six times faster' ratio).",
+   "kind": "measured",
+   "source": null,
+   "metric": "training time ratio",
+   "value": "6x (60 h vs 10 h)",
+   "unit": "x",
+   "baseline_value": "60 hours",
+   "n": 10,
+   "setup": "NLU-Benchmark, all 10 folds, DIET with fine-tuned BERT vs DIET with frozen ConveRT + sparse features; hardware stated once for the paper: 4 CPUs, 15 GB, one NVIDIA Tesla K80. Baseline is BERT fine-tuned inside DIET, not a standalone BERT classifier.",
+   "quote": "takes 60 hours, compared to 10 hours for DIET with embeddings from ConveRT and sparse features",
+   "table": null,
+   "note": "Abstract and conclusion say 'about six times faster' / 'six times faster'; the ratio is derived from 60/10.",
+   "where": "Sec 4.4, Table 4 caption"
+  },
+  {
+   "claim": "DIET with sparse + frozen ConveRT (no mask loss) reaches intent F1 90.18 vs 89.67 for fine-tuned BERT inside DIET, a 0.51-point gap the paper calls on par.",
+   "kind": "measured",
+   "source": null,
+   "metric": "intent micro-F1",
+   "value": "90.18",
+   "unit": "%",
+   "baseline_value": "89.67",
+   "n": 10,
+   "setup": "NLU-Benchmark, mean over 10 folds (one model per fold), +/- is as printed (0.53 vs 0.48)",
+   "quote": null,
+   "table": "Table 4, rows Fine-tuned BERT and sparse + ConveRT, column Intent F1",
+   "note": "Gap is inside one standard deviation.",
+   "where": "Table 4"
+  },
+  {
+   "claim": "On entities, DIET sparse + ConveRT scores 86.04 F1 vs 85.73 for fine-tuned BERT inside DIET.",
+   "kind": "measured",
+   "source": null,
+   "metric": "entity micro-F1",
+   "value": "86.04",
+   "unit": "%",
+   "baseline_value": "85.73",
+   "n": 10,
+   "setup": "NLU-Benchmark, 10-fold mean; overlap-based entity match",
+   "quote": null,
+   "table": "Table 4, rows Fine-tuned BERT and sparse + ConveRT, column Entities F1",
+   "note": "Text says it 'outperforms' on entities; 0.31 gap is well inside the std (1.01, 0.91).",
+   "where": "Table 4"
+  },
+  {
+   "claim": "Best DIET (sparse + ConveRT, no mask loss) beats HERMIT on NLU-Benchmark intents by over 2 points absolute.",
+   "kind": "measured",
+   "source": null,
+   "metric": "intent micro-F1",
+   "value": "90.18",
+   "unit": "%",
+   "baseline_value": "87.55",
+   "n": 10,
+   "setup": "NLU-Benchmark, 10-fold mean; HERMIT numbers from Vanzo et al. 2019",
+   "quote": null,
+   "table": "Table 1, rows HERMIT and sparse + ConveRT, column Intent F1",
+   "note": "Entity F1 86.04 vs 84.74.",
+   "where": "Table 1, Sec 4.3"
+  },
+  {
+   "claim": "Entity F1 of best DIET vs HERMIT.",
+   "kind": "measured",
+   "source": null,
+   "metric": "entity micro-F1",
+   "value": "86.04",
+   "unit": "%",
+   "baseline_value": "84.74",
+   "n": 10,
+   "setup": "NLU-Benchmark, 10-fold mean",
+   "quote": "Our micro-averaged F1 score on entities (86.04%) is also higher than HERMIT (84.74%).",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.3"
+  },
+  {
+   "claim": "DIET with only sparse features and no pre-trained embeddings, with mask loss, already beats HERMIT on NLU-Benchmark (intent 88.19 vs 87.55; entities 85.12 vs 84.74).",
+   "kind": "measured",
+   "source": null,
+   "metric": "intent micro-F1",
+   "value": "88.19",
+   "unit": "%",
+   "baseline_value": "87.55",
+   "n": 10,
+   "setup": "NLU-Benchmark, 10-fold mean, sparse features + mask loss, no dense embeddings",
+   "quote": null,
+   "table": "Table 3, row 2 (sparse, no dense, mask loss), column Intent",
+   "note": "Check marks for sparse/mask columns were lost in text extraction, so the row-to-configuration mapping is inferred from row order and from the text ('Adding a mask loss improves performance by around 1% absolute').",
+   "where": "Table 3"
+  },
+  {
+   "claim": "Pre-trained embeddings benefit measured as gap between best config and sparse-only+mask: about 2 points intent F1 (90.18 vs 88.19) and about 0.9 entity F1 (86.04 vs 85.12).",
+   "kind": "measured",
+   "source": null,
+   "metric": "intent micro-F1 gain from ConveRT",
+   "value": "90.18",
+   "unit": "%",
+   "baseline_value": "88.19",
+   "n": 10,
+   "setup": "NLU-Benchmark, 10-fold mean; gap is the reader's subtraction from Table 3, not a number the paper prints",
+   "quote": null,
+   "table": "Table 3, row 2 and row sparse + ConveRT without mask, column Intent",
+   "note": "Abstract says 'no clear benefit to using large pre-trained models'; the gain is from ConveRT (conversation-specific, small), not from large LMs. BERT dense features were worse than GloVe.",
+   "where": "Table 3, Sec 4.4"
+  },
+  {
+   "claim": "Adding mask loss improves sparse-only DIET by around 1 point on both tasks.",
+   "kind": "measured",
+   "source": null,
+   "metric": "micro-F1 gain",
+   "value": "around 1%",
+   "unit": "% absolute",
+   "baseline_value": null,
+   "n": 10,
+   "setup": "NLU-Benchmark, sparse features only",
+   "quote": "Adding a mask loss improves performance by around 1% absolute on both in-tents and entities.",
+   "table": null,
+   "note": "Quote kept as printed in the cached text (hyphenation artefact).",
+   "where": "Sec 4.4"
+  },
+  {
+   "claim": "Contextual BERT embeddings used frozen as dense features perform worse than GloVe; authors hypothesise BERT needs fine-tuning for dialogue.",
+   "kind": "measured",
+   "source": null,
+   "metric": "qualitative",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "NLU-Benchmark ablation, Table 3 (BERT rows 84-88 intent range vs GloVe 88-89)",
+   "quote": "Interestingly, using contextual BERT embeddings as dense features performs worse than GloVe.",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.4"
+  },
+  {
+   "claim": "Joint training helps entities a lot (86.04 vs 82.57 F1 single-task) and hurts intents slightly (90.18 vs 90.90).",
+   "kind": "measured",
+   "source": null,
+   "metric": "entity micro-F1 single-task",
+   "value": "82.57",
+   "unit": "%",
+   "baseline_value": "86.04",
+   "n": 10,
+   "setup": "NLU-Benchmark, 10-fold mean",
+   "quote": "the micro-averaged F1 score of entities drops from 86.04% to 82.57% when entities are trained separately",
+   "table": null,
+   "note": "Best single-task intent config used ConveRT with no transformer layers.",
+   "where": "Sec 4.4, Table 2"
+  },
+  {
+   "claim": "On ATIS and SNIPS, sparse-only DIET is within 1-2 points of Joint BERT.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ATIS intent accuracy, sparse only",
+   "value": "96.61",
+   "unit": "%",
+   "baseline_value": "97.90",
+   "n": 5,
+   "setup": "ATIS and SNIPS, 5 runs averaged, BILOU tags, exact-span entity match; Joint BERT from Chen et al. 2019",
+   "quote": null,
+   "table": "Table 5, rows Joint BERT and sparse*, column ATIS Intent",
+   "note": "SNIPS entities: 95.10 vs 97.00 (1.9 gap); text claim 'within 1-2%'.",
+   "where": "Table 5"
+  },
+  {
+   "claim": "Inference takes about 80 ms per utterance.",
+   "kind": "measured",
+   "source": null,
+   "metric": "latency",
+   "value": "80",
+   "unit": "ms",
+   "baseline_value": null,
+   "n": null,
+   "setup": "hardware as in training setup (4 CPUs, 15 GB, K80); not stated whether CPU or GPU was used for inference",
+   "quote": "At inference time we need around 80ms to process one utterance.",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2"
+  },
+  {
+   "claim": "Training DIET on fold 1 of NLU-Benchmark takes about one hour.",
+   "kind": "measured",
+   "source": null,
+   "metric": "train time",
+   "value": "one hour",
+   "unit": "h",
+   "baseline_value": null,
+   "n": 1,
+   "setup": "fold 1, 200 epochs, K80 machine",
+   "quote": "Training our model on the ﬁrst fold of the NLU-Benchmark dataset takes around one hour.",
+   "table": null,
+   "note": "10 folds at ~1 h is consistent with the 10 h figure in Table 4.",
+   "where": "Sec 4.2"
+  }
+ ],
+ "limits": [
+  "No parameter counts reported for DIET or any baseline.",
+  "The six-times speed ratio compares against BERT fine-tuned inside DIET, not a standalone BERT classifier, on a K80 GPU machine from 2020; it covers all 10 folds, and the setup does not say which device ran inference.",
+  "Intent gain over fine-tuned BERT is 0.51 points, within one std; the headline 'no clear benefit' from pre-training is for ConveRT/GloVe (small) versus BERT used frozen, and the authors concede ConveRT sparse gives the best intent F1.",
+  "Hyperparameters were tuned on fold 1 of NLU-Benchmark only; on ATIS and SNIPS DIET is 1-2 points below Joint BERT.",
+  "Joint training slightly hurt intents (90.90 single-task vs 90.18).",
+  "Frozen BERT features were worse than GloVe; fine-tuned BERT was only tested inside DIET.",
+  "No learning-rate schedule, dropout rate, seeds or parameter counts stated; no statistical test."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "DIET",
+   "definition": "Dual Intent and Entity Transformer",
+   "where": "Sec 1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "HERMIT NLU (Vanzo et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "prior state of the art on NLU-Benchmark; evaluation protocol followed",
+   "quote": null
+  },
+  {
+   "work": "BERT for joint intent classification and slot filling (Chen et al.)",
+   "year": 2019,
+   "arxiv": "1902.10909",
+   "relation": "baseline",
+   "note": "Joint BERT on ATIS and SNIPS",
+   "quote": null
+  },
+  {
+   "work": "ConveRT (Henderson et al.)",
+   "year": 2019,
+   "arxiv": "1911.03688",
+   "relation": "uses-method",
+   "note": "dense embeddings in best config",
+   "quote": null
+  },
+  {
+   "work": "BERT (Devlin et al.)",
+   "year": 2018,
+   "arxiv": "1810.04805",
+   "relation": "uses-method",
+   "note": "embeddings and fine-tuned baseline; masking and CLS idea",
+   "quote": null
+  },
+  {
+   "work": "GloVe (Pennington et al.)",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "dense embeddings",
+   "quote": null
+  },
+  {
+   "work": "Benchmarking NLU services (Liu et al.)",
+   "year": 2019,
+   "arxiv": "1903.05566",
+   "relation": "uses-data",
+   "note": "NLU-Benchmark",
+   "quote": null
+  },
+  {
+   "work": "Dialogue Transformers (Vlasov et al.)",
+   "year": 2019,
+   "arxiv": "1910.00486",
+   "relation": "extends",
+   "note": "balanced batching and dot-product loss",
+   "quote": null
+  },
+  {
+   "work": "To tune or not to tune? (Peters et al.)",
+   "year": 2019,
+   "arxiv": "1903.05987",
+   "relation": "related",
+   "note": "fine-tuning versus frozen features; protocol for BERT comparison",
+   "quote": null
+  },
+  {
+   "work": "Slot-gated modeling (Goo et al.)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "ATIS and SNIPS split",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Figure 1",
+   "caption": "A schematic representation of the DIET architecture.",
+   "page": 2,
+   "why": "shows sparse + dense features, transformer and the three heads"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 4",
+   "snippet": "Ltotal = LI + LE + LM",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Check marks in Table 3 were lost in text extraction, so which rows use sparse, dense or mask loss is inferred from row order and the text.",
+  "Text contains a typo: mask percentages 70/10/20 as printed.",
+  "No instructions embedded in the text."
+ ]
+}

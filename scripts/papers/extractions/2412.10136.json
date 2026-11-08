@@ -1,0 +1,628 @@
+{
+ "schema": 1,
+ "key": "2412.10136",
+ "pdf": "ai-engineering/05-graph-engineering/sources/wang-2024-can-llms-convert-graphs-text.pdf",
+ "bib": {
+  "title": "Can LLMs Convert Graphs to Text-Attributed Graphs?",
+  "authors": [
+   "Zehong Wang",
+   "Sidney Liu",
+   "Zheyuan Zhang",
+   "Tianyi Ma",
+   "Chuxu Zhang",
+   "Yanfang Ye"
+  ],
+  "first_author": "Wang",
+  "year": 2025,
+  "venue": "preprint (arXiv v2, 7 Feb 2025)",
+  "arxiv": "2412.10136",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 73357,
+  "chars_total": 73357,
+  "engine": "pymupdf",
+  "skipped": "References skimmed; case-study text in Appendix F skimmed."
+ },
+ "type": "empirical",
+ "question": "Can an LLM convert graphs with little or no node text into text-attributed graphs so one GNN can be trained across graphs with different feature spaces?",
+ "hypothesis": "Feeding topological properties and neighbour text into an LLM yields node descriptions that explain a node's role and give better, more transferable features than manual topology features or existing LLM augmentation (TAPE, KEA).",
+ "contributions": [
+  "First method (TANS) to use LLMs to generate node descriptions for graphs of any text availability (text-rich, text-limit, text-free)",
+  "Prompt that injects five computed topological properties with ranks plus optional node and neighbour text",
+  "Experiments on single-graph learning, domain adaptation and pretrain-finetune"
+ ],
+ "method": {
+  "summary": "For each node, compute five topological properties, build a templated prompt (graph/node type, optional node text, 5 random neighbour texts, property values and percentile ranks), ask GPT-4o-mini for the top-k likely classes with reasons (under 200 words), then embed the output (appended to original text where it exists) with a small text encoder and train a GCN/GAT/MLP on the embeddings.",
+  "task": "node classification with feature alignment across graphs",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Cora",
+    "role": "both",
+    "size": "2,708 nodes, 10,556 edges, 7 classes",
+    "split": "low-label: 20 train and 30 val nodes per class, rest test; high-label: 60/20/20",
+    "source": "citation network (He et al. 2024); titles and abstracts",
+    "preprocessing": "text-rich = title+abstract; text-limit = title only (or abstract only)"
+   },
+   {
+    "name": "Pubmed",
+    "role": "both",
+    "size": "19.717 nodes as printed in Table 3, 88,648 edges, 3 classes",
+    "split": "as Cora",
+    "source": "citation network (He et al. 2024)",
+    "preprocessing": "as Cora. Table 3 prints 19.717 (typo)"
+   },
+   {
+    "name": "USA airports",
+    "role": "both",
+    "size": "1,190 nodes, 28,388 edges, 4 classes",
+    "split": "as Cora",
+    "source": "Ribeiro et al. 2017 (struc2vec)",
+    "preprocessing": "text-free; classes are activity levels"
+   },
+   {
+    "name": "Europe airports",
+    "role": "both",
+    "size": "399 nodes, 12,385 edges, 4 classes",
+    "split": "as Cora",
+    "source": "Ribeiro et al. 2017",
+    "preprocessing": null
+   },
+   {
+    "name": "Brazil airports",
+    "role": "both",
+    "size": "131 nodes, 2,137 edges, 4 classes",
+    "split": "low-label: 10 train and 20 val per class",
+    "source": "Ribeiro et al. 2017",
+    "preprocessing": null
+   },
+   {
+    "name": "ogbn-products (subsample)",
+    "role": "eval",
+    "size": "54,000 sampled nodes from about 2,500,000",
+    "split": null,
+    "source": "OGB; subgraph sampling follows He et al. 2024",
+    "preprocessing": "KEA omitted, no processed text available"
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT-4o-mini",
+    "role": "proposed",
+    "params": null,
+    "architecture": "LLM via public API (description generator)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "used only for prompting, not trained"
+    }
+   },
+   {
+    "name": "MiniLM",
+    "role": "base",
+    "params": null,
+    "architecture": "text encoder",
+    "init_from": "Wang et al. 2020",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "alternatives": "Albert, Roberta, MPNet in Table 10/17"
+    }
+   },
+   {
+    "name": "GCN / GAT / MLP backbones",
+    "role": "proposed",
+    "params": null,
+    "architecture": "message-passing GNNs and MLP",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "searched {1,2,3}",
+    "hidden": "searched {8,16,32,64,128,256}",
+    "heads": "1 (GAT)",
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "TAPE, KEA",
+    "role": "baseline",
+    "params": null,
+    "architecture": "LLM augmentation of node text",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "generated texts appended to originals rather than their original training paradigm"
+    }
+   },
+   {
+    "name": "Node Degree, Eigenvector, Random Walk features; SVD",
+    "role": "baseline",
+    "params": null,
+    "architecture": "manual node features",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "dims": "32"
+    }
+   },
+   {
+    "name": "OFA",
+    "role": "baseline",
+    "params": null,
+    "architecture": "graph foundation model used as an encoder backbone (Table 18)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "inferred: node classification cross-entropy (not stated)",
+   "optimizer": null,
+   "lr": "searched {5e-2,1e-2,5e-3,1e-3}; final per dataset in Tables 12-14 (e.g. Cora text-rich 1e-3); pretraining lr 0.001",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": "pretraining fixed at 100",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": "searched {0.0,5e-5,1e-4,5e-4}",
+   "dropout": "searched {0.0,0.1,0.5,0.8}",
+   "regularisation": "normalize {none, batchnorm}",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": "30 random seeds per experiment",
+   "other": {
+    "hparam_search": "500 Bayesian-search runs per method, following Appendix B.2 of Chen et al. 2024a, best performance reported",
+    "model_selection": "test accuracy of the model best on validation",
+    "table12_cora_text_rich": "dim 128, 2 layers, no norm, lr 1e-3, wd 1e-4, dropout 0.8"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": "answer under 200 words (prompt instruction)",
+   "samples": "one LLM generation per node (inferred; not stated); GNN training 30 seeds",
+   "prompting": "Prefix + optional node text + optional neighbour text (k=5 random neighbours) + node property lines + suffix; see prompts",
+   "retrieval": null,
+   "parameters": {
+    "top_k_classes": "3 if more than 3 classes, else 1",
+    "neighbours": "5 random",
+    "properties": "degree, betweenness, closeness, clustering coefficient, square clustering coefficient, each with value and percent rank"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "accuracy",
+     "definition": "node classification accuracy on test set, model chosen on validation",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "raw features",
+    "raw text",
+    "TAPE",
+    "KEA",
+    "SVD",
+    "Node Degree",
+    "Eigenvector",
+    "Random Walk",
+    "TPF (topology properties as features)",
+    "OFA"
+   ],
+   "protocol": "30 runs with different seeds, mean +- std; settings: single-graph (low/high label), domain adaptation (train source, 20% target val, 80% test, no finetune), pretrain and finetune (high-label)"
+  },
+  "availability": {
+   "code": "https://github.com/Zehong-Wang/TANS",
+   "weights": null,
+   "data": "same repository (stated as code and data available)"
+  },
+  "prompts": [
+   {
+    "purpose": "Prefix",
+    "text": "Given a node from a {Graph Type} graph, where the node type is {Node Type} with {Node Number} nodes, and the edge type is {Edge Type} with {Edge Number} edges.",
+    "where": "Table 2"
+   },
+   {
+    "purpose": "Node text (optional)",
+    "text": "The original node description is {Original Textual Descriptions}.",
+    "where": "Table 2"
+   },
+   {
+    "purpose": "Neighbor text (optional)",
+    "text": "The following are the textual information of {k} connected nodes. The descriptions are: {Textual Descriptions of Selected Neighborhoods}.",
+    "where": "Table 2"
+   },
+   {
+    "purpose": "Node property",
+    "text": "The value of {Node Property} is {Value of The Given Property}, ranked as {Rank of The Node}% among {Node Number} nodes.",
+    "where": "Table 2"
+   },
+   {
+    "purpose": "Suffix",
+    "text": "Output the potential {k} classes of the node and provide reasons for your assessment. The classes include {Classes of Nodes}. Your answer should be less than 200 words.",
+    "where": "Table 2"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "inference.parameters.neighbours",
+    "quote": "We randomly select k = 5 neighbors",
+    "where": "Sec 3.3"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "TANS beats raw text, TAPE and KEA on text-rich Cora, low-label, averaged over GCN/GAT/MLP",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "78.27",
+   "unit": "% acc",
+   "baseline_value": "76.61 raw text; 76.96 TAPE; 76.87 KEA",
+   "n": null,
+   "setup": "Cora, text-rich, low-label (20 train/30 val per class), MiniLM encoder, mean of GCN/GAT/MLP, 30 seeds",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, Cora Low-Label, row + TANS, column Avg."
+  },
+  {
+   "claim": "TANS on text-rich Cora high-label, average over backbones",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "86.19",
+   "unit": "% acc",
+   "baseline_value": "84.04 raw text; 84.66 TAPE; 84.81 KEA",
+   "n": null,
+   "setup": "Cora, high-label 60/20/20 split, avg of GCN/GAT/MLP",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, Cora High-Label, row + TANS, column Avg."
+  },
+  {
+   "claim": "TANS on text-rich Pubmed low-label, average",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "76.21",
+   "unit": "% acc",
+   "baseline_value": "74.42 raw text; 74.29 TAPE; 74.65 KEA",
+   "n": null,
+   "setup": "Pubmed, low-label, avg GCN/GAT/MLP, MiniLM",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, Pubmed Low-Label, row + TANS, column Avg."
+  },
+  {
+   "claim": "TANS on text-rich Pubmed high-label, average; largest gain is with MLP (88.84 vs 85.33 KEA)",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "88.59",
+   "unit": "% acc",
+   "baseline_value": "85.76 raw text; 86.66 TAPE; 87.07 KEA",
+   "n": null,
+   "setup": "Pubmed, high-label, avg GCN/GAT/MLP",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, Pubmed High-Label, row + TANS, column Avg."
+  },
+  {
+   "claim": "On text-free airport graphs (GCN, low-label) TANS has the best average over degree, eigenvector and random-walk features",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "66.19",
+   "unit": "% acc",
+   "baseline_value": "62.15 Node Degree; 60.84 Random Walk; 58.65 Eigenvector; 56.59 one-hot",
+   "n": null,
+   "setup": "USA/Europe/Brazil, GCN, low-label, 32-dim baseline features",
+   "note": "Brazil std is 12.14; Europe gain over Random Walk is 56.87 vs 56.70, within noise",
+   "where": "Table 5",
+   "table": "Table 5, row TANS, column Low-Label Avg."
+  },
+  {
+   "claim": "Text-free airport graphs, GCN, high-label average",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "64.32",
+   "unit": "% acc",
+   "baseline_value": "62.30 Random Walk; 62.29 Eigenvector; 61.30 Node Degree",
+   "n": null,
+   "setup": "USA/Europe/Brazil, GCN, 60/20/20",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row TANS, column High-Label Avg."
+  },
+  {
+   "claim": "Domain adaptation across text-free airport graphs: TANS highest average",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "58.40",
+   "unit": "% acc",
+   "baseline_value": "54.21 Node Degree (second best)",
+   "n": null,
+   "setup": "Source->target among USA/Europe/Brazil, GCN, train on source, 20% target val / 80% test",
+   "note": "Best on 5 of 6 transfer pairs per text",
+   "where": "Table 6 and Sec 4.3",
+   "table": "Table 6, row TANS, column Avg."
+  },
+  {
+   "claim": "Text-limit Cora (title only) plus TANS, average over backbones",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "76.21",
+   "unit": "% acc",
+   "baseline_value": "71.46 title only; 61.21 abstract only",
+   "n": null,
+   "setup": "Cora, low-label, title + TANS description",
+   "note": null,
+   "where": "Table 7",
+   "table": "Table 7, Cora, column Title + TANS, row Avg."
+  },
+  {
+   "claim": "Text-limit Pubmed plus TANS, average",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "79.25",
+   "unit": "% acc",
+   "baseline_value": "75.42 abstract only; 71.97 title only",
+   "n": null,
+   "setup": "Pubmed, low-label, title + TANS",
+   "note": null,
+   "where": "Table 7",
+   "table": "Table 7, Pubmed, column Title + TANS, row Avg."
+  },
+  {
+   "claim": "Pretrain and finetune Cora->Pubmed",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "76.14",
+   "unit": "% acc",
+   "baseline_value": "75.77 raw text; 75.60 TAPE; 75.25 KEA",
+   "n": null,
+   "setup": "Text-rich, GCN-style pretrain on source then finetune on target, high-label",
+   "note": "Gains of 0.4 to 0.9 points with std about 2; not clearly significant",
+   "where": "Table 8",
+   "table": "Table 8, row + TANS, column Cora->Pubmed"
+  },
+  {
+   "claim": "Dropping neighbour text from the prompt lowers text-limit Cora average",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "72.92",
+   "unit": "% acc",
+   "baseline_value": "76.21 with neighbours; 71.46 raw text",
+   "n": null,
+   "setup": "Cora low-label, avg of three backbones, TANS without neighbours",
+   "note": null,
+   "where": "Table 9",
+   "table": "Table 9, row + TANS w.o. neighbors, column Text-Limit",
+   "quote": "the model’s performance drops from 76.21 to 72.92"
+  },
+  {
+   "claim": "Removing topological properties from the prompt lowers text-rich Cora GCN accuracy",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "80.69",
+   "unit": "% acc",
+   "baseline_value": "81.26 full TANS; 79.19 raw text",
+   "n": null,
+   "setup": "Cora low-label GCN, prompt without node properties",
+   "note": null,
+   "where": "Table 19",
+   "table": "Table 19, row + w.o. Topo, column Text-Rich"
+  },
+  {
+   "claim": "Directly using topological properties as features (TPF) is worse than TANS on Brazil",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "72.48",
+   "unit": "% acc",
+   "baseline_value": "80.61 TANS",
+   "n": null,
+   "setup": "Brazil, GCN, low-label",
+   "note": null,
+   "where": "Table 20",
+   "table": "Table 20, row TPF, column Brazil"
+  },
+  {
+   "claim": "TANS on ogbn-products subgraph (54,000 sampled nodes), GCN",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "78.05",
+   "unit": "% acc",
+   "baseline_value": "77.49 TAPE; 70.52 original text",
+   "n": null,
+   "setup": "ogbn-products subsampled from about 2,500,000 nodes, GCN",
+   "note": null,
+   "where": "Table 23",
+   "table": "Table 23, row + TANS, column GCN"
+  },
+  {
+   "claim": "Across four text encoders on text-rich Cora, TANS has best average",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "81.22",
+   "unit": "% acc",
+   "baseline_value": "80.57 KEA; 80.50 TAPE; 80.11 raw text",
+   "n": null,
+   "setup": "Cora low-label GCN; MiniLM, Albert, Roberta, MPNet",
+   "note": null,
+   "where": "Table 10",
+   "table": "Table 10, column TANS, row Avg. Results"
+  }
+ ],
+ "limits": [
+  "No graphs above 100,000 nodes: querying GPT per node is costly; ogbn-products is a 54,000-node subsample",
+  "Only GPT-4o-mini tried; authors say unclear whether GPT-4o would do better",
+  "Prompt-design ablations limited by cost; only neighbour text and topology removal tested",
+  "Only node classification; edge and graph tasks left to future work",
+  "Gains over TAPE/KEA on text-rich graphs are small (about 1 to 1.5 points average) relative to std of 1.5 to 2; no significance test",
+  "Hyperparameters tuned per method with 500 Bayesian runs, but best test-reported performance is selected; tuning budget for baselines not detailed",
+  "Airport tasks are small (131 to 1,190 nodes) with large std (Brazil up to 17 points)",
+  "Negative transfer observed in some cases and declared out of scope",
+  "No LLM-cost or latency figures given; possible LLM pretraining contamination on Cora/Pubmed not discussed",
+  "Decoding settings (temperature) and generation date of GPT-4o-mini not stated"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "text-attributed graph (TAG)",
+   "definition": "graph where each node is associated with a textual description, projected into a unified feature space by a textual encoder",
+   "where": "Abstract"
+  },
+  {
+   "term": "text-rich / text-limit / text-free graphs",
+   "definition": "nodes with abundant, sparse, or no textual descriptions",
+   "where": "Sec 3.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "TAPE: Harnessing explanations, LLM-to-LM interpreter",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "He et al., ICLR 2024; LLM infers node classes and explanations from existing text",
+   "quote": null
+  },
+  {
+   "work": "KEA: Exploring the potential of LLMs in learning on graphs",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Chen et al. 2024a; explains key terms in original text; also source of settings and hyperparameter protocol",
+   "quote": null
+  },
+  {
+   "work": "Text-space graph foundation models (Chen et al. 2024b)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "MiniLM encoder choice; note on embeddings in different subspaces",
+   "quote": null
+  },
+  {
+   "work": "One for All (OFA)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "graph foundation model used as alternate backbone",
+   "quote": null
+  },
+  {
+   "work": "GFT: Graph foundation model with transferable tree vocabulary",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Wang et al. 2024c, same group; TAG-based feature alignment",
+   "quote": null
+  },
+  {
+   "work": "GCN (Kipf and Welling)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "backbone",
+   "quote": null
+  },
+  {
+   "work": "GAT (Velickovic et al.)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "backbone",
+   "quote": null
+  },
+  {
+   "work": "struc2vec airport datasets (Ribeiro et al.)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "USA, Europe, Brazil",
+   "quote": null
+  },
+  {
+   "work": "Can language models solve graph problems in natural language? (Wang et al.)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "related",
+   "note": "feeds whole graph to LLM; TANS instead injects precomputed properties",
+   "quote": null
+  },
+  {
+   "work": "GPT4Graph (Guo et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "same contrast as above",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Figure 2",
+   "caption": "The framework of our topology-aware node description synthesis (TANS).",
+   "page": 3,
+   "why": "Shows the four steps from properties to prompt to LLM explanation to final description"
+  },
+  {
+   "figure": "Table 2",
+   "caption": "Prompt templates.",
+   "page": 4,
+   "why": "Exact prompt text to rerun"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Table 3 prints Pubmed nodes as 19.717 (typo for 19,717)",
+  "Pretrain and finetune base model and pretrain detail (GNN type) not stated for Table 8",
+  "No embedded instructions found"
+ ]
+}

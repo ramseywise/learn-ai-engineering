@@ -1,0 +1,619 @@
+{
+ "schema": 1,
+ "key": "2408.02666",
+ "pdf": "generative-ai/08-eval/sources/wang-2024-self-taught-evaluators.pdf",
+ "bib": {
+  "title": "Self-Taught Evaluators",
+  "authors": [
+   "Tianlu Wang",
+   "Ilia Kulikov",
+   "Olga Golovneva",
+   "Ping Yu",
+   "Weizhe Yuan",
+   "Jane Dwivedi-Yu",
+   "Richard Yuanzhe Pang",
+   "Maryam Fazel-Zarandi",
+   "Jason Weston",
+   "Xian Li"
+  ],
+  "first_author": "Wang",
+  "year": 2024,
+  "venue": "preprint",
+  "arxiv": "2408.02666",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 53725,
+  "chars_total": 53725,
+  "engine": "pymupdf",
+  "skipped": "reference list skimmed"
+ },
+ "type": "empirical",
+ "question": "Can a pairwise LLM-as-a-Judge be improved iteratively using only synthetic preference data, with no human preference labels?",
+ "hypothesis": "Training on judgments that agree with a synthetic preference construction (a response to a modified instruction is worse for the original) yields a better evaluator, with an automatic curriculum as the model improves.",
+ "contributions": [
+  "Iterative self-training scheme for LLM-as-a-Judge using only synthetic preference pairs",
+  "Llama3-70B-Instruct improved from 75.4 to 88.3 (88.7 with majority vote) on RewardBench without labeled preferences",
+  "Ablations on data source, bad-response generation, labeled-data comparison and mixing"
+ ],
+ "method": {
+  "summary": "Pick WildChat reasoning instructions, generate a good response and a response to a modified instruction (the bad one) with Mixtral 22Bx8 Instruct, sample N=15 judgments from the current judge, keep one correct reasoning chain and verdict per example (rejection sampling against the synthetic label), and fine-tune Llama3-70B-Instruct on those; repeat, always restarting from the seed.",
+  "task": "pairwise LLM-as-a-Judge with chain-of-thought, self-training",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "WildChat (reasoning category subset)",
+    "role": "train",
+    "size": "20,582 examples",
+    "split": "selected by Mixtral 22Bx8 Instruct category annotation",
+    "source": "WildChat (Zhao et al., 2024)",
+    "preprocessing": "category labelled by LLM with Figure 7 prompt; reasoning category kept; synthetic good/bad responses by Mixtral 22Bx8 Instruct; winner position randomised; labels balanced A/B"
+   },
+   {
+    "name": "HelpSteer2",
+    "role": "both",
+    "size": "10k annotations (train); validation split used for eval",
+    "split": "train for labeled baselines and mixing; validation for eval",
+    "source": "Wang et al. 2024b",
+    "preprocessing": "preference from weighted sum of helpfulness, correctness, coherence, complexity, verbosity with weights [0.65, 0.8, 0.45, 0.55, -0.4]"
+   },
+   {
+    "name": "GSM8K",
+    "role": "train",
+    "size": null,
+    "split": null,
+    "source": "Cobbe et al. 2021",
+    "preprocessing": "ablation: y_w when final answer matches ground truth, y_l otherwise"
+   },
+   {
+    "name": "hh_rlhf harmless_base",
+    "role": "train",
+    "size": null,
+    "split": "harmless_base training split",
+    "source": "Bai et al. 2022",
+    "preprocessing": "ablation: human preferences as ground truth for rejection sampling"
+   },
+   {
+    "name": "WildChat coding subset",
+    "role": "train",
+    "size": null,
+    "split": null,
+    "source": "WildChat",
+    "preprocessing": "ablation: Coding category"
+   },
+   {
+    "name": "RewardBench",
+    "role": "eval",
+    "size": null,
+    "split": "standard leaderboard protocol",
+    "source": "Lambert et al. 2024",
+    "preprocessing": null
+   },
+   {
+    "name": "MT-Bench human judgments",
+    "role": "eval",
+    "size": null,
+    "split": "ties excluded; both orders averaged",
+    "source": "Zheng et al. 2023",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Llama3-70B-Instruct",
+    "role": "base",
+    "params": "70B",
+    "architecture": "decoder-only transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "seed and re-initialisation point every iteration"
+    }
+   },
+   {
+    "name": "Self-Taught Evaluator (iterations 1-5)",
+    "role": "proposed",
+    "params": "70B",
+    "architecture": "decoder-only transformer",
+    "init_from": "Llama3-70B-Instruct (each iteration)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Mixtral 22Bx8 Instruct",
+    "role": "teacher",
+    "params": "22Bx8",
+    "architecture": "mixture of experts",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "category annotation, synthetic responses, iteration-0 judgments"
+    }
+   },
+   {
+    "name": "GPT4-0125",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Gemini 1.5 Pro 0514",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "nvidia/Llama3 70B RM with HelpSteer2",
+    "role": "baseline",
+    "params": "70B",
+    "architecture": "classifier reward model",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Llama3.1-405B-Instruct and Llama3.1-70B-Instruct",
+    "role": "baseline",
+    "params": "405B / 70B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "negative log-likelihood on the evaluation part (reasoning chain and verdict) only",
+   "optimizer": "inferred: Adam-style, betas 0.9, 0.95 (optimizer name not stated)",
+   "lr": "1.0e-06",
+   "lr_schedule": "final_lr_ratio 0.2",
+   "warmup": "100 steps",
+   "batch_size": null,
+   "steps": null,
+   "epochs": "max_num_data_epochs 2",
+   "tokens": null,
+   "seq_len": "max_seq_len 4096; max_num_tokens 8192",
+   "precision": "bfloat16",
+   "weight_decay": "0.1",
+   "dropout": null,
+   "regularisation": "activation checkpointing true; FSDP data parallelism",
+   "hardware": "tensor_parallel_size 8 (GPU type not stated)",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": "training seed 2",
+   "other": {
+    "gradient_accumulation": "1",
+    "checkpoint_every_n_steps": "100",
+    "library": "fairseq2 for finetuning, vLLM for inference",
+    "model_selection": "pairwise judgment accuracy and position bias on a held-out set",
+    "iterations": "5 reported"
+   }
+  },
+  "inference": {
+   "decoding": "sampling; greedy-like temperature 0.0 for MT-Bench and RewardBench",
+   "temperature": "train judgments 0.7; MT-Bench 0.0; RewardBench 0.0; RB majority vote 0.7; HelpSteer2 valid 0.7",
+   "top_p": "train 0.9; MT-Bench 1.0; RB 1.0; RB maj vote 0.9; HelpSteer2 0.9",
+   "max_tokens": null,
+   "samples": "N=15 judgments per training example; majority vote of 32 samples at eval; HelpSteer2 averaged over two orders and three seeds",
+   "prompting": "MT-Bench/RewardBench pairwise judge system prompt (Figure 8), explanation then [[A]]/[[B]]",
+   "retrieval": null,
+   "parameters": {},
+   "other": {
+    "majority_vote_note": "abstract/text say 88.7 with 32-sample vote on iteration 3 in section 5.1; Table 1 row printed under iteration 5"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "RewardBench accuracy",
+     "definition": "standard leaderboard protocol, overall and per category (Chat, Chat Hard, Safety, Reasoning)",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "MT-Bench agreement with human",
+     "definition": "agreement rate with human judgments, ties excluded, both response orders averaged",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "HelpSteer2 accuracy",
+     "definition": "0-1 acc, 1-0 acc, average, and position-consistent accuracy (incorrect when predictions differ across the two orders); label is higher summed scores",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Llama-3-70B-Instruct seed",
+    "Llama-3-70B-Instruct fine-tuned on HelpSteer2 as LLM-as-a-Judge",
+    "nvidia Llama3 70B RM with HelpSteer2 (classifier)",
+    "GPT4-0125",
+    "Gemini 1.5 Pro 0514",
+    "Llama3.1-405B-Instruct",
+    "Llama3.1-70B-Instruct"
+   ],
+   "protocol": "single training run per configuration (seed 2); no confidence intervals or significance tests reported; accuracy against RewardBench, MT-Bench and HelpSteer2 human labels"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": null
+  },
+  "prompts": [
+   {
+    "purpose": "judgment annotation / eval (MT-Bench and RewardBench judge prompt)",
+    "text": "Please act as an impartial judge and evaluate the quality of the responses provided by two AI assistants to the user question displayed below. You should choose the assistant that follows the user's instructions and answers the user's question better. Your evaluation should consider factors such as the helpfulness, relevance, accuracy, depth, creativity, and level of detail of their responses. Begin your evaluation by comparing the two responses and provide a short explanation. Avoid any position biases and ensure that the order in which the responses were presented does not influence your decision. Do not allow the length of the responses to influence your evaluation. Do not favor certain names of the assistants. Be as objective as possible. After providing your explanation, output your final verdict by strictly following this format: \"[[A]]\" if assistant A is better, \"[[B]]\" if assistant B is better.",
+    "where": "Figure 8, Appendix A"
+   },
+   {
+    "purpose": "generate worse response via modified instruction",
+    "text": "Please first generate a modified instruction that is highly relevant but not semantically identical to the instruction above from the user. Then write a high-quality answer which is a good response to the modified instruction but not a good response to the original user question.",
+    "where": "Figure 2 (abridged to the instruction part)"
+   },
+   {
+    "purpose": "ablation: direct bad response",
+    "text": "Please rewrite the Assistant's Answer to make it worse.",
+    "where": "Figure 10 (abridged)"
+   },
+   {
+    "purpose": "instruction category and complexity selection",
+    "text": "Firstly, categorize the instruction above into one of the following categories",
+    "where": "Figure 7 (first step only)"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "inference.temperature",
+    "quote": "Judgment 0.7 0.9",
+    "where": "Table 8"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Iterating on synthetic data raised RewardBench overall accuracy of the seed from 75.4 to 88.3 with no human preference labels",
+   "kind": "measured",
+   "source": null,
+   "metric": "RewardBench overall",
+   "value": 88.3,
+   "unit": "%",
+   "baseline_value": 75.4,
+   "n": null,
+   "setup": "RewardBench, Llama3-70B-Instruct seed fine-tuned on synthetic preferences from 20,582 WildChat reasoning prompts, no human preference labels, iteration 5, no majority vote",
+   "note": null,
+   "where": "5.1",
+   "quote": "achieves an overall score of 88.3 on iteration 5, while the seed model it starts from obtains 75.4"
+  },
+  {
+   "claim": "32-sample majority vote gives 88.7 on RewardBench",
+   "kind": "measured",
+   "source": null,
+   "metric": "RewardBench overall",
+   "value": 88.7,
+   "unit": "%",
+   "baseline_value": 88.3,
+   "n": null,
+   "setup": "RewardBench, Llama3-70B-Instruct seed fine-tuned on synthetic preferences from 20,582 WildChat reasoning prompts, no human preference labels, 32-sample majority vote",
+   "note": "Section 5.1 says third iteration; Table 1 lists the vote row after iteration 5, and the abstract does not say which",
+   "where": "5.1",
+   "quote": "reaches an overall performance of 88.7 on RewardBench"
+  },
+  {
+   "claim": "Same iterative recipe on labeled HelpSteer2 gives 85.6 as LLM-as-a-Judge, below the synthetic result",
+   "kind": "measured",
+   "source": null,
+   "metric": "RewardBench overall",
+   "value": 85.6,
+   "unit": "%",
+   "baseline_value": 88.3,
+   "n": null,
+   "setup": "Llama3-70B-Instruct fine-tuned on HelpSteer2 labels, LLM-as-a-Judge format",
+   "note": null,
+   "where": "5.1",
+   "quote": "we only obtain 85.6"
+  },
+  {
+   "claim": "Iterative training on labeled HelpSteer2 reaches 87.0 by iteration 3-4, below synthetic 88.3",
+   "kind": "measured",
+   "source": null,
+   "metric": "RewardBench overall",
+   "value": 87.0,
+   "unit": "%",
+   "baseline_value": 88.3,
+   "n": null,
+   "setup": "HelpSteer2 labeled preferences, iterations 1-4",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, rows Iteration 3 and Iteration 4, column Overall"
+  },
+  {
+   "claim": "Classifier reward model on HelpSteer2 scores 88.8, slightly above the generative judge",
+   "kind": "measured",
+   "source": null,
+   "metric": "RewardBench overall",
+   "value": 88.8,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "nvidia/Llama3 70B RM with HelpSteer2, from the RewardBench leaderboard",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row nvidia/Llama3 70B RM with HelpSteer2, column Overall"
+  },
+  {
+   "claim": "GPT4-0125 scores 84.3 on RewardBench, below the Self-Taught Evaluator",
+   "kind": "measured",
+   "source": null,
+   "metric": "RewardBench overall",
+   "value": 84.3,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT4 0125, taken from the RewardBench leaderboard",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row GPT4 0125, column Overall"
+  },
+  {
+   "claim": "Chat Hard improved from 58.9 to 84.2 while Chat dropped slightly from 97.6 to 96.6",
+   "kind": "measured",
+   "source": null,
+   "metric": "RewardBench Chat Hard",
+   "value": 84.2,
+   "unit": "%",
+   "baseline_value": 58.9,
+   "n": null,
+   "setup": "RewardBench, Llama3-70B-Instruct seed fine-tuned on synthetic preferences from 20,582 WildChat reasoning prompts, no human preference labels, iteration 5",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Iteration 5, column Chat Hard"
+  },
+  {
+   "claim": "On MT-Bench agreement with humans the evaluator reaches 79.5 with majority vote, on par with GPT4-0125 at 79.1; the gain over the seed (77.8) is small",
+   "kind": "measured",
+   "source": null,
+   "metric": "MT-Bench agreement with human",
+   "value": 79.5,
+   "unit": "%",
+   "baseline_value": 77.8,
+   "n": null,
+   "setup": "non-tie examples, both orders averaged, 32-sample vote",
+   "note": "GPT4-0125 is 79.1; iteration 4 (77.5) is below the seed",
+   "where": "Table 2",
+   "table": "Table 2, row w/ majority voting using 32 samples, column Agreement with Human"
+  },
+  {
+   "claim": "Position-consistent accuracy on HelpSteer2 validation rose from 56.5 to 60.6 (peak 61.9 at iteration 4)",
+   "kind": "measured",
+   "source": null,
+   "metric": "position-consistent accuracy",
+   "value": 60.6,
+   "unit": "%",
+   "baseline_value": 56.5,
+   "n": null,
+   "setup": "HelpSteer2 validation, iteration 5, average over two orders and three seeds",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row Iteration 5, column Position-consistent Acc"
+  },
+  {
+   "claim": "Always putting the winner last or first moves RewardBench accuracy from 85.5 to 91.1, a 5.6 point swing from order alone",
+   "kind": "measured",
+   "source": null,
+   "metric": "RewardBench overall",
+   "value": 85.5,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "iteration 5 model, yw always first versus yl always first",
+   "note": "randomised-seed runs range 88.3 to 88.9; authors recommend the average of the two extremes, 88.3",
+   "where": "Table 9",
+   "table": "Table 9, rows yw always first (85.5) and yl always first (91.1)"
+  },
+  {
+   "claim": "Generating the bad response directly gives 80.7 versus 83.8 for the modified-instruction method",
+   "kind": "measured",
+   "source": null,
+   "metric": "RewardBench overall",
+   "value": 80.7,
+   "unit": "%",
+   "baseline_value": 83.8,
+   "n": null,
+   "setup": "reasoning WildChat prompts, direct bad-response prompt (Figure 10)",
+   "note": null,
+   "where": "6.2",
+   "quote": "This approach obtains a RewardBench overall score of 80.7"
+  },
+  {
+   "claim": "Synthetic data from reasoning WildChat prompts gives the best single-source gain (83.5) after one SFT round",
+   "kind": "measured",
+   "source": null,
+   "metric": "RewardBench overall",
+   "value": 83.5,
+   "unit": "%",
+   "baseline_value": 75.4,
+   "n": null,
+   "setup": "single-source synthetic preferences, Llama-3-70B-Instruct",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row reasoning (WildChat), column Overall"
+  },
+  {
+   "claim": "Using Mixtral for both responses and judgments beat Llama3.0 judging itself (83.9 vs 81.4)",
+   "kind": "measured",
+   "source": null,
+   "metric": "RewardBench overall",
+   "value": 83.9,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "iteration 1, different generators",
+   "note": null,
+   "where": "Table 10",
+   "table": "Table 10, row Mixtral judge Mixtral, column Overall"
+  }
+ ],
+ "limits": [
+  "Authors: generative judges have longer outputs and higher inference cost than score-only reward models",
+  "Only 70B tested; no study of smaller models",
+  "Needs a capable, already-aligned instruction-tuned seed model",
+  "Only pairwise evaluation; single-response scoring left to future work",
+  "Only accuracy reported, no compute cost",
+  "Single training run per config, no confidence intervals; MT-Bench gains over seed are small (77.8 to 79.0)",
+  "Position order alone swings RewardBench by 5.6 points, so single-order numbers are not comparable",
+  "Evaluation targets are preference benchmarks (RewardBench, MT-Bench, HelpSteer2), not calibration against domain-specific human labels, no kappa or per-class error rates",
+  "Code, weights and data release not stated"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "position-consistent accuracy",
+   "definition": "treating a judgment as incorrect when a model has different predictions on the two orderings",
+   "where": "5.3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "LLM-as-a-Judge / MT-Bench (Zheng et al., 2023)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "pairwise judge setup, prompt and agreement metric",
+   "quote": null
+  },
+  {
+   "work": "RewardBench (Lambert et al., 2024)",
+   "year": 2024,
+   "arxiv": "2403.13787",
+   "relation": "uses-data",
+   "note": "main evaluation",
+   "quote": null
+  },
+  {
+   "work": "HelpSteer2 (Wang et al., 2024b)",
+   "year": 2024,
+   "arxiv": "2406.08673",
+   "relation": "uses-data",
+   "note": "labeled baseline and eval",
+   "quote": null
+  },
+  {
+   "work": "Self-Rewarding Language Models (Yuan et al., 2024)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "iterative self-improvement; complexity analysis procedure",
+   "quote": null
+  },
+  {
+   "work": "WildChat (Zhao et al., 2024)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "instruction pool",
+   "quote": null
+  },
+  {
+   "work": "Majority voting / self-consistency (Wang et al., 2023b)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "majority vote inference",
+   "quote": null
+  },
+  {
+   "work": "Prometheus (Kim et al., 2023)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "synthetic data for judge training",
+   "quote": null
+  },
+  {
+   "work": "Bavaresco et al. 2024",
+   "year": 2024,
+   "arxiv": "2406.18403",
+   "relation": "related",
+   "note": "off-the-shelf evaluators show high variance across tasks",
+   "quote": null
+  },
+  {
+   "work": "GSM8K (Cobbe et al., 2021)",
+   "year": 2021,
+   "arxiv": "2110.14168",
+   "relation": "uses-data",
+   "note": "ablation source",
+   "quote": null
+  },
+  {
+   "work": "hh_rlhf (Bai et al., 2022)",
+   "year": 2022,
+   "arxiv": "2204.05862",
+   "relation": "uses-data",
+   "note": "ablation source",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Figure 1",
+   "caption": "Self-Taught Evaluator iterative training scheme.",
+   "page": 2,
+   "why": "shows the generate-pair, sample-judgments, filter-correct, SFT loop"
+  },
+  {
+   "figure": "Table 9",
+   "caption": "Average accuracy on RewardBench when order of responses changes.",
+   "page": 12,
+   "why": "shows position bias size"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "No embedded instructions found",
+  "Section 5.1 says the 88.7 majority-vote result is from iteration 3 while the table lists it after iteration 5",
+  "Figure 7 and Figure 2/10 prompts abridged in extraction JSON"
+ ]
+}

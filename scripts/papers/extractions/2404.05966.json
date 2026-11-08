@@ -1,0 +1,237 @@
+{
+ "schema": 1,
+ "key": "2404.05966",
+ "pdf": "generative-ai/03-agentic-foundations/sources/chi-2024-thoughtsculpt.pdf",
+ "bib": {
+  "title": "THOUGHTSCULPT: Reasoning with Intermediate Revision and Search",
+  "authors": ["Yizhou Chi", "Kevin Yang", "Dan Klein"],
+  "first_author": "Chi",
+  "year": 2024,
+  "venue": "preprint",
+  "arxiv": "2404.05966",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 71770,
+  "chars_total": 71770,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can an inference-time MCTS over LLM thoughts, whose action space includes revising earlier output, beat CoT, Self-Refine and Tree-of-Thoughts on tasks that need continual revision?",
+ "hypothesis": "Tree search methods limited to the candidates generated at earlier steps (ToT) and linear self-refinement (Self-Refine) are weaker than a search that can revise intermediate nodes.",
+ "contributions": [
+  "ThoughtSculpt: MCTS over thought nodes with thought evaluator, thought generator and decision simulator, where the action space includes revising previous output",
+  "Evaluation on Story Outline Improvement, Mini-Crosswords and Constrained Generation (CommonGen-Hard) against CoT, Self-Refine and ToT",
+  "Shows the method works with DFS as well as MCTS and needs no training or external feedback"
+ ],
+ "method": {
+  "summary": "Each thought node is a full or partial output. A thought evaluator (LLM) returns numeric score and natural-language feedback (holistic or itemized); a thought generator (LLM) proposes k child nodes conditioned on task, parent and feedback; a decision simulator does MCTS rollouts (UCB1 selection, expansion, single-child simulation to depth d_simulation, backpropagation). The node with the highest average reward is returned. Runs entirely at inference time on GPT-3.5 and GPT-4.",
+  "task": "inference-time reasoning/revision search: story outline improvement, 5x5 mini crosswords, CommonGen-Hard constrained generation (also Game of 24)",
+  "trains": false,
+  "datasets": [
+   {"name": "WhatsThatBook book descriptions (story outline task)", "role": "eval", "size": "500 book descriptions sampled; 400 train / 50 val / 50 test", "split": "400 for training the content evaluator, 50 validation, 50 test outlines", "source": "Lin et al., 2023; outlines generated with DOC (Yang et al., 2023) using GPT-3.5", "preprocessing": "Three outlines per description: prompted interesting, prompted boring, default. Evaluator data: 400 interesting + 400 non-interesting for fine-tuning, 50+50 validation, 50 test outlines"},
+   {"name": "Mini crosswords (5x5)", "role": "eval", "size": "20 puzzles", "split": null, "source": "setup of Yao et al. (2023a)", "preprocessing": null},
+   {"name": "CommonGen-Hard", "role": "eval", "size": null, "split": null, "source": "Madaan et al. (2023); 20-30 concepts per item, from CommonGen (Lin et al., 2020)", "preprocessing": null},
+   {"name": "Game of 24", "role": "eval", "size": null, "split": null, "source": "same test set as Yao et al. (2023a)", "preprocessing": null}
+  ],
+  "models": [
+   {"name": "gpt-3.5-turbo-0125", "role": "base", "params": null, "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "gpt-4-0125-preview", "role": "base", "params": null, "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "Flan-T5 (story outline content evaluator)", "role": "judge", "params": null, "architecture": null, "init_from": "pre-trained Flan-T5 (Chung et al., 2022)", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"fine_tuning": "learning rate 3e-4, weight decay 0.1, 5 epochs; rates interesting outlines 1 and boring 0; hidden from all methods during generation"}},
+   {"name": "Llama3.1-8B-Instruct", "role": "evaluated", "params": "8B", "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"use": "swapped in for the evaluator and/or generator in the Table 10 ablation (Constrained Generation)"}}
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "UCB1 tree policy for MCTS; DFS variant picks highest-reward child greedily",
+   "temperature": "0.7 for both base LMs",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "not stated; single run per method implied, no seeds or significance tests reported",
+   "prompting": "three prompts per task: TASK_DESCRIPTION, NEW_CANDIDATE, EVALUATE_CURRENT (itemized and/or holistic); see prompts",
+   "retrieval": null,
+   "parameters": {
+    "max_depth_story_outline": "3",
+    "max_depth_constrained_generation": "3",
+    "max_candidates_per_node": "3 (ThoughtSculpt and ToT, all tasks)",
+    "d_simulation": "1 (MCTS, all experiments)",
+    "crossword_search_steps": "20 (vs 100 in Yao et al.); also run at 100 in Appendix F",
+    "ucb1_c": null,
+    "d_rollout": null,
+    "evaluator_score_scale_story": "interestingness 1 to 10 (itemized); EVALUATE_CURRENT prompt asks 1 to 100",
+    "game_of_24_branching": "b = 5"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "Average outline interestingness", "definition": "output of a fine-tuned Flan-T5 content evaluator on revised outlines (interesting=1, boring=0), reported as a percentage", "unit": "%", "higher_is_better": true},
+    {"name": "Mini-crossword success", "definition": "proportion of words, letters, and games correctly filled", "unit": "%", "higher_is_better": true},
+    {"name": "Concept coverage", "definition": "share of the 20-30 required concepts present in the generated sentence", "unit": "%", "higher_is_better": true},
+    {"name": "Human preference", "definition": "Prolific annotators, 100 pairs of outlines (ThoughtSculpt MCTS vs ToT or Self-Refine), two annotators per pair, GPT-3.5 base", "unit": "proportion", "higher_is_better": true},
+    {"name": "G-Eval interestingness", "definition": "G-Eval with a definition prompt of interestingness, scored by GPT-4 or GPT-3.5", "unit": "1-5 scale", "higher_is_better": true},
+    {"name": "Game of 24 success", "definition": "share of puzzles solved", "unit": "%", "higher_is_better": true}
+   ],
+   "baselines": ["CoT (Wei et al., 2023)", "Self-Refine (Madaan et al., 2023)", "ToT with DFS (Yao et al., 2023a)", "ThoughtSculpt with DFS (ablation of search)"],
+   "protocol": "Same base LM and temperature across methods. Story outlines judged by hidden fine-tuned evaluator plus human pairwise preference and G-Eval; coverage also compared by GPT-4 preference. Number of runs and variance not reported."
+  },
+  "availability": {
+   "code": "promised upon publication; no URL in text",
+   "weights": null,
+   "data": "public datasets (WhatsThatBook, CommonGen-Hard, ToT crossword and Game of 24 sets); Flan-T5 open source"
+  },
+  "prompts": [
+   {"purpose": "Story outline: generate new candidate", "text": "NEW_CANDIDATE = TASK_DESCRIPTION + \"# Original Outline {outline} # Feedback {feedback} Based on the feedback and the task description, can you make a better story outline by replacing the items suggested by the feedback? Write the outline in this format just like the original outline from [1] to [{num}]\"", "where": "Appendix A.1 (abridged; full text in the paper)"},
+   {"purpose": "Story outline: itemized evaluation", "text": "Which continuous {num_consecutive_lines} outlines items do you think are least interesting? ... Write in this format: Thought Process: ... [reason: ...] [start_index]-[end_index] [interesting level: 1-10] ... Can you provide {num_candidates} proposals?", "where": "Appendix A.1 (abridged)"},
+   {"purpose": "Crossword: evaluate board", "text": "Evaluate the current board and provide a strategy on how to continue to fill in the blank or correct potential mistakes.", "where": "Appendix A.2"},
+   {"purpose": "Constrained generation: evaluate sentence", "text": "Do you think that the proposed sentence is good enough? Write \"no need to improve\" if you think 1) the sentence covers all the concepts listed in the instruction; and 2) the sentence describes a common scene in daily life. Otherwise, write \"still need to improve\" and provide a reason.", "where": "Appendix A.3"}
+  ],
+  "evidence": [
+   {"field": "inference.parameters.d_simulation", "quote": "THOUGHTSCULPT with MCTS will have a maximum dsimulation of 1", "where": "Section 4.1 Method Setup"}
+  ]
+ },
+ "results": [
+  {
+   "claim": "On story outline improvement with GPT-3.5, ThoughtSculpt with MCTS reaches the highest interestingness, well above ToT.",
+   "kind": "measured", "source": null, "metric": "average outline interestingness", "value": "89.9", "unit": "%", "baseline_value": "72.1 (ToT)", "n": "50 test outlines",
+   "setup": "Story Outline Improvement, GPT-3.5 base, depth 3, 3 candidates per node, judged by fine-tuned Flan-T5 evaluator",
+   "quote": "ThoughtSculpt with MCTS demonstrates the highest average interestingness percentage across both GPT-3.5 and GPT-4 with 89.9 and 65.0 respectively",
+   "table": "Table 1, row THOUGHTSCULPT (MCTS), column GPT3.5",
+   "note": "The quote in the text wraps across lines in the PDF; Table 1 gives ToT 72.1, Self-refine 65.5, CoT 50.1, initial outline 12.0",
+   "where": "Section 4.1, Table 1"
+  },
+  {
+   "claim": "Same task with GPT-4: MCTS 65.0 vs ToT 49.9, Self-refine 27.9 and CoT 28.8, so GPT-4 baselines can fall below GPT-3.5 ones.",
+   "kind": "measured", "source": null, "metric": "average outline interestingness", "value": "65.0", "unit": "%", "baseline_value": "49.9 (ToT)", "n": "50 test outlines",
+   "setup": "Story Outline Improvement, GPT-4 base",
+   "quote": null,
+   "table": "Table 1, row THOUGHTSCULPT (MCTS), column GPT4",
+   "note": "Authors suggest GPT-4 scores lower overall because the evaluator was trained on GPT-3.5 outlines (footnote 1)",
+   "where": "Table 1"
+  },
+  {
+   "claim": "In the 20-step mini-crossword with GPT-4, MCTS has the highest word success and game success; ToT is worse than Self-refine on words.",
+   "kind": "measured", "source": null, "metric": "% word", "value": "54.0", "unit": "%", "baseline_value": "39.5 (ToT)", "n": "20 puzzles",
+   "setup": "Mini-crossword, GPT-4, 20 search steps, 3 candidates per node",
+   "quote": null,
+   "table": "Table 2, row THOUGHTSCULPT (MCTS), column GPT4 % word",
+   "note": "Game success 25.0 for MCTS vs 5.0 for ToT and Self-refine; with GPT-3.5 ToT word 19.5 vs MCTS 19.0 and game success 0.0 for both. The text says 'As shown in Table 8' but the main-text table is Table 2",
+   "where": "Section 4.2, Table 2"
+  },
+  {
+   "claim": "With 100 search steps ThoughtSculpt (MCTS) with GPT-4 reaches 66.0 word / 83.0 letter / 35.0 game success, above ToT's reported 60 / 78 / 20; with 20 steps it already matches ToT at 100.",
+   "kind": "measured", "source": null, "metric": "% word (100 search steps)", "value": "66.0", "unit": "%", "baseline_value": "60 (ToT, reported by Yao et al. 2023a)", "n": "20 puzzles",
+   "setup": "Mini-crossword, GPT-4, 100 search steps",
+   "quote": null,
+   "table": "Table 8, row THOUGHTSCULPT (MCTS) (100 search steps), column % word",
+   "note": null,
+   "where": "Appendix F, Table 8"
+  },
+  {
+   "claim": "On CommonGen-Hard with GPT-3.5, both ThoughtSculpt variants far exceed ToT coverage; DFS is slightly higher than MCTS on coverage.",
+   "kind": "measured", "source": null, "metric": "% concept coverage", "value": "79.6", "unit": "%", "baseline_value": "54.8 (ToT)", "n": null,
+   "setup": "CommonGen-Hard (20-30 concepts), GPT-3.5, depth 3, 3 candidates",
+   "quote": "While THOUGHTSCULPT with DFS achieves the highest coverage of 79.6% (GPT-3.5) and 99.1% (GPT-4)",
+   "table": null,
+   "note": "MCTS gets 77.9 (GPT-3.5) and 99.0 (GPT-4); with GPT-4 gaps are tiny (CoT 96.1, Self-refine 98.5, ToT 98.8)",
+   "where": "Section 4.3, Table 3"
+  },
+  {
+   "claim": "GPT-4 preference judging of coverage plus appropriateness favours MCTS over DFS on Constrained Generation.",
+   "kind": "measured", "source": null, "metric": "GPT-4 preference", "value": null, "unit": null, "baseline_value": null, "n": null,
+   "setup": "Constrained Generation, both base LMs, GPT-4 as judge; values only shown in Figure 6 bars, not in text",
+   "quote": null, "table": null, "note": null,
+   "where": "Appendix G, Figure 6"
+  },
+  {
+   "claim": "MCTS costs about 2.2x the ToT cost per case on story outline with GPT-4, and 1.6x on crossword.",
+   "kind": "measured", "source": null, "metric": "cost per case", "value": "0.547", "unit": "$", "baseline_value": "0.248 (ToT)", "n": null,
+   "setup": "Story Outline Improvement, gpt-4-0125-preview; 25.0k input / 9.9k output tokens for MCTS",
+   "quote": null,
+   "table": "Table 4, row THOUGHTSCULPT with MCTS, column Cost per case",
+   "note": "Main text says MCTS needs 1.2x more computation than ToT; token counts in Table 4 (25.0k/9.9k vs 10.1k/4.9k) imply a larger ratio. Crossword MCTS $1.491 vs ToT $0.912 (Table 5); CommonGen MCTS $0.217 vs ToT $0.104 (Table 6)",
+   "where": "Appendix B, Tables 4-6"
+  },
+  {
+   "claim": "Human annotators prefer ThoughtSculpt (MCTS) outlines to ToT and Self-Refine outlines.",
+   "kind": "measured", "source": null, "metric": "proportion of preference", "value": null, "unit": null, "baseline_value": null, "n": "100 pairs, 2 annotators each",
+   "setup": "GPT-3.5 base, Prolific annotators; numeric proportions only in Figure 3",
+   "quote": null, "table": null, "note": null,
+   "where": "Section 4.1, Figure 3"
+  },
+  {
+   "claim": "On Game of 24, ThoughtSculpt (MCTS, b=5) with a general prompt scores 79 vs ToT (b=5) 74 reported by Yao et al.",
+   "kind": "measured", "source": null, "metric": "success", "value": "79", "unit": "%", "baseline_value": "74 (ToT b=5, from Yao et al. 2023a)", "n": null,
+   "setup": "Game of 24, test set of Yao et al. (2023a); baselines copied from that paper, so base model and prompts differ",
+   "quote": null,
+   "table": "Table 9, row ThoughtSculpt (MCTS) (b = 5), column Success %",
+   "note": "Baseline numbers are reported (Yao et al.), not rerun",
+   "where": "Appendix H, Table 9"
+  },
+  {
+   "claim": "Weakening both evaluator and generator to Llama3.1-8B-Instruct drops coverage from 99.0 to 90.7; weakening the evaluator alone costs more (96.3) than weakening the generator alone (98.5).",
+   "kind": "measured", "source": null, "metric": "% coverage", "value": "90.7", "unit": "%", "baseline_value": "99.0", "n": null,
+   "setup": "Constrained Generation, GPT-4 replaced by Llama3.1-8B-Instruct for the named module(s)",
+   "quote": "These results highlight the critical role of a strong evaluator in deep reasoning tasks",
+   "table": "Table 10, row ThoughtSculpt (weakened generator + evaluator)",
+   "note": null,
+   "where": "Appendix I, Table 10"
+  },
+  {
+   "claim": "Only MCTS shows consistent improvement of interestingness across steps; ToT and Self-refine do not.",
+   "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null,
+   "setup": "Story outline, GPT-3.5, Figure 4 (values not in text)",
+   "quote": null, "table": null, "note": null,
+   "where": "Section 4.1, Figure 4"
+  }
+ ],
+ "limits": [
+  "Authors concede that multiple LLM calls cost more than most sampling methods, so it is not advisable where the base LM is already satisfactory.",
+  "Evaluation uses a hidden Flan-T5 evaluator trained on GPT-3.5 outlines, which may favour GPT-3.5 outputs; the authors give this as a reason for lower GPT-4 scores.",
+  "Small test sets (50 outlines, 20 crossword puzzles); no seeds, variances or significance tests reported.",
+  "On CommonGen-Hard, DFS beats MCTS on coverage; MCTS advantage rests on a GPT-4 preference judgment.",
+  "Cost claim of 1.2x ToT in the text is lower than the token tables suggest.",
+  "Game of 24 baselines are taken from Yao et al. rather than rerun.",
+  "Depends on closed OpenAI API models, so exact reproduction can drift; code was promised on publication with no link in the text.",
+  "UCB1 constant c and number of rollouts d_rollout are not stated."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "Thought evaluator", "definition": "gives textual and numerical feedback on a thought node; numeric score serves as the search heuristic and NL feedback conditions the children", "where": "Section 3.1"},
+  {"term": "Thought generator", "definition": "produces k candidate child nodes from the task description, current solution and natural language feedback", "where": "Section 3.2"},
+  {"term": "Decision simulator", "definition": "performs rollouts at deeper layers and backpropagates to update the score of the current decision", "where": "Section 3.3"},
+  {"term": "Holistic vs itemized evaluation", "definition": "holistic evaluates the whole node as a unit; itemized evaluates each sub-unit and returns a list of feedback", "where": "Section 3.1"}
+ ],
+ "lineage": [
+  {"work": "Tree of Thoughts: Deliberate Problem Solving with Large Language Models", "year": 2023, "arxiv": "2305.10601", "relation": "extends", "note": "ToT with DFS is the main tree baseline; ThoughtSculpt adds revision of intermediate nodes and uses feedback to generate rather than prune", "quote": "These approaches' reasoning capabilities are often limited by the set of candidates they generate at earlier steps."},
+  {"work": "Self-Refine: Iterative Refinement with Self-Feedback", "year": 2023, "arxiv": "2303.17651", "relation": "baseline", "note": "linear refinement baseline; CommonGen-Hard comes from this work", "quote": null},
+  {"work": "Chain-of-Thought prompting", "year": 2023, "arxiv": "2201.11903", "relation": "baseline", "note": "CoT baseline", "quote": null},
+  {"work": "Self-consistency improves chain of thought reasoning", "year": 2023, "arxiv": "2203.11171", "relation": "related", "note": "CoT-SC cited as background", "quote": null},
+  {"work": "Graph of Thoughts", "year": 2024, "arxiv": "2308.09687", "relation": "related", "note": "graph reasoning; ThoughtSculpt differs by allowing review and modification of intermediate nodes", "quote": null},
+  {"work": "Reflexion", "year": 2023, "arxiv": "2303.11366", "relation": "related", "note": "self-reflective feedback, linear left-to-right", "quote": null},
+  {"work": "Self-evaluation guided beam search for reasoning", "year": 2023, "arxiv": "2305.00633", "relation": "related", "note": "tree search with partial-solution nodes", "quote": null},
+  {"work": "RoT: Enhancing LLMs with reflection on search trees; AlphaMath Almost Zero; Toward self-improvement of LLMs via imagination, searching, and criticizing", "year": 2024, "arxiv": "2404.05449", "relation": "related", "note": "concurrent MCTS+LLM work; focus on maths or external feedback / trained policies, unlike ThoughtSculpt (Hui and Tu 2404.05449; Chen et al. 2405.03553; Tian et al. 2404.12253)", "quote": null},
+  {"work": "DOC: Improving Long Story Coherence With Detailed Outline Control", "year": 2023, "arxiv": "2212.10077", "relation": "uses-method", "note": "generates the initial story outlines", "quote": null},
+  {"work": "Decomposing complex queries for tip-of-the-tongue retrieval (WhatsThatBook)", "year": 2023, "arxiv": "2305.15053", "relation": "uses-data", "note": "book descriptions", "quote": null},
+  {"work": "CommonGen", "year": 2020, "arxiv": null, "relation": "uses-data", "note": "constrained generation benchmark; Hard variant from Madaan et al.", "quote": null},
+  {"work": "Scaling instruction-finetuned language models (Flan-T5)", "year": 2022, "arxiv": "2210.11416", "relation": "uses-method", "note": "fine-tuned as the interestingness evaluator", "quote": null},
+  {"work": "G-Eval", "year": 2023, "arxiv": "2303.16634", "relation": "uses-method", "note": "extra interestingness evaluation", "quote": null},
+  {"work": "GPT-4 technical report", "year": 2024, "arxiv": "2303.08774", "relation": "evaluates", "note": "gpt-4-0125-preview and gpt-3.5-turbo-0125 as base LMs", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 1", "caption": "Illustration of THOUGHTSCULPT using Monte Carlo Tree Search on the Constrained Generation task.", "page": 2, "why": "Shows selection, expansion (evaluator + generator), simulation and backpropagation in one picture."},
+  {"figure": "Fig 4", "caption": "Average outline interestingness at each step.", "page": 4, "why": "Shows MCTS improving steadily while ToT and Self-refine plateau."},
+  {"figure": "Table 1", "caption": "Average outline interestingness. Initial Outline is the starting point before rewriting with any reasoning method.", "page": 3, "why": "Main story-outline comparison across both base LMs."}
+ ],
+ "code": [
+  {"where": "Section 3.3, Eqn 4", "snippet": "UCB1(x) = v(x) + c * sqrt(ln n(x_parent) / n(x))", "verbatim": false},
+  {"where": "Appendix C, Algorithm 1", "snippet": "for j <- 1 to d_rollout: select leaf x by UCB1; expand x into X_child; x <- uniformly_sampled(X_child); for k <- 1 to d_simulation: x <- generate_single_child(x); evaluate reward v(x); propagate v and n back to x0. Return x* with highest reward v.", "verbatim": false}
+ ],
+ "problems": [
+  "Text mentions 'As shown in Table 8' for the 20-step crossword result; the main-text table is Table 2 and Table 8 is the 100-step comparison.",
+  "Figures 3 and 6 report bar heights only; no numbers in the text.",
+  "No embedded instructions found in the PDF."
+ ]
+}

@@ -1,0 +1,752 @@
+{
+ "schema": 1,
+ "key": "2310.18313",
+ "pdf": "ai-engineering/07-inference-engineering/sources/peng-2023-fp8-lm.pdf",
+ "bib": {
+  "title": "FP8-LM: Training FP8 Large Language Models",
+  "authors": [
+   "Houwen Peng",
+   "Kan Wu",
+   "Yixuan Wei",
+   "Guoshuai Zhao",
+   "Yuxiang Yang",
+   "Ze Liu",
+   "Yifan Xiong",
+   "Ziyue Yang",
+   "Bolin Ni",
+   "Jingcheng Hu",
+   "Ruihang Li",
+   "Miaosen Zhang",
+   "Chen Li",
+   "Jia Ning",
+   "Ruizhe Wang",
+   "Zheng Zhang",
+   "Shuguang Liu",
+   "Joe Chau",
+   "Han Hu",
+   "Peng Cheng"
+  ],
+  "first_author": "Peng",
+  "year": 2023,
+  "venue": "preprint",
+  "arxiv": "2310.18313",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 80646,
+  "chars_total": 80646,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "system",
+ "question": "Can FP8 be used not only for GEMM compute but also for gradients, optimizer states and distributed training of LLMs, cutting memory and communication without losing accuracy or changing hyper-parameters?",
+ "hypothesis": "Most variables in LLM training (gradients, optimizer moments) can use low-precision FP8 without hurting accuracy and without hyper-parameter changes.",
+ "contributions": [
+  "A new FP8 mixed-precision training framework that unlocks 8-bit weights, gradients, optimizer and distributed training gradually in an add-on fashion, as a drop-in replacement for 16/32-bit mixed precision with no hyper-parameter changes, with a PyTorch implementation.",
+  "A family of GPT-style models (7B to 175B) trained with FP8 for pre-training and fine-tuning (SFT, RLHF), with FP8 tensor, pipeline and sequence parallelism, and an open-source FP8 GPT codebase built on Megatron-LM."
+ ],
+ "method": {
+  "summary": "A three-level FP8 automatic mixed-precision framework (MS-AMP): FP8 gradients with all-reduce using automatic scaling and a shared minimum scaling factor, an FP8 Adam optimizer (FP8 first moment, FP16 second moment, FP16 master weights with tensor scaling), and FP8 tensor/sequence parallelism plus a greedy whole-tensor ZeRO distribution. Compared against BF16 Megatron-LM and Nvidia Transformer Engine on GPT models of 125M to 175B parameters, in pre-training, SFT and RLHF.",
+  "task": "next-token pretraining, instruction tuning (SFT) and RLHF (PPO) under FP8 mixed precision",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Pre-training mix (CommonCrawl, C4, OpenWebText, arXiv, StackExchange, DM-Math, USPTO, NIH ExPorter, Python, Wikipedia, Books, News, Dialogue)",
+    "role": "pretrain",
+    "size": "100B training tokens for 125M/7B/13B, 40B for 175B",
+    "split": null,
+    "source": "CommonCrawl, The Pile, C4, OpenWebText, CC-NEWS, CC-Stories, Redpajama, Wikipedia (24 languages, 20220301 dump), Python from GitHub (Bing repo list) plus Stack",
+    "preprocessing": "CCNet pipeline on 11 CommonCrawl snapshots 2018-2023 (line dedup, fastText language ID, n-gram LM filter, Wikipedia-like linear classifier), fuzzy deduplication; Python cleaning with alphanumeric-rate, line-length and keyword filters. Sampling weights in Table 10 (CommonCrawl 51.71%, C4 25.56%)."
+   },
+   {
+    "name": "ShareGPT (Vicuna-v1.1 setting)",
+    "role": "train",
+    "size": null,
+    "split": null,
+    "source": "publicly user-shared instruction-following data",
+    "preprocessing": null
+   },
+   {
+    "name": "Anthropic HH + Open-Assistant (RLHF)",
+    "role": "train",
+    "size": null,
+    "split": null,
+    "source": "Bai et al. 2022; Kopf et al. 2023, AlpacaFarm configuration",
+    "preprocessing": null
+   },
+   {
+    "name": "HellaSwag, Lambada, BoolQ, PIQA, COPA, Winogrande, Arc-C, Arc-E, OpenbookQA",
+    "role": "eval",
+    "size": null,
+    "split": "zero-shot",
+    "source": "public benchmarks",
+    "preprocessing": null
+   },
+   {
+    "name": "AlpacaEval, MT-Bench",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "win-rate vs Davinci-003; GPT-4 judged score",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT-125M",
+    "role": "proposed",
+    "params": "125M",
+    "architecture": "decoder-only Transformer with RoPE and Flash Attention",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "12",
+    "hidden": "768",
+    "heads": "12",
+    "context": "2048 tokens",
+    "other": {
+     "TP": 1,
+     "PP": 1,
+     "SP": true,
+     "lr": "6.0e-4",
+     "batch": "1M"
+    }
+   },
+   {
+    "name": "GPT-7B",
+    "role": "proposed",
+    "params": "7B",
+    "architecture": "decoder-only Transformer with RoPE and Flash Attention",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "32",
+    "hidden": "4096",
+    "heads": "32",
+    "context": "2048 tokens",
+    "other": {
+     "TP": 1,
+     "PP": 1,
+     "SP": true,
+     "lr": "3.0e-4",
+     "batch": "4M"
+    }
+   },
+   {
+    "name": "GPT-13B",
+    "role": "proposed",
+    "params": "13B",
+    "architecture": "decoder-only Transformer with RoPE and Flash Attention",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "40",
+    "hidden": "5120",
+    "heads": "40",
+    "context": "2048 tokens",
+    "other": {
+     "TP": 2,
+     "PP": 1,
+     "SP": true,
+     "lr": "3.0e-4",
+     "batch": "4M"
+    }
+   },
+   {
+    "name": "GPT-175B",
+    "role": "proposed",
+    "params": "175B",
+    "architecture": "decoder-only Transformer with RoPE and Flash Attention",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "96",
+    "hidden": "12288",
+    "heads": "96",
+    "context": "2048 tokens",
+    "other": {
+     "TP": 8,
+     "PP": 4,
+     "SP": true,
+     "lr": "3.0e-5",
+     "batch": "1M",
+     "note": "trained on only 40B tokens"
+    }
+   },
+   {
+    "name": "LLaMA-7B (SFT base)",
+    "role": "base",
+    "params": "7B",
+    "architecture": "decoder-only",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "BF16 Megatron-LM and Nvidia Transformer Engine (TE)",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "autoregressive next-token prediction (pre-training); SFT as Vicuna-v1.1; PPO for RLHF following AlpacaFarm",
+   "optimizer": "FP8 Adam with decoupled weight decay (AdamW), beta1=0.9, beta2=0.95",
+   "lr": "6.0e-4 (125M), 3.0e-4 (7B, 13B), 3.0e-5 (175B)",
+   "lr_schedule": "cosine-like, final lr is 10% of maximal",
+   "warmup": "1,000 iterations",
+   "batch_size": "4M tokens (7B, 13B); 1M (125M, 175B)",
+   "steps": null,
+   "epochs": null,
+   "tokens": "100B (125M, 7B, 13B); 40B (175B)",
+   "seq_len": "2048",
+   "precision": "FP8 compute (GEMM), FP8 gradients and all-reduce, FP8 first moment, FP16 second moment, FP16 master weights with tensor scaling; baselines BF16-FP32 and FP32",
+   "weight_decay": "0.1",
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "Azure NDv5 H100 GPU platform (80GB H100); GPU counts: 32 for 7B and 4096-context test, 16 DP x TP2 for 13B, TP8xPP4xDP4 for 175B (128 GPUs inferred from parallelism product)",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "fp8_formats": "E4M3 (max 448) and E5M2 (max 57344)",
+    "auto_scaling": "mu halves next step if fraction of values at FP8 max exceeds 0.001%, otherwise increases exponentially to 2 over 1,000 steps",
+    "gradient_all_reduce": "global minimum scaling factor s'_g = min(s'_1..s'_N) shared across GPUs, then standard NCCL all-reduce, s = N * s'_g",
+    "bytes_per_param": "16 bytes for FP32 Adam mixed precision (Eq 7), 6 bytes for FP8 optimizer (Eq 8): 2 master + 1 gradient + 1 + 2 Adam states",
+    "optimization_levels": "three levels adding FP8 communication, optimizer and distributed parallel training incrementally",
+    "zero": "greedy whole-tensor assignment, largest tensors first to the GPU with least memory (Alg 1)",
+    "figure_1_data": "max model size on H100 80GB clusters, read from Fig 1 not extractable as numbers"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": "zero-shot for downstream tasks",
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Pre-training loss",
+     "definition": "training loss over tokens, FP8 vs BF16",
+     "unit": "loss",
+     "higher_is_better": false
+    },
+    {
+     "name": "Zero-shot accuracy",
+     "definition": "per-task zero-shot score on 9 tasks plus average",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "AlpacaEval win-rate",
+     "definition": "win-rate against Davinci-003",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "MT-Bench",
+     "definition": "GPT-4 judged score",
+     "unit": "score",
+     "higher_is_better": true
+    },
+    {
+     "name": "GPU memory",
+     "definition": "per-GPU memory in training",
+     "unit": "GB",
+     "higher_is_better": false
+    },
+    {
+     "name": "Throughput",
+     "definition": "samples per second",
+     "unit": "samples/s",
+     "higher_is_better": true
+    },
+    {
+     "name": "MFU",
+     "definition": "model FLOPs utilization",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Weight-related communication volume",
+     "definition": "all-gather on weights plus reduce-scatter on weight gradients",
+     "unit": "GB",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "BF16 mixed precision (Megatron-LM)",
+    "Nvidia Transformer Engine FP8",
+    "FP32 (ablation)"
+   ],
+   "protocol": "Same hyper-parameters for FP8 and BF16; single run per configuration (no seeds or significance stated)."
+  },
+  "availability": {
+   "code": "aka.ms/MS.AMP (open-sourced FP8 framework and Megatron-LM based GPT codebase)",
+   "weights": null,
+   "data": "built from public corpora; no released mix stated"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.optimizer",
+    "quote": "with the decay rates β1 = 0.9, β2 = 0.95, and weight decay = 0.1",
+    "where": "3.1.2"
+   },
+   {
+    "field": "training.warmup",
+    "quote": "The model warm-up is conducted for 1,000 iterations.",
+    "where": "3.1.2"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "FP8 GPT-175B trains 75% faster than BF16 Megatron-LM.",
+   "kind": "measured",
+   "source": null,
+   "metric": "throughput",
+   "value": 75,
+   "unit": "% throughput gain",
+   "baseline_value": "22.4 samples/s BF16 vs 39.3 FP8",
+   "n": null,
+   "setup": "GPT-175B, TP8 PP4 DP4, 40B tokens, H100 80GB, Megatron-LM based; BF16 vs FP8 (Ours), micro BS 4 for the FP8 speed row",
+   "quote": "not only achieved a remarkable 39% reduction in real memory usage but also ran 75% faster",
+   "table": null,
+   "note": null,
+   "where": "Abstract; Table 5"
+  },
+  {
+   "claim": "FP8 cuts GPT-175B per-GPU memory by 39% vs BF16 at identical batch size.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GPU memory",
+   "value": 39,
+   "unit": "% reduction",
+   "baseline_value": "66.1 GB BF16",
+   "n": null,
+   "setup": "GPT-175B, micro BS 1, TP8 PP4 DP4, H100 80GB",
+   "quote": null,
+   "table": "Table 5, GPT-175B, row FP8 (Ours) micro BS 1, column GPU Mem. (GB): 40.3 (-39%)",
+   "note": null,
+   "where": "Table 5"
+  },
+  {
+   "claim": "Training time is 37% lower than Transformer Engine on GPT-175B, with 42% less memory.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 37,
+   "unit": "% time reduction vs TE",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-175B on H100",
+   "quote": "reduces training time by 37% compared to TE",
+   "table": null,
+   "note": "Abstract says speed surpasses TE by 37%; MFU section says MFU 34.2% is 37.3% above TE (24.9%).",
+   "where": "Introduction"
+  },
+  {
+   "claim": "Weight-related communication volume falls 63-65% vs BF16.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 63,
+   "unit": "% (to 65% for GPT-175B)",
+   "baseline_value": "theoretical 75%",
+   "n": null,
+   "setup": "GPT-7B/13B/175B; 8-bit gradient all-reduce vs 32-bit all-reduce",
+   "quote": "falls within the range of 63% to 65%",
+   "table": null,
+   "note": null,
+   "where": "3.2.2, Table 5"
+  },
+  {
+   "claim": "Real memory reduction is 29% for GPT-7B and 39% for GPT-175B.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 29,
+   "unit": "% (7B)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-7B vs GPT-175B, BF16 baseline",
+   "quote": "29% reduction for GPT-7B while 39% for GPT-175B",
+   "table": null,
+   "note": "Section 3.2.2 states a range 28% to 39% (13B is 28%).",
+   "where": "Introduction"
+  },
+  {
+   "claim": "FP8 and BF16 pre-training loss curves almost overlap for 7B, 13B, 175B with identical hyper-parameters.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-7B/13B 100B tokens, GPT-175B 40B tokens",
+   "quote": "the loss curves almost overlap with each other",
+   "table": null,
+   "note": null,
+   "where": "3.2.1, Fig 4"
+  },
+  {
+   "claim": "GPT-7B zero-shot average is 58.0 for FP8 vs 58.4 for BF16 over nine tasks.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 58.0,
+   "unit": "% avg accuracy",
+   "baseline_value": 58.4,
+   "n": null,
+   "setup": "GPT-7B, 100B tokens, zero-shot",
+   "quote": null,
+   "table": "Table 2, GPT-7B, row FP8, column Avg",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "GPT-13B zero-shot average is 60.4 for FP8 vs 61.0 for BF16.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 60.4,
+   "unit": "% avg accuracy",
+   "baseline_value": 61.0,
+   "n": null,
+   "setup": "GPT-13B, 100B tokens, zero-shot",
+   "quote": null,
+   "table": "Table 2, GPT-13B, row FP8, column Avg",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "FP8 SFT of LLaMA-7B uses 14% less memory and gets 27% higher throughput, with AlpacaEval 67.20 vs 66.15 and MT-Bench 5.70 vs 5.75.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 27,
+   "unit": "% throughput",
+   "baseline_value": "103 BF16",
+   "n": null,
+   "setup": "LLaMA-7B SFT on ShareGPT, Vicuna-v1.1 settings",
+   "quote": null,
+   "table": "Table 3, row FP8, column Throughput: 131(+27%)",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "FP8 RLHF reduces weight memory 32% and optimizer-state memory 62%; AlpacaEval 72.42 vs 72.05, MT-Bench 6.04 vs 6.16.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 62,
+   "unit": "% optimizer state reduction",
+   "baseline_value": "15,116 MB BF16",
+   "n": null,
+   "setup": "PPO RLHF in AlpacaFarm setting",
+   "quote": null,
+   "table": "Table 4, row FP8, column Optimizer States: 5,669(-62%)",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "FP8 optimizer uses 6 bytes per parameter vs 16 for FP32 Adam mixed precision, a 2.6x reduction.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": 6,
+   "unit": "bytes/param",
+   "baseline_value": 16,
+   "n": null,
+   "setup": "Adam states: FP8 gradients, FP16 master weights, FP8+FP16 moments",
+   "quote": "This new low-bit optimizer reduces memory footprints by 2.6x",
+   "table": null,
+   "note": null,
+   "where": "2.2, Eq 7-8"
+  },
+  {
+   "claim": "GPT-175B MFU is 34.2% with FP8 vs 39.0% for BF16 and 24.9% for TE (micro BS 4 for FP8 ours).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 34.2,
+   "unit": "% MFU",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-175B on H100",
+   "quote": "is 34.2% on H100 GPUs, being 37.3% superior to TE",
+   "table": null,
+   "note": "Table 5 shows BF16 MFU 39.0 at micro BS 1 and ours 34.2 at micro BS 4; BF16 at BS 4 not reported, so the BF16 MFU is not matched on batch size.",
+   "where": "3.2.2, Table 5"
+  },
+  {
+   "claim": "FP8 sequence/tensor-parallel activation communication volume falls 34% vs BF16.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 34,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-13B and GPT-175B activation all-gather/reduce-scatter",
+   "quote": "substantial reduction of 34% in activation-related communication costs",
+   "table": null,
+   "note": null,
+   "where": "3.3, Table 7"
+  },
+  {
+   "claim": "FP8 second-order moment makes training diverge (setting #4), while FP8 first-order moment and FP16 master weights with tensor scaling match FP32/BF16 loss.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-125M, 100B tokens, Table 6 settings",
+   "quote": "Utilizing FP8 for the second-order gradient moment can",
+   "table": null,
+   "note": "Quote continues 'lead to divergent training loss (see the #4 dot in Fig. 8)'; Fig 8 caption: loss curve for FP8 #4 has diverged.",
+   "where": "3.3, Table 6, Fig 8"
+  },
+  {
+   "claim": "An FP8 master weight degrades accuracy; BF16 master weight is slightly worse than FP16 with scaling.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-125M, Table 6 settings #2a, #2b, #3",
+   "quote": "FP8 master weight induces performance degra-",
+   "table": null,
+   "note": "Read from Fig 8 curves; no numbers given.",
+   "where": "3.3"
+  },
+  {
+   "claim": "With 32 H100 80GB GPUs, FP8 trains up to 175B parameter models at 4,096 context, whereas TE only fits 2,048.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 4096,
+   "unit": "tokens context",
+   "baseline_value": null,
+   "n": null,
+   "setup": "32 H100 GPUs 80GB, GPT-175B",
+   "quote": "our approach enables the training of models with a context of 4,096 tokens",
+   "table": null,
+   "note": null,
+   "where": "3.2.2"
+  },
+  {
+   "claim": "Pre-scaling gives higher gradient underflow, post-scaling higher overflow, auto-scaling lowers both and gives better SNR.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-7B, data parallelism 128, per Transformer block, Fig 7",
+   "quote": "the pre-scaling method has relative larger underflow rate",
+   "table": null,
+   "note": "Values only in figure, no numbers in text.",
+   "where": "3.3, Fig 7"
+  }
+ ],
+ "limits": [
+  "Largest model (175B) is trained for only 40B tokens, 'sufficient for evaluating system performance'; accuracy at full scale and long training is not shown.",
+  "Downstream accuracy shown only for 7B and 13B (Table 2); no zero-shot results for 175B; SFT and RLHF only at 7B scale (LLaMA-7B).",
+  "No seeds, no variance, no significance tests; differences like 58.0 vs 58.4 are single runs.",
+  "Requires Hopper (H100) hardware for FP8; weights and data mix not released.",
+  "Authors state future work: scale up model size and steps, multimodal models, low-bit deployment on edge devices.",
+  "This is a training-time method: it says nothing about FP8 inference or post-training quantization of deployed models.",
+  "Speed comparison to BF16 at 175B uses a larger micro batch (4) for FP8 than BF16 (1); at equal micro BS 1 the gain is +21%."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "precision decoupling",
+   "definition": "decoupling the influence of data precision on parameters such as weights, gradients, optimizer states, and assigning reduced precision to components that are not precision sensitive",
+   "where": "Introduction"
+  },
+  {
+   "term": "automatic scaling",
+   "definition": "preserve gradient values within the representation range of FP8 data formats through the dynamic adjustment of tensor scaling factors",
+   "where": "Introduction, 2.1"
+  },
+  {
+   "term": "pre-scaling vs post-scaling",
+   "definition": "pre-scaling divides each GPU gradient by N before summing; post-scaling sums first then divides",
+   "where": "2.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Mixed precision training (Micikevicius et al.)",
+   "year": 2017,
+   "arxiv": "1710.03740",
+   "relation": "extends",
+   "note": "FP16-FP32 mixed precision and loss scaling that this generalises to FP8",
+   "quote": null
+  },
+  {
+   "work": "FP8 formats for deep learning (Micikevicius et al.)",
+   "year": 2022,
+   "arxiv": "2209.05433",
+   "relation": "uses-method",
+   "note": "E4M3 and E5M2 formats and tensor scaling",
+   "quote": null
+  },
+  {
+   "work": "Nvidia Transformer Engine",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "FP8 only for GEMM; keeps high-precision master weights and gradients",
+   "quote": null
+  },
+  {
+   "work": "Megatron-LM (Shoeybi et al.)",
+   "year": 2019,
+   "arxiv": "1909.08053",
+   "relation": "baseline",
+   "note": "BF16 baseline and codebase base",
+   "quote": null
+  },
+  {
+   "work": "ZeRO (Rajbhandari et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "replaced by whole-tensor greedy FP8 distribution",
+   "quote": null
+  },
+  {
+   "work": "8-bit optimizers via block-wise quantization (Dettmers et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "related",
+   "note": "earlier low-bit optimizer work, listed among FP8 simulation efforts",
+   "quote": null
+  },
+  {
+   "work": "AlpacaFarm (Dubois et al.)",
+   "year": 2023,
+   "arxiv": "2305.14387",
+   "relation": "uses-method",
+   "note": "RLHF setup",
+   "quote": null
+  },
+  {
+   "work": "Vicuna-v1.1 / ShareGPT",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "SFT setup and data",
+   "quote": null
+  },
+  {
+   "work": "Judging LLM-as-a-judge with MT-Bench (Zheng et al.)",
+   "year": 2023,
+   "arxiv": "2306.05685",
+   "relation": "evaluates",
+   "note": "MT-Bench evaluation",
+   "quote": null
+  },
+  {
+   "work": "Flash Attention (Dao et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "attention kernel",
+   "quote": null
+  },
+  {
+   "work": "RoPE (Su et al.)",
+   "year": 2021,
+   "arxiv": "2104.09864",
+   "relation": "uses-method",
+   "note": "positional embedding",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "An analysis of comparing the maximum model sizes attainable through the utilization of either the prevalent BF16 or our FP8 mixed-precision training approach on a cluster of Nvidia H100 GPUs with 80GB memory.",
+   "page": 2,
+   "why": "shows how max trainable size scales with GPU count under BF16 vs FP8"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Transformer layer with FP8 tensor and sequence parallelism.",
+   "page": 6,
+   "why": "shows where FP8 conversions sit before the gather-reduce operator"
+  },
+  {
+   "figure": "Fig 7",
+   "caption": "Comparing different strategies, i.e., pre-scaling, post-scaling, and auto-scaling, for FP8 gradient all-reduce (SNR, underflow, overflow).",
+   "page": 11,
+   "why": "shows why auto-scaling beats pre/post scaling"
+  },
+  {
+   "figure": "Table 5",
+   "caption": "System-level performance on Nvidia H100 GPUs 80GB.",
+   "page": 11,
+   "why": "memory, throughput, MFU and communication for BF16, TE and FP8 side by side"
+  },
+  {
+   "figure": "Table 6 / Fig 8",
+   "caption": "Precision decoupling for the variables within the optimizer; training losses of GPT-125M models.",
+   "page": 12,
+   "why": "shows which optimizer variables tolerate FP8"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 7",
+   "snippet": "4 (master weights) + 4 (gradients) + 4 + 4 (Adam states) = 16 bytes",
+   "verbatim": false
+  },
+  {
+   "where": "Eq 8",
+   "snippet": "2 (master weights) + 1 (gradients) + 1 + 2 (Adam states) = 6 bytes",
+   "verbatim": false
+  },
+  {
+   "where": "Eq 4-6",
+   "snippet": "s'_g = min(s'_1,...,s'_N); g''_i = FP8(s'_g * (g'_i / s'_i)); g = g''_1+...+g''_N, s = N * s'_g",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text extraction of tables is cell-per-line; Table 5 and Table 2 columns were reassembled by position.",
+  "No embedded instructions found.",
+  "Table 1 GPU counts are not stated; the 128-GPU figure for 175B is inferred from TP*PP*DP."
+ ]
+}

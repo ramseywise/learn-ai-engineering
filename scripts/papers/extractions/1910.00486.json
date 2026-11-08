@@ -1,0 +1,618 @@
+{
+ "schema": 1,
+ "key": "1910.00486",
+ "pdf": "generative-ai/07-agentic-applications/sources/vlasov-2019-dialogue-transformers.pdf",
+ "bib": {
+  "title": "Dialogue Transformers",
+  "authors": [
+   "Vladimir Vlasov",
+   "Johannes E. M. Mosig",
+   "Alan Nichol"
+  ],
+  "first_author": "Vlasov",
+  "year": 2019,
+  "venue": "preprint (arXiv v3, 1 May 2020)",
+  "arxiv": "1910.00486",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 36492,
+  "chars_total": 36492,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Is a transformer with self-attention over dialogue turns a better dialogue policy than recurrent encoders for multi-turn conversations with interleaved topics?",
+ "hypothesis": "A transformer can pick which dialogue turns matter, so it handles interleaved discourse segments better than an LSTM and as well as the purpose-built REDP.",
+ "contributions": [
+  "TED policy: transformer self-attention over dialogue turns with embedding-similarity action retrieval",
+  "Comparison to LSTM and REDP on the REDP dataset and to an LSTM on MultiWOZ 2.1 in modular and end-to-end modes",
+  "Attention weights shown to be interpretable",
+  "Finding that MultiWOZ has little history dependence and ambiguous wizard actions"
+ ],
+ "method": {
+  "summary": "TED embeds the dialogue state (unidirectional transformer over featurized turns) and each system action into one vector space (dim 20) and trains with a dot-product loss with negative sampling; at inference the action with highest similarity is chosen. Compared with an identical LSTM policy and REDP on sub-dialogue data and MultiWOZ 2.1.",
+  "task": "next system-action retrieval for task-oriented dialogue policy",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "REDP dataset (Vlasov et al. 2018)",
+    "role": "both",
+    "size": null,
+    "split": "x-axis 'number of dialogues present during training' roughly 40-140 in Fig 2 (read from Fig 2); test set size not stated, y-axis up to ~30 correct test dialogues (read from Fig 2)",
+    "source": "hotel and restaurant reservation, cooperative and non-cooperative turns; arXiv:1811.11707",
+    "preprocessing": null
+   },
+   {
+    "name": "MultiWOZ 2.1",
+    "role": "both",
+    "size": "10438 dialogues, 7 domains",
+    "split": "7249 train / 1812 test; 1377 dialogues dropped for incomplete annotations",
+    "source": "Budzianowski 2018; Eric 2019",
+    "preprocessing": "e2e: delexicalised utterances, 4 status slots (available, not available, booked, unique) as 1-of-K; multiple action labels concatenated alphabetically; modular: gold intents/entities from belief-state changes, uninformative last intent labelled bye"
+   }
+  ],
+  "models": [
+   {
+    "name": "TED policy",
+    "role": "proposed",
+    "params": null,
+    "architecture": "unidirectional transformer over dialogue turns; embedding layers; dot-product similarity",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "max history N=10 or 2 turns on MultiWOZ",
+    "other": {
+     "embedding_dim": "20 (h in R^20)",
+     "input_modular": "binary vector of intent and entities, system actions as binary action-name vectors, slots as binary vectors",
+     "input_e2e": "bag-of-words vectors for user and system utterances"
+    }
+   },
+   {
+    "name": "REDP",
+    "role": "baseline",
+    "params": null,
+    "architecture": "LSTM-based with attention over history and copy mechanism",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "LSTM policy",
+    "role": "baseline",
+    "params": null,
+    "architecture": "identical to TED with transformer replaced by an LSTM",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "dot-product loss: -<S+ - log(e^S+ + sum over negatives e^S-)>, averaged over time steps and dialogues",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "balanced batching in modular training for class imbalance",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": "3 runs (mean and std, Fig 2); MultiWOZ runs not stated",
+   "other": {
+    "transformer_layers_heads_hidden": "not stated in paper",
+    "number_of_negative_samples": "not stated"
+   }
+  },
+  "inference": {
+   "decoding": "argmax dot-product similarity over all candidate system actions",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "3 runs on REDP dataset",
+   "prompting": null,
+   "retrieval": "retrieve from all 56128 possible MultiWOZ responses (e2e)",
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "correct test dialogues",
+     "definition": "number of test dialogues in which every action is predicted correctly",
+     "unit": "count",
+     "higher_is_better": true
+    },
+    {
+     "name": "accuracy",
+     "definition": "action-label match of retrieved response label vs gold, action level",
+     "unit": "fraction",
+     "higher_is_better": true
+    },
+    {
+     "name": "F1",
+     "definition": "F1 over action labels",
+     "unit": "fraction",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "REDP (REDP dataset only)",
+    "LSTM policy"
+   ],
+   "protocol": "REDP dataset: mean and std of 3 runs vs training-set size. MultiWOZ: single table, no significance test."
+  },
+  "availability": {
+   "code": "https://github.com/RasaHQ/TED-paper",
+   "weights": null,
+   "data": "public datasets"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "models.TED.other.embedding_dim",
+    "quote": "h ∈ IR20",
+    "where": "Sec III c"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "On the REDP dataset TED performs on par with REDP and significantly outperforms an LSTM policy; no numbers given in text, only Fig 2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "correct test dialogues",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": 3,
+   "setup": "REDP dataset, 3 runs, varying training dialogues",
+   "quote": null,
+   "table": null,
+   "note": "Values only in Fig 2",
+   "where": "Sec IV A"
+  },
+  {
+   "claim": "In the extreme low-data regime REDP beats TED; TED trains faster and needs fewer epochs than REDP.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "REDP dataset",
+   "quote": null,
+   "table": null,
+   "note": "qualitative, no numbers",
+   "where": "Sec IV A"
+  },
+  {
+   "claim": "TED modular, N=10, accuracy",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 0.73,
+   "unit": "fraction",
+   "baseline_value": 0.68,
+   "n": null,
+   "setup": "MultiWOZ 2.1, 7249 train / 1812 test dialogues, action-level prediction, retrieval over 56128 responses (e2e), max history N",
+   "quote": null,
+   "table": "Table I, row TED modular N=10, column accuracy",
+   "note": "baseline is LSTM modular N=10",
+   "where": "Table I"
+  },
+  {
+   "claim": "TED modular, N=10, F1",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 0.63,
+   "unit": "fraction",
+   "baseline_value": 0.6,
+   "n": null,
+   "setup": "MultiWOZ 2.1, 7249 train / 1812 test dialogues, action-level prediction, retrieval over 56128 responses (e2e), max history N",
+   "quote": null,
+   "table": "Table I, row TED modular N=10, column F1 score",
+   "note": "baseline is LSTM modular N=10",
+   "where": "Table I"
+  },
+  {
+   "claim": "TED end-to-end, N=10, accuracy",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 0.64,
+   "unit": "fraction",
+   "baseline_value": 0.51,
+   "n": null,
+   "setup": "MultiWOZ 2.1, 7249 train / 1812 test dialogues, action-level prediction, retrieval over 56128 responses (e2e), max history N",
+   "quote": null,
+   "table": "Table I, row TED end-to-end N=10, column accuracy",
+   "note": "baseline is LSTM end-to-end N=10",
+   "where": "Table I"
+  },
+  {
+   "claim": "TED end-to-end, N=10, F1",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 0.28,
+   "unit": "fraction",
+   "baseline_value": 0.23,
+   "n": null,
+   "setup": "MultiWOZ 2.1, 7249 train / 1812 test dialogues, action-level prediction, retrieval over 56128 responses (e2e), max history N",
+   "quote": null,
+   "table": "Table I, row TED end-to-end N=10, column F1 score",
+   "note": "baseline is LSTM end-to-end N=10",
+   "where": "Table I"
+  },
+  {
+   "claim": "TED modular, N=2, accuracy",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 0.69,
+   "unit": "fraction",
+   "baseline_value": 0.61,
+   "n": null,
+   "setup": "MultiWOZ 2.1, 7249 train / 1812 test dialogues, action-level prediction, retrieval over 56128 responses (e2e), max history N",
+   "quote": null,
+   "table": "Table I, row TED modular N=2, column accuracy",
+   "note": null,
+   "where": "Table I"
+  },
+  {
+   "claim": "TED modular, N=2, F1",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 0.55,
+   "unit": "fraction",
+   "baseline_value": 0.54,
+   "n": null,
+   "setup": "MultiWOZ 2.1, 7249 train / 1812 test dialogues, action-level prediction, retrieval over 56128 responses (e2e), max history N",
+   "quote": null,
+   "table": "Table I, row TED modular N=2, column F1 score",
+   "note": null,
+   "where": "Table I"
+  },
+  {
+   "claim": "TED end-to-end, N=2, accuracy",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 0.62,
+   "unit": "fraction",
+   "baseline_value": 0.57,
+   "n": null,
+   "setup": "MultiWOZ 2.1, 7249 train / 1812 test dialogues, action-level prediction, retrieval over 56128 responses (e2e), max history N",
+   "quote": null,
+   "table": "Table I, row TED end-to-end N=2, column accuracy",
+   "note": null,
+   "where": "Table I"
+  },
+  {
+   "claim": "TED end-to-end, N=2, F1",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 0.24,
+   "unit": "fraction",
+   "baseline_value": 0.24,
+   "n": null,
+   "setup": "MultiWOZ 2.1, 7249 train / 1812 test dialogues, action-level prediction, retrieval over 56128 responses (e2e), max history N",
+   "quote": null,
+   "table": "Table I, row TED end-to-end N=2, column F1 score",
+   "note": null,
+   "where": "Table I"
+  },
+  {
+   "claim": "LSTM modular, N=10, accuracy",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 0.68,
+   "unit": "fraction",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MultiWOZ 2.1, 7249 train / 1812 test dialogues, action-level prediction, retrieval over 56128 responses (e2e), max history N",
+   "quote": null,
+   "table": "Table I, row LSTM modular N=10, column accuracy",
+   "note": null,
+   "where": "Table I"
+  },
+  {
+   "claim": "LSTM end-to-end, N=10, accuracy",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 0.51,
+   "unit": "fraction",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MultiWOZ 2.1, 7249 train / 1812 test dialogues, action-level prediction, retrieval over 56128 responses (e2e), max history N",
+   "quote": null,
+   "table": "Table I, row LSTM end-to-end N=10, column accuracy",
+   "note": "LSTM e2e accuracy rises to 0.57 at N=2",
+   "where": "Table I"
+  },
+  {
+   "claim": "LSTM end-to-end N=2 accuracy (higher than N=10)",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 0.57,
+   "unit": "fraction",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MultiWOZ 2.1, 7249 train / 1812 test dialogues, action-level prediction, retrieval over 56128 responses (e2e), max history N",
+   "quote": null,
+   "table": "Table I, row LSTM end-to-end N=2, column accuracy",
+   "note": null,
+   "where": "Table I"
+  },
+  {
+   "claim": "LSTM modular, N=10, F1",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 0.6,
+   "unit": "fraction",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MultiWOZ 2.1, 7249 train / 1812 test dialogues, action-level prediction, retrieval over 56128 responses (e2e), max history N",
+   "quote": null,
+   "table": "Table I, row LSTM modular N=10, column F1 score",
+   "note": null,
+   "where": "Table I"
+  },
+  {
+   "claim": "Cutting history from 10 to 2 turns lowers accuracy and F1 by no more than 0.04 (end-to-end) and 0.08 (modular), so MultiWOZ depends weakly on history.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy/F1 drop",
+   "value": 0.08,
+   "unit": "fraction (max, modular)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MultiWOZ 2.1, 7249 train / 1812 test dialogues, action-level prediction, retrieval over 56128 responses (e2e), max history N",
+   "quote": "decrease by no more than 0.04 for end-to-end and no more than 0.08 for the modular architecture",
+   "table": null,
+   "note": null,
+   "where": "Sec IV B c"
+  },
+  {
+   "claim": "LSTM and transformer F1 differ by at most 0.05; LSTM end-to-end accuracy up to 0.13 lower.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1 gap",
+   "value": 0.05,
+   "unit": "fraction (max)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MultiWOZ 2.1, 7249 train / 1812 test dialogues, action-level prediction, retrieval over 56128 responses (e2e), max history N",
+   "quote": "The F1 scores of the LSTM and transformer versions diﬀer by no more than 0.05",
+   "table": null,
+   "note": "0.13 accuracy gap: 'up to 0.13 points lower for the LSTM'; table gives 0.64-0.51=0.13",
+   "where": "Sec IV B d"
+  },
+  {
+   "claim": "Modular input roughly doubles F1 over end-to-end for TED (0.28 to 0.63) because of extra supervision.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "MultiWOZ 2.1, 7249 train / 1812 test dialogues, action-level prediction, retrieval over 56128 responses (e2e), max history N",
+   "quote": "roughly doubles the F1 score",
+   "table": null,
+   "note": null,
+   "where": "Sec IV B b"
+  },
+  {
+   "claim": "Prior best MultiWOZ next-action F1 are 0.64 and 0.72, not comparable (retrieve among 20 negatives and compare text).",
+   "kind": "reported",
+   "source": "Mehri et al. 2019 [17]; Mehri and Eskenazi 2019 [29]",
+   "metric": "F1",
+   "value": 0.72,
+   "unit": "fraction",
+   "baseline_value": 0.64,
+   "n": null,
+   "setup": "retrieval out of 20 negative samples",
+   "quote": "given by [17] and [29] with 0.64 and 0.72, respectively",
+   "table": null,
+   "note": null,
+   "where": "Sec IV B b"
+  },
+  {
+   "claim": "MultiWOZ label frequencies are very skewed: bye_general 4759 occurrences versus 11 for the rarest example label.",
+   "kind": "measured",
+   "source": null,
+   "metric": "label count",
+   "value": 4759,
+   "unit": "occurrences",
+   "baseline_value": 11,
+   "n": null,
+   "setup": "MultiWOZ 2.1",
+   "quote": "occur very frequently (4759 times)",
+   "table": null,
+   "note": null,
+   "where": "Sec IV B a"
+  },
+  {
+   "claim": "Attention weights are sparse and ignore a run of chit-chat turns when asking task questions.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "one example dialogue, Fig 3",
+   "quote": null,
+   "table": null,
+   "note": "single example",
+   "where": "Fig 3"
+  }
+ ],
+ "limits": [
+  "Architectures are intentionally simple; TED is a building block, not state of the art",
+  "MultiWOZ has little history dependence and ambiguous wizard actions, so it cannot test long-range handling and scores are capped",
+  "MultiWOZ numbers not comparable to prior work (56128 candidates vs 20)",
+  "Few-data REDP outperforms TED at the lowest training sizes",
+  "REDP-dataset numbers only in a figure; no hyperparameters, optimiser, epochs, layer counts or seeds beyond 3 runs reported",
+  "Attention visualisation is one dialogue",
+  "Modular MultiWOZ uses gold intents and entities, not a real NLU",
+  "Taskmaster-1 excluded because action labels could not be extracted",
+  "1377 MultiWOZ dialogues dropped; split not from the official one (7249/1812)"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "end-to-end",
+   "definition": "no supervision beyond the sequence of utterances; no gold labels for NLU output or system action names",
+   "where": "Sec III a"
+  },
+  {
+   "term": "modular",
+   "definition": "an external NLU provides intent and entities as binary vectors; policy predicts from a fixed list of system actions",
+   "where": "Sec III a"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Few-shot generalization across dialogue tasks (REDP)",
+   "year": 2018,
+   "arxiv": "1811.11707",
+   "relation": "baseline",
+   "note": "REDP baseline and dataset",
+   "quote": null
+  },
+  {
+   "work": "Attention is all you need",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "transformer architecture",
+   "quote": null
+  },
+  {
+   "work": "Henderson et al., Training neural response selection",
+   "year": 2019,
+   "arxiv": "1906.01543",
+   "relation": "uses-method",
+   "note": "dot-product loss",
+   "quote": null
+  },
+  {
+   "work": "StarSpace",
+   "year": 2017,
+   "arxiv": "1709.03856",
+   "relation": "uses-method",
+   "note": "embedding loss",
+   "quote": null
+  },
+  {
+   "work": "Sahay et al., intent, dialog policies and response adaptation",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "related",
+   "note": "attention mechanisms on REDP dataset",
+   "quote": null
+  },
+  {
+   "work": "RavenClaw / Grosz and Sidner",
+   "year": 2009,
+   "arxiv": null,
+   "relation": "related",
+   "note": "dialogue stack for sub-dialogues",
+   "quote": null
+  },
+  {
+   "work": "MultiWOZ 2.1",
+   "year": 2019,
+   "arxiv": "1907.01669",
+   "relation": "uses-data",
+   "note": "eval data",
+   "quote": null
+  },
+  {
+   "work": "Mehri et al. 2019 / Mehri and Eskenazi 2019",
+   "year": 2019,
+   "arxiv": "1906.00414",
+   "relation": "related",
+   "note": "MultiWOZ action retrieval F1 comparisons",
+   "quote": null
+  },
+  {
+   "work": "Mosig et al., Where is the context?",
+   "year": 2020,
+   "arxiv": "2004.10473",
+   "relation": "related",
+   "note": "critique of MultiWOZ",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "A schematic representation of two time steps of the transformer embedding dialogue policy.",
+   "page": 3,
+   "why": "architecture"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Performance of REDP, TED policy, and an LSTM baseline policy on the dataset from [2]. Mean and std of 3 runs.",
+   "page": 4,
+   "why": "only place with the REDP-dataset comparison"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Attention weights of the TED policy on an example dialogue.",
+   "page": 4,
+   "why": "shows chit-chat turns ignored"
+  },
+  {
+   "figure": "Table I",
+   "caption": "Accuracy and F1 of TED end-to-end and modular vs LSTM on MultiWOZ 2.1 with max history N.",
+   "page": 5,
+   "why": "main numbers"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 1",
+   "snippet": "L_dialogue = -< S+ - log( e^{S+} + sum_{Omega-} e^{S-} ) >",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Table I extracted as flattened text; row/column mapping inferred from layout",
+  "No embedded instructions found"
+ ]
+}

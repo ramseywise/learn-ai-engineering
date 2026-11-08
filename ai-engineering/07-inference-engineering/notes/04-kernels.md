@@ -11,6 +11,7 @@ sources:
   - https://arxiv.org/abs/2603.05451
   - https://arxiv.org/abs/2405.02803
   - https://arxiv.org/abs/2409.04431
+  - https://arxiv.org/abs/2411.09009
 confidence: medium
 cleaned: 2026-11-01
 ---
@@ -181,6 +182,8 @@ The figure shows the two levels. A tile moves from global memory into SMEM, and 
 Two elementwise kernels write an intermediate to HBM and read it back. One fused kernel keeps it in registers. For memory-bound chains (activation, bias, normalization, residual add), that is the largest available win: it removes whole round trips and launches. `torch.compile` does most of this automatically ([05](05-compilers-and-frameworks.md#what-a-compiler-does-for-inference)). In ch. 12, the book says fusion "helps only modestly for memory-bound workloads" and "shines for compute-bound". That is backwards, and contradicts its own ch. 9. A kernel already at the compute roof gains little from fusion beyond launch savings.
 
 Fusion is also what an automated search finds first. TTT-Discover runs RL on gpt-oss-120b at test time against one kernel problem, with reward set to inverse runtime and zero for kernels that fail correctness checks. On the GPUMode TriMul task its best H100 kernel ran in 1,161 µs on the official leaderboard, against 1,371 µs for the best human submission. The policy's samples moved from mixed precision to fusing all the core operations to deeper fusion over training. In the authors' ablation, the same budget gives 1,203 µs with their entropic objective, 1,986 µs with plain expected-reward RL and 5,274 µs with no reuse of earlier solutions. A run of 50 steps × 512 rollouts costs about $500 ([arXiv:2601.16175](https://arxiv.org/abs/2601.16175) (Yuksekgonul et al., 2026-01)). The search needs a fast, trustworthy correctness check, the same check you would run before shipping a hand-written kernel.
+
+The same fusion-and-recompute idea applies to the loss layer. With a 256K vocabulary the log-probability matrix is the biggest tensor in training: 89% of Gemma 2 2B's training memory, 65% for Llama 3 8B and 40% for Phi 3.5 Mini (analytic model, 16x80GB FSDP). Cut Cross-Entropy computes the target logit with an indexed matmul and the log-sum-exp in blocks, never writing the logits to HBM, and skips backward blocks whose softmax values fall below 2^-12 (under 0.02% of entries matter). On Gemma 2 2B (8,192 tokens, A100-80GB, 5 seeds) loss plus gradient takes 1,164 MB and 145 ms against 28,000 MB and 208 ms for the baseline and 16,000 MB and 143 ms for torch.compile; without gradient filtering it is 3.4× slower. The gain shrinks as the vocabulary-to-hidden ratio falls (on Phi 3.5 Mini, 32K vocabulary, it is about 50% slower than torch.compile), and pretraining needs a slower Kahan variant without filtering on the classifier gradient. It is a Triton kernel, measured on training, with 2024 library versions ([arXiv:2411.09009](https://arxiv.org/abs/2411.09009) (Wijmans et al., ICLR 2025)).
 
 Related levers from ch. 9: **recompute** cheap values instead of storing them; **2:4 structured sparsity** for up to ~2× on large GEMMs on sparse tensor cores (inference-focused, needs fine-tuning after pruning, and the metadata costs bytes too); and PyTorch's SDPA, which dispatches to FlashAttention or cuDNN attention.
 

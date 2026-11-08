@@ -17,6 +17,7 @@ sources:
   - https://arxiv.org/abs/2609.11999
   - https://arxiv.org/abs/2402.09171
   - https://arxiv.org/abs/2308.07921
+  - https://arxiv.org/abs/2411.10213
   - https://arxiv.org/abs/2606.03303
   - https://arxiv.org/abs/2512.14012
   - https://arxiv.org/abs/2607.02134
@@ -63,6 +64,8 @@ Enforcement is a hook, not a hope. `PreCompletionChecklistMiddleware` intercepts
 This is what grounds a solution in tests and creates the feedback signal that self-improvement runs on. It's also why sandbox tooling matters ([note 04](04-execution-boundaries.md)) — test runners, logs, and screenshots are what "verify" reads.
 
 The check has to be executable. Zhou et al. ([arXiv:2308.07921](https://arxiv.org/abs/2308.07921) (Zhou et al., 2023-08, preprint)) prompted GPT-4 Code Interpreter to verify its own answer with code: on the MATH test set, zero-shot, accuracy rose from 69.69% to 73.54%, and verifying in natural language did not help (69.29%). A verdict of "True" was right 95.88% of the time, but only 79.11% of correct answers earned it. This is one closed model on math, where a computable check exists, with no variance reported, and the model grades its own answer.
+
+For code, the check usually starts as a reproduction. Meng et al. ([arXiv:2411.10213](https://arxiv.org/abs/2411.10213), 2024, preprint) compared six top SWE-bench Verified submissions (W&B Programmer resolved the most, 323 of 500) and argue the strongest ones reproduce the bug, patch, then re-run the reproduction. That is a claim from reading trajectories, not an ablation: backbones differ, each system ran once, and nothing isolates the effect of the reproduction step on the resolve rate. Two measured findings are useful. Reproduction quality tracks how much the issue gives you: a simple two-agent system (Claude 3.5 Sonnet) wrote a reproduction script whose output changes after the golden patch in 80.4% of cases (156 of 194) when the issue held a runnable example, against 64% (32 of 50) when it lacked enough information. And 181 cases were solved by all six systems while 96 were solved by none, with the unsolved ones scoring lower on whether the issue suggested a fix (Resolve Solutions, 0.656 against 1.276, DeepSeek-R1 as judge). The authors concede that "related" can give false positives, and the agent that wrote the script also judged it, so self-assessment bias is not addressed.
 
 ---
 

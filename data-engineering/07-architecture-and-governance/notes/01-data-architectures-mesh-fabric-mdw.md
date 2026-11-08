@@ -8,6 +8,7 @@ sources:
   # Data mesh scenario prompts handout, origin unknown, no public URL (linked from references.md)
   - https://martinfowler.com/articles/data-mesh-principles.html
   - https://dataintensive.net/
+  - https://www.cidrdb.org/cidr2021/papers/cidr2021_paper17.pdf
 confidence: medium
 cleaned: 2026-11-02
 ---
@@ -39,13 +40,13 @@ flowchart LR
 
 ## Modern data warehouse
 
-Serra opens from a failure. In the mid-2010s many teams tried to do everything in the lake and found that it could not yet serve business users the way a warehouse could, which is why the two now sit together. A **modern data warehouse (MDW)** is a relational data warehouse (RDW) plus a data lake. At least some data is copied from the lake into the RDW. If none is, and everything is queried in the lake, you have a lakehouse instead.
+Serra places the MDW after a failure: in the mid-2010s many teams tried to skip the RDW and use the lake for everything, the approach failed, and the MDW became the most popular architecture (p. 137). He gives no reason; his later remark that lakes lack the performance for dashboards (p. 143) is our guess at one. A **modern data warehouse (MDW)** is a relational data warehouse (RDW) plus a data lake. At least some data is copied from the lake into the RDW. If none is, and everything is queried in the lake, you have a lakehouse instead.
 
 | Stage | What happens | Zoomcamp equivalent |
 |---|---|---|
 | Ingestion | Pull from sources into the lake | [Ingest](../../02-ingest-and-modelling/notes/01-ingest.md): dlt, Kafka, `wget` into GCS |
 | Storage | Raw files in the lake | GCS bucket from Terraform ([Ingest](../../02-ingest-and-modelling/notes/01-ingest.md)) |
-| Transformation | Clean, join, conform, in conformed, cleaned and presentation layers | dbt ([Transform](../../03-transform-and-orchestrate/notes/01-transform.md)), Spark ([Warehouse](../../04-warehouse-lakehouse-streaming/notes/01-warehouse-and-store.md)) |
+| Transformation | Clean, join, conform, through the lake's conformed, cleaned, enriched and presentation layers | dbt ([Transform](../../03-transform-and-orchestrate/notes/01-transform.md)), Spark ([Warehouse](../../04-warehouse-lakehouse-streaming/notes/01-warehouse-and-store.md)) |
 | Data modeling | Star schema in the RDW | dbt `core` facts and dims ([Transform](../../03-transform-and-orchestrate/notes/01-transform.md)) |
 | Visualization | Reports, dashboards | Looker Studio / Metabase ([Transform](../../03-transform-and-orchestrate/notes/01-transform.md)) |
 
@@ -58,10 +59,10 @@ The data-engineering zoomcamp *is* an MDW: GCS lake, then BigQuery warehouse, th
 | Schema | On read | On write |
 | Users | Data scientists, power users | Business users, BI |
 | Job | Staging, preparation, exploration, cheap storage of everything | Serving: fast queries, a stable model |
-| Security | Folder/file level | Row- and column-level |
+| Security | Set over a complex folder-and-file structure | Adds row- and column-level |
 | Strength | Flexibility, any format | Compliance, performance, familiarity |
 
-Serra allows two exceptions to the rule that everything passes through the lake: small reference tables and migrations. Each one gives up the lake's role as backup and single source of raw truth, and pushes load on to the RDW, so keep them exceptions.
+Serra allows two exceptions to the flow (p. 140). Not all presentation-layer data in the lake has to be copied into the RDW. And not all source data has to pass through the lake: reference tables that are full extracts needing no cleaning, and on-prem migrations that reuse existing ETL packages are his examples. That second exception gives up the lake's role as backup and single source of truth, and puts the cleansing load on the RDW, so our advice is to keep it an exception.
 
 | Pros | Cons |
 |---|---|
@@ -72,19 +73,19 @@ Serra allows two exceptions to the rule that everything passes through the lake:
 | Flexible: raw data is kept | Compliance across two stores |
 | Fine-grained security in the RDW | Vendor lock-in on a cloud stack |
 
-Serra says that for customers with not much data, "say, under 10 terabytes", the MDW is still popular and likely to stay so. Above that he reports large enterprises moving to the fabric and lakehouse architectures, driven by streaming, volume and semi-structured data. The 10 TB figure is his judgement from practice and not a measurement.
+Serra says that as streaming, large and semi-structured data became more common, large enterprises started to use the fabric and lakehouse architectures, but for customers with not much data, "say, under 10 terabytes", the MDW is still popular and likely to stay so, "at least until data lakes can operate as well as RDWs can" (ch. 10, p. 137). Ch. 11 gives the other side of the line: the fabric is "the most widely used architecture for new solutions being built in the cloud, especially for large amounts of data (over 10 terabytes)" (p. 152). Neither claim cites data; the 10 TB figure is his judgement from practice and not a measurement.
 
 **Stepping stones** for a team with an on-prem enterprise data warehouse (EDW), which Serra presents as interim states on the way to an MDW:
 
 | Path | What you do |
 |---|---|
-| EDW augmentation | Keep the EDW; add a lake for new sources and data science |
-| Temporary lake + EDW | Land data in a lake, load the EDW from it, retire the old ETL over time |
+| EDW augmentation | Keep the EDW for the primary data; add a lake for big data that users can query and report on. It offloads none of the EDW's existing work |
+| Temporary lake + EDW | Use the lake only as a staging and refining area that offloads transformations and shortens the EDW's maintenance window; nobody queries it. A few changes turn it into a full MDW |
 | All-in-one | Lake only, query it directly. Close to a lakehouse |
 
-**Case study (Wilson & Gunkerk, a fictitious firm Serra uses for illustration):** under 1 TB, projected to stay within 10 TB, so the firm chose a symmetric multiprocessing (SMP) database (a single node, for example Azure SQL Database) rather than a massively parallel processing (MPP) warehouse. Lesson: don't buy MPP for data that fits on one machine. That is the same point as the "don't partition tables under 1 GB" rule in [the warehouse chapter](../../04-warehouse-lakehouse-streaming/notes/01-warehouse-and-store.md), at a larger scale.
+**Case study (Wilson & Gunkerk, a fictitious firm Serra uses for illustration):** under 1 TB, projected to stay within 10 TB, so the firm chose a cloud MDW on a symmetric multiprocessing (SMP) database rather than a massively parallel processing (MPP) warehouse, and the move took "a few months" (pp. 147-148). SMP and MPP are defined in his chapter 7, which we don't hold. Lesson: don't buy MPP for data that fits on one machine. That is the same point as the "don't partition tables under 1 GB" rule in [the warehouse chapter](../../04-warehouse-lakehouse-streaming/notes/01-warehouse-and-store.md), at a larger scale.
 
-How much fits on one machine is worth measuring before buying anything. The query below scans 50 million synthetic rows on a laptop, and writes a file of about 0.4 GB to the working directory to do it.
+Measure what fits on one machine before buying. The query below scans 50 million synthetic rows on a laptop, and writes a file of about 0.4 GB to the working directory to do it.
 
 ```python
 import duckdb, os, time
@@ -118,7 +119,7 @@ This is one aggregate with no concurrency, so it says nothing about a hundred an
 
 ### The lakehouse
 
-A lakehouse drops the RDW copy and adds warehouse features (ACID transactions, schema enforcement, time travel) to the lake through an open table format: Delta Lake, Apache Iceberg or Hudi. [Table formats](../../04-warehouse-lakehouse-streaming/notes/02-table-formats.md) shows how they work, and [lakehouse against warehouse](../../04-warehouse-lakehouse-streaming/notes/03-lakehouse-vs-warehouse.md) runs the comparison.
+A lakehouse ([CIDR 2021](https://www.cidrdb.org/cidr2021/papers/cidr2021_paper17.pdf)) drops the RDW copy and adds warehouse features (ACID transactions, schema enforcement, time travel) to the lake through an open table format: Delta Lake, Apache Iceberg or Hudi. [Table formats](../../04-warehouse-lakehouse-streaming/notes/02-table-formats.md) shows how, and [lakehouse against warehouse](../../04-warehouse-lakehouse-streaming/notes/03-lakehouse-vs-warehouse.md) runs the comparison.
 
 ## Data fabric
 
@@ -126,22 +127,22 @@ Serra calls a **data fabric** an evolution of the MDW, an added layer that impro
 
 | Feature | What it adds |
 |---|---|
-| Data access policies | Rules for who sees what, how it may be used and when, which every request must pass through. He calls them the key to governance |
+| Data access policies | Rules for who sees what, how it may be used and when, enforced on requests through mechanisms such as APIs, drivers or virtualization. He calls them the key to governance |
 | Metadata catalog | Search across all datasets, with **lineage** (where a value came from and how it was transformed). [Built out in chapter 03](03-catalog-semantic-layer-and-contracts.md) |
-| Master data management (MDM) | One golden record per customer, product, supplier |
-| Data virtualization | Query data where it sits, without copying. Optional, and in most cases used for only a few sources |
-| Real-time processing | Streams alongside batch ([Ingest](../../02-ingest-and-modelling/notes/01-ingest.md)) |
+| Master data management (MDM) | A single authoritative source for master data: customers, products, suppliers, employees |
+| Data virtualization | Query data where it sits, without copying. Optional in his definition, and used in a small number of situations, with most data still centralised |
+| Real-time processing | Results as soon as the data arrives ([Ingest](../../02-ingest-and-modelling/notes/01-ingest.md)) |
 | APIs | Standard access that hides where data lives, so moving the data doesn't break callers; can also filter by user |
 | Services | Reusable blocks, such as cleaning or ingestion code, offered to teams that don't need the whole fabric |
 | Products | The whole fabric bundled and sold, for example one built for an industry such as healthcare |
 
-Serra's rule of thumb: an MDW with three or more of these is a data fabric. The line is fuzzy, he says so, and he adds that plenty of people use none of them and still say "data fabric" for the philosophy. A fabric is an evolution of an MDW, not a replacement. The cost is more technology to buy and integrate, troubleshooting that gets harder, and a transition that needs cost, training and integration work; for a small business with few sources he says an MDW might suffice.
+Serra's rule of thumb: an MDW with three or more of these is a data fabric. The line is fuzzy, he says so, and he adds that plenty of people use none of them and still say "data fabric" for the philosophy. He calls it an evolution of the MDW (p. 151), and says many companies are "upgrading" their MDW into one (p. 152), so read it as an MDW with more added rather than a replacement. The costs he lists are a resource-intensive transition with hiccups in cost, training and integration, and troubleshooting that the added complexity makes harder; for a small business with few sources he says an MDW might suffice. His reasons to move anyway are scalability, a unified view of varied sources, real-time processing, security and governance, compliance across countries, and volatile industries such as stock trading and ecommerce (pp. 156-157).
 
 Definitions differ, so ask which one a speaker means. Gartner's version treats virtualization as a major piece and imagines an "intelligent" fabric using knowledge graphs and machine learning to automate discovery and integration. Serra says much of that technology does not yet exist and recommends working with fabrics as they are.
 
 ## Choosing the physical architecture
 
-The table below combines Serra's guidance with the single-machine measurement above. Treat the thresholds as starting points for a conversation.
+The table below is our synthesis of Serra's guidance and the single-machine measurement above; Serra gives no such table. Treat the thresholds as starting points for a conversation.
 
 | You have | Consider |
 |---|---|
@@ -169,7 +170,7 @@ Finally, a distinction that decides which incidents matter most. A late dashboar
 
 ## Data mesh: the four principles
 
-In the architectures so far a central data team owns ingestion, modelling and serving for the whole company. That team usually doesn't know what the source fields mean, and as the company grows it becomes the queue everyone waits in. Zhamak Dehghani's [data mesh](https://martinfowler.com/articles/data-mesh-principles.html) decentralises that, using four principles that answer four challenges (the mapping is Serra's):
+In the architectures so far a central data team owns ingestion, modelling and serving for the whole company. That team usually doesn't know what the source fields mean, and as the company grows it becomes the queue everyone waits in. Zhamak Dehghani's [data mesh](https://martinfowler.com/articles/data-mesh-principles.html) decentralises that, using four principles. Serra lists four challenges the principles address (p. 172); pairing each with one principle, and the cell wording, is ours:
 
 | Challenge with central ownership | Principle | What it means |
 |---|---|---|
@@ -180,7 +181,7 @@ In the architectures so far a central data team owns ingestion, modelling and se
 
 Two of the four are centralised. A mesh is not the absence of central teams: a platform team and a governance group still exist, as Serra's architecture diagram makes clear.
 
-**Data product against data as a product:** Serra separates these. *Data as a product* is the idea: the owner treats the data as a complete product and not as a byproduct. A *data product* is the implementation: a self-contained, independently deployable unit of data, code, metadata and infrastructure, built by one team, solving a specific business problem. A **data contract** is the agreement a consumer reads from: format, schema, metadata, transformation information and access rules. [The contracts chapter](../../02-ingest-and-modelling/notes/04-data-contracts.md) treats producer and consumer in depth; here we care about what happens across many of them.
+**Data product against data as a product:** Serra separates these. *Data as a product* is the idea: the owner treats the data as a complete product and not as a byproduct. A *data product* is the implementation: "a self-contained, independently deployable unit of data that delivers business value", built by one product team (pp. 173-174). Some exclude code, metadata and infrastructure from it, he notes. A **data contract** is the agreement a consumer reads from: format, schema, metadata, transformation information and access rules. [The contracts chapter](../../02-ingest-and-modelling/notes/04-data-contracts.md) treats producer and consumer in depth; here we care about what happens across many of them.
 
 **Federated governance, run.** Serra's example of an inconsistency is one domain using full state names and another the two-letter abbreviation. This is that bug, built so you can watch it pass quietly.
 
@@ -440,8 +441,8 @@ Serra also draws a customer 360 domain that cleans and masters customer data so 
 Serra (over 35 years in databases) is a mesh skeptic, and the chapter says so:
 
 - **Gartner's 2023 hype cycle** put data mesh near the peak with a "moderate" benefit rating and 5% to 20% market penetration, and predicted it "will be obsolete before the plateau", evolving toward data fabric. This is Gartner as quoted by Serra; the report itself isn't in our sources.
-- **His informal poll.** At talks, about 75% of a room have heard of data mesh, one or two in a hundred are building one, and he has yet to see a hand for one in production. He labels this anecdotal.
-- **"Pure" data mesh** (all four principles, fully decentralised) he expects no company to build, and a *minimum viable mesh* is undefined. He also rejects the claim that warehouses fail because they can't scale: failures are almost always people, process or the wrong technology choice.
+- **His informal poll.** At talks, usually at least 75% of a room have heard of data mesh, one or two in a hundred are building one, and he has yet to see a hand for one in production. He labels this anecdotal.
+- **"Pure" data mesh** (all four principles followed completely) he expects no company to build, and a *minimum viable mesh* is undefined. He also rejects the claim that warehouses fail because they can't scale: failures are almost always people, process or the wrong technology choice.
 
 He still says the mesh's ideas can improve any of the other architectures, which is the useful reading.
 
@@ -453,9 +454,9 @@ His three implementation types run from control to agility:
 | Type 2 | Same tech | A lake per domain | Truly decentralised, at the cost of linking the lakes and getting acceptable cross-domain performance |
 | Type 3 | Any tech, any cloud, per domain | Anything | The pure vision; he thinks it will never be adopted |
 
-**Mesh against fabric:** they aren't rivals. A fabric is a technical architecture. A mesh is an ownership model, so broad that Serra hesitates to call it an architecture. A fabric can be the architecture used *within* the domains of a mesh, one mesh can hold several fabrics, and a fabric's catalog and policies are often what makes principle 4 enforceable.
+**Mesh against fabric:** they aren't rivals. A fabric is a technical architecture. A mesh is an ownership model, so broad that Serra hesitates to call it an architecture. A fabric can be the architecture used *within* the domains of a mesh, and one mesh can hold several fabrics (pp. 182-183). Our addition: a fabric's catalog and policies are often what makes principle 4 enforceable.
 
-**Use cases on a scale:** responsibility runs from fully central IT to fully domain-owned. Data federation (domains own their data, IT owns everything else) satisfies only principle 1. Serra argues you need principle 2, data as a product, before it's fair to call it a mesh, because that is where the organisational and technical scaling comes from. If most responsibilities sit with IT, he says, what you have is better called an enterprise fabric or lakehouse with one workspace per domain.
+**Use cases on a scale:** responsibility runs from fully central IT to fully domain-owned. Data federation (domains own their data, even if IT builds the analytical data) satisfies only principle 1 (p. 183). Serra argues you need principle 2, data as a product, before it's fair to call it a mesh, because that is where the organisational and technical scaling comes from. If most responsibilities sit with IT, he says, what you have is better called an enterprise data fabric or lakehouse (p. 185).
 
 ## Is a mesh right for you?
 
@@ -469,30 +470,30 @@ This table is our synthesis of the two sources, not a test either of them gives.
 | Governance maturity | Low | Can agree global standards |
 | Culture | Top-down | Teams already own services end to end |
 
-Start with ownership (principle 1) and contracts (principle 2) on the datasets that hurt most. Do this on a shared platform (Serra's Type 1). Decentralise the technology last, if ever.
+Our advice (Serra defers fit to his chapter 14, not held): start with ownership (principle 1) and contracts (principle 2) on the datasets that hurt most, on a shared platform (Serra's Type 1). Decentralise the technology last, if ever.
 
 ## Strengholt's six topologies
 
-Strengholt (Microsoft), in "Data Mesh: Topologies and domain granularity" on Towards Data Science, wrote up the shapes he saw in customer design sessions. Two axes separate them: how fine-grained the domains are, and whether data moves peer to peer or through a central distribution layer.
+Strengholt (Microsoft), in "Data Mesh: Topologies and domain granularity" on Towards Data Science, wrote up the shapes he saw in customer design sessions. He orders them "from full decentralization and fine-grained decoupling to more managed data distribution". The two axes below (domain granularity; peer to peer or a central distribution layer) are our framing, and topologies 3 and 4 don't sit cleanly on them. The article gives no counts.
 
 ```text
                     peer to peer              central distribution layer
   fine-grained      1 fully federated         2 fully governed
-                    4 value-chain (inside)    4 value-chain (across chains: standards)
+  by value chain    4 value-chain: autonomy inside a chain, central standards when crossing one
   mixed             3 hybrid federated: central on the source side, mesh on the consumer side
   coarse-grained    5 aligned                 6 governed
 ```
 
 | # | Topology | Shape | Trade-off | Who picks it |
 |---|---|---|---|---|
-| 1 | Fine-grained, fully federated | Dehghani's pure form. Many small domains, each data product its own "architectural quantum"; data shared peer to peer; governance metadata logically central | Most flexible, but needs every domain to conform on interoperability and security, duplicates infrastructure, and makes cross-domain lookups costly ("data gravity and decentralization don't go hand in hand") | Cloud-born, multi-cloud, young firms with many strong engineers |
-| 2 | Fine-grained, fully governed | Domains own products in their own workspaces, but distribute them through a central storage layer ("multiple workspaces, shared lake") | Easier conformance and cheaper history; slower time to market, more coupling, hard on multi-cloud | Banks, governments, anyone who values compliance over agility |
+| 1 | Fine-grained, fully federated | Dehghani's pure form. Many small domains, each data product its own "architectural quantum"; data shared peer to peer; governance metadata logically central | Most flexible, but needs every domain to conform on interoperability and security, duplicates infrastructure, and makes cross-domain lookups problematic ("data gravity and decentralization don't go hand in hand") | Cloud-born, multi-cloud, young firms with many strong engineers |
+| 2 | Fine-grained, fully governed | Domains own products in their own workspaces, but distribute them through a central storage layer ("multiple workspaces, shared lake") | Easier conformance, and history processed on shared compute is cheaper; slower time to market and more coupling, and he expects it to be harder on multi-cloud. In his words it "doesn't implement a full data mesh architecture", though it adheres to many mesh principles | Banks, governments, anyone who values compliance over agility |
 | 3 | Hybrid federated | A central platform where source-aligned products are built, sometimes by a platform team; consumer side is more autonomous | Works with few engineers and legacy sources; heavier central onboarding and mixed operating models | Firms with legacy systems or limited skills: "some" data mesh |
 | 4 | Value-chain-aligned | Domains grouped into value chains (supply chain, product development) with autonomy inside; central standards only across chain boundaries | Fits operational, back-and-forth data flows; boundaries need strong architect guidance | Supply chain, transport, product companies |
-| 5 | Coarse-grained, aligned | A few large domains (regions, acquired units), each with tens or hundreds of apps and its own platform | Political fights over ownership; duplicated data quality and MDM on every platform; risks bigger silos | Firms grown by mergers and acquisitions |
+| 5 | Coarse-grained, aligned | Large organisational or regional domains, each holding "tens or hundreds of applications" and likely its own platform | Political fights over ownership; duplicated data quality and MDM on every platform; risks bigger silos. His advice: decompose domains first, then settle ownership, then guide product creation | Firms grown by mergers and acquisitions |
 | 6 | Coarse-grained, governed | Large domains publish and consume through a central distribution platform or marketplace | Needs a highly mature self-service platform team and a strong governance mandate, or it fails | Large complex organisations taming peer-to-peer sprawl |
 
-Strengholt's conclusion matches Serra's caution: treat data mesh as a framework of principles to pick from, not an all-or-nothing target. His topology 2 ("multiple workspaces, shared lake") is close to Serra's Type 1, and his topology 1 is closest to Serra's Type 3. Serra adds a warning that fits topology 2 exactly: he would call a solution with most responsibilities in IT a fabric or lakehouse, so check whose name is on the data before calling it a mesh.
+Strengholt concludes "there's no right or wrong": data mesh is a framework to pick from, which matches Serra's caution. The article never mentions Serra, so this mapping is ours: topology 2 is close to Serra's Type 1, topology 1 to his Type 3. Serra's warning fits topology 2: with most responsibilities in IT, call it a fabric or lakehouse.
 
 ## Scenario prompts, mapped to mechanisms
 
@@ -539,17 +540,16 @@ Use these as interview practice: name the root cause first (usually ownership or
 | Rule | Why |
 |---|---|
 | Name the system of record for each fact | Everything else is derived, and can be rebuilt if you know from what |
-
-| Size the architecture to the data | SMP under 1 TB, MDW up to about 10 TB, fabric or lakehouse beyond |
+| Size the architecture to the data | Our synthesis: SMP for modest data (Serra's case study is under 1 TB, projected within 10 TB), MDW up to about 10 TB, fabric or lakehouse beyond |
 | A mesh is an ownership model, not a storage choice | Each domain still runs an MDW, fabric or lakehouse |
 | Contracts before decentralisation | Ownership without contracts just moves the breakage |
-| Start with Serra Type 1 / Strengholt topology 2 | Shared platform, domain ownership of data; decentralise tech last |
+| Start with Serra Type 1 (close to Strengholt's topology 2) | Shared platform, domain ownership of data; decentralise tech last. Our advice: Strengholt makes no starting recommendation |
 | Lineage and a catalog pay for themselves first | Most governance prompts start with "where does this come from?" |
 
 ## Pitfalls
 
-- **Buying the architecture for the data you imagine.** MPP and a fabric each cost money and skills every month. Serra's fictional firm under 1 TB is the reference case, and the 50-million-row query above is the check to run first.
-- **Calling a reorganised folder tree a mesh.** Splitting a lake by department, or connecting lakes with virtualization software, satisfies at most principle 1. Serra lists both as things people wrongly call a mesh.
+- **Buying the architecture for the data you imagine.** MPP and a fabric each cost money and skills every month. Serra's fictional firm, under 1 TB and projected within 10 TB, is the reference case, and the 50-million-row query above is the check to run first.
+- **Calling a reorganised folder tree a mesh.** Grouping a lake's data by department applies principle 1 and none of the others; connecting lakes with virtualization software uses none of the four (p. 178).
 - **Decentralising without a platform.** Principles 1 and 2 hand domains work; without principle 3 each one rebuilds the same pipelines, and costs and incompatibilities climb.
 - **Governance as a document.** A standard nobody can fail is a suggestion. In the run above, the standard only took effect when `publish` called it.
 - **Picking a standard and leaving the mapping out.** A regex tells you the code is malformed. It takes a shared reference table, owned by someone, to turn `California` into `US-CA`.
@@ -578,14 +578,13 @@ Use these as interview practice: name the root cause first (usually ownership or
 |---|---|
 | What separates an MDW from a lakehouse? | An MDW copies at least some data from the lake into a relational warehouse. A lakehouse copies none and serves from the lake through a table format. |
 | Federation or unbundling? | Federation unifies reads, with one interface over many stores (virtualization). Unbundling unifies writes, with a log and derived views keeping stores in step (ELT, CDC). |
-
 | What makes an MDW a data fabric? | Added features: access policies, catalog, MDM, virtualization, real time, APIs, services, products. Serra's personal line is three or more, and he admits it is fuzzy. |
 | Is a data mesh an architecture? | Mainly an ownership and organisational model. Each domain still runs an MDW, fabric or lakehouse. |
 | Name the four principles. | Domain ownership, data as a product, self-serve platform, federated computational governance. |
 | Why can't domain tests catch `CA` against `California`? | Each table is valid by its own rules. The failure is between products, so it takes a global rule run by the platform, plus a shared mapping. |
 | What's the minimum to call something a mesh? | There is no agreed minimum. Serra argues principle 2 must hold in addition to 1, since federation alone satisfies only 1. |
-| Which mesh shape would you start with? | Shared platform, domains owning data: Serra's Type 1, Strengholt's topology 2. Decentralise technology last. |
-| A strong case against mesh? | Serra's: warehouses fail from people and process, not scale, and few meshes reach production. Gartner, as he quotes it, expected it to fold into fabric. |
+| Which mesh shape would you start with? | Shared platform, domains owning data: Serra's Type 1, which is close to Strengholt's topology 2 (our mapping; Strengholt says there's no right or wrong). Decentralise technology last. |
+| A strong case against mesh? | Serra's: warehouses fail from people and process, not scale, and few meshes reach production. Gartner, as he quotes it, expected it to fold into fabric, though he doesn't. |
 | Fabric or mesh? | Not a choice between rivals. A mesh can use a fabric inside each domain, and a fabric's catalog and policies help enforce principle 4. |
 | When is one node enough? | Serra's example is under 1 TB; measure a representative query first. Volume alone rarely justifies MPP at that size, though concurrency can. |
 

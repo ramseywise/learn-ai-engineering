@@ -1,0 +1,490 @@
+{
+ "schema": 1,
+ "key": "2401.15347",
+ "pdf": "ai-engineering/07-inference-engineering/sources/park-2024-comprehensive-survey-compression-algorithms-language.pdf",
+ "bib": {
+  "title": "A Comprehensive Survey of Compression Algorithms for Language Models",
+  "authors": [
+   "Seungcheol Park",
+   "Jaehyeon Choi",
+   "Sojin Lee",
+   "U Kang"
+  ],
+  "first_author": "Park",
+  "year": 2024,
+  "venue": "preprint",
+  "arxiv": "2401.15347",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 144471,
+  "chars_total": 144471,
+  "engine": "pymupdf",
+  "skipped": "Reference list (from about char 105309) skimmed for lineage only."
+ },
+ "type": "survey",
+ "question": "How can language models be compressed without sacrificing accuracy, and what are the trends, fundamentals and open problems across compression algorithm families (including low-cost ones usable on LLMs)?",
+ "hypothesis": null,
+ "contributions": [
+  "Overview: summarise the trend of compression algorithms for language models, covering both high-cost and low-cost algorithms.",
+  "Analysis: select three representative algorithms each from pruning, quantization and other compression, and elaborate their details.",
+  "Discussion: discuss compression algorithms and introduce promising future research topics."
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "Structured pruning (ZipLM) reaches up to 15x BERT inference speedup with small accuracy loss; pruning gives the highest acceleration among compression families.",
+   "kind": "reported",
+   "source": "ZipLM (Kurtic et al.), ref [77]",
+   "metric": "speedup",
+   "value": "15",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BERT-base, MNLI/QQP/SQuAD1.1, high-cost structured pruning (neurons, heads, sublayers) on target hardware",
+   "quote": "up to 15 times with a small accuracy degradation",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.1, Table 2"
+  },
+  {
+   "claim": "Low-cost pruning is far cheaper than high-cost: Kprune prunes BERT in 10 minutes on MNLI versus up to 40 hours for high-cost methods.",
+   "kind": "reported",
+   "source": "Kprune [112] vs DynaBERT [56]",
+   "metric": "pruning time",
+   "value": "10",
+   "unit": "minutes",
+   "baseline_value": "40 hours",
+   "n": null,
+   "setup": "BERT on MNLI; high-cost ~400K training examples vs low-cost ~2K calibration examples (Fig 6)",
+   "quote": "prunes BERT within 10 minutes on the MNLI",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.1, Fig 6"
+  },
+  {
+   "claim": "SparseGPT prunes a 175B-parameter LLM in about three hours on one A100 GPU.",
+   "kind": "reported",
+   "source": "SparseGPT [40]",
+   "metric": "pruning time",
+   "value": "3",
+   "unit": "hours",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Unstructured / 2:4 one-shot pruning with calibration data",
+   "quote": "SparseGPT achieves remarkable efficiency that prunes 175B",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.4"
+  },
+  {
+   "claim": "SparseGPT 2:4 on OPT-175B: perplexity 8.35 to 8.74 at 50% compression, 1.66x speedup.",
+   "kind": "reported",
+   "source": null,
+   "metric": "speedup",
+   "value": "1.66",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "WikiText2 perplexity, OPT-175B, 2:4 sparsity, low-cost; speedup is geometric mean over individual affine transformations",
+   "quote": null,
+   "table": "Table 3, row SparseGPT [40] OPT-175B 2:4, columns Perplexity PLM/Comp. and Speedup",
+   "note": "Perplexity 8.35 (PLM) vs 8.74 (compressed).",
+   "where": "Table 3"
+  },
+  {
+   "claim": "At 70% sparsity on LLaMA-7B (WikiText2), Wanda reaches perplexity 85.77 against 26.30 for SparseGPT, showing the weakness of weight-update-free pruning at high sparsity.",
+   "kind": "reported",
+   "source": "OWL [129]",
+   "metric": "perplexity",
+   "value": "85.77",
+   "unit": "ppl",
+   "baseline_value": "26.30",
+   "n": null,
+   "setup": "LLaMA-7B, unstructured, low-cost; results as reported in OWL; dense perplexity 5.68",
+   "quote": null,
+   "table": "Table 3, rows Wanda and SparseGPT, LLaMA-7B, column Perplexity Comp.",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Structured pruning of LLMs is much worse than unstructured: LLM-Pruner at 20% compression of LLaMA-7B rises from perplexity 12.62 to 17.37 for only 1.18x speedup.",
+   "kind": "reported",
+   "source": null,
+   "metric": "perplexity",
+   "value": "17.37",
+   "unit": "ppl",
+   "baseline_value": "12.62",
+   "n": null,
+   "setup": "WikiText2, LLaMA-7B, N+H structured, low-cost, LoRA error compensation",
+   "quote": null,
+   "table": "Table 3, row LLM-Pruner [105], columns Perplexity PLM/Comp. and Speedup",
+   "note": "Speedup 1.18x.",
+   "where": "Table 3"
+  },
+  {
+   "claim": "Kprune (iterative low-cost structured pruning, BERT-base, 75% FLOPs compression) loses 6.05 points average accuracy for 2.08x speedup, whereas Kwon et al. one-shot loses 29.88 points.",
+   "kind": "reported",
+   "source": "Kprune [112]",
+   "metric": "avg accuracy/F1 difference",
+   "value": "-6.05",
+   "unit": "%p",
+   "baseline_value": "-29.88",
+   "n": null,
+   "setup": "BERT-base on MNLI, QQP, SQuAD1.1; FLOPs-based rate; speedup is maximum when accuracy drop < 3%p",
+   "quote": null,
+   "table": "Table 2, rows Kprune [112] and Kwon et al. [81], column Avg.",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Quantization gives up to 3.9x faster inference on massive LLMs (AWQ).",
+   "kind": "reported",
+   "source": "AWQ [95]",
+   "metric": "speedup",
+   "value": "3.9",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LLaMA2-70B weight-only 4-bit-class quantization, low-cost",
+   "quote": "showing a maximum acceleration of 3.9 times faster inference speed than uncompressed models",
+   "table": null,
+   "note": "Table 5 prints 3.90x; perplexity 3.32 (PLM) to 3.74 (compressed), compression rate 81.3%.",
+   "where": "Sec 6.1, Table 5 row AWQ"
+  },
+  {
+   "claim": "OPTQ/GPTQ on OPT-175B: 81.3% compression, perplexity 8.34 to 8.68, 3.20x speedup.",
+   "kind": "reported",
+   "source": "OPTQ [42]",
+   "metric": "speedup",
+   "value": "3.20",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "WikiText2, OPT-175B, uniform weight-only PTQ, low-cost",
+   "quote": null,
+   "table": "Table 5, row OPTQ [42], columns Perplexity PLM/Comp. and Speedup",
+   "note": null,
+   "where": "Table 5"
+  },
+  {
+   "claim": "RPTQ degrades when activations are quantized below 8 bits.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "LLM activation quantization, OPT-175B",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Sec 4.4, Sec 6.3"
+  },
+  {
+   "claim": "Memory overhead, not compute, dominates LLM inference time, so recent LLM quantization focuses on weight-only methods that cut weight-loading latency but need dequantization.",
+   "kind": "claim",
+   "source": "cites SqueezeLLM [71]",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "LLM inference, weight-only quantization",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Sec 4.3.2"
+  },
+  {
+   "claim": "Pruning decoder-only models is harder than encoder-only: structured pruning of GPT-2 degrades below 50% compression while BERT survives 75%.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Structured pruning, GPT-2 vs BERT",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Sec 3.2"
+  },
+  {
+   "claim": "About 40% of attention heads are prunable with negligible accuracy loss.",
+   "kind": "reported",
+   "source": "Michel et al. [107]",
+   "metric": "prunable attention heads",
+   "value": "40",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BERT-style MHA sublayers (Michel et al.)",
+   "quote": "approximately 40% of attention heads are prunable with negligible accuracy degradation",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.2"
+  },
+  {
+   "claim": "LoRA cuts fine-tuning memory for GPT-3 175B from 1.2TB to 350GB.",
+   "kind": "reported",
+   "source": "LoRA [60]",
+   "metric": "fine-tuning memory",
+   "value": "350",
+   "unit": "GB",
+   "baseline_value": "1.2TB",
+   "n": null,
+   "setup": "GPT-3 175B fine-tuning",
+   "quote": "1.2TB to 350GB for fine-tuning a GPT-3",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.5"
+  },
+  {
+   "claim": "Low-rank approximation reaches the highest parameter compression, up to 50 times, but only in high-cost scenarios.",
+   "kind": "reported",
+   "source": "FWSVD [59], Wang et al. [141]",
+   "metric": "compression",
+   "value": "50",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Encoder-only models, high-cost retraining",
+   "quote": "up to 50 times, in high-cost compression scenarios",
+   "table": null,
+   "note": null,
+   "where": "Sec 6.1"
+  },
+  {
+   "claim": "NAS-BERT needs three days on 32 P40 GPUs to search for BERT-base (110M params), so NAS does not extend to LLMs.",
+   "kind": "reported",
+   "source": "NAS-BERT [158]",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "NAS for BERT-base",
+   "quote": "NAS-BERT [158] requires three days with 32 P40 GPUs",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.4"
+  },
+  {
+   "claim": "Authors' two desired properties for low-cost compression: optimise the task objective directly instead of layer-wise reconstruction error, and compress gradually and iteratively.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Survey synthesis, Sec 6.2",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Sec 6.2"
+  }
+ ],
+ "limits": [
+  "A survey: no new experiments. All numbers in Tables 2-7 are collected from the cited papers, under differing models, calibration sets and hardware, so cross-row comparison is loose; speedups are not measured under a common setup.",
+  "Compression rate is memory reduction, or FLOPs reduction where memory is not reported (marked with a spade symbol); the two are not comparable.",
+  "Knowledge distillation and low-rank tables cover encoder-only (BERT-scale) models only, because decoder-only studies are lacking.",
+  "Coverage ends in early 2024 (arXiv v1, Jan 2024). It does not cover KV-cache compression, speculative decoding, FP8/FP4 formats or serving-level adaptivity; later quantization and sparsity work has dated the LLM tables.",
+  "Authors concede low-cost algorithms suffer severe accuracy degradation and structured LLM pruning has much room for improvement."
+ ],
+ "practices": [
+  "Use low-cost (calibration-data, post-training) compression for LLMs; use high-cost retraining only for small models like BERT (Sec 2.3, 3.3, 4.3).",
+  "Prefer weight-only quantization for LLMs because memory loading dominates inference time (Sec 4.3.2).",
+  "Use scale (symmetric) quantization when compute cost matters and affine quantization for skewed distributions (Sec 4.2.1).",
+  "Calibrate clipping range with percentile or KL-divergence rather than min/max when outliers exist (Sec 4.2.1).",
+  "Treat activation outliers specially (keep related weights in full precision as OWQ, or cluster and reorder as RPTQ) (Sec 4.4).",
+  "For structured pruning, prune large granularities (sublayers, layers) to actually gain GPU speedup; head or neuron pruning rarely removes whole matmuls (Sec 3.2).",
+  "Use semi-structured 2:4 sparsity when speedup on NVIDIA A100 is needed (Sec 3.2, 3.4).",
+  "Compress iteratively with mild steps plus error compensation rather than one shot (Sec 6.2).",
+  "Optimise a task-specific objective, not only sublayer reconstruction error (Sec 6.2).",
+  "Use LoRA-style PEFT to compensate compression error cheaply (Sec 5.5, 6.1).",
+  "Combine compression families (e.g. pruning plus quantization) for higher rates; few works unify three or more (Sec 6.1)."
+ ],
+ "terms": [
+  {
+   "term": "PLM compression problem",
+   "definition": "Given an accurate large PLM T and dataset D, generate a tiny but still accurate compressed model S that meets cost constraints in FLOPs, memory or latency.",
+   "where": "Sec 2.1"
+  },
+  {
+   "term": "high-cost compression",
+   "definition": "Algorithms that require extensive retraining processes on large datasets; more accurate but intractable for LLMs.",
+   "where": "Sec 2.3"
+  },
+  {
+   "term": "low-cost compression",
+   "definition": "Algorithms that perform only a simple weight-tuning process on small calibration data; applicable to LLMs but with severe accuracy degradation.",
+   "where": "Sec 2.3"
+  },
+  {
+   "term": "mask search problem / error compensation problem",
+   "definition": "The two pruning sub-problems: choosing components to prune, and reducing the pruning error.",
+   "where": "Sec 3.1"
+  },
+  {
+   "term": "2:4 sparsity",
+   "definition": "Semi-structured pruning pattern with 2 zeros in 4 consecutive elements, accelerated on NVIDIA A100.",
+   "where": "Sec 3.2"
+  },
+  {
+   "term": "round-to-nearest (RTN)",
+   "definition": "Mapping continuous real values to their nearest integers; simple but often severely degrades performance.",
+   "where": "Sec 4.1"
+  },
+  {
+   "term": "post-training quantization (PTQ)",
+   "definition": "Training-free quantization of a pretrained model without retraining or fine-tuning after quantization.",
+   "where": "Sec 4.3.2"
+  },
+  {
+   "term": "quantization-aware training (QAT)",
+   "definition": "Apply quantization to a pretrained model, then retrain or fine-tune to recover; uses STE for the non-differentiable rounding.",
+   "where": "Sec 4.3.1"
+  },
+  {
+   "term": "weight-only quantization",
+   "definition": "Quantize only weights while keeping activations full precision; reduces memory loading but needs dequantization.",
+   "where": "Sec 4.3.2"
+  },
+  {
+   "term": "dynamic vs static quantization",
+   "definition": "Dynamic computes activation clipping ranges at inference (better accuracy, slower); static precomputes them from calibration data.",
+   "where": "Sec 4.3.2"
+  },
+  {
+   "term": "extreme quantization",
+   "definition": "Techniques reducing bit precision under 4-bit.",
+   "where": "Sec 4.2.2"
+  },
+  {
+   "term": "layer matching (1:1, many:1, many:many)",
+   "definition": "How sublayers of teacher and student are matched for distillation.",
+   "where": "Sec 5.1.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "SparseGPT (Frantar and Alistarh)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "surveys",
+   "note": "Representative pruning algorithm, Sec 3.4",
+   "quote": null
+  },
+  {
+   "work": "OPTQ / GPTQ (Frantar et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "surveys",
+   "note": "Representative quantization algorithm, Sec 4.4",
+   "quote": null
+  },
+  {
+   "work": "LoRA (Hu et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "surveys",
+   "note": "Representative low-rank adaptation algorithm, Sec 5.5",
+   "quote": null
+  },
+  {
+   "work": "Optimal Brain Surgeon (Hassibi and Stork)",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Basis of OBS error compensation used by SparseGPT, OPTQ, ZipLM",
+   "quote": null
+  },
+  {
+   "work": "AWQ, SmoothQuant, SqueezeLLM, SpQR, OWQ, RPTQ, ZeroQuant, LLM.int8()",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "surveys",
+   "note": "Low-cost LLM quantization methods in Table 5",
+   "quote": null
+  },
+  {
+   "work": "Wanda, OWL, LLM-Pruner, Kprune, ZipLM, CoFi",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "surveys",
+   "note": "Pruning methods in Tables 2-3",
+   "quote": null
+  },
+  {
+   "work": "MQA (Shazeer) and GQA (Ainslie et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "surveys",
+   "note": "Matrix sharing of K/V across heads; GQA adopted in LLaMA2-70B",
+   "quote": null
+  },
+  {
+   "work": "Existing compression surveys [24, 32, 44, 45, 49, 55, 72]",
+   "year": null,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Authors say these exclude low-cost algorithms applicable to LLMs",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 6",
+   "caption": "Comparison of high-cost and low-cost pruning algorithms. Dataset sizes and running times are based on pruning algorithms [56, 112] for BERT on MNLI.",
+   "page": 11,
+   "why": "Shows ~400K training examples and ~40 hours versus ~2K calibration examples and ~10 minutes."
+  },
+  {
+   "figure": "Fig 9",
+   "caption": "Comparison of high-cost and low-cost quantization.",
+   "page": 19,
+   "why": "Same cost contrast for quantization: retrain vs calibrate."
+  },
+  {
+   "figure": "Table 3",
+   "caption": "Comparison of pruning algorithms for decoder-only Transformers on WikiText2.",
+   "page": 10,
+   "why": "LLM pruning perplexity and speedup in one place."
+  },
+  {
+   "figure": "Table 5",
+   "caption": "Comparison of quantization algorithms for decoder-only Transformers on WikiText2.",
+   "page": 16,
+   "why": "LLM quantization perplexity, compression rate and speedup in one place."
+  },
+  {
+   "figure": "Fig 8",
+   "caption": "Different quantization schemes: RTN uniform, low-bit FP, log-scaled, binary-coded, codebook-based.",
+   "page": 17,
+   "why": "Visual taxonomy of non-uniform quantization."
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 13, Sec 4.2.1",
+   "snippet": "Q_U(W) = floor(W/s + 1/2) + z, s = (beta - alpha)/(2^b - 1)",
+   "verbatim": false
+  },
+  {
+   "where": "Eq 20, Sec 5.5",
+   "snippet": "h = W x = W0 x + dW x ~ W0 x + B A x",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text extraction garbles equations and tables into one token per line; table cells were read by position. Equation snippets in `code` are rewritten in plain text, not verbatim.",
+  "No embedded instructions found.",
+  "Survey reports other papers' numbers; no method block (null) per survey type."
+ ]
+}

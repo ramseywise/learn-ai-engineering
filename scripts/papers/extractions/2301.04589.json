@@ -1,0 +1,336 @@
+{
+ "schema": 1,
+ "key": "2301.04589",
+ "pdf": "generative-ai/03-agentic-foundations/sources/schuurmans-2023-memory-augmented-large-language-models.pdf",
+ "bib": {
+  "title": "Memory Augmented Large Language Models are Computationally Universal",
+  "authors": [
+   "Dale Schuurmans"
+  ],
+  "first_author": "Schuurmans",
+  "year": 2023,
+  "venue": "preprint",
+  "arxiv": "2301.04589",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 45477,
+  "chars_total": 45477,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "theory",
+ "question": "Does augmenting a frozen large language model with an external read-write memory and a feedback loop fundamentally expand the computations it can perform, i.e. make it computationally universal?",
+ "hypothesis": "An existing LLM with an unbounded associative read-write memory and a regex-based stored-instruction loop can simulate any algorithm without weight changes.",
+ "contributions": [
+  "Define a stored instruction computer in which the LLM is the CPU and an external associative memory (dictionary) is the RAM, with only finite-state (regex) pre/post-processing.",
+  "Give a prompt program that simulates the universal Turing machine U15,2.",
+  "Verify by brute force that Flan-U-PaLM 540B at temperature 0 returns the correct output for all 29 (state, symbol) prompts, which establishes universality of the frozen model plus memory."
+ ],
+ "method": {
+  "summary": "A Python loop reads the next prompt from MEMORY['op'], splices in memory values (@[x], nested to depth 2), calls the LLM, splices %[x] in the output, applies variable assignments and integer += / -= updates to memory by regex, and repeats until op is 'halt'. A prompt program (a boot prompt plus 15 instruction prompts A..O) encodes the transition table of U15,2; correctness reduces to the LLM returning the right output on 29 finite prompts, checked by one greedy call each.",
+  "task": "Simulation of a universal Turing machine (computational universality proof by construction and brute-force verification)",
+  "trains": false,
+  "datasets": [],
+  "models": [
+   {
+    "name": "Flan-U-PaLM 540B",
+    "role": "evaluated",
+    "params": "540B",
+    "architecture": null,
+    "init_from": "inferred: U-PaLM with instruction fine-tuning (Chung et al., 2022)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "bounded length, such as 4096 tokens (stated for LLMs in general)",
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "greedy",
+   "temperature": "0",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "one call per case; 29 cases (state, symbol pairs, state F input-independent); no repeated runs or seeds reported",
+   "prompting": "Zero-shot-style fixed prompt programs: a boot prompt of worked if-then examples spliced in front of each of 15 state prompts A..O; only if-then conditionals (if-then-else did not work reliably)",
+   "retrieval": "Associative memory lookup by exact key (dictionary); prompt retrieved from MEMORY['op']",
+   "parameters": {
+    "nesting_depth_bound": "2",
+    "memory": "dictionary mapping string keys to string or integer values",
+    "blank_symbol": "'0'",
+    "halt": "op = 'halt'",
+    "TM": "U15,2: 15 states, 2 symbols, halting pair (J,1)",
+    "verification_cases": "29"
+   },
+   "other": {
+    "call_llm_server": "Interface to the LLM server not described; no API, prompt formatting or stop-sequence details given"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Correct output per (state, symbol) prompt",
+     "definition": "The LLM result string, after the final line, specifies the same symbol to write, head move and next instruction as Table 1",
+     "unit": "29 cases pass/fail",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [],
+   "protocol": "Brute-force enumeration of all 29 cases, single greedy call each, outputs printed in the paper; inductive proof that each compute cycle equals a TM cycle if the 29 cases hold."
+  },
+  "availability": {
+   "code": "Python snippets printed in the paper; no repository",
+   "weights": "Flan-U-PaLM 540B not stated as released",
+   "data": null
+  },
+  "prompts": [
+   {
+    "purpose": "Instruction prompt for TM state A (others B..O follow the same pattern with a boot prefix)",
+    "text": "@[boot]result = \" op=\"%[B]\" %[i]=\"0\" i+=1 \"\nif @[@[i]]==1 then result = \" op=\"%[A]\" %[i]=\"1\" i+=1 \"\n$result\n",
+    "where": "Section 4, p.8"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "inference.temperature",
+    "quote": "the decoding temperature for the language model is set to zero (pure greedy decoding)",
+    "where": "Section 5"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Flan-U-PaLM 540B with associative memory exactly simulates U15,2: all 29 (state, symbol) prompts return the correct result string.",
+   "kind": "measured",
+   "source": null,
+   "metric": "verification cases",
+   "value": 29,
+   "unit": "cases",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Flan-U-PaLM 540B with an external associative memory (dictionary) driven by a Python regex loop, simulating universal Turing machine U15,2; temperature 0; one call per case",
+   "quote": "There are 29 cases.",
+   "table": null,
+   "note": null,
+   "where": "Section 5, p.12"
+  },
+  {
+   "claim": "The model is run deterministically with temperature zero (greedy decoding) so computation is deterministic.",
+   "kind": "measured",
+   "source": null,
+   "metric": "decoding temperature",
+   "value": 0,
+   "unit": "temperature",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Flan-U-PaLM 540B with an external associative memory (dictionary) driven by a Python regex loop, simulating universal Turing machine U15,2",
+   "quote": "is set to zero (pure greedy decoding).",
+   "table": null,
+   "note": null,
+   "where": "Section 5, p.12"
+  },
+  {
+   "claim": "Without any memory, an LLM conditioning on bounded-length strings is equivalent to a finite automaton.",
+   "kind": "claim",
+   "source": null,
+   "metric": "context bound example",
+   "value": 4096,
+   "unit": "tokens",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Any deterministic LLM with bounded input, e.g. 4096 tokens",
+   "quote": "can only condition on an input string of bounded length, such as 4096",
+   "table": null,
+   "note": null,
+   "where": "Section 1, p.1"
+  },
+  {
+   "claim": "U15,2 is a universal Turing machine with only 15 states and 2 tape symbols, Pareto optimal among known small UTMs.",
+   "kind": "reported",
+   "source": null,
+   "metric": null,
+   "value": 15,
+   "unit": "states",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Neary and Woods 2009 machine used as target",
+   "quote": "15 states and 2 tape symbols [Neary and Woods, 2009].",
+   "table": null,
+   "note": "Also 2 symbols; value is the state count.",
+   "where": "Section 3, p.4"
+  },
+  {
+   "claim": "Nested @ substitution is limited to depth 2 so pre/post-processing stays finite-state.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 2,
+   "unit": "nesting depth",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Pre-processing of prompts",
+   "quote": "(depth bound 2)",
+   "table": null,
+   "note": null,
+   "where": "Section 2.2, p.5"
+  },
+  {
+   "claim": "The construction needs no change to model weights; only prompts and regex parsing of outputs.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Frozen Flan-U-PaLM 540B",
+   "quote": "language model weights",
+   "table": null,
+   "note": null,
+   "where": "Abstract"
+  },
+  {
+   "claim": "LLM behaviour was brittle: success was not achieved with every large language model tried, and prompt engineering was needed; compact terse prompts were essential.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Author's experience, no counts given",
+   "quote": "Success was not achieved with every large language model",
+   "table": null,
+   "note": null,
+   "where": "Section 6, p.20"
+  },
+  {
+   "claim": "The hardest part was conditionals; if-then-else could not be made reliable, so only if-then is used, which blocks simulating smaller UTMs such as U6,4 (3 conditionals per state).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Author's experience, no counts given",
+   "quote": "since this requires a series of 3 conditionals",
+   "table": null,
+   "note": null,
+   "where": "Section 6, p.20"
+  }
+ ],
+ "limits": [
+  "Verification is one greedy call per case on one model (Flan-U-PaLM 540B); no repeated runs, no failure rates, no other models reported, and the weights are not stated to be public.",
+  "Universality assumes an unbounded memory and exact reliability of the 29 prompt-result pairs; it says nothing about how well LLM agents use memory in practice.",
+  "Author concedes brittleness: prompts had to be terse, if-then-else conditionals failed, other LLMs failed, and U6,4 could not be done without phantom states.",
+  "Regex pre/post-processing is rudimentary, and nested substitution beyond depth 2 would exceed finite-state power.",
+  "Results tied to a 2022-era model; the author expects better models to mitigate the brittleness."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "stored instruction computer",
+   "definition": "A computer where the language model plays the role of a CPU and the RAM is supplied by an external associative memory; the next prompt is fetched from memory, the output parsed back into memory.",
+   "where": "Section 2"
+  },
+  {
+   "term": "prompt program",
+   "definition": "A finite set of pre designed strings stored in memory that provide input prompts to the language model as part of the main compute cycle.",
+   "where": "Section 4"
+  },
+  {
+   "term": "instruction register",
+   "definition": "MEMORY['op'], the memory location whose string is passed as the next prompt; assigning a different string to it branches.",
+   "where": "Section 2.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Scaling instruction-finetuned language models (Flan-U-PaLM)",
+   "year": 2022,
+   "arxiv": "2210.11416",
+   "relation": "evaluates",
+   "note": "The 540B model whose behaviour is verified.",
+   "quote": null
+  },
+  {
+   "work": "Least-to-most prompting",
+   "year": 2022,
+   "arxiv": "2205.10625",
+   "relation": "related",
+   "note": "Example of chaining LLM calls via fed-back outputs.",
+   "quote": null
+  },
+  {
+   "work": "Language model cascades",
+   "year": 2022,
+   "arxiv": "2207.10342",
+   "relation": "related",
+   "note": "Strategies for processing outputs into later calls.",
+   "quote": null
+  },
+  {
+   "work": "Neary and Woods, Four small universal Turing machines",
+   "year": 2009,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Source of U15,2 and its transition table.",
+   "quote": null
+  },
+  {
+   "work": "von Neumann, First draft of a report on the EDVAC",
+   "year": 1945,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Stored instruction computer architecture.",
+   "quote": null
+  },
+  {
+   "work": "Chain of thought prompting",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Wei et al. 2022b, background on prompting.",
+   "quote": null
+  },
+  {
+   "work": "Perez et al. 2019; Siegelmann and Sontag; Weiss et al. 2018; Bhattamishra et al. 2020; Wei et al. 2022a",
+   "year": null,
+   "arxiv": null,
+   "relation": "contradicts",
+   "note": "Prior universality results need modified weights/high precision; this uses frozen weights plus external memory.",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Table 1",
+   "caption": "Transition table for the universal Turing machine U15,2. Rows are indexed by the read symbol, columns by the state; each entry (write symbol, move, next state).",
+   "page": 6,
+   "why": "Defines the machine whose 29 rules become the 15 instruction prompts."
+  }
+ ],
+ "code": [
+  {
+   "where": "Section 2.3, main loop",
+   "snippet": "def main():\n    global MEMORY\n    while True:\n        op = MEMORY['op']\n        if op == 'halt':\n            return None\n        prompt = substitute_nested(op, '@')\n        result = call_llm_server(prompt)\n        result = substitute(result, '%')\n        suffix = assignments(result)\n        updates(suffix)",
+   "verbatim": true
+  },
+  {
+   "where": "Section 2.1, assignment regex",
+   "snippet": "regex = '(?s)(?:((?:\\w|\\-)+)\\s*=\\s*(?:\\\"((?:.*\\n)|(?:[^\\\"]*))\\\"))(.*)'",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Text extraction OK; Table 1 is flattened column-wise in the text cache.",
+  "No embedded instructions found.",
+  "Result for weights-unchanged claim quoted only as fragment because the abstract text contains ligature characters."
+ ]
+}

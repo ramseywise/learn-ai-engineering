@@ -20,6 +20,7 @@ sources:
   - https://arxiv.org/abs/2510.16932
   - https://arxiv.org/abs/2407.14333
   - https://arxiv.org/abs/2609.26261
+  - https://arxiv.org/abs/2408.04560
 confidence: medium
 cleaned: 2026-11-01
 ---
@@ -132,6 +133,8 @@ Compared with few-shot it's token-efficient, avoids anchoring on specific exampl
 *Each round, the judge's feedback goes to a meta-prompt that rewrites the system prompt, and the best version is logged. DAIR, Reasoning LLMs Guide.*
 
 Generated prompts are a **first draft, not a result** — they still have to win on your eval.
+
+**Conversational Prompt Engineering** replaces the labelled set with a chat. Ein-Dor et al., [arXiv:2408.04560](https://arxiv.org/abs/2408.04560) (IBM Research, 2024-08, preprint), use a Llama-3-70B chat that asks about the task, needs only three or more unlabelled examples and no seed prompt, drafts an instruction, shows outputs on the user's examples, takes feedback, and ends with a few-shot prompt whose examples are the outputs the user approved. In a study of 12 sessions on summarization (five small datasets, 112 test examples), blinded raters ranked the zero-shot and few-shot CPE prompts best in 53% and 47% of cases, a difference that was not significant, so the authors drop the few-shot examples as unnecessary. Sessions took about 25 minutes and 32 turns. It was not compared with APE or OPRO and no labelled metric was used, with one rater per session and prompt-savvy researchers as users, so it is a way to get a first draft when you have no eval set yet, not a replacement for the loop above.
 
 ---
 

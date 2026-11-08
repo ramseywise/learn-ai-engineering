@@ -1,0 +1,480 @@
+{
+ "schema": 1,
+ "key": "2404.19705",
+ "pdf": "generative-ai/02-rag-retrieval/sources/labruna-2024-when-retrieve.pdf",
+ "bib": {
+  "title": "When to Retrieve: Teaching LLMs to Utilize Information Retrieval Effectively",
+  "authors": [
+   "Tiziano Labruna",
+   "Jon Ander Campos",
+   "Gorka Azkune"
+  ],
+  "first_author": "Labruna",
+  "year": 2024,
+  "venue": "preprint",
+  "arxiv": "2404.19705",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 49567,
+  "chars_total": 49567,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can an LLM learn to decide by itself when a question needs an external retriever and when its parametric memory suffices?",
+ "hypothesis": "Fine-tuning an LLM on data labelled by where its zero-shot answers fail teaches it to emit a special RET token exactly when it needs extra context.",
+ "contributions": [
+  "ADAPT-LLM outperforms always-retrieve and never-retrieve",
+  "Comparable to popularity-threshold strategy without using popularity scores",
+  "Model retrieves effectively when it asks and answers accurately when it does not",
+  "IR system quality is the main bottleneck (gold vs retrieved passages)"
+ ],
+ "method": {
+  "summary": "Llama-2 7B is zero-shot tested on a QA training set; questions it gets wrong become two training instances (parametric prompt with target <RET>, and context prompt with gold passage and answer), correct ones keep the gold answer. The model is LoRA-fine-tuned on this and at inference emits <RET> to trigger Contriever top-1 retrieval and a second prompt.",
+  "task": "open-domain QA with adaptive retrieval",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "NQ",
+    "role": "train",
+    "size": "58,880 questions",
+    "split": "train; dev split used for gold-vs-retrieved check",
+    "source": "Natural Questions (Kwiatkowski et al. 2019)",
+    "preprocessing": "zero-shot Llama-2 labels; 74.72% of questions marked RET"
+   },
+   {
+    "name": "SQuAD",
+    "role": "train",
+    "size": "87,599 questions",
+    "split": "train; dev split used for gold-vs-retrieved check",
+    "source": "Rajpurkar et al. 2016",
+    "preprocessing": "87.49% of questions marked RET"
+   },
+   {
+    "name": "PopQA",
+    "role": "eval",
+    "size": "14,282 questions",
+    "split": "full test set for Table 1 and 3; 25% test split (75% dev used for threshold) for Table 5",
+    "source": "Mallen et al. 2023",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Llama-2 7B",
+    "role": "base",
+    "params": "7B",
+    "architecture": "decoder-only transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "variant": "text says 'instruction-based' Llama-2 7B; chat vs base not stated (Table 5 caption says base models)"
+    }
+   },
+   {
+    "name": "Contriever",
+    "role": "retriever",
+    "params": null,
+    "architecture": "dense encoder",
+    "init_from": "unsupervised pretraining, fine-tuned on MS MARCO",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "passages_retrieved": "top-1"
+    }
+   }
+  ],
+  "training": {
+   "objective": "supervised instruction fine-tuning (answer or <RET>)",
+   "optimizer": null,
+   "lr": "3e-4 fixed",
+   "lr_schedule": "fixed",
+   "warmup": null,
+   "batch_size": "128",
+   "steps": null,
+   "epochs": "3",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": "0.05 (LoRA)",
+   "regularisation": "LoRA r=8, alpha=16, dropout 0.05",
+   "hardware": "1x NVIDIA A40",
+   "compute": null,
+   "wall_clock": "approximately 8 hours average",
+   "seeds": null,
+   "other": {
+    "config_source": "Alpaca-Lora",
+    "model_selection": "none, last checkpoint after 3 epochs"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single run; seeds not stated",
+   "prompting": "two prompts: parametric_prompt and context_prompt (see prompts); zero-shot",
+   "retrieval": "Contriever, top-1 passage, only when model emits <RET>; index/corpus not stated",
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Exact Match Accuracy",
+     "definition": "percentage of generated outputs that exactly match one of the possible answers annotated for the question",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "IR usage",
+     "definition": "percentage of questions for which retrieval is used",
+     "unit": "%",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "NR-LLM (never retrieve, fine-tuned)",
+    "AR-LLM (always retrieve, Contriever top-1, fine-tuned)",
+    "Popularity-score threshold (Mallen et al.) replicated with Llama-2 7B, threshold 707,000"
+   ],
+   "protocol": "Single reported numbers, no seeds or significance tests; same hyperparameters for all configurations."
+  },
+  "availability": {
+   "code": "https://github.com/tLabruna/Adapt-LLM",
+   "weights": null,
+   "data": "stated 'All resources are publicly available' at the same repo"
+  },
+  "prompts": [
+   {
+    "purpose": "parametric prompt (answer or request context)",
+    "text": "Answer the question Q. If you need help answer <RET> to get the context. Q: {...}",
+    "where": "Sec 3.1"
+   },
+   {
+    "purpose": "context prompt",
+    "text": "Answer the question Q given the context C. Q: {...}, C: {...}",
+    "where": "Sec 3.1"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training.lr",
+    "quote": "a batch size of 128, three epochs, and a fixed learning rate of 3e-4",
+    "where": "Sec 4.4"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "ADAPT-LLM trained on SQuAD beats always-retrieve on PopQA",
+   "kind": "measured",
+   "source": null,
+   "metric": "exact match accuracy",
+   "value": "38.15",
+   "unit": "%",
+   "baseline_value": "36.59",
+   "n": null,
+   "setup": "Llama-2 7B LoRA-fine-tuned, evaluated on PopQA test (14,282 questions), Contriever top-1 passage, exact match",
+   "note": null,
+   "where": "Table 1, p4",
+   "table": "Table 1, row SQuAD ADAPT-LLM (ours), column Accuracy"
+  },
+  {
+   "claim": "ADAPT-LLM trained on NQ beats always-retrieve on PopQA",
+   "kind": "measured",
+   "source": null,
+   "metric": "exact match accuracy",
+   "value": "36.77",
+   "unit": "%",
+   "baseline_value": "35.86",
+   "n": null,
+   "setup": "Llama-2 7B LoRA-fine-tuned, evaluated on PopQA test (14,282 questions), Contriever top-1 passage, exact match",
+   "note": null,
+   "where": "Table 1, p4",
+   "table": "Table 1, row NQ ADAPT-LLM (ours), column Accuracy"
+  },
+  {
+   "claim": "Never-retrieve is about 14 points below the other configurations",
+   "kind": "measured",
+   "source": null,
+   "metric": "exact match accuracy",
+   "value": "21.43",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Llama-2 7B LoRA-fine-tuned, evaluated on PopQA test (14,282 questions), Contriever top-1 passage, exact match, trained on NQ",
+   "note": "SQuAD-trained never-retrieve: 21.22%",
+   "where": "Table 1, p4",
+   "table": "Table 1, row NQ NEVER RETRIEVE, column Accuracy"
+  },
+  {
+   "claim": "ADAPT-LLM requests context (emits RET) for most PopQA questions",
+   "kind": "measured",
+   "source": null,
+   "metric": "RET usage",
+   "value": "82.26",
+   "unit": "% of questions",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Llama-2 7B LoRA-fine-tuned, evaluated on PopQA test (14,282 questions), Contriever top-1 passage, exact match, trained on NQ",
+   "note": "SQuAD-trained: 83.93%",
+   "where": "Table 3, p5",
+   "table": "Table 3, row NQ, column RET Usage"
+  },
+  {
+   "claim": "On RET questions, ADAPT-LLM with context far outperforms the never-retrieve model without context (NQ-trained)",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "33.04",
+   "unit": "%",
+   "baseline_value": "14.65",
+   "n": null,
+   "setup": "Llama-2 7B LoRA-fine-tuned, evaluated on PopQA test (14,282 questions), Contriever top-1 passage, exact match; NR-LLM without context on the same questions",
+   "note": "SQuAD-trained: 33.40% vs 9.94%",
+   "where": "Table 3, p5",
+   "table": "Table 3, row NQ, column RET Acc. w/ context"
+  },
+  {
+   "claim": "On non-RET questions, ADAPT-LLM answers from parametric memory with high accuracy (NQ-trained)",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "62.36",
+   "unit": "%",
+   "baseline_value": "55.72",
+   "n": null,
+   "setup": "Llama-2 7B LoRA-fine-tuned, evaluated on PopQA test (14,282 questions), Contriever top-1 passage, exact match; no context",
+   "note": "Baseline is the same questions with retrieved context. SQuAD-trained: 62.92% vs 57.73%. Text: 'accuracies above 62%' and 'decreases in accuracy of up to 7 absolute points'",
+   "where": "Table 3, p5",
+   "table": "Table 3, row NQ, column No RET Acc. w/o context"
+  },
+  {
+   "claim": "Top-1 Contriever passage vs gold passage on SQuAD dev: large gap, retrieval is the bottleneck",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "22.49",
+   "unit": "%",
+   "baseline_value": "89.42",
+   "n": null,
+   "setup": "ADAPT-LLM on SQuAD dev, best passage retrieved by Contriever",
+   "note": "Printed '22.49' without a % sign in Table 4; text says approximately 67 points gap",
+   "where": "Table 4, p6",
+   "table": "Table 4, row Contriever, column SQuAD Dev"
+  },
+  {
+   "claim": "Top-1 Contriever vs gold passage on NQ dev",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "27.04",
+   "unit": "%",
+   "baseline_value": "69.76",
+   "n": null,
+   "setup": "ADAPT-LLM on NQ dev, best passage retrieved by Contriever",
+   "note": "Gold 69.76%; text says approximately 42 points gap (computed 42.72)",
+   "where": "Table 4, p6",
+   "table": "Table 4, row Contriever, column NQ Dev"
+  },
+  {
+   "claim": "Replicated popularity-score threshold (707,000) on Llama-2 7B retrieves almost always",
+   "kind": "measured",
+   "source": null,
+   "metric": "IR usage",
+   "value": "99.86",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "PopQA 25% test split, popularity-score method with Llama-2 7B",
+   "note": null,
+   "where": "Table 5, p7",
+   "table": "Table 5, row POPULARITY SCORE, column IR usage"
+  },
+  {
+   "claim": "Popularity-score method accuracy is comparable to ADAPT-LLM despite retrieving for almost every question",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "36.81",
+   "unit": "%",
+   "baseline_value": "37.29",
+   "n": null,
+   "setup": "PopQA 25% test split",
+   "note": "Baseline value is ADAPT-LLM (SQuAD); ADAPT-LLM (NQ) is 35.30%, i.e. below the popularity method",
+   "where": "Table 5, p7",
+   "table": "Table 5, row POPULARITY SCORE, column Accuracy"
+  },
+  {
+   "claim": "ADAPT-LLM (SQuAD) reduces IR usage while matching or beating popularity-score method",
+   "kind": "measured",
+   "source": null,
+   "metric": "IR usage",
+   "value": "83.99",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "PopQA 25% test split, ADAPT-LLM trained on SQuAD",
+   "note": "NQ-trained: 87.22%. Related-work text also quotes 83.99% vs Toolformer 99.3% search use",
+   "where": "Table 5, p7; Related work p2",
+   "table": "Table 5, row ADAPT-LLM (SQUAD), column IR usage"
+  },
+  {
+   "claim": "Share of training questions marked RET after zero-shot filtering: NQ",
+   "kind": "measured",
+   "source": null,
+   "metric": "RET-marked share",
+   "value": "74.72",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Training-set construction with Llama-2 7B zero-shot on NQ",
+   "note": "SQuAD: 87.49%",
+   "where": "Sec 4.5",
+   "quote": "the 74.72% of the questions in NQ are marked with the ⟨RET⟩token"
+  },
+  {
+   "claim": "Toolformer uses search in 99.3% of QA cases (over-use)",
+   "kind": "reported",
+   "source": "Schick et al. 2024 (Toolformer)",
+   "metric": "tool use rate",
+   "value": "99.3",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Toolformer QA task",
+   "note": null,
+   "where": "Sec 2",
+   "quote": "for the QA task the model uses the search engine 99.3% of the cases"
+  }
+ ],
+ "limits": [
+  "Evaluated only on PopQA with one 7B model; no larger models or other test sets.",
+  "Retrieves a single top-1 Contriever passage; authors concede retrieval quality is the bottleneck and multiple passages would help.",
+  "No seeds, variance or significance tests; gains over always-retrieve are 0.9 to 1.6 points.",
+  "ADAPT-LLM(NQ) at 35.30% is below the popularity method (36.81%); 'comparable' claim only.",
+  "Retrieval decision is learned from a single zero-shot pass of the base model; calibration of RET not studied. RET issued for 82-87% of questions so IR savings are modest.",
+  "Why SQuAD transfers better than NQ is not explained (guessed to be scale).",
+  "Cost and latency of retrieval not measured."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "ADAPT-LLM",
+   "definition": "LLM fine-tuned to emit <RET> when it needs context and otherwise answer directly",
+   "where": "Sec 1, 3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "When Not to Trust Language Models (PopQA)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "popularity-threshold adaptive retrieval, replicated as baseline; PopQA test set",
+   "quote": null
+  },
+  {
+   "work": "Toolformer (Schick et al.)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "related",
+   "note": "self-taught tool use, over-uses search (99.3%)",
+   "quote": null
+  },
+  {
+   "work": "Erbacher et al. (Navigating uncertainty)",
+   "year": 2024,
+   "arxiv": "2401.01780",
+   "relation": "related",
+   "note": "contemporaneous; learns when to use external knowledge",
+   "quote": null
+  },
+  {
+   "work": "Contriever (Izacard et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "retriever",
+   "quote": null
+  },
+  {
+   "work": "Llama 2 (Touvron et al.)",
+   "year": 2023,
+   "arxiv": "2307.09288",
+   "relation": "uses-method",
+   "note": "base LLM",
+   "quote": null
+  },
+  {
+   "work": "Alpaca-Lora / Stanford Alpaca (Taori et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "fine-tuning hyperparameters",
+   "quote": null
+  },
+  {
+   "work": "Natural Questions",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "training",
+   "quote": null
+  },
+  {
+   "work": "SQuAD",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "training",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "The inference process of ADAPT-LLM step-by-step",
+   "page": 2,
+   "why": "Five-step flow: question, RET decision, direct answer or IR then second prompt; clearest picture of the loop"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Histograms of proportion of questions where ADAPT-LLM asks for extra context by popularity score interval",
+   "page": 6,
+   "why": "Shows learned RET rate falls with entity popularity without seeing popularity scores"
+  },
+  {
+   "figure": "Table 3",
+   "caption": "Usage of the RET token in ADAPT-LLM",
+   "page": 5,
+   "why": "Shows the decision is informative: context helps on RET questions, hurts on non-RET ones"
+  }
+ ],
+ "code": [
+  {
+   "where": "Algorithm 1, p3",
+   "snippet": "for q, gold_ans, pass in (Q, A, P): ans = LLM(q); if ans = gold_ans: add(parametric_prompt, q, gold_ans) else: add(parametric_prompt, q, \"<RET>\"); add(context_prompt, q, gold_ans, pass)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Table 4 prints 22.49 without a percent sign.",
+  "Table 5 caption says 'base models' while Sec 4.2 calls Llama-2 instruction-based.",
+  "No embedded instructions found."
+ ]
+}

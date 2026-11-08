@@ -1,0 +1,696 @@
+{
+ "schema": 1,
+ "key": "2411.09009",
+ "pdf": "ai-engineering/07-inference-engineering/sources/wijmans-2024-cut-your-losses-large-vocabulary.pdf",
+ "bib": {
+  "title": "Cut Your Losses in Large-Vocabulary Language Models",
+  "authors": [
+   "Erik Wijmans",
+   "Brody Huval",
+   "Alexander Hertzberg",
+   "Vladlen Koltun",
+   "Philipp Krähenbühl"
+  ],
+  "first_author": "Wijmans",
+  "year": 2025,
+  "venue": "ICLR 2025",
+  "arxiv": "2411.09009",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 65031,
+  "chars_total": 65031,
+  "engine": "pymupdf",
+  "skipped": "Reference list skimmed only; figure curve data not readable from text."
+ },
+ "type": "system",
+ "question": "How can the cross-entropy loss layer of large-vocabulary LLMs be computed without materializing the N x |V| logit matrix in GPU memory, without losing speed or convergence?",
+ "hypothesis": "Because softmax is extremely sparse, blocks of the gradient below bf16 precision can be skipped, so a fused kernel computing logits in SRAM gives negligible memory with no speed or convergence cost.",
+ "contributions": [
+  "Cut Cross-Entropy (CCE): loss decomposed into an indexed matmul plus a linear-log-sum-exp, computed blockwise in SRAM by custom Triton kernels",
+  "Gradient filtering of softmax blocks below 2^-12 and vocabulary sorting by average logit",
+  "Kahan-summation / unfiltered-C variants (CCE-Kahan-FullC) for pretraining",
+  "Benchmarks against Baseline, torch.compile, Torch Tune and Liger Kernels, plus fine-tuning and pretraining convergence checks"
+ ],
+ "method": {
+  "summary": "Rewrites cross-entropy as the correct-token logit (indexed matmul fused in one kernel) minus a log-sum-exp over the vocabulary computed blockwise with a spin-lock atomic log-add-exp; backward recomputes logits in SRAM and skips blocks whose softmax values are all below eps=2^-12, with vocabulary reordered by average logit to densify blocks. Implemented in Triton.",
+  "task": "memory-efficient cross-entropy loss and gradient for LLM training",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Alpaca",
+    "role": "both",
+    "size": null,
+    "split": null,
+    "source": "Taori et al., 2023",
+    "preprocessing": "inputs/labels for kernel benchmarks and fine-tuning; ignored tokens removable (Appendix B)"
+   },
+   {
+    "name": "Open WebText",
+    "role": "pretrain",
+    "size": "5% of the dataset for training",
+    "split": "held-out 0.25% for validation, non-overlapping",
+    "source": "Gokaslan et al., 2019",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Gemma 2 2B (Instruct)",
+    "role": "evaluated",
+    "params": "2B",
+    "architecture": "decoder-only transformer",
+    "init_from": "Instruct weights",
+    "tokenizer": null,
+    "vocab": "256,128 (256,000 in benchmark)",
+    "layers": null,
+    "hidden": "2304",
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Gemma 2 9B",
+    "role": "evaluated",
+    "params": "9B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": "256,000",
+    "layers": null,
+    "hidden": "3,584",
+    "heads": null,
+    "context": null,
+    "other": {
+     "scope": "kernel benchmark only"
+    }
+   },
+   {
+    "name": "Gemma 2 27B",
+    "role": "evaluated",
+    "params": "27B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": "256,000",
+    "layers": null,
+    "hidden": "4,608",
+    "heads": null,
+    "context": null,
+    "other": {
+     "scope": "kernel benchmark only"
+    }
+   },
+   {
+    "name": "Qwen 2.5 7B Instruct",
+    "role": "evaluated",
+    "params": "7B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": "152,064",
+    "layers": null,
+    "hidden": "3,584",
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Qwen 2.5 32B",
+    "role": "evaluated",
+    "params": "32B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": "152,064",
+    "layers": null,
+    "hidden": "5,120",
+    "heads": null,
+    "context": null,
+    "other": {
+     "scope": "kernel benchmark only"
+    }
+   },
+   {
+    "name": "Phi 3.5 Mini Instruct",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": "32,064",
+    "layers": null,
+    "hidden": "3,072",
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Mistral NeMo",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": "131,072",
+    "layers": null,
+    "hidden": "5,120",
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "next-token cross-entropy (fine-tuning on Alpaca; pretraining on Open WebText), CCE vs torch.compile control",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": "loss curves plotted to ~700 gradient steps for fine-tuning (read from Fig 4 axes)",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": "bf16 (gradient accumulated in global memory in final float type); Kahan summation in CCE-Kahan",
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "A100-SXM4 80GB for kernel benchmarks; training hardware not stated",
+   "compute": null,
+   "wall_clock": "Mistral NeMo: CCE-Kahan-FullC with doubled batch size saves 2 hours (16%) vs torch.compile",
+   "seeds": "5 seeds, averaged",
+   "other": {
+    "note": "The paper states no optimizer, learning rate, batch size or sequence length for the convergence experiments; Fig 1 assumes AdamW mixed-precision 16-bit, 16x80GB FSDP with activation checkpointing."
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "5 seeds averaged for all timings and curves",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "epsilon": "2^-12 (smallest bf16 value not truncated)",
+    "block sizes NB, VB, DB": "not stated",
+    "Torch Tune chunks": "8",
+    "token-count sweep": "2^8 to 2^12 tokens (read from Fig A1)"
+   },
+   "other": {
+    "synchronisation": "spin-lock on atomic in global memory (Triton)",
+    "vocab sort buffer": "O(|V|), about 1 MB"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Peak memory",
+     "definition": "peak GPU memory for loss, gradient, or both",
+     "unit": "MB",
+     "higher_is_better": false
+    },
+    {
+     "name": "Time",
+     "definition": "wall-clock to compute loss, gradient, or both",
+     "unit": "ms",
+     "higher_is_better": false
+    },
+    {
+     "name": "Training loss",
+     "definition": "fine-tuning loss curve on Alpaca",
+     "unit": "loss",
+     "higher_is_better": false
+    },
+    {
+     "name": "Validation perplexity",
+     "definition": "on held-out 0.25% of Open WebText",
+     "unit": "perplexity",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "Baseline (PyTorch)",
+    "torch.compile",
+    "Torch Tune (8 chunks)",
+    "Liger Kernels"
+   ],
+   "protocol": "Results averaged over 5 seeds; convergence compared by curves with p95 confidence range; no statistical test."
+  },
+  "availability": {
+   "code": "https://github.com/apple/ml-cross-entropy",
+   "weights": null,
+   "data": "public datasets (Alpaca, Open WebText)"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "models.vocab",
+    "quote": "Phi 3.5 Mini (|V |=32,064, D=3,072)",
+    "where": "C.2"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "CCE cuts Gemma 2 2B loss-computation memory from 24 GB to 1 MB.",
+   "kind": "measured",
+   "source": null,
+   "metric": "loss memory",
+   "value": 1,
+   "unit": "MB",
+   "baseline_value": "24,000 MB",
+   "n": null,
+   "setup": "Gemma 2 2B loss layer",
+   "where": "Abstract",
+   "note": null,
+   "quote": "CCE reduces the memory footprint of the loss computa-\ntion from 24 GB to 1 MB"
+  },
+  {
+   "claim": "CCE cuts total training-time classifier-head memory from 28 GB to 1 GB.",
+   "kind": "measured",
+   "source": null,
+   "metric": "loss+gradient memory",
+   "value": 1,
+   "unit": "GB",
+   "baseline_value": "28 GB",
+   "n": null,
+   "setup": "Gemma 2 2B classifier head",
+   "where": "Abstract",
+   "note": null,
+   "quote": "the total training-time memory consumption of the\nclassifier head from 28 GB to 1 GB"
+  },
+  {
+   "claim": "Log-probabilities are 89% of Gemma 2 2B training memory.",
+   "kind": "measured",
+   "source": null,
+   "metric": "share of memory",
+   "value": 89,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "|V|=256,128, 16-GPU FSDP setting of Fig 1",
+   "where": "Section 3",
+   "note": null,
+   "quote": "89% of the memory consumption of Gemma\n2 (2B)"
+  },
+  {
+   "claim": "CCE loss+gradient peak memory is 1,164 MB, near the 1,161 MB lower bound.",
+   "kind": "measured",
+   "source": null,
+   "metric": "peak memory loss+gradient",
+   "value": "1,164",
+   "unit": "MB",
+   "baseline_value": "28,000 MB (Baseline)",
+   "n": null,
+   "setup": "Gemma 2 (2B) shapes: 8,192 tokens, |V|=256,000, D=2304, Alpaca inputs, Gemma 2 2B Instruct weights; A100-SXM4 80GB, PyTorch 2.4.1, CUDA 12.4; averaged over 5 seeds",
+   "where": "Table 1",
+   "note": null,
+   "table": "Table 1, row 1) CCE (Ours), column Loss+Gradient Memory"
+  },
+  {
+   "claim": "CCE loss+gradient time is 145 ms versus 143 ms torch.compile and 208 ms Baseline.",
+   "kind": "measured",
+   "source": null,
+   "metric": "time loss+gradient",
+   "value": "145",
+   "unit": "ms",
+   "baseline_value": "143 ms (torch.compile)",
+   "n": null,
+   "setup": "Gemma 2 (2B) shapes: 8,192 tokens, |V|=256,000, D=2304, Alpaca inputs, Gemma 2 2B Instruct weights; A100-SXM4 80GB, PyTorch 2.4.1, CUDA 12.4; averaged over 5 seeds",
+   "where": "Table 1",
+   "note": null,
+   "table": "Table 1, row 1) CCE (Ours), column Loss+Gradient Time"
+  },
+  {
+   "claim": "Liger Kernels uses 95% less memory than Baseline but more than doubles wall-clock time versus torch.compile.",
+   "kind": "measured",
+   "source": null,
+   "metric": "memory reduction",
+   "value": 95,
+   "unit": "% less memory",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Gemma 2 (2B) shapes: 8,192 tokens, |V|=256,000, D=2304, Alpaca inputs, Gemma 2 2B Instruct weights; A100-SXM4 80GB, PyTorch 2.4.1, CUDA 12.4; averaged over 5 seeds",
+   "where": "Section 5.1",
+   "note": null,
+   "quote": "using 95% less memory than Baseline, it has a detrimental effect on latency,\nmore than doubling the wall-clock time"
+  },
+  {
+   "claim": "torch.compile reduces memory 43% and time 33% versus Baseline.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 43,
+   "unit": "% memory",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Gemma 2 (2B) shapes: 8,192 tokens, |V|=256,000, D=2304, Alpaca inputs, Gemma 2 2B Instruct weights; A100-SXM4 80GB, PyTorch 2.4.1, CUDA 12.4; averaged over 5 seeds",
+   "where": "Section 5.1",
+   "note": null,
+   "quote": "torch.compile (Ansel\net al., 2024) is able to reduce memory usage by 43% and computation time by 33%"
+  },
+  {
+   "claim": "Disabling gradient filtering makes CCE 3.4x slower.",
+   "kind": "measured",
+   "source": null,
+   "metric": "time loss+gradient",
+   "value": 3.4,
+   "unit": "x slower",
+   "baseline_value": "145 ms (CCE)",
+   "n": null,
+   "setup": "Gemma 2 (2B) shapes: 8,192 tokens, |V|=256,000, D=2304, Alpaca inputs, Gemma 2 2B Instruct weights; A100-SXM4 80GB, PyTorch 2.4.1, CUDA 12.4; averaged over 5 seeds",
+   "where": "Section 5.1",
+   "note": null,
+   "quote": "without gradient filtering it is 3.4x (356 ms)\nlonger"
+  },
+  {
+   "claim": "Disabling vocabulary sorting makes CCE 15% slower.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 15,
+   "unit": "% slower",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Gemma 2 (2B) shapes: 8,192 tokens, |V|=256,000, D=2304, Alpaca inputs, Gemma 2 2B Instruct weights; A100-SXM4 80GB, PyTorch 2.4.1, CUDA 12.4; averaged over 5 seeds",
+   "where": "Section 5.1",
+   "note": null,
+   "quote": "Without vocabulary sorting CCE takes\n15% (23 ms) longer"
+  },
+  {
+   "claim": "Fewer than 0.02% of softmax elements are non-zero in the evaluated frontier models.",
+   "kind": "measured",
+   "source": null,
+   "metric": "softmax sparsity",
+   "value": 0.02,
+   "unit": "% non-zero",
+   "baseline_value": null,
+   "n": null,
+   "setup": "frontier models evaluated, bf16, eps=2^-12",
+   "where": "Section 4.3",
+   "note": null,
+   "quote": "less than 0.02% of elements are non-zero"
+  },
+  {
+   "claim": "Gradient filtering gives a 3.5x speedup with no precision loss, per the authors.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 3.5,
+   "unit": "x speedup",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Gemma 2 2B Table 1 setup",
+   "where": "Section 4.3",
+   "note": "Table 1 rows 1 vs 7 give 357/145, about 2.5x on loss+gradient, and 314/100 = 3.1x on gradient only; 3.4x in 5.1 is from the loss+gradient difference of 356 ms vs. text; the paper's figures are not fully consistent.",
+   "quote": "this leads to a 3.5x speedup without loss of precision"
+  },
+  {
+   "claim": "CCE is 6% (2 ms) slower than torch.compile on loss+gradient but 5% (4 ms) faster on loss.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 6,
+   "unit": "% slower",
+   "baseline_value": "torch.compile 143 ms",
+   "n": null,
+   "setup": "Gemma 2 (2B) shapes: 8,192 tokens, |V|=256,000, D=2304, Alpaca inputs, Gemma 2 2B Instruct weights; A100-SXM4 80GB, PyTorch 2.4.1, CUDA 12.4; averaged over 5 seeds",
+   "where": "Section 5.1",
+   "note": null,
+   "quote": "computes the loss+gradient slightly slower (6%, 2 ms)"
+  },
+  {
+   "claim": "Fine-tuning loss curves of CCE and torch.compile are indistinguishable across four models.",
+   "kind": "measured",
+   "source": null,
+   "metric": "training loss",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Qwen 2.5 7B Instruct, Phi 3.5 Mini Instruct, Gemma 2 2B Instruct, Mistral NeMo on Alpaca, 5 seeds",
+   "where": "Section 5.3, Fig 4",
+   "note": null,
+   "quote": "CCE and\ntorch.compile have indistinguishable loss curves"
+  },
+  {
+   "claim": "CCE-Kahan-FullC matches torch.compile validation perplexity in pretraining.",
+   "kind": "measured",
+   "source": null,
+   "metric": "validation perplexity",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Same four models on 5% Open WebText, held-out 0.25%, 5 seeds",
+   "where": "Section 5.3, Fig 5",
+   "note": null,
+   "quote": "CCE-Kahan-\nFullC produces identical curves as torch.compile"
+  },
+  {
+   "claim": "On Mistral NeMo, CCE-Kahan-FullC doubled batch size and cut training time by 2 hours (16%) versus torch.compile.",
+   "kind": "measured",
+   "source": null,
+   "metric": "training time",
+   "value": 16,
+   "unit": "% faster",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Mistral NeMo pretraining; hardware not stated",
+   "where": "Section 5.3",
+   "note": null,
+   "quote": "decreasing\ntraining time by 2 hours (16%)"
+  },
+  {
+   "claim": "Fig 1: CCE raises max batch size 1.5x (Llama 2 13B) to 10x (GPT 2, Gemma 2 2B).",
+   "kind": "measured",
+   "source": null,
+   "metric": "max batch size gain",
+   "value": 10,
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "16x80GB FSDP, activation checkpointing, bf16 AdamW, 75 GB usable per GPU",
+   "where": "Fig 1 caption",
+   "note": "Table A4 prints GPT 2 as 11.9x and Gemma 2 2B as 9.5x.",
+   "quote": "increasing the batch size by 1.5x (Llama 2 13B) to 10x (GPT 2, Gemma 2 2B)"
+  },
+  {
+   "claim": "Gemma 2 2B log-probabilities for one 80,000-token sequence fill an 80 GB H100.",
+   "kind": "measured",
+   "source": null,
+   "metric": "sequence length",
+   "value": 80000,
+   "unit": "tokens",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Gemma 2 2B",
+   "where": "Section 3",
+   "note": null,
+   "quote": "for a\nsingle sequence x with length N = 80,000 use the entire available memory of an 80 GB H100 GPU"
+  },
+  {
+   "claim": "On Phi 3.5 Mini (lowest |V|/D) CCE loss+gradient is about 50% (12 ms) slower than torch.compile.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 50,
+   "unit": "% slower",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Phi 3.5 Mini, |V|=32,064, D=3,072, 8,192 tokens",
+   "where": "Appendix C.2",
+   "note": "Table A3 shows CCE 34 ms vs torch.compile 22 ms; training time rises only 1 to 2%.",
+   "quote": "ours is approximately 50%\nslower (12 ms) than torch.compile"
+  },
+  {
+   "claim": "Removing ignored tokens speeds methods by up to 3x.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 3,
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Alpaca, Gemma 2 2B Table 1 setup",
+   "where": "Appendix B",
+   "note": "Table A1: CCE loss+gradient 54 ms vs 145 ms in Table 1.",
+   "quote": "can be made up to 3 times faster by\nremoving tokens that are ignored"
+  },
+  {
+   "claim": "CCE memory grows O(N+|V|) versus O(N x |V|) for Baseline, torch.compile and Torch Tune.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "analytic",
+   "where": "Section 5.1",
+   "note": null,
+   "quote": "usage of CCE grows with O(N +|V |), as opposed to O(N ×|V |)"
+  }
+ ],
+ "limits": [
+  "Implemented in Triton; control flow (lock, filter) is block-level only, authors expect CUDA to be faster.",
+  "Advantage in time shrinks as |V|/D falls (Phi 3.5 Mini 50% slower than torch.compile); parallelism is B x |V| so large D adds work not parallelism.",
+  "Gradient filtering on gradC starves rare tokens; pretraining needs the slower CCE-Kahan-FullC, which is roughly 2x+ slower than torch.compile in kernel time.",
+  "Convergence experiments omit optimizer, learning rate, batch size, sequence length, step count and hardware; confidence from 5 seeds with curves only.",
+  "Only memory and time of the loss layer and curves were tested; no downstream task evaluation.",
+  "Max-batch-size claim uses an analytic memory model (float32 logits only, 75 GB usable), which the authors say likely undercounts."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Gradient filtering",
+   "definition": "skip gradient computation for any block whose softmax entries are all below eps=2^-12",
+   "where": "Section 4.3"
+  },
+  {
+   "term": "Vocabulary sorting",
+   "definition": "order tokens by average logit so non-trivial gradients are in contiguous blocks",
+   "where": "Section 4.3"
+  },
+  {
+   "term": "CCE-Kahan-FullC",
+   "definition": "CCE with Kahan summation and no gradient filtering on C, used for pretraining",
+   "where": "Section 5.3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "FlashAttention (Dao et al., 2022)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "online softmax and SRAM blockwise computation, the key idea CCE builds on",
+   "quote": null
+  },
+  {
+   "work": "Online softmax (Milakov & Gimelshein, 2018)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "basis of streaming log-sum-exp",
+   "quote": null
+  },
+  {
+   "work": "Liger Kernels (Hsu et al., 2024)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "chunked fused loss+gradient",
+   "quote": null
+  },
+  {
+   "work": "Torch Tune (Torch Tune Team, 2024)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "chunked cross-entropy with torch.compile",
+   "quote": null
+  },
+  {
+   "work": "torch.compile (Ansel et al., 2024)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "kernel-fused loss",
+   "quote": null
+  },
+  {
+   "work": "Triton (Tillet et al., 2019)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "implementation language",
+   "quote": null
+  },
+  {
+   "work": "Activation checkpointing (Chen et al., 2016); ZeRO (Rajbhandari et al., 2020)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "related",
+   "note": "earlier memory reductions that left the loss layer dominant",
+   "quote": null
+  },
+  {
+   "work": "Rabe & Staats (2021); Chen et al. (2023)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "related",
+   "note": "chunked and two-stage memory-efficient attention",
+   "quote": null
+  },
+  {
+   "work": "Kahan summation (Kahan, 1965)",
+   "year": 1965,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "precision recovery in pretraining",
+   "quote": null
+  },
+  {
+   "work": "Alpaca (Taori et al., 2023)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "fine-tuning and benchmark inputs",
+   "quote": null
+  },
+  {
+   "work": "Open WebText (Gokaslan et al., 2019)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "pretraining",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Memory use and maximum attainable batch size for frontier models on 16x80GB FSDP; (a) regular cross-entropy, (b) CCE",
+   "page": 2,
+   "why": "shows the log-probability share of memory and batch-size gain per model"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Access patterns and computation of blockwise indexed matmul, LSE forward and backward",
+   "page": 4,
+   "why": "the tiling and filter structure of the kernels"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Average probability for the ith most likely token, log-log",
+   "page": 8,
+   "why": "shows why softmax sparsity lets gradient filtering skip most blocks"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Peak memory and time for loss, gradient and combination",
+   "page": 8,
+   "why": "the central comparison and ablations"
+  }
+ ],
+ "code": [
+  {
+   "where": "Section 4",
+   "snippet": "l_i(x) = C_{x_i}^T E_i - log sum_j exp(C_j^T E_i)",
+   "verbatim": false
+  },
+  {
+   "where": "Algorithm 3",
+   "snippet": "S_nv = exp(A_nv - LSE_n); if all(S_nv < eps) skip",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Figure curve data are not recoverable from text; Fig 4/5 claims rest on captions and prose.",
+  "Paper arXiv v2; ICLR 2025 year used for bib though arXiv id is 2024."
+ ]
+}

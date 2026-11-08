@@ -4,6 +4,7 @@ sources:
   - "Fregly, AI Systems Performance Engineering (O'Reilly, 2025), ch. 15–16"
   - "Huyen, AI Engineering (O'Reilly, 2025), ch. 9"
   - "Iusztin & Labonne, LLM Engineer's Handbook (Packt, 2024), ch. 2, 8, 10"
+  - "Lakshmanan & Hapke, Generative AI Design Patterns (O'Reilly, 2025), ch. 8"
   - https://www.usenix.org/conference/osdi22/presentation/yu
   - https://arxiv.org/abs/2309.06180
   - https://arxiv.org/abs/2305.05176
@@ -82,6 +83,8 @@ Decode is bandwidth-bound: each step is one [forward pass](../../../data-science
 
 Huyen's illustration (*AI Engineering*, ch. 9): with batch size 4 and a 100 ms window, dynamic batching dispatches at 4 requests or 100 ms, whichever comes first. If one request needs 10 output tokens and another 1,000, static or dynamic batching holds the short one's slot for the whole 1,000 steps. Continuous batching, introduced by **Orca** (Yu et al., OSDI 2022), returns that slot after step 10. Fregly's typical dynamic-batching window is **2–10 ms**, tuned against the SLO (*AISPE*, ch. 16). Tuning the batch against an SLO predates LLMs. Clipper grew the batch additively and cut it multiplicatively (AIMD) whenever latency crossed the SLO. That raised throughput up to **26×** for a scikit-learn SVM under a 20 ms SLO, and the largest batch that met the same SLO differed **241×** across the models it served ([arXiv:1612.03079](https://arxiv.org/abs/1612.03079) (Crankshaw et al., NSDI 2017)). That spread is why the batch cap has to be measured per model rather than copied. The Handbook notes TGI's waiting-served ratio, which controls how eagerly waiting prefills interrupt running decodes (*LLM Engineer's Handbook*, ch. 8).
 
+A single-run demo shows the size of the gap when a client loops over requests instead of submitting them together: 100 samples took 106.11 s sequentially (0.94 samples/s) and 4.60 s as one batch (21.74 samples/s), a 23.07x speedup. The chapter's prose says "20x", and model and hardware are not stated, so treat it as an upper-end illustration (*Generative AI Design Patterns*, ch. 8, Pattern 26). Servers such as vLLM and SGLang batch continuously by default, so the practical advice is to send all requests to the server concurrently. The same chapter lists prompt compression as a second lever: hard compression (regex or an LLM rewrite, with a reconstruction check) stays readable, while soft compression encodes text into vectors or KV values and is model-specific.
+
 ![Static vs continuous batching: yellow = prefill, blue = decode, red = end of sequence](../sources/images/ai-systems-performance-engineering-fig16-6.png)
 
 *Image Source: Fregly, *AI Systems Performance Engineering* (O'Reilly, 2025), Fig. 16-6*
@@ -156,6 +159,10 @@ Fregly's monitoring stack (*AISPE*, ch. 16): DCGM exporter → Prometheus → Gr
 - **Network:** set `TCP_NODELAY` on token-streaming sockets. Nagle's algorithm otherwise holds small writes, and streamed tokens arrive in bursts.
 
 ---
+
+## Degradation testing
+
+Before launch, find where latency breaks. Lakshmanan and Hapke (*Generative AI Design Patterns*, ch. 8, Pattern 27) track TTFT, end-to-end request latency (P50/P95/P99), tokens per second (watching for the saturation point where it drops) and requests per second, and run scalability, stress and load tests. They name TTFT as dominated by attention over the prompt, so the levers are prompt compression, prefix caching, more GPU memory, a smaller maximum context, and putting predictable text first with dynamic RAG text later. A badly sized setup in their example averaged a 52 s TTFT with most requests failing (model and hardware not given). Their load-test run against gpt-4o-mini (100 users x 25 requests, max 150 tokens, temperature 0.7) completed 2,499 of 2,500 requests in 190.57 s with average TTFT 3.556 s and p95 4.206 s, and 1,914.5 tokens/s overall. Note that the tool printed "Success rate: 100.0%" despite the one failure, so check the raw counts. Tools named include LLMPerf, LangSmith, Arize Phoenix and the vLLM and SGLang benchmark scripts.
 
 ## Autoscaling
 

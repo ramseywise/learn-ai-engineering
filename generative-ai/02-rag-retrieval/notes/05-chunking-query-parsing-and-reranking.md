@@ -2,6 +2,7 @@
 origin: synthesis  # was: Deeplearning.ai-RAG-main
 sources:
   - https://arxiv.org/abs/2407.02485
+  - https://arxiv.org/abs/2411.02959
   - "Weaviate, Advanced RAG Techniques (vendor ebook, 2025; date from PDF metadata)"
   - https://arxiv.org/abs/2306.17563
   - https://arxiv.org/abs/2212.10496
@@ -82,6 +83,8 @@ Their guidelines match the course: match the chunk to the query type, respect th
 **Element-based chunking** is recursive splitting taken further: a document-layout model labels each element (title, narrative text, table, list), and chunks break at element boundaries. On FinanceBench (10-K and 10-Q filings, top-10 chunks, GPT-4 generator), element-based chunking answered 53.2% of questions correctly against 48.2% for the best fixed size (512 tokens) and 35.5% for 128 tokens, on manual grading. It also indexed about half as many chunks (62,529 vs 112,155) and needed no chunk-size tuning ([arXiv:2402.05131](https://arxiv.org/abs/2402.05131), Jimeno Yepes et al., 2024-02). The setting is one domain of table-heavy, strongly structured documents, so expect less on prose.
 
 **Semantic chunking** has the weaker evidence. A Vectara study ran fixed-size, breakpoint (the threshold method in the table) and clustering chunkers over ten retrieval sets and five evidence and answer sets, with the stella-1.5B embedder and gpt-4o-mini as generator. On the four real long-document sets, fixed-size chunks retrieved the right document best (HotpotQA F1@5 90.59 vs 87.37 for breakpoint). Evidence-retrieval F1 differed by under 2 points, and answer BERTScore by at most 0.01. Breakpoint chunking won big only on synthetic documents stitched together from unrelated short ones (NQ 63.93 vs 43.79), where topic boundaries are artificially sharp. Swapping the embedder mattered more: stella beat bge-large by 7.44% average F1 ([arXiv:2410.13070](https://arxiv.org/abs/2410.13070), Qu et al., 2024-10). The authors' own caveats: sentence embeddings without context, and no chunk-level ground truth.
+
+**Keep the HTML structure, then prune.** HtmlRAG feeds the reader cleaned HTML instead of flattened text. Rule-based cleaning drops 94.07% of tokens (plain text conversion drops 96.71%, Markdown 90.32%). A block tree is then pruned twice, by embedding and by a fine-tuned generative pruner (Phi-3.5-mini, 2,635 training samples), taking 20 retrieved pages from 1.6M to 135K to 8K to 4K tokens. With Llama-3.1-8B, a 4K window and Bing-retrieved pages (400 questions per dataset), ASQA Hit@1 was 71.75 against 68.50 for BGE chunk-and-rerank. At 70B the lead mostly vanished (MuSiQue exact match 13.25 against 12.50; ASQA exact match 30.53 against 30.57, though ASQA Hit@1 was 68.50 against 68.00). Without pruning, HTML only tied plain text at a 128K window (ASQA Hit@1 58.75 against 59.75), and uncleaned HTML scored 44.00. Ablations on ASQA Hit@1 (full 68.50): no block tree 59.50, no embedding pruning 56.75, no generative pruning 62.00. Single runs, one retrieval source, and no ELI5 ROUGE or BLEU gain at 8B (15.51 against 15.87 ROUGE-L; at 70B the gain is small, 16.33 against 16.20) ([arXiv:2411.02959](https://arxiv.org/abs/2411.02959), Tan et al., WWW 2025).
 
 ## Chunking code
 
