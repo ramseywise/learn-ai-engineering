@@ -1,0 +1,612 @@
+{
+ "schema": 1,
+ "key": "1606.06031",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/paperno-2016-lambada-dataset.pdf",
+ "bib": {
+  "title": "The LAMBADA dataset: Word prediction requiring a broad discourse context",
+  "authors": [
+   "Denis Paperno",
+   "Germán Kruszewski",
+   "Angeliki Lazaridou",
+   "Quan Ngoc Pham",
+   "Raffaella Bernardi",
+   "Sandro Pezzelle",
+   "Marco Baroni",
+   "Gemma Boleda",
+   "Raquel Fernández"
+  ],
+  "first_author": "Paperno",
+  "year": 2016,
+  "venue": "ACL 2016 (arXiv preprint v1)",
+  "arxiv": "1606.06031",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 40713,
+  "chars_total": 40713,
+  "engine": "pymupdf",
+  "skipped": "Supplementary Material (hyperparameter tuning, filter-model details) is not in the PDF; it is hosted at clic.cimec.unitn.it/lambada/"
+ },
+ "type": "benchmark",
+ "question": "Can a word-prediction benchmark be built whose targets humans guess from a broad passage but not from the last sentence alone, and how do language models of 2016 fare on it?",
+ "hypothesis": "Models that only use local context cannot solve items that need broad discourse context; LAMBADA should expose this.",
+ "contributions": [
+  "LAMBADA, 10,022 narrative passages whose last word is human-guessable only with the full passage",
+  "Analysis of the linguistic phenomena in the data",
+  "Evaluation of N-gram, RNN, LSTM, Memory Network and baselines, none above 1% accuracy"
+ ],
+ "method": {
+  "summary": "Passages from the Book Corpus are filtered with four language models, then with a three-step CrowdFlower protocol (two subjects must guess the final word from the whole passage; none of up to ten may guess it from the last sentence alone). Several language models trained on 2,662 novels are scored on accuracy, perplexity and median rank of the target word.",
+  "task": "final-word prediction in narrative passages (language modelling with broad context)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Book Corpus (filtered)",
+    "role": "pretrain",
+    "size": "5,325 novels, 465 million words",
+    "split": "novels split into equal halves: training 2,662 novels (>200M words, 203 million words) and dev+test",
+    "source": "Zhu et al., 2015 Book Corpus (unpublished novels)",
+    "preprocessing": "duplicate removal; offensive material filtered with a stop word list"
+   },
+   {
+    "name": "LAMBADA",
+    "role": "eval",
+    "size": "10,022 passages; average 4.6 context sentences plus 1 target sentence, 75.4 tokens (dev) / 75 tokens (test)",
+    "split": "4,869 dev (1,331 novels) and 5,153 test (1,332 disjoint novels)",
+    "source": "dev+test half of the Book Corpus novels",
+    "preprocessing": "context = minimum whole sentences before target sentence totalling at least 50 tokens; target = last word of the target sentence; LM filter drops any passage where any of 4 LMs gives the target probability >= 0.00175"
+   },
+   {
+    "name": "Control set",
+    "role": "eval",
+    "size": "5K passages of the same shape and size, unfiltered",
+    "split": "sampled from the same test novels",
+    "source": "Book Corpus test novels",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Simple RNN (Elman)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "recurrent LM",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": "60K most frequent training words",
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "LSTM",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "LSTM LM, similar to Deep LSTM Reader",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": "60K",
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "N-Gram (SRILM) with and without cache",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "statistical n-gram LM",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": "60K",
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "order": null
+    }
+   },
+   {
+    "name": "Memory Network",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "similar to Hill et al. 2016 CBT best system",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": "60K",
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Sup-CBOW",
+    "role": "baseline",
+    "params": null,
+    "architecture": "simple neural net over summed pre-trained CBOW vectors of passage words",
+    "init_from": "pre-trained CBOW vectors (Mikolov 2013)",
+    "tokenizer": null,
+    "vocab": "60K",
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "train_passages": "about 9M passages of LAMBADA shape from the training novels"
+    }
+   },
+   {
+    "name": "Unsup-CBOW",
+    "role": "baseline",
+    "params": null,
+    "architecture": "cosine similarity between passage vector and target word vector",
+    "init_from": "pre-trained CBOW vectors",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Filter LMs",
+    "role": "base",
+    "params": null,
+    "architecture": "pre-trained RNN (Mikolov 2011) plus 4-gram, RNN, feed-forward trained on Book Corpus",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "used only to filter candidates; differ from evaluated models"
+    }
+   }
+  ],
+  "training": {
+   "objective": "predict each upcoming word given previous context on the training novels (Sup-CBOW: predict final word of passage)",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": "203 million words (2,662 novels)",
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "NVIDIA-donated GPUs, model not stated",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "hyperparameter_tuning": "tuned on dev-set accuracy; details in the Supplementary Material, not in the PDF"
+   }
+  },
+  "inference": {
+   "decoding": "rank vocabulary by model probability; correct if the target is the top word",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "one trained model per method; no seeds or repeats stated",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Accuracy",
+     "definition": "average success at predicting the target word",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Perplexity",
+     "definition": "perplexity of the target word",
+     "unit": "Ppl.",
+     "higher_is_better": false
+    },
+    {
+     "name": "Rank",
+     "definition": "median rank of the correct word",
+     "unit": "rank",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "Random vocabulary word",
+    "Random word from passage",
+    "Random capitalized word from passage",
+    "Unsup-CBOW",
+    "Sup-CBOW"
+   ],
+   "protocol": "same trained models scored on LAMBADA and on the unfiltered control set; hyperparameters tuned on dev; the paper does not say whether Table 1 is dev or test (test set withheld for a planned competition)"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "dev set and training corpus at http://clic.cimec.unitn.it/lambada/; test set to be released at the competition"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "models.vocab",
+    "quote": "We restricted the vocabulary of the models to the 60K most frequent words in the training set (covering 95% of the target words in the development set).",
+    "where": "Section 4"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "No evaluated language model exceeds 1% accuracy on LAMBADA.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "1",
+   "unit": "% (upper bound)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LAMBADA, N-gram/RNN/LSTM/Memory Network trained on 2,662 novels",
+   "quote": "none of several state-of-the-art language models reaches accuracy above 1% on this novel benchmark",
+   "table": null,
+   "note": null,
+   "where": "Abstract"
+  },
+  {
+   "claim": "LSTM reaches 21.9% accuracy on the unfiltered control set but 0 on LAMBADA.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "21.9",
+   "unit": "%",
+   "baseline_value": "0",
+   "n": null,
+   "setup": "Control set of 5K unfiltered passages from the same novels",
+   "quote": null,
+   "table": "Table 1, Control models, row LSTM, column Acc.",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "N-Gram models reach 19.1% accuracy on the control set but 0.1 on LAMBADA.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "19.1",
+   "unit": "%",
+   "baseline_value": "0.1",
+   "n": null,
+   "setup": "Control set; N-Gram with and without cache",
+   "quote": null,
+   "table": "Table 1, Control models, rows N-Gram and N-Gram w/cache, column Acc.",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Picking a random capitalized word from the passage scores 7.3% on LAMBADA, beating every model.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "7.3",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LAMBADA; baseline exploiting proper-noun bias",
+   "quote": null,
+   "table": "Table 1, LAMBADA baselines, row Random capitalized word from passage, column Acc.",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Random word from the passage scores 1.6% on LAMBADA.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "1.6",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LAMBADA",
+   "quote": null,
+   "table": "Table 1, LAMBADA baselines, row Random word from passage, column Acc.",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "N-Gram w/cache has the best perplexity among models on LAMBADA.",
+   "kind": "measured",
+   "source": null,
+   "metric": "perplexity",
+   "value": "768",
+   "unit": "perplexity",
+   "baseline_value": "3125 (N-Gram without cache)",
+   "n": null,
+   "setup": "LAMBADA, N-Gram with cache",
+   "quote": "it achieves a respectable perplexity of 768",
+   "table": null,
+   "note": null,
+   "where": "Section 4 Results"
+  },
+  {
+   "claim": "N-Gram w/cache median rank of the correct word is 87 on LAMBADA versus 324 for LSTM.",
+   "kind": "measured",
+   "source": null,
+   "metric": "median rank",
+   "value": "87",
+   "unit": "rank",
+   "baseline_value": "324 (LSTM)",
+   "n": null,
+   "setup": "LAMBADA",
+   "quote": null,
+   "table": "Table 1, LAMBADA models, row N-Gram w/cache, column Rank",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Sup-CBOW, trained on about 9M LAMBADA-shaped passages, gets 0 accuracy on LAMBADA and 3.5% on control.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "3.5",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Control set",
+   "quote": null,
+   "table": "Table 1, Control baselines, row Sup-CBOW, column Acc.",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Only about one in 25 candidate passages survived all human selection steps.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "one in 25",
+   "unit": "ratio",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CrowdFlower pipeline on passages that passed the automatic LM filter",
+   "quote": "Only about one in 25 input examples passed all the selection steps.",
+   "table": null,
+   "note": null,
+   "where": "Section 3.1"
+  },
+  {
+   "claim": "Each retained item costs $1.24 on average.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "1.24",
+   "unit": "USD",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CrowdFlower, $0.22 per page of 10 passages at steps 1-2, $0.15 per page of 20 sentences at step 3",
+   "quote": "each item in the resulting dataset costed $1.24 on average",
+   "table": null,
+   "note": null,
+   "where": "Section 3.1"
+  },
+  {
+   "claim": "LAMBADA has 10,022 passages: 4,869 dev and 5,153 test.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "10,022",
+   "unit": "passages",
+   "baseline_value": null,
+   "n": null,
+   "setup": "from 1,331 (dev) and 1,332 (test) disjoint novels",
+   "quote": "The LAMBADA dataset consists of 10,022 pas-",
+   "table": null,
+   "note": null,
+   "where": "Section 3.2"
+  },
+  {
+   "claim": "More than 80% of LAMBADA passages contain the target word in the context, versus less than 15% of the unfiltered input sample.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "80",
+   "unit": "% (lower bound)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LAMBADA vs random 5000-item sample of passages passing the automatic filters",
+   "quote": "More than 80% of LAMBADA passages include the target word in the context",
+   "table": null,
+   "note": null,
+   "where": "Section 3.3, Fig 2(a)"
+  },
+  {
+   "claim": "48% of target words are proper nouns, 37% common nouns, 7.7% verbs; only 0.3% are pronouns.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "48",
+   "unit": "% proper nouns",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LAMBADA target-word POS distribution",
+   "quote": "most target words in LAMBADA are proper nouns (48%), followed by common nouns (37%) and, at a distance, verbs (7.7%).",
+   "table": null,
+   "note": null,
+   "where": "Section 3.3, Fig 2(b)"
+  },
+  {
+   "claim": "About 16% of LAMBADA targets have a lemma absent from the context.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "16",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LAMBADA",
+   "quote": "corresponding to about 16% of LAMBADA in total",
+   "table": null,
+   "note": null,
+   "where": "Section 3.3, Fig 2(c)"
+  },
+  {
+   "claim": "71% of LAMBADA items contain quoted direct speech versus 61% of the input sample.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "71",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LAMBADA vs input sample",
+   "quote": "71% of LAMBADA items vs. 61% of items in the input sample",
+   "table": null,
+   "note": null,
+   "where": "Section 3.3"
+  },
+  {
+   "claim": "At human-filter steps 84-86% of items were discarded at step 1, 6-7% more at step 2, 3-5% more at step 3.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "84-86",
+   "unit": "% discarded at step 1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CrowdFlower pipeline",
+   "quote": "In the crowdsourcing pipeline, 84–86% items were discarded at step 1, an additional 6–7% at step 2 and another 3–5% at step 3.",
+   "table": null,
+   "note": null,
+   "where": "Section 3.1"
+  }
+ ],
+ "limits": [
+  "Authors call the model evaluation 'very preliminary' and a 'proof-of-concept'; more tuning or attention might do better.",
+  "Standard LMs fail 'by design' because the dataset was filtered to passages where four simple LMs gave the target probability below 0.00175.",
+  "Strict exact-match human criterion excludes passages with synonymous or alternative plausible answers.",
+  "Hyperparameters, model sizes and optimiser are in the Supplementary Material, not the paper; the PDF does not say whether Table 1 uses dev or test.",
+  "Targets skew to proper nouns (48%) and to words present in context (>80%), so co-reference is over-represented; script/event reasoning is underrepresented.",
+  "Dated: the 1% ceiling applies to 2016 RNN/n-gram/memory models; later large LMs score far higher (not in this paper)."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "LAMBADA",
+   "definition": "LAnguage Modeling Broadened to Account for Discourse Aspects",
+   "where": "Section 1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Teaching machines to read and comprehend (CNN/Daily Mail)",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "related",
+   "note": "closest dataset; cloze on summary named entities",
+   "quote": null
+  },
+  {
+   "work": "The Goldilocks principle: Reading children's books with explicit memory representations (CBT)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "related",
+   "note": "CBT passages not filtered for broad-context-only guessability; Memory Network design follows it",
+   "quote": null
+  },
+  {
+   "work": "Zweig and Burges, MSR sentence completion",
+   "year": 2011,
+   "arxiv": null,
+   "relation": "related",
+   "note": "original book-excerpt completion, single-sentence context",
+   "quote": null
+  },
+  {
+   "work": "Zhu et al., Book Corpus",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "source of all passages",
+   "quote": null
+  },
+  {
+   "work": "End-to-end memory networks (Sukhbaatar et al.)",
+   "year": 2015,
+   "arxiv": "1503.08895",
+   "relation": "baseline",
+   "note": "Memory Network evaluated",
+   "quote": null
+  },
+  {
+   "work": "Long short-term memory (Hochreiter and Schmidhuber)",
+   "year": 1997,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "LSTM evaluated",
+   "quote": null
+  },
+  {
+   "work": "Efficient estimation of word representations in vector space (Mikolov et al.)",
+   "year": 2013,
+   "arxiv": "1301.3781",
+   "relation": "uses-method",
+   "note": "CBOW vectors for Sup/Unsup-CBOW",
+   "quote": null
+  },
+  {
+   "work": "SRILM (Stolcke)",
+   "year": 2002,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "N-gram LM with and without cache",
+   "quote": null
+  },
+  {
+   "work": "Mikolov et al., RNNLM",
+   "year": 2011,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "pre-trained RNN used as one of four filter models",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Examples of LAMBADA passages. Underlined words highlight when the target word (or its lemma) occurs in the context.",
+   "page": 3,
+   "why": "Ten concrete passages show what 'needs broad context' means."
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "(a) Target word in or not in context; (b) Target word POS distribution in LAMBADA vs. data presented to human subjects (input) and items guessed with sentence context only; (c) POS distribution of passages where the target lemma is not in the context.",
+   "page": 6,
+   "why": "Shows the proper-noun and in-context bias of the data."
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Results of computational methods. Accuracy is expressed in percentage.",
+   "page": 7,
+   "why": "Core result: control-set vs LAMBADA collapse for every model."
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Figure 2 bars are not extractable as text; values read only from prose.",
+  "Supplementary Material not included in the PDF; hyperparameters absent.",
+  "No embedded instructions found."
+ ]
+}

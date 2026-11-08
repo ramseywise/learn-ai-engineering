@@ -11,6 +11,7 @@ sources:
   - 13-case-study-support-agent.md
   - https://aclanthology.org/P19-1073/
   - https://arxiv.org/abs/2512.01948
+  - https://arxiv.org/abs/2212.13138
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -211,6 +212,8 @@ Once the criteria are clear, split them into **independent dimensions**, each wi
 Combine dimensions only at the end, explicitly ([04](04-graders.md#combining-graders-scoring-design)).
 
 One published list of dimensions is a useful prompt for what to separate. Liu et al. group trustworthiness into seven: reliability, safety, fairness, resistance to misuse, explainability and reasoning, social norms, and robustness, with 29 sub-categories, and measure 8 of the 29. The dimensions do not move together. Over 984 generated unsafe prompts, gpt-3.5-turbo and gpt-4 refused close to 100%, but on 361 gender-stereotype questions even gpt-4 refused under 60%. One "aligned" score would hide that gap. Caveats: gpt-4 judged the safety responses, and the fairness ones that gave no valid choice, with no judge-agreement figure, each cell is one run, and most results appear only as bar charts of mid-2023 API models ([arXiv:2308.05374](https://arxiv.org/abs/2308.05374) (Liu et al., 2023-08, preprint)).
+
+Separate dimensions also expose what a single "accuracy" hides. Med-PaLM was rated by nine clinicians on 140 consumer health questions, one rating per answer, on several axes. Against Flan-PaLM 540B it rose from **61.9% to 92.6% on agreement with scientific consensus** (clinicians' own answers: 92.9%) and fell from 29.7% to 5.9% on "possibly harmful" (clinicians 5.7%), yet it was worse than Flan-PaLM on inappropriate or incorrect content (18.7% against 16.1%; clinicians 1.4%). The same Flan-PaLM scored 67.6% on the multiple-choice MedQA, so the multiple-choice number said little about which axis was failing ([arXiv:2212.13138](https://arxiv.org/abs/2212.13138) (Singhal et al., Nature 2023)). With one rater per answer and 140 questions the percentages carry wide intervals, and the harm scale was not validated for this setting.
 
 ---
 

@@ -1,0 +1,578 @@
+{
+ "schema": 1,
+ "key": "https://doi.org/10.18653/v1/2022.emnlp-main.392",
+ "pdf": "generative-ai/08-eval/sources/mishra-2022-lila.pdf",
+ "bib": {
+  "title": "LILA: A Unified Benchmark for Mathematical Reasoning",
+  "authors": [
+   "Swaroop Mishra",
+   "Matthew Finlayson",
+   "Pan Lu",
+   "Leonard Tang",
+   "Sean Welleck",
+   "Chitta Baral",
+   "Tanmay Rajpurohit",
+   "Oyvind Tafjord",
+   "Ashish Sabharwal",
+   "Peter Clark",
+   "Ashwin Kalyan"
+  ],
+  "first_author": "Mishra",
+  "year": 2022,
+  "venue": "EMNLP 2022",
+  "arxiv": null,
+  "doi": "10.18653/v1/2022.emnlp-main.392"
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 79635,
+  "chars_total": 79635,
+  "engine": "pymupdf",
+  "skipped": "Reference list and the tail of Table 21 (per-dataset scores) skimmed only."
+ },
+ "type": "benchmark",
+ "question": "Can a single unified benchmark of math reasoning tasks, with program solutions, OOD and robustness splits, measure and improve general mathematical reasoning?",
+ "hypothesis": "Multi-task training on diverse math datasets with program annotations improves in-distribution and OOD performance over single-task models.",
+ "contributions": [
+  "LILA benchmark: 20 datasets extended with Python programs and instructions, 23 tasks over 4 dimensions, plus OOD and robustness evaluation",
+  "BHASKARA, a multi-task fine-tuned GPT-Neo-2.7B",
+  "Analysis: multitasking helps, program synthesis beats answer prediction, few-shot Codex strongest"
+ ],
+ "method": {
+  "summary": "Unify 20 math datasets into one format (question, answer, Python programs, instruction), define 23 tasks across 4 categories, split IID/OOD/ROBUST, then fine-tune GPT-Neo-2.7B single- and multi-task and few-shot prompt GPT-3 and Codex.",
+  "task": "mathematical reasoning (program synthesis vs direct answer)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "LILA (44 sub-datasets from 20 sources)",
+    "role": "both",
+    "size": "133,815 questions; 358,769 programs",
+    "split": "70% train / 10% dev / 20% test IID; plus LILA-OOD and LILA-ROBUST",
+    "source": "20 existing math datasets (Table 22) extended with Python programs and instructions; github.com/allenai/Lila",
+    "preprocessing": "DSL-to-Python rules, pattern matching, regenerated DeepMind/AMPS with programs, expert annotation; some datasets (e.g. AMPS) downsampled by random selection"
+   },
+   {
+    "name": "LILA-OOD",
+    "role": "eval",
+    "size": "not stated as one total (per-task held-out datasets; see Tables 15-18)",
+    "split": "held-out datasets per task",
+    "source": "Datasets randomly assigned to OOD per task",
+    "preprocessing": null
+   },
+   {
+    "name": "LILA-ROBUST",
+    "role": "eval",
+    "size": "20 questions per constituent dataset x 9 templates",
+    "split": "eval only",
+    "source": "MTurk rewrites",
+    "preprocessing": "9 templates"
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT-Neo-2.7B single-task (Neo-A, Neo-P)",
+    "role": "baseline",
+    "params": "2.7B",
+    "architecture": "causal LM (decoder-only)",
+    "init_from": "GPT-Neo pretrained on the Pile (natural language and code)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "count": "23 per-task models"
+    }
+   },
+   {
+    "name": "Neo-Multi (BHASKARA)",
+    "role": "proposed",
+    "params": "2.7B",
+    "architecture": "causal LM (decoder-only)",
+    "init_from": "GPT-Neo-2.7B",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "outputs": "trained to output both final answer and Python program"
+    }
+   },
+   {
+    "name": "GPT-3 text-davinci-002",
+    "role": "evaluated",
+    "params": "175B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Codex code-davinci-002",
+    "role": "evaluated",
+    "params": "175B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "training set not known"
+    }
+   }
+  ],
+  "training": {
+   "objective": "inferred: causal LM fine-tuning to emit answer and Python program given question",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "note": "Section 4 'Compute' heading in the text gives no numbers; no hyperparameters stated in the paper"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "one run; GPT-3 and Codex on 100 uniformly distributed examples per task",
+   "prompting": "few-shot with random input-output examples from same dataset (IID) or other datasets of the same task (OOD); 0, 1, 3, max examples; with or without task instruction",
+   "retrieval": null,
+   "parameters": {},
+   "other": {
+    "program_execution": "model output executed in Python interpreter; roughly 10% Neo-Multi IID programs fail to execute"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "F1",
+     "definition": "soft exact match with partial credit for common words, between model answer (or executed program output) and gold answer",
+     "unit": "F1 (0 to 1)",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "GPT-Neo-2.7B single-task answer (Neo-A) and program (Neo-P)",
+    "GPT-3 few-shot",
+    "Codex few-shot"
+   ],
+   "protocol": "Evaluation on program output rather than program text; IID, OOD and ROBUST sets; no seeds or significance tests reported"
+  },
+  "availability": {
+   "code": "https://github.com/allenai/Lila",
+   "weights": "https://huggingface.co/allenai/bhaskara",
+   "data": "https://github.com/allenai/Lila"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Multi-task Neo-Multi-P beats single-task Neo-P on in-distribution average F1 (0.480 vs 0.394).",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg F1",
+   "value": "0.480",
+   "unit": "F1",
+   "baseline_value": "0.394",
+   "n": null,
+   "setup": "LILA IID test split (20% per task), GPT-Neo-2.7B fine-tuned, program-synthesis output, 23 tasks averaged",
+   "note": null,
+   "where": "5.1",
+   "quote": "Neo-Multi achieves better average in-domain performance than the 23 individual per-task models (0.480 vs. 0.394 average score)"
+  },
+  {
+   "claim": "Multi-task training raises OOD average F1 from 0.238 to 0.448 for program synthesis.",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg F1 OOD",
+   "value": "0.448",
+   "unit": "F1",
+   "baseline_value": "0.238",
+   "n": null,
+   "setup": "LILA-OOD, GPT-Neo-2.7B program output, Neo-Multi-P vs Neo-P",
+   "note": "Table 4 prints Neo-P IID 0.394 / OOD 0.263 as dimension averages, while Table 3 prints Neo-P OOD average 0.238; the two tables aggregate differently.",
+   "where": "5.1",
+   "quote": "multi-task training substantially improves out-of-domain generalization (0.448 vs. 0.238)"
+  },
+  {
+   "claim": "Abstract: average relative improvement of multi-task over single-task models is 21.83% F1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "relative F1 gain",
+   "value": "21.83%",
+   "unit": "relative F1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LILA, multi-task GPT-Neo-2.7B vs single-task models",
+   "note": null,
+   "where": "Abstract",
+   "quote": "average relative improvement of 21.83% F1 score vs. single-task models"
+  },
+  {
+   "claim": "Best model (few-shot Codex, program synthesis) scores only 60.40% F1 on LILA.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": "60.40%",
+   "unit": "F1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Codex code-davinci-002, few-shot (max examples), computed on 100 uniformly distributed examples per task",
+   "note": "Table 3 prints the Codex IID average as 0.604; the 60.40% in abstract/conclusion matches it.",
+   "where": "Abstract",
+   "quote": "while the best performing model only obtains 60.40%"
+  },
+  {
+   "claim": "Program synthesis roughly doubles multi-task F1 over direct answer prediction (0.480 vs 0.252).",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg F1",
+   "value": "0.480",
+   "unit": "F1",
+   "baseline_value": "0.252",
+   "n": null,
+   "setup": "LILA IID, Neo-Multi-P vs Neo-Multi-A, GPT-Neo-2.7B",
+   "note": null,
+   "where": "5.1",
+   "quote": "multi-task program synthesis (Neo-Multi-P) has an average score of 0.480 while multi-task answer prediction (Neo-Multi-A) scores 0.252"
+  },
+  {
+   "claim": "Few-shot Codex IID/OOD average F1: 0.604 IID, 0.586 OOD.",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg F1",
+   "value": "0.604",
+   "unit": "F1",
+   "baseline_value": "GPT-3 0.384 IID / 0.384 OOD",
+   "n": null,
+   "setup": "LILA Table 3 average row, Codex 175B few-shot, 100 examples per task",
+   "note": "OOD average 0.586.",
+   "where": "Table 3",
+   "table": "Table 3, row Average score, columns Codex IID and OOD"
+  },
+  {
+   "claim": "Single-task GPT-Neo-2.7B program output shows a large IID to OOD drop (0.394 to 0.238), whereas Neo-Multi-P drops less (0.480 to 0.448).",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg F1 OOD",
+   "value": "0.238",
+   "unit": "F1",
+   "baseline_value": "0.394 IID",
+   "n": null,
+   "setup": "LILA Table 3 average row, Neo-P OOD",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row Average score, column Neo-P OOD"
+  },
+  {
+   "claim": "About 10% of Neo-Multi IID programs fail to execute; 86% of those are SyntaxErrors.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "10%",
+   "unit": "share of programs",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Neo-Multi IID outputs",
+   "note": null,
+   "where": "5.1",
+   "quote": "Roughly 10% of Neo-Multi’s IID programs fail to execute. 86% of these are SyntaxErrors"
+  },
+  {
+   "claim": "Instructions help only zero-shot for GPT-3: average IID 0.148 w/o vs 0.156 w/ instruction; few-shot(3) 0.396 vs 0.390.",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg F1",
+   "value": "0.156",
+   "unit": "F1",
+   "baseline_value": "0.148",
+   "n": null,
+   "setup": "GPT-3 IID, zero-shot and 3-shot, with and without task instructions",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row Average, columns Zero-shot w/ Inst"
+  },
+  {
+   "claim": "Neo-Multi is a better starting point for fine-tuning: T5-3B-style direct QA improves from 30.1% to 37.6% F1.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "37.6%",
+   "unit": "F1",
+   "baseline_value": "30.1%",
+   "n": null,
+   "setup": "Fine-tuning on held-out LILA-OOD data, direct answer, starting from Neo-Multi vs vanilla GPT-Neo-2.7B",
+   "note": "Text mentions T5-3B but Table 5 compares Neo and Multi (GPT-Neo-2.7B); Table 5 100% row answer F1 is 28.4 vs 32.3, which does not match 30.1/37.6. Inconsistent in the paper.",
+   "where": "5.1",
+   "quote": "we see an almost 8% absolute improvement in F1 (30.1% to 37.6%)"
+  },
+  {
+   "claim": "LILA has 133,815 questions and 358,769 programs across 23 tasks, 44 datasets.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "133,815",
+   "unit": "questions",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Full benchmark, Table 2",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row # Total questions"
+  },
+  {
+   "claim": "Unique programs 325,597 and unique answers 271,264.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "325,597",
+   "unit": "unique programs",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Full benchmark",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Unique programs"
+  },
+  {
+   "claim": "IID split is a random 70/10/20 train/dev/test partition within each task.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "70/10/20",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Per task random partition",
+   "note": null,
+   "where": "4",
+   "quote": "we randomly partition the data in each task into training (70%), development (10%) and test (20%) sets"
+  },
+  {
+   "claim": "LILA-ROBUST uses 20 sampled questions per constituent dataset and 9 perturbation templates (3 from SVAMP, 6 new) rewritten by MTurk workers.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "9",
+   "unit": "templates",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Crowdsourced via AMT, $3 per HIT, workers >98% acceptance and >1000 HITs",
+   "note": null,
+   "where": "3.4",
+   "quote": "we define a total of 9 templates for such question perturbations: 3 from Patel et al. (2021) and 6 of our own"
+  },
+  {
+   "claim": "Multi-task model showed no degradation on perturbed IID test examples.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "none",
+   "unit": "",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LILA-ROBUST, Neo-Multi",
+   "note": null,
+   "where": "5.1",
+   "quote": "we did not find any degradation in performance when testing on perturbed IID test examples"
+  },
+  {
+   "claim": "The OOD split assigns whole datasets of a task to IID or OOD at random; tasks with a single dataset get no OOD set.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "none",
+   "unit": "",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LILA-OOD construction",
+   "note": null,
+   "where": "3.3",
+   "quote": "randomly assigning the datasets for each task into IID and an OOD sets"
+  },
+  {
+   "claim": "Few-shot Codex scores under 0.5 F1 on geometry, number theory, advanced math, complex language, computer science, science formulas, real-world knowledge.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "none",
+   "unit": "F1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Codex few-shot",
+   "note": null,
+   "where": "5.3",
+   "quote": "Codex obtains less that 0.5 F1 on several tasks"
+  },
+  {
+   "claim": "GPT-3 and Codex numbers use only 100 uniformly distributed examples per task; fine-tuned on full test set.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "100",
+   "unit": "examples",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Cost limit",
+   "note": null,
+   "where": "Table 3 caption",
+   "quote": "GPT-3 and Codex performance is computed on 100 uniformly distributed examples owing to their cost and usage limit"
+  }
+ ],
+ "limits": [
+  "F1 likely overestimates performance: gold '2 apples' scores the same for predictions '2' and 'apples'.",
+  "Only one linear algebra dataset, no natural language; theorem proving not covered.",
+  "Codex and GPT-3 evaluated on only 100 examples per task, so their numbers are noisy and not comparable to full-test fine-tuned scores.",
+  "No training hyperparameters, seeds or compute reported.",
+  "OOD defined by random assignment of datasets within a task, so OOD difficulty varies by which datasets land there; tasks with one dataset have no OOD score.",
+  "Codex training data is unknown, so contamination with LILA source datasets cannot be ruled out.",
+  "Tables 7-9 show identical generated programs across unrelated examples, a probable extraction/typesetting error in the paper."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "LILA-OOD",
+   "definition": "evaluation set of whole datasets per task held out from training, testing the same skill from independently collected data",
+   "where": "3.3"
+  },
+  {
+   "term": "LILA-ROBUST",
+   "definition": "evaluation set with linguistic perturbations of questions (9 templates) via crowd-sourcing",
+   "where": "3.4"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "NumGLUE",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "LILA expands NumGLUE (8 tasks) to 23 tasks with OOD and robustness",
+   "quote": null
+  },
+  {
+   "work": "GPT-Neo",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "base model fine-tuned",
+   "quote": null
+  },
+  {
+   "work": "Codex (Chen et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "few-shot baseline",
+   "quote": null
+  },
+  {
+   "work": "GPT-3 (Brown et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "few-shot baseline",
+   "quote": null
+  },
+  {
+   "work": "SVAMP (Patel et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "3 of 9 robustness templates",
+   "quote": null
+  },
+  {
+   "work": "Adversarial filters of dataset biases (Le Bras et al.)",
+   "year": 2020,
+   "arxiv": "2002.04108",
+   "relation": "uses-method",
+   "note": "random IID/OOD assignment of datasets",
+   "quote": null
+  },
+  {
+   "work": "DeepMind Mathematics (Saxton et al.)",
+   "year": 2019,
+   "arxiv": "1904.01557",
+   "relation": "uses-data",
+   "note": "regenerated with program annotations",
+   "quote": null
+  },
+  {
+   "work": "MATH / AMPS (Hendrycks et al.)",
+   "year": 2021,
+   "arxiv": "2103.03874",
+   "relation": "uses-data",
+   "note": "AMPS downsampled",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Table 3",
+   "caption": "Evaluations of different baselines across 23 tasks in LILA.",
+   "page": 6,
+   "why": "Per-task IID vs OOD F1 for answer vs program output, fine-tuned vs few-shot; shows IID-to-OOD gap directly."
+  },
+  {
+   "figure": "Fig 1",
+   "caption": "A data example with two Python programs in LILA.",
+   "page": 1,
+   "why": "Shows the unified format: question, answer, programs, instruction, four category tags."
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Average F1 scores of GPT-3 and Codex with different numbers of few-shot examples in LILA.",
+   "page": 8,
+   "why": "Shows GPT-3 answer prediction winning at 0-1 shot and Codex overtaking with more examples."
+  },
+  {
+   "figure": "Table 15",
+   "caption": "Raw datasets used to create different tasks in LILA across different math categories.",
+   "page": 15,
+   "why": "Lists which source datasets are IID versus OOD for each task, concrete example of dataset-level OOD split."
+  },
+  {
+   "figure": "Table 19",
+   "caption": "Example for each template provided to MTurk workers to produce LILA-ROBUST",
+   "page": 19,
+   "why": "Nine concrete perturbation templates"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Table 3 and Table 4 average rows are not reconciled (Neo-P OOD 0.238 vs 0.263).",
+  "Text cites T5-3B 30.1% to 37.6% but Table 5 compares Neo vs Multi with different numbers.",
+  "Tables 7-9 generated-program cells repeat the same unrelated sympy snippet (probable PDF/paper error).",
+  "Table 15 labels two tasks 'TASK 8' (number theory, linear algebra) and PDF text columns are flattened so IID/OOD membership of datasets in Tables 15-18 is not recoverable from the text.",
+  "No embedded instructions found."
+ ]
+}

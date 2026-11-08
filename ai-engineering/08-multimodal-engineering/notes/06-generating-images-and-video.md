@@ -23,6 +23,8 @@ sources:
   - https://arxiv.org/abs/2204.03458
   - https://arxiv.org/abs/2308.16512
   - https://arxiv.org/abs/2601.20540
+  - https://arxiv.org/abs/2210.08402
+  - https://arxiv.org/abs/2306.16527
 confidence: medium
 cleaned: 2026-11-01
 ---
@@ -142,6 +144,8 @@ Two operational rules from the self-hosted side (ch. 9):
 **Mitigating bias is part of the product, and clumsy fixes backfire.** DALL-E 2 was found to silently append words like "black" or "female" to prompts such as "a photo of a doctor", to offset a skew in its training data. Google's Gemini image generation drew criticism in early 2024 for a similarly clumsy attempt (ch. 7). If your system rewrites prompts, log the rewritten prompt next to the user's, so you can audit what the model was actually asked.
 
 The labs' own first answer was to withhold the model or filter its training data. Google didn't release Imagen. Its paper reports a bias toward lighter skin tones and Western gender stereotypes for professions, and weaker photorealism on people: raters preferred Imagen over real COCO images 39.2% of the time overall, and 43.6% once images of people were removed ([arXiv:2205.11487](https://arxiv.org/abs/2205.11487), human evaluation and limitations). OpenAI released only a small 300M GLIDE trained on data with all people, and some violent images and hate symbols, filtered out ([arXiv:2112.10741](https://arxiv.org/abs/2112.10741), Safety Considerations). Filtering removes a capability as well as a risk, so expect a model released this way to be weak on whatever was filtered out.
+
+The open datasets show what that filtering looks like. LAION-5B kept 5.85B image-text pairs, about 10% of roughly 50B candidates, using CLIP ViT-B/32 similarity thresholds of 0.28 for English and 0.26 for other languages. About 3% were tagged NSFW. The paper reports no accuracy for the released tagger; the 96.45% recall and 7.96% false-positive rate in its appendix belong to an earlier EfficientNetV2 prototype on the authors' own test set. The dataset is links, not images, so content can vanish. The authors say it contains explicit and abusive material, that people in it were not asked for consent, that the safety tags are not production-ready filters, and that it is for research only. They measured no overlap with test sets ([arXiv:2210.08402](https://arxiv.org/abs/2210.08402) (Schuhmann et al., NeurIPS 2022)). OBELICS filtered Common Crawl into 141M interleaved documents with 353M images, of which 298M (84.3%) are unique against 60.6% for mmc4 (per the text), and 115B text tokens against 43B. Its IDEFICS-9B still trails Flamingo-9B ([arXiv:2306.16527](https://arxiv.org/abs/2306.16527) (Laurençon et al., NeurIPS 2023)).
 
 ### Record it or lose it
 

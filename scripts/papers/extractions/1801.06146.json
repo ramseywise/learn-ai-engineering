@@ -1,0 +1,233 @@
+{
+ "schema": 1,
+ "key": "1801.06146",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/howard-2018-universal-language-model-fine-tuning.pdf",
+ "bib": {
+  "title": "Universal Language Model Fine-tuning for Text Classification",
+  "authors": ["Jeremy Howard", "Sebastian Ruder"],
+  "first_author": "Howard",
+  "year": 2018,
+  "venue": "Proceedings of the 56th Annual Meeting of the Association for Computational Linguistics (ACL), Long Papers, pages 328-339",
+  "arxiv": "1801.06146",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 46141,
+  "chars_total": 46141,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "How can a pretrained language model be fine-tuned for any NLP text classification task without overfitting or catastrophic forgetting, matching CV-style inductive transfer?",
+ "hypothesis": "Language-model fine-tuning has failed in NLP because of how it was trained, not because of the idea; careful fine-tuning techniques will make it work across tasks.",
+ "contributions": [
+  "ULMFiT, a method for CV-like transfer learning for any NLP task",
+  "Discriminative fine-tuning, slanted triangular learning rates and gradual unfreezing to avoid catastrophic forgetting",
+  "Significantly outperform the state of the art on six text classification datasets, 18-24% error reduction on the majority",
+  "Extremely sample-efficient transfer learning plus an extensive ablation analysis",
+  "Release of pretrained models and code"
+ ],
+ "method": {
+  "summary": "Three stages: pretrain an AWD-LSTM language model on Wikitext-103, fine-tune the whole LM on target-task text with discriminative learning rates and slanted triangular schedule, then fine-tune a classifier (LM plus two linear blocks) with gradual unfreezing, concat pooling and BPT3C. One forward and one backward model are trained and their predictions averaged.",
+  "task": "text classification (sentiment, question, topic) via transfer learning from language modelling",
+  "trains": true,
+  "datasets": [
+   {"name": "Wikitext-103", "role": "pretrain", "size": "28,595 preprocessed Wikipedia articles, 103 million words", "split": null, "source": "Merity et al., 2017b", "preprocessing": null},
+   {"name": "TREC-6", "role": "both", "size": "5.5k training examples, 6 classes; 500-example test set", "split": "10% of training split off for validation in analyses", "source": "Voorhees and Tice, 1999", "preprocessing": "same as Johnson and Zhang 2017 / McCann et al. 2017, plus special tokens for upper-case words, elongation and repetition"},
+   {"name": "IMDb", "role": "both", "size": "25k training examples, 2 classes", "split": "10% of training split off for validation in analyses; hyperparameters tuned on IMDb validation set", "source": "Maas et al., 2011", "preprocessing": "same as above"},
+   {"name": "Yelp-bi", "role": "both", "size": "560k examples, 2 classes", "split": null, "source": "Zhang et al., 2015", "preprocessing": "same as above"},
+   {"name": "Yelp-full", "role": "both", "size": "650k examples, 5 classes", "split": null, "source": "Zhang et al., 2015", "preprocessing": "same as above"},
+   {"name": "AG news", "role": "both", "size": "120k examples, 4 classes", "split": "10% of training split off for validation in analyses", "source": "Zhang et al., 2015", "preprocessing": "same as above"},
+   {"name": "DBpedia", "role": "both", "size": "560k examples, 14 classes", "split": null, "source": "Zhang et al., 2015", "preprocessing": "same as above"}
+  ],
+  "models": [
+   {"name": "ULMFiT (AWD-LSTM)", "role": "proposed", "params": null, "architecture": "AWD-LSTM language model, regular LSTM with no attention or shortcut connections; classifier head of two linear blocks (batch norm, dropout, ReLU then softmax), hidden size 50", "init_from": "pretrained on Wikitext-103, then LM fine-tuned on target data", "tokenizer": null, "vocab": null, "layers": "3", "hidden": "1150 hidden activations per layer; embedding size 400", "heads": null, "context": "BPTT batch size of 70 (variable length backpropagation sequences)", "other": {"dropout": "0.4 layers, 0.3 RNN layers, 0.4 input embedding, 0.05 embedding, weight dropout 0.5 on RNN hidden-to-hidden matrix"}},
+   {"name": "CoVe", "role": "baseline", "params": null, "architecture": "hypercolumn-style contextualised vectors from MT, 7 million sentence pairs", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "DPCNN / CNN / oh-LSTM etc.", "role": "baseline", "params": null, "architecture": "Johnson and Zhang text categorization models and others, see Tables 2 and 3", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}}
+  ],
+  "training": {
+   "objective": "language modelling (pretraining and target LM fine-tuning); cross-entropy classification for the classifier stage",
+   "optimizer": "Adam with beta1 = 0.7 (default 0.9) and beta2 = 0.99",
+   "lr": "base 0.004 for LM fine-tuning and 0.01 for classifier; discriminative: last-layer LR chosen by fine-tuning only last layer, lower layers eta_(l-1) = eta_l/2.6",
+   "lr_schedule": "slanted triangular: cut_frac = 0.1, ratio = 32, eta_max = 0.01; linear increase then long linear decay",
+   "warmup": "inferred: the STLR increase phase, first 10% of iterations (cut_frac = 0.1)",
+   "batch_size": "64",
+   "steps": null,
+   "epochs": "tuned per task on validation set; TREC-6 LM fine-tuned 15 epochs; classifier 50 epochs default; ablations fine-tune classifier 50 epochs",
+   "tokens": null,
+   "seq_len": "BPTT 70 (variable length)",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": "see model other",
+   "regularisation": "AWD-LSTM dropouts and weight dropout; batch norm and dropout in classifier; gradual unfreezing (one layer per epoch, from last layer)",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "ablation_lrs": "Discr uses eta_L = 0.01; chain-thaw uses 0.001 for last layer and 0.0001 for others; 0.001 for all other ablation settings",
+    "vanilla_LM_ablation": "vanilla LM (no dropout) classifier trained only 5 epochs, classifier dropout 0.4 kept",
+    "concat_pooling": "h_c = [h_T, maxpool(H), meanpool(H)] over as many time steps as fit in GPU memory",
+    "BPT3C": "document split into fixed-length batches of size b; model state carried between batches; gradients backpropagated to batches that contributed to final prediction",
+    "bidirectional": "forward and backward LM each pretrained and fine-tuned independently, classifier predictions averaged",
+    "hyperparameter_tuning": "same hyperparameters across tasks, tuned on the IMDb validation set"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "error rate", "definition": "percentage of misclassified examples; test error for main results, validation error (10% held-out train) for ablations", "unit": "%", "higher_is_better": false}
+   ],
+   "baselines": ["CoVe (McCann et al., 2017)", "oh-LSTM", "Virtual adversarial (Miyato et al., 2016)", "TBCNN", "LSTM-CNN", "Char-level CNN", "CNN (Johnson and Zhang, 2016)", "DPCNN (Johnson and Zhang, 2017)", "training from scratch", "Dai and Le 2015 LM fine-tuning (7.64 on IMDb)"],
+   "protocol": "single reported numbers; no seeds, variance or significance test reported; authors note TREC-6 gain is not statistically significant given the 500-example test set. Ablations use unidirectional LMs on IMDb, TREC-6, AG validation sets."
+  },
+  "availability": {
+   "code": "http://nlp.fast.ai/ulmfit",
+   "weights": "pretrained models open-sourced at same URL",
+   "data": "public benchmark datasets"
+  },
+  "prompts": [],
+  "evidence": [
+   {"field": "training.lr_schedule", "quote": "We generally use cut frac = 0.1, ratio = 32 and", "where": "Section 3.2, p4"}
+  ]
+ },
+ "results": [
+  {
+   "claim": "ULMFiT beats CoVe and the prior state of the art on IMDb test error.",
+   "kind": "measured", "source": null, "metric": "test error", "value": "4.6", "unit": "%", "baseline_value": "5.9 (oh-LSTM / Virtual), 8.2 (CoVe)", "n": null,
+   "setup": "IMDb, AWD-LSTM pretrained on Wikitext-103, full ULMFiT with bidirectional ensemble",
+   "quote": null, "table": "Table 2, row ULMFiT (ours), column Test (IMDb)", "note": "Section 5 gives 4.58 for the bidirectional model on IMDb and 5.30 single model; Table 2 prints 4.6", "where": "Table 2"
+  },
+  {
+   "claim": "ULMFiT reduces IMDb error by 43.9% relative to CoVe and 22% relative to the state of the art.",
+   "kind": "measured", "source": null, "metric": "relative error reduction", "value": "43.9", "unit": "%", "baseline_value": null, "n": null,
+   "setup": "IMDb test set, vs CoVe",
+   "quote": "On IMDb, we reduce the error dramatically by 43.9% and 22%", "table": null, "note": null, "where": "Section 4.2"
+  },
+  {
+   "claim": "ULMFiT reaches 3.6% test error on TREC-6, better than CoVe 4.2 and LSTM-CNN 3.9, though not statistically significant.",
+   "kind": "measured", "source": null, "metric": "test error", "value": "3.6", "unit": "%", "baseline_value": "3.9 (LSTM-CNN), 4.2 (CoVe)", "n": "500 test examples",
+   "setup": "TREC-6 test set",
+   "quote": null, "table": "Table 2, row ULMFiT (ours), column Test (TREC-6)", "note": "authors say the improvement is not statistically significant", "where": "Table 2, Section 4.2"
+  },
+  {
+   "claim": "ULMFiT lowers AG test error to 5.01% from 6.57% (CNN), a 23.7% relative reduction.",
+   "kind": "measured", "source": null, "metric": "test error", "value": "5.01", "unit": "%", "baseline_value": "6.57", "n": null,
+   "setup": "AG news test set, vs Johnson and Zhang state of the art",
+   "quote": null, "table": "Table 3, row ULMFiT (ours), column AG", "note": "text: error reduced by 23.7%", "where": "Table 3"
+  },
+  {
+   "claim": "ULMFiT test errors on the other large datasets: DBpedia 0.80, Yelp-bi 2.16, Yelp-full 29.98.",
+   "kind": "measured", "source": null, "metric": "test error", "value": "29.98", "unit": "%", "baseline_value": "30.58 (DPCNN)", "n": null,
+   "setup": "Yelp-full test set; DBpedia 0.80 (vs 0.84), Yelp-bi 2.16 (vs 2.64)",
+   "quote": null, "table": "Table 3, row ULMFiT (ours), column Yelp-full", "note": "text gives reductions of 4.8%, 18.2%, 2.0% on DBpedia, Yelp-bi, Yelp-full", "where": "Table 3"
+  },
+  {
+   "claim": "With 100 labeled examples supervised ULMFiT matches training from scratch with 10x (IMDb) and 20x (AG) more data; with unlabeled data, 100x (IMDb) and 50x (AG).",
+   "kind": "measured", "source": null, "metric": "data-efficiency multiple", "value": "100", "unit": "x more data matched", "baseline_value": null, "n": null,
+   "setup": "IMDb and AG, semi-supervised uses 50k (IMDb) or 100k (AG) unlabeled examples for LM fine-tuning; read from Fig 3",
+   "quote": "we match the performance of training from scratch with 50× and 100× more data on AG", "table": null, "note": "Abstract says 'matches the performance of training from scratch on 100x more data'", "where": "Section 5, Fig 3"
+  },
+  {
+   "claim": "Pretraining on Wikitext-103 helps most on small data: TREC-6 validation error 10.67 without vs 5.69 with.",
+   "kind": "measured", "source": null, "metric": "validation error", "value": "5.69", "unit": "%", "baseline_value": "10.67", "n": null,
+   "setup": "TREC-6, ULMFiT with vs without pretraining; IMDb 5.63 vs 5.00, AG 5.52 vs 5.38",
+   "quote": null, "table": "Table 4, row With pretraining, column TREC-6", "note": null, "where": "Table 4"
+  },
+  {
+   "claim": "Discriminative fine-tuning plus STLR in LM fine-tuning lowers IMDb validation error from 6.99 (no LM fine-tuning) to 5.00.",
+   "kind": "measured", "source": null, "metric": "validation error", "value": "5.00", "unit": "%", "baseline_value": "6.99", "n": null,
+   "setup": "IMDb; Full 5.86, Full+discr 5.55; TREC-6 plain full fine-tuning (6.54) is worse than none (6.38)",
+   "quote": null, "table": "Table 6, row Full + discr + stlr, column IMDb", "note": null, "where": "Table 6"
+  },
+  {
+   "claim": "Last-layer-only classifier fine-tuning severely underfits (TREC-6 16.09) compared with the full ULMFiT recipe (5.69).",
+   "kind": "measured", "source": null, "metric": "validation error", "value": "16.09", "unit": "%", "baseline_value": "5.69", "n": null,
+   "setup": "TREC-6 classifier fine-tuning ablation; from scratch 13.36",
+   "quote": null, "table": "Table 7, row Last, column TREC-6", "note": null, "where": "Table 7"
+  },
+  {
+   "claim": "Full ULMFiT classifier fine-tuning (Freez + discr + stlr) gives 5.00 IMDb, 5.69 TREC-6, 5.38 AG validation error; best on IMDb and TREC-6 except Full + discr on IMDb (4.57).",
+   "kind": "measured", "source": null, "metric": "validation error", "value": "5.38", "unit": "%", "baseline_value": null, "n": null,
+   "setup": "AG; cosine variant gets 5.29 on AG (better)",
+   "quote": null, "table": "Table 7, row Freez + discr + stlr, column AG", "note": "Text says ULMFiT is best on IMDb, but Table 7 shows Full + discr at 4.57 on IMDb, lower than 5.00", "where": "Table 7"
+  },
+  {
+   "claim": "Bidirectional ensembling lowers IMDb test error from 5.30 to 4.58.",
+   "kind": "measured", "source": null, "metric": "test error", "value": "4.58", "unit": "%", "baseline_value": "5.30", "n": null,
+   "setup": "IMDb, forward+backward LM classifiers averaged",
+   "quote": "On IMDb we lower the test error from 5.30 of a single model", "table": null, "note": null, "where": "Section 5"
+  },
+  {
+   "claim": "A vanilla LM without dropout reaches IMDb 5.98 vs 5.00 for AWD-LSTM, but overfits on TREC-6 (7.41 vs 5.69).",
+   "kind": "measured", "source": null, "metric": "validation error", "value": "5.98", "unit": "%", "baseline_value": "5.00", "n": null,
+   "setup": "IMDb validation, vanilla LM vs AWD-LSTM LM",
+   "quote": null, "table": "Table 5, row Vanilla LM, column IMDb", "note": null, "where": "Table 5"
+  },
+  {
+   "claim": "Dai and Le's LM fine-tuning reaches only 7.64 error on IMDb vs 4.6 for ULMFiT.",
+   "kind": "reported", "source": "Dai and Le, 2015", "metric": "test error", "value": "7.64", "unit": "%", "baseline_value": "4.6", "n": null,
+   "setup": "IMDb",
+   "quote": "only achieves an error of 7.64", "table": null, "note": null, "where": "Section 4.2"
+  }
+ ],
+ "limits": [
+  "Only text classification on six English datasets is evaluated; sequence labeling is claimed straightforward but not tested, and entailment/QA may need new methods.",
+  "Pretraining corpus is only Wikitext-103 (103M words); more diverse corpora left to future work.",
+  "No seeds, variance, confidence intervals or compute/hardware are reported; TREC-6 gain is acknowledged as not statistically significant.",
+  "Hyperparameters were tuned on the IMDb validation set and reused across tasks; ablations use validation error on 10% of training data, so they are not test results.",
+  "Gradual unfreezing and slanted triangular LR were found empirically (e.g. the 2.6 factor); authors say more studies are needed to understand what a pretrained LM captures and how fine-tuning changes it.",
+  "Dated: AWD-LSTM base; later transformer LMs superseded it (not in the paper)."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "discriminative fine-tuning", "definition": "Tune each layer with a different learning rate; last-layer LR chosen first, lower layers use eta_(l-1) = eta_l/2.6", "where": "Section 3.2"},
+  {"term": "slanted triangular learning rates (STLR)", "definition": "Learning rate schedule that first linearly increases then linearly decays, with a short increase and long decay", "where": "Section 3.2"},
+  {"term": "gradual unfreezing", "definition": "Unfreeze the model one layer at a time starting from the last layer, fine-tuning all unfrozen layers one epoch per step until all layers are fine-tuned", "where": "Section 3.3"},
+  {"term": "concat pooling", "definition": "Concatenate last hidden state with max-pooled and mean-pooled hidden states over as many time steps as fit in GPU memory", "where": "Section 3.3"},
+  {"term": "BPT3C", "definition": "BPTT for Text Classification: split document into fixed-length batches, carry state across batches, backpropagate to batches that contributed to the prediction", "where": "Section 3.3"},
+  {"term": "hypercolumns", "definition": "In NLP, concatenation of embeddings at different layers of a pretrained model used as features", "where": "Section 2, footnote 2"}
+ ],
+ "lineage": [
+  {"work": "Dai and Le, Semi-supervised Sequence Learning", "year": 2015, "arxiv": "1511.01432", "relation": "extends", "note": "first proposed fine-tuning an LM but needs millions of in-domain documents", "quote": null},
+  {"work": "Merity et al., Regularizing and Optimizing LSTM Language Models (AWD-LSTM)", "year": 2017, "arxiv": "1708.02182", "relation": "uses-method", "note": "base language model", "quote": null},
+  {"work": "Merity et al., Pointer Sentinel Mixture Models (Wikitext-103)", "year": 2017, "arxiv": "1609.07843", "relation": "uses-data", "note": "pretraining corpus", "quote": null},
+  {"work": "McCann et al., Learned in Translation (CoVe)", "year": 2017, "arxiv": "1708.00107", "relation": "baseline", "note": "transfer learning baseline on IMDb and TREC-6", "quote": null},
+  {"work": "Johnson and Zhang, Deep pyramid CNN", "year": 2017, "arxiv": null, "relation": "baseline", "note": "state of the art on AG, DBpedia, Yelp", "quote": null},
+  {"work": "Peters et al., Deep contextualized word representations (ELMo)", "year": 2018, "arxiv": "1802.05365", "relation": "related", "note": "hypercolumn approach needing custom architectures", "quote": null},
+  {"work": "Smith, Cyclical learning rates", "year": 2017, "arxiv": "1506.01186", "relation": "uses-method", "note": "STLR modifies triangular LR", "quote": null},
+  {"work": "Felbo et al., emoji representations (chain-thaw)", "year": 2017, "arxiv": "1708.00524", "relation": "baseline", "note": "chain-thaw compared with gradual unfreezing", "quote": null},
+  {"work": "Loshchilov and Hutter, SGDR", "year": 2017, "arxiv": "1608.03983", "relation": "baseline", "note": "cosine annealing compared with STLR", "quote": null},
+  {"work": "Yosinski et al., How transferable are features in deep neural networks", "year": 2014, "arxiv": "1411.1792", "relation": "uses-method", "note": "motivates per-layer rates and unfreezing from the last layer", "quote": null},
+  {"work": "Mou et al., How transferable are neural networks in NLP applications", "year": 2016, "arxiv": "1603.06111", "relation": "contradicts", "note": "fine-tuning shown to fail between unrelated NLP tasks; ULMFiT argues it works with proper technique", "quote": null},
+  {"work": "Maas et al. IMDb; Zhang et al. 2015 datasets; Voorhees and Tice TREC", "year": 2015, "arxiv": null, "relation": "uses-data", "note": "evaluation datasets", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 1", "caption": "ULMFiT consists of three stages: a) LM pre-training b) LM fine-tuning with discriminative fine-tuning and STLR c) classifier fine-tuning with gradual unfreezing, Discr and STLR", "page": 3, "why": "Shows the three-stage pipeline and which layers are unfrozen at each stage"},
+  {"figure": "Fig 2", "caption": "The slanted triangular learning rate schedule used for ULMFiT as a function of the number of training iterations.", "page": 4, "why": "Shows the short ramp-up and long linear decay shape"},
+  {"figure": "Fig 3", "caption": "Validation error rates for supervised and semi-supervised ULMFiT vs. training from scratch with different numbers of training examples on IMDb, TREC-6, and AG", "page": 7, "why": "Low-shot data-efficiency curves"},
+  {"figure": "Fig 4", "caption": "Validation error rate curves for fine-tuning the classifier with ULMFiT and 'Full' on IMDb, TREC-6, and AG", "page": 9, "why": "Shows catastrophic forgetting in full fine-tuning (error rises after epoch 1) vs stable ULMFiT"}
+ ],
+ "code": [
+  {"where": "Eq 2, p3", "snippet": "theta_t^l = theta_{t-1}^l - eta^l * grad_{theta^l} J(theta); eta^{l-1} = eta^l / 2.6", "verbatim": false},
+  {"where": "Eq 3, p4", "snippet": "cut = floor(T * cut_frac); p = t/cut if t < cut else 1 - (t-cut)/(cut*(ratio-1)); eta_t = eta_max * (1 + p*(ratio-1)) / ratio", "verbatim": false},
+  {"where": "Eq 4, p5", "snippet": "h_c = [h_T, maxpool(H), meanpool(H)]", "verbatim": true}
+ ],
+ "problems": [
+  "PDF page numbers: paper pages 328-339 map to PDF pages 1-12; figure pages above are PDF page numbers per figures.py captions (p3, p4, p7, p9)",
+  "Table 7 vs text: text calls full ULMFiT best on IMDb, but 'Full + discr' row shows 4.57 on IMDb versus 5.00",
+  "No instructions embedded in the text."
+ ]
+}

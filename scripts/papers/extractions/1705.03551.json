@@ -1,0 +1,275 @@
+{
+ "schema": 1,
+ "key": "1705.03551",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/joshi-2017-triviaqa.pdf",
+ "bib": {
+  "title": "TriviaQA: A Large Scale Distantly Supervised Challenge Dataset for Reading Comprehension",
+  "authors": ["Mandar Joshi", "Eunsol Choi", "Daniel S. Weld", "Luke Zettlemoyer"],
+  "first_author": "Joshi",
+  "year": 2017,
+  "venue": "ACL 2017 (55th Annual Meeting of the Association for Computational Linguistics), pages 1601-1611",
+  "arxiv": "1705.03551",
+  "doi": "10.18653/v1/P17-1147"
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 46683,
+  "chars_total": 46683,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "benchmark",
+ "question": "Can a reading-comprehension dataset built from trivia questions written independently of the evidence documents, with evidence gathered afterwards, be larger and harder than existing ones?",
+ "hypothesis": "Decoupling question writing from evidence collection yields questions that are more compositional and need more lexical, syntactic and multi-sentence reasoning than SQuAD, so current models fall well short of humans.",
+ "contributions": [
+  "Over 650K question-answer-evidence triples, with questions from trivia enthusiasts independent of the evidence documents",
+  "A manual analysis quantifying dataset quality and the challenges involved",
+  "Experiments with two baseline methods showing the tasks are not easily solved",
+  "A clean human-verified subset of 1975 question-document-answer triples"
+ ],
+ "method": {
+  "summary": "Question-answer pairs are scraped from 14 trivia websites, then evidence is gathered afterwards from Bing web search (top 10 pages) and from Wikipedia pages for entities linked in the question with TAGME. Documents lacking the answer string are dropped, giving distant supervision. Baselines are a random-entity heuristic, a LambdaMART entity ranker and BiDAF with truncated documents.",
+  "task": "reading comprehension / question answering with distantly supervised evidence documents",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "TriviaQA (Wikipedia domain)",
+    "role": "both",
+    "size": "61,888 train / 7,993 dev / 7,701 test questions; 110,648 / 14,229 / 13,661 documents",
+    "split": "random 80% train, 10% dev, 10% test of QA pairs",
+    "source": "Questions from 14 trivia and quiz-league websites; evidence is Wikipedia pages for entities found with TAGME",
+    "preprocessing": "Questions under four tokens removed. Evidence lacking the answer string removed. Documents for one question pooled (1.8 per question on average), evaluated per question."
+   },
+   {
+    "name": "TriviaQA (Web domain)",
+    "role": "both",
+    "size": "76,496 train / 9,951 dev / 9,509 test questions; 528,979 / 68,621 / 65,059 documents",
+    "split": "random 80% train, 10% dev, 10% test",
+    "source": "Top 10 crawled pages from the top 50 Bing Web search API URLs, query is the question (answer not used)",
+    "preprocessing": "Trivia sites and URLs with trivia, question or answer removed; PDFs and ill-formatted documents pruned; each question-answer-document tuple is an independent data point; evaluated per document"
+   },
+   {
+    "name": "TriviaQA verified subsets",
+    "role": "eval",
+    "size": "Wiki: 297 dev / 584 test questions (305 / 592 documents). Web: 322 dev / 733 test questions (325 / 769 documents)",
+    "split": "dev and test only",
+    "source": "Questions and documents a human annotator answered correctly",
+    "preprocessing": "Annotator answered 986 (Wikipedia) and 1345 (Web) dev and test questions, abstaining if the minimal facts were absent"
+   }
+  ],
+  "models": [
+   {
+    "name": "Random entity baseline",
+    "role": "baseline",
+    "params": null,
+    "architecture": "heuristic: pick a random entity of the question's Wikipedia pages that does not occur in the question",
+    "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null,
+    "other": {"domain": "Wikipedia only"}
+   },
+   {
+    "name": "Entity classifier (LambdaMART)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "boosted-tree ranker over candidate answers, RankLib implementation, context and Wikipedia-catalog features",
+    "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null,
+    "other": {"candidates": "n-grams (n in [1,5]) in sentences sharing at least one word with the question that are titles of Wikipedia articles"}
+   },
+   {
+    "name": "BiDAF (modified)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "RNN at character, token and phrase level with question-context attention, outputs start and end positions",
+    "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null,
+    "context": "evidence truncated to first 800 words",
+    "other": {"span_label": "first match of the answer string in the document", "multi_doc": "predict per document, score(A_i) = sum_k c_{i,k}, take the highest"}
+   }
+  ],
+  "training": {
+   "objective": "BiDAF: answer start/end span prediction with spans approximated by the first answer string match; classifier: LambdaMART ranking with score(a+|q,D) > score(a-|q,D)",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "800 words at test; training uses only documents where the answer appears in the first 400 tokens",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "classifier_train": "random sample of 50,000 training questions",
+    "bidaf_web_train": "80,000 randomly sampled documents",
+    "bidaf_wiki_train": "not stated beyond the first-400-token filter"
+   }
+  },
+  "inference": {
+   "decoding": "BiDAF: highest summed-confidence candidate across documents",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single run; seeds not stated",
+   "prompting": null,
+   "retrieval": "Evidence is given, not retrieved at test time (Bing top 10 pages or TAGME-linked Wikipedia pages)",
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "Exact match (EM)", "definition": "As SQuAD; for Wikipedia-entity answers, Wikipedia aliases count as valid; otherwise one given answer", "unit": "%", "higher_is_better": true},
+    {"name": "F1", "definition": "Word-overlap F1 with the answer", "unit": "%", "higher_is_better": true},
+    {"name": "Oracle", "definition": "Upper bound on EM: answer found in the (truncated) evidence, or in the candidate set for the classifier", "unit": "%", "higher_is_better": true}
+   ],
+   "baselines": ["Random entity", "Entity classifier", "BiDAF", "Human annotator"],
+   "protocol": "Wikipedia scored per question, Web scored per document. Distant-supervision dev/test plus human-verified dev/test subsets. No significance tests."
+  },
+  "availability": {
+   "code": "http://nlp.cs.washington.edu/triviaqa/",
+   "weights": null,
+   "data": "http://nlp.cs.washington.edu/triviaqa/ (also an unfiltered release of 110,495 QA pairs and 740K documents)"
+  },
+  "prompts": [],
+  "evidence": [
+   {"field": "datasets.Web.preprocessing", "quote": "we posed each question4 as a search query to the Bing Web search API, and collected the top 50 search result URLs", "where": "Sec 3"}
+  ]
+ },
+ "results": [
+  {
+   "claim": "BiDAF reaches 40% on TriviaQA against 68% on SQuAD.",
+   "kind": "measured", "source": null, "metric": "EM", "value": "40", "unit": "%", "baseline_value": "68", "n": null,
+   "setup": "BiDAF on TriviaQA distant-supervision evaluation versus its SQuAD result",
+   "quote": "The neural model performs best, but only achieves 40% for TriviaQA in comparison to 68% on SQuAD",
+   "table": null, "note": "68% SQuAD figure is cited, not rerun here", "where": "Sec 1"
+  },
+  {
+   "claim": "BiDAF on Wikipedia evidence, distant supervision, dev EM.",
+   "kind": "measured", "source": null, "metric": "EM", "value": "40.26", "unit": "%", "baseline_value": "23.42", "n": 7993,
+   "setup": "Wikipedia domain, dev, distant supervision; baseline is the entity classifier",
+   "quote": null, "table": "Table 7, row BiDAF (Wiki), column Distant Supervision Dev EM", "note": "test EM 40.32, F1 45.91", "where": "Table 7"
+  },
+  {
+   "claim": "BiDAF on Web evidence, distant supervision, test EM.",
+   "kind": "measured", "source": null, "metric": "EM", "value": "40.74", "unit": "%", "baseline_value": "24.00", "n": 9509,
+   "setup": "Web domain, test, distant supervision, per document; baseline is the entity classifier",
+   "quote": null, "table": "Table 7, row BiDAF (web), column Distant Supervision Test EM", "note": "test F1 47.05", "where": "Table 7"
+  },
+  {
+   "claim": "BiDAF on the human-verified Wikipedia test subset.",
+   "kind": "measured", "source": null, "metric": "EM", "value": "44.86", "unit": "%", "baseline_value": "27.23", "n": 584,
+   "setup": "Wikipedia verified test; baseline is the entity classifier",
+   "quote": null, "table": "Table 7, row BiDAF (Wiki), column Verified Test EM", "note": "F1 50.71", "where": "Table 7"
+  },
+  {
+   "claim": "BiDAF on the human-verified Web test subset.",
+   "kind": "measured", "source": null, "metric": "EM", "value": "49.54", "unit": "%", "baseline_value": "30.17", "n": 733,
+   "setup": "Web verified test; baseline is the entity classifier",
+   "quote": null, "table": "Table 7, row BiDAF (web), column Verified Test EM", "note": "F1 55.80", "where": "Table 7"
+  },
+  {
+   "claim": "Entity classifier on Wikipedia, distant supervision test EM.",
+   "kind": "measured", "source": null, "metric": "EM", "value": "22.45", "unit": "%", "baseline_value": "12.74", "n": 7701,
+   "setup": "Wikipedia test, distant supervision; baseline is the random entity heuristic",
+   "quote": null, "table": "Table 7, row Classifier (Wiki), column Distant Supervision Test EM", "note": "abstract rounds the classifier to 23%", "where": "Table 7"
+  },
+  {
+   "claim": "Human accuracy sets the ceiling far above the models.",
+   "kind": "measured", "source": null, "metric": "accuracy", "value": "79.7", "unit": "%", "baseline_value": null, "n": 986,
+   "setup": "Wikipedia domain, human baseline",
+   "quote": "All models lag signiﬁcantly behind the human baseline of 79.7% on the Wikipedia domain, and 75.4% on the web domain.",
+   "table": null, "note": "Sec 4 gives the annotator accuracy as 79.6 (Wiki) and 75.3 (Web); the intro and Sec 6.3 print 79.7 and 75.4 (the latter also as the share of questions the evidence answers)", "where": "Sec 6.3"
+  },
+  {
+   "claim": "Evidence documents contain the answer for 75% or more of questions, supporting distant supervision.",
+   "kind": "measured", "source": null, "metric": "evidence answers question", "value": "75.4", "unit": "%", "baseline_value": null, "n": 1345,
+   "setup": "Web domain, human annotator on dev and test questions",
+   "quote": "evidence contains an-\nswers for 79.7% and 75.4% of questions from\nthe Wikipedia and Web domains respectively",
+   "table": null, "note": "Wikipedia figure is 79.7%", "where": "Sec 4"
+  },
+  {
+   "claim": "BiDAF accuracy falls as questions lengthen.",
+   "kind": "measured", "source": null, "metric": "accuracy", "value": "32", "unit": "%", "baseline_value": "50", "n": null,
+   "setup": "BiDAF on Wikipedia dev, questions of 20 or more words versus 5 or fewer",
+   "quote": "with 50% for\nquestions with 5 or fewer words to 32% for 20 or\nmore words",
+   "table": null, "note": null, "where": "Sec 6.3"
+  },
+  {
+   "claim": "Syntactic variation between question and answer sentence is the most common reasoning type.",
+   "kind": "measured", "source": null, "metric": "frequency", "value": "69", "unit": "%", "baseline_value": null, "n": 100,
+   "setup": "100 manually classified Wikipedia question-evidence pairs; categories not mutually exclusive",
+   "quote": "69% of\nthe questions had a different syntactic structure",
+   "table": null, "note": "41% lexical, 40% multi-sentence, 17% world knowledge; Table 5 gives web values 65/39/35/17", "where": "Sec 4, Table 5"
+  },
+  {
+   "claim": "Over three times as many questions need multi-sentence reasoning as in SQuAD.",
+   "kind": "measured", "source": null, "metric": "ratio vs SQuAD", "value": "3", "unit": "x", "baseline_value": null, "n": 100,
+   "setup": "Manual analysis, TriviaQA Wikipedia vs SQuAD",
+   "quote": "Compared to SQuAD, over three\ntimes as many questions in TriviaQA require rea-",
+   "table": null, "note": "SQuAD frequency itself not printed", "where": "Sec 4"
+  },
+  {
+   "claim": "Dataset size: 95,956 QA pairs and 662,659 evidence documents.",
+   "kind": "measured", "source": null, "metric": "QA pairs", "value": "95,956", "unit": "pairs", "baseline_value": null, "n": null,
+   "setup": "Filtered dataset; 40,478 unique answers, avg question 14 words, avg document 2,895 words",
+   "quote": null, "table": "Table 2, row Total number of QA pairs", "note": "Unfiltered release: 110,495 QA pairs and 740K documents", "where": "Table 2"
+  },
+  {
+   "claim": "Answer types: 92.85% of answers are Wikipedia titles.",
+   "kind": "measured", "source": null, "metric": "share of answers", "value": "92.85", "unit": "%", "baseline_value": null, "n": 200,
+   "setup": "200 annotated QA pairs; 4.17% numerical, rest free text",
+   "quote": "92.85% of the answers are titles\nin Wikipedia",
+   "table": null, "note": null, "where": "Sec 4"
+  },
+  {
+   "claim": "Most common BiDAF error category is paraphrasing.",
+   "kind": "measured", "source": null, "metric": "count of 100 errors", "value": "29", "unit": "of 100", "baseline_value": null, "n": 100,
+   "setup": "100 incorrect BiDAF dev predictions, Wikipedia evidence; categories overlap. Others: insufficient evidence 19, multi-sentence 18, answer not in clipped doc 15, distractors 11, wrong document 7",
+   "quote": null, "table": "Table 8, row Paraphrasing", "note": "Separately 19 lacked evidence, 3 wrong ground truth, 3 valid unlisted answers, 12 partially correct", "where": "Table 8, Sec 6.4"
+  }
+ ],
+ "limits": [
+  "Distant supervision is noisy: evidence contains the answer for only about 75% of questions, and the span is approximated by the first string match.",
+  "BiDAF could not read whole documents: truncated to 800 words, trained only on documents with the answer in the first 400 tokens, and Web training used a sample of 80,000 documents. Oracle is below 100% because of this.",
+  "Only three simple baselines, no tuning details, seeds or hyperparameters reported.",
+  "Authors leave abstention (documents without the answer), multi-instance learning, KB use and scalable use of all data to future work.",
+  "Dated: 2017 extractive-reader baselines. Later work (retrievers, LLMs) uses TriviaQA as open-domain or closed-book QA, which this paper does not evaluate; this paper offers the unfiltered release for that."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "distant supervision", "definition": "the assumption that the presence of the answer string in an evidence document implies that the document does answer the question", "where": "Sec 2"},
+  {"term": "verified set", "definition": "questions and documents a human annotator answered correctly using the original answers as reference", "where": "Sec 4"}
+ ],
+ "lineage": [
+  {"work": "SQuAD (Rajpurkar et al.)", "year": 2016, "arxiv": null, "relation": "baseline", "note": "Main comparison dataset; same EM and F1 metrics; answer-substring formulation", "quote": null},
+  {"work": "BiDAF (Seo et al.)", "year": 2017, "arxiv": "1611.01603", "relation": "uses-method", "note": "Neural baseline, modified for long documents", "quote": null},
+  {"work": "Chen, Bolton and Manning, CNN/Daily Mail examination", "year": 2016, "arxiv": null, "relation": "uses-method", "note": "Inspiration for the entity classifier", "quote": null},
+  {"work": "Wang et al., Machine comprehension with syntax, frames, and semantics", "year": 2015, "arxiv": null, "relation": "uses-method", "note": "Entity-centric classifier features", "quote": null},
+  {"work": "LambdaMART (Wu et al.)", "year": 2010, "arxiv": null, "relation": "uses-method", "note": "Ranking algorithm via RankLib", "quote": null},
+  {"work": "TAGME (Ferragina and Scaiella)", "year": 2010, "arxiv": null, "relation": "uses-method", "note": "Entity linker for Wikipedia evidence", "quote": null},
+  {"work": "MS MARCO (Nguyen et al.)", "year": 2016, "arxiv": "1611.09268", "relation": "related", "note": "Independent questions and search-result documents, but search-log questions and crowdsourced answers", "quote": null},
+  {"work": "NewsQA (Trischler et al.)", "year": 2016, "arxiv": "1611.09830", "relation": "related", "note": "Compared in Table 1", "quote": null},
+  {"work": "SearchQA (Dunn et al.)", "year": 2017, "arxiv": "1704.05179", "relation": "related", "note": "Jeopardy questions with search snippets", "quote": null},
+  {"work": "Hermann et al., Teaching machines to read and comprehend", "year": 2015, "arxiv": "1506.03340", "relation": "related", "note": "Cloze-style CNN/Daily Mail", "quote": null},
+  {"work": "Boyd-Graber et al., quiz bowl", "year": 2012, "arxiv": null, "relation": "related", "note": "Other trivia-question QA work; quiz bowl questions are pyramidal paragraphs", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 1", "caption": "Question-answer pairs with sample excerpts from evidence documents from TriviaQA exhibiting lexical and syntactic variability, and requiring reasoning from multiple sentences.", "page": 1, "why": "Shows a trivia question and the evidence sentence needed to answer it, making the paraphrase and multi-sentence challenge concrete."},
+  {"figure": "Table 5", "caption": "Analysis of reasoning used to answer TriviaQA questions shows that a high proportion of evidence sentence(s) exhibit syntactic and lexical variation with respect to questions.", "page": 5, "why": "Frequencies and worked examples of each reasoning type."},
+  {"figure": "Table 7", "caption": "Performance of all systems on TriviaQA using distantly supervised evaluation.", "page": 8, "why": "All baselines and oracle scores in one grid."},
+  {"figure": "Fig 2", "caption": "Distribution of hierarchical WordNet synsets for entities appearing in the answer. The arc length is proportional to the number of questions containing that category.", "page": 4, "why": "Sunburst of answer topics; shows breadth of subject matter."}
+ ],
+ "code": [
+  {"where": "Sec 5.3", "snippet": "score(A_i) = sum_k c_{i,k}", "verbatim": false}
+ ],
+ "problems": [
+  "No instructions embedded in the PDF text.",
+  "Text cache has the first three header lines duplicated; Table 1 check marks were lost in extraction (symbols, not text).",
+  "Human accuracy printed as 79.6/75.3 in Sec 4 and 79.7/75.4 elsewhere."
+ ]
+}

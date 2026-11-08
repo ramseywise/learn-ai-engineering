@@ -1,0 +1,649 @@
+{
+ "schema": 1,
+ "key": "1511.01432",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/dai-2015-semi-supervised-sequence-learning.pdf",
+ "bib": {
+  "title": "Semi-supervised Sequence Learning",
+  "authors": [
+   "Andrew M. Dai",
+   "Quoc V. Le"
+  ],
+  "first_author": "Dai",
+  "year": 2015,
+  "venue": "preprint",
+  "arxiv": "1511.01432",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 30170,
+  "chars_total": 30170,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can pretraining an LSTM on unlabeled sequences (language model or sequence autoencoder) stabilise and improve later supervised LSTM text classification?",
+ "hypothesis": "The sequence autoencoder can memorise the input and gives gradient shortcuts, so it is a good, stable initialisation for recurrent networks; more unlabeled data should improve generalisation.",
+ "contributions": [
+  "Two unsupervised pretraining methods for LSTMs: recurrent language model (LM-LSTM) and sequence autoencoder (SA-LSTM)",
+  "Pretraining makes LSTMs trainable on documents of a few hundred timesteps and matches or beats previous best on IMDB, Rotten Tomatoes, 20 Newsgroups, DBpedia",
+  "More unlabeled data from a related domain improves the supervised model"
+ ],
+ "method": {
+  "summary": "An LSTM is pretrained either as a next-step language model or as a sequence autoencoder (encoder and decoder share weights; reads the whole document then reproduces it), then its embeddings and LSTM weights initialise a supervised classifier that reads the label from the last timestep and is fine-tuned end to end with early stopping.",
+  "task": "unsupervised pretraining then supervised document classification (sentiment, topic) and CIFAR-10 row-wise image classification",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "IMDB (Maas et al. 2011)",
+    "role": "both",
+    "size": "25,000 labeled + 50,000 unlabeled train, 25,000 test; mean 241 words, max 2,526",
+    "split": "15% of labeled train as validation",
+    "source": "http://ai.Stanford.edu/amaas/data/sentiment/index.html",
+    "preprocessing": "punctuation as separate tokens; words appearing once in the dataset removed; no weighting or stemming"
+   },
+   {
+    "name": "Rotten Tomatoes (Pang and Lee 2005)",
+    "role": "both",
+    "size": "10,662 documents; mean 22 words, max 52",
+    "split": "random 80% train / 10% validation / 10% test",
+    "source": "http://www.cs.cornell.edu/people/pabo/movie-review-data/",
+    "preprocessing": null
+   },
+   {
+    "name": "Amazon movie reviews (McAuley and Leskovec 2013)",
+    "role": "pretrain",
+    "size": "7.9 million movie reviews used (of 34 million product reviews)",
+    "split": null,
+    "source": "http://snap.stanford.edu/data/web-Amazon.html",
+    "preprocessing": null
+   },
+   {
+    "name": "20 Newsgroups (Lang 1995)",
+    "role": "both",
+    "size": "11,293 train, 7,528 test; mean 267 words, max 11,925",
+    "split": "15% of train as validation",
+    "source": "http://qwone.com/~jason/20Newsgroups/",
+    "preprocessing": "attachments, PGP keys, duplicates and empty messages removed"
+   },
+   {
+    "name": "DBpedia (Lehmann et al. 2014; Zhang and LeCun 2015 split)",
+    "role": "both",
+    "size": "560,000 train, 70,000 test, 14 classes; mean 300 characters, max 13,467",
+    "split": "as Zhang and LeCun",
+    "source": null,
+    "preprocessing": "character-level input; non-English characters and words ignored"
+   },
+   {
+    "name": "CIFAR-10",
+    "role": "both",
+    "size": "60,000 32x32 colour images, 10 classes; 50,000 train images",
+    "split": null,
+    "source": null,
+    "preprocessing": "data augmentation as in Krizhevsky et al. 2012; each timestep is one row of pixels"
+   }
+  ],
+  "models": [
+   {
+    "name": "SA-LSTM / LM-LSTM",
+    "role": "proposed",
+    "params": null,
+    "architecture": "LSTM RNN with input, forget, output gates; word (or character) embeddings",
+    "init_from": "unsupervised sequence autoencoder or recurrent language model",
+    "tokenizer": "word-level (punctuation split); character-level for DBpedia",
+    "vocab": null,
+    "layers": "1 (IMDB, inferred: no other count given); 2 for DBpedia (3 in best variant); 1 or 2 for CIFAR-10",
+    "hidden": "1,024 memory cells, 512-unit input embedding, 512-unit hidden layer with 50% dropout before the classifier (30 units in later experiments); DBpedia 512 per layer, embedding 128; CIFAR-10 400 units",
+    "heads": null,
+    "context": "full document, backprop truncated to 400 timesteps from the end",
+    "other": {
+     "hidden layer note": "IMDB tuned plain LSTM used 512 hidden units"
+    }
+   },
+   {
+    "name": "Plain LSTM (random init)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "LSTM",
+    "init_from": "random",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": "512 units, truncation 400 (tuned IMDB)",
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "LSTM with word2vec embeddings",
+    "role": "baseline",
+    "params": null,
+    "architecture": "LSTM",
+    "init_from": "word2vec embeddings (Google News or trained on Amazon reviews)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "pretrain: next-step prediction (LM) or reconstruct the input after an end-of-sentence marker (autoencoder, shared encoder/decoder weights); CIFAR-10 uses Euclidean L2 distance between predicted and target row. Supervised: classification from last-timestep LSTM output; variants linear label gain (label at every step, weights rising 0 to 1) and joint training with the autoencoder",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "128 (pretraining)",
+   "steps": "roughly 500K (pretraining)",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "full documents, truncated backprop 400 timesteps",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": "chosen on validation: IMDB 80% input embedding dims; Rotten Tomatoes 95% embedding + 50% word; 20NG 70% embedding + 75% word; DBpedia none; 50% on hidden layer before classifier",
+   "regularisation": "embedding-dimension dropout, random word dropout, early stopping when validation error rises, clipping of cell outputs and gradients (Sutskever et al. recipe)",
+   "hardware": "GPU (memory use mentioned, type not stated)",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "fine-tuning": "both embeddings and LSTM weights fine-tuned"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "test error rate",
+     "definition": "percent of test examples misclassified",
+     "unit": "%",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "bag-of-words / NBSVM-bi",
+    "ConvNets (Kim 2014; Johnson and Zhang 2014; Zhang and LeCun 2015)",
+    "Paragraph Vectors",
+    "MV-RNN, RNTN etc. (Socher et al.)",
+    "SVM/NB on 20NG",
+    "Convolution DBNs on CIFAR-10",
+    "random-init LSTM",
+    "word2vec-initialised LSTM"
+   ],
+   "protocol": "single reported number per cell; no seeds, variance or significance tests stated; hyperparameters (dropout) chosen on validation set"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "all datasets public"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.steps",
+    "quote": "After training the recurrent language model or the sequence autoencoder for roughly 500K steps with a batch size of 128",
+    "where": "Section 4"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "SA-LSTM reaches 7.24% test error on IMDB, beating Paragraph Vectors (7.42%), previous best",
+   "kind": "measured",
+   "source": null,
+   "metric": "test error rate",
+   "value": 7.24,
+   "unit": "%",
+   "baseline_value": 7.42,
+   "n": null,
+   "setup": "IMDB, 25,000 labeled + 50,000 unlabeled train docs, 25,000 test, 15% of labeled train as validation; 1,024-unit LSTM, 512-unit embedding",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row SA-LSTM, column Test error rate"
+  },
+  {
+   "claim": "Randomly initialised, tuned LSTM gets 13.50% on IMDB",
+   "kind": "measured",
+   "source": null,
+   "metric": "test error rate",
+   "value": 13.5,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "IMDB, 25,000 labeled + 50,000 unlabeled train docs, 25,000 test, 15% of labeled train as validation; 1,024-unit LSTM, 512-unit embedding",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row LSTM with tuning and dropout"
+  },
+  {
+   "claim": "LM-LSTM pretraining gives 7.64% on IMDB",
+   "kind": "measured",
+   "source": null,
+   "metric": "test error rate",
+   "value": 7.64,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "IMDB, 25,000 labeled + 50,000 unlabeled train docs, 25,000 test, 15% of labeled train as validation; 1,024-unit LSTM, 512-unit embedding",
+   "note": "Text says LM-LSTM achieves 8.98% while Table 2 prints 7.64%",
+   "where": "Table 2 and Section 4.1",
+   "table": "Table 2, row LM-LSTM (see Section 2)"
+  },
+  {
+   "claim": "Text states LM-LSTM IMDB result as 8.98%, conflicting with Table 2",
+   "kind": "measured",
+   "source": null,
+   "metric": "test error rate",
+   "value": 8.98,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "IMDB, 25,000 labeled + 50,000 unlabeled train docs, 25,000 test, 15% of labeled train as validation; 1,024-unit LSTM, 512-unit embedding",
+   "note": "Table 2 prints 7.64%",
+   "where": "Section 4.1",
+   "quote": "achieving 8.98%, but less well compared to the SA-LSTM"
+  },
+  {
+   "claim": "LSTM initialised with word2vec only reaches 10.00% on IMDB",
+   "kind": "measured",
+   "source": null,
+   "metric": "test error rate",
+   "value": 10.0,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "IMDB, 25,000 labeled + 50,000 unlabeled train docs, 25,000 test, 15% of labeled train as validation; 1,024-unit LSTM, 512-unit embedding",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row LSTM initialized with word2vec embeddings"
+  },
+  {
+   "claim": "Joint training of SA with the supervised task is worse (14.70%) than pretraining",
+   "kind": "measured",
+   "source": null,
+   "metric": "test error rate",
+   "value": 14.7,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "IMDB, 25,000 labeled + 50,000 unlabeled train docs, 25,000 test, 15% of labeled train as validation; 1,024-unit LSTM, 512-unit embedding",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row SA-LSTM with joint training"
+  },
+  {
+   "claim": "Linear label gain hurts on IMDB (9.17%) but helps on DBpedia",
+   "kind": "measured",
+   "source": null,
+   "metric": "test error rate",
+   "value": 9.17,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "IMDB, 25,000 labeled + 50,000 unlabeled train docs, 25,000 test, 15% of labeled train as validation; 1,024-unit LSTM, 512-unit embedding",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row SA-LSTM with linear gain"
+  },
+  {
+   "claim": "Without pretraining, tuned LSTM only reached about 86.5% IMDB accuracy and was unstable when hidden units or backprop steps grew",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 86.5,
+   "unit": "% accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "IMDB, 512 hidden units, truncation 400, embedding and word dropout",
+   "note": null,
+   "where": "Section 4.1",
+   "quote": "we are able to reach performance of around 86.5% accuracy in the test set"
+  },
+  {
+   "claim": "SA-LSTM pretrained on 7.9M Amazon movie reviews gets 16.7% on Rotten Tomatoes",
+   "kind": "measured",
+   "source": null,
+   "metric": "test error rate",
+   "value": 16.7,
+   "unit": "%",
+   "baseline_value": 20.3,
+   "n": null,
+   "setup": "Rotten Tomatoes 80/10/10 split; autoencoder pretrained on Amazon movie reviews (7.9 million)",
+   "note": "Intro states Rotten Tomatoes accuracy rises from 79.7% to 83.3%",
+   "where": "Table 4; Intro",
+   "table": "Table 4, row SA-LSTM with unlabeled data from Amazon reviews"
+  },
+  {
+   "claim": "Pretraining the autoencoder on IMDB unlabeled data gives 18.6% on Rotten Tomatoes",
+   "kind": "measured",
+   "source": null,
+   "metric": "test error rate",
+   "value": 18.6,
+   "unit": "%",
+   "baseline_value": 20.5,
+   "n": null,
+   "setup": "Rotten Tomatoes; SA pretraining on IMDB unlabeled data",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row SA-LSTM with unlabeled data from IMDB"
+  },
+  {
+   "claim": "word2vec Google News vectors give only 20.5% on Rotten Tomatoes (0.5% gain)",
+   "kind": "measured",
+   "source": null,
+   "metric": "test error rate",
+   "value": 20.5,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Rotten Tomatoes; LSTM with word2vec vectors",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row LSTM with word vectors from word2vec Google News"
+  },
+  {
+   "claim": "SA-LSTM without extra unlabeled data equals tuned LSTM on Rotten Tomatoes (20.3%)",
+   "kind": "measured",
+   "source": null,
+   "metric": "test error rate",
+   "value": 20.3,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Rotten Tomatoes; SA-LSTM, 95% embedding and 50% word dropout",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row SA-LSTM"
+  },
+  {
+   "claim": "Unlabeled-data SA-LSTM (16.7%) ranks second behind RNTN (14.6%) trained with 215,154 extra labeled phrases",
+   "kind": "measured",
+   "source": null,
+   "metric": "test error rate",
+   "value": 16.7,
+   "unit": "%",
+   "baseline_value": 14.6,
+   "n": null,
+   "setup": "Rotten Tomatoes sentence-level vs Socher et al. 2013 models using extra labeled phrases",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row SA-LSTM with unlabeled data from Amazon reviews"
+  },
+  {
+   "claim": "LSTM with word2vec trained on Amazon reviews gets 23.3% versus 16.7% for SA-LSTM on same unlabeled data",
+   "kind": "measured",
+   "source": null,
+   "metric": "test error rate",
+   "value": 23.3,
+   "unit": "%",
+   "baseline_value": 16.7,
+   "n": null,
+   "setup": "Rotten Tomatoes; same Amazon corpus",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row LSTM initialized with word2vec embeddings trained on Amazon reviews"
+  },
+  {
+   "claim": "LM-LSTM gets 15.3% and SA-LSTM 15.6% on 20 Newsgroups; plain LSTM 18.0%; SVM+BoW 17.1%",
+   "kind": "measured",
+   "source": null,
+   "metric": "test error rate",
+   "value": 15.6,
+   "unit": "%",
+   "baseline_value": 17.1,
+   "n": null,
+   "setup": "20 Newsgroups, 70% embedding dropout and 75% word dropout",
+   "note": "LM-LSTM is slightly better at 15.3%",
+   "where": "Table 6",
+   "table": "Table 6, row SA-LSTM"
+  },
+  {
+   "claim": "Linear label gain without pretraining collapses on 20 Newsgroups (71.6%)",
+   "kind": "measured",
+   "source": null,
+   "metric": "test error rate",
+   "value": 71.6,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "20 Newsgroups, LSTM with linear gain",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row LSTM with linear gain"
+  },
+  {
+   "claim": "SA-LSTM with 3 layers and linear gain gets 1.19% on character-level DBpedia vs 1.73% Large ConvNet",
+   "kind": "measured",
+   "source": null,
+   "metric": "test error rate",
+   "value": 1.19,
+   "unit": "%",
+   "baseline_value": 1.73,
+   "n": null,
+   "setup": "DBpedia, 560K train, 14 classes, character-level, no dropout",
+   "note": null,
+   "where": "Table 7",
+   "table": "Table 7, row SA-LSTM with 3 layers and linear gain"
+  },
+  {
+   "claim": "Plain character-level LSTM fails to train well on DBpedia (13.64%)",
+   "kind": "measured",
+   "source": null,
+   "metric": "test error rate",
+   "value": 13.64,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "DBpedia, two-layer LSTM, 512 units",
+   "note": null,
+   "where": "Table 7",
+   "table": "Table 7, row LSTM"
+  },
+  {
+   "claim": "Linear gain alone (no pretraining) gets 1.32% on DBpedia",
+   "kind": "measured",
+   "source": null,
+   "metric": "test error rate",
+   "value": 1.32,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "DBpedia",
+   "note": null,
+   "where": "Table 7",
+   "table": "Table 7, row LSTM with linear gain"
+  },
+  {
+   "claim": "Plain SA-LSTM gets 2.34% on DBpedia, worse than LM-LSTM 1.50%",
+   "kind": "measured",
+   "source": null,
+   "metric": "test error rate",
+   "value": 2.34,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "DBpedia",
+   "note": null,
+   "where": "Table 7",
+   "table": "Table 7, row SA-LSTM"
+  },
+  {
+   "claim": "2-layer LM-LSTM pretrained on next-row prediction gets 18.0% on CIFAR-10, beating Convolution DBNs (21.1%) and non-pretrained 2-layer LSTM (26.0%)",
+   "kind": "measured",
+   "source": null,
+   "metric": "test error rate",
+   "value": 18.0,
+   "unit": "%",
+   "baseline_value": 26.0,
+   "n": null,
+   "setup": "CIFAR-10, 50,000 train images, 400 units, row-wise input, L2 loss",
+   "note": null,
+   "where": "Table 8",
+   "table": "Table 8, row 2-layer LM-LSTM"
+  },
+  {
+   "claim": "2-layer SA-LSTM on CIFAR-10 gives no gain (25.1%)",
+   "kind": "measured",
+   "source": null,
+   "metric": "test error rate",
+   "value": 25.1,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CIFAR-10, 400 units",
+   "note": null,
+   "where": "Table 8",
+   "table": "Table 8, row 2-layer SA-LSTM"
+  }
+ ],
+ "limits": [
+  "No optimizer, learning rate, schedule, GPU type, compute or seed information; single runs, no variance or significance",
+  "Hyperparameters tuned per dataset on validation sets; dropout rates differ widely across tasks",
+  "Text and Table 2 disagree on LM-LSTM IMDB error (8.98% vs 7.64%)",
+  "Rotten Tomatoes gain from Amazon data confounds domain match with data volume; no scaling curve over unlabeled data size",
+  "SA vs LM comparison is mixed: LM wins on 20NG, DBpedia (w/o gain) and CIFAR-10; authors' short-term-objective explanation is a hypothesis, not tested",
+  "Only supervised classification evaluated; LSTMs are dated vs transformers; CIFAR-10 below state-of-the-art convnets (authors concede)",
+  "Hypothesis about why the autoencoder works (memorisation, gradient shortcuts) is not tested",
+  "No code or weights released in the paper"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "SA-LSTM",
+   "definition": "LSTMs initialized with a sequence autoencoder",
+   "where": "Section 3"
+  },
+  {
+   "term": "LM-LSTM",
+   "definition": "LSTMs initialized with a language model",
+   "where": "Section 3"
+  },
+  {
+   "term": "linear label gain",
+   "definition": "putting the label at every timestep and linearly increasing the weights of the prediction objectives from 0 to 1",
+   "where": "Section 3"
+  },
+  {
+   "term": "joint training",
+   "definition": "jointly training the supervised learning task with the sequence autoencoder",
+   "where": "Section 3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Sequence to sequence learning with neural networks (Sutskever, Vinyals, Le)",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "autoencoder inspired by seq2seq; training recipe of clipping cell outputs and gradients",
+   "quote": null
+  },
+  {
+   "work": "Recurrent neural network based language model (Mikolov et al.)",
+   "year": 2010,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "recurrent LM used as pretraining",
+   "quote": null
+  },
+  {
+   "work": "Learning word vectors for sentiment analysis (Maas et al.)",
+   "year": 2011,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "IMDB",
+   "quote": null
+  },
+  {
+   "work": "Distributed representations of sentences and documents (Le and Mikolov)",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Paragraph Vectors; previous best IMDB 7.42%",
+   "quote": null
+  },
+  {
+   "work": "Skip-thought vectors (Kiros et al.)",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "related",
+   "note": "harder objective (adjacent sentences), pure unsupervised, no fine-tuning",
+   "quote": null
+  },
+  {
+   "work": "Ando and Zhang, framework for learning predictive structures from multiple tasks and unlabeled data",
+   "year": 2005,
+   "arxiv": null,
+   "relation": "related",
+   "note": "semi-supervised argument cited",
+   "quote": null
+  },
+  {
+   "work": "Recursive deep models for semantic compositionality over a sentiment treebank (Socher et al.)",
+   "year": 2013,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "models using extra labeled phrases, Table 5",
+   "quote": null
+  },
+  {
+   "work": "Character-level convolutional networks for text classification (Zhang and LeCun)",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "DBpedia split and ConvNet baselines",
+   "quote": null
+  },
+  {
+   "work": "Recurrent neural network regularization (Zaremba et al.)",
+   "year": 2014,
+   "arxiv": "1409.2329",
+   "relation": "uses-method",
+   "note": "embedding dimension dropout",
+   "quote": null
+  },
+  {
+   "work": "Beyond short snippets (Ng et al.)",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "linear label gain",
+   "quote": null
+  },
+  {
+   "work": "Long short-term memory (Hochreiter and Schmidhuber)",
+   "year": 1997,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "model",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "The sequence autoencoder for the sequence \"WXYZ\". The sequence autoencoder uses a recurrent network to read the input sequence in to the hidden state, which can then be used to reconstruct the original sequence.",
+   "page": 2,
+   "why": "shows encoder-to-decoder reuse of one set of weights, and that dropping the encoder gives the LM"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "PDF prints no venue (arXiv v1 header only); NIPS 2015 comes from the ledger/caller, not the text",
+  "Table 2 vs Section 4.1 text disagree on LM-LSTM IMDB error",
+  "No embedded instructions found"
+ ]
+}

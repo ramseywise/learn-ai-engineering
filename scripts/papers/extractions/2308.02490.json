@@ -23,47 +23,47 @@
  "read": {
   "by": "source-reader",
   "at": "2026-11-08",
-  "chars_read": 71000,
+  "chars_read": 87410,
   "chars_total": 87410,
   "engine": "pymupdf",
-  "skipped": "Reference list and appendix example tables 12-17 skimmed only; Appendix Table 11 model details not read in detail."
+  "skipped": "Reference list skimmed only; appendix example tables 12-17 read in part (samples only)."
  },
  "type": "benchmark",
- "question": "How can large multimodal models be evaluated on complicated tasks that integrate several vision-language capabilities, with a metric that works across open-ended answer types?",
- "hypothesis": "Complex multimodal task ability comes from a generalist model integrating core VL capabilities, so a benchmark organised by capability integrations, graded by an LLM, gives more insight than a single ranking.",
+ "question": "How can large multimodal models be evaluated on complicated tasks that integrate several core vision-language capabilities, with a metric that works across open-ended answer styles?",
+ "hypothesis": "Complicated multimodal tasks are solved by a generalist model integrating core VL capabilities, and a few-shot GPT-4 evaluator can score open-ended answers close to human judgement.",
  "contributions": [
-  "MM-Vet: 16 emergent tasks integrated from 6 core VL capabilities",
-  "LLM-based evaluator (GPT-4, few-shot) giving unified 0-1 score for open-ended outputs",
-  "Benchmarking of representative LMMs revealing strengths of system paradigms"
+  "MM-Vet benchmark of 16 capability integrations from 6 core VL capabilities",
+  "LLM-based evaluator giving a 0-1 soft score for open-ended outputs",
+  "Benchmark of end-to-end LMMs and tool-using systems with per-capability analysis"
  ],
  "method": {
-  "summary": "Authors built a 218-question benchmark over 200 images, each question tagged with required capabilities among recognition, OCR, knowledge, language generation, spatial awareness, math. Model outputs are graded 0-1 by GPT-4 with a 7-example few-shot prompt, averaged over 5 grading runs; the grader is validated against human scores.",
-  "task": "multimodal open-ended QA evaluation; LLM-as-judge",
+  "summary": "200 images and 218 open-ended questions, each tagged with required capabilities among Rec, OCR, Know, Gen, Spat, Math. Model outputs are scored 0 to 1 by GPT-4 (0613) with a 7-example few-shot prompt given question, ground truth and prediction; scores averaged to a percentage.",
+  "task": "open-ended multimodal question answering benchmark",
   "trains": false,
   "datasets": [
    {
     "name": "MM-Vet",
     "role": "eval",
     "size": "218 questions, 200 images",
-    "split": "all",
-    "source": "187 images from online sources (205 questions; 155 answers annotated by authors, 50 from Internet), 10 images from VCR reformatted open-ended, 3 from ChestX-ray14",
-    "preprocessing": "VCR questions modified to open-ended format"
+    "split": "all used for eval; 187 collected images + 10 from VCR + 3 from ChestX-ray14",
+    "source": "online sources; 155 ground truths annotated by authors, 50 from the Internet; 10 VCR and 3 ChestX-ray14 images",
+    "preprocessing": "VCR questions and answers modified to open-ended format"
    },
    {
     "name": "MM-Vet Bard set",
     "role": "eval",
     "size": "168 samples",
-    "split": "subset",
-    "source": "samples without faces that Bard would process",
+    "split": "subset Bard could process (no faces)",
+    "source": "subset of MM-Vet",
     "preprocessing": null
    },
    {
-    "name": "Objective subset for grader validation",
+    "name": "Objective subset for judge validation",
     "role": "eval",
     "size": "138 questions",
     "split": "MM-ReAct-GPT-4 outputs",
-    "source": "questions objectively human-annotated",
-    "preprocessing": null
+    "source": "subset of MM-Vet objectively annotatable by humans",
+    "preprocessing": "human-annotated scores as gold"
    }
   ],
   "models": [
@@ -82,10 +82,10 @@
     "other": {}
    },
    {
-    "name": "GPT-4V",
+    "name": "OpenFlamingo-9B, BLIP-2-12B, LLaVA-7B/13B (several), MiniGPT-4-8B/14B, LLaMA-Adapter v2-7B, Otter-9B, InstructBLIP-8B/14B, MM-ReAct-GPT-3.5/GPT-4, Transformers Agent (GPT-4), GPT-4V, Bard",
     "role": "evaluated",
-    "params": null,
-    "architecture": null,
+    "params": "7B to 14B for open models",
+    "architecture": "end-to-end LMMs and LLM-tool systems",
     "init_from": null,
     "tokenizer": null,
     "vocab": null,
@@ -93,24 +93,12 @@
     "hidden": null,
     "heads": null,
     "context": null,
-    "other": {}
+    "other": {
+     "details": "Appendix Table 11"
+    }
    },
    {
-    "name": "MM-ReAct (GPT-3.5/GPT-4), Transformers Agent, OpenFlamingo-9B, BLIP-2-12B, LLaVA 7B/13B variants, MiniGPT-4 8B/14B, LLaMA-Adapter v2-7B, Otter-9B, InstructBLIP 8B/14B, Bard",
-    "role": "evaluated",
-    "params": "7B-14B for open models",
-    "architecture": null,
-    "init_from": null,
-    "tokenizer": null,
-    "vocab": null,
-    "layers": null,
-    "hidden": null,
-    "heads": null,
-    "context": null,
-    "other": {}
-   },
-   {
-    "name": "Alternative graders: LLaMA-2 7B/13B/70B, Mistral-7B, Mistral-7B-Instruct-v0.2, Mixtral-8x7B-Instruct-v0.1, Gemini Pro, Claude 3 Opus, GPT-3.5 turbo-0613",
+    "name": "Alternative judges: LLaMA-2-7B/13B/70B, Mistral-7B-v0.1, Mistral-7B-Instruct-v0.2, Mixtral-8x7B-Instruct-v0.1, Gemini Pro, Claude 3 Opus, GPT-3.5 (turbo-0613)",
     "role": "judge",
     "params": null,
     "architecture": null,
@@ -127,264 +115,307 @@
   "training": null,
   "inference": {
    "decoding": null,
-   "temperature": "0 for GPT-4 grader",
+   "temperature": "0 (GPT-4 judge)",
    "top_p": null,
    "max_tokens": null,
-   "samples": "grader run 5 times per output; average reported for capabilities, average and variance for total",
-   "prompting": "few-shot grader prompt, 7 examples (5 short-answer, 2 long); GPT-4V query prefixed 'Generate a short and concise response to the following image text pair.'",
+   "samples": "Judge run 5 times per output; average reported for capabilities, mean and variance for total",
+   "prompting": "7-example few-shot judge prompt (5 short, 2 long answers); GPT-4V queries prefixed with 'Generate a short and concise response to the following image text pair.'",
    "retrieval": null,
    "parameters": {
-    "score_range": "0.0-1.0 in 0.1 steps",
-    "score formula": "S = sum(s_i)/N x 100%; per capability S_c = sum(s_i, i in C)/N_c x 100%"
+    "judge_input": "question, ground truth, prediction; no image",
+    "score_grid": "0.0 to 1.0 in steps of 0.1",
+    "image_given_to_judge": "no"
    },
-   "other": {
-    "gpt4_variance": "outputs still vary at temperature 0"
-   }
+   "other": {}
   },
   "eval": {
    "metrics": [
     {
-     "name": "MM-Vet score",
-     "definition": "mean of GPT-4 soft scores (0-1) over samples, x100",
+     "name": "MM-Vet total score",
+     "definition": "S = sum(s_i)/N x 100%, s_i the GPT-4 score 0-1 per sample",
      "unit": "%",
      "higher_is_better": true
     },
     {
-     "name": "delta",
-     "definition": "mean absolute difference between evaluator score and human-annotated score",
-     "unit": "score diff, max 1.0",
+     "name": "Judge delta",
+     "definition": "mean absolute difference between evaluator score and human score on 138 objective questions",
+     "unit": "score diff, 0-1",
      "higher_is_better": false
     }
    ],
    "baselines": [
-    "keyword matching (grader)",
-    "open-source LMMs",
-    "MM-ReAct",
-    "Transformers Agent",
-    "Bard",
-    "GPT-4V"
+    "keyword matching",
+    "other LLM judges"
    ],
-   "protocol": "GPT-4 grades 5 times; grader validated against human annotation on 138 objective questions; no significance test."
+   "protocol": "GPT-4 judge averaged over 5 runs; judge validated against human annotation on MM-ReAct-GPT-4 outputs only"
   },
   "availability": {
    "code": "https://github.com/yuweihao/MM-Vet",
    "weights": null,
-   "data": "https://github.com/yuweihao/MM-Vet; online evaluator at huggingface.co/spaces/whyu/MM-Vet_Evaluator"
+   "data": "https://github.com/yuweihao/MM-Vet; online evaluator at https://huggingface.co/spaces/whyu/MM-Vet_Evaluator"
   },
   "prompts": [
    {
-    "purpose": "GPT-4 grader (instruction part; followed by 7 in-context rows of Question | Ground truth | Prediction | Correctness)",
+    "purpose": "GPT-4 few-shot evaluator instruction (examples omitted)",
     "text": "Compare the ground truth and prediction from AI models, to give a correctness score for the prediction. <AND> in the ground truth means it is totally right only when all elements in the ground truth are present in the prediction, and <OR> means it is totally right when any one element in the ground truth is present in the prediction. The correctness score is 0.0 (totally wrong), 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, or 1.0 (totally right). Just complete the last space of the correctness score.",
-    "where": "Table 1"
+    "where": "Table 1, p4"
    }
   ],
-  "evidence": []
+  "evidence": [
+   {
+    "field": "eval.protocol",
+    "quote": "we select the outputs from MMReAct- GPT-4 on 138 objective questions, which can be objectively annotated by humans.",
+    "where": "Sec 4.4"
+   }
+  ]
  },
  "results": [
   {
-   "claim": "GPT-4V scores 67.7% total on MM-Vet, far above open-source LMMs and tool-using agents.",
+   "claim": "GPT-4 (0613) few-shot evaluator is far closer to human scores than keyword matching on MM-ReAct-GPT-4 outputs",
    "kind": "measured",
    "source": null,
-   "metric": "Total score",
-   "value": 67.7,
-   "unit": "%",
-   "baseline_value": "44.6 (MM-ReAct-GPT-4)",
+   "metric": "mean absolute difference to human score",
+   "value": "0.042",
+   "unit": "score diff, 0-1 scale",
+   "baseline_value": "0.273",
    "n": null,
-   "setup": "MM-Vet, 218 questions, GPT-4 (0613) few-shot grader, temperature 0, 5 grading runs averaged",
-   "note": null,
-   "where": "Sec 4.3.2",
-   "quote": "Remarkably, GPT-4V\nachieves a score of 67.7%"
+   "setup": "138 objective questions from MM-ReAct-GPT-4 outputs; human-annotated score as gold; GPT-4 0613 with the 7-example few-shot prompt",
+   "note": "Table 7 and Table 8 print the same figure as 0.0423",
+   "where": "Sec 4.4, Table 6",
+   "table": "Table 6, column GPT-4 (0613), row Delta"
   },
   {
-   "claim": "MM-ReAct-GPT-4 (tool-using) is second best at 44.6% total.",
+   "claim": "Keyword matching deviates strongly from human scoring on MM-Vet open-ended answers",
    "kind": "measured",
    "source": null,
-   "metric": "Total score",
-   "value": 44.6,
+   "metric": "mean absolute difference to human score",
+   "value": "0.273",
+   "unit": "score diff, 0-1 scale",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Same 138 questions and MM-ReAct-GPT-4 outputs; maximum possible discrepancy 1.0",
+   "note": null,
+   "where": "Sec 4.4",
+   "quote": "With a maximum poten- tial discrepancy of 1.0, the baseline evaluation method, keyword matching, results in a high difference of 0.273."
+  },
+  {
+   "claim": "Claude 3 Opus is the next-closest judge to GPT-4",
+   "kind": "measured",
+   "source": null,
+   "metric": "mean absolute difference to human score",
+   "value": "0.137",
+   "unit": "score diff",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Same 138 questions",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, column Claude 3 Opus, row Delta"
+  },
+  {
+   "claim": "Gemini Pro as judge",
+   "kind": "measured",
+   "source": null,
+   "metric": "mean absolute difference to human score",
+   "value": "0.144",
+   "unit": "score diff",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Same 138 questions",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, column Gemini Pro, row Delta"
+  },
+  {
+   "claim": "GPT-3.5 (turbo-0613) as judge",
+   "kind": "measured",
+   "source": null,
+   "metric": "mean absolute difference to human score",
+   "value": "0.178",
+   "unit": "score diff",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Same 138 questions",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, column GPT-3.5 (turbo-0613), row Delta"
+  },
+  {
+   "claim": "LLaMA-2-70B as judge is worse than keyword matching",
+   "kind": "measured",
+   "source": null,
+   "metric": "mean absolute difference to human score",
+   "value": "0.316",
+   "unit": "score diff",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Same 138 questions; authors suggest larger open models are more creative and follow the few-shot prompt less strictly",
+   "note": null,
+   "where": "Table 6, Sec 4.4",
+   "table": "Table 6, column LLaMA-2-70B, row Delta"
+  },
+  {
+   "claim": "Adding other LLMs to GPT-4 as combined judges does not help",
+   "kind": "measured",
+   "source": null,
+   "metric": "mean absolute difference to human score",
+   "value": "0.1502",
+   "unit": "score diff",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-4 + Llama-2-13b-chat + Mistral-7B-Instruct-v0.2 + Gemini Pro + Claude 3 Opus combined",
+   "note": "GPT-4 alone 0.0423",
+   "where": "Table 7",
+   "table": "Table 7, last row"
+  },
+  {
+   "claim": "Few-shot examples lower judge error: no examples versus all seven",
+   "kind": "measured",
+   "source": null,
+   "metric": "mean absolute difference to human score",
+   "value": "0.0630",
+   "unit": "score diff",
+   "baseline_value": null,
+   "n": null,
+   "setup": "No grading examples in prompt; same 138 questions",
+   "note": "All seven examples give 0.0423",
+   "where": "Table 8, Sec 4.5",
+   "table": "Table 8, row None"
+  },
+  {
+   "claim": "GPT-4V scores highest overall on MM-Vet",
+   "kind": "measured",
+   "source": null,
+   "metric": "total score",
+   "value": "67.7",
    "unit": "%",
    "baseline_value": null,
    "n": null,
-   "setup": "MM-Vet, 218 questions, GPT-4 (0613) few-shot grader, temperature 0, 5 grading runs averaged",
+   "setup": "GPT-4V prompted with 'Generate a short and concise response to the following image text pair.'; GPT-4 judge, 5 runs averaged",
+   "note": null,
+   "where": "Sec 4.3.2",
+   "quote": "Remarkably, GPT-4V achieves a score of 67.7%, surpassing both open-sourced LMMs (Liu et al., 2023c) and LLM-based multimodal agents (Yang et al., 2023c) by substantial margins."
+  },
+  {
+   "claim": "MM-ReAct-GPT-4 total score, best non-GPT-4V model",
+   "kind": "measured",
+   "source": null,
+   "metric": "total score",
+   "value": "44.6",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "218 questions, GPT-4 judge, mean of 5 runs, +-0.2",
    "note": null,
    "where": "Table 2",
    "table": "Table 2, row MM-ReAct-GPT-4, column Total"
   },
   {
-   "claim": "Best end-to-end open-source model is LLaVA-13B (LLaMA-2) at 32.9% total.",
+   "claim": "LLaVA-13B (LLaMA-2) is best end-to-end open model",
    "kind": "measured",
    "source": null,
-   "metric": "Total score",
-   "value": 32.9,
+   "metric": "total score",
+   "value": "32.9",
    "unit": "%",
    "baseline_value": null,
    "n": null,
-   "setup": "MM-Vet, 218 questions, GPT-4 (0613) few-shot grader, temperature 0, 5 grading runs averaged",
+   "setup": "218 questions, GPT-4 judge",
    "note": null,
    "where": "Table 2",
    "table": "Table 2, row LLaVA-13B (LLaMA-2), column Total"
   },
   {
-   "claim": "Keyword matching deviates from human scores by 0.273 on average versus 0.042 for GPT-4 (0613) as grader.",
-   "kind": "measured",
-   "source": null,
-   "metric": "Mean absolute difference to human score (delta)",
-   "value": 0.042,
-   "unit": "score diff (max 1.0)",
-   "baseline_value": "0.273 (keyword matching)",
-   "n": null,
-   "setup": "MM-ReAct-GPT-4 outputs on 138 objective questions, human-annotated gold",
-   "note": null,
-   "where": "Table 6, Sec 4.4",
-   "table": "Table 6, row GPT-4 (0613), column delta"
-  },
-  {
-   "claim": "GPT-3.5 turbo-0613 as grader gives delta 0.178; Claude 3 Opus 0.137; Gemini Pro 0.144; LLaMA-2-70B 0.316; only GPT-4 matches humans well.",
-   "kind": "measured",
-   "source": null,
-   "metric": "delta (GPT-3.5)",
-   "value": 0.178,
-   "unit": "score diff",
-   "baseline_value": null,
-   "n": null,
-   "setup": "same 138 questions as Table 6",
-   "note": null,
-   "where": "Table 6",
-   "table": "Table 6, row GPT-3.5 (turbo-0613), column delta"
-  },
-  {
-   "claim": "Combining GPT-4 with other LLM graders did not help: GPT-4 alone has delta 0.0423 vs 0.0896 with Claude 3 Opus added.",
-   "kind": "measured",
-   "source": null,
-   "metric": "delta (GPT-4 alone)",
-   "value": 0.0423,
-   "unit": "score diff",
-   "baseline_value": "0.0896 (GPT-4 + Claude 3 Opus)",
-   "n": null,
-   "setup": "same 138 questions",
-   "note": null,
-   "where": "Table 7",
-   "table": "Table 7, row GPT-4 solely"
-  },
-  {
-   "claim": "Few-shot grading examples reduce grader-human delta from 0.0630 (no examples) to 0.0423 (all seven).",
-   "kind": "measured",
-   "source": null,
-   "metric": "delta (all 7 examples)",
-   "value": 0.0423,
-   "unit": "score diff",
-   "baseline_value": "0.0630 (no examples)",
-   "n": null,
-   "setup": "same 138 questions; ablating the 7 examples of the Table 1 prompt",
-   "note": null,
-   "where": "Table 8",
-   "table": "Table 8, row (1)-(7), column delta"
-  },
-  {
-   "claim": "Tool-using MM-ReAct-GPT-4 leads on OCR (65.7%), spatial (56.8%) and math (69.2%) via OCR, dense-caption and PAL tools.",
+   "claim": "MM-ReAct-GPT-4 leads OCR",
    "kind": "measured",
    "source": null,
    "metric": "OCR score",
-   "value": 65.7,
+   "value": "65.7",
    "unit": "%",
    "baseline_value": null,
    "n": null,
-   "setup": "MM-Vet, 218 questions, GPT-4 (0613) few-shot grader, temperature 0, 5 grading runs averaged",
+   "setup": "Uses Azure OCR tool",
    "note": null,
    "where": "Table 2",
    "table": "Table 2, row MM-ReAct-GPT-4, column OCR"
   },
   {
-   "claim": "Swapping GPT-3.5 for GPT-4 in MM-ReAct raises total from 27.9 to 44.6.",
+   "claim": "MM-ReAct-GPT-4 leads math",
    "kind": "measured",
    "source": null,
-   "metric": "Total score",
-   "value": 27.9,
-   "unit": "%",
-   "baseline_value": "44.6",
-   "n": null,
-   "setup": "MM-Vet, 218 questions, GPT-4 (0613) few-shot grader, temperature 0, 5 grading runs averaged",
-   "note": null,
-   "where": "Table 2",
-   "table": "Table 2, row MM-ReAct-GPT-3.5, column Total"
-  },
-  {
-   "claim": "On the 168-sample Bard subset Bard scores 53.5% total, above MM-ReAct-GPT-4 at 48.1%.",
-   "kind": "measured",
-   "source": null,
-   "metric": "Total score (Bard set)",
-   "value": 53.5,
-   "unit": "%",
-   "baseline_value": "48.1 (MM-ReAct-GPT-4)",
-   "n": null,
-   "setup": "168 samples Bard could process (it refuses faces); same grader",
-   "note": null,
-   "where": "Table 9",
-   "table": "Table 9, row Bard, column Total"
-  },
-  {
-   "claim": "Swapping LLaVA-13B's Vicuna LLM for LLaMA-2 lifted recognition by 8.3 points (39.2 Rec).",
-   "kind": "measured",
-   "source": null,
-   "metric": "Recognition score",
-   "value": 39.2,
+   "metric": "Math score",
+   "value": "69.2",
    "unit": "%",
    "baseline_value": null,
    "n": null,
-   "setup": "MM-Vet, 218 questions, GPT-4 (0613) few-shot grader, temperature 0, 5 grading runs averaged",
-   "note": "paper text is garbled 'important' for improvement",
-   "where": "Sec 4.2.1",
-   "quote": "LLaVA-13B (LLaMA-2) obtains 8.3% impor-\ntant over LLaVA-13B (Vicuna-13B)."
+   "setup": "Uses PAL math tool",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row MM-ReAct-GPT-4, column Math"
   },
   {
-   "claim": "GPT-4V-Turbo with detail:high scores 67.6% vs detail:low 60.2%.",
+   "claim": "Bard leads on the Bard subset",
    "kind": "measured",
    "source": null,
-   "metric": "Total score",
-   "value": 60.2,
+   "metric": "total score",
+   "value": "53.5",
    "unit": "%",
-   "baseline_value": "67.6 (detail:high)",
+   "baseline_value": null,
    "n": null,
-   "setup": "MM-Vet, 218 questions, GPT-4 (0613) few-shot grader, temperature 0, 5 grading runs averaged",
+   "setup": "168-sample subset without face images; MM-ReAct-GPT-4 scores 48.1",
    "note": null,
-   "where": "Table 4",
-   "table": "Table 4, row GPT-4V-Turbo-detail:low, column Total"
+   "where": "Appendix B",
+   "table": "Table 9, row Bard, column Total"
+  },
+  {
+   "claim": "Benchmark size: 218 questions on 200 images",
+   "kind": "measured",
+   "source": null,
+   "metric": "samples",
+   "value": "218",
+   "unit": "questions",
+   "baseline_value": null,
+   "n": null,
+   "setup": "187 collected images + 10 VCR + 3 ChestX-ray14",
+   "note": null,
+   "where": "Sec 3.1",
+   "quote": "In total, our MM-Vet contains 200 images, and 218 questions (samples), all paired with their respective ground truths."
+  },
+  {
+   "claim": "GPT-4 judge output varies even at temperature 0, so evaluation is run 5 times",
+   "kind": "measured",
+   "source": null,
+   "metric": "runs",
+   "value": "5",
+   "unit": "runs",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Temperature 0",
+   "note": null,
+   "where": "Sec 4.1",
+   "quote": "It is found that outputs of GPT-4 still exist variance, although the temperature is set as 0."
   }
  ],
  "limits": [
-  "Only image-text input and text output are covered, no other modalities.",
-  "Only GPT-4 matches human grading well; grader costs fees, authors host an evaluator.",
-  "Grader validated only on MM-ReAct-GPT-4 outputs, 138 objective questions; GPT-4 (0613) is a dated model version.",
-  "Small benchmark (218 questions); integration categories are long-tailed so per-integration scores rest on few samples.",
-  "Authors state vision-encoder comparisons are inconclusive without ablation; explanations of why models do well are speculative.",
-  "Bard cannot be compared on full set (refuses faces); Bard and GPT-4V details unknown."
+  "Judge validated against humans on one system's outputs (MM-ReAct-GPT-4) and 138 objective questions only; no validation on open-ended long answers or other systems.",
+  "Only GPT-4 matched human grades well; authors concede this brings GPT-4 usage fees.",
+  "Judge not given the image.",
+  "Image-text input and text output only.",
+  "GPT-4 0613 judge output varies even at temperature 0.",
+  "Keyword matching delta is not broken down by question type."
  ],
  "practices": [],
- "terms": [
-  {
-   "term": "capability integration",
-   "definition": "a combination of core VL capabilities required by one sample (16 in MM-Vet)",
-   "where": "Sec 1, Fig 2"
-  }
- ],
+ "terms": [],
  "lineage": [
   {
-   "work": "Can large language models be an alternative to human evaluations?",
+   "work": "Chiang and Lee 2023, Can large language models be an alternative to human evaluations",
    "year": 2023,
-   "arxiv": "2305.01937",
+   "arxiv": null,
    "relation": "uses-method",
-   "note": "LLM-based evaluation basis (Chiang & Lee)",
+   "note": "LLM-based evaluation idea",
    "quote": null
   },
   {
-   "work": "GPTScore",
-   "year": 2023,
-   "arxiv": "2302.04166",
-   "relation": "uses-method",
-   "note": "LLM evaluation (Fu et al.)",
-   "quote": null
-  },
-  {
-   "work": "Judging LLM-as-a-judge / Vicuna (Zheng et al., 2023)",
+   "work": "Zheng et al. 2023 (Vicuna / MT-Bench judge)",
    "year": 2023,
    "arxiv": null,
    "relation": "uses-method",
@@ -392,91 +423,78 @@
    "quote": null
   },
   {
-   "work": "MME",
-   "year": 2023,
-   "arxiv": "2306.13394",
-   "relation": "related",
-   "note": "concurrent benchmark",
-   "quote": null
-  },
-  {
-   "work": "MM-ReAct (Yang et al., 2023c)",
+   "work": "MM-ReAct (Yang et al. 2023c)",
    "year": 2023,
    "arxiv": null,
    "relation": "evaluates",
-   "note": "tool-using agent",
+   "note": "tool-using system used for judge validation",
    "quote": null
   },
   {
-   "work": "LLaVA (Liu et al., 2023c)",
+   "work": "LLaVA (Liu et al. 2023c)",
    "year": 2023,
    "arxiv": null,
    "relation": "evaluates",
-   "note": "end-to-end LMM",
+   "note": "best open model",
    "quote": null
   },
   {
-   "work": "InstructBLIP",
+   "work": "GPT-4V (OpenAI 2023a)",
    "year": 2023,
-   "arxiv": "2305.06500",
+   "arxiv": null,
    "relation": "evaluates",
-   "note": "end-to-end LMM",
+   "note": "best overall",
    "quote": null
   },
   {
-   "work": "VQA, COCO Captions, TextVQA",
-   "year": 2015,
-   "arxiv": "1504.00325",
+   "work": "MME and MMBench (concurrent)",
+   "year": 2023,
+   "arxiv": null,
    "relation": "related",
-   "note": "single-capability benchmarks contrasted",
+   "note": "concurrent LMM benchmarks",
    "quote": null
   },
   {
-   "work": "VCR / ChestX-ray14",
+   "work": "VCR (Zellers et al. 2019)",
    "year": 2019,
    "arxiv": null,
    "relation": "uses-data",
-   "note": "source of 13 images",
+   "note": "10 images",
+   "quote": null
+  },
+  {
+   "work": "ChestX-ray14 (Wang et al. 2017)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "3 images",
    "quote": null
   }
  ],
  "figures": [
   {
-   "figure": "Figure 1",
-   "caption": "The benchmarks differ in their required capabilities. ... MM-Vet focuses on the integration of multiple core VL capabilities.",
-   "page": 1,
-   "why": "Shows how VQA/COCO need 1-2 capabilities versus MM-Vet 2-4"
-  },
-  {
-   "figure": "Figure 2",
-   "caption": "MM-Vet proportion of capabilities. (a) per capability; (b) capability integrations.",
-   "page": 3,
-   "why": "Rec 68.8%, OCR 44.0%, Know 38.5%, Gen 36.7%, Spat 34.4%, Math 11.9%; largest integration 28.4%"
-  },
-  {
    "figure": "Table 1",
    "caption": "Few-shot prompt for evaluating model outputs using GPT-4",
    "page": 4,
-   "why": "The complete judge prompt with partial-credit examples"
+   "why": "The whole judge, including the <AND>/<OR> convention and partial-credit examples"
   },
   {
-   "figure": "Table 8",
-   "caption": "Ablation study of few-shot examples in prompt for LLM-based evaluator",
-   "page": 9,
-   "why": "Judge delta falls 0.0630 to 0.0423 as examples are added"
-  }
- ],
- "code": [
+   "figure": "Table 6",
+   "caption": "Averaged absolute differences between evaluation scores of various LLM evaluators and human-annotated scores, on MM-ReAct-GPT4's results",
+   "page": 8,
+   "why": "Shows which judges beat keyword matching"
+  },
   {
-   "where": "Eq 1-2, Sec 3.2",
-   "snippet": "S = (sum_{i=1}^N s_i / N) x 100%;  S_c = (sum s_i / N_c) x 100%, i in C",
-   "verbatim": false
+   "figure": "Figure 2",
+   "caption": "MM-Vet proportion of capabilities",
+   "page": 3,
+   "why": "Benchmark composition"
   }
  ],
+ "code": [],
  "problems": [
-  "Dataset count inconsistency: 187 images/205 questions plus 10 VCR plus 3 ChestX-ray = 200 images, 218 questions (stated); not itemised for questions.",
-  "Text says 'Table 11's OCR column' where Table 2 is meant.",
-  "Table 3/10 headers flattened by extraction; per-integration cells not recorded. Bard set Table 10 lists 'Vicuna-13B' labels for LLaVA rows.",
-  "No embedded instructions found."
+  "Table 6 and Table 8/7 print 0.042 and 0.0423 for the same GPT-4 figure.",
+  "Table 6 text layout is flattened; column mapping inferred from header order and checked against Sec 4.4 text.",
+  "Paper text has typos: 'LLaVA-Adapter v2' for LLaMA-Adapter v2; references 'Table 11's OCR column' for Table 2."
  ]
 }

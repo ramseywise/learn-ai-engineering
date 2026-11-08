@@ -1,0 +1,758 @@
+{
+ "schema": 1,
+ "key": "1906.08237",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/yang-2019-xlnet.pdf",
+ "bib": {
+  "title": "XLNet: Generalized Autoregressive Pretraining for Language Understanding",
+  "authors": [
+   "Zhilin Yang",
+   "Zihang Dai",
+   "Yiming Yang",
+   "Jaime Carbonell",
+   "Ruslan Salakhutdinov",
+   "Quoc V. Le"
+  ],
+  "first_author": "Yang",
+  "year": 2019,
+  "venue": "NeurIPS 2019",
+  "arxiv": "1906.08237",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 57106,
+  "chars_total": 57106,
+  "engine": "pymupdf",
+  "skipped": "References skimmed only for lineage."
+ },
+ "type": "empirical",
+ "question": "Can a pretraining objective keep autoregressive likelihood (no input corruption, no independence assumption) while still learning bidirectional context, and does that beat BERT's masked denoising?",
+ "hypothesis": "Maximising expected likelihood over all factorization orders gives bidirectional context without BERT's [MASK] discrepancy and independence assumption, and so pretrains better.",
+ "contributions": [
+  "Permutation language modeling objective",
+  "Two-stream (content and query) self-attention for target-aware prediction",
+  "Integration of Transformer-XL segment recurrence and relative positional encodings, plus relative segment encodings",
+  "Outperforms BERT on 20 tasks under comparable settings"
+ ],
+ "method": {
+  "summary": "XLNet pretrains a Transformer-XL with a permutation LM objective: sample a factorization order, predict only the last 1/K tokens in that order using attention masks (positions stay in natural order) and a query stream that sees position but not content. XLNet-Large matches BERT-Large size and is trained on 32.89B tokens of mixed corpora; ablations use BERT-Base-sized models on Wikipedia+Books.",
+  "task": "self-supervised pretraining (permutation language modeling), then finetuning on NLU tasks",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "BooksCorpus + English Wikipedia",
+    "role": "pretrain",
+    "size": "13GB text; 1.09B + 2.78B subword pieces",
+    "split": null,
+    "source": "BERT's data",
+    "preprocessing": "SentencePiece"
+   },
+   {
+    "name": "Giga5",
+    "role": "pretrain",
+    "size": "16GB text; 4.75B pieces",
+    "split": null,
+    "source": "Parker et al. 2011",
+    "preprocessing": "SentencePiece"
+   },
+   {
+    "name": "ClueWeb 2012-B",
+    "role": "pretrain",
+    "size": "19GB after filtering; 4.30B pieces",
+    "split": null,
+    "source": "extended from Callan et al. 2009",
+    "preprocessing": "heuristics to aggressively filter short or low-quality articles; SentencePiece"
+   },
+   {
+    "name": "Common Crawl",
+    "role": "pretrain",
+    "size": "110GB after filtering; 19.97B pieces",
+    "split": null,
+    "source": "commoncrawl.org",
+    "preprocessing": "heuristic filtering of short or low-quality articles; SentencePiece"
+   },
+   {
+    "name": "RACE",
+    "role": "both",
+    "size": "near 100K questions",
+    "split": "test for Table 2",
+    "source": "Lai et al. 2017",
+    "preprocessing": "seq len 512"
+   },
+   {
+    "name": "SQuAD1.1 / SQuAD2.0",
+    "role": "both",
+    "size": null,
+    "split": "dev and leaderboard test",
+    "source": "Rajpurkar et al.",
+    "preprocessing": null
+   },
+   {
+    "name": "IMDB, Yelp-2, Yelp-5, DBpedia, AG, Amazon-2, Amazon-5",
+    "role": "both",
+    "size": "MNLI >390K, Yelp >560K, Amazon >3M noted",
+    "split": "test",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "GLUE",
+    "role": "both",
+    "size": "9 tasks",
+    "split": "dev median of 10 runs; test via leaderboard",
+    "source": "Wang et al. 2019",
+    "preprocessing": null
+   },
+   {
+    "name": "ClueWeb09-B",
+    "role": "eval",
+    "size": "50M documents; rerank top 100",
+    "split": "TREC 2009-2012 Web Track queries",
+    "source": null,
+    "preprocessing": "frozen XLNet word embeddings plus kernel pooling ranker"
+   }
+  ],
+  "models": [
+   {
+    "name": "XLNet-Large",
+    "role": "proposed",
+    "params": null,
+    "architecture": "Transformer-XL with two-stream attention, relative position and segment encodings",
+    "init_from": null,
+    "tokenizer": "SentencePiece",
+    "vocab": null,
+    "layers": 24,
+    "hidden": 1024,
+    "heads": 16,
+    "context": "512 tokens",
+    "other": {
+     "head size": "64",
+     "FFN inner": "4096",
+     "note": "same architecture hyperparameters as BERT-Large, params not stated"
+    }
+   },
+   {
+    "name": "XLNet-Large-wikibooks",
+    "role": "proposed",
+    "params": null,
+    "architecture": "as XLNet-Large",
+    "init_from": null,
+    "tokenizer": "SentencePiece",
+    "vocab": null,
+    "layers": 24,
+    "hidden": 1024,
+    "heads": 16,
+    "context": "512 tokens",
+    "other": {
+     "data": "BooksCorpus+Wikipedia only, BERT hyperparameters reused"
+    }
+   },
+   {
+    "name": "XLNet-Base-wikibooks",
+    "role": "proposed",
+    "params": null,
+    "architecture": "as XLNet-Large, BERT-Base sized",
+    "init_from": null,
+    "tokenizer": "SentencePiece",
+    "vocab": null,
+    "layers": 12,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "ablation, Table 6"
+    }
+   },
+   {
+    "name": "BERT-Large / BERT-Base",
+    "role": "baseline",
+    "params": null,
+    "architecture": "Transformer encoder, MLM+NSP",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "DAE + Transformer-XL",
+    "role": "baseline",
+    "params": null,
+    "architecture": "Transformer-XL trained with BERT's denoising objective and bidirectional input pipeline",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": 12,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "RoBERTa",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "published numbers; XLNet reuses RoBERTa hyperparameters in Sec 3.3"
+    }
+   }
+  ],
+  "training": {
+   "objective": "permutation LM with partial prediction: E_z[ sum_{t=c+1..|z|} log p(x_zt | x_z<t) ], K=6 so about 1/6 of tokens are targets; span-based prediction (length L in 1..5 within a context of KL tokens); no next-sentence prediction in XLNet-Large",
+   "optimizer": "Adam with weight decay",
+   "lr": "4e-4",
+   "lr_schedule": "linear decay",
+   "warmup": "40,000 steps",
+   "batch_size": "8192",
+   "steps": "500K",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "512",
+   "precision": null,
+   "weight_decay": "0.01",
+   "dropout": "hidden 0.1, GeLU 0.0, attention 0.1",
+   "regularisation": null,
+   "hardware": "512 TPU v3 chips",
+   "compute": null,
+   "wall_clock": "about 5.5 days",
+   "seeds": "ablation: median of 5 runs; GLUE dev: median of 10 runs; Table 1 BERT best of 3 variants",
+   "other": {
+    "adam_epsilon": "1e-6",
+    "data pipeline": "bidirectional: forward and backward each take half the batch",
+    "underfit": "model still underfits the data at the end of training",
+    "finetune": "Table 8: RACE bs32 lr2e-5 12K steps len512; SQuAD bs48 lr3e-5 8K steps len512 layer-wise lr decay 0.75; MNLI bs128 lr2e-5 10K steps len128; Yelp-5 bs128 lr1e-5 10K steps len512; all linear decay, wd 0.01"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "accuracy / EM / F1 / error rate / NDCG@20 / ERR@20",
+     "definition": "task-standard",
+     "unit": "% or points",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "BERT (best of 3 variants)",
+    "BERT-Base",
+    "DAE + Transformer-XL",
+    "RoBERTa",
+    "GPT",
+    "ULMFiT",
+    "MT-DNN",
+    "Mixed VAT"
+   ],
+   "protocol": "Table 1 same data and recipe as BERT; Sec 3.3 full data with RoBERTa hyperparameters; ablation median of 5 runs; GLUE dev median of 10 runs"
+  },
+  "availability": {
+   "code": "https://github.com/zihangdai/xlnet",
+   "weights": "pretrained models released at same URL",
+   "data": "public corpora; filtered ClueWeb/Common Crawl not stated as released"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.compute",
+    "quote": "we train on 512 TPU v3 chips for 500K steps with an Adam weight decay",
+    "where": "Sec 3.1"
+   },
+   {
+    "field": "models.params",
+    "quote": "Our largest model XLNet-Large has the same architecture hyperparameters as BERT-Large",
+    "where": "Sec 3.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "With the same data (BooksCorpus+Wikipedia) and BERT hyperparameters, XLNet-Large-wikibooks beats the best of three BERT-Large variants on RACE.",
+   "kind": "measured",
+   "source": null,
+   "metric": "RACE accuracy",
+   "value": "77.4",
+   "unit": "%",
+   "baseline_value": "75.1",
+   "n": null,
+   "setup": "24-layer XLNet-Large-wikibooks vs best of 3 BERT variants (original, whole-word masking, no NSP); BERT recipe",
+   "note": null,
+   "where": "Sec 3.2, Table 1",
+   "table": "Table 1, row XLNet-Large-wikibooks, column RACE"
+  },
+  {
+   "claim": "Same fair setting: MNLI accuracy.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MNLI",
+   "value": "88.4",
+   "unit": "%",
+   "baseline_value": "87.3",
+   "n": null,
+   "setup": "as above",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row XLNet-Large-wikibooks, column MNLI"
+  },
+  {
+   "claim": "Same fair setting: SQuAD2.0 EM/F1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "SQuAD2.0 EM/F1",
+   "value": "85.1/87.8",
+   "unit": "EM/F1",
+   "baseline_value": "82.8/85.5",
+   "n": null,
+   "setup": "as above",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row XLNet-Large-wikibooks, column SQuAD2.0"
+  },
+  {
+   "claim": "Same fair setting: RTE jumps by about 7 points.",
+   "kind": "measured",
+   "source": null,
+   "metric": "RTE",
+   "value": "81.2",
+   "unit": "%",
+   "baseline_value": "74.0",
+   "n": null,
+   "setup": "as above",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row XLNet-Large-wikibooks, column RTE"
+  },
+  {
+   "claim": "Ablation: replacing BERT-Base with Transformer-XL trained with BERT's DAE objective already helps; permutation LM adds more (RACE).",
+   "kind": "measured",
+   "source": null,
+   "metric": "RACE (XLNet-Base K=6)",
+   "value": "66.66",
+   "unit": "%",
+   "baseline_value": "65.03 (DAE+Transformer-XL); 64.3 (BERT-Base)",
+   "n": null,
+   "setup": "12-layer BERT-Base-sized models, Wikipedia+BooksCorpus only, median of 5 runs",
+   "note": null,
+   "where": "Sec 3.4, Table 6",
+   "table": "Table 6, row 4 XLNet-Base (K = 6), column RACE; row 2 DAE + Transformer-XL; row 1 BERT-Base"
+  },
+  {
+   "claim": "Ablation: permutation LM vs DAE on the same Transformer-XL backbone, SQuAD2.0 F1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "SQuAD2.0 F1 (XLNet-Base K=6)",
+   "value": "80.98",
+   "unit": "F1",
+   "baseline_value": "79.56 (DAE+Transformer-XL); 76.30 (BERT-Base)",
+   "n": null,
+   "setup": "as above",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row 4, column SQuAD2.0 F1; row 2; row 1"
+  },
+  {
+   "claim": "Ablation: MNLI m/mm for XLNet-Base K=6 vs DAE+Transformer-XL.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MNLI m/mm",
+   "value": "85.63/85.12",
+   "unit": "%",
+   "baseline_value": "84.88/84.45",
+   "n": null,
+   "setup": "as above",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row 4 and row 2, column MNLI"
+  },
+  {
+   "claim": "Ablation: SST-2 is nearly flat across rows; DAE+Transformer-XL is below BERT-Base.",
+   "kind": "measured",
+   "source": null,
+   "metric": "SST-2",
+   "value": "93.35",
+   "unit": "%",
+   "baseline_value": "92.78 (BERT-Base); 92.60 (DAE+TXL)",
+   "n": null,
+   "setup": "as above",
+   "note": "Small differences; no variance reported besides median of 5.",
+   "where": "Table 6",
+   "table": "Table 6, rows 4, 1, 2, column SST-2"
+  },
+  {
+   "claim": "Removing the memory (segment recurrence) hurts, most on RACE, the longest-context task.",
+   "kind": "measured",
+   "source": null,
+   "metric": "RACE without memory",
+   "value": "65.55",
+   "unit": "%",
+   "baseline_value": "66.66 (XLNet-Base K=6)",
+   "n": null,
+   "setup": "XLNet-Base ablation",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row 5 - memory, column RACE"
+  },
+  {
+   "claim": "Adding next-sentence prediction does not help overall: RACE rises slightly but SQuAD2.0 F1 falls.",
+   "kind": "measured",
+   "source": null,
+   "metric": "SQuAD2.0 F1 with +NSP",
+   "value": "79.83",
+   "unit": "F1",
+   "baseline_value": "80.98 (K=6 without NSP)",
+   "n": null,
+   "setup": "XLNet-Base ablation",
+   "note": "RACE 66.76 with NSP vs 66.66 without; MNLI 85.32/85.09 vs 85.63/85.12.",
+   "where": "Table 6",
+   "table": "Table 6, row 8 + next-sent pred, column SQuAD2.0 F1"
+  },
+  {
+   "claim": "Dropping span-based prediction lowers SQuAD2.0 F1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "SQuAD2.0 F1 without span-based pred",
+   "value": "80.61",
+   "unit": "F1",
+   "baseline_value": "80.98",
+   "n": null,
+   "setup": "XLNet-Base ablation",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row 6 - span-based pred, column SQuAD2.0 F1"
+  },
+  {
+   "claim": "At scale (full data, RoBERTa hyperparameters) XLNet beats RoBERTa on RACE test.",
+   "kind": "measured",
+   "source": null,
+   "metric": "RACE accuracy",
+   "value": "85.4",
+   "unit": "%",
+   "baseline_value": "83.2 (RoBERTa)",
+   "n": null,
+   "setup": "XLNet-Large, 24 layers, 32.89B-token data, test set",
+   "note": null,
+   "where": "Sec 3.3, Table 2",
+   "table": "Table 2, row XLNet, column RACE Accuracy"
+  },
+  {
+   "claim": "SQuAD2.0 dev F1 vs RoBERTa.",
+   "kind": "measured",
+   "source": null,
+   "metric": "SQuAD2.0 dev F1",
+   "value": "90.6",
+   "unit": "F1",
+   "baseline_value": "89.4 (RoBERTa)",
+   "n": null,
+   "setup": "single model, dev set",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, Dev set, row XLNet, SQuAD2.0 F1"
+  },
+  {
+   "claim": "GLUE MNLI single-task dev vs RoBERTa.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MNLI-m dev",
+   "value": "90.8",
+   "unit": "%",
+   "baseline_value": "90.2 (RoBERTa)",
+   "n": null,
+   "setup": "single-task single model, median of 10 runs",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row XLNet, column MNLI"
+  },
+  {
+   "claim": "GLUE RTE dev: XLNet slightly below RoBERTa.",
+   "kind": "measured",
+   "source": null,
+   "metric": "RTE dev",
+   "value": "85.9",
+   "unit": "%",
+   "baseline_value": "86.6 (RoBERTa)",
+   "n": null,
+   "setup": "single-task single model, median of 10 runs",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row XLNet, column RTE"
+  },
+  {
+   "claim": "Yelp-5 error rate vs BERT.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Yelp-5 error",
+   "value": "27.05",
+   "unit": "% error",
+   "baseline_value": "29.32 (BERT)",
+   "n": null,
+   "setup": "24-layer models, test set",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row XLNet, column Yelp-5"
+  },
+  {
+   "claim": "IMDB error rate vs previous best (Mixed VAT 4.32, BERT 4.51).",
+   "kind": "measured",
+   "source": null,
+   "metric": "IMDB error",
+   "value": "3.20",
+   "unit": "% error",
+   "baseline_value": "4.32 (Mixed VAT)",
+   "n": null,
+   "setup": "test set",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row XLNet, column IMDB"
+  },
+  {
+   "claim": "ClueWeb09-B reranking with frozen XLNet embeddings: ERR@20 vs BERT.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ERR@20",
+   "value": "20.28",
+   "unit": "ERR@20",
+   "baseline_value": "18.67 (BERT, authors' implementation)",
+   "n": null,
+   "setup": "embeddings extracted without finetuning, kernel pooling ranker, rerank top 100",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row XLNet, column ERR@20"
+  },
+  {
+   "claim": "Pretraining corpus size after SentencePiece.",
+   "kind": "measured",
+   "source": null,
+   "metric": "tokens",
+   "value": "32.89B",
+   "unit": "subword pieces",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Wikipedia 2.78B, BooksCorpus 1.09B, Giga5 4.75B, ClueWeb 4.30B, Common Crawl 19.97B",
+   "note": null,
+   "where": "Sec 3.1",
+   "quote": "which are 32.89B in total."
+  },
+  {
+   "claim": "Pretraining cost of XLNet-Large.",
+   "kind": "measured",
+   "source": null,
+   "metric": "wall-clock",
+   "value": "about 5.5 days",
+   "unit": "days",
+   "baseline_value": null,
+   "n": null,
+   "setup": "512 TPU v3 chips, 500K steps, batch 8192",
+   "note": "Text breaks across a line after 'days'; the model still underfit at the end.",
+   "where": "Sec 3.1",
+   "quote": "which takes about 5.5 days."
+  },
+  {
+   "claim": "The authors observe the largest gains on longer-context tasks and attribute it to Transformer-XL.",
+   "kind": "claim",
+   "source": null,
+   "metric": "none",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 2-3 comparisons with BERT/RoBERTa",
+   "note": null,
+   "where": "Sec 3.3",
+   "quote": "the performance gain of XLNet is usually larger."
+  },
+  {
+   "claim": "Authors say the permutation objective mostly improves data efficiency; the gains from Transformer-XL are shown by ablation, but attention-pattern evidence is only qualitative.",
+   "kind": "claim",
+   "source": null,
+   "metric": "none",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Appendix A.6",
+   "note": null,
+   "where": "A.6",
+   "quote": "mostly contributes to a better data efﬁciency"
+  }
+ ],
+ "limits": [
+  "Parameter count is never given; XLNet-Large is only said to be 'a similar model size' to BERT-Large.",
+  "Ablation (Table 6) reports medians of 5 runs without variance; several gaps (SST-2, NSP rows) are within a point.",
+  "Table 1 compares against the best of 3 BERT variants; the permutation objective is not isolated from the Transformer-XL backbone except by the DAE+Transformer-XL row at BERT-Base scale.",
+  "Large-scale win over RoBERTa uses different data than the fair comparison, and XLNet is slightly lower than RoBERTa on GLUE RTE dev.",
+  "The ablation compares to BERT only at Base size; no ablation of partial prediction K beyond 6 vs 7, and pretraining data effects for XLNet-Large are not separated from objective.",
+  "Model still underfit at the end of 500K steps. SQuAD1.1 test result is from an older model version.",
+  "The claim that the permutation objective mostly improves data efficiency is conjecture backed only by qualitative attention analysis."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Permutation language modeling",
+   "definition": "maximizing the expected log likelihood of a sequence over all permutations of the factorization order",
+   "where": "Sec 2.2"
+  },
+  {
+   "term": "Partial prediction",
+   "definition": "predicting only the last tokens in a factorization order, about 1/K of tokens",
+   "where": "Sec 2.3"
+  },
+  {
+   "term": "Two-stream self-attention",
+   "definition": "content stream h (sees its own token) and query stream g (sees position only) with shared parameters",
+   "where": "Sec 2.3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "BERT",
+   "year": 2018,
+   "arxiv": "1810.04805",
+   "relation": "baseline",
+   "note": "denoising autoencoding objective XLNet contrasts with",
+   "quote": null
+  },
+  {
+   "work": "Transformer-XL",
+   "year": 2019,
+   "arxiv": "1901.02860",
+   "relation": "extends",
+   "note": "segment recurrence and relative positional encoding integrated",
+   "quote": null
+  },
+  {
+   "work": "NADE (Uria et al.)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "orderless NADE inspired the permutation objective",
+   "quote": null
+  },
+  {
+   "work": "MADE (Germain et al.)",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "related",
+   "note": "permutation-based AR modeling",
+   "quote": null
+  },
+  {
+   "work": "RoBERTa",
+   "year": 2019,
+   "arxiv": "1907.11692",
+   "relation": "baseline",
+   "note": "scaled-up comparison, hyperparameters reused",
+   "quote": null
+  },
+  {
+   "work": "GPT (Radford et al.)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "unidirectional AR pretraining",
+   "quote": null
+  },
+  {
+   "work": "ELMo",
+   "year": 2018,
+   "arxiv": "1802.05365",
+   "relation": "related",
+   "note": "shallow concatenation of forward and backward LMs",
+   "quote": null
+  },
+  {
+   "work": "SentencePiece",
+   "year": 2018,
+   "arxiv": "1808.06226",
+   "relation": "uses-method",
+   "note": "tokenizer",
+   "quote": null
+  },
+  {
+   "work": "BooksCorpus / Wikipedia / Giga5 / ClueWeb / Common Crawl",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "pretraining data",
+   "quote": null
+  },
+  {
+   "work": "ALBERT",
+   "year": 2019,
+   "arxiv": "1909.11942",
+   "relation": "related",
+   "note": "excluded from comparison since it changes hidden size and FLOPs",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "(a) Content stream attention. (b) Query stream attention, no access to content x_zt. (c) Overview of permutation LM training with two-stream attention.",
+   "page": 4,
+   "why": "Shows how one set of weights realises a random factorization order via masks with 3->2->4->1 example."
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Illustration of the permutation language modeling objective for predicting x3 given the same input sequence x but with different factorization orders.",
+   "page": 16,
+   "why": "Shows the same target seeing different context under different orders; the clearest picture of why it is bidirectional in expectation."
+  },
+  {
+   "figure": "Table 6",
+   "caption": "Ablation: BERT-Base, DAE+Transformer-XL, XLNet-Base variants.",
+   "page": 9,
+   "why": "Separates objective effect from backbone effect."
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Content stream, joint and split views, order [3,2,4,1].",
+   "page": 17,
+   "why": "Detailed mask view."
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "Query stream, joint and split views.",
+   "page": 18,
+   "why": "Detailed mask view for the query stream."
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 2.2 Eq 3",
+   "snippet": "max_theta E_{z~Z_T} [ sum_{t=1..T} log p_theta(x_{z_t} | x_{z_<t}) ]",
+   "verbatim": false
+  },
+  {
+   "where": "Sec 2.6",
+   "snippet": "J_BERT = log p(New | is a city) + log p(York | is a city),  J_XLNet = log p(New | is a city) + log p(York | New, is a city).",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "PDF text has NUL bytes in the cache file; reading was unaffected.",
+  "Table cell order in text extraction is jumbled for Tables 2-5 (columns interleaved); values were assigned using the table captions and column layout.",
+  "Table 3 Dec 14, 2019 leaderboard date text is as printed (the arXiv v2 revision).",
+  "No embedded instructions found."
+ ]
+}

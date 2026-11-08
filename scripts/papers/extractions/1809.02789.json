@@ -1,0 +1,594 @@
+{
+ "schema": 1,
+ "key": "1809.02789",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/mihaylov-2018-can-suit-armor-conduct-electricity.pdf",
+ "bib": {
+  "title": "Can a Suit of Armor Conduct Electricity? A New Dataset for Open Book Question Answering",
+  "authors": [
+   "Todor Mihaylov",
+   "Peter Clark",
+   "Tushar Khot",
+   "Ashish Sabharwal"
+  ],
+  "first_author": "Mihaylov",
+  "year": 2018,
+  "venue": "Proceedings of the 2018 Conference on Empirical Methods in Natural Language Processing (EMNLP), pages 2381-2391",
+  "arxiv": "1809.02789",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 46884,
+  "chars_total": 46884,
+  "engine": "pymupdf",
+  "skipped": "Appendices A (retrieval for K) and D (sample predictions) are cited in the text but are not in the PDF; nothing to read."
+ },
+ "type": "benchmark",
+ "question": "Can a QA dataset built around a small 'open book' of core science facts plus broad common knowledge expose the gap between systems and humans in multi-hop reasoning?",
+ "hypothesis": "Existing retrieval/association-based science QA solvers will fail on questions that require combining an open-book fact with common knowledge, while humans solve them easily.",
+ "contributions": [
+  "OpenBookQA: 5957 four-way multiple-choice elementary science questions with an open book of 1326 core facts",
+  "Multi-stage crowdsourcing pipeline with IR and word-association hardness filters and a crowd answerability filter",
+  "Baselines: pre-trained solvers, knowledge-free neural models showing dataset bias, and a knowledge-enhanced reader with oracle facts",
+  "A statistical estimate of human performance (~92%)"
+ ],
+ "method": {
+  "summary": "Crowd workers on Mechanical Turk write a multiple-choice question from a core science fact f plus a self-chosen common fact k; questions failing IR and word-association solvers and answered by 4 of 5 other workers are kept. Baselines range from untrained science QA solvers to BiLSTM max-out models, a knowledge-enhanced reader and oracle-fact variants.",
+  "task": "4-way multiple-choice science question answering (open book + common knowledge)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "OpenBookQA",
+    "role": "both",
+    "size": "5957 questions; 1326 core facts F; ~6000 auxiliary facts K",
+    "split": "4957/500/500 Train/Dev/Test; Dev and Test additionally expert-filtered",
+    "source": "Crowdsourced on Amazon Mechanical Turk (North America, masters qualification); F from WorldTree (Jansen et al. 2018); 8140 collected, 2183 discarded",
+    "preprocessing": "Checks: exactly 4 choices, no negation words, uniform choice length (all <=3 or >=4 words); choices shuffled randomly"
+   },
+   {
+    "name": "GloVe 840B Common Crawl",
+    "role": "pretrain",
+    "size": "840B tokens, d=300 embeddings",
+    "split": null,
+    "source": "Pennington et al. 2014",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "PMI, TableILP, TupleInference, DGEM, IR (pre-trained science solvers)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "PMI over 280 GB text; ILP over tables; ILP over Open IE tuples; neural entailment",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Embedd+Sim (L2 logistic regression)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "Centroid GloVe vectors + cosine similarities, features in R^(5d+4)",
+    "init_from": "GloVe d=300",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "BiLSTM max-out (Plausible Answer Detector, Odd-one-out, Question Match) and ESIM",
+    "role": "baseline",
+    "params": null,
+    "architecture": "BiLSTM max-out (Conneau et al. 2017) with linear attention Att(u,v)=W^T[u;v;u.v;|u-v|]",
+    "init_from": "GloVe d=300",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": "inferred: 2h-dim representations, h not stated",
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Knowledge-Enhanced Reader",
+    "role": "proposed",
+    "params": null,
+    "architecture": "Question Match BiLSTM max-out extended with attention over retrieved fact memory Mk; 9 attention terms with weights initialised to ones",
+    "init_from": "GloVe d=300",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "knowledge_sources": "F, WordNet, ConceptNet, oracle f, oracle k"
+    }
+   }
+  ],
+  "training": {
+   "objective": "Multi-class classification over 4 labels (softmax over choice scores)",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "L2 for the logistic regression baseline",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": "5 runs with different random seeds",
+   "other": {
+    "note": "Kingma and Ba 2015 (Adam), PyTorch and AllenNLP are cited in references but the body text does not state optimizer or hyperparameters; Appendix A not in PDF"
+   }
+  },
+  "inference": {
+   "decoding": "arg max over choice scores; ties score 1/k",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "5 seeds for trained models, mean±std",
+   "prompting": null,
+   "retrieval": "IR over K to select a fixed-size subset K_Q,C per instance (details in Appendix A, not in PDF)",
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "accuracy",
+     "definition": "1 point for correct answer, 1/k for a k-way tie including the correct answer; Guess All=25%",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Guess All",
+    "TupleInference",
+    "PMI",
+    "TableILP",
+    "DGEM",
+    "IR with F",
+    "Embedd+Sim",
+    "ESIM",
+    "Plausible Answer Detector",
+    "Odd-one-out",
+    "Question Match",
+    "human"
+   ],
+   "protocol": "Dev and Test; mean ± std over 5 seeds; human accuracy estimated from step-6 crowd answers with Hoeffding bound (H(Q)>=H~(Q)-3% with prob >98.8%, -2.5% with 95.6%)"
+  },
+  "availability": {
+   "code": "http://data.allenai.org/OpenBookQA",
+   "weights": null,
+   "data": "http://data.allenai.org/OpenBookQA"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "eval.protocol",
+    "quote": "we report the former as our conservative estimate on human performance.",
+    "where": "Sec 3.2"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Human performance on OpenBookQA is about 92% (conservative lower estimate from crowd-worker step-6 answers).",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "91.7",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Test split, estimate H~(Q)-3% from 5 crowd answers per question; not new annotations",
+   "note": null,
+   "where": "Table 4; Sec 3.2, 5",
+   "table": "Table 4, row Human solver, column Test"
+  },
+  {
+   "claim": "Re-annotation of 100 random questions per split by 5 new workers gave similar accuracy (Test 91.6%).",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "91.6",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "5 new annotations on 100 random questions from each of Train/Dev/Test",
+   "note": "Line-break hyphenation in the text ('re-mained'); Train 88.6, Dev 90.2, Test 91.6",
+   "where": "Sec 5",
+   "quote": "The performance re-mained similar at 88.6%, 90.2%, and 91.6%, resp."
+  },
+  {
+   "claim": "Pre-trained science QA solvers without the open book score near or below random (TupleInference 17.9%, PMI 21.2%, TableILP 23.4%, DGEM 24.4%).",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "17.9",
+   "unit": "%",
+   "baseline_value": "25.0",
+   "n": null,
+   "setup": "Test, no retraining, KB only; value shown is TupleInference (worst); random=25.0",
+   "note": null,
+   "where": "Table 4, Sec 5",
+   "table": "Table 4, row TupleInference, column Test"
+  },
+  {
+   "claim": "Adding the open book F to pre-trained solvers gives mixed results: TupleInference with F improves by 8.7% (Test 26.6), DGEM with F unchanged.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "26.6",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Test, no training, KB + F",
+   "note": "Text says 'improving TupleInference by 8.7%' (26.6-17.9)",
+   "where": "Table 4, Sec 5",
+   "table": "Table 4, row TupleInference with F, column Test"
+  },
+  {
+   "claim": "A choice-only Plausible Answer Detector, which ignores the question, reaches 49.6% on Test.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "49.6",
+   "unit": "%",
+   "baseline_value": "25.0",
+   "n": null,
+   "setup": "BiLSTM max-out, choices only, trained on 4957 Train questions, GloVe d=300, 5 seeds",
+   "note": "Quote has hyphenated line break ('ques-tion') in the cached text; Table 4 gives 49.6±0.7",
+   "where": "Sec 5, Table 4",
+   "quote": "the “plausible answer detector” can predict the correct answer with 49.6% accuracy without even looking at the ques-tion."
+  },
+  {
+   "claim": "The Odd-one-out solver reaches 50.2% on Test (Dev 56.9).",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "50.2",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "OpenBookQA Test split (500 questions), 4-way multiple choice, scores in %, mean of 5 seeds for trained models",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row Odd-one-out Solver, column Test"
+  },
+  {
+   "claim": "Question Match solver reaches 50.2% on Test (Dev 54.6).",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "50.2",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "OpenBookQA Test split (500 questions), 4-way multiple choice, scores in %, mean of 5 seeds for trained models",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row Question Match, column Test"
+  },
+  {
+   "claim": "Embeddings+similarity logistic regression reaches 41.8% on Test.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "41.8",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "L2 logistic regression on centroid GloVe features, Test",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row Embedd+Sim, column Test"
+  },
+  {
+   "claim": "ESIM reaches 48.9% on Test; ELMo improved Question Match and ESIM Test scores by 0.4% and 1.8%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "48.9",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "OpenBookQA Test split (500 questions), 4-way multiple choice, scores in %, mean of 5 seeds for trained models",
+   "note": null,
+   "where": "Table 4, Sec 5",
+   "table": "Table 4, row ESIM, column Test"
+  },
+  {
+   "claim": "The three knowledge-free neural baselines simultaneously succeed on 34.4% of Dev questions and simultaneously fail on 23.6%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "share of questions",
+   "value": "34.4",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Dev, three knowledge-free baselines",
+   "note": null,
+   "where": "Sec 5",
+   "quote": "all of these neural knowledge-free baselines simultaneously succeed on 34.4% of the"
+  },
+  {
+   "claim": "Oracle: giving the knowledge-enhanced reader the gold core fact f reaches 55.8% on Test, about 5% over knowledge-free models.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "55.8",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Knowledge-enhanced reader + gold f, Test",
+   "note": null,
+   "where": "Table 4, Sec 5",
+   "table": "Table 4, row f, column Test"
+  },
+  {
+   "claim": "f + WordNet gives 56.3% on Test, about 0.5% gain; f + ConceptNet drops to 53.7%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "56.3",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Oracle f plus retrieved WordNet facts, Test",
+   "note": "f+ConceptNet Test 53.7 (below f alone 55.8)",
+   "where": "Table 4",
+   "table": "Table 4, row f + WordNet, column Test"
+  },
+  {
+   "claim": "Oracle f plus the question author's additional fact k reaches 76.9% on Test (Dev 80.2), still far from human 92%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "76.9",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Gold f and author-provided k, knowledge-enhanced reader, 5 seeds",
+   "note": "Intro says 'Using both f and k increases the accuracy to 76%'",
+   "where": "Table 4, Sec 5",
+   "table": "Table 4, row f + k, column Test"
+  },
+  {
+   "claim": "Dataset size: 5957 questions split 4957/500/500, from 8140 collected of which 2183 discarded at crowd answerability step.",
+   "kind": "measured",
+   "source": null,
+   "metric": "count",
+   "value": "5957",
+   "unit": "questions",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Full dataset",
+   "note": "4957/500/500 on next line",
+   "where": "Sec 3.3, fn 9",
+   "quote": "OpenBookQA consists of 5957 questions, with"
+  },
+  {
+   "claim": "The open book F has 1326 facts, filtered from 2287 WorldTree central facts.",
+   "kind": "measured",
+   "source": null,
+   "metric": "count",
+   "value": "1326",
+   "unit": "facts",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Subset of WorldTree corpus (Jansen et al. 2018)",
+   "note": "'down to 1326 that appear general enough' follows on next line; abstract also says 1326",
+   "where": "Sec 3",
+   "quote": "We further ﬁlter them"
+  },
+  {
+   "claim": "In 21% of 100 analysed Train questions the question does not actually need the core science fact.",
+   "kind": "measured",
+   "source": null,
+   "metric": "share of questions",
+   "value": "21",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Manual analysis of 100 Train questions",
+   "note": null,
+   "where": "Sec 3.3",
+   "quote": "In 21% of the cases, the crowdsourced question ac-"
+  },
+  {
+   "claim": "Each question needs on average 1.16 additional common-knowledge facts.",
+   "kind": "measured",
+   "source": null,
+   "metric": "count",
+   "value": "1.16",
+   "unit": "facts/question",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Manual analysis of 100 Train questions (minus 21% not needing f)",
+   "note": null,
+   "where": "Sec 3.3",
+   "quote": "question needed 1.16 additional facts ignoring any lin-"
+  },
+  {
+   "claim": "Most needed extra facts are PROPERTY (29.11% of questions) and ISA (20.25%).",
+   "kind": "measured",
+   "source": null,
+   "metric": "share of questions",
+   "value": "29.11",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "100 Train questions, at least one fact of the type needed",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row PROPERTY, column % Questions"
+  },
+  {
+   "claim": "Answer-position bias: choice A was correct in 69% of questions before shuffling; answer is longest choice in 18.6% and shortest in 3.6%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "share of questions",
+   "value": "69",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "After step 4, before random shuffle in step 8",
+   "note": null,
+   "where": "fn 7; Table 1",
+   "quote": "Choice ‘A’ was the correct answer in 69% of the ques-"
+  },
+  {
+   "claim": "TableILP does not answer 24% of OpenBookQA questions at all.",
+   "kind": "measured",
+   "source": null,
+   "metric": "share of questions",
+   "value": "24",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "TableILP knowledge tables incomplete",
+   "note": null,
+   "where": "Sec 4.1",
+   "quote": "making TableILP not answer 24%"
+  }
+ ],
+ "limits": [
+  "Retrieving the right common knowledge is left open; the oracle k is author-written and noisy (incomplete, over-complete, or distantly related), not gold.",
+  "21% of analysed questions do not need the core fact.",
+  "Choice-only and odd-one-out baselines reach ~50%, showing annotation artifacts remain in the data.",
+  "Pre-trained solvers are correlated with the IR filter used to build the dataset, so their low scores are partly by design (IR gets 0% by construction).",
+  "Human estimate reuses the filtering annotations and assumes independent answers; worker dependence across questions left unanalysed.",
+  "Training hyperparameters (optimizer, lr, hidden size, epochs) not given in the body; appendices not in PDF.",
+  "Pre-LLM era models only (BiLSTM, GloVe, ELMo); modern LLMs not evaluated."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "open book",
+   "definition": "a set of 1326 elementary level science facts that forms the basis for generating the questions and is by itself generally insufficient to answer them",
+   "where": "Sec 1"
+  },
+  {
+   "term": "oracle f / k",
+   "definition": "f: the core fact used by the question author; k: the author's additional fact for the question",
+   "where": "Sec 1, 3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "WorldTree: A corpus of explanation graphs for elementary science questions",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Source of the 1326 core facts",
+   "quote": null
+  },
+  {
+   "work": "Think you have solved question answering? Try ARC",
+   "year": 2018,
+   "arxiv": "1803.05457",
+   "relation": "related",
+   "note": "Related science QA set; DGEM adaptation; Question Match scores 33.87% on ARC Challenge",
+   "quote": null
+  },
+  {
+   "work": "Knowledgeable Reader (Mihaylov and Frank)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Base for the knowledge-enhanced reader",
+   "quote": null
+  },
+  {
+   "work": "Annotation artifacts in natural language inference data (Gururangan et al.)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Motivates choice-only baselines",
+   "quote": null
+  },
+  {
+   "work": "Supervised learning of universal sentence representations (Conneau et al.)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "BiLSTM max-out",
+   "quote": null
+  },
+  {
+   "work": "Enhanced LSTM for NLI (ESIM)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "ESIM baseline",
+   "quote": null
+  },
+  {
+   "work": "PMI, TableILP, TupleInference, DGEM, IR solvers (Clark 2016; Khashabi 2016; Khot 2017, 2018)",
+   "year": null,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Untrained science QA solvers evaluated",
+   "quote": null
+  },
+  {
+   "work": "ConceptNet 5.5; WordNet",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "External knowledge sources",
+   "quote": null
+  },
+  {
+   "work": "GloVe",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Embeddings",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Figure 1",
+   "caption": "An example for a question with a given set of choices and supporting facts.",
+   "page": 1,
+   "why": "Shows the core fact plus common knowledge needed for one question (steel spoon)."
+  },
+  {
+   "figure": "Figure 2",
+   "caption": "OpenBookQA question generation pipeline",
+   "page": 4,
+   "why": "Shows write, hardness filter (IR and ACME), answerability, de-bias steps."
+  },
+  {
+   "figure": "Table 4",
+   "caption": "Scores obtained by various solvers on OpenBookQA",
+   "page": 9,
+   "why": "Main results ladder from random to oracle to human."
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Appendices A and D referenced but absent from the PDF.",
+  "No embedded instructions found."
+ ]
+}

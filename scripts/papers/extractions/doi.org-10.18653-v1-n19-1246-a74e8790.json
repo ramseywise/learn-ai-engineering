@@ -1,0 +1,646 @@
+{
+ "schema": 1,
+ "key": "https://doi.org/10.18653/v1/n19-1246",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/dua-2019-drop.pdf",
+ "bib": {
+  "title": "DROP: A Reading Comprehension Benchmark Requiring Discrete Reasoning Over Paragraphs",
+  "authors": [
+   "Dheeru Dua",
+   "Yizhong Wang",
+   "Pradeep Dasigi",
+   "Gabriel Stanovsky",
+   "Sameer Singh",
+   "Matt Gardner"
+  ],
+  "first_author": "Dua",
+  "year": 2019,
+  "venue": "Proceedings of NAACL-HLT 2019, pages 2368-2378",
+  "arxiv": "1903.00161",
+  "doi": "10.18653/v1/n19-1246"
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 48062,
+  "chars_total": 48062,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "benchmark",
+ "question": "Can reading comprehension systems perform discrete reasoning (counting, addition, sorting) over paragraphs, which existing datasets like SQuAD do not require?",
+ "hypothesis": "Questions needing discrete reasoning over paragraph content, collected adversarially against a baseline, will be far harder for current systems than prior datasets.",
+ "contributions": [
+  "DROP, a crowdsourced, adversarially-created 96k-question English reading comprehension benchmark requiring discrete reasoning",
+  "Evaluation of heuristic, semantic parsing and SQuAD-style RC baselines",
+  "NAQANet, a QANet extension with limited numerical reasoning reaching 47.0% F1"
+ ],
+ "method": {
+  "summary": "Passages were extracted from Wikipedia (NFL summaries, history), and Mechanical Turk workers wrote questions that a live BiDAF model could not answer. Dev and test answers were validated with extra annotations. Heuristic, semantic parsing and RC baselines plus a numerically-aware QANet (NAQANet) were evaluated with EM and a numeracy-focused F1.",
+  "task": "reading comprehension requiring discrete reasoning over a paragraph (answers are spans, numbers or dates)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "DROP",
+    "role": "both",
+    "size": "96,567 questions; 7,000 passages extracted (approx)",
+    "split": "random by passage: train 80% (5565 passages, 77,409 questions), dev 10% (582, 9,536), test 10% (588, 9,622)",
+    "source": "Wikipedia (Oct 2018 dump plus scraping), crowdsourced on Amazon Mechanical Turk; 60k USD budget; 5 USD per HIT, about 10 USD/hour",
+    "preprocessing": "0.7% of questions marked invalid in validation and filtered out; at least two extra answers collected for each dev/test question; for span-only RC models 45% of train questions not answerable by a span were omitted"
+   },
+   {
+    "name": "SQuAD 1.1",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Rajpurkar et al. 2016",
+    "preprocessing": "used only to report baseline EM (BiDAF 66.8, QANet 72.7, QANet+ELMo 78.7, BERT 84.7)"
+   },
+   {
+    "name": "WikiTableQuestions",
+    "role": "pretrain",
+    "size": null,
+    "split": null,
+    "source": "Pasupat and Liang 2015",
+    "preprocessing": "question style inspiration and KDG parser design; not trained on"
+   }
+  ],
+  "models": [
+   {
+    "name": "NAQANet",
+    "role": "proposed",
+    "params": null,
+    "architecture": "QANet with four output heads (passage span, question span, count 0-9, signed-number arithmetic expression) plus answer-type classifier",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "hyperparameters": "same as QANet baseline",
+     "arithmetic_search": "only addition/subtraction of two numbers searched"
+    }
+   },
+   {
+    "name": "QANet",
+    "role": "baseline",
+    "params": null,
+    "architecture": "QANet",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "6 blocks in modeling layer (original 7)",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "batch_size": "16 (original 32)"
+    }
+   },
+   {
+    "name": "QANet+ELMo",
+    "role": "baseline",
+    "params": null,
+    "architecture": "QANet with ELMo",
+    "init_from": "ELMo trained on 5.5B corpus",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "BERT",
+    "role": "baseline",
+    "params": null,
+    "architecture": "large uncased BERT",
+    "init_from": "pretrained BERT large uncased (Hugging Face pytorch-pretrained-bert)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "drop_to_squad": "first match used as gold span"
+    }
+   },
+   {
+    "name": "BiDAF",
+    "role": "baseline",
+    "params": null,
+    "architecture": "AllenNLP BiDAF with marginal objective",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "also_used": "adversary during data collection"
+    }
+   },
+   {
+    "name": "KDG semantic parser (Syn Dep, OpenIE, SRL)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "grammar-constrained parser over table built from paragraph",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "GloVe_cosine_distance_d": "0.3, tuned on dev"
+    }
+   }
+  ],
+  "training": {
+   "objective": "marginal likelihood over all answer-matching executions (spans, counts, sign assignments); KDG maximises marginal likelihood of logical forms found by exhaustive search to preset depth",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "16 (QANet and NAQANet, per Section 5.2)",
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "GPU (memory-limited); computations on beaker.org with Google Cloud credits",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "note": "NAQANet hyperparameters stated to equal QANet baseline but not listed"
+   }
+  },
+  "inference": {
+   "decoding": "KDG: beam search for most likely logical form then execute; NAQANet: answer type chosen greedily, then best answer within type",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "not stated; single reported number per system",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Exact Match (EM)",
+     "definition": "SQuAD implementation: removes articles and simple normalisation; max over gold answers",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Numeracy-focused F1",
+     "definition": "macro-averaged bag-of-words overlap F1 (SQuAD-based); 0 if number mismatch between gold and prediction; multi-span answers aligned greedily one-to-one then averaged; max over gold answers",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Majority",
+    "Question-only QANet",
+    "Paragraph-only QANet",
+    "Syn Dep / OpenIE / SRL semantic parsers (KDG)",
+    "BiDAF",
+    "QANet",
+    "QANet+ELMo",
+    "BERT"
+   ],
+   "protocol": "Dev and hidden test. Human performance estimated by the authors collectively answering 560 test questions. No seeds or significance tests stated."
+  },
+  "availability": {
+   "code": "https://allennlp.org/drop",
+   "weights": null,
+   "data": "https://allennlp.org/drop (hidden-test leaderboard)"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.batch_size",
+    "quote": "our settings differ from the original paper only in the batch size (16 v.s. 32)",
+    "where": "5.2"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Best baseline reaches only 32.7% F1 on test while expert humans reach 96.4%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 32.7,
+   "unit": "%",
+   "baseline_value": 96.42,
+   "n": null,
+   "setup": "DROP test, BERT large uncased baseline vs human on 560 test questions",
+   "quote": "the best systems only achieve 32.7% F1 on our generalized accuracy metric, while expert human performance is 96.4%",
+   "table": null,
+   "note": "Table 4 prints BERT 32.70 and human 96.42",
+   "where": "Abstract"
+  },
+  {
+   "claim": "NAQANet complete model reaches 47.0% F1 on test.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 47.0,
+   "unit": "%",
+   "baseline_value": 32.7,
+   "n": null,
+   "setup": "DROP test, NAQANet with question span, count, add/sub heads",
+   "quote": "achieve 47.0% F1",
+   "table": null,
+   "note": "Table 4: 47.01",
+   "where": "Abstract"
+  },
+  {
+   "claim": "NAQANet gains 14.3 points F1 over the best baseline.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1 gain",
+   "value": 14.3,
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "DROP test, vs BERT",
+   "quote": "This model reaches 47% F1, a 14.3% absolute increase over the best baseline system.",
+   "table": null,
+   "note": null,
+   "where": "Introduction"
+  },
+  {
+   "claim": "BERT test EM/F1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": 29.45,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "DROP test, BERT large uncased",
+   "quote": null,
+   "table": "Table 4, row BERT, column Test EM (29.45; F1 32.70)",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "Human test EM/F1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 96.42,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "560 test questions answered by authors",
+   "quote": null,
+   "table": "Table 4, row Human, column Test F1 (EM 94.09)",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "Add/Sub head gives the biggest NAQANet gain: dev F1 33.92 to 45.71.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 45.71,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "DROP dev, NAQANet + Q Span + Count + Add/Sub",
+   "quote": null,
+   "table": "Table 4, row + Add/Sub, column Dev F1 (+Count 33.92)",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "Heuristic baselines do poorly: Question-only 8.59 test F1, paragraph-only 2.26, majority 1.44.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 8.59,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "DROP test, QANet with question or paragraph zeroed",
+   "quote": null,
+   "table": "Table 4, row Q-only, column Test F1 (P-only 2.26, Majority 1.44)",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "Semantic parsing baselines score around 11% test F1 (SRL 11.45).",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 11.45,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "DROP test, KDG parser on SRL tables",
+   "quote": null,
+   "table": "Table 4, row SRL, column Test F1 (Syn Dep 10.84, OpenIE 10.77)",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "BERT drops by more than 50 absolute F1 points on DROP relative to SQuAD.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1 drop",
+   "value": 50,
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BERT, DROP vs SQuAD",
+   "quote": "BERT, the current state-of-the-art on SQuAD, drops by more than 50 absolute F1 points.",
+   "table": null,
+   "note": "stated as bound, 'more than 50'",
+   "where": "7"
+  },
+  {
+   "claim": "BERT on SQuAD 1.1 gets 84.7% EM.",
+   "kind": "reported",
+   "source": "Devlin et al. 2019 / Hugging Face implementation",
+   "metric": "EM",
+   "value": 84.7,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "SQuAD 1.1 as reported for BERT",
+   "quote": "(4) BERT (Devlin et al., 2019), which recently achieved improvements on many NLP tasks with a novel pre-training technique (84.7% EM)",
+   "table": null,
+   "note": null,
+   "where": "5.2"
+  },
+  {
+   "claim": "Numbers questions are 61.94% of dev; NAQANet 44.2 F1 vs BERT 14.8.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 44.2,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "DROP dev, Numbers answer type",
+   "quote": null,
+   "table": "Table 6, row Numbers, column F1 QN+ (BERT 14.8; EM 44.0 vs 14.5)",
+   "note": null,
+   "where": "Table 6"
+  },
+  {
+   "claim": "Single Span questions: BERT beats NAQANet (70.1 vs 64.6 F1).",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 70.1,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "DROP dev, single-span answers",
+   "quote": null,
+   "table": "Table 6, row Single Span, column F1 BERT (QN+ 64.6)",
+   "note": null,
+   "where": "Table 6"
+  },
+  {
+   "claim": "Inter-annotator agreement Cohen kappa is 0.74 overall.",
+   "kind": "measured",
+   "source": null,
+   "metric": "kappa",
+   "value": 0.74,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "DROP dev/test validation; 0.81 numbers, 0.62 spans, 0.65 dates",
+   "quote": "overall Cohen’s κ was 0.74, with 0.81 for numbers, 0.62 for spans, and 0.65 for dates",
+   "table": null,
+   "note": null,
+   "where": "3"
+  },
+  {
+   "claim": "On average 2.18 passage spans must be considered per question, 26 words apart.",
+   "kind": "measured",
+   "source": null,
+   "metric": "spans",
+   "value": 2.18,
+   "unit": "spans",
+   "baseline_value": null,
+   "n": null,
+   "setup": "350 manually annotated train/dev questions",
+   "quote": "on an average 2.18 spans need to be considered to answer a question and the average distance between these spans is 26 words",
+   "table": null,
+   "note": null,
+   "where": "4"
+  },
+  {
+   "claim": "66.1% of train answers are numbers.",
+   "kind": "measured",
+   "source": null,
+   "metric": "share",
+   "value": 66.1,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "train set, spaCy NER automatic partition",
+   "quote": null,
+   "table": "Table 3, row NUMBER, column Percent",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Subtraction is the most common reasoning type (28.8%); comparison 18.2%, selection 19.4%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "share",
+   "value": 28.8,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "350 manually annotated questions",
+   "quote": null,
+   "table": "Table 1, row Subtraction",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Semantic-parser search yields logical forms for only 34% of train data (SRL/Syn Dep), 25% with OpenIE; only 13% of 60 sampled questions had non-spurious logical forms.",
+   "kind": "measured",
+   "source": null,
+   "metric": "coverage",
+   "value": 34,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "DROP train, KDG parsers",
+   "quote": "the search was able to yield logical forms for 34% of the training data, whereas with OpenIE, it was only 25%",
+   "table": null,
+   "note": null,
+   "where": "7"
+  },
+  {
+   "claim": "Error analysis of 100 NAQANet errors: arithmetic 51%, counting 30%, domain knowledge 23%, coreference 6%, combinations 40%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "share",
+   "value": 51,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "100 random erroneous NAQANet predictions",
+   "quote": "arithmetic operations (evident in 51% of the errors), counting (30%)",
+   "table": null,
+   "note": null,
+   "where": "7"
+  },
+  {
+   "claim": "Total Mechanical Turk budget was 60k USD.",
+   "kind": "measured",
+   "source": null,
+   "metric": "cost",
+   "value": 60000,
+   "unit": "USD",
+   "baseline_value": null,
+   "n": null,
+   "setup": "including validation",
+   "quote": "a total Mechanical Turk budget of 60k USD",
+   "table": null,
+   "note": null,
+   "where": "3"
+  }
+ ],
+ "limits": [
+  "Weak supervision: only answer strings, no reasoning type, so spurious logical forms hurt training.",
+  "NAQANet handles only counts 0-9 and addition/subtraction of up to two numbers.",
+  "Human performance estimated by the authors themselves on 560 test questions.",
+  "Heavy skew to NFL game summaries and history passages; some questions need sports domain knowledge.",
+  "Adversary was BiDAF, no longer state of the art; only systems of 2019 evaluated.",
+  "No seeds, optimizer or learning rate given for baselines; hyperparameters deferred to the code release.",
+  "Numeric answers restricted to questions stating a unit, to ease evaluation."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "DROP",
+   "definition": "Discrete Reasoning Over the content of Paragraphs",
+   "where": "Abstract"
+  },
+  {
+   "term": "numeracy-focused F1",
+   "definition": "F1 is 0 when there is a number mismatch between gold and predicted answers regardless of other word overlap",
+   "where": "5"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "SQuAD",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "related",
+   "note": "RC dataset DROP aims to move past; metrics derived from it",
+   "quote": null
+  },
+  {
+   "work": "BiDAF (Seo et al.)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "adversary in collection and baseline",
+   "quote": null
+  },
+  {
+   "work": "QANet (Yu et al.)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "NAQANet extends QANet",
+   "quote": null
+  },
+  {
+   "work": "BERT (Devlin et al.)",
+   "year": 2019,
+   "arxiv": "1810.04805",
+   "relation": "baseline",
+   "note": "best baseline",
+   "quote": null
+  },
+  {
+   "work": "ELMo (Peters et al.)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "QANet+ELMo",
+   "quote": null
+  },
+  {
+   "work": "Krishnamurthy et al. neural semantic parsing with type constraints",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "KDG parser",
+   "quote": null
+  },
+  {
+   "work": "WikiTableQuestions (Pasupat and Liang)",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "related",
+   "note": "question semantics modelled on it",
+   "quote": null
+  },
+  {
+   "work": "Clark and Gardner, simple and effective multi-paragraph reading comprehension",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "marginal likelihood over matching spans",
+   "quote": null
+  },
+  {
+   "work": "Gururangan et al.; Kaushik and Lipton",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "related",
+   "note": "annotation artifact motivation for heuristic baselines",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Table 1",
+   "caption": "Example questions and answers from the DROP dataset, showing the relevant parts of the associated passage and the reasoning required to answer the question.",
+   "page": 3,
+   "why": "Shows each reasoning type with percentages and BiDAF failure."
+  },
+  {
+   "figure": "Figure 1",
+   "caption": "Distribution of the most popular question prefixes for two different subsets of the training data.",
+   "page": 6,
+   "why": "Sunburst of question prefixes; low value."
+  },
+  {
+   "figure": "Table 4",
+   "caption": "Performance of the different models on our development and test set, in terms of EM and numerically-focused F1.",
+   "page": 8,
+   "why": "Whole results ladder from heuristics to human."
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Cache text has no real figure content (Figure 1 sunburst labels are scrambled); table cell text is one value per line."
+ ]
+}

@@ -1,0 +1,197 @@
+{
+ "schema": 1,
+ "key": "2210.02414",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/zeng-2022-glm-130b.pdf",
+ "bib": {
+  "title": "GLM-130B: An Open Bilingual Pre-trained Model",
+  "authors": ["Aohan Zeng", "Xiao Liu", "Zhengxiao Du", "Zihan Wang", "Hanyu Lai", "Ming Ding", "Zhuoyi Yang", "Yifan Xu", "Wendi Zheng", "Xiao Xia", "Weng Lam Tam", "Zixuan Ma", "Yufei Xue", "Jidong Zhai", "Wenguang Chen", "Peng Zhang", "Yuxiao Dong", "Jie Tang"],
+  "first_author": "Zeng",
+  "year": 2023,
+  "venue": "ICLR 2023",
+  "arxiv": "2210.02414",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 183737,
+  "chars_total": 183737,
+  "engine": "pymupdf",
+  "skipped": "Reference list skimmed only; Table 12 (74 MIP dataset names) and Table 15 (per-task MMLU) read but not itemised."
+ },
+ "type": "system",
+ "question": "How can an open 100B-scale dense bilingual (English/Chinese) LLM at least as good as GPT-3 davinci be pre-trained stably and made cheap enough to run on affordable GPUs?",
+ "hypothesis": "A bidirectional GLM backbone with blank-infilling plus a small share of multi-task instruction pre-training, stabilised by DeepNorm and embedding gradient shrink, can match or beat GPT-3 175B at 130B parameters.",
+ "contributions": [
+  "Open-source a 130B bilingual dense model (weights, code, training logs, toolkit, lessons learned)",
+  "Training-stability recipe for 100B scale: DeepNorm Post-LN plus Embedding Layer Gradient Shrink (alpha=0.1) with FP16 mixed precision",
+  "Platform-aware 3D parallel configuration (4-way tensor, 8-way pipeline, PipeDream-Flush) that fixes the model shape (70 layers)",
+  "INT4 weight-only quantization without post-training, enabling inference on 4x RTX 3090 or 8x RTX 2080 Ti",
+  "Evaluation on 112 tasks plus bias and toxicity benchmarks; lessons learned (Appendix B.10)"
+ ],
+ "method": {
+  "summary": "A 130B-parameter, 70-layer bidirectional GLM (autoregressive blank infilling with [MASK] and [gMASK]) trained for 400B tokens on a bilingual corpus with 5% multi-task instruction pre-training (MIP), on 96 DGX-A100 40G nodes in about 60 days. Stability came from DeepNorm Post-LN and embedding gradient shrink under FP16 mixed precision. The weights are then quantized to INT4 (absmax, weight-only) with activations kept in FP16.",
+  "task": "next-token / blank-infilling pretraining of a bilingual LLM, plus INT4 post-hoc weight quantization",
+  "trains": true,
+  "datasets": [
+   {"name": "The Pile (train split), English", "role": "pretrain", "size": "1.2T (as printed; tokens or bytes not stated)", "split": "train split", "source": "Gao et al., 2020", "preprocessing": null},
+   {"name": "WuDaoCorpora, Chinese", "role": "pretrain", "size": "1.0T (as printed)", "split": null, "source": "Yuan et al., 2021", "preprocessing": null},
+   {"name": "Web-crawled Chinese corpora (forums, encyclopedia, QA)", "role": "pretrain", "size": "250G", "split": null, "source": "crawled by the authors", "preprocessing": null},
+   {"name": "MIP: 74 prompted datasets (T0/PromptSource NLU and NLG, DeepStruct information extraction)", "role": "pretrain", "size": "5% of training tokens; per-dataset truncation printed as '10,0000' samples (T0 sets, presumably 100,000) and '20,0000' (IE sets, presumably 200,000), '50,0000' for KELM and PropBank (presumably 500,000)", "split": "approximately 36% of the samples in each dataset seen", "source": "Sanh et al. 2022; Bach et al. 2022; Wang et al. 2022a", "preprocessing": "Jinja templates; DeepStruct prompts hand-written by the authors. Mistake: both T0 train and zero-shot-transfer datasets were included and DeepStruct excluded until fixed at about 23k steps; the model kept training on the corrected data"},
+   {"name": "Eval: LAMBADA, Pile test (18 sub-sets), MMLU (57 tasks), BIG-bench-lite (24 tasks), CLUE (7) and FewCLUE (5), CrowS-Pairs, StereoSet, ETHOS, RealToxicPrompts, GEM (WebNLG, E2E, WikiLingua), SuperGLUE, others", "role": "eval", "size": "see appendix C", "split": "dev sets for CLUE/FewCLUE; test for Pile; 5000 random WikiLingua test examples", "source": "public benchmarks", "preprocessing": "13-gram overlap check for LAMBADA and CLUE (minimal overlap); Pile, MMLU, BIG-bench held out or released after corpus crawl"}
+  ],
+  "models": [
+   {"name": "GLM-130B", "role": "proposed", "params": "130B", "architecture": "bidirectional GLM (blank infilling), Post-LN with DeepNorm, RoPE, GeGLU FFN", "init_from": null, "tokenizer": "icetk-based SentencePiece unigram, trained on 25GB bilingual corpus; adds [MASK], [gMASK], <sop>, <eop>, <eos>", "vocab": "150000 in icetk, first 20000 are image tokens, remaining 130000 text tokens used", "layers": "70 (9x8-2, one layer removed from each pipeline end)", "hidden": "12288", "heads": "96", "context": "2048", "other": {"ffn_hidden_size": "32768", "init_method_std": "0.0052", "DeepNorm alpha": "(2N)^(1/2)", "DeepNorm init": "Xavier normal with scale (2N)^(-1/2) on ffn, v_proj, out_proj; biases zero"}},
+   {"name": "GPT-3 175B (davinci)", "role": "baseline", "params": "175B", "architecture": "decoder-only", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "OPT-175B", "role": "baseline", "params": "175B", "architecture": "decoder-only", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"note": "authors could not run it themselves; numbers taken from OPT paper and others"}},
+   {"name": "BLOOM-176B", "role": "baseline", "params": "176B", "architecture": "decoder-only, Pre-LN, embedding norm, BF16", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "PaLM 540B", "role": "baseline", "params": "540B", "architecture": "decoder-only", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"note": "reported numbers only"}},
+   {"name": "ERNIE Titan 3.0 260B", "role": "baseline", "params": "260B", "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"note": "Chinese baseline on CLUE/FewCLUE"}},
+   {"name": "GLM-Base ablation model", "role": "base", "params": "110M", "architecture": "GLM", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"use": "PE and FFN ablation, pre-trained on a random 50G Chinese-English corpus"}},
+   {"name": "GLM-10B (English-only)", "role": "base", "params": "10B", "architecture": "GLM", "init_from": "released GLM-10B without MIP; MIP variant initialised from a middle-stage checkpoint", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"use": "ablation of GLM objective versus MIP"}}
+  ],
+  "training": {
+   "objective": "Autoregressive blank infilling (95% of tokens): [MASK] on 30% of sequences (Poisson lambda=3 spans totalling 15% of input), [gMASK] on 70% (uniform-length long blank at end, prefix kept); plus 5% multi-task instruction pre-training",
+   "optimizer": "AdamW, beta1=0.9, beta2=0.95, eps 1e-8",
+   "lr": "8e-5 peak (min_lr 8e-06 in Table 11)",
+   "lr_schedule": "warm up from 1e-7 to 8e-5 over first 0.5% samples, then 10x cosine decay (lr_decay_samples 197753905)",
+   "warmup": "LR warmup over 0.5% of samples (lr_warmup_samples 1098632); batch size warmup from 192 to 4224 over first 2.5% samples (rampup_batch_size 192, 24, 5493164)",
+   "batch_size": "4224 (global)",
+   "steps": null,
+   "epochs": null,
+   "tokens": "400B (roughly 200B each English and Chinese)",
+   "seq_len": "2048 ([gMASK] uses 2048 context; [MASK] and MIP use 512 and concatenate four samples to 2048)",
+   "precision": "FP16 mixed precision (Apex O2): FP16 forward/backward, FP32 optimizer states and master weights; attention softmax in FP32",
+   "weight_decay": "0.1",
+   "dropout": "0.1 (hidden and attention)",
+   "regularisation": "gradient clipping 1.0; Embedding Layer Gradient Shrink alpha=0.1; DeepNorm",
+   "hardware": "96 NVIDIA DGX-A100 nodes (8x40G), world size 768; TP=4, PP=8, DP=24, ZeRO stage 1, PipeDream-Flush from DeepSpeed",
+   "compute": "442.4 MWh electricity over the 60-day course; 257.01 metric tons CO2 (0.5810 kg/kWh)",
+   "wall_clock": "May 6 to July 3, 2022 (60-day access)",
+   "seeds": "1234 (Table 11)",
+   "other": {"HFU": "43.3%", "MFU": "32.5%", "micro_batches_per_pipeline": "m=176, bubble share 3.8%", "gradient checkpointing": "True", "initial_loss_scale": "65536", "mask_prob": "0.15", "gpt_prob": "0.7", "min_gmask_ratio": "0.2"}
+  },
+  "inference": {
+   "decoding": "Zero/few-shot scoring: option log-likelihood for multiple choice (BIG-bench, MMLU next-token A/B/C/D probability); greedy decoding for BIG-bench generation; nucleus sampling for RealToxicPrompts",
+   "temperature": null,
+   "top_p": "0.9 (RealToxicPrompts only)",
+   "max_tokens": "128 (RealToxicPrompts continuations)",
+   "samples": "25 continuations for each of 10K random prompts (RealToxicPrompts); median over 5 or 15 prompts for NLI; 1-shot demos randomly sampled from train for GEM",
+   "prompting": "Zero-shot to 5-shot; PromptSource prompts; English prompts and verbalizers used for Chinese CLUE; MMLU 1-shot example in Appendix C.6; PaLM-style prompts 'Summarize the following article:' and 'Verbalize:' for GEM",
+   "retrieval": null,
+   "parameters": {"INT4 quantization": "weight-only absmax, per-row, linear layers only; embeddings, LayerNorm and biases left in FP16; two INT4 packed per INT8; dequantized to FP16 at runtime", "Pile eval": "[gMASK], 1024 context tokens bidirectional then 1024 tokens scored autoregressively"},
+   "other": {"inference engine": "FasterTransformer C++ reimplementation (two months of work)"}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "LAMBADA accuracy", "definition": "last-word prediction accuracy, zero-shot", "unit": "%", "higher_is_better": true},
+    {"name": "Pile BPB", "definition": "bits-per-byte, weighted average over 18 shared sub-sets by ratio in the Pile train set", "unit": "BPB", "higher_is_better": false},
+    {"name": "MMLU accuracy", "definition": "5-shot, per-sample weighted average over 57 tasks", "unit": "%", "higher_is_better": true},
+    {"name": "BIG-bench-lite normalized preferred metric", "definition": "aggregate over 24 tasks, official implementation", "unit": "points", "higher_is_better": true},
+    {"name": "CLUE/FewCLUE", "definition": "accuracy, EM for DRCD and CMRC2018, zero-shot on dev sets", "unit": "% ", "higher_is_better": true},
+    {"name": "CrowS-Pairs, StereoSet SS, RealToxicPrompts toxicity", "definition": "bias and toxicity measures", "unit": "score", "higher_is_better": false}
+   ],
+   "baselines": ["GPT-3 175B", "OPT-175B", "BLOOM-176B", "PaLM 540B", "ERNIE Titan 3.0 260B", "Jurassic-1", "LaMDA 137B", "Chinchilla", "Gopher"],
+   "protocol": "Single run, no seeds or significance tests. GPT-3 numbers mostly from literature or OpenAI API; OPT/BLOOM from OPT paper, BigScience sheets or own HF runs. English zero-shot restricted to datasets with domain transfer from MIP; fixed-label tasks such as NLI excluded from the main results."
+  },
+  "availability": {
+   "code": "https://github.com/THUDM/GLM-130B/",
+   "weights": "public on application under a license forbidding harmful use",
+   "data": null
+  },
+  "prompts": [
+   {"purpose": "MMLU 1-shot example", "text": "The following are multiple choice questions about philosophy.\nAccording to d'Holbach, people always act according to _____.\n(A) free choices (B) dictates of the soul (C) necessary natural laws (D) undetermined will\nAnswer: (C) necessary natural laws\nEpicurus holds that philosophy is:\n(A) not suitable for the young. (B) not suitable for the old. (C) important, but unpleasant. (D) none of the above.\nAnswer: (", "where": "Appendix C.6"},
+   {"purpose": "Winograd-style evaluation", "text": "<sentence> The \"<pronoun>\" refers to [MASK]", "where": "Appendix C.9"},
+   {"purpose": "GEM summarisation and data-to-text", "text": "Summarize the following article:"},
+   {"purpose": "GEM data-to-text", "where": "Appendix C.8", "text": "Verbalize:", "where": "Appendix C.8"}
+  ],
+  "evidence": [
+   {"field": "training.precision", "quote": "FP16 for forwards and backwards and FP32 for optimizer states and master weights", "where": "Section 3"},
+   {"field": "models.GLM-130B.layers", "quote": "making 9×8-2=70 transformer layers in GLM-130B", "where": "Section 2.3"}
+  ]
+ },
+ "results": [
+  {"claim": "GLM-130B reaches 80.2% zero-shot accuracy on LAMBADA, above GPT-3 and PaLM 540B.", "kind": "measured", "source": null, "metric": "LAMBADA zero-shot accuracy", "value": "80.2", "unit": "%", "baseline_value": null, "n": null, "setup": "130B bidirectional GLM, [MASK]/[gMASK] with bidirectional attention, zero-shot", "quote": "of 80.2% on zero-shot LAMBADA by outperforming", "table": null, "note": "Table 2 prints 80.21 for FP16; GPT-3 76.2 in Table 2", "where": "Section 2.1, Fig 2"},
+  {"claim": "GLM-130B beats GPT-3 175B on 5-shot MMLU by 0.9 points (44.8 vs 43.9) after 400B tokens, and still rising.", "kind": "measured", "source": null, "metric": "MMLU 5-shot accuracy", "value": "44.8", "unit": "%", "baseline_value": "43.9", "n": "57 tasks", "setup": "5-shot, weighted over samples; GPT-3 number taken from the MMLU paper", "quote": "achieving an accuracy of 44.8 when the training has to end", "table": null, "note": "Table 2 prints 44.75 FP16", "where": "Section 5.2, Fig 6"},
+  {"claim": "GLM-130B surpasses GPT-3 on average Pile BPB (0.634 vs 0.742), and Jurassic-1 (0.650).", "kind": "measured", "source": null, "metric": "Pile weighted avg BPB (18 sub-sets)", "value": "0.634", "unit": "BPB", "baseline_value": "0.742", "n": "18 sub-sets", "setup": "GPT-3 and Jurassic-1 numbers copied from Lieber et al. 2021", "quote": null, "table": "Table 3, row Avg. BPB, column GLM-130B", "note": null, "where": "Table 3 / Table 13"},
+  {"claim": "On BIG-bench-lite zero-shot, GLM-130B scores 13.31 vs GPT-3 175B 4.35 and PaLM 540B 8.05, but gains little from few-shot (15.12 at 3-shot vs GPT-3 13.18).", "kind": "measured", "source": null, "metric": "BIG-bench-lite aggregate, 24 tasks", "value": "13.31", "unit": "points", "baseline_value": "4.35", "n": "24 tasks", "setup": "0-shot; GPT-3 and PaLM from BIG-bench repo; PaLM 3-shot unavailable", "quote": null, "table": "Table 4, row GLM-130B, column 0-shot", "note": null, "where": "Table 4, Sec 5.3"},
+  {"claim": "Few-shot growth is weaker for GLM-130B than GPT-3, which the authors attribute to bidirectionality and zero-shot-only MIP.", "kind": "claim", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "BIG-bench-lite", "quote": "GLM-130B’s performance growth (13.31 to 15.12) with the increase of few-shot samples is not as significant as GPT-3’s (4.35", "table": null, "note": "Explanations are conjecture, not tested", "where": "Section 5.3"},
+  {"claim": "Embedding gradient shrink with alpha=0.1 wipes out most loss spikes; the final run saw only three late-stage divergences.", "kind": "measured", "source": null, "metric": "loss spikes", "value": "0.1", "unit": "alpha", "baseline_value": null, "n": null, "setup": "40B-scale test plus final 130B run", "quote": "setting α = 0.1 wipes out most spikes we would have met", "table": null, "note": "Shown in Fig 4 only; no numeric spike counts for ablations", "where": "Section 3, Fig 4"},
+  {"claim": "Hardware FLOPs utilisation 43.3% and model FLOPs utilisation 32.5% with 4-way TP and 8-way PP.", "kind": "measured", "source": null, "metric": "HFU / MFU", "value": "43.3", "unit": "% HFU", "baseline_value": null, "n": null, "setup": "96 DGX-A100 40G, global batch 4224, re-materialization", "quote": "hardware FLOPs utilization (HFU) of 43.3%", "table": null, "note": "MFU 32.5%", "where": "Section 2.3"},
+  {"claim": "Pipeline bubble share is only 3.8% with m=176 micro-batches, p=8, t=4.", "kind": "measured", "source": null, "metric": "bubble ratio", "value": "3.8", "unit": "%", "baseline_value": null, "n": null, "setup": "Eq 6 with n/t = 8", "quote": "the bubble share is calculated to be only 3.8%", "table": null, "note": "Computed from formula, not measured", "where": "Appendix B.4"},
+  {"claim": "INT4 weight quantization costs 0.74 points on LAMBADA and nothing on MMLU (+0.05), keeping it above GPT-3.", "kind": "measured", "source": null, "metric": "LAMBADA accuracy FP16 vs INT4", "value": "79.47", "unit": "%", "baseline_value": "80.21", "n": null, "setup": "GLM-130B weight-only absmax INT4, no post-training; activations FP16", "quote": "-0.74% on LAMBADA and", "table": "Table 2, row LAMBADA (acc), columns FP16 80.21 / INT4 79.47", "note": "MMLU 44.75 FP16 vs 44.80 INT4; Pile BPB 0.634 vs 0.641", "where": "Section 1, Table 2"},
+  {"claim": "INT4 halves memory versus INT8, down to 70GB, allowing inference on 4x RTX 3090 or 8x RTX 2080 Ti.", "kind": "measured", "source": null, "metric": "GPU memory for weights", "value": "70", "unit": "GB", "baseline_value": null, "n": null, "setup": "INT4 weights, FP16 activations", "quote": "helps additionally save half of the required GPU memory to 70GB", "table": null, "note": null, "where": "Section 4"},
+  {"claim": "About 30% of GLM-130B's activation dimensions have outliers, so LLM.int8-style outlier decomposition (0.1% dimensions in GPT-style models) does not apply and the authors quantize weights only.", "kind": "measured", "source": null, "metric": "fraction of outlier dimensions", "value": "30", "unit": "%", "baseline_value": "0.1", "n": null, "setup": "GLM-130B hidden states; baseline figure from Dettmers et al. 2022", "quote": "there exist about 30% outliers in GLM-130B’s activations", "table": null, "note": null, "where": "Section 4, App B.6, Fig 12"},
+  {"claim": "GLM-130B decoding on 8xA100 80G is 7.0 to 8.4 times faster than BLOOM-176B in HF Transformers.", "kind": "measured", "source": null, "metric": "decode speedup", "value": "8.4", "unit": "x (128 tokens); 7.0x at 2048", "baseline_value": null, "n": null, "setup": "16-bit, FasterTransformer vs PyTorch HF", "quote": "can be 7.0 to 8.4 times faster than BLOOM-176B’s Pytorch implementation", "table": "Table 9, columns 128 to 2048 tokens: 4.40s vs 36.76s up to 89.88s vs 631.81s", "note": "Implementation difference, not architecture", "where": "Table 9"},
+  {"claim": "Weight-quantized INT4 degrades BLOOM-176B LAMBADA from 64.37% to 34.83% (col-wise absmax) while GLM-130B drops 80.21 to 79.47.", "kind": "measured", "source": null, "metric": "LAMBADA accuracy under INT4", "value": "34.83", "unit": "%", "baseline_value": "64.37", "n": null, "setup": "Absmax INT4, col-wise for BLOOM; row-wise for GLM", "quote": null, "table": "Table 10, row Absmax INT4 col-wise, column BLOOM-176B", "note": "BLOOM row-wise INT4 yields NaN at 176B", "where": "Table 10"},
+  {"claim": "On the 24 Chinese tasks, GLM-130B beats ERNIE Titan 3.0 260B by 24.26% on 7 zero-shot CLUE sets and 12.75% on 5 FewCLUE sets.", "kind": "measured", "source": null, "metric": "relative CLUE gain", "value": "24.26", "unit": "%", "baseline_value": null, "n": "7 CLUE, 5 FewCLUE", "setup": "Zero-shot dev sets, English prompts and verbalizers", "quote": "7 zero-shot CLUE (Xu et al., 2020) datasets (+24.26%)", "table": null, "note": "Only part of the benchmarks tested", "where": "Section 1, Fig 8"},
+  {"claim": "Ablation on 110M GLM-Base: RoPE and GeGLU lower test perplexity from 24.58 to 22.31.", "kind": "measured", "source": null, "metric": "Test PPL", "value": "22.31", "unit": "PPL", "baseline_value": "24.58", "n": null, "setup": "GLM-Base 110M, 50G mixed corpus; ALiBi 24.14, RoPE 22.95", "quote": null, "table": "Table 8, row + RoPE + GeGLU, column Test PPL", "note": null, "where": "Table 8"},
+  {"claim": "In a 10B-scale ablation the GLM objective (bidirectional attention) accounts for 73% of the LAMBADA gain and 90% of the MMLU gain; MIP helps mostly text-similarity and coreference tasks and can hurt WiC, ReCoRD, Hellaswag.", "kind": "measured", "source": null, "metric": "share of improvement", "value": "73", "unit": "% of LAMBADA improvement", "baseline_value": null, "n": "8 datasets", "setup": "GLM-10B English-only; GLM(uni), GLM(bi), GLM+MIP(bi)", "quote": "accounts for 73% improvement in LAMBADA and 90% improvement in MMLU", "table": null, "note": null, "where": "Appendix B.9, Fig 14"},
+  {"claim": "Pre-training emitted 257.01 t CO2 using 442.4 MWh, about half of GPT-3's estimated 500 t.", "kind": "measured", "source": null, "metric": "carbon", "value": "257.01", "unit": "metric tons CO2", "baseline_value": "500", "n": null, "setup": "60-day training, local grid 0.5810 kg/kWh; GPT-3 figure from Patterson et al. 2021", "quote": "the pre-training released 257.01 metric", "table": null, "note": "Estimate", "where": "Appendix H"},
+  {"claim": "Zero-shot NLI with MIP-seen task types is far higher than OPT/BLOOM, so the authors exclude fixed-label tasks from the main zero-shot claims.", "kind": "measured", "source": null, "metric": "mnli valid zero-shot", "value": "85.7", "unit": "% (median of 15 prompts)", "baseline_value": "36.0", "n": null, "setup": "GLM-130B vs OPT-175B; other NLI datasets present in MIP so not strict zero-shot", "quote": null, "table": "Table 20, row mnli, column GLM-130B", "note": "Baseline value is OPT-175B; BLOOM 35.5", "where": "Table 20"},
+  {"claim": "GLM-130B has lower overall CrowS-Pairs bias score (65.8) than GPT-3 (67.2) and OPT-175B (69.5).", "kind": "measured", "source": null, "metric": "CrowS-Pairs overall", "value": "65.8", "unit": "score (lower better)", "baseline_value": "67.2", "n": "1508 examples", "setup": "pseudo-log-likelihood; baselines from OPT paper", "quote": null, "table": "Table 5, row Overall, column GLM-130B", "note": null, "where": "Table 5"},
+  {"claim": "GLM-130B has a lower RealToxicPrompts continuation toxicity than GPT-3 Davinci across all prompt-toxicity bins.", "kind": "measured", "source": null, "metric": "toxicity probability", "value": null, "unit": null, "baseline_value": null, "n": "10K prompts x 25 continuations", "setup": "Nucleus p=0.9, 128 tokens, Perspective API on first sentence", "quote": null, "table": null, "note": "Read only as Fig 9 curves, no numbers in text", "where": "Appendix A.4, Fig 9"},
+  {"claim": "Unidirectional GLM-130B underperforms GPT-3 on GEM generation tasks; bidirectional is higher (WebNLG ROUGE-2 25.3 uni vs 38.5 bi vs GPT-3 29.9).", "kind": "measured", "source": null, "metric": "WebNLG ROUGE-2", "value": "38.5", "unit": "ROUGE-2 F", "baseline_value": "29.9", "n": null, "setup": "1-shot, full WebNLG 2020 test", "quote": null, "table": "Table 16, row WebNLG ROUGE-2, column GLM-130B bi", "note": null, "where": "Table 16"},
+  {"claim": "GLM-130B is weaker than GPT-3 and PaLM on Natural Questions (11.7 EM vs 14.6 and 21.2).", "kind": "measured", "source": null, "metric": "Natural Questions EM", "value": "11.7", "unit": "EM", "baseline_value": "14.6", "n": null, "setup": "Closed-book; authors blame only about 200B English tokens seen", "quote": null, "table": "Table 18, row Natural Questions (EM), column GLM-130B", "note": null, "where": "Table 18"},
+  {"claim": "Chain-of-thought prompting improves GLM-130B on several symbolic and commonsense tasks.", "kind": "measured", "source": null, "metric": "accuracy", "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "Last letter concatenation, coin flip, reverse list, sports, date", "quote": null, "table": null, "note": "Numbers only in Fig 18 graphic", "where": "Appendix C.14"}
+ ],
+ "limits": [
+  "Few-shot gains are smaller than GPT-3's; the authors conjecture the cause (bidirectionality, zero-shot-only MIP) without testing it",
+  "MIP covers 74 datasets, so zero-shot comparisons are restricted by the authors' own criterion; SuperGLUE and NLI results are explicitly not zero-shot",
+  "Only 400B tokens were seen (about 200B English); authors concede under-training and weak closed-book QA (Natural Questions)",
+  "Only part of CLUE/FewCLUE and 24 of 150 BIG-bench tasks were evaluated",
+  "OPT-175B could not be run by the authors; its numbers come from other sources, GPT-3 mostly from literature",
+  "No seeds or confidence intervals; ablations of the GLM objective and MIP were done at 10B, not 130B",
+  "Pile BPB is on 18 of 22 sub-sets, compared to numbers copied from Jurassic-1/GPT-3",
+  "Bias results use English-centric benchmarks; Chinese biases are not tested",
+  "BLOOM-176B comparison uses BF16 and HF implementation; speedup figures partly reflect implementation, not architecture",
+  "Several explanations (why GLM quantizes to INT4, outlier meaning) are speculative"
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "Embedding Layer Gradient Shrink (EGS)", "definition": "word_embedding = word_embedding * alpha + word_embedding.detach() * (1 - alpha), alpha = 0.1", "where": "Section 3"},
+  {"term": "DeepNorm", "definition": "DeepNorm(x) = LayerNorm(alpha * x + Network(x)) with alpha = (2N)^(1/2)", "where": "Section 2.1"},
+  {"term": "Multi-task Instruction Pre-training (MIP)", "definition": "a variety of instruction-prompted datasets included in pre-training for 5% of tokens", "where": "Section 2.2"},
+  {"term": "[MASK] / [gMASK]", "definition": "short-blank infilling versus random-length long blank at the end of a sequence with prefix context", "where": "Section 2.1"}
+ ],
+ "lineage": [
+  {"work": "GLM: General Language Model Pretraining with Autoregressive Blank Infilling", "year": 2022, "arxiv": "2103.10360", "relation": "extends", "note": "backbone and objective; Du et al. 2022", "quote": null},
+  {"work": "DeepNet / DeepNorm", "year": 2022, "arxiv": "2203.00555", "relation": "uses-method", "note": "Wang et al. 2022b, Post-LN init that stabilised training", "quote": null},
+  {"work": "CogView", "year": 2021, "arxiv": "2105.13290", "relation": "uses-method", "note": "Sandwich-LN, PB-Relax, and gradient shrink origin", "quote": null},
+  {"work": "RoFormer / RoPE", "year": 2021, "arxiv": "2104.09864", "relation": "uses-method", "note": "Su et al. 2021", "quote": null},
+  {"work": "Language Models are Few-Shot Learners (GPT-3)", "year": 2020, "arxiv": "2005.14165", "relation": "baseline", "note": "main target to match", "quote": null},
+  {"work": "OPT: Open Pre-trained Transformer Language Models", "year": 2022, "arxiv": "2205.01068", "relation": "baseline", "note": "concurrent open 175B model", "quote": null},
+  {"work": "BLOOM: A 176B-Parameter Open-Access Multilingual Language Model", "year": 2022, "arxiv": "2211.05100", "relation": "baseline", "note": "concurrent open model; embedding norm and BF16", "quote": null},
+  {"work": "PaLM: Scaling Language Modeling with Pathways", "year": 2022, "arxiv": "2204.02311", "relation": "baseline", "note": "reference 540B model; MFU/HFU definitions", "quote": null},
+  {"work": "Training Compute-Optimal Large Language Models (Chinchilla)", "year": 2022, "arxiv": "2203.15556", "relation": "related", "note": "motivation to pass as many tokens as possible", "quote": null},
+  {"work": "Multitask Prompted Training Enables Zero-Shot Task Generalization (T0)", "year": 2022, "arxiv": "2110.08207", "relation": "uses-data", "note": "MIP datasets and prompts", "quote": null},
+  {"work": "DeepStruct", "year": 2022, "arxiv": "2205.10475", "relation": "uses-data", "note": "information extraction datasets in MIP", "quote": null},
+  {"work": "LLM.int8()", "year": 2022, "arxiv": "2208.07339", "relation": "related", "note": "activation outliers; contrasted with GLM's 30%", "quote": null},
+  {"work": "Megatron-LM; PipeDream-Flush; DeepSpeed", "year": 2021, "arxiv": null, "relation": "uses-method", "note": "3D parallel stack", "quote": null},
+  {"work": "The Pile", "year": 2020, "arxiv": "2101.00027", "relation": "uses-data", "note": "English pre-training data and BPB eval", "quote": null},
+  {"work": "MMLU; BIG-bench; CLUE; FewCLUE", "year": 2021, "arxiv": null, "relation": "evaluates", "note": "main benchmarks", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 1", "caption": "A summary of the performance evaluation and ethical studies.", "page": 2, "why": "radar summary of GLM-130B vs GPT-3, PaLM, BLOOM, OPT"},
+  {"figure": "Table 1", "caption": "A comparison between GLM-130B and other 100B-scale LLMs and PaLM 540B.", "page": 2, "why": "one-glance comparison of objective, LN, precision, stabilisation, quantization, GPUs needed"},
+  {"figure": "Fig 3", "caption": "Trials on different LayerNorms for GLM-130B training.", "page": 3, "why": "gradient norm of failed trials versus DeepNorm"},
+  {"figure": "Fig 4", "caption": "EGS reduces gradient scale and variance to stabilize LLMs' pre-training.", "page": 5, "why": "embedding gradient norm and effect of alpha=0.1"},
+  {"figure": "Fig 10", "caption": "Handling training collapses and instability is the first priority when training LLMs.", "page": 23, "why": "loss curves of OPT, BLOOM, GLM trials and the real run with reloads"},
+  {"figure": "Fig 5", "caption": "(Left) attn-dense and w2's weight distributions; (Right) GLM-130B's INT4 weight quantization scaling law.", "page": 6, "why": "why GLM tolerates INT4 and BLOOM does not"},
+  {"figure": "Fig 11", "caption": "Different pipeline strategies and their conceptual comparison.", "page": 26, "why": "naive vs GPipe vs PipeDream-Flush schedules"},
+  {"figure": "Fig 21", "caption": "The timeline of major issues that training GLM-130B encountered and addressed, as of July 31st, 2022.", "page": 54, "why": "chronology of failures; useful for a pretraining-runs note"},
+  {"figure": "Fig 6", "caption": "GLM-130B on MMLU (57 tasks) along training steps.", "page": 8, "why": "5-shot MMLU vs trained tokens against GPT-3 and BLOOM"}
+ ],
+ "code": [
+  {"where": "Section 3", "snippet": "word_embedding = word_embedding * α + word_embedding.detach() * (1 − α)", "verbatim": true},
+  {"where": "Section 2.1", "snippet": "DeepNorm(x) = LayerNorm(α · x + Network(x)), α = (2N)^(1/2)", "verbatim": false},
+  {"where": "Eq 4, Appendix B.3", "snippet": "FFN_GeGLU(x; W1, V, W2) = (GeLU(xW1) ⊗ xV) W2, d_ffn reduced to 8/3 d_H", "verbatim": false}
+ ],
+ "problems": [
+  "Text extraction scrambles tables and figure data (Fig 8 CLUE bars, Table 2 layout) so values were read by position; Table 2 row layout was reconstructed.",
+  "Paper says 'Figure 17' for chain-of-thought results in C.14 but they are Figure 18 (author typo).",
+  "Section 4 text says 4 x RTX 3090 Ti in some places and 3090 (24G) in others; the abstract says RTX 3090.",
+  "Appendix C.1 says 'by a mistake' the MIP included T0 zero-shot-transfer sets; fixed at around 23k steps, but Fig 21 timeline says a mistake was found after about 20,000 steps and corrected data did not make it 'forget'.",
+  "Table 11 contains duplicated lines (tokenizer_type, weight_decay) from layout; no embedded instructions found."
+ ]
+}

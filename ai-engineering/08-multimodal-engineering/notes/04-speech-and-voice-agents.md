@@ -21,6 +21,8 @@ sources:
   - https://arxiv.org/abs/2312.15821
   - https://arxiv.org/abs/2308.11596
   - https://arxiv.org/abs/2312.05187
+  - https://arxiv.org/abs/1904.08779
+  - https://arxiv.org/abs/1912.06670
 confidence: medium
 cleaned: 2026-11-01
 ---
@@ -38,6 +40,11 @@ Modern recognisers combine local and global patterns in sound. Conformer put con
 *Image Source: Gulati et al., [Conformer](https://arxiv.org/abs/2005.08100) (Interspeech 2020), Fig. 1.*
 
 Whisper attacked robustness through data. It trained on about 680,000 hours of web audio, weakly supervised by whatever transcripts came with it, and it splits audio into 30-second segments. On clean LibriSpeech its score was unremarkable, at 2.5 WER, but it held up much better on harder sets such as CHiME-6 and TED talks ([arXiv:2212.04356](https://arxiv.org/abs/2212.04356) (Radford et al., ICML 2023)). Its decoder also predicts a `<|nospeech|>` token, trained on segments with no speech in them, so a model that outputs one can double as a rough voice activity signal. The authors found that WER across languages tracked training hours closely, with an r² of 0.83, which is a good warning for any language you are about to launch in: check how much audio trained the model in that language.
+
+Augmentation is the cheaper route to robustness. SpecAugment masks stretches of the spectrogram in time and frequency and warps it in time. On LibriSpeech 960 h, a listen-attend-spell model with 6 layers and 1280 units went from about 12.5% to 6.8% word error rate on test-other with no language model, and reached 5.8% with one (24-day schedule, best dev-other checkpoint; the paper does not report seeds). On Switchboard it scored 7.2% and 14.6% on the two test sets without a language model ([arXiv:1904.08779](https://arxiv.org/abs/1904.08779) (Park et al., Interspeech 2019)). The data side is the other half. Common Voice held about 2,500 hours across its languages (38 languages were collecting data as of November 2019), with speaker-disjoint train, dev and test splits. Copying four layers from an English DeepSpeech model cut Chuvash character error rate from 48.1% to 27.21% with 1,023 training clips, but helped almost nothing on German, which has 65,745 ([arXiv:1912.06670](https://arxiv.org/abs/1912.06670) (Ardila et al., LREC 2020)). The mean gain across 12 languages was 5.99 ± 5.48 points, so transfer pays most where data is scarcest (experiments on an internal February 2019 version, whose splits differ from the public release).
+
+![A log-mel spectrogram with no augmentation, then time warping, frequency masking and time masking](../sources/images/park-specaugment-fig1.png)
+*Image Source: Park et al., [SpecAugment: A Simple Data Augmentation Method for Automatic Speech Recognition](https://arxiv.org/abs/1904.08779) (Interspeech 2019), Fig. 1. From top: the base input, time warp, frequency mask, time mask.*
 
 Coverage has continued to expand. Omnilingual ASR is open-source recognition for 1,600+ languages, with a wav2vec 2.0 encoder of 0.3B to 7B parameters pre-trained on about 3.84M hours of unlabeled audio in 1,239 languages. Paired with a 1.2B-parameter language-model decoder, the 7B version beats Whisper large-v3 on 65 of 81 FLEURS languages, with mean character error rate 5.6 against 22.6, and **78% of the 1,570 languages evaluated reach CER of 10 or below** ([arXiv:2511.09690](https://arxiv.org/abs/2511.09690) (Omnilingual ASR team, 2025-11, preprint)). The tail is the catch. Languages with under 10 hours of data average CER 18.0 to 18.6, and only about a third of them get under 10. Whisper still wins on the eight-language MLS set (2.0 against 2.4). The paper's "500 never before served" count has no table behind it. Its zero-shot mode shows what a language model decoder buys: given 10 audio-text example pairs in the prompt, CER on 32 held-out languages fell from 26.33% to 14.4%, though still well short of a trained language. Kimi-Audio is an example of a current audio foundation model, trained on 13 million hours ([Kimi-Audio report](https://github.com/MoonshotAI/Kimi-Audio/blob/master/assets/kimia_report.pdf) (Moonshot AI, 2025)).
 

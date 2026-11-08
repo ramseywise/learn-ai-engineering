@@ -44,56 +44,48 @@
  "read": {
   "by": "source-reader",
   "at": "2026-11-08",
-  "chars_read": 100000,
+  "chars_read": 108109,
   "chars_total": 108109,
   "engine": "pymupdf",
-  "skipped": "reference list (chars 40961-64797) skimmed not read; datasheet table 25 tail after ~105,700 not read"
+  "skipped": "none; reference list skimmed for lineage"
  },
  "type": "empirical",
- "question": "Does jointly scaling vision and language components, with multilingual pretraining, improve a unified image+text-to-text model?",
- "hypothesis": "Scaling the vision component alongside the language component gives a better return than scaling language alone.",
+ "question": "Does jointly scaling the vision and language components, with multilingual pretraining on a 10B-image web dataset, improve a unified image+text-to-text model?",
+ "hypothesis": "Scaling the vision component (a 4B ViT-e) alongside the language component gives a better return per parameter than scaling language alone.",
  "contributions": [
-  "Simple modular encoder-decoder architecture reusing unimodal checkpoints",
-  "Joint scaling of vision and language, ViT-e 4B",
-  "Mixture-of-objectives validated",
-  "Multilingual WebLI (100+ languages) and multilingual model"
+  "A simple, modular encoder-decoder that reuses unimodal mT5 and ViT checkpoints",
+  "Joint scaling of language (1B to 13B) and vision (2B to 4B) components, with no saturation at PaLI-17B",
+  "Empirical support that a mixture of objectives helps",
+  "Multilingual pretraining over 100+ languages on the new WebLI dataset, with SOTA on English-only tasks retained"
  ],
  "method": {
-  "summary": "PaLI feeds output patch features of a ViT (no pooling) to an mT5 encoder-decoder, treats every task as image+text prompt to text. Initialised from mT5-L/XXL and ViT-G/ViT-e, pretrained on a 1.6B-example multilingual mix from WebLI, 224x224 with ViT frozen; 17B adds a 10k-step 588x588 phase.",
-  "task": "image+text to text: captioning, VQA, scene-text, zero-shot classification, multilingual",
+  "summary": "PaLI feeds output patch features of a ViT (no pooling) as visual tokens to an mT5 text encoder-decoder, with all tasks cast as image+text to text. Language component is updated and the ViT is frozen during one epoch over a 1.6B-example multilingual mixture at 224x224; PaLI-17B gets an extra 10k-step 588x588 phase with all parameters updated. Models are then fine-tuned per task.",
+  "task": "image+text to text pretraining (captioning, VQA, OCR, detection, span corruption) and per-task fine-tuning",
   "trains": true,
   "datasets": [
    {
-    "name": "WebLI",
+    "name": "WebLI (top 10% by cross-modal score)",
     "role": "pretrain",
-    "size": "10B images, 12B alt-texts, 29B image-OCR pairs; top 10% (~1B examples) used",
+    "size": "about 1B examples kept from 9,624,017,440 instances (10B images, 12B alt-texts, 109 languages, 29B image-OCR pairs)",
     "split": "single split",
-    "source": "public web, 109 languages",
-    "preprocessing": "near-dedup against 68 vision/V&L datasets (0.36% removed); cross-modal cosine-similarity filter keeps top 10%"
+    "source": "public web, 2021-2022",
+    "preprocessing": "near de-duplication of images against train/val/test of 68 vision/V&L datasets (0.36% removed); filtered by image-alt-text cosine similarity, keeping the top 10%"
    },
    {
-    "name": "Pretraining mixture",
+    "name": "Pretraining mixture (8 tasks)",
     "role": "pretrain",
-    "size": "1.6B examples (Table 9: 100M text-only, 1000M WebLI alt-text, 100M OCR, 100M CC3M-35L, 100M VQA, 100M VQG, 50M OA, 16M detection = 1566M)",
-    "split": null,
-    "source": "WebLI, CC3M-35L, VQ2A-CC3M-35L, Open Images, Visual Genome, Object365",
-    "preprocessing": null
+    "size": "1566M examples: text-only 100M, WebLI alt-text 1000M, OCR 100M, CC3M-35L 100M, VQA 100M, VQG 100M, object-aware 50M, detection 16M",
+    "split": "one epoch",
+    "source": "WebLI, CC3M-35L, VQ2A-CC3M-35L-100M, Open Images, Visual Genome, Objects365",
+    "preprocessing": "de-duplicated against all downstream tasks"
    },
    {
-    "name": "COCO Captions",
-    "role": "both",
-    "size": null,
-    "split": "Karpathy",
-    "source": null,
-    "preprocessing": null
-   },
-   {
-    "name": "VQAv2, OKVQA, TextVQA, VizWiz-QA, ST-VQA, NoCaps, TextCaps, VizWiz-Cap, Crossmodal-3600, xGQA, MaXM, ImageNet+OOD",
+    "name": "COCO Captions (Karpathy), NoCaps, TextCaps, VizWiz-Cap, Crossmodal-3600, VQAv2, OKVQA, TextVQA, VizWiz-QA, ST-VQA, xGQA, MaXM",
     "role": "eval",
     "size": null,
-    "split": "as standard",
+    "split": null,
     "source": null,
-    "preprocessing": "TextCaps/TextVQA/VizWiz/ST-VQA use OCR strings from an external service, ordered top-left to bottom-right"
+    "preprocessing": "TextCaps/TextVQA/VizWiz/ST-VQA fine-tuned with OCR strings from a public service, ordered top-left to bottom-right"
    }
   ],
   "models": [
@@ -101,10 +93,10 @@
     "name": "PaLI-3B",
     "role": "proposed",
     "params": "3.0B (ViT-G 1.8B + mT5-L 1.2B)",
-    "architecture": "ViT + mT5 encoder-decoder",
-    "init_from": "mT5-Large, ViT-G",
-    "tokenizer": "mT5",
-    "vocab": "250k",
+    "architecture": "mT5 encoder-decoder + ViT-G",
+    "init_from": "mT5-Large and ViT-G",
+    "tokenizer": null,
+    "vocab": null,
     "layers": null,
     "hidden": null,
     "heads": null,
@@ -115,10 +107,10 @@
     "name": "PaLI-15B",
     "role": "proposed",
     "params": "14.8B (ViT-G 1.8B + mT5-XXL 13B)",
-    "architecture": "ViT + mT5 encoder-decoder",
-    "init_from": "mT5-XXL, ViT-G",
-    "tokenizer": "mT5",
-    "vocab": "250k",
+    "architecture": "mT5 encoder-decoder + ViT-G",
+    "init_from": "mT5-XXL and ViT-G",
+    "tokenizer": null,
+    "vocab": null,
     "layers": null,
     "hidden": null,
     "heads": null,
@@ -129,60 +121,112 @@
     "name": "PaLI-17B",
     "role": "proposed",
     "params": "16.9B (ViT-e 3.9B + mT5-XXL 13B)",
-    "architecture": "ViT + mT5 encoder-decoder",
-    "init_from": "mT5-XXL, ViT-e",
-    "tokenizer": "mT5",
-    "vocab": "250k",
+    "architecture": "mT5 encoder-decoder + ViT-e",
+    "init_from": "mT5-XXL and ViT-e",
+    "tokenizer": null,
+    "vocab": "250k mT5 vocabulary",
     "layers": null,
     "hidden": null,
     "heads": null,
     "context": null,
     "other": {
-     "resolutions": "pretrain 224, then 588 for 10k steps; fine-tune 490 for 3B/15B, 588 for 17B, 378 for xGQA/MaXM, 224 for Crossmodal-3600"
+     "two_phase": "224 then 588 for 10k steps"
+    }
+   },
+   {
+    "name": "PaLI-5B",
+    "role": "proposed",
+    "params": "ViT-e + mT5-Large",
+    "architecture": "mT5 encoder-decoder + ViT-e",
+    "init_from": "mT5-L and ViT-e",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "training mixture and hyperparameters slightly different from other sizes"
     }
    },
    {
     "name": "ViT-e",
     "role": "proposed",
-    "params": "3926M (3.9B)",
-    "architecture": "vanilla ViT e/14, width 1792, depth 56, MLP 15360, 16 heads, patch 14",
+    "params": "4B (3926M)",
+    "architecture": "vanilla ViT e/14",
+    "init_from": "trained from scratch on JFT-3B",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": 56,
+    "hidden": 1792,
+    "heads": 16,
+    "context": null,
+    "other": {
+     "mlp": 15360,
+     "gflops_224": 1980,
+     "gflops_384": 5777,
+     "patch": "14"
+    }
+   },
+   {
+    "name": "ViT-G/14",
+    "role": "base",
+    "params": "1843M",
+    "architecture": "vanilla ViT",
     "init_from": null,
     "tokenizer": null,
     "vocab": null,
-    "layers": "56",
-    "hidden": "1792",
-    "heads": "16",
+    "layers": 48,
+    "hidden": 1664,
+    "heads": 16,
     "context": null,
     "other": {
-     "GFLOPs": "1980 at 224, 5777 at 384",
-     "inferred_tokens_per_image": "inferred: 224/14=16 per side -> 256 tokens; 490/14=35 -> 1225; 588/14=42 -> 1764 (patch 14 from 'e/14', no pooling)"
+     "mlp": 8192
+    }
+   },
+   {
+    "name": "ViT-g/14",
+    "role": "base",
+    "params": "1011M",
+    "architecture": "vanilla ViT",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": 40,
+    "hidden": 1408,
+    "heads": 16,
+    "context": null,
+    "other": {
+     "mlp": 6144
     }
    }
   ],
   "training": {
-   "objective": "teacher-forced softmax cross-entropy over a mixture of 8 tasks (span corruption, split-captioning, captioning, OCR, VQA, VQG, object-aware VQA, detection)",
+   "objective": "teacher-forced softmax cross-entropy over text targets (language-model style)",
    "optimizer": "Adafactor, beta1=0, second-moment decay 0.8",
-   "lr": "peak 1e-2 (PaLI-3B); 5e-3 (15B, 17B)",
+   "lr": "peak 1e-2 for PaLI-3B; 5e-3 for PaLI-15B and PaLI-17B",
    "lr_schedule": "inverse square-root decay",
-   "warmup": "1k steps linear",
-   "batch_size": "4,096 (PaLI-17B pretraining); 1024 in high-res phase",
-   "steps": "high-res phase 10k steps",
-   "epochs": "1 over 1.6B examples",
+   "warmup": "1k-step linear",
+   "batch_size": "4,096 (PaLI-17B pretraining); 1024 in the high-res phase",
+   "steps": "high-res phase 10k steps (10M examples); main pretraining steps not stated",
+   "epochs": "1 epoch over 1.6B examples",
    "tokens": null,
    "seq_len": null,
    "precision": null,
    "weight_decay": null,
-   "dropout": "0.1 (fine-tuning)",
-   "regularisation": "ViT frozen during 224 pretraining; all params updated in high-res phase",
-   "hardware": "1,024 TPUv4 chips (224 phase), 512 TPUv4 chips (high-res phase)",
+   "dropout": "0.1 in fine-tuning",
+   "regularisation": null,
+   "hardware": "PaLI-17B: 1,024 GCP TPUv4 chips, four-way model partitioning; high-res phase 512 TPUv4 chips",
    "compute": null,
-   "wall_clock": "7 days + 3 days",
+   "wall_clock": "7 days pretraining plus 3 days high-res phase",
    "seeds": null,
    "other": {
-    "ViT-e training": "JFT-3B, batch 16,384, 224x224, 1M steps, lr 0.0008, inverse sqrt decay, linear cooldown last 100k, two cooldowns (with/without inception crop) weight-averaged",
-    "fine-tuning": "batch 256, linear decay to zero, peak LR 3e-5 to 1e-4, steps 5k-20k (Table 10)",
-    "high-res": "positional embeddings 2D bilinear upsampled, patch size unchanged, mixture reduced to OCR, CC3M-35L, VQ2A equally weighted",
-    "framework": "JAX/Flax, T5X, Flaxformer; ViT-e via big_vision"
+    "resolution_224": "all variants pretrain at 224x224; ViT frozen, only language component updated",
+    "high_res_phase": "PaLI-17B only, 588x588, 10k steps, batch 1024, all parameters updated, mixture reduced to OCR, CC3M-35L and VQ2A equally weighted; 2D bilinear upsampling of positional embeddings, patch size unchanged",
+    "finetune_resolution": "PaLI-3B and 15B at 490x490; PaLI-17B at 588x588 unless stated; xGQA/MaXM 17B pretrained at 224 and fine-tuned at 378; Crossmodal-3600 at 224",
+    "finetune_hparams": "batch size 256 (searched over {128,256,512}), peak LR {1e-5,3e-5,1e-4} searched; steps 20k COCO/NoCaps, 10k TextCaps, 5k VizWiz-Cap, 20k VQAv2, 5k TextVQA/VizWiz-QA/OKVQA/ST-VQA; LR 3e-5 for COCO/NoCaps and OKVQA, 1e-4 for the rest; linear decay to zero",
+    "vit_e_training": "JFT-3B, batch 16,384, 224x224, 1M steps, initial LR 0.0008, inverse sqrt decay with linear cool-down to zero over final 100k steps, model soup of two cool-downs (with and without inception crop), big_vision",
+    "frameworks": "JAX/Flax, T5X, Flaxformer"
    }
   },
   "inference": {
@@ -190,30 +234,32 @@
    "temperature": null,
    "top_p": null,
    "max_tokens": null,
-   "samples": null,
-   "prompting": "text prompt per task e.g. 'Answer in EN: <question>', 'Generate the alt_text in ⟨lang⟩'; zero-shot ImageNet scores 1000 class strings with decoder",
+   "samples": "single run per setting; no seeds reported",
+   "prompting": "template prompts per task, e.g. 'Answer in EN: [question]'; zero-shot ImageNet scores all 1,000 class names with the decoder using 'Generate alt_text in EN at 2: Photo of <extra_id_0>'",
    "retrieval": null,
    "parameters": {},
-   "other": {}
+   "other": {
+    "vqa": "open-vocabulary generation with exact match, 250k mT5 vocabulary"
+   }
   },
   "eval": {
    "metrics": [
     {
      "name": "CIDEr",
-     "definition": "captioning consensus metric",
+     "definition": "consensus caption score; Crossmodal-3600 after unicode normalisation and punctuation removal, neural segmenter for zh/ja/ko/th",
      "unit": "points",
      "higher_is_better": true
     },
     {
      "name": "VQA accuracy",
-     "definition": "exact match of generated text (open vocab)",
+     "definition": "exact match of generated answer (ANLS for ST-VQA)",
      "unit": "%",
      "higher_is_better": true
     },
     {
-     "name": "ANLS",
-     "definition": "ST-VQA metric",
-     "unit": "score",
+     "name": "7-task average",
+     "definition": "mean of COCO-Cap, NoCaps, TextCaps CIDEr and VQAv2, TextVQA, OKVQA, VizWiz-QA accuracy as plotted in Fig 2; exact aggregation and fine-tune resolution per bar not stated",
+     "unit": "points",
      "higher_is_better": true
     }
    ],
@@ -222,351 +268,312 @@
     "CoCa",
     "GIT/GIT2",
     "OFA",
-    "Flamingo",
+    "Flamingo-80B",
     "BEiT-3",
     "LEMON",
     "KAT",
-    "Mia"
+    "Mia",
+    "MPT"
    ],
-   "protocol": "single reported runs; no seeds or variance stated"
+   "protocol": "single fine-tuned checkpoint per task; PaLI-17B without the high-res phase evaluated for the scaling comparison; no seeds or significance tests"
   },
   "availability": {
-   "code": null,
-   "weights": "not public ('current version is not available for the public')",
-   "data": "WebLI not released; datasheet given"
+   "code": "not released; built on open T5X, big_vision",
+   "weights": "not available (model card: research prototype, not public)",
+   "data": "WebLI not released; datasheet in Appendix G"
   },
   "prompts": [
    {
-    "purpose": "split captioning",
-    "text": "Generate the alt_text in ⟨lang⟩ at ⟨pos⟩: ⟨cap1⟩ ⟨extra_id_0⟩",
-    "where": "App A.2"
+    "purpose": "split-captioning",
+    "text": "Generate the alt_text in <lang> at <pos>: <cap1> <extra_id_0>",
+    "where": "A.2"
    },
    {
-    "purpose": "VQA",
-    "text": "Answer in EN: [question] ⟨extra_id_0⟩",
-    "where": "App A.2"
+    "purpose": "captioning CC3M-35L",
+    "text": "Generate the alt_text in <lang> at 0: <extra_id_0>",
+    "where": "A.2"
    },
    {
     "purpose": "OCR",
-    "text": "Generate the ocr_text in ⟨lang⟩: ⟨extra_id_0⟩",
-    "where": "App A.2"
+    "text": "Generate the ocr_text in <lang>: <extra_id_0>",
+    "where": "A.2"
    },
    {
-    "purpose": "zero-shot ImageNet",
-    "text": "Generate alt_text in EN at 2: Photo of ⟨extra_id_0⟩",
-    "where": "App A.3"
+    "purpose": "VQA",
+    "text": "Answer in EN: [question] <extra_id_0>",
+    "where": "A.2"
+   },
+   {
+    "purpose": "VQG",
+    "text": "Generate a question in <lang> for [answer]: <extra_id_0>",
+    "where": "A.2"
    },
    {
     "purpose": "detection",
     "text": "detect cat and dog and leopard",
-    "where": "App A.2"
+    "where": "A.2"
+   },
+   {
+    "purpose": "zero-shot ImageNet",
+    "text": "Generate alt_text in EN at 2: Photo of <extra_id_0>",
+    "where": "A.3"
    }
   ],
   "evidence": [
    {
-    "field": "models.ViT-e.heads/patch",
-    "quote": "e/14 1792 56 15360 16 3926",
-    "where": "Table 8"
+    "field": "training.other.high_res_phase",
+    "quote": "This phase is only for 10k steps, covering 10M examples in total, with all the parameters of PaLI updated.",
+    "where": "3.3"
    }
   ]
  },
  "results": [
   {
-   "claim": "PaLI pretrains at 224x224 and the 17B model adds a short 588x588 phase",
+   "claim": "Scaling the vision tower ViT-G to ViT-e (+2B params, ~13% of the model) adds 3.2 points to the average over seven benchmarks.",
    "kind": "measured",
    "source": null,
-   "metric": null,
-   "value": null,
-   "unit": null,
-   "baseline_value": null,
+   "metric": "7-task average gain",
+   "value": "3.2",
+   "unit": "points",
+   "baseline_value": "3.1 (language L to XXL)",
    "n": null,
-   "setup": "All PaLI variants, one epoch over 1.6B examples at 224x224; PaLI-17B adds 10k steps (10M examples) at 588x588",
-   "note": null,
-   "where": "3.3",
-   "quote": "All PaLI variants are trained for one epoch over the entire pre-training dataset (1.6B) with 224×224 image resolution."
+   "setup": "PaLI-15B to PaLI-17B, no high-res phase for 17B, 224 pretrain, seven V&L benchmarks of Fig 2",
+   "note": "Text does not name the two checkpoints compared; per-task bars are only in Fig 2",
+   "where": "4.5",
+   "quote": "the average performance improvement over all seven benchmarks (additional +3.2) is larger than the one obtained with much larger increases in the capacity of the language model (+3.1)"
   },
   {
-   "claim": "High-resolution phase adds average gain over seven V&L benchmarks",
+   "claim": "Scaling the language side mT5-L to XXL (+12B) adds 3.1 points on the same seven-benchmark average.",
    "kind": "measured",
    "source": null,
-   "metric": "7-task avg",
-   "value": "+2.0",
+   "metric": "7-task average gain",
+   "value": "3.1",
    "unit": "points",
    "baseline_value": null,
    "n": null,
-   "setup": "PaLI-17B, 588x588 phase vs 224 pretraining, average over 7 benchmarks (Fig 2)",
-   "note": null,
+   "setup": "PaLI-3B to PaLI-15B presumed (ViT-G fixed); same seven benchmarks",
+   "note": "'+3.1' printed in the same sentence as the 3.2; baseline checkpoints inferred from Fig 2 legend",
+   "where": "4.5",
+   "quote": "which takes more parameters (+12B)"
+  },
+  {
+   "claim": "The 588x588 high-resolution phase adds 2.0 points on the seven-benchmark average for PaLI-17B.",
+   "kind": "measured",
+   "source": null,
+   "metric": "7-task average gain",
+   "value": "2.0",
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "PaLI-17B, 10k extra steps (10M examples), all parameters updated, simplified mixture",
+   "note": "Bundled effect: higher resolution plus unfrozen ViT plus a different mixture plus 10M more examples; fine-tune resolution of the non-high-res 17B bar not stated",
    "where": "4.5",
    "quote": "The high-resolution pre-training phase at 588×588 resolution brings an additional +2.0 points"
   },
   {
-   "claim": "Scaling ViT-G to ViT-e (+2B params, ~13% of model) gives larger average gain than scaling mT5-L to XXL (+12B)",
-   "kind": "measured",
-   "source": null,
-   "metric": null,
-   "value": "+3.2 vs +3.1",
-   "unit": "points",
-   "baseline_value": null,
-   "n": null,
-   "setup": "Average over seven V&L benchmarks, Fig 2",
-   "note": null,
-   "where": "4.5",
-   "quote": "the average performance improvement over all seven benchmarks (additional +3.2) is larger than the one obtained with much larger increases in the capacity of the language model (+3.1) which takes more parameters (+12B)"
-  },
-  {
-   "claim": "PaLI-17B COCO Karpathy-test CIDEr",
+   "claim": "PaLI-17B reaches 149.1 CIDEr on COCO Karpathy test, the best without CIDEr optimisation.",
    "kind": "measured",
    "source": null,
    "metric": "CIDEr",
    "value": "149.1",
    "unit": "CIDEr",
-   "baseline_value": null,
+   "baseline_value": "147.6 (BEiT-3)",
    "n": null,
-   "setup": "PaLI-17B fine-tuned and evaluated at 588x588, cross-entropy only, no CIDEr optimisation",
+   "setup": "COCO Captions Karpathy split, PaLI-17B at 588x588",
    "note": null,
    "where": "4.1",
-   "quote": "establishes a new high of CIDEr score (Vedantam et al., 2015) at 149.1"
+   "quote": "establishes a new high of CIDEr score (Vedantam et al., 2015) at 149.1",
+   "table": "Table 1, row PaLI-17B, column COCO Karpathy-test"
   },
   {
-   "claim": "PaLI-17B VQAv2 test-dev accuracy, open-vocabulary generation",
+   "claim": "PaLI-17B scores 84.3 on VQAv2 test-dev in open-vocabulary generation.",
    "kind": "measured",
    "source": null,
-   "metric": "VQA accuracy",
+   "metric": "accuracy",
    "value": "84.3",
-   "unit": "accuracy",
-   "baseline_value": "82.1 Flamingo (open vocab); 84.2 BEiT-3 (classification)",
+   "unit": "%",
+   "baseline_value": "84.2 (BEiT-3, classification)",
    "n": null,
-   "setup": "PaLI-17B at 588x588, exact-match generation over 250k mT5 vocabulary",
+   "setup": "VQAv2 test-dev, open-vocab generation",
    "note": null,
    "where": "4.2",
-   "quote": "PaLI achieves 84.3 accuracy on VQAv2"
+   "quote": "PaLI achieves 84.3 accuracy on VQAv2",
+   "table": "Table 3, row PaLI-17B, column VQAv2 test-dev"
   },
   {
-   "claim": "Detected OCR strings as input help text-in-image tasks a lot: TextVQA test 58.80 without vs 73.06 with OCR",
+   "claim": "Adding ViT-e to mT5-L (PaLI-5B) gives +0.9 improvement per 1B ViT params versus +0.2 per 1B mT5 params for L to XXL.",
    "kind": "measured",
    "source": null,
-   "metric": "TextVQA acc",
-   "value": "73.06",
-   "unit": "accuracy",
-   "baseline_value": "58.80 without OCR",
+   "metric": "return per 1B params",
+   "value": "0.9",
+   "unit": "points per 1B params",
+   "baseline_value": "0.2 per 1B mT5 params",
    "n": null,
-   "setup": "PaLI-17B, TextVQA test; OCR items ordered top-left to bottom-right, strings only",
-   "note": "Same table: TextCaps 135.4 without vs 160.4 with OCR",
-   "where": "App C.5",
-   "table": "Table 20, row PaLI Yes OCR, column TextVQA test"
+   "setup": "COCO-Cap and OKVQA at 490 res; PaLI-3B, 5B, 15B, 17B",
+   "note": "PaLI-17B vs 15B: +2.2 per 1B ViT params; vs 5B: +0.4 per 1B mT5 params; RoI computed from COCO and OKVQA only",
+   "where": "C.2",
+   "quote": "+0.9 per 1B more ViT params",
+   "table": "Table 12, rows PaLI-5B and PaLI-15B, column Improvement per 1B more params"
   },
   {
-   "claim": "Without OCR input PaLI trails GIT2 on TextVQA test",
-   "kind": "measured",
-   "source": null,
-   "metric": "TextVQA acc",
-   "value": "58.80",
-   "unit": "accuracy",
-   "baseline_value": "67.27 GIT2",
-   "n": null,
-   "setup": "PaLI-17B no OCR vs GIT2 67.27, TextVQA test",
-   "note": null,
-   "where": "App C.5",
-   "table": "Table 20, row PaLI No, column TextVQA test"
-  },
-  {
-   "claim": "ViT-e adds ~3 CIDEr on COCO over ViT-G when paired with mT5-XXL, no high-res phase",
+   "claim": "ViT-e is only marginally better than ViT-G on ImageNet but gives about three more COCO CIDEr points in PaLI.",
    "kind": "measured",
    "source": null,
    "metric": "CIDEr",
-   "value": "149 vs 146.2",
+   "value": "149",
    "unit": "CIDEr",
-   "baseline_value": null,
+   "baseline_value": "146.2 (ViT-G)",
    "n": null,
-   "setup": "PaLI with mT5-XXL, ViT-G vs ViT-e, 224 pretraining",
+   "setup": "mT5-XXL paired with ViT-e, no high-res phase, COCO",
    "note": null,
-   "where": "Table 17",
-   "table": "Table 17, rows ViT-G and ViT-e, column COCO"
+   "where": "3.1 / Table 17",
+   "quote": "ViT-e yields almost three additional CIDEr points over ViT-G on the COCO captioning task.",
+   "table": "Table 17, row ViT-e, column COCO"
   },
   {
-   "claim": "ViT-e gives only small ImageNet gain over ViT-G (10-shot 85.2 vs 84.9) but larger V&L gain",
+   "claim": "ViT-e reaches 90.9% ImageNet fine-tuning top-1.",
    "kind": "measured",
    "source": null,
-   "metric": null,
-   "value": "85.2",
-   "unit": "10-shot top-1 %",
-   "baseline_value": "84.9",
-   "n": null,
-   "setup": "Vision-only few-shot ImageNet",
-   "note": null,
-   "where": "Table 17",
-   "table": "Table 17, row ViT-e, column INet-10"
-  },
-  {
-   "claim": "ViT-e ImageNet fine-tune top-1",
-   "kind": "measured",
-   "source": null,
-   "metric": null,
+   "metric": "top-1",
    "value": "90.9",
    "unit": "%",
-   "baseline_value": null,
+   "baseline_value": "90.5 (ViT-G)",
    "n": null,
    "setup": "ViT-e fine-tuned at 560x560, evaluated at 644x644",
    "note": null,
-   "where": "App C.4",
+   "where": "C.4",
    "quote": "ViT-e achieves 90.9% top-1 accuracy on ImageNet"
   },
   {
-   "claim": "Initialising from unimodal checkpoints is critical: from scratch COCO 72.8 vs 141.4",
+   "claim": "PaLI-17B zero-shot ImageNet top-1 is 72.11%, above 15B at 70.27%.",
    "kind": "measured",
    "source": null,
-   "metric": null,
-   "value": "141.4",
-   "unit": "CIDEr",
-   "baseline_value": "72.8 from scratch",
-   "n": null,
-   "setup": "PaLI-3B ablation, COCO Karpathy test",
-   "note": null,
-   "where": "Table 14",
-   "table": "Table 14, row From mT5-Large and ViT-G, column COCO"
-  },
-  {
-   "claim": "Freezing ViT during pretraining helps slightly on COCO (PaLI-15B)",
-   "kind": "measured",
-   "source": null,
-   "metric": null,
-   "value": "141.4",
-   "unit": "CIDEr",
-   "baseline_value": "140.1 fine-tuned",
-   "n": null,
-   "setup": "COCO fine-tune at 224x224; frozen vs fine-tuned ViT in pretraining",
-   "note": null,
-   "where": "Table 15",
-   "table": "Table 15, row PaLI-15B, ViT frozen"
-  },
-  {
-   "claim": "PaLI-17B zero-shot ImageNet top-1",
-   "kind": "measured",
-   "source": null,
-   "metric": null,
+   "metric": "top-1",
    "value": "72.11",
    "unit": "%",
-   "baseline_value": "71.9 Flamingo-80B 1-shot",
+   "baseline_value": "70.27",
    "n": null,
-   "setup": "Generative scoring of 1000 class-name strings at 224x224, no high-res phase",
+   "setup": "0-shot, 224x224, no high-res phase",
    "note": null,
    "where": "4.4",
+   "quote": "PaLI-17B (0-shot)",
    "table": "Table 5, row PaLI-17B (0-shot), column INet"
   },
   {
-   "claim": "OKVQA accuracy improves with ViT-e: PaLI-17B 64.5 vs PaLI-15B 56.5",
+   "claim": "PaLI-17B keeps language-only quality close to mT5-XXL: SuperGLUE 88.2 vs 89.3.",
    "kind": "measured",
    "source": null,
-   "metric": null,
-   "value": "64.5",
-   "unit": "accuracy",
-   "baseline_value": "56.5",
+   "metric": "avg score",
+   "value": "88.2",
+   "unit": "avg score",
+   "baseline_value": "89.3 (mT5-XXL our setting)",
    "n": null,
-   "setup": "Fine-tuned OKVQA val",
+   "setup": "SuperGLUE fine-tuned",
    "note": null,
-   "where": "4.2",
-   "quote": "PaLI-17B achieves 64.5 accuracy"
+   "where": "C.1",
+   "quote": "PaLI-17B",
+   "table": "Table 11, row PaLI-17B, column SuperGLUE"
   },
   {
-   "claim": "PaLI-17B pretrained on 1,024 TPUv4 chips for 7 days, batch 4,096",
+   "claim": "Initialising from unimodal checkpoints matters: from scratch PaLI-3B scores 72.8 COCO CIDEr vs 141.4.",
    "kind": "measured",
    "source": null,
-   "metric": null,
+   "metric": "CIDEr",
+   "value": "72.8",
+   "unit": "CIDEr",
+   "baseline_value": "141.4",
+   "n": null,
+   "setup": "PaLI-3B, 200M-example ablation",
+   "note": null,
+   "where": "C.3",
+   "quote": "From scratch",
+   "table": "Table 14, row From scratch, column COCO"
+  },
+  {
+   "claim": "Removing the VQG objective drops the zero-shot VQG score from 96.7 to 17.9.",
+   "kind": "measured",
+   "source": null,
+   "metric": "VQG ZS",
+   "value": "17.9",
+   "unit": "score",
+   "baseline_value": "96.7",
+   "n": null,
+   "setup": "PaLI-3B, 200M data coverage",
+   "note": null,
+   "where": "4.6",
+   "quote": "17.9 (-78.8)",
+   "table": "Table 6, row w/o VQG, column VQG (ZS / FT)"
+  },
+  {
+   "claim": "Dropping non-English WebLI cuts multilingual caption quality: 8.2 (6L) with English-only WebLI vs 41.9 with the full mix.",
+   "kind": "measured",
+   "source": null,
+   "metric": "XM-3600 6L",
+   "value": "8.2",
+   "unit": "CIDEr",
+   "baseline_value": "41.9",
+   "n": null,
+   "setup": "1.5B PaLI (mT5-L + ViT-L), 200M data, 224 res",
+   "note": null,
+   "where": "C.3",
+   "quote": "86.0 (en) / 8.2 (6L)",
+   "table": "Table 16, row only WebLI-en, column XM-3600"
+  },
+  {
+   "claim": "PaLI-17B averages 53.6 CIDEr over 35 Crossmodal-3600 languages vs 47.0 for PaLI-3B.",
+   "kind": "measured",
+   "source": null,
+   "metric": "CIDEr",
+   "value": "53.6",
+   "unit": "CIDEr",
+   "baseline_value": "47.0",
+   "n": null,
+   "setup": "224 res, fine-tuned on COCO-35L",
+   "note": null,
+   "where": "4.1",
+   "quote": "53.6",
+   "table": "Table 2, row PaLI-17B, column 35-lang avg."
+  },
+  {
+   "claim": "Pretraining cost for PaLI-17B: 1,024 TPUv4 chips for 7 days, plus 512 chips for 3 days for the high-res phase.",
+   "kind": "measured",
+   "source": null,
+   "metric": "wall-clock",
    "value": "7",
    "unit": "days",
    "baseline_value": null,
    "n": null,
-   "setup": "Pretraining 224 phase",
+   "setup": "1,024 GCP-TPUv4 chips",
    "note": null,
-   "where": "App A.1",
-   "quote": "The largest model, PaLI-17B, is pretrained using 1,024 GCP-TPUv4 chips for 7 days."
-  },
-  {
-   "claim": "High-res phase cost 512 TPUv4 chips for 3 days",
-   "kind": "measured",
-   "source": null,
-   "metric": null,
-   "value": null,
-   "unit": null,
-   "baseline_value": null,
-   "n": null,
-   "setup": "PaLI-17B 588 phase",
-   "note": null,
-   "where": "App A.1",
-   "quote": "This high resolution phase was performed using 512 GCP-TPUv4 chips for an additional 3 days."
-  },
-  {
-   "claim": "Visual tokens come from ViT patch features with no pooling; patch size fixed, patch count grows with resolution",
-   "kind": "measured",
-   "source": null,
-   "metric": null,
-   "value": null,
-   "unit": null,
-   "baseline_value": null,
-   "n": null,
-   "setup": "Architecture",
-   "note": null,
-   "where": "3.1",
-   "quote": "No pooling is applied to the output of the Vision Transformer before passing the visual tokens to the encoder-decoder model via cross-attention."
-  },
-  {
-   "claim": "ViT-e GFLOPs per image grow with resolution: 1980 at 224 vs 5777 at 384",
-   "kind": "measured",
-   "source": null,
-   "metric": null,
-   "value": "5777",
-   "unit": "GFLOPs",
-   "baseline_value": "1980 at 224",
-   "n": null,
-   "setup": "ViT-e/14 forward",
-   "note": null,
-   "where": "Table 8",
-   "table": "Table 8, row e/14, column 384^2"
+   "where": "A.1",
+   "quote": "1,024 GCP-TPUv4 chips for 7 days"
   }
  ],
  "limits": [
-  "Complex scenes described thinly because source data lacks dense annotations",
-  "Multilingual ability lost when fine-tuned on English-only data",
-  "Open-vocab exact-match VQA counts paraphrases as wrong",
-  "Benchmarks may be Western-centric",
-  "Without OCR input PaLI is weaker on text-in-image tasks (TextVQA 58.80 vs 73.06)",
-  "Resolution effect not isolated: high-res phase also changes mixture and unfreezes ViT",
-  "Model and WebLI not public",
-  "Single runs, no seeds"
+  "Open-vocabulary VQA scoring counts paraphrases and synonyms as wrong (E).",
+  "Multilingual ability is partly lost when fine-tuning on English-only data (E).",
+  "Without OCR input PaLI falls behind (TextVQA 58.80 vs 73.06 with OCR); the authors guess the large vocab makes OCR string generation harder (C.5).",
+  "The high-res gain is one bundled phase with changed mixture and unfrozen parameters, not a resolution-only ablation, and is shown only for PaLI-17B.",
+  "The 3.2 vs 3.1 comparison names no checkpoints in text and has no seeds or intervals; PaLI-5B used a slightly different mixture and hyperparameters; ViT-e benefit is smaller with mT5-L (OKVQA +1.4).",
+  "Weights, code and WebLI are not released."
  ],
  "practices": [],
  "terms": [],
  "lineage": [
   {
-   "work": "ViT (Dosovitskiy et al.)",
+   "work": "mT5",
    "year": 2021,
    "arxiv": null,
    "relation": "uses-method",
-   "note": "vision encoder",
+   "note": "language backbone initialisation (Large 1B, XXL 13B)",
    "quote": null
   },
   {
-   "work": "mT5 (Xue et al.)",
-   "year": 2021,
-   "arxiv": null,
-   "relation": "uses-method",
-   "note": "language encoder-decoder init",
-   "quote": null
-  },
-  {
-   "work": "Scaling Vision Transformers / ViT-G (Zhai et al.)",
+   "work": "Scaling Vision Transformers (ViT-G)",
    "year": 2022,
    "arxiv": null,
    "relation": "extends",
-   "note": "ViT-e recipe copied",
-   "quote": null
-  },
-  {
-   "work": "LiT (Zhai et al.)",
-   "year": 2022,
-   "arxiv": null,
-   "relation": "uses-method",
-   "note": "zero-shot ViT-e eval",
+   "note": "ViT-e uses ViT-G recipe scaled to 4B",
    "quote": null
   },
   {
@@ -574,47 +581,63 @@
    "year": 2022,
    "arxiv": "2204.14198",
    "relation": "baseline",
-   "note": "open-vocab VQA comparison",
-   "quote": null
-  },
-  {
-   "work": "CoCa",
-   "year": 2022,
-   "arxiv": null,
-   "relation": "baseline",
-   "note": null,
-   "quote": null
-  },
-  {
-   "work": "GIT/GIT2",
-   "year": 2022,
-   "arxiv": null,
-   "relation": "baseline",
-   "note": null,
-   "quote": null
-  },
-  {
-   "work": "BEiT-3",
-   "year": 2022,
-   "arxiv": null,
-   "relation": "baseline",
-   "note": null,
+   "note": "80B text backbone with 435M vision encoder",
    "quote": null
   },
   {
    "work": "SimVLM",
    "year": 2021,
-   "arxiv": null,
-   "relation": "baseline",
-   "note": "split-captioning objective source",
+   "arxiv": "2108.10904",
+   "relation": "uses-method",
+   "note": "split-captioning objective",
    "quote": null
   },
   {
-   "work": "Model soups (Wortsman et al.)",
+   "work": "CoCa",
+   "year": 2022,
+   "arxiv": "2205.01917",
+   "relation": "baseline",
+   "note": "2.1B model; also high-res phase precedent",
+   "quote": null
+  },
+  {
+   "work": "GIT/GIT2",
+   "year": 2022,
+   "arxiv": "2205.14100",
+   "relation": "baseline",
+   "note": "5.1B with 4.8B vision",
+   "quote": null
+  },
+  {
+   "work": "BEiT-3",
+   "year": 2022,
+   "arxiv": "2208.10442",
+   "relation": "baseline",
+   "note": "VQAv2 closed-vocab SOTA",
+   "quote": null
+  },
+  {
+   "work": "OFA",
+   "year": 2022,
+   "arxiv": "2202.03052",
+   "relation": "related",
+   "note": "unified text interface",
+   "quote": null
+  },
+  {
+   "work": "Model soups",
    "year": 2022,
    "arxiv": null,
    "relation": "uses-method",
-   "note": "ViT-e weight averaging",
+   "note": "weight averaging for ViT-e",
+   "quote": null
+  },
+  {
+   "work": "LiT",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "zero-shot transfer for ViT-e",
    "quote": null
   },
   {
@@ -622,41 +645,50 @@
    "year": 2021,
    "arxiv": "2109.10852",
    "relation": "uses-method",
-   "note": "generative detection format",
+   "note": "generative detection objective",
    "quote": null
   },
   {
-   "work": "Conceptual Captions / VQ2A",
+   "work": "Crossmodal-3600",
+   "year": 2022,
+   "arxiv": "2205.12522",
+   "relation": "uses-data",
+   "note": "multilingual caption eval",
+   "quote": null
+  },
+  {
+   "work": "VQ2A / CC3M",
    "year": 2022,
    "arxiv": null,
    "relation": "uses-data",
-   "note": null,
+   "note": "VQA pretraining data",
    "quote": null
   }
  ],
  "figures": [
   {
-   "figure": "Fig 1",
-   "caption": "The PaLI main architecture is simple and scalable. It uses an encoder-decoder Transformer model, with a large-capacity ViT component for image processing.",
-   "page": 4,
-   "why": "Shows patch tokens from ViT entering the text encoder"
-  },
-  {
    "figure": "Fig 2",
-   "caption": "PaLI scaling for a number of tasks.",
+   "caption": "PaLI scaling for a number of tasks. Both scaling the language side (from 1B to 13B parameters) and the vision side of the model (from 2B to 4B parameters) yield improvements across all tasks.",
    "page": 8,
-   "why": "Per-benchmark gains from language, vision and resolution scaling"
+   "why": "Per-task and 7-task-average gains from bigger language side, bigger ViT, and the high-res phase in one chart"
   },
   {
-   "figure": "Table 8",
-   "caption": "ViT-e architecture details",
+   "figure": "Table 7",
+   "caption": "The size in terms of number of parameters for the trained PaLI model versions.",
    "page": 17,
-   "why": "Patch 14, GFLOPs at 224 vs 384"
+   "why": "Exact component sizes behind the 13% and +12B figures"
+  },
+  {
+   "figure": "Table 12",
+   "caption": "Result on a 5B version of PaLI consisting of mT5-Large and ViT-e.",
+   "page": 23,
+   "why": "Gain per 1B parameters for vision vs language"
   }
  ],
  "code": [],
  "problems": [
-  "Prose figure/table text only; Fig 1 content is image, not in text",
-  "No statement of visual token count; derived values are inferred from patch 14"
+  "Text extraction of tables is one cell per line; table cells verified by reading, not alignment.",
+  "Fig 2 bar values are not in the text; only the +3.2, +3.1 and +2.0 averages are.",
+  "No embedded instructions found."
  ]
 }

@@ -1,0 +1,231 @@
+{
+ "schema": 1,
+ "key": "https://doi.org/10.18653/v1/d19-1259",
+ "pdf": "generative-ai/08-eval/sources/jin-2019-pubmedqa.pdf",
+ "bib": {
+  "title": "PubMedQA: A Dataset for Biomedical Research Question Answering",
+  "authors": ["Qiao Jin", "Bhuwan Dhingra", "Zhengping Liu", "William W. Cohen", "Xinghua Lu"],
+  "first_author": "Jin",
+  "year": 2019,
+  "venue": "Proceedings of EMNLP-IJCNLP 2019, pages 2567-2577, Hong Kong",
+  "arxiv": null,
+  "doi": "10.18653/v1/d19-1259"
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 41540,
+  "chars_total": 41540,
+  "engine": "pymupdf",
+  "skipped": "References skimmed only"
+ },
+ "type": "benchmark",
+ "question": "Can a biomedical QA dataset be built from PubMed question-titled abstracts that has expert labels and requires reasoning over quantitative research text to answer yes/no/maybe?",
+ "hypothesis": "Pre-training on a large automatically labeled set and bootstrapping on pseudo-labeled unlabeled data, plus long-answer supervision, helps a low-resource, reasoning-heavy task.",
+ "contributions": [
+  "PubMedQA: 1k expert-annotated, 61.2k unlabeled and 211.3k artificially generated yes/no/maybe QA instances from PubMed abstracts",
+  "Two evaluation settings: reasoning-required (question + context) and reasoning-free (question + long answer)",
+  "Multi-phase fine-tuning of BioBERT with long-answer bag-of-words auxiliary supervision as a baseline, compared with single-human performance"
+ ],
+ "method": {
+  "summary": "Collect PubMed articles with question titles and structured abstracts; context is the abstract without its conclusion, long answer is the conclusion. Two M.D. candidates label 1k instances (PQA-L) with yes/no/maybe; the rest of the answerable ones form PQA-U; statement titles converted to questions form PQA-A. Baselines (majority, shallow features, BiLSTM, ESIM+BioELMo, BioBERT) are trained under several schedules.",
+  "task": "biomedical research-question answering as 3-way classification (yes/no/maybe)",
+  "trains": true,
+  "datasets": [
+   {"name": "PQA-L (labeled)", "role": "both", "size": "1.0k QA pairs (55.2% yes, 33.8% no, 11.0% maybe)", "split": "500 randomly sampled instances for 10-fold cross-validation (450 train per fold), remaining 500 are the test set", "source": "PubMed articles with question-mark titles and structured abstracts with conclusion; labeled by two M.D. candidates", "preprocessing": "Annotator 1 sees question, context and long answer (reasoning-free); annotator 2 sees question and context only (reasoning-required); disagreements discussed, instance dropped if no agreement"},
+   {"name": "PQA-U (unlabeled)", "role": "train", "size": "61.2k QA pairs", "split": "pseudo-labeled subset with same yes/no/maybe proportions as PQA-L used in Phase II", "source": "pre-PQA-U instances that are yes/no/maybe answerable", "preprocessing": "Rule-based removal of wh-questions and multi-entity selection questions; over 93% agreement with annotator 1 on answerability"},
+   {"name": "PQA-A (artificial)", "role": "pretrain", "size": "211.3k QA pairs (92.8% yes, 7.2% no)", "split": "200k randomly sampled for training, 11.3k for validation", "source": "PubMed articles with statement titles (NP-(VBP/VBZ) by Stanford CoreNLP) and structured abstract with conclusion", "preprocessing": "Statement title converted to question by moving or adding copulas or auxiliary verbs; label by negation status of the verb"}
+  ],
+  "models": [
+   {"name": "BioBERT", "role": "proposed", "params": null, "architecture": "BERT encoder; [CLS] softmax for 3-way label", "init_from": "BERT, further pre-trained on PubMed abstracts and PMC articles", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"input": "question and context (or long answer) separated by [SEP]"}},
+   {"name": "ESIM with BioELMo", "role": "baseline", "params": null, "architecture": "biLSTM encoder, attentional local inference, biLSTM composition, softmax; BioELMo weights fixed", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "BiLSTM", "role": "baseline", "params": null, "architecture": "biLSTM over biomedical word2vec plus segment embeddings", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "Shallow Features", "role": "baseline", "params": null, "architecture": "feed-forward net on TF-IDF of question, TF-IDF of context/long answer, summed IDF of overlapping non-stop words", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "Majority", "role": "baseline", "params": null, "architecture": "predict yes always", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}}
+  ],
+  "training": {
+   "objective": "L = L_QA + beta * L_BoW; L_QA cross-entropy on yes/no/maybe, L_BoW binary cross-entropy predicting binary bag-of-words of the long answer from [CLS] (beta = 0 in reasoning-free setting)",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "long-answer BoW auxiliary loss",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "schedule": "Phase I: fine-tune on PQA-A (question, context). Bootstrapping: fine-tune on PQA-A (question, long answer), then PQA-L (question, long answer), pseudo-label PQA-U with the most confident predictions per class in PQA-L proportions. Phase II: fine-tune on pseudo-labeled PQA-U (question, context). Final: fine-tune on PQA-L (question, context).",
+    "compared_schedules": "Final Phase Only, Single-phase (combined PQA-A + bootstrapped PQA-U + PQA-L), Phase I + Final, Phase II + Final, Multi-phase",
+    "beta_value": "not stated"
+   }
+  },
+  "inference": {
+   "decoding": "argmax over softmax of 3 classes (inferred from classification setup)",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "Accuracy", "definition": "fraction of PQA-L test instances with correct yes/no/maybe label, question and context as input", "unit": "%", "higher_is_better": true},
+    {"name": "Macro-F1", "definition": "macro-averaged F1 over yes/no/maybe on the PQA-L test set", "unit": "%", "higher_is_better": true}
+   ],
+   "baselines": ["Majority", "Shallow Features", "BiLSTM", "ESIM w/ BioELMo", "single human annotator"],
+   "protocol": "Test on 500 PQA-L instances; 10-fold cross-validation on the other 500 for validation. Human performance measured during annotation, single annotator against discussed ground truth. Single run per cell reported; no seeds or significance tests stated."
+  },
+  "availability": {"code": null, "weights": null, "data": "https://pubmedqa.github.io"},
+  "prompts": [],
+  "evidence": [
+   {"field": "eval.protocol", "quote": "500 randomly sampled PQA-L instances are used for 10-fold cross validation and the rest 500 instances consist of Pub- MedQA test set.", "where": "Sec 3.1"}
+  ]
+ },
+ "results": [
+  {
+   "claim": "Best model (multi-phase fine-tuned BioBERT with long-answer BoW supervision) reaches 68.1% accuracy, below single human 78.0%.",
+   "kind": "measured", "source": null, "metric": "accuracy", "value": "68.08", "unit": "%", "baseline_value": "78.00", "n": 500,
+   "setup": "PQA-L test set, reasoning-required setting, BioBERT multi-phase with additional supervision",
+   "table": "Table 5, row BioBERT w/ A.S., column Multi-phase Acc",
+   "quote": null, "note": "Abstract rounds to 68.1%", "where": "Table 5; abstract"
+  },
+  {
+   "claim": "Majority baseline (always yes) gets 55.2% accuracy on the test set.",
+   "kind": "measured", "source": null, "metric": "accuracy", "value": "55.2", "unit": "%", "baseline_value": null, "n": 500,
+   "setup": "PQA-L test set, predict yes always",
+   "quote": "majority-baseline of 55.2% accuracy", "table": null, "note": "Table 5 prints 55.20; Majority macro-F1 23.71", "where": "Abstract"
+  },
+  {
+   "claim": "Single human accuracy under the reasoning-free setting (question + conclusion visible) is 90.4%.",
+   "kind": "measured", "source": null, "metric": "accuracy", "value": "90.4", "unit": "%", "baseline_value": null, "n": null,
+   "setup": "single annotator (M.D. candidate), PQA-L test set, against discussed ground truth",
+   "quote": "a single human achieves 90.4% accuracy and 84.2% macro- F1", "table": null, "note": "macro-F1 84.18 in Table 4", "where": "Sec 5.1, Table 4"
+  },
+  {
+   "claim": "Single human accuracy under the reasoning-required setting (question + context only) drops to 78.0%, macro-F1 72.2%.",
+   "kind": "measured", "source": null, "metric": "accuracy", "value": "78.0", "unit": "%", "baseline_value": null, "n": null,
+   "setup": "single annotator, PQA-L test set; a lower bound on human performance since only one annotator was tested",
+   "quote": "a single annotator can get 78.0% accuracy and 72.2% macro-F1", "table": null, "note": null, "where": "Sec 5.1, Table 4"
+  },
+  {
+   "claim": "BioBERT with only PQA-L (450 training instances per fold) is about majority level.",
+   "kind": "measured", "source": null, "metric": "accuracy", "value": "56.98", "unit": "%", "baseline_value": "55.20", "n": 500,
+   "setup": "BioBERT, Final Phase Only, no additional supervision, reasoning-required",
+   "table": "Table 5, row BioBERT w/o A.S., column Final Phase Only Acc", "quote": null, "note": null, "where": "Table 5"
+  },
+  {
+   "claim": "Pre-training on PQA-A (Phase I + Final) lifts BioBERT from 56.98 to 66.90 accuracy without additional supervision.",
+   "kind": "measured", "source": null, "metric": "accuracy", "value": "66.90", "unit": "%", "baseline_value": "56.98", "n": 500,
+   "setup": "BioBERT w/o A.S., reasoning-required, PQA-L test",
+   "table": "Table 5, row BioBERT w/o A.S., column Phase I + Final Acc", "quote": null, "note": null, "where": "Table 5"
+  },
+  {
+   "claim": "Long-answer BoW auxiliary supervision improves most results.",
+   "kind": "measured", "source": null, "metric": "count of improved cells", "value": "28/40", "unit": "cells", "baseline_value": null, "n": 40,
+   "setup": "Table 5, 4 models x 5 schedules x 2 metrics, w/ vs w/o A.S.",
+   "quote": "most results (28/40) are better with such additional supervision than without", "table": null, "note": null, "where": "Sec 5.2"
+  },
+  {
+   "claim": "BioBERT scores 80.80 accuracy in the reasoning-free setting on PQA-L, versus 90.40 for a single human, so even with the conclusion visible models trail humans.",
+   "kind": "measured", "source": null, "metric": "accuracy", "value": "80.80", "unit": "%", "baseline_value": "90.40", "n": 500,
+   "setup": "BioBERT fine-tuned PQA-A then PQA-L with question + long answer (Eq. 3)",
+   "table": "Table 7, row BioBERT, column Eq. 3 Acc", "quote": null, "note": null, "where": "Table 7"
+  },
+  {
+   "claim": "Model ranking BioBERT > ESIM w/ BioELMo > BiLSTM > shallow features > majority holds across schedules.",
+   "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null,
+   "setup": "Table 5, accuracy and macro-F1",
+   "quote": null, "table": null, "note": "claim only; see Table 5", "where": "Sec 5.2"
+  },
+  {
+   "claim": "PQA-A is highly imbalanced: majority baseline gets 92.76% accuracy on it, BioBERT 96.50% (macro-F1 84.65).",
+   "kind": "measured", "source": null, "metric": "accuracy", "value": "96.50", "unit": "%", "baseline_value": "92.76", "n": null,
+   "setup": "Phase I on PQA-A validation, reasoning-required, BioBERT w/o A.S.",
+   "table": "Table 6, row BioBERT, column w/o A.S. Acc", "quote": null, "note": null, "where": "Table 6"
+  },
+  {
+   "claim": "Dataset sizes: 1k expert-annotated, 61.2k unlabeled, 211.3k artificially generated instances.",
+   "kind": "measured", "source": null, "metric": "instances", "value": "1k / 61.2k / 211.3k", "unit": "QA instances", "baseline_value": null, "n": null,
+   "setup": "PQA-L / PQA-U / PQA-A",
+   "quote": "PubMedQA has 1k expert-annotated, 61.2k unlabeled and 211.3k artiﬁcially gen- erated QA instances.", "table": null, "note": null, "where": "Abstract"
+  },
+  {
+   "claim": "About half of the question-titled candidates are unanswerable by yes/no/maybe.",
+   "kind": "measured", "source": null, "metric": "unanswerable share", "value": "1091 of 2173 (about 50.2%)", "unit": "question titles", "baseline_value": null, "n": 2173,
+   "setup": "manual answerability screen at start of PQA-L annotation",
+   "quote": "We labeled 1091 (about 50.2%) of 2173 question titles as unanswerable.", "table": null, "note": null, "where": "Appendix A"
+  },
+  {
+   "claim": "Estimated error rate of ground-truth labels could be as low as 1%.",
+   "kind": "worked-example", "source": null, "metric": "label error", "value": "1%", "unit": "%", "baseline_value": null, "n": null,
+   "setup": "roughly half of the product of two annotator error rates (footnote 4)",
+   "quote": "such error rate could be as low as 1%", "table": null, "note": null, "where": "Sec 3.1"
+  },
+  {
+   "claim": "Reasoning over quantitative content is required in nearly all PQA-L instances; 57.5% involve inter-group comparison.",
+   "kind": "measured", "source": null, "metric": "share requiring quantitative reasoning", "value": "96.5%", "unit": "%", "baseline_value": null, "n": 200,
+   "setup": "200 sampled PQA-L examples, manually categorised",
+   "quote": "Reasoning over quantitative con- tents is required in nearly all (96.5%) of them", "table": null, "note": "75.5% of contexts have text descriptions of the statistics, 21.0% numbers only, 3.5% no numbers", "where": "Sec 3.2, Table 3"
+  },
+  {
+   "claim": "Yes/no-answerable question titles are common in PubMed versus other datasets.",
+   "kind": "reported", "source": "Kwiatkowski et al. 2019 (Natural Questions); Yang et al. 2018 (HotpotQA)", "metric": "yes/no share of questions", "value": "1% NQ, 6% HotpotQA", "unit": "%", "baseline_value": null, "n": null,
+   "setup": "compared with more than half of PubMed question titles",
+   "quote": "just 1% in Natural Questions (Kwiatkowski et al., 2019) and 6% in HotpotQA (Yang et al., 2018)", "table": null, "note": null, "where": "Sec 1"
+  }
+ ],
+ "limits": [
+  "Human performance is single-annotator only, a lower bound by authors' admission.",
+  "Ground truth could be wrong if both annotators make the same mistake (estimated about 1%).",
+  "PQA-A labels are heuristic and very imbalanced (92.8% yes, 0% maybe); Phase II results are not comparable across models because each uses its own pseudo-labels.",
+  "Topics skew to clinical-study subjects (Appendix B).",
+  "Yes/no/maybe labelling is context-dependent: 'yes' means the paper's results indicate it (Appendix C), not universal truth.",
+  "Optimizer, learning rate, batch size, epochs, beta, seeds and hardware are not stated, so baseline training is not reproducible from the paper.",
+  "Task is 3-way classification, so a 55.2% majority baseline and a 500-instance test set give wide uncertainty; no confidence intervals or seeds reported.",
+  "Predates LLMs; baseline numbers are BERT-era."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "reasoning-required setting", "definition": "prediction using question and context; answers are not directly expressed in the input", "where": "Sec 3.3"},
+  {"term": "reasoning-free setting", "definition": "models use question and long answer to predict yes/no/maybe, since the label is usually explicit in the conclusion", "where": "Sec 3.3"},
+  {"term": "long answer", "definition": "the conclusion of the abstract, which presumably answers the research question", "where": "Abstract"}
+ ],
+ "lineage": [
+  {"work": "BioBERT (Lee et al.)", "year": 2019, "arxiv": "1901.08746", "relation": "uses-method", "note": "main model, fine-tuned", "quote": null},
+  {"work": "BERT (Devlin et al.)", "year": 2018, "arxiv": "1810.04805", "relation": "related", "note": "BioBERT initialisation", "quote": null},
+  {"work": "BioELMo / Probing biomedical embeddings from language models (Jin et al.)", "year": 2019, "arxiv": "1904.02181", "relation": "baseline", "note": "embeddings for ESIM baseline", "quote": null},
+  {"work": "ESIM, Enhanced LSTM for NLI (Chen et al.)", "year": 2016, "arxiv": "1609.06038", "relation": "baseline", "note": "recurrent NLI architecture", "quote": null},
+  {"work": "Bag-of-words as target for NMT (Ma et al.)", "year": 2018, "arxiv": "1805.04871", "relation": "uses-method", "note": "BoW auxiliary loss idea", "quote": null},
+  {"work": "BioASQ (Tsatsaronis et al.)", "year": 2015, "arxiv": null, "relation": "related", "note": "largest prior annotated biomedical QA, 2,747 train and 500 test in 2019", "quote": null},
+  {"work": "BoolQ (Clark et al.)", "year": 2019, "arxiv": null, "relation": "related", "note": "yes/no QA; PubMedQA adds maybe", "quote": null},
+  {"work": "Natural Questions (Kwiatkowski et al.)", "year": 2019, "arxiv": null, "relation": "related", "note": "annotator ensemble beats single annotator", "quote": null},
+  {"work": "HotpotQA (Yang et al.)", "year": 2018, "arxiv": "1809.09600", "relation": "related", "note": "yes/no share comparison", "quote": null},
+  {"work": "emrQA, BioRead, BMKC", "year": 2018, "arxiv": "1809.00732", "relation": "related", "note": "large automatic biomedical QA datasets, mostly factoid/cloze", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Figure 2", "caption": "Architecture of PubMedQA dataset. PubMedQA is split into three subsets, PQA-A(rtificial), PQA-U(nlabeled) and PQA-L(abeled).", "page": 3, "why": "Shows the three splits, which fields each has, and where labels come from; good for splits note"},
+  {"figure": "Figure 5", "caption": "Multi-phase fine-tuning architecture.", "page": 5, "why": "Shows reasoning-free bootstrapping feeding pseudo-labels into the reasoning-required pipeline"},
+  {"figure": "Table 1", "caption": "PubMedQA dataset statistics.", "page": 3, "why": "Sizes and label proportions of PQA-L/U/A"},
+  {"figure": "Table 4", "caption": "Human performance (single-annotator).", "page": 7, "why": "Reasoning-free 90.40 vs reasoning-required 78.00 human accuracy"},
+  {"figure": "Figure 1", "caption": "An instance of PubMedQA dataset: Question is the original question title; Context includes the structured abstract except its conclusive part, which serves as the Long Answer; Human experts annotated the Answer yes.", "page": 1, "why": "One concrete instance showing question, context, long answer, label"}
+ ],
+ "code": [
+  {"where": "Sec 4.2", "snippet": "L = LQA + βLBoW", "verbatim": true}
+ ],
+ "problems": [
+  "No embedded instructions found.",
+  "Appendix C and parts of figures 3-4 are figure text only; figure content not read visually."
+ ]
+}

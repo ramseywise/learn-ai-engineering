@@ -1,0 +1,131 @@
+{
+ "schema": 1,
+ "key": "2104.08773",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/mishra-2022-cross-task-generalization-natural-language.pdf",
+ "bib": {"title": "Cross-Task Generalization via Natural Language Crowdsourcing Instructions", "authors": ["Swaroop Mishra", "Daniel Khashabi", "Chitta Baral", "Hannaneh Hajishirzi"], "first_author": "Mishra", "year": 2022, "venue": "Proceedings of the 60th Annual Meeting of the Association for Computational Linguistics (ACL 2022), Volume 1: Long Papers, pages 3470-3487", "arxiv": "2104.08773", "doi": null},
+ "read": {"by": "source-reader", "at": "2026-11-08", "chars_read": 74569, "chars_total": 74569, "engine": "pymupdf", "skipped": null},
+ "type": "benchmark",
+ "question": "Can a model trained on instructions and instances of seen tasks follow the crowdsourcing instructions of unseen tasks and solve them?",
+ "hypothesis": "Encoding natural-language task instructions alongside inputs lets LMs generalize to unseen tasks, and generalization improves with more seen tasks.",
+ "contributions": [
+  "NATURAL INSTRUCTIONS: human-authored crowdsourcing instructions from existing datasets mapped to a unified schema, with instances, for learning from instructions",
+  "Models that encode instructions, showing the benefit of cross-task generalization, the importance of different instruction elements, and large headroom",
+  "A task-level generalization setup (seen vs unseen tasks) with random, leave-one-category, leave-one-dataset and leave-one-task splits"
+ ],
+ "method": {
+  "summary": "Crowdsourcing templates of 9 NLP datasets are split into 61 minimal subtasks, each mapped by hand to a schema (title, prompt, definition, things to avoid, emphasis/caution, positive/negative examples with reasons and suggestions). BART-base is fine-tuned on seen tasks with the instruction text prepended to the input and evaluated by ROUGE-L on unseen tasks; GPT3 is run without fine-tuning for comparison.",
+  "task": "cross-task generalization from instructions (text-to-text generation)",
+  "trains": true,
+  "datasets": [
+   {"name": "NATURAL INSTRUCTIONS", "role": "both", "size": "61 tasks, 193k instances (6 categories; at most 6.5k instances per task)", "split": "random split: 2 tasks per category held out for evaluation = 12 unseen, 49 seen tasks; also leave-one-category (QG, AG), leave-one-dataset (QASC, Quoref), leave-one-task (QASC QG)", "source": "Crowdsourcing templates and raw data from CosmosQA, DROP, EssentialTerms, MCTACO, MultiRC, QASC, Quoref, ROPES, Winogrande, obtained from their authors; plus a Miscellaneous group", "preprocessing": "Instructions manually mapped to schema by one author and verified by another; typos and repetition edited; at least two negative examples added per task where possible; reasons/suggestions added; model-in-the-loop tasks dropped; tasks without reliable automatic evaluation excluded from the unseen set. Avg 4.9 positive and 2.2 negative examples per task; definition 65.5 tokens avg."}
+  ],
+  "models": [
+   {"name": "BART (base)", "role": "proposed", "params": "140m", "architecture": "encoder-decoder", "init_from": "pretrained BART (Lewis et al., 2019)", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"note": "full instruction encoding includes as many examples as possible before exceeding the input limit (limit value not stated)"}},
+   {"name": "GPT3 (davinci-instruct engine)", "role": "baseline", "params": "175B", "architecture": "autoregressive LM", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"fine_tuned": "no, used as-is"}}
+  ],
+  "training": {
+   "objective": "inferred: sequence-to-sequence generation of output y given enc(I_t, x), standard fine-tuning",
+   "optimizer": null,
+   "lr": "5e-5",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": "3",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {"per_setup": "one model per training split and input encoding", "task_specific_upper_bound": "BART trained separately per task on that task's annotated training data"}
+  },
+  "inference": {
+   "decoding": "GPT3: greedy decoding; BART: not stated",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": "GPT3: 16 (default)",
+   "samples": "GPT3: single greedy output; Fig 2b points averaged over 5 random subsamples of seen tasks; BART runs/seeds not stated",
+   "prompting": "Instruction elements concatenated before 'input: x output:' (Fig 5, Appendix B.1). Encodings compared: NO-INSTRUCTIONS, PROMPT, POS. EXAMPLES, PROMPT+DEFINITION, PROMPT+THINGS TO AVOID, PROMPT+EMPHASIS, PROMPT+POS. EXAMPLES, PROMPT+DEFINITION+POS. EXAMPLES, FULL INSTRUCTION.",
+   "retrieval": null,
+   "parameters": {"gpt3_stop": "default stop condition, 2 newline tokens"},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [{"name": "ROUGE-L", "definition": "automatic overlap metric on generated text, all tasks treated as generation; paper says BLEURT correlates with it", "unit": "% (ROUGE-L)", "higher_is_better": true}],
+   "baselines": ["BART with no instructions", "BART with partial instruction encodings", "GPT3 davinci-instruct with full instructions (no fine-tuning)", "task-specific BART per task (upper bound)", "humans: 240 instances (20 from 12 random tasks) answered by independent annotators, >96% accuracy"],
+   "protocol": "Train on T_seen with a given encoding, evaluate on T_unseen. No significance tests or seeds reported. Error analysis on 30 sampled erroneous predictions on each of 3 tasks (stated: 30 erroneous predictions on 3 distinct tasks). Humans surveyed on perceived importance of instruction elements."
+  },
+  "availability": {"code": "https://github.com/allenai/natural-instructions-v1", "weights": null, "data": "https://instructions.apps.allenai.org"},
+  "prompts": [
+   {"purpose": "NO-INSTRUCTIONS encoding", "text": "input : x\noutput :", "where": "Appendix B.1 eq. 1"},
+   {"purpose": "FULL INSTRUCTIONS encoding", "text": "Definition : ... Prompt : ... Things to Avoid : ... Emphasis&Caution : ... NegativeExample1- input/output/reason ... PositiveExample1- input/output/reason ... input : x output :", "where": "Fig 5; Appendix B.1 eq. 4"}
+  ],
+  "evidence": [
+   {"field": "training.epochs / training.lr", "quote": "our models are trained for 3 epochs with a learning rate of 5e-5", "where": "Sec 6 Implementation details"},
+   {"field": "models[0].params", "quote": "This is an encoder-decoder architecture with 140m", "where": "Sec 5.2"}
+  ]
+ },
+ "results": [
+  {"claim": "Under the random task split, BART with full instructions beats BART without instructions (ROUGE-L 32 vs 13), the headline 19-point gain.", "kind": "measured", "source": null, "metric": "ROUGE-L", "value": "32", "unit": "% ROUGE-L", "baseline_value": "13", "n": "12 unseen, 49 seen tasks", "setup": "BART-base fine-tuned 3 epochs lr 5e-5, random split, FULL INSTRUCTIONS vs NO INSTRUCTIONS", "quote": "the model using FULL INSTRUCTIONS results in +19% gains over a model that is not using instructions", "table": "Table 4, rows BART NO INSTRUCTIONS (13) and FULL INSTRUCTIONS (32), column random split", "note": "Abstract says '19% better'; the gain is 19 absolute ROUGE-L points, which is a relative gain of about 146%.", "where": "Sec 6.1, Table 4"},
+  {"claim": "Fine-tuned BART-base with full instructions beats few-shot-style GPT3 (175B, not fine-tuned) by 8 points under the random split (32 vs 24).", "kind": "measured", "source": null, "metric": "ROUGE-L", "value": "24", "unit": "% ROUGE-L", "baseline_value": "32", "n": null, "setup": "GPT3 davinci-instruct greedy, 16 max tokens, full instructions, random split; BART 140m", "quote": "achieves 8% higher performance than GPT3 under random split of tasks", "table": "Table 4, row GPT3 FULL INSTRUCTIONS, column random split", "note": null, "where": "Sec 6.1"},
+  {"claim": "Leave-one-category (question generation held out): BART no-instruction 6, with instructions 17, GPT3 33.", "kind": "measured", "source": null, "metric": "ROUGE-L", "value": "17", "unit": "% ROUGE-L", "baseline_value": "6", "n": null, "setup": "BART-base, QG category held out; GPT3 reaches 33, higher than BART here", "quote": null, "table": "Table 4, column leave-one-category (QG), rows NO INSTRUCTIONS 6, FULL INSTRUCTIONS 17, GPT3 33", "note": "Text claims BART beats GPT3 regardless of split, but in this column and leave-one-category/QG, GPT3 (33) beats BART (17).", "where": "Table 4"},
+  {"claim": "Leave-one-task (QASC QG): BART with instructions 56 vs 20 without.", "kind": "measured", "source": null, "metric": "ROUGE-L", "value": "56", "unit": "% ROUGE-L", "baseline_value": "20", "n": null, "setup": "BART-base trained on all tasks except QASC question generation", "quote": null, "table": "Table 4, column leave-one-task (QASC QG), rows NO INSTRUCTIONS 20, FULL INSTRUCTIONS 56", "note": null, "where": "Table 4"},
+  {"claim": "Per-category averages under random split: no instruction 13, prompt only 20, prompt+definition 30, full instruction 32; prompt+definition+positive examples is best at 33.", "kind": "measured", "source": null, "metric": "ROUGE-L avg", "value": "33", "unit": "% ROUGE-L", "baseline_value": "13", "n": null, "setup": "BART-base random split, averaged over 6 task categories", "quote": null, "table": "Table 5, row DEFINITION+POS. EXAMPLES, column avg (33); NO INSTRUCTION 13; FULL INSTRUCTION 32", "note": null, "where": "Table 5"},
+  {"claim": "Definition is the key element for classification: prompt+definition lifts CF from 7 (prompt only) to 50.", "kind": "measured", "source": null, "metric": "ROUGE-L CF category", "value": "50", "unit": "% ROUGE-L", "baseline_value": "7", "n": null, "setup": "BART-base random split, classification category", "quote": null, "table": "Table 5, row +DEFINITION, column CF (50) vs row PROMPT, column CF (7)", "note": null, "where": "Table 5, Sec 6.2"},
+  {"claim": "Positive examples help question generation most (QG 53-55) but do little for classification.", "kind": "measured", "source": null, "metric": "ROUGE-L QG category", "value": "55", "unit": "% ROUGE-L", "baseline_value": "26", "n": null, "setup": "BART-base random split; POS. EXAMP. alone gives QG 55, NO INSTRUCTION 26", "quote": null, "table": "Table 5, row POS. EXAMP., column QG (55); row NO INSTRUCTION column QG (26)", "note": null, "where": "Table 5, Sec 6.2"},
+  {"claim": "With instructions, generalization to unseen tasks improves as the number of seen tasks grows; with no instructions there is no tangible gain from more tasks.", "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": "Seen tasks sampled from 10 to 50; each point averaged over 5 random subsamples; 6 evaluation tasks (one per category)", "setup": "BART-base, ROUGE-L on 6 unseen tasks", "quote": "with NO-INSTRUCTION encoding there is no tangible value in observing more tasks", "table": null, "note": "Values only in Fig 2b; not stated in text.", "where": "Sec 6.3, Fig 2b"},
+  {"claim": "Task-specific BART models (trained per task) score 66 on average, versus the best generalizing model at 32, leaving a large gap.", "kind": "measured", "source": null, "metric": "ROUGE-L", "value": "66", "unit": "% ROUGE-L", "baseline_value": "32", "n": null, "setup": "BART trained separately on each task's annotated training data, loose upper bound", "quote": "66% which is considerably higher", "table": null, "note": "Text says 'Table 4' for 32; the 32 figure is in Table 4 and Table 5.", "where": "Sec 6.4"},
+  {"claim": "Removing negative examples from the full instruction hurts GPT3 a lot (44 without vs 24 with) and BART little (35 without vs 32 with, random split).", "kind": "measured", "source": null, "metric": "ROUGE-L", "value": "44", "unit": "% ROUGE-L", "baseline_value": "24", "n": null, "setup": "Full-instruction encoding with vs without negative examples, random split", "quote": "GPT3’s drop (44 vs 24) is more signiﬁcant than BART (35 vs 32)", "table": null, "note": null, "where": "Sec 6.4, Table 6"},
+  {"claim": "Independent human annotators reach over 96% accuracy on 240 instances, showing the instructions are executable by people.", "kind": "measured", "source": null, "metric": "accuracy", "value": "96", "unit": "%", "baseline_value": null, "n": "240 instances (20 from each of 12 random tasks)", "setup": "Human answers evaluated against references", "quote": "results in more than 96% accuracy", "table": null, "note": null, "where": "Sec 4.2.2"},
+  {"claim": "Raw crowdsourcing instructions (avg 2.5k tokens) give GPT3 much lower ROUGE-L than the schema encoding (950 tokens), e.g. Quoref 12.5 vs 25.8, QASC 3.7 vs 51.3.", "kind": "measured", "source": null, "metric": "ROUGE-L", "value": "51.3", "unit": "% ROUGE-L", "baseline_value": "3.7", "n": "first subtask of 4 datasets", "setup": "GPT3, QASC", "quote": null, "table": "Table 13, row our schema, column QASC (51.3); row raw instructions (3.7)", "note": null, "where": "Appendix C.1, Table 13"},
+  {"claim": "On shared tasks, GPT3 zero-shot does better with these lengthy instructions than PromptSource templates (GPT3-Instruct Quoref QA 47 vs 43).", "kind": "measured", "source": null, "metric": "ROUGE-L", "value": "47", "unit": "% ROUGE-L", "baseline_value": "43", "n": null, "setup": "Quoref QA (task 002), GPT3-Instruct zero-shot; plain GPT3 13 vs 2", "quote": null, "table": "Table 11, row Quoref QA (002) GPT3-Instruct, columns PromptSource 43 and NATURAL INSTRUCTIONS 47", "note": null, "where": "Appendix A.5, Table 11"},
+  {"claim": "Curation cost 6-34 hours per task; parsing instances is the bottleneck (0.5-24 hrs).", "kind": "measured", "source": null, "metric": "hours per task", "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "Estimated per task", "quote": null, "table": null, "note": "Main text says 5 hrs-34 hrs; Table 9 says 6-34 hrs.", "where": "Footnote 4, Table 9"},
+  {"claim": "Most frequent BART error on QASC QG is a nonsensical or vague question (47% of sampled errors).", "kind": "measured", "source": null, "metric": "% of errors", "value": "47", "unit": "%", "baseline_value": null, "n": "30 sampled erroneous predictions", "setup": "QASC question generation, error types not mutually exclusive", "quote": null, "table": "Table 8, row Generates a nonsensical/vague question, column BART", "note": null, "where": "Table 8"}
+ ],
+ "limits": [
+  "Only textual instructions, mostly QA datasets from 9 sources the authors could get; 61 tasks with 6 coarse categories, instance cap 6.5k per task.",
+  "Only BART-base (140m) is fine-tuned; GPT3 is used as-is without fine-tuning, so the BART vs GPT3 comparison mixes model size, tuning and prompt-format effects; no seeds or significance tests; optimizer, batch size, input length and hardware unspecified.",
+  "Authors concede models are far from the 66% task-specific upper bound, verification tasks show little improvement, and negative examples are surprisingly hard to learn from.",
+  "Scaling trend with number of tasks is shown only up to about 50 seen tasks and suggests, but does not prove, that scaling the task set will help.",
+  "Evaluation is by ROUGE-L only; BLEURT is said to correlate but not reported. Tasks without reliable automatic evaluation excluded from unseen set.",
+  "Data curation is manual (6-34 hrs per task), so extending the dataset is expensive. Superseded in scale by FLAN, T0 (PromptSource) and Super-NaturalInstructions."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "cross-task (task-level) generalization", "definition": "Learn a model M with M(I_t, x) = y trained on tasks T_seen and evaluated on T_unseen, with T_unseen intersect T_seen empty and no task-specific training data for unseen tasks", "where": "Sec 3, Fig 2a"},
+  {"term": "instance-level generalization", "definition": "Conventional setup: train on instances of a task and evaluate on test instances of the same task, M(x) = y", "where": "Sec 3"},
+  {"term": "instruction schema", "definition": "Title, prompt, definition, things to avoid, emphasis and caution, positive examples, negative examples, reason, suggestion", "where": "Sec 4.1, Fig 4"}
+ ],
+ "lineage": [
+  {"work": "BART: Denoising sequence-to-sequence pre-training", "year": 2019, "arxiv": null, "relation": "uses-method", "note": "Fine-tuned model (BART base)", "quote": null},
+  {"work": "Language models are few-shot learners (GPT-3)", "year": 2020, "arxiv": null, "relation": "baseline", "note": "davinci-instruct used without fine-tuning", "quote": null},
+  {"work": "Efrat and Levy, The turking test: Can language models understand instructions?", "year": 2020, "arxiv": "2010.11982", "relation": "extends", "note": "Used raw crowdsourcing instructions with no training; this work splits them into subtasks and trains for cross-task generalization", "quote": null},
+  {"work": "Weller et al., Learning from task descriptions", "year": 2020, "arxiv": null, "relation": "related", "note": "Short question-like task descriptions; theirs are shorter", "quote": null},
+  {"work": "Wei et al., Finetuned language models are zero-shot learners (FLAN)", "year": 2022, "arxiv": null, "relation": "related", "note": "Concurrent; instructions written retroactively after instances", "quote": null},
+  {"work": "Sanh et al., Multitask prompted training enables zero-shot task generalization (PromptSource/T0)", "year": 2022, "arxiv": null, "relation": "related", "note": "Concurrent; compared qualitatively and in Table 11", "quote": null},
+  {"work": "UnifiedQA (Khashabi et al.)", "year": 2020, "arxiv": null, "relation": "related", "note": "Multi-task unified encoding within seen tasks", "quote": null},
+  {"work": "Muppet (Aghajanyan et al.)", "year": 2021, "arxiv": null, "relation": "related", "note": "Multi-task pre-finetuning", "quote": null},
+  {"work": "CosmosQA, DROP, EssentialTerms, MCTACO, MultiRC, QASC, Quoref, ROPES, Winogrande", "year": null, "arxiv": null, "relation": "uses-data", "note": "Source crowdsourcing templates and instances", "quote": null},
+  {"work": "Lin, ROUGE", "year": 2004, "arxiv": null, "relation": "uses-method", "note": "Evaluation metric", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 1", "caption": "We construct the NATURAL INSTRUCTIONS dataset from crowdsourcing instructions and instances of different NLP datasets. We study if models can learn from seen tasks and generalize to unseen tasks given their natural crowdsourcing instructions.", "page": 1, "why": "Shows the seen/unseen task setup at a glance"},
+  {"figure": "Fig 2", "caption": "The formal definition of generalization to unseen tasks (a) and a summary of its empirical outcome (b).", "page": 2, "why": "(a) contrasts instance-level and task-level generalization; (b) plots ROUGE-L vs number of seen tasks with and without instructions"},
+  {"figure": "Fig 3", "caption": "An example from our dataset. Note that it follows the schema provided in Fig.4.", "page": 3, "why": "Concrete instruction with positive and negative examples"},
+  {"figure": "Fig 4", "caption": "The schema used for representing instruction in NATURAL INSTRUCTIONS (4.1), shown in plate notation.", "page": 4, "why": "The instruction schema"},
+  {"figure": "Fig 5", "caption": "Encoding instruction It, where Ic t refers to the text of a component c in the instruction schema.", "page": 5, "why": "How the instruction is serialized into the model input"},
+  {"figure": "Table 5", "caption": "Cross-task generalization under random split (5.1). Models show improved results when provided with instructions.", "page": 8, "why": "Per-category effect of each instruction element"}
+ ],
+ "code": [],
+ "problems": [
+  "Text extraction has ligature characters and garbled symbols in math; figure and table values were read from the extracted text in column order.",
+  "Fig 2b values are not in the text.",
+  "Abstract and Sec 6.1 call the gain 19% but it is 19 ROUGE-L points (13 to 32).",
+  "No embedded instructions found in the PDF."
+ ]
+}

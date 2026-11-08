@@ -34,6 +34,7 @@ sources:
   - https://arxiv.org/abs/2609.16487
   - https://arxiv.org/abs/2304.03279
   - https://arxiv.org/abs/2412.04494
+  - https://arxiv.org/abs/2302.10329
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -41,7 +42,7 @@ cleaned: 2026-11-01
 
 > An agent's output is a path, not just an answer. Grade the outcome *and* the trajectory, run every task several times, and evaluate each component (router, tools, final answer) on its own as well as end to end.
 
-An agent tells a customer "I've issued your refund", the answer-quality judge gives it full marks, and no refund exists. On another ticket it reaches the right result after calling a paid API 40 times. Grading the final text misses both, and one run per task can't tell a reliable agent from a lucky one. This chapter grades the end state and the path, runs every task several times, and tracks what each success costs.
+An agent tells a customer "I've issued your refund", the answer-quality judge gives it full marks, and no refund exists. On another ticket it reaches the right result after calling a paid API 40 times. Grading the final text misses both, and one run per task can't tell a reliable agent from a lucky one. This chapter grades the end state and the path, runs every task several times, and tracks what each success costs. "Agent" is a matter of degree, not a switch. Chan et al. name four traits that raise a system's agency, especially in combination: underspecified goals, direct impact on the world, goal-directedness and long-term planning ([arXiv:2302.10329](https://arxiv.org/abs/2302.10329) (Chan et al., FAccT 2023); a position paper with no experiments). The more of them a system has, the less a final-answer check can stand in for grading the path.
 
 ---
 

@@ -1,0 +1,485 @@
+{
+ "schema": 1,
+ "key": "1704.04683",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/lai-2017-race.pdf",
+ "bib": {
+  "title": "RACE: Large-scale ReAding Comprehension Dataset From Examinations",
+  "authors": [
+   "Guokun Lai",
+   "Qizhe Xie",
+   "Hanxiao Liu",
+   "Yiming Yang",
+   "Eduard Hovy"
+  ],
+  "first_author": "Lai",
+  "year": 2017,
+  "venue": "EMNLP 2017",
+  "arxiv": "1704.04683",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 37477,
+  "chars_total": 37477,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "benchmark",
+ "question": "Can a large multiple-choice reading comprehension dataset written by human experts for school exams be built that needs more reasoning than existing datasets and separates machines from humans?",
+ "hypothesis": "Existing datasets (cloze, span-based) are solvable by matching and are noisy; an exam-derived dataset with free-form options will be harder and show a large machine-human gap.",
+ "contributions": [
+  "RACE: 27,933 passages and 97,687 expert-written four-option questions from Chinese middle and high school English exams",
+  "Annotation of reasoning types showing 59.2% of questions need single- or multi-sentence reasoning",
+  "Baselines (sliding window, Stanford AR, Gated-Attention Reader) vs. Turker and ceiling human performance"
+ ],
+ "method": {
+  "summary": "Raw exam reading problems were scraped from three Chinese public websites and filtered to 27,933 passages and 97,687 four-option questions. Question reasoning types were labelled by Mechanical Turk on 500 questions. Three baselines were trained on RACE-M plus RACE-H and compared with Turkers and a human ceiling.",
+  "task": "multiple-choice reading comprehension (4 options)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "RACE (RACE-M + RACE-H)",
+    "role": "both",
+    "size": "27,933 passages, 97,687 questions",
+    "split": "Train 25,137 passages / 87,866 questions; Dev 1,389 / 4,887; Test 1,407 / 4,934 (5% dev, 5% test for each of RACE-M and RACE-H)",
+    "source": "English exams by teachers in China, scraped from 21cnjy.com, 5utk.ks5u.com, zujuan.xkw.com; raw 137,918 passages and 519,878 questions (middle 38,159 / 156,782; high 99,759 / 363,096)",
+    "preprocessing": "removed questions not having four options; removed items with images or tables; removed questions with keywords 'underlined' or 'paragraph'; removed duplicate articles; for xkw.com answers stored as images, OCR with tesseract and ABBYY FineReader, dropped answers where the two disagreed"
+   },
+   {
+    "name": "RACE-M",
+    "role": "both",
+    "size": "6,409 train / 368 dev / 362 test passages; 25,421 / 1,436 / 1,436 questions",
+    "split": "middle school (age 12-15)",
+    "source": "as above",
+    "preprocessing": null
+   },
+   {
+    "name": "RACE-H",
+    "role": "both",
+    "size": "18,728 train / 1,021 dev / 1,045 test passages; 62,445 / 3,451 / 3,498 questions",
+    "split": "high school (age 15-18)",
+    "source": "as above",
+    "preprocessing": null
+   },
+   {
+    "name": "Reasoning-type annotation sample",
+    "role": "eval",
+    "size": "100 passages (50 RACE-M, 50 RACE-H), 500 questions, 1000 labels",
+    "split": "sample (the paper later calls it a randomly sampled subset of the test set)",
+    "source": "Amazon Mechanical Turk, master turkers only, two labels per question, $0.70 per RACE-M passage and $1.00 per RACE-H passage",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Sliding Window",
+    "role": "baseline",
+    "params": null,
+    "architecture": "rule-based TF-IDF-style matching of question+answer against text windows (Richardson et al. 2013)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "window size": "chosen by performance on train and dev sets; value not stated"
+    }
+   },
+   {
+    "name": "Stanford Attentive Reader",
+    "role": "baseline",
+    "params": null,
+    "architecture": "bidirectional GRU encoders for passage, question and options, bilinear attention",
+    "init_from": "100-d GloVe embeddings",
+    "tokenizer": null,
+    "vocab": "50k",
+    "layers": "1",
+    "hidden": "128",
+    "heads": null,
+    "context": null,
+    "other": {
+     "embedding size": "100"
+    }
+   },
+   {
+    "name": "Gated-Attention Reader (GA)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "multi-hop gated attention reader; Attention Sum layer not applied at final layer; no character-level embeddings",
+    "init_from": "100-d GloVe embeddings",
+    "tokenizer": null,
+    "vocab": "50k",
+    "layers": "1",
+    "hidden": "128",
+    "heads": null,
+    "context": null,
+    "other": {
+     "embedding size": "100"
+    }
+   }
+  ],
+  "training": {
+   "objective": "inferred: cross-entropy over softmax of four option scores (Eq. 2); loss not named",
+   "optimizer": "vanilla SGD",
+   "lr": "0.1 for Stanford AR, 0.3 for GA (grid {0.05, 0.1, 0.3, 0.5})",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": "0.5 on word embeddings (grid {0.2, 0.5, 0.7})",
+   "regularisation": "gradient clipped when norm larger than 10",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "init": "GRU weights N(0, 0.1); other parameters uniform (-0.01, 0.01)",
+    "data": "RACE-M and RACE-H used together to train, tested separately",
+    "selection": "grid search on validation set"
+   }
+  },
+  "inference": {
+   "decoding": "argmax over softmax of option scores",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "accuracy",
+     "definition": "fraction of questions answered correctly",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "ceiling human performance",
+     "definition": "share of questions that are valid (unambiguous and having a correct answer), labelled manually",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Random",
+    "Sliding Window",
+    "Stanford AR",
+    "GA",
+    "Turkers",
+    "Ceiling performance"
+   ],
+   "protocol": "Single run per model; no seeds or significance test stated. Turker accuracy on 500 sampled questions. Comparison datasets (MCTest, CNN/DM, CBT, WDW) numbers taken from prior publications."
+  },
+  "availability": {
+   "code": "https://github.com/qizhex/RACE_AR_baselines",
+   "weights": null,
+   "data": "http://www.cs.cmu.edu/~glai1/data/race/"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.lr",
+    "quote": "learning rate to 0.1 for Stanford AR and 0.3 for GA and dropout rate to 0.5",
+    "where": "Sec 5.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "RACE has 27,933 passages and 97,687 questions.",
+   "kind": "measured",
+   "source": null,
+   "metric": "questions",
+   "value": "97,687",
+   "unit": "questions",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Full RACE after filtering of 519,878 raw questions",
+   "quote": "Finally, we get the cleaned dataset RACE, with 27,933 passages and 97,687 questions.",
+   "table": null,
+   "note": null,
+   "where": "Sec 4"
+  },
+  {
+   "claim": "Stanford Attentive Reader reaches 43.3% accuracy on RACE.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "43.3",
+   "unit": "%",
+   "baseline_value": "24.9 (random)",
+   "n": 4934,
+   "setup": "Trained on RACE-M+RACE-H train, tested on RACE test, GloVe-100, hidden 128, 1 layer, SGD lr 0.1",
+   "quote": "The Stanford AR and Gated AR achieve an accuracy of only 43.3% and 44.1% on RACE",
+   "table": "Table 5, row Stanford AR, column RACE",
+   "note": null,
+   "where": "Sec 5.3"
+  },
+  {
+   "claim": "Gated-Attention Reader reaches 44.1% accuracy on RACE, the best model result.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "44.1",
+   "unit": "%",
+   "baseline_value": "24.9 (random)",
+   "n": 4934,
+   "setup": "Same setup, SGD lr 0.3, dropout 0.5",
+   "quote": "The Stanford AR and Gated AR achieve an accuracy of only 43.3% and 44.1% on RACE",
+   "table": "Table 5, row GA, column RACE",
+   "note": "Abstract rounds state of the art to 43%",
+   "where": "Sec 5.3"
+  },
+  {
+   "claim": "Ceiling human performance on RACE is 94.5% (share of valid questions).",
+   "kind": "measured",
+   "source": null,
+   "metric": "ceiling accuracy",
+   "value": "94.5",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Authors manually labelled the proportion of valid (unambiguous, correct-answer) questions; sample size for this check not stated",
+   "quote": "We found that 94.5% of the data is valid, which sets the ceiling human performance.",
+   "table": null,
+   "note": "RACE-M 95.4, RACE-H 94.2",
+   "where": "Sec 5.2"
+  },
+  {
+   "claim": "Mechanical Turkers score 73.3% on RACE overall (85.1 RACE-M, 69.4 RACE-H).",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "73.3",
+   "unit": "%",
+   "baseline_value": null,
+   "n": 500,
+   "setup": "500 sampled questions, half RACE-M and half RACE-H, master turkers",
+   "quote": "The turkers’ performance is 85% for RACE-M and 70% for RACE-H.",
+   "table": "Table 5, row Turkers, column RACE",
+   "note": "Text rounds to 85% and 70%; Table 5 prints 85.1, 69.4, 73.3",
+   "where": "Sec 5.2, Table 5"
+  },
+  {
+   "claim": "59.2% of RACE questions need single- or multi-sentence reasoning, vs 21% CNN, 20.5% SQuAD, 33.9% NewsQA.",
+   "kind": "measured",
+   "source": null,
+   "metric": "reasoning share",
+   "value": "59.2",
+   "unit": "%",
+   "baseline_value": "20.5 (SQuAD)",
+   "n": 500,
+   "setup": "500 questions labelled by two Turkers each; CNN, SQuAD, NewsQA figures from Chen et al. 2016 and Trischler et al. 2016",
+   "quote": "Specifically, 59.2% questions of RACE are either in the category of single-sentence reasoning or in the category of multi-sentence reasoning",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.2"
+  },
+  {
+   "claim": "Only 15.8% of RACE questions are word-matching, the lowest among categories.",
+   "kind": "measured",
+   "source": null,
+   "metric": "word matching share",
+   "value": "15.8",
+   "unit": "%",
+   "baseline_value": "39.8 (SQuAD)",
+   "n": 500,
+   "setup": "Same 500-question annotation",
+   "quote": "Also notice that the ratio of word matching questions on RACE is only 15.8%",
+   "table": "Table 4, row Word Matching, column RACE",
+   "note": null,
+   "where": "Sec 3.2"
+  },
+  {
+   "claim": "Sliding window scores 37.3% on RACE-M and 30.4% on RACE-H, 32.2% on RACE, versus 51.5% on MCTest.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "32.2",
+   "unit": "%",
+   "baseline_value": "24.9 (random)",
+   "n": 4934,
+   "setup": "Rule-based baseline; MCTest 51.5 quoted from Richardson et al. 2013",
+   "quote": "Sliding Window achieves an accuracy of 51.5% on MCTest while only 37.3% on RACE",
+   "table": "Table 5, row Sliding Window, column RACE",
+   "note": "Text says 37.3% on RACE but that is the RACE-M cell; RACE overall is 32.2",
+   "where": "Sec 5.3"
+  },
+  {
+   "claim": "Sliding window beats random by 28.6% on RACE vs 58.5%, 92.2%, 50% on CBT-N, CBT-C, WDW, so RACE is less solvable by matching.",
+   "kind": "measured",
+   "source": null,
+   "metric": "improvement over random",
+   "value": "28.6",
+   "unit": "%",
+   "baseline_value": "58.5 (CBT-N)",
+   "n": null,
+   "setup": "Other datasets use prior-publication numbers",
+   "quote": "On RACE, Sliding Window is 28.6% better than the random baseline",
+   "table": null,
+   "note": "Ten options on CBT, about three on WDW, so not directly comparable",
+   "where": "Sec 5.3"
+  },
+  {
+   "claim": "Gap between best model and Turkers is 41% on RACE-M and 25% on RACE-H.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy gap",
+   "value": "41",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Turker minus best model",
+   "quote": "The performance gap is 41% for the middle school problems and 25% for the high school problems.",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.3"
+  }
+ ],
+ "limits": [
+  "Vocabulary and language constructs are simpler than news or Wikipedia because passages target foreign-language learners (Sec 3.1).",
+  "Turker accuracy is below the ceiling because carelessness cannot be enforced; ceiling is a validity rate, not measured human accuracy, and its sample size is not stated.",
+  "Reasoning-type analysis rests on only 500 questions (100 passages).",
+  "Baselines are 2016-era single-layer recurrent readers; no seeds, no variance, no batch size or epochs.",
+  "Stanford AR underperforms on word-matching questions; authors offer speculative explanations (Sec 5.4).",
+  "Datasets scraped from public Chinese websites; copyright of exam items not discussed beyond excluding SSAT, SAT, TOEFL, GRE examples.",
+  "Dated: later pretrained models far exceed these baselines; the 43% state of the art reflects 2017 models."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "RACE-M / RACE-H",
+   "definition": "RACE-M denotes the middle school examinations and RACE-H denotes high school examinations",
+   "where": "Sec 3.1"
+  },
+  {
+   "term": "Ceiling performance",
+   "definition": "proportion of valid questions, where a question is valid if it is unambiguous and has a correct answer",
+   "where": "Sec 5.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "MCTest (Richardson et al.)",
+   "year": 2013,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "same four-option format; RACE is a larger, harder version; sliding window baseline from it",
+   "quote": "RACE can be viewed as a larger and more difﬁcult version of the MCTest dataset."
+  },
+  {
+   "work": "A thorough examination of the CNN/Daily Mail reading comprehension task (Chen et al.)",
+   "year": 2016,
+   "arxiv": "1606.02858",
+   "relation": "baseline",
+   "note": "Stanford Attentive Reader, experiment settings and reasoning taxonomy",
+   "quote": null
+  },
+  {
+   "work": "Gated-attention readers for text comprehension (Dhingra et al.)",
+   "year": 2016,
+   "arxiv": "1606.01549",
+   "relation": "baseline",
+   "note": "GA reader",
+   "quote": null
+  },
+  {
+   "work": "NewsQA (Trischler et al.)",
+   "year": 2016,
+   "arxiv": "1611.09830",
+   "relation": "related",
+   "note": "reasoning type taxonomy and statistics",
+   "quote": null
+  },
+  {
+   "work": "SQuAD (Rajpurkar et al.)",
+   "year": 2016,
+   "arxiv": "1606.05250",
+   "relation": "related",
+   "note": "span-based comparison dataset",
+   "quote": null
+  },
+  {
+   "work": "CNN/Daily Mail (Hermann et al.)",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "related",
+   "note": "cloze comparison",
+   "quote": null
+  },
+  {
+   "work": "Children's Book Test (Hill et al.)",
+   "year": 2015,
+   "arxiv": "1511.02301",
+   "relation": "related",
+   "note": "cloze comparison",
+   "quote": null
+  },
+  {
+   "work": "Who Did What (Onishi et al.)",
+   "year": 2016,
+   "arxiv": "1608.05457",
+   "relation": "related",
+   "note": "cloze comparison",
+   "quote": null
+  },
+  {
+   "work": "GloVe (Pennington et al.)",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "embedding init",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Table 1",
+   "caption": "Sample reading comprehension problems from our dataset.",
+   "page": 3,
+   "why": "Shows a passage with five questions whose options are free text, not spans"
+  },
+  {
+   "figure": "Table 4",
+   "caption": "Statistic information about Reasoning type in different datasets.",
+   "page": 5,
+   "why": "Reasoning-type share across RACE, CNN, SQuAD, NewsQA"
+  },
+  {
+   "figure": "Table 5",
+   "caption": "Accuracy of models and human on the each dataset",
+   "page": 6,
+   "why": "Gap between models (about 44%), Turkers and ceiling"
+  },
+  {
+   "figure": "Fig 1",
+   "caption": "Test accuracy of different baselines on each reasoning type category introduced in Section 3.2",
+   "page": 7,
+   "why": "Accuracy by reasoning type for sliding window, Stanford AR and Turkers (bar charts, values only in figure)"
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 5.1 Eq 1-2",
+   "snippet": "alpha_i = Softmax_i((h^p_i)^T W1 h^q); s^p = sum_i alpha_i h^p_i; p_i = Softmax_i(h^{o_i} W2 s_d)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Eq. 2 in the text uses s_d where s^p is defined; likely a typo in the paper.",
+  "Table 5 flattened by text extraction; cells matched by order.",
+  "No embedded instructions found."
+ ]
+}

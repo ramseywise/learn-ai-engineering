@@ -37,6 +37,10 @@ sources:
   - https://arxiv.org/abs/2607.19322
   - https://arxiv.org/abs/2211.09110
   - https://arxiv.org/abs/1906.04908
+  - https://arxiv.org/abs/2106.11520
+  - https://arxiv.org/abs/2302.06476
+  - https://arxiv.org/abs/2212.07919
+  - https://arxiv.org/abs/2005.00661
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -131,6 +135,10 @@ Model-based metrics close part of the gap. **BERTScore** matches each token to i
 
 ![BERTScore recall: contextual embeddings of reference and candidate, pairwise cosine similarity, greedy maximum per reference token, optional idf weighting](../sources/images/zhang-2019-bertscore-fig1.png)
 *Image Source: Zhang et al., [BERTScore: Evaluating Text Generation with BERT](https://arxiv.org/abs/1904.09675) (ICLR 2020), Fig. 1*
+
+**BARTScore** treats scoring as generation: the average log-likelihood of the hypothesis given the source (faithfulness) or the reference (precision, recall, F), under a BART model, with no extra training. Fine-tuned on CNN/DM, it reached **0.836 accuracy on the Rank19 factuality ranking, against 0.839 for human annotators**, and beat existing metrics in 16 of 22 test settings (16 datasets, 7 quality aspects). On QAGS-XSum its Pearson was only 0.184 (the QAGS metric: 0.175) ([arXiv:2106.11520](https://arxiv.org/abs/2106.11520) (Yuan et al., NeurIPS 2021)). It is still a likelihood under one model, so it inherits that model's blind spots. Length is another: ChatGPT's SAMSum summaries averaged 36.6 words against 23.3 for GPT-3.5 and 20.0 for the references, and scored a lower ROUGE-1 (42.4 against 44.0; fine-tuned CODA 50.1; zero-shot, "TL;DR:" prompt) ([arXiv:2302.06476](https://arxiv.org/abs/2302.06476) (Qin et al., EMNLP 2023)); a reference-matching metric rewards the reference's length and style, which zero-shot output does not copy. For hallucination, entailment tracked human faithfulness judgments better than either ROUGE-1 or BERTScore (Spearman 0.431 against 0.197 and 0.190, [arXiv:2005.00661](https://arxiv.org/abs/2005.00661) (Maynez et al., ACL 2020); [07](07-evaluating-rag-and-grounding.md#faithfulness-claim-by-claim)).
+
+A reasoning chain has no single reference, so ROSCOE scores its steps for semantic alignment, consistency, logic and fluency without one. On EntailmentBank's synthetically perturbed chains its semantic-similarity group (ROSCOE-SS) reached Somers' D **0.955 against 0.453 for the best baseline (PRISM)**; fixed score thresholds did not transfer across datasets, so calibrate them per dataset ([arXiv:2212.07919](https://arxiv.org/abs/2212.07919) (Golovneva et al., ICLR 2023)). On human-judged chains the gap narrowed or flipped by dataset (ROSCOE-SA on ESNLI: 0.799 with off-the-shelf embeddings against 0.521 fine-tuned; the largest gap in the table, so not typical), and BARTScore correlated negatively on GSM8K (-0.546) ([arXiv:2212.07919](https://arxiv.org/abs/2212.07919)).
 
 Dialog has too many right answers for any reference. USR drops it: RoBERTa models fine-tuned on the dialog corpus score naturalness (masked-LM likelihood of the reply) and fit to the context (a classifier that tells the true reply from a random one), and a regression combines them. On 360 Topical-Chat replies from 60 contexts, its turn-level Spearman with overall-quality ratings was **0.42, against 0.34 for METEOR, 0.32 for BERTScore and 0.22 for BLEU-4**. Its system-level 1.0 rests on only five and four response sources, and the authors say to use it for tuning and model selection alongside human evaluation, not to claim one system beats another ([arXiv:2005.00456](https://arxiv.org/abs/2005.00456) (Mehri & Eskenazi, ACL 2020)).
 

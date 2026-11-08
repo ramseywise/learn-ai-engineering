@@ -23,54 +23,62 @@
   ],
   "first_author": "Chen",
   "year": 2024,
-  "venue": "preprint (arXiv v3, 15 Jan 2024)",
+  "venue": "preprint (arXiv v3, 15 Jan 2024; the PDF prints no venue)",
   "arxiv": "2312.14238",
   "doi": null
  },
  "read": {
   "by": "source-reader",
   "at": "2026-11-08",
-  "chars_read": 69400,
+  "chars_read": 127817,
   "chars_total": 127817,
   "engine": "pymupdf",
-  "skipped": "Dataset description tables 24-28 and references (offset ~69400 onward) not read line by line; only data-prep prose before them was read."
+  "skipped": "Reference list lines after [123] skimmed only; body, tables and all appendices read."
  },
  "type": "empirical",
- "question": "Can a vision encoder scaled to 6B parameters, progressively aligned with an LLM-initialised middleware, serve both contrastive and generative vision-language tasks?",
- "hypothesis": "Scaling the vision encoder to match LLM scale and aligning its representation with an LLM (rather than a light glue layer) gives better visual and vision-language performance.",
+ "question": "Can a vision encoder scaled to 6B parameters, progressively aligned with an LLM-initialised language middleware on web-scale image-text data, serve both contrastive and generative vision-language tasks?",
+ "hypothesis": "Scaling the vision encoder to match LLM scale and aligning it with an LLM-initialised middleware (contrastive first, generative later) closes the parameter and representation gap that lightweight glue layers leave.",
  "contributions": [
-  "A large-scale vision-language foundation model aligning a 6B vision encoder with LLMs",
-  "A progressive image-text alignment strategy (contrastive on noisy data, then generative on cleaned data)",
-  "Extensive comparison with SoTA vision foundation models and VLLMs"
+  "A large-scale vision-language foundation model aligning a 6B vision encoder with LLMs for the first time",
+  "A progressive image-text alignment strategy: contrastive on noisy web data, then generative on filtered data",
+  "Extensive comparison with state-of-the-art vision foundation models and VLLMs on 32 benchmarks"
  ],
  "method": {
-  "summary": "InternViT-6B (vanilla ViT, patch 14) is trained contrastively against a multilingual LLaMA-7B text encoder (stage 1), then frozen and joined to QLLaMA (LLaMA-7B plus 96 learnable queries and cross-attention, 8B total) with ITC+ITM+ITG losses (stage 2), then connected to Vicuna/InternLM through an MLP for SFT (stage 3). Images are fixed-square resized (224 pretraining, 336 for chat SFT), not tiled.",
-  "task": "vision-language pretraining and alignment",
+  "summary": "InternViT-6B (vanilla ViT, 5.9B) plus QLLaMA (8B, multilingual LLaMA-7B with 96 queries and 1B new cross-attention params). Stage 1 contrastive training from scratch on 4.98B pairs, stage 2 generative training of only the new queries and cross-attention on 1.03B pairs, stage 3 SFT on ~4M instruction samples connecting to Vicuna or InternLM through an MLP.",
+  "task": "vision-language foundation model pretraining; zero-shot classification, retrieval, captioning, multimodal dialogue",
   "trains": true,
   "datasets": [
    {
-    "name": "Stage 1 web image-text pairs (LAION-en, LAION-multi, LAION-COCO, COYO, Wukong, CC12M, CC3M, SBU)",
+    "name": "Stage 1/2 web image-text pairs (LAION-en, LAION-multi, LAION-COCO, COYO, Wukong, CC12M, CC3M, SBU)",
     "role": "pretrain",
-    "size": "6.03B original, 4.98B after cleaning",
+    "size": "6.03B original; 4.98B after stage-1 cleaning (82.6%); 1.03B after stage-2 cleaning (17.0%)",
     "split": null,
-    "source": "public",
-    "preprocessing": "filter on CLIP similarity, watermark prob, unsafe prob, aesthetic score, image resolution, caption length; dedup against ImageNet-1K/22K, Flickr30K, COCO"
+    "source": "public web datasets",
+    "preprocessing": "Stage 1: minor filtering on CLIP similarity, watermark probability, unsafe probability, aesthetic score, image resolution, caption length; deduplicated against ImageNet-1K/22K, Flickr30K, COCO. Stage 2: caption filtering on length, completeness, readability, gibberish/boilerplate, offensive language, placeholder text, source code."
    },
    {
-    "name": "Stage 2 filtered subset",
-    "role": "pretrain",
-    "size": "1.03B",
-    "split": null,
-    "source": "same",
-    "preprocessing": "caption filter: length, completeness, readability, gibberish, boilerplate, offensive, placeholder, source code"
-   },
-   {
-    "name": "Stage 3 SFT mix (captioning 588K, VQA 1.1M, OCR 294K, grounding 323K, grounded cap 284K, conversation 1.4M)",
+    "name": "Stage 3 SFT mix",
     "role": "train",
-    "size": "approximately 4 million samples",
+    "size": "~4M samples: captioning 588K, VQA 1.1M, OCR 294K, grounding 323K, grounded captioning 284K, conversation 1.4M",
     "split": "training splits only",
-    "source": "COCO Caption, TextCaps, VQAv2, DocVQA, ChartQA, LLaVA-Mix-665K etc.",
-    "preprocessing": "non-dialogue converted following LLaVA-1.5"
+    "source": "COCO Caption, TextCaps, VQAv2, OKVQA, A-OKVQA, IconQA, AI2D, GQA, OCR-VQA, ChartQA, DocVQA, ST-VQA, EST-VQA, InfoVQA, LLaVAR (20K), RefCOCO/+/g, Toloka, LLaVA-150K, SVIT, VisDial, LRV-Instruction, LLaVA-Mix-665K",
+    "preprocessing": "converted to dialogue with LLaVA-1.5 response-format prompts"
+   },
+   {
+    "name": "LLaVA recipe data (InternVL-Chat w/o QLLaMA)",
+    "role": "train",
+    "size": "LGS-558K then LLaVA-Mix-665K",
+    "split": null,
+    "source": "LLaVA-1.5",
+    "preprocessing": null
+   },
+   {
+    "name": "Evaluation sets",
+    "role": "eval",
+    "size": "ImageNet-1K and variants, ObjectNet, 20 other classification sets, Kinetics 400/600/700, Flickr30K, COCO, Flickr30K-CN, COCO-CN, XTD, MSR-VTT, NoCaps, ADE20K, VQAv2, GQA, VizWiz, TextVQA, MME, POPE, Tiny LVLM",
+    "split": "Karpathy test for COCO/Flickr30K captioning; NoCaps val; VQAv2/VizWiz test-dev; GQA test-balanced; TextVQA val; ADE20K val",
+    "source": "public",
+    "preprocessing": "Birdsnap: only 1,845 of 2,443 test images downloadable"
    }
   ],
   "models": [
@@ -82,22 +90,22 @@
     "init_from": "random (BEiT init)",
     "tokenizer": null,
     "vocab": null,
-    "layers": "48",
-    "hidden": "3200",
-    "heads": "25",
+    "layers": 48,
+    "hidden": 3200,
+    "heads": 25,
     "context": null,
     "other": {
-     "MLP": 12800,
-     "input res": "224x224 (196x196 with 50% token masking early in stage 1)",
-     "pos": "inferred: feature map H/14 x W/14"
+     "mlp_dim": 12800,
+     "flops_224": "1536 GFLOPs",
+     "chosen": "variant 3 of 6 shortlisted from 16"
     }
    },
    {
     "name": "QLLaMA",
     "role": "proposed",
-    "params": "8B (1B new cross-attn/queries)",
-    "architecture": "multilingual LLaMA-7B + 96 learnable queries + cross-attention",
-    "init_from": "multilingual LLaMA-7B (Cui et al.)",
+    "params": "8B (incl. 1B new cross-attention)",
+    "architecture": "multilingual LLaMA-7B + 96 learnable queries + cross-attention layers",
+    "init_from": "Cui et al. 2023 Chinese LLaMA/Alpaca multilingual LLaMA-7B",
     "tokenizer": null,
     "vocab": null,
     "layers": null,
@@ -110,7 +118,7 @@
     "name": "Vicuna-7B/13B, InternLM-7B",
     "role": "base",
     "params": "7B/13B",
-    "architecture": "LLM decoder",
+    "architecture": "LLM decoders",
     "init_from": "pretrained",
     "tokenizer": null,
     "vocab": null,
@@ -119,34 +127,49 @@
     "heads": null,
     "context": null,
     "other": {
-     "frozen in some SFT configs": true
+     "note": "frozen LLM decoder in the QLLaMA configuration; MLP and QLLaMA trained"
     }
+   },
+   {
+    "name": "ViT-22B, OpenCLIP-G, EVA-02-CLIP-E+, BLIP-2, InstructBLIP, LLaVA-1.5, Qwen-VL and others",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
    }
   ],
   "training": {
-   "objective": "stage 1 symmetric CLIP contrastive loss; stage 2 ITC+ITM+ITG (BLIP-2); stage 3 next-token generative loss",
-   "optimizer": "AdamW",
-   "lr": "stage 1 peak 1e-3 image / 1e-4 text; stage 2 5e-5 cross-attn",
-   "lr_schedule": "cosine decay",
-   "warmup": "5K iters stage 1; 2K stage 2",
-   "batch_size": "164K stage 1; 20K stage 2; 512 stage 3 with QLLaMA",
-   "steps": "175K stage 1; 80K stage 2",
-   "epochs": "1 epoch each for InternVL-Chat w/o QLLaMA stages",
-   "tokens": null,
+   "objective": "Stage 1: CLIP symmetric cross-entropy contrastive loss. Stage 2: sum of ITC + ITM + ITG (BLIP-2 style). Stage 3: generative (SFT) loss",
+   "optimizer": "AdamW; stage 1 betas 0.9/0.95; stage 2 betas 0.9/0.98; retrieval FT and ADE20K betas 0.9/0.999; linear probe SGD momentum 0.9",
+   "lr": "stage 1 peak 1e-3 (image enc) and 1e-4 (text enc); stage 2 cross-attn 5e-5 with encoders frozen; retrieval FT 1e-6; ImageNet linear probe 0.2; ADE20K 4e-5",
+   "lr_schedule": "cosine decay (polynomial decay for ADE20K)",
+   "warmup": "stage 1: 5K iterations; stage 2: 2K; retrieval FT: 100; linear probe: 1 epoch; ADE20K: 1.5K",
+   "batch_size": "stage 1: 164K; stage 2: 20K; stage 3 QLLaMA config: 512; retrieval FT: 1024; linear probe: 1024; ADE20K: 16",
+   "steps": "stage 1: 175K iterations; stage 2: 80K; ADE20K: 80K",
+   "epochs": "stage 3 LLaVA recipe: 1 epoch per step; retrieval FT: 10; linear probe: 10",
+   "tokens": "samples seen: stage 1 28.7B, stage 2 1.6B",
    "seq_len": null,
    "precision": "DeepSpeed bf16",
-   "weight_decay": "0.1 stage 1; 0.05 stage 2",
-   "dropout": "drop path 0.2 stage 1, 0.0 stage 2",
-   "regularisation": "random resized crop",
-   "hardware": "640x A100 80G stage 1; 160x A100 80G stage 2; 32x A100 retrieval FT",
+   "weight_decay": "stage 1 0.1; stage 2 0.05; retrieval FT 0.05; linear probe 0.0; ADE20K 0.0/0.05/0.05",
+   "dropout": null,
+   "regularisation": "drop path: stage 1 uniform 0.2, stage 2 0.0, retrieval FT 0.3, ADE20K full tuning 0.4; layer-wise lr decay 0.9 in retrieval FT (0.95 ADE20K full tuning); random resized crop; stage 1 masks 50% of image tokens at 196x196",
+   "hardware": "stage 1: 640x A100 (80G); stage 2: 160x A100 (80G); retrieval FT: 32x A100; linear probe and ADE20K: 8x A100",
    "compute": null,
    "wall_clock": null,
    "seeds": null,
    "other": {
-    "samples seen": "28.7B stage 1, 1.6B stage 2",
-    "betas": "0.9,0.95 stage 1; 0.9,0.98 stage 2",
-    "input resolution": "196->224 stage 1, 224 stage 2, 336 chat SFT w/o QLLaMA, 364 retrieval FT, 504 segmentation",
-    "stage 3 trainable": "MLP only, or MLP + QLLaMA; LLM frozen in InternVL-Chat w/ QLLaMA (inferred from 'freezing the LLM decoder' option)"
+    "input_resolution": "stage 1: 196x196 (50% token masking) then 224x224 unmasked for the final 0.5B samples; stage 2: 224x224; retrieval FT 364x364; ADE20K 504x504",
+    "trainable_params": "stage 1 13B/13B; stage 2 1B/14B; retrieval FT 14B/14B",
+    "stage3": "InternVL-Chat w/o QLLaMA: train MLP on LGS-558K then LLM on LLaVA-Mix-665K, one epoch each; w/ QLLaMA: MLP first then LLM on custom 4M SFT, batch 512; LLM decoder can stay frozen",
+    "linear_probe": "extra BatchNorm on frozen features; average-pooled patch tokens concatenated with class token",
+    "throughput_note": "no GPU-hours or total FLOPs of training given"
    }
   },
   "inference": {
@@ -154,326 +177,492 @@
    "temperature": null,
    "top_p": null,
    "max_tokens": null,
-   "samples": null,
-   "prompting": null,
+   "samples": "single run; no seeds reported",
+   "prompting": "LLaVA-1.5 response-format prompts, e.g. 'Answer the question using a single word or phrase.' and 'Provide a one-sentence caption for the provided image.'",
    "retrieval": null,
-   "parameters": {
-    "video": "1 centre frame or 8 uniformly sampled frames, embeddings averaged"
-   },
-   "other": {}
+   "parameters": {},
+   "other": {
+    "video": "Kinetics: 1 center frame or 8 uniformly sampled frames; MSR-VTT 8 frames encoded independently and embeddings averaged",
+    "efficiency_test": "batch 128, single A100, Flash Attention, bf16, PyTorch"
+   }
   },
   "eval": {
    "metrics": [
     {
      "name": "top-1 accuracy",
-     "definition": "ImageNet linear probe / zero-shot",
-     "unit": "%",
-     "higher_is_better": true
-    },
-    {
-     "name": "mIoU",
-     "definition": "ADE20K",
+     "definition": "ImageNet-style classification; for Kinetics also avg = mean of top-1 and top-5",
      "unit": "%",
      "higher_is_better": true
     },
     {
      "name": "Recall@K",
-     "definition": "retrieval",
+     "definition": "image-text and video-text retrieval",
      "unit": "%",
      "higher_is_better": true
     },
     {
-     "name": "CIDEr",
-     "definition": "captioning",
-     "unit": "points",
-     "higher_is_better": true
-    },
-    {
-     "name": "MME",
-     "definition": "perception+cognition score",
-     "unit": "points",
-     "higher_is_better": true
-    },
-    {
-     "name": "POPE",
-     "definition": "object hallucination",
+     "name": "mIoU",
+     "definition": "ADE20K semantic segmentation",
      "unit": "%",
      "higher_is_better": true
+    },
+    {
+     "name": "CIDEr-style caption scores, VQA accuracy, MME score, POPE, Tiny LVLM overall",
+     "definition": "as in each benchmark; not defined in the paper",
+     "unit": "benchmark units",
+     "higher_is_better": true
+    },
+    {
+     "name": "encode time and FPS",
+     "definition": "time to encode an image-text pair, batch 128, single A100",
+     "unit": "ms, frames/s",
+     "higher_is_better": false
     }
    ],
    "baselines": [
-    "OpenCLIP",
-    "EVA-CLIP",
+    "OpenCLIP-H/G/g",
+    "DINOv2-g",
+    "EVA-01/02-CLIP",
+    "MAWS",
     "ViT-22B",
+    "LiT-22B",
     "CoCa",
     "BLIP-2",
     "InstructBLIP",
+    "LLaVA-1.5",
     "Qwen-VL",
-    "LLaVA-1.5"
+    "IDEFICS-80B",
+    "Shikra",
+    "Flamingo",
+    "ViCLIP"
    ],
-   "protocol": "single runs, no seeds or significance stated"
+   "protocol": "single reported numbers, no seeds or significance tests; starred results saw training annotations; zero-shot test sets deduplicated from training data"
   },
   "availability": {
    "code": "https://github.com/OpenGVLab/InternVL",
    "weights": null,
-   "data": "public datasets"
+   "data": "public datasets only"
   },
-  "prompts": [],
-  "evidence": []
+  "prompts": [
+   {
+    "purpose": "caption evaluation and SFT conversion",
+    "text": "Provide a one-sentence caption for the provided image.",
+    "where": "Tables 27-28"
+   },
+   {
+    "purpose": "short-answer VQA, MME, POPE",
+    "text": "Answer the question using a single word or phrase.",
+    "where": "Tables 27-28"
+   },
+   {
+    "purpose": "multiple-choice (A-OKVQA, IconQA)",
+    "text": "Answer with the option's letter from the given choices directly.",
+    "where": "Table 27"
+   },
+   {
+    "purpose": "VizWiz evaluation",
+    "text": "When the provided information is insufficient, respond with 'Unanswerable'. Answer the question using a single word or phrase.",
+    "where": "Table 28"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "efficiency",
+    "quote": "We measure the time cost with a batch size of 128 on a single A100 GPU. Flash Attention [35] and bf16 precision are used during testing.",
+    "where": "Table 19 caption"
+   }
+  ]
  },
  "results": [
   {
-   "claim": "Resolution matters for cost: InternViT-6B image encoding time rises from 15.5 ms at 224 to 66.9 ms at 448 (batch 128, one A100).",
+   "claim": "InternViT-6B image encoding time rises from 15.5 ms at 224 to 66.9 ms at 448 (4.3x for 4x the tokens)",
    "kind": "measured",
    "source": null,
-   "metric": "encode time",
-   "value": 66.9,
+   "metric": "encode image time, InternViT-6B",
+   "value": "66.9",
+   "unit": "ms",
+   "baseline_value": "15.5",
+   "n": null,
+   "setup": "InternVL-C, batch 128, single A100, Flash Attention, bf16, PyTorch; no quantisation or TensorRT",
+   "note": null,
+   "where": "A.2 Efficiency Analysis",
+   "table": "Table 19, rows InternVL-C 224 and 448, column encode image (ms) InternViT-6B"
+  },
+  {
+   "claim": "InternVL-C total image-text encoding throughput falls from 48.9 FPS at 224 to 13.9 FPS at 448 (24.9 at 336)",
+   "kind": "measured",
+   "source": null,
+   "metric": "frame rate",
+   "value": "13.9",
+   "unit": "FPS",
+   "baseline_value": "48.9",
+   "n": null,
+   "setup": "same as above; total time 20.4 ms at 224 vs 71.8 ms at 448 includes 4.9 ms text encoding",
+   "note": null,
+   "where": "A.2",
+   "table": "Table 19, rows InternVL-C 224 and 448, column FPS"
+  },
+  {
+   "claim": "InternVL-G (adds QLLaMA image pass) falls from 35.0 to 11.8 FPS from 224 to 448; QLLaMA image encode grows only 8.2 to 12.8 ms",
+   "kind": "measured",
+   "source": null,
+   "metric": "frame rate",
+   "value": "11.8",
+   "unit": "FPS",
+   "baseline_value": "35.0",
+   "n": null,
+   "setup": "batch 128, one A100, bf16, Flash Attention",
+   "note": null,
+   "where": "A.2",
+   "table": "Table 19, rows InternVL-G 224 and 448, column FPS"
+  },
+  {
+   "claim": "Text encoding cost is small (4.9 ms) next to image encoding, so image size dominates cost",
+   "kind": "measured",
+   "source": null,
+   "metric": "encode text QLLaMA",
+   "value": "4.9",
    "unit": "ms",
    "baseline_value": null,
    "n": null,
-   "setup": "InternViT-6B encode, 448x448 vs 224 (15.5 ms), Flash Attention, bf16",
+   "setup": "Table 19 setup",
    "note": null,
-   "where": null,
-   "table": "Table 19, row InternVL-C 448, column InternViT-6B"
+   "where": "A.2",
+   "quote": "the main time expenditure lies in image encoding",
+   "table": "Table 19, column encode text (ms) QLLaMA"
   },
   {
-   "claim": "InternVL-C total throughput falls from 48.9 FPS at 224 to 13.9 FPS at 448.",
-   "kind": "measured",
+   "claim": "Authors state timings are unoptimised",
+   "kind": "claim",
    "source": null,
-   "metric": "FPS",
-   "value": 13.9,
-   "unit": "FPS",
+   "metric": null,
+   "value": null,
+   "unit": null,
    "baseline_value": null,
    "n": null,
-   "setup": "batch 128, single A100",
+   "setup": "PyTorch + Flash Attention + bf16",
    "note": null,
-   "where": null,
-   "table": "Table 19, row InternVL-C 448, column FPS"
+   "where": "A.2",
+   "quote": "there is still considerable room for optimization, such as using model quantization and TensorRT"
   },
   {
-   "claim": "InternVL-Chat with QLLaMA glue at 336 px reaches MME 1586.4 and POPE 87.6.",
+   "claim": "InternViT-6B linear-probe ImageNet-1K top-1 is 88.2, best without JFT",
    "kind": "measured",
    "source": null,
-   "metric": "MME",
-   "value": 1586.4,
-   "unit": "points",
+   "metric": "IN-1K linear probe",
+   "value": "88.2",
+   "unit": "% top-1",
    "baseline_value": null,
    "n": null,
-   "setup": "InternViT-6B + QLLaMA + Vicuna-13B, 336 input, 4.0M SFT",
+   "setup": "frozen backbone, linear head, 224 input, IN-1K val; avg over 6 IN variants 82.5",
    "note": null,
-   "where": null,
-   "table": "Table 9, last row, column MME"
+   "where": "Sec 4.2",
+   "table": "Table 4, row InternViT-6B (ours), column IN-1K"
   },
   {
-   "claim": "Swapping an MLP for QLLaMA as glue lifts MME from 1022.3 to 1227.5 under identical LLaVA-Mix-665K SFT with only the glue trainable.",
+   "claim": "InternVL-C zero-shot IN-1K top-1 83.2, average over variants 82.4, delta 0.8",
    "kind": "measured",
    "source": null,
-   "metric": "MME",
-   "value": 1227.5,
-   "unit": "points",
+   "metric": "zero-shot IN-1K",
+   "value": "83.2",
+   "unit": "% top-1",
    "baseline_value": null,
    "n": null,
-   "setup": "InternViT-6B, Vicuna-7B, 665K SFT",
+   "setup": "zero-shot, ImageNet variants + ObjectNet",
    "note": null,
-   "where": null,
-   "table": "Table 12, row IViT-6B QLLaMA V-7B 665K, column MME"
+   "where": "Table 6a",
+   "table": "Table 6a, row InternVL-C (ours), column IN-1K"
   },
   {
-   "claim": "Same-data SFT with a lightweight MLP: InternViT-6B beats EVA-E on MME (1022.3 vs 970.5).",
+   "claim": "InternViT-6B ADE20K full-tuning mIoU 58.9 (UperNet, crop 504); linear probing 47.2, +12.6 over ViT-22B",
    "kind": "measured",
    "source": null,
-   "metric": "MME",
-   "value": 1022.3,
-   "unit": "points",
-   "baseline_value": null,
-   "n": null,
-   "setup": "Vicuna-7B, 665K SFT, MLP trainable",
-   "note": null,
-   "where": null,
-   "table": "Table 12, row IViT-6B MLP V-7B, column MME"
-  },
-  {
-   "claim": "InternViT-6B linear-probe ImageNet-1K top-1 is 88.2 (ViT-22B 89.5 with private JFT-3B).",
-   "kind": "measured",
-   "source": null,
-   "metric": "top-1",
-   "value": 88.2,
-   "unit": "%",
-   "baseline_value": null,
-   "n": null,
-   "setup": "frozen backbone, linear head, 224 input",
-   "note": null,
-   "where": null,
-   "table": "Table 4, row InternViT-6B, column IN-1K"
-  },
-  {
-   "claim": "InternViT-6B frozen linear-probe ADE20K mIoU is 47.2, +12.6 over ViT-22B.",
-   "kind": "measured",
-   "source": null,
-   "metric": "mIoU",
-   "value": 47.2,
+   "metric": "ADE20K linear probe",
+   "value": "47.2",
    "unit": "mIoU",
    "baseline_value": null,
    "n": null,
-   "setup": "crop 504, linear head",
-   "note": "quote spans line break in text cache; table 5b also lists 47.2",
-   "where": null,
-   "quote": "attains 47.2 mIoU, a substantial +12.6 mIoU improvement over"
+   "setup": "ADE20K val, 150 classes, crop 504x504",
+   "note": "Table 5b: full tuning 58.9 vs ViT-22B 55.3",
+   "where": "Sec 4.2, Table 5b",
+   "quote": "InternViT-6B attains 47.2 mIoU, a substantial +12.6 mIoU improvement over ViT-22B"
   },
   {
-   "claim": "InternVL-C zero-shot ImageNet-1K top-1 is 83.2.",
+   "claim": "Zero-shot Kinetics-400 average accuracy 76.1% with a single center frame; 8 frames adds at least 3.3 points",
    "kind": "measured",
    "source": null,
-   "metric": "top-1",
-   "value": 83.2,
-   "unit": "%",
+   "metric": "K400",
+   "value": "76.1",
+   "unit": "% (mean top1/top5)",
    "baseline_value": null,
    "n": null,
-   "setup": "zero-shot, 224",
+   "setup": "InternVL-C, Kinetics 400/600/700, avg = mean of top-1 and top-5",
    "note": null,
-   "where": null,
-   "table": "Table 6a, row InternVL-C, column IN-1K"
+   "where": "Sec 4.3, Table 8",
+   "quote": "our method achieves an average accuracy of 76.1%, 75.5%, and 67.5% on the three datasets"
   },
   {
-   "claim": "InternVL-G zero-shot Flickr30K image-to-text R@1 is 95.7.",
+   "claim": "InternVL-G zero-shot Flickr30K image-to-text R@1 95.7 and COCO text-to-image R@1 58.6",
    "kind": "measured",
    "source": null,
-   "metric": "R@1",
-   "value": 95.7,
-   "unit": "%",
+   "metric": "Flickr30K I2T R@1",
+   "value": "95.7",
+   "unit": "R@1 %",
    "baseline_value": null,
    "n": null,
-   "setup": "zero-shot, 1K test",
+   "setup": "zero-shot retrieval, Flickr30K 1K test, COCO 5K test",
    "note": null,
-   "where": null,
-   "table": "Table 7, row InternVL-G, Flickr30K Image to Text R@1"
+   "where": "Table 7",
+   "table": "Table 7, row InternVL-G (ours), column Flickr30K Image to Text R@1"
   },
   {
-   "claim": "Single centre frame video classification: average accuracy 76.1 on Kinetics-400.",
+   "claim": "InternVL-G XTD multilingual retrieval average recall@10 96.6 across 8 languages",
    "kind": "measured",
    "source": null,
-   "metric": "avg top1/top5",
-   "value": 76.1,
-   "unit": "%",
+   "metric": "XTD avg",
+   "value": "96.6",
+   "unit": "recall@10 %",
    "baseline_value": null,
    "n": null,
-   "setup": "InternVL-C, 1 frame",
+   "setup": "XTD, image-to-text recall@10",
    "note": null,
-   "where": null,
-   "quote": "average accuracy of 76.1%, 75.5%, and 67.5% on the three"
+   "where": "A.1, Table 13",
+   "quote": "establishes a new record for average performance at 96.6%"
   },
   {
-   "claim": "Zero-shot COCO caption CIDEr 128.2 for InternVL-G (QLLaMA).",
+   "claim": "InternVL-C average 78.1% over 20 further zero-shot classification datasets, +1.0 over EVA-02-CLIP-E+",
    "kind": "measured",
    "source": null,
-   "metric": "CIDEr",
-   "value": 128.2,
+   "metric": "avg zero-shot 20 datasets",
+   "value": "78.1",
+   "unit": "% top-1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "20 datasets, top-1",
+   "note": null,
+   "where": "A.1, Table 16",
+   "quote": "InternVL registers an average performance of 78.1% across all 20 benchmarks"
+  },
+  {
+   "claim": "InternVL-Chat (QLLaMA, Vicuna-13B, 336 px) MME 1586.4 and POPE 87.6, vs LLaVA-1.5-13B 1531.3 / 85.9",
+   "kind": "measured",
+   "source": null,
+   "metric": "MME",
+   "value": "1586.4",
+   "unit": "MME score",
+   "baseline_value": null,
+   "n": null,
+   "setup": "SFT ~4M samples, 336 input, 13B LLM",
+   "note": null,
+   "where": "Table 9",
+   "table": "Table 9, last row InternVL-Chat QLLaMA Vicuna-13B 336, column MME"
+  },
+  {
+   "claim": "InternVL-Chat w/ QLLaMA Vicuna-13B 224 px: COCO caption 142.4, VQAv2 71.7, GQA 59.5",
+   "kind": "measured",
+   "source": null,
+   "metric": "COCO caption",
+   "value": "142.4",
    "unit": "CIDEr",
    "baseline_value": null,
    "n": null,
-   "setup": "zero-shot, Karpathy test",
+   "setup": "starred = training annotations seen",
    "note": null,
-   "where": null,
-   "table": "Table 10, row InternVL-G, column COCO"
+   "where": "Table 9",
+   "table": "Table 9, row InternVL-Chat Vicuna-13B 224, column COCO"
   },
   {
-   "claim": "Average zero-shot accuracy over 20 datasets 78.1%, +1.0 over EVA-02-CLIP-E+.",
+   "claim": "Same InternViT-6B with MLP glue (336, Vicuna-13B, LLaVA recipe) beats LLaVA-1.5 CLIP-L336: MME 1546.9 vs 1531.3",
    "kind": "measured",
    "source": null,
-   "metric": "avg top-1",
-   "value": 78.1,
-   "unit": "%",
-   "baseline_value": null,
+   "metric": "MME",
+   "value": "1546.9",
+   "unit": "MME",
+   "baseline_value": "1531.3",
    "n": null,
-   "setup": "InternVL-C",
+   "setup": "MLP glue, LLaVA-Mix-665K, one epoch each stage",
    "note": null,
-   "where": null,
-   "quote": "average performance of 78.1%"
+   "where": "Table 9",
+   "table": "Table 9, row InternVL-Chat IViT-6B MLP Vicuna-13B 336, column MME"
   },
   {
-   "claim": "Stage 1 trains on 28.7B samples at 196x196 with 50% image-token masking, then 224x224 for the last 0.5B samples.",
+   "claim": "Ablation: IViT-6B beats EVA-E as encoder (MME 1022.3 vs 970.5) and QLLaMA glue lifts MME to 1227.5, same 665K data",
+   "kind": "measured",
+   "source": null,
+   "metric": "MME",
+   "value": "1227.5",
+   "unit": "MME",
+   "baseline_value": "1022.3",
+   "n": null,
+   "setup": "MLP-only trainable, Vicuna-7B, LLaVA-Mix-665K",
+   "note": null,
+   "where": "Sec 4.5",
+   "table": "Table 12, row IViT-6B QLLaMA V-7B 665K, column MME"
+  },
+  {
+   "claim": "InternLM-7B slightly beats Vicuna-7B with InternViT-6B+MLP: MME 1532.8 vs 1525.1",
+   "kind": "measured",
+   "source": null,
+   "metric": "MME",
+   "value": "1532.8",
+   "unit": "MME",
+   "baseline_value": "1525.1",
+   "n": null,
+   "setup": "same setup as Table 9",
+   "note": null,
+   "where": "A.2",
+   "table": "Table 18, row IViT-6B MLP InternLM-7B, column MME"
+  },
+  {
+   "claim": "Tiny LVLM overall 327.6 for InternVL-Chat (Vicuna-13B), top of table, vs InternLM-XComposer 322.5",
+   "kind": "measured",
+   "source": null,
+   "metric": "Tiny LVLM",
+   "value": "327.6",
+   "unit": "overall score",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Tiny LVLM test set, 5 ability categories",
+   "note": null,
+   "where": "Table 17",
+   "table": "Table 17, row InternVL-Chat (ours), column Overall"
+  },
+  {
+   "claim": "Hyperparameter search: depth/head-dim/MLP ratio have little effect on accuracy at fixed parameters; deeper variants are slower (variant 6, depth 80: 16.9 img/s vs 28.0 for chosen variant 3 at batch 1)",
+   "kind": "measured",
+   "source": null,
+   "metric": "throughput variant 3",
+   "value": "28.0 / 64.6",
+   "unit": "img/s (batch 1 / batch 128)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "16 configs reduced to 6; 100M LAION-en subset, 10K iterations, CLIP-L random-init text encoder; throughput at 224",
+   "note": "zero-shot IN 66.2 for variant 3",
+   "where": "Sec 4.5, Table 11",
+   "table": "Table 11, row variant 3, column throughput"
+  },
+  {
+   "claim": "Stage-1 data cleaned from 6.03B to 4.98B pairs (82.6%); stage-2 filtered to 1.03B (17.0%)",
+   "kind": "measured",
+   "source": null,
+   "metric": "stage 1 data",
+   "value": "4.98B",
+   "unit": "image-text pairs",
+   "baseline_value": null,
+   "n": null,
+   "setup": "web image-text; dedup against IN-1K/22K, Flickr30K, COCO",
+   "note": null,
+   "where": "Sec 3.3, Table 2",
+   "table": "Table 2, row Total"
+  },
+  {
+   "claim": "QLLaMA has 8B parameters, 42x the QFormer, with 96 learnable queries and 1B new cross-attention parameters",
    "kind": "measured",
    "source": null,
    "metric": null,
-   "value": 28.7,
-   "unit": "B samples",
+   "value": null,
+   "unit": null,
    "baseline_value": null,
    "n": null,
-   "setup": "640 A100, batch 164K",
+   "setup": "architecture",
    "note": null,
-   "where": null,
-   "quote": "we initially train at a 196×196 resolution, masking 50% of"
+   "where": "Sec 3.2",
+   "quote": "QLLaMA has 8 billion parameters for vision-language alignment, which are 42 times larger than the QFormer"
   }
  ],
  "limits": [
-  "Image input is a single fixed square resize (224 pretrain; 336 for chat); no dynamic or tiled high resolution, which later InternVL versions add (not in this paper).",
-  "Authors say encoding speed has room for optimisation (quantization, TensorRT).",
-  "No seeds or significance reported; many Table 9 VQA cells (*) saw training annotations.",
-  "Compute in GPU-hours not stated; OCR/document benchmarks for high-res not evaluated in this paper."
+  "Efficiency (Table 19) covers only 224, 336 and 448 px, encoding only (no LLM decoding), batch 128, one A100; no memory numbers, no accuracy-vs-resolution curve for the same model.",
+  "FPS in Table 19 is total image-plus-text pair encoding rate (includes 4.9 ms text), not image-encoder-only throughput.",
+  "The paper states timings are unoptimised (no quantisation or TensorRT).",
+  "Resolution effect on accuracy is not ablated; main-table models use 224 or 336 inputs, and Table 9 mixes resolution with glue layer, data and LLM changes.",
+  "No seeds, error bars or significance tests; no training compute in GPU-hours; stage-3 SFT hyperparameters (lr, steps) mostly not given.",
+  "Starred benchmarks saw their training annotations; several competitor numbers are not like-for-like in training data.",
+  "Superseded in practice by later InternVL releases (dynamic tiling); not covered here."
  ],
  "practices": [],
  "terms": [
   {
    "term": "QLLaMA",
-   "definition": "language middleware developed from pre-trained multilingual LLaMA with 96 newly added learnable queries and cross-attention layers",
+   "definition": "language middleware initialised from multilingual LLaMA with 96 learnable queries and cross-attention layers, used for contrastive text encoding or to bridge to an LLM decoder",
    "where": "Sec 3.2"
+  },
+  {
+   "term": "InternVL-C / InternVL-G",
+   "definition": "contrastive inference modes: C uses attention-pooled InternViT features; G also passes them through QLLaMA queries",
+   "where": "Sec 3.2, Fig 4"
   }
  ],
  "lineage": [
   {
-   "work": "CLIP",
+   "work": "CLIP (Radford et al.)",
    "year": 2021,
    "arxiv": null,
    "relation": "uses-method",
-   "note": "stage 1 symmetric contrastive loss",
+   "note": "symmetric contrastive loss for stage 1; baseline",
    "quote": null
   },
   {
-   "work": "BLIP-2",
+   "work": "BLIP-2 (Li et al.)",
    "year": 2023,
-   "arxiv": null,
+   "arxiv": "2301.12597",
    "relation": "uses-method",
-   "note": "ITC+ITM+ITG loss, learnable queries",
+   "note": "stage-2 ITC+ITM+ITG loss; QFormer comparison",
    "quote": null
   },
   {
-   "work": "LLaVA-1.5",
-   "year": 2023,
-   "arxiv": null,
-   "relation": "uses-method",
-   "note": "SFT recipe and LLaVA-Mix-665K; baseline",
-   "quote": null
-  },
-  {
-   "work": "ViT-22B",
+   "work": "ViT-22B (Dehghani et al.)",
    "year": 2023,
    "arxiv": null,
    "relation": "baseline",
-   "note": "main scale comparison",
+   "note": "abstract: a good alternative to ViT-22B; linear probe and segmentation protocol followed",
    "quote": null
   },
   {
-   "work": "ViT (Dosovitskiy)",
-   "year": 2021,
-   "arxiv": null,
-   "relation": "extends",
-   "note": "vanilla ViT scaled to 6B",
-   "quote": null
-  },
-  {
-   "work": "Multilingual LLaMA (Cui et al.)",
+   "work": "LLaVA-1.5 (Liu et al.)",
    "year": 2023,
+   "arxiv": "2310.03744",
+   "relation": "uses-method",
+   "note": "SFT recipe, data and response prompts",
+   "quote": null
+  },
+  {
+   "work": "Cui et al. multilingual Chinese LLaMA",
+   "year": 2023,
+   "arxiv": "2304.08177",
+   "relation": "uses-method",
+   "note": "initialises text encoder and QLLaMA",
+   "quote": null
+  },
+  {
+   "work": "EVA-02-CLIP",
+   "year": 2023,
+   "arxiv": "2303.11331",
+   "relation": "baseline",
+   "note": "main prior state of the art",
+   "quote": null
+  },
+  {
+   "work": "Vicuna / InternLM",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "LLM decoders",
+   "quote": null
+  },
+  {
+   "work": "LAION-5B, COYO, Wukong, CC3M/12M, SBU, LAION-COCO",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "pretraining data",
+   "quote": null
+  },
+  {
+   "work": "Flash Attention (Dao et al.)",
+   "year": 2022,
    "arxiv": null,
    "relation": "uses-method",
-   "note": "QLLaMA init",
-   "quote": null
-  },
-  {
-   "work": "InstructBLIP / Qwen-VL",
-   "year": 2023,
-   "arxiv": null,
-   "relation": "baseline",
-   "note": "VLLM baselines",
+   "note": "used in speed tests",
    "quote": null
   }
  ],
@@ -482,24 +671,24 @@
    "figure": "Fig 3",
    "caption": "The training strategy of the proposed InternVL model.",
    "page": 4,
-   "why": "Three-stage frozen/trainable layout"
+   "why": "Shows which parts are frozen or trainable across the three stages."
   },
   {
    "figure": "Fig 4",
    "caption": "Different ways to use InternVL.",
    "page": 5,
-   "why": "Shows image -> InternViT -> QLLaMA queries -> LLM path"
+   "why": "C, G and the two chat configurations in one view."
   },
   {
    "figure": "Table 19",
    "caption": "Efficiency analysis of InternVL for encoding image-text pairs.",
    "page": 11,
-   "why": "Cost of resolution 224/336/448"
+   "why": "Gives encode time and FPS by image size, the cost of resolution."
   }
  ],
  "code": [],
  "problems": [
-  "Table values come as one-per-line in text cache; quotes limited to prose lines.",
-  "Dataset tables 24-28 and references not read."
+  "Cached text has figure-label and table cell noise (one value per line); tables were checked against column order.",
+  "Venue (CVPR 2024) not printed in the PDF; it is arXiv v3 preprint text."
  ]
 }

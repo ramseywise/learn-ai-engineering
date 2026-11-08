@@ -1,0 +1,640 @@
+{
+ "schema": 1,
+ "key": "1409.1556",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/simonyan-2014-very-deep-convolutional-networks-large.pdf",
+ "bib": {
+  "title": "Very Deep Convolutional Networks for Large-Scale Image Recognition",
+  "authors": [
+   "Karen Simonyan",
+   "Andrew Zisserman"
+  ],
+  "first_author": "Simonyan",
+  "year": 2015,
+  "venue": "ICLR 2015",
+  "arxiv": "1409.1556",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 54750,
+  "chars_total": 54750,
+  "engine": "pymupdf",
+  "skipped": "reference list skimmed only"
+ },
+ "type": "empirical",
+ "question": "How does convolutional network depth affect accuracy in large-scale image recognition when all other design choices are fixed and 3x3 filters are used throughout?",
+ "hypothesis": "Increasing depth with very small 3x3 filters improves accuracy over prior-art configurations.",
+ "contributions": [
+  "Thorough evaluation of networks of increasing depth (11 to 19 weight layers) with 3x3 filters",
+  "ILSVRC-2014: 1st in localisation, 2nd in classification",
+  "Features generalise to other datasets with state-of-the-art results",
+  "Two best models (D, E) publicly released"
+ ],
+ "method": {
+  "summary": "Six ConvNet configurations (A-E, plus A-LRN) differing only in depth (11-19 weight layers), all 3x3 convs (config C adds 1x1), trained on ILSVRC-2012 with SGD, scale jittering, and evaluated densely, multi-scale, multi-crop and as ensembles. Models also used as frozen feature extractors with linear SVM, and for localisation.",
+  "task": "image classification (ILSVRC-2012), localisation, transfer feature extraction",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "ILSVRC-2012",
+    "role": "both",
+    "size": "1000 classes; train 1.3M, val 50K, test 100K images",
+    "split": "most experiments evaluated on val as test; some on test via official server",
+    "source": "ImageNet (Deng et al., 2009)",
+    "preprocessing": "subtract training-set mean RGB; random 224x224 crop from isotropically rescaled image, random horizontal flip, random RGB colour shift"
+   },
+   {
+    "name": "PASCAL VOC-2007/2012 classification",
+    "role": "eval",
+    "size": "10K and 22.5K images, 20 classes",
+    "split": "official train/val/test; VOC-2012 test via server",
+    "source": "Everingham et al. 2015",
+    "preprocessing": "features L2-normalised, averaged over scales Q in {256,384,512,640,768}"
+   },
+   {
+    "name": "Caltech-101",
+    "role": "eval",
+    "size": "9K images, 102 classes",
+    "split": "3 random splits, 30 train and up to 50 test images per class, 20% of train as validation",
+    "source": "Fei-Fei et al. 2004",
+    "preprocessing": "stacked features at Q in {256,384,512}"
+   },
+   {
+    "name": "Caltech-256",
+    "role": "eval",
+    "size": "31K images, 257 classes",
+    "split": "3 random splits, 60 train images per class, rest test, 20% of train as validation",
+    "source": "Griffin et al. 2007",
+    "preprocessing": "stacked features at Q in {256,384,512}"
+   },
+   {
+    "name": "PASCAL VOC-2012 action classification",
+    "role": "eval",
+    "size": "4.6K training images, 11 classes",
+    "split": "official",
+    "source": "Everingham et al. 2015",
+    "preprocessing": "features on whole image, optionally stacked with person bounding-box features"
+   }
+  ],
+  "models": [
+   {
+    "name": "VGG A (11 layers)",
+    "role": "proposed",
+    "params": "133M",
+    "architecture": "8 conv3 + 3 FC",
+    "init_from": "random N(0, 1e-2 variance), zero biases",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "11 weight layers",
+    "hidden": "conv width starts at 64 and doubles after each max-pool up to 512; FC 4096 x2 then 1000",
+    "heads": null,
+    "context": "224x224 input",
+    "other": {
+     "A-LRN": "same plus one LRN layer, 133M"
+    }
+   },
+   {
+    "name": "VGG B (13)",
+    "role": "proposed",
+    "params": "133M",
+    "architecture": "10 conv3 + 3 FC",
+    "init_from": "first 4 conv and last 3 FC from net A, rest random",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "13",
+    "hidden": null,
+    "heads": null,
+    "context": "224x224",
+    "other": {}
+   },
+   {
+    "name": "VGG C (16)",
+    "role": "proposed",
+    "params": "134M",
+    "architecture": "13 conv (three of them 1x1) + 3 FC",
+    "init_from": "from net A",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "16",
+    "hidden": null,
+    "heads": null,
+    "context": "224x224",
+    "other": {}
+   },
+   {
+    "name": "VGG D / VGG-16",
+    "role": "proposed",
+    "params": "138M",
+    "architecture": "13 conv3 + 3 FC",
+    "init_from": "from net A",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "16",
+    "hidden": null,
+    "heads": null,
+    "context": "224x224",
+    "other": {
+     "released": "yes"
+    }
+   },
+   {
+    "name": "VGG E / VGG-19",
+    "role": "proposed",
+    "params": "144M",
+    "architecture": "16 conv3 + 3 FC",
+    "init_from": "from net A",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "19",
+    "hidden": null,
+    "heads": null,
+    "context": "224x224",
+    "other": {
+     "released": "yes"
+    }
+   }
+  ],
+  "training": {
+   "objective": "multinomial logistic regression (softmax cross-entropy); Euclidean loss for localisation",
+   "optimizer": "mini-batch SGD with momentum 0.9",
+   "lr": "10^-2 initially (10^-3 for S=384 initialised from S=256, and for localisation)",
+   "lr_schedule": "divided by 10 when validation accuracy stopped improving; decreased 3 times",
+   "warmup": null,
+   "batch_size": "256",
+   "steps": "370K iterations",
+   "epochs": "74",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": "5e-4 (L2 multiplier, as printed 5·10^-4)",
+   "dropout": "0.5 on the first two FC layers",
+   "regularisation": "weight decay, dropout, scale jittering S in [256;512], flips, RGB colour shift",
+   "hardware": "4x NVIDIA Titan Black GPUs, synchronous data parallelism",
+   "compute": null,
+   "wall_clock": "2-3 weeks per net",
+   "seeds": null,
+   "other": {
+    "multi_scale_training": "fine-tune all layers of single-scale model pre-trained at S=384; for the submission only the FC layers of D were fine-tuned",
+    "implementation": "derived from C++ Caffe (Dec 2013 branch), multi-GPU, full-size multi-scale",
+    "init_note": "after submission found Glorot & Bengio (2010) init works without pre-training",
+    "preinit_layers_lr": "learning rate not reduced for pre-initialised layers"
+   }
+  },
+  "inference": {
+   "decoding": "dense fully-convolutional application (FC->7x7 conv and 1x1 convs), spatial average of class score map, average with horizontal flip",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "deterministic; no seeds or repeated runs reported",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "test_scale_Q": "Q=S for fixed S; Q=0.5(Smin+Smax) for jittered single-scale; multi-scale Q={S-32,S,S+32} or {256,384,512}",
+    "multi_crop": "50 crops per scale (5x5 grid x 2 flips), 150 crops over 3 scales"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "top-1 error",
+     "definition": "proportion of images misclassified",
+     "unit": "%",
+     "higher_is_better": false
+    },
+    {
+     "name": "top-5 error",
+     "definition": "proportion of images whose ground-truth class is outside the top-5 predictions",
+     "unit": "%",
+     "higher_is_better": false
+    },
+    {
+     "name": "localisation error",
+     "definition": "top-5 error with box correct if IoU > 0.5",
+     "unit": "%",
+     "higher_is_better": false
+    },
+    {
+     "name": "mAP / mean class recall",
+     "definition": "VOC mean average precision; Caltech mean class recall",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Krizhevsky et al. 2012",
+    "Zeiler & Fergus 2013",
+    "OverFeat (Sermanet et al. 2014)",
+    "GoogLeNet (Szegedy et al. 2014)",
+    "MSRA (He et al. 2014)",
+    "Clarifai"
+   ],
+   "protocol": "single run per config; validation set used as test for most; ILSVRC test via official server; Caltech 3 random splits with mean +- std; no significance tests"
+  },
+  "availability": {
+   "code": "models released at http://www.robots.ox.ac.uk/~vgg/research/very_deep/ (D and E); training code not stated",
+   "weights": "Net-D and Net-E released",
+   "data": "public datasets"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.weight_decay",
+    "quote": "the L2 penalty multiplier set to 5·10−4",
+    "where": "Sect 3.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Best two-model VGG ensemble (D+E, multi-crop & dense) reaches 6.8% top-5 test error on ILSVRC-2014 classification.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-5 test error",
+   "value": "6.8",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ILSVRC-2012 data, 2 nets (D and E, S in [256;512]), Q={256,384,512}, multi-crop & dense eval",
+   "note": null,
+   "where": "Table 7, Sect 4.5",
+   "table": "Table 7, row VGG (2 nets, multi-crop & dense eval.), column top-5 test error"
+  },
+  {
+   "claim": "Single-model error falls from 11 weight layers (A) to 16-19 (D, E) then saturates.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1 val error",
+   "value": "25.5",
+   "unit": "%",
+   "baseline_value": "29.6 (config A, S=Q=256)",
+   "n": null,
+   "setup": "Config E, train S in [256;512], single test scale Q=384, ILSVRC val",
+   "note": null,
+   "where": "Table 3, Sect 4.1",
+   "table": "Table 3, row E [256;512]/384, column top-1"
+  },
+  {
+   "claim": "Best single-network validation error with multi-scale test.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1/top-5 val error",
+   "value": "24.8/7.5",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Configs D and E, S in [256;512], Q={256,384,512}, dense eval",
+   "note": null,
+   "where": "Sect 4.2",
+   "quote": "Our best single-network performance on the validation set is 24.8%/7.5% top-1/top-5 error"
+  },
+  {
+   "claim": "Scale jittering at training beats fixed S at a single test scale.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1 val error",
+   "value": "25.6",
+   "unit": "%",
+   "baseline_value": "26.8 (S=Q=384) and 27.0 (S=Q=256)",
+   "n": null,
+   "setup": "Config D, S in [256;512], Q=384",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row D [256;512]/384, column top-1"
+  },
+  {
+   "claim": "Local response normalisation does not help (A-LRN vs A).",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1 val error",
+   "value": "29.7",
+   "unit": "%",
+   "baseline_value": "29.6 (A)",
+   "n": null,
+   "setup": "A-LRN S=Q=256",
+   "note": null,
+   "where": "Table 3, Sect 4.1",
+   "table": "Table 3, row A-LRN, column top-1"
+  },
+  {
+   "claim": "1x1 layers help (C better than B) but 3x3 layers help more (D better than C).",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1 val error",
+   "value": "28.1",
+   "unit": "%",
+   "baseline_value": "28.7 (B); 27.0 (D)",
+   "n": null,
+   "setup": "C, S=Q=256",
+   "note": null,
+   "where": "Sect 4.1",
+   "table": "Table 3, row C 256/256, column top-1"
+  },
+  {
+   "claim": "A shallow net with 5x5 convs derived from B has 7% higher top-1 error than B (center crop).",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1 error gap",
+   "value": "7",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "B vs shallow net with five 5x5 conv layers, center crop",
+   "note": null,
+   "where": "Sect 4.1",
+   "quote": "The top-1 error of the shallow net was measured to be 7% higher than that of B (on a center crop)"
+  },
+  {
+   "claim": "Dense plus multi-crop evaluation improves over either alone.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-5 val error",
+   "value": "7.1",
+   "unit": "%",
+   "baseline_value": "7.5 dense",
+   "n": null,
+   "setup": "Config E, S in [256;512], Q={256,384,512}",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row E multi-crop & dense, column top-5"
+  },
+  {
+   "claim": "Submitted 7-net ensemble got 7.3% top-5 test error (2nd place classification).",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-5 test error",
+   "value": "7.3",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ILSVRC-2014 submission, 7 nets, dense eval",
+   "note": null,
+   "where": "Sect 4.5",
+   "quote": "7.3% test error using an ensemble of 7 models"
+  },
+  {
+   "claim": "Single VGG net beats single GoogLeNet by 0.9% top-5 test error.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-5 test error",
+   "value": "7.0",
+   "unit": "%",
+   "baseline_value": "7.9 GoogLeNet 1 net",
+   "n": null,
+   "setup": "1 net, multi-crop & dense",
+   "note": null,
+   "where": "Sect 4.5",
+   "quote": "our architecture achieves the best result (7.0% test error), outperforming a single GoogLeNet by 0.9%"
+  },
+  {
+   "claim": "Parameter counts are 133M (A) to 144M (E).",
+   "kind": "measured",
+   "source": null,
+   "metric": "parameters",
+   "value": "144",
+   "unit": "M",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Config E",
+   "note": "Table text printed as a column of numbers: 133, 133, 134, 138, 144",
+   "where": "Table 2",
+   "table": "Table 2, column E"
+  },
+  {
+   "claim": "Three 3x3 conv layers use 27C^2 weights vs 49C^2 for one 7x7 (81% more).",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "parameter ratio",
+   "value": "81",
+   "unit": "% more",
+   "baseline_value": null,
+   "n": null,
+   "setup": "C channels in and out",
+   "note": null,
+   "where": "Sect 2.3",
+   "quote": "49C2 parameters, i.e. 81% more"
+  },
+  {
+   "claim": "Multi-GPU data parallelism gives 3.75x speedup on 4 GPUs.",
+   "kind": "measured",
+   "source": null,
+   "metric": "speedup",
+   "value": "3.75",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "4 NVIDIA Titan Black, synchronous data parallel",
+   "note": null,
+   "where": "Sect 3.3",
+   "quote": "speedup of 3.75 times on an off-the-shelf 4-GPU system"
+  },
+  {
+   "claim": "Training one net took 2-3 weeks on four Titan Black GPUs.",
+   "kind": "measured",
+   "source": null,
+   "metric": "wall clock",
+   "value": "2-3",
+   "unit": "weeks",
+   "baseline_value": null,
+   "n": null,
+   "setup": "4x NVIDIA Titan Black",
+   "note": null,
+   "where": "Sect 3.3",
+   "quote": "training a single net took 2–3 weeks depending on the architecture"
+  },
+  {
+   "claim": "VGG won ILSVRC-2014 localisation with 25.3% top-5 test error.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-5 localisation test error",
+   "value": "25.3",
+   "unit": "%",
+   "baseline_value": "29.9 OverFeat",
+   "n": null,
+   "setup": "Config D based, per-class regression, all layers fine-tuned, fusion of S=256 and S=384 models",
+   "note": null,
+   "where": "Table 9/10",
+   "table": "Table 9, row fusion, column test"
+  },
+  {
+   "claim": "Per-class regression with all layers fine-tuned is best for localisation.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GT-class localisation error",
+   "value": "33.1",
+   "unit": "%",
+   "baseline_value": "36.4 (FC only, SCR)",
+   "n": null,
+   "setup": "Config D, S=384, centre crop, GT class",
+   "note": null,
+   "where": "Table 8",
+   "table": "Table 8, row all PCR"
+  },
+  {
+   "claim": "Frozen VGG features + linear SVM reach 89.7 mAP on VOC-2007.",
+   "kind": "measured",
+   "source": null,
+   "metric": "mAP",
+   "value": "89.7",
+   "unit": "%",
+   "baseline_value": "82.4 Chatfield et al.",
+   "n": null,
+   "setup": "Net-D & Net-E stacked, 4096-D penultimate features, no fine-tuning",
+   "note": null,
+   "where": "Table 11",
+   "table": "Table 11, row VGG Net-D & Net-E, column VOC-2007"
+  },
+  {
+   "claim": "Caltech-256 mean class recall with Net-D & Net-E.",
+   "kind": "measured",
+   "source": null,
+   "metric": "mean class recall",
+   "value": "86.2",
+   "unit": "%",
+   "baseline_value": "77.6 Chatfield et al.",
+   "n": null,
+   "setup": "3 random splits, 60 train images per class",
+   "note": null,
+   "where": "Table 11",
+   "table": "Table 11, row VGG Net-D & Net-E, column Caltech-256"
+  },
+  {
+   "claim": "VOC-2012 action classification with image and bounding box features.",
+   "kind": "measured",
+   "source": null,
+   "metric": "mAP",
+   "value": "84.0",
+   "unit": "%",
+   "baseline_value": "76.3 Hoai",
+   "n": null,
+   "setup": "Net-D & Net-E stacked, whole image + person box",
+   "note": null,
+   "where": "Table 12",
+   "table": "Table 12, row VGG Net-D & Net-E, image and bounding box"
+  }
+ ],
+ "limits": [
+  "Error saturates at 19 layers on ImageNet; authors say deeper may help on larger datasets but do not test it",
+  "Single runs, no seeds or variance for ILSVRC results",
+  "Initialisation from shallow net A was needed to train deeper nets; the authors later found Glorot init removes this",
+  "Multi-crop vs dense gain attributed to boundary conditions only as a hypothesis",
+  "Localisation did not use scale jittering or OverFeat's resolution enhancement",
+  "Parameter count (~140M, mostly in FC layers) and 2-3 weeks of training on 4 GPUs; superseded by residual networks (not in this paper)",
+  "Several VOC comparisons are against methods using extended pre-training sets"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "S (training scale)",
+   "definition": "the smallest side of an isotropically-rescaled training image, from which the ConvNet input is cropped",
+   "where": "Sect 3.1"
+  },
+  {
+   "term": "Q (test scale)",
+   "definition": "pre-defined smallest image side to which the test image is isotropically rescaled",
+   "where": "Sect 3.2"
+  },
+  {
+   "term": "scale jittering",
+   "definition": "each training image is individually rescaled by randomly sampling S from a range [Smin, Smax]",
+   "where": "Sect 3.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "ImageNet Classification with Deep Convolutional Neural Networks (Krizhevsky et al.)",
+   "year": 2012,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "training procedure and architecture basis; ILSVRC-2012 winner"
+  },
+  {
+   "work": "Flexible, high performance convolutional neural networks (Ciresan et al.)",
+   "year": 2011,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "small filters, much shallower"
+  },
+  {
+   "work": "OverFeat (Sermanet et al.)",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "dense evaluation and localisation merging; baseline"
+  },
+  {
+   "work": "Visualizing and Understanding Convolutional Networks (Zeiler & Fergus)",
+   "year": 2013,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "ILSVRC-2013 entry"
+  },
+  {
+   "work": "GoogLeNet (Szegedy et al.)",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "developed independently, 22 layers; 6.7% top-5 test error"
+  },
+  {
+   "work": "Network in Network (Lin et al.)",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "related",
+   "note": "1x1 conv layers"
+  },
+  {
+   "work": "Understanding the difficulty of training deep feedforward neural networks (Glorot & Bengio)",
+   "year": 2010,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "initialisation found after submission"
+  },
+  {
+   "work": "ImageNet (Deng et al.)",
+   "year": 2009,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "ILSVRC-2012"
+  },
+  {
+   "work": "Spatial pyramid pooling (He et al.)",
+   "year": 2014,
+   "arxiv": "1406.4729",
+   "relation": "baseline",
+   "note": "MSRA entry"
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Table 1",
+   "caption": "ConvNet configurations (shown in columns). The depth of the configurations increases from the left (A) to the right (E)",
+   "page": 3,
+   "why": "one table shows all six architectures and what changes between them"
+  },
+  {
+   "figure": "Table 3",
+   "caption": "ConvNet performance at a single test scale.",
+   "page": 6,
+   "why": "depth, LRN, 1x1 vs 3x3 and scale jittering effects in one view"
+  },
+  {
+   "figure": "Table 7",
+   "caption": "Comparison with the state of the art in ILSVRC classification.",
+   "page": 8,
+   "why": "places VGG against AlexNet, OverFeat, GoogLeNet"
+  }
+ ],
+ "code": [
+  {
+   "where": "Sect 2.3",
+   "snippet": "3 (3^2 C^2) = 27C^2 weights vs 7^2 C^2 = 49C^2 for one 7x7 layer (81% more)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "figures.py captions returned no figure captions (paper has tables only); Table text is flattened so cell positions were reconstructed from reading order",
+  "No embedded instructions found"
+ ]
+}

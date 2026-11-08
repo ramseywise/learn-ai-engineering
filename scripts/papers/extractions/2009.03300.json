@@ -1,0 +1,656 @@
+{
+ "schema": 1,
+ "key": "2009.03300",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/hendrycks-2021-measuring-massive-multitask-language-understanding.pdf",
+ "bib": {
+  "title": "Measuring Massive Multitask Language Understanding",
+  "authors": [
+   "Dan Hendrycks",
+   "Collin Burns",
+   "Steven Basart",
+   "Andy Zou",
+   "Mantas Mazeika",
+   "Dawn Song",
+   "Jacob Steinhardt"
+  ],
+  "first_author": "Hendrycks",
+  "year": 2021,
+  "venue": "ICLR 2021",
+  "arxiv": "2009.03300",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 83329,
+  "chars_total": 83329,
+  "engine": "pymupdf",
+  "skipped": "Per-task example figures 14-70 (appendix pages 16-27) are question screenshots; only Table 2 and captions were checked."
+ },
+ "type": "benchmark",
+ "question": "How much knowledge and problem-solving ability do pretrained language models have across many academic and professional subjects, measured zero- and few-shot?",
+ "hypothesis": "Pretrained models should hold broad world knowledge from their corpora, and a broad multi-subject exam in zero/few-shot form exposes blind spots that narrower benchmarks miss.",
+ "contributions": [
+  "A 57-task multiple-choice benchmark (MMLU) spanning elementary to professional level",
+  "Evaluation of GPT-3 (four sizes) and UnifiedQA showing near-chance accuracy except for the largest GPT-3",
+  "Analysis of lopsided per-subject performance, calibration and weakness on calculation and on law/morality"
+ ],
+ "method": {
+  "summary": "Questions were hand-collected by students from free online sources (GRE, USMLE practice, course and OUP-reader questions) into 57 subjects, split into dev/val/test. Pretrained or transfer models are scored by 4-way multiple-choice accuracy with a fixed zero- or few-shot prompt; no training on the test.",
+  "task": "4-way multiple-choice question answering across 57 subjects",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "MMLU",
+    "role": "eval",
+    "size": "15908 questions in 57 tasks",
+    "split": "5 per subject dev (few-shot), 1540 validation, 14079 test; at least 100 test examples per subject",
+    "source": "Freely available online sources collected by graduate and undergraduate students",
+    "preprocessing": "Math expressions encoded in LaTeX or symbols such as * and ^"
+   },
+   {
+    "name": "UnifiedQA training data / MMLU dev+val",
+    "role": "train",
+    "size": null,
+    "split": null,
+    "source": "Used to fine-tune RoBERTa-base, ALBERT-xxlarge, GPT-2 (App A.1)",
+    "preprocessing": null
+   },
+   {
+    "name": "Legal case summaries (case.law)",
+    "role": "pretrain",
+    "size": "approximately 1.6 million case summaries",
+    "split": null,
+    "source": "Harvard Law Library case.law",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT-3 Small (Ada)",
+    "role": "evaluated",
+    "params": "2.7B",
+    "architecture": "decoder-only transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-3 Medium (Babbage)",
+    "role": "evaluated",
+    "params": "6.7B",
+    "architecture": "decoder-only transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-3 Large (Curie)",
+    "role": "evaluated",
+    "params": "13B",
+    "architecture": "decoder-only transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-3 X-Large (Davinci)",
+    "role": "evaluated",
+    "params": "175B",
+    "architecture": "decoder-only transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "UnifiedQA",
+    "role": "evaluated",
+    "params": "60M to 11B (3B and 11B reported)",
+    "architecture": "T5 text-to-text",
+    "init_from": "T5, fine-tuned on prior QA datasets",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "RoBERTa-base",
+    "role": "baseline",
+    "params": "125M",
+    "architecture": "encoder",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "ALBERT-xxlarge",
+    "role": "baseline",
+    "params": "223M",
+    "architecture": "encoder",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-2",
+    "role": "baseline",
+    "params": "1,558M",
+    "architecture": "decoder-only transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "Take the highest-probability among tokens A, B, C, D after 'Answer: '",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "one deterministic pass per item; no seeds stated",
+   "prompting": "Header 'The following are multiple choice questions (with answers) about [subject].', up to 5 fixed dev-set demonstrations, then the question, ending in 'Answer: '. Zero-shot has no demonstrations. UnifiedQA input: QUESTION \\n (A) .. (B) .. </s>, lowercased; prediction = class with highest token overlap with output.",
+   "retrieval": null,
+   "parameters": {
+    "few_shot_k": "0 to 5 (Fig 10)"
+   },
+   "other": {
+    "fine_tuned_baselines": "RoBERTa-base, ALBERT-xxlarge, GPT-2 fine-tuned to predict one of four classes; hyperparameters not stated",
+    "law_experiment": "about 2,000 extra Professional Law training examples; RoBERTa-base continued pretraining on about 1.6M case summaries"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "accuracy",
+     "definition": "classification accuracy across all examples and tasks (weighted average per discipline)",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "RMS calibration error",
+     "definition": "root mean squared gap between confidence and accuracy",
+     "unit": "%",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "Random 25%",
+    "RoBERTa-base",
+    "ALBERT-xxlarge",
+    "GPT-2",
+    "UnifiedQA",
+    "Amazon Mechanical Turk humans 34.5%",
+    "Estimated expert 89.8%"
+   ],
+   "protocol": "Single run per model; no significance tests; validation set may be used for hyperparameters, test for final accuracy."
+  },
+  "availability": {
+   "code": "github.com/hendrycks/test",
+   "weights": null,
+   "data": "github.com/hendrycks/test"
+  },
+  "prompts": [
+   {
+    "purpose": "MMLU few-shot prompt",
+    "text": "The following are multiple choice questions (with answers) about [subject].",
+    "where": "Sec 4.1"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Few-shot GPT-3 175B (X-Large) scores 43.9% average; the 2.7B, 6.7B and 13B sizes are near the 25% random baseline.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 43.9,
+   "unit": "%",
+   "baseline_value": 25.0,
+   "n": null,
+   "setup": "MMLU test set, 14079 questions, 57 tasks, accuracy; GPT-3 via OpenAI API, up to 5 demonstrations",
+   "note": null,
+   "where": "Sec 1, Table 1",
+   "quote": "the 175 billion parameter GPT-3 model reaches a much higher 43.9% accuracy"
+  },
+  {
+   "claim": "Zero-shot GPT-3 175B reaches about 37.7%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 37.7,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MMLU test set, 14079 questions, 57 tasks, accuracy; zero-shot, GPT-3 X-Large",
+   "note": null,
+   "where": "Sec 4.2",
+   "quote": "has a much higher zero-shot accuracy of about 37.7%"
+  },
+  {
+   "claim": "UniﬁedQA (11B, T5 backbone, fine-tuned on other QA data, no tuning on MMLU) scores 48.9%, beating few-shot GPT-3 175B with far fewer parameters.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 48.9,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MMLU test set, 14079 questions, 57 tasks, accuracy; transfer setting",
+   "note": "Text says 11B is 'slightly smaller than GPT-3 Large' (13B)",
+   "where": "Sec 4.2",
+   "table": "Table 1, row UniﬁedQA, column Average"
+  },
+  {
+   "claim": "Smallest UniﬁedQA (60M parameters) gets about 29.3%, above RoBERTa-base and ALBERT-xxlarge.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 29.3,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MMLU test set, 14079 questions, 57 tasks, accuracy",
+   "note": null,
+   "where": "Sec 4.2, A.1",
+   "quote": "approximately 29.3% accuracy"
+  },
+  {
+   "claim": "Fine-tuned small models: RoBERTa-base 27.9, ALBERT-xxlarge 27.1, GPT-2 (1.5B) 32.4 average.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 32.4,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MMLU test set, 14079 questions, 57 tasks, accuracy; GPT-2 1,558M fine-tuned on UniﬁedQA MCQ data plus dev+val",
+   "note": null,
+   "where": "A.1, Table 1",
+   "quote": "GPT-2 attains an accuracy of 32.4%"
+  },
+  {
+   "claim": "UniﬁedQA 3B gets 43.7% versus 32.4% for GPT-2 1.5B, attributed by authors to T5's larger pretraining set.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 43.7,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MMLU test set, 14079 questions, 57 tasks, accuracy",
+   "note": null,
+   "where": "A.1",
+   "quote": "UniﬁedQA with 3 billion parameters attains 43.7%"
+  },
+  {
+   "claim": "Unspecialized Mechanical Turk workers score 34.5%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 34.5,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Human baseline on the MMLU test",
+   "note": null,
+   "where": "Sec 3",
+   "quote": "obtain 34.5% accuracy on this test"
+  },
+  {
+   "claim": "Estimated expert-level accuracy is about 89.8% (95th percentile test-takers, educated guess where unavailable).",
+   "kind": "claim",
+   "source": null,
+   "metric": "accuracy",
+   "value": 89.8,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Estimate across exams making up the test",
+   "note": null,
+   "where": "Sec 3",
+   "quote": "expert-level accuracy is approximately 89.8%"
+  },
+  {
+   "claim": "GPT-3 per-task accuracy ranges from 69% (US Foreign Policy) to 26% (College Chemistry); lopsided, no expert-level task.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 69,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-3 few-shot, best task",
+   "note": null,
+   "where": "Sec 4.2, Fig 6",
+   "quote": "GPT-3’s accuracy ranging from 69% for US Foreign Policy to 26% for College Chemistry"
+  },
+  {
+   "claim": "GPT-3 does better on College Medicine (47.4%) and College Mathematics (35.0%) than on Elementary Mathematics (29.9%).",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 29.9,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-3 few-shot, Elementary Mathematics",
+   "note": null,
+   "where": "Sec 4.2",
+   "quote": "Elementary Mathematics (29.9%)"
+  },
+  {
+   "claim": "9 of the 10 lowest-accuracy GPT-3 tasks are calculation-heavy STEM subjects.",
+   "kind": "measured",
+   "source": null,
+   "metric": "count",
+   "value": 9,
+   "unit": "of 10 tasks",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-3 few-shot",
+   "note": null,
+   "where": "Sec 4.2",
+   "quote": "For GPT-3, 9 out of the 10"
+  },
+  {
+   "claim": "GPT-3 zero-shot confidence can be off from accuracy by up to 24%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "calibration gap",
+   "value": 24,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-3 zero-shot, per subject",
+   "note": null,
+   "where": "Fig 8",
+   "quote": "can be off by up to 24%"
+  },
+  {
+   "claim": "Few-shot calibration gap is up to 14%; confidence-accuracy correlation r=0.81 few-shot vs r=0.63 zero-shot.",
+   "kind": "measured",
+   "source": null,
+   "metric": "calibration gap",
+   "value": 14,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-3 few-shot, per subject",
+   "note": null,
+   "where": "Fig 11, App A",
+   "quote": "reaching up to 14%"
+  },
+  {
+   "claim": "Zero-shot RMS calibration error on Elementary Mathematics is 19.4%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "RMS calibration error",
+   "value": 19.4,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-3 zero-shot",
+   "note": null,
+   "where": "Sec 4.2",
+   "quote": "zero-shot RMS calibration error of 19.4%"
+  },
+  {
+   "claim": "RoBERTa-base fine-tuned on about 2,000 extra Professional Law examples gets 32.8%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 32.8,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Professional Law test, RoBERTa-base",
+   "note": null,
+   "where": "Sec 5",
+   "quote": "our model attained 32.8% test accuracy"
+  },
+  {
+   "claim": "Continued pretraining RoBERTa on about 1.6M legal case summaries raises Professional Law to 36.1%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 36.1,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Professional Law test, RoBERTa-base, case.law corpus then fine-tune",
+   "note": null,
+   "where": "Sec 5",
+   "quote": "it only attained 36.1% accuracy"
+  },
+  {
+   "claim": "Question log-probability is negatively correlated with accuracy (zero-shot r=-0.43, few-shot r=-0.56), so the authors judge exact-question memorization unlikely.",
+   "kind": "measured",
+   "source": null,
+   "metric": "correlation",
+   "value": -0.56,
+   "unit": "r",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-3, per task",
+   "note": null,
+   "where": "Fig 13, App B.2",
+   "quote": "for the few-shot setting the correlation is r = −0.56"
+  },
+  {
+   "claim": "Test split: 15908 questions total; 1540 validation, 14079 test, 5 per subject dev.",
+   "kind": "measured",
+   "source": null,
+   "metric": "questions",
+   "value": 15908,
+   "unit": "questions",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Dataset construction",
+   "note": null,
+   "where": "Sec 3",
+   "quote": "We collected 15908 questions in total"
+  },
+  {
+   "claim": "Kaplan et al. rule quoted: 10x model size needs about 5x data.",
+   "kind": "reported",
+   "source": "Kaplan et al. 2020, Scaling laws for neural language models",
+   "metric": "ratio",
+   "value": 5,
+   "unit": "x data per 10x params",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Cited scaling-law claim",
+   "note": "source: Kaplan et al. 2020",
+   "where": "Sec 5",
+   "quote": "a 10× increase in model size must be accompanied by an approximate 5× increase in data"
+  }
+ ],
+ "limits": [
+  "Text-only; authors note multimodal knowledge is untested and propose a 'Turk Test'.",
+  "Contamination checked only indirectly (log-prob vs accuracy correlation, Fig 13); authors concede models saw related Wikipedia text and promise a list of question sources.",
+  "Only GPT-3 via API and UnifiedQA evaluated at scale; no training details of GPT-3 given, so size effects are confounded with pretraining data.",
+  "Single runs, no variance; UnifiedQA is sensitive to format (removing </s> costs several points; Moral Scenarios format hurts it).",
+  "Expert accuracy of 89.8% is partly an educated guess.",
+  "Ground-truth label quality not audited; has dated: frontier models now far exceed 43.9% (not in the source)."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "massive multitask test",
+   "definition": "57 multiple-choice tasks across humanities, social science, STEM and other, measured zero- and few-shot",
+   "where": "Sec 3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Language models are few-shot learners (GPT-3)",
+   "year": 2020,
+   "arxiv": "2005.14165",
+   "relation": "evaluates",
+   "note": "main evaluated model family",
+   "quote": null
+  },
+  {
+   "work": "UnifiedQA: Crossing format boundaries with a single QA system",
+   "year": 2020,
+   "arxiv": "2005.00700",
+   "relation": "evaluates",
+   "note": "fine-tuned transfer baseline",
+   "quote": null
+  },
+  {
+   "work": "Scaling laws for neural language models",
+   "year": 2020,
+   "arxiv": "2001.08361",
+   "relation": "related",
+   "note": "10x params needs 5x data argument",
+   "quote": null
+  },
+  {
+   "work": "Aligning AI with shared human values (ETHICS)",
+   "year": 2020,
+   "arxiv": "2008.02275",
+   "relation": "uses-data",
+   "note": "source of Moral Scenarios questions",
+   "quote": null
+  },
+  {
+   "work": "GLUE",
+   "year": 2018,
+   "arxiv": "1804.07461",
+   "relation": "related",
+   "note": "benchmark saturation motivation",
+   "quote": null
+  },
+  {
+   "work": "SuperGLUE",
+   "year": 2019,
+   "arxiv": "1905.00537",
+   "relation": "related",
+   "note": "benchmark saturation motivation",
+   "quote": null
+  },
+  {
+   "work": "HellaSwag",
+   "year": 2019,
+   "arxiv": "1905.07830",
+   "relation": "related",
+   "note": "contrast in Fig 1b",
+   "quote": null
+  },
+  {
+   "work": "RoBERTa",
+   "year": 2019,
+   "arxiv": "1907.11692",
+   "relation": "baseline",
+   "note": "fine-tuned baseline",
+   "quote": null
+  },
+  {
+   "work": "ALBERT",
+   "year": 2020,
+   "arxiv": "1909.11942",
+   "relation": "baseline",
+   "note": "fine-tuned baseline",
+   "quote": null
+  },
+  {
+   "work": "Language models as knowledge bases?",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Petroni et al.; motivation",
+   "quote": null
+  },
+  {
+   "work": "On calibration of modern neural networks",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "related",
+   "note": "calibration framing, Guo et al.",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1b",
+   "caption": "Performance on HellaSwag, SuperGLUE and the massive multitask test across GPT-3 sizes",
+   "page": 2,
+   "why": "Shows MMLU stays at chance until 175B whereas older benchmarks improve smoothly with size"
+  },
+  {
+   "figure": "Fig 1a",
+   "caption": "Few-shot prompt and predicted answer with GPT-3",
+   "page": 2,
+   "why": "The exact prompt format"
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "GPT-3 (few-shot) and UnifiedQA results per task",
+   "page": 6,
+   "why": "Per-task lopsidedness against random and expert"
+  },
+  {
+   "figure": "Fig 8",
+   "caption": "GPT-3 confidence is a poor estimator of its accuracy and can be off by up to 24%",
+   "page": 7,
+   "why": "Calibration scatter"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Average weighted accuracy for each model on all four broad disciplines",
+   "page": 5,
+   "why": "Whole model comparison in one table"
+  },
+  {
+   "figure": "Fig 10",
+   "caption": "Accuracy vs number of few-shot examples",
+   "page": 13,
+   "why": "Zero-shot only somewhat below 5-shot"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Text has ligature characters (fi shown as U+FB01), so quotes avoid them.",
+  "Dev-set 'few-shot examples' count (5 per subject) is stated; GPT-3 training details, fine-tuning hyperparameters and seeds are not in the paper."
+ ]
+}

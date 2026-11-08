@@ -28,6 +28,11 @@ sources:
   - "Iusztin & Labonne, LLM Engineer's Handbook (Packt, 2024), ch. 7"
   - https://arxiv.org/abs/2510.23038
   - "Valliappa Lakshmanan & Hannes Hapke, Generative AI Design Patterns (O'Reilly, 2025), ch. 6"
+  - https://doi.org/10.18653/v1/2024.acl-long.511
+  - https://arxiv.org/abs/2305.01937
+  - https://arxiv.org/abs/2302.07736
+  - https://arxiv.org/abs/2306.05087
+  - https://arxiv.org/abs/2305.11171
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -228,6 +233,10 @@ Training a judge does not remove position bias. J1 fine-tuned judges with reinfo
 
 Explanations can also hurt: on LLMEval2 (2,633 position items, temperature 0) GPT-3.5-turbo's position consistency fell from 68.78% to 48.97% ([arXiv:2411.15594](https://arxiv.org/abs/2411.15594) (Gu et al., 2024-11, preprint)).
 
+Position bias was measured directly in the paper that named it a fairness problem. On 80 Vicuna-bench questions, GPT-4 judging Vicuna-13B against ChatGPT gave Vicuna a **51.3% win rate when its answer was shown first and 23.8% when second**; ChatGPT as judge went from 2.5% to 82.5% for the same pair, enough to flip which model won (Vicuna ahead in 66 of 80 under one order). Sampling multiple judgments under both orders and averaging (multiple evidence calibration plus balanced position calibration, k = 3 each) lifted ChatGPT's agreement with human labels from 44.4% to 58.8% ([doi:10.18653/v1/2024.acl-long.511](https://doi.org/10.18653/v1/2024.acl-long.511) (Wang et al., ACL 2024)). The sample is small (n = 80, one pair), so read the swing, not the exact percentages.
+
+Judges can match teachers on open-ended text. Rating GPT-2 versus human stories on four attributes, davinci and ChatGPT preferred the human-written stories the way English teachers did, at about US$5 or less per run against about US$140 for each teacher ([arXiv:2305.01937](https://arxiv.org/abs/2305.01937) (Chiang & Lee, ACL 2023)). Their explanations also change how people judge: on tweets where an earlier label and ChatGPT disagreed, lay raters' mean hatefulness score (scale -1 to 1) was -0.41 for the post alone and -0.52 with ChatGPT's explanation attached (t(316) = -13.75), against +0.29 with the human-written explanation; ChatGPT's explanations also scored higher on clarity, 5.39 against 4.68 (1-7 scale, 100 tweets) ([arXiv:2302.07736](https://arxiv.org/abs/2302.07736) (Huang et al., WWW Companion 2023)). A fluent rationale is persuasive whether or not the label is right, which is one more reason to calibrate against labels ([15](15-calibration-against-human-labels.md)) rather than read the explanations.
+
 ---
 
 Turning pairwise votes into a ranking (Bradley–Terry, Elo, the Chatbot Arena caveats and a worked comparison) is in [05b](05b-pairwise-ranking-elo-and-bradley-terry.md).
@@ -247,6 +256,8 @@ Judges multiply cost: every trial × every judge × every repeat. Ways to contro
 Know the multiplier. Using GPT-4 to generate and to judge one criterion doubles the calls. Judging three criteria (quality, factual consistency, toxicity) quadruples them (*AI Engineering*, ch. 3). The usual answer is **spot-checking**: a cheap model generates and a strong judge scores 1% of responses, which buys cost at the price of missed failures. Choose the sample rate against the error bar you need ([09](09-reading-results.md#how-many-tasks)).
 
 The cascade is the reject option from classification (Chow, 1970, whom the authors cite for cost-based thresholds), applied to judges. [arXiv:2609.26550](https://arxiv.org/abs/2609.26550) (Li et al., 2026-09, preprint) froze one before testing it: a cheap decision-only judge (JEV) answers, and GPT-6 takes every pair where JEV's confidence is under 0.9, a threshold chosen on 96 pilot pairs. On 1,610 held-out preference pairs **the cascade scored 93.4% against 92.5% for GPT-6 alone, at 41.4% of the fee**. The saving depends on how good the cheap judge already is: 26.7% of the fee on RewardBench, 66.8% on JudgeBench, and 75.5% on two new workloads, where thresholds re-chosen per workload by the lower-bound rule (0.95 and 0.99) escalated 74.2% of pairs. The frozen 0.9 would have cost 61.9% there and lost 0.5 points. Two rules come with it. Set the threshold on the lower confidence bound of the accuracy loss, not the point estimate, which cut the risk of losing more than 2 points from 40–50% to about 5% with 96 labels. And check that confidence finds the errors on your data: on reference-free prose its AUROC was 0.498, so no threshold helped. Fees outside the live run are simulated, the cheap judge is one proprietary model, and only pairwise preference was tested, not rubric scores.
+
+A small open judge can be tuned to GPT-4 level on agreement. PandaLM-70B matched human annotators at 0.6687 against GPT-4's 0.6647 on a test set of about 1,000 human-labelled pairs from five instruction-tuned 7B models, while the 7B model reached 0.5926 ([arXiv:2306.05087](https://arxiv.org/abs/2306.05087) (Wang et al., ICLR 2024)). It is trained on 300K GPT-3.5-distilled comparisons and tested on a set the authors labelled, so check the judge on your own split. A related route trains a small model on synthetic labels: a T5-11B student fine-tuned on FLAN-PaLM 540B labels mixed with ANLI reached an average ROC-AUC of 87.8 on the five TRUE summarization datasets, above its 540B teacher's 84.9 ([arXiv:2305.11171](https://arxiv.org/abs/2305.11171) (Gekhman et al., EMNLP 2023)).
 
 ---
 

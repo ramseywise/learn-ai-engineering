@@ -1,0 +1,519 @@
+{
+ "schema": 1,
+ "key": "2211.11501",
+ "pdf": "generative-ai/08-eval/sources/lai-2022-ds-1000.pdf",
+ "bib": {
+  "title": "DS-1000: A Natural and Reliable Benchmark for Data Science Code Generation",
+  "authors": [
+   "Yuhang Lai",
+   "Chengxi Li",
+   "Yiming Wang",
+   "Tianyi Zhang",
+   "Ruiqi Zhong",
+   "Luke Zettlemoyer",
+   "Scott Wen-tau Yih",
+   "Daniel Fried",
+   "Sida Wang",
+   "Tao Yu"
+  ],
+  "first_author": "Lai",
+  "year": 2022,
+  "venue": "preprint (arXiv v1; ICML 2023)",
+  "arxiv": "2211.11501",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 83174,
+  "chars_total": 83174,
+  "engine": "pymupdf",
+  "skipped": "Appendix figures 16-31 (example problems) skimmed by caption only; they are prompt/code examples"
+ },
+ "type": "benchmark",
+ "question": "How can a data science code generation benchmark use natural StackOverflow problems yet have reliable execution-based evaluation and resist memorization?",
+ "hypothesis": "Models may answer public problems by recalling pre-training solutions, so perturbing problems without raising difficulty should expose and prevent this.",
+ "contributions": [
+  "1000 realistic problems over seven Python libraries from StackOverflow",
+  "multi-criteria evaluation (test cases plus surface-form constraints) with 1.8% false discovery rate",
+  "proactive perturbation against memorization, with a numpy-100 pilot"
+ ],
+ "method": {
+  "summary": "Authors hand-adapted 451 StackOverflow problems into 1000 problems with executable code contexts, test cases and surface-form constraints, perturbing more than half to differ from the web source. Five code models were evaluated with pass@1 from 40 samples per problem.",
+  "task": "data science code generation (infilling and left-to-right completion)",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "DS-1000",
+    "role": "eval",
+    "size": "1000 problems from 451 StackOverflow problems",
+    "split": "single eval set",
+    "source": "StackOverflow, 7 libraries (Pandas 291, NumPy 220, Matplotlib 155, Scikit-learn 115, SciPy 106, PyTorch 68, TensorFlow 45)",
+    "preprocessing": "filter: >=1 vote, >=1000 views, accepted answer, deduplicated; stratified by year for Pandas/TensorFlow; random initial pool of 4500; rubric-ranked; 152 surface perturbation, 235 semantic perturbation, 162 difficult rewrite, 451 origin"
+   },
+   {
+    "name": "numpy-100",
+    "role": "eval",
+    "size": "20 problems sampled from 100",
+    "split": "pilot",
+    "source": "github.com/rougier/numpy-100",
+    "preprocessing": "code context written, one test case each, surface and semantic perturbations written manually"
+   }
+  ],
+  "models": [
+   {
+    "name": "codex-davinci-002",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "supports infilling; training details undisclosed"
+    }
+   },
+   {
+    "name": "codex-davinci-001",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "codex-cushman-001",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "CodeGen",
+    "role": "evaluated",
+    "params": "6B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "InCoder",
+    "role": "evaluated",
+    "params": "6B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "sampling",
+   "temperature": "0.2 (benchmark); 0.7 for the 2800-sample reliability audit and numpy-100 pilot",
+   "top_p": "0.95",
+   "max_tokens": "1024",
+   "samples": "40 per problem (unbiased pass@1 estimator); numpy-100 pilot 10 samples x 20 problems; audit 40 samples x 70 problems",
+   "prompting": "zero-shot; Insertion (infilling with [insert] marker) or Completion (left context only, right context rewritten as instructions)",
+   "retrieval": null,
+   "parameters": {
+    "stop_sequences": "</code> and # SOLUTION END"
+   },
+   "other": {
+    "library_versions": "Python 3.7.10; Matplotlib 3.5.2, NumPy 1.21.6, Pandas 1.3.5, Scikit-learn 1.0.2, SciPy 1.7.3, TensorFlow 2.10.0, PyTorch 1.12.1, Seaborn 0.11.2",
+    "compute": "no GPUs needed for evaluation"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "pass@1",
+     "definition": "unbiased estimator from 40 samples; sample passes only if all test cases and surface-form constraints pass",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "false discovery rate",
+     "definition": "fraction of auto-accepted samples judged incorrect by annotators",
+     "unit": "%",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "Codex-001",
+    "Codex-Cushman",
+    "CodeGen-6B",
+    "InCoder-6B"
+   ],
+   "protocol": "Single run per config; no seeds or significance tests stated. Reliability audited on 10 problems per library by manual review."
+  },
+  "availability": {
+   "code": "https://ds1000-code-gen.github.io",
+   "weights": null,
+   "data": "https://ds1000-code-gen.github.io"
+  },
+  "prompts": [
+   {
+    "purpose": "Insertion format",
+    "text": "BEGIN SOLUTION\n<code>\n[insert]\n</code>\nEND SOLUTION",
+    "where": "Fig 1 (insertion marker block; rest is problem text and code context)"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Best model Codex-002 (Insertion) reaches 43.3% pass@1 on DS-1000.",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass@1",
+   "value": "43.3",
+   "unit": "% pass@1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "DS-1000, 1000 problems, 40 samples/problem, T=0.2, top-p 0.95, Insertion format",
+   "note": null,
+   "where": "Sec 4.3",
+   "quote": "The best model Codex-002 achieves a nontrivial\nbut far-from-perfect average accuracy of 43.3%"
+  },
+  {
+   "claim": "Codex-002 gains 4.1 points from Insertion over Completion format (43.3 vs 39.2).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "4.1",
+   "unit": "% points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Codex-002, DS-1000 overall",
+   "note": null,
+   "where": "Sec 4.3",
+   "quote": "The same Codex-002 model has a 4.1%\naverage accuracy improvement when used with Insertion\nformat than used with Completion format."
+  },
+  {
+   "claim": "Weakest models CodeGen-6B and InCoder-6B score 8.4 and 7.4 overall in Completion format.",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass@1",
+   "value": "7.4",
+   "unit": "% pass@1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "InCoder-6B Completion overall; CodeGen-6B 8.4",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row InCoder-6B (Completion), column Overall"
+  },
+  {
+   "claim": "On a 20-problem numpy-100 subset, Codex-002 gets 72.5% on original problems but 23.6% after semantic perturbation of equal difficulty.",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass@1",
+   "value": "23.6",
+   "unit": "% pass@1",
+   "baseline_value": "72.5",
+   "n": null,
+   "setup": "numpy-100, 20 problems, 10 samples each, T=0.7, top-p 0.95, one test case per problem; original 72.5, surface 50.8, avg perturbation 40.6",
+   "note": null,
+   "where": "Intro, Sec 2.4, Table 2",
+   "quote": "while Codex achieves 72.5% accuracy on the popular numpy-100\ndataset, the accuracy drastically drops to 23.6% after per-\nturbing them without increasing their difﬁculty."
+  },
+  {
+   "claim": "Codex-002 on numpy-100 after surface perturbation scores 50.8%.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "50.8",
+   "unit": "% pass@1",
+   "baseline_value": "72.5",
+   "n": null,
+   "setup": "numpy-100 20-problem subset, surface perturbations (paraphrase, code context change)",
+   "note": null,
+   "where": "Sec 2.4",
+   "quote": "(50.8% on surface per-\nturbations and 23.6% on semantic perturbations)"
+  },
+  {
+   "claim": "After semantic perturbation, Codex-002 still output the original problem's answer in 36% of cases, which the authors read as memorization.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "36",
+   "unit": "% of cases",
+   "baseline_value": null,
+   "n": null,
+   "setup": "numpy-100 semantic perturbations, Codex-002",
+   "note": null,
+   "where": "Sec 2.4",
+   "quote": "in 36% of the cases, the model still predicted the orig-\ninal answer of the problem after the semantic perturbation"
+  },
+  {
+   "claim": "Sample-level false discovery rate of the DS-1000 metric on Codex-002 predictions is 1.8%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "false discovery rate",
+   "value": "1.8",
+   "unit": "% of accepted samples incorrect",
+   "baseline_value": null,
+   "n": null,
+   "setup": "10 problems per library (70), 40 Codex-002 samples each at T=0.7 (2800 problem-code pairs), manual review by annotators",
+   "note": null,
+   "where": "Sec 3",
+   "quote": "Sample Level False Discovery Rate: among all pre-\ndicted samples that pass our automatic evaluation,\n1.8% of them are incorrect according to our annotator."
+  },
+  {
+   "claim": "Sample-level false omission rate is 0.5%.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "0.5",
+   "unit": "% of rejected samples correct",
+   "baseline_value": null,
+   "n": null,
+   "setup": "same 2800-sample audit",
+   "note": null,
+   "where": "Sec 3",
+   "quote": "1.8% of them are incorrect according to our annotator.\n• Sample Level False Omission Rate: among all pre-\ndicted samples that do not pass our automatic eval-\nuation, 0.5% of them are correct according to our\nannotator."
+  },
+  {
+   "claim": "Problem-level false positive percentage is 5.7%, versus 60% reported by Li et al. (2022) for APPS.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "5.7",
+   "unit": "% of problems",
+   "baseline_value": "60",
+   "n": null,
+   "setup": "same 2800-sample audit; at least one of 40 samples wrongly accepted",
+   "note": "APPS 60% is reported from Li et al. 2022 (AlphaCode); not comparable apples-to-apples per the authors",
+   "where": "Sec 3",
+   "quote": "5.7% of the problems contain at least one\nincorrect sample prediction that pass our automatic\nmetric."
+  },
+  {
+   "claim": "Problem-level false negative percentage is 5.7%.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "5.7",
+   "unit": "% of problems",
+   "baseline_value": null,
+   "n": null,
+   "setup": "same audit",
+   "note": null,
+   "where": "Sec 3",
+   "quote": "5.7% (it happens to be the same as the above)\nproblems contain at least one correct sample prediction\nthat fails to pass our automatic metric."
+  },
+  {
+   "claim": "On DS-1000 itself, surface perturbation lowers Codex-002 accuracy by 3.4 points and semantic perturbation by 9.0, far less than on numpy-100.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "9.0",
+   "unit": "% points drop (semantic)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Codex-002 Insertion, perturbed subsets only (not comparable to Table 5); surface 53.2 to 49.8, semantic 47.2 to 38.2",
+   "note": "Authors infer weaker memorization because StackOverflow items repeat less than numpy-100; indirect evidence only",
+   "where": "Sec 4.4, Table 6",
+   "quote": "The performance of Codex-002\ndrops after perturbation (3.4% on surface perturbations and\n9.0% on semantic perturbations)"
+  },
+  {
+   "claim": "Difficult rewrites drop Codex-002 by 25.8 points (46.8 to 21.0).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "25.8",
+   "unit": "% points drop",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Codex-002, 162 difficult-rewrite problems vs their origins",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row Difficult Rewrite, column Overall"
+  },
+  {
+   "claim": "1000 problems derive from 451 unique StackOverflow problems; 152 surface perturbations, 235 semantic perturbations, 162 difficult rewrites.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "451",
+   "unit": "unique source problems",
+   "baseline_value": null,
+   "n": null,
+   "setup": "DS-1000 construction",
+   "note": null,
+   "where": "Sec 3, Table 3",
+   "quote": "DS-1000\ncontains 1000 problems originating from 451 unique Stack-\nOverﬂow problems."
+  },
+  {
+   "claim": "Average 1.6 test cases per problem and 19.4% of problems carry surface-form constraints.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "1.6",
+   "unit": "test cases per problem",
+   "baseline_value": null,
+   "n": null,
+   "setup": "DS-1000 overall; HumanEval 7.7, MBPP 3.0, APPS 13.2",
+   "note": null,
+   "where": "Sec 3, Tables 3-4",
+   "quote": "there are 1.6 test cases (manually annotated\ncorner test cases) on average, and 19.4% of them are accom-\npanied by surface-form constraints."
+  },
+  {
+   "claim": "Construction took about 1200 hours by five authors; each problem reviewed by at least three experts.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "1200",
+   "unit": "hours",
+   "baseline_value": null,
+   "n": null,
+   "setup": "five CS-student authors, selection to quality review",
+   "note": null,
+   "where": "Sec 2",
+   "quote": "spent a total of about 1200 hours con-\nstructing DS-1000"
+  }
+ ],
+ "limits": [
+  "Memorization evidence on DS-1000 is indirect: perturbation drops are 3.4 and 9.0 points on subsets, not comparable to Table 5.",
+  "numpy-100 pilot uses only 20 problems, 10 samples and one test case each.",
+  "Reliability audit covers only Codex-002 on 70 problems; only 1.6 test cases per problem on average.",
+  "Several Table 6 cells average fewer than 10 problems (starred).",
+  "Single library versions fixed (2022); models are 2022-era.",
+  "Authors concede the cause of the gap between Codex and 6B models is not isolated (size, instruction tuning, pretraining data).",
+  "Matplotlib has no perturbed problems and only Completion format."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Surface perturbation",
+   "definition": "paraphrase or change code context; the reference solution stays the same",
+   "where": "Sec 2.4"
+  },
+  {
+   "term": "Semantic perturbation",
+   "definition": "change the semantics of the reference solution without changing difficulty, e.g. min instead of max",
+   "where": "Sec 2.4"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Codex (Evaluating large language models trained on code)",
+   "year": 2021,
+   "arxiv": "2107.03374",
+   "relation": "evaluates",
+   "note": "best model evaluated",
+   "quote": null
+  },
+  {
+   "work": "InCoder",
+   "year": 2022,
+   "arxiv": "2204.05999",
+   "relation": "evaluates",
+   "note": "infilling model evaluated",
+   "quote": null
+  },
+  {
+   "work": "CodeGen",
+   "year": 2022,
+   "arxiv": "2203.13474",
+   "relation": "evaluates",
+   "note": "evaluated at 6B",
+   "quote": null
+  },
+  {
+   "work": "AlphaCode, Li et al.",
+   "year": 2022,
+   "arxiv": "2203.07814",
+   "relation": "related",
+   "note": "source of 60% APPS problem-level false positive figure",
+   "quote": null
+  },
+  {
+   "work": "APPS, Hendrycks et al.",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "related",
+   "note": "compared benchmark",
+   "quote": null
+  },
+  {
+   "work": "Carlini et al. extracting training data",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "related",
+   "note": "memorization motivation",
+   "quote": null
+  },
+  {
+   "work": "numpy-100",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "memorization pilot",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "An example problem in DS-1000.",
+   "page": 2,
+   "why": "Shows prompt, reference solution, test cases and a for/while surface-form constraint in one view"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "The pipeline for building DS-1000.",
+   "page": 3,
+   "why": "Five-stage pipeline including perturbation and red teaming"
+  },
+  {
+   "figure": "Table 2",
+   "caption": "The performance of Codex-002 on numpy-100.",
+   "page": 4,
+   "why": "72.5 to 50.8 to 23.6 memorization drop"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "The perturbation categories along with examples.",
+   "page": 4,
+   "why": "Taxonomy of surface vs semantic vs difficult rewrite"
+  },
+  {
+   "figure": "Fig 5-7",
+   "caption": "numpy-100 original, surface and semantic perturbation (100th to 99th element).",
+   "page": 13,
+   "why": "Smallest concrete example of a memorization-exposing perturbation"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Text extraction fine; figure content of Fig 16-31 read by caption only."
+ ]
+}

@@ -1,0 +1,479 @@
+{
+ "schema": 1,
+ "key": "2105.09938",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/hendrycks-2021-measuring-coding-challenge-competence-apps.pdf",
+ "bib": {
+  "title": "Measuring Coding Challenge Competence With APPS",
+  "authors": [
+   "Dan Hendrycks",
+   "Steven Basart",
+   "Saurav Kadavath",
+   "Mantas Mazeika",
+   "Akul Arora",
+   "Ethan Guo",
+   "Collin Burns",
+   "Samir Puranik",
+   "Horace He",
+   "Dawn Song",
+   "Jacob Steinhardt"
+  ],
+  "first_author": "Hendrycks",
+  "year": 2021,
+  "venue": "NeurIPS 2021 Track on Datasets and Benchmarks",
+  "arxiv": "2105.09938",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 69196,
+  "chars_total": 69196,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "benchmark",
+ "question": "How well can language models write Python code from arbitrary natural-language problem specifications, measured by test cases?",
+ "hypothesis": null,
+ "contributions": [
+  "APPS: 10,000 Python problems from introductory to competition level with 131,777 test cases and 232,421 human solutions",
+  "Test-case-based metrics (test case average, strict accuracy) and evidence that BLEU is a poor proxy",
+  "Evaluation of GPT-2, GPT-Neo and few-shot GPT-3 showing syntax errors fall exponentially with scale/fine-tuning"
+ ],
+ "method": {
+  "summary": "Problems scraped from coding sites (Codewars, AtCoder, Kattis, Codeforces, plus CodeChef, HackerRank, LeetCode) with custom parsers, dedup, and a unified judge. GPT-2 (pretrained on 30 GB decontaminated GitHub Python) and GPT-Neo are fine-tuned on the APPS train set and evaluated by running generated code on test cases; GPT-3 davinci instruct is evaluated few-shot.",
+  "task": "code generation from natural-language specification (Python)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "APPS",
+    "role": "both",
+    "size": "10,000 problems; 131,777 test cases; 232,421 ground-truth solutions; avg 293.2 words per problem",
+    "split": "5,000 train / 5,000 test; test: 1,000 introductory, 3,000 interview, 1,000 competition; avg 21.2 test cases per test problem",
+    "source": "Open-access coding sites; CC BY-SA 3.0 data, MIT code; Fair Use for non-Kattis content",
+    "preprocessing": "custom HTML parsers per source, MathPix for equation images to LaTeX, problems needing images removed, tf-idf + SVD cosine dedup, identifying info in solution comments removed; six months of student curation"
+   },
+   {
+    "name": "GitHub Python (GPT-2 pretraining)",
+    "role": "pretrain",
+    "size": "30 GB Python",
+    "split": null,
+    "source": "GitHub repos with at least one star",
+    "preprocessing": "removed repos matching a keyword list (e.g. leetcode, codeforces, solution, code, problem), dropped code with functions sharing APPS starter-code signatures; spaces converted to tabs"
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT-2 0.1B",
+    "role": "evaluated",
+    "params": "0.1B",
+    "architecture": "GPT-2 decoder",
+    "init_from": "GPT-2 then pretrained on GitHub, fine-tuned on APPS",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-2 1.5B",
+    "role": "evaluated",
+    "params": "1.5B",
+    "architecture": "GPT-2 decoder",
+    "init_from": "GPT-2 then pretrained on GitHub, fine-tuned on APPS",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-Neo 2.7B",
+    "role": "evaluated",
+    "params": "2.7B",
+    "architecture": "GPT-3-like decoder",
+    "init_from": "Pile-pretrained (includes GitHub, not decontaminated for APPS), fine-tuned on APPS",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-3 davinci (Instruct series)",
+    "role": "evaluated",
+    "params": "175B (speculated)",
+    "architecture": "GPT-3",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "few-shot, not fine-tuned"
+    }
+   }
+  ],
+  "training": {
+   "objective": "predict the entire code solution given problem text and format; starter code excluded from loss",
+   "optimizer": "AdamW",
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "256",
+   "steps": null,
+   "epochs": "10 (fine-tuning)",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": "0.05",
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "8 A100 GPUs; DeepSpeed ZeRO",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "scope": "same optimizer, batch size, weight decay across pretraining and fine-tuning"
+   }
+  },
+  "inference": {
+   "decoding": "HuggingFace default generation parameters except beam search, beam size 5",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "Top-1: one program; Top-5: best of the 5 beams; one run, no seeds stated",
+   "prompting": "Call-based and standard-input prompt templates; GPT-3 few-shot with two example question/solution pairs per format, using shortest passing solutions",
+   "retrieval": null,
+   "parameters": {},
+   "other": {
+    "gpt3_cost": "inference on 5,000 test problems approximately $500"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Test case average",
+     "definition": "mean over problems of fraction of test cases where generated code output equals expected",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Strict accuracy",
+     "definition": "fraction of problems whose generated code passes every test case",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "BLEU",
+     "definition": "max BLEU against any human-written solution for the problem",
+     "unit": "BLEU",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "GPT-2 0.1B",
+    "GPT-2 1.5B",
+    "GPT-Neo 2.7B",
+    "GPT-3 175B few-shot"
+   ],
+   "protocol": "Run generated code via merged judge; syntax errors identified by whether pyext can load the code as a module; false-positive check on 2- and 3-test-case problems solved by GPT-Neo."
+  },
+  "availability": {
+   "code": "https://github.com/hendrycks/apps (MIT)",
+   "weights": null,
+   "data": "https://github.com/hendrycks/apps (CC BY-SA 3.0)"
+  },
+  "prompts": [
+   {
+    "purpose": "call-based format prompt",
+    "text": "\"\\nQUESTION:\\n\" + q_str + \"\\n\" + starter_code_str + \"\\n\" + \"\\nUse Call-Based Format\\n\\nANSWER:\\n\" (standard input problems replace Call-Based Format with Standard Input Format)",
+    "where": "Sec 3, p5"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "GPT-Neo 2.7B gets about 15% test case average and about 4% strict accuracy on introductory problems (top-1).",
+   "kind": "measured",
+   "source": null,
+   "metric": "test case average",
+   "value": 14.68,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "APPS test split (5,000 problems), fine-tuned on APPS train, beam search size 5, top-1, introductory, test case average",
+   "note": "Strict accuracy introductory 3.90",
+   "where": "Table 2",
+   "table": "Table 2, row GPT-Neo 2.7B, column Introductory (Test Case Average)"
+  },
+  {
+   "claim": "GPT-Neo 2.7B overall strict accuracy is about 1.12% top-1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "strict accuracy",
+   "value": 1.12,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "APPS test split (5,000 problems), fine-tuned on APPS train, beam search size 5, top-1, all difficulty levels",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row GPT-Neo 2.7B, column Average (Strict Accuracy)"
+  },
+  {
+   "claim": "Best of five beams lifts GPT-Neo introductory strict accuracy from 3.9% to 5.5% and test case average from 14.7% to 19.9%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "strict accuracy top-5",
+   "value": 5.5,
+   "unit": "%",
+   "baseline_value": 3.9,
+   "n": null,
+   "setup": "GPT-Neo 2.7B, introductory, top-5 vs top-1",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row Strict Accuracy, column Top-5"
+  },
+  {
+   "claim": "Top-5 test case average of GPT-2 0.1B (10.75) exceeds top-1 of GPT-2 1.5B (7.96): sampling several candidates is a strong improvement.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test case average",
+   "value": 10.75,
+   "unit": "%",
+   "baseline_value": 7.96,
+   "n": null,
+   "setup": "APPS test, overall average test case average",
+   "note": null,
+   "where": "Sec 4.3",
+   "quote": "top-5 test case average GPT-2 0.1B is 10.75 while the top-1 test case average of GPT-2 1.5B is 7.96"
+  },
+  {
+   "claim": "Few-shot GPT-3 175B solves only 3 of 5,000 test problems (two introductory, one interview); strict accuracy 0.06%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "problems solved",
+   "value": 3,
+   "unit": "problems",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-3 davinci instruct, few-shot with two examples per format, APPS test 5,000 problems",
+   "note": "Table 2 average strict accuracy 0.06",
+   "where": "Sec 4.3",
+   "quote": "GPT-3 only solves 3 problems out of 5,000"
+  },
+  {
+   "claim": "About 59% of GPT-3's introductory solutions have syntax errors vs about 3% for GPT-Neo.",
+   "kind": "measured",
+   "source": null,
+   "metric": "syntax error rate",
+   "value": 59,
+   "unit": "%",
+   "baseline_value": 3,
+   "n": null,
+   "setup": "introductory problems; syntax error = pyext cannot load the code as a module",
+   "note": null,
+   "where": "Sec 4.3, Fig 5",
+   "quote": "approximately 59% of GPT-3's generated solutions for introductory problems have syntax errors"
+  },
+  {
+   "claim": "BLEU is anticorrelated with accuracy: GPT-2 0.1B scores 26.8 introductory BLEU vs GPT-Neo 2.7B 27.1, and BLEU rises with difficulty while accuracy falls.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": 26.8,
+   "unit": "BLEU",
+   "baseline_value": 27.1,
+   "n": null,
+   "setup": "introductory problems, max BLEU against human solutions",
+   "note": "GPT-Neo 2.7B: 27.1, 29.1, 29.3",
+   "where": "Sec 4.3, Fig 6",
+   "quote": "GPT-2 0.1B has 26.8, 29.7, and 30.2 as BLEU scores for introductory, interview, and competition problems"
+  },
+  {
+   "claim": "False positives from 2-test-case problems are under 1% of problems (8 of 12 solved ones were false positives).",
+   "kind": "measured",
+   "source": null,
+   "metric": "false positive rate",
+   "value": 0.009,
+   "unit": "fraction",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-Neo 2.7B, manual check of problems with 2 test cases",
+   "note": null,
+   "where": "Sec 3",
+   "quote": "the false positive rate with 2 test cases is 8/(890 −4) = 0.009 < 1%"
+  },
+  {
+   "claim": "Codex 12B (Chen et al. 2021) reaches 4.14% top-1 and 9.65% top-5 introductory accuracy and 25% at top-1000.",
+   "kind": "reported",
+   "source": null,
+   "metric": "strict accuracy top-5",
+   "value": 9.65,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "introductory, Codex 12B, as evaluated by Chen et al. (2021)",
+   "note": null,
+   "where": "Sec 4.3",
+   "quote": "achieve top-1 and top-5 accuracy on introductory problems of 4.14% and 9.65% respectively"
+  },
+  {
+   "claim": "GPT-2 1.5B strict accuracy overall is 0.68% top-1; competition-level strict accuracy is 0.00 for all fine-tuned models.",
+   "kind": "measured",
+   "source": null,
+   "metric": "strict accuracy",
+   "value": 0.68,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "APPS test split (5,000 problems), fine-tuned on APPS train, beam search size 5, top-1",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row GPT-2 1.5B, column Average (Strict Accuracy)"
+  }
+ ],
+ "limits": [
+  "Few test cases for some Kattis problems (as few as 2) can yield false positives; authors measured under 1% rate.",
+  "GPT-Neo pretraining data not decontaminated against APPS; authors argue memorisation is implausible because performance tracks difficulty, but offer no direct test.",
+  "GPT-3 evaluated only few-shot with two examples; the 3 solved problems may be memorised or lucky.",
+  "Unclear whether GPT-Neo's edge over GPT-2 comes from more code, size or architecture (not disentangled).",
+  "Python only; fine-tuning hyperparameters (lr, schedule, seq len) not given; single run, no seeds or intervals.",
+  "Dated: 2021 models; Codex and later models far exceed these numbers. Test case coverage is a subset of possible cases."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Test case average",
+   "definition": "average fraction of test cases passed per problem",
+   "where": "Sec 4.2"
+  },
+  {
+   "term": "Strict accuracy",
+   "definition": "fraction of problems for which the generated code passes every test case",
+   "where": "Sec 4.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "GPT-2 (Radford et al. 2019)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "model family, pretrained on GitHub here",
+   "quote": null
+  },
+  {
+   "work": "GPT-3 (Brown et al. 2020)",
+   "year": 2020,
+   "arxiv": "2005.14165",
+   "relation": "evaluates",
+   "note": "davinci instruct few-shot",
+   "quote": null
+  },
+  {
+   "work": "GPT-Neo (Black et al. 2021)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "fine-tuned on APPS",
+   "quote": null
+  },
+  {
+   "work": "The Pile (Gao et al. 2020)",
+   "year": 2020,
+   "arxiv": "2101.00027",
+   "relation": "uses-data",
+   "note": "GPT-Neo pretraining incl. GitHub",
+   "quote": null
+  },
+  {
+   "work": "Evaluating large language models trained on code (Chen et al. 2021)",
+   "year": 2021,
+   "arxiv": "2107.03374",
+   "relation": "related",
+   "note": "Codex evaluated on APPS",
+   "quote": null
+  },
+  {
+   "work": "SPoC (Kulal et al. 2019)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "related",
+   "note": "pseudocode-to-code dataset compared",
+   "quote": null
+  },
+  {
+   "work": "CONCODE (Iyer et al. 2018)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "related",
+   "note": "docstring-to-Java, BLEU-evaluated",
+   "quote": null
+  },
+  {
+   "work": "CodeXGLUE (Lu et al. 2021)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "related",
+   "note": "aggregated benchmark",
+   "quote": null
+  },
+  {
+   "work": "MMLU (Hendrycks et al. 2021b)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "related",
+   "note": "same group's benchmark",
+   "quote": null
+  },
+  {
+   "work": "AdamW (Loshchilov and Hutter 2019); DeepSpeed ZeRO",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "optimiser and memory sharding",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "An example problem from APPS (left) along with possible generated code (middle) and two example test cases",
+   "page": 2,
+   "why": "Shows task/evaluation loop at a glance"
+  },
+  {
+   "figure": "Table 2",
+   "caption": "Average percentage of test cases passed and strict accuracy for each model and difficulty level",
+   "page": 7,
+   "why": "Main results"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Syntax errors decrease exponentially with fine-tuning and increased model sizes",
+   "page": 8,
+   "why": "Headline finding"
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "BLEU scores for GPT-Neo 2.7B increase with difficulty level and are anticorrelated with a gold-standard accuracy metric",
+   "page": 9,
+   "why": "Shows why BLEU fails for code"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Text cache contains ligature characters (fi, fl); quotes chosen to avoid them.",
+  "Datasheet says 'ETHICS dataset' (copy-paste slip). Intro says 'Test Cases' row in Table 1 has check marks lost in extraction. Section 3 counts: 3,639 introductory + 5,000 interview + 1,361 competition (total 10,000) with test counts 1,000/3,000/1,000."
+ ]
+}

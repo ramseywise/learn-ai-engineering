@@ -1,0 +1,602 @@
+{
+ "schema": 1,
+ "key": "1808.07042",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/reddy-2019-coqa.pdf",
+ "bib": {
+  "title": "CoQA: A Conversational Question Answering Challenge",
+  "authors": [
+   "Siva Reddy",
+   "Danqi Chen",
+   "Christopher D. Manning"
+  ],
+  "first_author": "Reddy",
+  "year": 2019,
+  "venue": "Transactions of the Association for Computational Linguistics (TACL)",
+  "arxiv": "1808.07042",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 65107,
+  "chars_total": 65107,
+  "engine": "pymupdf",
+  "skipped": "References skimmed only; figures (images) not viewed, captions only"
+ },
+ "type": "benchmark",
+ "question": "Can a large conversational reading-comprehension dataset with free-form answers and multiple domains be built, and how well do current dialogue and reading-comprehension models do on it?",
+ "hypothesis": "Conversational questions (coreference, pragmatics) and free-form answers are not handled by existing span-based reading comprehension models, leaving headroom versus humans.",
+ "contributions": [
+  "CoQA: 127k questions from 8k conversations over passages from seven domains",
+  "Free-form answers with span rationales",
+  "Analysis of linguistic phenomena in conversational questions",
+  "Benchmarks of seq2seq, PGNet, DrQA, augmented DrQA and a combined DrQA+PGNet model"
+ ],
+ "method": {
+  "summary": "Two Amazon Mechanical Turk workers (questioner and answerer) chat about a ~200-word passage; the answerer highlights a rationale span and edits it into a free-form answer. Dev/test get three extra answers per question. Baselines: seq2seq, pointer-generator (PGNet), DrQA, DrQA with yes/no tokens, and DrQA feeding PGNet.",
+  "task": "conversational question answering over a passage",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "CoQA",
+    "role": "both",
+    "size": "127k Q/A pairs; 8,399 passages; 8k conversations",
+    "split": "In-domain (Children's, Literature, Mid/High School, News, Wikipedia): 100 dev passages and 100 test passages per domain, rest train. Out-of-domain (Reddit, Science): 100 test passages each",
+    "source": "Passages from MCTest, Project Gutenberg, RACE, CNN, Wikipedia, Reddit Writing Prompts, AI2 Science Questions; collected on AMT via ParlAI",
+    "preprocessing": "Passages with multiple entities/pronominal references chosen with Stanford CoreNLP; truncated to about 200 words; ~12% of conversations had one worker play both roles (train only)"
+   }
+  ],
+  "models": [
+   {
+    "name": "Seq2seq",
+    "role": "baseline",
+    "params": null,
+    "architecture": "2-layer BiLSTM encoder, LSTM decoder with attention (OpenNMT)",
+    "init_from": "GloVe word projection (updated in training)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "2",
+    "hidden": "500",
+    "heads": null,
+    "context": "inferred: passage plus n history turns; n best from Table 9",
+    "other": {}
+   },
+   {
+    "name": "PGNet",
+    "role": "baseline",
+    "params": null,
+    "architecture": "seq2seq with copy mechanism (pointer-generator)",
+    "init_from": "GloVe",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "2",
+    "hidden": "500",
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "DrQA",
+    "role": "baseline",
+    "params": null,
+    "architecture": "Document Reader of Chen et al. 2017, LSTM span extractor",
+    "init_from": "fastText",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "3",
+    "hidden": "300",
+    "heads": null,
+    "context": null,
+    "other": {
+     "unknown_token_fraction_train": "about 17%"
+    }
+   },
+   {
+    "name": "Augmented DrQA",
+    "role": "proposed",
+    "params": null,
+    "architecture": "DrQA with yes and no tokens appended to passage",
+    "init_from": "fastText",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "3",
+    "hidden": "300",
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "DrQA+PGNet",
+    "role": "proposed",
+    "params": null,
+    "architecture": "DrQA predicts rationale/answer span, PGNet rewrites it into the answer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "training": "DrQA oracle spans fed into PGNet during training"
+    }
+   }
+  ],
+  "training": {
+   "objective": null,
+   "optimizer": "seq2seq/PGNet: SGD; DrQA: Adam",
+   "lr": "seq2seq/PGNet: initial 1.0, decay rate 0.5; DrQA: null",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": "seq2seq/PGNet 0.3 all layers; DrQA 0.4 on LSTM layers, 0.5 on word embeddings",
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "drqa_tuning": "turns of history, layers, hidden units, dropout tuned on dev",
+    "gold_span_for_drqa": "span with highest F1 to the original answer; rationale used to disambiguate; unknown token if an answer word is absent",
+    "history": "gold previous answers used to predict the next answer"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single run per model; no seeds reported",
+   "prompting": "input format: p <q> q_{i-n} <a> a_{i-n} ... <q> q_{i-1} <a> a_{i-1} <q> q_i",
+   "retrieval": null,
+   "parameters": {
+    "history_size": "0,1,2,all previous turns (Table 9)"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "macro-average word-overlap F1",
+     "definition": "per question F1 averaged over n=4 human answer sets (original + 3 extra), each set leaving one out for human performance; articles and punctuation removed",
+     "unit": "F1 %",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Seq2seq",
+    "PGNet",
+    "DrQA",
+    "human"
+   ],
+   "protocol": "Gold history answers used. Human score: each human answer compared with the other n-1 answers (partitioned into n sets). No significance tests."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "https://stanfordnlp.github.io/coqa"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "The best system (augmented DrQA) reaches 65.4 F1 on the test set versus 88.8 for humans.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 65.4,
+   "unit": "F1 %",
+   "baseline_value": 88.8,
+   "n": null,
+   "setup": "CoQA test, overall, gold history",
+   "quote": "The best system obtains an F1 score of 65.4%",
+   "table": "Table 7, row Augmt. DrQA, test Overall",
+   "note": "Abstract prints 23.4 points gap",
+   "where": "Table 7"
+  },
+  {
+   "claim": "Human F1 on the test set.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 88.8,
+   "unit": "F1 %",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CoQA test, overall",
+   "quote": "The human performance\non the test data is 88.8 F1",
+   "table": null,
+   "note": null,
+   "where": "Sec 6.3"
+  },
+  {
+   "claim": "Seq2seq overall test F1.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 26.3,
+   "unit": "F1 %",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CoQA test overall",
+   "quote": null,
+   "table": "Table 7, row Seq2seq, test Overall",
+   "note": null,
+   "where": "Table 7"
+  },
+  {
+   "claim": "PGNet overall test F1.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 44.1,
+   "unit": "F1 %",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CoQA test overall",
+   "quote": null,
+   "table": "Table 7, row PGNet, test Overall",
+   "note": null,
+   "where": "Table 7"
+  },
+  {
+   "claim": "DrQA overall test F1.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 52.6,
+   "unit": "F1 %",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CoQA test overall",
+   "quote": null,
+   "table": "Table 7, row DrQA, test Overall",
+   "note": null,
+   "where": "Table 7"
+  },
+  {
+   "claim": "DrQA+PGNet overall test F1.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 65.1,
+   "unit": "F1 %",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CoQA test overall",
+   "quote": "competi-tive with the augmented DrQA (65.1 vs. 65.4)",
+   "table": null,
+   "note": null,
+   "where": "Sec 6.3"
+  },
+  {
+   "claim": "Best model drops 6.6 F1 out-of-domain versus in-domain.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 6.6,
+   "unit": "F1 points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Augmented DrQA, test, in-domain 67.6 vs out-of-domain 60.2",
+   "quote": null,
+   "table": "Table 7, Augmt. DrQA, columns In-domain Overall and Out-of-dom. Overall",
+   "note": "Text: The best model drops by 6.6 points",
+   "where": "Table 7"
+  },
+  {
+   "claim": "Human F1 with no conversation history on 300 one/two-word questions.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 19.9,
+   "unit": "F1 %",
+   "baseline_value": null,
+   "n": null,
+   "setup": "300 sampled one or two word questions, humans",
+   "quote": "human perfor-mance drops to 19.9 F1",
+   "table": null,
+   "note": null,
+   "where": "Sec 6.3"
+  },
+  {
+   "claim": "Human F1 with full history on the same 300 questions.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 86.4,
+   "unit": "F1 %",
+   "baseline_value": null,
+   "n": null,
+   "setup": "same 300 questions",
+   "quote": "86.4 F1 when full history is shown",
+   "table": null,
+   "note": null,
+   "where": "Sec 6.3"
+  },
+  {
+   "claim": "Human F1 with only the previous turn shown.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 79.8,
+   "unit": "F1 %",
+   "baseline_value": null,
+   "n": null,
+   "setup": "same 300 questions",
+   "quote": "boosts to 79.8 F1",
+   "table": null,
+   "note": null,
+   "where": "Sec 6.3"
+  },
+  {
+   "claim": "Human F1 with last two turns shown.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 85.3,
+   "unit": "F1 %",
+   "baseline_value": null,
+   "n": null,
+   "setup": "same 300 questions",
+   "quote": "they reach up to 85.3 F1",
+   "table": null,
+   "note": null,
+   "where": "Sec 6.3"
+  },
+  {
+   "claim": "Model gains from history are small beyond one previous turn; augmented DrQA dev F1 0 vs 1 vs 2 vs all turns of history.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 66.8,
+   "unit": "F1 %",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Dev set, Augmented DrQA with 1 previous turn (0: 62.7, 2: 67.2, all: 64.5)",
+   "quote": null,
+   "table": "Table 9, row 1, column Augmt. DrQA",
+   "note": null,
+   "where": "Table 9"
+  },
+  {
+   "claim": "DrQA fails on answers without a span: F1 22.7 on 'No span found' vs 69.8 on 'Span found'.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 22.7,
+   "unit": "F1 %",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Dev set, DrQA",
+   "quote": null,
+   "table": "Table 8, row No span found, column DrQA",
+   "note": null,
+   "where": "Table 8"
+  },
+  {
+   "claim": "Pilot: the verification setup for collecting extra answers raised human F1.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 5.4,
+   "unit": "F1 %",
+   "baseline_value": null,
+   "n": null,
+   "setup": "pilot experiment",
+   "quote": "the human F1 score is increased by 5.4% when we use this veriﬁcation setup",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.3"
+  },
+  {
+   "claim": "Share of CoQA answers that overlap the passage as a span (after ignoring punctuation/case).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 66.8,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CoQA vs SQuAD 2.0",
+   "quote": null,
+   "table": "Table 4, row Span found, column CoQA",
+   "note": "Only 37% are spans if punctuation and case are not ignored (footnote 6)",
+   "where": "Table 4"
+  },
+  {
+   "claim": "Question types in 150 dev questions: lexical match 29.8%, paraphrasing 43.0%, pragmatics 27.2%; coreference: none 30.5%, explicit 49.7%, implicit 19.8%.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 49.7,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "150 annotated dev questions; value is explicit coreference share",
+   "quote": null,
+   "table": "Table 5, row Explicit coref.",
+   "note": null,
+   "where": "Table 5"
+  },
+  {
+   "claim": "Average question length is 5.5 words in CoQA versus 10.1 in SQuAD.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 5.5,
+   "unit": "words",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CoQA vs SQuAD 2.0",
+   "quote": null,
+   "table": "Table 3, row Question Length, column CoQA",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Human F1 on QuAC (concurrent dataset) versus CoQA, and QuAC average answer length 15.1 words versus 2.7.",
+   "kind": "reported",
+   "source": null,
+   "metric": null,
+   "value": 74.6,
+   "unit": "F1 %",
+   "baseline_value": null,
+   "n": null,
+   "setup": "QuAC (Choi et al. 2018) human performance as quoted",
+   "quote": "While the human performance on our test set is 88.8 F1, theirs is 74.6 F1.",
+   "table": null,
+   "note": null,
+   "where": "Sec 7"
+  },
+  {
+   "claim": "State-of-the-art test F1 on CoQA as of Jan 8, 2019 was 82.8 (BERT-based work).",
+   "kind": "reported",
+   "source": null,
+   "metric": null,
+   "value": 82.8,
+   "unit": "F1 %",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CoQA test, reported from other work (e.g. Zhu et al. 2018)",
+   "quote": "the state-of-art F1 score on the test set was 82.8",
+   "table": null,
+   "note": null,
+   "where": "Sec 7"
+  }
+ ],
+ "limits": [
+  "F1 word overlap is an imperfect metric for free-form answers; the authors say a better metric is beyond scope (Sec 6.3)",
+  "Human agreement lowest on unanswerable questions and non-overlapping answers",
+  "Questioner sees the passage so question independence from passage is incomplete",
+  "Gold previous answers are used as history in evaluation, not model predictions",
+  "Only ~1.3% unanswerable questions",
+  "Baselines are pre-BERT; paper notes BERT-based systems reached 82.8 F1 by Jan 2019, so the 65.4 numbers have dated",
+  "Reddit and Science out-of-domain only 100 passages each (about 1.5-1.7k Q/A)",
+  "No seeds, batch size, epochs or compute reported for the baselines"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "rationale",
+   "definition": "a contiguous text span in the passage highlighted by the answerer as evidence; not provided at test time",
+   "where": "Sec 2"
+  },
+  {
+   "term": "Conversational QA",
+   "definition": "Given a passage and the conversation so far, answer the next question",
+   "where": "Sec 2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "SQuAD",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "F1 metric and extractive setup; compared in Sec 4.1",
+   "quote": null
+  },
+  {
+   "work": "SQuAD 2.0 (Rajpurkar et al.)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "dataset compared",
+   "quote": null
+  },
+  {
+   "work": "Reading Wikipedia to Answer Open-Domain Questions (DrQA)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "reading comprehension baseline",
+   "quote": null
+  },
+  {
+   "work": "Pointer-Generator Networks (See et al.)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "PGNet baseline",
+   "quote": null
+  },
+  {
+   "work": "QuAC (Choi et al.)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "related",
+   "note": "concurrent conversational QA dataset",
+   "quote": null
+  },
+  {
+   "work": "ParlAI (Miller et al.)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "MTurk pairing",
+   "quote": null
+  },
+  {
+   "work": "OpenNMT (Klein et al.)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "seq2seq/PGNet implementation",
+   "quote": null
+  },
+  {
+   "work": "MCTest, RACE, CNN/DailyMail, Writing Prompts, AI2 Science Questions, Project Gutenberg",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "passage sources",
+   "quote": null
+  },
+  {
+   "work": "BERT (Devlin et al.)",
+   "year": 2018,
+   "arxiv": "1810.04805",
+   "relation": "related",
+   "note": "mentioned as later progress",
+   "quote": null
+  },
+  {
+   "work": "FlowQA (Huang et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "related",
+   "note": "later CoQA model",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "A conversation from the CoQA dataset. Each turn contains a question (Qi), an answer (Ai) and a rationale (Ri) that supports the answer.",
+   "page": 1,
+   "why": "Shows the data format"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Distribution of trigram prefixes of questions in SQuAD and CoQA.",
+   "page": 5,
+   "why": "Sunburst contrast"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Chunks of interest as a conversation progresses.",
+   "page": 8,
+   "why": "Conversation flow"
+  }
+ ],
+ "code": [],
+ "problems": []
+}

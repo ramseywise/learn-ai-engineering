@@ -1,0 +1,582 @@
+{
+ "schema": 1,
+ "key": "https://doi.org/10.18653/v1/d18-1241",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/choi-2018-quac.pdf",
+ "bib": {
+  "title": "QuAC : Question Answering in Context",
+  "authors": [
+   "Eunsol Choi",
+   "He He",
+   "Mohit Iyyer",
+   "Mark Yatskar",
+   "Wen-tau Yih",
+   "Yejin Choi",
+   "Percy Liang",
+   "Luke Zettlemoyer"
+  ],
+  "first_author": "Choi",
+  "year": 2018,
+  "venue": "EMNLP 2018",
+  "arxiv": "1808.07036",
+  "doi": "10.18653/v1/d18-1241"
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 43603,
+  "chars_total": 43603,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "benchmark",
+ "question": "Can a large crowdsourced dataset of student-teacher information-seeking dialogs over hidden Wikipedia text expose challenges in contextual, open-ended, unanswerable question answering that existing reading comprehension data miss?",
+ "hypothesis": "Models built for this data must incorporate dialog context to perform well; strong SQuAD-style models without context will fall well short of humans.",
+ "contributions": [
+  "QuAC: 14K information-seeking QA dialogs (100K questions) with information asymmetry between student and teacher",
+  "Dialog acts (continuation, affirmation, answerability) as part of the answer",
+  "Human equivalence score HEQ-Q/HEQ-D",
+  "Baselines including context-aware BiDAF++ with a 20 F1 gap to humans"
+ ],
+ "method": {
+  "summary": "Two Mechanical Turk workers play student (sees only section title and first paragraph of the article) and teacher (sees full section, answers with a span up to 30 tokens plus dialog acts). Baselines (sanity checks, text-matching, logistic regression, BiDAF++ with and without k previous QA pairs) are evaluated with word-level F1 and HEQ.",
+  "task": "information-seeking conversational extractive QA with dialog acts",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "QuAC",
+    "role": "both",
+    "size": "98,407 questions, 13,594 dialogs, 8,854 unique sections",
+    "split": "train/dev/test 83,568/7,354/7,353 questions; 11,567/1,000/1,002 dialogs; no sections shared across folds; train has 1 reference, dev/test 5 references; questions with human F1 < 40 excluded from evaluation (~10%)",
+    "source": "Wikipedia sections about people (>=100 incoming links, non-person entities removed with YAGO), collected via Amazon Mechanical Turk; http://quac.ai",
+    "preprocessing": "Sections filtered by number of paragraphs, tokens, average words per sentence; max answer length 30 tokens; dialogs with <3 QA pairs discarded; dialog ends at 12 questions, partner quit, or >2 unanswerable questions; no-answer kept only if majority of references mark it"
+   }
+  ],
+  "models": [
+   {
+    "name": "BiDAF++ (no ctx)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "BiDAF + self-attention (Clark and Gardner 2018) + contextualized embeddings (ELMo); no-answer token appended to section; dialog-act classifier over the span-end representation",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "AllenNLP re-implementation, 82.7 on SQuAD dev vs 85.8 reported"
+    }
+   },
+   {
+    "name": "BiDAF++ w/ k-ctx",
+    "role": "proposed",
+    "params": null,
+    "architecture": "BiDAF++ with marker embeddings on previous k answers in the passage and turn number encoded in question embedding",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "previous k QA pairs, k in 1,2,3",
+    "other": {}
+   },
+   {
+    "name": "Feature-rich logistic regression",
+    "role": "baseline",
+    "params": null,
+    "architecture": "Vowpal Wabbit; n-gram overlap, position/length bias, contextual features",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Pretrained InferSent",
+    "role": "baseline",
+    "params": null,
+    "architecture": "sentence with highest cosine similarity to question",
+    "init_from": "Conneau et al. 2017 InferSent",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": null,
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "note": "No training hyperparameters stated for any baseline; implementation in AllenNLP"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": "max answer span 30 tokens (collection constraint)",
+   "samples": "inferred: single run per system; no seeds or variance reported",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {
+    "input": "first k gold questions and answers, entity, topic, background paragraph, section text, question k+1; predict span indices and dialog acts"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "F1",
+     "definition": "word-level F1 as in SQuAD after removing stopwords; no-answer scored 1/0; max over references; human computed as average of max F1 over each n-1 subset against heldout reference",
+     "unit": "F1 (0-100)",
+     "higher_is_better": true
+    },
+    {
+     "name": "HEQ-Q",
+     "definition": "% of questions where system F1 >= human F1",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "HEQ-D",
+     "definition": "% of dialogs where system F1 >= human F1 on every question",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Dialog act accuracy",
+     "definition": "accuracy vs majority annotation, ties random (yes/no affirmation and follow-up continuation)",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Random sentence",
+    "Majority answer",
+    "Transition matrix",
+    "Pretrained InferSent",
+    "Logistic regression",
+    "BiDAF++",
+    "Gold NA + TM",
+    "Gold sentence + NA",
+    "Human"
+   ],
+   "protocol": "dev/test cells reported; exact match not used because span boundaries are vague"
+  },
+  "availability": {
+   "code": "AllenNLP implementation (footnote 17)",
+   "weights": null,
+   "data": "http://quac.ai"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Human upper bound F1 is 80.8 dev, 81.1 test",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": "80.8 / 81.1",
+   "unit": "F1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "QuAC dev/test (cells dev/test), questions with human F1 >= 40 unless F1 (All)",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row Human performance, column F1"
+  },
+  {
+   "claim": "Best model BiDAF++ w/ 2-ctx reaches 60.6 dev / 60.1 test F1, about 20 F1 below humans",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": "60.6 / 60.1",
+   "unit": "F1",
+   "baseline_value": "80.8 / 81.1",
+   "n": null,
+   "setup": "QuAC dev/test (cells dev/test), questions with human F1 >= 40 unless F1 (All)",
+   "note": null,
+   "where": "Abstract; Table 4",
+   "table": "Table 4, row BiDAF++ (w/ 2-ctx), column F1",
+   "quote": "Our best model underperforms humans by 20 F1"
+  },
+  {
+   "claim": "Adding 1 previous QA pair of context lifts BiDAF++ F1 from 51.8/50.2 to 59.9/59.0",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": "59.9 / 59.0",
+   "unit": "F1",
+   "baseline_value": "51.8 / 50.2",
+   "n": null,
+   "setup": "QuAC dev/test (cells dev/test), questions with human F1 >= 40 unless F1 (All)",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row BiDAF++ (w/ 1-ctx), column F1"
+  },
+  {
+   "claim": "Context gains saturate at 3 previous turns (2-ctx 60.6/60.1, 3-ctx 60.6/59.5)",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": "60.6 / 59.5",
+   "unit": "F1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "QuAC dev/test (cells dev/test), questions with human F1 >= 40 unless F1 (All)",
+   "note": null,
+   "where": "Sec 5.4",
+   "table": "Table 4, row BiDAF++ (w/ 3-ctx), column F1",
+   "quote": "we observe saturation using contexts of length 3"
+  },
+  {
+   "claim": "Best system matches human F1 on only 60% of questions and 5% of dialogs",
+   "kind": "measured",
+   "source": null,
+   "metric": "HEQ-Q / HEQ-D",
+   "value": "60% / 5%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BiDAF++ w/ 2-ctx, dev (Table 4 prints 55.7/54.8 HEQ-Q and 5.3/4.0 HEQ-D)",
+   "note": "Prose says 60% of questions; Table 4 HEQ-Q for BiDAF++ w/ 2-ctx is 55.7 dev / 54.8 test; prose appears to be rounded loosely (or refers to F1 column).",
+   "where": "Sec 5.4",
+   "quote": "the sys-\ntem achieves human equivalence on only 60% of\nquestions and 5% of full dialogs."
+  },
+  {
+   "claim": "Dialog-context-free BiDAF++ gets 51.8/50.2 F1 and HEQ-Q 45.3/43.3",
+   "kind": "measured",
+   "source": null,
+   "metric": "HEQ-Q",
+   "value": "45.3 / 43.3",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "QuAC dev/test (cells dev/test), questions with human F1 >= 40 unless F1 (All)",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row BiDAF++ (no ctx), column HEQ-Q"
+  },
+  {
+   "claim": "Transition-matrix baseline (position only) reaches 31.8/31.5 F1, best sanity check",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": "31.8 / 31.5",
+   "unit": "F1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "QuAC dev/test (cells dev/test), questions with human F1 >= 40 unless F1 (All)",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row Trans. matrix (TM), column F1"
+  },
+  {
+   "claim": "Gold sentence + NA oracle reaches 72.4/72.7 F1 but only 9.8/9.7 HEQ-D, so span approaches are needed",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": "72.4 / 72.7",
+   "unit": "F1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "QuAC dev/test (cells dev/test), questions with human F1 >= 40 unless F1 (All)",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row Gold sentence + NA, column F1"
+  },
+  {
+   "claim": "Feature-rich logistic regression 34.3/33.9 F1; pretrained InferSent 21.4/20.8 F1",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": "34.3 / 33.9",
+   "unit": "F1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "QuAC dev/test (cells dev/test), questions with human F1 >= 40 unless F1 (All)",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row Logistic regression, column F1"
+  },
+  {
+   "claim": "Yes/No accuracy: BiDAF++ w/ 2-ctx 86.6/85.7 vs human 89.4/89.0; follow-up accuracy 61.6/61.3",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "86.6 / 85.7",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "QuAC dev/test (cells dev/test), questions with human F1 >= 40 unless F1 (All)",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row BiDAF++ (w/ 2-ctx), column Yes / No"
+  },
+  {
+   "claim": "Dataset size: 98,407 questions in 13,594 dialogs over 8,854 sections",
+   "kind": "measured",
+   "source": null,
+   "metric": "questions",
+   "value": "98,407",
+   "unit": "count",
+   "baseline_value": null,
+   "n": null,
+   "setup": "All splits",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, column Overall, row questions"
+  },
+  {
+   "claim": "Split sizes 83,568 / 7,354 / 7,353 questions (train/dev/test)",
+   "kind": "measured",
+   "source": null,
+   "metric": "train questions",
+   "value": "83,568",
+   "unit": "count",
+   "baseline_value": null,
+   "n": null,
+   "setup": "train",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, column Train, row questions"
+  },
+  {
+   "claim": "Average QuAC answer is 15 tokens vs 3 for SQuAD; question 6.5 tokens vs 11",
+   "kind": "measured",
+   "source": null,
+   "metric": "answer length",
+   "value": "15",
+   "unit": "tokens",
+   "baseline_value": null,
+   "n": null,
+   "setup": "QuAC overall (Table 2: 14.6)",
+   "note": null,
+   "where": "Sec 3",
+   "quote": "has long an-\nswers of 15 tokens on average compared to 3 for\nSQuAD"
+  },
+  {
+   "claim": "20.2% of questions are unanswerable; 25.8% yes/no",
+   "kind": "measured",
+   "source": null,
+   "metric": "% unanswerable",
+   "value": "20.2",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Overall",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 2, column Overall, row % unanswerable"
+  },
+  {
+   "claim": "86% of questions are contextual; 54% non-factoid (100 sampled questions)",
+   "kind": "measured",
+   "source": null,
+   "metric": "% contextual",
+   "value": "86",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "manual labelling of 100 random questions from different dialogs",
+   "note": null,
+   "where": "Sec 3, Table 3",
+   "quote": "86% of questions\nare contextual, requiring reading the context to re-\nsolve coreference"
+  },
+  {
+   "claim": "Coreference: 61% refer to article subject, 44% to dialog history (of contextual)",
+   "kind": "measured",
+   "source": null,
+   "metric": "% coref article",
+   "value": "61",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "same 100-question sample",
+   "note": null,
+   "where": "Sec 3",
+   "quote": "44% refer to entities\nor events in the dialog history, while 61% refer to\nthe subject of the article"
+  },
+  {
+   "claim": "Context-aware model scores 6 HEQ-Q higher on 'follow up' questions; context-agnostic shows no difference",
+   "kind": "measured",
+   "source": null,
+   "metric": "HEQ-Q diff",
+   "value": "6",
+   "unit": "HEQ-Q points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "dev, BiDAF++ w/ 2-ctx vs BiDAF++",
+   "note": null,
+   "where": "Sec 5.5",
+   "quote": "performs 6 HEQ-Q\nhigher on the “follow up” questions"
+  },
+  {
+   "claim": "Validation vs original answers differ by under 1 F1",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1 diff",
+   "value": "<1",
+   "unit": "F1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "original answer used as system output vs validation answers",
+   "note": null,
+   "where": "Footnote 9",
+   "quote": "We observe a difference of less\nthan 1 F1"
+  }
+ ],
+ "limits": [
+  "Article selection biases data toward entertainers (footnote 6, datasheet)",
+  "Answers restricted to spans of at most 30 tokens, limiting expressivity",
+  "Training sections are shorter and have one reference; dev/test have five",
+  "Evaluation excludes questions with human F1 < 40 (~10% noisiest); unthresholded F1 given in last column",
+  "Continuation act has no multiple annotations so no human agreement",
+  "No training hyperparameters, seeds or variance reported for baselines",
+  "Dated: baselines are 2018 BiDAF++ models; LLM-era models not evaluated"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "HEQ",
+   "definition": "human equivalence score: percentage of examples for which system F1 exceeds or matches human F1 (HEQ-Q per question, HEQ-D per dialog)",
+   "where": "Sec 4.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "SQuAD",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "span-based reading comprehension and F1 metric",
+   "quote": null
+  },
+  {
+   "work": "SQuAD 2.0 (Rajpurkar et al.)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "related",
+   "note": "unanswerable questions",
+   "quote": null
+  },
+  {
+   "work": "CoQA (Reddy et al.)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "related",
+   "note": "concurrent conversational QA, asker sees evidence",
+   "quote": null
+  },
+  {
+   "work": "Simple and effective multi-paragraph reading comprehension (Clark and Gardner)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "self-attention BiDAF basis",
+   "quote": null
+  },
+  {
+   "work": "Bidirectional attention flow (Seo et al.)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "BiDAF",
+   "quote": null
+  },
+  {
+   "work": "Deep contextualized word representations (Peters et al.)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "ELMo embeddings",
+   "quote": null
+  },
+  {
+   "work": "InferSent (Conneau et al.)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "sentence encoder baseline",
+   "quote": null
+  },
+  {
+   "work": "MS MARCO, NewsQA, TriviaQA, NarrativeQA, CSQA, SQA, CQA",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "compared in Table 1",
+   "quote": null
+  },
+  {
+   "work": "Stede and Schlangen, Information-seeking chat",
+   "year": 2004,
+   "arxiv": null,
+   "relation": "related",
+   "note": "motivation for information-seeking dialog",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "An example dialog about a Wikipedia section...",
+   "page": 1,
+   "why": "Shows the student/teacher setup and dialog acts"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Comparison of the QuAC dataset to other question answering datasets.",
+   "page": 2,
+   "why": "Feature matrix against CoQA, SQuAD 2.0, etc. (checkmarks lost in text extraction)"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "A treemap visualization of the eight most frequent Wh words",
+   "page": 3,
+   "why": "Question-type diversity"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Heatmaps depicting the importance of context in dialogs",
+   "page": 6,
+   "why": "Answer location shifts with turn number"
+  },
+  {
+   "figure": "Fig 7",
+   "caption": "F1 of baselines and human agreement by turn, distance from previous answer, answer length",
+   "page": 9,
+   "why": "Error analysis of context-aware vs agnostic model"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Dataset name glyph is dropped in extracted text (small-caps QuAC), and Table 1 checkmarks are lost; Table 4 cells are dev / test pairs",
+  "Prose says 60% HEQ-Q while Table 4 HEQ-Q for BiDAF++ w/ 2-ctx is 55.7/54.8"
+ ]
+}

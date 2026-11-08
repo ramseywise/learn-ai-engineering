@@ -1,0 +1,553 @@
+{
+ "schema": 1,
+ "key": "2305.12524",
+ "pdf": "generative-ai/08-eval/sources/chen-2023-theoremqa.pdf",
+ "bib": {
+  "title": "TheoremQA: A Theorem-driven Question Answering Dataset",
+  "authors": [
+   "Wenhu Chen",
+   "Ming Yin",
+   "Max Ku",
+   "Pan Lu",
+   "Yixin Wan",
+   "Xueguang Ma",
+   "Jianyu Xu",
+   "Xinyi Wang",
+   "Tony Xia"
+  ],
+  "first_author": "Chen",
+  "year": 2023,
+  "venue": "EMNLP 2023 (pages 7889-7901)",
+  "arxiv": "2305.12524",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 45898,
+  "chars_total": 45898,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "benchmark",
+ "question": "Can LLMs apply university-level theorems to solve challenging science problems, which grade-school math benchmarks no longer test?",
+ "hypothesis": "Existing math word problem sets are too easy and not theorem-driven, so a theorem-based set will separate strong from weak LLMs.",
+ "contributions": [
+  "First theorem-driven QA dataset to test LLMs' ability to apply science theorems",
+  "Comprehensive evaluation of 16 LLMs",
+  "Analyses of theorem integration and multimodal understanding"
+ ],
+ "method": {
+  "summary": "Experts collected 800 university-level questions over 354 theorems in Math, Physics, EE&CS and Finance, rewriting each so the answer is an integer, float, list, bool or option. 16 LLMs were prompted with CoT and PoT; answers were extracted with ChatGPT and normalised with WolframAlpha.",
+  "task": "theorem-driven science/math question answering",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "TheoremQA",
+    "role": "eval",
+    "size": "800 questions, 354 theorems, 51 image questions (text elsewhere says 50)",
+    "split": "single evaluation set, no train/dev split stated",
+    "source": "Websites, books, or written by nine domain experts; theorem list first drafted by GPT-4 then refined by experts (~400 theorems enumerated); licence not stated",
+    "preprocessing": "Experts modified web questions to reduce contamination and to force answers into integer/float/list/bool/option"
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT-3 (text-davinci-002), GPT-3.5, ChatGPT, GPT-4",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "OpenAI instruction-tuned",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "PaLM-2, Claude-v1, Claude-instant",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Alpaca-13B, Vicuna-13B (LLaMA); OpenAssistant-12B (Pythia); MOSS-instruct-16B (CodeGen); StarChat-16B (StarCoder); InstructCodeT5+ (16B in Table 2)",
+    "role": "evaluated",
+    "params": "12B-16B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "LLaVA-13B, VisualGLM-6B",
+    "role": "evaluated",
+    "params": "13B, 6B",
+    "architecture": "multimodal",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": "CoT and PoT; one demonstration example for GPT-3 and GPT-3.5 (non-chat) to fix the output format; GPT-4 case study says it worked without any demonstration; number of shots otherwise not stated",
+   "retrieval": "Optional theorem augmentation: GPT-4-written theorem description (post-processed) or web-retrieved description concatenated in the prompt",
+   "parameters": {
+    "multimodal": "BLIP captions of images appended to the prompt (Chameleon style)",
+    "answer_extraction": "ChatGPT finds the answer span, WolframAlpha normalises to float/integer/list"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "accuracy",
+     "definition": "fraction of questions whose extracted and normalised answer matches the ground truth, broken down by answer type and field",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Random guess (10.5% All)",
+    "Four undergraduate students on 20 questions"
+   ],
+   "protocol": "single run per model and prompt as far as stated; no seeds, no significance test; extractor is imperfect so accuracy is an approximate lower bound"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": null
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "datasets.size",
+    "quote": "we also include 51 questions with image input (diagrams)",
+    "where": "Sec 3"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "GPT-4 with Program-of-Thoughts reaches 52.4% overall on TheoremQA, the best of all models.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "52.4",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "TheoremQA, 800 questions, answer extracted by ChatGPT then normalised by WolframAlpha; exact match on integer/float/list/bool/option; GPT-4, PoT prompting",
+   "note": "Abstract and intro round this to 51%; Table 2 prints 52.4",
+   "where": "Table 2",
+   "table": "Table 2, row PoT GPT-4, column All"
+  },
+  {
+   "claim": "GPT-4 with Chain-of-Thoughts reaches 43.8% overall.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "43.8",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "TheoremQA, 800 questions, answer extracted by ChatGPT then normalised by WolframAlpha; exact match on integer/float/list/bool/option; GPT-4, CoT",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row CoT GPT-4, column All"
+  },
+  {
+   "claim": "Abstract headline: GPT-4 achieves 51% with PoT prompting.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "51",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "TheoremQA, 800 questions, answer extracted by ChatGPT then normalised by WolframAlpha; exact match on integer/float/list/bool/option; GPT-4, PoT",
+   "note": "Table 2 gives 52.4 for the same cell",
+   "where": "Abstract",
+   "quote": "achieving an accuracy of 51% with Program-of-Thoughts Prompting"
+  },
+  {
+   "claim": "ChatGPT with PoT reaches 35.6%, second best; with CoT 30.2%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "35.6",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "TheoremQA, 800 questions, answer extracted by ChatGPT then normalised by WolframAlpha; exact match on integer/float/list/bool/option; ChatGPT PoT",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row PoT ChatGPT, column All"
+  },
+  {
+   "claim": "All open-source instruction-tuned models score below 15%, barely above the 10% random-guess baseline.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "15",
+   "unit": "% (upper bound)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Alpaca-13B, Vicuna-13B, OpenAssistant-12B, MOSS-16B, StarChat-16B, InstructCodeT5+ under CoT and PoT",
+   "note": null,
+   "where": "Abstract",
+   "quote": "All the existing open-sourced models are below 15%, barely surpassing the random-guess baseline."
+  },
+  {
+   "claim": "Random-guess baseline is 10.0% overall (Table 2: 10.5 in All column).",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "10.5",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Random guess row, All column",
+   "note": "Text says random guess baseline of 10%; Table 2 All column prints 10.5, Math column 10.0",
+   "where": "Table 2",
+   "table": "Table 2, row Random Guess, column All"
+  },
+  {
+   "claim": "Dataset size: 800 questions over 354 theorems (abstract says 350, intro says roughly 400 enumerated).",
+   "kind": "measured",
+   "source": null,
+   "metric": "dataset size",
+   "value": "800",
+   "unit": "questions",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Whole benchmark, expert-curated question-theorem-answer triples",
+   "note": null,
+   "where": "Sec 3 Dataset Statistics",
+   "quote": "we collected a total of 800 questions over 354 theorems"
+  },
+  {
+   "claim": "Answer-type distribution: float 47%, integer 27%, bool 15%, list 9%, option 2%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "share of answer type",
+   "value": "47",
+   "unit": "% float",
+   "baseline_value": null,
+   "n": null,
+   "setup": "All 800 questions",
+   "note": "Read from Fig 3 label text in the extracted text",
+   "where": "Fig 3",
+   "table": "Figure 3 data (text order float 47%, integer 27%, bool 15%, list 9%, option 2%)"
+  },
+  {
+   "claim": "Question counts by domain: 442 Math, 146 CS&EE, 131 Physics, 81 Finance.",
+   "kind": "measured",
+   "source": null,
+   "metric": "count",
+   "value": "442",
+   "unit": "Math questions",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Domain split of the 800",
+   "note": null,
+   "where": "Sec 3",
+   "quote": "There are 442 Math questions, 146 CS&EE ques-"
+  },
+  {
+   "claim": "Theorems by domain: 199 Math, 52 Physics, 55 Finance, 48 CS&EE.",
+   "kind": "measured",
+   "source": null,
+   "metric": "count",
+   "value": "199",
+   "unit": "Math theorems",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Domain split of 354 theorems",
+   "note": null,
+   "where": "Sec 3",
+   "quote": "there are 199 Math theorems, 52 Physics theorems,"
+  },
+  {
+   "claim": "Contamination mitigation: experts were encouraged to modify web-sourced questions; no contamination test was run.",
+   "kind": "claim",
+   "source": null,
+   "metric": "accuracy",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Construction step",
+   "note": null,
+   "where": "Sec 3",
+   "quote": "To mitigate this ’data contamination’ issue, we encouraged domain experts to modify these questions."
+  },
+  {
+   "claim": "GPT-4 beats ChatGPT by 13 points with CoT (and 16 with PoT per text).",
+   "kind": "claim",
+   "source": null,
+   "metric": "accuracy",
+   "value": "13",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Construction step",
+   "note": null,
+   "where": "Sec 3",
+   "quote": "GPT-4 can outperform ChatGPT by 13%"
+  },
+  {
+   "claim": "GPT-4 PoT beats ChatGPT PoT by 16 points and CoT by 13 points.",
+   "kind": "measured",
+   "source": null,
+   "metric": "gap",
+   "value": "16",
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-4 vs ChatGPT",
+   "note": "13% is for CoT; PoT 16% quoted separately in text; table gives 52.4-35.6=16.8 and 43.8-30.2=13.6",
+   "where": "Sec 5.2",
+   "quote": "GPT-4 can outperform ChatGPT by 13%"
+  },
+  {
+   "claim": "GPT-4 generates executable Python in 92% of PoT outputs; StarChat and CodeT5+ about 40% or less.",
+   "kind": "measured",
+   "source": null,
+   "metric": "executable ratio",
+   "value": "92",
+   "unit": "% executable",
+   "baseline_value": null,
+   "n": null,
+   "setup": "PoT prompting",
+   "note": null,
+   "where": "Sec 5.2, Fig 5",
+   "quote": "where 92% of the generated programs are runnable"
+  },
+  {
+   "claim": "PoT gains over CoT of 5-8 points on GPT-* models; Claude-v1 and StarChat gain almost nothing.",
+   "kind": "measured",
+   "source": null,
+   "metric": "gain",
+   "value": "5-8",
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CoT vs PoT",
+   "note": null,
+   "where": "Sec 5.2",
+   "quote": "Different GPT-* mod- els can normally yield a gain of 5-8% accuracy."
+  },
+  {
+   "claim": "Adding a GPT-4-written theorem description to the prompt improves accuracy by under 1 point (ChatGPT CoT 30.2 to 30.8).",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "30.8",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ChatGPT CoT with theorem text",
+   "note": null,
+   "where": "Sec 5.3",
+   "quote": "we found that the improvement is limited to within 1%",
+   "table": "Table 3, row ChatGPT CoT +, column All"
+  },
+  {
+   "claim": "On the ~50 multimodal questions no model reaches 10% (GPT-4 7.5%, ChatGPT 9.3%) when images are captioned by BLIP.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "7.5",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Image subset with BLIP captions",
+   "note": "Per-model values read from Fig 7 label order; mapping to models is ambiguous in extracted text",
+   "where": "Fig 7",
+   "quote": "none of the models were able to achieve an accuracy rate of 10%"
+  },
+  {
+   "claim": "Half of GPT-4's errors are minor calculation mistakes; 90% of Alpaca's errors are not rectifiable (do not know the theorem).",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Manual analysis of 200 erroneous cases from GPT-4, ChatGPT, Alpaca",
+   "note": null,
+   "where": "Intro, Fig 8",
+   "quote": "our human evalua- tion determined that half of GPT- 4’s errors are caused by minor mistakes"
+  },
+  {
+   "claim": "Human estimate: four undergraduates scored 12/20, 15/20, 18/20, 19/20 on 20 random questions with 24h and internet.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "20 random questions, 4 undergrads",
+   "note": null,
+   "where": "Sec 3",
+   "quote": "The four undergraduate students achieve 12/20, 15/20, 18/20, and 19/20 scores"
+  },
+  {
+   "claim": "GPT-4 and PaLM-2 already reach 92% on GSM8K, motivating a harder benchmark.",
+   "kind": "reported",
+   "source": null,
+   "metric": "accuracy",
+   "value": "92",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GSM8K",
+   "note": null,
+   "where": "Intro",
+   "quote": "both already achieved 92% accuracy"
+  }
+ ],
+ "limits": [
+  "Answer extraction is imperfect so reported accuracy is an approximate lower bound (authors)",
+  "Questions with formula, figure or matrix answers were deliberately avoided, which biases coverage (authors)",
+  "No multimodal model succeeded on the image subset (authors)",
+  "No contamination test, only an instruction to experts to modify questions; GPT-4 also helped draft the theorem list",
+  "Decoding settings, temperature, shot count and seeds are not reported",
+  "Small per-field counts (Finance 81, Physics 131) and a single run mean wide uncertainty; no confidence intervals",
+  "Headline 51% in abstract differs from 52.4 in Table 2; 350/354 theorems and 50/51 image questions printed inconsistently"
+ ],
+ "practices": [],
+ "terms": [],
+ "lineage": [
+  {
+   "work": "Program of Thoughts prompting (Chen et al. 2022b)",
+   "year": 2022,
+   "arxiv": "2211.12588",
+   "relation": "uses-method",
+   "note": "PoT prompting",
+   "quote": null
+  },
+  {
+   "work": "Chain-of-thought prompting (Wei et al. 2022b)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "CoT prompting",
+   "quote": null
+  },
+  {
+   "work": "PAL (Gao et al. 2022)",
+   "year": 2022,
+   "arxiv": "2211.10435",
+   "relation": "uses-method",
+   "note": "program-aided reasoning",
+   "quote": null
+  },
+  {
+   "work": "Chameleon (Lu et al. 2023a)",
+   "year": 2023,
+   "arxiv": "2304.09842",
+   "relation": "uses-method",
+   "note": "caption-based multimodal input",
+   "quote": null
+  },
+  {
+   "work": "MATH (Hendrycks et al. 2021)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "related",
+   "note": "closest harder math benchmark, but skill- not theorem-focused",
+   "quote": null
+  },
+  {
+   "work": "GSM8K (Cobbe et al. 2021)",
+   "year": 2021,
+   "arxiv": "2110.14168",
+   "relation": "related",
+   "note": "saturated at 92% for GPT-4 and PaLM-2",
+   "quote": null
+  },
+  {
+   "work": "GPT-4 technical report",
+   "year": 2023,
+   "arxiv": "2303.08774",
+   "relation": "evaluates",
+   "note": "strongest model evaluated",
+   "quote": null
+  },
+  {
+   "work": "LLaVA (Liu et al. 2023); BLIP (Li et al. 2022)",
+   "year": 2023,
+   "arxiv": "2304.08485",
+   "relation": "evaluates",
+   "note": "multimodal subset",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Table 2",
+   "caption": "Results for CoT and PoT prompting on TheoremQA. We report the accuracy over different fine-grained question types and scientific fields.",
+   "page": 9,
+   "why": "Per-answer-type and per-field accuracy for 16 models in one table; shows GPT-4 PoT 52.4 vs open-source about 10-14"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Answer type distribution in TheoremQA.",
+   "page": 5,
+   "why": "Shows the answer-type grading scheme: float 47, integer 27, bool 15, list 9, option 2"
+  },
+  {
+   "figure": "Fig 1",
+   "caption": "The overview of TheoremQA and the prompting strategies adopted.",
+   "page": 2,
+   "why": "Pipeline from question to CoT/PoT to extraction"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Ratio of Executable Python Program of different models with PoT prompting.",
+   "page": 7,
+   "why": "Explains why PoT helps GPT-* but not Claude or StarChat"
+  },
+  {
+   "figure": "Fig 8",
+   "caption": "Error Analysis for GPT4, ChatGPT and Alpaca. Error severity: E1 > E2 > E3",
+   "page": 8,
+   "why": "Error type split: GPT-4 mostly calculation slips, Alpaca mostly missing theorem"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Figure text extracted without axis mapping; Fig 3, 5, 7, 8 values are read from label order",
+  "No embedded instructions found"
+ ]
+}

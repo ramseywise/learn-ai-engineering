@@ -1,0 +1,566 @@
+{
+ "schema": 1,
+ "key": "1704.05426",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/williams-2018-broad-coverage-challenge-corpus-sentence.pdf",
+ "bib": {
+  "title": "A Broad-Coverage Challenge Corpus for Sentence Understanding through Inference",
+  "authors": [
+   "Adina Williams",
+   "Nikita Nangia",
+   "Samuel R. Bowman"
+  ],
+  "first_author": "Williams",
+  "year": 2018,
+  "venue": "Proceedings of NAACL-HLT 2018",
+  "arxiv": "1704.05426",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 48569,
+  "chars_total": 48569,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "benchmark",
+ "question": "Can a multi-genre NLI corpus, collected like SNLI but from ten genres of written and spoken English, give a harder and broader benchmark for sentence understanding and cross-genre transfer?",
+ "hypothesis": "SNLI's single image-caption genre limits coverage and leaves little headroom; a multi-genre corpus with comparable annotation quality should be substantially harder.",
+ "contributions": [
+  "MultiNLI, 433k premise-hypothesis pairs from ten genres of written and spoken English",
+  "Matched/mismatched dev and test sets for explicit cross-genre evaluation",
+  "Baseline results with CBOW, BiLSTM and ESIM, and annotation-tag analysis of 13 linguistic phenomena"
+ ],
+ "method": {
+  "summary": "Crowdworkers read a premise sentence from one of ten genres and write three hypotheses (entailment, neutral, contradiction); dev and test pairs are relabeled by four more workers and gold is the majority of five labels. Three sentence-pair models (CBOW, BiLSTM, ESIM) are trained on SNLI, MultiNLI, or a mix and tested on matched and mismatched genres.",
+  "task": "natural language inference (3-way: entailment, neutral, contradiction)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "MultiNLI",
+    "role": "both",
+    "size": "392,702 train, 20,000 dev, 20,000 test (433k pairs total per abstract)",
+    "split": "Train: 5 genres (FICTION, GOVERNMENT, SLATE, TELEPHONE, TRAVEL). Dev/test: 2,000 random examples per genre across all 10 genres; first 5 are matched, other 5 (9/11, FACE-TO-FACE, LETTERS, OUP, VERBATIM) mismatched. No premise in more than one set.",
+    "source": "9 genres from OANC 2nd release (downloaded 12/2016) plus FICTION compiled from freely available works; OANC permissive licence, FICTION under CC-SA/CC-BY/public domain. 387 annotators via Hybrid (gethybrid.io).",
+    "preprocessing": "Unique sentences within genres, exclude premises under eight characters, manually remove non-narrative text (formulae, bibliographic references, lists)."
+   },
+   {
+    "name": "SNLI",
+    "role": "both",
+    "size": "550,152 train, 10,000 dev, 10,000 test",
+    "split": "Standard; in mixed setting 15% random sample of SNLI train used (resampled each epoch)",
+    "source": "Bowman et al. 2015; Flickr30k captions",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "CBOW",
+    "role": "baseline",
+    "params": null,
+    "architecture": "sentence = sum of word embeddings; concat of premise, hypothesis, difference, element-wise product -> single tanh layer -> 3-way softmax",
+    "init_from": "300D GloVe 840B; OOV random; embeddings fine-tuned",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": "300D",
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "BiLSTM",
+    "role": "baseline",
+    "params": null,
+    "architecture": "average of bidirectional LSTM states over words; same classifier as CBOW",
+    "init_from": "300D GloVe 840B",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": "300D",
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "ESIM",
+    "role": "baseline",
+    "params": null,
+    "architecture": "Enhanced Sequential Inference Model (Chen et al. 2017), base without TreeLSTM ensemble",
+    "init_from": "300D GloVe 840B",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": "300D",
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "inferred: cross-entropy over 3-way softmax",
+   "optimizer": "Adam, default parameters",
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": "ESIM 0.5; CBOW and BiLSTM 0.1 (tuned on SNLI dev); per-genre CBOW 0.2",
+   "regularisation": "dropout",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "mixed_setting": "full MultiNLI train + random 15% of SNLI train each epoch",
+    "per_genre": "separate CBOW trained per genre"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "accuracy",
+     "definition": "test-set accuracy of 3-way label vs gold label; examples without 3-vote consensus (gold '-') excluded",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "inter-annotator agreement",
+     "definition": "percent of individual labels matching gold label in validated examples",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "most-frequent-class",
+    "CBOW",
+    "BiLSTM",
+    "ESIM",
+    "SNLI-only training"
+   ],
+   "protocol": "Matched and mismatched test; no seeds, repeats or significance tests stated. Dev tag analysis in Table 5."
+  },
+  "availability": {
+   "code": "github.com/nyu-mll/multiNLI/",
+   "weights": null,
+   "data": "nyu.edu/projects/bowman/multinli/; unlabeled test on Kaggle"
+  },
+  "prompts": [
+   {
+    "purpose": "Annotator instruction for written non-fiction genres (truncated)",
+    "text": "This task will involve reading a line from a non-ﬁction article and writing three sentences that relate to it. The line will describe a situation or event. Using only this description and what you know about the world: Write one sentence that is deﬁnitely correct about the situation or event in the line. Write one sentence that might be correct about the situation or event in the line. Write one sentence that is deﬁnitely incorrect about the situation or event in the line.",
+    "where": "Figure 1, p.3"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "MultiNLI has 433k pairs from ten genres, one of the largest NLI corpora",
+   "kind": "measured",
+   "source": null,
+   "metric": "pairs",
+   "value": 433,
+   "unit": "k",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MultiNLI full corpus",
+   "quote": "At 433k examples,",
+   "table": null,
+   "note": null,
+   "where": "Abstract"
+  },
+  {
+   "claim": "ESIM trained on MultiNLI gets 72.3 matched and 72.1 mismatched test accuracy",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 72.3,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ESIM, trained on MultiNLI only, matched test",
+   "quote": "ESIM 60.7 72.3 72.1",
+   "table": "Table 4, row MNLI ESIM, column Match.",
+   "note": "Table 4 extracted text prints cells on separate lines; mismatched 72.1",
+   "where": "Table 4"
+  },
+  {
+   "claim": "CBOW trained on MultiNLI gets 64.8 matched",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 64.8,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CBOW, MultiNLI train, matched test",
+   "quote": null,
+   "table": "Table 4, row MNLI CBOW, column Match.",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "BiLSTM trained on MultiNLI gets 66.9 matched and mismatched",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 66.9,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BiLSTM, MultiNLI train",
+   "quote": null,
+   "table": "Table 4, row MNLI BiLSTM, columns Match. and Mis.",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "ESIM trained on SNLI reaches 86.7 on SNLI test",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 86.7,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ESIM, SNLI train, SNLI test",
+   "quote": null,
+   "table": "Table 4, row SNLI ESIM, column SNLI",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "Most-frequent-class baseline gets 36.5 matched, 35.6 mismatched",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 36.5,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "trivial baseline",
+   "quote": null,
+   "table": "Table 4, row Most freq., column Match.",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "Adding 15% of SNLI to MultiNLI training does not change MultiNLI accuracy significantly (ESIM 72.4 matched, 71.9 mismatched)",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 72.4,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ESIM, MultiNLI + SNLI train, matched test",
+   "quote": null,
+   "table": "Table 4, row MNLI+SNLI ESIM, column Match.",
+   "note": null,
+   "where": "Table 4, Sec 4.2"
+  },
+  {
+   "claim": "Baselines score about 15% lower on MultiNLI than SNLI when trained on respective data",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy gap",
+   "value": 15,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CBOW, BiLSTM, ESIM",
+   "quote": "about 15%",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2"
+  },
+  {
+   "claim": "Only ESIM surpasses 70% on MultiNLI test sets when trained on MultiNLI",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 70,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MultiNLI train",
+   "quote": "only ESIM surpasses 70% accuracy",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2"
+  },
+  {
+   "claim": "Validation: 58.2% of MultiNLI pairs have unanimous gold label (SNLI 58.3%)",
+   "kind": "measured",
+   "source": null,
+   "metric": "unanimous gold",
+   "value": 58.2,
+   "unit": "%",
+   "baseline_value": 58.3,
+   "n": null,
+   "setup": "dev+test relabeled by 4 extra workers, 5 labels each",
+   "quote": null,
+   "table": "Table 2, row Pairs w/ unanimous gold label, column MultiNLI",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Individual label matches gold 88.7% in MultiNLI (SNLI 89.0%)",
+   "kind": "measured",
+   "source": null,
+   "metric": "agreement",
+   "value": 88.7,
+   "unit": "%",
+   "baseline_value": 89.0,
+   "n": null,
+   "setup": "validated dev/test",
+   "quote": null,
+   "table": "Table 2, row Individual label = gold label",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "1.8% of MultiNLI pairs have no gold label",
+   "kind": "measured",
+   "source": null,
+   "metric": "no gold label",
+   "value": 1.8,
+   "unit": "%",
+   "baseline_value": 2.0,
+   "n": null,
+   "setup": "no 3 labels match; marked '-'",
+   "quote": null,
+   "table": "Table 2, row No gold label",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Mean premise length 22.3 words vs 14.1 in SNLI; hypotheses 11.4",
+   "kind": "measured",
+   "source": null,
+   "metric": "mean words",
+   "value": 22.3,
+   "unit": "words",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MultiNLI premises",
+   "quote": "mean 22.3 words",
+   "table": null,
+   "note": null,
+   "where": "Sec 2.2"
+  },
+  {
+   "claim": "Only 0.9% of MultiNLI hypotheses (170 examples) differ from premise by deletion, vs 2.5% in SNLI",
+   "kind": "measured",
+   "source": null,
+   "metric": "deletion hypotheses",
+   "value": 0.9,
+   "unit": "%",
+   "baseline_value": 2.5,
+   "n": null,
+   "setup": "MultiNLI",
+   "quote": "only 0.9% of those in MultiNLI (170",
+   "table": null,
+   "note": null,
+   "where": "Sec 2.2"
+  },
+  {
+   "claim": "Baselines lose 3-4 points on comparatives/superlatives, which occur in 17% of pairs",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy loss",
+   "value": 3,
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "tag analysis, models trained on MultiNLI",
+   "quote": "losing 3-4 points each",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.3"
+  },
+  {
+   "claim": "Negation is the only tag with a notable label skew: 48% most-frequent label (contradiction)",
+   "kind": "measured",
+   "source": null,
+   "metric": "label share",
+   "value": 48,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MultiNLI dev, tag Negation (PTB)",
+   "quote": null,
+   "table": "Table 5, row Negation (PTB), column %",
+   "note": null,
+   "where": "Table 5"
+  },
+  {
+   "claim": "Modals occur in 28% of MultiNLI dev pairs vs under 1% of SNLI",
+   "kind": "measured",
+   "source": null,
+   "metric": "tag frequency",
+   "value": 28,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "dev set",
+   "quote": null,
+   "table": "Table 5, row Modals (PTB)",
+   "note": null,
+   "where": "Table 5"
+  },
+  {
+   "claim": "Model trained only on SLATE gets 55.6 on 9/11 and 57.2 on VERBATIM; average performance on SLATE 57.5%",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 57.5,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "single-genre CBOW, average over SNLI and matched-genre trained runs",
+   "quote": "average performance on SLATE was only 57.5%",
+   "table": null,
+   "note": null,
+   "where": "Sec 3"
+  }
+ ],
+ "limits": [
+  "Baselines are only CBOW, BiLSTM and ESIM; no seeds, variance or significance tests stated; learning rate, batch size, epochs not given.",
+  "Models perform similarly on matched and mismatched sets, so the cross-genre transfer test is not yet discriminating; authors expect genre mismatch to matter as models improve.",
+  "Gold labels depend on annotator coreference assumptions; spurious cues (e.g. negation predicts contradiction) acknowledged; no hypothesis-only baseline.",
+  "Premises are single sentences; hypotheses written by crowdworkers (387, demographics unavailable). Dated: baselines far below later pretrained models."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "matched",
+   "definition": "test examples derived from the same sources as those in the training set",
+   "where": "Sec 1"
+  },
+  {
+   "term": "mismatched",
+   "definition": "examples that do not closely resemble any of those seen at training time",
+   "where": "Sec 1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "A large annotated corpus for learning natural language inference (SNLI)",
+   "year": 2015,
+   "arxiv": "1508.05326",
+   "relation": "extends",
+   "note": "collection method and size modeled on SNLI",
+   "quote": null
+  },
+  {
+   "work": "Enhanced LSTM for natural language inference (ESIM)",
+   "year": 2017,
+   "arxiv": "1609.06038",
+   "relation": "baseline",
+   "note": "strong baseline",
+   "quote": null
+  },
+  {
+   "work": "GloVe",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "300D initialisation",
+   "quote": null
+  },
+  {
+   "work": "Adam",
+   "year": 2015,
+   "arxiv": "1412.6980",
+   "relation": "uses-method",
+   "note": "optimizer",
+   "quote": null
+  },
+  {
+   "work": "Open American National Corpus",
+   "year": 2006,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "nine of ten genres",
+   "quote": null
+  },
+  {
+   "work": "Conneau et al. Supervised learning of universal sentence representations from NLI data",
+   "year": 2017,
+   "arxiv": "1705.02364",
+   "relation": "related",
+   "note": "NLI as pretraining source task",
+   "quote": null
+  },
+  {
+   "work": "SICK (Marelli et al.)",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "validation procedure",
+   "quote": null
+  },
+  {
+   "work": "Mou et al. Natural language inference by tree-based convolution and heuristic matching",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "concat/difference/product feature",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Table 1",
+   "caption": "Randomly chosen examples from the development set, with genre labels, gold labels and five validation labels",
+   "page": 2,
+   "why": "shows genre diversity and label noise at a glance"
+  },
+  {
+   "figure": "Fig 1",
+   "caption": "The main text of a prompt (truncated) presented to annotators, written non-fiction genres",
+   "page": 3,
+   "why": "shows the three-hypothesis elicitation protocol"
+  },
+  {
+   "figure": "Table 3",
+   "caption": "Key statistics for the corpus by genre",
+   "page": 5,
+   "why": "genre split, matched/mismatched, per-genre accuracy"
+  },
+  {
+   "figure": "Table 4",
+   "caption": "Test set accuracies (%) for all models",
+   "page": 6,
+   "why": "core baseline results"
+  },
+  {
+   "figure": "Table 5",
+   "caption": "Dev. Freq. by annotation tag",
+   "page": 8,
+   "why": "phenomenon coverage vs SNLI"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Table cells extract one per line; the paper's Conclusion cites Table 5 for baseline performance where Table 4 is meant."
+ ]
+}

@@ -1,0 +1,619 @@
+{
+ "schema": 1,
+ "key": "2202.12837",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/min-2022-rethinking-role-demonstrations.pdf",
+ "bib": {
+  "title": "Rethinking the Role of Demonstrations: What Makes In-Context Learning Work?",
+  "authors": [
+   "Sewon Min",
+   "Xinxi Lyu",
+   "Ari Holtzman",
+   "Mikel Artetxe",
+   "Mike Lewis",
+   "Hannaneh Hajishirzi",
+   "Luke Zettlemoyer"
+  ],
+  "first_author": "Min",
+  "year": 2022,
+  "venue": "Proceedings of the 2022 Conference on Empirical Methods in Natural Language Processing (EMNLP), pages 11048-11064",
+  "arxiv": "2202.12837",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 65680,
+  "chars_total": 65680,
+  "engine": "pymupdf",
+  "skipped": "Reference list (about lines 1144-1500) skimmed only."
+ },
+ "type": "empirical",
+ "question": "Which aspects of the demonstrations in in-context learning actually drive end-task performance, and does the ground-truth input-label mapping matter?",
+ "hypothesis": "Ground-truth input-label pairings are not what drives in-context learning gains; the label space, the input text distribution and the pair format are (stated as findings, not framed as an a-priori hypothesis).",
+ "contributions": [
+  "Show that replacing gold labels with random labels barely hurts in-context learning across 12 models including GPT-3",
+  "Identify label space, input distribution and format as the key drivers via ablated demonstration variants",
+  "Show meta-training with an in-context objective magnifies reliance on simpler aspects such as format"
+ ],
+ "method": {
+  "summary": "Inference-only study. Demonstrations are altered (random labels, a% correct labels, OOD inputs, random English words as labels, no labels, labels only) and performance is compared with gold-label demos and no demos across 12 model/inference-method variants on 26 datasets.",
+  "task": "in-context learning on classification and multi-choice tasks",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "26 low-resource datasets (GLUE, SuperGLUE, financial_phrasebank, poem_sentiment, ethos, tweet_eval, openbookqa, commonsense_qa, ai2_arc, copa, etc.)",
+    "role": "eval",
+    "size": "each with fewer than 10K training examples; Table 2 gives per-dataset # train / # eval (e.g. financial_phrasebank 1,811/453, hate_speech18 8,562/2,141)",
+    "split": "k=16 examples sampled uniformly from train; HuggingFace development data used for evaluation",
+    "source": "HuggingFace datasets (Lhoest et al., 2021); same k-shot train sets and 5 seeds as Min et al. 2021b",
+    "preprocessing": "minimal templates (Table 3); manual templates as ablation"
+   },
+   {
+    "name": "CC-News",
+    "role": "eval",
+    "size": "external corpus for OOD demonstration inputs, sampled to match test input length",
+    "split": null,
+    "source": "Nagel, 2016",
+    "preprocessing": null
+   },
+   {
+    "name": "english-words (pypi)",
+    "role": "eval",
+    "size": "61,569 words, source of random English labels",
+    "split": null,
+    "source": "pypi.org/project/english-words",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT-2 Large",
+    "role": "evaluated",
+    "params": "774M",
+    "architecture": "decoder-only dense LM",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "public": true
+    }
+   },
+   {
+    "name": "MetaICL",
+    "role": "evaluated",
+    "params": "774M",
+    "architecture": "decoder-only, meta-trained with in-context objective",
+    "init_from": "GPT-2 Large",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "eval datasets do not overlap meta-training datasets"
+    }
+   },
+   {
+    "name": "GPT-J",
+    "role": "evaluated",
+    "params": "6B",
+    "architecture": "decoder-only dense LM",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "fairseq 6.7B",
+    "role": "evaluated",
+    "params": "6.7B",
+    "architecture": "dense LM (Artetxe et al. 2021)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "fairseq 13B",
+    "role": "evaluated",
+    "params": "13B",
+    "architecture": "dense LM (Artetxe et al. 2021)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-3 (Davinci API, base not instruct)",
+    "role": "evaluated",
+    "params": "175B",
+    "architecture": "decoder-only dense LM",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "size assumed 175B following Gao et al. 2021 and Artetxe et al. 2021; weights not public"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "argmax over a small discrete label set C of P(y|x1,y1...xk,yk,x) (direct); channel flips x and y",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "5 random seeds for the choice of k training examples (3 seeds and 6 datasets for fairseq 13B and GPT-3); per-dataset average over seeds, then macro-average over datasets",
+   "prompting": "k=16 input-label demonstrations, minimal templates; GPT-2 separates input and label with a space and examples with a space; MetaICL, GPT-J, GPT-3 use newline between input and label and three newlines between examples; fairseq uses a newline for both",
+   "retrieval": null,
+   "parameters": {
+    "k": "16 default; ablation over 0,4,8,16,32",
+    "inference_methods": "direct and channel (Min et al. 2021a)",
+    "ablation_datasets": "5 classification (MRPC, RTE, Tweet_eval-hate, SICK, poem-sentiment) and 4 multi-choice (OpenbookQA, CommonsenseQA, COPA, ARC)",
+    "random_label_sampling": "uniform from C; Appendix C.2 also samples from true label distribution"
+   },
+   "other": {
+    "hardware_note": "fairseq 13B and GPT-3 restricted to 6 datasets and 3 seeds due to limited resources"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Macro-F1",
+     "definition": "classification tasks; averaged over seeds per dataset then macro-averaged over datasets",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Accuracy",
+     "definition": "multi-choice tasks, same averaging",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "No demonstrations (zero-shot)",
+    "Demonstrations with gold labels"
+   ],
+   "protocol": "Variants differ in format/input/label-space/mapping (Fig 7, Fig 8-10 tables); no significance test described beyond use of the word significantly"
+  },
+  "availability": {
+   "code": "github.com/Alrope123/rethinking-demonstrations",
+   "weights": null,
+   "data": "HuggingFace datasets"
+  },
+  "prompts": [
+   {
+    "purpose": "Minimal template example (MRPC)",
+    "text": "sentence 1: Cisco pared spending to compensate for sluggish sales . [SEP] sentence 2: In response to sluggish sales , Cisco pared spending . \\n {equivalent|not_equivalent}",
+    "where": "Table 3"
+   },
+   {
+    "purpose": "Manual template example (MRPC)",
+    "text": "Cisco pared spending to compensate for sluggish sales . \\n The question is: In response to sluggish sales , Cisco pared spending . True or False? \\n The answer is:{True|False}",
+    "where": "Table 3"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Replacing gold labels with random labels in demonstrations drops performance only 0-5% absolute across nearly all models.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Macro-F1/accuracy drop",
+   "value": "0-5",
+   "unit": "% absolute",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Channel/direct inference; k=16 minimal-template demonstrations; 12 model variants (6 LMs x direct/channel), 26 classification and multi-choice datasets (6 datasets for fairseq 13B and GPT-3); Macro-F1 for classification, accuracy for multi-choice",
+   "quote": "models see performance drop in the range of 0–5% absolute",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.1, Fig 3"
+  },
+  {
+   "claim": "Average drop from random labels is smaller in multi-choice than classification.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "1.7 vs 2.6",
+   "unit": "% absolute",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Channel/direct inference; k=16 minimal-template demonstrations; 12 model variants (6 LMs x direct/channel), 26 classification and multi-choice datasets (6 datasets for fairseq 13B and GPT-3); Macro-F1 for classification, accuracy for multi-choice",
+   "quote": "There is less impact in replacing labels in multi-choice tasks (1.7% on average) than in classification tasks (2.6% absolute).",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.1"
+  },
+  {
+   "claim": "MetaICL shows almost no drop from random labels.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "0.1-0.9",
+   "unit": "% absolute",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Channel/direct inference; k=16 minimal-template demonstrations; 12 model variants (6 LMs x direct/channel), 26 classification and multi-choice datasets (6 datasets for fairseq 13B and GPT-3); Macro-F1 for classification, accuracy for multi-choice; MetaICL only",
+   "quote": "little performance drop in MetaICL: 0.1–0.9%",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.1"
+  },
+  {
+   "claim": "Always-incorrect labels preserve most of the demonstration gain for MetaICL (classification), MetaICL (multi-choice) and GPT-J (multi-choice).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "92%, 100%, 97%",
+   "unit": "% of improvement preserved",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Ablation, 5 classification and 4 multi-choice datasets, k=16, 0% correct labels",
+   "quote": "preserving 92%, 100% and 97% of improvements",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2, Fig 4"
+  },
+  {
+   "claim": "GPT-J on classification drops nearly 10% with always-incorrect labels but stays above no demonstrations.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "nearly 10",
+   "unit": "% drop",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Ablation, 5 classification datasets, channel GPT-J",
+   "quote": "e.g., nearly 10% drop in",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2, Fig 4"
+  },
+  {
+   "claim": "Gold-vs-random gap stays small across k; gains from larger k flatten beyond k=8.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "0.8-1.6",
+   "unit": "% gap across k (4.4% at k=4 classification)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Channel MetaICL (classification) and Direct GPT-J (multi-choice), k in 0,4,8,16,32",
+   "quote": "in the range of 0.8–1.6%",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2, Fig 5"
+  },
+  {
+   "claim": "OOD inputs (CC-News sentences) in demonstrations cut performance by 3-16% absolute, showing the input distribution matters.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "3-16",
+   "unit": "% absolute drop",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Channel MetaICL, Direct GPT-J, Channel GPT-J; classification and multi-choice; Direct MetaICL is an exception",
+   "quote": "by 3–16% in absolute",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.1, Fig 8"
+  },
+  {
+   "claim": "For direct models, random English words as labels instead of random in-label-space labels cost 5-16% absolute, showing the label space matters.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "5-16",
+   "unit": "% absolute drop",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Direct models, classification and multi-choice, ablation datasets",
+   "quote": "ranging between 5–16% absolute",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.2, Fig 9"
+  },
+  {
+   "claim": "For channel models removing the label space costs little.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "0-2",
+   "unit": "% absolute drop",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Channel models, ablation datasets",
+   "quote": "there is 0–2% drop in absolute",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.2, Fig 9"
+  },
+  {
+   "claim": "Direct MetaICL keeps 95% (classification) and 82% (multi-choice) of the in-context gain using random corpus sentences randomly paired with the label set.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "95% and 82%",
+   "unit": "% of improvement retained",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Direct MetaICL; OOD inputs + random labels vs gold demos",
+   "quote": "it is possible to retain 95% and 82% of improve",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.3, Fig 10"
+  },
+  {
+   "claim": "Channel models keep 75-87% of the gain by pairing each unlabeled training input with a random English word.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "82%, 87%, 86% and 75%",
+   "unit": "% of improvement retained",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MetaICL cls, GPT-J cls, MetaICL multi-choice, GPT-J multi-choice (channel)",
+   "quote": "retain 82%, 87%, 86% and 75% of improvements from in-context",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.3, Fig 10"
+  },
+  {
+   "claim": "Removing the format (no labels, or labels only) is close to or worse than no demonstrations.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "none",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Direct/channel MetaICL and GPT-J, ablation datasets",
+   "quote": "removing the format is close to or worse than no demonstrations",
+   "table": null,
+   "note": "Qualitative; read from Fig 10",
+   "where": "Sec 5.3, Fig 10"
+  },
+  {
+   "claim": "Sampling random labels from the true label distribution narrows the gold-vs-random gap further for Channel MetaICL.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "1.9 to 1.3",
+   "unit": "% absolute gap",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Classification, Channel MetaICL, uniform vs true-distribution random labels",
+   "quote": "with Channel MetaICL, the gap is reduced from 1.9% to 1.3% absolute",
+   "table": null,
+   "note": null,
+   "where": "App C.2"
+  },
+  {
+   "claim": "Same for Channel GPT-J.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "5.0 to 3.5",
+   "unit": "% absolute gap",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Classification, Channel GPT-J",
+   "quote": "the gap is reduced from 5.0% to 3.5% absolute",
+   "table": null,
+   "note": null,
+   "where": "App C.2"
+  },
+  {
+   "claim": "Largest per-dataset gold-vs-random gap is nearly 14% absolute on financial_phrasebank with GPT-J.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "14",
+   "unit": "% absolute",
+   "baseline_value": null,
+   "n": null,
+   "setup": "financial_phrasebank, GPT-J",
+   "quote": "nearly 14% absolute on the",
+   "table": null,
+   "note": null,
+   "where": "Limitation, App C.2, Fig 12"
+  }
+ ],
+ "limits": [
+  "Only classification and multi-choice tasks with natural-language inputs; generation not tested (authors concede)",
+  "Synthetic tasks may use ground-truth labels more (Rong 2021)",
+  "Macro averages hide outlier datasets such as financial_phrasebank (nearly 14% gap) and some hate-speech sets",
+  "Later work: Kim et al. 2022 found negated labels substantially lower classification performance; Madaan and Yazdanbakhsh 2022 found random rationales in chain-of-thought hurt substantially",
+  "Models of 774M-175B from 2021-era; no instruction-tuned models (authors only hypothesise findings carry over)",
+  "Several direct models (GPT-2, GPT-J, fairseq 6.7B) are near random guessing on many classification datasets; channel fairseq 13B no-demo beats gold demos",
+  "GPT-3 and fairseq 13B evaluated on only 6 datasets and 3 seeds",
+  "Temperature, max tokens and seeds values not stated; GPT-3 size assumed 175B"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "ground truth input-label mapping",
+   "definition": "correctly-paired inputs and labels in the demonstrations",
+   "where": "Sec 4.1"
+  },
+  {
+   "term": "direct / channel",
+   "definition": "direct models P(y|x); channel models condition on the label and score the input (x and y flipped)",
+   "where": "Sec 3, footnote 4"
+  },
+  {
+   "term": "meta-training",
+   "definition": "training with an in-context learning objective on a collection of supervised datasets (MetaICL)",
+   "where": "Sec 5.4"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Language models are few-shot learners (Brown et al.)",
+   "year": 2020,
+   "arxiv": "2005.14165",
+   "relation": "extends",
+   "note": "introduces in-context learning; GPT-3 evaluated",
+   "quote": null
+  },
+  {
+   "work": "MetaICL (Min et al. 2021b)",
+   "year": 2021,
+   "arxiv": "2110.15943",
+   "relation": "uses-method",
+   "note": "meta-trained model, datasets and k-shot splits",
+   "quote": null
+  },
+  {
+   "work": "Noisy channel language model prompting (Min et al. 2021a)",
+   "year": 2021,
+   "arxiv": "2108.04106",
+   "relation": "uses-method",
+   "note": "direct and channel inference",
+   "quote": null
+  },
+  {
+   "work": "Efficient large scale language modeling with mixtures of experts (Artetxe et al.)",
+   "year": 2021,
+   "arxiv": "2112.10684",
+   "relation": "evaluates",
+   "note": "fairseq dense LMs",
+   "quote": null
+  },
+  {
+   "work": "GPT-J (Wang and Komatsuzaki)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "6B model",
+   "quote": null
+  },
+  {
+   "work": "Reynolds and McDonell",
+   "year": 2021,
+   "arxiv": "2102.07350",
+   "relation": "related",
+   "note": "demonstrations are for task location; authors agree with the premise but argue demonstrations are still the easiest prompt",
+   "quote": null
+  },
+  {
+   "work": "Xie et al.",
+   "year": 2022,
+   "arxiv": "2111.02080",
+   "relation": "related",
+   "note": "ICL as Bayesian inference over latent concepts",
+   "quote": null
+  },
+  {
+   "work": "Webson and Pavlick",
+   "year": 2022,
+   "arxiv": "2109.01247",
+   "relation": "related",
+   "note": "irrelevant or misleading instructions do not hurt much",
+   "quote": null
+  },
+  {
+   "work": "Kim et al.",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "negated labels lower performance; cited as a later qualification",
+   "quote": null
+  },
+  {
+   "work": "Madaan and Yazdanbakhsh",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "similar analysis for chain-of-thought rationales",
+   "quote": null
+  },
+  {
+   "work": "Ye et al.; Zhao et al.; Holtzman et al. (templates)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "minimal and manual templates",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Results in classification (top) and multi-choice tasks (bottom), using three LMs with varying size.",
+   "page": 1,
+   "why": "headline result: random labels barely below gold"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "An overview of in-context learning. The demonstrations consist of k input-label pairs from the training data (k = 3 in the figure).",
+   "page": 2,
+   "why": "shows prompt layout"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Results when using no-demonstrations, demonstrations with gold labels, and demonstrations with random labels",
+   "page": 3,
+   "why": "full 12-model comparison"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Results with varying number of correct labels in the demonstrations.",
+   "page": 4,
+   "why": "0-100% correct labels curve"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Ablations on varying numbers of examples in the demonstrations (k).",
+   "page": 4,
+   "why": "flat curve beyond k=8"
+  },
+  {
+   "figure": "Fig 7",
+   "caption": "Four different aspects in the demonstrations: the input-label mapping, the distribution of the input text, the label space, and the use of input-label pairing as the format.",
+   "page": 5,
+   "why": "decomposition of a demonstration into four aspects; best candidate for a note figure"
+  },
+  {
+   "figure": "Table 4",
+   "caption": "Example demonstrations when using methods in Section 5.",
+   "page": 16,
+   "why": "concrete examples of each variant with F/L/I/M flags"
+  }
+ ],
+ "code": [
+  {
+   "where": "Algorithm 1, p11061",
+   "snippet": "FORMDEMONS({(xi,yi)}, a): n <- k*a/100; G <- Sample(Range(1,k), n); for i in 1..k: if i in G append (xi,yi) else append (xi, Sample(C - yi))",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "No embedded instructions found",
+  "Figure numbers are read from caption text; figure data (bars) is not in text so exact per-model values are unavailable"
+ ]
+}

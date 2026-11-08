@@ -1,0 +1,507 @@
+{
+ "schema": 1,
+ "key": "1905.00537",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/wang-2019-superglue.pdf",
+ "bib": {
+  "title": "SuperGLUE: A Stickier Benchmark for General-Purpose Language Understanding Systems",
+  "authors": [
+   "Alex Wang",
+   "Yada Pruksachatkun",
+   "Nikita Nangia",
+   "Amanpreet Singh",
+   "Julian Michael",
+   "Felix Hill",
+   "Omer Levy",
+   "Samuel R. Bowman"
+  ],
+  "first_author": "Wang",
+  "year": 2019,
+  "venue": "NeurIPS 2019 (33rd Conference on Neural Information Processing Systems)",
+  "arxiv": "1905.00537",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 92211,
+  "chars_total": 92211,
+  "engine": "pymupdf",
+  "skipped": "References skimmed only"
+ },
+ "type": "benchmark",
+ "question": "Can a harder successor to GLUE, with more diverse task formats and human baselines, keep measuring progress in general-purpose language understanding once GLUE is saturated by pretrained models?",
+ "hypothesis": "Significant progress on SuperGLUE should require substantive innovations in sample-efficient, transfer, multitask, and unsupervised or self-supervised learning, since BERT-based systems still lag humans by nearly 20 points.",
+ "contributions": [
+  "Eight harder NLU tasks selected from an open call for proposals by BERT and human baselines",
+  "More diverse task formats (coreference, QA) beyond sentence and sentence-pair classification",
+  "Human performance estimates for all tasks",
+  "jiant, a modular PyTorch/AllenNLP toolkit",
+  "Revised leaderboard usage rules and credit assignment"
+ ],
+ "method": {
+  "summary": "Eight tasks (BoolQ, CB, COPA, MultiRC, ReCoRD, RTE, WiC, WSC) plus two diagnostics (AXb broad-coverage entailment, AXg Winogender) are scored by an equal-weight average over tasks. Baselines are most-frequent-class, CBOW (GloVe), bert-large-cased fine-tuned per task, and BERT++ with intermediate MultiNLI/SWAG fine-tuning; human performance is estimated with Mechanical Turk majority votes.",
+  "task": "general-purpose language understanding benchmark (QA, NLI, WSD, coreference)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "BoolQ",
+    "role": "both",
+    "size": "9427/3270/3245",
+    "split": "train/dev/test as SuperGLUE-distributed",
+    "source": "Google queries, Wikipedia",
+    "preprocessing": null
+   },
+   {
+    "name": "CB",
+    "role": "both",
+    "size": "250/57/250",
+    "split": "train/dev/test as SuperGLUE-distributed",
+    "source": "various",
+    "preprocessing": null
+   },
+   {
+    "name": "COPA",
+    "role": "both",
+    "size": "400/100/500",
+    "split": "train/dev/test as SuperGLUE-distributed",
+    "source": "blogs, photography encyclopedia",
+    "preprocessing": null
+   },
+   {
+    "name": "MultiRC",
+    "role": "both",
+    "size": "5100/953/1800 answers (456/83/166 questions)",
+    "split": "train/dev/test as SuperGLUE-distributed",
+    "source": "various",
+    "preprocessing": null
+   },
+   {
+    "name": "ReCoRD",
+    "role": "both",
+    "size": "101k/10k/10k",
+    "split": "train/dev/test as SuperGLUE-distributed",
+    "source": "news (CNN, Daily Mail)",
+    "preprocessing": null
+   },
+   {
+    "name": "RTE",
+    "role": "both",
+    "size": "2500/278/300",
+    "split": "train/dev/test as SuperGLUE-distributed",
+    "source": "news, Wikipedia",
+    "preprocessing": null
+   },
+   {
+    "name": "WiC",
+    "role": "both",
+    "size": "6000/638/1400",
+    "split": "train/dev/test as SuperGLUE-distributed",
+    "source": "WordNet, VerbNet, Wiktionary",
+    "preprocessing": null
+   },
+   {
+    "name": "WSC",
+    "role": "both",
+    "size": "554/104/146",
+    "split": "train/dev/test as SuperGLUE-distributed",
+    "source": "fiction books",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "BERT (bert-large-cased)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "BERT large, cased; simplest possible head per task, separate fine-tuned copy per task",
+    "init_from": "pretrained BERT",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "BERT++",
+    "role": "baseline",
+    "params": null,
+    "architecture": "BERT with STILTs-style intermediate fine-tuning: MultiNLI for CB, RTE, BoolQ; SWAG for COPA",
+    "init_from": "bert-large-cased",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "CBOW",
+    "role": "baseline",
+    "params": null,
+    "architecture": "average of GloVe 300D/840B token vectors",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Most Frequent",
+    "role": "baseline",
+    "params": null,
+    "architecture": "majority class",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "per-task supervised fine-tuning",
+   "optimizer": "Adam",
+   "lr": "10-5 (printed 10^-5)",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": "maximum of 10",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "heads": "[CLS] + logistic regression for BoolQ, CB, RTE, WiC (WiC also concatenates marked word representation); scalar projection for COPA; per-answer logistic regression for MultiRC; per-candidate probability for ReCoRD; self-attention span pooling + logistic regression for WSC"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "SuperGLUE Avg",
+     "definition": "equal-weight mean of task scores; multi-metric tasks first averaged over their metrics",
+     "unit": "points x100",
+     "higher_is_better": true
+    },
+    {
+     "name": "Gender parity score (AXg)",
+     "definition": "percentage of Winogender minimal pairs with the same prediction",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "MCC (AXb)",
+     "definition": "Matthews correlation on collapsed two-class diagnostic",
+     "unit": "x100",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Most Frequent",
+    "CBOW",
+    "BERT",
+    "BERT++",
+    "Outside Best (May 2019)",
+    "Human (est.)"
+   ],
+   "protocol": "Test set via private-label leaderboard, max two submissions per day and six per month. Human estimates: MTurk workers, training phase up to 30 dev examples, qualification at median performance and at least 5 HITs, then 100 random test examples per task (full test set for WSC), 5 annotators each, majority vote; $23.75/hr average pay. Human numbers for WiC, MultiRC, RTE, ReCoRD taken from prior papers. Single run reported; no seeds or variance stated."
+  },
+  "availability": {
+   "code": "https://github.com/nyu-mll/jiant",
+   "weights": null,
+   "data": "super.gluebenchmark.com"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "BERT++ test-set average on SuperGLUE trails the estimated human average by nearly 20 points.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Avg",
+   "value": 71.5,
+   "unit": "points",
+   "baseline_value": 89.8,
+   "n": null,
+   "setup": "Test sets, BERT++ vs Human (est.), Table 3",
+   "table": "Table 3, row BERT++ vs Human (est.), column Avg (71.5 vs 89.8)",
+   "note": null,
+   "where": "Table 3, Sec 5.2"
+  },
+  {
+   "claim": "Fine-tuned BERT raises the SuperGLUE average by about 25 points over the trivial baselines.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Avg",
+   "value": 69.0,
+   "unit": "points",
+   "baseline_value": 44.3,
+   "n": null,
+   "setup": "Test sets, bert-large-cased per-task fine-tune",
+   "table": "Table 3, row BERT, column Avg (69.0; Most Frequent 47.1, CBoW 44.3)",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Largest human-machine gap is on WSC; BERT scores below simple baselines there.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 35,
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Gap between best baseline and human on WSC test",
+   "quote": "The largest gap is on WSC, with a 35 point difference between the best model and human performance.",
+   "note": null,
+   "where": "Sec 5.2"
+  },
+  {
+   "claim": "Intermediate MultiNLI training gives 2-5 point gains on CB, RTE and BoolQ; SWAG gives about 8 on COPA.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 8,
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BERT++ vs BERT, test sets",
+   "quote": "Using SWAG as a transfer task for COPA sees an 8 point improvement.",
+   "note": null,
+   "where": "Sec 5.2"
+  },
+  {
+   "claim": "GLUE state of the art (88.4) exceeded estimated non-expert human performance (87.1) by 1.3 points, motivating SuperGLUE.",
+   "kind": "reported",
+   "source": null,
+   "metric": null,
+   "value": 88.4,
+   "unit": "GLUE score",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GLUE as of early July 2019, XLNet ensemble",
+   "quote": "the current state of the art GLUE Score as of early July 2019 (88.4 from Yang et al., 2019) surpasses human performance (87.1 from Nangia and Bowman, 2019) by 1.3 points",
+   "note": null,
+   "where": "Sec 1"
+  },
+  {
+   "claim": "Models obtain near-perfect gender parity on Winogender only because accuracy is near chance.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 51.7,
+   "unit": "% accuracy (AXg)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BERT test AXg; GPS 97.8",
+   "table": "Table 3, row BERT, column AXg Acc. (97.8 / 51.7)",
+   "note": null,
+   "where": "Table 3, Sec 5.2"
+  },
+  {
+   "claim": "Human accuracy on the collapsed broad-coverage diagnostic is 88% (MCC 0.77); BERT++ reaches MCC 38.0.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 88,
+   "unit": "% accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Crowd estimate on diagnostic",
+   "quote": "We estimate an accuracy of 88% and a Matthew’s correlation coefficient (MCC, the two-class variant of the R3 metric used in GLUE) of 0.77.",
+   "note": null,
+   "where": "Sec 3.4"
+  },
+  {
+   "claim": "BERT++ dev average is 74.6 versus BERT 72.2.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 74.6,
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Dev sets",
+   "table": "Table 4, row BERT++, column Avg",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "Excluded tasks: BERT beat the crowd human baseline on PAWS-Wiki (91.9 vs 84% accuracy) and Quora Insincere (67.2 vs 66.7 F1).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 91.9,
+   "unit": "% accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "PAWS-Wiki, BERT vs human baseline",
+   "quote": "For PAWS-Wiki, we report that BERT achieves an accuracy of 91.9%, while our human baseline achieved 84% accuracy.",
+   "note": null,
+   "where": "Appendix D"
+  },
+  {
+   "claim": "Nearly half the tasks have fewer than 1k training examples and all but one have fewer than 10k.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 1 sizes",
+   "quote": "with nearly half the tasks having fewer than 1k examples and all but one of the tasks having fewer than 10k examples",
+   "note": null,
+   "where": "Sec 6"
+  }
+ ],
+ "limits": [
+  "Baselines are single-run BERT-large only; no seeds, variance, batch size, schedule or hardware given.",
+  "Human baselines are conservative, from crowd workers with brief instructions (authors concede this); human numbers for four tasks come from other papers and WSC/MultiRC etc. use different test subsets.",
+  "Winogender offers only positive predictive value; does not cover non-binary or gender-neutral pronouns.",
+  "MultiRC Outside Best is evaluated on a subset of the test set.",
+  "Dated: benchmark was saturated by later models (not stated in this paper); authors expected the gaps to be hard to close."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "gender parity score",
+   "definition": "the percentage of minimal pairs for which the predictions are the same",
+   "where": "Sec 3.4"
+  },
+  {
+   "term": "SuperGLUE score",
+   "definition": "average of task scores, each task weighted equally, multi-metric tasks first averaged",
+   "where": "Sec 3.3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "GLUE (Wang et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "direct predecessor benchmark; SuperGLUE keeps its two hardest tasks (RTE, WSC form)",
+   "quote": null
+  },
+  {
+   "work": "BERT (Devlin et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "bert-large-cased fine-tuned per Devlin recipe",
+   "quote": null
+  },
+  {
+   "work": "STILTs (Phang et al.)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "intermediate-task fine-tuning for BERT++",
+   "quote": null
+  },
+  {
+   "work": "XLNet (Yang et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "cited for GLUE score 88.4",
+   "quote": null
+  },
+  {
+   "work": "MT-DNN (Liu et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "related",
+   "note": "RTE 86.3 outside result",
+   "quote": null
+  },
+  {
+   "work": "BoolQ, CB, COPA, MultiRC, ReCoRD, RTE, WiC, WSC",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Clark 2019a; de Marneffe 2019; Roemmele 2011; Khashabi 2018; Zhang 2018; RTE 1-5; Pilehvar 2019; Levesque 2012",
+   "quote": null
+  },
+  {
+   "work": "Winogender (Rudinger et al.)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "gender bias diagnostic via DNC version",
+   "quote": null
+  },
+  {
+   "work": "SentEval, DecaNLP",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "alternative benchmarks",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "GLUE benchmark performance for submitted systems, rescaled to set human performance to 1.0",
+   "page": 2,
+   "why": "shows GLUE saturation per task, the motivation"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "The tasks included in SuperGLUE",
+   "page": 3,
+   "why": "task sizes, metrics, sources"
+  },
+  {
+   "figure": "Table 2",
+   "caption": "Development set examples from the tasks in SuperGLUE",
+   "page": 4,
+   "why": "concrete example of each task format"
+  },
+  {
+   "figure": "Table 3",
+   "caption": "Baseline performance on the SuperGLUE test sets and diagnostics",
+   "page": 8,
+   "why": "main results incl. human gap"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Performance of GLUE submissions on selected diagnostic categories",
+   "page": 16,
+   "why": "phenomena still hard for models"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Table 3 text extraction flattens cells; values read in column order, CB/MultiRC/ReCoRD cells are pairs.",
+  "No embedded instructions found."
+ ]
+}

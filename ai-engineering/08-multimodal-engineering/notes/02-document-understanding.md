@@ -22,6 +22,8 @@ sources:
   - https://deep-geometry.github.io/abc-dataset/
   - ../practice/invoice_pipeline.py
   - ../practice/drawing_extraction_lab.py
+  - https://arxiv.org/abs/2007.00398
+  - https://arxiv.org/abs/2203.10244
 confidence: medium
 cleaned: 2026-11-02
 ---
@@ -164,6 +166,8 @@ Keep the detector out of your happy path: on a hit, truncate to the first unit a
 ## Scoring extraction
 
 Scoring tells you whether a change helped, and a document pipeline needs two kinds of score. Edit distance measures transcript quality and is good for comparing OCR engines. Field-level F1 measures what the business cares about. Donut's authors use field-level F1 together with tree edit distance for nested output, and they point out how strict field-level scoring is: one wrong character fails the whole field ([arXiv:2111.15664](https://arxiv.org/abs/2111.15664)). That strictness suits invoice work. An amount with one wrong digit is simply wrong, though it would look almost perfect on edit distance.
+
+The public document benchmarks score differently. DocVQA's answers are spans copied from the page, scored by ANLS, a soft edit-distance score. On its 5,188-question test split humans reached 0.981 ANLS (94.36% accuracy) and the best text-only baseline, BERT-large fine-tuned on SQuAD and then DocVQA, read one commercial OCR's text and reached 0.665 (55.77%). That OCR's answer-substring upper bound is 87%, which caps any model reading only its text ([arXiv:2007.00398](https://arxiv.org/abs/2007.00398) (Mathew et al., WACV 2021)). ChartQA scores relaxed accuracy, with numeric answers right within 5%, and splits its test set into 1,250 machine-written and 1,250 human-written questions. VisionTaPas scored 61.44% on the machine-written half and 29.60% on the human-written half. Given the gold data table it reached 61.84% overall against 45.52% with an extracted one, so chart-to-table extraction alone cost 16.3 points ([arXiv:2203.10244](https://arxiv.org/abs/2203.10244) (Masry et al., ACL Findings 2022)). Both sets were built for 2020-22 models, so read them for how the questions are made and not as a current ceiling.
 
 ```python
 def edit_distance(a, b):
