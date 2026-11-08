@@ -1,0 +1,510 @@
+{
+ "schema": 1,
+ "key": "https://doi.org/10.18653/v1/d15-1237",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/yang-2015-wikiqa.pdf",
+ "bib": {
+  "title": "WIKIQA: A Challenge Dataset for Open-Domain Question Answering",
+  "authors": [
+   "Yi Yang",
+   "Wen-tau Yih",
+   "Christopher Meek"
+  ],
+  "first_author": "Yang",
+  "year": 2015,
+  "venue": "Proceedings of the 2015 Conference on Empirical Methods in Natural Language Processing (EMNLP), pages 2013-2018",
+  "arxiv": null,
+  "doi": "10.18653/v1/d15-1237"
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 22733,
+  "chars_total": 22733,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "benchmark",
+ "question": "Does the QASENT (TREC-QA) answer sentence selection benchmark misrepresent natural open-domain QA, and what does a more natural dataset, including questions with no correct sentence, show?",
+ "hypothesis": "QASENT's lexical-overlap candidate selection inflates the performance of word matching methods in more natural settings.",
+ "contributions": [
+  "WIKIQA: 3,047 Bing-log questions with 29,258 candidate Wikipedia summary sentences and crowdsourced labels",
+  "Comparison of several systems on answer sentence selection on both QASENT and WIKIQA",
+  "Proposal of the answer triggering task with question-level precision, recall and F1, plus a feature study"
+ ],
+ "method": {
+  "summary": "Questions were sampled from Bing query logs and linked by clicks to Wikipedia pages; all sentences of the page summary are candidates, labelled by crowd workers. Seven baselines (word counts, LCLR, Paragraph Vector, CNN and two combinations) are compared on QASENT and WIKIQA by MAP/MRR, and the best (CNN-Cnt) is evaluated on answer triggering.",
+  "task": "answer sentence selection and answer triggering (open-domain QA)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "WIKIQA",
+    "role": "both",
+    "size": "3,047 questions; 29,258 sentences; 1,473 answer sentences; 1,805 questions without an answer",
+    "split": "random split 70% train (2,118 q, 20,360 sent), 10% dev (296 q, 2,733 sent), 20% test (633 q, 6,165 sent)",
+    "source": "Bing query logs May 1 2010 to July 31 2011; Wikipedia summary sections; released at http://aka.ms/WikiQA",
+    "preprocessing": "Question-like queries picked by heuristics (WH-word start or question mark; entity queries filtered), about 2% of queries kept; only queries from at least 5 unique users with clicks to Wikipedia; 3,050 sampled by frequency. Labelled by three crowd workers per question in a two-stage UI, disputed sentences re-verified, majority vote. Answer phrases added by authors, at most two per sentence, not used in experiments. For MAP/MRR, questions without answers are removed."
+   },
+   {
+    "name": "QASENT",
+    "role": "both",
+    "size": "227 questions; 8,478 sentences; 928 answers (train 94 q, dev 65, test 68)",
+    "split": "settings of Yih et al. (2013); only 94 train questions have human annotations",
+    "source": "TREC 8-13 QA tracks, Wang et al. (2007)",
+    "preprocessing": "sentences kept only if they share one or more non-stopwords with the question; questions without correct answers discarded"
+   },
+   {
+    "name": "UIUC Question Classification",
+    "role": "train",
+    "size": null,
+    "split": null,
+    "source": "http://cogcomp.cs.illinois.edu/Data/QA/QC",
+    "preprocessing": "used to train a logistic regression question classifier for the QClass feature"
+   }
+  ],
+  "models": [
+   {
+    "name": "Word Cnt",
+    "role": "baseline",
+    "params": null,
+    "architecture": "count of question non-stopwords in the answer sentence",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Wgt Word Cnt",
+    "role": "baseline",
+    "params": null,
+    "architecture": "word count re-weighted by IDF of question words",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "LCLR",
+    "role": "baseline",
+    "params": null,
+    "architecture": "Yih et al. (2013) lexical semantic model: word/lemma matching, WordNet, vector-space lexical semantics; no NE matching features; reimplemented",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "PV",
+    "role": "baseline",
+    "params": null,
+    "architecture": "Paragraph Vector, Distributed Bag of Words version; score = cosine of question and sentence vectors",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "CNN",
+    "role": "baseline",
+    "params": null,
+    "architecture": "bigram CNN with average pooling (Yu et al. 2014)",
+    "init_from": "pre-trained word2vec embeddings (Mikolov et al. 2013) as input",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "sentences truncated to 40 tokens",
+    "other": {}
+   },
+   {
+    "name": "PV-Cnt / CNN-Cnt",
+    "role": "proposed",
+    "params": null,
+    "architecture": "logistic regression combining PV or CNN score with the two word-count features",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "extra_features_for_triggering": "QLen, SLen, QClass"
+    }
+   }
+  ],
+  "training": {
+   "objective": "logistic regression classifier for the combined models; the other models' objectives are not stated",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "inferred: sentences truncated to 40 tokens for CNN",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "threshold": "answer-triggering score threshold tuned for F1 on the dev set because of skewed class distribution"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "not stated; single run per system apparently",
+   "prompting": null,
+   "retrieval": "candidates are all sentences of the clicked Wikipedia page summary",
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "MAP",
+     "definition": "mean average precision of ranking correct sentences among a question's candidates (questions with answers only)",
+     "unit": "score 0-1",
+     "higher_is_better": true
+    },
+    {
+     "name": "MRR",
+     "definition": "mean reciprocal rank of the first correct sentence",
+     "unit": "score 0-1",
+     "higher_is_better": true
+    },
+    {
+     "name": "Question-level precision/recall/F1 (answer triggering)",
+     "definition": "A question is positive if its pool has one or more correct sentences; only the top-scored sentence is considered; correct if its score exceeds a threshold and it is a labelled answer",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Word Cnt",
+    "Wgt Word Cnt",
+    "LCLR",
+    "PV",
+    "CNN",
+    "PV-Cnt",
+    "CNN-Cnt"
+   ],
+   "protocol": "Fixed train/dev/test split; no seeds or significance tests reported."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "http://aka.ms/WikiQA (data and evaluation script)"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "datasets[WIKIQA].split",
+    "quote": "we randomly split the data to training (70%), development (10%) and testing (20%) sets",
+    "where": "Sec 2.3"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "CNN-Cnt is best on WIKIQA by MAP, beating LCLR and word counts",
+   "kind": "measured",
+   "source": null,
+   "metric": "MAP",
+   "value": 0.652,
+   "unit": "MAP",
+   "baseline_value": 0.5993,
+   "n": null,
+   "setup": "WIKIQA test, questions with answers only; CNN-Cnt",
+   "quote": "",
+   "table": "Table 4, row CNN-Cnt, column WIKIQA MAP (LCLR 0.5993)",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "CNN-Cnt MRR on WIKIQA",
+   "kind": "measured",
+   "source": null,
+   "metric": "MRR",
+   "value": 0.6652,
+   "unit": "MRR",
+   "baseline_value": 0.6086,
+   "n": null,
+   "setup": "WIKIQA, questions with answers only",
+   "quote": "",
+   "table": "Table 4, row CNN-Cnt, column WIKIQA MRR (LCLR 0.6086)",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "On QASENT, LCLR leads word matching; CNN-Cnt matches it",
+   "kind": "measured",
+   "source": null,
+   "metric": "MAP",
+   "value": 0.6954,
+   "unit": "MAP",
+   "baseline_value": 0.6095,
+   "n": null,
+   "setup": "QASENT, LCLR",
+   "quote": "",
+   "table": "Table 4, row LCLR, column QASENT MAP (Wgt Word Cnt 0.6095; CNN-Cnt 0.6951)",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "Word counting on WIKIQA is weak compared with QASENT",
+   "kind": "measured",
+   "source": null,
+   "metric": "MAP",
+   "value": 0.4891,
+   "unit": "MAP",
+   "baseline_value": 0.5919,
+   "n": null,
+   "setup": "WIKIQA, Word Cnt",
+   "quote": "",
+   "table": "Table 4, row Word Cnt, column WIKIQA MAP (QASENT MAP 0.5919)",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "Plain CNN falls below word counting on QASENT but beats it on WIKIQA",
+   "kind": "measured",
+   "source": null,
+   "metric": "MAP",
+   "value": 0.619,
+   "unit": "MAP",
+   "baseline_value": 0.559,
+   "n": null,
+   "setup": "WIKIQA, CNN",
+   "quote": "",
+   "table": "Table 4, row CNN, column WIKIQA MAP (QASENT MAP 0.5590)",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "Best answer-triggering F1 is only slightly above 30%",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 31.64,
+   "unit": "%",
+   "baseline_value": 30.61,
+   "n": null,
+   "setup": "WIKIQA, CNN-Cnt +All features, question-level, threshold tuned on dev",
+   "quote": "The best F1 scores are slightly above 30%",
+   "table": "Table 5, row +All, column F1 (CNN-Cnt 30.61)",
+   "note": null,
+   "where": "Sec 1; Table 5"
+  },
+  {
+   "claim": "Adding the question length feature raised F1 the most",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 32.17,
+   "unit": "%",
+   "baseline_value": 30.61,
+   "n": null,
+   "setup": "WIKIQA, CNN-Cnt +QLen",
+   "quote": "",
+   "table": "Table 5, row +QLen, column F1",
+   "note": null,
+   "where": "Table 5"
+  },
+  {
+   "claim": "The question-class feature slightly lowered F1",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 30.34,
+   "unit": "%",
+   "baseline_value": 30.61,
+   "n": null,
+   "setup": "WIKIQA, CNN-Cnt +QClass",
+   "quote": "",
+   "table": "Table 5, row +QClass, column F1",
+   "note": null,
+   "where": "Table 5"
+  },
+  {
+   "claim": "20.3% of WIKIQA answers share no content words with the question",
+   "kind": "measured",
+   "source": null,
+   "metric": "share of answers",
+   "value": 20.3,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "WIKIQA answer sentences",
+   "quote": "In comparison, 20.3% of the answers in the WIKIQA dataset share no content words with questions.",
+   "table": null,
+   "note": null,
+   "where": "Sec 2.3"
+  },
+  {
+   "claim": "About two-thirds of WIKIQA questions have no correct sentence",
+   "kind": "measured",
+   "source": null,
+   "metric": "questions w/o answer",
+   "value": 1805,
+   "unit": "questions of 3,047",
+   "baseline_value": null,
+   "n": null,
+   "setup": "WIKIQA all splits",
+   "quote": "we ﬁnd nearly two-thirds of questions contain no correct answers in the candidate sentences",
+   "table": "Table 2, row # of ques. w/o ans., column Total",
+   "note": "Intro says about one-third contain correct answers; Table 2 gives 1,805 of 3,047 without.",
+   "where": "Sec 2.3; Table 2"
+  },
+  {
+   "claim": "Description questions are 36% of WIKIQA versus 7% of QASENT",
+   "kind": "measured",
+   "source": null,
+   "metric": "description share",
+   "value": 36,
+   "unit": "%",
+   "baseline_value": 7,
+   "n": null,
+   "setup": "question class via logistic regression on UIUC data",
+   "quote": "",
+   "table": "Table 3, row Description (1087 of WIKIQA; QASENT 16)",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Word matching features add roughly 3 to 4 MAP/MRR points to CNN",
+   "kind": "measured",
+   "source": null,
+   "metric": "gain",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "WIKIQA, CNN vs CNN-Cnt",
+   "quote": "word matching features help to further boost CNN results by approximately 3 to 4 points in both MAP and MRR",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.3"
+  }
+ ],
+ "limits": [
+  "Candidates come only from the Wikipedia summary paragraph, so recall of the candidate pool is not tested.",
+  "Answer-triggering study covers only one system (CNN-Cnt) with a few features; authors say F1 leaves large room.",
+  "No seeds, variance or significance tests; CNN reimplementation performs slightly worse than Yu et al. (2014).",
+  "Model details (optimizer, learning rate, CNN size) are not given.",
+  "Dated: neural sentence-ranking baselines of 2014; later models far surpass them."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "answer triggering",
+   "definition": "detect whether there is at least one correct answer in the set of candidate sentences for the question, and return a correct answer if there is one",
+   "where": "Sec 1, 3.2"
+  },
+  {
+   "term": "answer sentence selection",
+   "definition": "extracting answers from a set of pre-selected sentences",
+   "where": "Sec 1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "What is the Jeopardy model? (Wang et al.)",
+   "year": 2007,
+   "arxiv": null,
+   "relation": "contradicts",
+   "note": "created QASENT, whose lexical-overlap selection the paper argues is biased",
+   "quote": null
+  },
+  {
+   "work": "Question answering using enhanced lexical semantic models (Yih et al.)",
+   "year": 2013,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "LCLR reimplemented; QASENT settings followed",
+   "quote": null
+  },
+  {
+   "work": "Deep learning for answer sentence selection (Yu et al.)",
+   "year": 2014,
+   "arxiv": "1412.1632",
+   "relation": "baseline",
+   "note": "bigram CNN and CNN-Cnt",
+   "quote": null
+  },
+  {
+   "work": "Distributed representations of sentences and documents (Le and Mikolov)",
+   "year": 2014,
+   "arxiv": "1405.4053",
+   "relation": "baseline",
+   "note": "Paragraph Vector",
+   "quote": null
+  },
+  {
+   "work": "Distributed representations of words and phrases (Mikolov et al.)",
+   "year": 2013,
+   "arxiv": "1310.4546",
+   "relation": "uses-method",
+   "note": "word2vec embeddings as CNN input",
+   "quote": null
+  },
+  {
+   "work": "Learning question classifiers (Li and Roth)",
+   "year": 2002,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "UIUC question classification data",
+   "quote": null
+  },
+  {
+   "work": "TREC-8 question answering track (Voorhees and Tice)",
+   "year": 1999,
+   "arxiv": null,
+   "relation": "related",
+   "note": "source of TREC-QA discard policy",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Table 4",
+   "caption": "Baseline results on both QASENT and WIKIQA datasets.",
+   "page": 4,
+   "why": "Shows the ranking of methods flips between datasets (word counts strong on QASENT, CNN strong on WIKIQA)."
+  },
+  {
+   "figure": "Table 5",
+   "caption": "Evaluation of answer triggering on the WIKIQA dataset.",
+   "page": 4,
+   "why": "Shows question-level P/R/F1 around 30%."
+  }
+ ],
+ "code": [],
+ "problems": [
+  "No instructions embedded in the text. Table text is flattened by extraction; cell values were matched by order."
+ ]
+}

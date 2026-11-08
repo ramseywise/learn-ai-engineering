@@ -1,0 +1,256 @@
+{
+ "schema": 1,
+ "key": "2210.07128",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/madaan-2022-language-models-code-few-shot.pdf",
+ "bib": {
+  "title": "Language Models of Code are Few-Shot Commonsense Learners",
+  "authors": ["Aman Madaan", "Shuyan Zhou", "Uri Alon", "Yiming Yang", "Graham Neubig"],
+  "first_author": "Madaan",
+  "year": 2022,
+  "venue": "Proceedings of the 2022 Conference on Empirical Methods in Natural Language Processing (EMNLP), pages 1384-1403",
+  "arxiv": "2210.07128",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 64860,
+  "chars_total": 64860,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Do large language models of code, prompted with the output graph rewritten as Python, generate structured commonsense graphs better than natural-language LLMs prompted with serialized text graphs?",
+ "hypothesis": "Code-LLMs can be repurposed to generate structured output better than NL-LLMs, because code-formatted graphs resemble their pre-training data.",
+ "contributions": [
+  "Insight that Code-LLMs are better structured commonsense reasoners than NL-LLMs when the desired graph is represented as code.",
+  "CoCoGen: a method for using Code-LLMs for structured commonsense generation.",
+  "Evaluation on three structured commonsense generation tasks showing CoCoGen outperforms fine-tuned and few-shot NL-LLMs while controlling for number of task examples.",
+  "Ablations on data formatting, model size and number of few-shot examples."
+ ],
+ "method": {
+  "summary": "Each (text input T, graph G) pair is rewritten as a Python class or function (nodes as objects, edges as attributes or add_edge calls). A few such classes form a few-shot prompt for Codex (code-davinci-002); the test input is a partial class that the model completes, and the code is parsed back into a graph. Baselines are text-davinci-002 and text-curie-001 given the same examples as flattened text, and fine-tuned T5.",
+  "task": "structured commonsense generation (script generation, edge prediction, entity state tracking, explanation graph generation)",
+  "trains": false,
+  "datasets": [
+   {"name": "ProScript", "role": "eval", "size": "3252 train / 1085 val / 2077 test (Table 12)", "split": "test split obtained from the authors of ProScript", "source": "Sakaguchi et al. 2021; DAGs from ROCStories, Descript, VirtualHome", "preprocessing": "each node becomes a Node() instance, edges as children attribute; for edge prediction nodes are listed in random order"},
+   {"name": "ProPara", "role": "eval", "size": "387 train / 43 val / 54 test (Table 12)", "split": "test", "source": "Dalvi et al. 2018", "preprocessing": "main function with actions as comments, state_k variables per entity, one function per action plus init; UNK for unknown location, None for non-existence"},
+   {"name": "ExplaGraphs", "role": "eval", "size": "2368 train / 398 val / no test (Table 12)", "split": "validation split (test split not available)", "source": "Saha et al. 2021", "preprocessing": "belief, argument, stance as strings; edges as add_edge(source, edge_type, destination); begin list of start nodes; stance taken from the stance predictor released by Saha et al."}
+  ],
+  "models": [
+   {"name": "CoCoGen (Codex code-davinci-002)", "role": "proposed", "params": null, "architecture": "code-generation LM (OpenAI Codex), size undisclosed", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": "4096 tokens", "other": {"note": "Appendix A estimates capacity only via loss per token: Codex 0.46 code / 2.71 text"}},
+   {"name": "text-davinci-002 (DAVINCI)", "role": "baseline", "params": null, "architecture": "GPT-3 based NL model", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": "4000 tokens", "other": {"loss_per_token": "0.63 code / 2.25 text"}},
+   {"name": "text-curie-001 (CURIE)", "role": "baseline", "params": null, "architecture": "GPT-3 based NL model, smaller than DAVINCI", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"loss_per_token": "1.17 code / 3.32 text"}},
+   {"name": "T5-large (ExplaGraphs) / T5-xxl (ProScript, results from Sakaguchi et al. 2021)", "role": "baseline", "params": null, "architecture": "encoder-decoder", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"note": "fine-tuned on the task data; T5 sizes as named, parameter counts not printed"}},
+   {"name": "code-davinci-001", "role": "evaluated", "params": null, "architecture": "smaller Codex version", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": "4000 tokens", "other": {}},
+   {"name": "mpnet-base (KST retriever)", "role": "retriever", "params": null, "architecture": "sentence-transformer, fine-tuned with SentenceTransformers", "init_from": "microsoft/mpnet-base", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}}
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "ProScript and ExplaGraphs: at least 3 different prompts, averaged; Appendix I: 3 random seeds that set example order; ProPara: 5 runs with different randomly sampled prompts",
+   "prompting": "few-shot: prompt p is k Python classes (T, Gc) concatenated; test input appended as partial class; k randomly sampled from training set, k between 5 and 30 depending on task (15 ProScript, 3 ProPara, 30 ExplaGraphs); GPT-3 baselines get the same examples as flattened text",
+   "retrieval": "optional dynamic prompt: KST retriever (mpnet-base) fetches k nearest training examples; trained with L = (cos(f(Ti), f(Tj)) - sim(Gi, Gj))^2",
+   "parameters": {},
+   "other": {"decoding_settings": "temperature, top_p, max output tokens and decoding strategy not stated in the paper"}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "BLEU / ROUGE-L / BLEURT", "definition": "content overlap of generated vs reference script", "unit": "score (BLEU, ROUGE-L); BLEURT unitless, negative", "higher_is_better": true},
+    {"name": "GED", "definition": "number of node/edge edits to transform generated graph into reference", "unit": "edits", "higher_is_better": false},
+    {"name": "ISO", "definition": "fraction of generated graphs isomorphic to the reference, ignoring node text", "unit": "fraction", "higher_is_better": true},
+    {"name": "Edge prediction P/R/F1", "definition": "precision, recall, F1 of predicted edge set vs true (paper prints r = |E union E^|/|E|, which looks like a typo)", "unit": "%", "higher_is_better": true},
+    {"name": "ProPara entity-state P/R/F1", "definition": "precision/recall/F1 of predicted entity states (Dalvi et al. 2018)", "unit": "%", "higher_is_better": true},
+    {"name": "StCA, SeCA, G-BS, GED, EA", "definition": "Saha et al. 2021 metrics: structural accuracy (connected DAGs with two concepts from belief and argument), learned semantic correctness, G-BERTScore, graph edit distance, edge importance accuracy", "unit": "%", "higher_is_better": true}
+   ],
+   "baselines": ["T5 fine-tuned (100, 1k, 4k examples on edge prediction; 150, 1500, 2500 on ExplaGraphs)", "text-curie-001 few-shot", "text-davinci-002 few-shot", "Codex with text prompt", "DAVINCI with code prompt"],
+   "protocol": "At least 3 prompts averaged; std in Appendix I; improvements over DAVINCI reported significant at p < 0.001 (test not named). Human eval: 20 samples, three of the authors, pairwise blind choice on relevance and correctness."
+  },
+  "availability": {"code": "https://github.com/madaan/CoCoGen", "weights": null, "data": "prompts and model outputs in the same repository"},
+  "prompts": [
+   {"purpose": "ProScript script generation, partial class given at test time", "text": "class Tree:\n    goal = \"make hot green tea.\"\n    def __init__(self):\n        # generate", "where": "Figure 2"},
+   {"purpose": "ExplaGraphs prompt format (Literal example, completion starts after '# Edges')", "text": "class ExplanationDAG:\n    def __init__(self):\n        belief = \"factory farming should not be banned.\"\n        argument = \"Factory farming feeds millions.\"\n        stance = \"support\"\n        # Edges\n        begin = [\"factory farming\", \"millions\"]\n        add_edge(\"factory farming\", \"causes\", \"food\")", "where": "Figure 4"}
+  ],
+  "evidence": [
+   {"field": "inference.prompting", "quote": "In our experiments, k varies between 5 and 30", "where": "Section 3.1"}
+  ]
+ },
+ "results": [
+  {
+   "claim": "On ProScript script generation, CoCoGen with 15 prompt examples beats T5 fine-tuned on all 3500 samples on BLEU.",
+   "kind": "measured", "source": null, "metric": "BLEU", "value": "25.24", "unit": "BLEU", "baseline_value": "23.80 (T5 fine-tuned)", "n": null,
+   "setup": "ProScript test, Codex code-davinci-002, 15-shot random prompts, Python Tree class; T5 fine-tuned on full training data",
+   "quote": "outperforms the fine-tuned model T5 which has been fine-tuned on all 3500 samples",
+   "table": "Table 1, row COCOGEN (15), column BLEU (25.24); row T5 (fine-tuned) 23.80",
+   "note": "Text says 3500 samples; Table 12 lists 3252 train", "where": "Table 1, Section 3.2"
+  },
+  {
+   "claim": "On ProScript edge prediction, CoCoGen (15 examples) reaches F1 56.24, above DAVINCI (48.92) and T5 fine-tuned on 1k (60.15 is higher; CoCoGen is above T5 on 100 at 51.89).",
+   "kind": "measured", "source": null, "metric": "F1", "value": "56.24", "unit": "F1 %", "baseline_value": "48.92 (DAVINCI 15)", "n": null,
+   "setup": "ProScript edge prediction, 15-shot, Codex code-davinci-002, Python Tree prompt",
+   "quote": "COCOGEN with only 15 examples outperforms the fine-tuned T5 which was fine-tuned on 100 examples",
+   "table": "Table 2, row COCOGEN (15), column F1 (56.24); row DAVINCI (15) 48.92; row T5 (100) 51.89",
+   "note": "Table 2 caption claims outperforming T5 on 1k samples, but T5 (1k) F1 is 60.15 > 56.24; the body text claims only T5 (100). Table 5 and Table 6 print the same CoCoGen F1 as 56.52, Table 19 as 56.2.",
+   "where": "Table 2, Section 3.2"
+  },
+  {
+   "claim": "On ProPara with 3 shots, CoCoGen gets F1 63.0, 5.0 higher than DAVINCI and 74% higher than CURIE.",
+   "kind": "measured", "source": null, "metric": "F1", "value": "63.0", "unit": "F1 %", "baseline_value": "58.0 (DAVINCI), 36.1 (CURIE)", "n": "5 runs with different random prompts",
+   "setup": "ProPara, 3 random training examples in prompt, Codex code-davinci-002 vs text-davinci-002 and text-curie-001",
+   "quote": "COCOGEN achieves a significantly better F1 score than DAVINCI. Across the five prompts, COCOGEN achieves 5.0 higher F1 than DAVINCI on average.",
+   "table": "Table 3, row COCOGEN, column F1 (63.0); row DAVINCI 58.0; row CURIE 36.1",
+   "note": "Appendix Table 21 prints CoCoGen 62.8 +/- 2.4 and DAVINCI 56.9 +/- 2.4 across three seeds.",
+   "where": "Table 3, Section 3.3"
+  },
+  {
+   "claim": "CoCoGen is state-of-the-art in the few-shot setting on ProPara and under 10 F1 below the overall SOTA, which fine-tunes on the full training set.",
+   "kind": "claim", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null,
+   "setup": "ProPara leaderboard as of 10/11/2022; CoCoGen would rank 6th",
+   "quote": "In the few-shot settings, COCOGEN is state-of-the-art in PROPARA.",
+   "table": null, "note": null, "where": "Section 3.3"
+  },
+  {
+   "claim": "On ExplaGraphs, CoCoGen with 30 examples beats T5 fine-tuned on 1500 examples on all metrics; structural accuracy 45.20 vs 38.19.",
+   "kind": "measured", "source": null, "metric": "StCA", "value": "45.20", "unit": "%", "baseline_value": "38.19 (T5 1500)", "n": null,
+   "setup": "ExplaGraphs eval split, Codex code-davinci-002, 30-shot random prompts, Python ExplanationDAG class",
+   "quote": "COCOGEN with only 30 examples outperforms the T5 model that was fine-tuned using 1500 examples, across all metrics.",
+   "table": "Table 4, row COCOGEN (30), column StCA (45.20); row T5 (1500) 38.19",
+   "note": "Table 4 shows DAVINCI (30) StCA 23.62 and T5 (2500) 43.22.", "where": "Table 4, Section 3.4"
+  },
+  {
+   "claim": "Both the code model and the code prompt matter, and together they help more than the sum of each alone: on ExplaGraphs StCA, DAVINCI+text 33.16, DAVINCI+code 33.00, Codex+text 38.02, CoCoGen 45.20.",
+   "kind": "measured", "source": null, "metric": "StCA", "value": "38.02", "unit": "%", "baseline_value": "33.16 (DAVINCI + text)", "n": null,
+   "setup": "ExplaGraphs and ProScript edge prediction, 2x2 of model (DAVINCI vs Codex) and prompt (text vs code)",
+   "quote": "However when using both a Code-LLM and a code prompt – the improvement is greater than the sum",
+   "table": "Table 5, row CODEX + text, column StCA (38.02); row DAVINCI + text 33.16",
+   "note": "Table 5 gives DAVINCI+code SeCA 15.37 vs text 7.14; edge-prediction F1 43.06 / 49.3 / 44.47 / 56.52.", "where": "Table 5, Section 4"
+  },
+  {
+   "claim": "Dynamic prompt retrieval (KST) raises ProScript edge-prediction F1 from 56.52 to 65.71.",
+   "kind": "measured", "source": null, "metric": "F1", "value": "65.71", "unit": "F1 %", "baseline_value": "56.52", "n": null,
+   "setup": "ProScript edge prediction, 15-shot, mpnet-base retriever fine-tuned with KST loss vs random prompt",
+   "quote": "Our retrieval mechanism is highly effective for",
+   "table": "Table 6, row COCOGEN + KST, column F1 (65.71); row COCOGEN 56.52",
+   "note": null, "where": "Table 6, Section 4"
+  },
+  {
+   "claim": "KST retrieval hurts ExplaGraphs: StCA falls from 45.2 to 37.47, because nearest neighbours in the training set are near-duplicates and cut prompt diversity.",
+   "kind": "measured", "source": null, "metric": "StCA", "value": "37.47", "unit": "%", "baseline_value": "45.2", "n": null,
+   "setup": "ExplaGraphs eval, CoCoGen + code-davinci-002 with KST-retrieved prompts vs random",
+   "quote": "actually hurts performance",
+   "table": "Table 9, row COCOGEN + 002 + KST, column StCA (37.47); row COCOGEN + 002 45.2",
+   "note": null, "where": "Table 9, Appendix B"
+  },
+  {
+   "claim": "KST gives only marginal gains on ProScript script generation (BLEU 25.24 to 25.4).",
+   "kind": "measured", "source": null, "metric": "BLEU", "value": "25.4", "unit": "BLEU", "baseline_value": "25.24", "n": null,
+   "setup": "ProScript script generation, 15-shot, Codex-002 with KST",
+   "quote": "Dynamically creating a prompt leads to marginal improvements.",
+   "table": "Table 8, row COCOGEN + 002 (15) + KST, column BLEU (25.4)",
+   "note": null, "where": "Table 8, Appendix B"
+  },
+  {
+   "claim": "The Python class format matters, and the best format depends on the task: on ExplaGraphs the Literal format (StCA 45.2) beats Tree (39.24) and Relation (42.82).",
+   "kind": "measured", "source": null, "metric": "StCA", "value": "39.24", "unit": "%", "baseline_value": "45.2 (Literal)", "n": null,
+   "setup": "ExplaGraphs, Codex-002, three Python formats from Figure 7",
+   "quote": "there are no clear task-agnostic Python class designs that work uniformly well",
+   "table": "Table 13, row CODEX-002 Tree, column StCA (39.24)",
+   "note": "On ProScript edge prediction (Table 14) CODEX-002 Tree F1 56.5 vs Literal 52.0, though the caption says literal performs best; on script generation (Table 15) Literal BLEU 25.24 beats Tree 18.96.",
+   "where": "Table 13, Appendix G, Section 4"
+  },
+  {
+   "claim": "Larger Codex is less sensitive to prompt format: Codex-001 swings from F1 15.9 (Literal) to 29.7 (Tree) on edge prediction, while Codex-002 swings from 52.0 to 56.5.",
+   "kind": "measured", "source": null, "metric": "F1", "value": "15.9", "unit": "F1 %", "baseline_value": "29.7 (Tree, CODEX-001)", "n": null,
+   "setup": "ProScript edge prediction, identical prompts, code-davinci-001 vs 002",
+   "quote": "as model size increases, the sensitivity of the model on the prompt reduces",
+   "table": "Table 14, row CODEX-001 Literal, column F1 (15.9)",
+   "note": "Model size is inferred from the API's description of 002 as most capable, not stated numerically.", "where": "Table 14, Appendix H"
+  },
+  {
+   "claim": "Code-davinci-002 beats code-davinci-001 on ProScript script generation with identical prompts (BLEU 25.24 vs 22.9).",
+   "kind": "measured", "source": null, "metric": "BLEU", "value": "22.9", "unit": "BLEU", "baseline_value": "25.24 (002)", "n": null,
+   "setup": "ProScript script generation, 15-shot, same prompts",
+   "quote": "vastly outperforms",
+   "table": "Table 16, row COCOGEN + 001 (15), column BLEU (22.9)",
+   "note": null, "where": "Table 16, Appendix H"
+  },
+  {
+   "claim": "In a blind pairwise human evaluation on 20 ExplaGraphs samples, CoCoGen graphs were preferred for correctness 38.3% vs 18.3% for DAVINCI.",
+   "kind": "measured", "source": null, "metric": "preference", "value": "38.3", "unit": "%", "baseline_value": "18.3 (DAVINCI)", "n": "20 examples, 3 author annotators",
+   "setup": "ExplaGraphs and ProScript script generation, CoCoGen vs DAVINCI, annotators could pick no preference (31.7% for ExplaGraphs correctness)",
+   "quote": "for EXPLAGRAPHS, annotators found the",
+   "table": "Table 11, row EXPLAGRAPHS under Correctness, column COCOGEN (38.3%)",
+   "note": "For ProScript the preferences are close (26.7% vs 23.3% on correctness), with 50% no preference.", "where": "Table 11, Appendix C"
+  },
+  {
+   "claim": "Across three seeds, CoCoGen's improvements over DAVINCI are reported significant (p < 0.001); ProScript script-generation BLEU 25.3 +/- 0.1 vs 23.1 +/- 2.7.",
+   "kind": "measured", "source": null, "metric": "BLEU", "value": "25.3", "unit": "BLEU", "baseline_value": "23.1 (DAVINCI)", "n": "3 seeds",
+   "setup": "ProScript script generation, seeds set the order of examples in the prompt",
+   "quote": "all improvements of COCOGEN over DAVINCI are statistically significant (p-value < 0.001)",
+   "table": "Table 18, row COCOGEN, column BLEU (25.3±0.1)",
+   "note": "Seeds vary example order; Section 3.1 says prompts are resampled (at least 3 different prompts). Significance test not named.", "where": "Appendix I"
+  },
+  {
+   "claim": "Codex nearly always generates syntactically valid Python that converts back into a graph.",
+   "kind": "claim", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null,
+   "setup": "CoCoGen on all three tasks with code-davinci-002",
+   "quote": "we used CODEX (Chen et al., 2021a) and found that it nearly always generates syntactically valid Python.",
+   "table": null, "note": "Appendix E: nearly 100% of cases, no exact rate given", "where": "Section 2.2, Appendix E"
+  },
+  {
+   "claim": "Codex has lower code loss per token than DAVINCI (0.46 vs 0.63) but higher text loss (2.71 vs 2.25), used to argue the two are comparable in capacity.",
+   "kind": "measured", "source": null, "metric": "avg loss per token", "value": "0.46", "unit": "nats per token (inferred, unit not printed)", "baseline_value": "0.63 (DAVINCI code)", "n": "30 random Wikiplots pages for text; Polycoder eval split Python for code",
+   "setup": "Appendix A size estimate for Codex, DAVINCI, CURIE",
+   "quote": "CODEX and DAVINCI are of comparable capacities",
+   "table": "Table 7, row CODEX, column CODE (0.46)",
+   "note": null, "where": "Table 7, Appendix A"
+  }
+ ],
+ "limits": [
+  "Models (Codex, DAVINCI, CURIE) are closed; pretraining corpus, size and biases are undocumented, so size comparisons are educated guesses (Appendix A).",
+  "Authors are unsure Codex will remain free for research; Codex has since been deprecated by OpenAI (not stated in the paper).",
+  "English only.",
+  "The ExplaGraphs test split was unavailable, so results are on the validation split.",
+  "Python format must be designed per task; no format works uniformly.",
+  "Dynamic prompt retrieval helps edge prediction but hurts ExplaGraphs because of near-duplicate training examples.",
+  "Human evaluation is 20 examples judged by three of the authors.",
+  "Decoding settings (temperature, max tokens) are not reported, and the CURIE ProPara result suffers from output-format failures (high precision, low recall).",
+  "Internal inconsistencies: edge-prediction caption claims a win over T5 (1k) that Table 2 does not show; the Table 14 caption disagrees with its numbers."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "CoCoGen", "definition": "models of Code for Commonsense Generation: frame the output structure as Python code and prompt a Code-LLM few-shot", "where": "Section 1"},
+  {"term": "serialized graph", "definition": "structure converted into text, such as a flat list of node pairs or a DOT string", "where": "Section 1"},
+  {"term": "KST (knowledge similarity tuning)", "definition": "a retriever fine-tuned so that embedding similarity of inputs matches similarity of their output graphs, used to pick prompt examples", "where": "Section 4, Appendix B"}
+ ],
+ "lineage": [
+  {"work": "Evaluating Large Language Models Trained on Code (Codex)", "year": 2021, "arxiv": "2107.03374", "relation": "evaluates", "note": "main model, code-davinci-002", "quote": null},
+  {"work": "Language Models are Few-Shot Learners (Brown et al.)", "year": 2020, "arxiv": "2005.14165", "relation": "baseline", "note": "few-shot prompting; GPT-3 text-davinci-002 and text-curie-001 baselines", "quote": null},
+  {"work": "proScript: Partially Ordered Scripts Generation (Sakaguchi et al.)", "year": 2021, "arxiv": null, "relation": "uses-data", "note": "ProScript dataset, metrics, and T5 baseline results", "quote": null},
+  {"work": "ExplaGraphs (Saha et al.)", "year": 2021, "arxiv": "2104.07644", "relation": "uses-data", "note": "dataset, metrics and stance predictor", "quote": null},
+  {"work": "Tracking state changes in procedural text (Dalvi et al.)", "year": 2018, "arxiv": null, "relation": "uses-data", "note": "ProPara", "quote": null},
+  {"work": "Synchromesh (Poesia et al.)", "year": 2021, "arxiv": null, "relation": "uses-method", "note": "target-similarity tuning, adapted as KST for dynamic prompt retrieval", "quote": null},
+  {"work": "A systematic evaluation of large language models of code (Xu et al.)", "year": 2022, "arxiv": "2202.13169", "relation": "uses-method", "note": "loss-per-token implementation for the size estimate", "quote": null},
+  {"work": "Autoformalization with large language models (Wu et al.)", "year": 2022, "arxiv": "2205.12615", "relation": "related", "note": "similar in spirit; CoCoGen differs by translating the output into Python", "quote": null},
+  {"work": "ProgPrompt (Singh et al.)", "year": 2022, "arxiv": "2209.11302", "relation": "related", "note": "code for situated robot task plans", "quote": null},
+  {"work": "What Makes Good In-Context Examples for GPT-3? (Liu et al.)", "year": 2021, "arxiv": "2101.06804", "relation": "related", "note": "retrieved in-context examples", "quote": null},
+  {"work": "Learning To Retrieve Prompts for In-Context Learning (Rubin et al.)", "year": 2021, "arxiv": "2112.08633", "relation": "related", "note": "retrieved in-context examples", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Figure 1", "caption": "An illustration of COCOGEN for the task of script generation.", "page": 2, "why": "Shows the same script as an edge list, DOT and Python side by side."},
+  {"figure": "Table 5", "caption": "Teasing apart the contributions of a code generation model and a structured prompt.", "page": 7, "why": "The 2x2 ablation of model type against prompt format."}
+ ],
+ "code": [
+  {"where": "Figure 2, p.3", "snippet": "class Tree:\n    goal = \"make hot green tea.\"\n    def __init__(self):\n        # generate", "verbatim": true},
+  {"where": "Section 2.2, p.3", "snippet": "p = x1 ⊕ y1 ⋅ x2 ⊕ y2 ⋅ ... ⋅ xk ⊕ yk", "verbatim": false}
+ ],
+ "problems": [
+  "Text-cache check: the Table 1 and tables were flattened to one cell per line; values were matched by position.",
+  "Several tables in the appendix are misnumbered or out of order (Tables 18-21, 'Tables 16 and ??' in Appendix H).",
+  "Table 3 caption says '3-shots ... five runs' while Appendix I says three seeds for ProPara (Table 21: 62.8 vs 63.0 in Table 3).",
+  "No embedded instructions found."
+ ]
+}

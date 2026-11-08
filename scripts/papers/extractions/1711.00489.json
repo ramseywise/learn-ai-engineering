@@ -1,0 +1,442 @@
+{
+ "schema": 1,
+ "key": "1711.00489",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/smith-2017-don-t-decay-learning-rate.pdf",
+ "bib": {
+  "title": "Don't Decay the Learning Rate, Increase the Batch Size",
+  "authors": [
+   "Samuel L. Smith",
+   "Pieter-Jan Kindermans",
+   "Chris Ying",
+   "Quoc V. Le"
+  ],
+  "first_author": "Smith",
+  "year": 2018,
+  "venue": "ICLR 2018",
+  "arxiv": "1711.00489",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 37027,
+  "chars_total": 37027,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can the benefits of decaying the learning rate be obtained by instead increasing the batch size during training, cutting parameter updates?",
+ "hypothesis": "Decaying the learning rate acts by decaying the SGD noise scale g = eps(N/B - 1); raising B at constant eps should give the same learning curve per epoch with fewer updates.",
+ "contributions": [
+  "Show empirically that decaying learning rate schedules convert directly into increasing batch size schedules with the same epochs and near-identical curves, for SGD, momentum, Nesterov and Adam",
+  "Further cut updates by raising learning rate (B proportional to eps) and momentum (B proportional to 1/(1-m))",
+  "Train Inception-ResNet-V2 on ImageNet in under 2500 updates with batches of 65536 and ResNet-50 to 76.1% in under 30 minutes on TPU, with no hyper-parameter tuning"
+ ],
+ "method": {
+  "summary": "Existing step-decay schedules are converted so that when the learning rate would drop by factor alpha, the batch size grows by alpha instead (until a maximum batch size, after which the learning rate decays). Tested on CIFAR-10 wide ResNet and ImageNet with Inception-ResNet-V2 and ResNet-50.",
+  "task": "image classification training schedule study (CIFAR-10, ImageNet)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "CIFAR-10",
+    "role": "both",
+    "size": "50000 training images",
+    "split": "standard train/test",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "ImageNet",
+    "role": "both",
+    "size": "around 1.28 million training images",
+    "split": "validation set accuracy reported",
+    "source": null,
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Wide ResNet 16-4",
+    "role": "base",
+    "params": null,
+    "architecture": "wide ResNet (Zagoruyko & Komodakis 2016) with ghost batch norm, ghost batch 128",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Inception-ResNet-V2",
+    "role": "base",
+    "params": null,
+    "architecture": "Szegedy et al. 2017",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "ghost_batch": "32 initially, then 64 (matches GPU batch size)"
+    }
+   },
+   {
+    "name": "ResNet-50",
+    "role": "base",
+    "params": null,
+    "architecture": "as Goyal et al. 2017",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "classification cross-entropy",
+   "optimizer": "SGD, SGD with momentum (0.9), Nesterov momentum (0.9), Adam (TensorFlow defaults, base lr 1e-3, beta1 0.9, beta2 0.999); ImageNet runs use momentum 0.9 to 0.9875",
+   "lr": "CIFAR: 0.1 (original), 0.5 (increased); ImageNet: 3.0 (Inception-ResNet-V2)",
+   "lr_schedule": "step: noise scale divided by 5 in three steps on CIFAR (lr/5 per step, or B x5 per step); ImageNet divides noise scale by 10 at epochs 30, 60, 80 (B x10 until Bmax, then lr decay)",
+   "warmup": "none for ImageNet Inception-ResNet-V2 (Goyal et al. used warm-up)",
+   "batch_size": "CIFAR: 128 initial (640 or 3200 in larger-lr runs), Bmax 5120; ImageNet: 8192, 16384 or 32768 initial, Bmax 65536 (81920 in the Fig 6 run)",
+   "steps": "CIFAR original ~80000 updates; ImageNet ~14000 baseline, under 2500 at best",
+   "epochs": "90 on ImageNet; CIFAR epoch count not stated",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "ghost batch norm",
+   "hardware": "half TPU pod, 256 tensorcores (ResNet-50 run); distributed GPUs of batch size 64 (Inception-ResNet-V2)",
+   "compute": null,
+   "wall_clock": "ResNet-50: under 45 min at B=8192, under 30 min with B=16384 after epoch 30",
+   "seeds": "CIFAR: 5 additional runs per schedule (median reported); ImageNet: 2 runs per schedule",
+   "other": {
+    "noise_scale": "g = eps(N/B - 1) ~ eps N/B; with momentum g ~ eps N/(B(1-m))",
+    "rule": "B proportional to eps/(1-m)",
+    "lost_epochs": "N_lost = B/(N(1-m)) epochs lost to accumulation growth-in"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "test/validation accuracy",
+     "definition": "top-1 accuracy on held-out set",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "parameter updates",
+     "definition": "number of optimizer steps to finish training",
+     "unit": "count",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "Decaying learning rate with constant batch size (original schedules, Zagoruyko & Komodakis 2016; Goyal et al. 2017)"
+   ],
+   "protocol": "Fixed number of epochs per schedule; curves compared by epochs and updates; medians over 5 runs on CIFAR, 2 runs on ImageNet; no significance tests"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": null
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.epochs",
+    "quote": "We also train for 90 epochs and follow the same schedule",
+    "where": "5.3"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Replacing lr decay by batch size increase on CIFAR-10 gives the same accuracy with far fewer updates: original schedule vs increasing batch size",
+   "kind": "measured",
+   "source": null,
+   "metric": "test accuracy",
+   "value": 94.4,
+   "unit": "% test acc",
+   "baseline_value": "94.3 (~80000 updates)",
+   "n": null,
+   "setup": "Wide ResNet 16-4 CIFAR-10, SGD momentum 0.9, B 128 x5 per step, lr 0.1 constant",
+   "quote": "\"Increasing batch size” requires ∼29000 updates, reaching a ﬁnal accuracy of 94.4%.",
+   "table": null,
+   "note": "Original schedule 94.3% at ~80000 updates",
+   "where": "5.2"
+  },
+  {
+   "claim": "Increased initial lr 0.5 with B 640 needs under 6500 updates",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 94.5,
+   "unit": "% test acc",
+   "baseline_value": "94.3",
+   "n": null,
+   "setup": "Same CIFAR-10 setup, Bmax 5120",
+   "quote": "“Increased initial learning rate” requires under 6500 updates, reaching a ﬁnal accuracy of 94.5%.",
+   "table": null,
+   "note": null,
+   "where": "5.2"
+  },
+  {
+   "claim": "Momentum 0.98 with B 3200 needs under 2500 updates but loses accuracy",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 93.3,
+   "unit": "% test acc",
+   "baseline_value": "94.3",
+   "n": null,
+   "setup": "Same CIFAR-10 setup",
+   "quote": "requires less than 2500 parameter updates, but reaches a lower test accuracy of 93.3%",
+   "table": null,
+   "note": "Median over 5 extra runs 93.5% vs 94.3/94.2/94.2 for others",
+   "where": "5.2"
+  },
+  {
+   "claim": "Inception-ResNet-V2 on ImageNet: batch increase cuts updates from ~14000 to below 6000 with similar accuracy",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 6000,
+   "unit": "updates (upper bound)",
+   "baseline_value": "just over 14000",
+   "n": null,
+   "setup": "ImageNet, 90 epochs, lr 3.0, momentum 0.9, B 8192 -> 81920 at first step",
+   "quote": "Increasing the batch size reduces the number of parameter updates during training from just over 14000 to below 6000.",
+   "table": null,
+   "note": "Final acc: decay 78.7/77.8; batch increase 78.1/76.8 (two runs each)",
+   "where": "5.3"
+  },
+  {
+   "claim": "Momentum 0.9, initial B 8192, Bmax 65536 reaches 78.8% in just under 6000 updates",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 78.8,
+   "unit": "% val acc",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Inception-ResNet-V2, ImageNet, lr 3",
+   "quote": "“Momentum 0.9” achieves a ﬁnal accuracy of 78.8% in just under 6000 updates.",
+   "table": null,
+   "note": null,
+   "where": "5.3"
+  },
+  {
+   "claim": "Momentum 0.975, initial B 32768 or 16384, gets 77.5% and 76.8% in under 2500 updates",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 2500,
+   "unit": "updates (upper bound)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Inception-ResNet-V2, ImageNet",
+   "quote": "Finally “Momentum 0.975” achieves ﬁnal accuracies of 77.5% and 76.8% in under 2500 updates.",
+   "table": null,
+   "note": "Text says initial B 32768 for 'Momentum 0.9875' but results paragraph names 'Momentum 0.95' and 'Momentum 0.975'; labels inconsistent",
+   "where": "5.3"
+  },
+  {
+   "claim": "ResNet-50 reaches 76.1% in under 30 minutes by doubling batch to 16384 after epoch 30",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 30,
+   "unit": "minutes (upper bound)",
+   "baseline_value": "under 45 minutes at B=8192",
+   "n": null,
+   "setup": "ImageNet, half TPU pod 256 tensorcores, 90 epochs, Goyal et al. setup",
+   "quote": "and achieve the same validation accuracy of 76.1% in under 30 minutes",
+   "table": null,
+   "note": null,
+   "where": "5.4"
+  },
+  {
+   "claim": "Doubling initial lr with B=16384 throughout gives lower accuracy, showing batch growth matters",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 75.0,
+   "unit": "% val acc",
+   "baseline_value": "76.1",
+   "n": null,
+   "setup": "ResNet-50, same TPU setup, 22 minutes",
+   "quote": "achieves a lower validation set accuracy of 75.0% in 22 minutes",
+   "table": null,
+   "note": null,
+   "where": "5.4"
+  },
+  {
+   "claim": "Lost epochs from momentum accumulation grow-in: N_lost = B/(N(1-m))",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "SGD with momentum, constant gradient assumption",
+   "quote": "Since the batch size B ∝ϵ/(1 −m)",
+   "table": null,
+   "note": null,
+   "where": "Appendix A"
+  },
+  {
+   "claim": "Test accuracy falls for initial learning rates above ~0.4 at constant batch size",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 0.4,
+   "unit": "initial lr",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Wide ResNet CIFAR-10, B scaled proportional to lr, median of 5 runs",
+   "quote": "We ﬁnd that the test accuracy falls for initial learning rates larger than ∼0.4.",
+   "table": null,
+   "note": null,
+   "where": "5.2 / Appendix B"
+  }
+ ],
+ "limits": [
+  "Scaling rules need B << N, so a Bmax is imposed (5120 on CIFAR, 65536 on ImageNet) after which lr decays again",
+  "Raising momentum with B proportional to 1/(1-m) lowers test accuracy slightly (93.3% vs 94.3% on CIFAR; 76.8-77.5% vs 78.8% on ImageNet)",
+  "Authors could not replicate the original paper's 95% CIFAR accuracy (got 94.3%)",
+  "Only image classification with step schedules; no language models, no cosine or other schedules tested; ImageNet runs only two seeds, with differences comparable to run-to-run variance",
+  "Test set evaluations were reduced for ImageNet, making curves noisy",
+  "Convex analysis (Sec 2) is mostly motivation; noise-scale argument rests on Smith & Le (2017)"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "noise scale",
+   "definition": "g = eps(N/B - 1), the scale of random fluctuations in SGD dynamics; with momentum g = eps/(1-m) (N/B - 1)",
+   "where": "Sec 2, 4"
+  },
+  {
+   "term": "effective learning rate",
+   "definition": "eps_eff = eps/(1 - m)",
+   "where": "Sec 4"
+  },
+  {
+   "term": "ghost batch norm",
+   "definition": "batch norm computed on sub-batches of fixed size (Hoffer et al. 2017), so mean gradient is independent of batch size",
+   "where": "Sec 5.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "A Bayesian perspective on generalization and stochastic gradient descent (Smith & Le)",
+   "year": 2017,
+   "arxiv": "1710.06451",
+   "relation": "extends",
+   "note": "Noise scale analysis extended here to decaying learning rates",
+   "quote": null
+  },
+  {
+   "work": "Accurate, large minibatch SGD: Training ImageNet in 1 hour (Goyal et al.)",
+   "year": 2017,
+   "arxiv": "1706.02677",
+   "relation": "replicates",
+   "note": "Replicated setup on TPU and baseline schedule; linear scaling rule",
+   "quote": null
+  },
+  {
+   "work": "Wide residual networks (Zagoruyko & Komodakis)",
+   "year": 2016,
+   "arxiv": "1605.07146",
+   "relation": "uses-method",
+   "note": "CIFAR-10 architecture and schedule",
+   "quote": null
+  },
+  {
+   "work": "Train longer, generalize better (Hoffer et al.)",
+   "year": 2017,
+   "arxiv": "1705.08741",
+   "relation": "uses-method",
+   "note": "ghost batch norm; alternative B proportional to sqrt(eps) rule",
+   "quote": null
+  },
+  {
+   "work": "Inception-v4, Inception-ResNet (Szegedy et al.)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "ImageNet model",
+   "quote": null
+  },
+  {
+   "work": "Scaling SGD batch size to 32k for ImageNet training (You et al., LARS)",
+   "year": 2017,
+   "arxiv": "1708.03888",
+   "relation": "related",
+   "note": "LARS, 14 min at 74.9%",
+   "quote": null
+  },
+  {
+   "work": "Adam (Kingma & Ba)",
+   "year": 2014,
+   "arxiv": "1412.6980",
+   "relation": "evaluates",
+   "note": "optimizer tested; bias correction discussed",
+   "quote": null
+  },
+  {
+   "work": "On large-batch training for deep learning (Keskar et al.)",
+   "year": 2016,
+   "arxiv": "1609.04836",
+   "relation": "related",
+   "note": "generalization gap",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Schedules for the learning rate (a) and batch size (b), as a function of training epochs.",
+   "page": 4,
+   "why": "Shows decaying-lr, hybrid and increasing-batch schedules side by side"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Wide ResNet on CIFAR10. Test accuracy as a function of the number of parameter updates.",
+   "page": 6,
+   "why": "Shows update savings from 80000 to under 2500"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 4-5",
+   "snippet": "g = (eps/(1-m)) (N/B - 1) ~ eps N / (B(1-m))",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Figure 7 text labels momentum runs 0.9/0.95/0.975 while the setup lists 0.9/0.975/0.9875; inconsistent in paper",
+  "Equations and some symbols garbled by PDF extraction; no embedded instructions found"
+ ]
+}

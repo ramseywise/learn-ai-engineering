@@ -1,0 +1,131 @@
+{
+ "schema": 1,
+ "key": "1909.12673",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/rosenfeld-2019-constructive-prediction-generalization-error-across.pdf",
+ "bib": {
+  "title": "A Constructive Prediction of the Generalization Error Across Scales",
+  "authors": ["Jonathan S. Rosenfeld", "Amir Rosenfeld", "Yonatan Belinkov", "Nir Shavit"],
+  "first_author": "Rosenfeld",
+  "year": 2020,
+  "venue": "ICLR 2020",
+  "arxiv": "1909.12673",
+  "doi": null
+ },
+ "read": {"by": "source-reader", "at": "2026-11-08", "chars_read": 68755, "chars_total": 68755, "engine": "pymupdf",
+  "skipped": "Appendix D extrapolation grids (Figs 16-21) are numeric subplot labels only; skimmed, not itemised."},
+ "type": "empirical",
+ "question": "What is the functional form relating generalization error to both model size and dataset size, and can it extrapolate from small to large scale?",
+ "hypothesis": "A simple joint form (sum of a data power law, a model power law and an irreducible term, with a random-guess envelope) approximates the error landscape and extrapolates.",
+ "contributions": [
+  "A joint functional form of the generalization error landscape, dependent on both data and model size, with few interpretable degrees of freedom",
+  "Direct and complete specification (via the scaling policy) of the model configuration attaining said error across model and dataset sizes",
+  "Highly accurate approximation of error measurements across model and data scales on different models, datasets and tasks",
+  "Highly accurate error prediction from small to large model and data"
+ ],
+ "method": {
+  "summary": "Train fixed-hyperparameter model families at a grid of width scales and data fractions on 6 vision and 3 language datasets, observe saturating power laws in each axis, propose eps_hat(m,n)=eps0*(e~/(e~-i*eta)) with e~=a n^-alpha + b m^-beta + c_inf, fit it by least squares on relative error, and test by 10-fold cross-validation and by extrapolating from small (m,n) to larger configurations.",
+  "task": "error-landscape fitting and extrapolation for image classification and word-level language modeling",
+  "trains": true,
+  "datasets": [
+   {"name": "ImageNet", "role": "both", "size": "1.28M train images, 1000 classes; 50K val, 100K test", "split": "data fractions 2^-k N, 0<=k<=6", "source": "Russakovsky et al. 2015", "preprocessing": "uniform class subsampling by a constant ratio; test set untouched"},
+   {"name": "CIFAR10 / CIFAR100", "role": "both", "size": "60K images (50K/10K train/test)", "split": "2^-k N, 0<=k<=5", "source": "Krizhevsky 2009", "preprocessing": null},
+   {"name": "DTD / Aircraft / UCF101", "role": "both", "size": "5640 / 10K / 13,320 images", "split": "2^-k N, 0<=k<=5; Rebuffi et al. 2017 train/val/test split", "source": "Cimpoi 2014; Maji 2013; Soomro 2012 (UCF101 converted to one image per video via Bilen 2016)", "preprocessing": "versions collated and resized by Rebuffi et al. 2017"},
+   {"name": "PTB", "role": "both", "size": "~900K/70K/80K train/val/test words; vocab 10K", "split": "2^-k N, 0<=k<=5", "source": "Mikolov 2010", "preprocessing": "random sentence sampling to a fraction of total words"},
+   {"name": "WikiText-2", "role": "both", "size": "2M/210K/240K train/val/test words; vocab 33K", "split": "2^-k N, 0<=k<=5", "source": "Bradbury 2017", "preprocessing": null},
+   {"name": "WikiText-103", "role": "both", "size": "100M train words; vocab 270K", "split": "2^-k N, 0<=k<=5", "source": "Merity 2016", "preprocessing": null}
+  ],
+  "models": [
+   {"name": "Transformer-XL (base config)", "role": "evaluated", "params": "41M (excluding word embeddings)", "architecture": "transformer with segment-level recurrence", "init_from": null, "tokenizer": null, "vocab": null, "layers": "16", "hidden": "embedding 410; inner dim 2100", "heads": "10", "context": null, "other": {"scaling": "decimate inner dimension; scales 4^-k M, 0<=k<=6", "used_for": "WikiText-103"}},
+   {"name": "AWD-LSTM", "role": "evaluated", "params": "20M (excluding word embeddings)", "architecture": "LSTM", "init_from": null, "tokenizer": null, "vocab": null, "layers": "3", "hidden": "embedding 400; hidden 1150", "heads": null, "context": null, "other": {"scaling": "decimate hidden size; 4^-k M, 0<=k<=6", "used_for": "PTB, WikiText-2"}},
+   {"name": "ResNet-50", "role": "evaluated", "params": "25.5M", "architecture": "CNN", "init_from": null, "tokenizer": null, "vocab": null, "layers": "50", "hidden": null, "heads": null, "context": null, "other": {"scaling": "width, 4^-k M, 0<=k<=6", "used_for": "ImageNet"}},
+   {"name": "WRN-44-16", "role": "evaluated", "params": "0.7M", "architecture": "wide ResNet", "init_from": null, "tokenizer": null, "vocab": null, "layers": "44", "hidden": null, "heads": null, "context": null, "other": {"scaling": "width 4^-k M; CIFAR10 -3<=k<=4, CIFAR100 -2<=k<=4; depth scaling probe on CIFAR10 (D=8..128, W=1..128)", "used_for": "CIFAR10/100, DTD, Aircraft, UCF101"}},
+   {"name": "VGG16bn and DenseNet (L=40,k=32)", "role": "evaluated", "params": null, "architecture": "CNN", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"scaling": "width 4^-k, 0<=k<=5", "used_for": "CIFAR100 optimizer/architecture check, Sec 6.2"}}
+  ],
+  "training": {
+   "objective": "image classification cross-entropy / word-level language modeling cross-entropy (error = top-1 error or test cross-entropy loss)",
+   "optimizer": "SGD momentum 0.9 for ResNet/WRN/AWD-LSTM; Adam for Transformer-XL; VGG and DenseNet with both SGD and Adam (default Adam hyperparameters)",
+   "lr": "0.1 (SGD vision); 1e-3 (Adam, VGG/DenseNet); LM rates not stated in paper (official implementations)",
+   "lr_schedule": "step x0.1: ImageNet after epochs 30 and 60; other vision after 80, 120, and 160 epochs; VGG SGD same; DenseNet SGD after 150 and 225 epochs",
+   "warmup": null,
+   "batch_size": "16 (ImageNet); 128 (other vision); LM not stated",
+   "steps": null,
+   "epochs": "90 (ImageNet); 200 (other vision); 170 (VGG, CIFAR100); 300 (DenseNet, CIFAR100)",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": "1e-4 (vision SGD)",
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {"hyperparameters": "held fixed across all scales, no tuning at large scale", "lm_details": "follow official implementations (kimiyoung/transformer-xl, salesforce/awd-lstm-lm)"}
+  },
+  "inference": {
+   "decoding": null, "temperature": null, "top_p": null, "max_tokens": null,
+   "samples": "extrapolation fit repeated 10 times (main text) or 100 times (Appendix D) with different random initialisations of theta; training run seeds per configuration not stated",
+   "prompting": null, "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "divergence delta", "definition": "(eps_hat(m,n;theta) - eps(m,n)) / eps(m,n), reported as mean mu and std sigma over configurations", "unit": "%", "higher_is_better": false}
+   ],
+   "baselines": [],
+   "protocol": "least squares on relative divergence; 10-fold CV over all (m,n) per dataset, +-1 std over folds; extrapolation fits on all points with m<=mi, n<=nj and tests on all larger points"
+  },
+  "availability": {"code": null, "weights": null, "data": null},
+  "prompts": [],
+  "evidence": [
+   {"field": "training.lr", "quote": "initial learning rate of 0.1", "where": "Appendix A.1.3"}
+  ]
+ },
+ "results": [
+  {"claim": "Fitting the form across all scales gives mean and std of relative error under 2% on ImageNet and WikiText-103.", "kind": "measured", "source": null, "metric": "relative error mean and std", "value": "2", "unit": "% (upper bound)", "baseline_value": null, "n": null, "setup": "Fit with 10-fold CV over all model/data configs, ImageNet and WikiText-103", "quote": "the mean and standard deviation of the relative errors are under 2% when", "table": null, "note": "Fig 3 legend for ImageNet shows sigma 1.9, wiki103 sigma 1.2", "where": "Sec 1"},
+  {"claim": "Extrapolating from a 1/16-size model on 1/8 of the data gives mean and std of relative error under 5%.", "kind": "measured", "source": null, "metric": "relative error mean and std", "value": "5", "unit": "% (upper bound)", "baseline_value": null, "n": null, "setup": "ImageNet and WikiText-103; fit on m<=M/16, n<=N/8, predict larger configs", "quote": "under 5% when extrapolating from a slimmed-down model (1/16 of the parameters) on a fraction of the training data (1/8 of the examples)", "table": null, "note": null, "where": "Sec 1"},
+  {"claim": "ImageNet extrapolation from M/16, N/8 has mean divergence 4.5% (std 4.7%).", "kind": "measured", "source": null, "metric": "mean divergence", "value": "4.5", "unit": "%", "baseline_value": null, "n": null, "setup": "ResNet-50 ImageNet top-1 error, fit on m<=M/16, n<=N/8", "quote": "mean divergence of µ = 4.5% (std: σ = 4.7%)", "table": null, "note": "Fig 6b legend prints -4.5% and 4.681%", "where": "Sec 7"},
+  {"claim": "WikiText-103 extrapolation from M/16, N/8 has mean divergence 0.5% (std 1.7%).", "kind": "measured", "source": null, "metric": "mean divergence", "value": "0.5", "unit": "%", "baseline_value": null, "n": null, "setup": "Transformer-XL WikiText-103 cross-entropy, fit on m<=M/16, n<=N/8", "quote": "mean divergence of µ = 0.5% (std: σ = 1.7%)", "table": null, "note": null, "where": "Sec 7"},
+  {"claim": "10-fold cross-validated fit quality is worst-case mean under 1% and std under 5% across datasets, with at most 6 free parameters against 42-49 configurations.", "kind": "measured", "source": null, "metric": "mean divergence (worst case)", "value": "1", "unit": "% (upper bound)", "baseline_value": null, "n": "42-49 configurations", "setup": "all 9 datasets, per-dataset fit", "quote": "worst-case values µ < 1% and σ < 5%", "table": null, "note": null, "where": "Sec 6"},
+  {"claim": "The form holds across VGG, DenseNet and WRN with SGD and Adam on CIFAR100 with mean divergence under 1%.", "kind": "measured", "source": null, "metric": "mean divergence", "value": "1", "unit": "% (upper bound)", "baseline_value": null, "n": null, "setup": "CIFAR100, 3 architectures x 2 optimizers (5 settings shown in Fig 5)", "quote": "mean divergence of µ < 1% (std: σ < 6%", "table": null, "note": null, "where": "Sec 6.2"},
+  {"claim": "Fitted data exponent alpha for ImageNet is 0.75.", "kind": "measured", "source": null, "metric": "alpha", "value": "0.75", "unit": null, "baseline_value": null, "n": null, "setup": "ResNet-50 ImageNet top-1 error", "quote": null, "table": "Table 2a, row ImageNet, column alpha (beta 0.61, b 0.76, c_inf 3.63, eta 18.50)", "note": null, "where": "Appendix B.2"},
+  {"claim": "Fitted data exponent alpha for WikiText-103 is 0.74 and model exponent beta 0.56.", "kind": "measured", "source": null, "metric": "alpha", "value": "0.74", "unit": null, "baseline_value": null, "n": null, "setup": "Transformer-XL WikiText-103 cross-entropy", "quote": null, "table": "Table 2b, row WikiText-103, column alpha (beta 0.56, b 0.33, c_inf 9.04, eta 16.34, eps0 6.60)", "note": null, "where": "Appendix B.2"},
+  {"claim": "Extrapolation fails when fit points sit near the random-guess plateau or number fewer than the free parameters of theta.", "kind": "claim", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "Appendix D extrapolation grids, all datasets", "quote": null, "table": null, "note": "Authors say at least two measurements per scaling dimension and no fewer than |theta| in total are needed", "where": "Appendix D"},
+  {"claim": "Compute-optimal model-to-data ratio under FLOPs proportional to m*n is given by b*(beta/alpha)*n^alpha/m^beta = 1.", "kind": "worked-example", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "Minimise m*n subject to constant error contour c = n^-alpha + b m^-beta; assumes constant epoch budget", "quote": null, "table": null, "note": "Derived, not tested empirically", "where": "Sec 8"}
+ ],
+ "limits": [
+  "Hyperparameters held constant across scales; no hyperparameter scaling policy shown (authors' conjecture only)",
+  "Transition from random-guess level is modelled by a convenience envelope; random-guess levels for small-model and small-data cases assumed identical, which fits worse for imbalanced language modeling (Fig 15)",
+  "Overfitting with larger models seen in one dataset (UCF101, Fig 12); form does not capture it",
+  "Extrapolation ill-posed near the random-guess plateau or with fewer points than parameters",
+  "No theory for the form; word-level LSTM/Transformer-XL and CNNs of 2019, up to 100M-word corpora and ImageNet; no large-scale subword LLM pretraining; compute/FLOPs trade-off is a derivation, not measured",
+  "Training seeds, hardware and compute are not stated"
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "error landscape", "definition": "the generalization error eps(n,m) as a function of training set size n and model size m", "where": "Sec 3"},
+  {"term": "scaling policy", "definition": "a function that completely defines how to scale up a model from small to large scales, including all parameters", "where": "Sec 1"}
+ ],
+ "lineage": [
+  {"work": "Deep learning scaling is predictable, empirically (Hestness et al.)", "year": 2017, "arxiv": "1712.00409", "relation": "extends", "note": "observed data-size power law but did not tie saturation to data size or give a joint form", "quote": null},
+  {"work": "EfficientNet (Tan & Le)", "year": 2019, "arxiv": null, "relation": "extends", "note": "model scaling saturation; authors verify form on its public results", "quote": null},
+  {"work": "Transformer-XL (Dai et al.)", "year": 2019, "arxiv": null, "relation": "evaluates", "note": "WikiText-103 model", "quote": null},
+  {"work": "AWD-LSTM (Merity et al.)", "year": 2018, "arxiv": null, "relation": "evaluates", "note": "PTB and WikiText-2 model", "quote": null},
+  {"work": "ResNet (He et al.) / WRN (Zagoruyko & Komodakis)", "year": 2016, "arxiv": "1605.07146", "relation": "evaluates", "note": "vision models", "quote": null},
+  {"work": "Wide or deeper: Revisiting the ResNet model (Wu et al.)", "year": 2016, "arxiv": "1611.10080", "relation": "evaluates", "note": "WRN-44-16 source", "quote": null},
+  {"work": "WikiText-103 / Pointer sentinel mixture models (Merity et al.)", "year": 2016, "arxiv": "1609.07843", "relation": "uses-data", "note": "language modeling data", "quote": null},
+  {"work": "ImageNet (Russakovsky et al.)", "year": 2015, "arxiv": null, "relation": "uses-data", "note": "vision data", "quote": null},
+  {"work": "Green AI (Schwartz et al.)", "year": 2019, "arxiv": "1907.10597", "relation": "related", "note": "motivation for compute-efficient trade-offs", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 1", "caption": "Error landscapes in log-log-log scale (Wiki103 cross entropy, CIFAR10 top1)", "page": 4, "why": "Shows the model-by-data surface with saturation and power-law regions"},
+  {"figure": "Fig 2", "caption": "Error vs. data size and model size for Wiki103 and CIFAR10; dashed lines are best fit saturating power-law", "page": 4, "why": "Shows the two one-dimensional power-law observations O1/O2"},
+  {"figure": "Fig 6", "caption": "Extrapolation results: illustration of fit vs extrapolated configurations; ImageNet and WikiText-103 examples", "page": 8, "why": "Explains the extrapolation protocol and headline accuracy"}
+ ],
+ "code": [
+  {"where": "Eq 4 (Sec 5.2)", "snippet": "~eps(m,n) = a n^-alpha + b m^-beta + c_inf", "verbatim": false},
+  {"where": "Eq 5 (Sec 5.2)", "snippet": "eps_hat(m,n) = eps0 * (~eps / (~eps - i*eta)); eps_inf = eps0 * c_inf / eta; a=1 WLOG; theta = {alpha, beta, b, c_inf, eta}", "verbatim": false}
+ ],
+ "problems": ["Figure/table text extraction is numeric noise for plots; Appendix D subplot labels not itemised. Table 2 lists 'UFC101' for UCF101 as printed. No embedded instructions found."]
+}

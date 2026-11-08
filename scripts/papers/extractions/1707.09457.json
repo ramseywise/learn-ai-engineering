@@ -1,0 +1,437 @@
+{
+ "schema": 1,
+ "key": "1707.09457",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/zhao-2017-men-also-like-shopping.pdf",
+ "bib": {
+  "title": "Men Also Like Shopping: Reducing Gender Bias Amplification using Corpus-level Constraints",
+  "authors": [
+   "Jieyu Zhao",
+   "Tianlu Wang",
+   "Mark Yatskar",
+   "Vicente Ordonez",
+   "Kai-Wei Chang"
+  ],
+  "first_author": "Zhao",
+  "year": 2017,
+  "venue": "EMNLP 2017",
+  "arxiv": "1707.09457",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 38345,
+  "chars_total": 38345,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Do datasets and structured-prediction models for visual semantic role labeling and multilabel classification carry and amplify gender bias, and can corpus-level constraints reduce the amplification?",
+ "hypothesis": "Datasets gathered from the web are gender biased and models trained on them amplify that bias, more so where initial bias is larger.",
+ "contributions": [
+  "A framework to quantify bias and bias amplification in structured prediction",
+  "Evidence that imSitu and MS-COCO are gender biased and trained CRFs amplify the bias",
+  "RBA: corpus-level constraints solved with Lagrangian relaxation as a meta-algorithm over the original inference"
+ ],
+ "method": {
+  "summary": "Bias score b(o,g)=c(o,g)/sum c(o,g') is compared between training labels and model predictions on held-out data. RBA adds corpus-level gender-ratio constraints (within margin gamma of training ratio) and solves by Lagrangian relaxation, re-running the original per-instance inference each iteration.",
+  "task": "visual semantic role labeling (imSitu) and multilabel object classification (MS-COCO), bias measurement and debiasing at inference",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "imSitu",
+    "role": "both",
+    "size": "about 125,000 images originally (75,702 train, 25,200 dev, 25,200 test); about 60,000 after filtering to 212 human-oriented verbs",
+    "split": "train / dev / test as released",
+    "source": "Yatskar et al. 2016; FrameNet verbs, WordNet nouns",
+    "preprocessing": "non-human verbs (e.g. rearing, retrieving, wagging) removed, leaving 212 verbs"
+   },
+   {
+    "name": "MS-COCO (multilabel)",
+    "role": "both",
+    "size": "25,000 images, 66 objects",
+    "split": null,
+    "source": "Lin et al. 2014",
+    "preprocessing": "gender from the five captions per image: mark man or woman if any caption mentions it, drop images mentioning both; keep objects co-occurring with man or woman at least 100 times in training"
+   }
+  ],
+  "models": [
+   {
+    "name": "imSitu CRF",
+    "role": "base",
+    "params": null,
+    "architecture": "CRF with potentials exp(w^T f_i + b), VGG conv features",
+    "init_from": "pretrained on the original task with 504 verbs",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "MS-COCO CRF",
+    "role": "base",
+    "params": null,
+    "architecture": "CRF over object categories and gender, ResNet-50 features",
+    "init_from": "pretrained ResNet-50, fine-tuned",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "inferred: 50 from ResNet-50",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": null,
+   "optimizer": "SGD (MS-COCO model only)",
+   "lr": "10^-5",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": "50 (MS-COCO model)",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": "10^-4",
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "inferred: NVIDIA hardware grants acknowledged, GPU not stated",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "momentum": "0.9",
+    "imSitu": "uses the released baseline CRF; no training hyperparameters given"
+   }
+  },
+  "inference": {
+   "decoding": "argmax_y log p(y|i) with corpus-level constraints, Lagrangian relaxation",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single run per setting; no seeds reported",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "margin_gamma": "0.05 around training gender ratio",
+    "eta": "10^-1",
+    "iterations": "100",
+    "lambda_init": "0",
+    "constraints": "applied over the whole dev or test set; constraints derived from the training set; test ground truth never used"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "mean bias amplification",
+     "definition": "(1/|O|) sum_g sum_{o: b*(o,g)>1/|G|} (b~(o,g) - b*(o,g)), training vs predicted bias",
+     "unit": "ratio (0-1 scale)",
+     "higher_is_better": false
+    },
+    {
+     "name": "Viol.",
+     "definition": "number of verbs/objects whose predicted bias exceeds the training bias by over 0.05",
+     "unit": "count",
+     "higher_is_better": false
+    },
+    {
+     "name": "top-1 semantic role accuracy (vSRL)",
+     "definition": "how often the correct verb was predicted and noun value correctly assigned to a role",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "top-1 mean average precision (MLC)",
+     "definition": "precision averaged across object categories",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "CRF without RBA"
+   ],
+   "protocol": "dev and test sets; single run, no significance test stated"
+  },
+  "availability": {
+   "code": "https://github.com/uclanlp/reducingbias",
+   "weights": null,
+   "data": "https://github.com/uclanlp/reducingbias"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Model predictions amplify the training gender skew for cooking (abstract example).",
+   "kind": "measured",
+   "source": null,
+   "metric": "cooking female disparity",
+   "value": 68,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "imSitu vSRL, 212 verbs, VGG-feature CRF, gender binary on agent role",
+   "quote": "the activity cooking is over 33% more likely to involve females than males in a train- ing set, and a trained model further ampli- ﬁes the disparity to 68% at test time",
+   "table": null,
+   "note": "Quote has PDF hyphenation breaks; Fig 1 caption gives man in 33% of cooking agent roles in training and 16% after CRF.",
+   "where": "Abstract"
+  },
+  {
+   "claim": "RBA reduces mean bias amplification on imSitu vSRL test set.",
+   "kind": "measured",
+   "source": null,
+   "metric": "bias amplification reduction",
+   "value": 40.5,
+   "unit": "% reduction",
+   "baseline_value": null,
+   "n": null,
+   "setup": "imSitu vSRL, 212 verbs, VGG-feature CRF, gender binary on agent role, test set",
+   "quote": "we decrease bias ampliﬁcation by 40.5% (Amp. bias)",
+   "table": null,
+   "note": null,
+   "where": "Sec 7.1"
+  },
+  {
+   "claim": "RBA reduces mean bias amplification on MS-COCO MLC test set.",
+   "kind": "measured",
+   "source": null,
+   "metric": "bias amplification reduction",
+   "value": 47.5,
+   "unit": "% reduction",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MS-COCO MLC, 66 objects, ResNet-50 CRF, gender from captions, test set",
+   "quote": "we de- crease bias ampliﬁcation by 47.5% (Amp. bias)",
+   "table": null,
+   "note": null,
+   "where": "Sec 7.2"
+  },
+  {
+   "claim": "Over 45% of verbs and 37% of objects are biased toward one gender by more than 2:1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "share of biased categories",
+   "value": 45,
+   "unit": "% of verbs (37% of objects)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "imSitu and MS-COCO training sets",
+   "quote": "over 45% and 37% of verbs and objects, respectively, exhibit bias to- ward a gender greater than 2:1",
+   "table": null,
+   "note": null,
+   "where": "Sec 1"
+  },
+  {
+   "claim": "imSitu: 64.6% of verbs favour a male agent, average bias 0.707.",
+   "kind": "measured",
+   "source": null,
+   "metric": "verbs favouring male",
+   "value": 64.6,
+   "unit": "% of verbs",
+   "baseline_value": null,
+   "n": null,
+   "setup": "imSitu training set",
+   "quote": "64.6% of verbs favoring a male agent by an average bias of 0.707",
+   "table": null,
+   "note": null,
+   "where": "Sec 6.1"
+  },
+  {
+   "claim": "imSitu mean bias amplification on dev is 0.050, with 45.75% of verbs amplified.",
+   "kind": "measured",
+   "source": null,
+   "metric": "mean bias amplification",
+   "value": 0.05,
+   "unit": "bias score",
+   "baseline_value": null,
+   "n": null,
+   "setup": "imSitu vSRL, 212 verbs, VGG-feature CRF, gender binary on agent role, dev set",
+   "quote": "The mean bias ampli- ﬁcation in the development set is high, 0.050 on average, with 45.75% of verbs exhibiting ampli- ﬁcation",
+   "table": null,
+   "note": null,
+   "where": "Sec 6.1"
+  },
+  {
+   "claim": "MS-COCO: 86.6% of objects are biased toward men, average magnitude 0.65.",
+   "kind": "measured",
+   "source": null,
+   "metric": "objects favouring male",
+   "value": 86.6,
+   "unit": "% of objects",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MS-COCO MLC, 66 objects, ResNet-50 CRF, gender from captions, training set",
+   "quote": "86.6% of ob- jects biased toward men, but with smaller average magnitude, 0.65",
+   "table": null,
+   "note": null,
+   "where": "Sec 6.2"
+  },
+  {
+   "claim": "MS-COCO mean bias amplification is 0.036 on dev, 65.67% of objects amplified.",
+   "kind": "measured",
+   "source": null,
+   "metric": "mean bias amplification",
+   "value": 0.036,
+   "unit": "bias score",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MS-COCO MLC, 66 objects, ResNet-50 CRF, gender from captions, dev set",
+   "quote": "The mean bias ampli- ﬁca- tion across all objects is 0.036, with 65.67% of nouns exhibiting ampli- ﬁcation",
+   "table": null,
+   "note": null,
+   "where": "Sec 6.2"
+  },
+  {
+   "claim": "Highly biased categories amplify more: mean amplification 0.072 (vSRL) vs 0.050 overall.",
+   "kind": "measured",
+   "source": null,
+   "metric": "mean bias amplification",
+   "value": 0.072,
+   "unit": "bias score",
+   "baseline_value": 0.05,
+   "n": null,
+   "setup": "imSitu vSRL, 212 verbs, VGG-feature CRF, gender binary on agent role, dev set, training bias over 0.7",
+   "quote": "verbs with training bias over 0.7 in either the male or female direction have a mean ampliﬁcation of 0.072",
+   "table": null,
+   "note": null,
+   "where": "Sec 6.1"
+  },
+  {
+   "claim": "vSRL accuracy barely changes with RBA on test set: 24.14 to 24.01.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Perf. (%)",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "imSitu vSRL, 212 verbs, VGG-feature CRF, gender binary on agent role, test set, top-1 semantic role accuracy",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "MLC mAP barely changes with RBA on test set: 45.40 to 45.38.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Perf. (%)",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "MS-COCO MLC, 66 objects, ResNet-50 CRF, gender from captions, test set, top-1 mAP",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Table 2"
+  }
+ ],
+ "limits": [
+  "Gender binary only, as perceived by annotators; authors say finer-grained analysis needed for production.",
+  "Assumes evaluation set is identically distributed to training set, so the target ratio is the training ratio, which is itself biased.",
+  "RBA cannot remove all amplification and struggles where initial bias is low.",
+  "Unclear whether other predictors amplify more or less; only one bias measure and one CRF family tested.",
+  "Pre-LLM: CRFs over CNN features, not language models; the amplification metric and corpus-level calibration idea are what carry over.",
+  "Single run per setting, no seeds or significance tests."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "bias score",
+   "definition": "b(o,g)=c(o,g)/sum_g' c(o,g'), the share of occurrences of output o that co-occur with demographic value g",
+   "where": "Sec 3"
+  },
+  {
+   "term": "bias amplification",
+   "definition": "predicted bias b~(o,g) exceeds training bias b*(o,g) where b*(o,g)>1/|G|",
+   "where": "Sec 3"
+  },
+  {
+   "term": "RBA",
+   "definition": "Reducing Bias Amplification, corpus-level constrained inference via Lagrangian relaxation",
+   "where": "Sec 1, 4"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Situation recognition: Visual semantic role labeling (Yatskar et al.)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "imSitu dataset and baseline CRF",
+   "quote": null
+  },
+  {
+   "work": "Microsoft COCO (Lin et al.)",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "multilabel classification data",
+   "quote": null
+  },
+  {
+   "work": "Rush and Collins tutorial on dual decomposition and Lagrangian relaxation",
+   "year": 2012,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "inference technique",
+   "quote": null
+  },
+  {
+   "work": "Bolukbasi et al., Man is to computer programmer as woman is to homemaker?",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "related",
+   "note": "bias in word embeddings",
+   "quote": null
+  },
+  {
+   "work": "Caliskan et al., Semantics derived automatically from language corpora contain human-like biases",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "related",
+   "note": "bias in embeddings",
+   "quote": null
+  },
+  {
+   "work": "VGG (Simonyan and Zisserman)",
+   "year": 2014,
+   "arxiv": "1409.1556",
+   "relation": "uses-method",
+   "note": "features for imSitu CRF",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Five example images from the imSitu vSRL dataset... bias is amplified: man fills 16% of agent roles in cooking images.",
+   "page": 2,
+   "why": "Shows cooking skew 33% -> 16% -> 20% after RBA in one image set."
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Gender bias analysis of imSitu vSRL and MS-COCO MLC.",
+   "page": 5,
+   "why": "Training ratio vs predicted ratio scatter makes amplification visible as points off the diagonal."
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 3",
+   "snippet": "b(o, g) = c(o, g) / sum_{g' in G} c(o, g')",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "PDF text has ligature and hyphenation breaks inside quotes; quotes copied verbatim including those.",
+  "No embedded instructions found."
+ ]
+}

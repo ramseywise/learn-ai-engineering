@@ -1,0 +1,675 @@
+{
+ "schema": 1,
+ "key": "https://doi.org/10.18653/v1/2023.ijcnlp-main.20",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/lyu-2023-faithful-chain-thought-reasoning.pdf",
+ "bib": {
+  "title": "Faithful Chain-of-Thought Reasoning",
+  "authors": [
+   "Qing Lyu",
+   "Shreya Havaldar",
+   "Adam Stein",
+   "Li Zhang",
+   "Delip Rao",
+   "Eric Wong",
+   "Marianna Apidianaki",
+   "Chris Callison-Burch"
+  ],
+  "first_author": "Lyu",
+  "year": 2023,
+  "venue": "IJCNLP-AACL 2023 (13th IJCNLP and 3rd AACL-IJCNLP, Volume 1: Long Papers)",
+  "arxiv": null,
+  "doi": "10.18653/v1/2023.ijcnlp-main.20"
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 98931,
+  "chars_total": 98931,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can a CoT-style pipeline whose answer is produced by deterministically executing the LM-written reasoning chain give faithful explanations without losing accuracy?",
+ "hypothesis": "Guaranteeing faithfulness (LM translates, deterministic solver answers) does not cost accuracy and may improve it.",
+ "contributions": [
+  "Faithful CoT: Translation (NL query to interleaved NL+symbolic chain) and Problem Solving (deterministic solver) stages",
+  "Generalises across Python, Datalog, PDDL and a relational-inference engine over 4 domains; new few-shot SOTA on 7 of 10 datasets",
+  "Analysis of LMs, exemplar and phrasing robustness, solver role, human plausibility study and error patterns"
+ ],
+ "method": {
+  "summary": "An LM few-shot prompted with (Q, C, A) exemplars writes a reasoning chain interleaving NL comments (subquestions, dependency graph, support rationales) and task-specific symbolic code; a Python interpreter, Datalog executor, PDDL planner or relation-rule engine executes it to get the answer. Compared with standard, CoT and Least-to-Most prompting under greedy and self-consistency decoding on 10 datasets.",
+  "task": "few-shot multi-step reasoning (math word problems, multi-hop QA, planning, relational inference)",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "GSM8K",
+    "role": "eval",
+    "size": "1,319 test",
+    "split": "test; 8 shot; validation = 1,000 random train examples",
+    "source": "Cobbe 2021, MIT",
+    "preprocessing": null
+   },
+   {
+    "name": "SVAMP",
+    "role": "eval",
+    "size": "1,000 test",
+    "split": "test only; 8 shot",
+    "source": "Patel 2021, MIT",
+    "preprocessing": null
+   },
+   {
+    "name": "MultiArith",
+    "role": "eval",
+    "size": "600 test",
+    "split": "test only; 8 shot",
+    "source": "Roy and Roth 2015, CC BY 4.0",
+    "preprocessing": null
+   },
+   {
+    "name": "ASDiv",
+    "role": "eval",
+    "size": "2,096 test",
+    "split": "test only; 8 shot; manually cleaned (multi-value answers)",
+    "source": "Miao 2020",
+    "preprocessing": null
+   },
+   {
+    "name": "AQuA",
+    "role": "eval",
+    "size": "254 test",
+    "split": "official split; 8 shot; two-step prompt",
+    "source": "Ling 2017",
+    "preprocessing": null
+   },
+   {
+    "name": "StrategyQA",
+    "role": "eval",
+    "size": "2,290 test",
+    "split": "open-domain question-only set from BIG-bench; 6 shot",
+    "source": "Geva 2021",
+    "preprocessing": null
+   },
+   {
+    "name": "Date Understanding",
+    "role": "eval",
+    "size": "359 test",
+    "split": "10 exemplars taken from test, rest evaluated; answers corrected",
+    "source": "BIG-bench, Apache 2.0",
+    "preprocessing": null
+   },
+   {
+    "name": "Sports Understanding",
+    "role": "eval",
+    "size": "977 test",
+    "split": "10 exemplars from test; 8+5 ambiguous questions removed",
+    "source": "BIG-bench, Apache 2.0",
+    "preprocessing": null
+   },
+   {
+    "name": "SayCan",
+    "role": "eval",
+    "size": "103 test (of 120)",
+    "split": "7 hand-written exemplars; cleaned, 17 filtered",
+    "source": "Ahn 2022, CC BY 4.0",
+    "preprocessing": null
+   },
+   {
+    "name": "CLUTRR",
+    "role": "eval",
+    "size": "1,042 test",
+    "split": "8 exemplars with K in {2,3}; test folds K=2..10 concatenated; data_089907f8 split",
+    "source": "Sinha 2019",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "code-davinci-002 (Codex)",
+    "role": "proposed",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "main Translator; discontinued 2023-03-23"
+    }
+   },
+   {
+    "name": "code-davinci-001",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "text-davinci-002",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "text-davinci-003",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "gpt-4",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "text-davinci-001",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "listed in App A API use only"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "greedy (temperature 0.0) and self-consistency majority vote",
+   "temperature": "0.0 greedy; 0.4 self-consistency",
+   "top_p": null,
+   "max_tokens": "1000",
+   "samples": "n=1 greedy; n=40 self-consistency; exemplar robustness: 6 runs (original + 5 resampled prompts)",
+   "prompting": "Few-shot (Q, C, A) exemplars, 6-10 per dataset (8 for MWP, 6 StrategyQA, 10 Date/Sports, 7 SayCan, 8 CLUTRR); chain interleaves NL subquestions with '(independent|depends on N, support: [...])' and code; AQuA uses a two-step prompt (numeric answer then closest option)",
+   "retrieval": null,
+   "parameters": {
+    "frequency_penalty": "0",
+    "presence_penalty": "0",
+    "other_api_params": "default per OpenAI completions API",
+    "API window": "Sept 2022 to Jan 2023",
+    "solver": "Python interpreter / Datalog / PDDL planner / transitivity-rule engine from Zhang et al. 2022"
+   },
+   "other": {
+    "cost": "Codex $0 (limited beta); GPT-3 $0.01-$0.03 per example",
+    "latency": "GSM8K test 3.5h with Codex, 2.3h with GPT-3",
+    "rate_limit": "150,000 tokens/min Codex",
+    "seeds": "not stated; greedy deterministic",
+    "baseline_fix": "Wei et al. exemplar count inconsistent (10 main text vs 6 appendix); baseline rerun with 10"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "final answer accuracy",
+     "definition": "exact match; MWP integers rounded to nearest integer; Boolean exact match for StrategyQA/Sports; SayCan plan correct if among ground-truth plans; string match otherwise",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "human-rated chain correctness",
+     "definition": "Prolific annotators label chains with correct answers as correct / incorrect NL / incorrect SL / flawed question / confused; majority label",
+     "unit": "% of 100 chains per domain",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Standard prompting (Brown 2020)",
+    "CoT (Wei 2022)",
+    "Least-to-Most (Zhou 2022)",
+    "PAL / PoT reimplemented as 'No NL' prompt",
+    "published few-shot SOTA"
+   ],
+   "protocol": "Single run per cell for Table 1, no significance tests; exemplar-set std from 6 runs; human study 100 annotators, >=3 per item, $16/hr, $280 total; errors manually categorised from 100 sampled errors per dataset"
+  },
+  "availability": {
+   "code": "https://github.com/veronica320/Faithful-COT",
+   "weights": null,
+   "data": "cleaned test sets and prompts in the repository"
+  },
+  "prompts": [
+   {
+    "purpose": "GSM8K/SVAMP/MultiArith/ASDiv exemplar",
+    "text": "# Q: There are 15 trees in the grove. Grove workers will plant trees in the grove today. After they are done, there will be 21 trees. How many trees did the grove workers plant today?\n# To answer this question, write a Python program to answer the following subquestions:\n# 1. How many trees are there in the beginning? (independent, support: [\"There are 15 trees\"])\ntrees_begin = 15\n# 2. How many trees are there in the end? (independent, support: [\"there will be 21 trees\"])\ntrees_end = 21\n# 3. How many trees did the grove workers plant today? (depends on 1 and 2, support: [])\ntrees_today = trees_end - trees_begin\n# 4. Final Answer: How many trees did the grove workers plant today? (depends on 3, support: [])\nanswer = trees_today",
+    "where": "Table 12"
+   },
+   {
+    "purpose": "StrategyQA Datalog exemplar",
+    "text": "// Q: Would a pear sink in water?\n// To answer this question, we answer the following subquestions:\n// 1. What is the density of a pear?\n// The density of a pear is about 0.6g/cm3.\n// 2. What is the density of water?\n// Water has a density of 1g/cm3.\n// Then, we represent these answers in Datalog:\n.decl Has_density(Object:symbol, Density:float)\nHas_density(\"pear\", 0.6).\nHas_density(\"water\", 1).\n// The answer is Yes only if the density of a pear is more than the density of water.\n.decl Answer()\nAnswer() :- Has_density(\"pear\", density1), Has_density(\"water\", density2), density1 > density2.\n.output Answer",
+    "where": "Table 13"
+   },
+   {
+    "purpose": "CLUTRR exemplar",
+    "text": "# Question: How is [Jason] related to [Myrna]?\n# To answer this question, we write a program to answer the following subquestions:\n# 1. How is [Jason] related to [Guillermina]? (independent, support: ...)\nrelation(Jason, Guillermina) = grandfather\n# 2. ...\nrelation(Guillermina, Myrna) = daughter\n# 3. Final answer: ...\nrelation(Jason, Myrna) = relation(Jason, Guillermina) @ relation(Guillermina, Myrna)",
+    "where": "Table 17 (abridged)"
+   },
+   {
+    "purpose": "SayCan exemplar (PDDL goal)",
+    "text": "User query: Bring me something not sweet to eat.\nGoal in PDDL:\n(:goal\n; I need to find a snack\n(exists (?s - snack)\n(and (not (is-sweet ?s)) (at ?s user))))",
+    "where": "Table 16 (reformatted)"
+   },
+   {
+    "purpose": "Other exemplars (AQuA, Date, Sports)",
+    "text": "See Tables 11, 14, 15; full prompts in the repository.",
+    "where": "App G"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "inference.max_tokens",
+    "quote": "max_tokens: 1000;",
+    "where": "App A"
+   },
+   {
+    "field": "inference.temperature",
+    "quote": "temperature: 0.0 for greedy decoding, 0.4 for",
+    "where": "App A"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Faithful CoT beats CoT on GSM8K with Codex under greedy decoding.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "72.3",
+   "unit": "% accuracy",
+   "baseline_value": "63.3",
+   "n": null,
+   "setup": "code-davinci-002, greedy decoding, 8-10 shot, Table 1",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Faithful CoT (ours), column GSM8K, Greedy Decoding"
+  },
+  {
+   "claim": "Relative gain over CoT on CLUTRR (relational inference) is 21.4% with greedy decoding.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "21.4",
+   "unit": "% relative",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CLUTRR, code-davinci-002, greedy",
+   "note": null,
+   "where": "Sec 5",
+   "quote": "and a surprising 21.4% on Relational Inference"
+  },
+  {
+   "claim": "Faithful CoT beats CoT on CLUTRR, absolute accuracy, greedy.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "58.9",
+   "unit": "% accuracy",
+   "baseline_value": "48.5",
+   "n": null,
+   "setup": "code-davinci-002, greedy decoding, 8-10 shot, Table 1",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Faithful CoT (ours), column CLUTRR, Greedy Decoding"
+  },
+  {
+   "claim": "Under self-consistency (T=0.4, 40 samples) Faithful CoT reaches 71.9 on CLUTRR vs CoT 45.7.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "71.9",
+   "unit": "% accuracy",
+   "baseline_value": "45.7",
+   "n": null,
+   "setup": "code-davinci-002, self-consistency",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Faithful CoT (ours), column CLUTRR, Self-Consistency Decoding"
+  },
+  {
+   "claim": "Abstract claim: Faithful CoT outperforms standard CoT on 9 of 10 benchmarks; relative gains 6.3% MWP, 3.4% Planning, 5.5% Multi-hop QA.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "6.3",
+   "unit": "% relative (MWP)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Codex, 10 datasets",
+   "note": "Abstract text is 'relative accuracy gain of 6.3% on Math Word Problems (MWP)' broken across lines",
+   "where": "Abstract",
+   "quote": "with a relative accuracy gain of 6.3% on Math Word Problems (MWP)"
+  },
+  {
+   "claim": "StrategyQA is the weak spot: Faithful CoT 63.0 vs CoT 72.5 under greedy decoding.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "63.0",
+   "unit": "% accuracy",
+   "baseline_value": "72.5",
+   "n": null,
+   "setup": "code-davinci-002, greedy decoding, 8-10 shot, Table 1",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Faithful CoT (ours), column StrategyQA, Greedy Decoding"
+  },
+  {
+   "claim": "29% of StrategyQA errors (where CoT is right and Faithful CoT wrong) are Datalog syntax errors.",
+   "kind": "measured",
+   "source": null,
+   "metric": "error share",
+   "value": "29",
+   "unit": "% of 70 errors",
+   "baseline_value": null,
+   "n": null,
+   "setup": "StrategyQA error analysis, 70 instances",
+   "note": null,
+   "where": "Sec 5, App F.2",
+   "quote": "an overwhelming 29% of errors are"
+  },
+  {
+   "claim": "Removing the solver (LM predicts the answer itself) drops GSM8K accuracy by 50.8 points.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "-50.8",
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Ablation, GSM8K, code-davinci-002 greedy",
+   "note": "Table 4: Full 72.3 vs No solver 21.5",
+   "where": "Sec 6.1",
+   "quote": "(-50.8, -22.9, and -19.4"
+  },
+  {
+   "claim": "The nudge line alone adds 31.3 points on CLUTRR (No NL 9.3 vs No NL but nudge 39.6).",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "31.3",
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Ablation, CLUTRR",
+   "note": null,
+   "where": "Sec 6.1",
+   "quote": "by 31.3 points"
+  },
+  {
+   "claim": "Exemplar choice matters little: GSM8K mean over six exemplar sets 71.8, std 0.6.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "71.8",
+   "unit": "% accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "6 runs (original plus 5 random samples of k=7-10 from 20 annotated examples), greedy",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Mean, column GSM8K"
+  },
+  {
+   "claim": "With GPT-4 Faithful CoT reaches 95.0 on GSM8K (CoT 64.9, LtM 91.8).",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "95.0",
+   "unit": "% accuracy",
+   "baseline_value": "64.9",
+   "n": null,
+   "setup": "gpt-4, greedy, 8-shot",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, LM gpt-4, row Faithful CoT (ours), column GSM8K"
+  },
+  {
+   "claim": "GPT-4 Faithful CoT averages 91.6 over five MWP datasets vs CoT 77.1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "91.6",
+   "unit": "% accuracy",
+   "baseline_value": "77.1",
+   "n": null,
+   "setup": "gpt-4, five MWP datasets",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, LM gpt-4, row Faithful CoT (ours), column Average"
+  },
+  {
+   "claim": "Human check: 92.0% of correct-answer MWP chains judged fully correct; StrategyQA only 66.7%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "66.7",
+   "unit": "% chains judged correct",
+   "baseline_value": null,
+   "n": null,
+   "setup": "100 chains per domain, >=3 Prolific annotators each, code-davinci-002 greedy",
+   "note": "MWP 92.0, Planning 94.0, Date 87.9, Sports 100.0, Relation 88.0; agreement for StrategyQA only 0.455",
+   "where": "Table 8",
+   "table": "Table 8, row StrategyQA, column Correct"
+  },
+  {
+   "claim": "Concurrent PAL/PoT-style (No NL) prompt is within 2.0 of Faithful CoT on 6 of 10 datasets; Faithful CoT wins on StrategyQA, Sports, CLUTRR.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "code-davinci-002 greedy, Fig 8",
+   "note": null,
+   "where": "App B.3",
+   "quote": "have very close accuracy (<2.0 difference)"
+  },
+  {
+   "claim": "Enforcing all three dependency constraints (GOU) lowers self-consistency accuracy, e.g. -5.0 on GSM8K.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "-5.0",
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MWP datasets, self-consistent decoding",
+   "note": null,
+   "where": "Table 7",
+   "table": "Table 7, row + GOU, column GSM8K"
+  },
+  {
+   "claim": "Few-shot SOTA claimed on 7 of 10 datasets, 95.0+ accuracy on 6 of them (GPT-4 and Codex).",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "7",
+   "unit": "datasets",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 3 best LM per dataset",
+   "note": null,
+   "where": "App B.2",
+   "quote": "sets new SOTA performance on 7 out of the 10 datasets"
+  }
+ ],
+ "limits": [
+  "code-davinci-002 was discontinued on 2023-03-23, so part of the results cannot be replicated without continued access.",
+  "Only the Problem Solving stage is faithful; the Translation stage is still opaque.",
+  "Faithfulness does not guarantee correctness; chains can be wrong yet reach correct answers (esp. StrategyQA).",
+  "No gain on StrategyQA (Datalog sparse in pretraining, 29% syntax errors) and AQuA; Sports is saturated.",
+  "NL comments contribute little to accuracy on GSM8K, Date, SayCan; the human-in-the-loop debugging benefit is untested.",
+  "Single run per Table 1 cell; baselines rerun on cleaned test sets by the authors; human-eval agreement low on StrategyQA (0.455); SayCan chains annotated by authors."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "faithfulness",
+   "definition": "an explanation should \"accurately represent the reasoning process behind the model's prediction\"",
+   "where": "Sec 2"
+  },
+  {
+   "term": "plausibility",
+   "definition": "\"how convincing an explanation is to humans\"",
+   "where": "Sec 2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Chain of Thought Prompting Elicits Reasoning in Large Language Models (Wei et al.)",
+   "year": 2022,
+   "arxiv": "2201.11903",
+   "relation": "baseline",
+   "note": "CoT baseline, datasets and exemplar counts followed",
+   "quote": null
+  },
+  {
+   "work": "Least-to-Most Prompting (Zhou et al.)",
+   "year": 2022,
+   "arxiv": "2205.10625",
+   "relation": "baseline",
+   "note": "decomposition baseline",
+   "quote": null
+  },
+  {
+   "work": "Self-Consistency Improves Chain of Thought Reasoning (Wang et al.)",
+   "year": 2022,
+   "arxiv": "2203.11171",
+   "relation": "uses-method",
+   "note": "decoding strategy",
+   "quote": null
+  },
+  {
+   "work": "Program-Aided Language Models (Gao et al.)",
+   "year": 2022,
+   "arxiv": "2211.10435",
+   "relation": "related",
+   "note": "concurrent; Python-only chains",
+   "quote": null
+  },
+  {
+   "work": "Program of Thoughts Prompting (Chen et al.)",
+   "year": 2022,
+   "arxiv": "2211.12588",
+   "relation": "related",
+   "note": "concurrent; Python-only chains",
+   "quote": null
+  },
+  {
+   "work": "Language Models Don't Always Say What They Think (Turpin et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "cited for systematic CoT unfaithfulness",
+   "quote": null
+  },
+  {
+   "work": "Towards Faithfully Interpretable NLP Systems (Jacovi and Goldberg)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "faithfulness/plausibility definitions",
+   "quote": null
+  },
+  {
+   "work": "Evaluating Large Language Models Trained on Code (Codex)",
+   "year": 2021,
+   "arxiv": "2107.03374",
+   "relation": "evaluates",
+   "note": "main LM",
+   "quote": null
+  },
+  {
+   "work": "GPT-4 technical report (OpenAI)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "best LM on MWP",
+   "quote": null
+  },
+  {
+   "work": "GSM8K, SVAMP, MultiArith, ASDiv, AQuA, StrategyQA, BIG-bench Date/Sports, SayCan, CLUTRR",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "10 evaluation datasets",
+   "quote": null
+  },
+  {
+   "work": "Zhang et al. 2022 differentiable symbolic programming",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "transitivity rules for the CLUTRR solver",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "An overview of our Faithful CoT framework",
+   "page": 2,
+   "why": "Two-stage Translation then Problem Solving pipeline at a glance"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "A sample output for a math question from three baselines and Faithful CoT",
+   "page": 6,
+   "why": "Side by side prompts: only Faithful CoT gets 280"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Ablation study results: accuracy when we remove different parts of the prompt",
+   "page": 8,
+   "why": "Shows solver is the key component, NL comments matter on CLUTRR"
+  }
+ ],
+ "code": [
+  {
+   "where": "Table 12",
+   "snippet": "# 3. How many trees did the grove workers plant today? (depends on 1 and 2, support: [])\ntrees_today = trees_end - trees_begin",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "No embedded instructions found. arXiv id not printed in the paper. Text read in full; figure content (Fig 5, 6, 8, 10-14) is not in the text layer, so figure values were taken from tables only."
+ ]
+}

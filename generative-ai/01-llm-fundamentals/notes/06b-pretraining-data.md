@@ -34,6 +34,23 @@ sources:
   - https://arxiv.org/abs/1805.12471
   - https://arxiv.org/abs/1505.00468
   - https://arxiv.org/abs/2305.08322
+  - https://doi.org/10.18653/v1/2024.acl-long.840
+  - https://doi.org/10.18653/v1/2024.naacl-long.179
+  - https://arxiv.org/abs/2109.07445
+  - https://doi.org/10.18653/v1/2021.naacl-main.190
+  - https://arxiv.org/abs/2203.09509
+  - https://doi.org/10.1609/icwsm.v14i1.7347
+  - https://doi.org/10.18653/v1/2020.acl-main.447
+  - https://arxiv.org/abs/1511.06709
+  - https://doi.org/10.18653/v1/d18-1045
+  - https://doi.org/10.18653/v1/2021.findings-emnlp.192
+  - https://arxiv.org/abs/1904.12848
+  - https://arxiv.org/abs/1312.3005
+  - https://arxiv.org/abs/1703.04730
+  - https://arxiv.org/abs/2101.05783
+  - https://arxiv.org/abs/2010.00133
+  - https://arxiv.org/abs/1707.09457
+  - https://arxiv.org/abs/2106.13219
 confidence: high
 cleaned: 2026-11-08
 ---
@@ -89,6 +106,44 @@ Multilingual pretraining shows the same data questions at the language level. XL
 
 ![Bar chart of XNLI accuracy for low-resource, high-resource and all languages as the number of pretraining languages grows from 7 to 100: high-resource accuracy falls from about 80 to 75, and low-resource accuracy peaks near 65 at 15 languages before dropping to about 58](../sources/images/conneau-xlmr-fig2.png)
 *Image Source: Conneau et al., [Unsupervised Cross-lingual Representation Learning at Scale](https://arxiv.org/abs/1911.02116) (2020), Fig. 2*
+
+### Open corpora and their sources
+
+Dolma is the open corpus whose pipeline is written down: about 3T Llama tokens (v1.6, 4,367M documents) curated from roughly 200TB of raw text. Web is 2,479B tokens, code 411B, Reddit 89B, papers 70B, books 6.0B and encyclopedic text 4.3B. Its 1.2B-model ablations (150B tokens, one run each) found that stacking quality filters, content filters and paragraph dedup compounds on HellaSwag, that the C4 no-punctuation rule alone beat both C4's and Gopher's full rule sets, and that Reddit comments kept as independent documents beat threaded layouts. The permissive toxicity threshold (tau=0.4, removing 5.5-7.3% of content) scored slightly worse than the strict one, and the authors chose it to keep tokens. Dolma v1.6 was not decontaminated ([doi:10.18653/v1/2024.acl-long.840](https://doi.org/10.18653/v1/2024.acl-long.840) (Soldaini et al., ACL 2024)).
+
+![Line chart of HellaSwag accuracy over 60B training tokens for 1.2B models trained on Reddit data in five layouts: atomic content with dedup, PII and toxicity filtering is highest, near 0.51, and complete threads lowest, near 0.46](../sources/images/soldaini-dolma-fig4.png)
+*Image Source: Soldaini et al., [Dolma](https://doi.org/10.18653/v1/2024.acl-long.840) (2024), Fig. 4*
+
+Two of its sources are documented elsewhere. The Pushshift dump behind Dolma's Reddit slice holds 651,778,198 submissions and 5,601,331,385 comments from June 2005 to April 2019, across 2,888,885 subreddits. The paper is a data-collection description and analyses no duplication, bots or toxicity ([doi:10.1609/icwsm.v14i1.7347](https://doi.org/10.1609/icwsm.v14i1.7347) (Baumgartner et al., ICWSM 2020)). S2ORC, the source of peS2o, clusters 81.1M papers, of which only 8.1M (10.0%) have full text parsed from PDF, and it resolves 380.5M citation links. Its SciBERT retrain matched the original on downstream tasks (winning most, losing ACL-ARC and SciCite) without a corpus ablation ([doi:10.18653/v1/2020.acl-main.447](https://doi.org/10.18653/v1/2020.acl-main.447) (Lo et al., ACL 2020)). The older yardstick for such corpora is the One Billion Word Benchmark, with sentences shuffled so it cannot test long context. An unpruned interpolated Kneser-Ney 5-gram scored perplexity 67.6 on it, the best single RNN-1024 plus 9-gram model 51.3, and an interpolation of all models 43.8, about 35% lower ([arXiv:1312.3005](https://arxiv.org/abs/1312.3005) (Chelba et al., INTERSPEECH 2014)).
+
+### Filtering for quality and toxicity has side effects
+
+Longpre et al. pretrained 1.5B decoder models on filtered C4 and Pile slices, one run per setting. A quality filter keeping 91% of C4 (T=0.975) raised average relative QA performance by 2.5, and removing the highest-quality 27% lowered it by 3.1. A toxicity filter keeping 76% lowered it by 2.7, and the strongest toxicity filter (T=0.3) cut toxic generation (RTP-T, 84.6 to 55.0) but lowered toxicity identification by 5.2. Pretraining-to-evaluation year mismatch cost 0.4 points per year on average, against 2.8 for fine-tuning mismatch. The classifiers are Perspective and a proprietary quality model, and the data is English C4 and the Pile only ([doi:10.18653/v1/2024.naacl-long.179](https://doi.org/10.18653/v1/2024.naacl-long.179) (Longpre et al., NAACL 2024)).
+
+![Two panels for a 1.5B model on C4: toxicity filtering lowers both toxic generation and toxicity identification, while quality filtering raises identification and lets toxic generation rise](../sources/images/longpre-pretrainers-guide-fig4.png)
+*Image Source: Longpre et al., [A Pretrainer's Guide to Training Data](https://doi.org/10.18653/v1/2024.naacl-long.179) (2024), Fig. 4*
+
+Welbl et al. found the cost is concentrated. On a 1.4B model trained on C4, combining training-data filtering, test-time filtering and PPLM drove automatic toxicity on RealToxicityPrompts to near zero (0.08 against 0.49 on toxic prompts, Perspective API, 20-token continuations). The strongest training filter raised C4 validation loss to about that of a model a third the size, and the extra loss sat on text Perspective labels toxic ([arXiv:2109.07445](https://arxiv.org/abs/2109.07445) (Welbl et al., EMNLP Findings 2021)). Xu et al. showed who pays. Under GeDi on GPT-2 medium, the perplexity ratio of African-American English to white-aligned English tweets grew from about 3 at no detoxification to 384.5 at the strongest weight, and more than 80% of annotators found GeDi less topical (100 prompts, one model, part of the drop is domain shift) ([doi:10.18653/v1/2021.naacl-main.190](https://doi.org/10.18653/v1/2021.naacl-main.190) (Xu et al., NAACL 2021)).
+
+![Line chart on a log axis: the AAE to WAE perplexity ratio of GPT-2 under GeDi rises from 3.1 to 384.5 as the discriminator weight goes from 0 to 5](../sources/images/xu-detoxifying-minority-voices-fig2.png)
+*Image Source: Xu et al., [Detoxifying Language Models Risks Marginalizing Minority Voices](https://doi.org/10.18653/v1/2021.naacl-main.190) (2021), Fig. 2*
+
+Toxicity classifiers themselves miss implicit hate. ToxiGen holds machine-generated statements, 98.2% of them implicit (no profanity-list match), and a majority of annotators judged 90.5% to be human-written. Fine-tuning HateBERT on its ALICE and top-k sets raised AUC on ToxiGen's validation set from 0.57 to 0.96 and on DynaHate from 0.47 to 0.66; prompt labels are a noisy proxy and hyperparameters are unstated ([arXiv:2203.09509](https://arxiv.org/abs/2203.09509) (Hartvigsen et al., ACL 2022)).
+
+### Bias in the data and in the model
+
+Bias is measured on the model, not the corpus, and the measurements are narrow. Zhao et al. showed a model can amplify a skew it was trained on: in imSitu, men fill 33% of cooking agent roles in training and 16% in a CRF's predictions, and over 45% of verbs lean toward one gender by more than 2:1. Corpus-level constraints reduced the amplification on imSitu and MS-COCO, with a gender binary assumed ([arXiv:1707.09457](https://arxiv.org/abs/1707.09457) (Zhao et al., EMNLP 2017)). On CrowS-Pairs, whose ideal score is 50, ALBERT-xxl-v2 scored 67.0, RoBERTa-large 64.1 and BERT-base 60.5, with religion worst (75.2 for ALBERT); it covers US stereotypes in masked models only ([arXiv:2010.00133](https://arxiv.org/abs/2010.00133) (Nangia et al., EMNLP 2020)). For GPT-3 davinci, 66 of 100 completions of "Two Muslims walked into a" were violent and "Muslim" was analogized to "terrorist" 23% of the time. A positive adjective in the prompt cut violence, to about 20% for the six best adjectives chosen on the same test, a manual fix that narrows topics ([arXiv:2101.05783](https://arxiv.org/abs/2101.05783) (Abid et al., AIES 2021)). The data-side filters above did not fix any of this, and A-INLP, a decoding-time fix, shows the alternative. On GPT-2 small it moved StereoSet religion ICAT from 74.27 to 88.51 (stereotype score 58.02 to 49.98), but human-rated fairness only moved from 3.93 to 4.00 of 5, and the paper's own religion gain is 19% in the text and 7% in Appendix D.5 ([arXiv:2106.13219](https://arxiv.org/abs/2106.13219) (Liang et al., ICML 2021)).
+
+Koh and Liang's influence functions are the tool Ruis et al. scaled to pretraining documents. The estimate matched leave-one-out retraining on MNIST logistic regression and a 2,616-parameter CNN, but it assumes a smooth loss and was validated only on small models ([arXiv:1703.04730](https://arxiv.org/abs/1703.04730) (Koh & Liang, ICML 2017)).
+
+### Augmenting and synthesising data
+
+Synthetic text predates the LLM recipe. Sennrich et al. back-translated target-side monolingual text into synthetic parallel pairs and gained 2.8 to 3.4 BLEU on English-German (WMT 15, attentional GRU, single models) with no model change ([arXiv:1511.06709](https://arxiv.org/abs/1511.06709) (Sennrich et al., ACL 2016)). Edunov et al. found that how the source is generated matters: sampling or noised beam beat beam search by 1.7 BLEU on average across newstest2013-2017, and with 226M sampled German sentences a Big Transformer reached 35 tokenized BLEU on newstest2014 (33.8 detokenized). Sampling hurt in the 80K-pair low-resource setting, and no variance is reported ([doi:10.18653/v1/d18-1045](https://doi.org/10.18653/v1/d18-1045) (Edunov et al., EMNLP 2018)).
+
+![Line chart of newstest2012 BLEU against total training data from 5M to 29M sentences: beam+noise and sampling rise highest, beam and greedy lowest](../sources/images/edunov-back-translation-fig1.png)
+*Image Source: Edunov et al., [Understanding Back-Translation at Scale](https://doi.org/10.18653/v1/d18-1045) (2018), Fig. 1*
+
+Xie et al.'s UDA trains with a consistency loss between an unlabeled input and its augmentation. With 20 labelled IMDb examples and BERT initialisation it reached 4.20% error, beating the 4.32% pre-BERT state of the art trained on 25k labels, and on CIFAR-10 with 4k labels (WRN-28-2, ten runs) 4.32% against MixMatch's 6.24%. It assumes label-preserving augmentations ([arXiv:1904.12848](https://arxiv.org/abs/1904.12848) (Xie et al., NeurIPS 2020)). GPT3Mix replaces rule-based augmentation with GPT-3 prompted on mixed examples, using the predicted label distribution as a soft label. At 0.1% of the data across seven tasks it lifted BERT-base from 58.4 to 69.2 average accuracy (10.8 points, about 18.5% relative), soft labels beat hard ones (71.2 against 61.6 on SST-2, DistilBERT), and it did not beat baselines on TREC6 or SUBJ at 1% ([doi:10.18653/v1/2021.findings-emnlp.192](https://doi.org/10.18653/v1/2021.findings-emnlp.192) (Yoo et al., EMNLP Findings 2021)).
 
 ### Evaluation sets are data too
 

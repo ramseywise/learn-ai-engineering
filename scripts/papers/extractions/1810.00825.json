@@ -1,0 +1,701 @@
+{
+ "schema": 1,
+ "key": "1810.00825",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/lee-2018-set-transformer.pdf",
+ "bib": {
+  "title": "Set Transformer: A Framework for Attention-based Permutation-Invariant Neural Networks",
+  "authors": [
+   "Juho Lee",
+   "Yoonho Lee",
+   "Jungtaek Kim",
+   "Adam R. Kosiorek",
+   "Seungjin Choi",
+   "Yee Whye Teh"
+  ],
+  "first_author": "Lee",
+  "year": 2019,
+  "venue": "ICML 2019 (PMLR 97)",
+  "arxiv": "1810.00825",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 57877,
+  "chars_total": 57877,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "How can a neural network over sets model interactions between elements, stay permutation invariant, and scale to large sets?",
+ "hypothesis": "Attention in both encoder and aggregation beats independent per-element encoding plus fixed pooling, and inducing points cut cost from quadratic to linear in set size without losing accuracy.",
+ "contributions": [
+  "Self-attention (SAB) to encode pairwise and higher-order interactions in a set",
+  "ISAB: inducing-point attention reducing O(n^2) to O(nm)",
+  "PMA: pooling by multihead attention on learnable seed vectors, followed by SAB for k correlated outputs",
+  "Proof that the Set Transformer is permutation invariant and a universal approximator of permutation invariant functions"
+ ],
+ "method": {
+  "summary": "Encoder is a stack of SAB or ISAB blocks (MAB without positional encoding or dropout); decoder is PMA with k learnable seed vectors, then SAB and a row-wise feedforward layer. ISAB attends m trainable inducing points to the set, then the set attends to the result. Tested on five set tasks against Deep Sets-style pooling and attention-pooling baselines.",
+  "task": "set-input learning: max regression, unique-character counting, amortized MoG clustering, set anomaly detection, point cloud classification",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Max regression (synthetic)",
+    "role": "both",
+    "size": "sampled fresh each step; n uniform in {1..10}, x in [0,100]",
+    "split": "no train/test split (new set each step)",
+    "source": "synthetic",
+    "preprocessing": null
+   },
+   {
+    "name": "Omniglot (unique character counting)",
+    "role": "both",
+    "size": "1,623 characters x 20 images; sets of 6-10 images",
+    "split": "characters split into train, validation, test; train only on train classes (split sizes not stated)",
+    "source": "Lake et al., 2015",
+    "preprocessing": null
+   },
+   {
+    "name": "Synthetic 2D MoG",
+    "role": "both",
+    "size": "n ~ Unif(100,500) points, 4 Gaussians, centers Unif(-4,4), std 0.3; 10 datasets per step",
+    "split": "generated on the fly",
+    "source": "synthetic",
+    "preprocessing": null
+   },
+   {
+    "name": "Large-scale synthetic 2D MoG (supplement)",
+    "role": "both",
+    "size": "n ~ Unif(1000,5000), k=6",
+    "split": "generated on the fly",
+    "source": "synthetic",
+    "preprocessing": null
+   },
+   {
+    "name": "CIFAR-100 amortized clustering",
+    "role": "both",
+    "size": "n ~ Unif(100,500) images from 4 random classes; 512-d VGG features of 50k training images",
+    "split": "VGG pretrained on CIFAR-100, test accuracy 68.54%",
+    "source": "CIFAR-100",
+    "preprocessing": "512-dim features from layer before last of pretrained VGG"
+   },
+   {
+    "name": "CelebA set anomaly",
+    "role": "both",
+    "size": "202,599 images, 40 attributes; 1,000 sampled sets of 8 (7 normal with two shared attributes, 1 anomaly)",
+    "split": "800 train sets, 200 test sets",
+    "source": "CelebA",
+    "preprocessing": null
+   },
+   {
+    "name": "ModelNet40 point clouds",
+    "role": "both",
+    "size": "9,843 train and 2,468 test objects, 40 classes; n = 100, 1000, 5000 points in R^3",
+    "split": "9,843 / 2,468",
+    "source": "Chang et al., 2015; obtained from the authors of Zaheer et al. (2017)",
+    "preprocessing": "random rotation and scaling during training"
+   }
+  ],
+  "models": [
+   {
+    "name": "Set Transformer (SAB/ISAB encoder + PMA decoder)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "permutation-invariant attention encoder-decoder; MAB = LayerNorm(H+rFF(H)), no positional encoding, no dropout",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "2 SAB/ISAB in encoder (Eq 13-14; 1 ISAB for 5000-pt cloud)",
+    "hidden": "64 (max, counting), 128 (2D MoG, anomaly), 256 (CIFAR-100 clustering, point cloud), 512 (5000-pt cloud)",
+    "heads": "4 (8 in counting PMA and runtime test)",
+    "context": null,
+    "other": {
+     "inducing_points_m": "16 typical; 4 in runtime test; 16/32/64 compared",
+     "PMA_seeds_k": "1 (max, counting, point cloud); 4 (MoG, CIFAR, anomaly); 6 (large MoG)",
+     "rFF": "fully connected with ReLU"
+    }
+   },
+   {
+    "name": "rFF + Pooling (Deep Sets)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "per-element rFF then mean pooling",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "rFFp-mean / rFFp-max + Pooling",
+    "role": "baseline",
+    "params": null,
+    "architecture": "permutation-equivariant layers (Zaheer et al. Eq 4) then pooling",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "rFF + Dotprod",
+    "role": "baseline",
+    "params": null,
+    "architecture": "dot-product attention weighted-sum pooling (Yang 2018, Ilse 2018)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "max regression: MAE; counting: Poisson log-likelihood with softplus rate; MoG: maximise expected log-likelihood (Eq 18); anomaly/point cloud: classification",
+   "optimizer": "Adam (point cloud 5000 points: Adamax used by Zaheer et al. baseline, not by this work)",
+   "lr": "1e-3 (max, 2D MoG, point cloud); 1e-4 (counting, CIFAR-100 clustering, anomaly)",
+   "lr_schedule": "constant (max, counting); 1e-3 to 1e-4 after 35k steps (2D MoG); 1e-4 to 1e-5 after 35k steps (CIFAR); exponential decay (anomaly); x0.3 every 20,000 steps (point cloud)",
+   "warmup": null,
+   "batch_size": "128 (max); 32 (counting); 10 datasets per step (MoG, CIFAR)",
+   "steps": "20,000 batches (max); 200,000 batches (counting); 50k steps (MoG, CIFAR); 1,000 iterations (anomaly, as stated)",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": "5000-pt point cloud only: 'decayed the weights by a factor of 10^-7'",
+   "dropout": "0.5 in point cloud rFF/decoder; Dropout in anomaly conv/FC; none inside MAB",
+   "regularisation": "random rotation and scaling (point cloud)",
+   "hardware": "Tesla P40 GPU (runtime test only)",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": "each experiment repeated five times",
+   "other": {}
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "five repeated runs; mean +- reported",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "MAE",
+     "definition": "|p - max(x)|",
+     "unit": "absolute error",
+     "higher_is_better": false
+    },
+    {
+     "name": "Counting accuracy",
+     "definition": "frequency the Poisson mode equals the true number of characters",
+     "unit": "fraction",
+     "higher_is_better": true
+    },
+    {
+     "name": "LL0/data, LL1/data",
+     "definition": "average log-likelihood per data point of predicted MoG parameters; LL1 after one EM step",
+     "unit": "nats per point",
+     "higher_is_better": true
+    },
+    {
+     "name": "ARI0, ARI1",
+     "definition": "adjusted Rand index of clustering; ARI1 after one EM step",
+     "unit": "fraction",
+     "higher_is_better": true
+    },
+    {
+     "name": "AUROC, AUPR",
+     "definition": "anomaly detection on test sets",
+     "unit": "fraction",
+     "higher_is_better": true
+    },
+    {
+     "name": "Test accuracy",
+     "definition": "ModelNet40 classification",
+     "unit": "fraction",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "rFF + Pooling (mean/sum/max)",
+    "rFFp-mean/max + Pooling",
+    "rFF + Dotprod",
+    "oracle (true parameters for synthetic; EM to convergence for CIFAR)"
+   ],
+   "protocol": "Five repetitions, mean +- (error bar type not stated); test-set metrics."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "Omniglot, CIFAR-100, CelebA, ModelNet40 are public; ModelNet40 point clouds obtained from Zaheer et al. authors"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.steps",
+    "quote": "Adam optimizer (?) with a constant learning rate of 10−3 and a batch size of 128 for 20,000",
+    "where": "Supp 2.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Max regression: SAB+PMA reaches near max-pooling error, far below mean and sum pooling",
+   "kind": "measured",
+   "source": null,
+   "metric": "MAE",
+   "value": 0.2085,
+   "unit": "MAE",
+   "baseline_value": 0.1355,
+   "n": 5,
+   "setup": "Max of n<=10 reals in [0,100], 5 runs",
+   "quote": null,
+   "table": "Table 1, row SAB + PMA (ours), column MAE",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Mean pooling fails on max regression",
+   "kind": "measured",
+   "source": null,
+   "metric": "MAE",
+   "value": 2.133,
+   "unit": "MAE",
+   "baseline_value": null,
+   "n": 5,
+   "setup": "as above",
+   "quote": null,
+   "table": "Table 1, row rFF + Pooling (mean), column MAE",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Unique-character counting: SAB+PMA best",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 0.6037,
+   "unit": "fraction",
+   "baseline_value": 0.4382,
+   "n": 5,
+   "setup": "Omniglot sets of 6-10 images, 5 runs",
+   "quote": null,
+   "table": "Table 2, row SAB + PMA (ours), column Accuracy",
+   "note": "baseline is rFF+Pooling 0.4382; supplement Table 2 prints rFF+Pooling as 0.4366 and SAB+PMA with +-0.0072",
+   "where": "Table 2"
+  },
+  {
+   "claim": "SAB+Pooling alone gives large gain over rFF+Pooling, showing encoder attention matters",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 0.5659,
+   "unit": "fraction",
+   "baseline_value": null,
+   "n": 5,
+   "setup": "as above",
+   "quote": null,
+   "table": "Table 2, row SAB + Pooling (ours), column Accuracy",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "rFF+PMA (attention only in decoder) gains little over pooling",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 0.4572,
+   "unit": "fraction",
+   "baseline_value": null,
+   "n": 5,
+   "setup": "as above",
+   "quote": null,
+   "table": "Table 2, row rFF + PMA (ours), column Accuracy",
+   "note": "supplement prints 0.4617",
+   "where": "Table 2"
+  },
+  {
+   "claim": "Meta clustering, synthetic: ISAB(16)+PMA beats oracle after one EM step",
+   "kind": "measured",
+   "source": null,
+   "metric": "LL1/data",
+   "value": -1.453,
+   "unit": "nats/point",
+   "baseline_value": -1.4726,
+   "n": 5,
+   "setup": "Synthetic 4-Gaussian 2D, n in [100,500], 5 runs",
+   "quote": null,
+   "table": "Table 3, row ISAB (16) + PMA (ours), column LL1/data",
+   "note": "baseline is the oracle LL",
+   "where": "Table 3"
+  },
+  {
+   "claim": "Meta clustering, synthetic: before EM, ISAB(16)+PMA",
+   "kind": "measured",
+   "source": null,
+   "metric": "LL0/data",
+   "value": -1.5009,
+   "unit": "nats/point",
+   "baseline_value": -2.0006,
+   "n": 5,
+   "setup": "as above",
+   "quote": null,
+   "table": "Table 3, row ISAB (16) + PMA (ours), column LL0/data",
+   "note": "baseline rFF+Pooling",
+   "where": "Table 3"
+  },
+  {
+   "claim": "CIFAR-100 clustering: ISAB(16)+PMA reaches ARI near oracle, rFF+Pooling far below",
+   "kind": "measured",
+   "source": null,
+   "metric": "ARI0",
+   "value": 0.921,
+   "unit": "ARI",
+   "baseline_value": 0.5593,
+   "n": 5,
+   "setup": "4 random CIFAR-100 classes, n in [100,500], VGG features",
+   "quote": null,
+   "table": "Table 3, row ISAB (16) + PMA (ours), column ARI0",
+   "note": "oracle ARI is 0.9150 (0.9151 in supplement Table 8); baseline rFF+Pooling",
+   "where": "Table 3"
+  },
+  {
+   "claim": "PMA gain larger than SAB gain on clustering: rFF+PMA vs rFF+Pooling ARI0",
+   "kind": "measured",
+   "source": null,
+   "metric": "ARI0",
+   "value": 0.7612,
+   "unit": "ARI",
+   "baseline_value": 0.5593,
+   "n": 5,
+   "setup": "as above",
+   "quote": null,
+   "table": "Table 3, row rFF + PMA (ours), column ARI0",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Large-scale clustering: SAB(32)+PMA(6) near oracle",
+   "kind": "measured",
+   "source": null,
+   "metric": "LL1/data",
+   "value": -1.8549,
+   "unit": "nats/point",
+   "baseline_value": -1.8202,
+   "n": 5,
+   "setup": "Synthetic 2D, n in [1000,5000], k=6",
+   "quote": null,
+   "table": "Supp Table 6, row SAB (32) + PMA (6), column LL1/data",
+   "note": "baseline is oracle; rFF+Pooling LL1 -2.0709",
+   "where": "Supp Table 6"
+  },
+  {
+   "claim": "Set anomaly detection: SAB+PMA best AUROC",
+   "kind": "measured",
+   "source": null,
+   "metric": "AUROC",
+   "value": 0.5941,
+   "unit": "AUROC",
+   "baseline_value": 0.5643,
+   "n": 5,
+   "setup": "CelebA, 8-image sets, 800 train / 200 test sets",
+   "quote": null,
+   "table": "Table 5, row SAB + PMA (ours), column Test AUROC",
+   "note": "baseline rFF+Pooling; random guess 0.5",
+   "where": "Table 5"
+  },
+  {
+   "claim": "Set anomaly detection: AUPR",
+   "kind": "measured",
+   "source": null,
+   "metric": "AUPR",
+   "value": 0.4386,
+   "unit": "AUPR",
+   "baseline_value": 0.4126,
+   "n": 5,
+   "setup": "as above",
+   "quote": null,
+   "table": "Table 5, row SAB + PMA (ours), column Test AUPR",
+   "note": "random guess 0.125",
+   "where": "Table 5"
+  },
+  {
+   "claim": "Point cloud 100 pts: ISAB(16)+PMA best",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 0.8454,
+   "unit": "fraction",
+   "baseline_value": 0.7951,
+   "n": 5,
+   "setup": "ModelNet40, 100 points",
+   "quote": null,
+   "table": "Table 4, row ISAB (16) + PMA (ours), column 100 pts",
+   "note": "baseline rFF+Pooling (this work's run)",
+   "where": "Table 4"
+  },
+  {
+   "claim": "Point cloud 5000 pts: ISAB(16)+Pooling is best of this work's models but below Zaheer's 0.90 result with more engineering",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 0.904,
+   "unit": "fraction",
+   "baseline_value": 0.9,
+   "n": 5,
+   "setup": "ModelNet40, 5000 points, 1 ISAB block, hidden 512",
+   "quote": null,
+   "table": "Table 4, row ISAB (16) + Pooling (ours), column 5000 pts",
+   "note": "baseline rFFp-max + Pooling from Zaheer et al. (reported 0.90 +- 0.003)",
+   "where": "Table 4"
+  },
+  {
+   "claim": "Point cloud 1000 pts: PMA does not help; ISAB(16)+Pooling beats ISAB(16)+PMA",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 0.8915,
+   "unit": "fraction",
+   "baseline_value": 0.8662,
+   "n": 5,
+   "setup": "ModelNet40, 1000 points",
+   "quote": null,
+   "table": "Table 4, row ISAB (16) + Pooling (ours), column 1000 pts",
+   "note": "baseline ISAB(16)+PMA; contradicts text claim 'PMA outperformed simple pooling in all other experiments' only for this table",
+   "where": "Table 4"
+  },
+  {
+   "claim": "ISAB cost is linear in set size for fixed m (time complexity of ISAB_m)",
+   "kind": "claim",
+   "source": null,
+   "metric": "complexity",
+   "value": "O(nm)",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Attention between a set of size m and one of size n",
+   "quote": "Therefore, the time complexity of ISABm(X; λ) is O(nm) where m is a (typ-",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.1"
+  },
+  {
+   "claim": "l stacked SABs cost O(l n^2); l stacked ISABs cost O(l n m)",
+   "kind": "claim",
+   "source": null,
+   "metric": "complexity",
+   "value": "O(ℓnm)",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Encoder stack of l blocks",
+   "quote": "and ISABs are O(ℓn2) and O(ℓnm), respectively.",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.3"
+  },
+  {
+   "claim": "Even ISAB with 1 inducing point plus PMA beats rFF+Pooling and rFF+PMA on counting; accuracy grows with n (read from Fig 3, no numbers printed)",
+   "kind": "measured",
+   "source": null,
+   "metric": "none",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": 5,
+   "setup": "Omniglot counting, ISAB_n + PMA, n=1..11",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Fig 3"
+  },
+  {
+   "claim": "Runtime test: SAB could not exceed 2,000 elements on a Tesla P40; ISAB4(64,8) vs SAB(64,8) seconds per 10,000 sets plotted in Fig 1 (no numbers in text)",
+   "kind": "measured",
+   "source": null,
+   "metric": "max set size SAB",
+   "value": 2000,
+   "unit": "elements",
+   "baseline_value": null,
+   "n": 5,
+   "setup": "Single Tesla P40, zero tensor of n 3-d vectors",
+   "quote": "took to process 10,000 sets of each size. The maximum set size we report for SAB is 2,000 because the computation graph",
+   "table": null,
+   "note": null,
+   "where": "Supp 3.1"
+  }
+ ],
+ "limits": [
+  "Authors concede Set Transformer lost to ISAB(16)+Pooling on large (5000-point) clouds, attributing it to sets already carrying enough information",
+  "Zaheer et al. used more engineering (augmentation, Adamax, schedule) for their 5000-point result, so the comparison is not like for like",
+  "No parameter counts, GPU hours or per-model compute given; runtime is shown only in a figure",
+  "Universality proof disables the pairwise interaction terms (W^O = 0), so it says nothing about why attention helps",
+  "Set anomaly AUROC gains are small (0.594 vs 0.564), error bar type unspecified",
+  "Anomaly training schedule stated as '1,000 iterations' with exponential decay, unclear",
+  "Authors suggest ISAB acts as regulariser (16 inducing points beat full SAB on clustering) but do not test it",
+  "Supplement has unresolved references ('?') and some figures cited as 'Figure ??'"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "MAB",
+   "definition": "Multihead Attention Block: MAB(X,Y) = LayerNorm(H + rFF(H)), H = LayerNorm(X + Multihead(X,Y,Y))",
+   "where": "Sec 3.1"
+  },
+  {
+   "term": "SAB",
+   "definition": "Set Attention Block: SAB(X) := MAB(X, X)",
+   "where": "Sec 3.1"
+  },
+  {
+   "term": "ISAB",
+   "definition": "Induced Set Attention Block: ISAB_m(X) = MAB(X, H), H = MAB(I, X), with m trainable inducing points I",
+   "where": "Sec 3.1"
+  },
+  {
+   "term": "PMA",
+   "definition": "Pooling by Multihead Attention: PMA_k(Z) = MAB(S, rFF(Z)) with k learnable seed vectors S",
+   "where": "Sec 3.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Attention is all you need (Vaswani et al.)",
+   "year": 2017,
+   "arxiv": "1706.03762",
+   "relation": "extends",
+   "note": "MAB adapts the Transformer encoder block without positional encoding or dropout",
+   "quote": null
+  },
+  {
+   "work": "Deep Sets (Zaheer et al.)",
+   "year": 2017,
+   "arxiv": "1703.06114",
+   "relation": "baseline",
+   "note": "pooling architecture and universality result; point cloud data source",
+   "quote": null
+  },
+  {
+   "work": "Towards a neural statistician (Edwards & Storkey)",
+   "year": 2017,
+   "arxiv": "1606.02185",
+   "relation": "baseline",
+   "note": "set pooling",
+   "quote": null
+  },
+  {
+   "work": "Sparse Gaussian processes using pseudo-inputs (Snelson & Ghahramani)",
+   "year": 2005,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "inducing points idea",
+   "quote": null
+  },
+  {
+   "work": "Nystrom method (Fowlkes et al.)",
+   "year": 2004,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "inducing points motivation",
+   "quote": null
+  },
+  {
+   "work": "Attention-based deep multiple instance learning (Ilse et al.)",
+   "year": 2018,
+   "arxiv": "1802.04712",
+   "relation": "baseline",
+   "note": "rFF + Dotprod attention pooling",
+   "quote": null
+  },
+  {
+   "work": "Attentional aggregation of deep feature sets (Yang et al.)",
+   "year": 2018,
+   "arxiv": "1808.00758",
+   "relation": "baseline",
+   "note": "AttSets pooling",
+   "quote": null
+  },
+  {
+   "work": "Order matters: seq2seq for sets (Vinyals et al.)",
+   "year": 2016,
+   "arxiv": "1511.06391",
+   "relation": "related",
+   "note": "attention pooling over sets",
+   "quote": null
+  },
+  {
+   "work": "Omniglot (Lake et al.)",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "counting task",
+   "quote": null
+  },
+  {
+   "work": "ModelNet40 / ShapeNet (Chang et al.)",
+   "year": 2015,
+   "arxiv": "1512.03012",
+   "relation": "uses-data",
+   "note": "point cloud classification",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Diagrams of our attention-based set operations. (a) Our model (b) MAB (c) SAB (d) ISAB",
+   "page": 2,
+   "why": "Shows ISAB's two-step attention through m inducing points versus SAB's n x n attention"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Accuracy of ISABn + PMA on the unique character counting task. x-axis is n and y-axis is accuracy.",
+   "page": 4,
+   "why": "Accuracy vs number of inducing points against SAB and rFF baselines"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Clustering results for 10 test datasets, along with centers and covariance matrices.",
+   "page": 5,
+   "why": "Qualitative: pooling fails explaining-away, PMA+SAB succeeds"
+  },
+  {
+   "figure": "Supp Fig 1",
+   "caption": "Runtime of a single SAB/ISAB block on dummy data. x axis is the size of the input set and y axis is time (seconds). x-axis is log-scale.",
+   "page": 8,
+   "why": "Direct evidence of quadratic vs linear cost"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 9-10",
+   "snippet": "ISABm(X) = MAB(X, H) ∈Rn×d,  where H = MAB(I, X) ∈Rm×d.",
+   "verbatim": true
+  },
+  {
+   "where": "Eq 11",
+   "snippet": "PMAk(Z) = MAB(S, rFF(Z)).",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Supplement has broken references ('(?)', 'Figure ??') in the text",
+  "Figure 1 labels page numbers approximated",
+  "Supplement Table 2 and main Table 2 differ for some rows (rFF+Pooling 0.4366 vs 0.4382; rFF+PMA 0.4617 vs 0.4572)",
+  "No embedded instructions found"
+ ]
+}

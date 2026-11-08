@@ -1,0 +1,664 @@
+{
+ "schema": 1,
+ "key": "1811.03600",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/shallue-2018-measuring-effects-data-parallelism-neural.pdf",
+ "bib": {
+  "title": "Measuring the Effects of Data Parallelism on Neural Network Training",
+  "authors": [
+   "Christopher J. Shallue",
+   "Jaehoon Lee",
+   "Joseph Antognini",
+   "Jascha Sohl-Dickstein",
+   "Roy Frostig",
+   "George E. Dahl"
+  ],
+  "first_author": "Shallue",
+  "year": 2019,
+  "venue": "Journal of Machine Learning Research 20 (2019) 1-49",
+  "arxiv": "1811.03600",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 140999,
+  "chars_total": 140999,
+  "engine": "pymupdf",
+  "skipped": "Reference list skimmed; appendix figure axis text (plot ticks) is noise and was not read line by line."
+ },
+ "type": "empirical",
+ "question": "How does batch size (the amount of synchronous data parallelism) affect the number of training steps needed to reach a goal out-of-sample error, what governs it, and does large batch cost solution quality?",
+ "hypothesis": null,
+ "contributions": [
+  "Steps-to-result vs batch size has the same three-regime form (perfect scaling, diminishing returns, maximal data parallelism) across six model families, three optimizers and seven data sets, with learning rate, momentum and schedule tuned per batch size",
+  "Maximum useful batch size varies widely; momentum extends it vs plain SGD; model matters in non-simple ways; data set matters less and not through size",
+  "Optimal metaparameters do not follow linear or square-root learning-rate scaling heuristics",
+  "Disagreement in the literature on large-batch solution quality is largely explained by metaparameter tuning and compute-budget protocol; public database of training curves"
+ ],
+ "method": {
+  "summary": "For each workload (model, data set, optimizer) and each batch size, the authors ran quasi-random metaparameter search (learning rate, momentum, decay schedule, label smoothing) and recorded the fewest training steps to first reach a fixed goal validation error. They compared batch sizes under step budgets and epoch budgets to separate batch size from compute budget.",
+  "task": "Measuring steps-to-result vs batch size for supervised image classification and language modelling",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "MNIST",
+    "role": "both",
+    "size": "55,000 train",
+    "split": "55,000 train / 5,000 validation / 10,000 test",
+    "source": "LeCun et al. 1998",
+    "preprocessing": "no augmentation"
+   },
+   {
+    "name": "Fashion MNIST",
+    "role": "both",
+    "size": "55,000 train",
+    "split": "55,000 / 5,000 / 10,000 test",
+    "source": "Xiao et al. 2017",
+    "preprocessing": "no augmentation"
+   },
+   {
+    "name": "CIFAR-10",
+    "role": "both",
+    "size": "45,000 train",
+    "split": "45,000 / 5,000 validation / 10,000 test",
+    "source": "Krizhevsky 2009",
+    "preprocessing": "per-image standardisation; no augmentation"
+   },
+   {
+    "name": "ImageNet",
+    "role": "both",
+    "size": "1,281,167 train",
+    "split": "1,281,167 train / 50,045 test (from official train) / 50,000 validation (official)",
+    "source": "Russakovsky et al. 2015",
+    "preprocessing": "random S in [256,512] aspect-preserving resize, random 224x224 crop, horizontal flip, mean RGB subtraction; eval resize 256 and central crop 224"
+   },
+   {
+    "name": "Open Images v4",
+    "role": "both",
+    "size": "4,526,492 train images",
+    "split": "4,526,492 / 41,225 validation / 124,293 test",
+    "source": "Krasin et al. 2017",
+    "preprocessing": "7,186 trainable classes; only human-annotated positives, all others negative; same as ImageNet"
+   },
+   {
+    "name": "LM1B",
+    "role": "both",
+    "size": "30,301,028 train sentences",
+    "split": "30,301,028 / 6,075 validation / 6,206 test sentences",
+    "source": "Chelba et al. 2014",
+    "preprocessing": "sub-word tokenizer, vocab 32,000; training sentences clipped to first 64 tokens (about 2% affected); no clipping at eval (max 476)"
+   },
+   {
+    "name": "Common Crawl",
+    "role": "both",
+    "size": "~25.8 billion train sentences",
+    "split": "99.98% train / 0.02% holdout; first 6,075 holdout sentences as validation",
+    "source": "Common Crawl June 2017 archive, filtered as Anil et al. 2018",
+    "preprocessing": "vocab 24,006 sub-word tokens; clipped to 64 tokens train, 476 eval"
+   }
+  ],
+  "models": [
+   {
+    "name": "Fully Connected (FC-N1-...-Nk)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "ReLU MLP, dropout 0.4 on hidden layers; sizes varied (e.g. FC-1024, FC-128-128-128 to FC-2048-2048-2048)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "varied",
+    "hidden": "varied",
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Simple CNN (base/narrow/wide)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "2 conv layers (5x5, stride 1, same padding) with 2x2 max-pool, 1 FC layer, dropout 0.4",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "2 conv + 1 FC",
+    "hidden": "base 32/64 filters, 1,024 FC units; narrow 16/32, 512; wide 64/128, 2,048",
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "ResNet-8",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "7 conv layers with residual connections plus 1 FC; He et al. 2016a n=1 with improved block; no batch norm",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "8",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "ResNet-50",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "49 conv layers with residual connections plus 1 FC; ghost batch norm with ghost batch size 32; label smoothing tuned",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "50",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "VGG-11",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "8 conv layers plus 3 FC; Simonyan and Zisserman model A",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "11",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "LSTM",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "one hidden-layer LSTM, simpler variant of Jozefowicz et al. 2016 LSTM-2048-512; no output bias",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "1",
+    "hidden": "1,024 embedding dims, 2,048 hidden units, 512 projection dims",
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Transformer (base/shallow/narrow and shallow/wide)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "Vaswani et al. 2017 decoder used as autoregressive LM; base as in original; shallow = 2 hidden layers instead of 6; narrow and shallow = half hidden units, heads and filter size; wide = double",
+    "init_from": null,
+    "tokenizer": "sub-word",
+    "vocab": "32,000 (LM1B); 24,006 (Common Crawl)",
+    "layers": "base 6; shallow 2",
+    "hidden": null,
+    "heads": null,
+    "context": "sentences clipped to 64 tokens at training",
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "Cross-entropy / softmax loss for classification (sigmoid for Open Images), next-token cross-entropy for LM; label smoothing on ResNet-50 and optionally MNIST/Fashion MNIST",
+   "optimizer": "Mini-batch SGD, SGD with momentum, Nesterov momentum (default Nesterov); TensorFlow MomentumOptimizer update rules; LSTM on LM1B used fixed gamma=0.99",
+   "lr": "tuned independently at every batch size by quasi-random search (search ranges shown in Figs 9, 10, 13, 14, not given as numbers in text)",
+   "lr_schedule": "constant for Fully Connected, Simple CNN, Transformer, LSTM; linear decay from eta0 to alpha*eta0 over T steps for ResNet-8, ResNet-50, VGG-11 (chosen after Appendix C comparison on ResNet-50/ImageNet)",
+   "warmup": "null: not used in the main experiments; paper only mentions warmup as a technique others use",
+   "batch_size": "swept as powers of two, e.g. 1 to 2^16 depending on workload (Fig 1 axes)",
+   "steps": "measured outcome (steps to goal); budgets used in Sec 4.8: 5k to 5000k steps (MNIST), 10k to 1000k (LM1B); Fig 10 budget 50,000 steps; Fig 9b 25,000 steps; Appendix C 150,000 steps",
+   "epochs": "epoch budgets in Sec 4.8: 10 to 10000 epochs (MNIST), 0.2 to 20 (LM1B); Fig 9a budget one epoch",
+   "tokens": null,
+   "seq_len": "64 tokens training clip (LM1B and Common Crawl)",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": "0.4 on Fully Connected hidden layers and Simple CNN FC layer",
+   "regularisation": "label smoothing (values {0,0.01,0.1} for b<=2^14 and {0,0.1} above on ResNet-50; {0,0.1} on MNIST/Fashion MNIST); ghost batch norm 32; tried L2 and gradient noise unsuccessfully",
+   "hardware": null,
+   "compute": "over 25 hours of wall time for each metaparameter configuration in saturation runs (Sec 3.2.1 footnote and Sec 4.8)",
+   "wall_clock": null,
+   "seeds": "no repeated seeds; the best trial among 100 (or 50) non-divergent quasi-random trials per batch size is reported",
+   "other": {
+    "metaparameter_search": "quasi-random search (Bousquet et al. 2017), equal budgets of non-divergent trials per batch size; 100 non-divergent trials generally, 50 for Transformer Shallow on LM1B with SGD, Transformer on Common Crawl and LSTM on LM1B; search space re-run if optimum near boundary or goal not reached",
+    "effective_learning_rate": "eta_eff = eta/(1-gamma)",
+    "goal_errors": "MNIST simple CNN 0.01; Fashion MNIST 0.1; CIFAR-10 ResNet-8 0.3; ImageNet ResNet-50 0.25; VGG-11 0.35; Open Images AP 0.31; LM1B and Common Crawl Transformer 3.9 cross entropy; LSTM LM1B 3.9",
+    "scale": "database of 454 workload-batch size combinations, 168,160 models, 71,638,836 loss measurements"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "one best trial out of 50-100 per batch size; no repeated runs",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Steps to result",
+     "definition": "fewest training steps at which any metaparameter trial first reaches a goal validation error",
+     "unit": "training steps",
+     "higher_is_better": false
+    },
+    {
+     "name": "Classification error",
+     "definition": "# incorrect classifications / # classifications",
+     "unit": "fraction",
+     "higher_is_better": false
+    },
+    {
+     "name": "Average precision (Open Images)",
+     "definition": "class-agnostic AP over all classes using area under discrete PR curve (tf.metrics.auc, 200 thresholds)",
+     "unit": "AP",
+     "higher_is_better": true
+    },
+    {
+     "name": "Cross entropy error",
+     "definition": "average per-token cross entropy over a data set (log of per-token perplexity)",
+     "unit": "nats per token",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "plain mini-batch SGD vs SGD with momentum vs Nesterov momentum",
+    "perfect-scaling line (steps halve per batch doubling)",
+    "linear and square-root learning-rate scaling heuristics"
+   ],
+   "protocol": "Steps to result per batch size with independently tuned metaparameters; error goal varied modestly to check robustness (Fig 2); training error checked (Fig 12); solution-quality study under step or epoch budgets taking best validation checkpoint across all trials (Sec 4.8). No significance tests."
+  },
+  "availability": {
+   "code": "https://github.com/google-research/google-research/tree/master/batch_science",
+   "weights": null,
+   "data": "Raw training-curve database released (same repo)"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Steps to reach a goal validation error fall proportionally with batch size at first, then show diminishing returns, then stop changing, in every workload.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Nine workload panels in Fig 1: six model families, seven data sets, per-batch-size tuned metaparameters, Nesterov momentum by default",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Sec 4.1, Fig 1"
+  },
+  {
+   "claim": "The perfect-scaling regime ended at a batch size anywhere from 2^4 to 2^13 depending on the workload.",
+   "kind": "measured",
+   "source": null,
+   "metric": "end of perfect scaling",
+   "value": "2^4 to 2^13",
+   "unit": "batch size",
+   "baseline_value": null,
+   "n": null,
+   "setup": "All workloads in Fig 1",
+   "quote": "ended anywhere from a batch size of 24 to a batch size of 213",
+   "table": null,
+   "note": "The text prints exponents flattened (24, 213).",
+   "where": "Sec 5"
+  },
+  {
+   "claim": "The maximum useful batch size (beyond which steps stop falling) varied between roughly 2^9 and 2^16.",
+   "kind": "measured",
+   "source": null,
+   "metric": "maximum useful batch size",
+   "value": "2^9 to 2^16",
+   "unit": "batch size",
+   "baseline_value": null,
+   "n": null,
+   "setup": "All workloads in Fig 1",
+   "quote": "varied between roughly 29 and 216 in our experiments",
+   "table": null,
+   "note": "Exponents flattened in text.",
+   "where": "Sec 5"
+  },
+  {
+   "claim": "For ResNet-8 on CIFAR-10, perfect scaling ends at batch size 16 with plain SGD but Nesterov momentum extends it to batch size 256.",
+   "kind": "measured",
+   "source": null,
+   "metric": "end of perfect scaling",
+   "value": "16 (SGD) vs 256 (Nesterov)",
+   "unit": "batch size",
+   "baseline_value": "16",
+   "n": null,
+   "setup": "ResNet-8 without batch norm, CIFAR-10, goal validation error 0.3",
+   "quote": "Our experiments conﬁrmed that perfect scaling ends at batch size 16 with plain mini-batch SGD",
+   "table": null,
+   "note": "The Nesterov value 256 is on the next line of the text: 'using Nesterov momentum extends the perfect scaling regime to batch size 256 (see Figure 1c)'.",
+   "where": "Sec 5, item 2"
+  },
+  {
+   "claim": "Momentum optimizers extend the perfect-scaling region to larger batch sizes than plain SGD but match SGD at small batch sizes; Nesterov and heavy-ball momentum differ little.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Simple CNN on MNIST, Transformer Shallow on LM1B, ResNet-8 on CIFAR-10 (Fig 4)",
+   "quote": "momentum optimizers perform identically to SGD without momentum",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.4"
+  },
+  {
+   "claim": "No evidence that larger batch sizes degrade out-of-sample error; solution quality depends on compute budget (step vs epoch) more than on batch size.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Simple CNN on MNIST and Fashion MNIST, Transformer (narrow shallow and base) on LM1B, 100 trials per batch size (Fig 11)",
+   "quote": "subject to a budget on training steps, larger batch sizes achieve better out-of-sample error than smaller batch sizes, but subject to a budget on training epochs, smaller batch sizes achieve better out-of-sample error than larger batch sizes",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.8, Fig 11"
+  },
+  {
+   "claim": "Optimal effective learning rate generally rises with batch size but does not follow linear or square-root scaling, sometimes decreasing; learning rate and momentum should be tuned jointly.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "All nine workloads, Fig 8 (eta_eff = eta/(1-gamma))",
+   "quote": "it did not always follow either a linear or square root scaling heuristic",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.7, Fig 8"
+  },
+  {
+   "claim": "Label smoothing improved ResNet-50 ImageNet validation error by up to about one percentage point at large batch sizes and had no apparent effect at small ones.",
+   "kind": "measured",
+   "source": null,
+   "metric": "validation error improvement",
+   "value": "1",
+   "unit": "percentage points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ResNet-50 on ImageNet, fixed compute budget per batch size, smoothing in {0,0.01,0.1} (Fig 7)",
+   "quote": "improved the error by as much as one percentage point",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.6"
+  },
+  {
+   "claim": "Without label smoothing the 0.25 ImageNet error goal could not be reached for batch sizes above 2^14 within the training budget.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "ResNet-50 on ImageNet, goal 0.25",
+   "quote": "Without label smoothing, we could not achieve our goal validation",
+   "table": null,
+   "note": "Text prints 'greater than 214' for 2^14.",
+   "where": "Sec 4.6"
+  },
+  {
+   "claim": "Narrower Transformers on LM1B scale to larger batch sizes than wider ones; ResNet-50 scales further than VGG-11 on ImageNet; Transformer further than LSTM on LM1B.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 3, y-axis normalised, goal errors chosen so all variants reach them",
+   "quote": "Thus, reducing width appears to",
+   "table": null,
+   "note": "Quote is a fragment; the sentence continues 'allow Transformer to make more use of larger batch sizes on LM1B.'",
+   "where": "Sec 4.3, Fig 3"
+  },
+  {
+   "claim": "Data set effect on maximum useful batch size is smaller than model and optimizer effects and does not follow data set size consistently.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Figs 5 and 6: MNIST vs Fashion MNIST, ImageNet vs Open Images, LM1B vs Common Crawl, and data subsets",
+   "quote": "these diﬀerences are not simply as straightforward",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.5"
+  },
+  {
+   "claim": "Saturating performance even on MNIST took millions of steps at small batch sizes or thousands of epochs at large ones, up to 25 hours per configuration.",
+   "kind": "measured",
+   "source": null,
+   "metric": "wall time per configuration",
+   "value": "25",
+   "unit": "hours",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Simple CNN on MNIST and Fashion MNIST, 100 metaparameter configurations per batch size",
+   "quote": "training for up to 25 hours per conﬁguration",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.8"
+  },
+  {
+   "claim": "About 100 non-divergent quasi-random trials per batch size sufficed for stable steps-to-result.",
+   "kind": "measured",
+   "source": null,
+   "metric": "trials per batch size",
+   "value": "100",
+   "unit": "trials",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Per batch size and workload; 50 trials for Transformer Shallow/SGD on LM1B, Transformer on Common Crawl, LSTM on LM1B",
+   "quote": "but 100 trials seemed to suﬃce in",
+   "table": null,
+   "note": null,
+   "where": "Sec 4"
+  },
+  {
+   "claim": "Released database holds 71,638,836 loss measurements for 168,160 models across 35 workloads.",
+   "kind": "measured",
+   "source": null,
+   "metric": "database size",
+   "value": "71,638,836",
+   "unit": "loss measurements",
+   "baseline_value": null,
+   "n": "168,160 models",
+   "setup": "35 workloads, 454 workload-batch size combinations",
+   "quote": "a database of 71,638,836 loss measurements taken over the course of training for 168,160",
+   "table": null,
+   "note": null,
+   "where": "Abstract, Sec 1.3"
+  }
+ ],
+ "limits": [
+  "Search spaces were specified by hand and may not suit every batch size; learning rate decay schedule searches were hard to verify as sufficient (Sec 5.1)",
+  "Smaller batch sizes got more validation measurements and so more chances of a lucky value; larger batch sizes that missed the goal got revised search spaces",
+  "Reports only the best trial; robustness across trials (e.g. median) and repeated seeds are not studied",
+  "Only SGD, momentum and Nesterov momentum; no Adam or second-order optimizers; no model parallelism",
+  "Results are retrospective: no way offered to predict the maximum useful batch size without tuning at every batch size",
+  "Idealised data parallel hardware assumed: step count as the time proxy, communication cost ignored",
+  "Width/depth effects inconsistent across architectures; dataset-size effect equivocal",
+  "Does not show the role of gradient noise scale; later work (not in this paper) addresses prediction"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "steps to result",
+   "definition": "the number of steps needed to first reach a desired out-of-sample error",
+   "where": "Sec 4"
+  },
+  {
+   "term": "workload",
+   "definition": "a data set, model, and training algorithm jointly",
+   "where": "Sec 2.3"
+  },
+  {
+   "term": "metaparameters",
+   "definition": "architectural choices and training parameters such as learning rates and regularization weights (the authors' name for hyperparameters)",
+   "where": "Sec 2.3"
+  },
+  {
+   "term": "effective learning rate",
+   "definition": "eta_eff = eta/(1 - gamma), the contribution of a given mini-batch gradient to final parameters under momentum",
+   "where": "Sec 2.2"
+  },
+  {
+   "term": "perfect scaling",
+   "definition": "region where steps needed halve for each doubling of batch size (b-fold benefit)",
+   "where": "Sec 4.1"
+  },
+  {
+   "term": "maximum useful batch size",
+   "definition": "batch size beyond which increasing the batch size no longer changes the steps needed",
+   "where": "Sec 5"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Goyal et al. 2017 (large minibatch ImageNet in 1 hour)",
+   "year": 2017,
+   "arxiv": "1706.02677",
+   "relation": "related",
+   "note": "linear LR scaling heuristic the paper tests and finds not general",
+   "quote": null
+  },
+  {
+   "work": "Golmant et al. 2018",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "related",
+   "note": "concurrent work with the same three-region form but inconsistent results, attributed to LR heuristics",
+   "quote": null
+  },
+  {
+   "work": "Chen et al. 2018 (critical batch size)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "contradicts",
+   "note": "width claim not confirmed; narrow Transformers scaled better",
+   "quote": null
+  },
+  {
+   "work": "Masters and Luschi 2018",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "replicates",
+   "note": "reproduced ResNet-8 CIFAR-10 SGD result, perfect scaling ends at 16, extended by momentum",
+   "quote": null
+  },
+  {
+   "work": "Keskar et al. 2017 (sharp minima)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "contradicts",
+   "note": "large-batch generalisation gap attributed to protocol and tuning",
+   "quote": null
+  },
+  {
+   "work": "Hoffer et al. 2017",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "ghost batch normalization",
+   "quote": null
+  },
+  {
+   "work": "Vaswani et al. 2017 Transformer",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "decoder used as LM",
+   "quote": null
+  },
+  {
+   "work": "Bousquet et al. 2017 quasi-random search",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "metaparameter tuning",
+   "quote": null
+  },
+  {
+   "work": "Smith and Le 2018",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "related",
+   "note": "small-batch noise as regularisation",
+   "quote": null
+  },
+  {
+   "work": "Chelba et al. 2014 LM1B; Anil et al. 2018 Common Crawl processing",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "LM data",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "The relationship between steps to result and batch size has the same characteristic form for all problems.",
+   "page": 16,
+   "why": "Shows the three regimes (perfect scaling, diminishing returns, maximal data parallelism) in nine workloads at once."
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Some models can exploit much larger batch sizes than others.",
+   "page": 18,
+   "why": "Compares architectures and widths/depths on normalised axes."
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Momentum extends perfect scaling to larger batch sizes, but matches plain SGD at small batch sizes.",
+   "page": 20,
+   "why": "Optimizer effect on the knee."
+  },
+  {
+   "figure": "Fig 8",
+   "caption": "Optimal effective learning rates do not always follow linear or square root scaling heuristics.",
+   "page": 23,
+   "why": "Shows heuristics against measured optima."
+  },
+  {
+   "figure": "Fig 11",
+   "caption": "Validation error depends on compute budget more than batch size.",
+   "page": 27,
+   "why": "Step budgets favour large batch, epoch budgets favour small."
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 2.2, p.6",
+   "snippet": "eta_eff = lim_{T->inf} sum_{u=tau}^{T} eta*gamma^(u-tau) = eta/(1 - gamma)",
+   "verbatim": false
+  },
+  {
+   "where": "Sec 4, p.15",
+   "snippet": "eta_t = eta_0 - (1-alpha)*eta_0*t/T if t <= T ; alpha*eta_0 if t > T",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Plot tick text from figures pollutes the cached text; exponents are flattened (2^14 appears as 214)",
+  "No ledger-visible hardware, seed, or search-range numbers in the text; ranges only in figures"
+ ]
+}

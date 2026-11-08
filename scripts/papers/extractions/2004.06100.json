@@ -1,0 +1,92 @@
+{
+ "schema": 1,
+ "key": "2004.06100",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/hendrycks-2020-pretrained-transformers-improve-out-distribution.pdf",
+ "bib": {"title": "Pretrained Transformers Improve Out-of-Distribution Robustness", "authors": ["Dan Hendrycks", "Xiaoyuan Liu", "Eric Wallace", "Adam Dziedzic", "Rishabh Krishnan", "Dawn Song"], "first_author": "Hendrycks", "year": 2020, "venue": "Proceedings of the 58th Annual Meeting of the Association for Computational Linguistics (ACL 2020), pages 2744-2751", "arxiv": "2004.06100", "doi": null},
+ "read": {"by": "source-reader", "at": "2026-11-08", "chars_read": 29777, "chars_total": 29777, "engine": "pymupdf", "skipped": "Nothing skipped. The PDF is the 8-page main paper only; the Appendix with full results that the text refers to is not in the file."},
+ "type": "empirical",
+ "question": "Do pretrained Transformers such as BERT generalize to out-of-distribution data and detect OOD examples better than earlier NLP models?",
+ "hypothesis": "Implied: high IID accuracy may not translate to OOD robustness for pretrained Transformers, as in vision, so this is tested rather than assumed.",
+ "contributions": ["A new OOD robustness benchmark over seven NLP datasets with realistic distribution shifts (style, topic, vocabulary)", "Evidence that pretrained Transformers have smaller IID/OOD gaps and detect OOD examples better than BoW, ConvNet and LSTM models", "Analysis of factors: larger models are not necessarily more robust, distillation can hurt, more diverse pretraining data helps"],
+ "method": {
+  "summary": "Thirteen models (bag-of-words, word-embedding encoders, pretrained Transformers) are trained on one distribution and tested on another, built by splitting datasets by metadata or pairing similar datasets. OOD generalization is the IID-to-OOD accuracy gap. OOD detection uses negative max softmax probability from an SST-2 classifier, scored by FAR95.",
+  "task": "OOD generalization and OOD detection across sentiment analysis, textual entailment, reading comprehension and semantic similarity",
+  "trains": true,
+  "datasets": [
+   {"name": "SST-2 / IMDb", "role": "both", "size": null, "split": "train on one, test on the other, and vice versa", "source": "Socher et al. 2013; Maas et al. 2011", "preprocessing": null},
+   {"name": "Yelp Review Dataset", "role": "both", "size": null, "split": "four groups by food type: American, Chinese, Italian, Japanese", "source": "Yelp", "preprocessing": null},
+   {"name": "Amazon Review Dataset", "role": "both", "size": "50,000 reviews per category", "split": "seven categories: Clothes, Women Clothing, Men Clothing, Baby Clothing, Shoes, Music, Movies", "source": "McAuley et al. 2015; He and McAuley 2016", "preprocessing": "1 to 5 star rating prediction"},
+   {"name": "STS-B", "role": "both", "size": null, "split": "four sources from two genres: MSRpar, Headlines (news); MSRvid, Images (captions)", "source": "Cer et al. 2017", "preprocessing": null},
+   {"name": "ReCoRD", "role": "both", "size": null, "split": "CNN vs Daily Mail", "source": "Zhang et al. 2018", "preprocessing": null},
+   {"name": "MNLI", "role": "both", "size": null, "split": "Telephone and Face-to-Face (transcribed), Letters (written)", "source": "Williams et al. 2018", "preprocessing": null},
+   {"name": "20 Newsgroups, Multi30K, RTE, SNLI, WMT16 (English-German source side)", "role": "eval", "size": null, "split": "validation examples; RTE/SNLI use premise+hypothesis concatenated; used only as OOD examples for detection, never for training", "source": "Lang 1995; Elliott et al. 2016; Dagan et al. 2005; Bowman et al. 2015", "preprocessing": null}
+  ],
+  "models": [
+   {"name": "Bag-of-words", "role": "baseline", "params": null, "architecture": "BoW (used for sentiment and STS-B only)", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "word2vec / GloVe with averages, LSTM or ConvNet encoders (+MLP head); DocQA with GloVe for ReCoRD", "role": "baseline", "params": null, "architecture": "word embeddings + encoder", "init_from": "word2vec / GloVe embeddings", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"implementation": "AllenNLP"}},
+   {"name": "BERT Base", "role": "proposed", "params": null, "architecture": "pretrained bidirectional Transformer, GELU", "init_from": "BERT pretrained", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "BERT Large", "role": "proposed", "params": null, "architecture": "pretrained bidirectional Transformer", "init_from": "BERT pretrained", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "RoBERTa Large", "role": "proposed", "params": null, "architecture": "pretrained on a larger dataset than BERT", "init_from": "RoBERTa pretrained", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "ALBERT (base, large, xlarge, xxlarge)", "role": "proposed", "params": null, "architecture": "ALBERT", "init_from": "ALBERT pretrained", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "DistilBERT", "role": "proposed", "params": null, "architecture": "distilled BERT", "init_from": "DistilBERT pretrained", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}}
+  ],
+  "training": {
+   "objective": "supervised fine-tuning on each task's training distribution (standard BERT fine-tuning procedure)",
+   "optimizer": null, "lr": null, "lr_schedule": null, "warmup": null, "batch_size": null, "steps": null, "epochs": null, "tokens": null, "seq_len": null, "precision": null, "weight_decay": null, "dropout": null, "regularisation": null, "hardware": null, "compute": null, "wall_clock": null, "seeds": null,
+   "other": {"hyperparameter_tuning": "non-pretrained models tuned to maximize validation performance on the IID task; Transformers 'lightly tune the hyperparameters'", "library": "HuggingFace Transformers"}
+  },
+  "inference": {
+   "decoding": null, "temperature": null, "top_p": null, "max_tokens": null, "samples": null, "prompting": null, "retrieval": null,
+   "parameters": {"ood_detection_score": "anomaly score = -max_y p(y|x), negative prediction confidence (maximum softmax probability)"},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "Accuracy", "definition": "classification accuracy for sentiment, Amazon (5-way), MNLI", "unit": "%", "higher_is_better": true},
+    {"name": "Pearson correlation", "definition": "STS-B semantic similarity", "unit": "%", "higher_is_better": true},
+    {"name": "Exact match", "definition": "ReCoRD reading comprehension", "unit": "%", "higher_is_better": true},
+    {"name": "FAR95", "definition": "False Alarm Rate at 95% Recall: probability that an in-distribution example raises a false alarm, assuming 95% of OOD examples are detected", "unit": "%", "higher_is_better": false}
+   ],
+   "baselines": ["Bag-of-words", "word2vec/GloVe averages", "word2vec/GloVe LSTM", "word2vec/GloVe ConvNet", "DocQA", "random detector"],
+   "protocol": "Train on IID split, test on IID and OOD splits; gap between them is generalization. No seeds, repeats or significance tests stated. Full results are in an Appendix not included in this PDF."
+  },
+  "availability": {"code": "https://github.com/camelop/NLP-Robustness", "weights": null, "data": "https://github.com/camelop/NLP-Robustness"},
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {"claim": "On STS-B (IID Images vs OOD MSRvid), an LSTM word2vec model's performance falls by over 35% while RoBERTa's slightly increases.", "kind": "measured", "source": null, "metric": "relative decline in Pearson correlation", "value": "35", "unit": "% (over)", "baseline_value": null, "n": null, "setup": "STS-B, train Images test MSRvid, LSTM word2vec vs RoBERTa Large, read from Fig 1", "quote": "the LSTM model declined by over 35%", "table": null, "note": "Abstract-level intro text says 'declines by over 35%' for an LSTM semantic similarity model.", "where": "Section 3, p.3; Intro"},
+  {"claim": "A BERT Base MNLI model trained on Telephone data keeps similar accuracy on OOD genres.", "kind": "measured", "source": null, "metric": "accuracy", "value": "81.4 (Telephone IID), 82.3 (Letters OOD), 80.8 (Face-to-Face OOD)", "unit": "%", "baseline_value": null, "n": null, "setup": "MNLI, BERT Base trained on Telephone", "quote": null, "table": "Table 1, row BERT, columns Telephone (IID) 81.4%, Letters (OOD) 82.3%, Face-to-Face (OOD) 80.8%", "note": null, "where": "Table 1, p.3"},
+  {"claim": "Larger BERT and ALBERT models do not shrink the IID/OOD gap on SST-2 vs IMDb, unlike in computer vision.", "kind": "measured", "source": null, "metric": "SST-2 accuracy minus IMDb accuracy", "value": null, "unit": "%", "baseline_value": null, "n": null, "setup": "BERT base/large and ALBERT base to xxlarge, train IMDb test SST-2 (Fig 3, no numbers in text)", "quote": "Figure 3 shows that larger BERT and AL-", "table": null, "note": "Claim only; values are in the figure.", "where": "Section 3, Fig 3"},
+  {"claim": "Distillation can reduce robustness (DistilBERT worse OOD than BERT).", "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "ReCoRD and IMDb, DistilBERT vs BERT, Fig 2", "quote": "model distillation can reduce robustness, as evident", "table": null, "note": "No numbers in text.", "where": "Section 3"},
+  {"claim": "More diverse and larger pretraining data (RoBERTa vs BERT Large) improves robustness, but data volume is not a full explanation.", "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "RoBERTa vs BERT Large, Fig 2", "quote": "RoBERTa exhibits greater robustness", "table": null, "note": "Authors note BERT is pretrained on roughly 3 billion tokens while GloVe is trained on roughly 840 billion tokens, so data size alone does not explain robustness.", "where": "Sections 3 and 5"},
+  {"claim": "Non-pretrained models are near or worse than chance at OOD detection, with false alarm rates approximately 100% on 20 Newsgroups.", "kind": "measured", "source": null, "metric": "FAR95", "value": "100", "unit": "% (approximately)", "baseline_value": null, "n": null, "setup": "SST-2 classifiers (BoW, word2vec averages, LSTM, ConvNet) with max-softmax score, OOD set 20 Newsgroups", "quote": "as their false alarm rates are approximately 100%", "table": null, "note": null, "where": "Section 4, p.4"},
+  {"claim": "Pretrained Transformers always beat a random detector on FAR95 but still do not cleanly separate IID from OOD.", "kind": "measured", "source": null, "metric": "FAR95", "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "SST-2 classifiers, OOD sets 20 NG, Multi30K, RTE, SNLI, WMT16", "quote": "Their FAR95 scores are always", "table": null, "note": "Numbers only in Fig 4 and the Appendix.", "where": "Section 4, Fig 4 and Fig 5"}
+ ],
+ "limits": ["The benchmark covers only classification, entailment, QA and similarity models of 2020 scale (BERT, RoBERTa, ALBERT); no generative or autoregressive LMs are tested.", "Authors say why pretrained models are more robust is open; data diversity and self-supervision are only partial explanations.", "OOD detection by max softmax probability is far from perfect for pretrained Transformers (Fig 5).", "Hyperparameters, seeds, dataset sizes and per-dataset numbers are not in the main text; the Appendix is missing from this PDF.", "Shifts studied are natural (style, topic, vocabulary), not adversarial; domain adaptation is excluded."],
+ "practices": [],
+ "terms": [
+  {"term": "FAR95", "definition": "the False Alarm Rate at 95% Recall: the probability that an in-distribution example raises a false alarm, assuming that 95% of all out-of-distribution examples are detected", "where": "Section 4"},
+  {"term": "OOD robustness", "definition": "decomposed into a model's ability to (1) generalize and to (2) detect OOD examples", "where": "Section 1"}
+ ],
+ "lineage": [
+  {"work": "A baseline for detecting misclassified and out-of-distribution examples in neural networks", "year": 2017, "arxiv": "1610.02136", "relation": "uses-method", "note": "max softmax probability as anomaly score", "quote": null},
+  {"work": "Benchmarking neural network robustness to common corruptions and perturbations", "year": 2019, "arxiv": "1903.12261", "relation": "related", "note": "vision finding that high IID accuracy does not imply OOD robustness; larger models help there", "quote": null},
+  {"work": "Using pre-training can improve model robustness and uncertainty", "year": 2019, "arxiv": "1901.09960", "relation": "related", "note": "vision counterpart", "quote": null},
+  {"work": "Deep anomaly detection with outlier exposure", "year": 2019, "arxiv": "1812.04606", "relation": "uses-method", "note": "FAR95 protocol", "quote": null},
+  {"work": "BERT", "year": 2019, "arxiv": "1810.04805", "relation": "evaluates", "note": "BERT Base and Large", "quote": null},
+  {"work": "RoBERTa", "year": 2019, "arxiv": "1907.11692", "relation": "evaluates", "note": "RoBERTa Large", "quote": null},
+  {"work": "ALBERT", "year": 2020, "arxiv": "1909.11942", "relation": "evaluates", "note": null, "quote": null},
+  {"work": "DistilBERT", "year": 2019, "arxiv": "1910.01108", "relation": "evaluates", "note": null, "quote": null},
+  {"work": "Annotation artifacts in natural language inference data (Gururangan et al. 2018)", "year": 2018, "arxiv": "1803.02324", "relation": "related", "note": "spurious cues explain OOD brittleness", "quote": null},
+  {"work": "SST-2, IMDb, Yelp, Amazon, STS-B, ReCoRD, MNLI", "year": null, "arxiv": null, "relation": "uses-data", "note": "datasets restructured into OOD splits", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 1", "caption": "Pretrained Transformers often have smaller IID/OOD generalization gaps than previous models.", "page": 3, "why": "Bars show IID vs OOD per model on STS-B; the LSTM collapse versus RoBERTa gain is visible at a glance."},
+  {"figure": "Fig 4", "caption": "OOD examples fed to SST-2 classifiers; False Alarm Rate at 95% Recall, lower is better.", "page": 4, "why": "Shows non-pretrained models at random-chance detection and BERT Large much better."},
+  {"figure": "Fig 5", "caption": "Confidence distribution for a RoBERTa SST-2 classifier on SST-2 test vs WMT16.", "page": 5, "why": "Shows even a good model is confident on OOD text, relevant to confident wrong output."},
+  {"figure": "Fig 3", "caption": "The IID/OOD generalization gap is not improved with larger models, unlike in computer vision.", "page": 3, "why": "Scale does not buy robustness here."}
+ ],
+ "code": [],
+ "problems": ["PDF is the 8-page main paper; the Appendix with full results and hyperparameters is absent, so many method numbers are null.", "Figure values are not in the text; bar heights were not read off.", "No embedded instructions found."]
+}

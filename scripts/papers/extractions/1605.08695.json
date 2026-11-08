@@ -1,0 +1,708 @@
+{
+ "schema": 1,
+ "key": "1605.08695",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/abadi-2016-tensorflow.pdf",
+ "bib": {
+  "title": "TensorFlow: A system for large-scale machine learning",
+  "authors": [
+   "Martín Abadi",
+   "Paul Barham",
+   "Jianmin Chen",
+   "Zhifeng Chen",
+   "Andy Davis",
+   "Jeffrey Dean",
+   "Matthieu Devin",
+   "Sanjay Ghemawat",
+   "Geoffrey Irving",
+   "Michael Isard",
+   "Manjunath Kudlur",
+   "Josh Levenberg",
+   "Rajat Monga",
+   "Sherry Moore",
+   "Derek G. Murray",
+   "Benoit Steiner",
+   "Paul Tucker",
+   "Vijay Vasudevan",
+   "Pete Warden",
+   "Martin Wicke",
+   "Yuan Yu",
+   "Xiaoqiang Zheng"
+  ],
+  "first_author": "Abadi",
+  "year": 2016,
+  "venue": "OSDI 2016 (arXiv v2, 31 May 2016)",
+  "arxiv": "1605.08695",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 80480,
+  "chars_total": 80480,
+  "engine": "pymupdf",
+  "skipped": "Reference list skimmed only (no appendices in this paper)."
+ },
+ "type": "system",
+ "question": "How can a single dataflow-graph system support large-scale distributed training and inference on heterogeneous hardware while staying extensible to new optimizers, models and coordination schemes?",
+ "hypothesis": "A dataflow graph with mutable state subsumes parameter-server designs and lets users build optimizers, sharding, fault tolerance and synchronous replication in user-level code with little overhead.",
+ "contributions": [
+  "A unified dataflow graph with mutable state (variables, queues) covering computation, parameters and input pipelines",
+  "User-level extensibility case studies: differentiation/optimizers, very large sharded models, checkpoint fault tolerance, synchronous replication with backup workers",
+  "Evaluation of single-machine overhead, synchronous coordination, Inception-v3 and LSTM language-model scaling"
+ ],
+ "method": {
+  "summary": "TensorFlow represents computation and state as one dataflow graph placed across CPUs, GPUs and TPUs, partitioned per device with Send/Recv. Parameter-server behaviour, sharded embeddings, checkpointing and sync/async/backup-worker replication are built from graph primitives. Evaluation measures system throughput and step time, not accuracy.",
+  "task": "distributed ML systems: neural network training and inference (image classification, language modelling)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "ImageNet / ILSVRC 2012",
+    "role": "train",
+    "size": "136 gigabytes of images (as stated for ImageNet)",
+    "split": null,
+    "source": "public",
+    "preprocessing": null
+   },
+   {
+    "name": "One Billion Word Benchmark",
+    "role": "train",
+    "size": "vocabulary 800,000 words; restricted to the 40,000 most common words for the experiment",
+    "split": null,
+    "source": "public",
+    "preprocessing": "restricted vocabulary of 40,000 words"
+   }
+  ],
+  "models": [
+   {
+    "name": "Inception-v3",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "deep CNN; 78.8% accuracy on ILSVRC 2012",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "LSTM-512-512",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "recurrent LSTM language model; output matrix 512 x 40,000",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": "40,000",
+    "layers": null,
+    "hidden": "512",
+    "heads": null,
+    "context": null,
+    "other": {
+     "sampled_softmax_classes": "512 per batch"
+    }
+   },
+   {
+    "name": "AlexNet, Overfeat, OxfordNet, GoogleNet",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "convolutional models, Chintala benchmark",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": null,
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "32 randomly selected embedding entries per worker in the sparse microbenchmark; training batch sizes not stated",
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": "32-bit floats (single-machine benchmark)",
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "Inception: 17 PS tasks; each worker task one NVIDIA K40 GPU and 5 IvyBridge cores, each PS task 8 IvyBridge cores, up to 200 workers. Single-machine: six-core Intel Core i7-5930K 3.5 GHz and one NVIDIA Titan X. Shared production cluster.",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "language_model_PS_and_worker_counts": "1 to 32 PS tasks; 4, 32, 256 workers (read from Fig 9)",
+    "backup_workers": "50-worker Inception job, 0 to 5 backup workers",
+    "null_step_PS_tasks": "16 PS tasks"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "training step time",
+     "definition": "time per training step, median with 10th/90th percentile error bars",
+     "unit": "ms or s",
+     "higher_is_better": false
+    },
+    {
+     "name": "throughput",
+     "definition": "images/second, batches/second or words/second",
+     "unit": "per second",
+     "higher_is_better": true
+    },
+    {
+     "name": "normalized speedup",
+     "definition": "t(b)/t(0) x 50/(50+b), t(b) median step time with b backup workers",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Caffe",
+    "Neon",
+    "Torch"
+   ],
+   "protocol": "Median values with 10th and 90th percentile error bars on a shared production cluster; system metrics only, no time-to-accuracy. Number of runs not stated."
+  },
+  "availability": {
+   "code": "https://github.com/tensorflow/tensorflow",
+   "weights": null,
+   "data": "public datasets"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "models.Inception-v3",
+    "quote": "Google's Inception-v3 model, which achieves 78.8% accuracy the ILSVRC 2012 image classiﬁcation challenge",
+    "where": "Sec 6.3"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Sync training of Inception-v3 reaches 2,300 images/s at 200 workers with diminishing returns",
+   "kind": "measured",
+   "source": null,
+   "metric": "throughput",
+   "value": 2300,
+   "unit": "images/second",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Inception-v3, 17 PS tasks, K40 workers, up to 200",
+   "quote": "Training throughput improves to 2,300 images per second as we increase the number of workers to 200",
+   "table": null,
+   "note": null,
+   "where": "Sec 6.3, Fig 7a"
+  },
+  {
+   "claim": "Adding 3 backup workers to a 50-worker job gives the best normalized speedup",
+   "kind": "measured",
+   "source": null,
+   "metric": "normalized speedup",
+   "value": 9.5,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Inception-v3, 50 workers",
+   "quote": "adding 3 achieves the highest normalized speedup (9.5%)",
+   "table": null,
+   "note": null,
+   "where": "Sec 6.3, Fig 8"
+  },
+  {
+   "claim": "4 backup workers give the shortest median step time",
+   "kind": "measured",
+   "source": null,
+   "metric": "step time",
+   "value": 1.93,
+   "unit": "s",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Inception-v3, 50 workers",
+   "quote": "adding 4 backup workers achieves the shortest overall step time (1.93 s)",
+   "table": null,
+   "note": null,
+   "where": "Sec 6.3, Fig 8"
+  },
+  {
+   "claim": "Backup workers improve throughput by up to 15%",
+   "kind": "measured",
+   "source": null,
+   "metric": "throughput gain",
+   "value": 15,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "synchronous training with backup workers",
+   "quote": "backup workers improve throughput by up to 15%",
+   "table": null,
+   "note": "Sec 4.4 states up to 15% throughput; Sec 6.3 reports 9.5% normalized speedup at best",
+   "where": "Sec 4.4"
+  },
+  {
+   "claim": "Median sync step is about 10% longer than async with same workers",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 10,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Inception-v3, same worker count",
+   "quote": "the median synchronous step is approximately 10% longer than an asynchronous step",
+   "table": null,
+   "note": null,
+   "where": "Sec 6.3"
+  },
+  {
+   "claim": "Null sync step with scalar fetch: median 1.8 ms with 1 worker",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 1.8,
+   "unit": "ms",
+   "baseline_value": null,
+   "n": null,
+   "setup": "16 PS tasks, 4-byte value per PS",
+   "quote": "The median step time is 1.8 ms using a sin-",
+   "table": null,
+   "note": "text wraps 'single worker, growing to 8.8 ms with 100 workers'",
+   "where": "Sec 6.2, Fig 6"
+  },
+  {
+   "claim": "Null sync step with scalar fetch grows to 8.8 ms at 100 workers",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 8.8,
+   "unit": "ms",
+   "baseline_value": null,
+   "n": null,
+   "setup": "16 PS tasks",
+   "quote": "growing to 8.8 ms with 100 workers",
+   "table": null,
+   "note": null,
+   "where": "Sec 6.2"
+  },
+  {
+   "claim": "Dense 1 GB model null step grows from 1.01 s to 7.16 s (1 to 100 workers)",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 7.16,
+   "unit": "s",
+   "baseline_value": "1.01 s at one worker",
+   "n": null,
+   "setup": "16 PS tasks, model sharded equally",
+   "quote": "it increases from 1.01 s with one worker to 7.16 s with 100 workers",
+   "table": null,
+   "note": null,
+   "where": "Sec 6.2"
+  },
+  {
+   "claim": "Dense 100 MB model null step grows from 147 ms to 613 ms",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 613,
+   "unit": "ms",
+   "baseline_value": "147 ms at one worker",
+   "n": null,
+   "setup": "16 PS tasks",
+   "quote": "increases from 147 ms with one worker to 613 ms with 100 workers",
+   "table": null,
+   "note": null,
+   "where": "Sec 6.2"
+  },
+  {
+   "claim": "Sparse embedding lookups give 5-20 ms steps independent of embedding size (1 GB or 16 GB)",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "5 to 20",
+   "unit": "ms",
+   "baseline_value": null,
+   "n": null,
+   "setup": "32 random entries per worker",
+   "quote": "TensorFlow achieves step times ranging from 5 to 20 ms",
+   "table": null,
+   "note": null,
+   "where": "Sec 6.2"
+  },
+  {
+   "claim": "Executor dispatches about 2,000,000 null operations per second",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 2000000,
+   "unit": "ops/second",
+   "baseline_value": null,
+   "n": null,
+   "setup": "dataflow executor",
+   "quote": "our current implementation dispatches approximately 2,000,000 null operations per second",
+   "table": null,
+   "note": null,
+   "where": "Sec 5"
+  },
+  {
+   "claim": "Sampled softmax with 512 sampled classes cuts softmax data transfer and computation by a factor of 78",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 78,
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LSTM-512-512, 40,000-word vocabulary",
+   "quote": "reduces the softmax data transfer and computation by a factor of 78",
+   "table": null,
+   "note": null,
+   "where": "Sec 6.4"
+  },
+  {
+   "claim": "TensorFlow GoogleNet step 445 ms vs Caffe 1935 ms (Titan X, one GPU)",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 445,
+   "unit": "ms",
+   "baseline_value": "1935 ms (Caffe)",
+   "n": null,
+   "setup": "Chintala benchmark, 32-bit floats",
+   "quote": "TensorFlow achieves shorter step",
+   "table": "Table 1, row TensorFlow, column GoogleNet (Caffe 1935, Neon 270, Torch 470)",
+   "note": "Neon 270 ms is faster on GoogleNet",
+   "where": "Table 1"
+  },
+  {
+   "claim": "TensorFlow AlexNet step 81 ms, tied with Torch 81, Neon 87, Caffe 324",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 81,
+   "unit": "ms",
+   "baseline_value": "324 ms (Caffe)",
+   "n": null,
+   "setup": "one Titan X, 32-bit",
+   "quote": "",
+   "table": "Table 1, row TensorFlow, column AlexNet",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "TensorFlow is within 6% of Torch on single-GPU training step times",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 6,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "four convolutional models, same cuDNN",
+   "quote": "performance within 6% of the latest version of Torch",
+   "table": null,
+   "note": null,
+   "where": "Sec 6.1"
+  },
+  {
+   "claim": "Prior Spark-based SparkNet takes 20 s to broadcast weights and collect updates from five workers; TensorFlow steps as short as 2 s",
+   "kind": "reported",
+   "source": "Moritz et al. SparkNet [52]",
+   "metric": null,
+   "value": 20,
+   "unit": "s",
+   "baseline_value": null,
+   "n": null,
+   "setup": "SparkNet on Spark",
+   "quote": "takes 20 seconds to broadcast weights and collect",
+   "table": null,
+   "note": null,
+   "where": "Sec 2.2"
+  },
+  {
+   "claim": "A single Titan X has 6 TFLOPS peak",
+   "kind": "reported",
+   "source": "NVIDIA [60]",
+   "metric": null,
+   "value": 6,
+   "unit": "TFLOPS",
+   "baseline_value": null,
+   "n": null,
+   "setup": "NVIDIA Titan X",
+   "quote": "has 6 TFLOPS peak performance",
+   "table": null,
+   "note": null,
+   "where": "Sec 2.1"
+  },
+  {
+   "claim": "2012 image classification SOTA used 16,000 CPU cores for three days or two GPUs for six days",
+   "kind": "reported",
+   "source": "Le et al. [45]; Krizhevsky et al. [42]",
+   "metric": null,
+   "value": 16000,
+   "unit": "CPU cores",
+   "baseline_value": null,
+   "n": null,
+   "setup": "2012 image classification",
+   "quote": "16,000 CPU cores for three days",
+   "table": null,
+   "note": null,
+   "where": "Sec 2.1"
+  },
+  {
+   "claim": "TPU gives an order of magnitude better performance-per-watt",
+   "kind": "reported",
+   "source": "Jouppi et al. [38]",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "TPU vs alternative state-of-the-art technology",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Sec 2.1"
+  },
+  {
+   "claim": "An LSTM language model on One Billion Word has 1.04 billion parameters",
+   "kind": "reported",
+   "source": "Jozefowicz et al. [39]",
+   "metric": null,
+   "value": 1.04,
+   "unit": "billion parameters",
+   "baseline_value": null,
+   "n": null,
+   "setup": "One Billion Word Benchmark, 800,000-word vocabulary",
+   "quote": "language models with 1.04 billion parameters",
+   "table": null,
+   "note": null,
+   "where": "Sec 2.1"
+  },
+  {
+   "claim": "Image classification inference can take 5 billion FLOPS per image",
+   "kind": "reported",
+   "source": "Szegedy et al. [70]",
+   "metric": null,
+   "value": 5,
+   "unit": "billion FLOPS",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Inception-class model",
+   "quote": "5 billion FLOPS per im-",
+   "table": null,
+   "note": null,
+   "where": "Sec 2.1"
+  },
+  {
+   "claim": "ResNet uses 2.3 million floating-point parameters as stated",
+   "kind": "reported",
+   "source": "He et al. [26]",
+   "metric": null,
+   "value": 2.3,
+   "unit": "million parameters",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ResNet, 1000 classes",
+   "quote": "uses 2.3 million ﬂoating-point parame-",
+   "table": null,
+   "note": "figure as printed; likely a small-model count, not the full ResNet",
+   "where": "Sec 2.1"
+  },
+  {
+   "claim": "Training can take several hours or days even with many machines",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "DistBelief/Adam-style training",
+   "quote": "Training a model can take several hours or days",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.3"
+  }
+ ],
+ "limits": [
+  "Measures system throughput and step time only; the authors defer time-to-accuracy and convergence benefits of synchronous replication to other papers.",
+  "Evaluated on a shared production cluster, so noise is present; no run counts or seeds given.",
+  "Default policies for most users are undetermined; automatic placement, kernel fusion, memory management, scheduling still in development.",
+  "Mutable state and fault tolerance suit only weak consistency; checkpoints are not guaranteed consistent.",
+  "Static dataflow graph limits dynamic algorithms such as deep RL (conceded in Conclusions).",
+  "Dated: parameter server era, K40 GPUs, async SGD; no tensor/pipeline parallelism, mixed precision or collective all-reduce (only noted as under investigation)."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "step",
+   "definition": "Each invocation of the API is called a step",
+   "where": "Sec 3.2"
+  },
+  {
+   "term": "backup workers",
+   "definition": "the aggregation takes the first m of n updates produced",
+   "where": "Sec 4.4"
+  },
+  {
+   "term": "normalized speedup",
+   "definition": "t(b)/t(0)x50/(50+b), discounting speedup by the fraction of additional resources consumed",
+   "where": "Sec 6.3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "DistBelief (Dean et al. 2012)",
+   "year": 2012,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "first-generation system TensorFlow simplifies and generalizes",
+   "quote": "We have based TensorFlow on years of experience with our ﬁrst-generation system"
+  },
+  {
+   "work": "Project Adam",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "related",
+   "note": "parameter server for CNNs; sharded softmax scheme",
+   "quote": null
+  },
+  {
+   "work": "Li et al. Parameter Server",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "related",
+   "note": "consistency, fault tolerance, elastic rescaling",
+   "quote": null
+  },
+  {
+   "work": "Chen et al., Revisiting distributed synchronous SGD (backup workers)",
+   "year": 2016,
+   "arxiv": "1604.00981",
+   "relation": "uses-method",
+   "note": "backup workers [11]",
+   "quote": null
+  },
+  {
+   "work": "GeePS (Cui et al.)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "related",
+   "note": "GPU parameter server; synchronous results",
+   "quote": null
+  },
+  {
+   "work": "Theano",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "related",
+   "note": "closest programming model",
+   "quote": null
+  },
+  {
+   "work": "Torch, Caffe, Neon",
+   "year": null,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Table 1 comparison",
+   "quote": null
+  },
+  {
+   "work": "MXNet",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "related",
+   "note": "parameter server is privileged code",
+   "quote": null
+  },
+  {
+   "work": "Naiad timely dataflow",
+   "year": 2013,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "loop semantics",
+   "quote": null
+  },
+  {
+   "work": "Sampled softmax (Jean et al.)",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "[35]",
+   "quote": null
+  },
+  {
+   "work": "Exploring the limits of language modeling (Jozefowicz et al.)",
+   "year": 2016,
+   "arxiv": "1602.02410",
+   "relation": "uses-data",
+   "note": "One Billion Word LSTM models [39]",
+   "quote": null
+  },
+  {
+   "work": "Inception-v3 (Szegedy et al.)",
+   "year": 2015,
+   "arxiv": "1512.00567",
+   "relation": "evaluates",
+   "note": "image classification workload",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "A schematic TensorFlow dataflow graph for a training pipeline contains subgraphs for reading input data, preprocessing, training, and checkpointing state.",
+   "page": 5,
+   "why": "shows the single-graph view of a training job"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Three parameter synchronization schemes (async, sync, sync with backup workers)",
+   "page": 9,
+   "why": "contrasts staleness vs straggler cost"
+  },
+  {
+   "figure": "Fig 7",
+   "caption": "Inception-v3 training throughput increases with up to 200 workers, with diminishing returns",
+   "page": 12,
+   "why": "scaling curve of data-parallel training"
+  },
+  {
+   "figure": "Fig 8",
+   "caption": "Backup workers reduce the step time for 50-worker Inception-v3 training.",
+   "page": 12,
+   "why": "cost of stragglers and resource trade-off"
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 4.1",
+   "snippet": "W ′ ←W −α × ∂L/∂W",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "No embedded instructions found.",
+  "Table 1 and figure data extracted as flattened text; Fig 6-9 values not recoverable beyond the text.",
+  "ResNet '2.3 million parameters' is printed as is."
+ ]
+}

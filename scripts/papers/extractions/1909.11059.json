@@ -1,0 +1,124 @@
+{
+ "schema": 1,
+ "key": "1909.11059",
+ "pdf": "ai-engineering/08-multimodal-engineering/sources/zhou-2020-unified-vision-language-pre-training.pdf",
+ "bib": {"title": "Unified Vision-Language Pre-Training for Image Captioning and VQA", "authors": ["Luowei Zhou","Hamid Palangi","Lei Zhang","Houdong Hu","Jason J. Corso","Jianfeng Gao"], "first_author": "Zhou", "year": 2020, "venue": "AAAI 2020 (Copyright 2020 AAAI; arXiv v3 Dec 2019)", "arxiv": "1909.11059", "doi": null},
+ "read": {"by": "source-reader", "at": "2026-11-08", "chars_read": 47691, "chars_total": 47691, "engine": "pymupdf", "skipped": "reference list skimmed only"},
+ "type": "empirical",
+ "question": "Can one shared Transformer, pre-trained on image-text pairs, be fine-tuned for both vision-language generation (captioning) and understanding (VQA)?",
+ "hypothesis": "A unified encoder-decoder pre-trained with bidirectional and seq2seq masked prediction (differing only in the self-attention mask) will speed up fine-tuning and beat both no pre-training and language-only pre-training on both task types.",
+ "contributions": [
+  "A unified encoder-decoder VLP model with one shared multi-layer Transformer for encoding and decoding",
+  "Pre-training on two objectives, bidirectional and seq2seq masked vision-language prediction, switched by the self-attention mask",
+  "State-of-the-art results on COCO Captions, Flickr30k Captions and VQA 2.0 with one architecture"
+ ],
+ "method": {
+  "summary": "A BERT-base Transformer initialised from UniLM takes 100 Faster R-CNN region embeddings plus caption tokens. It is pre-trained on Conceptual Captions with masked word prediction, alternating per batch between a bidirectional mask and a seq2seq (left-to-right) mask with proportion lambda, then fine-tuned on captioning (seq2seq) or VQA (bidirectional, MLP classifier).",
+  "task": "vision-language pre-training; image captioning and visual question answering",
+  "trains": true,
+  "datasets": [
+   {"name": "Conceptual Captions (CC)", "role": "pretrain", "size": "around 3 million web-accessible images with captions", "split": null, "source": "Sharma et al. 2018", "preprocessing": "sentences trimmed or padded to 20 words, BERT tokenisation"},
+   {"name": "COCO Captions", "role": "both", "size": "113.2k/5k/5k images train/val/test", "split": "Karpathy split", "source": "Chen et al. 2015", "preprocessing": "sentences trimmed or padded to 20 words"},
+   {"name": "Flickr30k", "role": "both", "size": "29.8k/1k/1k images train/val/test", "split": "Karpathy split", "source": "Young et al. 2014", "preprocessing": "sentences trimmed or padded to 20 words"},
+   {"name": "VQA 2.0", "role": "both", "size": "443.8k questions from 82.8k images train; 214.4k questions from 40.5k images val", "split": "official partition; test-standard via the evaluation server; for test results models were trained on train+val", "source": "Goyal et al. 2017", "preprocessing": "answer vocabulary of the top 3129 answers (k = 3129, following Anderson et al. 2018)"}
+  ],
+  "models": [
+   {"name": "Unified VLP", "role": "proposed", "params": null, "architecture": "12-layer Transformer, same as BERT-base, shared for encoder and decoder; input = region embeddings + word embeddings + [CLS],[SEP],[STOP]", "init_from": "UniLM (Dong et al. 2019) pre-trained on text only (unless specified)", "tokenizer": "as in BERT", "vocab": null, "layers": "12", "hidden": null, "heads": null, "context": "100 regions + 20 words + 3 special tokens", "other": {"region_features": "Faster R-CNN, ResNeXt-101 FPN backbone, pre-trained on Visual Genome (1600 object classes + attributes); fc6 output as feature, fc7 fine-tuned; exactly 100 regions per image", "region_embedding": "r_i = W_r R_i + W_p[LayerNorm(W_c C_i) | LayerNorm(W_g G_i)], G has 5 values (box corners and relative area)", "vqa_head": "Linear+ReLU+Linear+Sigmoid on element-wise product of last hidden states of [CLS] and [SEP]"}},
+   {"name": "Init from BERT / From scratch / Init from UniLM (no VLP)", "role": "baseline", "params": null, "architecture": "same network, different initialisation", "init_from": "BERT weights / random / UniLM weights", "tokenizer": null, "vocab": null, "layers": "12", "hidden": null, "heads": null, "context": null, "other": {}}
+  ],
+  "training": {
+   "objective": "masked language prediction as in BERT (15% of caption tokens; 80% [MASK], 10% random, 10% original), bidirectional or seq2seq self-attention mask, alternated per batch with proportions lambda and 1-lambda; no next-sentence/image-text matching and no masked region classification. Fine-tuning: seq2seq for captioning; cross-entropy against soft labels for VQA; SCST for CIDEr optimisation",
+   "optimizer": "same as BERT (Devlin et al.), details not given",
+   "lr": "Table 8: CC 1e-4(x8); COCO 3e-5(x8); VQA 2.0 2e-5(x2); Flickr30k 3e-5(x8); COCO w/o pre-training 3e-4(x8); COCO SCST 1e-6(x4)",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "Table 8: CC 64(x8); COCO 64(x8); VQA 2.0 64(x2); Flickr30k 64(x8); COCO w/o pre-training 64(x8); COCO SCST 16(x4)",
+   "steps": null,
+   "epochs": "Table 8: CC 30; COCO 30; VQA 2.0 20; Flickr30k 30; COCO w/o pre-training 30; COCO SCST 30",
+   "tokens": null,
+   "seq_len": "20 words per caption, plus 100 regions",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "8x V100 for pre-training, COCO and Flickr30k; 2x V100 for VQA; 4x Titan Xp for SCST",
+   "compute": "Table 8 time per epoch: CC 5hr; COCO 12min; VQA 2.0 32min; Flickr30k 3min; COCO SCST 3hr",
+   "wall_clock": null,
+   "seeds": null,
+   "other": {"lambda": "0.75 for CC pre-training (light search over {0.25, 0.5, 0.75}); 1 for captioning fine-tuning; 0 for VQA fine-tuning", "x_notation": "(x8) etc. in Table 8 is printed without explanation, likely a multiplier for number of GPUs", "hyperparameter_search": "light model hyper-parameter search"}
+  },
+  "inference": {
+   "decoding": "greedy search on the validation set; beam search with beam size 5 on the test set; generation starts from a [MASK] token and ends on [STOP]",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": "20 words (sentence length)",
+   "samples": "single model, single reported run; no seeds stated",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "BLEU@4 (B@4)", "definition": "standard caption n-gram metric", "unit": "points", "higher_is_better": true},
+    {"name": "METEOR (M)", "definition": "standard caption metric", "unit": "points", "higher_is_better": true},
+    {"name": "CIDEr (C)", "definition": "standard caption metric", "unit": "points", "higher_is_better": true},
+    {"name": "SPICE (S)", "definition": "standard caption metric", "unit": "points", "higher_is_better": true},
+    {"name": "VQA accuracy", "definition": "official measure, overall and for Yes/No, Number, Other", "unit": "%", "higher_is_better": true}
+   ],
+   "baselines": ["BUTD", "NBT", "GCN-LSTM", "GVD", "BAN", "DFAF", "AoANet", "ViLBERT", "LXMERT", "SGAE", "own no-VLP baseline (init from UniLM)", "from scratch", "init from BERT"],
+   "protocol": "single models; cross-entropy only in Table 2 for fairness; CIDEr optimisation via SCST in Table 3; no seeds or significance tests"
+  },
+  "availability": {"code": "https://github.com/LuoweiZhou/VLP", "weights": "pre-trained models stated to be available at the same URL", "data": "public datasets"},
+  "prompts": [],
+  "evidence": [
+   {"field": "training.batch_size", "quote": "COCO 64(x8) 3e-5(x8) 30 8x V100 12min", "where": "Table 8"}
+  ]
+ },
+ "results": [
+  {"claim": "Unified VLP sets new state of the art on COCO Captions with CIDEr optimisation (CIDEr).", "kind": "measured", "source": null, "metric": "CIDEr", "value": "129.3", "unit": "points", "baseline_value": "129.8 (AoANet*, unpublished)", "n": null, "setup": "COCO test, SCST, single model, beam 5", "quote": null, "table": "Table 3, row Ours (Unified VLP), column C", "note": "The text says the model sets new SotA on all metrics, but AoANet* (unpublished) has higher CIDEr 129.8 and METEOR is 29.3 vs 29.2; B@4 39.5 and SPICE 23.2 are the top.", "where": "Table 3"},
+  {"claim": "Unified VLP reaches CIDEr 67.4 on the Flickr30k test set, versus 56.8 for its no-VLP baseline.", "kind": "measured", "source": null, "metric": "CIDEr", "value": "67.4", "unit": "points", "baseline_value": "56.8", "n": null, "setup": "Flickr30k test, cross-entropy only, beam 5, init from UniLM baseline", "quote": null, "table": "Table 2, row Unified VLP, column Flickr30k C", "note": null, "where": "Table 2"},
+  {"claim": "Gain over the best prior Flickr30k method is 5.1 CIDEr and 2.8 BLEU@4.", "kind": "measured", "source": null, "metric": "CIDEr gain", "value": "5.1", "unit": "% absolute", "baseline_value": null, "n": null, "setup": "Flickr30k test vs prior SotA (GVD with BBox 62.3 CIDEr)", "quote": "we get 5.1% absolute gain on CIDEr metric and 2.8% on BLEU@4", "table": null, "note": null, "where": "Experiments and Results"},
+  {"claim": "VLP pre-training gains over 10 CIDEr over the no-VLP baseline on Flickr30k.", "kind": "measured", "source": null, "metric": "CIDEr gain", "value": "10", "unit": "% absolute", "baseline_value": null, "n": null, "setup": "Flickr30k test, full model vs baseline", "quote": "over 10% absolute gain on CIDEr metric on Flickr30k", "table": null, "note": "Table 2 gives 67.4 vs 56.8, a 10.6 gain.", "where": "Boost from pre-training"},
+  {"claim": "Unified VLP overall VQA 2.0 Test-Standard accuracy is below LXMERT*.", "kind": "measured", "source": null, "metric": "VQA overall accuracy", "value": "70.7", "unit": "%", "baseline_value": "72.5 (LXMERT*, unpublished)", "n": null, "setup": "VQA 2.0 Test-Standard, single model", "quote": null, "table": "Table 2, row Unified VLP, column Overall; row LXMERT*", "note": "Text claims SotA on VQA overall; that holds only against published works (BAN 70.4, ViLBERT* 70.9 is higher, LXMERT* 72.5 higher); bidirectional-only variant reaches 71.3.", "where": "Table 2"},
+  {"claim": "Bidirectional-only pre-training gives the best VQA accuracy of the variants.", "kind": "measured", "source": null, "metric": "VQA overall accuracy", "value": "71.3", "unit": "%", "baseline_value": "70.0 (no VLP)", "n": null, "setup": "VQA 2.0 Test-Standard", "quote": null, "table": "Table 2, row bidirectional pre-training only, column Overall", "note": null, "where": "Table 2"},
+  {"claim": "Seq2seq-only pre-training gives the best Flickr30k CIDEr among the variants.", "kind": "measured", "source": null, "metric": "CIDEr", "value": "68.5", "unit": "points", "baseline_value": "67.4 (unified)", "n": null, "setup": "Flickr30k test", "quote": null, "table": "Table 2, row seq2seq pre-training only, column Flickr30k C", "note": null, "where": "Table 2"},
+  {"claim": "COCO CIDEr rises from 114.3 (no VLP) to 116.9 with unified VLP.", "kind": "measured", "source": null, "metric": "CIDEr", "value": "116.9", "unit": "points", "baseline_value": "114.3", "n": null, "setup": "COCO test, cross-entropy only", "quote": null, "table": "Table 2, row Unified VLP, column COCO C", "note": null, "where": "Table 2"},
+  {"claim": "Initialising from BERT or UniLM helps CC caption pre-training only slightly versus scratch (CIDEr 63.8, 66.7, 67.0).", "kind": "measured", "source": null, "metric": "CIDEr", "value": "67.0", "unit": "points", "baseline_value": "63.8 (from scratch)", "n": null, "setup": "Conceptual Captions val, epoch 20, lambda 0.75", "quote": null, "table": "Table 5, row Init from UniLM, column C", "note": null, "where": "Table 5"},
+  {"claim": "Feeding region class probabilities as input beats using region labels as a masked-classification pretext.", "kind": "measured", "source": null, "metric": "CIDEr", "value": "67.0", "unit": "points", "baseline_value": "62.2", "n": null, "setup": "Conceptual Captions val", "quote": null, "table": "Table 6, row Region label probability as input vs Region label as pretext, column C", "note": null, "where": "Table 6"},
+  {"claim": "With full seq2seq pre-training, CC caption CIDEr could climb to 77.2 after 30 epochs.", "kind": "measured", "source": null, "metric": "CIDEr", "value": "77.2", "unit": "points", "baseline_value": null, "n": null, "setup": "Conceptual Captions val, 30 epochs", "quote": "with full seq2seq training, CIDEr could climb to 77.2 after training for 30 epochs", "table": null, "note": null, "where": "Impact of pre-training types"},
+  {"claim": "COCO fine-tuning from scratch used a 10x higher learning rate (3e-4) than with pre-training (3e-5).", "kind": "measured", "source": null, "metric": "learning rate", "value": "3e-4", "unit": null, "baseline_value": "3e-5", "n": null, "setup": "COCO fine-tuning, Table 8", "quote": null, "table": "Table 8, row COCO (w/o pre-training), column Learning Rate", "note": null, "where": "Table 8"}
+ ],
+ "limits": [
+  "Region labels from the off-the-shelf detector are a fixed dependency; the authors hypothesise noisy labels hurt masked region classification, not tested further.",
+  "Unified joint training gives 'slightly compromised' results versus task-specific pre-training; separate models are optimal if affordable.",
+  "No seeds, variance or significance tests; hyper-parameter search is described as light.",
+  "Authors list text-image grounding, visual dialogue and multi-task fine-tuning as future work.",
+  "Claimed VQA state of the art ignores unpublished LXMERT (72.5) and ViLBERT (70.9) rows in its own Table 2.",
+  "Detector-region-based inputs have since been superseded; VLP still needs a pre-trained Faster R-CNN."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "Unified VLP", "definition": "A shared multi-layer Transformer for encoding and decoding, pre-trained with bidirectional and seq2seq masked vision-language prediction, differing only in the self-attention mask", "where": "Abstract"}
+ ],
+ "lineage": [
+  {"work": "BERT (Devlin et al.)", "year": 2018, "arxiv": "1810.04805", "relation": "extends", "note": "architecture, masking scheme, optimizer", "quote": null},
+  {"work": "Unified Language Model pre-training (UniLM, Dong et al.)", "year": 2019, "arxiv": "1905.03197", "relation": "extends", "note": "mask-controlled bidirectional/seq2seq objectives; weight initialisation", "quote": null},
+  {"work": "MT-DNN (Liu et al.)", "year": 2019, "arxiv": "1901.11504", "relation": "related", "note": "inspiration", "quote": null},
+  {"work": "ViLBERT (Lu et al.)", "year": 2019, "arxiv": "1908.02265", "relation": "baseline", "note": "understanding-only two-stream VLP", "quote": null},
+  {"work": "LXMERT (Tan and Bansal)", "year": 2019, "arxiv": "1908.07490", "relation": "baseline", "note": "uses VQA data during pre-training; masked region classification pretext", "quote": null},
+  {"work": "VideoBERT (Sun et al.)", "year": 2019, "arxiv": null, "relation": "related", "note": "closest prior; separate encoder and decoder, only encoder pre-trained", "quote": null},
+  {"work": "Bottom-up and top-down attention (Anderson et al.)", "year": 2018, "arxiv": null, "relation": "uses-method", "note": "region features, detector, BUTD baseline, k=3129", "quote": null},
+  {"work": "Conceptual Captions (Sharma et al.)", "year": 2018, "arxiv": null, "relation": "uses-data", "note": "pre-training data", "quote": null},
+  {"work": "Self-critical sequence training (Rennie et al.)", "year": 2017, "arxiv": null, "relation": "uses-method", "note": "CIDEr optimisation", "quote": null},
+  {"work": "RoBERTa (Liu et al.)", "year": 2019, "arxiv": "1907.11692", "relation": "related", "note": "concurrent agreement on dropping next-sentence prediction", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 2", "caption": "Model architecture for pre-training ... two self-attention masks depending on whether the objective is bidirectional or seq2seq", "page": 3, "why": "Shows how one network does both tasks by changing only the attention mask"},
+  {"figure": "Fig 1", "caption": "unified encoder-decoder model for general vision-language pre-training; training curves on COCO, Flickr30k, VQA", "page": 1, "why": "Shows faster fine-tuning convergence with VLP"}
+ ],
+ "code": [
+  {"where": "Eq. 1 and 3", "snippet": "ri = WrRi + Wp[LayerNorm(WcCi)|LayerNorm(WgGi)]; Al = softmax(Q^T K / sqrt(d) + M) V^T", "verbatim": false}
+ ],
+ "problems": ["Figure and table cell text came out as one value per line; table values read from that order.", "No embedded instructions found."]
+}

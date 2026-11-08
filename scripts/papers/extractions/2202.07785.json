@@ -1,0 +1,565 @@
+{
+ "schema": 1,
+ "key": "2202.07785",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/ganguli-2022-predictability-surprise-large-generative-models.pdf",
+ "bib": {
+  "title": "Predictability and Surprise in Large Generative Models",
+  "authors": [
+   "Deep Ganguli",
+   "Danny Hernandez",
+   "Liane Lovitt",
+   "Nova DasSarma",
+   "Tom Henighan",
+   "Andy Jones",
+   "Nicholas Joseph",
+   "Jackson Kernion",
+   "Ben Mann",
+   "Amanda Askell",
+   "Yuntao Bai",
+   "Anna Chen",
+   "Tom Conerly",
+   "Dawn Drain",
+   "Nelson Elhage",
+   "Sheer El Showk",
+   "Stanislav Fort",
+   "Zac Hatfield-Dodds",
+   "Scott Johnston",
+   "Shauna Kravec",
+   "Neel Nanda",
+   "Kamal Ndousse",
+   "Catherine Olsson",
+   "Daniela Amodei",
+   "Tom Brown",
+   "Jared Kaplan",
+   "Sam McCandlish",
+   "Chris Olah",
+   "Dario Amodei",
+   "Jack Clark"
+  ],
+  "first_author": "Ganguli",
+  "year": 2022,
+  "venue": "2022 ACM Conference on Fairness, Accountability, and Transparency (FAccT '22)",
+  "arxiv": "2202.07785",
+  "doi": "10.1145/3531146.3533229"
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 109926,
+  "chars_total": 109926,
+  "engine": "pymupdf",
+  "skipped": "Reference list skimmed only for lineage."
+ },
+ "type": "empirical",
+ "question": "How does the combination of predictable aggregate loss scaling and unpredictable specific capabilities, inputs and outputs shape the development, deployment and harms of large generative models?",
+ "hypothesis": "Large generative models combine high predictability (loss follows scaling laws) with high unpredictability (specific capabilities, inputs, outputs); the former drives rapid development and the latter makes deployment consequences hard to anticipate.",
+ "contributions": [
+  "Thesis with four distinguishing features: smooth general capability scaling, abrupt specific capability scaling, open-ended inputs and domains, open-ended outputs",
+  "Two novel experiments (COMPAS recidivism prediction with LMs, toxicity vs scale) plus a zero-shot recommendation experiment",
+  "Analysis of motivations and barriers to developing large models, including industry vs academia compute gap",
+  "List of policy and technical interventions"
+ ],
+ "method": {
+  "summary": "Position paper with small original experiments on Anthropic's GPT-3-like language models of various sizes (up to 52B): few-shot recidivism prediction on COMPAS, toxicity of generations on RealToxicityPrompts, zero-shot movie rating prediction on MovieLens 1M, plus a compute-trend analysis. Other evidence is re-plotted from GPT-3, Gopher and Google program synthesis papers.",
+  "task": "Scaling behaviour and societal-risk case studies of large language models",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "ProPublica COMPAS",
+    "role": "eval",
+    "size": ">7,000 defendants (Broward County, Florida)",
+    "split": "same filtering as ProPublica notebook; 50 random labelled training examples used as few-shot (<1% of data); rest as test",
+    "source": "ProPublica compas-analysis",
+    "preprocessing": "ProPublica notebook filtering"
+   },
+   {
+    "name": "RealToxicityPrompts",
+    "role": "eval",
+    "size": "1K random prompts, equal toxic and non-toxic",
+    "split": null,
+    "source": "Gehman et al. 2020",
+    "preprocessing": "prompt labelled toxic if toxicity score >0.5"
+   },
+   {
+    "name": "MovieLens 1M",
+    "role": "eval",
+    "size": "~4K movies, ~6K users, 1M ratings (1-5); ~160 ratings per user, 96% missing",
+    "split": "1% of dataset (10K ratings) as test set",
+    "source": "Harper and Konstan 2015",
+    "preprocessing": "up to 500 previously rated movies randomly sampled per user"
+   }
+  ],
+  "models": [
+   {
+    "name": "Anthropic GPT-3-like language models",
+    "role": "evaluated",
+    "params": "52B (largest)",
+    "architecture": "inferred: decoder-only transformer LMs, GPT-3-like [3]",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "sizes_not_listed": "individual model sizes are only shown on figure axes",
+     "axis_range": "read from Figs 3, 5, 8: roughly 1e7 to 1e10 parameters"
+    }
+   },
+   {
+    "name": "Detoxify toxicity detector",
+    "role": "judge",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "open-source, used instead of Perspective API"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "No sampling for COMPAS and MovieLens: next-token probabilities read directly (Yes/No normalised; ratings 1-5 normalised and probability-weighted mean)",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "Toxicity: 25 responses per prompt, 1K prompts; COMPAS and MovieLens: single probability readout per item",
+   "prompting": "COMPAS: few-shot with 50 random labelled examples; MovieLens: zero-shot (few-shot tested and found worse); prompts in prompts field",
+   "retrieval": null,
+   "parameters": {
+    "movielens_max_rated_movies_in_prompt": "500",
+    "compas_fewshot_examples": "50"
+   },
+   "other": {
+    "context_window": "not stated"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Accuracy",
+     "definition": "Probability of Yes compared to ground-truth re-offence label",
+     "unit": "fraction",
+     "higher_is_better": true
+    },
+    {
+     "name": "Black-to-white false positive rate ratio",
+     "definition": "FPR for Black defendants divided by FPR for white defendants (Fairlearn); 1 is fair",
+     "unit": "ratio",
+     "higher_is_better": false
+    },
+    {
+     "name": "Predictive accuracy ratio",
+     "definition": "Accuracy Black over white; 1 is fair",
+     "unit": "ratio",
+     "higher_is_better": null
+    },
+    {
+     "name": "Toxicity effect size",
+     "definition": "Coefficient on model-size category in linear regression of Detoxify score on model size and prompt toxicity, with 95% CI",
+     "unit": "regression coefficient",
+     "higher_is_better": false
+    },
+    {
+     "name": "RMSE",
+     "definition": "Root mean squared error between predicted and actual ratings on test set",
+     "unit": "rating points",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "COMPAS algorithm",
+    "Chance",
+    "MovieLens popularity (mean rating) baseline RMSE 0.98",
+    "MovieLens SOTA RMSE 0.822 (Han et al. 2021)"
+   ],
+   "protocol": "Single run per model size; no seeds stated; confidence intervals only for toxicity regression."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "Poem samples gist linked in footnote 28; datasets are public"
+  },
+  "prompts": [
+   {
+    "purpose": "MovieLens zero-shot rating prediction",
+    "text": "A {age} {gender} who is employed as an {occupation} previously rated\n{list_of_movies_and_ratings_from_training_set} will rate\n{movie_from_test_set} a",
+    "where": "App A.3, p23"
+   },
+   {
+    "purpose": "COMPAS recidivism prediction (race-excluded), from Dressel and Farid 2018",
+    "text": "The defendant is a {sex} aged {age}. They have been charged with:\n{c_charge_desc}. This crime is classified as a {c_charge_degree}.\nThey have been convicted of {priors_count} prior crimes. They\nhave {juv_fel_count} juvenile felony charges and {juv_misd_count}\njuvenile misdemeanor charges on their record.\nDo you think this person will commit another crime within 2 years?",
+    "where": "App A.4, p24"
+   },
+   {
+    "purpose": "COMPAS race-included variant (first sentence replaced)",
+    "text": "The defendant is a {race} {sex} aged {age}.",
+    "where": "App A.4, p24"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Three-digit addition jumps from under 1% below 6B parameters to 80% at GPT-3 175B.",
+   "kind": "reported",
+   "source": "Brown et al. 2020 (GPT-3)",
+   "metric": "accuracy",
+   "value": "80%",
+   "unit": "accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-3 family, 3-digit addition, accuracy vs parameters; figure from Brown et al.",
+   "quote": "jumps to 8% accuracy on a 13B parameter model and 80% accuracy on a 175B parameter model",
+   "table": null,
+   "note": null,
+   "where": "Sec 2.2, p5"
+  },
+  {
+   "claim": "Gopher stays under 30% on MMLU for all models under 6B, then reaches 60% at 280B.",
+   "kind": "reported",
+   "source": "Rae et al. 2021 (Gopher)",
+   "metric": "MMLU accuracy",
+   "value": "60%",
+   "unit": "accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Gopher family, MMLU, accuracy vs parameters (chance 25%)",
+   "quote": "the full 280B parameter Gopher model achieves 60% accuracy",
+   "table": null,
+   "note": null,
+   "where": "Sec 2.2, p5"
+  },
+  {
+   "claim": "Google program synthesis models solve 6% to 13% of problems going from 68B to 138B parameters, after little change over two orders of magnitude.",
+   "kind": "reported",
+   "source": "Austin et al. 2021",
+   "metric": "% samples solving task",
+   "value": "13%",
+   "unit": "% samples solving task",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Google LMs, program synthesis, % samples solving task",
+   "quote": "jumps substantially from 6% to 13% when the model size increases by ∼2x from 68B to 138B parameters",
+   "table": null,
+   "note": null,
+   "where": "Sec 2.2, p6"
+  },
+  {
+   "claim": "In the recidivism experiment the largest LM (52B) reaches 63% accuracy versus 66% for COMPAS, with no significant difference whether race is in the prompt.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "63%",
+   "unit": "accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Anthropic LMs up to 52B, few-shot (50 labelled examples), ProPublica COMPAS data (>7,000 defendants); probability of Yes normalised against No; metrics via Fairlearn",
+   "quote": "the largest model, with 52B parameters, achieves 63% accuracy compared to COMPAS’s 66% accuracy",
+   "table": null,
+   "note": null,
+   "where": "Sec 2.3, p7"
+  },
+  {
+   "claim": "False positive rate ratio (Black to white) for COMPAS is 1.92 (fair = 1).",
+   "kind": "measured",
+   "source": null,
+   "metric": "FPR ratio",
+   "value": "1.92",
+   "unit": "ratio",
+   "baseline_value": null,
+   "n": null,
+   "setup": "COMPAS scores in ProPublica data",
+   "quote": "For COMPAS, this ratio is 1.92",
+   "table": null,
+   "note": null,
+   "where": "Sec 2.3, p7"
+  },
+  {
+   "claim": "Largest LM with race excluded from the prompt reaches a false positive rate ratio of 1.5, rising smoothly from about 12B parameters.",
+   "kind": "measured",
+   "source": null,
+   "metric": "FPR ratio",
+   "value": "1.5",
+   "unit": "ratio",
+   "baseline_value": null,
+   "n": null,
+   "setup": "52B LM, few-shot, race excluded from prompt",
+   "quote": "reaches a value of 1.5 for the largest model when race is excluded in the prompt",
+   "table": null,
+   "note": null,
+   "where": "Sec 2.3, p7"
+  },
+  {
+   "claim": "Largest LM with race included in the prompt reaches an FPR ratio of 2.21, worse than COMPAS's 1.92, though absolute FPRs are lower (30% Black, 12.6% white vs 45% and 24%).",
+   "kind": "measured",
+   "source": null,
+   "metric": "FPR ratio",
+   "value": "2.21",
+   "unit": "ratio",
+   "baseline_value": null,
+   "n": null,
+   "setup": "52B LM, few-shot, race included",
+   "quote": "a value of 2.21 when race is included in the prompt",
+   "table": null,
+   "note": "Footnote 10 gives absolute FPRs: LM 30% Black / 12.6% white; COMPAS 45% / 24%.",
+   "where": "Sec 2.3, p7 and footnote 10"
+  },
+  {
+   "claim": "Toxicity of generated text increases smoothly with model size.",
+   "kind": "measured",
+   "source": null,
+   "metric": "regression effect size",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "RealToxicityPrompts, 1K prompts (half toxic), 25 samples per prompt, Detoxify scorer, linear regression on model-size categories controlling for prompt toxicity; effect size roughly 0.02 to 0.06 read from Fig 5",
+   "quote": "the toxicity (defined as rude, disrespectful, or unreasonable language [29])11 of text generated from language models [3]\nincreases smoothly and significantly with model size",
+   "table": null,
+   "note": null,
+   "where": "Sec 2.4, p9; Fig 5"
+  },
+  {
+   "claim": "Zero-shot LMs on MovieLens 1M: smallest model RMSE 1.06 versus random 1.91; largest LM 0.94 beats the popularity baseline (0.98) but not SOTA (0.82).",
+   "kind": "measured",
+   "source": null,
+   "metric": "RMSE",
+   "value": "0.94",
+   "unit": "RMSE",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MovieLens 1M, 1% test set (10K ratings), zero-shot prompt with up to 500 sampled rated movies, expected rating from next-token probabilities over 1-5",
+   "quote": "the largest model achieves a significantly lower RMSE (0.94) than a strong baseline model (RMSE 0.98, see below for further details)",
+   "table": null,
+   "note": "Smallest model RMSE 1.06, random 1.91, SOTA 0.822 (0.82 in the paragraph above).",
+   "where": "App A.3, p22"
+  },
+  {
+   "claim": "Extrapolating the RMSE trend, an LM would reach SOTA zero-shot recommendation at about 800T parameters.",
+   "kind": "measured",
+   "source": null,
+   "metric": "extrapolated parameters to SOTA RMSE",
+   "value": "800T",
+   "unit": "parameters",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Extrapolation of Fig 8 power-law-like trend; the authors call it incredulous",
+   "quote": "at 800T parameters, a language model\nwill achieve state of the art performance with zero-shot learning",
+   "table": null,
+   "note": null,
+   "where": "App A.3, p22"
+  },
+  {
+   "claim": "Compute for large-scale AI experiments has increased more than 300,000X relative to a decade ago, with the academic share falling.",
+   "kind": "reported",
+   "source": "OpenAI AI and Compute and Sevilla et al. data [70]",
+   "metric": "compute growth",
+   "value": "300,000X",
+   "unit": "x increase",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Compute data from OpenAI AI and Compute plus additional experiments [70]; industry/academia labelled by first-author affiliation; LOWESS fit",
+   "quote": "has increased by more than 300, 000X relative to a decade ago",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.3, p12"
+  },
+  {
+   "claim": "Training frontier generative models such as GPT-3 costs on the order of a million to ten million dollars.",
+   "kind": "claim",
+   "source": null,
+   "metric": "training cost",
+   "value": "1M-10M",
+   "unit": "USD",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Authors' estimate used in policy argument; GPT-3 elsewhere said to cost several million dollars [50]",
+   "quote": "costs on the order of a million to ten million dollars",
+   "table": null,
+   "note": null,
+   "where": "Sec 4, p14"
+  },
+  {
+   "claim": "Scaling laws give smooth power-law test loss improvement with compute, data and parameters, while specific tasks can change abruptly; the paper's thesis.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Argument from prior literature (Kaplan et al. 2020 Fig 1) and the examples above",
+   "quote": null,
+   "table": null,
+   "note": "No single number.",
+   "where": "Sec 1-2"
+  }
+ ],
+ "limits": [
+  "Authors concede many fairness metrics exist and one algorithm cannot satisfy all; COMPAS benchmark data has measurement biases.",
+  "Comparisons to proprietary COMPAS are hard to make precise.",
+  "Toxicity: effect-size magnitude vs human perception unclear; automated detectors biased; Detoxify used rather than Perspective API.",
+  "Compute analysis data are incomplete with sampling bias; no industrial production compute.",
+  "Scaling extrapolation to 800T parameters for MovieLens is described as incredulous; algorithmic improvement could shift curves.",
+  "Model sizes, architecture, training data, context length and decoding for the Anthropic models are not given here (refers to Askell et al. 2021); single run per size.",
+  "Only three abrupt-scaling examples, all taken from other papers; no systematic estimate of how common abrupt jumps are (authors say anecdotally a minority of tasks).",
+  "Pre-dates Chinchilla-style compute-optimal scaling and later work questioning whether emergence is a metric artifact; 'emergent' framing here is not tested against metric choice."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "smooth general capability scaling",
+   "definition": "First, the training (and test) loss improves predictably with scale on a broad data distribution. Second, this improvement in loss tends to correlate on average with increased performance on a number of downstream tasks.",
+   "where": "Sec 1, p2"
+  },
+  {
+   "term": "abrupt specific capability scaling",
+   "definition": "performance on a specific task can sometimes emerge quite unpredictably and abruptly at scale",
+   "where": "Sec 2, p4"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Scaling Laws for Neural Language Models (Kaplan et al.)",
+   "year": 2020,
+   "arxiv": "2001.08361",
+   "relation": "extends",
+   "note": "Fig 1 adapted from it; basis of smooth scaling claim",
+   "quote": null
+  },
+  {
+   "work": "Language Models are Few-Shot Learners (GPT-3)",
+   "year": 2020,
+   "arxiv": "2005.14165",
+   "relation": "evaluates",
+   "note": "Source of arithmetic abrupt-scaling example",
+   "quote": null
+  },
+  {
+   "work": "Scaling Language Models: Gopher",
+   "year": 2021,
+   "arxiv": "2112.11446",
+   "relation": "evaluates",
+   "note": "MMLU jump and toxicity trend",
+   "quote": null
+  },
+  {
+   "work": "Program Synthesis with Large Language Models (Austin et al.)",
+   "year": 2021,
+   "arxiv": "2108.07732",
+   "relation": "evaluates",
+   "note": "Program synthesis jump",
+   "quote": null
+  },
+  {
+   "work": "A General Language Assistant as a Laboratory for Alignment (Askell et al.)",
+   "year": 2021,
+   "arxiv": "2112.00861",
+   "relation": "uses-method",
+   "note": "The LMs and AI assistant used in experiments",
+   "quote": null
+  },
+  {
+   "work": "Measuring Massive Multitask Language Understanding",
+   "year": 2021,
+   "arxiv": "2009.03300",
+   "relation": "uses-data",
+   "note": "MMLU",
+   "quote": null
+  },
+  {
+   "work": "The accuracy, fairness, and limits of predicting recidivism (Dressel and Farid)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "replicates",
+   "note": "Same prompts, with LMs instead of humans",
+   "quote": null
+  },
+  {
+   "work": "RealToxicityPrompts (Gehman et al.)",
+   "year": 2020,
+   "arxiv": "2009.11462",
+   "relation": "uses-data",
+   "note": "Toxicity prompts",
+   "quote": null
+  },
+  {
+   "work": "Deep Learning Scaling is Predictable, Empirically (Hestness et al.)",
+   "year": 2017,
+   "arxiv": "1712.00409",
+   "relation": "related",
+   "note": "First noticing smooth scaling",
+   "quote": null
+  },
+  {
+   "work": "A Constructive Prediction of the Generalization Error Across Scales (Rosenfeld et al.)",
+   "year": 2019,
+   "arxiv": "1909.12673",
+   "relation": "related",
+   "note": "Formalised scale-error relation",
+   "quote": null
+  },
+  {
+   "work": "On the Opportunities and Risks of Foundation Models (Bommasani et al.)",
+   "year": 2021,
+   "arxiv": "2108.07258",
+   "relation": "related",
+   "note": "Foundation models framing",
+   "quote": null
+  },
+  {
+   "work": "The MovieLens Datasets (Harper and Konstan)",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "MovieLens 1M",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Scaling laws reliably predict that model performance improves with increasing compute, training data, and model size; power-law fits (adapted from Kaplan et al.)",
+   "page": 3,
+   "why": "Shows the predictable half of the thesis"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Three examples of abrupt specific capability scaling: 3-digit addition (GPT-3), MMLU (GPT-3, Gopher), program synthesis (Google LMs)",
+   "page": 5,
+   "why": "Shows hockey-stick jumps against smooth loss"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "LMs with few-shot learning show similar or worse inaccuracies and racial biases than COMPAS for recidivism prediction",
+   "page": 7,
+   "why": "Shows capability and harm emerging together with scale"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Toxicity of model outputs increases smoothly with model size",
+   "page": 9,
+   "why": "Harmful property scaling alongside capability"
+  },
+  {
+   "figure": "Fig 8",
+   "caption": "Language models can perform as zero-shot recommendation systems with increasing scale",
+   "page": 23,
+   "why": "Example of forecasting task value from scale"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "No embedded instructions found.",
+  "Figure axis text is garbled in the extracted text; sizes for Fig 3/5/8 read from tick labels only.",
+  "No ledger-independent note references found: grep of note filenames for the key returned nothing."
+ ]
+}

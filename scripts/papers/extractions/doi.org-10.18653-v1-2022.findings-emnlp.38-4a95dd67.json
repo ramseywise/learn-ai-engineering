@@ -1,0 +1,439 @@
+{
+ "schema": 1,
+ "key": "https://doi.org/10.18653/v1/2022.findings-emnlp.38",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/lampinen-2022-can-language-models-learn-explanations.pdf",
+ "bib": {
+  "title": "Can language models learn from explanations in context?",
+  "authors": [
+   "Andrew K. Lampinen",
+   "Ishita Dasgupta",
+   "Stephanie C. Y. Chan",
+   "Kory Mathewson",
+   "Michael Henry Tessler",
+   "Antonia Creswell",
+   "James L. McClelland",
+   "Jane X. Wang",
+   "Felix Hill"
+  ],
+  "first_author": "Lampinen",
+  "year": 2022,
+  "venue": "Findings of the Association for Computational Linguistics: EMNLP 2022",
+  "arxiv": null,
+  "doi": "10.18653/v1/2022.findings-emnlp.38"
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 102269,
+  "chars_total": 102269,
+  "engine": "pymupdf",
+  "skipped": "Reference list skimmed; dot-matrix plot residue in Figs 6-12 not read."
+ },
+ "type": "empirical",
+ "question": "Can explanations of few-shot examples placed in the prompt improve language-model task performance, and what drives any benefit?",
+ "hypothesis": "Explanations that link examples to task principles, which help human learning, may also improve in-context learning in LMs.",
+ "contributions": [
+  "Annotate 40 diverse, challenging BIG-bench tasks with explanations of examples and release them",
+  "Evaluate several LMs with or without few-shot examples, explanations, instructions and control conditions",
+  "Show explanations of few-shot examples improve large-model performance and beat matched controls even untuned",
+  "Show explanations tuned or selected on a small validation set have larger effects",
+  "Analyse with hierarchical statistical models respecting task/item/prompt dependencies"
+ ],
+ "method": {
+  "summary": "Gopher-family decoder-only LMs (1B, 7B, 280B) are evaluated on 40 multiple-choice BIG-bench tasks under 0- and 5-shot prompts, with or without a task instruction, and with author-written post-answer explanations or matched controls. Answers are chosen by greedy highest likelihood of each option. Effects are estimated with hierarchical logistic regressions; selection and hand-tuning of explanations on a small validation set are also tested.",
+  "task": "few-shot in-context learning on multiple-choice reasoning tasks (BIG-bench subset)",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "40 BIG-bench tasks/subtasks (explanation annotations released)",
+    "role": "eval",
+    "size": "15 examples per task annotated with explanations; three 5-shot prompts per task; regression data 17,028 task:input groups (untuned model), 26,786 (selection model)",
+    "split": "Evaluated on all task items except the 5 in the prompt; tuning on the other annotated examples (10 validation items for hand-tuning)",
+    "source": "BIG-bench collaboration 2021 (multiple-choice JSON tasks); annotations by a single author, released at a Google Cloud Storage bucket dm_some_explanations_for_bigbench_tasks",
+    "preprocessing": "Task prefixes omitted except where they carry necessary information; 5-shot prompt with instruction and explanations plus target must fit in 2048 tokens; largest model's 5-shot accuracy below 75% on all chosen tasks; causal_judgment annotations were lost, analysed only untuned on the largest model"
+   }
+  ],
+  "models": [
+   {
+    "name": "Gopher family (Rae et al. 2021)",
+    "role": "evaluated",
+    "params": "1B, 7B, 280B (range 1B to 280B stated; 1/7/280 shown in figures)",
+    "architecture": "decoder-only Transformer, relative position encodings",
+    "init_from": null,
+    "tokenizer": "32,000 token SentencePiece",
+    "vocab": "32,000",
+    "layers": "vary by model, not stated",
+    "hidden": "vary by model, not stated",
+    "heads": null,
+    "context": "2048 tokens",
+    "other": {
+     "training_data": "same quantity of the same dataset across sizes"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "No generation: score likelihood of each answer option given prompt and question, pick the highest greedily; no length normalisation; no prior correction (Holtzman et al. 2021 tried, no benefit in preliminary run)",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "Three 5-shot prompts per task (prompt_index; 120 prompts across 40 tasks); no repeated seeds as decoding is deterministic scoring",
+   "prompting": "Optional task instruction, then 0 or 5 examples separated by a blank line, each 'Q: ... A: ...' with optional 'Explanation:' line after the answer; conditions: instruction (none/instruction/non-instruction) x explanation (none/real/other-item/true non-explanation/scrambled)",
+   "retrieval": null,
+   "parameters": {
+    "n_shots": "0 or 5",
+    "explanation_position": "after the answer",
+    "controls": "scrambled (word-shuffled), true non-explanation, other-item (permuted among prompt examples)",
+    "selection": "greedy forward selection of 5 of the 15 annotated examples, scored on the remaining examples",
+    "hand_tuning": "5 tasks per text (4 per Table 2), start from best untuned prompt without instructions, edit on 10-example validation set"
+   },
+   "other": {
+    "evaluation_hardware": "Google Cloud TPU v3 (4 x 8 topology), batched inference, a few days total",
+    "reduced_grid": "control explanations not combined with instructions or non-instructions"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Task accuracy",
+     "definition": "score defined by each BIG-bench task for the highest-likelihood option (may allow multiple correct answers or partial credit)",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Effect size",
+     "definition": "log odds ratio from hierarchical logistic regression, divided by 1.81 for Fig 2 (Chinn 2000)",
+     "unit": "effect size / log odds",
+     "higher_is_better": true
+    },
+    {
+     "name": "Improvement in log score",
+     "definition": "log-score difference from adding explanations vs matched prompt without",
+     "unit": "log score",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "0-shot",
+    "5-shot without explanations",
+    "task instruction and non-instruction",
+    "selected examples without explanations",
+    "control explanations"
+   ],
+   "protocol": "Multilevel logistic regressions in R (lme4, glmer, bobyqa) with random effects for task, task:prompt_index, task:input and by-task slopes; separate models for untuned, hand-tuned and selected subsets; bootstrap 95% CIs on plots"
+  },
+  "availability": {
+   "code": "load_explanations.py in the data bucket (loads data and builds prompts)",
+   "weights": "not available; Gopher access granted to authors",
+   "data": "https://console.cloud.google.com/storage/browser/dm_some_explanations_for_bigbench_tasks"
+  },
+  "prompts": [
+   {
+    "purpose": "Example 5-shot prompt format with instruction, example and explanation (metaphor_boolean)",
+    "text": "Answer these questions by identifying whether the second sentence is an appropriate paraphrase of the first, metaphorical sentence.\nQ: David's eyes were like daggers at Paul when Paul invited his new girlfriend to dance. <- -> David had two daggers when Paul invited his new girlfriend to dance.\nchoice: True\nchoice: False\nA: False\nExplanation: David's eyes were not literally daggers, it is a metaphor used to imply that David was glaring fiercely at Paul.\n...\nQ: Our whole life we swim against the waves towards the green light of happiness. <- -> Our whole life we try to reach happiness.\nchoice: True\nchoice: False\nA:",
+    "where": "Fig 1, p.2"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "inference.decoding",
+    "quote": "We greedily choose the highest-likelihood answer from the set",
+    "where": "Sec 2.4"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Adding untuned post-answer explanations to 5-shot prompts raises accuracy on the log-odds scale (fixed effect).",
+   "kind": "measured",
+   "source": null,
+   "metric": "logistic regression coefficient",
+   "value": 0.25171,
+   "unit": "log odds",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Hierarchical logistic regression (glmer) on untuned-prompt data, Gopher-family 280B model, 40 BIG-bench tasks, 5-shot, accuracy via answer likelihood",
+   "note": null,
+   "where": "Table 1 (App D.1.1)",
+   "table": "Table 1, row explanationexplanation, column Estimate"
+  },
+  {
+   "claim": "Few-shot examples versus zero-shot are the largest prompt effect; explanations are about a third of it.",
+   "kind": "measured",
+   "source": null,
+   "metric": "logistic regression coefficient",
+   "value": 0.8031,
+   "unit": "log odds",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Hierarchical logistic regression (glmer) on untuned-prompt data, Gopher-family 280B model, 40 BIG-bench tasks, 5-shot, accuracy via answer likelihood",
+   "note": "Text says explanations have about 1/3 the effect size of few-shot examples and twice that of instructions.",
+   "where": "Table 1",
+   "table": "Table 1, row with_fewshotTRUE, column Estimate"
+  },
+  {
+   "claim": "Task instructions give a smaller benefit than untuned explanations.",
+   "kind": "measured",
+   "source": null,
+   "metric": "logistic regression coefficient",
+   "value": 0.11532,
+   "unit": "log odds",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Hierarchical logistic regression (glmer) on untuned-prompt data, Gopher-family 280B model, 40 BIG-bench tasks, 5-shot, accuracy via answer likelihood",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row instructioninstruction, column Estimate"
+  },
+  {
+   "claim": "Scrambled-word explanations hurt relative to no explanation (largest model).",
+   "kind": "measured",
+   "source": null,
+   "metric": "logistic regression coefficient",
+   "value": -0.16851,
+   "unit": "log odds",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Hierarchical logistic regression (glmer) on untuned-prompt data, Gopher-family 280B model, 40 BIG-bench tasks, 5-shot, accuracy via answer likelihood",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row explanationscrambledexplanation, column Estimate"
+  },
+  {
+   "claim": "True non-explanations have no reliable effect.",
+   "kind": "measured",
+   "source": null,
+   "metric": "logistic regression coefficient",
+   "value": -0.01294,
+   "unit": "log odds",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Hierarchical logistic regression (glmer) on untuned-prompt data, Gopher-family 280B model, 40 BIG-bench tasks, 5-shot, accuracy via answer likelihood",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row explanationtruenonexplanation, column Estimate"
+  },
+  {
+   "claim": "Other-item (permuted) explanations have no reliable effect, i.e. no better than no explanation.",
+   "kind": "measured",
+   "source": null,
+   "metric": "logistic regression coefficient",
+   "value": -0.04291,
+   "unit": "log odds",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Hierarchical logistic regression (glmer) on untuned-prompt data, Gopher-family 280B model, 40 BIG-bench tasks, 5-shot, accuracy via answer likelihood",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row explanationotherexplanation, column Estimate"
+  },
+  {
+   "claim": "Benefit of explanations grows with model scale: positive interaction of log parameters with explanations.",
+   "kind": "measured",
+   "source": null,
+   "metric": "interaction coefficient",
+   "value": 0.077,
+   "unit": "coefficient (z-scored log params x explanation)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Hierarchical logistic regression, 1B/7B/280B models, 5-shot with untuned explanations vs none",
+   "note": "Table 4 prints 0.076578.",
+   "where": "App D.1.2, Table 4",
+   "quote": "β = 0.077; z = 12.99"
+  },
+  {
+   "claim": "Untuned explanations beat each control condition (relative to explanations as reference) in the largest model; scrambled is worst.",
+   "kind": "measured",
+   "source": null,
+   "metric": "logistic regression coefficient",
+   "value": -0.22694,
+   "unit": "log odds",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Largest model, 5-shot, no instructions, untuned explanations as reference",
+   "note": "Text: all other conditions worse, all beta <= -0.13, z <= -2.92, p <= 0.005.",
+   "where": "Table 5 (App D.1.3)",
+   "table": "Table 5, row explanationscrambledexplanation, column Estimate"
+  },
+  {
+   "claim": "Selecting 5-shot examples jointly with explanations beats selecting examples alone.",
+   "kind": "measured",
+   "source": null,
+   "metric": "logistic regression coefficient",
+   "value": 0.638385,
+   "unit": "log odds",
+   "baseline_value": 0.353198,
+   "n": null,
+   "setup": "Largest model, greedy selection from 15 annotated examples per task, 40 tasks",
+   "note": "Baseline is 'selected no explanation' 0.353198; selected with other-explanations 0.331608, true non-explanations 0.289914.",
+   "where": "Table 3 (App D.1.1)",
+   "table": "Table 3, row explanationselectedexplanation, column Estimate"
+  },
+  {
+   "claim": "Hand-tuned explanations give a large benefit on the hardest tasks.",
+   "kind": "measured",
+   "source": null,
+   "metric": "logistic regression coefficient",
+   "value": 1.23356,
+   "unit": "log odds",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Largest model, tasks where performance was consistently low; hand-edited on a 10-example validation set",
+   "note": "Text says five tasks were hand-tuned; Table 2 data filter lists four tasks (disambiguation_q, odd_one_out, presuppositions_as_nli, truthful_qa) and reports 4 task groups. Estimate has wide SE 0.41932.",
+   "where": "Table 2",
+   "table": "Table 2, row explanationhandtunedexplanation, column Estimate"
+  },
+  {
+   "claim": "Condition-blind rater scored the authors' explanations as clearly explanatory.",
+   "kind": "measured",
+   "source": null,
+   "metric": "mean rating",
+   "value": 2.37,
+   "unit": "Likert -3..3",
+   "baseline_value": null,
+   "n": null,
+   "setup": "One question per task rated by an independent author (KM), n=38 (t(37)",
+   "note": "True non-explanations mean -0.82.",
+   "where": "App B.3",
+   "quote": "mean = 2.37"
+  },
+  {
+   "claim": "Only the largest model benefits from untuned explanations; smaller models do not.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Gopher family 1B/7B/280B, mean accuracy across 40 tasks (read from Fig 4)",
+   "note": "Exact accuracies only in Fig 4 (axis 40-60%); not read numerically.",
+   "where": "Sec 3, Fig 4",
+   "quote": "Smaller models do not beneﬁt."
+  }
+ ],
+ "limits": [
+  "BIG-bench tasks are adversarially sampled and may not represent typical LM tasks; effects could be amplified or suppressed elsewhere",
+  "Single author wrote all explanations; possible bias or errors; small dataset; causal_judgment annotations lost",
+  "Only one model family (Gopher, 1B/7B/280B) with matched training; instruction-tuned or differently trained models may benefit more",
+  "Untuned benefit is modest; only the 280B model benefits untuned; smaller models might gain with more explanations or simpler tasks",
+  "Hand-tuning done on few tasks (five per text; four per Table 2), so wide CIs, bimodal gains",
+  "Selection is slightly biased vs a true validation set (hard examples avoided)",
+  "Results not comparable to published BIG-bench numbers because task prefixes were omitted",
+  "Explanations lengthen prompts and context is fixed at 2048 tokens",
+  "Post-answer explanations only; no direct comparison with pre-answer chain of thought in the same experiments",
+  "Task-cluster analysis too small to interpret strongly; 'zone of proximal development' bump is speculative"
+ ],
+ "practices": [],
+ "terms": [],
+ "lineage": [
+  {
+   "work": "Language models are few-shot learners",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Few-shot in-context learning paradigm",
+   "quote": null
+  },
+  {
+   "work": "Scaling language models: methods, analysis and insights from training Gopher (Rae et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "The 1B-280B model family evaluated",
+   "quote": null
+  },
+  {
+   "work": "BIG-bench collaboration, Beyond the imitation game",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Source of the 40 tasks",
+   "quote": null
+  },
+  {
+   "work": "Chain-of-thought prompting (Wei et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Pre-answer reasoning; Wei et al. saw no benefit from post-answer explanations, this paper does",
+   "quote": null
+  },
+  {
+   "work": "Nye et al., Show your work: scratchpads",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Pre-answer decomposition",
+   "quote": null
+  },
+  {
+   "work": "Min et al., Rethinking the role of demonstrations",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Random labels barely hurt; this paper's other-item control probes whether in-context relations matter",
+   "quote": null
+  },
+  {
+   "work": "Mishra et al. 2021b, Natural instructions / reframing",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Prompts with task descriptions and explanations but no isolated effect or controls",
+   "quote": null
+  },
+  {
+   "work": "Zelikman et al., STaR",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Post-answer rationalizations in bootstrapped training",
+   "quote": null
+  },
+  {
+   "work": "Ganguli et al., Predictability and surprise in large generative models",
+   "year": 2022,
+   "arxiv": "2202.07785",
+   "relation": "related",
+   "note": "Scale-dependent emergent behaviours",
+   "quote": null
+  },
+  {
+   "work": "Holtzman et al., Surface form competition",
+   "year": 2021,
+   "arxiv": "2104.08315",
+   "relation": "related",
+   "note": "Prior-correction scoring tried, no benefit",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Example prompt including a task instruction, few-shot examples with explanations, and the target question.",
+   "page": 2,
+   "why": "Shows the exact prompt layout with the post-answer Explanation line."
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "The benefits of different components of a prompt for the largest LM (280B), as estimated from hierarchical logistic regression.",
+   "page": 4,
+   "why": "One-glance ranking of few-shot, explanations, tuned explanations, controls, instructions."
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "The effects of explanations on average accuracy, across model sizes.",
+   "page": 5,
+   "why": "Shows benefit appears only at 280B."
+  }
+ ],
+ "code": [],
+ "problems": [
+  "No embedded instructions found",
+  "Text says five tasks were hand-tuned but Table 2 lists four tasks and four task groups",
+  "Section 2.5 says the validation set is 10 examples; the 15 annotated examples minus 5 in prompt",
+  "Figure value data not extractable (plot residue); per-model accuracies unread",
+  "Number of layers/hidden sizes per model not given (refers to Rae et al.)"
+ ]
+}

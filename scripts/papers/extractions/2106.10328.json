@@ -1,0 +1,536 @@
+{
+ "schema": 1,
+ "key": "2106.10328",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/solaiman-2021-process-adapting-language-models-society.pdf",
+ "bib": {
+  "title": "Process for Adapting Language Models to Society (PALMS) with Values-Targeted Datasets",
+  "authors": [
+   "Irene Solaiman",
+   "Christy Dennison"
+  ],
+  "first_author": "Solaiman",
+  "year": 2021,
+  "venue": "NeurIPS 2021 (35th Conference on Neural Information Processing Systems)",
+  "arxiv": "2106.10328",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 98213,
+  "chars_total": 98213,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can a small, hand-curated dataset that reflects a predetermined set of values be used to fine-tune a pretrained language model so that its behaviour on sensitive topics measurably shifts toward those values?",
+ "hypothesis": "Fine-tuning a pretrained LM on a small values-targeted dataset will move outputs toward the target values, more so for larger models, without hurting capabilities.",
+ "contributions": [
+  "PALMS: an iterative 7-step process (topic selection, desired behaviour description, prompt creation, completion creation, fine-tuning, evaluation, iterate) for building a values-targeted dataset",
+  "Evaluation with toxicity scoring, human ratings of value adherence, and co-occurrence analysis, against base and control models across GPT-3 sizes",
+  "Evidence that effectiveness grows with model size and capability integrity is largely preserved"
+ ],
+ "method": {
+  "summary": "Authors wrote 80 Q&A prompts and had a professional writer produce 40-340 word completions matching written position statements on eight sensitive-topic categories. GPT-3 models of eight sizes were fine-tuned on these via the OpenAI fine-tuning API, then compared with base models and models fine-tuned on a 100-snippet control corpus using Perspective API toxicity, 1-5 human ratings and co-occurrence word analysis.",
+  "task": "supervised fine-tuning of a pretrained LM for behaviour/value alignment",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Values-targeted dataset",
+    "role": "train",
+    "size": "N = 80 prompt-completion pairs; completions 40-340 words",
+    "split": "70 broad-topic prompts (history, science, technology, government policy) + 10 weakness-targeting prompts; one round of iteration added examples after validation",
+    "source": "Prompts written by authors; completions written by a contracted professional writer, guided by answer outlines for the 10 weakness prompts (outlines not in fine-tuning data); broad prompts/completions not shared (data policy)",
+    "preprocessing": "Writer followed 'encyclopedic' guidelines (App. M); broad samples checked and modified to match positions"
+   },
+   {
+    "name": "Control dataset",
+    "role": "train",
+    "size": "N = 100 snippets",
+    "split": null,
+    "source": "Private corpus of books and Wikipedia articles",
+    "preprocessing": "Snippet lengths drawn from the same token-length distribution as the values-targeted set; split on token boundaries"
+   },
+   {
+    "name": "Validation/test prompt sets",
+    "role": "eval",
+    "size": "5 weakness-targeting prompts per category, 8 categories (40 test prompts)",
+    "split": "validation set used for iteration; all graphs are test set",
+    "source": "Authors, Q&A format (App. G)",
+    "preprocessing": null
+   },
+   {
+    "name": "Co-occurrence prompts",
+    "role": "eval",
+    "size": "800 outputs per prompt",
+    "split": null,
+    "source": "Prompts such as '{subject_pronoun} was very', '{category} are', 'The {category} man was very'",
+    "preprocessing": null
+   },
+   {
+    "name": "GPT-3 capability evaluations (arithmetic, LAMBADA, Quizbowl, Anagrams 2, HellaSwag, SAT analogies)",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Brown et al. 2020; arithmetic re-run with commas",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT-3 (base)",
+    "role": "base",
+    "params": "125M, 350M, 760M, 1.3B, 2.7B, 6.7B, 13B, 175B",
+    "architecture": "GPT-3 decoder-only transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Values-targeted models (-S)",
+    "role": "proposed",
+    "params": "same eight sizes",
+    "architecture": "GPT-3",
+    "init_from": "GPT-3 base of the same size",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Control models (-C)",
+    "role": "baseline",
+    "params": "same eight sizes",
+    "architecture": "GPT-3",
+    "init_from": "GPT-3 base of the same size",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "supervised fine-tuning; loss weight 0.1 on prompt, 1.0 on completion",
+   "optimizer": null,
+   "lr": "size-dependent: 175B 2.00e-6, 13B 3.00e-6, 6.7B 4.00e-6, 2.7B 5.00e-6, 1.3B 6.00e-6, 760M 8.00e-6, 350M 1.00e-5, 125M 2.00e-5",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "4 examples (125M: 8)",
+   "steps": null,
+   "epochs": "2 (no packing)",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "packing": "not used; footnote says packing can help for very small datasets",
+    "epoch_rationale": "internal experiments found about 2 epochs best on qualitative tests",
+    "reproduce": "use the OpenAI Fine-Tuning API on the same base models",
+    "min_samples_pilot": "pilot on 175B with LR 30x lower than default; metrics converged around 60 samples, so N=70 initially collected"
+   }
+  },
+  "inference": {
+   "decoding": "sampling; length 200 for eval completions; nucleus sampling Top-P 0.8 for co-occurrence",
+   "temperature": "0.7 (test completions)",
+   "top_p": "0.8 (co-occurrence only)",
+   "max_tokens": "200 (completion length)",
+   "samples": "3 completions per prompt per model for toxicity/human eval; 800 outputs per prompt for co-occurrence; ten outputs per input for capability probes (App. E, cherry-picked)",
+   "prompting": "Q&A format for test prompts; leading open-ended prompts for co-occurrence",
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Toxicity score",
+     "definition": "Perspective API Toxicity, Severe Toxicity, Threat and Insult averaged; probability reader perceives text as toxic",
+     "unit": "0-1",
+     "higher_is_better": false
+    },
+    {
+     "name": "Human evaluation",
+     "definition": "Three Surge.AI raters, blind to model, rate adherence to the position statement for each sample",
+     "unit": "1-5",
+     "higher_is_better": true
+    },
+    {
+     "name": "Co-occurrence top word",
+     "definition": "Most common descriptive word per social category (gender, religion, race); qualitative",
+     "unit": "word",
+     "higher_is_better": null
+    },
+    {
+     "name": "Capability integrity",
+     "definition": "GPT-3 benchmark accuracies on 175B base vs values-targeted",
+     "unit": "% accuracy",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "GPT-3 base models",
+    "Control models fine-tuned on 100 book/Wikipedia snippets"
+   ],
+   "protocol": "Statistical significance asterisks in Figs 2-3 (values-targeted vs base, vs control); the test or p-value is not stated in the text. Human raters: 3 per sample, demographics in Table 16. Capability integrity run only on 175B; GLUE/SuperGLUE excluded for time."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "Values-targeted dataset samples shown in App. K only; broad prompts/completions withheld; test prompts in App. G"
+  },
+  "prompts": [
+   {
+    "purpose": "writer guidelines for encyclopedic answers",
+    "text": "You will be given an answer to a question. Your job is to rewrite the answer to make it more encyclopedic.",
+    "where": "Appendix M"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training.lr",
+    "quote": null,
+    "where": "Table 1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Human-evaluation adherence ratings are higher for values-targeted models than base and control in all categories, and the gain rises with model size.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-3 base models 125M-175B fine-tuned on the 80-sample values-targeted dataset (PALMS), test set of 40 weakness-targeting Q&A prompts (5 per category x 8 categories), 3 completions/prompt/model, length 200, temperature 0.7",
+   "quote": "The rating improves as model size increases, signaling that PALMS has a larger",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.1.2, Fig 3"
+  },
+  {
+   "claim": "Values-targeted models have lower mean toxicity than base, most clearly at the largest size; control models fall between the two.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-3 base models 125M-175B fine-tuned on the 80-sample values-targeted dataset (PALMS), test set of 40 weakness-targeting Q&A prompts (5 per category x 8 categories), 3 completions/prompt/model, length 200, temperature 0.7; Perspective API average of 4 attributes",
+   "quote": "The control model performance is in-between the values-",
+   "table": null,
+   "note": "No numeric value in text; read from figure only",
+   "where": "Sec 4.1.1, Fig 2"
+  },
+  {
+   "claim": "Capability integrity: most benchmark accuracies of the 175B values-targeted model are within 1% of base.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "175B base vs values-targeted, GPT-3 capability evals (Table 3)",
+   "quote": "performance is within 1% accuracy of the base model’s performance",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.3, App. D"
+  },
+  {
+   "claim": "Largest capability drop is on 5-digit addition (base 90.45 vs values-targeted 88.7).",
+   "kind": "measured",
+   "source": null,
+   "metric": "5D+ accuracy",
+   "value": 88.7,
+   "unit": "%",
+   "baseline_value": 90.45,
+   "n": null,
+   "setup": "175B, 5D+ arithmetic accuracy, commas formatting",
+   "quote": null,
+   "table": "Table 3, row 5D+, columns base model / values-targeted model",
+   "note": null,
+   "where": "App. D, Table 3"
+  },
+  {
+   "claim": "Training set was 80 prompts: 70 broad and 10 weakness-targeting.",
+   "kind": "measured",
+   "source": null,
+   "metric": "training prompts",
+   "value": 80,
+   "unit": "count",
+   "baseline_value": null,
+   "n": null,
+   "setup": "values-targeted dataset",
+   "quote": "We used N = 80 prompts for the training set, where 70 of the prompts were on",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.3"
+  },
+  {
+   "claim": "Pilot on the 175B model found metrics converged around 60 samples.",
+   "kind": "measured",
+   "source": null,
+   "metric": "samples to convergence",
+   "value": 60,
+   "unit": "samples",
+   "baseline_value": null,
+   "n": null,
+   "setup": "175B fine-tuned on authors' own Q&A samples with LR 30x below default; punctuation accuracy, answering the question, length matching",
+   "quote": "all mostly converged around 60 samples for the pretrained",
+   "table": null,
+   "note": null,
+   "where": "App. O"
+  },
+  {
+   "claim": "Human rating on Human Characteristics and Behavior rose from 2.55 (base) to 4.35 (values-targeted).",
+   "kind": "measured",
+   "source": null,
+   "metric": "mean human rating",
+   "value": 4.35,
+   "unit": "1-5",
+   "baseline_value": 2.55,
+   "n": null,
+   "setup": "Largest base vs largest values-targeted model, samples closest to average, 1-5 scale",
+   "quote": "Average human evaluation values-targeted model rating: 4.35",
+   "table": null,
+   "note": null,
+   "where": "App. J"
+  },
+  {
+   "claim": "Smallest gain was on Terrorism: 3.26 base vs 3.47 values-targeted.",
+   "kind": "measured",
+   "source": null,
+   "metric": "mean human rating",
+   "value": 3.47,
+   "unit": "1-5",
+   "baseline_value": 3.26,
+   "n": null,
+   "setup": "same as above",
+   "quote": "Average human evaluation values-targeted model rating: 3.47",
+   "table": null,
+   "note": null,
+   "where": "App. J"
+  },
+  {
+   "claim": "34 of 40 test prompts had no similar prompt in the training set, suggesting generalisation from the small dataset.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test prompts without similar training prompt",
+   "value": 34,
+   "unit": "of 40",
+   "baseline_value": null,
+   "n": null,
+   "setup": "test prompts vs values-targeted dataset",
+   "quote": "Of our test prompts, 34 out of 40 did not have similar prompts in our values-",
+   "table": null,
+   "note": null,
+   "where": "Sec 8"
+  },
+  {
+   "claim": "Authors speculate linearly fewer examples are needed per exponential growth in model size.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "speculation from the size trend, not tested",
+   "quote": "A scaling law could be drawn from these results: as language models continue to",
+   "table": null,
+   "note": null,
+   "where": "Sec 8"
+  },
+  {
+   "claim": "A first attempt with samples written by a researcher (not a professional writer) produced output of equal substandard quality and seemingly more biased answers.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "anecdotal, not measured",
+   "quote": "which produced substandard output, i.e. output equivalent in quality",
+   "table": null,
+   "note": null,
+   "where": "App. N"
+  },
+  {
+   "claim": "Co-occurrence top words become more neutral for values-targeted models but new biases appear (for example Tomboy, Heterosexual, Intelligence) and small models still show terrorism words.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "800 outputs/prompt, top-p 0.8, gender/religion/race, qualitative",
+   "quote": "Muslim” in the largest base model",
+   "table": null,
+   "note": "quote is the start of a sentence; qualitative result, no number",
+   "where": "Sec 4.2"
+  }
+ ],
+ "limits": [
+  "Only U.S. English, U.S.-law and UN-rights positions; authors say behaviour is a template, not universal",
+  "Test prompts only Q&A and leading open-ended prompts; small window into model behaviour",
+  "Toxicity scores carry their own demographic biases; human rating is subjective",
+  "Statistical test for significance asterisks not described; one round of iteration; single run, no seeds stated",
+  "Capability integrity only on 175B and a subset of GPT-3 evals; GLUE/SuperGLUE skipped",
+  "Whether the effect equals few-shot context stuffing is left open",
+  "Appendix J shows values-targeted outputs still flawed (e.g. 'you should be very grateful' in abuse example)",
+  "Pre-dates RLHF-style instruction tuning; GPT-3 175B-era models"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "values-targeted dataset",
+   "definition": "the dataset used to train a model to reflect a specific set of values",
+   "where": "Sec 1"
+  },
+  {
+   "term": "values-targeted model",
+   "definition": "models fine-tuned using PALMS",
+   "where": "Sec 1"
+  },
+  {
+   "term": "control model",
+   "definition": "models fine-tuned on our control dataset",
+   "where": "Sec 1"
+  },
+  {
+   "term": "capability integrity",
+   "definition": "standard capabilities remain intact on the same evaluations used for the base model",
+   "where": "Sec 3.6.5"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Language models are few-shot learners (GPT-3)",
+   "year": 2020,
+   "arxiv": "2005.14165",
+   "relation": "evaluates",
+   "note": "base models and capability evals",
+   "quote": null
+  },
+  {
+   "work": "RealToxicityPrompts",
+   "year": 2020,
+   "arxiv": "2009.11462",
+   "relation": "extends",
+   "note": "found fine-tuning on non-toxic text beats filters/control tokens",
+   "quote": null
+  },
+  {
+   "work": "Don't stop pretraining",
+   "year": 2020,
+   "arxiv": "2004.10964",
+   "relation": "related",
+   "note": "domain/task adaptation improves performance",
+   "quote": null
+  },
+  {
+   "work": "Detoxifying language models risks marginalizing minority voices",
+   "year": 2021,
+   "arxiv": "2104.06390",
+   "relation": "related",
+   "note": "detox methods can cause representational harm",
+   "quote": null
+  },
+  {
+   "work": "Recipes for safety in open-domain chatbots",
+   "year": 2020,
+   "arxiv": "2010.07079",
+   "relation": "related",
+   "note": "human-and-model-in-the-loop",
+   "quote": null
+  },
+  {
+   "work": "Persistent anti-Muslim bias in large language models",
+   "year": 2021,
+   "arxiv": "2101.05783",
+   "relation": "related",
+   "note": "GPT-3 religious bias",
+   "quote": null
+  },
+  {
+   "work": "On the dangers of stochastic parrots",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "related",
+   "note": "motivation",
+   "quote": null
+  },
+  {
+   "work": "Alignment of language agents",
+   "year": 2021,
+   "arxiv": "2103.14659",
+   "relation": "related",
+   "note": "alignment framing",
+   "quote": null
+  },
+  {
+   "work": "Perspective API",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "toxicity scoring",
+   "quote": null
+  },
+  {
+   "work": "BOLD",
+   "year": 2021,
+   "arxiv": "2101.11718",
+   "relation": "related",
+   "note": "bias metrics in open-ended generation",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "PALMS Steps",
+   "page": 3,
+   "why": "the seven-step loop with restart points at steps 2, 3 or 4"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Toxicity Scores Mean",
+   "page": 6,
+   "why": "toxicity vs model size for base/values-targeted/control"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Human Evaluations Scores Mean",
+   "page": 7,
+   "why": "adherence rating grows with size"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Figure values (Figs 2-19) are images, so toxicity and per-size human ratings cannot be extracted as numbers",
+  "Embedded instructions: none found",
+  "Appendix E poetry/formatting text has garbled regex/Bangla characters from PDF extraction"
+ ]
+}

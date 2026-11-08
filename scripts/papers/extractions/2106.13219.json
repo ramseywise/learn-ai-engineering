@@ -1,0 +1,545 @@
+{
+ "schema": 1,
+ "key": "2106.13219",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/liang-2021-towards-understanding-mitigating-social-biases.pdf",
+ "bib": {
+  "title": "Towards Understanding and Mitigating Social Biases in Language Models",
+  "authors": [
+   "Paul Pu Liang",
+   "Chiyu Wu",
+   "Louis-Philippe Morency",
+   "Ruslan Salakhutdinov"
+  ],
+  "first_author": "Liang",
+  "year": 2021,
+  "venue": "Proceedings of the 38th International Conference on Machine Learning, PMLR 139, 2021",
+  "arxiv": "2106.13219",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 97790,
+  "chars_total": 97790,
+  "engine": "pymupdf",
+  "skipped": "References (chars ~44660-61441) and the Table 13/14 token lists only skimmed"
+ },
+ "type": "empirical",
+ "question": "How can sources of representational social bias in text generation be defined and measured, and can a pretrained LM be debiased post hoc without retraining while keeping context associations?",
+ "hypothesis": "Dynamically finding bias-sensitive tokens and applying autoregressive nullspace projection mitigates local and global bias while retaining contextual information, improving the performance-fairness Pareto frontier.",
+ "contributions": [
+  "Disentangle fine-grained local bias from high-level global bias in text generation, with metrics that separate bias association from context association",
+  "New benchmark of diverse real-world contexts (16,338 contexts from 5 corpora)",
+  "A-INLP: post-hoc debiasing of pretrained LMs using automatically found bias-sensitive tokens and autoregressive iterative nullspace projection",
+  "Ablation analysis and human evaluation"
+ ],
+ "method": {
+  "summary": "Bias subspace from definitional word pairs (GloVe, PCA) yields bias-sensitive tokens; a linear SVM bias classifier on GPT-2 context embeddings is iterated to obtain a nullspace projection P; at each decoding step the output distribution mixes the projected and original distributions with weight alpha (tuned or learned per step). Applied to pretrained GPT-2 small with no retraining of the LM.",
+  "task": "post-hoc social-bias mitigation in autoregressive text generation (gender, religion)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Diverse contexts (WikiText-2 first 10%, SST, Reddit, MELD, POM)",
+    "role": "both",
+    "size": "948,573 sentences searched; 16,338 contexts (15,162 gender, 1,176 religion)",
+    "split": "Bias classifier data: 6,000 contexts -> 2,940 train / 1,260 val / 1,800 test. LM performance: 50 random contexts per bias class; bias: 100 sampled contexts per class with swapped pairs",
+    "source": "Public corpora plus Reddit forums on politics, electronics, relationships",
+    "preprocessing": "Sentences with sensitive tokens from multiple classes removed; sentences under 5 tokens removed; random subsequence taken as context"
+   },
+   {
+    "name": "Simple contexts (Sheng et al., 2019 templates)",
+    "role": "both",
+    "size": null,
+    "split": null,
+    "source": "Sheng et al. 2019 Regard dataset",
+    "preprocessing": "XYZ placeholder replaced with definitional tokens"
+   },
+   {
+    "name": "StereoSet (Nadeem et al., 2020)",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Nadeem et al. 2020",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT-2 (small, Hugging Face)",
+    "role": "base",
+    "params": "124 million",
+    "architecture": "decoder-only transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": "inferred: 768, from the 768x768 nullspace matrix",
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "A-INLP (tune alpha / learn alpha) and A-SUBSPACE",
+    "role": "proposed",
+    "params": "SVM 2307 parameters (768*3+3); nullspace matrix P 589,000 (768*768)",
+    "architecture": "post-hoc projection on GPT-2 context embedding",
+    "init_from": "pretrained GPT-2",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "INLP applied at every token (alpha=1)",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "Linear SVM (l2 penalty, squared hinge loss) classifying the protected attribute from context embeddings; iterated nullspace projection. GPT-2 itself is not trained.",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": "Table 6: P trained for 30 and 15 epochs (two sets of rows)",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": "swept 0, 0.1, 0.2, 0.3 (selected value is in bold in the PDF, not recoverable from text)",
+   "regularisation": null,
+   "hardware": "Tesla P40 Ti GPU with 22 GB memory",
+   "compute": "Preprocessing 740 seconds and 1470 MiB",
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "nullspace_iterations": "80 classifiers for gender, 50 for religion; swept 40-90",
+    "hyperparameter_search": "grid ranges in Tables 10 and 11; chosen values shown in bold in the PDF but lost in text extraction",
+    "SVM_sweep": "C 0.1-10; penalty l1/l2; loss hinge/squared hinge; iterations 500-5000",
+    "bias_sensitive_token_count_sweep": "50,100,200,500,1000",
+    "subspace_components_sweep": "1,2,3,5(6),10",
+    "definitional_pairs_sweep": "1,3,5(6),10,15",
+    "nullspace_dataset_size_sweep": "3000-7500",
+    "classifier_accuracy_after_projection": "around 33% (chance for 3 classes)"
+   }
+  },
+  "inference": {
+   "decoding": "Sampling from the mixed distribution; top-k used to build V' for alpha_t (k not stated)",
+   "temperature": "swept 1-1.5 (selected not recoverable)",
+   "top_p": null,
+   "max_tokens": "maximum length swept 20-40; average generated sentence length 25",
+   "samples": null,
+   "prompting": "Context prefixes (templates or corpus subsequences) with gender/religion terms swapped",
+   "retrieval": null,
+   "parameters": {
+    "alpha": "swept 0.1-0.9 for A-INLP Tune alpha; alpha=1 recovers INLP; alpha=0 recovers GPT-2; alpha_t learned per step as p*-weighted mean of bias-subspace projection q(w) over top-k tokens intersected with S",
+    "no_repeat_ngram_size": "swept 0-5",
+    "repetition_penalty": "swept 1-1.6",
+    "embedding_for_subspace": "GloVe (more accurate than GPT-2 embeddings, especially for religion)"
+   },
+   "other": {
+    "inference_cost": "1.21 s and 1231 MiB per 25-token sentence vs 1.12 s and 1181 MiB for GPT-2; 102 s to load model and tokenizer"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Local bias",
+     "definition": "KL divergence or Hellinger distance between next-token distributions under counterfactual (gender/religion swapped) contexts",
+     "unit": "divergence",
+     "higher_is_better": false
+    },
+    {
+     "name": "Global bias",
+     "definition": "Absolute difference |g(s1)-g(s2)| of regard/sentiment classifier scores of sentences generated from swapped contexts",
+     "unit": "score difference",
+     "higher_is_better": false
+    },
+    {
+     "name": "Context association / LM performance",
+     "definition": "p(w*|c) for ground-truth word, plus KL/Hellinger to original GPT-2 distribution",
+     "unit": "probability / divergence",
+     "higher_is_better": null
+    },
+    {
+     "name": "StereoSet LM, SS, ICAT",
+     "definition": "Language modeling score, stereotype score, idealized CAT score",
+     "unit": "points",
+     "higher_is_better": null
+    },
+    {
+     "name": "Human evaluation",
+     "definition": "Clarity, content, fairness rated 1-5 by 5 annotators",
+     "unit": "1-5 scale",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "GPT-2",
+    "INLP at every token",
+    "A-INLP Tune alpha",
+    "A-INLP Learn alpha",
+    "A-Subspace (Bolukbasi-style subspace debiasing)"
+   ],
+   "protocol": "Performance-fairness trade-off plots (Fig 3); StereoSet; 5 human annotators chosen for diversity of age, gender, race and religion. No seeds, confidence intervals or significance tests stated."
+  },
+  "availability": {
+   "code": "https://github.com/pliang279/LM_bias",
+   "weights": null,
+   "data": "Code release link only"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "models.params",
+    "quote": "SVM model has 2307 parameters (768 ∗3 + 3) and small GPT-2 has 124 million parameters.",
+    "where": "Appendix C.4"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "A-INLP raises religion ICAT on StereoSet by 19% over GPT-2",
+   "kind": "measured",
+   "source": null,
+   "metric": "ICAT",
+   "value": 19,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "StereoSet religion contexts, GPT-2 small, A-INLP",
+   "quote": "On the overall ICAT score metric, we improve performance by 19% on the tasks testing for bias associated with different religions.",
+   "table": null,
+   "note": "Appendix D.5 says religion ICAT improves by 7% and gender by 3%, apparently describing the other A-INLP row; Table 6/16 values 74.27 -> 88.51 give about 19%",
+   "where": "Sec 5.3"
+  },
+  {
+   "claim": "StereoSet religion stereotype score drops from 58.02 (GPT-2) to 49.98 with LM score held near 88.5",
+   "kind": "measured",
+   "source": null,
+   "metric": "SS",
+   "value": 49.98,
+   "unit": null,
+   "baseline_value": 58.02,
+   "n": null,
+   "setup": "StereoSet religion, A-INLP trained P for 15 epochs",
+   "quote": null,
+   "table": "Table 6, row A-INLP (second set), column SS",
+   "note": null,
+   "where": "Table 6"
+  },
+  {
+   "claim": "Same A-INLP row has LM 88.55 vs 88.46 for GPT-2 and ICAT 88.51 vs 74.27",
+   "kind": "measured",
+   "source": null,
+   "metric": "ICAT",
+   "value": 88.51,
+   "unit": null,
+   "baseline_value": 74.27,
+   "n": null,
+   "setup": "StereoSet religion",
+   "quote": null,
+   "table": "Table 6, row A-INLP (second set), column ICAT",
+   "note": null,
+   "where": "Table 6"
+  },
+  {
+   "claim": "StereoSet gender: stereotype score 62.67 -> 60.56, LM 93.28 -> 91.68, ICAT 69.65 -> 72.32",
+   "kind": "measured",
+   "source": null,
+   "metric": "ICAT",
+   "value": 72.32,
+   "unit": null,
+   "baseline_value": 69.65,
+   "n": null,
+   "setup": "StereoSet gender contexts",
+   "quote": null,
+   "table": "Table 16, row Gender A-INLP (second), column ICAT",
+   "note": null,
+   "where": "Table 16"
+  },
+  {
+   "claim": "Global regard difference for negative regard in Respect contexts falls from 0.160 to 0.003",
+   "kind": "measured",
+   "source": null,
+   "metric": "global regard difference",
+   "value": 0.003,
+   "unit": null,
+   "baseline_value": 0.16,
+   "n": null,
+   "setup": "Gender, Respect contexts, regard classifier",
+   "quote": null,
+   "table": "Table 4, row Respect A-INLP, column Negative",
+   "note": "Occupation context: neutral 0.088 -> 0.046 and negative 0.084 -> 0.034, but positive worsens 0.004 -> 0.012",
+   "where": "Table 4"
+  },
+  {
+   "claim": "Human-judged fairness barely rises (3.93 to 4.00) while clarity and content stay near 5",
+   "kind": "measured",
+   "source": null,
+   "metric": "fairness",
+   "value": 4.0,
+   "unit": null,
+   "baseline_value": 3.93,
+   "n": null,
+   "setup": "Religion contexts, 5 annotators, 1-5 scale",
+   "quote": null,
+   "table": "Table 7, row Religion A-INLP, column Fairness",
+   "note": null,
+   "where": "Table 7"
+  },
+  {
+   "claim": "Relative human fairness difference across swapped contexts drops 0.74 -> 0.59",
+   "kind": "measured",
+   "source": null,
+   "metric": "relative fairness gap",
+   "value": 0.59,
+   "unit": null,
+   "baseline_value": 0.74,
+   "n": null,
+   "setup": "Religion contexts, absolute difference in human fairness for swapped contexts",
+   "quote": null,
+   "table": "Table 8, row Religion A-INLP",
+   "note": null,
+   "where": "Table 8"
+  },
+  {
+   "claim": "32% of the top-ranked Islam bias-sensitive tokens were judged severely negative",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 32,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Top 100 tokens per group, 5 annotators",
+   "quote": "For the Islamic religion, 32% of the top-ranked words were judged as showing severely negative bias",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.1"
+  },
+  {
+   "claim": "Bias classifier trained on simple+diverse+sub-sequences gets 63.7% accuracy on diverse contexts vs 53.6% for simple-only",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 63.7,
+   "unit": "%",
+   "baseline_value": 53.6,
+   "n": null,
+   "setup": "Test accuracy of gender bias classifier; train on simple/diverse/sub-sequences",
+   "quote": null,
+   "table": "Table 3, row Simple + Diverse + Sub-sequences, column Diverse",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "A-INLP inference costs 1.21 s vs 1.12 s per sentence of average length 25",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 1.21,
+   "unit": "s",
+   "baseline_value": 1.12,
+   "n": null,
+   "setup": "Tesla P40, GPT-2 small",
+   "quote": "It takes 1.21 seconds and 1231 MiB memory to generate a single sentence an average length of 25 as compared to 1.12 seconds and 1181 MiB memory for the original GPT-2 language model.",
+   "table": null,
+   "note": null,
+   "where": "Appendix C.5"
+  },
+  {
+   "claim": "Diverse-context dataset size: 16,338 contexts (15,162 gender, 1,176 religion) from 948,573 sentences",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 16338,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "5 corpora",
+   "quote": "we collect a large set of 16,338 diverse contexts from 5 real-world text corpora",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.3"
+  },
+  {
+   "claim": "Fixing the first sensitive token largely removes bias in the remaining text",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Qualitative ablation, Table 15 examples",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Sec 5.3 ablation 2"
+  },
+  {
+   "claim": "Directly applying INLP (alpha=1) gets best fairness but hurts LM performance; GPT-2 is best on performance and least fair",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 3 trade-off plots",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Sec 5.3"
+  }
+ ],
+ "limits": [
+  "Authors: strong performance-fairness trade-offs; not a guarantee of real-world safety",
+  "Depends on one perception of bias (definitional pairs, subspace, classifier); may not generalise across cultures or time",
+  "Only binary-gender pairs for gender and three religions (Judaism, Christianity, Islam) were tested; only GPT-2 small",
+  "Hard to detect and mitigate bias in diverse real-world contexts; classifier data imperfect and nullspace removes context information",
+  "GPT-2 embedding subspace inaccurate; GloVe lacks many subword tokens",
+  "Human fairness gain is tiny in absolute terms (3.93 to 4.00); no seeds or significance tests reported; chosen hyperparameters not recoverable from text",
+  "Global-bias plots are not smooth, attributed to sampling stochasticity",
+  "Dated: GPT-2 small only; tokenwise linear projection evaluated before instruction-tuned LLMs"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Local bias",
+   "definition": "predictions generated at a particular time step that reflect undesirable associations with the context",
+   "where": "Sec 1/3.1"
+  },
+  {
+   "term": "Global bias",
+   "definition": "representational differences across entire generated sentences spanning multiple phrases",
+   "where": "Sec 1/3.2"
+  },
+  {
+   "term": "A-INLP",
+   "definition": "Autoregressive iterative nullspace projection applied to the context embedding at each decoding step, mixed with the original distribution by alpha",
+   "where": "Sec 4.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Iterative nullspace projection (Ravfogel et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "INLP generalised to autoregressive generation",
+   "quote": null
+  },
+  {
+   "work": "Bolukbasi et al., Man is to computer programmer as woman is to homemaker",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Definitional pairs and bias subspace; A-SUBSPACE",
+   "quote": null
+  },
+  {
+   "work": "Sheng et al., The woman worked as a babysitter",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Regard classifier and templates",
+   "quote": null
+  },
+  {
+   "work": "StereoSet (Nadeem et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Evaluation benchmark",
+   "quote": null
+  },
+  {
+   "work": "GPT-2 (Radford et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "Model debiased",
+   "quote": null
+  },
+  {
+   "work": "Manzini et al., multiclass debiasing",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "PCA bias subspace for multiclass",
+   "quote": null
+  },
+  {
+   "work": "Liang et al., Towards debiasing sentence representations",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Contextualising sensitive tokens",
+   "quote": null
+  },
+  {
+   "work": "Dathathri et al., Plug and play language models",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Key-value context formulation",
+   "quote": null
+  },
+  {
+   "work": "Blodgett et al., Language (technology) is power",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Representational bias taxonomy",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Local vs global biases and context association (surgery->doctor)",
+   "page": 2,
+   "why": "Separates bias from legitimate context"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Bias metrics on gender and religion contexts; A-INLP Tune alpha vs Learn alpha",
+   "page": 4,
+   "why": "Performance-fairness Pareto curves"
+  },
+  {
+   "figure": "Algorithm 1",
+   "caption": "Autoregressive INLP algorithm",
+   "page": 3,
+   "why": "Per-step procedure"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 8",
+   "snippet": "alpha_t = sum_{w in V'} p*(w|c_{t-1}) q(w) / sum_{w in V'} p*(w|c_{t-1})",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Bold (selected) hyperparameters in Tables 10-11 are not distinguishable in extracted text",
+  "Sec 5.3 says religion ICAT +19%, Appendix D.5 says +7%",
+  "Table 6 and Table 16 row labels for the two A-INLP rows are not distinguished in text"
+ ]
+}
