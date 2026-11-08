@@ -1,6 +1,7 @@
 ---
 origin: synthesis
 sources:
+  - "Xiao & Zhu, Foundations of Large Language Models (2025), ch. 6"
   - https://arxiv.org/abs/2607.09510
   - https://arxiv.org/abs/2506.09050
   - https://arxiv.org/abs/2512.09882
@@ -139,6 +140,8 @@ Two metrics answer different questions:
 If per-trial success is *p* and trials are independent: pass@k = 1 − (1 − p)^k, and pass^k = p^k. At p = 0.75 and k = 3: pass@3 = 0.98, pass^3 = **0.42**.
 
 - **pass@k** fits tools where a user or system can retry and pick a good result: code generation with tests, candidate generation. From *n* samples with *c* correct, the unbiased estimator is pass@k = 1 − C(n−c, k) / C(n, k) (Chen et al. 2021, the Codex paper). Codex drew n = 200 samples per HumanEval problem to report k ≤ 100. Plugging the observed pass rate into 1 − (1 − p̂)^k underestimates pass@k by a wide margin, and the gap doesn't fully close even at n > 5k. The best sampling temperature also rises with k: 0.2 for pass@1 and 0.8 for pass@100 on a 679M model. Codex-12B scores 28.8% pass@1 and 72.3% pass@100 ([arXiv:2107.03374](https://arxiv.org/abs/2107.03374) (Chen et al., 2021 ⚑), Appendix A). Choosing a candidate needs a grader: from 100 Codex-S samples, taking the one with the highest mean log-probability solves 44.5% of problems, while an oracle that picks a sample passing the tests solves 77.5%. MBPP's 137B model shows the same temperature pattern (low temperature is best with one try, higher wins within 10 samples), and beam search did worst of all because it looped ([arXiv:2108.07732](https://arxiv.org/abs/2108.07732) (Austin et al., 2021 ⚑)).
+Xiao and Zhu give the same estimator over a dataset, averaged across problems: Pass@k = (1/N) Σᵢ [1 − C(Nₛ − Cᵢ, k) / C(Nₛ, k)], with Nₛ ≥ k samples per problem and Cᵢ of them correct (*Foundations of LLMs*, ch. 6, Eq. 6.31, citing Chen et al.).
+- **Cons@k** (consensus@k) needs no oracle at scoring time. Draw k reasoning paths, extract each final answer, take the most frequent, and score only that majority answer against the reference: Cons@k = (1/N) Σᵢ 1[majority answerᵢ = correct answerᵢ]. Pass@k asks whether any of k samples is right, so it is generous. Cons@k asks whether the system as deployed, voting over k paths, is right (self-consistency scored as a metric; Wang et al.), so it is the stricter, more deployment-shaped number whenever the product returns one answer (*Foundations of LLMs*, ch. 6, Eq. 6.33). It applies only where answers can be extracted and compared, and it is still not pass^k: a stable wrong answer scores 0 every time.
 - **pass^k** fits customer-facing agents, where every user gets one try. τ-bench (Yao et al. 2024) introduced it and showed agents that look fine on pass@1 falling sharply at pass^8.
 
 The two can rank models in opposite orders. On math benchmarks, RLVR-trained models beat their base models at k=1 but lose at large k: base Qwen2.5-32B solves about 9% more Minerva problems than its RL-trained version at k=128 ([arXiv:2504.13837](https://arxiv.org/abs/2504.13837) (Yue et al., 2025-04)). Pick the k that matches how the system is used before comparing.

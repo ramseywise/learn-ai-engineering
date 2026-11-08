@@ -30,6 +30,7 @@ sources:
   - https://docs.pola.rs/
   - https://delta.io/
   - https://iceberg.apache.org/docs/latest/
+  - "Kimball and Ross, The Data Warehouse Toolkit, 2nd ed. (Wiley, 2002), ch. 5 (real-time partitions)"
   - https://dataintensive.net/
   - https://mytherin.github.io/papers/2019-duckdbdemo.pdf
 confidence: high
@@ -202,6 +203,18 @@ vendor_id bytes, June only  :       34 KB (12.3x less)
 ```
 
 The ratio is simple arithmetic: June is 30 days of 366, so about 12 times less. The course's 15 times on real data has the same cause, with real seasonality and a two-year table.
+
+### A small hot partition for today's rows
+
+Kimball's answer to "the nightly load is too slow" was a second, tiny fact table. The static table is loaded at midnight. A **real-time partition** holds only what has happened since, with the same grain and keys, so a query asks both tables and adds the results (*Data Warehouse Toolkit*, ch. 5). It is deliberately not a literal database partition: no indexes except a B-tree on the primary key for loading, no aggregates, and small enough to pin in memory. What it holds depends on the fact table's grain, and the size follows from the setup:
+
+| Static fact grain | Real-time partition holds | Setup | Size |
+|---|---|---|---|
+| Transaction | Transactions since midnight | 10 million a day, 40-byte row (7 keys, 3 facts, 4 bytes each) | 400 MB a day (static table about 150 GB a year) |
+| Periodic snapshot | The current, still-changing month | 15 million bank accounts, 4 keys and 4 facts | 480 MB (static: 540 million rows over 36 months) |
+| Accumulating snapshot | Line items updated today | The book's 7,500 updates a day, 80-byte row | 600 kB |
+
+The accumulating case is the book's own arithmetic, and it does not reproduce: 60,000 invoices a month with 20 lines each, every line updated 5 times over 2 months, is about 150,000 updates on a 20-day working month, or 12 MB. The 7,500 appears only if the 60,000 are counted as lines. The conclusion survives, since either figure fits in memory, and the grain is the point: a transaction partition appends, a snapshot partition rewrites its month, and an accumulating one is a set of new row versions that overwrite by key at the nightly merge. Today an append-only log such as [Kafka](04-kafka-and-stream-semantics.md) with micro-batch or streaming ingestion plays this role, and the book's 2002 text does not cover it.
 
 ## Layout: sort order and clustering
 

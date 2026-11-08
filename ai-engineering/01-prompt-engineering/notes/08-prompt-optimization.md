@@ -49,7 +49,7 @@ A survey of black-box automatic prompt optimization sorts every method by five c
 
 ## Prompts as versioned artifacts
 
-- **Template ≠ prompt.** Version the template (static instructions plus slots), not the rendered string ([02](02-prompt-anatomy.md#prompt-templates)).
+- **Template ≠ prompt.** Version the template (static instructions plus slots), not the rendered string ([02](02b-document-types-formatting-and-templates.md#prompt-templates)).
 - **Store it like code**: in the repo or a prompt registry, with an ID, a version, the model it was tuned on, and its eval score.
 - **Pin the model version** next to the prompt. A prompt tuned on one model is not portable. Re-run the evals when either changes. Jahani et al. measured how much of an upgrade's gain is the prompt catching up with the model: in a preregistered experiment with 1,893 Prolific participants writing 18,560 prompts to replicate target images, DALL-E 3 beat DALL-E 2 by 0.0164 CLIP cosine (about 0.19 SD), and replaying each arm's prompts on the other model split that gain into a model effect (51%) and a prompting effect (48%): DALL-E 3 users wrote 24% longer prompts that only paid off on DALL-E 3. Routing the same users through a hidden GPT-4 prompt rewriter cut DALL-E 3's gain by 58% (95% CI 40–76%). On a logo-design task scored by pairwise judge the prompting share fell to 7%, so the split is task-dependent. One text-to-image upgrade, memoryless interface ([arXiv:2407.14333](https://arxiv.org/abs/2407.14333) (Jahani et al., 2024-07, preprint, v7 2026-01)).
 - **Diff behavior, not text.** A one-word change can move the scores; run the regression suite on every edit.
@@ -173,7 +173,7 @@ Huyen's three warnings (*AI Engineering*, ch. 5):
 Before reaching for a framework:
 
 1. **Find the failure category** in the eval results — format, missing context, wrong reasoning, instruction ignored.
-2. **Fix the cheapest layer first**: clarity of the instruction ([02](02-prompt-anatomy.md#writing-instructions)) → missing context → ordering → examples → CoT → splitting the task ([06](06-chaining-and-workflows.md)) → a stronger model → fine-tuning. Ordering includes the assembly's knobs: the priority tiers, scores and elastic versions that decide which snippets make the cut are parameters to tune against the eval like any wording (book, Ch 6; [02](02-prompt-anatomy.md#formatting-injected-content)). A stronger model costs money and latency. When the book was written, GPT-4 could cost 20 times as much as gpt-3.5-turbo, and early Copilot chose the small, fast Codex model because users would not wait for a bigger one (book, Ch 4).
+2. **Fix the cheapest layer first**: clarity of the instruction ([02](02-prompt-anatomy.md#writing-instructions)) → missing context → ordering → examples → CoT → splitting the task ([06](06-chaining-and-workflows.md)) → a stronger model → fine-tuning. Ordering includes the assembly's knobs: the priority tiers, scores and elastic versions that decide which snippets make the cut are parameters to tune against the eval like any wording (book, Ch 6; [02](02b-document-types-formatting-and-templates.md#formatting-injected-content)). A stronger model costs money and latency. When the book was written, GPT-4 could cost 20 times as much as gpt-3.5-turbo, and early Copilot chose the small, fast Codex model because users would not wait for a bigger one (book, Ch 4).
 3. **Change one thing at a time** and re-score.
 4. **Keep the losers.** Recording what didn't work stops you re-trying it.
 

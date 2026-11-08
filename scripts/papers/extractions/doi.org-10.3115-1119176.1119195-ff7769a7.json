@@ -1,0 +1,419 @@
+{
+ "schema": 1,
+ "key": "https://doi.org/10.3115/1119176.1119195",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/sang-2003-introduction-conll-2003-shared-task.pdf",
+ "bib": {
+  "title": "Introduction to the CoNLL-2003 Shared Task: Language-Independent Named Entity Recognition",
+  "authors": [
+   "Erik F. Tjong Kim Sang",
+   "Fien De Meulder"
+  ],
+  "first_author": "Tjong Kim Sang",
+  "year": 2003,
+  "venue": "preprint (arXiv cs/0306050; CoNLL-2003 proceedings)",
+  "arxiv": "cs/0306050",
+  "doi": "10.3115/1119176.1119195"
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 24142,
+  "chars_total": 24142,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "benchmark",
+ "question": "How well can sixteen machine-learning systems recognise persons, organizations, locations and miscellaneous names in English and German text, and does extra information (gazetteers, unannotated data) help?",
+ "hypothesis": "Plainly implied: systems that make use of resources beyond the supplied training data, especially unannotated data, will do better.",
+ "contributions": [
+  "Annotated English and German NER data sets (train/dev/test plus unannotated text) in a four-column IOB format",
+  "An F1 evaluation protocol with bootstrap significance bounds",
+  "A comparison of sixteen participating systems, their features and use of external resources",
+  "A majority-vote combination of the systems as an upper-bound probe"
+ ],
+ "method": {
+  "summary": "Organizers released English (Reuters) and German (Frankfurter Rundschau) news text hand-annotated with PER, ORG, LOC and MISC entities. Sixteen teams trained on the training file, tuned on the development file and were scored once on the test file by exact-match entity F1. The paper surveys the systems, features and external resources, and tests a majority vote over systems.",
+  "task": "named entity recognition (sequence labelling, 4 entity types)",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "CoNLL-2003 English",
+    "role": "both",
+    "size": "train 946 articles / 14,987 sentences / 203,621 tokens; dev 216 / 3,466 / 51,362; test 231 / 3,684 / 46,435",
+    "split": "train/dev/test as supplied; dev for tuning, test for comparison",
+    "source": "Reuters Corpus, Aug 1996 to Aug 1997 news; train and dev from ten days at end of Aug 1996, test from Dec 1996",
+    "preprocessing": "tokenizer, MBT POS tagger and chunker; hand NE tagging at Univ. of Antwerp, mostly MUC conventions plus MISC; IOB tags; non-recursive, non-overlapping, top-level entity only"
+   },
+   {
+    "name": "CoNLL-2003 German",
+    "role": "both",
+    "size": "train 553 articles / 12,705 sentences / 206,931 tokens; dev 201 / 3,068 / 51,444; test 155 / 3,160 / 51,943",
+    "split": "train/dev/test as supplied",
+    "source": "ECI Multilingual Text Corpus, Frankfurter Rundschau; all three sets from one week at end of Aug 1992",
+    "preprocessing": "tokenizer, Treetagger lemma, POS and chunk; hand NE tagging; IOB tags"
+   },
+   {
+    "name": "Unannotated text (English, German)",
+    "role": "pretrain",
+    "size": "17 million tokens (English), 14 million tokens (German)",
+    "split": null,
+    "source": "English: Reuters Sept 1996; German: Sept to Dec 1992",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Sixteen participating systems (Florian, Chieu, Klein, Zhang, Carreras a/b, Curran, Mayfield, McCallum, Bender, Munro, Wu, Whitelaw, Hendrickx, De Meulder, Hammerton)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "MaxEnt (5), HMM (4), RRM/Winnow, voted perceptron, LSTM, AdaBoost.MH (2), memory-based (2), TBL, SVM, CRF; 5 used system combination",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Baseline",
+    "role": "baseline",
+    "params": null,
+    "architecture": "labels only phrases with a unique class in training data; longest phrase if several",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "one test-set run per system; 250 bootstrap samples of sentences per output file for significance",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "majority_vote_search": "bidirectional hill-climbing, beam size 9, over 16 systems, selected on dev data",
+    "bootstrap_samples": "250",
+    "significance_rule": "A differs from B if A is outside the centre 90% of B's distribution"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "F(beta=1)",
+     "definition": "2PR/(P+R); precision = % of found entities that are correct, recall = % of corpus entities found; entity correct only on exact match",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "error reduction",
+     "definition": "relative reduction in error on dev data with extra information vs training data only",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "unique-class phrase lookup baseline"
+   ],
+   "protocol": "Train on train, tune on dev, report once on test; bootstrap resampling (Noreen 1989), 250 samples, 90% centre interval"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "http://lcg-www.uia.ac.be/conll2003/ner/ (all but the words; English words need Reuters Corpus access)"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Best English system (Florian et al., classifier combination) reaches F1 88.76",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 88.76,
+   "unit": "F1 %",
+   "baseline_value": 59.61,
+   "n": null,
+   "setup": "CoNLL-2003 English test set (Reuters, Dec 1996), 46,435 tokens, exact-match entity F1, 4 types; Florian precision 88.99, recall 88.54",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, English test, row Florian, column Fβ=1"
+  },
+  {
+   "claim": "Chieu and Ng single MaxEnt system is not significantly different from the best on English",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 88.31,
+   "unit": "F1 %",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CoNLL-2003 English test set (Reuters, Dec 1996), 46,435 tokens, exact-match entity F1, 4 types",
+   "note": null,
+   "where": "Table 5; Sec 3.4",
+   "table": "Table 5, English test, row Chieu, column Fβ=1"
+  },
+  {
+   "claim": "Best German system is again Florian et al., F1 72.41",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 72.41,
+   "unit": "F1 %",
+   "baseline_value": 30.3,
+   "n": null,
+   "setup": "CoNLL-2003 German test set (Frankfurter Rundschau 1992), 51,943 tokens, exact-match entity F1; precision 83.87, recall 63.71",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, German test, row Florian, column Fβ=1"
+  },
+  {
+   "claim": "German scores are far below English, driven by low recall",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "German test: best recall 66.21 (Munro) against best precision 83.87",
+   "note": "claim derived from table; no value recorded",
+   "where": "Table 5"
+  },
+  {
+   "claim": "English baseline F1",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 59.61,
+   "unit": "F1 %",
+   "baseline_value": null,
+   "n": null,
+   "setup": "English test; unique-class lookup baseline",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, English test, row Baseline, column Fβ=1"
+  },
+  {
+   "claim": "German baseline F1",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 30.3,
+   "unit": "F1 %",
+   "baseline_value": null,
+   "n": null,
+   "setup": "German test; unique-class lookup baseline",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, German test, row Baseline, column Fβ=1"
+  },
+  {
+   "claim": "Majority vote of five systems selected on dev gives English F1 90.30 (14% error reduction vs best system)",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 90.3,
+   "unit": "F1 %",
+   "baseline_value": 88.76,
+   "n": null,
+   "setup": "English test; vote chosen by hill-climbing on English dev data",
+   "note": null,
+   "where": "Sec 3.4",
+   "quote": "obtained Fβ=1 rates of 90.30 for"
+  },
+  {
+   "claim": "Majority vote of five systems gives German F1 74.17 (6% error reduction)",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 74.17,
+   "unit": "F1 %",
+   "baseline_value": 72.41,
+   "n": null,
+   "setup": "German test; vote chosen on German dev data",
+   "note": null,
+   "where": "Sec 3.4",
+   "quote": "74.17 for German (6% error reduction)"
+  },
+  {
+   "claim": "Florian error reduction on English dev from gazetteers plus external NER systems",
+   "kind": "measured",
+   "source": null,
+   "metric": "error reduction",
+   "value": 27,
+   "unit": "% error reduction",
+   "baseline_value": null,
+   "n": null,
+   "setup": "English dev; gazetteers and externally trained NER; German reduction 5%",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row Florian, column English"
+  },
+  {
+   "claim": "Systems using unannotated data gained around 5%",
+   "kind": "measured",
+   "source": null,
+   "metric": "gain",
+   "value": 5,
+   "unit": "% gain",
+   "baseline_value": null,
+   "n": null,
+   "setup": "dev sets, systems using unannotated data",
+   "note": "quote is the start of a line-wrapped sentence; text continues 'tated data, obtained performance gains around 5%'",
+   "where": "Sec 4",
+   "quote": "Systems that employed unanno-"
+  },
+  {
+   "claim": "Five systems used Maximum Entropy; top three English and top two German results came from participants using it",
+   "kind": "measured",
+   "source": null,
+   "metric": "count",
+   "value": 5,
+   "unit": "systems",
+   "baseline_value": null,
+   "n": null,
+   "setup": "16 systems",
+   "note": null,
+   "where": "Sec 3.1",
+   "quote": "Five systems used this statistical learning"
+  }
+ ],
+ "limits": [
+  "Only two languages, both European news text; German and English are the sole test of 'language independence'.",
+  "Single test-set run per system; no seeds or repeated training reported.",
+  "Exact-match F1 only; MISC is a catch-all category the authors call very diverse.",
+  "Entities are non-recursive and non-overlapping; nested entities annotated at top level only.",
+  "Test sets come from a later period than train/dev (English Dec 1996 vs Aug 1996), so temporal drift is mixed into the test score.",
+  "Authors state that how best to exploit raw text remains open; gazetteer and external-NER gains needed much manual work.",
+  "Table 4 gives '?' for McCallum and Wu error reductions."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "IOB tagging",
+   "definition": "I-XXX inside an entity of type XXX, O outside, B-XXX only when the word begins an entity directly adjacent to another entity of the same type",
+   "where": "Sec 2.3"
+  },
+  {
+   "term": "MISC",
+   "definition": "names which are not already in the other categories, including adjectives like Italian and events like 1000 Lakes Rally",
+   "where": "Sec 2.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Introduction to the CoNLL-2002 Shared Task (Tjong Kim Sang)",
+   "year": 2002,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "previous task covered Spanish and Dutch",
+   "quote": null
+  },
+  {
+   "work": "MUC 1999 Named Entity Recognition Task Definition (Chinchor et al.)",
+   "year": 1999,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "annotation conventions mostly followed",
+   "quote": null
+  },
+  {
+   "work": "Reuters Corpus",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "English text",
+   "quote": null
+  },
+  {
+   "work": "ECI Multilingual Text Corpus",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "German text, Frankfurter Rundschau",
+   "quote": null
+  },
+  {
+   "work": "Ramshaw and Marcus, Text Chunking Using Transformation-Based Learning",
+   "year": 1995,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "IOB scheme",
+   "quote": null
+  },
+  {
+   "work": "Noreen, Computer-Intensive Methods for Testing Hypotheses",
+   "year": 1989,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "bootstrap resampling",
+   "quote": null
+  },
+  {
+   "work": "Florian et al., Named Entity Recognition through Classifier Combination",
+   "year": 2003,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "best system on both languages",
+   "quote": null
+  },
+  {
+   "work": "Chieu and Ng, NER with a Maximum Entropy Approach",
+   "year": 2003,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "runner-up English",
+   "quote": null
+  },
+  {
+   "work": "Hammerton, NER with Long Short-Term Memory",
+   "year": 2003,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "only neural system; F1 60.15 English, 47.74 German",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Table 1",
+   "caption": "Number of articles, sentences and tokens in each data file.",
+   "page": 1,
+   "why": "Data sizes for the benchmark"
+  },
+  {
+   "figure": "Table 2",
+   "caption": "Number of named entities per data file",
+   "page": 2,
+   "why": "Entity counts per type and split"
+  },
+  {
+   "figure": "Table 5",
+   "caption": "Overall precision, recall and F-beta=1 rates obtained by the sixteen participating systems on the test data sets",
+   "page": 5,
+   "why": "Leaderboard with bootstrap error bars"
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 2.3",
+   "snippet": "U.N. NNP I-NP I-ORG / official NN I-NP O / Ekeus NNP I-NP I-PER / heads VBZ I-VP O / for IN I-PP O / Baghdad NNP I-NP I-LOC / . . O O",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Table cells are flattened one value per line in the text cache; values were matched by order. Embedded instructions: none."
+ ]
+}

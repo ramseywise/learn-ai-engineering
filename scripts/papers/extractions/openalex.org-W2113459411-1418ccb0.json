@@ -1,0 +1,357 @@
+{
+ "schema": 1,
+ "key": "https://openalex.org/W2113459411",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/maas-2011-learning-word-vectors-sentiment-analysis.pdf",
+ "bib": {
+  "title": "Learning Word Vectors for Sentiment Analysis",
+  "authors": ["Andrew L. Maas", "Raymond E. Daly", "Peter T. Pham", "Dan Huang", "Andrew Y. Ng", "Christopher Potts"],
+  "first_author": "Maas",
+  "year": 2011,
+  "venue": "Proceedings of the 49th Annual Meeting of the Association for Computational Linguistics (ACL), pages 142-150, Portland, Oregon",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 35540,
+  "chars_total": 35540,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can word vectors learned from a mix of unsupervised document modelling and supervised document-level sentiment labels capture both semantic and sentiment similarity, and improve sentiment classification?",
+ "hypothesis": "A purely unsupervised vector model misses sentiment information, so adding a supervised sentiment predictor on word vectors should give better sentiment features.",
+ "contributions": [
+  "A log-bilinear probabilistic document model that learns word vectors, extended with a supervised sentiment component so words of similar sentiment get similar vectors",
+  "Evaluation against LSA, LDA and bag-of-words weighting schemes on document polarity and sentence subjectivity tasks",
+  "Evidence that the small Pang and Lee polarity dataset has correlated train/test examples (same movie), and a new 50,000-review IMDB benchmark with disjoint movies in train and test, released publicly"
+ ],
+ "method": {
+  "summary": "A latent-mixture document model p(d)=integral p(theta) prod p(w_i|theta) with a softmax log-linear word distribution (word matrix R, biases b) is trained by MAP estimation of theta per document, plus a logistic-regression sentiment predictor on each word vector, trained jointly by alternating maximization. Document features are R v (bag of words times R), fed to a linear SVM, and compared with LSA, LDA and bag-of-words variants.",
+  "task": "Word-vector learning; document-level movie review polarity classification; sentence-level subjectivity classification",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "IMDB movie reviews (labeled, train)",
+    "role": "train",
+    "size": "25,000 labeled reviews (polarized only; neutral excluded)",
+    "split": "25,000 train / 25,000 test, even split of the 50,000-review labeled set; train and test use disjoint movies (stated in section 4.3.1)",
+    "source": "Internet Movie Database; released publicly at http://www.andrew-maas.net/data/sentiment",
+    "preprocessing": "At most 30 reviews per movie. Negative review score <=4 of 10, positive >=7 of 10; neutral reviews not included. Star values 1-10 linearly mapped to [0,1] as labels. Dictionary of the 5,000 most frequent tokens, ignoring the 50 most frequent terms of the full vocabulary. No stop-word removal, no stemming; tokens like '!' and ':-)' kept."
+   },
+   {
+    "name": "IMDB movie reviews (unlabeled)",
+    "role": "train",
+    "size": "50,000 unlabeled reviews",
+    "split": "used only in the 'Additional Unlabeled' model variant, on top of the 25,000 labeled",
+    "source": "IMDB",
+    "preprocessing": "Contains neutral reviews as well as polarized ones. The paper gives no count of how many are neutral."
+   },
+   {
+    "name": "IMDB review dataset (evaluation)",
+    "role": "eval",
+    "size": "50,000 reviews, balanced positive/negative",
+    "split": "25,000 train / 25,000 test; classifier parameters cross-validated on the training set",
+    "source": "IMDB",
+    "preprocessing": null
+   },
+   {
+    "name": "Pang and Lee (2004) polarity dataset v2.0 (PL04)",
+    "role": "eval",
+    "size": "2,000 movie reviews, binary polarity",
+    "split": "10-fold cross validation using the authors' published folds",
+    "source": "http://www.cs.cornell.edu/people/pabo/movie-review-data",
+    "preprocessing": null
+   },
+   {
+    "name": "Pang and Lee (2004) subjectivity dataset",
+    "role": "eval",
+    "size": "10,000 sentences (subjective from review summaries, objective from plot summaries)",
+    "split": "random 10 folds, 10-fold cross validation",
+    "source": "Pang and Lee (2004)",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Maas et al. model (semantic only / full / full with additional unlabeled)",
+    "role": "proposed",
+    "params": "inferred: 50 x 5,000 word matrix R = 250,000 plus 5,000 biases, from 50-dim vectors and a 5,000-token dictionary",
+    "architecture": "log-bilinear latent-mixture document model with Gaussian prior on theta and logistic-regression sentiment head",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": "5,000 most frequent tokens (excluding the 50 most frequent)",
+    "layers": null,
+    "hidden": "50-dimensional word vectors",
+    "heads": null,
+    "context": null,
+    "other": {"hyperparameters_named": "lambda and nu (regularization weights), beta (vector dimensionality); lambda and nu values not stated"}
+   },
+   {
+    "name": "LSA",
+    "role": "baseline",
+    "params": null,
+    "architecture": "truncated SVD of tf.idf weighted, cosine normalized count matrix",
+    "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": "50-dimensional (inferred from 'For all word vector models, we use 50-dimensional vectors')", "heads": null, "context": null,
+    "other": {}
+   },
+   {
+    "name": "LDA",
+    "role": "baseline",
+    "params": null,
+    "architecture": "50-topic LDA, word-topic matrix p(w|T) normalized to unit length, Blei et al. code, default hyperparameters",
+    "init_from": null, "tokenizer": null, "vocab": "same 5,000-term vocabulary", "layers": null, "hidden": null, "heads": null, "context": null,
+    "other": {}
+   },
+   {
+    "name": "Linear SVM (LIBLINEAR)",
+    "role": "base",
+    "params": null,
+    "architecture": "linear SVM classifier on document features",
+    "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null,
+    "other": {"regularization": "PL04: same value as Pang and Lee (2004); IMDB: cross-validated on training set; subjectivity: SVM training protocol of Pang and Lee (2004)"}
+   }
+  ],
+  "training": {
+   "objective": "Maximize nu||R||_F^2 + sum_k lambda||theta_k||^2 + sum_i log p(w_i|theta_k;R,b) + sum_k (1/|S_k|) sum_i log p(s_k|w_i;R,psi,b_c) (Eq. 11; regularizer signs as printed); 1/|S_k| reweights by count of documents with same rounded rating (s<0.5, s>=0.5)",
+   "optimizer": "alternating maximization: optimize R, b, psi, b_c with MAP theta fixed, then re-estimate MAP theta per document with word representations fixed, until convergence",
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "Frobenius norm on R (weight nu), L2 on theta (weight lambda); word biases not regularized",
+   "hardware": "not stated; per-document MAP problems can be solved in parallel on separate machines",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {"vector_dimensionality": "50", "labels": "star rating mapped linearly to [0,1], treated as probability of positive polarity"}
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "Single run per configuration reported; no seeds or variance stated",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {"document_features": "R v with bnn weighting for v (found best in preliminary experiments), cosine normalization applied to the final feature vector Rv", "bag_of_words_variants": "bnc (binary, no idf, cosine) and b-delta-t'-c (binary, smoothed delta idf, cosine)"},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "Classification accuracy", "definition": "fraction correct on balanced two-class tasks (10-fold CV for PL04 and subjectivity; held-out 25,000 test reviews for IMDB)", "unit": "%", "higher_is_better": true}
+   ],
+   "baselines": ["Bag of words (bnc)", "Bag of words (b delta-t' c)", "LDA", "LSA", "Bag of Words SVM (Pang and Lee, 2004)", "Contextual Valence Shifters (Kennedy and Inkpen, 2006)", "tf.delta-idf (Martineau and Finin, 2009)", "Appraisal Taxonomy (Whitelaw et al., 2005)"],
+   "protocol": "PL04: 10-fold CV with published folds. IMDB: train 25,000, test 25,000, SVM parameters cross-validated on train. Subjectivity: 10-fold CV. No significance test; authors argue the 25,000-example test set gives low variance."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "IMDB dataset at http://www.andrew-maas.net/data/sentiment"
+  },
+  "prompts": [],
+  "evidence": [
+   {"field": "datasets[IMDB unlabeled].preprocessing", "quote": "The unlabeled set of reviews contains neutral reviews as well as those which are polarized as found in the labeled set.", "where": "Section 4.1"}
+  ]
+ },
+ "results": [
+  {
+   "claim": "The IMDB benchmark is 50,000 balanced polarized reviews split evenly into train and test, with at most 30 reviews per movie and neutral reviews excluded.",
+   "kind": "measured",
+   "source": null,
+   "metric": "dataset size",
+   "value": "50,000",
+   "unit": "reviews",
+   "baseline_value": null,
+   "n": 50000,
+   "setup": "IMDB, positive score >=7/10, negative <=4/10, 25,000 train / 25,000 test",
+   "quote": "We constructed a collection of 50,000 reviews from IMDB, allowing no more than 30 reviews per movie.",
+   "table": null,
+   "note": "Section 4.3.2 says test and train are evenly divided; the disjoint-movies property is stated in the end of 4.3.1.",
+   "where": "Section 4.3.2"
+  },
+  {
+   "claim": "The full model with 50,000 additional unlabeled reviews plus bag of words (bnc) is the best configuration reported on the IMDB test set.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "88.89",
+   "unit": "%",
+   "baseline_value": "87.80 (bag of words bnc)",
+   "n": 25000,
+   "setup": "IMDB 25,000 train / 25,000 test, linear SVM, 50-dim vectors, 5,000-word vocabulary",
+   "quote": null,
+   "table": "Table 2, row Our Full, Add'l Unlabeled + Bag of Words (bnc), column Our Dataset",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Bag of words with delta-idf weighting scores 88.23 on the IMDB test set, so the best vector-plus-BoW result is only about 0.7 points higher.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "88.23",
+   "unit": "%",
+   "baseline_value": null,
+   "n": 25000,
+   "setup": "IMDB test set, linear SVM, b delta-t' c weighting",
+   "quote": null,
+   "table": "Table 2, row Bag of Words (b∆t'c), column Our Dataset",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Our full model alone (labeled only) scores 87.44 on IMDB, versus 83.96 for LSA and 67.42 for LDA.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "87.44",
+   "unit": "%",
+   "baseline_value": "83.96 (LSA); 67.42 (LDA)",
+   "n": 25000,
+   "setup": "IMDB test set, 50-dim vectors, linear SVM",
+   "quote": null,
+   "table": "Table 2, row Our Full, column Our Dataset",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "On the 2,000-review PL04 dataset the best configuration reaches 88.90, below the appraisal-taxonomy result of 90.20 and above the Pang and Lee BoW SVM at 87.15.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "88.90",
+   "unit": "%",
+   "baseline_value": "87.15 (Pang and Lee 2004); 90.20 (Whitelaw et al. 2005, reported)",
+   "n": 2000,
+   "setup": "PL04, 10-fold CV with published folds, linear SVM, Our Full + additional unlabeled + BoW (bnc)",
+   "quote": null,
+   "table": "Table 2, row Our Full, Add'l Unlabeled + Bag of Words (bnc), column PL04",
+   "note": "Baseline rows from other papers are reported, not re-run.",
+   "where": "Table 2"
+  },
+  {
+   "claim": "On subjectivity, the best combined model reaches 88.58, below the 90.00 reported by Pang and Lee's bag-of-words SVM.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "88.58",
+   "unit": "%",
+   "baseline_value": "90.00 (Pang and Lee 2004, reported)",
+   "n": 10000,
+   "setup": "Subjectivity dataset, 10,000 sentences, 10-fold CV, Our Semantic + BoW (bnc)",
+   "quote": null,
+   "table": "Table 2, row Our Semantic + Bag of Words (bnc), column Subjectivity",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "In the small PL04 dataset, 1,299 of 2,000 reviews share a movie with another review in the dataset.",
+   "kind": "measured",
+   "source": null,
+   "metric": "reviews with another review of same movie",
+   "value": "1,299",
+   "unit": "of 2,000 reviews",
+   "baseline_value": null,
+   "n": 2000,
+   "setup": "PL04 polarity dataset v2.0, movie titles extracted from reviews",
+   "quote": "1,299 of the 2,000 reviews in",
+   "table": null,
+   "note": null,
+   "where": "Section 4.3.1"
+  },
+  {
+   "claim": "Of 406 movies with multiple reviews in PL04, 249 have the same polarity label on all their reviews.",
+   "kind": "measured",
+   "source": null,
+   "metric": "movies with uniform label",
+   "value": "249",
+   "unit": "of 406 movies",
+   "baseline_value": null,
+   "n": 406,
+   "setup": "PL04 polarity dataset v2.0",
+   "quote": "Of 406 movies with multiple reviews, 249 have the same polarity label for all of",
+   "table": null,
+   "note": null,
+   "where": "Section 4.3.1"
+  },
+  {
+   "claim": "In the published PL04 random folds, about half of the test reviews have a same-movie, same-label review in the training set.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test reviews with same-movie same-label training review",
+   "value": "approximately 50%",
+   "unit": "% of reviews per fold test set",
+   "baseline_value": null,
+   "n": null,
+   "setup": "PL04 published 10-fold random folds",
+   "quote": "approximately 50% of reviews in each validation fold",
+   "table": null,
+   "note": null,
+   "where": "Section 4.3.1"
+  },
+  {
+   "claim": "With a 25,000-example test set, a 0.1% accuracy change equals 25 reviews, so small differences are said to have low variance.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "reviews per 0.1% accuracy",
+   "value": "25",
+   "unit": "reviews",
+   "baseline_value": null,
+   "n": 25000,
+   "setup": "IMDB test set",
+   "quote": "an accuracy increase of 0.1% corresponds to correctly classifying an additional 25 reviews",
+   "table": null,
+   "note": "Variance asserted, not estimated; no repeated runs or significance test.",
+   "where": "Section 4.3.2"
+  }
+ ],
+ "limits": [
+  "No variance, seeds or significance tests are reported; the low-variance argument rests on test-set size alone.",
+  "Hyperparameters lambda, nu, SVM C, number of alternating iterations and compute are not stated, so the model cannot be retrained from the paper; no code link given.",
+  "The best vector results do not beat the best published numbers on PL04 (90.20, Whitelaw et al.) or subjectivity (90.00, Pang and Lee); vocabulary limited to 5,000 words.",
+  "Qualitative evidence (Table 1) is admitted to be 'only an impressionistic analysis of a few cases'.",
+  "Sentiment is handled only as a scalar document polarity; continuous, multi-dimensional and non-sentiment labels are claimed possible but not tested.",
+  "The count of neutral reviews among the 50,000 unlabeled reviews is not given; the unlabeled set's relationship to the labeled test movies is not stated.",
+  "Differences between top rows on IMDB are small (87.80 to 88.89)."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "Bag of words weighting notation (bnc, b∆t'c, bnn)", "definition": "b = binary term frequency, n = no idf, ∆t' = smoothed delta idf, c = cosine normalization", "where": "Section 4.2"}
+ ],
+ "lineage": [
+  {"work": "Latent Dirichlet Allocation (Blei, Ng and Jordan)", "year": 2003, "arxiv": null, "relation": "baseline", "note": "Model shares probabilistic foundation; LDA topic matrix used as a word-vector baseline", "quote": null},
+  {"work": "Latent Semantic Analysis (Deerwester et al.)", "year": 1990, "arxiv": null, "relation": "baseline", "note": "SVD of tf.idf matrix used as word-vector baseline", "quote": null},
+  {"work": "Delta tfidf (Martineau and Finin)", "year": 2009, "arxiv": null, "relation": "uses-method", "note": "Supervised idf weighting that motivates putting sentiment into the objective; also a BoW baseline", "quote": null},
+  {"work": "Three new graphical models for statistical language modelling (Mnih and Hinton)", "year": 2007, "arxiv": null, "relation": "extends", "note": "Log-bilinear word vector inner product idea", "quote": null},
+  {"work": "A neural probabilistic language model (Bengio et al.)", "year": 2003, "arxiv": null, "relation": "related", "note": "Log-bilinear / neural language model lineage", "quote": null},
+  {"work": "A unified architecture for natural language processing (Collobert and Weston)", "year": 2008, "arxiv": null, "relation": "related", "note": "Multi-task learning for better word representations", "quote": null},
+  {"work": "A sentimental education (Pang and Lee)", "year": 2004, "arxiv": null, "relation": "uses-data", "note": "PL04 polarity v2.0 and subjectivity datasets, SVM protocol and folds", "quote": null},
+  {"work": "Thumbs up? (Pang, Lee, Vaithyanathan)", "year": 2002, "arxiv": null, "relation": "baseline", "note": "Binary no-idf weighting", "quote": null},
+  {"work": "LIBLINEAR (Fan et al.)", "year": 2008, "arxiv": null, "relation": "uses-method", "note": "Linear SVM classifier", "quote": null},
+  {"work": "Paltoglou and Thelwall", "year": 2010, "arxiv": null, "relation": "related", "note": "Systematic study of weighting schemes for sentiment", "quote": null},
+  {"work": "Kennedy and Inkpen; Whitelaw et al.", "year": 2006, "arxiv": null, "relation": "baseline", "note": "Published PL04 results quoted in Table 2 (Whitelaw et al. 2005)", "quote": null},
+  {"work": "Turian, Ratinov and Bengio", "year": 2010, "arxiv": null, "relation": "related", "note": "Word representations as semi-supervised features", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Table 1", "caption": "Similarity of learned word vectors. Each target word is given with its five most similar words using cosine similarity of the vectors determined by each model.", "page": 5, "why": "Shows side by side that sentiment+semantic vectors give sentiment-coherent neighbours (ghastly -> hideous, inept) where LSA gives unrelated ones (ghastly -> predators, tube)."},
+  {"figure": "Table 2", "caption": "Classification accuracy on three tasks (PL04, Our Dataset, Subjectivity).", "page": 6, "why": "All results in one grid: BoW vs LSA vs LDA vs the proposed vectors, alone and concatenated, plus published numbers."}
+ ],
+ "code": [
+  {"where": "Eq. 11, p.5", "snippet": "nu||R||_F^2 + sum_k lambda||theta_k||_2^2 + sum_i log p(w_i|theta_k;R,b) + sum_k (1/|S_k|) sum_i log p(s_k|w_i;R,psi,b_c)", "verbatim": false},
+  {"where": "Eq. 9, p.4", "snippet": "p(s = 1|w; R, psi) = sigma(psi^T phi_w + b_c)", "verbatim": false}
+ ],
+ "problems": [
+  "PDF text extraction scrambled the equations and Table 1/Table 2 columns into one value per line; table cells were re-aligned by order, consistent with the printed row order.",
+  "Section 3.1 says the denominator grows linearly in |V| 'making exact computation... possible' as printed; treated as is.",
+  "No embedded instructions found."
+ ]
+}

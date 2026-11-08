@@ -16,6 +16,7 @@ cleaned: 2026-11-02
 | Book | Chapters | PDF | Maps to |
 |---|---|---|---|
 | ★ Kleppmann, [*Designing Data-Intensive Applications*](https://dataintensive.net/) (O'Reilly, 2017) | ch. 3, 6, 10 (warehouse and store); ch. 7 (MVCC, optimistic concurrency) and ch. 9 (commit points, total order) behind the table-format log; ch. 11 (log brokers, time, joins, fault tolerance); ch. 12 (system of record, lambda, unbundling, timeliness and integrity) | [PDF](../sources/kleppmann-designing-data-intensive-applications.pdf) | [01](notes/01-warehouse-and-store.md), [02](notes/02-table-formats.md), [03](notes/03-lakehouse-vs-warehouse.md), [04](notes/04-kafka-and-stream-semantics.md) |
+| ★ Kimball and Ross, [*The Data Warehouse Toolkit*](https://www.kimballgroup.com/data-warehouse-business-intelligence-resources/books/), 2nd ed. (Wiley, 2002) | Chapter PDFs in [sources/data-warehouse-toolkit/](../sources/data-warehouse-toolkit/). Folded in as: ch. 5 → [01](notes/01-warehouse-and-store.md#a-small-hot-partition-for-todays-rows) (real-time partition sizes by fact grain; the accumulating-snapshot figure does not reproduce). Notes cite it as `(*Data Warehouse Toolkit*, ch. N)`. The chapter text is the 2nd edition (2002) | [ch. 5](../sources/data-warehouse-toolkit/ch05-order-management.pdf) | [01](notes/01-warehouse-and-store.md) |
 | Reis and Housley, *Fundamentals of Data Engineering* (O'Reilly, 2022) | Lifecycle chapters; the publisher page blocks automated checks | none | Background for all |
 
 ## Core papers

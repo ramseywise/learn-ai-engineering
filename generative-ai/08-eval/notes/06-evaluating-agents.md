@@ -1,6 +1,7 @@
 ---
 origin: synthesis
 sources:
+  - "Xiao & Zhu, Foundations of Large Language Models (2025), ch. 6"
   - https://arxiv.org/abs/2606.05405
   - https://arxiv.org/abs/2602.14337
   - https://arxiv.org/abs/2512.18470
@@ -67,7 +68,7 @@ Anthropic recommends grading both the final environment state and the transcript
 
 The reverse also happens: a strict trajectory check can fail a run that did *better* than the script. Anthropic's example is a flight-booking agent that found a loophole in the airline's policy and got the user a cheaper fare. Scored against the preset path, it failed. Scored by outcome, the user got a better deal. Let trajectory checks enforce invariants ("never book before confirming"), not a single golden path.
 
-Trajectory analysis also tells you **where** a run failed. A multi-step run has many paths to the same wrong answer, and each needs a different fix. An outcome-only eval scores them identically.
+Trajectory analysis also tells you **where** a run failed. A multi-step run has many paths to the same wrong answer, and each needs a different fix. An outcome-only eval scores them identically. Xiao and Zhu call this the right-answer-for-the-wrong-reason false positive. Their process-based alternative checks every step, and they say it is ideal but hard: step-level gold data is scarce, and a problem has exponentially many valid paths, so listing the correct steps is infeasible. Cheaper variants narrow the scope to one decision: give a correct prefix and check whether the model picks or writes the next step, score the step-level verifier itself, or test whether the model can spot the error in a given path (*Foundations of LLMs*, ch. 6, §6.5.1).
 
 A survey of agent evaluation names this as an open gap: most benchmarks report end-to-end success, which falls "short in diagnosing specific agent failures" ([arXiv:2503.16416](https://arxiv.org/abs/2503.16416) (Yehudai et al., Findings of ACL 2026; read as arXiv v2, 2026-04)). In its own tables, 3 of the 8 evaluation frameworks it compares support trajectory assessment and 1 of 8 benchmarks tests safety. It adds a caution for step-level judges, which assume "each action can be meaningfully assessed in isolation". The survey runs no experiments, it does not say how its tool table was coded and cites only vendor pages for it, and it gives no count of the papers screened.
 

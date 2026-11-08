@@ -1,0 +1,552 @@
+{
+ "schema": 1,
+ "key": "2010.00710",
+ "pdf": "generative-ai/02-rag-retrieval/sources/khandelwal-2020-nearest-neighbor-machine-translation.pdf",
+ "bib": {
+  "title": "Nearest Neighbor Machine Translation",
+  "authors": [
+   "Urvashi Khandelwal",
+   "Angela Fan",
+   "Dan Jurafsky",
+   "Luke Zettlemoyer",
+   "Mike Lewis"
+  ],
+  "first_author": "Khandelwal",
+  "year": 2021,
+  "venue": "ICLR 2021",
+  "arxiv": "2010.00710",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 50220,
+  "chars_total": 50220,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can a nearest-neighbor retrieval over cached decoder representations, added to a pre-trained MT model with no training, improve translation in-domain, out-of-domain and multilingually?",
+ "hypothesis": "Translation contexts that are close in the MT model's representation space are more likely to be followed by the same target word.",
+ "contributions": [
+  "kNN-MT: interpolates the MT softmax with a kNN distribution over a datastore of (decoder representation, target token) pairs, no extra training",
+  "Gains of 1.5 BLEU on a SOTA de-en model, 9.2 BLEU average domain-adaptation gain, and up to 3 BLEU for a multilingual model specialised per language pair",
+  "Qualitative analysis showing retrievals combine source and target context"
+ ],
+ "method": {
+  "summary": "A FAISS datastore is built offline from one forward pass of a trained MT model over parallel data; keys are the 1024-d decoder representation input to the final feedforward layer, values are the gold target token. At each decoding step the top-k neighbours by squared L2 give a softmax-with-temperature distribution over tokens, interpolated with the model distribution by lambda; decoding is beam search.",
+  "task": "machine translation (single pair, multilingual, domain adaptation)",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "WMT'19 de-en",
+    "role": "both",
+    "size": "about 770M tokens in datastore",
+    "split": "newstest2019 test, newstest2018 validation",
+    "source": "WMT'19",
+    "preprocessing": null
+   },
+   {
+    "name": "CCMatrix",
+    "role": "pretrain",
+    "size": "4 billion sentence-pairs, 79 languages, 1,546 pairs",
+    "split": "datastores per language pair from its training pairs",
+    "source": "Schwenk et al., 2019; pairs with distance measure >= 1.06",
+    "preprocessing": null
+   },
+   {
+    "name": "newstest2018/2019 (ja: 2020)",
+    "role": "eval",
+    "size": "about 1,000-2,000 sentences per pair (Table 1)",
+    "split": "2018 validation, 2019 test",
+    "source": "WMT",
+    "preprocessing": null
+   },
+   {
+    "name": "Ted Talks (Qi et al., 2018)",
+    "role": "eval",
+    "size": "3,560-5,090 test sentences (Table 2)",
+    "split": "test",
+    "source": "Qi et al. 2018",
+    "preprocessing": null
+   },
+   {
+    "name": "Multi-domains (Koehn & Knowles, 2017; re-split Aharoni & Goldberg, 2020)",
+    "role": "both",
+    "size": "in-domain datastore: Medical 5.70M, Law 18.3M, IT 3.10M, Koran 450K, Subtitles 159M",
+    "split": "train datastore, 2,000 test sentences per domain",
+    "source": "de-en, five domains",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "WMT'19 de-en winner (Ng et al., 2019)",
+    "role": "base",
+    "params": null,
+    "architecture": "Transformer encoder-decoder",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "6",
+    "hidden": "1,024",
+    "heads": "8",
+    "context": null,
+    "other": {
+     "ffn": "8,192",
+     "extra_training": "over 10 billion tokens of backtranslation data; fine-tuned on newstest sets before 2018",
+     "ensembling": "no ensembles or n-best reranking"
+    }
+   },
+   {
+    "name": "Multilingual MT model",
+    "role": "base",
+    "params": "418M",
+    "architecture": "Transformer encoder-decoder",
+    "init_from": null,
+    "tokenizer": "sentencepiece",
+    "vocab": "128K subwords shared",
+    "layers": "12 encoder and 12 decoder",
+    "hidden": "1,024 embedding; 4,096 hidden",
+    "heads": "16",
+    "context": null,
+    "other": {
+     "training": "100K updates on CCMatrix, temperature upsampling T=5"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "beam search, beam size 5 (Appendix A); beam 1 and lambda=1 for qualitative analysis",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single run; no seeds stated",
+   "prompting": null,
+   "retrieval": "FAISS index, keys quantised to 64 bytes, clustered; k=64 neighbours, 32 clusters searched; squared-L2 distance; key = 1024-d representation input to final-layer FFN",
+   "parameters": {
+    "k": "64",
+    "clusters_searched": "32",
+    "clusters_trained": "131K clusters from 5M keys (multilingual); 4K clusters from 1M keys (domain adaptation in-domain)",
+    "lambda": "tuned per pair on validation, 0.2-0.8 (Tables 4, 5)",
+    "softmax_temperature_T": "10 or 100, tuned on validation (Tables 4, 5)"
+   },
+   "other": {
+    "cost": "datastore build is one forward pass; generation about two orders of magnitude slower than base MT with billion-item datastore"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "BLEU",
+     "definition": "case-sensitive detokenized SacreBLEU, signature BLEU+case.mixed+numrefs.1+smooth.exp+tok.13a+version.1.4.13 (tok.zh, tok.ja-mecab for zh, ja)",
+     "unit": "BLEU points",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Base MT model without datastore",
+    "Aharoni & Goldberg (2020): per-domain models, all-domain model, best data selection"
+   ],
+   "protocol": "Hyperparameters (lambda, T) tuned on validation sets; significance by power analysis of Card et al. (2020), bold in Table 1; about 2,000-example test sets with >=1 BLEU gains considered powered"
+  },
+  "availability": {
+   "code": "https://github.com/urvashik/knnlm (stated as will be available)",
+   "weights": null,
+   "data": "public datasets"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "kNN-MT improves a strong WMT'19 de-en model by 1.5 BLEU using the training set as datastore",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": 39.08,
+   "unit": "BLEU",
+   "baseline_value": 37.59,
+   "n": null,
+   "setup": "de-en newstest2019, datastore of about 770M WMT'19 training tokens, no extra training",
+   "quote": "Providing this heavily tuned base model with a datastore containing about 770M tokens of WMT'19 training data improves performance by 1.5 BLEU to 39.08, without any additional training.",
+   "table": null,
+   "note": null,
+   "where": "4.1"
+  },
+  {
+   "claim": "Average BLEU gain over base across multilingual pairs",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU gain",
+   "value": 1.4,
+   "unit": "BLEU",
+   "baseline_value": null,
+   "n": null,
+   "setup": "17 language pairs, newstest2019 (ja: 2020), one datastore per pair from CCMatrix, 418M model",
+   "quote": "with an average improvement of 1.4 BLEU across all 17 pairs, without any additional training.",
+   "table": null,
+   "note": null,
+   "where": "4.2"
+  },
+  {
+   "claim": "Up to 3 BLEU for en-de, en-zh, zh-en",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU gain",
+   "value": 3,
+   "unit": "BLEU",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 1 multilingual",
+   "quote": "Retrieving neighbors results in up to 3 BLEU improvements for English-German, English-Chinese and Chinese-English",
+   "table": null,
+   "note": "en-de 36.47 to 39.49, en-zh 30.22 to 33.63, zh-en 24.23 to 27.51 (Table 1)",
+   "where": "4.2"
+  },
+  {
+   "claim": "Average BLEU across all 16 directions with a datastore, versus base",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": 27.4,
+   "unit": "BLEU",
+   "baseline_value": 26.0,
+   "n": null,
+   "setup": "Table 1 Avg. column (en-X and X-en pairs listed in second block)",
+   "quote": null,
+   "table": "Table 1, row +kNN-MT, column Avg.",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Gain into English averages less than gain out of English",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU gain",
+   "value": 1.94,
+   "unit": "BLEU",
+   "baseline_value": 1.23,
+   "n": null,
+   "setup": "Out-of-English average 1.94 versus into-English 1.23",
+   "quote": "improvements for languages translated into English, on average 1.23 BLEU, are lower than improvements for languages translated from English, on average 1.94 BLEU.",
+   "table": null,
+   "note": null,
+   "where": "4.2"
+  },
+  {
+   "claim": "Datastores built from English-source data improve other source languages by about 1 BLEU",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU gain",
+   "value": 1,
+   "unit": "BLEU",
+   "baseline_value": null,
+   "n": null,
+   "setup": "5 Ted Talks pairs and 3 newstest2019 pairs, English-source datastore (Table 2)",
+   "quote": "Table 2 shows that on five pairs from the Ted Talks data and three from newstest2019, we find that kNN-MT improves performance by 1 BLEU on average.",
+   "table": null,
+   "note": "Table 2 average 16.98 to 17.96",
+   "where": "4.2"
+  },
+  {
+   "claim": "Domain adaptation with in-domain datastore: average BLEU over the five multi-domain sets",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": 42.63,
+   "unit": "BLEU",
+   "baseline_value": 33.82,
+   "n": null,
+   "setup": "WMT'19 de-en model, in-domain datastore, test sets Medical/Law/IT/Koran/Subtitles plus newstest2019 in Avg. column",
+   "quote": null,
+   "table": "Table 3, row in-domain datastore, column Avg.",
+   "note": "Base MT Avg. is 33.82; Avg. includes newstest column? paper does not state; text says 9.2 BLEU average over the multi-domains",
+   "where": "Table 3"
+  },
+  {
+   "claim": "kNN-MT improves multi-domain base by an average of 9.2 BLEU, up to 16 on Law and 14.5 on Medical",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU gain",
+   "value": 9.2,
+   "unit": "BLEU",
+   "baseline_value": null,
+   "n": null,
+   "setup": "de-en, in-domain datastores, no training",
+   "quote": "kNN-MT improves the base MT model performance by an average of 9.2 BLEU, with improvements as large as 16 BLEU on Law and 14.5 BLEU on Medical, all without any further training.",
+   "table": null,
+   "note": null,
+   "where": "4.3"
+  },
+  {
+   "claim": "Law: in-domain datastore vs base",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": 61.78,
+   "unit": "BLEU",
+   "baseline_value": 45.71,
+   "n": null,
+   "setup": "de-en Law test, in-domain datastore 18.3M tokens",
+   "quote": null,
+   "table": "Table 3, row in-domain datastore, column Law",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "kNN-MT beats best reported average of Aharoni & Goldberg (2020) by 1.4 BLEU",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU gain",
+   "value": 1.4,
+   "unit": "BLEU",
+   "baseline_value": 41.26,
+   "n": null,
+   "setup": "multi-domains average",
+   "quote": "kNN-MT also outperforms the best reported average on the multi-domains dataset by 1.4 BLEU.",
+   "table": null,
+   "note": null,
+   "where": "4.3"
+  },
+  {
+   "claim": "Retrieving from the large out-of-domain WMT'19 datastore gives much smaller gains than in-domain",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": 34.89,
+   "unit": "BLEU",
+   "baseline_value": 33.82,
+   "n": null,
+   "setup": "WMT'19 datastore (770M tokens) applied to multi-domains",
+   "quote": null,
+   "table": "Table 3, row WMT'19 datastore, column Avg.",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "A single all-domains datastore matches or slightly exceeds in-domain datastores on average",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": 43.04,
+   "unit": "BLEU",
+   "baseline_value": 42.63,
+   "n": null,
+   "setup": "single datastore with parallel data from all six settings",
+   "quote": null,
+   "table": "Table 3, row all-domains datastore, column Avg.",
+   "note": "IT improves by 3 BLEU (48.63 vs 45.82), others mostly the same",
+   "where": "Table 3"
+  },
+  {
+   "claim": "Softmax temperature of 1 gives significantly lower BLEU; 10 or 100 optimal in all experiments",
+   "kind": "measured",
+   "source": null,
+   "metric": "T",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "validation sets, multilingual; Fig 2 for en-zh",
+   "quote": null,
+   "table": null,
+   "note": "Quote: 'values of either 10 or 100 prove to be optimal'",
+   "where": "5"
+  },
+  {
+   "claim": "More neighbours than k=64 does not help and sometimes hurts",
+   "kind": "measured",
+   "source": null,
+   "metric": "k",
+   "value": 64,
+   "unit": "neighbours",
+   "baseline_value": null,
+   "n": null,
+   "setup": "validation, fixed temperature and lambda",
+   "quote": "In our experiments, we fix the value of k, the number of neighbors retrieved per query, to 64.",
+   "table": null,
+   "note": null,
+   "where": "5"
+  },
+  {
+   "claim": "Larger datastore improves BLEU monotonically but slows retrieval; much of the benefit comes from smaller datastores",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU diff",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "ru-en (3.8B) and en-zh (1.13B) validation, Fig 3",
+   "quote": null,
+   "table": null,
+   "note": "Quote: 'Much of the benefit can be realized with much smaller, and correspondingly faster, datastores.'",
+   "where": "5, Fig 3"
+  },
+  {
+   "claim": "Generation with billions-item datastore is about two orders of magnitude slower than base MT",
+   "kind": "measured",
+   "source": null,
+   "metric": "speed ratio",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "retrieving 64 keys",
+   "quote": null,
+   "table": null,
+   "note": "Quote: 'a generation speed that is two orders of magnitude slower than the base MT system'",
+   "where": "3 Computational Cost"
+  },
+  {
+   "claim": "With lambda fixed at 0.5, kNN-MT performs similarly or better than base on validation for all 17 pairs",
+   "kind": "measured",
+   "source": null,
+   "metric": "lambda",
+   "value": 0.5,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "validation sets, 17 language pairs",
+   "quote": "for a fixed value of λ = 0.5, using kNN-MT either performs similarly to or improves the base MT model's performance, but never hurts",
+   "table": null,
+   "note": null,
+   "where": "Appendix A"
+  }
+ ],
+ "limits": [
+  "Inference is about two orders of magnitude slower than the base model with billion-scale datastores; authors name faster search as open work.",
+  "lambda and T tuned on validation per language pair or domain; k, clusters and beam fixed, k not tuned.",
+  "Multilingual datastores are built from data the model was trained on; in-domain datastore gains for the multi-domain set are over a base never trained on those domains.",
+  "Only translation evaluated; only BLEU, no human evaluation.",
+  "Authors say further investigation is needed on cross-lingual retrieval across related and unrelated languages.",
+  "No seeds or variance reported beyond a power analysis; no latency or memory numbers given.",
+  "Code stated as 'will be available', not confirmed."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "kNN-MT",
+   "definition": "augmenting the decoder of a pre-trained machine translation model with a nearest neighbor retrieval mechanism, allowing the model direct access to a datastore of cached examples",
+   "where": "Section 2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Generalization through memorization: Nearest neighbor language models (Khandelwal et al.)",
+   "year": 2020,
+   "arxiv": "1911.00172",
+   "relation": "extends",
+   "note": "kNN-MT generalises kNN-LM to conditional generation: keys include source context, plus a softmax temperature",
+   "quote": "kNN-MT is a generalization of kNN-LM applied to conditional sequence generation"
+  },
+  {
+   "work": "Billion-scale similarity search with GPUs (FAISS, Johnson et al.)",
+   "year": 2017,
+   "arxiv": "1702.08734",
+   "relation": "uses-method",
+   "note": "datastore index and search",
+   "quote": null
+  },
+  {
+   "work": "Facebook FAIR's WMT19 news translation submission (Ng et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "base de-en model",
+   "quote": null
+  },
+  {
+   "work": "Unsupervised domain clusters in pretrained language models (Aharoni & Goldberg)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "multi-domains re-split and baseline scores",
+   "quote": null
+  },
+  {
+   "work": "CCMatrix (Schwenk et al.)",
+   "year": 2019,
+   "arxiv": "1911.04944",
+   "relation": "uses-data",
+   "note": "multilingual training and datastore data",
+   "quote": null
+  },
+  {
+   "work": "Search engine guided NMT (Gu et al.)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "related",
+   "note": "needs training; smaller retrieval scale",
+   "quote": null
+  },
+  {
+   "work": "REALM (Guu et al.)",
+   "year": 2020,
+   "arxiv": "2002.08909",
+   "relation": "related",
+   "note": "non-parametric QA",
+   "quote": null
+  },
+  {
+   "work": "Retrieval-augmented generation (Lewis et al.)",
+   "year": 2020,
+   "arxiv": "2005.11401",
+   "relation": "related",
+   "note": "retrieval concatenated into inputs, versus kNN-MT interpolating output distributions",
+   "quote": null
+  },
+  {
+   "work": "With little power comes great responsibility (Card et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "statistical power analysis for BLEU",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "An illustration of how the kNN distribution is computed.",
+   "page": 2,
+   "why": "Shows datastore keys/values, distance, temperature softmax and aggregation of duplicate targets in one picture."
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Effect of the number of neighbors retrieved and the softmax temperature on the validation BLEU score for en-zh.",
+   "page": 7,
+   "why": "Shows temperature 1 failing and larger k not helping."
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Effect of datastore size on the validation BLEU score for ru-en and en-zh.",
+   "page": 7,
+   "why": "Size-versus-quality trade-off."
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Example retrievals using kNN-MT.",
+   "page": 8,
+   "why": "Shows retrieved contexts and probabilities all mapping to 'military'."
+  },
+  {
+   "figure": "Table 3",
+   "caption": "Domain adaptation using kNN-MT.",
+   "page": 6,
+   "why": "Shows in-domain vs out-of-domain vs all-domain datastores against Aharoni & Goldberg baselines."
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 1-3, Section 2",
+   "snippet": "(K, V) = {(f(s, t_{1:i-1}), t_i), for all t_i in t | (s, t) in (S, T)}; p_kNN(y_i|x, y^_{1:i-1}) ∝ sum_{(k_j,v_j) in N} 1[y_i=v_j] exp(-d(k_j, f(x, y^_{1:i-1}))/T); p = λ p_kNN + (1-λ) p_MT",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text contains Fig 1 residue (diagram labels) interleaved; no embedded instructions found.",
+  "Table 3 Avg. column semantics (includes newstest or not) is not stated; 9.2 BLEU figure is quoted from text."
+ ]
+}

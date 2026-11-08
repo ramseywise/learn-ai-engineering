@@ -7,7 +7,7 @@ sources:
   - https://mixtape.scunning.com/
   - https://doi.org/10.1126/science.187.4175.398 (Bickel, Hammel and O'Connell, Science, 1975; not held)
   - Reinhart, Statistics Done Wrong (No Starch, 2015) (ch. 8, Model Abuse)
-  - McElreath, Statistical Rethinking (CRC Press, 2nd ed.) (ch. 10, Berkeley admissions)
+  - McElreath, Statistical Rethinking (CRC Press, 2015) (ch. 10, Berkeley admissions)
   - https://doi.org/10.1037/h0037350 (Rubin, J. Educational Psychology, 1974; not held)
   - https://doi.org/10.1214/09-ss057 (Pearl, Statistics Surveys, 2009; not held)
   - "https://web.cs.ucla.edu/~kaoru/primer-complete-2019.pdf (Pearl, Glymour and Jewell, Causal Inference in Statistics: A Primer, Wiley, 2016; link only, sections 3.3 and 3.4 and part of 3.6 read)"

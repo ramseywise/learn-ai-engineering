@@ -5,6 +5,7 @@ sources:
   - "Hyndman and Koehler, Another look at measures of forecast accuracy, International Journal of Forecasting, 2006"
   - "Taylor and Letham, Forecasting at Scale, The American Statistician, 2018"
   - https://www.statsmodels.org/stable/index.html (statsmodels documentation)
+  - "Wilson, Machine Learning Engineering in Action, Manning, 2022 (ch. 5, experimentation prep work)"
   - https://doi.org/10.1016/j.ijforecast.2006.03.001
   - https://doi.org/10.1080/00031305.2017.1380080
 confidence: high
@@ -71,6 +72,39 @@ growth by year: {2022: 7.3, 2023: 8.1, 2024: 10.8, 2025: 5.9}
 Look before you fit. There are four things in this picture, and each of them will break some method. There is a **trend**, with units growing between 6% and 11% a year. There is a yearly **season**, with a broad autumn hump. There is an **event that moves**: Black Friday is the day after the fourth Thursday of November, so its week does not sit at a fixed distance from last year's. And there is a **hole** in June 2023, when the warehouse was down for a week. That hole is a supply problem, not a demand signal, and a method that copies last year will copy it too.
 
 There is also a problem with the calendar. A year is about 52.18 weeks. FPP3 makes the point directly: the seasonal period of weekly data is both large and not a whole number, which rules out the classic seasonal methods that want a short integer period ([Hyndman and Athanasopoulos, FPP3, section 13.1](https://otexts.com/fpp3/weekly.html)). Its suggestions are STL decomposition with a non-seasonal model on what is left, or dynamic harmonic regression. We will try both, along with Prophet, and we will not trust any of them until they have beaten something simple.
+
+### Two checks before modelling: stationarity and the seasonal period
+
+Wilson's chapter on researching an ML project runs the same prep work on monthly airport passengers (*Machine Learning Engineering in Action*, ch. 5), and it carries two lessons that apply here. First, test for stationarity with the augmented Dickey-Fuller test, whose null is that the series has a unit root, so a large p-value means "not stationary", and the statistic should be compared with the critical values, not only the p-value. A trending series fails it, and models that cannot handle a trend need differencing first. Second, the lag count the test reports is not a seasonal period. In the book the test used 13 lags on monthly data, and passing 13 to `seasonal_decompose` left visible signal in the residuals, while 12 gave a smooth trend and residuals that looked random. The period comes from the calendar (12 for months, 52.18 for weeks as above), not from a diagnostic. The chapter's listing also has a typo (`statsmodel.tsa`) and uses a tuple return from `adfuller` that statsmodels now flags, so the sketch below uses the current API on simulated monthly data (trend 0.8 a month, a 12-month sine of amplitude 15, noise SD 3; seed 7):
+
+```python
+import numpy as np
+import pandas as pd
+from statsmodels.tsa.seasonal import seasonal_decompose
+from statsmodels.tsa.stattools import adfuller
+
+rng = np.random.default_rng(7)
+t = np.arange(180)
+y = pd.Series(100 + 0.8 * t + 15 * np.sin(2 * np.pi * t / 12) + rng.normal(0, 3, 180),
+              index=pd.date_range("2005-01-01", periods=180, freq="MS"))
+
+adf = adfuller(y, autolag="AIC", result_object=True)
+print(f"ADF {adf.statistic:.2f}, p {adf.pvalue:.3f}, lags {adf.lags}, 5% critical {adf.critical_values['5%']:.2f}")
+d12 = adfuller(y.diff(12).dropna(), autolag="AIC", result_object=True)
+print(f"after 12-month difference: ADF {d12.statistic:.2f}, p {d12.pvalue:.4f}")
+for period in (12, adf.lags):
+    r = seasonal_decompose(y, period=period).resid.dropna()
+    print(f"period {period}: residual SD {r.std():.2f}, lag-1 autocorrelation {r.autocorr(1):.2f}")
+```
+
+```text
+ADF -0.04, p 0.955, lags 13, 5% critical -2.88
+after 12-month difference: ADF -6.10, p 0.0000
+period 12: residual SD 2.47, lag-1 autocorrelation -0.17
+period 13: residual SD 11.62, lag-1 autocorrelation 0.82
+```
+
+The statistic of -0.04 sits far above the 5% critical value of -2.88, so the series is not stationary, and one seasonal difference takes it to -6.10. Autolag happened to pick 13 lags here, as it did in the book, and decomposing at 13 leaves a residual four times as large and strongly autocorrelated, which is the signature of a wrong period: the seasonal pattern is still in the remainder. The fix costs nothing. Decompose at the known period, and treat stationarity as a reason to difference, not as a number to read off a table. The weekly warehouse series needs the same two checks, with one seasonal difference of 52 weeks being only approximate because the true period is 52.18.
 
 ## Baselines come first
 

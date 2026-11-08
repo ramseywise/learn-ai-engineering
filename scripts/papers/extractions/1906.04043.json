@@ -1,0 +1,121 @@
+{
+ "schema": 1,
+ "key": "1906.04043",
+ "pdf": "ai-engineering/09-safety-and-security/sources/gehrmann-2019-gltr.pdf",
+ "bib": {
+  "title": "GLTR: Statistical Detection and Visualization of Generated Text",
+  "authors": ["Sebastian Gehrmann", "Hendrik Strobelt", "Alexander M. Rush"],
+  "first_author": "Gehrmann",
+  "year": 2019,
+  "venue": "Proceedings of the 57th Annual Meeting of the ACL: System Demonstrations (Florence, Italy)",
+  "arxiv": "1906.04043",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 23938,
+  "chars_total": 23938,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "system",
+ "question": "Can simple statistical tests under a language model, shown as a visual overlay, help non-experts detect machine-generated text?",
+ "hypothesis": "Generation systems over-sample from the head of the distribution, so generated text uses fewer low-rank words than human text; this should hold in black-box settings when a different large LM is used for detection.",
+ "contributions": [
+  "Three simple statistical tests (word probability, word rank, predictive entropy) for detecting generated text",
+  "GLTR, an open-source, publicly deployed visual tool built on these tests",
+  "A human-subjects study showing the overlay improves human detection of fake text"
+ ],
+ "method": {
+  "summary": "Per-token probability, rank and entropy are computed under a detection LM (GPT-2 117M or BERT) and rendered as a colour overlay (top-10 green, top-100 yellow, top-1,000 red, rest purple) plus histograms. Features were validated with logistic regression on 3 generated and 3 human sources, and with a 35-student study with and without the overlay.",
+  "task": "detecting machine-generated text (zero-shot statistical features, human-in-the-loop)",
+  "trains": true,
+  "datasets": [
+   {"name": "GPT-2 1.5B released samples, temperature 0.7", "role": "eval", "size": "50 articles", "split": "cross-validation: train on four sources (two real/fake), test on the remaining two", "source": "random subset of GPT-2 released examples", "preprocessing": null},
+   {"name": "GPT-2 1.5B released samples, top-40 truncation", "role": "eval", "size": "50 articles", "split": "as above", "source": "random subset of GPT-2 released examples", "preprocessing": null},
+   {"name": "Washington Post Heliograf articles", "role": "eval", "size": "50 articles", "split": "as above", "source": "autonomous Washington Post system covering local sports results and gubernatorial races", "preprocessing": null},
+   {"name": "Children's Book Test (CBT)", "role": "eval", "size": "50 articles (random paragraphs)", "split": "as above", "source": "Hill et al. 2015", "preprocessing": null},
+   {"name": "New York Times articles", "role": "eval", "size": "50 articles", "split": "as above", "source": "NYT", "preprocessing": "samples constrained to publication dates past or close to the GPT-2 release to minimise training-set overlap"},
+   {"name": "Scientific abstracts (nature, science)", "role": "eval", "size": "50 articles", "split": "as above", "source": "journals nature and science", "preprocessing": "same date constraint as NYT"}
+  ],
+  "models": [
+   {"name": "GPT-2 117M", "role": "proposed", "params": "117M", "architecture": "left-to-right language model", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"use": "detection model in the public deployment"}},
+   {"name": "BERT", "role": "proposed", "params": null, "architecture": "bidirectional masked LM", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": "30 words each side used (512 possible)", "other": {"use": "detection model; each token masked in turn"}},
+   {"name": "GPT-2 1.5B", "role": "evaluated", "params": "1.5B", "architecture": "left-to-right language model", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"use": "source of generated text"}}
+  ],
+  "training": {
+   "objective": "logistic regression on document features (no LM training)",
+   "optimizer": null, "lr": null, "lr_schedule": null, "warmup": null, "batch_size": null, "steps": null, "epochs": null, "tokens": null, "seq_len": null, "precision": null, "weight_decay": null, "dropout": null, "regularisation": null, "hardware": null, "compute": null, "wall_clock": null, "seeds": null,
+   "other": {"features": "Test 1: average word probability per document (single feature); Test 2: distribution over four rank buckets"}
+  },
+  "inference": {
+   "decoding": "generated-text sources: temperature 0.7 or top-40 truncation (GPT-2 released samples)",
+   "temperature": "0.7 (one GPT-2 source)",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "50 documents per source, 6 sources",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "test_1": "probability of the word, p_det(X_i = observed | X_1:i-1)",
+    "test_2": "absolute rank of the word in p_det",
+    "test_3": "entropy of the predicted distribution",
+    "rank_buckets": "top 10 green, top 100 yellow, top 1,000 red, rest purple",
+    "bert_context": "30 words each side"
+   },
+   "other": {"tooltip": "top 5 predictions with probabilities"}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "AUC", "definition": "cross-validated AUC of logistic regression discriminating fake vs real documents", "unit": "AUC (mean +- sd)", "higher_is_better": true},
+    {"name": "Human accuracy", "definition": "fraction of texts correctly labelled real or fake within 90 seconds", "unit": "%", "higher_is_better": true}
+   ],
+   "baselines": ["Logistic regression over bag-of-words", "Humans without overlay"],
+   "protocol": "Cross-validation: train on each combination of four of the six sources (two real/fake), test on remaining two. Human study: 35 volunteer students in a college-level NLP class, two rounds of 5 texts (no overlay, then overlay with a brief tutorial between), each round 2 GPT-2 (temp 0.7), 1 Heliograf, 2 NYT, texts randomly assigned to rounds across students; treatment effect controlled for native-speaker status and rated difficulty."
+  },
+  "availability": {"code": "https://github.com/HendrikStrobelt/detecting-fake-text", "weights": null, "data": null},
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {"claim": "The GLTR overlay raises human detection accuracy of fake text from 54% to 72% with no prior training.", "kind": "measured", "source": null, "metric": "human accuracy with overlay", "value": "72.3", "unit": "%", "baseline_value": "54.2", "n": 35, "setup": "35 students, 5 texts per round, 90 s per text, GPT-2 117M detection overlay; texts: 2 GPT-2 temp 0.7, 1 Heliograf, 2 NYT", "quote": "With the interface, the performance improved to 72.3%.", "table": null, "note": "Abstract rounds to 54% and 72%; body gives 54.2% and 72.3%", "where": "Section 5"},
+  {"claim": "Without the overlay, humans are barely above chance at telling real from generated text.", "kind": "measured", "source": null, "metric": "human accuracy without overlay", "value": "54.2", "unit": "%", "baseline_value": null, "n": 35, "setup": "Same study, first round without overlay", "quote": "Without the interface, the par-", "table": null, "note": null, "where": "Section 5"},
+  {"claim": "Average treatment effect of the overlay.", "kind": "measured", "source": null, "metric": "average treatment effect", "value": "18.1", "unit": "%", "baseline_value": null, "n": 35, "setup": "Same study; controlling for native-speaker status and rated difficulty", "quote": "The average treatment effect shows an im-", "table": null, "note": "Quote spans a line break; p < 0.001 stated", "where": "Section 5"},
+  {"claim": "Without the overlay humans trusted Heliograf text more than GPT-2 text.", "kind": "measured", "source": null, "metric": "fraction judged real", "value": "68.6", "unit": "% (Heliograf) vs 51.4% (GPT-2)", "baseline_value": "51.4", "n": 35, "setup": "No-overlay round; only 40% of texts were real yet 56.0% were trusted; p < 0.01", "quote": "rate than GPT-2 (68.6% vs. 51.4%,", "table": null, "note": null, "where": "Section 5"},
+  {"claim": "Rank-bucket features under GPT-2 separate real from fake best; bag-of-words is worst.", "kind": "measured", "source": null, "metric": "AUC (Test 2 - GPT-2 top-k buckets)", "value": "0.87", "unit": "AUC", "baseline_value": "0.63", "n": null, "setup": "Cross-validated logistic regression, 50 articles x 6 sources, white-box GPT-2 detector (GPT-2 117M; fake text from GPT-2 1.5B and Heliograf)", "quote": null, "table": "Table 1, row (Test 2 - GPT-2) Top-K Buckets, column AUC (0.87 +-0.07); bag of words 0.63 +-0.11", "note": null, "where": "Table 1"},
+  {"claim": "BERT as a different (black-box) detector gives nearly the same AUC on rank buckets.", "kind": "measured", "source": null, "metric": "AUC (Test 2 - BERT top-k buckets)", "value": "0.85", "unit": "AUC", "baseline_value": "0.63", "n": null, "setup": "Same cross-validation, BERT detector", "quote": null, "table": "Table 1, row (Test 2 - BERT) Top-K Buckets, column AUC (0.85 +-0.09)", "note": null, "where": "Table 1"},
+  {"claim": "Average-probability features are weaker and highly variable.", "kind": "measured", "source": null, "metric": "AUC (Test 1 average probability)", "value": "0.71", "unit": "AUC", "baseline_value": "0.63", "n": null, "setup": "GPT-2 detector 0.71 +-0.25; BERT 0.70 +-0.27", "quote": null, "table": "Table 1, rows (Test 1 - GPT-2) Average Probability 0.71 +-0.25 and (Test 1 - BERT) 0.70 +-0.27", "note": null, "where": "Table 1"},
+  {"claim": "Real text uses words outside the top 100 predictions more often than generated text.", "kind": "measured", "source": null, "metric": "ratio of tail-word use, real vs generated", "value": "2.41", "unit": "x (1.67 for BERT)", "baseline_value": null, "n": null, "setup": "GPT-2 detector, compared even against lower-temperature sampling", "quote": "Real texts use words outside of the", "table": null, "note": "Quote spans a line; full text: 'top 100 predictions 2.41 times as frequently under GPT-2 (1.67 for BERT) as generated text'", "where": "Section 4"},
+  {"claim": "Odds ratio of a word being outside the top 100 predictions favours real text; the top-1 odds ratio is low.", "kind": "measured", "source": null, "metric": "odds ratio outside top 100", "value": "5.32", "unit": "odds ratio", "baseline_value": "0.09", "n": null, "setup": "Learned by the rank-bucket classifier; 0.09 is the odds ratio for being the top-1 prediction", "quote": "5.32, while the odds ratio for being the top 1 pre-", "table": null, "note": null, "where": "Section 4"},
+  {"claim": "Public demo reach in the first month.", "kind": "measured", "source": null, "metric": "page views", "value": "30,000", "unit": "demo page views (21,000 for blog)", "baseline_value": null, "n": null, "setup": "first month after release", "quote": "Within the ﬁrst month, GLTR had 30,000", "table": null, "note": null, "where": "Section 7"},
+  {"claim": "Human text uses high-rank words even in low-entropy contexts, unlike sampled text.", "kind": "claim", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "Fig 5 KDE of entropy vs rank, NYT vs GPT-2 temp 0.7", "quote": null, "table": null, "note": null, "where": "Section 4, Fig 5"}
+ ],
+ "limits": [
+  "Authors concede the core assumption is biased (head-of-distribution) sampling; adversarial schemes could fool the overlay, though sampling from the tail reduces coherence.",
+  "Samples conditioned on a hidden seed text have a different conditional distribution; only preliminary qualitative investigation of this.",
+  "Small data: 50 articles per source, six sources, high AUC variance (+-0.07 to +-0.27); human study uses 35 students from one NLP class, 5 texts per round; no false-positive-rate analysis.",
+  "Detector models are 2019-era (GPT-2 117M, BERT); modern LLMs with different sampling and instruction tuning are untested. Related work notes entropy findings reversed vs Lavergne et al. 2008 as LMs improved.",
+  "Does not detect misinformation content; only statistical signature."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "GLTR", "definition": "Giant Language model Test Room, pronounced Glitter", "where": "Section 3"}
+ ],
+ "lineage": [
+  {"work": "Language models are unsupervised multitask learners (GPT-2)", "year": 2019, "arxiv": null, "relation": "evaluates", "note": "Detector model and source of generated text", "quote": null},
+  {"work": "BERT", "year": 2018, "arxiv": "1810.04805", "relation": "uses-method", "note": "Second detection model via masked-token prediction", "quote": null},
+  {"work": "Hashimoto, Zhang, Liang: Unifying human and statistical evaluation for NLG", "year": 2019, "arxiv": "1904.02792", "relation": "extends", "note": "Likelihood can discriminate human from generated text when human acceptability is high", "quote": null},
+  {"work": "Lavergne et al.: Detecting fake content with relative entropy scoring", "year": 2008, "arxiv": null, "relation": "contradicts", "note": "Found the opposite entropy direction", "quote": null},
+  {"work": "Hovy: The enemy in your own camp", "year": 2016, "arxiv": null, "relation": "related", "note": "Logistic regression detects fake reviews better than humans", "quote": null},
+  {"work": "Hill et al.: Goldilocks principle (CBT)", "year": 2015, "arxiv": "1511.02301", "relation": "uses-data", "note": "Human text source", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 1", "caption": "The top-k overlay within GLTR. It is easy to distinguish sampled from written text. The real text is from the Wikipedia page of The Great British Bake Off, the fake from GPT-2 large with temperature 0.7.", "page": 1, "why": "Shows the green/yellow/red/purple overlay: generated text is almost all green and yellow."},
+  {"figure": "Fig 3", "caption": "Analysis of a generated GPT-2 sample versus a real NYT article and a scientific abstract.", "page": 3, "why": "Side-by-side case study of generated vs human text with histograms."},
+  {"figure": "Fig 4", "caption": "Distribution over the rankings of words in the predicted distributions from GPT-2. The real text in the bottom three examples has a consistently higher fraction of words from the tail of the distribution.", "page": 4, "why": "The key statistical evidence in one bar chart."},
+  {"figure": "Fig 5", "caption": "A kernel density estimate of the contextual entropy (Test 3) versus the next-word rank (Test 2) for NYT and GPT-2.", "page": 4, "why": "Shows humans use high-rank words even in low-entropy contexts."}
+ ],
+ "code": [],
+ "problems": ["No embedded instructions found. Figure content is not in the text; only captions read. Training hyperparameters of the logistic regression are not stated."]
+}

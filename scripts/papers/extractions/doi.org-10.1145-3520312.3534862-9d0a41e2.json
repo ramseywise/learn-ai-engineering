@@ -1,0 +1,602 @@
+{
+ "schema": 1,
+ "key": "https://doi.org/10.1145/3520312.3534862",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/xu-2022-systematic-evaluation-large-language-models.pdf",
+ "bib": {
+  "title": "A Systematic Evaluation of Large Language Models of Code",
+  "authors": [
+   "Frank F. Xu",
+   "Uri Alon",
+   "Graham Neubig",
+   "Vincent J. Hellendoorn"
+  ],
+  "first_author": "Xu",
+  "year": 2022,
+  "venue": "DL4C workshop at ICLR 2022 (MAPS 2022, ACM)",
+  "arxiv": "2202.13169",
+  "doi": "10.1145/3520312.3534862"
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 44084,
+  "chars_total": 44084,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "How do existing large code LMs (Codex, GPT-Neo/J/NeoX, CodeParrot) compare, and how does an open code-only multilingual model trained from scratch fare?",
+ "hypothesis": "Multilingual code LMs may generalise across languages and outperform monolingual ones (stated as yet to be verified).",
+ "contributions": [
+  "Systematic comparison of Codex, GPT-Neo, GPT-J, GPT-NeoX and CodeParrot on HumanEval and per-language perplexity",
+  "Release of PolyCoder (160M, 400M, 2.7B), open-source, trained on 12 programming languages",
+  "Unseen 12-language perplexity evaluation set"
+ ],
+ "method": {
+  "summary": "Trains three GPT-2-architecture models on 253.6GB of filtered GitHub code in 12 languages and evaluates them with existing models on HumanEval (Pass@k) and on per-language perplexity over unseen GitHub files.",
+  "task": "code LM pretraining; NL-to-Python synthesis; per-language perplexity",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "PolyCoder GitHub corpus",
+    "role": "pretrain",
+    "size": "253.6G, 24,082,681 files after filtering (631.4G raw, 147,095 repos in Table 1)",
+    "split": null,
+    "source": "GitHub repos with at least 50 stars, up to about 25K per language, cloned October 2021",
+    "preprocessing": "drop files >1MB or <100 tokens (631GB to 424GB), exact hash dedup; no auto-generated-file filter"
+   },
+   {
+    "name": "HumanEval",
+    "role": "eval",
+    "size": "164 prompts",
+    "split": null,
+    "source": "Chen et al. 2021",
+    "preprocessing": null
+   },
+   {
+    "name": "Unseen GitHub perplexity set",
+    "role": "eval",
+    "size": "100 random files per language, 12 languages",
+    "split": null,
+    "source": "GitHub repos not in the Pile's GitHub portion",
+    "preprocessing": "log-likelihood sum normalised by Pygments token count"
+   }
+  ],
+  "models": [
+   {
+    "name": "PolyCoder 2.7B",
+    "role": "proposed",
+    "params": "2.7B",
+    "architecture": "decoder-only transformer",
+    "init_from": "scratch",
+    "tokenizer": "GPT-2 BPE tokenizer trained on random 5% of pretraining data, all languages",
+    "vocab": null,
+    "layers": 32,
+    "hidden": "2,560",
+    "heads": null,
+    "context": "2048",
+    "other": {}
+   },
+   {
+    "name": "PolyCoder 400M",
+    "role": "proposed",
+    "params": "400M",
+    "architecture": "decoder-only transformer",
+    "init_from": "scratch",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": 24,
+    "hidden": 1024,
+    "heads": null,
+    "context": "2048",
+    "other": {}
+   },
+   {
+    "name": "PolyCoder 160M",
+    "role": "proposed",
+    "params": "160M",
+    "architecture": "decoder-only transformer",
+    "init_from": "scratch",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": 12,
+    "hidden": 768,
+    "heads": null,
+    "context": "2048",
+    "other": {}
+   },
+   {
+    "name": "Codex (12B, 2.5B, 300M)",
+    "role": "evaluated",
+    "params": "12B / 2.5B / 300M",
+    "architecture": "decoder-only transformer",
+    "init_from": "GPT-3",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "4096",
+    "other": {
+     "engine": "code-davinci-001 for perplexity"
+    }
+   },
+   {
+    "name": "GPT-Neo (125M, 1.3B, 2.7B), GPT-J 6B, GPT-NeoX 20B",
+    "role": "evaluated",
+    "params": "125M to 20B",
+    "architecture": "decoder-only transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "data": "the Pile",
+     "note": "GPT-NeoX not run on HumanEval for cost"
+    }
+   },
+   {
+    "name": "CodeParrot (110M, 1.5B)",
+    "role": "evaluated",
+    "params": "110M / 1.5B",
+    "architecture": "decoder-only transformer",
+    "init_from": "scratch",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "1024",
+    "other": {
+     "data": "180GB Python"
+    }
+   }
+  ],
+  "training": {
+   "objective": "inferred: left-to-right next-token prediction (GPT-2 style LM); not stated explicitly",
+   "optimizer": "AdamW (betas 0.9, 0.999; eps 1e-8)",
+   "lr": "1.6e-4",
+   "lr_schedule": "Cosine decay; decay adjusted to half the default 320K steps",
+   "warmup": "1600 steps",
+   "batch_size": "128 sequences (262K tokens)",
+   "steps": "150K",
+   "epochs": null,
+   "tokens": "39B",
+   "seq_len": "2048 tokens",
+   "precision": null,
+   "weight_decay": "- (none listed in Table 3)",
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "8x Nvidia RTX 8000 GPUs, single machine",
+   "compute": null,
+   "wall_clock": "about 6 weeks (2.7B)",
+   "seeds": null,
+   "other": {
+    "hyperparameter_search": "none, due to cost",
+    "default_steps": "320K",
+    "note": "validation loss still decreasing at 150K, authors say models under-fit",
+    "framework": "GPT-NeoX toolkit"
+   }
+  },
+  "inference": {
+   "decoding": "nucleus sampling, softmax(x/T)",
+   "temperature": "0.2, 0.4, 0.6, 0.8 (best per metric reported)",
+   "top_p": "0.95",
+   "max_tokens": null,
+   "samples": "100 samples per prompt",
+   "prompting": "HumanEval prompt as given (docstring and signature); stop sequences \\nclass, \\ndef, \\n#, \\nif, \\nprint",
+   "retrieval": null,
+   "parameters": {},
+   "other": {
+    "gpt_neox_20b": "excluded from HumanEval for cost"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Pass@1, Pass@10, Pass@100",
+     "definition": "HumanEval functional correctness with unit tests, from 100 samples",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Perplexity",
+     "definition": "per-language on unseen files; log-likelihood sum normalised by Pygments token count to compare across tokenizers",
+     "unit": "perplexity",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "Codex",
+    "GPT-Neo",
+    "GPT-J",
+    "GPT-NeoX",
+    "CodeParrot"
+   ],
+   "protocol": "Single run per setting; no seeds or significance tests stated. Best temperature chosen per metric."
+  },
+  "availability": {
+   "code": "https://github.com/VHellendoorn/Code-LMs",
+   "weights": "released (same repo)",
+   "data": null
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.weight_decay",
+    "quote": "Weight Decay - 0.1 0.1",
+    "where": "Table 3: PolyCoder column shows a dash"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "PolyCoder 2.7B reaches Pass@1 of 5.59% on HumanEval, below GPT-Neo 2.7B (6.41%) and GPT-J 6B (11.62%).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Pass@1",
+   "value": "5.59",
+   "unit": "%",
+   "baseline_value": "6.41",
+   "n": null,
+   "setup": "HumanEval (164 prompts), best over T in {0.2,0.4,0.6,0.8}, top-p 0.95, 100 samples per prompt",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row PolyCoder (2.7B), column Pass@1"
+  },
+  {
+   "claim": "Codex 12B is far ahead of all open models on HumanEval Pass@1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Pass@1",
+   "value": "28.81",
+   "unit": "%",
+   "baseline_value": "11.62",
+   "n": null,
+   "setup": "HumanEval (164 prompts), best over T in {0.2,0.4,0.6,0.8}, top-p 0.95, 100 samples per prompt; Codex via API",
+   "note": "baseline is GPT-J 6B, best open model",
+   "where": "Table 4",
+   "table": "Table 4, row Codex (12B), column Pass@1"
+  },
+  {
+   "claim": "Codex 12B Pass@100.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Pass@100",
+   "value": "72.31",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "HumanEval (164 prompts), best over T in {0.2,0.4,0.6,0.8}, top-p 0.95, 100 samples per prompt",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row Codex (12B), column Pass@100"
+  },
+  {
+   "claim": "PolyCoder 2.7B Pass@100 versus GPT-Neo 2.7B.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Pass@100",
+   "value": "17.68",
+   "unit": "%",
+   "baseline_value": "21.37",
+   "n": null,
+   "setup": "HumanEval (164 prompts), best over T in {0.2,0.4,0.6,0.8}, top-p 0.95, 100 samples per prompt",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row PolyCoder (2.7B), column Pass@100"
+  },
+  {
+   "claim": "PolyCoder beats CodeParrot 1.5B on Pass@1 (5.59 vs 3.58).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Pass@1",
+   "value": "3.58",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "HumanEval (164 prompts), best over T in {0.2,0.4,0.6,0.8}, top-p 0.95, 100 samples per prompt; CodeParrot 1.5B, trained on Python only",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row CodeParrot (1.5B), column Pass@1"
+  },
+  {
+   "claim": "PolyCoder 2.7B has seen only 2.5B Python tokens, far fewer than GPT-Neo 2.7B (4.3B) and CodeParrot (26B); authors offer this as partial explanation of the HumanEval gap.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Python tokens seen",
+   "value": "2.5B",
+   "unit": "tokens",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 4 rightmost columns",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row PolyCoder (2.7B), column Python Tokens"
+  },
+  {
+   "claim": "PolyCoder 2.7B gets lowest perplexity of all models in C, including Codex.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Perplexity (Pygments-normalised)",
+   "value": "2.33",
+   "unit": "perplexity",
+   "baseline_value": "2.55",
+   "n": null,
+   "setup": "100 random unseen GitHub files per language; Codex (code-davinci-001) may have seen the test files",
+   "note": "baseline is Codex; GPT-NeoX 20B is 2.37",
+   "where": "Table 5",
+   "table": "Table 5, row C, column PolyCoder 2.7B"
+  },
+  {
+   "claim": "Codex perplexity in Python is much lower than PolyCoder's.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Perplexity",
+   "value": "1.47",
+   "unit": "perplexity",
+   "baseline_value": "3.18",
+   "n": null,
+   "setup": "Python eval files; Codex possibly contaminated",
+   "note": "baseline is PolyCoder 2.7B",
+   "where": "Table 5",
+   "table": "Table 5, row Python, column Codex"
+  },
+  {
+   "claim": "CodeParrot, trained only on Python, has very high perplexity on other languages (19.23 in C).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Perplexity",
+   "value": "19.23",
+   "unit": "perplexity",
+   "baseline_value": null,
+   "n": null,
+   "setup": "C eval files",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row C, column CodeParrot"
+  },
+  {
+   "claim": "PolyCoder 2.7B beats GPT-Neo 2.7B in C, JavaScript, Rust, Scala and TypeScript perplexity.",
+   "kind": "measured",
+   "source": null,
+   "metric": "claim",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Open-source comparison, 12-language eval set",
+   "note": null,
+   "where": "Sec 5.2",
+   "quote": "Comparing the open-source models only, PolyCoder performs better than the similarly sized GPT-Neo 2.7B in C, JavaScript, Rust, Scala and TypeScript."
+  },
+  {
+   "claim": "Python perplexity ranking tracks HumanEval ranking, so perplexity is proposed as a cheap proxy.",
+   "kind": "measured",
+   "source": null,
+   "metric": "claim",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "across models",
+   "note": null,
+   "where": "Sec 5.2",
+   "quote": "This suggests that perplexity is a useful and low-cost metric to estimate other, downstream, metrics."
+  },
+  {
+   "claim": "Pass@1 favours low temperature, Pass@100 higher temperature, Pass@10 in the middle; T=0.8 hurts the 2.7B model at Pass@100.",
+   "kind": "measured",
+   "source": null,
+   "metric": "claim",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "PolyCoder, Fig 5 and Fig 8",
+   "note": null,
+   "where": "Sec 5.1",
+   "quote": "The general trend is for Pass@1, lower temperatures are better, and for Pass@100, a higher temperature will help, while for Pass@10 a temperature in the middle is better suited."
+  },
+  {
+   "claim": "HumanEval performance rises roughly linearly with log parameter count for Codex, PolyCoder and GPT-Neo/J; CodeParrot saturates.",
+   "kind": "measured",
+   "source": null,
+   "metric": "claim",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 4",
+   "note": null,
+   "where": "Sec 5.1",
+   "quote": "The performance on HumanEval benchmark increases linearly with the magnitude (log scale) of the number of parameters in the model."
+  },
+  {
+   "claim": "Training 2.7B model from 100K to 150K steps improves Pass@k uniformly, most at Pass@100; the 400M model gains little and Pass@100 drops.",
+   "kind": "measured",
+   "source": null,
+   "metric": "claim",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 7, Appendix A",
+   "note": null,
+   "where": "Appendix A",
+   "quote": "We can see that in the larger 2.7B model, by training the model longer till 150K steps, the performance increases uniformly, with Pass@100 increasing the most."
+  },
+  {
+   "claim": "Cleaned corpus is 253.6G across 24,082,681 files after filtering and dedup (631.4G raw per Table 1).",
+   "kind": "measured",
+   "source": null,
+   "metric": "dataset size",
+   "value": "253.6G",
+   "unit": "GB",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 1 totals",
+   "note": "Abstract says 249GB; text says 254GB; Table 1 says 253.6G; text says unfiltered 631GB and 38.9M files",
+   "where": "Table 1",
+   "table": "Table 1, row Total, column Size After Filtering"
+  },
+  {
+   "claim": "Size filtering and dedup reduced file count by 38% and dataset size by 61%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "dataset reduction",
+   "value": "61",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "filter >1MB and <100 tokens, then exact hash dedup",
+   "note": null,
+   "where": "Sec 4.2",
+   "quote": "reduced the number of files by 38%, and the dataset size by 61%"
+  },
+  {
+   "claim": "Training the 2.7B model took about 6 weeks on 8 RTX 8000 GPUs.",
+   "kind": "measured",
+   "source": null,
+   "metric": "wall time",
+   "value": "6",
+   "unit": "weeks",
+   "baseline_value": null,
+   "n": null,
+   "setup": "8 Nvidia RTX 8000, single machine, GPT-NeoX toolkit",
+   "note": null,
+   "where": "Sec 4.3",
+   "quote": "The wall time used to train the largest 2.7B model is about 6 weeks."
+  }
+ ],
+ "limits": [
+  "No hyperparameter search because of cost.",
+  "2.7B model under-trained: 150K steps with decay shortened from 320K; validation loss still falling.",
+  "Codex training data unknown, so perplexity results may be contaminated (over-optimistic).",
+  "GPT-NeoX 20B not run on HumanEval.",
+  "HumanEval is Python only; other languages measured by perplexity only.",
+  "Best-temperature selection per metric on the test benchmark.",
+  "Explanations (value of natural-language text, language imbalance) are hypotheses, not tested by ablation.",
+  "Single runs; no seeds or variance.",
+  "Dated: Codex-era models; superseded by later open code models."
+ ],
+ "practices": [],
+ "terms": [],
+ "lineage": [
+  {
+   "work": "Evaluating large language models trained on code (Codex)",
+   "year": 2021,
+   "arxiv": "2107.03374",
+   "relation": "baseline",
+   "note": "HumanEval, sampling protocol and data design followed",
+   "quote": null
+  },
+  {
+   "work": "GPT-Neo",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "evaluated; same size as PolyCoder 2.7B",
+   "quote": null
+  },
+  {
+   "work": "GPT-J-6B",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "evaluated",
+   "quote": null
+  },
+  {
+   "work": "GPT-NeoX-20B",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "evaluated; its toolkit used for training",
+   "quote": null
+  },
+  {
+   "work": "CodeParrot (Tunstall et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Python-only model",
+   "quote": null
+  },
+  {
+   "work": "The Pile",
+   "year": 2020,
+   "arxiv": "2101.00027",
+   "relation": "uses-data",
+   "note": "training data of GPT-Neo/J/NeoX; overlap removed from eval set",
+   "quote": null
+  },
+  {
+   "work": "Language models are unsupervised multitask learners (GPT-2)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "architecture",
+   "quote": null
+  },
+  {
+   "work": "The curious case of neural text degeneration",
+   "year": 2019,
+   "arxiv": "1904.09751",
+   "relation": "uses-method",
+   "note": "nucleus sampling",
+   "quote": null
+  },
+  {
+   "work": "The adverse effects of code duplication",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "motivates dedup",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Table 4",
+   "caption": "Results of different models on the HumanEval benchmark, and the number of different types of tokens seen during the training process.",
+   "page": 8,
+   "why": "Pass@k plus tokens seen in one table"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "The scaling effect of HumanEval performance on different models.",
+   "page": 8,
+   "why": "log-linear scaling and CodeParrot saturation"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "HumanEval performance with different softmax temperatures during generation.",
+   "page": 9,
+   "why": "Pass@k best temperature shifts with k"
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "Perplexity comparison on our evaluation dataset of different models on different programming languages.",
+   "page": 9,
+   "why": "per-language perplexity; PolyCoder wins in C"
+  },
+  {
+   "figure": "Table 3",
+   "caption": "Comparison of design decisions and hyper-parameters in training different models of code.",
+   "page": 7,
+   "why": "PolyCoder vs CodeParrot vs Codex recipes"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Abstract says 249GB, Table 1 says 253.6G, text says 254GB.",
+  "Table 3 shows 'Training Steps 150K steps, 39B tokens' while Table 4 lists Python tokens 2.5B.",
+  "Table 3 weight decay for PolyCoder is a dash, treated as not used/unstated.",
+  "Text on Fig 7 says 400M 'trained longer till 100K steps' (likely a typo for 150K).",
+  "No embedded instructions found."
+ ]
+}

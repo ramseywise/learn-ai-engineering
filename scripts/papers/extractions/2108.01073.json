@@ -1,0 +1,646 @@
+{
+ "schema": 1,
+ "key": "2108.01073",
+ "pdf": "ai-engineering/08-multimodal-engineering/sources/meng-2021-sdedit.pdf",
+ "bib": {
+  "title": "SDEdit: Guided Image Synthesis and Editing with Stochastic Differential Equations",
+  "authors": [
+   "Chenlin Meng",
+   "Yutong He",
+   "Yang Song",
+   "Jiaming Song",
+   "Jiajun Wu",
+   "Jun-Yan Zhu",
+   "Stefano Ermon"
+  ],
+  "first_author": "Meng",
+  "year": 2021,
+  "venue": "preprint (Under review, ICLR 2022 submission format; arXiv v2 5 Jan 2022)",
+  "arxiv": "2108.01073",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 79482,
+  "chars_total": 79482,
+  "engine": "pymupdf",
+  "skipped": "Reference list skimmed only; figure-only appendix pages (Figs 25-35) have no text beyond captions."
+ },
+ "type": "empirical",
+ "question": "How can a pretrained diffusion/SDE generative model do guided image synthesis and editing that balances faithfulness to a user guide and realism, without task-specific training or inversion?",
+ "hypothesis": "Adding noise to a guide up to an intermediate time t0 and running the reverse SDE projects it onto the natural-image manifold, with t0 controlling a realism-faithfulness trade-off.",
+ "contributions": [
+  "SDEdit: noise the guide to time t0 then run the reverse SDE (training-free, unified for stroke synthesis, stroke editing, compositing)",
+  "Analysis of realism-faithfulness trade-off in t0 with a bound (Prop 1)",
+  "Human (MTurk) and KID/L2/LPIPS evaluation beating GAN-inversion baselines"
+ ],
+ "method": {
+  "summary": "Take a user guide image, perturb with forward SDE noise to time t0 (x(t0)=x_g+sigma(t0)z for VE), then simulate the reverse SDE to t=0 with a pretrained score model. A mask variant keeps unedited pixels by re-noising the original at each step. Trains nothing.",
+  "task": "guided image synthesis and editing (stroke-to-image, stroke editing, compositing)",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "LSUN bedroom",
+    "role": "eval",
+    "size": "400 generated images per method for human study",
+    "split": "validation set for simulated strokes and KID",
+    "source": "public",
+    "preprocessing": "stroke simulation: 256x256, median filter kernel 23, reduce to 6 colours via adaptive palette"
+   },
+   {
+    "name": "LSUN church outdoor",
+    "role": "eval",
+    "size": null,
+    "split": "validation set",
+    "source": "public",
+    "preprocessing": "same stroke simulation"
+   },
+   {
+    "name": "CelebA-HQ / CelebA 256",
+    "role": "eval",
+    "size": "936 composited images (human study); 6000 random CelebA test images for attribute classification",
+    "split": "test",
+    "source": "public",
+    "preprocessing": null
+   },
+   {
+    "name": "FFHQ (pretrained model only)",
+    "role": "pretrain",
+    "size": null,
+    "split": null,
+    "source": "public checkpoint",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "SDEdit (VP-SDE, LSUN) / (VE-SDE, CelebA-HQ/FFHQ)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "pretrained score-based/diffusion models of Song et al. 2021, Ho et al. 2020, Dhariwal & Nichol 2021",
+    "init_from": "public checkpoints, not trained here",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "VE_sigma_min": 0.01,
+     "VE_sigma_max": "380 church, 378 bedroom, 348 FFHQ/CelebA-HQ 256, 1348 FFHQ 1024",
+     "VP_beta": "beta_min=0.1, beta_max=20"
+    }
+   },
+   {
+    "name": "StyleGAN2-ADA projection (W+, perceptual loss)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "GAN inversion",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "In-domain GAN-1 (encoder only) and GAN-2 (encoder + optimization)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "GAN inversion",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "e4e",
+    "role": "baseline",
+    "params": null,
+    "architecture": "encoder-based GAN inversion",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Laplacian and Poisson blending",
+    "role": "baseline",
+    "params": null,
+    "architecture": "classical compositing",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "Euler-Maruyama reverse SDE from t0 to 0 (Algorithms 1-5); optional K repeats of noise+denoise",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "not stated per item; diverse samples shown per guide",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "t0": "0.5 (VP stroke synthesis/editing), 0.45 (VE editing), 0.35 (VE compositing); [0.3,0.6] recommended; 0.6 for coarse cat/horse",
+    "N": "500 (VP), 1000 (VE editing), 700 (VE compositing)",
+    "K": "1 (K=1 to 3 works; larger K more realistic but costs more)",
+    "mask": "binary Omega; uneditable region set to x0+sigma(t)z each step"
+   },
+   "other": {
+    "speed": "29.1s per image on one 2080Ti"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "L2 (faithfulness)",
+     "definition": "L2 distance summed over all pixels between guide and output, images normalised to [0,1]",
+     "unit": "pixel L2",
+     "higher_is_better": false
+    },
+    {
+     "name": "KID (realism)",
+     "definition": "Kernel Inception Distance between generated images and real validation images",
+     "unit": "KID",
+     "higher_is_better": false
+    },
+    {
+     "name": "MTurk pairwise preference (realism)",
+     "definition": "share of workers preferring SDEdit; 'Which image do you think is more realistic'",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "MTurk pairwise preference (satisfaction)",
+     "definition": "guide shown; choose image more reasonable, realistic, less blurry and similar to the input",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Masked LPIPS",
+     "definition": "LPIPS between edited and unchanged images outside the mask (following Bau et al. 2020)",
+     "unit": "LPIPS",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "StyleGAN2-ADA",
+    "In-domain GAN-1",
+    "In-domain GAN-2",
+    "e4e",
+    "Laplacian blending",
+    "Poisson blending",
+    "SC-FEGAN (qualitative)",
+    "Song et al. 2021 inpainting (qualitative)"
+   ],
+   "protocol": "MTurk, 15 pairwise questions per HIT, $0.2 per HIT (~$12/h). Stroke realism: 1500 comparisons (100 HITs); stroke satisfaction: 3000 (200 HITs); compositing realism and satisfaction: 1500 each (100 HITs). No significance tests or seeds reported."
+  },
+  "availability": {
+   "code": "to be released upon publication",
+   "weights": "uses public checkpoints",
+   "data": "open-source datasets"
+  },
+  "prompts": [
+   {
+    "purpose": "MTurk realism question",
+    "text": "Which image do you think is more realistic",
+    "where": "App F.1"
+   },
+   {
+    "purpose": "MTurk satisfaction question (strokes)",
+    "text": "Given the input painting, how would you imagine this image to look like in reality? Choose the image that looks more reasonable to you. Your selection should based on how realistic and less blurry the image is, and whether it shares similarities with the input",
+    "where": "App F.1"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "SDEdit beats the GAN baselines on realism by up to 98.09% (MTurk preference) for human-drawn strokes on LSUN bedroom.",
+   "kind": "measured",
+   "source": null,
+   "metric": "% MTurk workers preferring SDEdit (realism)",
+   "value": "98.09",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LSUN bedroom, human-drawn strokes, 400 images/method, 1500 pairwise MTurk comparisons vs StyleGAN2-ADA",
+   "quote": null,
+   "table": "Table 1, row StyleGAN2-ADA, column SDEdit is more realistic",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "SDEdit wins overall satisfaction (realism+faithfulness) by up to 91.72% on human strokes.",
+   "kind": "measured",
+   "source": null,
+   "metric": "% preferring SDEdit (satisfaction)",
+   "value": "91.72",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LSUN bedroom, human strokes, 3000 pairwise MTurk comparisons with the guide shown",
+   "quote": null,
+   "table": "Table 1, row StyleGAN2-ADA, column SDEdit is more satisfactory",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Closest baseline e4e is still beaten: 80.34% realism and 75.43% satisfaction preference.",
+   "kind": "measured",
+   "source": null,
+   "metric": "% preferring SDEdit (realism)",
+   "value": "80.34",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LSUN bedroom, human strokes",
+   "quote": null,
+   "table": "Table 1, row e4e, columns realistic / satisfactory",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "SDEdit has the lowest faithfulness L2 on human strokes (32.55) vs 53.76 for e4e and 101.18 for In-domain GAN-1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "L2",
+   "value": "32.55",
+   "unit": "summed pixel L2",
+   "baseline_value": "53.76 (e4e)",
+   "n": null,
+   "setup": "LSUN bedroom, human strokes; L2 summed over pixels, images in [0,1]",
+   "quote": null,
+   "table": "Table 1, row SDEdit, column Faithfulness score (L2)",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "On simulated strokes (LSUN bedroom) SDEdit gets KID 0.0030 vs 0.0464 for e4e, and L2 36.76 vs 52.40.",
+   "kind": "measured",
+   "source": null,
+   "metric": "KID",
+   "value": "0.0030",
+   "unit": "KID",
+   "baseline_value": "0.0464 (e4e)",
+   "n": null,
+   "setup": "LSUN bedroom, algorithm-simulated strokes (6 colours), KID vs validation set",
+   "quote": null,
+   "table": "Table 2, row SDEdit (ours), columns LSUN Bedroom L2 and KID",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "On LSUN church simulated strokes SDEdit gets KID 0.0156 and L2 37.67 vs e4e 0.0354 and 68.53.",
+   "kind": "measured",
+   "source": null,
+   "metric": "KID",
+   "value": "0.0156",
+   "unit": "KID",
+   "baseline_value": "0.0354 (e4e)",
+   "n": null,
+   "setup": "LSUN church, simulated strokes",
+   "quote": null,
+   "table": "Table 2, row SDEdit (ours), columns LSUN Church L2 and KID",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Realism-faithfulness trade-off in t0: larger t0 gives more realistic but less faithful outputs; t0 in [0.3, 0.6] is the sweet spot for reasonable guides.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "LSUN church, simulated stroke guides, KID (realism) and squared L2 to the guide (faithfulness), t0 swept over 0.01 and 0.1..1",
+   "quote": "For reasonable guides, we ﬁnd that t0 ∈[0.3, 0.6] works well.",
+   "table": null,
+   "note": "t0=0 returns the guide itself, t0=1 a random unconditional sample. Fig 3 caption says 'on LSUN' and App D.2 says LSUN church outdoor; Sec 3 text says 'LSUN dataset'. No numeric KID/L2 values per t0 in text (figure only).",
+   "where": "Sec 3, Fig 3, App D.2"
+  },
+  {
+   "claim": "Proposition 1 bounds guide deviation: with probability >= 1-delta, ||x_g - SDEdit(x_g;t0)||^2 <= sigma^2(t0)(C sigma^2(t0) + d + 2 sqrt(-d log delta) - 2 log delta), so deviation grows with t0.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Assumes score norm squared <= C; d = pixel dimensionality; VE-SDE",
+   "quote": "x(g) −SDEdit(x(g); t0, θ)",
+   "table": null,
+   "note": "Theoretical; no numeric value.",
+   "where": "Sec 3, Prop 1, proof App A"
+  },
+  {
+   "claim": "Default t0 used: 0.5 for stroke synthesis (VP, N=500, K=1) and editing (VP); 0.45 (VE, N=1000) for editing; 0.35 (VE, N=700, K=1) for compositing.",
+   "kind": "measured",
+   "source": null,
+   "metric": "t0",
+   "value": "0.5",
+   "unit": "time in [0,1]",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Per-task fixed t0 chosen by binary search on one image then shared across the task",
+   "quote": "In this experiment, we use K = 1, N = 500, t0 = 0.5, for SDEdit (VP).",
+   "table": null,
+   "note": null,
+   "where": "App D.1"
+  },
+  {
+   "claim": "Coarser guides need larger t0: t0=0.6 for coarse cat/horse strokes, 0.5 otherwise.",
+   "kind": "measured",
+   "source": null,
+   "metric": "t0",
+   "value": "0.6",
+   "unit": "time in [0,1]",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LSUN cat and horse, SDEdit VP",
+   "quote": "we choose to slightly sacriﬁce faithfulness in order to obtain more realistic images by selecting a larger t0 = 0.6",
+   "table": null,
+   "note": null,
+   "where": "App E.4"
+  },
+  {
+   "claim": "Image compositing on CelebA-HQ: SDEdit L2 21.70 vs 36.67 (In-domain GAN), 53.90 (e4e), 63.04 (Poisson), 68.45 (Laplacian).",
+   "kind": "measured",
+   "source": null,
+   "metric": "L2 (faithfulness)",
+   "value": "21.70",
+   "unit": "summed pixel L2",
+   "baseline_value": "36.67 (best baseline, In-domain GAN)",
+   "n": null,
+   "setup": "CelebA-HQ 256, 936 composited images, SDEdit VE pretrained on FFHQ",
+   "quote": null,
+   "table": "Table 3, row SDEdit (ours), column L2",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Compositing overall satisfaction preference for SDEdit up to 83.73% (vs Laplacian blending); realism preference up to 75.60% (vs Poisson).",
+   "kind": "measured",
+   "source": null,
+   "metric": "% preferring SDEdit (satisfaction)",
+   "value": "83.73",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CelebA-HQ compositing, 1500 pairwise comparisons each for realism and satisfaction",
+   "quote": null,
+   "table": "Table 3, row Laplacian Blending, column SDEdit more satisfactory",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "SDEdit is not uniformly more realistic: only 43.67% of workers preferred SDEdit's realism over e4e (i.e. e4e slightly more realistic), and 53.08% vs In-domain GAN.",
+   "kind": "measured",
+   "source": null,
+   "metric": "% preferring SDEdit (realism)",
+   "value": "43.67",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CelebA-HQ compositing",
+   "quote": null,
+   "table": "Table 3, row e4e, column SDEdit more realistic",
+   "note": null,
+   "where": "Table 3, Sec 5.2"
+  },
+  {
+   "claim": "Masked LPIPS (undesired change outside the mask) is 0.03 for SDEdit vs 0.05 Poisson, 0.09 Laplacian, 0.21 StyleGAN2-ADA, 0.23 In-domain GAN, 0.33 e4e.",
+   "kind": "measured",
+   "source": null,
+   "metric": "masked LPIPS",
+   "value": "0.03",
+   "unit": "LPIPS",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CelebA-HQ compositing",
+   "quote": null,
+   "table": "Table 3, row SDEdit (ours), column LPIPS (masked)",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "SDEdit is tolerant to guide detail: KID 0.0233 (3 colours) to 0.0126 (50 colours) with L2 stable 36.00-37.70, while baselines stay worse.",
+   "kind": "measured",
+   "source": null,
+   "metric": "KID",
+   "value": "0.0233",
+   "unit": "KID",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LSUN church, simulated strokes with 3-50 colours",
+   "quote": null,
+   "table": "Table 4, row 3, SDEdit KID",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "Attribute accuracy from simulated strokes on CelebA: SDEdit 0.9232 glasses, 0.8147 gender vs e4e 0.6623 and 0.6175.",
+   "kind": "measured",
+   "source": null,
+   "metric": "classification accuracy",
+   "value": "0.9232",
+   "unit": "fraction",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CelebA 256, 6000 test images, Azure Face API, no face counts as wrong",
+   "quote": null,
+   "table": "Table 5, row SDEdit (ours), column Glasses",
+   "note": null,
+   "where": "Table 5"
+  },
+  {
+   "claim": "SDEdit takes 29.1s per 256x256 image on one 2080Ti vs 72.8s StyleGAN2-ADA and 5.2s In-domain GAN 2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "seconds per image",
+   "value": "29.1",
+   "unit": "s",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Scribble-based generation, 256x256",
+   "quote": "SDEdit takes 29.1s to generate one image on one 2080Ti GPU.",
+   "table": null,
+   "note": null,
+   "where": "App D.3"
+  },
+  {
+   "claim": "A GAN-fake detector (Wang et al. 2020) detects under 3% of SDEdit LSUN bedroom images vs up to 93% of GAN images.",
+   "kind": "measured",
+   "source": null,
+   "metric": "detection rate",
+   "value": "3",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LSUN bedroom",
+   "quote": "it only successfully detects less than 3% of SDEdit-generated images whereas being able to distinguish up to 93% on GAN-based generation",
+   "table": null,
+   "note": null,
+   "where": "Ethics statement"
+  }
+ ],
+ "limits": [
+  "No numeric KID/L2 values per t0: the trade-off curve is only in Fig 3a; the sweet spot [0.3,0.6] is empirical.",
+  "Different guides may have different optimal t0; a shared t0 per task is used and justified only empirically.",
+  "Slower than encoder-based GAN inversion (29.1s vs 5.2s); authors suggest faster SDE sampling.",
+  "Realism is not uniformly better: e4e preferred over SDEdit for realism on compositing (43.67% prefer SDEdit).",
+  "Baselines are GAN inversion methods only; no comparison with conditional GANs trained per task (only qualitative SC-FEGAN).",
+  "Needs a pretrained model in the target domain; unconditional, text conditioning not studied (class conditioning via classifier shown in App E.3).",
+  "Misuse risk: GAN-fake detector misses SDEdit images; MTurk and user bias may affect metrics."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "guide",
+   "definition": "a full resolution image x(g) in a form of manipulating RGB pixels",
+   "where": "Sec 3"
+  },
+  {
+   "term": "t0",
+   "definition": "the time from which we begin the image synthesis procedure in the reverse SDE",
+   "where": "Sec 3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Score-based generative modeling through SDEs (Song et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "VE/VP SDEs and checkpoints",
+   "quote": null
+  },
+  {
+   "work": "DDPM (Ho et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "VP checkpoints",
+   "quote": null
+  },
+  {
+   "work": "Diffusion models beat GANs (Dhariwal & Nichol)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "checkpoints and class guidance",
+   "quote": null
+  },
+  {
+   "work": "StyleGAN2-ADA (Karras et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "projection baseline",
+   "quote": null
+  },
+  {
+   "work": "In-domain GAN inversion (Zhu et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "GAN-1 and GAN-2",
+   "quote": null
+  },
+  {
+   "work": "e4e (Tov et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "encoder inversion",
+   "quote": null
+  },
+  {
+   "work": "SC-FEGAN (Jo & Park)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "qualitative comparison",
+   "quote": null
+  },
+  {
+   "work": "Choi et al. (ILVR)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "related",
+   "note": "concurrent diffusion conditioning work",
+   "quote": null
+  },
+  {
+   "work": "LSUN, CelebA-HQ, FFHQ",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "datasets",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 3",
+   "caption": "Trade-off between faithfulness and realism for stroke-based generation on LSUN. As t0 increases, the generated images become more realistic while less faithful.",
+   "page": 4,
+   "why": "KID and L2 vs t0 curve plus t0 strip from 0 to 1; the img2img strength analogue"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Synthesizing images from strokes with SDEdit: perturb with Gaussian noise then reverse SDE projects onto image manifold.",
+   "page": 3,
+   "why": "Core intuition of noise-then-denoise"
+  },
+  {
+   "figure": "Fig 12",
+   "caption": "Extra analysis on t0, t0 from 0 to 0.9.",
+   "page": 18,
+   "why": "Finer t0 strip"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "SDEdit vs GAN models on stroke-based generation (LSUN bedroom).",
+   "page": 5,
+   "why": "Side-by-side with baselines"
+  },
+  {
+   "figure": "Fig 1",
+   "caption": "SDEdit unified framework: stroke painting to image, compositing, stroke editing.",
+   "page": 1,
+   "why": "Overview of tasks"
+  }
+ ],
+ "code": [
+  {
+   "where": "Algorithm 1 (VE-SDE)",
+   "snippet": "x <- x + sigma(t0) z; for n=N..1: t=t0*n/N; eps=sqrt(sigma^2(t)-sigma^2(t-dt)); x <- x + eps^2 s_theta(x,t) + eps z",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text has ligature characters (fi/fl) in places. No embedded instructions found.",
+  "Sec 5.1 text says 'more details in Appendix C' but experiment settings are in App D."
+ ]
+}

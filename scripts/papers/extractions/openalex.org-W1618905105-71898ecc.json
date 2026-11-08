@@ -1,0 +1,431 @@
+{
+ "schema": 1,
+ "key": "https://openalex.org/W1618905105",
+ "pdf": "generative-ai/08-eval/sources/platt-1999-probabilistic-outputs-support-vector-machines.pdf",
+ "bib": {
+  "title": "Probabilistic Outputs for Support Vector Machines and Comparisons to Regularized Likelihood Methods",
+  "authors": [
+   "John C. Platt"
+  ],
+  "first_author": "Platt",
+  "year": 1999,
+  "venue": "preprint (dated March 26, 1999); in Advances in Large Margin Classifiers, MIT Press, to appear",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 0,
+  "chars_total": 31616,
+  "engine": "pymupdf",
+  "skipped": "Text layer is font-encoded gibberish (empty after cleaning); all 11 pages were read as rendered images instead. Result quotes and table numbers therefore cannot be verified against the text layer, so result values are null and numbers sit in the claim text."
+ },
+ "type": "empirical",
+ "question": "How can the uncalibrated output of an SVM be mapped to a calibrated posterior probability P(y=1|x) while keeping the SVM's sparseness?",
+ "hypothesis": "A two-parameter sigmoid fitted discriminatively on SVM outputs matches the empirically observed posterior and gives probabilities comparable in quality to a kernel machine trained with a regularized likelihood.",
+ "contributions": [
+  "A post-hoc sigmoid P(y=1|f)=1/(1+exp(Af+B)) fitted by maximum likelihood on unbiased SVM outputs",
+  "Bayes-motivated non-binary targets t+=(N+ +1)/(N+ +2), t-=1/(N- +2) as regularisation against overfitting",
+  "Comparison of SVM+sigmoid against raw SVM and a regularized-likelihood kernel machine on three tasks",
+  "Pseudo-code for a Levenberg-Marquardt style model-trust fit"
+ ],
+ "method": {
+  "summary": "Train an SVM unchanged, obtain unbiased outputs f_i by 3-fold cross-validation (or a hold-out set), then fit A and B of a sigmoid by minimising cross-entropy against smoothed targets with a model-trust (Levenberg-Marquardt) optimiser. Compare error counts and negative log likelihood against a raw SVM and a kernel machine trained with regularized binomial likelihood.",
+  "task": "binary classification probability calibration (post-hoc Platt scaling)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Reuters news category (Reuters Linear)",
+    "role": "both",
+    "size": "9603 train / 3299 test; 300 inputs",
+    "split": "fixed train/test",
+    "source": "Dumais 1998; Joachims 1998",
+    "preprocessing": null
+   },
+   {
+    "name": "UCI Adult (income from census data)",
+    "role": "both",
+    "size": "Linear: 32562 train / 16282 test; Quadratic: 1605 train / 16282 test; 123 inputs",
+    "split": "fixed train/test",
+    "source": "Merz and Murphy 1998 (UCI); inputs quantized as in Platt 1999 (SMO)",
+    "preprocessing": "inputs quantized"
+   },
+   {
+    "name": "Web page category from key words",
+    "role": "both",
+    "size": "Linear: 49749 train / 21489 test; Quadratic: 2477 train / 21489 test; 300 inputs",
+    "split": "fixed train/test",
+    "source": "Platt 1999 (SMO)",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "SVM + sigmoid",
+    "role": "proposed",
+    "params": null,
+    "architecture": "SVM (linear; quadratic kernel) with 2-parameter sigmoid on output",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "C": "Reuters Linear 0.08; Adult Linear 0.05; Adult Quadratic 0.3; Web Linear 1.0; Web Quadratic 10.0",
+     "kernels": "linear; quadratic k=(xi.xj+1)^2/14 (Adult), /12 (Web); constants are average self dot product",
+     "support vectors column in Table 1": "Reuters 118; others 1"
+    }
+   },
+   {
+    "name": "Regularized likelihood kernel machine",
+    "role": "baseline",
+    "params": null,
+    "architecture": "kernel machine, logistic link, negative log multinomial likelihood + lambda ||h||^2 (Wahba)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Raw SVM",
+    "role": "baseline",
+    "params": null,
+    "architecture": "SVM, threshold f=0",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "SVM: C*sum(1-y_i f_i)+ + 0.5||h||^2 (eq 3); sigmoid: min -sum t_i log p_i + (1-t_i) log(1-p_i), p_i=1/(1+exp(A f_i+B)) (eqs 11-12)",
+   "optimizer": "model-trust / Levenberg-Marquardt (Gill, Murray, Wright 1981; Press et al. 1992), max 100 iterations",
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": "up to 100 iterations; stop when |gradient|<1e-9 or objective change tiny for 3 iterations",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "target smoothing t+=(N+ +1)/(N+ +2), t-=1/(N- +2); SVM C and regularisers set per algorithm on hold-out set",
+   "hardware": null,
+   "compute": "3-fold CV costs about 2.2x a single SVM on the full set; hold-out (30%) about 1.5x if SVM training scales quadratically",
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "init": "A=0, B=log((N- +1)/(N+ +1)), lambda=1e-3",
+    "lambda_update": "x0.1 on success, x10 on failure, give up at lambda>=1e6",
+    "log0": "log(0) returns -200",
+    "sigmoid_training_set": "3-fold CV outputs f_i; training-set outputs are biased (margin examples forced to |f|=1) and for non-linear SVMs can be disastrously biased"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "sigmoid": "P(y=1|f)=1/(1+exp(Af+B)), A<0 ensures monotonic",
+    "hold_out_fraction": "typically 30%",
+    "cv_folds": 3
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Number of test errors",
+     "definition": "misclassifications on test set; raw SVM at f=0, SVM+sigmoid at P=0.5",
+     "unit": "count",
+     "higher_is_better": false
+    },
+    {
+     "name": "-log(p) score",
+     "definition": "negative log likelihood of the test set (sum over test examples)",
+     "unit": "nats (sum)",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "Raw SVM",
+    "Regularized likelihood kernel method"
+   ],
+   "protocol": "McNemar's test for error differences, Wilcoxon signed rank test for log-likelihood differences, p=0.05; underlined entries in Table 2 are significantly better than non-underlined ones."
+  },
+  "availability": {
+   "code": "pseudo-code only (Appendix 5)",
+   "weights": null,
+   "data": "UCI Adult public; others cited"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.other.init",
+    "quote": null,
+    "where": "Appendix 5 pseudo-code, p9"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Reuters Linear: raw SVM 1043 errors, SVM+sigmoid 963 (significantly better), regularized likelihood 1060; NLL 3249 for sigmoid vs 3301 for regularized likelihood (sigmoid significantly better).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 2, Reuters Linear, p=0.05",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Table 2, p8"
+  },
+  {
+   "claim": "Adult Linear: raw SVM 2441, SVM+sigmoid 2442, regularized likelihood 2434 errors; NLL 5323 sigmoid vs 5288 regularized likelihood (latter significantly better).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 2",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Table 2, p8"
+  },
+  {
+   "claim": "Adult Quadratic: raw SVM 2626, SVM+sigmoid 2554 (significantly better), regularized likelihood 2610 errors; NLL 5772 sigmoid (significantly better) vs 5827.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 2",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Table 2, p8"
+  },
+  {
+   "claim": "Web Linear: raw SVM 260, SVM+sigmoid 265, regularized likelihood 248 errors; NLL 1121 sigmoid vs 958 regularized likelihood (latter significantly better).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 2",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Table 2, p8"
+  },
+  {
+   "claim": "Web Quadratic: raw SVM 444, SVM+sigmoid 452, regularized likelihood 507 errors; NLL 1767 sigmoid vs 2163 regularized likelihood (sigmoid better on total log likelihood, but Wilcoxon prefers regularized likelihood).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 2",
+   "quote": null,
+   "table": null,
+   "note": "Text says Wilcoxon rank test prefers regularized likelihood for Web Quadratic although sigmoid has better overall NLL; the table underlines 2163 for the regularized likelihood (read as image, 1767 vs 2163 as printed with underline on 2163).",
+   "where": "Table 2 and discussion, p8"
+  },
+  {
+   "claim": "On Adult Quadratic the sigmoid threshold P=0.5 corresponds to f=-0.1722, a better threshold than f=0; zero is not necessarily Bayes optimal for a raw SVM, mostly when the class prior ratio is far from one (Reuters Linear and Adult Quadratic).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Adult Quadratic SVM+sigmoid",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "3.1, p8"
+  },
+  {
+   "claim": "Qualitative: a sigmoid fits the non-parametric posterior estimate (Bayes rule on 0.1-wide histogram bins) extremely well even beyond the margins for a linear SVM on Adult; class-conditional densities are not Gaussian and show discontinuities at f=+1 and f=-1.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Linear SVM on UCI Adult, 3-fold CV, bins 0.1 wide",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "2.1, Figs 1-2, p3-5"
+  },
+  {
+   "claim": "Neither SVM+sigmoid nor regularized likelihood dominates: sigmoid makes fewer errors on 3 of 5 tasks; regularized likelihood gives significantly better probabilities on 3 of 5.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 2",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "3.1, p8"
+  }
+ ],
+ "limits": [
+  "Only binary SVMs; five task configurations from three datasets, no calibration metric such as reliability diagram or ECE, only error count and test NLL.",
+  "Smoothing targets and sigmoid form justified empirically (Figs 1-2) and by MAP argument; no theory for the shape of class-conditional densities ('currently under development').",
+  "Fitting on the SVM's own training outputs is biased, especially for non-linear SVMs; needs hold-out set or CV (extra cost 1.5x to 2.2x).",
+  "The sigmoid cannot model dependence of P(y=1|f) on other feature-space directions u; it averages over u.",
+  "Paper is dated 1999; modern neural nets and LLMs are not covered. Any mapping to LLM P(True) or temperature scaling is the reader's, not the paper's."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Platt scaling (sigmoid fit)",
+   "definition": "P(y=1|f)=1/(1+exp(Af+B)): output of SVM assumed proportional to the log odds of a positive example, with A and B trained discriminatively",
+   "where": "eq 9, p3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Vapnik, Statistical Learning Theory (sec 11.11 cosine-expansion posterior)",
+   "year": 1998,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Alternative SVM probability method; non-monotonic, needs a linear solve per evaluation",
+   "quote": null
+  },
+  {
+   "work": "Wahba, Support vector machines, RKHS and the randomized GACV / Multivariate function and operator estimation",
+   "year": 1999,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Regularized likelihood kernel machine with logistic link is the baseline",
+   "quote": null
+  },
+  {
+   "work": "Hastie and Tibshirani, Classification by pairwise coupling",
+   "year": 1996,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Tied-variance Gaussian fit to class-conditional densities; contrast with discriminative two-parameter sigmoid",
+   "quote": null
+  },
+  {
+   "work": "Platt, Fast training of SVMs using sequential minimal optimization",
+   "year": 1999,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "SVM trainer and source of Adult/Web data setup",
+   "quote": null
+  },
+  {
+   "work": "Burges, NIPS 1998 SVM workshop talk (speaker identification)",
+   "year": 1998,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Independently proposed and used the same sigmoid output model (footnote 1)",
+   "quote": null
+  },
+  {
+   "work": "Gill, Murray, Wright, Practical Optimization / Press et al. Numerical Recipes (Levenberg-Marquardt)",
+   "year": 1981,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Model-trust optimiser",
+   "quote": null
+  },
+  {
+   "work": "UCI Adult (Merz and Murphy)",
+   "year": 1998,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "Reuters (Dumais; Joachims) and web page data",
+   "year": 1998,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "Dietterich, Approximate statistical tests (McNemar); Mosteller and Rourke (Wilcoxon)",
+   "year": 1998,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Significance tests",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "The histograms for p(f|y=+-1) for a linear SVM trained on the Adult data set. The solid line is p(f|y=-1), while the dashed line is p(f|y=1). Notice that these histograms are not Gaussian.",
+   "page": 4,
+   "why": "Shows why not Gaussian and motivates the sigmoid"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "The fit of the sigmoid to the data for a linear SVM on the Adult data set (as in Figure 1). Each plus mark is the posterior probability computed for all examples falling into a bin of width 0.1. The solid line is the best-fit sigmoid to the posterior, using the algorithm described in this chapter.",
+   "page": 5,
+   "why": "Best single picture of a sigmoid calibration map against empirical posterior bins"
+  },
+  {
+   "figure": "Table 2",
+   "caption": "Experimental Results",
+   "page": 8,
+   "why": "Errors and NLL for raw SVM, SVM+sigmoid, regularized likelihood"
+  }
+ ],
+ "code": [
+  {
+   "where": "Appendix 5, p9-10",
+   "snippet": "hiTarget = (prior1+1)/(prior1+2)\nloTarget = 1/(prior0+2)\nA = 0; B = log((prior0+1)/(prior1+1)); lambda = 1e-3\n// p = 1/(1+exp(out[i]*A+B)); err -= t*log(p)+(1-t)*log(1-p)\n// Newton step with Hessian stabilised by lambda: det=(a+lambda)*(b+lambda)-c*c",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text layer is unusable, so extract.py check cannot verify quotes; result values left null and all numbers placed in claim text, read from page images.",
+  "Possible OCR-by-eye risk on Table 2 underlines; underline pattern read from the image.",
+  "Code snippet is abridged from the pseudo-code, not verbatim.",
+  "No embedded instructions found."
+ ]
+}

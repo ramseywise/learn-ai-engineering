@@ -1,0 +1,653 @@
+{
+ "schema": 1,
+ "key": "1912.01991",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/misra-2020-self-supervised-learning-pretext-invariant.pdf",
+ "bib": {
+  "title": "Self-Supervised Learning of Pretext-Invariant Representations",
+  "authors": [
+   "Ishan Misra",
+   "Laurens van der Maaten"
+  ],
+  "first_author": "Misra",
+  "year": 2020,
+  "venue": "CVPR 2020 (arXiv v1 Dec 2019; Facebook AI Research)",
+  "arxiv": "1912.01991",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 61859,
+  "chars_total": 61859,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can self-supervised image representations be improved by making them invariant to the pretext transformation instead of covariant with it?",
+ "hypothesis": "Semantic representations ought to be invariant under image transformations, so a contrastive invariance loss on a pretext task should beat predicting transformation properties.",
+ "contributions": [
+  "PIRL: a contrastive loss that makes the representation of an image similar to that of its transformed version and dissimilar to other images",
+  "Applied to Jigsaw and Rotation pretext tasks, with state-of-the-art self-supervised results on several benchmarks",
+  "Outperforms supervised ImageNet pre-training for object detection"
+ ],
+ "method": {
+  "summary": "A ResNet-50 is trained with an NCE loss (convex combination, lambda) between an image I and its pretext-transformed version I^t (Jigsaw: nine patches shuffled; also Rotation), using a memory bank of 32,000 negatives as in NPID. Representations are then evaluated by linear probes, finetuned detection, and semi-supervised finetuning.",
+  "task": "self-supervised visual representation learning (contrastive, pretext-invariant)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "ImageNet-1k train (no labels)",
+    "role": "pretrain",
+    "size": "1.28M images",
+    "split": "train split",
+    "source": "ImageNet [58]",
+    "preprocessing": "random resized crop, flip, photometric jitter; no Fast AutoAugment"
+   },
+   {
+    "name": "YFCC-1M",
+    "role": "pretrain",
+    "size": "1M images randomly selected from the 100M YFCC",
+    "split": "random subset",
+    "source": "YFCC100M [63]",
+    "preprocessing": null
+   },
+   {
+    "name": "ImageNet / Places205 / iNaturalist2018 / VOC07",
+    "role": "eval",
+    "size": "1.28M / 2.4M / 437K training images (VOC07 size not stated)",
+    "split": "linear probes; ImageNet validation single/center crop",
+    "source": "public",
+    "preprocessing": null
+   },
+   {
+    "name": "VOC07+12 train (16K images) and VOC07 train+val (5K), VOC07 test",
+    "role": "eval",
+    "size": "16K and 5K train images",
+    "split": "detection finetune, VOC07 test",
+    "source": "Pascal VOC [15]",
+    "preprocessing": null
+   },
+   {
+    "name": "ImageNet 1% and 10% labelled subsets",
+    "role": "eval",
+    "size": "~13,000 images for 1%",
+    "split": "random 1% and 10% of train labels",
+    "source": "ImageNet",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "PIRL ResNet-50",
+    "role": "proposed",
+    "params": "25.6M",
+    "architecture": "ResNet-50; res5 avg-pooled (2048-d) then linear head to 128-d; Jigsaw head g: 9 patches each res5 pooled -> linear 128-d, concatenated (1152-d) -> linear 128-d",
+    "init_from": "random (self-supervised)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "50",
+    "hidden": "128 (embedding)",
+    "heads": null,
+    "context": null,
+    "other": {
+     "heads_removed_at_transfer": true
+    }
+   },
+   {
+    "name": "PIRL-c2x",
+    "role": "proposed",
+    "params": "98M",
+    "architecture": "ResNet-50 with doubled channels per stage",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "50",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "NPID++",
+    "role": "baseline",
+    "params": "25.6M",
+    "architecture": "PIRL with lambda=0 (NPID with more negatives and epochs)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Jigsaw ResNet-50 [19]",
+    "role": "baseline",
+    "params": "25.6M",
+    "architecture": "covariant Jigsaw",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "Noise contrastive loss L = lambda*L_NCE(m_I, g(v_It)) + (1-lambda)*L_NCE(m_I, f(v_I)); memory bank m_I EMA of f(v_I), weight 0.5; cosine similarity; tau=0.07; lambda=0.5; N=32,000 negatives",
+   "optimizer": "mini-batch SGD, momentum 0.9",
+   "lr": "1.2e-1 initial, 1.2e-4 final",
+   "lr_schedule": "cosine decay",
+   "warmup": null,
+   "batch_size": "1,024 images (32 per GPU x 32 GPUs)",
+   "steps": null,
+   "epochs": "800 (Sec 3); 400 with N=4,096 (Sec 4 ablations)",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": "1e-4",
+   "dropout": null,
+   "regularisation": "data augmentation: random resized crop, flip, color jitter etc.",
+   "hardware": "32 GPUs (type not stated)",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "jigsaw_input": "crop >=60% of image resized to 255x255, 3x3 grid, 64x64 patch each, photometric aug per patch; I is 224x224",
+    "rotation": "T = {0,90,180,270} degrees",
+    "linear_probe": "features avg-pooled to ~9,000 dims; SGD lr 0.01 decayed 0.1 twice, momentum 0.9, wd 5e-4; 28 epochs ImageNet, 14 Places205, 84 iNat; linear SVMs for VOC07",
+    "detection": "Faster R-CNN C4 Detectron2, 8 GPUs x 2 images; VOC07+12: 25K iters, lr dropped 0.1 at 17K; VOC07: 12.5K iters, drop at 9.5K; PIRL/NPID++ lr 0.003 warmup 1000 iters, supervised/Jigsaw lr 0.02 warmup 100; BatchNorm fixed"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single run reported; no seeds or error bars",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "tau": "0.07",
+    "lambda": "0.5",
+    "memory_bank_EMA_weight": "0.5",
+    "negatives": "32,000"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "top-1 accuracy",
+     "definition": "linear classifier on frozen features of best layer; single/center crop",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "mAP",
+     "definition": "linear SVM on VOC07",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "APall/AP50/AP75",
+     "definition": "detection AP on VOC07 test",
+     "unit": "AP",
+     "higher_is_better": true
+    },
+    {
+     "name": "top-5 accuracy",
+     "definition": "semi-supervised finetune on 1%/10% labels",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Jigsaw [19]",
+    "Rotation [18]",
+    "NPID/NPID++ [72]",
+    "MoCo [24]",
+    "CMC",
+    "CPC",
+    "AMDIM",
+    "BigBiGAN",
+    "DeepCluster",
+    "supervised ImageNet"
+   ],
+   "protocol": "Transfer-learning evaluation following Goyal et al. 2019 (best layer per method); numbers for PIRL, NPID++, Rotation obtained by the authors, others adopted from papers."
+  },
+  "availability": {
+   "code": "stated: will be published online",
+   "weights": null,
+   "data": "public datasets"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.batch_size",
+    "quote": "We train the models for 800 epochs using a batch size of 1, 024 images",
+    "where": "Sec 3"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "PIRL linear-probe top-1 on ImageNet beats its covariant Jigsaw counterpart by over 15 points.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1 acc",
+   "value": 63.6,
+   "unit": "% top-1",
+   "baseline_value": "45.7 (Jigsaw)",
+   "n": null,
+   "setup": "ResNet-50 (25.6M) pre-trained on ImageNet-1k train (1.28M images, no labels), 800 epochs, N=32,000 negatives, batch 1,024, lambda=0.5, Jigsaw pretext; best layer (res5 for PIRL); linear classifier",
+   "note": null,
+   "where": "Sec 3.2, Table 2",
+   "quote": "PIRL improves recognition accuracies by over 15% compared to its covari-",
+   "table": "Table 2, row PIRL (ours), column ImageNet"
+  },
+  {
+   "claim": "NPID++ (lambda=0, improved NPID with more negatives and epochs) reaches 59% top-1, so invariance adds ~4.6 points.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1 acc",
+   "value": 59.0,
+   "unit": "% top-1",
+   "baseline_value": "54.0 (original NPID)",
+   "n": null,
+   "setup": "ResNet-50 (25.6M) pre-trained on ImageNet-1k train (1.28M images, no labels), 800 epochs, N=32,000 negatives, batch 1,024, lambda=0.5, Jigsaw pretext (same setup, lambda=0)",
+   "note": "Table 2 prints 59.0; Table 7 prints 59 (res5)",
+   "where": "Sec 3.2",
+   "quote": "NPID++ achieves a",
+   "table": "Table 2, row NPID++, column ImageNet"
+  },
+  {
+   "claim": "PIRL (Jigsaw) fine-tuned Faster R-CNN C4 beats supervised ImageNet pre-training on AP_all and AP75 (VOC07+12 train, VOC07 test).",
+   "kind": "measured",
+   "source": null,
+   "metric": "APall",
+   "value": 54.0,
+   "unit": "APall",
+   "baseline_value": "52.6 (supervised)",
+   "n": null,
+   "setup": "Faster R-CNN C4, Detectron2, R-50, VOC07+12 train (16K images), BatchNorm fixed, 25K iters, 8 GPUs x 2 images",
+   "note": null,
+   "where": "Sec 3.1, Table 1",
+   "table": "Table 1, row PIRL (ours), column APall"
+  },
+  {
+   "claim": "Same detection setup, AP75 for PIRL vs supervised.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AP75",
+   "value": 59.7,
+   "unit": "AP75",
+   "baseline_value": "57.4 (supervised); 52.9 Jigsaw",
+   "n": null,
+   "setup": "as above",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row PIRL (ours), column AP75"
+  },
+  {
+   "claim": "PIRL beats supervised pre-training with the smaller VOC07 train+val (5K images) finetuning set on APall.",
+   "kind": "measured",
+   "source": null,
+   "metric": "APall",
+   "value": 44.7,
+   "unit": "APall",
+   "baseline_value": "43.8 (supervised)",
+   "n": null,
+   "setup": "Faster R-CNN C4, R-50, VOC07 train+val, 12.5K iters",
+   "note": "PIRL AP50 is worse than supervised (73.4 vs 74.5)",
+   "where": "Table 6",
+   "table": "Table 6, row PIRL (ours), column APall"
+  },
+  {
+   "claim": "PIRL VOC07 linear mAP exceeds Jigsaw by more than 16 points.",
+   "kind": "measured",
+   "source": null,
+   "metric": "mAP",
+   "value": 81.1,
+   "unit": "mAP",
+   "baseline_value": "64.5 (Jigsaw), 87.5 supervised",
+   "n": null,
+   "setup": "ResNet-50 (25.6M) pre-trained on ImageNet-1k train (1.28M images, no labels), 800 epochs, N=32,000 negatives, batch 1,024, lambda=0.5, Jigsaw pretext; linear SVM",
+   "note": null,
+   "where": "Sec 3.2",
+   "quote": "improves the previous best results of [19] on VOC07 by",
+   "table": "Table 2, row PIRL (ours), column VOC07"
+  },
+  {
+   "claim": "PIRL within 2% of supervised on Places205 linear probe.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1 acc",
+   "value": 49.8,
+   "unit": "% top-1",
+   "baseline_value": "51.5 (supervised)",
+   "n": null,
+   "setup": "ResNet-50 (25.6M) pre-trained on ImageNet-1k train (1.28M images, no labels), 800 epochs, N=32,000 negatives, batch 1,024, lambda=0.5, Jigsaw pretext",
+   "note": null,
+   "where": "Sec 3.2",
+   "quote": "The performance of PIRL is within",
+   "table": "Table 2, row PIRL (ours), column Places205"
+  },
+  {
+   "claim": "iNaturalist2018 linear probe: PIRL top-1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1 acc",
+   "value": 34.1,
+   "unit": "% top-1",
+   "baseline_value": "23.0 (Rotation, prior best)",
+   "n": null,
+   "setup": "ResNet-50 (25.6M) pre-trained on ImageNet-1k train (1.28M images, no labels), 800 epochs, N=32,000 negatives, batch 1,024, lambda=0.5, Jigsaw pretext",
+   "note": null,
+   "where": "Sec 3.2",
+   "quote": "we obtain a gain",
+   "table": "Table 2, row PIRL (ours), column iNat."
+  },
+  {
+   "claim": "Ensembling two ResNet-50s with longer linear training gives PIRL-ens.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1 acc",
+   "value": 65.7,
+   "unit": "% top-1",
+   "baseline_value": "64.1 (CMC)",
+   "n": null,
+   "setup": "as CMC protocol: two R-50 and longer linear classifier training",
+   "note": null,
+   "where": "Sec 3.2, Fig 2",
+   "quote": "obtained a top-1 accuracy of 65.7%"
+  },
+  {
+   "claim": "PIRL-c2x (R-50 with doubled channels, 98M params) top-1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1 acc",
+   "value": 67.4,
+   "unit": "% top-1",
+   "baseline_value": "68.1 (AMDIM, 670M params)",
+   "n": null,
+   "setup": "double channels per stage, 98M params",
+   "note": null,
+   "where": "Sec 3.2, Fig 2",
+   "quote": "PIRL-c2x achieves a top-1 accuracy of 67.4%"
+  },
+  {
+   "claim": "Semi-supervised: finetuning on 1% of ImageNet labels (~13,000 images), top-5.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-5 acc",
+   "value": 57.2,
+   "unit": "% top-5",
+   "baseline_value": "52.6 NPID++, 45.3 Jigsaw, 53.4 S4L Rotation",
+   "n": null,
+   "setup": "R-50 PIRL finetuned on 1% labeled ImageNet, procedure of NPID",
+   "note": null,
+   "where": "Sec 3.3, Table 3",
+   "table": "Table 3, row PIRL (ours), column 1%"
+  },
+  {
+   "claim": "Semi-supervised 10% labels, top-5.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-5 acc",
+   "value": 83.8,
+   "unit": "% top-5",
+   "baseline_value": "83.8 S4L Rotation; 84.9 CPC-Largest",
+   "n": null,
+   "setup": "as above, 10% labels",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row PIRL (ours), column 10%"
+  },
+  {
+   "claim": "Pre-training on uncurated YFCC-1M (1M random images) gives ImageNet linear top-1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1 acc",
+   "value": 57.8,
+   "unit": "% top-1",
+   "baseline_value": "48.3 Jigsaw on YFCC100M (100x more data)",
+   "n": null,
+   "setup": "R-50 PIRL on YFCC-1M, same procedure",
+   "note": null,
+   "where": "Sec 3.4, Table 4",
+   "table": "Table 4, row PIRL (ours) YFCC1M, column ImageNet"
+  },
+  {
+   "claim": "YFCC-1M pretraining gives better Places205 than ImageNet pretraining.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1 acc",
+   "value": 51.0,
+   "unit": "% top-1",
+   "baseline_value": "49.8 (ImageNet pretraining)",
+   "n": null,
+   "setup": "R-50 PIRL on YFCC-1M",
+   "note": null,
+   "where": "Sec 3.4",
+   "table": "Table 4, row PIRL (ours) YFCC1M, column Places205"
+  },
+  {
+   "claim": "PIRL with the Rotation pretext task gains +11.3 top-1 on ImageNet over standard rotation prediction.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1 acc",
+   "value": 60.2,
+   "unit": "% top-1",
+   "baseline_value": "48.9 (Rotation)",
+   "n": null,
+   "setup": "R-50, T={0,90,180,270 deg} rotations, linear probe",
+   "note": "Table 5 PIRL (Jigsaw) 62.2 differs from Table 2 63.6; the paper does not explain (not stated whether different epochs)",
+   "where": "Sec 4.3, Table 5",
+   "table": "Table 5, row PIRL (Rotation; ours), column ImageNet"
+  },
+  {
+   "claim": "Combining Rotation and Jigsaw transforms in PIRL improves further.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1 acc",
+   "value": 63.1,
+   "unit": "% top-1",
+   "baseline_value": "62.2 (PIRL Jigsaw)",
+   "n": null,
+   "setup": "R-50, rotation then jigsaw",
+   "note": null,
+   "where": "Sec 4.3, Table 5",
+   "table": "Table 5, row PIRL (Rotation + Jigsaw; ours), column ImageNet"
+  },
+  {
+   "claim": "Ablation shows lambda=0.5 is best and performance is quite sensitive to lambda.",
+   "kind": "measured",
+   "source": null,
+   "metric": "best lambda",
+   "value": 0.5,
+   "unit": "lambda",
+   "baseline_value": null,
+   "n": null,
+   "setup": "400 epochs, N=4,096, ImageNet linear probe",
+   "note": "No numeric accuracies per lambda in text; Fig 6 only",
+   "where": "Sec 4.2, Fig 6",
+   "quote": "the best performance if obtained by setting"
+  },
+  {
+   "claim": "PIRL's invariance claim: l2 distance between f(vI) and g(vIt) is small for PIRL, much larger mean and variance for Jigsaw. (histogram only, no number in text)",
+   "kind": "measured",
+   "source": null,
+   "metric": "l2 distance distribution",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 4, unit-norm representations, all transforms, large set of images",
+   "note": null,
+   "where": "Sec 4.1, Fig 4"
+  },
+  {
+   "claim": "Jigsaw representation quality collapses at res5; PIRL best at res5.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1 acc",
+   "value": 63.6,
+   "unit": "% top-1",
+   "baseline_value": "34.2 (Jigsaw res5), 45.7 (Jigsaw res4)",
+   "n": null,
+   "setup": "per layer linear probe; PIRL res5 vs Jigsaw res5",
+   "note": null,
+   "where": "Sec 4.1, Fig 5, Table 7",
+   "table": "Table 7, row PIRL (Ours), column res5 (ImageNet)"
+  }
+ ],
+ "limits": [
+  "Evaluated on ImageNet-scale ResNet-50 only; gains shrink against concurrent MoCo (55.2 APall, 60.6 top-1) which the paper notes is concurrent work.",
+  "Single runs, no seeds or error bars; PIRL AP50 on VOC07 below supervised (73.4 vs 74.5).",
+  "Ablations (Sec 4) use 400 epochs and N=4,096, so absolute numbers are lower; lambda, N and |T| results are shown only as plots.",
+  "Table 5 PIRL (Jigsaw) 62.2 differs from Table 2 63.6 without explanation.",
+  "Authors concede PIRL is sensitive to lambda.",
+  "Compute hardware type and wall clock not stated; MoCo-comparison conditions differ (BatchNorm finetuned)."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "pretext-invariant representation",
+   "definition": "representations that are similar for an image and its transformed version and different from other images",
+   "where": "Sec 1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Unsupervised Learning of Visual Representations by Solving Jigsaw Puzzles (Noroozi, Favaro)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Jigsaw pretext task adapted to invariance",
+   "quote": null
+  },
+  {
+   "work": "Unsupervised feature learning via non-parametric instance discrimination (NPID, Wu et al.)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "memory bank and NCE; PIRL with lambda=0 equals NPID",
+   "quote": null
+  },
+  {
+   "work": "Scaling and benchmarking self-supervised visual representation learning (Goyal et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "evaluation protocol and Jigsaw baseline",
+   "quote": null
+  },
+  {
+   "work": "Momentum Contrast (He et al.)",
+   "year": 2019,
+   "arxiv": "1911.05722",
+   "relation": "related",
+   "note": "concurrent work, memory-bank approach",
+   "quote": null
+  },
+  {
+   "work": "Unsupervised representation learning by predicting image rotations (Gidaris et al.)",
+   "year": 2018,
+   "arxiv": "1803.07728",
+   "relation": "baseline",
+   "note": "Rotation pretext task",
+   "quote": null
+  },
+  {
+   "work": "Representation learning with contrastive predictive coding (van den Oord et al.)",
+   "year": 2018,
+   "arxiv": "1807.03748",
+   "relation": "baseline",
+   "note": "CPC",
+   "quote": null
+  },
+  {
+   "work": "Contrastive multiview coding (Tian et al.)",
+   "year": 2019,
+   "arxiv": "1906.05849",
+   "relation": "baseline",
+   "note": "CMC",
+   "quote": null
+  },
+  {
+   "work": "ImageNet",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "pretraining",
+   "quote": null
+  },
+  {
+   "work": "YFCC100M (Thomee et al.)",
+   "year": 2015,
+   "arxiv": "1503.01817",
+   "relation": "uses-data",
+   "note": "uncurated pretraining",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Pretext-Invariant Representation Learning (PIRL)",
+   "page": 1,
+   "why": "covariant vs invariant pretext in one diagram"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "ImageNet classification with linear models vs parameters",
+   "page": 2,
+   "why": "accuracy/size tradeoff across methods"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Overview of PIRL",
+   "page": 3,
+   "why": "memory bank and f/g heads"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Invariance of PIRL representations",
+   "page": 6,
+   "why": "distance histogram PIRL vs Jigsaw"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Quality of PIRL representations per layer",
+   "page": 7,
+   "why": "Jigsaw collapse at res5"
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "Effect of varying lambda",
+   "page": 7,
+   "why": "lambda sensitivity"
+  },
+  {
+   "figure": "Fig 8",
+   "caption": "Effect of number of negatives",
+   "page": 8,
+   "why": "more negatives helps"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 5, p3",
+   "snippet": "L(I, It) = \u03bb LNCE(mI, g(vIt)) + (1 \u2212 \u03bb) LNCE(mI, f(vI))",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "No embedded instructions found.",
+  "Figure data (Figs 6-8 values) not in text."
+ ]
+}

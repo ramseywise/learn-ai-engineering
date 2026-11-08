@@ -378,7 +378,25 @@ Three devices answer "the dimension is too big, too fast-changing or too awkward
 
 **Junk dimension.** Ten two-value flags on a fact become one dimension of at most 1,024 rows (2^10) and one key. Five three-valued flags give 243, so combine them. Five 100-valued flags give 100 million combinations, so keep those apart (ch. 5).
 
-**Role-playing dates and bridges.** An order has an order date, a requested ship date and more. Keep one date table and expose it through views, one per role (`order_date`, `req_ship_date`), each with its own key in the fact (ch. 2, ch. 5). A ragged customer hierarchy cannot be followed by `GROUP BY` through a parent pointer, so Kimball adds a bridge table of every parent and descendant pair; his eight-customer, four-level example needs 22 rows (1+4+9+8). It stays standard SQL, at the price of a table several times the dimension's size (ch. 6). A multivalued attribute such as an employee's skills has two shapes: a skills-group outrigger, which needs `UNION` or `INTERSECT` to ask for Unix and Linux together, or a delimited string such as `\Unix\C++\` searched with `LIKE '%\Unix\%' AND LIKE '%\Linux\%'`, which answers AND and OR in one `SELECT` but cannot use an ordinary index on a leading wildcard (ch. 8). A multivalued dimension such as a bill's diagnoses (some patients have more than 50) gets a group key and a bridge with a weighting factor per member, and the weights in a group sum to exactly 1.00, so allocated totals reconcile; without them the report counts each fact once per member and is an "impact report" (ch. 13). The descendant query on the customer bridge is plain SQL: `FROM customer c, bridge b, fact f WHERE c.customer_key = b.parent_key AND b.subsidiary_key = f.customer_key AND c.customer_name = 'ABC General International'` (ch. 6).
+**Role-playing dates and bridges.** An order has an order date, a requested ship date and more. Keep one date table and expose it through one view per role (`order_date`, `req_ship_date`), each with its own key in the fact (ch. 2, ch. 5). A ragged customer hierarchy cannot be followed by `GROUP BY` through a parent pointer, so Kimball adds a bridge table of every parent and descendant pair; his eight-customer, four-level example needs 22 rows (1+4+9+8). It stays standard SQL, at the price of a table several times the dimension's size (ch. 6). An employee's skills are either a skills-group outrigger, which needs `UNION` or `INTERSECT` for Unix and Linux together, or a delimited string such as `\Unix\C++\` searched with `LIKE`, which answers AND and OR in one `SELECT` but cannot use an ordinary index (ch. 8). A multivalued dimension such as a bill's diagnoses gets a group key and a bridge with a weighting factor per member, and the weights in a group sum to exactly 1.00; without them each fact is counted once per member, an "impact report" (ch. 13).
+
+Each bridge row holds a parent key, a subsidiary key, the levels between them, and bottom and top flags, plus a zero-length row from each parent to itself. Filter `levels = 1` for direct subsidiaries. Constrain the dimension to one parent before joining the bridge to the fact, or revenue is counted once per path (ch. 6):
+
+```sql
+SELECT c.customer_name, SUM(f.revenue)
+FROM customer c
+JOIN bridge b ON c.customer_key = b.parent_key
+JOIN fact f   ON b.subsidiary_key = f.customer_key
+WHERE c.customer_name = 'ABC General International' AND f.month = '2002-01'
+GROUP BY c.customer_name;
+
+-- many parents: take subsidiary keys DISTINCT, or shared ones double count
+SELECT SUM(f.revenue) FROM fact f
+WHERE f.month = '2002-01' AND f.customer_key IN (
+  SELECT DISTINCT b.subsidiary_key FROM customer c
+  JOIN bridge b ON c.customer_key = b.parent_key WHERE c.customer_city = 'San Francisco');
+```
+
 
 **Factless facts.** An event with nothing to measure is still a fact row. A registration table at grain one row per registered course, student and term holds only keys, and counting any key gives the same answer, so add an always-1 count column to keep the SQL readable (ch. 12). What did not happen needs a **coverage table** with a row for every possible combination, such as every promoted product in a store and week. Subtract the sales fact and the set difference is promoted-but-unsold, far smaller than padding the sales fact with zero rows (ch. 12).
 

@@ -1,0 +1,416 @@
+{
+ "schema": 1,
+ "key": "https://doi.org/10.1109/icvgip.2008.47",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/nilsback-2008-automated-flower-classification-over-large.pdf",
+ "bib": {
+  "title": "Automated flower classification over a large number of classes",
+  "authors": [
+   "Maria-Elena Nilsback",
+   "Andrew Zisserman"
+  ],
+  "first_author": "Nilsback",
+  "year": 2008,
+  "venue": "ICVGIP 2008 (Indian Conference on Computer Vision, Graphics and Image Processing)",
+  "arxiv": null,
+  "doi": "10.1109/icvgip.2008.47"
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 25798,
+  "chars_total": 25798,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "To what extent can combining several hand-designed features in a multiple-kernel SVM improve classification over a large number of visually similar flower classes?",
+ "hypothesis": "Learning a per-class optimal weighting of colour, shape, texture and spatial-layout kernels will beat any single feature on a dataset with high between-class similarity.",
+ "contributions": [
+  "A 103-class flower dataset (8189 images)",
+  "Four flower-specific features (internal SIFT, boundary SIFT, HOG, HSV) combined with per-class multiple-kernel learning",
+  "New best result on the 17-class flower dataset (88.33%)"
+ ],
+ "method": {
+  "summary": "Flowers are segmented from background with an iterative graph-cut and petal-shape-model scheme; four bag-of-visual-words features (HSV colour, foreground SIFT, boundary SIFT, HOG) are turned into chi-squared exponential kernels and combined with per-class weights learnt by Varma and Ray's convex MKL inside a one-vs-rest SVM. Vocabulary sizes and SIFT radius/spacing are tuned on a validation set, then the classifier is retrained on train+val.",
+  "task": "fine-grained image classification (flowers), 103 classes",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "103-class flower dataset (later released as Oxford Flowers)",
+    "role": "both",
+    "size": "8189 images, 103 classes, 40 to 250 images per class",
+    "split": "train 10/class (1030), val 10/class (1030), test remaining 6129 (min 20/class)",
+    "source": "Mostly web-collected, a few photographed by authors; flowers common in the UK; licence not stated",
+    "preprocessing": "Images rescaled so smallest dimension is 500 px"
+   },
+   {
+    "name": "17-class flower dataset (Nilsback and Zisserman 2006)",
+    "role": "eval",
+    "size": "not stated in this paper",
+    "split": "not stated here; results are mean +- std, so presumably repeated splits (inferred: from the +- values)",
+    "source": "public, http://www.robots.ox.ac.uk/~vgg/data/flowers/index.html",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Multiple-kernel SVM, one-vs-rest, kernels sum_f beta_f exp(-mu_f chi2_f)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "SVM with weighted sum of chi-squared kernels; beta learnt per class by Varma and Ray [16]",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": "visual words: colour 1000, internal SIFT 8000, boundary SIFT 3000, HOG 1500",
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "mu_f": "1/mean chi2 distance between vectors over all training images",
+     "SIFT": "128-d, grey value only, rotation invariant, descriptors with L2 norm below 200 zeroed",
+     "SIFT radius R": "15 internal, 10 boundary",
+     "SIFT spacing": "10 internal, 10 boundary (M internal, S boundary)",
+     "prediction": "classifier with most positive response over all classes"
+    }
+   },
+   {
+    "name": "Nearest neighbour with chi2 distance (Nilsback and Zisserman 2006 features)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "1-NN",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Varma and Ray MKL on 2006 features",
+    "role": "baseline",
+    "params": null,
+    "architecture": "multiple kernel classifier",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "one-vs-rest SVM with learnt kernel weights (convex optimisation of Varma and Ray)",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": "k-means repeated 3 times, best kept",
+   "other": {
+    "hyperparameter search": "words 1000-10000 (colour 100-5000), R and M 5-50 px, each variable maximised separately on validation set",
+    "final fit": "retrain on all training data (train plus val, 1030 each) after fixing parameters",
+    "SVM C": "not stated"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "mean per-class recognition rate",
+     "definition": "classification accuracy averaged over classes, not over images (as Caltech101/256)",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "single features",
+    "1-NN chi2 of [12]",
+    "Varma and Ray [16] MKL on [12] features"
+   ],
+   "protocol": "Single reported test-set number for 103-class set (no variance given); 17-class results reported as mean +- value."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "http://www.robots.ox.ac.uk/~vgg/data/flowers/index.html (stated for the 17-class set)"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "datasets[0].split",
+    "quote": "The test set consist of the remaining 6129 images (minimum 20 per class).",
+    "where": "Section 4"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Combining all four features gives the best 103-class recognition rate.",
+   "kind": "measured",
+   "source": null,
+   "metric": "recognition rate",
+   "value": 72.8,
+   "unit": "%",
+   "baseline_value": 55.1,
+   "n": null,
+   "setup": "103-class set, train+val (1030 each), test 6129, per-class average",
+   "note": "Table 1 and abstract agree (72.8, 55.1). Quote spans line breaks.",
+   "where": "Table 1",
+   "quote": "from 55.1% for the best single feature to 72.8% for the combination of"
+  },
+  {
+   "claim": "Best single feature is internal SIFT.",
+   "kind": "measured",
+   "source": null,
+   "metric": "recognition rate",
+   "value": 55.1,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "103-class set, single kernel",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row SIFT internal, column Recognition rate"
+  },
+  {
+   "claim": "HSV colour alone.",
+   "kind": "measured",
+   "source": null,
+   "metric": "recognition rate",
+   "value": 43.0,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "103-class set",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row HSV, column Recognition rate"
+  },
+  {
+   "claim": "HOG alone.",
+   "kind": "measured",
+   "source": null,
+   "metric": "recognition rate",
+   "value": 49.6,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "103-class set",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row HOG, column Recognition rate"
+  },
+  {
+   "claim": "Boundary SIFT alone is weakest.",
+   "kind": "measured",
+   "source": null,
+   "metric": "recognition rate",
+   "value": 32.0,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "103-class set",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row SIFT boundary, column Recognition rate"
+  },
+  {
+   "claim": "HSV + internal SIFT + HOG without boundary SIFT.",
+   "kind": "measured",
+   "source": null,
+   "metric": "recognition rate",
+   "value": 71.8,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "103-class set",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row HSV + SIFT int + HOG, column Recognition rate"
+  },
+  {
+   "claim": "New best on the 17-class dataset with iterative segmentation and this paper's features.",
+   "kind": "measured",
+   "source": null,
+   "metric": "recognition rate",
+   "value": 88.33,
+   "unit": "%",
+   "baseline_value": 83.33,
+   "n": null,
+   "setup": "17-class set, segmentation of [13], MKL, +-0.3",
+   "note": null,
+   "where": "Section 6",
+   "quote": "88.33±0.3%"
+  },
+  {
+   "claim": "17-class, graph-cut segmentation, this paper's features with MKL.",
+   "kind": "measured",
+   "source": null,
+   "metric": "recognition rate",
+   "value": 85.1,
+   "unit": "%",
+   "baseline_value": 82.55,
+   "n": null,
+   "setup": "17-class set, +-1.19",
+   "note": null,
+   "where": "Section 6",
+   "quote": "85.1 ± 1.19%"
+  },
+  {
+   "claim": "17-class, 1-NN of [12] with graph-cut segmentation.",
+   "kind": "measured",
+   "source": null,
+   "metric": "recognition rate",
+   "value": 71.76,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "17-class set, +-1.76",
+   "note": null,
+   "where": "Section 6",
+   "quote": "71.76 ± 1.76%"
+  },
+  {
+   "claim": "17-class, Varma and Ray MKL on [12] features.",
+   "kind": "measured",
+   "source": null,
+   "metric": "recognition rate",
+   "value": 82.55,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "17-class set, +-0.34",
+   "note": null,
+   "where": "Section 6",
+   "quote": "82.55 ± 0.34%"
+  }
+ ],
+ "limits": [
+  "103-class test number is a single split (10 train/10 val per class) with no variance or seed reporting",
+  "Dataset has 103 classes in this paper; the later public Flowers-102 release differs in class count",
+  "Authors concede large within-class variation and few samples per class are the principal challenge",
+  "Boundary SIFT is sensitive to segmentation quality; pipeline depends on flower segmentation",
+  "SVM C, k-means init and compute are not stated; hand-crafted features, long superseded by deep features"
+ ],
+ "practices": [],
+ "terms": [],
+ "lineage": [
+  {
+   "work": "Varma and Ray, Learning the discriminative power-invariance trade-off",
+   "year": 2007,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "per-class kernel weights via convex optimisation",
+   "quote": null
+  },
+  {
+   "work": "Nilsback and Zisserman, A visual vocabulary for flower classification",
+   "year": 2006,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "17-class dataset, baseline features",
+   "quote": null
+  },
+  {
+   "work": "Nilsback and Zisserman, Delving into the whorl of flower segmentation",
+   "year": 2007,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "iterative segmentation",
+   "quote": null
+  },
+  {
+   "work": "Bosch et al., Representing shape with a spatial pyramid kernel",
+   "year": 2007,
+   "arxiv": null,
+   "relation": "related",
+   "note": "per-class weighted kernel combination",
+   "quote": null
+  },
+  {
+   "work": "Lowe SIFT",
+   "year": 2004,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "local descriptor",
+   "quote": null
+  },
+  {
+   "work": "Dalal and Triggs HOG",
+   "year": 2005,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "global layout descriptor",
+   "quote": null
+  },
+  {
+   "work": "Caltech 101/256",
+   "year": 2007,
+   "arxiv": null,
+   "relation": "related",
+   "note": "comparable class count and per-class averaging protocol",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "The 103 class flower dataset. Each image is an instance of a different class... colour bar shows feature weights learnt for each class",
+   "page": 2,
+   "why": "shows the class set and per-class learnt kernel weights"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Recognition performance on the test set.",
+   "page": 5,
+   "why": "feature ablation in one table"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "The distribution of the number of images over the 103 classes.",
+   "page": 3,
+   "why": "class imbalance 40-250"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Example segmentations.",
+   "page": 3,
+   "why": "what segmentation yields"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 1",
+   "snippet": "K(i, j) = sum_{f in F} beta_f exp(-mu_f chi2_f(x_f(i), x_f(j)))",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Page numbers for figures are approximate (not in cache). Text has ligature characters. No embedded instructions."
+ ]
+}

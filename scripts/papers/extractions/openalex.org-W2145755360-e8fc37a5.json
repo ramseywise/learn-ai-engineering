@@ -1,0 +1,400 @@
+{
+ "schema": 1,
+ "key": "https://openalex.org/W2145755360",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/roemmele-2011-choice-plausible-alternatives.pdf",
+ "bib": {
+  "title": "Choice of Plausible Alternatives: An Evaluation of Commonsense Causal Reasoning",
+  "authors": [
+   "Melissa Roemmele",
+   "Cosmin Adrian Bejan",
+   "Andrew S. Gordon"
+  ],
+  "first_author": "Roemmele",
+  "year": 2011,
+  "venue": "AAAI 2011 Spring Symposium on Logical Formalizations of Commonsense Reasoning (SS-11-06)",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 33832,
+  "chars_total": 33832,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "benchmark",
+ "question": "How can progress in open-domain commonsense causal reasoning be measured with a validated, automatically scored question set?",
+ "hypothesis": "Simple associative corpus statistics will perform only moderately above chance while humans are near perfect, leaving a gap for future systems.",
+ "contributions": [
+  "COPA: 1000 forced-choice commonsense causal questions with dev/test split",
+  "Authoring methodology for breadth, clarity and rater agreement",
+  "Three unsupervised PMI/Dice baselines"
+ ],
+ "method": {
+  "summary": "Authors wrote 1000 premise plus two-alternative questions (cause or effect), validated by human raters, split 500/500 dev/test. Three unsupervised co-occurrence baselines using PMI and Dice are scored by accuracy.",
+  "task": "Commonsense causal reasoning, forced choice between two alternatives (forward: effect; backward: cause)",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "COPA",
+    "role": "both",
+    "size": "1000 questions",
+    "split": "500 dev, 500 test",
+    "source": "Authored by the researchers; topics from 1M personal weblog stories (Aug-Sep 2008, Gordon & Swanson 2009) and Library of Congress Thesaurus for Graphic Materials subject terms; available at http://ict.usc.edu/~gordon/copa.html",
+    "preprocessing": "Past tense, brief, no proper names or slang; order of questions and position of correct alternative randomised"
+   },
+   {
+    "name": "Project Gutenberg",
+    "role": "pretrain",
+    "size": "over 42,000 documents (16GB of text)",
+    "split": null,
+    "source": "English-language documents from gutenberg.org",
+    "preprocessing": "Content words only; co-occurrence within window W=5, 25 or 50"
+   }
+  ],
+  "models": [
+   {
+    "name": "Gutenberg word-pair PMI/Dice",
+    "role": "baseline",
+    "params": null,
+    "architecture": "Unsupervised correlation score averaged over content word pairs",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "window W=5, 25, 50 words",
+    "other": {}
+   },
+   {
+    "name": "Web word-pair PMI/Dice",
+    "role": "baseline",
+    "params": null,
+    "architecture": "Same formula with search engine hit counts (Bing, Google, Yahoo)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Web phrase-level PMI/Dice",
+    "role": "baseline",
+    "params": null,
+    "architecture": "Whole premise and alternative as search query",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "Select the alternative with the larger causality score",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "Single deterministic run per configuration; no seeds (unsupervised)",
+   "prompting": null,
+   "retrieval": "Search engine hit counts (Bing, Google, Yahoo); query date not stated",
+   "parameters": {
+    "window_sizes": "W=5, 25, 50",
+    "measures": "PMI (Church & Hanks 1989), Dice (1945)",
+    "reverse_word_order": "used for backward-causal questions since measures are asymmetric"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "accuracy",
+     "definition": "fraction of questions where the higher-scoring alternative is the intended one",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "random choice (50%)"
+   ],
+   "protocol": "Evaluated on dev, test and dev+test (unsupervised, so combined is valid); significance versus 50% at 0.05/0.01/0.001 (test type not stated). Human validation: 10 volunteers, 2 raters per question. No human accuracy figure is given, only kappa."
+  },
+  "availability": {
+   "code": "evaluation scripts mentioned, not linked",
+   "weights": null,
+   "data": "http://ict.usc.edu/~gordon/copa.html"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Best baseline (Gutenberg PMI, W=5) reaches 58.3% on all 1000 questions, vs 50% random.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "58.3",
+   "unit": "%",
+   "baseline_value": "50",
+   "n": 1000,
+   "setup": "Unsupervised PMI over Project Gutenberg co-occurrence, window W=5, dev+test 1000 questions",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Dev + Test PMI, column W=5"
+  },
+  {
+   "claim": "Best baseline on the 500-question test set is Gutenberg PMI W=5.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "58.8",
+   "unit": "%",
+   "baseline_value": "50",
+   "n": 500,
+   "setup": "PMI, window W=5, test set 500 questions; ** p<0.01 vs random",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Test Set PMI, column W=5"
+  },
+  {
+   "claim": "Same baseline on the 500-question dev set.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "57.8",
+   "unit": "%",
+   "baseline_value": "50",
+   "n": 500,
+   "setup": "PMI, W=5, dev set 500 questions; ** p<0.01",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Dev Set PMI, column W=5"
+  },
+  {
+   "claim": "Gutenberg Dice W=5 scores 56.0% on test.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "56.0",
+   "unit": "%",
+   "baseline_value": "50",
+   "n": 500,
+   "setup": "Dice, W=5, test 500; * p<0.05",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Test Set Dice, column W=5"
+  },
+  {
+   "claim": "Web word-pair baseline is near chance: Google Dice on dev+test.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "50.5",
+   "unit": "%",
+   "baseline_value": "50",
+   "n": 1000,
+   "setup": "Web hit counts at word-pair level, Google, Dice, 1000 questions",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Dev + Test Dice, column Google (web word pairs)"
+  },
+  {
+   "claim": "Web phrase-level Dice with Bing reaches 57.8% on test.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "57.8",
+   "unit": "%",
+   "baseline_value": "50",
+   "n": 500,
+   "setup": "Whole premise and alternative as query, Bing hits, Dice, test 500; ** p<0.01",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Test Set Dice, column Bing (web word phrase level)"
+  },
+  {
+   "claim": "Web phrase-level Dice with Bing on dev+test.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "56.4",
+   "unit": "%",
+   "baseline_value": "50",
+   "n": 1000,
+   "setup": "Phrase-level Bing Dice, 1000 questions; ** p<0.01",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Dev + Test Dice, column Bing (web word phrase level)"
+  },
+  {
+   "claim": "Phrase-level Google is below chance (48.0 on test PMI).",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "48.0",
+   "unit": "%",
+   "baseline_value": "50",
+   "n": 500,
+   "setup": "Phrase-level Google, PMI, test 500",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Test Set PMI, column Google (web word phrase level)"
+  },
+  {
+   "claim": "Human raters agree almost perfectly on the intended answer.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Cohen's kappa",
+   "value": "0.965",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "10 volunteers, 200 questions each, 2 raters per question",
+   "note": null,
+   "where": "Authoring Methodology",
+   "quote": "Agreement between authors was high (Cohen's Κ = 0.965)."
+  },
+  {
+   "claim": "Volunteers disagreed with the author's intended answer on 26 questions, which were replaced.",
+   "kind": "measured",
+   "source": null,
+   "metric": "questions removed",
+   "value": "26",
+   "unit": "questions",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Replacements validated by two additional raters; 1000 final questions",
+   "note": null,
+   "where": "Authoring Methodology",
+   "quote": "these volunteers answered 26 questions differently than was intended by the author of the question"
+  },
+  {
+   "claim": "COPA has 1000 questions split equally into dev and test.",
+   "kind": "measured",
+   "source": null,
+   "metric": "questions",
+   "value": "1000",
+   "unit": "questions",
+   "baseline_value": null,
+   "n": null,
+   "setup": "500 dev + 500 test",
+   "note": null,
+   "where": "Authoring Methodology",
+   "quote": "(500 questions each)"
+  },
+  {
+   "claim": "A random baseline scores exactly 50% because the correct position is randomised.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Forced choice between two alternatives",
+   "note": null,
+   "where": "Authoring Methodology"
+  },
+  {
+   "claim": "Smallest window is best, suggesting causally related events are described close together.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Gutenberg PMI, W=5 vs W=25 (58.2) and W=50 (56.2) on dev+test",
+   "note": null,
+   "where": "Baselines",
+   "quote": "suggesting that causally related events are typically described in close proximity to one another"
+  }
+ ],
+ "limits": [
+  "Only unsupervised associative baselines; no supervised or knowledge-based system tested",
+  "No human accuracy is reported, only inter-rater kappa 0.965",
+  "Significance test used is not named",
+  "Web hit-count baselines depend on unknown search engine mechanisms and date",
+  "Questions are single-author written, with the authors' own creative choices, 500 test items so small differences are noisy",
+  "Authors concede baselines are not expected to be competitive; best is 58.3%"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "COPA",
+   "definition": "Choice Of Plausible Alternatives: a premise and two plausible causes or effects, where the correct choice is the more plausible",
+   "where": "Abstract"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Recognizing Textual Entailment challenges (PASCAL/NIST)",
+   "year": 2004,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "COPA adapts the RTE question-set design (dev/test split, balanced)",
+   "quote": null
+  },
+  {
+   "work": "Turney, Mining the Web for synonyms: PMI-IR versus LSA on TOEFL",
+   "year": 2001,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Web hit-count PMI baseline",
+   "quote": null
+  },
+  {
+   "work": "Church & Hanks, Word Association Norms",
+   "year": 1989,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "PMI",
+   "quote": null
+  },
+  {
+   "work": "Gordon & Swanson, Identifying Personal Stories in Millions of Weblog Entries",
+   "year": 2009,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "weblog story corpus for topics",
+   "quote": null
+  },
+  {
+   "work": "Gerber, Gordon & Sagae, Open-domain Commonsense Reasoning Using Discourse Relations from a Corpus of Weblog Stories",
+   "year": 2010,
+   "arxiv": null,
+   "relation": "related",
+   "note": "suggested promising approach",
+   "quote": null
+  },
+  {
+   "work": "Cyc (Lenat 1995); ConceptNet (Liu & Singh 2004)",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "suggested knowledge sources",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Table 1",
+   "caption": "Three baseline results for the COPA evaluation. The results are computed in terms of accuracy and the ones marked with ***, **, and * are statistically significantly better at the 0.001, 0.01, and 0.05 levels, respectively, than the random baseline (50% accuracy).",
+   "page": 5,
+   "why": "Shows all baseline accuracies by window and search engine against 50% chance"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "The two scoring formulas are images and did not extract",
+  "Table 1 flattened by extraction; column assignment inferred from the header order"
+ ]
+}

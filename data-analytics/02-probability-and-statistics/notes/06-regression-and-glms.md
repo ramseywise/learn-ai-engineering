@@ -5,6 +5,7 @@ sources:
   - Bruce & Bruce, Practical Statistics for Data Scientists (O'Reilly, 2017) (ch. 4, Regression and Prediction)
   - Efron & Hastie, Computer Age Statistical Inference (Cambridge, 2016), https://hastie.su.domains/CASI/ (ch. 7, ridge; ch. 16-18, lasso, boosting and neural networks as GLM relatives)
   - https://www.statsmodels.org/stable/index.html
+  - McKinney, Python for Data Analysis (O'Reilly, 2nd ed., 2017) (ch. 13, Introduction to Modeling Libraries in Python)
   - https://doi.org/10.3368/jhr.50.2.317 (Cameron and Miller, J. Human Resources, 2015; authors' draft read)
   - Downey, Think Stats (Green Tea Press, 2011), https://allendowney.github.io/ThinkStats/ (ch. 9, Correlation)
   - Reinhart, Statistics Done Wrong (No Starch, 2015) (ch. 7, Continuity Errors; ch. 8, Model Abuse)
@@ -112,6 +113,38 @@ Read it from the left. Each `coef` is a *conditional* difference: `new_checkout`
 `std err` is the coefficient's sampling standard deviation, and `t` is the ratio of the two. `[0.025, 0.975]` is the 95% confidence interval, which is what you should report. R² at 0.30 tells you the share of variance explained. It is low, and that is fine for inference. Whether the effect estimate is unbiased depends on the randomisation and has nothing to do with R².
 
 A prediction needs a different interval. The confidence interval covers the average outcome for everyone with those inputs, and the prediction interval covers one new person, adding the irreducible error. The book's advertising fit gives a 95% confidence interval of 10,985 to 11,528 around 11,256 units of sales and a prediction interval of 7,930 to 14,580 around the same centre (*ISLP*, ch. 3). Report the first for an effect or an average, the second for a single user's spend.
+
+### The array interface, and a time-series cousin
+
+`smf.ols` takes a formula and a DataFrame. `sm.OLS` takes arrays, and builds no intercept unless you ask for one with `sm.add_constant`. McKinney's chapter on modelling libraries uses it on simulated data with known truth: 100 rows, three predictors, true coefficients 0.1, 0.3 and 0.5, and noise of variance 0.1 (*Python for Data Analysis*, ch. 13; seed 12345, recomputed here):
+
+```python
+import numpy as np, statsmodels.api as sm
+from statsmodels.tsa.ar_model import AutoReg
+
+def dnorm(mean, variance, size):
+    return mean + np.sqrt(variance) * np.random.randn(*size)
+
+np.random.seed(12345)
+N = 100
+X = np.c_[dnorm(0, 0.4, (N,)), dnorm(0, 0.6, (N,)), dnorm(0, 0.2, (N,))]
+y = X @ [0.1, 0.3, 0.5] + dnorm(0, 0.1, (N,))
+res = sm.OLS(y, X).fit()
+print(res.params.round(4), round(res.rsquared, 3))
+
+values = [4, 4]                       # AR(2): x_t = 0.8 x_{t-1} - 0.4 x_{t-2} + noise
+noise = dnorm(0, 0.1, (1000,))
+for e in noise:
+    values.append(0.8 * values[-1] - 0.4 * values[-2] + e)
+print(AutoReg(values, lags=5, trend="c").fit().params.round(4))
+```
+
+```text
+[0.1783 0.223  0.501 ] 0.43
+[-0.0062  0.7845 -0.4085 -0.0136  0.015   0.0143]
+```
+
+The estimates 0.1783, 0.223 and 0.501 land near the truth, with standard errors of 0.053, 0.046 and 0.080. Because there is no constant column, the reported R² of 0.430 is the uncentred one (variation around zero, not around the mean of y), so do not compare it with an R² from a model that has an intercept. The second fit is the book's autoregressive example: the series follows an AR(2) with coefficients 0.8 and -0.4, and when you do not know the order you fit more lags than needed. The intercept comes first, then lags 1 and 2 at 0.7845 and -0.4085, and the three extra lags sit near zero (-0.0136, 0.015, 0.0143). The book calls `sm.tsa.AR`, which has been removed from statsmodels; `AutoReg` with `trend="c"` gives the same numbers.
 
 ### Why add pre-period covariates
 

@@ -8,7 +8,7 @@ cleaned: 2026-11-01
 ---
 # Prompt Library
 
-> Small, copyable prompts grouped by task, each with the lesson it teaches. Most date from the GPT-3.5/GPT-4 era. The *shape* of each prompt still transfers, but strong current models rarely need the scaffolding. `{input}` marks a slot ([02](02-prompt-anatomy.md#prompt-templates)).
+> Small, copyable prompts grouped by task, each with the lesson it teaches. Most date from the GPT-3.5/GPT-4 era. The *shape* of each prompt still transfers, but strong current models rarely need the scaffolding. `{input}` marks a slot ([02](02b-document-types-formatting-and-templates.md#prompt-templates)).
 
 When you have a task and a blank prompt, you need the shape that works for that task and the lesson behind it, not a theory. Copied blindly these go wrong: without an empty case, the extraction prompt invents answers, and "exclusively" didn't stop GPT-4 adding a BMI to a medical note. Each entry here names its lesson.
 

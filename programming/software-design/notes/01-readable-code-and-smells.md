@@ -4,7 +4,7 @@ sources:
   - "Martin Fowler, Code Smell (2006) — https://martinfowler.com/bliki/CodeSmell.html"
   - "John Ousterhout and Robert C. Martin, A Philosophy of Software Design vs Clean Code (2024-25) — https://github.com/johnousterhout/aposd-vs-clean-code"
   - "Sjøberg, Yamashita, Anda, Mockus, Dybå, Quantifying the Effect of Code Smells on Maintenance Effort, IEEE TSE 39(8), 2013 — https://doi.org/10.1109/TSE.2012.89"
-  - "Ben Wilson, Machine Learning Engineering in Action (Manning, 2022), chapters 4 and 10 (smells; ratio of feature code to model code) — chapter PDFs in data-engineering/sources/ml-engineering-in-action/"
+  - "Ben Wilson, Machine Learning Engineering in Action (Manning, 2022), chapters 4 and 10 (smells; ratio of feature code to model code; nested-logic example) — chapter PDFs in data-engineering/sources/ml-engineering-in-action/"
   - "PEP 8, Style Guide for Python Code — https://peps.python.org/pep-0008/"
   - "Google Python Style Guide — https://google.github.io/styleguide/pyguide.html"
   - "Ruff rule C901 (complex-structure) — https://docs.astral.sh/ruff/rules/complex-structure/"
@@ -241,6 +241,18 @@ Wilson's list of "nontoxic" smells in ML code bases (*Machine Learning Engineeri
 | Wildcard imports (`from scipy import *`) and mixed styles (`import numpy as np` beside `from numpy import add`) | Names collide across libraries, and a reader cannot tell where `add` came from |
 | SQL as one chain of joins with no CTEs, or with no indentation or capitalisation | One dependency chain means adding or dropping a column can take hours to trace |
 | Constant recasting (`age = int(age)` repeated) | Types do not change between lines; cast once, where the data enters |
+
+Nested logic is the last of his five, and the one with a number attached. Merge the probability scores of several models into one score by bucketing each into five bands (below 0.2, 0.4, 0.6, 0.8, else) and writing a branch for every combination. For two models that is a 25-entry table. For eight, his `how_many_terrible_lines(8)`, `5**8 * 2 + 8!`, returns 821,570 lines (*Machine Learning Engineering in Action*, ch. 10). The fix is to stop enumerating combinations and compute the score:
+
+```python
+def band(p):                      # 0 for p < 0.2 ... 4 for p >= 0.8
+    return min(int(p / 0.2), 4)
+
+def combined_score(scores):       # any number of models, one line
+    return sum(band(p) for p in scores)
+```
+
+His Listing 10.23 does the same, with an `if/elif` ladder inside the per-model bucket function and a `sum` over each tuple (100 synthetic tuples, seed 42). The book then says a dictionary keyed by 8-tuples would need 32,768 entries, which does not match five bands (`5**8` is 390,625), so treat the 821,570 as the illustration and not that figure. The rule he draws is to walk away from the keyboard when you are pasting the same logic again, and look for the arithmetic.
 
 Swallowed exceptions are on his list of the five "deadly" problems and have an example in [errors and context managers](../../python/03-language-for-engineers/notes/04-errors-and-context-managers.md#blind-catches-hide-wrong-input). One more of his heuristics is a smell by his own account: "for the vast majority of ML solutions, the ratio of feature engineering code to model code should always be > 4x" (ch. 4). It is an experienced author's rule of thumb. The book gives no data or setup behind the 4, so use it as a prompt to look at where the code's effort went, not as a threshold. All of this is practitioner judgement, so the caution in the next section applies to every row.
 

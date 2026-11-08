@@ -1,0 +1,426 @@
+{
+ "schema": 1,
+ "key": "1904.09482",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/liu-2019-improving-multi-task-deep-neural.pdf",
+ "bib": {
+  "title": "Improving Multi-Task Deep Neural Networks via Knowledge Distillation for Natural Language Understanding",
+  "authors": [
+   "Xiaodong Liu",
+   "Pengcheng He",
+   "Weizhu Chen",
+   "Jianfeng Gao"
+  ],
+  "first_author": "Liu",
+  "year": 2019,
+  "venue": "preprint",
+  "arxiv": "1904.09482",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 30502,
+  "chars_total": 30502,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can knowledge distillation from task-specific ensembles of MT-DNNs into one multi-task MT-DNN improve GLUE performance without increasing serving cost?",
+ "hypothesis": "A single MT-DNN trained on the soft targets of ensemble teachers generalizes like the ensemble and beats a vanilla MT-DNN trained on hard labels, including on tasks without a teacher.",
+ "contributions": [
+  "Extend Hinton et al. (2015) knowledge distillation to the multi-task learning setting of MT-DNN",
+  "New single-model GLUE state of the art of 83.7% (April 1, 2019 leaderboard)",
+  "Show gains also on tasks with no teacher, larger for tasks with less in-domain data"
+ ],
+ "method": {
+  "summary": "Six MT-DNNs with varied shared-layer dropout are trained, the best 3 are fine-tuned per task (MNLI, QQP, RTE, QNLI) into 3-model ensemble teachers whose averaged class probabilities become soft targets. A student MT-DNN (same architecture as vanilla) is trained by multi-task learning with the per-task loss the average of hard-label and soft-target cross entropy, then fine-tuned per task.",
+  "task": "multi-task natural language understanding (GLUE), knowledge distillation",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "GLUE (CoLA, SST-2, MNLI, RTE, WNLI, QQP, MRPC, STS-B, QNLI)",
+    "role": "both",
+    "size": "train: CoLA 8.5k, SST-2 67k, MNLI 393k, RTE 2.5k, WNLI 634, QQP 364k, MRPC 3.7k, STS-B 7k, QNLI 108k",
+    "split": "dev/test per Table 1 (e.g. MNLI 20k dev, 20k test); test scored on GLUE server",
+    "source": "Wang et al. 2019",
+    "preprocessing": "wordpiece tokenization, spans no longer than 512 tokens; QNLI treated as two tasks (pairwise ranking on v1, classification on v2) with test results merged"
+   }
+  ],
+  "models": [
+   {
+    "name": "MT-DNN_KD (student)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "BERT-large shared layers (lexicon encoder + multi-layer bidirectional Transformer) with task-specific output layers",
+    "init_from": "BERT_LARGE for shared layers",
+    "tokenizer": "wordpiece",
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "512 tokens",
+    "other": {
+     "note": "intro states BERT large has 24 transformer layers, 344 million parameters"
+    }
+   },
+   {
+    "name": "MT-DNN ensemble teacher (per task: MNLI, QQP, RTE, QNLI)",
+    "role": "teacher",
+    "params": null,
+    "architecture": "3 single MT-DNNs per task",
+    "init_from": "Cased/Uncased BERT; shared layers from MT-DNN pretrained on GLUE via MTL; task output layers random",
+    "tokenizer": "wordpiece",
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "512 tokens",
+    "other": {
+     "selection": "6 single MT-DNNs with shared-layer dropout in {0.1,0.2,0.3}; top 3 by MNLI and RTE dev"
+    }
+   },
+   {
+    "name": "MT-DNN (vanilla)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "same as student",
+    "init_from": "BERT_LARGE",
+    "tokenizer": "wordpiece",
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "BERT_LARGE",
+    "role": "baseline",
+    "params": "344 million",
+    "architecture": "24-layer transformer",
+    "init_from": null,
+    "tokenizer": "wordpiece",
+    "vocab": null,
+    "layers": "24",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "Per task with teacher: average of cross entropy with hard labels (Eq 2) and cross entropy with soft targets Q = avg of K teacher class probabilities (Eq 3, 4); tasks without teacher use hard-label cross entropy. Mini-batches of single tasks, shuffled across tasks (Algorithm 1)",
+   "optimizer": "Adamax",
+   "lr": "5e-5",
+   "lr_schedule": "linear decay",
+   "warmup": "0.1",
+   "batch_size": "32",
+   "steps": null,
+   "epochs": "5 (maximum)",
+   "tokens": null,
+   "seq_len": "512 tokens (max span)",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": "0.1 for task-specific layers, 0.3 MNLI, 0.05 CoLA/SST-2",
+   "regularisation": "gradient norm clipped to 1",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "loss_weighting": "equal-weight average; authors report no significant difference with other weights",
+    "teacher_dropout": "shared-layer dropout in {0.1,0.2,0.3} for the 6 candidate models"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "not stated; no seeds or repeated runs reported",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "teachers_per_task": "3",
+    "tasks_with_teachers": "4 of 9 (MNLI, QQP, RTE, QNLI)"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "GLUE score",
+     "definition": "overall benchmark score from GLUE server",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Matthews corr (CoLA); accuracy; accuracy/F1; Pearson/Spearman",
+     "definition": "per-task metrics as in Table 1",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "BERT_LARGE",
+    "MT-DNN",
+    "Snorkel MeTaL (ensemble)",
+    "ALICE (unpublished)",
+    "GPT on STILTs",
+    "BiLSTM+ELMo+Attn",
+    "MT-DNN-ensemble (dev)"
+   ],
+   "protocol": "Test: GLUE leaderboard on April 1, 2019, single run; dev: Table 3. No seeds or significance test reported, though text says 'significantly'."
+  },
+  "availability": {
+   "code": "https://github.com/namisan/mt-dnn (stated as to be released)",
+   "weights": "pre-trained models to be released",
+   "data": "GLUE public"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.warmup",
+    "quote": "A linear learning rate decay schedule with warm-up over 0.1 was used, unless stated otherwise.",
+    "where": "4.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Distilled MT-DNN sets a new single-model GLUE test score",
+   "kind": "measured",
+   "source": null,
+   "metric": "GLUE score",
+   "value": 83.7,
+   "unit": "%",
+   "baseline_value": 82.2,
+   "n": null,
+   "setup": "GLUE test server, BERT-large based MT-DNN_KD, April 1 2019 leaderboard; baseline is vanilla MT-DNN",
+   "quote": "creating a new state-of-the-art result of 83.7%",
+   "table": null,
+   "note": null,
+   "where": "4.2, Table 2"
+  },
+  {
+   "claim": "Margin over second-best ALICE on the GLUE test set",
+   "kind": "measured",
+   "source": null,
+   "metric": "GLUE score margin",
+   "value": 0.5,
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GLUE test, ALICE 83.3 (unpublished, single/ensemble unknown)",
+   "quote": "ALICE is 0.5%",
+   "table": null,
+   "note": null,
+   "where": "4.2"
+  },
+  {
+   "claim": "Improvement over BERT_LARGE on GLUE test",
+   "kind": "measured",
+   "source": null,
+   "metric": "GLUE score",
+   "value": 3.2,
+   "unit": "points absolute",
+   "baseline_value": 80.5,
+   "n": null,
+   "setup": "GLUE test",
+   "quote": "3.2% absolute improvement over BERT",
+   "table": null,
+   "note": null,
+   "where": "1"
+  },
+  {
+   "claim": "MT-DNN_KD vs MT-DNN on RTE test",
+   "kind": "measured",
+   "source": null,
+   "metric": "RTE accuracy",
+   "value": 85.1,
+   "unit": "accuracy %",
+   "baseline_value": 75.5,
+   "n": null,
+   "setup": "GLUE test; RTE has teacher, 2.5k train examples",
+   "quote": "RTE (85.1% vs. 75.5%)",
+   "table": null,
+   "note": null,
+   "where": "4.2, Table 2"
+  },
+  {
+   "claim": "MT-DNN_KD vs MT-DNN on CoLA test (no teacher)",
+   "kind": "measured",
+   "source": null,
+   "metric": "CoLA Matthews",
+   "value": 65.4,
+   "unit": "Matthews corr %",
+   "baseline_value": 61.5,
+   "n": null,
+   "setup": "GLUE test; CoLA has no teacher, 8.5k train examples",
+   "quote": "CoLA (65.4% vs. 61.5%)",
+   "table": null,
+   "note": null,
+   "where": "4.2, Table 2"
+  },
+  {
+   "claim": "MT-DNN_KD vs MT-DNN on RTE dev",
+   "kind": "measured",
+   "source": null,
+   "metric": "RTE dev accuracy",
+   "value": 88.6,
+   "unit": "accuracy %",
+   "baseline_value": 83.4,
+   "n": null,
+   "setup": "GLUE dev, Table 3; MT-DNN-ensemble 86.7 (student exceeds its own teacher ensemble here)",
+   "quote": null,
+   "table": "Table 3, row MT-DNNKD, column RTE",
+   "note": "Student 88.6 exceeds ensemble teacher 86.7 on RTE dev",
+   "where": "Table 3"
+  },
+  {
+   "claim": "MT-DNN_KD vs MT-DNN on MRPC dev (no teacher), accuracy",
+   "kind": "measured",
+   "source": null,
+   "metric": "MRPC dev accuracy",
+   "value": 93.3,
+   "unit": "accuracy %",
+   "baseline_value": 91.0,
+   "n": null,
+   "setup": "GLUE dev, Table 3; ensemble 93.4",
+   "quote": null,
+   "table": "Table 3, row MT-DNNKD, column MRPC",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "MNLI-m dev: student vs ensemble teacher",
+   "kind": "measured",
+   "source": null,
+   "metric": "MNLI-m dev accuracy",
+   "value": 87.3,
+   "unit": "accuracy %",
+   "baseline_value": 88.1,
+   "n": null,
+   "setup": "GLUE dev, Table 3; baseline_value is MT-DNN-ensemble; vanilla MT-DNN 87.1",
+   "quote": null,
+   "table": "Table 3, row MT-DNNKD, column MNLI-m/mm",
+   "note": "Student keeps only part of the ensemble gap on MNLI (87.1 -> 87.3 vs ensemble 88.1)",
+   "where": "Table 3"
+  },
+  {
+   "claim": "Student retains nearly all ensemble gain (qualitative)",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "GLUE dev, Table 3, four teacher tasks and three no-teacher tasks",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "4.3"
+  }
+ ],
+ "limits": [
+  "Evaluated only on GLUE; teachers only for 4 of 9 tasks",
+  "No seeds, variance or significance tests despite 'significantly outperforms' wording",
+  "Dev improvement on larger tasks (MNLI, QQP) is small: 87.1 to 87.3, 91.9 to 91.9",
+  "Weight on hard vs soft loss not ablated in reported numbers; authors say no significant difference",
+  "Student cost, teacher training compute and hardware not reported",
+  "Comparison with ALICE and Snorkel MeTaL partly unclear (unpublished or ensemble); leaderboard claim dated April 1, 2019",
+  "Authors list future work: better combination of soft and hard targets, soft targets for unlabeled data, self-distillation"
+ ],
+ "practices": [],
+ "terms": [],
+ "lineage": [
+  {
+   "work": "Multi-task deep neural networks for natural language understanding (MT-DNN)",
+   "year": 2019,
+   "arxiv": "1901.11504",
+   "relation": "extends",
+   "note": "base and vanilla baseline",
+   "quote": null
+  },
+  {
+   "work": "Distilling the knowledge in a neural network",
+   "year": 2015,
+   "arxiv": "1503.02531",
+   "relation": "uses-method",
+   "note": "soft-target distillation extended to MTL",
+   "quote": null
+  },
+  {
+   "work": "BERT",
+   "year": 2018,
+   "arxiv": "1810.04805",
+   "relation": "baseline",
+   "note": "initializes shared layers; BERT_LARGE baseline",
+   "quote": null
+  },
+  {
+   "work": "Snorkel MeTaL",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "ensemble compared on leaderboard",
+   "quote": null
+  },
+  {
+   "work": "STILTs (Phang et al.)",
+   "year": 2018,
+   "arxiv": "1811.01088",
+   "relation": "baseline",
+   "note": "GPT on STILTs",
+   "quote": null
+  },
+  {
+   "work": "GLUE",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Wang et al. benchmark",
+   "quote": null
+  },
+  {
+   "work": "Model compression (Bucilu et al.)",
+   "year": 2006,
+   "arxiv": null,
+   "relation": "related",
+   "note": "early distillation",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Architecture of the MT-DNN model for representation learning",
+   "page": 3,
+   "why": "shared lower layers vs task-specific heads"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Process of knowledge distillation for multi-task learning",
+   "page": 4,
+   "why": "teacher ensembles to soft targets to student pipeline"
+  },
+  {
+   "figure": "Table 3",
+   "caption": "GLUE dev set results: BERT, MT-DNN, MT-DNN_KD, MT-DNN-ensemble",
+   "page": 6,
+   "why": "shows student retains most of the ensemble gain"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 3-4, Section 3",
+   "snippet": "Q = avg([Q1, Q2, ..., QK]);  loss = -sum_c Q(c|X) log Pr(c|X)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "No embedded instructions found",
+  "Page numbers for Table 3 approximate"
+ ]
+}

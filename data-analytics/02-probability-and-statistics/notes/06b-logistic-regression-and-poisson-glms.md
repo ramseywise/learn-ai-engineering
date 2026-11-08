@@ -4,7 +4,7 @@ sources:
   - James, Witten, Hastie, Tibshirani & Taylor, An Introduction to Statistical Learning with Applications in Python (Springer, 2023), https://www.statlearning.com/ (ch. 4, Classification, §4.3 and §4.6)
   - Bruce & Bruce, Practical Statistics for Data Scientists (O'Reilly, 2017) (ch. 5, Classification)
   - Efron & Hastie, Computer Age Statistical Inference (Cambridge, 2016), https://hastie.su.domains/CASI/ (ch. 5, exponential families; ch. 8, GLMs)
-  - McElreath, Statistical Rethinking (CRC Press, first edition) (ch. 9, link functions; ch. 10, binomial and Poisson regression; ch. 11, ordered categorical outcomes)
+  - McElreath, Statistical Rethinking (CRC Press, 2015) (ch. 9, link functions; ch. 10, binomial and Poisson regression; ch. 11, ordered categorical outcomes)
   - https://arxiv.org/abs/0901.4011
   - https://doi.org/10.1214/08-aoas191 (separation)
   - https://www.statsmodels.org/stable/index.html

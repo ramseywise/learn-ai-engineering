@@ -4,6 +4,7 @@ sources:
   - "Prompt Engineering for LLMs (Berryman & Ziegler, O'Reilly 2024) — Ch 4, Ch 5, Ch 8"
   - https://www.promptingguide.ai/techniques
   - "Huyen, AI Engineering (O'Reilly, 2025), ch. 5"
+  - "Xiao & Zhu, Foundations of Large Language Models (2025), ch. 6"
   - https://arxiv.org/abs/2201.11903
   - https://arxiv.org/abs/2205.11916
   - https://arxiv.org/abs/2302.00923
@@ -89,7 +90,7 @@ With PaLM 540B and 8 exemplars, GSM8K math rose from **17.9% to 56.9%**, past th
 *Image Source: Zhang et al. (2022)*
 
 Practical notes:
-- **Put reasoning in a parseable place** — a `<thinking>` block or an `# Analysis` section before `# Conclusion` ([02](02-prompt-anatomy.md#choosing-the-document-type)) — so the app can strip it before showing the answer.
+- **Put reasoning in a parseable place** — a `<thinking>` block or an `# Analysis` section before `# Conclusion` ([02](02b-document-types-formatting-and-templates.md#choosing-the-document-type)) — so the app can strip it before showing the answer.
 - **Reasoning must come first.** "Answer, then explain" gets you rationalization, not reasoning. Forbidding the work costs most. On the 1,000 algebra word problems of DRAW-1K, ChatGPT (January–February 2023) gave only wrong answers or "No Solution" on 84% of problems when the prompt demanded "Just provide the final number", against 20% when it could show its work. Failure rose with the number of additions and subtractions in the problem ([arXiv:2302.13814](https://arxiv.org/abs/2302.13814) (Shakarian et al., AAAI-MAKE 2023)). Each condition ran once, and the answer-only prompt was long and insistent, so part of the gap may be the instruction itself.
 - Variants worth knowing by name: **pause tokens** (fine-tune on a meaningless "pause" token, then insert ~10 after the question: the extra positions give earlier information time to integrate, buying compute without words — the model's "uh, um"), **Multimodal CoT** (two stages — generate a rationale from text + image, then infer the answer from it; a fine-tuned 738M model scored 90.5% on ScienceQA vs. ~76% for GPT-3.5 with CoT), **Graph prompting** (GraphPrompt, for graph-structured tasks — niche).
 
@@ -103,6 +104,8 @@ The two-stage split exists because a one-stage chain hurt the small model. **A 2
 ## Self-consistency
 
 Sample several CoT completions at non-zero temperature and take the **majority answer** (Wang et al., 2022). Replaces greedy decoding: different reasoning paths that converge on one answer are more trustworthy than any single path.
+
+Xiao and Zhu write the vote as a formula and place it in a family. Sample N paths with temperature plus top-k or top-p, extract each final answer, and return the most frequent: â = argmax over a of Σₖ 1[Extract(yₖ) = a]. **Best-of-N** swaps the vote for a verifier score, ŷ = argmax over the N paths of v(x, y), so it is only as good as the verifier (a weak one is fooled by flawed logic that lands on the right answer). Both spend compute on width, and the book frames all test-time reasoning as search scaling with three questions: how to generate paths, how to search over steps, and how to check them. Two cautions, both stated without data: raising temperature buys diversity but lowers each path's quality, and search gains plateau because the model's capability sets a ceiling and path diversity falls as search effort rises. The claim that a smaller model with extra inference compute can beat a larger one answering at once is attributed to Snell et al. 2024 without numbers (*Foundations of LLMs*, ch. 6, §6.3). For verifiers see [agentic foundations 04c](../../../generative-ai/03-agentic-foundations/notes/04c-planning-architectures-and-failure.md).
 
 ![Single-path reasoning (CoT) vs. multi-path reasoning (CoT-SC, ToT)](../sources/images/dair-single-vs-multi-path-reasoning.png)
 *Image Source: DAIR.AI, Introduction to AI Agents (task decomposition). Left: one reasoning chain. Middle: CoT-SC samples several chains and votes. Right: ToT branches at every step.*

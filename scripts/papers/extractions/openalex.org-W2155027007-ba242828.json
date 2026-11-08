@@ -1,0 +1,217 @@
+{
+ "schema": 1,
+ "key": "https://openalex.org/W2155027007",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/sutton-1999-policy-gradient-methods-reinforcement-learning.pdf",
+ "bib": {
+  "title": "Policy Gradient Methods for Reinforcement Learning with Function Approximation",
+  "authors": [
+   "Richard S. Sutton",
+   "David McAllester",
+   "Satinder Singh",
+   "Yishay Mansour"
+  ],
+  "first_author": "Sutton",
+  "year": 1999,
+  "venue": "NIPS 12 (1999)",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 19037,
+  "chars_total": 19037,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "theory",
+ "question": "Can a policy represented by its own function approximator be updated by the gradient of expected reward, with that gradient estimated from experience using a learned approximate value function, and does this converge?",
+ "hypothesis": "A learned approximate action-value or advantage function satisfying a compatibility condition gives an unbiased policy-gradient estimate, so policy iteration with function approximation converges to a local optimum.",
+ "contributions": [
+  "Policy Gradient Theorem (Theorem 1): gradient of performance has no state-distribution derivative term",
+  "Theorem 2: gradient is exact when the approximate Q (f_w) is compatible with the policy parameterization and at a local optimum of its fit",
+  "Theorem 3: first proof that a form of policy iteration with general differentiable function approximation converges to a locally optimal policy"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "Policy gradient theorem: the gradient of performance equals the sum over states and actions of d(s) dpi/dtheta Q, with no term for the derivative of the state distribution.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Any MDP, average-reward or start-state formulation; pi differentiable in theta.",
+   "quote": "the key point is that their are no terms of the form ∂dπ(s) ∂θ : the eﬀect of policy changes on the distribution of states does not appear.",
+   "table": null,
+   "note": null,
+   "where": "Sec 1, Theorem 1 (eq 2)"
+  },
+  {
+   "claim": "With f_w compatible with the policy (df/dw = dpi/dtheta / pi) and converged in least squares, substituting f_w for Q gives the exact gradient.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Theorem 2, eqs 3-5.",
+   "quote": "which tells us that the error in fw(s, a) is orthogonal to the gradient of the policy parameterization.",
+   "table": null,
+   "note": null,
+   "where": "Sec 2, Theorem 2"
+  },
+  {
+   "claim": "For a Gibbs (softmax) policy linear in features, the compatible f_w is linear in the same features, mean-centred per state, so it approximates the advantage function.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "pi = exp(theta^T phi_sa)/sum_b exp(theta^T phi_sb).",
+   "quote": "In other words, fw must be linear in the same features as the policy, except normalized to be mean zero for each state.",
+   "table": null,
+   "note": null,
+   "where": "Sec 3"
+  },
+  {
+   "claim": "Adding any state-only function v(s) (a baseline) leaves the gradient theorems unchanged but can change estimator variance.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Because sum_a dpi/dtheta = 0 for every state.",
+   "quote": "The choice of v does not aﬀect any of our theorems, but can substantially aﬀect the variance of the gradient estimators.",
+   "table": null,
+   "note": null,
+   "where": "Sec 3"
+  },
+  {
+   "claim": "Policy iteration with compatible differentiable approximators converges to a point where the gradient is zero, under bounded second derivatives, bounded rewards and standard step sizes.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Theorem 3: max|d2pi/dtheta_i dtheta_j| < B, step sizes alpha_k -> 0 and sum alpha_k = infinity; relies on Bertsekas and Tsitsiklis (1996) Prop 3.5 p96.",
+   "quote": "converges such that limk→∞ ∂ρ(πk) ∂θ = 0.",
+   "table": null,
+   "note": null,
+   "where": "Sec 4, Theorem 3"
+  },
+  {
+   "claim": "REINFORCE gives an unbiased gradient estimate without a value function but learns much more slowly; a learned value function to cut variance appears essential for rapid learning (asserted, no experiment).",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Comparison with Williams 1988/1992 REINFORCE; no experiments in the paper.",
+   "quote": "REINFORCE learns much more slowly than RL methods using value functions and has received relatively little attention.",
+   "table": null,
+   "note": null,
+   "where": "Intro"
+  }
+ ],
+ "limits": [
+  "No experiments; purely theoretical, so no empirical evidence of speed or variance benefits.",
+  "Convergence is to a local optimum only, and Theorem 3 is for a form of policy iteration that assumes f_w is solved to its exact fixed point each iteration.",
+  "Requires compatibility condition (4), which restricts the critic's form; practical critics usually violate it.",
+  "Assumes a stationary state distribution independent of s0 and bounded rewards and second derivatives.",
+  "Authors present this as a first step toward proving convergence of actor-critic algorithms; actor-critic convergence itself is not proved."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "compatible function approximation",
+   "definition": "f_w with df_w/dw = (dpi/dtheta)(1/pi), so that the critic's error is orthogonal to the policy gradient",
+   "where": "Sec 2, eq 4"
+  },
+  {
+   "term": "advantage function",
+   "definition": "A(s,a) = Q(s,a) - V(s)",
+   "where": "Sec 3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Williams, Simple statistical gradient-following algorithms (REINFORCE)",
+   "year": 1992,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "REINFORCE shown to follow the gradient in expectation; paper adds learned value function",
+   "quote": null
+  },
+  {
+   "work": "Jaakkola, Singh, Jordan, RL algorithms for POMDPs",
+   "year": 1995,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Similar result for tabular POMDP; generalised to arbitrary differentiable approximators",
+   "quote": null
+  },
+  {
+   "work": "Marbach and Tsitsiklis, Simulation-based optimization of Markov reward processes",
+   "year": 1998,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Related gradient expression using the state-value function",
+   "quote": null
+  },
+  {
+   "work": "Baird and Moore, VAPS",
+   "year": 1999,
+   "arxiv": null,
+   "relation": "contradicts",
+   "note": "VAPS does not climb the performance gradient so does not converge to a local optimum",
+   "quote": null
+  },
+  {
+   "work": "Bertsekas and Tsitsiklis, Neuro-Dynamic Programming",
+   "year": 1996,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Proposition 3.5 used for convergence proof",
+   "quote": null
+  },
+  {
+   "work": "Baird, Advantage Updating",
+   "year": 1993,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Advantage function as target",
+   "quote": null
+  },
+  {
+   "work": "Barto, Sutton, Anderson actor-critic",
+   "year": 1983,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Actor-critic architectures the result is meant to help analyse",
+   "quote": null
+  }
+ ],
+ "figures": [],
+ "code": [
+  {
+   "where": "Sec 1 eq 2",
+   "snippet": "∂ρ/∂θ = Σ_s d^π(s) Σ_a ∂π(s,a)/∂θ Q^π(s,a)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "No figures or tables in the paper; no embedded instructions found. Math is garbled in the text layer but readable."
+ ]
+}

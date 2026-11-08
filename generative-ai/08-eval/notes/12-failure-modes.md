@@ -1,6 +1,7 @@
 ---
 origin: synthesis
 sources:
+  - "Xiao & Zhu, Foundations of Large Language Models (2025), ch. 6"
   - https://arxiv.org/abs/2410.22071
   - https://arxiv.org/abs/2305.15324
   - https://arxiv.org/abs/2310.16789
@@ -197,7 +198,7 @@ Every prompt tweak you keep because it scored better on the eval set is fitting 
 
 The model may have seen your eval data:
 
-- **Public benchmarks** leak into pre-training. High scores may be memory, not skill. Prefer private, recent, or regenerated tasks.
+- **Public benchmarks** leak into pre-training. High scores may be memory, not skill. Prefer private, recent, or regenerated tasks. For reasoning benchmarks (MATH, GSM8K) Xiao and Zhu make the same case and name two remedies: continuously updated problem sets, and private hold-out sets that are never released. They add two neighbouring failures: robustness, where a model solves a problem and fails when it is rephrased or given irrelevant details, and saturation, where near-perfect scores stop separating models (*Foundations of LLMs*, ch. 6; stated without measurements).
 - **Your own leaks**: eval rows pasted into few-shot examples, fine-tuning data built from logs that include eval rows, eval rows in the retrieval index.
 - **Detection**: performance far above similar unseen tasks; the model completes a task's text verbatim; scores drop on paraphrased versions.
 

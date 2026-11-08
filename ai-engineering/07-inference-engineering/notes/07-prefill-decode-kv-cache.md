@@ -5,6 +5,7 @@ sources:
   - "Huyen, AI Engineering (O'Reilly, 2025), ch. 9"
   - "Iusztin & Labonne, LLM Engineer's Handbook (Packt, 2024), ch. 8"
   - "Lakshmanan & Hapke, Generative AI Design Patterns (O'Reilly, 2025), ch. 8"
+  - "Xiao & Zhu, Foundations of Large Language Models (2025), ch. 5"
   - https://arxiv.org/abs/2401.09670
   - https://arxiv.org/abs/2309.06180
   - https://arxiv.org/abs/2411.17116
@@ -63,7 +64,7 @@ Split a long prefill into chunks and schedule each chunk in the same step as the
 
 *Image Source: Fregly, *AI Systems Performance Engineering* (O'Reilly, 2025), Fig. 19-7*
 
-R1 keeps decoding every step while R2, R3 and R4 prefill in two or three chunks each. No request waits for another's whole prompt. **SARATHI** (Agrawal et al., 2023) reported **~1.3–1.9×** throughput over naive scheduling. Fregly's rule of thumb is a chunk that takes **~50–100 ms** of GPU time, which is a few thousand tokens depending on model and GPU (*AISPE*, ch. 19). His example splits a 10,000-token prefill into five 2,000-token chunks. Chunking does **not reduce total work** (*AISPE*, ch. 16). It reorders work so decodes are not starved. A small chunk also re-reads the KV cache of earlier chunks, so very small chunks cost extra.
+R1 keeps decoding every step while R2, R3 and R4 prefill in two or three chunks each. No request waits for another's whole prompt. **SARATHI** (Agrawal et al., 2023) reported **~1.3–1.9×** throughput over naive scheduling. Fregly's rule of thumb is a chunk that takes **~50–100 ms** of GPU time, which is a few thousand tokens depending on model and GPU (*AISPE*, ch. 19). His example splits a 10,000-token prefill into five 2,000-token chunks. Chunking does **not reduce total work** (*AISPE*, ch. 16). It reorders work so decodes are not starved. A small chunk also re-reads the KV cache of earlier chunks, so very small chunks cost extra. Xiao and Zhu give the sizing logic: choose the chunk so that a prefill chunk and the decode steps sharing its iteration take about the same time. In their two-sequence schematic, a 3-chunk prefill lets 3 decode steps run, where plain iteration-level scheduling (which treats the whole prefill as one iteration and so favours throughput) allows 1. The price is one forward pass per chunk, earlier chunks' KV held in memory meanwhile, and the loss of single-pass prefill parallelism (*Foundations of LLMs*, ch. 5, Fig. 5.13; schematic, no measurements).
 
 Chunked prefill is on by default in vLLM V1, and it is what the TGI `MAX_BATCH_PREFILL_TOKENS` knob approximates ([06](06-serving-at-scale.md#monolith-or-microservice)). It is the right first answer to interference on a single pool.
 
@@ -75,7 +76,7 @@ Chunked prefill is on by default in vLLM V1, and it is what the TGI `MAX_BATCH_P
 
 ## Disaggregated prefill and decode
 
-Run prefill and decode on **separate GPU pools**. A router sends the prompt to a prefill worker, which computes the KV cache and **transfers** it to a decode worker that generates the tokens ([06](06-serving-at-scale.md#parallelism-for-inference), Fig. 15-2). Each pool gets its own batch size, parallelism, and even its own hardware.
+Run prefill and decode on **separate GPU pools**. A router sends the prompt to a prefill worker, which computes the KV cache and **transfers** it to a decode worker that generates the tokens ([06](06-serving-at-scale.md#parallelism-for-inference), Fig. 15-2). Each pool gets its own batch size, parallelism, and even its own hardware. Xiao and Zhu add the batching benefit and the bill: with no prefill-decode interference, short prompts can be packed into one long sequence to fill the prefill batch, but the KV cache must then be copied to the decode engine, which they say needs a high-bandwidth, low-latency network (*Foundations of LLMs*, ch. 5; they cite Wu et al. 2023, Patel et al. 2024 and Zhong et al. 2024, the last being DistServe).
 
 ![Colocated vs disaggregated (2 prefill GPUs + 1 decode GPU) under P90 TTFT ≤ 400 ms and P90 TPOT ≤ 40 ms](../sources/images/ai-systems-performance-engineering-fig17-2.png)
 
@@ -181,7 +182,7 @@ Before **PagedAttention** (Kwon et al., 2023, the vLLM paper), engines reserved 
 
 *Image Source: Fregly, *AI Systems Performance Engineering* (O'Reilly, 2025), Fig. 18-3*
 
-Paging gives three things: near-zero fragmentation (waste under 4% in the paper), growth one block at a time, and **sharing**. Sequences with a common prefix point at the same physical blocks, with copy-on-write when they diverge. The Handbook cites the sharing win for parallel sampling and beam search: memory overhead down **up to 55%**, throughput up **up to 2.2×** (*LLM Engineer's Handbook*, ch. 8). Every major engine (vLLM, SGLang, TensorRT-LLM, TGI) now uses paged KV, and it is what lets continuous batching admit requests without knowing their final length ([06](06-serving-at-scale.md#batching)).
+Paging gives three things: near-zero fragmentation (waste under 4% in the paper), growth one block at a time, and **sharing**. Sequences with a common prefix point at the same physical blocks, with copy-on-write when they diverge. The Handbook cites the sharing win for parallel sampling and beam search: memory overhead down **up to 55%**, throughput up **up to 2.2×** (*LLM Engineer's Handbook*, ch. 8). Xiao and Zhu make the point that paging is not itself a batching technique: it helps batched inference because blocks fit into fragmented gaps, and with a well-designed block size the extra memory-access cost of non-contiguous KV stays small (*Foundations of LLMs*, ch. 5). Every major engine (vLLM, SGLang, TensorRT-LLM, TGI) now uses paged KV, and it is what lets continuous batching admit requests without knowing their final length ([06](06-serving-at-scale.md#batching)).
 
 ---
 
@@ -189,7 +190,7 @@ Paging gives three things: near-zero fragmentation (waste under 4% in the paper)
 
 Sharing blocks *within* a request generalizes to sharing *across* requests. If a new prompt starts with tokens whose KV is already cached, skip their prefill.
 
-- **vLLM automatic prefix caching** hashes each full 16-token block, chained with the hash of its prefix, and looks blocks up in a global table (*AISPE*, ch. 18). Only full blocks are shared, and the match must be exact from the first token.
+- **vLLM automatic prefix caching** hashes each full 16-token block, chained with the hash of its prefix, and looks blocks up in a global table (*AISPE*, ch. 18). Only full blocks are shared, and the match must be exact from the first token. The textbook version is the same idea in three lines: store each prefix's KV states keyed by a hash of its tokens, load the longest match, compute only the tokens after it, and evict by LRU. It sits one level below the sequence-level cache that maps an exact query to a stored response and skips the model entirely (*Foundations of LLMs*, ch. 5).
 - **SGLang RadixAttention** keeps a radix tree over token sequences, giving longest-prefix matching at token granularity with LRU eviction. In practice both get the same effect, with different data structures.
 
 The hit rate depends on **prompt layout**. Put stable content first (system prompt, tool definitions, few-shot examples, documents) and variable content last. Changing one token early in the prompt invalidates everything after it. This is the same rule that drives API prompt-cache pricing ([02/04](../../02-context-engineering/notes/04-retrieval.md#caching)). Fregly's "10× faster" prefix-cache example (*AISPE*, ch. 16) is the ideal case of a long shared document and a short question. Real gains scale with the cached fraction of each prompt.

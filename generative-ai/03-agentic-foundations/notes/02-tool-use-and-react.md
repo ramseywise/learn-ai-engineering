@@ -1,6 +1,7 @@
 ---
 origin: synthesis  # was: course-synthesis
 sources:
+  - "Xiao & Zhu, Foundations of Large Language Models (2025), ch. 6"
   - "Lakshmanan & Hapke, Generative AI Design Patterns (O'Reilly 2025), ch 7: P21 Tool Calling, P22 Code Execution"
   - "Lakshmanan & Hapke, Generative AI Design Patterns (O'Reilly 2025), ch 5: P13 Chain of Thought; ch 9: P32 Guardrails"
   - "DeepLearning.AI, LLMs as Operating Systems: Agent Memory, Lab 1 (self-editing memory from scratch) — https://github.com/frankwwu/LLMs-as-Operating-Systems--Agent-Memory"
@@ -50,7 +51,7 @@ Every agent framework in [05](05-framework-survey.md) wraps the same four steps:
 | 3. Execute | client | your code parses the arguments and runs the function |
 | 4. Observe | client → model | the result goes back as a tool message; return to step 2 |
 
-The loop stops when the model answers without a tool call, or when a step or token budget runs out. The names differ by vendor: Toolformer called it tool use, Andrew Ng and Anthropic say **tool use**, OpenAI and Gemini say **function calling**. Lakshmanan and Hapke file it as pattern **P21 Tool Calling** and call ReAct "just" CoT plus Tool Calling; with Reflection, tool calling is "usually considered the threshold" of an agentic application (*Generative AI Design Patterns*, ch. 7).
+The loop stops when the model answers without a tool call, or when a step or token budget runs out. The names differ by vendor: Toolformer called it tool use, Andrew Ng and Anthropic say **tool use**, OpenAI and Gemini say **function calling**. Lakshmanan and Hapke file it as pattern **P21 Tool Calling** and call ReAct "just" CoT plus Tool Calling; with Reflection, tool calling is "usually considered the threshold" of an agentic application (*Generative AI Design Patterns*, ch. 7). Xiao and Zhu put the same loop in one line: plain reasoning is a straight line from prompt to answer, while agentic reasoning runs in a continuous loop of thinking, acting and observing (Yao et al., 2023), and the failure to expect is a model that gets lost or stuck in it, repeating mistakes or not recovering when an action fails (Shinn et al., 2023). They also note that reasoning models motivate agents: an agent needs reasoning to plan toward a goal and to notice and repair its own mistakes (*Foundations of LLMs*, ch. 6).
 
 The training recipe came nine months earlier in TALM ([arXiv:2205.12255](https://arxiv.org/abs/2205.12255) (Parisi et al., 2022 ⚑)). It fine-tuned T5 models (220M–3B) to write a text tool call, read the result and then answer. Starting from about 150 hand-written tool demonstrations, it sampled many tool calls per training example and kept only those that led to the right answer, for several rounds. With a BM25 retriever on Natural Questions, the 220M TALM beat a 3B T5 without tools. The paper reports these gains only as figures, and every call was single-hop.
 

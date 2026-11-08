@@ -1,0 +1,552 @@
+{
+ "schema": 1,
+ "key": "1802.05957",
+ "pdf": "ai-engineering/08-multimodal-engineering/sources/miyato-2018-spectral-normalization-generative-adversarial-networks.pdf",
+ "bib": {
+  "title": "Spectral Normalization for Generative Adversarial Networks",
+  "authors": [
+   "Takeru Miyato",
+   "Toshiki Kataoka",
+   "Masanori Koyama",
+   "Yuichi Yoshida"
+  ],
+  "first_author": "Miyato",
+  "year": 2018,
+  "venue": "ICLR 2018",
+  "arxiv": "1802.05957",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 72111,
+  "chars_total": 72111,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can constraining the spectral norm of each discriminator layer stabilize GAN training more cheaply and robustly than weight clipping, weight normalization, orthonormal regularization or gradient penalty?",
+ "hypothesis": "Normalizing each weight matrix by its largest singular value bounds the discriminator's Lipschitz constant without collapsing the rank of the weights, so training is more robust to hyperparameters and the generator is more diverse.",
+ "contributions": [
+  "Spectral normalization: divide each discriminator weight matrix by its largest singular value, estimated with one power-iteration step per update.",
+  "Analysis showing weight normalization, Frobenius normalization and weight clipping favour low-rank weight matrices while spectral normalization does not.",
+  "Experiments on CIFAR-10, STL-10 and ILSVRC2012 (ImageNet) comparing against seven alternative regularisers across six optimizer settings."
+ ],
+ "method": {
+  "summary": "Each discriminator weight matrix W is replaced by W/sigma(W), where sigma(W) is estimated with a single power-iteration step whose vector u is reused between updates. SN-GANs are compared with weight clipping, GAN-GP, WGAN-GP, batch norm, layer norm, weight norm and orthonormal regularization on CIFAR-10 and STL-10 under six Adam settings, then scaled to conditional ImageNet generation at 128x128.",
+  "task": "unsupervised and class-conditional image generation with GANs",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "CIFAR-10",
+    "role": "both",
+    "size": null,
+    "split": null,
+    "source": "Torralba et al. 2008",
+    "preprocessing": "32x32 images"
+   },
+   {
+    "name": "STL-10",
+    "role": "both",
+    "size": null,
+    "split": null,
+    "source": "Coates et al. 2011",
+    "preprocessing": "48x48 images"
+   },
+   {
+    "name": "ILSVRC2012 (ImageNet)",
+    "role": "both",
+    "size": "1000 classes, approximately 1300 images each",
+    "split": null,
+    "source": "Russakovsky et al. 2015",
+    "preprocessing": "compressed to 128x128 pixels"
+   }
+  ],
+  "models": [
+   {
+    "name": "SN-GAN, standard CNN",
+    "role": "proposed",
+    "params": null,
+    "architecture": "Generator: dense to Mg x Mg x 512, three 4x4 stride-2 deconvs with BN (256,128,64), 3x3 conv 3 Tanh. Discriminator: seven conv layers (64,64,128,128,256,256,512) with leaky ReLU slope 0.1, then dense to 1. Mg=4 for CIFAR-10, 6 for STL-10.",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "7 conv layers in D",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "latent_dim": "128",
+     "generator_norm": "batch normalization"
+    }
+   },
+   {
+    "name": "SN-GAN, ResNet",
+    "role": "proposed",
+    "params": null,
+    "architecture": "ResNet generator and discriminator after Gulrajani et al. 2017 (Tables 4-6); no BN in discriminator ResBlocks, global sum pooling; ImageNet generator uses conditional batch norm, conditional D concatenates a 128-d label embedding.",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "cifar10_resnet_G": "dense 4x4x256, 3 ResBlock up 256",
+     "sn_gan_generator_feature_maps": "doubled versus original for SN-GANs (Appendix B.2)"
+    }
+   }
+  ],
+  "training": {
+   "objective": "Standard GAN loss (Eq. 15) with the alternate non-saturating generator cost; also hinge loss (Eqs. 16-17); WGAN-GP objective for that baseline; conditional ImageNet used hinge loss",
+   "optimizer": "Adam; six settings A-F (Table 1): A alpha 0.0001 b1 0.5 b2 0.9 ndis 5; B 0.0001/0.5/0.999/1; C 0.0002/0.5/0.999/1; D 0.001/0.5/0.9/5; E 0.001/0.5/0.999/5; F 0.001/0.9/0.999/5. ResNet runs: alpha 0.0002, b1 0, b2 0.9, ndis 5",
+   "lr": "0.0001 to 0.001 depending on setting (Table 1); 0.0002 for ResNet",
+   "lr_schedule": "ImageNet: linear decay to 0 after 400K iterations; others not stated",
+   "warmup": null,
+   "batch_size": null,
+   "steps": "100K generator updates for all CIFAR/STL experiments unless noted; STL-10 SN-GAN also run at 2x; ImageNet 450K generator updates",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "Spectral normalization on every discriminator layer, one power iteration per update, u recycled between steps; baselines: weight clipping c=0.01, gradient penalty lambda=10, orthonormal regularizer ||W^T W - I||_F^2",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": "Relative: SN-GAN about 110-120% of weight normalization time on CIFAR-10; about the same as vanilla GAN on STL-10 (Fig 10, values read from bar chart not extracted)",
+   "seeds": "ResNet: multiple random seeds, mean and std over models; count not stated",
+   "other": {
+    "batch_norm_multiplier_gamma": "gamma excluded from WN, BN and LN baselines to keep Lipschitz condition",
+    "conv_weight_treatment": "conv weight treated as 2-D matrix dout x (din*h*w)",
+    "power_iteration_steps": "1"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "Inception score: 5000 generated images per evaluation, repeated 10 times (mean and std); FID over 10000 and 5000 samples",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Inception score",
+     "definition": "exp(E[KL(p(y|x)||p(y))]) with the Inception network",
+     "unit": "score",
+     "higher_is_better": true
+    },
+    {
+     "name": "FID",
+     "definition": "Frechet distance between Gaussian fits of Inception features of real and generated images",
+     "unit": "distance",
+     "higher_is_better": false
+    },
+    {
+     "name": "intra MS-SSIM",
+     "definition": "MS-SSIM between pairs of independently generated images of one class, as in Odena et al. 2017; measures mode collapse",
+     "unit": "score",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "Weight clipping",
+    "GAN-GP",
+    "WGAN-GP",
+    "Batch norm",
+    "Layer norm",
+    "Weight norm",
+    "Orthonormal regularization",
+    "AC-GAN (ImageNet)"
+   ],
+   "protocol": "Six optimizer settings per method on CIFAR-10 and STL-10; best setting reported in Table 2; ImageNet compared to orthonormal regularization and AC-GAN; no significance test."
+  },
+  "availability": {
+   "code": "https://github.com/pfnet-research/sngan_projection (Chainer)",
+   "weights": "pretrained models available at the same repo",
+   "data": "public datasets"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.optimizer",
+    "quote": null,
+    "where": "Table 1, settings A-F"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "SN-GAN with the hinge loss and ResNet reaches inception score 8.22 on CIFAR-10, ahead of orthonormal regularization with the same loss.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Inception score",
+   "value": "8.22",
+   "unit": "score",
+   "baseline_value": "7.92",
+   "n": null,
+   "setup": "CIFAR-10, ResNet GAN, hinge loss Eq.(17), alpha 0.0002 b1 0 b2 0.9 ndis 5, mean over seeds; baseline is orthonormal regularization with Eq.(17)",
+   "quote": null,
+   "table": "Table 2, rows (ours) SN-GANs, Eq.(17) and Orthonormal, Eq.(17) under ResNet, column Inception score CIFAR-10",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "FID on CIFAR-10 for the ResNet SN-GAN is 21.7 versus 23.8 for orthonormal regularization.",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": "21.7",
+   "unit": "FID",
+   "baseline_value": "23.8",
+   "n": null,
+   "setup": "CIFAR-10, ResNet, hinge loss, same as above",
+   "quote": null,
+   "table": "Table 2, row (ours) SN-GANs, Eq.(17) under ResNet, column FID CIFAR-10",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "With the standard CNN, SN-GAN has a higher CIFAR-10 inception score than weight clipping, WGAN-GP, BN, LN and WN, and is level with orthonormal regularization (7.42 vs 7.40).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Inception score",
+   "value": "7.42",
+   "unit": "score",
+   "baseline_value": "6.68 (WGAN-GP)",
+   "n": null,
+   "setup": "CIFAR-10, standard CNN, standard GAN loss Eq.(15), best of settings A-F, 100K generator updates",
+   "quote": null,
+   "table": "Table 2, row (ours) SN-GANs, column Inception score CIFAR-10",
+   "note": "Orthonormal gets 7.40, so SN is only 0.02 ahead on CIFAR-10 and behind on STL-10 (8.28 vs 8.56).",
+   "where": "Table 2"
+  },
+  {
+   "claim": "WGAN-GP fails to train good GANs at high learning rates and high momentum, while spectral normalization stays robust.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "CIFAR-10 and STL-10, settings D, E, F (alpha 0.001) in Figs 1-2",
+   "quote": "WGAN-GP fails to train good GANs at high learning rates and high momentum parameters",
+   "table": null,
+   "note": "Read from Fig 1/2; no per-setting numbers in the text.",
+   "where": "Section 4.1"
+  },
+  {
+   "claim": "The spectral norm of each discriminator layer stays near 1 throughout training with a single power iteration.",
+   "kind": "measured",
+   "source": null,
+   "metric": "sigma(W_SN)",
+   "value": "1-1.05",
+   "unit": "spectral norm",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CIFAR-10, standard CNN, setting C, 7 conv layers",
+   "quote": "the spectral norms of these layers ﬂoats around 1–1.05 region throughout the training",
+   "table": null,
+   "note": "Appendix C.1 says layers 6 and 7 deviate by more than 0.1 early in training before settling near 1.",
+   "where": "Section 4.1, Fig 9"
+  },
+  {
+   "claim": "SN-GAN training costs about 110 to 120% of weight normalization time on CIFAR-10 and is much faster than WGAN-GP.",
+   "kind": "measured",
+   "source": null,
+   "metric": "relative training time",
+   "value": "110-120%",
+   "unit": "% of weight-norm time",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CIFAR-10, ndis=5, 100 generator updates timed (Fig 10)",
+   "quote": "about 110 ∼120% computational time",
+   "table": null,
+   "note": null,
+   "where": "Section 4.1.1"
+  },
+  {
+   "claim": "Weight clipping and weight normalization give low-rank discriminator layers (singular values concentrated on a few components) while spectral normalization gives broadly distributed singular values.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Final discriminators at best inception-score setting, layers 1-5, CIFAR-10 and STL-10 (Fig 3)",
+   "quote": "the singular values of the ﬁrst to ﬁfth layers trained with weight clipping and weight normalization concentrate on a few components",
+   "table": null,
+   "note": "Qualitative, from figure.",
+   "where": "Section 4.1.1"
+  },
+  {
+   "claim": "Orthonormal regularization degrades as the final-layer feature dimension grows, while SN-GAN does not.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "STL-10, setting C, final-layer width scaled 0.5x to 8x (Fig 4)",
+   "quote": "the per-\nformance of the orthonormal regularization deteriorates as we increase the dimension of the feature\nmaps at the ﬁnal layer",
+   "table": null,
+   "note": null,
+   "where": "Section 4.1.2"
+  },
+  {
+   "claim": "Conditional SN-GAN on ImageNet at 128x128 reaches inception score 21.1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Inception score",
+   "value": "21.1",
+   "unit": "score",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ILSVRC2012, 1000 classes, conditional GAN, hinge loss, 450K generator updates",
+   "quote": "The\ninception score is 21.1±.35.",
+   "table": null,
+   "note": null,
+   "where": "Fig 7 caption"
+  },
+  {
+   "claim": "Intra-class MS-SSIM of SN-GAN on ImageNet is 0.101 versus about 0.25 for AC-GAN, indicating less mode collapse.",
+   "kind": "measured",
+   "source": null,
+   "metric": "intra MS-SSIM",
+   "value": "0.101",
+   "unit": "MS-SSIM",
+   "baseline_value": "~0.25 (AC-GAN)",
+   "n": null,
+   "setup": "ImageNet 128x128 conditional GAN; AC-GAN figure taken from Odena et al. 2017",
+   "quote": "(intra MS-SSIM)=0.101",
+   "table": null,
+   "note": "The AC-GAN value is reported from other work; different architecture and training.",
+   "where": "Section 4.2"
+  },
+  {
+   "claim": "GANs without normalization and with layer normalization collapse at the start of ImageNet training; orthonormal regularization plateaus near 20K iterations while SN keeps improving.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "ImageNet, Fig 5 and Fig 13",
+   "quote": "plateaued around 20Kth iterations",
+   "table": null,
+   "note": null,
+   "where": "Section 4.2"
+  },
+  {
+   "claim": "Adding the learned scale gamma on a spectrally normalized layer improves WGAN-GP on the standard CNN from inception 6.68 to 7.20 and FID 40.1 to 32.0.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Inception score",
+   "value": "7.20",
+   "unit": "score",
+   "baseline_value": "6.68",
+   "n": null,
+   "setup": "CIFAR-10, WGAN-GP standard CNN, reparametrization W~ = gamma W_SN (Appendix E)",
+   "quote": null,
+   "table": "Table 7, row w/ Spectral Norm., column Inception score",
+   "note": "Table 7 prints the WGAN-GP baseline FID as 40.1; Table 2 prints 40.2. Weight norm reparametrization gives 6.36 (Table 7) vs 6.84 as a plain regulariser (Table 2). Frobenius norm collapsed. Appendix E text misstates 'spectral normalization achieved 7.28, whereas the spectral normalization and vanilla ... 7.04 and 6.69' (second should be weight normalization).",
+   "where": "Table 7"
+  },
+  {
+   "claim": "WGAN-GP with a doubled-width generator got worse, whereas SN-GAN improved when the generator feature maps were doubled.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "CIFAR-10 ResNet, Appendix B.2",
+   "quote": "when we doubled the dimension of the feature map for the WGAN-GP experiment, however, the perfor-\nmance deteriorated",
+   "table": null,
+   "note": "Confound: SN-GAN and WGAN-GP ResNet baselines in Table 2 are not size-matched.",
+   "where": "Appendix B.2"
+  }
+ ],
+ "limits": [
+  "Authors concede the comparison across rows of Table 2 differs in optimizer and architecture: 'all methods listed thereof are all different in both optimization methods and the architecture of the model'.",
+  "Orthonormal regularization is slightly better than SN-GAN on STL-10 with the standard CNN at equal iterations (8.56 vs 8.28) and at the best setting.",
+  "The Lipschitz bound is an upper bound; layerwise product of 1 does not make the discriminator tight, and the paper offers no theory of why it improves sample quality (future work 'on more theoretical basis').",
+  "Only Inception score and FID on 32x32 to 128x128 images; no precision/recall, no human evaluation; no number of seeds or batch size given; hardware and wall-clock in seconds are only in a bar chart.",
+  "Dated: 2018 GAN era; diffusion models have superseded GANs for most image generation, though SN is still used in GAN discriminators.",
+  "Each method is tuned over only 6 optimizer settings and the best is reported; no significance test across settings."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Spectral normalization",
+   "definition": "W_SN(W) := W/sigma(W), normalizing the weight matrix by its largest singular value so that sigma(W_SN)=1",
+   "where": "Eq. 8, Section 2.1"
+  },
+  {
+   "term": "Lipschitz constant of a layer",
+   "definition": "For a linear layer g(h)=Wh, ||g||_Lip = sigma(W), the largest singular value",
+   "where": "Section 2.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Spectral norm regularization for improving the generalizability of deep learning",
+   "year": 2017,
+   "arxiv": "1705.10941",
+   "relation": "extends",
+   "note": "Power-iteration estimate of sigma(W) comes from Yoshida & Miyato; SN sets the norm rather than penalizing it.",
+   "quote": null
+  },
+  {
+   "work": "Improved training of Wasserstein GANs",
+   "year": 2017,
+   "arxiv": "1704.00028",
+   "relation": "baseline",
+   "note": "WGAN-GP and its ResNet architecture and hyperparameters.",
+   "quote": null
+  },
+  {
+   "work": "Wasserstein GAN",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Weight clipping, c=0.01.",
+   "quote": null
+  },
+  {
+   "work": "Weight normalization (Salimans & Kingma)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Analyzed as favouring low-rank weights.",
+   "quote": null
+  },
+  {
+   "work": "Neural photo editing with introspective adversarial networks (Brock et al.)",
+   "year": 2016,
+   "arxiv": "1609.07093",
+   "relation": "baseline",
+   "note": "Orthonormal regularization.",
+   "quote": null
+  },
+  {
+   "work": "Towards principled methods for training generative adversarial networks (Arjovsky & Bottou)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Perfect discriminator on disjoint supports stops generator gradient.",
+   "quote": null
+  },
+  {
+   "work": "Generative adversarial nets",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Standard and alternate (non-saturating) GAN losses.",
+   "quote": null
+  },
+  {
+   "work": "Geometric GAN (Lim & Ye)",
+   "year": 2017,
+   "arxiv": "1705.02894",
+   "relation": "uses-method",
+   "note": "Hinge loss.",
+   "quote": null
+  },
+  {
+   "work": "Improved techniques for training GANs (Salimans et al.)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Inception score.",
+   "quote": null
+  },
+  {
+   "work": "GANs trained by a two time-scale update rule (Heusel et al.)",
+   "year": 2017,
+   "arxiv": "1706.08500",
+   "relation": "uses-method",
+   "note": "FID.",
+   "quote": null
+  },
+  {
+   "work": "cGANs with projection discriminator",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Projection discriminator used in the ImageNet comparison.",
+   "quote": null
+  },
+  {
+   "work": "Conditional image synthesis with auxiliary classifier GANs (Odena et al.)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "AC-GAN ImageNet baseline, intra MS-SSIM.",
+   "quote": null
+  },
+  {
+   "work": "CIFAR-10, STL-10, ILSVRC2012",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Datasets.",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Inception scores on CIFAR-10 and STL-10 with different methods and hyperparameters (higher is better).",
+   "page": 7,
+   "why": "Shows SN holding up across settings A-F where WGAN-GP drops at high learning rate; the robustness claim in one picture."
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "FIDs on CIFAR-10 and STL-10 with different methods and hyperparameters (lower is better).",
+   "page": 8,
+   "why": "Same robustness comparison under FID."
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Squared singular values of weight matrices trained with different methods: Weight clipping (WC), Weight Normalization (WN) and Spectral Normalization (SN).",
+   "page": 9,
+   "why": "Shows rank collapse under WC and WN versus broad spectrum under SN; the central mechanism."
+  },
+  {
+   "figure": "Fig 10",
+   "caption": "Computational time for 100 updates. We set ndis = 5",
+   "page": 19,
+   "why": "Cost of WGAN-GP versus SN versus vanilla."
+  },
+  {
+   "figure": "Fig 14",
+   "caption": "Visualization of the difference between spectral normalization (Red) and weight normalization (Blue) on possible sets of singular values.",
+   "page": 22,
+   "why": "Geometric view of why WN constrains the spectrum more than SN."
+  }
+ ],
+ "code": [
+  {
+   "where": "Appendix A, Eqs 18-19, 22",
+   "snippet": "v <- W^T u / ||W^T u||_2 ; u <- W v / ||W v||_2 ; sigma(W) ~= u^T W v ; W_SN = W / sigma(W)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "No embedded instructions found.",
+  "Dataset sizes for CIFAR-10 and STL-10 are not stated in the paper, so size and split are null.",
+  "Figure data (Figs 1, 2, 10) is not in the text layer; values for individual settings are not extracted."
+ ]
+}

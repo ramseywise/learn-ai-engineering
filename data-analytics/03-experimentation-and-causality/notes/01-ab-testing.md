@@ -1,7 +1,7 @@
 ---
 origin: synthesis  # was: own coursework
 sources:
-  - McElreath, Statistical Rethinking (CRC Press, 2nd ed.) (ch. 15, Horoscopes)
+  - McElreath, Statistical Rethinking (CRC Press, 2015) (ch. 15, Horoscopes)
   - ../practice/AB-Bayes/AB_Testing_with_Python.ipynb
   - ../../02-probability-and-statistics/practice/5_Statistical_Analysis.ipynb
   - https://www.kaggle.com/datasets/zhangluyuan/ab-testing (ab_data.csv, not included)

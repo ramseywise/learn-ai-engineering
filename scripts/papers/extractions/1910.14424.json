@@ -1,0 +1,529 @@
+{
+ "schema": 1,
+ "key": "1910.14424",
+ "pdf": "generative-ai/02-rag-retrieval/sources/nogueira-2019-multi-stage-document-ranking-bert.pdf",
+ "bib": {
+  "title": "Multi-Stage Document Ranking with BERT",
+  "authors": [
+   "Rodrigo Nogueira",
+   "Wei Yang",
+   "Kyunghyun Cho",
+   "Jimmy Lin"
+  ],
+  "first_author": "Nogueira",
+  "year": 2019,
+  "venue": "preprint",
+  "arxiv": "1910.14424",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 50168,
+  "chars_total": 50168,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can BERT be used for document ranking in a multi-stage pipeline (pointwise then pairwise) that lets one trade ranking quality against latency?",
+ "hypothesis": "A pairwise BERT stage (duoBERT) on top of pointwise monoBERT adds effectiveness for a modest latency increase when candidate admission is controlled per stage.",
+ "contributions": [
+  "Describe monoBERT, a pointwise BERT relevance classifier (from Nogueira and Cho 2019)",
+  "Propose duoBERT, a pairwise extension",
+  "Integrate both in a multi-stage ranking architecture that trades quality for latency by controlling candidate admission",
+  "Show that pre-training on the target-task corpus beats out-of-domain pre-training"
+ ],
+ "method": {
+  "summary": "Three-stage pipeline: H0 BM25 (Anserini) retrieves k0 candidates, H1 monoBERT scores each (query, doc) pair independently and keeps top k1, H2 duoBERT scores ordered pairs (q, di, dj) among the k1 and aggregates pairwise probabilities into one score per document. Evaluated on MS MARCO passage ranking and TREC CAR 2017, with ablations over k0, k1 and aggregation.",
+  "task": "ad hoc document/passage re-ranking",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "MS MARCO passage ranking",
+    "role": "both",
+    "size": "8.8M passages from 3.6M web documents; ~500k relevant query-passage pairs and 400M non-relevant pairs in train; avg 55 words per passage",
+    "split": "dev 6,980 queries (about 1 relevant doc each); blind eval 6,837 queries via leaderboard",
+    "source": "Bajaj et al. 2018, Bing query logs",
+    "preprocessing": "No query or doc needed truncation; batches built with equal relevant and non-relevant passages (non-relevant ~1000x more frequent)"
+   },
+   {
+    "name": "TREC CAR 2017",
+    "role": "both",
+    "size": "29M Wikipedia paragraphs (avg 60 words); ~3M train queries",
+    "split": "folds 1-4 train (~3M queries), remaining fold validation (~700k); test = TREC 2017 CAR (2,254 queries)",
+    "source": "Dietz et al. 2017; queries = article title + section title",
+    "preprocessing": "Fine-tuning pairs from top 10 BM25 docs per query: 30M pairs (3M x 10). BERT pre-trained only on the half of Wikipedia in the CAR training set (1.1B words) to avoid test leakage. Evaluated with automatic annotations, not the sparse manual ones."
+   },
+   {
+    "name": "Pre-training: Wikipedia + Toronto Book + MS MARCO corpus",
+    "role": "pretrain",
+    "size": "Wikipedia 2.5B words, Toronto Book 0.8B words, MS MARCO corpus 0.5B words",
+    "split": null,
+    "source": "Devlin et al. 2019 BERT recipe",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "monoBERT",
+    "role": "proposed",
+    "params": null,
+    "architecture": "BERT cross-encoder, [CLS] vector into a single-layer network giving relevance probability; query as sentence A, doc as sentence B",
+    "init_from": "BERT pre-trained on Wikipedia+Toronto Book (1M iterations); for TCP, further pre-trained 100k iterations on MS MARCO corpus",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "512 tokens; query truncated to 64 tokens",
+    "other": {
+     "BERT size": "not stated (base vs large)"
+    }
+   },
+   {
+    "name": "duoBERT",
+    "role": "proposed",
+    "params": null,
+    "architecture": "BERT with three segment types (query A, di B, dj C), [CLS] into single-layer network giving p_ij",
+    "init_from": "same as monoBERT",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "512 tokens: query 62, di 223, dj 223 tokens; <1% of docs truncated",
+    "other": {
+     "pairs scored": "k1(k1-1)"
+    }
+   },
+   {
+    "name": "BM25 via Anserini (Lucene)",
+    "role": "retriever",
+    "params": null,
+    "architecture": "bag-of-words inverted index",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "parameters": "not stated"
+    }
+   }
+  ],
+  "training": {
+   "objective": "monoBERT: cross-entropy over relevant/non-relevant candidates (Eq 1). duoBERT: cross-entropy over pairs with exactly one relevant doc (Eq 2).",
+   "optimizer": "Adam, beta1=0.9, beta2=0.999",
+   "lr": "3e-6 (fine-tuning); 5e-5 (second-phase pre-training)",
+   "lr_schedule": "linear decay",
+   "warmup": "first 10,000 steps",
+   "batch_size": "128 sequences x 512 tokens = 16,384 tokens/batch",
+   "steps": "100k iterations fine-tuning (12.8M query-document pairs); 100k iterations target-corpus pre-training",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "512",
+   "precision": null,
+   "weight_decay": "L2 0.01",
+   "dropout": "0.1 in all layers",
+   "regularisation": "balanced relevant/non-relevant sampling per batch",
+   "hardware": "TPU v3",
+   "compute": "about 24 hours fine-tuning on one TPU v3; about 24 hours for 100k-iteration second pre-training on a TPU v3",
+   "wall_clock": "~24 h fine-tune; another three days (50M pairs) gave no dev gain",
+   "seeds": null,
+   "other": {
+    "same hyperparameters on TREC CAR": "yes"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "SAMPLE aggregation averaged over ten trials; otherwise single run",
+   "prompting": null,
+   "retrieval": "BM25 top-k0=1000 to monoBERT, top-k1=50 to duoBERT in base configuration",
+   "parameters": {
+    "k0": "1000 base; varied {50,100,200,500,1000}",
+    "k1": "50 base; varied {0,10,20,30,40,50}",
+    "aggregation": "SUM, BINARY (pij>0.5 count), MIN, MAX, SAMPLE (m=10..40 drawn without replacement)",
+    "inferences per query": "k0 + k1(k1-1)"
+   },
+   "other": {
+    "latency": "measured in inferences per query; ms latency said comparable between mono and duoBERT but not reported"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "MRR@10",
+     "definition": "mean reciprocal rank of first relevant doc in top 10 (MS MARCO official)",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "MAP",
+     "definition": "mean average precision (TREC CAR official)",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Recall@1000",
+     "definition": "recall of BM25 at 1000 hits",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "inferences per query",
+     "definition": "BERT forward passes per query, proxy for latency",
+     "unit": "count",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "BM25 (Microsoft)",
+    "IRNet",
+    "monoBERT (Jan 2019)",
+    "BM25 (Kashyapi et al. 2018)",
+    "Co-PACRR (MacAvaney et al. 2017)",
+    "Anserini BM25"
+   ],
+   "protocol": "Single trained model per configuration; no seeds or significance tests; eval-set scores only for submitted conditions (leaderboard)."
+  },
+  "availability": {
+   "code": "stated available on GitHub (URL not in text)",
+   "weights": null,
+   "data": "MS MARCO and TREC CAR public"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Anserini BM25 plus monoBERT gains 17.5 MRR@10 points over BM25 on MS MARCO dev.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MRR@10",
+   "value": 37.2,
+   "unit": "%",
+   "baseline_value": 18.7,
+   "n": null,
+   "setup": "MS MARCO passage ranking dev (6,980 queries) / held-out eval (6,837 queries); H0 = Anserini BM25 k0=1000, monoBERT then duoBERT k1=50; BERT fine-tuned 100k iters, batch 128",
+   "note": null,
+   "where": "Sec 5, Table 1",
+   "quote": "we observe a gain of 17.5 points",
+   "table": "Table 1, rows Anserini (BM25) and + monoBERT, column Dev (18.7 -> 37.2; Eval 19.0 -> 36.5)"
+  },
+  {
+   "claim": "Adding duoBERT SUM raises MS MARCO eval MRR@10 to 37.0, 0.5 over monoBERT.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MRR@10 (eval)",
+   "value": 37.0,
+   "unit": "%",
+   "baseline_value": 36.5,
+   "n": null,
+   "setup": "MS MARCO passage ranking dev (6,980 queries) / held-out eval (6,837 queries); H0 = Anserini BM25 k0=1000, monoBERT then duoBERT k1=50; BERT fine-tuned 100k iters, batch 128",
+   "note": null,
+   "where": "Table 1; Sec 5",
+   "table": "Table 1, row + monoBERT + duoBERT_SUM, column Eval (37.0); dev 38.2 vs 37.2"
+  },
+  {
+   "claim": "Target-corpus pre-training adds 0.8 MRR@10 on eval (37.9), near leaderboard best 38.3.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MRR@10 (eval)",
+   "value": 37.9,
+   "unit": "%",
+   "baseline_value": 37.0,
+   "n": null,
+   "setup": "MS MARCO passage ranking dev (6,980 queries) / held-out eval (6,837 queries); H0 = Anserini BM25 k0=1000, monoBERT then duoBERT k1=50; BERT fine-tuned 100k iters, batch 128; second-phase pre-train on MS MARCO corpus",
+   "note": null,
+   "where": "Table 1; Sec 5",
+   "quote": "MRR@10 by another 0.8 points",
+   "table": "Table 1, row + monoBERT + duoBERT_SUM + TCP, column Eval"
+  },
+  {
+   "claim": "duoBERT BINARY aggregation is best on dev (38.3), 0.1 above SUM; MAX aggregation is much worse than monoBERT alone (32.6 vs 37.2).",
+   "kind": "measured",
+   "source": null,
+   "metric": "MRR@10 (dev)",
+   "value": 38.3,
+   "unit": "%",
+   "baseline_value": 38.2,
+   "n": null,
+   "setup": "MS MARCO passage ranking dev (6,980 queries) / held-out eval (6,837 queries); H0 = Anserini BM25 k0=1000, monoBERT then duoBERT k1=50; BERT fine-tuned 100k iters, batch 128",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, rows duoBERT_BINARY 38.3, duoBERT_SUM 38.2, duoBERT_MAX 32.6, column Dev"
+  },
+  {
+   "claim": "monoBERT gives a 19.5 MAP jump over BM25 on TREC CAR.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MAP",
+   "value": 34.8,
+   "unit": "%",
+   "baseline_value": 15.3,
+   "n": null,
+   "setup": "TREC 2017 CAR test (2,254 queries), automatic annotations, MAP; k0=1000, k1=50",
+   "note": null,
+   "where": "Table 2",
+   "quote": "jump of 19.5 MAP points over the BM25",
+   "table": "Table 2, rows BM25 (Anserini) 15.3 and + monoBERT 34.8"
+  },
+  {
+   "claim": "duoBERT SUM or BINARY adds 2.1 MAP over monoBERT on TREC CAR (36.9), best known result at the time.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MAP",
+   "value": 36.9,
+   "unit": "%",
+   "baseline_value": 34.8,
+   "n": null,
+   "setup": "TREC 2017 CAR test (2,254 queries), automatic annotations, MAP; k0=1000, k1=50",
+   "note": null,
+   "where": "Table 2",
+   "quote": "provides another improvement of 2.1 points",
+   "table": "Table 2, rows duoBERT_SUM and duoBERT_BINARY"
+  },
+  {
+   "claim": "Anserini BM25 recall@1000 is 85.7% on MS MARCO vs 81.5% for Microsoft's BM25.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Recall@1000",
+   "value": 85.7,
+   "unit": "%",
+   "baseline_value": 81.5,
+   "n": null,
+   "setup": "MS MARCO; first-stage BM25",
+   "note": null,
+   "where": "Sec 5",
+   "quote": "85.7%, compared to only 81.5%"
+  },
+  {
+   "claim": "duoBERT SUM needs an extra 50 x 49 BERT inferences per query on top of monoBERT.",
+   "kind": "measured",
+   "source": null,
+   "metric": "extra inferences/query",
+   "value": 2450,
+   "unit": "inferences",
+   "baseline_value": null,
+   "n": null,
+   "setup": "k1=50",
+   "note": "2450 is derived (50x49); the text prints 50 x 49",
+   "where": "Sec 5",
+   "quote": "requires an additional 50 × 49"
+  },
+  {
+   "claim": "With k0=1000 vs smaller k0, over half the monoBERT gain is achieved with about a fifth of the inferences (diminishing returns).",
+   "kind": "measured",
+   "source": null,
+   "metric": "fraction of gain",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "monoBERT only, vary k0 in {50,200,500,1000}, MS MARCO and TREC CAR (Fig 2)",
+   "note": null,
+   "where": "Sec 5.1, Fig 2",
+   "quote": "achieve more than half the gain in effectiveness"
+  },
+  {
+   "claim": "k1=20 with BINARY (MS MARCO) or SUM (TREC CAR) reaches near-maximum score with only about a 40% latency increase over monoBERT; k1=50 more than doubles inferences.",
+   "kind": "measured",
+   "source": null,
+   "metric": "latency increase",
+   "value": 40,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "k0=1000, vary k1 (Fig 3)",
+   "note": null,
+   "where": "Sec 5.2, Fig 3",
+   "quote": "with only a 40% in"
+  },
+  {
+   "claim": "Exhaustive pairs from a smaller monoBERT top-k1 beat uniform SAMPLE from a larger candidate set at the same inference budget.",
+   "kind": "measured",
+   "source": null,
+   "metric": "effectiveness at fixed inferences",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "duoBERT SAMPLE m in {10,20,30,40} averaged over ten trials vs SUM/BINARY (Fig 3)",
+   "note": null,
+   "where": "Sec 5.2"
+  },
+  {
+   "claim": "Training 3 more days (50M pairs) gave no dev improvement; fine-tune is 12.8M pairs, ~24 h on a TPU v3.",
+   "kind": "measured",
+   "source": null,
+   "metric": "pairs seen",
+   "value": 12.8,
+   "unit": "M pairs",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MS MARCO fine-tune, batch 128, 100k iterations",
+   "note": null,
+   "where": "Sec 4.1",
+   "quote": "12.8M (100k × 128)"
+  }
+ ],
+ "limits": [
+  "BERT size (base/large), parameter count and BM25 parameters are not stated.",
+  "Latency is proxied by inferences per query; milliseconds are asserted comparable but not reported.",
+  "Single runs, no seeds or significance tests; eval-set numbers missing for most conditions to avoid probing the leaderboard.",
+  "Inputs limited to 512 tokens (a few sentences); long documents untested (MS MARCO document task named as future work).",
+  "TREC CAR scored on automatic annotations because manual judgments are too sparse; no TCP result there since pre-training corpus is already Wikipedia.",
+  "Authors note MAP gains on CAR are larger than MRR@10 gains on MS MARCO partly because of metric properties, not only model strength.",
+  "Stages are tuned separately; joint tuning and passing earlier-stage scores forward are future work.",
+  "Dated: MS MARCO leaderboard standings (Oct 2019) and 'first application of BERT to retrieval' claims."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "monoBERT",
+   "definition": "pointwise BERT relevance classifier scoring each (query, candidate) independently",
+   "where": "Sec 3.2"
+  },
+  {
+   "term": "duoBERT",
+   "definition": "pairwise BERT estimating the probability that candidate di is more relevant than dj",
+   "where": "Sec 3.3"
+  },
+  {
+   "term": "Target Corpus Pre-training (TCP)",
+   "definition": "extra BERT pre-training phase on the target task corpus",
+   "where": "Sec 4.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Passage re-ranking with BERT (Nogueira and Cho)",
+   "year": 2019,
+   "arxiv": "1901.04085",
+   "relation": "extends",
+   "note": "origin of monoBERT",
+   "quote": null
+  },
+  {
+   "work": "BERT (Devlin et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "base model and pre-training recipe",
+   "quote": null
+  },
+  {
+   "work": "MS MARCO (Bajaj et al.)",
+   "year": 2018,
+   "arxiv": "1611.09268",
+   "relation": "uses-data",
+   "note": "passage ranking",
+   "quote": null
+  },
+  {
+   "work": "TREC CAR overview (Dietz et al.)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "complex answer retrieval",
+   "quote": null
+  },
+  {
+   "work": "Anserini (Yang, Fang, Lin)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "BM25 first stage on Lucene",
+   "quote": null
+  },
+  {
+   "work": "Cascade ranking (Wang, Lin, Metzler)",
+   "year": 2011,
+   "arxiv": null,
+   "relation": "related",
+   "note": "multi-stage ranking background",
+   "quote": null
+  },
+  {
+   "work": "Condorcet fusion (Montague and Aslam)",
+   "year": 2002,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "inspires BINARY aggregation",
+   "quote": null
+  },
+  {
+   "work": "IRNet",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "previous MS MARCO leader, beaten by ~8 points",
+   "quote": null
+  },
+  {
+   "work": "Co-PACRR (MacAvaney et al.)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "best TREC 2017 CAR entry",
+   "quote": null
+  },
+  {
+   "work": "The neural hype and comparisons against weak baselines (Lin)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "related",
+   "note": "motivates strong BM25 baseline",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Illustration of our multi-stage ranking architecture (BM25 -> monoBERT -> duoBERT).",
+   "page": 3,
+   "why": "Shows candidate funnel R0 -> R1 -> R2 and pairwise scoring in one picture"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Number of inferences per query vs. effectiveness when varying k0 fed to monoBERT.",
+   "page": 8,
+   "why": "Diminishing returns of deeper first-stage candidate lists"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Inferences per query vs. effectiveness of duoBERT when varying k1.",
+   "page": 8,
+   "why": "Latency/quality curve per aggregation method"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Inferences per query vs. effectiveness of duoBERT_SUM varying k0 and k1.",
+   "page": 9,
+   "why": "Joint cutoff tradeoff"
+  },
+  {
+   "figure": "Table 3",
+   "caption": "Comparison of BM25 vs. monoBERT, and monoBERT vs. duoBERT, showing result ranks of answers.",
+   "page": 10,
+   "why": "Qualitative: BM25 repeated-term trap, duoBERT low vs elevated"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 3-4",
+   "snippet": "SUM: s_i = sum_{j in J_i} p_ij ; BINARY: s_i = sum_{j in J_i} 1[p_ij > 0.5]",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "No embedded instructions found.",
+  "Ligatures (fi/fl) in text cache; quotes avoid them.",
+  "Figure 2-4 values are plotted only; no numeric table."
+ ]
+}
