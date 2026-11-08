@@ -427,7 +427,7 @@ Wilson's answer is the honest one: strictly no, though he recommends one. His al
 
 When evaluating one, Wilson's criteria are a good list: sync to the online store, accessibility to the people who need it, batch and streaming ingestion, access control, merging just-in-time data with stored features, and lineage. Access control is not a detail, because features often derive from personal data; see [the governance chapter](../../07-architecture-and-governance/notes/02-access-control-pii-gdpr.md).
 
-The course material has no feature store. The "who owns feature engineering code?" scenario in [the architecture chapter](../../07-architecture-and-governance/notes/01-data-architectures-mesh-fabric-mdw.md) is where the same question turns from technical to organisational.
+The course material has no feature store. The "who owns feature engineering code?" scenario in [the architecture chapter](../../07-architecture-and-governance/notes/01b-data-mesh-topologies-and-scenarios.md) is where the same question turns from technical to organisational.
 
 ## Pitfalls
 

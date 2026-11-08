@@ -162,7 +162,7 @@ Most production agents are conditional loops with occasional parallel batches. P
 
 ## MCP: a protocol for moving context
 
-The Model Context Protocol standardises how context from outside the agent reaches the window. Harness 03 is the authoritative note. It covers [when to choose MCP over an in-process tool](../../03-harness-engineering/notes/03-tool-design.md#mcp-vs-in-process), [the protocol itself](../../03-harness-engineering/notes/03-tool-design.md#the-protocol), its supply-chain risks, and the cost of loading every server's definitions eagerly ([tool discovery at scale](../../03-harness-engineering/notes/03-tool-design.md#tool-discovery-at-scale)). This section reads the protocol as context plumbing: who decides what enters the window, and what each hop costs.
+The Model Context Protocol standardises how context from outside the agent reaches the window. Harness 03 is the authoritative note. It covers [when to choose MCP over an in-process tool](../../03-harness-engineering/notes/03b-mcp-write-safety-and-async-tools.md#mcp-vs-in-process), [the protocol itself](../../03-harness-engineering/notes/03b-mcp-write-safety-and-async-tools.md#the-protocol), its supply-chain risks, and the cost of loading every server's definitions eagerly ([tool discovery at scale](../../03-harness-engineering/notes/03-tool-design.md#tool-discovery-at-scale)). This section reads the protocol as context plumbing: who decides what enters the window, and what each hop costs.
 
 **Why a protocol.** The idea is borrowed from the Language Server Protocol. Without a shared interface, M models and N tools need M×N connectors; with one, M+N. Three models and four tools is 12 integrations without MCP and 7 with it (*AI Agents with MCP*, ch. 1).
 
@@ -178,7 +178,7 @@ The book's ch. 2 calls prompts application-controlled. Its own ch. 5 and the spe
 
 **MCP is the context-facing kind of protocol.** A taxonomy of nine open agent protocols, built from the authors' reading of the specs with no experiments, separates protocols whose counterparty is context from those whose counterparty is another agent, with one protocol (LMOS) classed as hybrid ([arXiv:2606.19135](https://arxiv.org/abs/2606.19135) (Sander et al., TUM, 2026-06, preprint)). MCP is the context kind. It is stateless, and its discovery is static: a client can list a server's tools at run time, but it must know the server's address first. The seven protocols that support agent-to-agent communication, A2A among them, all keep session state. That makes the context-engineering split concrete. With MCP, whatever must persist between calls is the host's job, so it lands in the window or in [memory](06-memory.md). The paper classifies mid-2025 specs.
 
-Everything else about the protocol is in [harness 03](../../03-harness-engineering/notes/03-tool-design.md#the-protocol): the architecture, server-initiated requests, transports and a minimal server.
+Everything else about the protocol is in [harness 03](../../03-harness-engineering/notes/03b-mcp-write-safety-and-async-tools.md#the-protocol): the architecture, server-initiated requests, transports and a minimal server.
 
 ### Designing MCP servers for the window
 

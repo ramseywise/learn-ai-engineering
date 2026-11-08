@@ -427,7 +427,7 @@ client.close()                                 # embedded server keeps running o
 | `hybrid(alpha=…)` | fused | `reciprocal_rank_fusion` |
 | `rerank=Rerank(…)` | cross-encoder on top-k | note 05 |
 
-The lecture example weights hybrid as 25% vector / 75% keyword; the lab uses `alpha=0.3`. Some sources define alpha the other way round, with 0 as pure vector ([03 § hybrid search](03-keyword-semantic-and-hybrid-search.md#hybrid-search-and-reciprocal-rank-fusion)). Check before porting a value. Tune alpha on your own eval set: keyword-heavy for catalogues with SKUs, vector-heavy for conversational queries.
+The lecture example weights hybrid as 25% vector / 75% keyword; the lab uses `alpha=0.3`. Some sources define alpha the other way round, with 0 as pure vector ([03 § hybrid search](03b-metadata-filters-hybrid-search-and-evaluating-a-retriever.md#hybrid-search-and-reciprocal-rank-fusion)). Check before porting a value. Tune alpha on your own eval set: keyword-heavy for catalogues with SKUs, vector-heavy for conversational queries.
 
 ---
 

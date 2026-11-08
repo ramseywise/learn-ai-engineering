@@ -176,6 +176,9 @@ The thumbs-down sample is good at finding failures and useless for estimating a 
 
 When no labels exist, the drift signal can be a behaviour probe instead of a score. [arXiv:2306.13651](https://arxiv.org/abs/2306.13651) (Jain et al., 2023, preprint) scores a model by how much its output changes when the input is transformed, e.g. perplexity before and after inserting "not" into a Wikipedia sentence. On 1,000 sentences per metric across about 25 open and API models (up to 7B open), the negation score tracked TriviaQA accuracy and the long-range-sensitivity score tracked LAMBADA accuracy in scatter plots, at under 30 minutes per model for most tests. **No correlation coefficients are reported, validation is on Wikipedia only, and the paper proposes monitoring live streams but runs no deployment experiment.** Treat it as a cheap tripwire to compare against a fixed corpus, not as a substitute for the labelled sample above.
 
+![Negation sensitivity score (raw and normalised) against TriviaQA accuracy across model families and sizes](../sources/images/jain-2023-self-supervised-sensitivity-fig3.png)
+*Image Source: Jain et al., [Bring Your Own Data! Self-Supervised Evaluation for Large Language Models](https://arxiv.org/abs/2306.13651) (2023), Fig. 3*
+
 ## Online experiments
 
 When offline evals can't settle a question (tone, engagement, real resolution), A/B test:

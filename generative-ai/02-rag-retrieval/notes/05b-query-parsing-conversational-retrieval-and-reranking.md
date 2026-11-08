@@ -103,9 +103,9 @@ multi-query: ['kb-04', 'kb-18', 'kb-05']
 HyDE:        ['kb-04', 'kb-05', 'kb-11']
 ```
 
-The right documents here are `kb-04` and its stale twin `kb-05`. Either rewrite gets there, and neither knows `kb-05` is out of date, so the stale copy still needs a filter ([03](03-keyword-semantic-and-hybrid-search.md)). The block also shows HyDE's hidden gamble: the hypothetical document works because it used the word "refund". An LLM that guesses the wrong vocabulary steers the search away from the answer.
+The right documents here are `kb-04` and its stale twin `kb-05`. Either rewrite gets there, and neither knows `kb-05` is out of date, so the stale copy still needs a filter ([03b](03b-metadata-filters-hybrid-search-and-evaluating-a-retriever.md#metadata-filtering)). The block also shows HyDE's hidden gamble: the hypothetical document works because it used the word "refund". An LLM that guesses the wrong vocabulary steers the search away from the answer.
 
-The same RRF is used for hybrid search ([03](03-keyword-semantic-and-hybrid-search.md#hybrid-search-and-reciprocal-rank-fusion)). The book's examples use `gpt-3.5-turbo` and `retriever.get_relevant_documents`; current LangChain spells the call `retriever.invoke`. Query expansion pulls in more marginal chunks, so pair it with a post-filter or a reranker (*Building AI Agents*, ch. 6).
+The same RRF is used for hybrid search ([03](03b-metadata-filters-hybrid-search-and-evaluating-a-retriever.md#hybrid-search-and-reciprocal-rank-fusion)). The book's examples use `gpt-3.5-turbo` and `retriever.get_relevant_documents`; current LangChain spells the call `retriever.invoke`. Query expansion pulls in more marginal chunks, so pair it with a post-filter or a reranker (*Building AI Agents*, ch. 6).
 
 Two rewrites from Huyen matter in chat (*AI Engineering*, ch. 6). Identity resolution: after "Who is John Doe?", "How about his wife?" needs rewriting to name John Doe's wife before retrieval. And when the rewrite can't be resolved, the rewriter should say so rather than guess. Multi-turn rewriting is covered in [§ conversational retrieval](#conversational-retrieval).
 

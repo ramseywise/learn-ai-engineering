@@ -33,6 +33,9 @@ Tool design follows **ACI principles — Agent-Computer Interface, not Applicati
 
 The term comes from SWE-agent ([arXiv:2405.15793](https://arxiv.org/abs/2405.15793), Yang et al., 2024-05), which measured it: the same GPT-4 Turbo resolved 18.0% of SWE-bench Lite through a purpose-built interface (a windowed file viewer, summarized search, an editor that lints every edit) against 11.0% through a plain Linux shell.
 
+![SWE-agent: an LM agent sends LM-friendly commands (navigate, search, view, edit) through the agent-computer interface to a computer and receives LM-friendly environment feedback](../sources/images/yang-swe-agent-fig1.png)
+*Image Source: Yang et al., [SWE-agent: Agent-Computer Interfaces Enable Automated Software Engineering](https://arxiv.org/abs/2405.15793) (NeurIPS 2024), Fig. 1*
+
 Consequences:
 
 - **Boundaries must be explicit.** Where one tool ends and the next begins has to be legible from descriptions alone.
@@ -176,6 +179,9 @@ The return path is as much a part of the tool as the call. Rules by tool type:
 
 SWE-agent's ablations (GPT-4 Turbo, SWE-bench Lite, 18.0% for the full interface) put numbers on several of these rules. Search that returned a summary of which files matched scored 18.0%; search that paged through matches one at a time scored 12.0%, worse than no search tool at all (15.7%), because agents "tend to look through every match exhaustively." A 100-line file window scored 18.0%, a 30-line window 14.3%, and showing the whole file 12.7%. Dropping the lint-on-edit check cost 3 points (15.0%), and keeping full history instead of collapsing all but the last five observations cost 3 more (15.0%). Failed edits compound: any edit attempt had a 90.5% chance of eventually succeeding, but after one failed edit that fell to 57.2%, so a check that catches a bad write immediately is worth more than it looks.
 
+![Three search interfaces for one task: no search (ls and cd), iterative search that pages with next, and summarized search that returns one list of matching files](../sources/images/yang-swe-agent-fig5.png)
+*Image Source: Yang et al., [SWE-agent](https://arxiv.org/abs/2405.15793) (NeurIPS 2024), Fig. 5*
+
 **Parallel calls need fault boundaries.** Each tool declares whether it is concurrency-safe (default: no). Execution of a call can begin as soon as its arguments finish streaming and validate. A failure aborts only the calls in the same batch that depend on it; the independent calls and the parent task carry on.
 
 **`tool_choice` turns tool use from the model's call into yours** (*Building Applications with AI Agents*, ch. 4). `auto` lets the model decide, which suits general use. `required` (`any` on some APIs) forces at least one call, for steps whose answer has to come from a tool. `none` blocks calls, which is useful in tests or for a final prose turn. Pinning a named tool makes a step deterministic. A pipeline step that must extract into a schema should pin the tool rather than hope the model chooses it.
@@ -294,8 +300,6 @@ The protocol, its supply-chain risks, write-operation safety, tools over persist
 - **Descriptions with only positive guidance.** Symptom: the model confuses `search`, `grep` and `read`. Fix: add WHEN NOT TO USE and DO NOT USE FOR, ratcheted from real misuse, plus examples. In Li's book, examples moved tool-call accuracy from about 72% to 90%.
 - **Loading every MCP definition up front.** Symptom: about 55K tokens, roughly 30% of a 200K window, spent on five servers before the first user message (Li's measurement). Fix: progressive disclosure or discovery, keeping the stable prefix intact for the cache.
 - **Helpful silent argument changes.** Symptom: edits to files with curly quotes fail in a way the model can't diagnose, because the tool straightened its input. Fix: pass arguments through unchanged, or say in the result what changed.
-- **Treating tool descriptions as trusted config.** Symptom: a server update quietly adds an instruction such as reading `~/.ssh` and passing it as `notes`. Fix: review descriptions as code, diff them on every update, namespace per server, and break the lethal triad.
-- **A tool name that implies the work is finished.** Symptom: the model treats `phone_call` as complete when it returns. Fix: name the initiation, as in `initiate_phone_call`, and report `phone_call_connected` and `phone_call_ended` as later events.
 
 ## Try it
 
@@ -330,7 +334,6 @@ The protocol, its supply-chain risks, write-operation safety, tools over persist
 | Give evidence that the interface matters independently of the model. | SWE-agent: the same GPT-4 Turbo resolved 18.0% of SWE-bench Lite through a purpose-built interface and 11.0% through a plain shell. |
 | Typed catalog or bash for a strong current model? | Mak et al. found bash alone beat a typed catalog by 21.8–24.5 pp on TheAgentCompany and 4.8–7.4 pp on APEX-Agents with Opus-4.8 and GPT-5.5, using fewer tokens. Keep typed tools for steps needing a gate, an audit record or a retry policy. |
 | What are the four gating questions? | Reversible, idempotent, observable, parallel-safe. Failing them means, in order, a confirmation gate, no retry without an idempotency key, undebuggable, and serialized execution. |
-| A payment tool timed out and the customer was charged three times. What went wrong? | A non-idempotent write was auto-retried. Tools without idempotency keys must not be auto-retried, and the fix is a key on the call plus a query-before-mutate check. |
 | Why are negative boundaries in a description worth writing? | Positive descriptions leave the model to infer the boundary between similar tools. WHEN NOT TO USE and DO NOT USE FOR disambiguate `search`, `grep` and `read`, and each entry should come from observed misuse. |
 | Your agent has about 100 tools and picks wrongly. What are your options? | Merge overlapping tools, namespace the rest, and stop loading every definition up front. Use progressive disclosure or discovery, keeping dynamic content out of the cached prefix. |
 | Dedicated tool or Skill plus a general executor? | Use a Skill plus executor when parameters are complex, the procedure changes often, or the model is strong enough to compose it. Use a dedicated tool when the call is frequent, parameters are simple, or a smaller model must get it right every time. |

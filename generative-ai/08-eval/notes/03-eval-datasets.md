@@ -75,6 +75,9 @@ Expert-written tasks can be pooled across a field, and the pooling leaves its ow
 
 Injecting one known fault into correct text gives labelled rows and a matched negative for free. MEDEC ([arXiv:2412.19260](https://arxiv.org/abs/2412.19260) (Ben Abacha et al., 2024-12, preprint)) holds 3,848 clinical texts that are either correct or contain exactly one medical error. Annotators injected a wrong diagnosis, treatment or similar into MedQA scenarios (3,360 texts), or swapped a concept in real hospital notes (244 of 488 sampled notes altered), where each injected error had to contradict at least two other parts of the note. Three tasks follow from the labels: flag the error, find its sentence, write the correction. The test set (925 texts, 51.3% with errors) separates the tasks: Claude 3.5 Sonnet flagged best of the LLMs (70.16% accuracy) but its corrections scored lowest (aggregate 0.2795), while o1-preview corrected best (0.698); two physicians reached 79.6% and 71.6% flag accuracy on a 569-text subset. Corrections were scored against one reference sentence by ROUGE, BERTScore and BLEURT with no human grading, and the paper's own example shows a correct synonym (X-linked for Bruton agammaglobulinemia) scored low ([04](04-graders.md)). o1-preview dropped from 0.7286 flag accuracy on the public MedQA-based set to 0.5762 on the private hospital notes, which the authors attribute to public text, not tested.
 
+![MEDEC examples: a clinical text with one injected error in diagnosis, causal organism, management, treatment or pharmacotherapy, and its correction](../sources/images/abacha-2024-medec-fig1.png)
+*Image Source: Ben Abacha et al., [MEDEC: A Benchmark for Medical Error Detection and Correction in Clinical Notes](https://arxiv.org/abs/2412.19260) (2024), Fig. 1*
+
 ### Synthetic data done right
 
 Don't ask a model for "100 test questions". You'll get 100 variations of the same polite question. Generate along **dimensions** instead:

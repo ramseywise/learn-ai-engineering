@@ -100,7 +100,7 @@ boosting  train acc 0.888  val acc 0.868  train AUC 0.949  val AUC 0.925
 
 The dummy always predicts "under 50K" and gets 0.759 accuracy, the share of people under 50K. Its AUC of 0.500 says it ranks no better than a coin.
 
-Logistic regression's validation AUC here is 0.906. [Note 04](04-model-evaluation.md#the-running-example-adult-census) reports 0.901 for the same model on the test rows. Those are different rows, and a gap of 0.005 is within the range the folds below will show.
+Logistic regression's validation AUC here is 0.906. [Note 04](04b-thresholds-pr-roc-and-calibration.md#the-running-example-adult-census) reports 0.901 for the same model on the test rows. Those are different rows, and a gap of 0.005 is within the range the folds below will show.
 
 ## Reading performance during training
 
@@ -514,6 +514,9 @@ A **hyperparameter** is a setting you choose and the model does not learn. Knobs
 
 **Bayesian search** uses earlier trials to choose the next. The Tree-structured Parzen Estimator of Bergstra et al., [*Algorithms for Hyper-Parameter Optimization*](https://papers.nips.cc/paper_files/paper/2011/file/86e8f7ab32cfd12577bc2619bc635690-Paper.pdf) (NeurIPS 2011), splits past trials into good and bad, models each group's settings as $l(x)$ and $g(x)$, and next tries the $x$ with the highest $l(x)/g(x)$. On their 32-knob network search (convex, 200 trials) it reached 14.13% test error against 18.97% for random. [Optuna](https://arxiv.org/abs/1907.10902) (Akiba et al., KDD 2019) makes this the default, with the search space in ordinary code through `trial.suggest_*`. The same chapter warns that TPE is sequential, so at high concurrency it sees few finished trials and degrades toward random search. His 400 iterations took 3 h 34 min on one core; 600 iterations at parallelism 8 on four Spark nodes took under 30 min (not like for like).
 
+![Test error against elapsed time: pruned searches reach low error in about 30 minutes, unpruned ones take hours](../../sources/images/akiba-optuna-fig11a.png)
+*Image Source: Akiba et al., *Optuna: A Next-generation Hyperparameter Optimization Framework* (KDD 2019), Fig. 11a*
+
 Below, each method gets 32 fits and five seeds. The validation pile is cut in half: the **search rows** choose the winner and the **report rows** then score it, so no method flatters itself on its own rows. The first grid spreads two values over all five knobs. The second puts four values on the knobs people trust most.
 
 ```python
@@ -713,16 +716,16 @@ Nested CV gives 0.9274, close to the hold-out test score of 0.9272, at a cost of
 
 | Step | What to do | On adult |
 |---|---|---|
-| 1. Split | Train, validation, test. Choose a splitter that mimics how new data arrives. Lock the test rows away | 19,536, 6,512, 6,513 |
+| 1. Split | Train, validation, test. Mimic how new data arrives. Lock the test rows away | 19,536, 6,512, 6,513 |
 | 2. Baseline | Fit a dummy, then a simple model | 0.759 accuracy, then AUC 0.906 on validation |
 | 3. Fit a strong default | Usually boosting on a table | Validation AUC 0.925 |
-| 4. Read the curves | Train against validation, by rows and by rounds. Name the problem before you touch a knob | Gap 0.027, healthy |
-| 5. Cross-validate | Compare candidates fold by fold, and judge differences against the spread | Boosting +0.0197, sd 0.0025 |
+| 4. Read the curves | Train against validation, by rows and rounds. Name the problem before touching a knob | Gap 0.027, healthy |
+| 5. Cross-validate | Compare candidates fold by fold, against the spread | Boosting +0.0197, sd 0.0025 |
 | 6. Regularise | Validation curve for the knob the diagnosis points to | Learning rate 0.03 on 1,500 rows |
 | 7. Stop early | Set patience, keep the best round, not the last | Round 16, loss 0.2918 |
-| 8. Search | Random or TPE, on a fixed budget, with rows set aside to check the winner | +0.0025 to 0.0041 on report rows |
+| 8. Search | Random or TPE, fixed budget, rows set aside to check the winner | +0.0025 to 0.0041 on report rows |
 | 9. Final number | Refit on train plus validation, read the test rows once, give an interval | 0.9272, 95% 0.9209 to 0.9337 |
-| 10. Stop | If a later step moves less than the spread, ship it. [Note 10](10-imbalance-errors-and-drift.md) asks what this number hides | |
+| 10. Stop | If a step moves less than the spread, ship. [Note 10](10-imbalance-errors-and-drift.md) asks what this number hides | |
 
 ---
 
@@ -730,12 +733,12 @@ Nested CV gives 0.9274, close to the hold-out test score of 0.9272, at a cost of
 
 | Pitfall | Symptom | Fix |
 |---|---|---|
-| Reading the test pile while still deciding | The test score was fine, and live is lower | One read, at the end. If you must iterate, cut a new test pile |
-| Tuning on too few rows | A big gain vanishes on fresh rows | Measured above: optimism of 0.0085 at 100 rows. Use more rows or fewer tries |
+| Reading the test pile while still deciding | Test fine, live lower | One read, at the end. To iterate, cut a new test pile |
+| Tuning on too few rows | Gain vanishes on fresh rows | Measured above: optimism of 0.0085 at 100 rows. More rows or fewer tries |
 | Shuffling rows that have time or group structure | Great CV, weak live | `TimeSeriesSplit` or `GroupKFold`. Measured above: R² 0.648 against 0.590 |
-| Patience without rollback | More patience gives a worse model | Cut back to the best round. Measured above: 0.3561 against 0.2918 |
-| The winner sits at the edge of its range | The search looks finished but is not | Use log ranges, and widen at a bound |
-| Spending the week on tuning | A gain of 0.0009 | Family and features first |
+| Patience without rollback | More patience, worse model | Cut back to the best round. Measured above: 0.3561 against 0.2918 |
+| The winner sits at the edge of its range | Search looks finished but is not | Use log ranges, and widen at a bound |
+| Week spent tuning | Gain of 0.0009 | Family and features first |
 
 ---
 

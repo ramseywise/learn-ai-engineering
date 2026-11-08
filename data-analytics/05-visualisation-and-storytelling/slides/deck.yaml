@@ -473,7 +473,7 @@ parts:
         statement: "A web endpoint returns the whole customer table, emails included, with no login, and a chart paints four unrelated groups on a numeric scale."
         attribution: "Fernhill's first draft of the segments dashboard, on 50,000 synthetic customers"
         takeaway: A dashboard that works on a laptop can still leak, overload and misdraw, so choose the stack and measure the costs.
-        source: notes/06-dashboard-stacks-from-python-to-frontend.md
+        source: notes/06b-dashboard-data-path-points-colour-and-worked-example.md
         recall: What is wrong with a first-draft dashboard that returns the customer table and colours by cluster number?
         notes: >-
           This chapter answers the question the draft skipped: which stack should this be built on, and how do Python results reach a browser? You do not need to know React.
@@ -568,7 +568,7 @@ parts:
           - "`response_model` removes the email."
           - "`after` is keyset paging: no skipped rows, no jumping to a page."
         takeaway: Permissions, field lists and row caps belong on the server, where a caller cannot go around them.
-        source: notes/06-dashboard-stacks-from-python-to-frontend.md
+        source: notes/06b-dashboard-data-path-points-colour-and-worked-example.md
         recall: Where do permissions, field lists and row caps belong, and why?
         notes: >-
           The draft's faults map to OWASP API Security Top 10, 2023: no login, no per-object permission, every column returned, no limit on rows. The rows contain emails, and the response does not, because response_model filters the output. The demo keys are stand-ins: a real deployment uses single sign-on and verifies a signed token, and a key compiled into a front-end bundle is public. Keyset pagination says "after the last id I saw" rather than "skip 40,000 rows".
@@ -583,7 +583,7 @@ parts:
           - "ECharts: **172 KB** scatter only, **375 KB** everything."
           - "In process, no network: summary **4 ms**, all rows **534 ms**."
         takeaway: All 50,000 customers gzip to 1,419 KB, about the same as all of plotly.js at 1,449 KB, so fix the data before choosing a library.
-        source: notes/06-dashboard-stacks-from-python-to-frontend.md
+        source: notes/06b-dashboard-data-path-points-colour-and-worked-example.md
         recall: Which is heavier, 50,000 customers as JSON or all of plotly.js, and what does that imply?
         notes: >-
           Timings: Apple M4 Pro with 24 GB, Python 3.13.15, FastAPI TestClient, no network and no TLS, measured 2 November 2026; latency is uncompressed, and a real network would add to every row. Dash's first load fetched 21 files, about 1,901 KB if gzipped; our React page 5 files, about 177 KB. That gap matters on phones and hardly at all on office broadband.
@@ -598,7 +598,7 @@ parts:
           - ["One region (Wales, 2,001)", "0.0%", "2.6%"]
           - ["Spend above the median (25,000)", "14.8%", "25.3%"]
         takeaway: The objection to refitting is meaning rather than speed, so publish one table and let the filter select rows from it.
-        source: notes/06-dashboard-stacks-from-python-to-frontend.md
+        source: notes/06b-dashboard-data-path-points-colour-and-worked-example.md
         recall: Why not refit the clustering when a user filters?
         notes: >-
           One k-means fit took about 49 ms on this laptop, so speed would not settle it. The cluster ids are arbitrary too: a new seed on overlapping data kept the same id for only 49.1% of customers, with ARI 0.994. These groups are planted and simple, so treat the percentages as an illustration.
@@ -614,7 +614,7 @@ parts:
           - ["50,000", "476", "55"]
           - ["400,000", "not run", "111"]
         takeaway: Use WebGL from about 10,000 points, measured on one M4 Pro, and datashader past about a million or to keep the data on a server. Often you need neither.
-        source: notes/06-dashboard-stacks-from-python-to-frontend.md
+        source: notes/06b-dashboard-data-path-points-colour-and-worked-example.md
         recall: When do you reach for WebGL, and when for datashader?
         notes: >-
           Reruns moved the WebGL figures by tens of milliseconds, so read the shape. Plotly's page warns of a limit of about 4 to 8 WebGL figures per page. Datashader needs a running Python process to zoom. For the CRM team, a grid of counts at 2.4 KB gzipped is enough.
@@ -629,7 +629,7 @@ parts:
           - "Default colours follow order of appearance, so a filter repaints segments."
           - "Fix the map by name, and add a shape."
         takeaway: Map each segment name to a fixed colour and a second encoding, so nothing depends on order or on colour alone.
-        source: notes/06-dashboard-stacks-from-python-to-frontend.md
+        source: notes/06b-dashboard-data-path-points-colour-and-worked-example.md
         recall: How should you colour customer segments in Plotly?
         notes: >-
           Accessibility is part of this. WCAG 2.2 asks that colour is not the only means of conveying information, that marks reach 3:1 contrast, that there is a table view, and that everything works without a mouse. We have not tested with a screen reader.
@@ -644,7 +644,7 @@ parts:
           - ["First load, gzipped", "about 1,901 KB", "about 177 KB"]
           - ["Login", "The company's login proxy, in front", "Key check in the demo, your SSO in production"]
         takeaway: A few internal CRM users make this a Python app job. The React version earns its code when the views reach customers.
-        source: notes/06-dashboard-stacks-from-python-to-frontend.md
+        source: notes/06b-dashboard-data-path-points-colour-and-worked-example.md
         recall: Why does Fernhill's CRM dashboard belong on the Python app route?
         notes: >-
           All numbers synthetic. If the same numbers were going into a BI tool the company already pays for, publishing the summary table to it would be cheaper still. Line counts include the kept first draft on the API side.

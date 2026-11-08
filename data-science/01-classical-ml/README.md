@@ -53,6 +53,7 @@ Read in this order. It is the pillar's reading order, and note numbers are stabl
 |---|---|---|
 | 2.1 | [Feature engineering and pipelines](notes/03-feature-engineering-and-pipelines.md) | What should the model see, and how do you keep it from cheating? |
 | 2.2 | [Model evaluation](notes/04-model-evaluation.md) | A model scored 90%. Is that good? |
+| 2.3 | [Thresholds, precision–recall, ROC and calibration](notes/04b-thresholds-pr-roc-and-calibration.md) | Where do you cut a score, and can you believe it as a probability? |
 
 ### 3. Winning on tables
 

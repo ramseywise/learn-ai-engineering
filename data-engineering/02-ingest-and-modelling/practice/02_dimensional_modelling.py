@@ -1,4 +1,4 @@
-"""Code from notes/02-dimensional-modelling.md.
+"""Code from notes/02-dimensional-modelling.md and notes/02b-dimensional-modelling-history-and-conformed-dimensions.md.
 
 Run from any folder (it writes only to a temporary directory):
     uv run --with duckdb --with pyarrow --with numpy python 02_dimensional_modelling.py

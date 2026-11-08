@@ -16,6 +16,7 @@ How to choose a chart, draw it well in Python and JavaScript, and use it to get 
 | 4 | [JavaScript: D3, Vega-Lite and Observable Plot](notes/04-javascript-d3-vega-lite-observable-plot.md) | What is underneath, and when should I write it directly? |
 | 5 | [Dashboards and storytelling with data](notes/05-dashboards-and-storytelling.md) | How do I monitor a number, and how do I get a decision made? |
 | 6 | [Dashboard stacks: from Python results to a browser](notes/06-dashboard-stacks-from-python-to-frontend.md) | Which stack should this dashboard use, and how do results reach a browser? |
+| 6b | [Dashboard stacks, part 2: the data path, many points, colour and the finished pages](notes/06b-dashboard-data-path-points-colour-and-worked-example.md) | How do I stop the first draft leaking and overloading, and what do the finished pages look like? |
 
 Then go on to [applied analyses](../06-applied-analyses/README.md), which use these charts on worked business questions. Readers new to pandas should start with [Python for data analysis](../01-python-for-data-analysis/README.md).
 

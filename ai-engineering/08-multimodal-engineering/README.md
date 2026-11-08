@@ -62,6 +62,7 @@ behind it, a check that catches it, and the evidence for what to do about it.
 | 04 | [Speech and voice agents](notes/04-speech-and-voice-agents.md) | Cascade or speech-to-speech, and how do you spend the latency budget? |
 | 05 | [How image generators work](notes/05-how-image-generators-work.md) | What happens between noise and picture, and which families compete with diffusion? |
 | 06 | [Generating images and video](notes/06-generating-images-and-video.md) | Which controls do you set and record, and how do you handle provenance? |
+| 06b | [Editing and customizing images](notes/06b-editing-and-customizing-images.md) | How do you change one region of an image, or teach a model one subject, without a re-roll? |
 | 07 | [Evaluating multimodal systems](notes/07-evaluating-multimodal-systems.md) | How do you build tests in which guessing fails? |
 
 Failure modes have no chapter of their own: each chapter ends with its own pitfalls, and chapter 07 pulls

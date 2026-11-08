@@ -338,7 +338,7 @@ A common enumeration of agentic risks lists sixteen, in five groups. Each group 
 
 | Group | Risks | Harness control |
 |---|---|---|
-| **Agent behaviour** | Deception, goal manipulation, tool misuse, memory poisoning, cascading hallucination | Tool schemas and write-op gates ([03](03-tool-design.md#write-operation-safety)), editable memory ([rollback](#rollback)), verification ([05](05-verification-loops.md)) |
+| **Agent behaviour** | Deception, goal manipulation, tool misuse, memory poisoning, cascading hallucination | Tool schemas and write-op gates ([03](03b-mcp-write-safety-and-async-tools.md#write-operation-safety)), editable memory ([rollback](#rollback)), verification ([05](05-verification-loops.md)) |
 | **Security** | Privilege compromise, identity spoofing, unexpected RCE | Sandbox, least-privilege credentials, trust zones above |
 | **Operational resilience** | Resource overload, repudiation and untraceability | [Cost envelope](#cost-envelope), traces ([08](08-maturity-and-failure-modes.md#runtime-vs-process-observability)) |
 | **Multi-agent collusion** | Rogue agents, communication poisoning, human attacks on the system | Context firewalls and labelled handoffs ([07](07-orchestration.md#handoff-design)) |

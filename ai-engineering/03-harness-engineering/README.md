@@ -26,7 +26,8 @@ Read the notes in order. 01–08 are the harness as components; 09–10 put it i
 
 1. [What a harness is](notes/01-what-a-harness-is.md) — Agent = Model + Harness, the four parts, three data points (LangChain, Agent S4, Vercel), five no-harness failures, the ratchet, convergent design.
 2. [Harness anatomy](notes/02-harness-anatomy.md) — the nine components, the five subsystems and ablation, one real harness (the Gemini Minecraft run) read through them, Deep Agents capability groups, the filesystem as foundational primitive.
-3. [Tool design as harness surface](notes/03-tool-design.md) — ACI over API, the five-section tool contract, the four gating questions, tool discovery at scale, writing a skill, MCP vs. in-process.
+3. [Tool design as harness surface](notes/03-tool-design.md) — ACI over API, the five-section tool contract, the four gating questions, tool discovery at scale, writing a skill.
+   - 3b. [MCP, write safety and asynchronous tools](notes/03b-mcp-write-safety-and-async-tools.md) — MCP vs. in-process, the protocol, supply-chain risks, write-operation safety, tools over persistent state, asynchronous tool interfaces.
 4. [Execution boundaries and guardrails](notes/04-execution-boundaries.md) — the isolation ladder, shell vs. interpreter, hooks, rules vs. requests, tool allowlists, reviewers, the five protection layers, the canary pattern.
 5. [Verification and feedback loops](notes/05-verification-loops.md) — the three-layer termination check, three kinds of reflection, asymmetric QA, generator/evaluator separation and an observer agent, sprint contracts, eval-first, trace-driven improvement, verification the user performs.
    - 5b. [Recovery, retries and termination](notes/05b-recovery-and-termination.md) — loop detection and injected nudges, failures by layer, the retry taxonomy and its budgets, reasoning budgets.
@@ -70,7 +71,7 @@ A tool server with sandboxing: file tools behind a sandbox boundary, with the at
 ```
 README.md         this file
 references.md     primary sources, upstream course, what was kept and dropped
-notes/            01–10 (with 05b), the course; figures and code inline
+notes/            01–10 (with 03b, 05b), the course; figures and code inline
 slides/           deck.yaml + harness-engineering.pptx
 practice/         the lab, in TypeScript and Python
 sources/          paper PDFs + images/ (figures used by notes and deck)

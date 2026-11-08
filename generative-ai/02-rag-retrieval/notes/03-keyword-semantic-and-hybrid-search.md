@@ -7,7 +7,6 @@ sources:
   - Huyen, *AI Engineering* (O'Reilly, 2025), ch. 6
   - Raieli & Iuculano, *Building AI Agents with LLMs, RAG, and Knowledge Graphs* (Packt, 2025), ch. 5, ch. 6
   - Iusztin & Labonne, *LLM Engineer's Handbook* (Packt, 2024), ch. 4
-  - https://arxiv.org/abs/2404.13781
   - https://arxiv.org/abs/2312.15503
   - https://arxiv.org/abs/2403.15246
   - https://doi.org/10.1561/1500000019
@@ -16,7 +15,6 @@ sources:
   - https://arxiv.org/abs/2112.09118
   - https://doi.org/10.18653/v1/2022.emnlp-main.669
   - https://arxiv.org/abs/2209.11755
-  - https://doi.org/10.1145/3404835.3463238
   - https://arxiv.org/abs/1906.00300
   - https://arxiv.org/abs/2301.12652
   - https://arxiv.org/abs/2412.13663
@@ -28,7 +26,7 @@ cleaned: 2026-11-01
 
 A Tallybook customer pastes `X-Tally-Signature` into the help widget, and an embedding search can answer with pages that merely feel related, because an identifier carries little meaning for a model to embed. Another asks "can I get my money back?" and keyword search returns nothing useful, because the refund page never says "money" or "back". Each method fails where the other is strong. Pick one and the retriever passes your favourite test queries and fails a whole class of real ones. This chapter builds both, fuses them and measures the blind spots.
 
-> A retriever ranks documents. Keyword search (TF-IDF, BM25) ranks by shared words, semantic search ranks by embedding distance, metadata filters cut the set without ranking, and hybrid search fuses the rankings with RRF. Precision, recall, MAP and MRR tell you which one is working.
+> A retriever ranks documents. Keyword search (TF-IDF, BM25) ranks by shared words, semantic search ranks by embedding distance, metadata filters cut the set without ranking, and hybrid search fuses the rankings with RRF. Precision, recall, MAP and MRR tell you which one is working. The filters, fusion and metrics are in [03b](03b-metadata-filters-hybrid-search-and-evaluating-a-retriever.md).
 
 ---
 
@@ -344,163 +342,8 @@ Raieli and Iuculano cover the training side (*Building AI Agents*, ch. 5):
 
 **Choosing an embedder.** Start from the MTEB leaderboard, which ranks retrieval by NDCG, but don't stop there. Scores are self-reported, and some models may have trained on the benchmark data. Test two or three candidates on your own queries (*Building AI Agents*, ch. 5). Huyen points to BEIR (14 retrieval benchmarks) for the same comparison (*AI Engineering*, ch. 6). Read BEIR averages with the metric in mind. Contriever, trained with no labels on two random spans cropped from the same document, beat BM25 on 11 of 15 BEIR datasets at recall@100. Its average was still lower, 60.1 against 63.6, because BM25 won Trec-COVID and Touché by 30 points or more, and BM25 led nDCG@10 on 12 of the 15. After fine-tuning on MS MARCO it led the dense models of the time at 47.5 average nDCG@10 (excluding CQADupStack), and a cross-encoder reranker on top reached 51.2. Its authors judge retrievers by recall@100 because a reranker or reader consumes the top 100, while BEIR's headline metric is nDCG@10 ([arXiv:2112.09118](https://arxiv.org/abs/2112.09118), Izacard et al., TMLR 2022). A leaderboard rank can flip with the metric, so pick the one that matches what reads your results. Size buys generality more than dimensions do. GTR kept one 768-d vector and grew its T5 encoder from 110M to 4.8B parameters. Its average nDCG@10 on 18 BEIR datasets outside MS MARCO rose from 0.416, below BM25's 0.423, to 0.458. Going from 768 to 4,096 dimensions gained almost nothing, in a smaller ablation on six of the datasets. Latency rose from 17 ms to 349 ms per query at batch size 1. BM25 still won Trec-COVID, BioASQ, Signal-1M, Trec-News and Touché by 5–16 points of nDCG@10 even at the largest size. Fine-tuning on 10% of MS MARCO matched the out-of-domain score of the full set ([EMNLP 2022](https://doi.org/10.18653/v1/2022.emnlp-main.669), Ni et al.). The encoder under the embedder matters less than a leaderboard suggests. ModernBERT, a BERT-style backbone trained on 2T tokens with an 8,192-token context, ships as a masked language model, not an embedder, and its single-vector retrieval numbers come after the same contrastive fine-tune on 1.25M MS MARCO pairs applied to each backbone, its ColBERT numbers after the same 810k-pair MS MARCO distillation. Fine-tuned that way, its base model averaged 41.6 nDCG@10 over the 15 BEIR datasets against 41.4 for GTE-en-MLM-base, and lost to GTE on 9 of the 15 and tied one; TREC-COVID (72.1 against 49.7) carries the average. Where it clearly wins is code retrieval (56.4 against 44.9 on CodeSearchNet, as the only encoder in its comparison pretrained on code), long documents under ColBERT-style multi-vector scoring (80.2 against 69.3 on MLDR with no long-context fine-tuning) and throughput at 8,192 tokens, 2.65× the next encoder on one RTX 4090. It is English-only, and as a single-vector embedder it lost to GTE on long documents out of domain, 27.4 against 34.3 ([arXiv:2412.13663](https://arxiv.org/abs/2412.13663), Warner et al., ACL 2025). Biomedical, news and argument search are where an off-the-shelf embedder is most likely to need BM25 beside it. The same ordering shows up when the retriever feeds a generator rather than a benchmark: with ten Wikitext-103 passages prepended to GPT-2 (774M and 1.5B), BM25 lowered test perplexity more than off-the-shelf Contriever, DPR or BERT, and only a Contriever retrained on the language model's own likelihoods beat it ([arXiv:2301.12652](https://arxiv.org/abs/2301.12652), Shi et al., NAACL 2024).
 
----
 
-## Metadata filtering
-
-Filters are SQL-style constraints on fields (`region == "EU"`, `tier >= "pro"`, `date > 2024-01-01`). They pass or fail a document and rank nothing. Use them for access control, subscription tiers and freshness. Never as a substitute for search.
-
-Here the filter settles something search cannot. The current refund page and its archive are near-duplicates and both match, so ranking alone can surface the wrong one. A date filter removes the archive before scoring, and the audience filter removes the internal runbook:
-
-```python
-from ragkit import DOCS, Retriever
-
-def search(query, **filters):
-    allowed = [d for d in DOCS
-               if d.audience == filters.get("audience", d.audience)
-               and d.updated >= filters.get("updated_after", "")]
-    return Retriever(allowed).sparse(query, k=3)
-
-query = "refund policy for annual plans"
-print("no filter:      ", search(query))
-print("public, current:", search(query, audience="public", updated_after="2025-01-01"))
-```
-
-```text
-no filter:       ['kb-04', 'kb-05', 'kb-18']
-public, current: ['kb-04', 'kb-07', 'kb-06']
-```
-
----
-
-## Hybrid search and reciprocal rank fusion
-
-The hybrid pipeline:
-
-1. Keyword search returns its top 20–50.
-2. Semantic search returns its top 20–50.
-3. Metadata filters remove ineligible docs from both lists.
-4. **RRF** fuses the two rankings into one.
-
-RRF ignores raw scores (which are on different scales) and uses only ranks:
-
-```
-RRF(d) = Σ over lists  1 / (k + rank(d))
-```
-
-| k | 1st vs 10th place | Behaviour |
-|---|---|---|
-| 0 | 1/1 vs 1/10 = 10× | Top ranks dominate |
-| 50 | 1/51 vs 1/60 ≈ 1.2× | Ranks matter less; agreement across lists matters more |
-| 60 | common default | — |
-
-A **beta** weight can tilt the fusion, e.g. 0.7 semantic / 0.3 keyword.
-
-Why fuse at all: the two retrievers find different documents. In ANCE's TREC DL 2019 analysis (MS MARCO corpus), at most 25% of the dense retriever's top 100 were also in BM25's (Xiong et al., ICLR 2021). DPR's hybrid ran before RRF was common. It reranked the union of each retriever's top 2,000 by BM25 + 1.1 × dense score. That helped where the words matter, with DPR trained on each dataset separately, adding 5.4 top-20 points on TREC and 8.3 on SQuAD, and cost 1.8 points on Natural Questions, where dense alone was stronger (Karpukhin et al., EMNLP 2020).
-
-**Check which way alpha points.** Raieli and Iuculano define hybrid weight α so that α = 0 is pure vector search and α = 1 is pure keyword, with typical values of 0.4–0.5 (some recommend 0.3) (*Building AI Agents*, ch. 6). Weaviate's `hybrid(alpha=…)`, used in note [04](04-vector-databases-and-ann.md#4-query), runs the other way: α = 1 is pure vector. The same "0.3" means mostly keyword in one convention and mostly vector in the other. Read the library's definition before copying a number.
-
-```python
-from ragkit import Retriever
-
-def reciprocal_rank_fusion(list1, list2, top_k=5, K=60):
-    rrf_scores = {}
-    for lst in [list1, list2]:
-        for rank, item in enumerate(lst, start=1):   # ranks start at 1
-            rrf_scores.setdefault(item, 0)
-            rrf_scores[item] += 1 / (rank + K)       # agreement across lists adds up
-    sorted_items = sorted(rrf_scores, key=rrf_scores.get, reverse=True)
-    return sorted_items[:top_k]                      # the course casts ids to int here
-
-retriever = Retriever()
-query = "Scale plan limit"
-sparse, dense = retriever.sparse(query, 10), retriever.dense(query, 10)
-print("bm25 ", sparse[:5])
-print("dense", dense[:5])
-for K in [0, 60]:
-    print(f"rrf K={K:<2}", reciprocal_rank_fusion(sparse, dense, K=K))
-```
-
-```text
-bm25  ['kb-03', 'kb-16', 'kb-07', 'kb-06']
-dense ['kb-03', 'kb-07', 'kb-06', 'kb-04', 'kb-05']
-rrf K=0  ['kb-03', 'kb-07', 'kb-16', 'kb-06', 'kb-04']
-rrf K=60 ['kb-03', 'kb-07', 'kb-06', 'kb-16', 'kb-04']
-```
-
-Pages found by both lists rise to the top. K matters at the margin: K=0 lets `kb-16`, ranked second by BM25, climb above `kb-06`, which sits higher in the dense list and lower in the BM25 one. The assignment's output shows fusion at work on its news corpus:
-
-| Retriever | Top 5 indices |
-|---|---|
-| Semantic | 743, 673, 626, 752, 326 |
-| BM25 | 752, 673, 289, 626, 43 |
-| **RRF** | **673, 752, 626, 743, 289** |
-
-The three in both lists lead; each retriever's unique pick (743, 289) survives lower down.
-
----
-
-Pyserini shows the case where fusion pays. On MS MARCO passage dev, with every system built on the same toolkit, BM25 scored 0.184 MRR@10, and tuning k1 and b moved it only to 0.187. Document expansion with doc2query-T5 kept retrieval bag-of-words and reached 0.272 at default settings, 0.282 tuned. A dense TCT-ColBERT retriever reached 0.335. A weighted interpolation of dense and BM25 scores reached 0.353, and 0.365 with expansion. HNSW lost almost nothing against an exact scan (recall@1000 0.962 vs 0.964). The dense index was 25 GB against 2.6 GB for the sparse one (which includes the text) ([SIGIR 2021](https://doi.org/10.1145/3404835.3463238), Lin et al.). The paper reports no latency or interpolation weight, and tests on MS MARCO only. Pyserini ships pre-built indexes for about three dozen test collections, so a BM25 baseline like the one above is one command.
-
-## Evaluating a retriever
-
-You need a labelled set: for each query, which documents are relevant.
-
-| Metric | Formula | Question it answers |
-|---|---|---|
-| **Precision** | relevant retrieved / retrieved | How much of what I returned is useful? |
-| **Recall** | relevant retrieved / total relevant | How much of what exists did I find? |
-| P@k, R@k | Same, on the top k only | Comparable across systems |
-| **MAP** | Mean over queries of average precision at each relevant hit | Are relevant docs ranked high? |
-| **MRR** | Mean of 1 / rank of first relevant doc | How soon is the first good one? |
-
-### Worked numbers from the course
-
-| Case | Numbers |
-|---|---|
-| Return 12, 8 relevant; 10 relevant exist | P = 8/12 = 66%, R = 8/10 = 80% |
-| Return 15, 9 relevant | P = 9/15 = 60%, R = 9/10 = 90% — recall up, precision down |
-| P@5 = 2/5, P@10 = 6/10, 8 relevant exist | R@10 = 6/8 |
-| Relevant at ranks 1, 4, 5 (of 3 relevant) | AP = (1/1 + 2/4 + 3/5) / 3 = (1 + 0.5 + 0.6) / 3 = 0.7 |
-| First relevant at ranks 1, 3, 6, 2 over 4 queries | MRR = (1 + 0.33 + 0.17 + 0.5) / 4 = 0.5 |
-| Relevance list [1, 0, 1, 0, 1] (*Building AI Agents*, ch. 5) | AP = (1/1 + 2/3 + 3/5) / 3 = (1 + 0.67 + 0.6) / 3 ≈ 0.76 |
-
-Two naming notes from Huyen (*AI Engineering*, ch. 6). *Context precision* is sometimes called *context relevance*. *Context recall* needs every relevant document in the corpus labelled for each query, so it is expensive to measure.
-
-These metrics are short enough to write out and check against the table above. Average precision for relevance at ranks 1, 4 and 5 should come to 0.7, and the four-query MRR to 0.5:
-
-```python
-from ragkit import Retriever, evaluate, QUERIES
-
-def average_precision(flags):                 # flags: relevance by rank, e.g. [1, 0, 0, 1, 1]
-    hits, total = 0, 0.0
-    for rank, flag in enumerate(flags, start=1):
-        if flag:
-            hits += 1
-            total += hits / rank
-    return total / hits
-
-print("AP, relevant at 1, 4, 5:", round(average_precision([1, 0, 0, 1, 1]), 2))
-print("AP, [1, 0, 1, 0, 1]:    ", round(average_precision([1, 0, 1, 0, 1]), 2))
-print("MRR, first hits 1,3,6,2:", round(sum(1 / r for r in [1, 3, 6, 2]) / 4, 2))
-
-r = Retriever()
-for name, search in [("bm25", r.sparse), ("dense", r.dense), ("hybrid", r.hybrid)]:
-    print(f"{name:7}", {m: round(v, 3) for m, v in evaluate(search).items()})
-```
-
-```text
-AP, relevant at 1, 4, 5: 0.7
-AP, [1, 0, 1, 0, 1]:     0.76
-MRR, first hits 1,3,6,2: 0.5
-bm25    {'recall@3': 0.6, 'mrr': 0.562, 'ndcg@3': 0.563}
-dense   {'recall@3': 0.9, 'mrr': 0.877, 'ndcg@3': 0.875}
-hybrid  {'recall@3': 0.95, 'mrr': 0.742, 'ndcg@3': 0.789}
-```
-
-**Recall@k is the most cited** for RAG: the LLM can ignore a bad document, but it can't use one you never retrieved. Note [01 § measure each stage](01-rag-pipeline.md#measure-each-stage) puts these in the pipeline context.
-
-**Relevance to a person is not usefulness to the model.** Salemi and Zamani test how well retrieval metrics predict a RAG system's final score ([arXiv:2404.13781](https://arxiv.org/abs/2404.13781), SIGIR 2024). With T5-small using Fusion-in-Decoder over 50 BM25 documents on Natural Questions, MRR against the KILT benchmark's human provenance labels correlates with downstream exact match at only Kendall's tau 0.177. LLM-judged relevance (Mistral 7B) does worse, at 0.060. Their method, eRAG, runs the system's own LLM on each retrieved document alone, scores each output against the task's ground truth, and feeds those scores to the same metric as relevance labels. Its MRR reaches tau 0.503 on the same setup, and across datasets the gain over the best baseline is 0.168 to 0.494. It also used far less GPU memory than end-to-end evaluation in their runs (1.5 GB per document against 75 GB on NQ). Two limits: this was a small model and the correlations fell as more documents were retrieved, since the metric judges each document alone while the LLM reads them together. Keep Recall@k for debugging, and check it still predicts your final answer quality before you optimise it for long.
+Metadata filters, hybrid search with reciprocal rank fusion, and evaluating a retriever continue in [03b](03b-metadata-filters-hybrid-search-and-evaluating-a-retriever.md).
 
 ---
 
@@ -508,9 +351,7 @@ hybrid  {'recall@3': 0.95, 'mrr': 0.742, 'ndcg@3': 0.789}
 
 | Rule | Why |
 |---|---|
-| Default to hybrid (BM25 + dense + RRF) | Each covers the other's blind spot; cost is small |
-| Retrieve 20–50 per retriever before fusion | RRF needs depth to find agreement |
-| Filters for constraints, search for relevance | Mixing them up hides docs or leaks them |
+| Check your embedder's token limit | Past it, text is silently dropped |
 
 ---
 
@@ -527,8 +368,6 @@ hybrid  {'recall@3': 0.95, 'mrr': 0.742, 'ndcg@3': 0.789}
 - **Tokeniser mismatch.** Symptom: an exact code returns nothing or the wrong page. A tokeniser that splits `HTTP-403` into `HTTP` and `403` matches every HTTP page. Test identifiers explicitly, and use the same tokeniser for the corpus and the query.
 - **Mixing embedding models.** Symptom: similarity scores look like noise after a model upgrade. Two models' spaces are unrelated, so re-embed the whole corpus.
 - **Text past the token limit.** Symptom: two long articles with different endings get identical vectors. `bge-base-en-v1.5` truncates at 512 tokens, silently.
-- **A hybrid weight copied from elsewhere.** Symptom: a "0.3" setting behaves like the opposite of what the post promised. Alpha conventions differ. Read the library's definition.
-- **Filtering after fusion.** Symptom: fewer than k results for filtered users, or forbidden documents in a trace. Apply filters to both lists, ideally inside the query.
 - **Trusting a small corpus.** Symptom: dense search looks perfect in the demo and misses exact codes in production. Rare identifiers get harder to separate as near-duplicate pages multiply, so test at realistic size.
 
 ---
@@ -537,14 +376,12 @@ hybrid  {'recall@3': 0.95, 'mrr': 0.742, 'ndcg@3': 0.789}
 
 1. Tokenise `HTTP-403` with `re.findall(r"\w+", ...)` instead of `ragkit.tokenize` and rerun `BM25` on "HTTP-403 when calling the API". What changes?
 2. Add a 19th page, `Doc("kb-19", "Release notes", " ".join(["API changes shipped this release for developers and integrators."] * 30), "api", "2026-10-10")`. How do `b=0` and `b=0.75` treat it for "API rate limits"?
-3. Compute by hand: a query's relevant pages sit at ranks 2 and 5 with two relevant pages in total. What are recall@3, MRR and AP?
 
 <details>
 <summary>Answers</summary>
 
 1. `kb-01` stays first, because `403` alone is still rare. The damage shows with a code the corpus lacks. `HTTP-404` now matches `kb-01` and `kb-03` on `HTTP`, where the whole-token tokeniser finds nothing and honestly says so.
 2. `kb-03` wins both ways, since it matches the rarer "rate" and "limits". The long page comes second. Its score falls from 3.07 at `b=0` to 2.71 at `b=0.75`, while `kb-03` rises from 6.51 to 7.16.
-3. Recall@3 = 1/2, because only the rank 2 page is in the top 3. MRR = 1/2. AP = (1/2 + 2/5) / 2 = 0.45.
 
 </details>
 
@@ -558,15 +395,9 @@ hybrid  {'recall@3': 0.95, 'mrr': 0.742, 'ndcg@3': 0.789}
 | What do BM25's `k1` and `b` control? | `k1` saturates term frequency, so repeats give diminishing returns. `b` sets how much long documents are penalised: 0 ignores length, 1 normalises fully. |
 | When does keyword search beat embeddings? | Exact identifiers, names and jargon, especially when many documents are semantically near-identical. |
 | Cosine similarity or dot product? | Cosine ignores length. They are the same on unit vectors, so normalise and use the faster one. |
-| Why fuse ranks and not scores? | BM25 and cosine live on different scales. RRF needs no calibration, at the cost of discarding score magnitude. |
-| What does the k in RRF do? | It flattens the reward for top ranks. At k=0 first place is worth ten times tenth place; at k=60 about 1.2 times, so agreement across lists matters more. |
-| Which retrieval metric first, and why? | Recall@k. A document that was not retrieved can't be used, so low recall caps the system. |
-| MRR, MAP or nDCG? | MRR when one good document is enough. MAP when you want all relevant documents ranked high with binary labels. nDCG with graded labels. |
-| Do human relevance labels predict RAG quality? | Weakly in Salemi and Zamani's tests: tau around 0.18 for provenance MRR on NQ, against 0.50 for eRAG, which scores each document by what the system's LLM does with it. |
-| Why do filters not replace search? | A filter is a hard yes or no with no ranking. It enforces constraints but does not order what remains by relevance. |
 
 ---
 
 ## Next
 
-[04 — Vector databases and ANN](04-vector-databases-and-ann.md): semantic search with a linear scan doesn't scale, and ANN indexes make it fast.
+[03b — Metadata filters, hybrid search and evaluating a retriever](03b-metadata-filters-hybrid-search-and-evaluating-a-retriever.md): cut the candidate set with filters, fuse the keyword and semantic rankings with RRF, and measure the result with Recall@k, MRR and nDCG.

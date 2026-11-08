@@ -346,7 +346,7 @@ Rows in a table are a weak fit for plain RAG. On 80 BIRD questions adapted to ne
 | Keep source metadata through formatting | Citations need it, and so does debugging |
 | Treat the prompt template as code | It decides whether the model trusts, ignores or mixes the docs |
 | Treat context construction as feature engineering | Huyen's framing: what you retrieve and how you format it is to an LLM app what features are to a classical model (*AI Engineering*, ch. 6) |
-| Start with `top_k` around 5 | Then tune with the metrics in note 03 |
+| Start with `top_k` around 5 | Then tune with the metrics in note 03b |
 
 ---
 

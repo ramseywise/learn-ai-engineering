@@ -374,11 +374,11 @@ These costs need real cases to set them against. On 301,536 FICO credit scores, 
 
 ## What an audit report states
 
-An audit report records what was measured, under what assumptions, and what remains unknown. It should state:
+An audit report records what was measured, under what assumptions, and what remains unknown:
 
 1. **The decision.** What is decided, by which model version, at which threshold, and who sees the result before it takes effect.
 2. **The population and window.** Who is included and excluded, and over what dates.
-3. **The labels.** Where each came from. Whether it's a prior human decision. What independent check exists, on how many cases, chosen how.
+3. **The labels.** Where each came from. Whether it's a prior human decision. The independent check, on how many cases, chosen how.
 4. **The group data.** How it was obtained, how much is missing and by which decision, and any inference method with its validated error.
 5. **Rates with counts.** Numerators, denominators, ratio and interval per group and pre-chosen slice, and the rule for small cells.
 6. **Error rates and calibration**, with the label named for each, and which metric was chosen as primary, by whom and why.
@@ -387,7 +387,7 @@ An audit report records what was measured, under what assumptions, and what rema
 9. **What is not established.** Cause, job-relatedness and compliance, unless someone established them.
 10. **When it gets repeated**, and what would trigger it sooner: a model change, a shift in applicants, or a change in the law.
 
-Section 10 of the lab fills in the middle of that from this run.
+Section 10 of the lab fills in the middle of that.
 
 ```text
     Model: unaware, trained on recruiter decisions. Decision: top 20% advance. Data: generated, 20,000 test applicants
@@ -398,24 +398,24 @@ Section 10 of the lab fills in the middle of that from this run.
     Not established: the cause of the gap, job-relatedness, or whether any law is met. That is for counsel.
 ```
 
-C's line is a useful one to teach from. The point reads 0.806 and the interval runs from 0.714 to 0.910, so "passes" isn't what the data says. Metrics also have limits that no report can compute away: Fairlearn notes that "group fairness metrics do not account for differences in individual experiences, nor do they account for procedural justice" ([overview](https://fairlearn.org/main/user_guide/fairness_in_machine_learning.html)). An appeals route, and a person able to overturn the result, are part of the system too.
+C's line is the one to teach from: the point reads 0.806 and the interval runs 0.714 to 0.910, so "passes" isn't what the data says. Metrics also have limits no report can compute away: Fairlearn notes that "group fairness metrics do not account for differences in individual experiences, nor do they account for procedural justice" ([overview](https://fairlearn.org/main/user_guide/fairness_in_machine_learning.html)). An appeals route and a person able to overturn the result are part of the system too.
 
 ## Pitfalls
 
 - **Reporting a ratio without counts.** Symptom: a depot reads 0.28 and alarms everyone, on 2 selected out of 30, with an interval reaching 1.08.
-- **Treating 0.8 as a pass.** Symptom: a report reads "compliant" because a ratio is 0.806, with an interval down to 0.714, in a place where the rule may not even apply.
+- **Treating 0.8 as a pass.** Symptom: a report reads "compliant" on a ratio of 0.806, with an interval down to 0.714, where the rule may not apply.
 - **Auditing with the training label.** Symptom: calibration across groups looks clean (a mean gap of 0.033), and against an independent check it isn't (0.124).
 - **Deleting the column and declaring the model blind.** Symptom: 83.6% of the people advanced stay the same after removing it, and a feature set that predicts group with an AUC of 0.838.
-- **Chasing every metric at once.** Symptom: each fix opens another gap, and a project review keeps finding a new failing number. With unequal base rates, some of those can't close. Choose a primary metric with the people who own the decision, and write down why.
-- **Stopping at margins.** Symptom: group and attribute pass, and a crossing doesn't: on the lab's default seed B/Y reads 0.77, and over 30 seeds some crossing falls under 0.8 on 18.
-- **Dropping small groups.** Symptom: the "excluded under n=30" footnote covers the people most likely to be harmed and least able to complain.
+- **Chasing every metric at once.** Symptom: each fix opens another gap, and a project review keeps finding a new failing number. With unequal base rates, some can't close. Choose a primary metric with the decision's owners, and write down why.
+- **Stopping at margins.** Symptom: group and attribute pass, a crossing doesn't: B/Y reads 0.77 on the default seed, and some crossing falls under 0.8 on 18 of 30 seeds.
+- **Dropping small groups.** Symptom: the "excluded under n=30" footnote covers the people most likely to be harmed.
 - **Pricing the fix on biased labels.** Symptom: the fix appears to cost 2.7 points of precision on the logs, and 0.6 on the work sample.
 - **Assuming a low ratio proves model bias.** Symptom: an expensive retrain closes nothing. With recruiters playing fair the ratio was still 0.641, from the base rates.
 - **Reusing another place's rule.** Symptom: an EU review cites the four-fifths rule. The EU text we read names no such number.
 
 ## Try it
 
-Run the [lab](../practice/fairness_audit_lab.py) with `uv run fairness_audit_lab.py` from `practice/`. A setting that removes a planted effect can trip an assertion further down. The sections above that point still print, and the failure is itself the result.
+Run the [lab](../practice/fairness_audit_lab.py) with `uv run fairness_audit_lab.py` from `practice/`. A setting that removes a planted effect can trip a later assertion. The sections before it still print, and the failure is itself the result.
 
 1. By hand: 20 of 100 applicants in one group advance, and 300 of 1,000 in another. What's the ratio, its interval, and how many more selections reach 0.8?
 
@@ -437,7 +437,7 @@ Band's AUC falls from 0.827 to 0.503, chance. The unaware ratio rises from 0.469
 
 <details><summary>Answer</summary>
 
-Base rates become 0.345 and 0.348, and the one-cutoff row reads FPR 0.178 and 0.158, FNR 0.445 and 0.463, against 0.178 and 0.094, 0.446 and 0.608. That is what the theorems say: equal base rates remove what forces the gap. This is one seed, so a small gap remains. Section 9's "no skill gap" row gives the matching control: without proxies the ratio is 0.988. An assertion in section 8 trips here, because the weighted estimator's direction depends on the world. That is a reason not to trust its direction anywhere.
+Base rates become 0.345 and 0.348, and the one-cutoff row reads FPR 0.178 and 0.158, FNR 0.445 and 0.463, against 0.178 and 0.094, 0.446 and 0.608. That is what the theorems say: equal base rates remove what forces the gap. Section 9's "no skill gap" row is the matching control: without proxies the ratio is 0.988. An assertion in section 8 trips here, because the weighted estimator's direction depends on the world.
 
 </details>
 
@@ -445,7 +445,7 @@ Base rates become 0.345 and 0.348, and the one-cutoff row reads FPR 0.178 and 0.
 
 <details><summary>Answer</summary>
 
-There isn't one, and asking for one assumes the criteria agree. Offer the decision they need instead: which error matters more, for whom, and at what price. Give the table of ratio, error rates and quality across the alternatives, the label each number used, and the limits. The choice then belongs to the people accountable for it, with counsel for any legal reading.
+There isn't one, and asking for one assumes the criteria agree. Offer the decision instead: which error matters more, for whom, and at what price. Give the table of ratio, error rates and quality across the alternatives, the label each used, and the limits. The choice belongs to the people accountable for it, with counsel for any legal reading.
 
 </details>
 
@@ -454,18 +454,18 @@ There isn't one, and asking for one assumes the criteria agree. Offer the decisi
 | Question | Answer |
 |---|---|
 | Define the impact ratio. | A group's selection rate over the highest group's. It needs only decisions and groups. |
-| What is the four-fifths rule? | A US federal employment rule of thumb in 29 CFR 1607.4(D): under 80% is generally regarded as evidence of adverse impact. Not a pass mark, not a finding of discrimination, not valid elsewhere, and under rescission review as of November 2026. |
-| Equal opportunity or equalized odds? | Equal opportunity equalises TPR. Equalized odds also equalises FPR. Use the first when missing qualified people is the harm you care about, and know that both need a label you trust. |
-| Can you have calibration and equalized odds? | Not with unequal base rates and an imperfect predictor, and two results say so. Kleinberg et al.: calibration plus balance of the mean score in each class, from the line (1-p)x + py = p. Chouldechova, at a threshold: equal PPV plus equal error rates, from FPR = p/(1-p) x (1-PPV)/PPV x (1-FNR). Her identity is about PPV, not calibration, since a calibrated score needn't have equal PPV at a cutoff. |
+| What is the four-fifths rule? | A US federal employment rule of thumb in 29 CFR 1607.4(D): under 80% is generally regarded as evidence of adverse impact. Not a pass mark, a finding of discrimination, or valid elsewhere, and under rescission review as of November 2026. |
+| Equal opportunity or equalized odds? | Equal opportunity equalises TPR. Equalized odds also equalises FPR. Use the first when missing qualified people is the harm. Both need a label you trust. |
+| Can you have calibration and equalized odds? | Not with unequal base rates and an imperfect predictor, and two results say so. Kleinberg et al.: calibration plus balance of the mean score in each class, from the line (1-p)x + py = p. Chouldechova, at a threshold: equal PPV plus equal error rates, from FPR = p/(1-p) x (1-PPV)/PPV x (1-FNR). |
 | Does a higher accuracy solve it? | Only at perfect prediction. Kleinberg et al. also prove an approximate version, so nearly satisfying all conditions needs nearly perfect prediction or nearly equal base rates. |
-| Your ratio is 0.68 on 104 people. Report it how? | With counts and an interval: here 0.42 to 1.10. It doesn't establish a gap or its absence. Say what data would, such as a longer window. |
+| Your ratio is 0.68 on 104 people. Report it how? | With counts and an interval: here 0.42 to 1.10. It doesn't establish a gap or its absence. Say what would, such as a longer window. |
 | Why isn't dropping the protected column enough? | Other columns can reconstruct it, and the model learns what predicts its label. Test by predicting the group from your features. In the lab: AUC 0.838, and 83.6% of those advanced by either version are advanced by both. |
-| The training labels are past recruiter decisions. What now? | Every label-based metric inherits their bias, and calibration can look clean. Get an independent check on a random sample. Hardt et al. warn that the target's measurement may itself be biased, and that it needs domain scrutiny. |
-| Which slices do you check? | Each attribute and pre-chosen intersections, with counts and intervals and a plan for multiple comparisons. Margins can pass while a crossing fails: 0.90 and 0.85 against 0.77 on the lab's default seed, and some crossing fails on 18 of 30 other seeds. |
-| You may not hold demographic data. How do you audit? | Check what the law allows there (in the EU, Article 4a). Options are inference against a validated sample, voluntary data with response rates by decision, and counterfactual tests. Inference can understate or overstate a gap. Report the error. |
-| Why not just use group thresholds? | They may close the ratio, but need the attribute at decision time, can level down, and in US employment may be barred outright by 42 U.S.C. 2000e-2(l). Try features and labels first. |
+| The training labels are past recruiter decisions. What now? | Every label-based metric inherits their bias, and calibration can look clean. Check independently on a random sample. Hardt et al. warn that the target's measurement may itself be biased, and that it needs domain scrutiny. |
+| Which slices to check? | Each attribute and pre-chosen intersections, with counts and intervals and a plan for multiple comparisons. Margins can pass while a crossing fails: 0.90 and 0.85 against 0.77 on the lab's default seed, and some crossing fails on 18 of 30 other seeds. |
+| You may not hold demographic data. How do you audit? | Check what the law allows (in the EU, Article 4a). Options are inference against a validated sample, voluntary data with response rates by decision, and counterfactual tests. Inference can understate or overstate a gap. Report the error. |
+| Why not group thresholds? | They may close the ratio, but need the attribute at decision time, can level down, and in US employment may be barred outright by 42 U.S.C. 2000e-2(l). Try features and labels first. |
 | What must an audit report say? | The decision, population, label provenance, group-data method, counts with intervals, error rates by named label, alternatives and their costs, jurisdiction and date, and what is not established. |
 
 ## Next
 
-[Deep learning](../../02-deep-learning/README.md): the same discipline of splits, thresholds and calibration, now with models that learn their own features, which makes the proxy test here more important. To see a scoring loop as the last stage of a whole invoice system, with its rollout and monitoring, read [DE 06/06](../../../data-engineering/06-ml-platform/notes/06-ml-system-framing-to-monitoring.md).
+[Deep learning](../../02-deep-learning/README.md): the same discipline, now with models that learn their own features, which makes the proxy test more important. For a scoring loop as the last stage of an invoice system, with rollout and monitoring, read [DE 06/06](../../../data-engineering/06-ml-platform/notes/06-ml-system-framing-to-monitoring.md).

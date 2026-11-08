@@ -195,6 +195,9 @@ The maintenance list:
 
 [Voyager](https://arxiv.org/abs/2305.16291) is the canonical complete loop. It combines an automatic curriculum (what to learn next), a skill library of verified, composable code (what was learned) and iterative prompting with environment feedback (how to tell it worked). The result was 3.3× the unique items and up to 15.3× faster tech-tree milestones than its baselines. The ablations show each part carrying weight. With a random curriculum it discovered 93% fewer items. Without the self-verification check it found 73% fewer. Without the skill library it plateaued in the later stages instead of compounding.
 
+![Voyager: an automatic curriculum proposes tasks, iterative prompting writes code and refines it from environment feedback and self-verification, and verified programs enter the skill library for later retrieval](../sources/images/wang-voyager-fig2.png)
+*Image Source: Wang et al., [Voyager: An Open-Ended Embodied Agent with Large Language Models](https://arxiv.org/abs/2305.16291) (2023), Fig. 2*
+
 ---
 
 ## The worked example: `autoresearch`

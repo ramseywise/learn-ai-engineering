@@ -1,0 +1,622 @@
+{
+ "schema": 1,
+ "key": "2010.11918",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/ruckle-2021-adapterdrop.pdf",
+ "bib": {
+  "title": "AdapterDrop: On the Efficiency of Adapters in Transformers",
+  "authors": [
+   "Andreas Rücklé",
+   "Gregor Geigle",
+   "Max Glockner",
+   "Tilman Beck",
+   "Jonas Pfeiffer",
+   "Nils Reimers",
+   "Iryna Gurevych"
+  ],
+  "first_author": "Rücklé",
+  "year": 2021,
+  "venue": "Proceedings of the 2021 Conference on Empirical Methods in Natural Language Processing (EMNLP), pages 7930-7946",
+  "arxiv": "2010.11918",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 54718,
+  "chars_total": 54718,
+  "engine": "pymupdf",
+  "skipped": "Figure-only numeric axes and the bulk of tables 9-12 and figure data were skimmed, not transcribed; reference list skimmed for lineage"
+ },
+ "type": "empirical",
+ "question": "How computationally efficient are adapters (Houlsby, Pfeiffer) and AdapterFusion at training and inference time versus full fine-tuning, and can adapters be dropped or pruned to make them faster with little loss?",
+ "hypothesis": "Adapters in lower transformer layers matter little for task performance, so removing them (and pruning rarely-activated adapters in AdapterFusion) cuts compute with minimal accuracy loss.",
+ "contributions": [
+  "First establishment of the computational efficiency of adapters vs full fine-tuning: training steps up to 60% faster, inference 4-6% slower",
+  "AdapterDrop: dynamic removal of adapters from lower layers, specialized and robust variants, with large multi-task inference speedups",
+  "AdapterFusion pruning: remove least-activated adapters after fusion training, keeping task performance"
+ ],
+ "method": {
+  "summary": "Timing of BERT-base-configuration transformers with full fine-tuning, Houlsby and Pfeiffer adapters (AdapterHub) on V100 and Titan X GPUs; AdapterDrop (adapters removed from the first n layers, trained with fixed n or random n per batch) evaluated on GLUE with RoBERTa-base; AdapterFusion layer removal and adapter pruning evaluated on small GLUE tasks.",
+  "task": "Efficiency of adapter-based fine-tuning and inference; GLUE classification/regression",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "GLUE (excluding WNLI)",
+    "role": "both",
+    "size": null,
+    "split": "dev sets; SST-2, MNLI, QNLI, QQP trained 10 epochs, the rest 20 epochs",
+    "source": "Wang et al. 2018",
+    "preprocessing": null
+   },
+   {
+    "name": "English Wikipedia dump (adapter MLM pre-training, Appendix B)",
+    "role": "pretrain",
+    "size": "250k steps at batch 64, no sentence used twice",
+    "split": null,
+    "source": "recent English Wikipedia dump",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "RoBERTa-base + Pfeiffer adapter",
+    "role": "proposed",
+    "params": null,
+    "architecture": "transformer encoder with adapters; compression (reduction) rate 16 default",
+    "init_from": "RoBERTa base",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "12",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "adapter_params": "884k without classification heads (Table 6, standard)"
+    }
+   },
+   {
+    "name": "Houlsby adapter",
+    "role": "baseline",
+    "params": null,
+    "architecture": "adapter after attention and FFN",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "BERT-base configuration (timing)",
+    "role": "base",
+    "params": null,
+    "architecture": "transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "12",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "inferred: 12 layers from n drawn from [0, 11]"
+    }
+   },
+   {
+    "name": "AdapterFusion (8 adapters, one per GLUE task)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "attention-style fusion of task adapters per layer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "task fine-tuning (adapters)",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "32",
+   "steps": null,
+   "epochs": "10 for SST-2/MNLI/QNLI/QQP, 20 for the rest",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "Robust AdapterDrop: n drawn randomly from [0, 11] per batch; AF dropout 0-75% (Appendix E)",
+   "hardware": "NVIDIA Tesla V100 PCIe 32GB and Titan X Pascal 12GB (timing only)",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": "three runs, mean and std of best dev score after each epoch",
+   "other": {
+    "hyperparameters": "default adapter fine-tuning hyperparameters of Pfeiffer et al. 2021a, values not printed",
+    "software": "Python 3.6, PyTorch 1.5.1, CUDA 10.1"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "timing: each step repeated 300 times, median reported",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "adapterdrop_layers": "first n layers (n up to 11)",
+    "af_pruning": "keep adapters with highest average activation per fusion layer, activations averaged over the AF training set"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Relative speed",
+     "definition": "S_a / S_f (adapter vs full fine-tuning); 1.5 means 1.5 steps in the time of one full-FT step",
+     "unit": "ratio",
+     "higher_is_better": true
+    },
+    {
+     "name": "Speedup",
+     "definition": "p% means adapter model with AdapterDrop needs (1-p/100)x runtime; additive per dropped layer",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "GLUE dev score",
+     "definition": "task metrics (accuracy, Spearman, MCC etc.); also reported as % of standard adapter",
+     "unit": "% / points",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "full fine-tuning",
+    "standard adapter with no dropped layers",
+    "single-task adapter",
+    "12 specialized adapters"
+   ],
+   "protocol": "timing median of 300 repeats on two GPUs, torch.cuda.Event with synchronize; task scores mean of 3 runs"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": null
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.hyperparameters",
+    "quote": "default hyperparameters for adapter ﬁne-tuning as in (Pfeiffer et al., 2021a)",
+    "where": "Appendix A.2"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Adapter training steps are up to 60% faster than full fine-tuning (Pfeiffer, seq 128, batch 32 = 1.60).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 1.6,
+   "unit": "relative speed",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BERT-base config, V100, seq 128, batch 32, Pfeiffer adapter",
+   "quote": "Adapters can be considerably faster compared to full model ﬁne-tuning—60% faster",
+   "table": "Table 1, row Training Pfeiffer, column 128/32",
+   "note": null,
+   "where": "Sec 2"
+  },
+  {
+   "claim": "Houlsby adapter training relative speed at seq 512 batch 32.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 1.33,
+   "unit": "relative speed",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BERT-base config, seq 512, batch 32",
+   "quote": null,
+   "table": "Table 1, row Training Houlsby, column 512/32",
+   "note": "Speedup shrinks with larger inputs (1.33-1.37 at 512/32); Pfeiffer 1.37",
+   "where": "Table 1"
+  },
+  {
+   "claim": "Adapter inference is 94-96% as fast as fully fine-tuned models (4-6% slower).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 0.94,
+   "unit": "relative speed",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BERT-base config, Houlsby and Pfeiffer, V100 and Titan X",
+   "quote": null,
+   "table": "Table 1, row Inference Houlsby, column 128/16",
+   "note": "abstract/conclusion say 4-6% slower",
+   "where": "Sec 2, Table 1"
+  },
+  {
+   "claim": "Adapters need no more training steps to converge than full fine-tuning, and MLM pre-training of adapters gives no convergence gain.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "RoBERTa-base, 8 GLUE tasks, Pfeiffer adapter, MLM pre-training on Wikipedia 250k steps batch 64",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Appendix B, Fig 12"
+  },
+  {
+   "claim": "Each shared transformer layer speeds up multi-task inference by up to 8.4% (16 simultaneous tasks).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 8.4,
+   "unit": "% per layer",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Multi-task inference, 16 simultaneous tasks; average over batch sizes 16, 32, 64, seq 128",
+   "quote": null,
+   "table": "Table 2, row Speedup (each layer), column 16",
+   "note": "Table 2: 4.3% / 6.6% / 7.8% / 8.4% for 2 / 4 / 8 / 16 tasks",
+   "where": "Table 2"
+  },
+  {
+   "claim": "With adapters dropped from the first five layers, inference on 8 tasks at once is 39% faster.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 39,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Multi-task inference, 8 simultaneous tasks, first five layers dropped",
+   "quote": "with adapters\ndropped from the ﬁrst ﬁve layers, AdapterDrop\nis 39% faster",
+   "table": null,
+   "note": null,
+   "where": "Sec 1"
+  },
+  {
+   "claim": "Dropping the first five layers gives inference speedups of 21-42% depending on number of simultaneous tasks.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Multi-task inference, five dropped layers",
+   "quote": "we measure inference speedups of 21–42% with ﬁve",
+   "table": null,
+   "note": null,
+   "where": "Sec 3"
+  },
+  {
+   "claim": "Specialized AdapterDrop with five dropped layers retains 97.1% of the standard adapter's average GLUE performance.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 97.1,
+   "unit": "% of standard adapter",
+   "baseline_value": null,
+   "n": null,
+   "setup": "RoBERTa-base, 8 GLUE tasks, separate model trained per n, 5 layers dropped",
+   "quote": null,
+   "table": "Table 8, row Specialized AdapterDrop (12 models), column 5",
+   "note": null,
+   "where": "Sec 3"
+  },
+  {
+   "claim": "Robust AdapterDrop with five dropped layers retains 95.4% of average GLUE performance (one model for all n).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 95.4,
+   "unit": "% of standard adapter",
+   "baseline_value": null,
+   "n": null,
+   "setup": "RoBERTa-base, 8 GLUE tasks, n drawn from [0,11] per batch",
+   "quote": null,
+   "table": "Table 8, row Robust AdapterDrop, column 5",
+   "note": "Robust model at 0 dropped layers retains 98.5; at 11 dropped 62.0; specialized at 11 is 82.9",
+   "where": "Sec 3"
+  },
+  {
+   "claim": "A standard adapter (trained with no dropped layers) degrades to 89.0% with five layers dropped at test time, so AdapterDrop training is what makes dropping safe.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 89.0,
+   "unit": "% of standard adapter",
+   "baseline_value": null,
+   "n": null,
+   "setup": "RoBERTa-base, 8 GLUE tasks, dropping at evaluation only",
+   "quote": null,
+   "table": "Table 8, row Standard adapter, column 5",
+   "note": null,
+   "where": "Table 8"
+  },
+  {
+   "claim": "Training robust AdapterDrop speeds up training steps by 26%.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 26,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Robust adapter training; 4.7% per dropped adapter, average 5.5 dropped",
+   "quote": "Training of our robust\nadapters is also more efﬁcient, which increases\nthe speed of training steps by 26%",
+   "table": null,
+   "note": "Footnote 7: 4.7% per dropped adapter (V100; 4.5% TitanX), 5.5 dropped on average",
+   "where": "Sec 3"
+  },
+  {
+   "claim": "AdapterFusion with eight adapters is about 47% slower at training and 62% slower at inference than full fine-tuning.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 0.53,
+   "unit": "relative speed (training vs full FT)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Pfeiffer adapters, batch 32, seq 128, 8 adapters in fusion, V100",
+   "quote": "AF with\neight adapters is around 47% slower at training\ntime and 62% slower at inference",
+   "table": "Table 3, row 8, column AF vs. Full FT Training (0.53) and Inference (0.38)",
+   "note": null,
+   "where": "Sec 4"
+  },
+  {
+   "claim": "AdapterFusion with 16 adapters runs at 0.33 of full fine-tuning speed in training and 0.24 at inference.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 0.24,
+   "unit": "relative speed (inference vs full FT)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "batch 32, seq 128",
+   "quote": null,
+   "table": "Table 3, row 16, column AF vs. Full FT Inference",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Removing AF from the first five layers on RTE still beats the single-task adapter and improves inference efficiency by 26%.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 26,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "AdapterFusion over 8 GLUE tasks, RoBERTa-base, RTE, robust AF",
+   "quote": "This improves the inference ef-\nﬁciency by 26%",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.1, Fig 4"
+  },
+  {
+   "claim": "On CoLA, removing even the first AF layer drops performance below the single-task adapter.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "AdapterFusion, CoLA, dropped AF layers at inference",
+   "quote": "Removing AF from the ﬁrst layer results\nin more noticeable performance decreases",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.1"
+  },
+  {
+   "claim": "AdapterFusion pruning to two remaining adapters (of eight) matches the full AF models and improves inference speed by 68%.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 68,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "AF trained with 8 adapters, least-activated adapters removed per layer, RTE and CoLA",
+   "quote": "With two remaining adapters, we achieve\ncomparable results to the full AF models with eight\nadapters and improve the inference speed by 68%",
+   "table": null,
+   "note": "Table 3 shows 8-adapter AF inference at 0.38 of full FT versus 2-adapter 0.64, consistent with the order of magnitude",
+   "where": "Sec 5.2, Fig 5"
+  },
+  {
+   "claim": "Per dropped AdapterFusion layer speedup, inference with 16 adapters.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 6.3,
+   "unit": "% per layer",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Batch 32, seq 128, V100",
+   "quote": null,
+   "table": "Table 4, row 16, column Inference V100",
+   "note": "Training V100 for 16 adapters is 7.8%; for 8 adapters 5.2% inference, 7.3% training",
+   "where": "Table 4"
+  },
+  {
+   "claim": "Fusion dropout of 75% (6 of 8 adapters) makes each AF training step 74% faster on average but lowers RTE and CoLA scores.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 73.7,
+   "unit": "% training speedup",
+   "baseline_value": null,
+   "n": null,
+   "setup": "8 adapters, seq 128, batch 32; RTE 85.4 -> 80.9, CoLA 63.9 -> 60.4",
+   "quote": null,
+   "table": "Table 7, row Speedup (8), column 75%",
+   "note": "Text says 74%; Table 7 prints 73.7%. MRPC improves 88.4 -> 89.3",
+   "where": "Appendix E"
+  },
+  {
+   "claim": "Cross-layer parameter sharing at compression rate 16 costs 2.35% average GLUE score (85.35 to 83.0) with 74k params; rate 4 uses 295k params, 66% fewer than standard 884k.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 83.0,
+   "unit": "average GLUE",
+   "baseline_value": null,
+   "n": null,
+   "setup": "RoBERTa-base, Pfeiffer architecture, shared adapter weights across layers",
+   "quote": null,
+   "table": "Table 6, row Average, last column (16)",
+   "note": "Rate 4 average 84.39; shared adapter at rate 16 needs only 307KB storage",
+   "where": "Appendix D"
+  }
+ ],
+ "limits": [
+  "Speed measured only on BERT-base configuration with V100 and Titan X GPUs, PyTorch 1.5.1, small encoder models; no decoder-only or billion-parameter LLMs",
+  "Accuracy experiments use GLUE dev sets with RoBERTa-base only, mean of three runs",
+  "Authors say AdapterDrop might not be suitable for all tasks; CoLA drops sharply and RTE/CoLA fall steeply even with AdapterDrop",
+  "Multi-task speedup only applies when several independent predictions are made on the same input",
+  "Adapters are 4-6% slower at inference than full fine-tuning",
+  "Parallel AdapterFusion implementation (convolution reformulation) gave no gain; iterative is faster at larger inputs",
+  "Training speedups depend on input size; CUDA cores are the bottleneck",
+  "Authors call Appendix B-E results preliminary",
+  "Optimizer, learning rate and adapter hyperparameters are not printed (refer to Pfeiffer et al. 2021a); no code link in text"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "AdapterDrop",
+   "definition": "Dynamically removing adapters from lower transformer layers during training and inference",
+   "where": "Sec 3"
+  },
+  {
+   "term": "Robust AdapterDrop",
+   "definition": "Drawing the integer n randomly from [0, 11] for each training batch, giving one model usable with a varying number of dropped layers",
+   "where": "Sec 3"
+  },
+  {
+   "term": "Specialized AdapterDrop",
+   "definition": "Removing adapters from the first n layers with n fixed during training, yielding a separate model per n",
+   "where": "Sec 3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Parameter-Efficient Transfer Learning for NLP (Houlsby adapter)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Houlsby adapter architecture timed; lower layers have small impact",
+   "quote": null
+  },
+  {
+   "work": "AdapterFusion (Pfeiffer et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Prunes adapters and layers from AdapterFusion; Pfeiffer adapter architecture",
+   "quote": null
+  },
+  {
+   "work": "AdapterHub (Pfeiffer et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Framework used for all measurements",
+   "quote": null
+  },
+  {
+   "work": "Reducing Transformer Depth on Demand with Structured Dropout (Fan et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "AdapterDrop is similar to LayerDrop, specialized to adapters",
+   "quote": null
+  },
+  {
+   "work": "RoBERTa (Liu et al.)",
+   "year": 2019,
+   "arxiv": "1907.11692",
+   "relation": "uses-method",
+   "note": "Pre-trained model for task experiments",
+   "quote": null
+  },
+  {
+   "work": "GLUE (Wang et al.)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Task evaluation, WNLI excluded",
+   "quote": null
+  },
+  {
+   "work": "ALBERT (Lan et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Cross-layer weight sharing, adapted to adapters in Appendix D",
+   "quote": null
+  },
+  {
+   "work": "Bapna and Firat, Simple, Scalable Adaptation for NMT",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Adapters in machine translation",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Standard adapter fine-tuning vs. AdapterDrop fine-tuning. The left model includes adapters at every layer whereas the right model has adapters dropped at the first layer.",
+   "page": 3,
+   "why": "Shows forward/backward pass paths and why dropping lower adapters shortens backprop"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Task performances in relation to dropped layers during evaluation",
+   "page": 3,
+   "why": "Standard vs specialized vs robust AdapterDrop degradation curves"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Task performance of AdapterFusion Pruning.",
+   "page": 4,
+   "why": "Accuracy flat as adapters removed from 8 to 2"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Standard AdapterFusion vs. AdapterFusion pruning",
+   "page": 4,
+   "why": "Diagram of pruning one adapter per layer"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Relative speed of adapters compared to fully fine-tuned models",
+   "page": 2,
+   "why": "Core training vs inference speed table"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "No embedded instructions found",
+  "Text extraction flattens table cells to one value per line; Figure 2 axis text is noise"
+ ]
+}

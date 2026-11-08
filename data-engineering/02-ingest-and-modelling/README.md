@@ -18,7 +18,8 @@ How data enters a platform you control, and what shape it takes once it is there
 | # | Chapter | Question it answers |
 |---|---|---|
 | 1 | [Ingest](notes/01-ingest.md) | How do you copy data without loading it twice or losing it once? |
-| 2 | [Dimensional modelling](notes/02-dimensional-modelling.md) | What does a row mean, what adds up, and what did a label mean that day? |
+| 2 | [Dimensional modelling](notes/02-dimensional-modelling.md) | What does a row mean, and what adds up? |
+| 2b | [Dimensional modelling: history and conformed dimensions](notes/02b-dimensional-modelling-history-and-conformed-dimensions.md) | What did a label mean that day, and how do two facts combine? |
 | 3 | [Data Vault and One Big Table](notes/03-data-vault-and-obt.md) | When is the star wrong, in either direction? |
 | 4 | [Data contracts](notes/04-data-contracts.md) | How do you turn "the source keeps sending this" into a promise a machine checks? |
 

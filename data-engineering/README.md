@@ -113,7 +113,7 @@ Tools are easier to compare within a layer than across one. Snowflake against Ai
 
 **Objectives:** compare centralised, mesh, fabric, and MDW architectures (Serra; [Dehghani](https://martinfowler.com/articles/data-mesh-principles.html)); design ownership and interoperability; control access; protect PII; account for deletion, retention, and audit obligations (Kleppmann 2017, ch. 11–12); run a catalog and a semantic layer, and trace a contract change to named consumers.
 
-**Learning:** [chapters and scenarios](07-architecture-and-governance/README.md); the scenario prompts in [data architectures](07-architecture-and-governance/notes/01-data-architectures-mesh-fabric-mdw.md) are written as interview practice. **Evidence:** defend an architecture with mechanisms and trade-offs, then write an access/retention decision for a dataset, and list who a column change breaks.
+**Learning:** [chapters and scenarios](07-architecture-and-governance/README.md); the scenario prompts in [data architectures](07-architecture-and-governance/notes/01b-data-mesh-topologies-and-scenarios.md) are written as interview practice. **Evidence:** defend an architecture with mechanisms and trade-offs, then write an access/retention decision for a dataset, and list who a column change breaks.
 
 ## Rules of thumb
 
@@ -138,7 +138,7 @@ Each pillar's README has its own full list. These are the ones that cross stages
 | On a drift alert, check for a pipeline fault before retraining | [06](06-ml-platform/notes/04-drift.md) |
 | Frame the decision and price each mistake before choosing a model; keep a random audit, since corrections hide what nobody looked at | [06](06-ml-platform/notes/06-ml-system-framing-to-monitoring.md) |
 | Name the system of record for each fact; everything else is derived and can be rebuilt | [04](04-warehouse-lakehouse-streaming/notes/03-lakehouse-vs-warehouse.md), [07](07-architecture-and-governance/notes/01-data-architectures-mesh-fabric-mdw.md) |
-| A mesh is an ownership model, not a storage choice; contracts come before decentralisation | [07](07-architecture-and-governance/notes/01-data-architectures-mesh-fabric-mdw.md) |
+| A mesh is an ownership model, not a storage choice; contracts come before decentralisation | [07](07-architecture-and-governance/notes/01b-data-mesh-topologies-and-scenarios.md) |
 | Hashed is not anonymous: pseudonymised data stays personal data | [07](07-architecture-and-governance/notes/02-access-control-pii-gdpr.md) |
 
 ## Resource map

@@ -323,7 +323,7 @@ Jan 10, joined to the dimension as it is today: [('Brooklyn', 137), ('Manhattan'
 Jan 10, joined to the dimension as it was then: [('Manhattan', 550), ('Queens', 550)]
 ```
 
-The 137 trips in zone 6 moved borough, and the Queens total for January 10th fell from 550 to 413, even though nothing happened on January 10th. Sometimes that is what you want: restating history in current territories is a legitimate report, and Pillar 2's [Type 1 and Type 2](../../02-ingest-and-modelling/notes/02-dimensional-modelling.md) discussion is exactly this choice. What you must not do is make it by accident. A nightly job on a Type 1 dimension and a backfill of the same job produce different answers for the same day, so the table's history depends on when each partition happened to be built. For reproducibility, join to a dated dimension, or snapshot the dimension per day and read the partition for the logical date.
+The 137 trips in zone 6 moved borough, and the Queens total for January 10th fell from 550 to 413, even though nothing happened on January 10th. Sometimes that is what you want: restating history in current territories is a legitimate report, and Pillar 2's [Type 1 and Type 2](../../02-ingest-and-modelling/notes/02b-dimensional-modelling-history-and-conformed-dimensions.md) discussion is exactly this choice. What you must not do is make it by accident. A nightly job on a Type 1 dimension and a backfill of the same job produce different answers for the same day, so the table's history depends on when each partition happened to be built. For reproducibility, join to a dated dimension, or snapshot the dimension per day and read the partition for the logical date.
 
 ### Dependencies on the past
 

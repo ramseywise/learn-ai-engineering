@@ -459,26 +459,21 @@ Where the fixes landed:
 |---|---|---|
 | Accuracy on imbalanced data | A model at 90% accuracy has F1 near zero on the class you care about | Compare to `DummyClassifier`; use F1, AP or AUC |
 | Reporting `best_score_` as the result | The published number is above what the test set or production gives | Report on untouched test data, or use nested CV |
-| Picking the threshold on the test set | Test precision is exactly on target, then drifts in production | Tune on validation or with `TunedThresholdClassifierCV` |
 | Random split with repeat subjects or time order | CV is excellent and production is poor | `GroupKFold`, `TimeSeriesSplit`; mirror how the model meets new data |
 | Best grid value on the edge of the range | Heatmap's highest cell sits on a border | Extend the range before trusting it |
-| ROC AUC on heavy imbalance | AUC looks high but the flagged set is mostly false positives | Read precision–recall as well |
-| Taking probabilities at face value | Decile of 0.8 scores contains 60% positives | Plot a reliability diagram and recalibrate on held-out data |
 | Tuning on a metric nobody uses | The model improves and the business number does not | Choose the scorer from the error costs first |
 
 ## Try it
 
-1. On the adult block, change the business rule to "catch 80% of high earners" and read the threshold and precision from the validation curve.
-2. Run `cross_val_score` on iris with `KFold(n_splits=3)` and no shuffle. Explain the scores.
-3. In the digits block, search `SVC` hyperparameters with `scoring="average_precision"` and compare with the `roc_auc` winner.
-4. Run ex5's polynomial case: expand `Xe` to degree 8, normalise, and call `ng_learning_curve` with `lam=0` and `lam=3`. Worked solution in [`ex5.ipynb`](../practice/ng-machine-learning/ex5/ex5.ipynb).
+1. Run `cross_val_score` on iris with `KFold(n_splits=3)` and no shuffle. Explain the scores.
+2. In the digits block, search `SVC` hyperparameters with `scoring="average_precision"` and compare with the `roc_auc` winner.
+3. Run ex5's polynomial case: expand `Xe` to degree 8, normalise, and call `ng_learning_curve` with `lam=0` and `lam=3`. Worked solution in [`ex5.ipynb`](../practice/ng-machine-learning/ex5/ex5.ipynb).
 
 <details>
 <summary>Answers</summary>
 
-1. Take the last index where `r[:-1] >= 0.80`, since recall falls as the threshold rises. Precision is well below the 80% of the block above: the two targets pull against each other, which is the trade-off a business has to settle.
-2. All zero. Iris is sorted by class, so each fold holds a class the training folds never saw. `shuffle=True` or stratification fixes it.
-3. Both pick `gamma=0.01` on this split. They can differ when the positive class is rarer, and AP is the one that reflects the flagged set.
+1. All zero. Iris is sorted by class, so each fold holds a class the training folds never saw. `shuffle=True` or stratification fixes it.
+2. Both pick `gamma=0.01` on this split. They can differ when the positive class is rarer, and AP is the one that reflects the flagged set.
 
 </details>
 
@@ -490,10 +485,6 @@ Where the fixes landed:
 | What does nested CV estimate? | The generalisation of the whole selection procedure, not of one model |
 | Precision vs recall? | Of those flagged, how many are real; of the real ones, how many were caught |
 | When is accuracy misleading? | Imbalanced classes or asymmetric costs, where a dummy can score high |
-| What does AUC mean? | The probability a random positive ranks above a random negative |
-| ROC or PR on imbalance? | PR: it ignores the large pool of true negatives |
-| How do you pick a threshold? | From the cost of each error, on validation data, then report on test once |
-| What is calibration, and how do you fix it? | Whether scores match frequencies. Reliability diagram; Platt, isotonic, or temperature scaling |
 | How do you read a learning curve? | High and converged means bias, so more data will not help. A large gap means variance, so more data will help |
 | How do you split for grouped or temporal data? | So production's situation holds: by subject, or past-to-future |
 | Recall or specificity? | Recall is $TP/(TP+FN)$, the share of real positives caught. Specificity is $TN/(TN+FP)$, the share of negatives left alone. The first counts misses and the second counts false alarms. |

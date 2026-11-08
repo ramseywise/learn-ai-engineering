@@ -223,7 +223,6 @@ The chapters were written in 2023 for a 2024 book. Still sound: the controls tab
 
 - [ ] Every generated image is stored with its model ID and version, seed, sampler, steps, CFG, prompt and negative prompt, and any rewritten prompt.
 - [ ] Pipelines that must regenerate an image exactly use a non-ancestral sampler.
-- [ ] Edits use masks or control images, not a re-roll of the whole prompt.
 - [ ] Self-hosted weights are `.safetensors`, pinned by hash.
 - [ ] A hosted model's deprecation would not break the product: prompts and settings are versioned per model.
 - [ ] Prompts naming living artists, trademarks or real people are filtered or reviewed.
@@ -232,8 +231,6 @@ The chapters were written in 2023 for a 2024 book. Still sound: the controls tab
 
 - **Storing the image without its settings.** You can't produce a small variation later, and you can't answer where a picture came from.
 - **Pinning a model name without pinning weights.** A hosted model can change under the same name. Self-hosted weights should be pinned by hash.
-- **Re-rolling a whole prompt to fix one region.** Each re-roll changes everything. Use a mask or a control image.
-- **Fine-tuning before trying a reference image.** A customized model costs training, storage and review, and prompting or a control image may be enough.
 - **Scoring with one metric.** Each metric in the table above misses something. CLIP score in particular stops being useful once you select on it hard.
 - **Treating training-data risk as a legal footnote.** Generators can reproduce memorised images, and prompts naming real people need review before an image ships.
 
@@ -257,8 +254,6 @@ The chapters were written in 2023 for a 2024 book. Still sound: the controls tab
 |---|---|
 | Which settings must you store to reproduce an image? | Model and exact weights, seed, sampler, steps, guidance, size, prompt and negative prompt, plus any rewritten prompt or extra weights and control inputs. |
 | Why do ancestral samplers break reproducibility work? | They inject fresh noise at each step, so the image never converges and small changes in settings move it unpredictably. |
-| Mask, control image or img2img: how do you choose? | Mask when one region changes, a control image to fix structure such as pose or layout, and img2img to restyle while keeping overall composition. |
-| When is a custom model worth it? | When prompting and reference images can't name the subject, such as a specific product or a house style, and the volume repays the training and governance cost. |
 | API or self-hosted? | API for low volume and fast start, self-hosted for control, privacy, pinned weights and high volume. A hosted model is a dependency that can be withdrawn. |
 | How do you evaluate generated images? | Combine a distribution metric such as FID for model comparison, CLIP-style scores for triage, and structured prompt-adherence checks and human review for what users will actually see. |
 

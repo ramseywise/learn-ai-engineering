@@ -347,7 +347,7 @@ ROC-AUC is the honest comparison here since it ignores the class mix. The leaked
 
 ## Calibration: the bridge from score to price
 
-A lender prices with a probability: expected loss = PD × LGD × exposure. Rank isn't enough. Note 04 has [reliability diagrams and the methods](04-model-evaluation.md#calibration-is-a-08-really-80); here's what resampling does to them.
+A lender prices with a probability: expected loss = PD × LGD × exposure. Rank isn't enough. Note 04 has [reliability diagrams and the methods](04b-thresholds-pr-roc-and-calibration.md#calibration-is-a-08-really-80); here's what resampling does to them.
 
 ```python
 from sklearn.calibration import CalibratedClassifierCV

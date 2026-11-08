@@ -10,9 +10,11 @@
 
 | # | Chapter | Question it answers |
 |---|---|---|
-| 01 | [Data architectures: MDW, fabric, mesh](notes/01-data-architectures-mesh-fabric-mdw.md) | Where should the data live, and who should own each part of it? |
+| 01 | [Data architectures: MDW and fabric](notes/01-data-architectures-mesh-fabric-mdw.md) | Where should the data live? |
+| 01b | [Data mesh: topologies and scenarios](notes/01b-data-mesh-topologies-and-scenarios.md) | Who should own each part of it, how far should a mesh go, and which mechanism answers each scenario prompt? |
 | 02 | [Access control, PII and GDPR](notes/02-access-control-pii-gdpr.md) | Who may see it, what counts as anonymous, and how do you delete one person from an immutable lake? |
-| 03 | [Catalog, semantic layer and data contracts](notes/03-catalog-semantic-layer-and-contracts.md) | What does this column mean, how is a metric computed the same way everywhere, and who breaks when it changes? |
+| 03 | [Catalog and semantic layer](notes/03-catalog-semantic-layer-and-contracts.md) | What does this column mean, and how is a metric computed the same way everywhere? |
+| 03b | [Data contracts: who a change reaches](notes/03b-data-contracts-who-a-change-reaches.md) | Who owns a contract, how do you find its consumers, and who breaks when a column changes? |
 
 ## Builds on and feeds into
 
@@ -49,9 +51,9 @@
 
 ## Deck and practice
 
-**Deck:** [slides/architecture-and-governance.pptx](slides/architecture-and-governance.pptx) ([PDF](slides/architecture-and-governance.pdf)), covering chapters 01 and 02; chapter 03 has no slide yet. Build it with `make slides PILLAR=data-engineering/07-architecture-and-governance STRICT=1 PREVIEW=1`.
+**Deck:** [slides/architecture-and-governance.pptx](slides/architecture-and-governance.pptx) ([PDF](slides/architecture-and-governance.pdf)), covering chapters 01, 01b and 02; chapter 03 has no slide yet. Build it with `make slides PILLAR=data-engineering/07-architecture-and-governance STRICT=1 PREVIEW=1`.
 
-**Practice:** this pillar has no practice folder. The discussion version is the [scenario prompts handout](../sources/data-mesh-scenario-prompts-handout.pdf), and [chapter 01](notes/01-data-architectures-mesh-fabric-mdw.md#scenario-prompts-mapped-to-mechanisms) maps each prompt to a mechanism.
+**Practice:** this pillar has no practice folder. The discussion version is the [scenario prompts handout](../sources/data-mesh-scenario-prompts-handout.pdf), and [chapter 01](notes/01b-data-mesh-topologies-and-scenarios.md#scenario-prompts-mapped-to-mechanisms) maps each prompt to a mechanism.
 
 **Chapter code:** every block runs top to bottom on synthetic data. Each chapter gives its `uv run --with ...` line near the start, and none needs a server or a paid service. The SQL for Postgres in chapter 02 is marked illustrative because it needs a server.
 

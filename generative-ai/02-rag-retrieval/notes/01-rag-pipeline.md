@@ -260,7 +260,7 @@ chunks left: 0
 
 Two changes that sync can't absorb chunk by chunk. **An embedding-model change forces a full reindex**, because vectors from different model versions are not comparable; Lakshmanan and Hapke advise open-weights embedders partly so a vendor deprecation can't force one on you. And for content that has gone stale they give three remedies with different costs: filter at query time on metadata, prune the store (smaller index, faster retrieval, but the history is gone), or demote old chunks at rerank (*Generative AI Design Patterns*, ch. 3, Pattern 8). The chapter's example is a ChromaDB `where` prefilter on `created_at` dropping a 2024 duplicate; it measures none of the three.
 
-Scheduling, change detection, LangChain's indexing API and asynchronous deletes are in [07 § keeping a live index in sync](07-rag-in-production.md#keeping-a-live-index-in-sync).
+Scheduling, change detection, LangChain's indexing API and asynchronous deletes are in [07 § keeping a live index in sync](07b-security-changing-text-multimodal-and-live-indexes.md#keeping-a-live-index-in-sync).
 
 ---
 

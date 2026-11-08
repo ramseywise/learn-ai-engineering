@@ -61,7 +61,7 @@ if __name__ == "__main__":
 
 **MCP does not bypass the tool call.** Albada describes MCP as a way to "inject rich, dynamic context ... directly into the model's reasoning process without invoking separate tools", unlike API calls that "require full round-trip execution" (*Building Applications with AI Agents*, ch. 2). That is wrong. An MCP tool is invoked through a `tools/call` request and its result returns as an ordinary tool result: a full round trip. Resources and prompts are separate primitives that the client or user chooses to put into context. MCP standardizes how tools and context are discovered and transported. It doesn't give the model a cheaper channel into its reasoning.
 
-For when MCP beats an in-process function, the protocol's architecture, transports and limits, and the tool-contract rules, see [harness 03 — tool design](../../../ai-engineering/03-harness-engineering/notes/03-tool-design.md#mcp-vs-in-process), the authoritative note.
+For when MCP beats an in-process function, the protocol's architecture, transports and limits, and the tool-contract rules, see [harness 03 — tool design](../../../ai-engineering/03-harness-engineering/notes/03b-mcp-write-safety-and-async-tools.md#mcp-vs-in-process), the authoritative note.
 
 ---
 

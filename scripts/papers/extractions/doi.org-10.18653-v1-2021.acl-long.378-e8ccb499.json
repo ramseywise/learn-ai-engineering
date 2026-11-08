@@ -1,0 +1,712 @@
+{
+ "schema": 1,
+ "key": "https://doi.org/10.18653/v1/2021.acl-long.378",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/guo-2021-parameter-efficient-transfer-learning-diff.pdf",
+ "bib": {
+  "title": "Parameter-Efficient Transfer Learning with Diff Pruning",
+  "authors": [
+   "Demi Guo",
+   "Alexander M. Rush",
+   "Yoon Kim"
+  ],
+  "first_author": "Guo",
+  "year": 2021,
+  "venue": "Proceedings of ACL-IJCNLP 2021 (59th ACL), pages 4884-4896",
+  "arxiv": null,
+  "doi": "10.18653/v1/2021.acl-long.378"
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 50564,
+  "chars_total": 50564,
+  "engine": "pymupdf",
+  "skipped": "References skimmed only"
+ },
+ "type": "empirical",
+ "question": "Can a task-specific sparse difference vector added to frozen pretrained weights match full finetuning while storing far fewer parameters per task?",
+ "hypothesis": "A diff vector regularised with a differentiable L0 relaxation can be very sparse (about 0.5%) with little loss versus full finetuning, and structured grouping helps further.",
+ "contributions": [
+  "Diff pruning: theta_task = theta_pretrained + delta_task with delta sparsified via relaxed L0 penalty",
+  "Magnitude-pruning projection onto an L0 ball for exact sparsity, followed by fixed-mask finetuning",
+  "Structured variant with a per-group mask (393 groups)",
+  "Matches full finetuning on GLUE at 0.5% new params per task; beats compression methods on storage"
+ ],
+ "method": {
+  "summary": "Reparameterise task parameters as theta + delta with theta frozen; delta = z * w where z is a stretched Hard-Concrete relaxed binary mask with an expected-L0 penalty. After training, magnitude-prune delta to a target sparsity and finetune with the mask fixed. Structured version multiplies a per-group scalar mask.",
+  "task": "Transfer learning on GLUE classification/regression tasks and SQuAD v1.1 extractive QA",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "GLUE (MNLI, QQP, QNLI, SST-2, CoLA, STS-B, MRPC, RTE)",
+    "role": "both",
+    "size": null,
+    "split": "test server for Table 1; validation set for analysis",
+    "source": "Wang et al. 2019",
+    "preprocessing": null
+   },
+   {
+    "name": "SQuAD v1.1",
+    "role": "both",
+    "size": null,
+    "split": "validation set",
+    "source": "Rajpurkar et al. 2016",
+    "preprocessing": "max sequence length 384, document stride 128"
+   }
+  ],
+  "models": [
+   {
+    "name": "BERT-large",
+    "role": "base",
+    "params": "340M",
+    "architecture": "BERT encoder",
+    "init_from": "pretrained BERT (Devlin et al. 2019)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "BERT-base",
+    "role": "base",
+    "params": "110M (109M in Table 5)",
+    "architecture": "BERT encoder",
+    "init_from": "pretrained BERT",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "compression comparison, Table 5"
+    }
+   },
+   {
+    "name": "Diff pruning / structured diff pruning",
+    "role": "proposed",
+    "params": "inferred: 0.5% of base parameters nonzero per task",
+    "architecture": "frozen theta + sparse delta",
+    "init_from": "pretrained BERT; w init 0, alpha init 5",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "groups": "393 (one per matrix/bias vector)"
+    }
+   },
+   {
+    "name": "Adapters (Houlsby)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "bottleneck layers",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "numbers_from": "Houlsby et al. 2019"
+    }
+   }
+  ],
+  "training": {
+   "objective": "cross-entropy plus lambda * expected L0 norm of delta; then fixed-mask finetuning after magnitude pruning",
+   "optimizer": null,
+   "lr": "GLUE per task 1e-5 to 5e-5 (Table 7); fixed-mask phase 5e-5; SQuAD 3e-5",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "GLUE 8 (12 for STS-B); SQuAD per-GPU 3 on 8 GPUs",
+   "steps": null,
+   "epochs": "GLUE: 3 initial + 3 fixed-mask (5 for MRPC/STS-B/RTE/SST-2); SQuAD 2 + 2",
+   "tokens": null,
+   "seq_len": "SQuAD 384",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "relaxed L0 penalty lambda=1.25e-7; Hard-Concrete l=-1.5, r=1.5",
+   "hardware": "SQuAD: 8 GPUs (type not stated)",
+   "compute": null,
+   "wall_clock": "1.5x to 2x slower per minibatch than regular finetuning",
+   "seeds": "Fig 3 shows 5 runs of SST-2; main-table seed count not stated",
+   "other": {
+    "search": "batch size in {5,8,12,16}, lr in {1e-5,2e-5,5e-5}, selected on validation",
+    "alpha_init": "5",
+    "w_init": "0",
+    "hardcrete_hparams_tuned_on": "SST-2 validation, light search",
+    "sampling": "u sampled once to get z at end of training",
+    "implementation": "Hugging Face Transformers, commit 656e1386a296d696327a9db37de2ccccc79e2cc7",
+    "table7": "lr QNLI 2e-5, SST-2 5e-5, MNLI 1e-5, CoLA 1e-5, MRPC 1e-5, STS-B 1e-5, RTE 1e-5, QQP 2e-5"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "GLUE per-task",
+     "definition": "Matthews corr for CoLA, Spearman for STS-B, F1 for MRPC/QQP, accuracy for MNLI/QNLI/SST-2/RTE",
+     "unit": "points",
+     "higher_is_better": true
+    },
+    {
+     "name": "SQuAD v1.1 F1",
+     "definition": "token-overlap F1",
+     "unit": "F1",
+     "higher_is_better": true
+    },
+    {
+     "name": "new params per task",
+     "definition": "share of pretrained parameters that are nonzero in the diff",
+     "unit": "%",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "Full finetuning",
+    "Last-layer finetuning",
+    "Adapters (Houlsby 2019)",
+    "Non-adaptive diff pruning",
+    "DistilBERT, TinyBERT, MobileBERT (BERT-base comparison)"
+   ],
+   "protocol": "Test server for Table 1 (QNLI excluded from average because the test set changed since Houlsby); validation for analysis; no significance tests stated"
+  },
+  "availability": {
+   "code": "https://github.com/dguo98/DiffPruning",
+   "weights": null,
+   "data": null
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.regularisation",
+    "quote": "We found l = −1.5, r = 1.5, λ = 1.25 × 10−7 to work well across all tasks.",
+    "where": "4.3"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Structured diff pruning matches fully finetuned BERT-large on GLUE test while adding 0.5% parameters per task.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GLUE avg (QNLI excluded)",
+   "value": "80.6",
+   "unit": "points",
+   "baseline_value": "80.6",
+   "n": null,
+   "setup": "BERT-large, GLUE test server, 0.5% target sparsity, single hyperparameter-searched run per task",
+   "note": null,
+   "where": "Table 1, p4888",
+   "table": "Table 1, row Diff pruning (struct.), column Avg (80.6) vs Full finetuning (80.6)"
+  },
+  {
+   "claim": "Abstract headline: diff pruning matches finetuned baselines on GLUE modifying 0.5% of parameters per task.",
+   "kind": "measured",
+   "source": null,
+   "metric": "new params per task",
+   "value": "0.5",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GLUE, BERT-large",
+   "note": null,
+   "where": "Abstract",
+   "quote": "while only modifying 0.5% of the pretrained model’s pa-"
+  },
+  {
+   "claim": "Unstructured diff pruning is slightly worse than structured on GLUE test.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GLUE avg",
+   "value": "79.4",
+   "unit": "points",
+   "baseline_value": "80.6",
+   "n": null,
+   "setup": "BERT-large, GLUE test server, 0.5% target sparsity, single hyperparameter-searched run per task",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Diff pruning, column Avg"
+  },
+  {
+   "claim": "Non-adaptive diff pruning (magnitude-prune finetuned delta, no learned mask) is much worse, showing the learned mask matters.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GLUE avg",
+   "value": "75.5",
+   "unit": "points",
+   "baseline_value": "80.6",
+   "n": null,
+   "setup": "BERT-large, GLUE test server, 0.5% target sparsity, single hyperparameter-searched run per task",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Non-adap. diff pruning, column Avg"
+  },
+  {
+   "claim": "Last-layer finetuning is far worse at similar-ish parameter share (3.8%).",
+   "kind": "measured",
+   "source": null,
+   "metric": "GLUE avg",
+   "value": "68.2",
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BERT-large, GLUE test server, 0.5% target sparsity, single hyperparameter-searched run per task",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Last layer, column Avg"
+  },
+  {
+   "claim": "Adapters (Houlsby) reach 80.4 avg with 3.6% new params per task; figure taken from Houlsby et al. (2019).",
+   "kind": "reported",
+   "source": "Houlsby et al., 2019",
+   "metric": "GLUE avg",
+   "value": "80.4",
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BERT-large; QNLI excluded from average because test set changed",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Adapters (8-256), column Avg"
+  },
+  {
+   "claim": "Adapters (64) 2.1% new params per task, avg 79.8 (reported from Houlsby).",
+   "kind": "reported",
+   "source": "Houlsby et al., 2019",
+   "metric": "GLUE avg",
+   "value": "79.8",
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BERT-large",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Adapters (64), column Avg"
+  },
+  {
+   "claim": "Structured diff pruning on SQuAD v1.1 with 1.0% new params beats full finetuning F1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "SQuAD v1.1 F1",
+   "value": "93.2",
+   "unit": "F1",
+   "baseline_value": "90.8",
+   "n": null,
+   "setup": "BERT-large, validation set",
+   "note": null,
+   "where": "Fig 1 (right), p4889",
+   "table": "Fig 1 right table, row Diff pruning (struct.) 1.0%, column F1"
+  },
+  {
+   "claim": "Unstructured diff pruning at 1.0% on SQuAD v1.1 F1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "SQuAD v1.1 F1",
+   "value": "92.1",
+   "unit": "F1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BERT-large, validation",
+   "note": null,
+   "where": "Fig 1 (right)",
+   "table": "Fig 1 right table, row Diff pruning 1.0%, column F1"
+  },
+  {
+   "claim": "Structured diff pruning at 0.5% on SQuAD v1.1 F1 still above full finetuning.",
+   "kind": "measured",
+   "source": null,
+   "metric": "SQuAD v1.1 F1",
+   "value": "91.1",
+   "unit": "F1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BERT-large, validation",
+   "note": null,
+   "where": "Fig 1 (right)",
+   "table": "Fig 1 right table, row Diff pruning (struct.) 0.5%, column F1"
+  },
+  {
+   "claim": "Adapters at 2.0% on SQuAD v1.1 F1 (from Houlsby).",
+   "kind": "reported",
+   "source": "Houlsby et al., 2019",
+   "metric": "SQuAD v1.1 F1",
+   "value": "90.4",
+   "unit": "F1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BERT-large",
+   "note": null,
+   "where": "Fig 1 (right)",
+   "table": "Fig 1 right table, row Adapters 2.0%, column F1"
+  },
+  {
+   "claim": "Authors read the SQuAD gain as a regularization effect.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "SQuAD v1.1, BERT-large",
+   "note": null,
+   "where": "5.2",
+   "quote": "can have a useful regularization effect on top of parameter-efﬁciency"
+  },
+  {
+   "claim": "Structured diff pruning validation GLUE average by target sparsity: 0.10% gives 82.5.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GLUE val avg",
+   "value": "82.5",
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BERT-large, validation set",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row 0.10%, column Avg"
+  },
+  {
+   "claim": "0.25% target sparsity gives 84.5 avg.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GLUE val avg",
+   "value": "84.5",
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BERT-large, validation",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row 0.25%, column Avg"
+  },
+  {
+   "claim": "0.50% target sparsity gives 84.8 avg.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GLUE val avg",
+   "value": "84.8",
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BERT-large, validation",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row 0.50%, column Avg"
+  },
+  {
+   "claim": "1.00% target sparsity gives 85.1 avg.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GLUE val avg",
+   "value": "85.1",
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BERT-large, validation",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row 1.00%, column Avg"
+  },
+  {
+   "claim": "The 100% (unpruned diff) row gives 85.0 avg, so sparsity costs little down to 0.25-0.5%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GLUE val avg",
+   "value": "85.0",
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BERT-large, validation",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row 100%, column Avg"
+  },
+  {
+   "claim": "Adaptive methods' advantage grows at extreme sparsity; tasks differ in sensitivity to sparsity.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 1 left, GLUE val avg at 0.1/0.25/0.5/1.0%",
+   "note": null,
+   "where": "6.1",
+   "quote": "The advantage of adaptive methods becomes more pronounced at extreme sparsity rates."
+  },
+  {
+   "claim": "Structured diff pruning zeroes whole groups far more often than unstructured (avg share of the 393 groups fully zero).",
+   "kind": "measured",
+   "source": null,
+   "metric": "groups fully zero",
+   "value": "28.1",
+   "unit": "%",
+   "baseline_value": "6.3",
+   "n": null,
+   "setup": "0.5% target sparsity, groups = each matrix/bias vector (393)",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row Structured, column Avg"
+  },
+  {
+   "claim": "Without fixed-mask finetuning GLUE performance falls from 84.9 to 81.4.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GLUE val avg",
+   "value": "81.4",
+   "unit": "points",
+   "baseline_value": "84.9",
+   "n": null,
+   "setup": "Structured diff pruning, BERT-large",
+   "note": null,
+   "where": "footnote 16, p4890",
+   "quote": "decreases from 84.9 to 81.4."
+  },
+  {
+   "claim": "Magnitude-pruning projection to exact 0.5% costs little: avg 84.8 vs 84.9 without it (where natural sparsity was 1.4%).",
+   "kind": "measured",
+   "source": null,
+   "metric": "GLUE val avg",
+   "value": "84.8",
+   "unit": "points",
+   "baseline_value": "84.9",
+   "n": null,
+   "setup": "Structured, fixed-mask finetuning in both",
+   "note": "Without magnitude pruning the learned L0 mask alone gave avg sparsity 1.4% (range 0.6-3.3%).",
+   "where": "Table 4",
+   "table": "Table 4, row Mag. Pruning, column Avg"
+  },
+  {
+   "claim": "On BERT-base, structured diff pruning (0.5%) matches full finetuning and beats DistilBERT/TinyBERT/MobileBERT on test avg.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GLUE avg",
+   "value": "79.0",
+   "unit": "points",
+   "baseline_value": "79.1",
+   "n": null,
+   "setup": "BERT-base (109M), GLUE; compression numbers from Jiao et al. 2020 table 1",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row Diff pruning (struct.), column Avg"
+  },
+  {
+   "claim": "TinyBERT6 (61.5% params) reaches 79.4 avg on same comparison (reported from Jiao et al.).",
+   "kind": "reported",
+   "source": "Jiao et al., 2020",
+   "metric": "GLUE avg",
+   "value": "79.4",
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BERT-base",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row TinyBERT6, column Avg"
+  },
+  {
+   "claim": "Storage per task: diff pruning 13.6 MB vs Adapters 51.7 MB vs full finetune 1297.0 MB.",
+   "kind": "measured",
+   "source": null,
+   "metric": "storage per task",
+   "value": "13.6",
+   "unit": "MB",
+   "baseline_value": "51.7",
+   "n": null,
+   "setup": "basic Python implementation, float32 weights, int32 positions; BERT-large",
+   "note": "Full finetuning 1297.0 MB; Adapters weights only 51.7 MB at 3.6%.",
+   "where": "Table 6",
+   "table": "Table 6, row Diff pruning (positions + weights), column Storage (MB) per task"
+  },
+  {
+   "claim": "Training is 1.5x to 2x slower per minibatch than regular finetuning, and needs more memory for alpha and w.",
+   "kind": "measured",
+   "source": null,
+   "metric": "training slowdown per minibatch",
+   "value": "1.5-2",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "vs regular finetuning",
+   "note": null,
+   "where": "6.7",
+   "quote": "approximately 1.5× to 2× slower to train"
+  },
+  {
+   "claim": "Modifying only the FC layers after self-attention (adapter-like placement) gave much worse performance, suggesting adapters' restricted read/write points limit efficiency.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "footnote 15, diff pruning restricted to FC layers after self-attention",
+   "note": null,
+   "where": "6.3",
+   "quote": "observed much worse performance."
+  }
+ ],
+ "limits": [
+  "Training needs more memory than usual finetuning (also optimises alpha and w) and is 1.5-2x slower per minibatch; the authors flag this as a concern as models grow.",
+  "Storing the diff needs nonzero positions as well as weights.",
+  "No inference speedup, unlike compression methods (TinyBERT4 is 9.4x faster).",
+  "Only BERT-large/base evaluated in main experiments; RoBERTa and XLNet only in preliminary unreported runs.",
+  "Only encoder models and GLUE/SQuAD; no generative LLM; storage is a basic Python estimate.",
+  "Adapters numbers are copied from Houlsby et al., and QNLI is not directly comparable.",
+  "Seed variance for main results not reported; Fig 3 shows nontrivial variation in which layers are modified.",
+  "The 'regularization effect' on SQuAD is a conjecture, not tested."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "diff vector",
+   "definition": "task-specific difference vector delta_task added to fixed pretrained parameters, theta_task = theta_pretrained + delta_task",
+   "where": "Section 1"
+  },
+  {
+   "term": "non-adaptive diff pruning",
+   "definition": "finetune normally, set delta = theta_task - theta, magnitude prune, then finetune delta further",
+   "where": "4.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Parameter-efficient transfer learning for NLP (Adapters)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "main comparison; Houlsby et al. 2019 ICML",
+   "quote": null
+  },
+  {
+   "work": "Learning Sparse Neural Networks through L0 Regularization",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Louizos et al. 2018, relaxed L0 / Hard-Concrete",
+   "quote": null
+  },
+  {
+   "work": "Structured pruning of large language models / Wang et al. 2019b",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "L0 relaxation for model size constraint",
+   "quote": null
+  },
+  {
+   "work": "Hard-Concrete / Gumbel-Softmax and Concrete distribution",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Jang et al. 2017; Maddison et al. 2017",
+   "quote": null
+  },
+  {
+   "work": "BERT",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "Devlin et al. 2019",
+   "quote": null
+  },
+  {
+   "work": "GLUE",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Wang et al. 2019",
+   "quote": null
+  },
+  {
+   "work": "SQuAD",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Rajpurkar et al. 2016",
+   "quote": null
+  },
+  {
+   "work": "DistilBERT, TinyBERT, MobileBERT",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Table 5 numbers from Jiao et al. 2020 table 1",
+   "quote": null
+  },
+  {
+   "work": "Masking as an Efficient Alternative to Finetuning (Zhao et al.)",
+   "year": 2020,
+   "arxiv": "2004.12406",
+   "relation": "related",
+   "note": "masks on pretrained params rather than on diff",
+   "quote": null
+  },
+  {
+   "work": "Prefix-tuning (Li & Liang)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "related",
+   "note": "learned prompts on pretrained models",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "(Left) Average performance on the GLUE validation set across different target sparsity rates for the different methods. (Right) Results with BERTLARGE on the SQuAD v1.1 validation set.",
+   "page": 6,
+   "why": "Shows structured vs unstructured vs non-adaptive across sparsity; adaptive advantage grows at extreme sparsity."
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Percentage of modified parameters attributable to each layer for different tasks at 0.5% target sparsity.",
+   "page": 7,
+   "why": "Different tasks modify different layers; embeddings barely touched."
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Percentage of modified parameters attributable to each layer for 5 different runs of SST-2 at 0.5% target sparsity.",
+   "page": 13,
+   "why": "Run-to-run consistency of where the diff lands."
+  }
+ ],
+ "code": [
+  {
+   "where": "Section 3.1",
+   "snippet": "u ~ U(0,1); s = sigmoid(log u - log(1-u) + alpha); s_bar = s*(r-l)+l; z = min(1, max(0, s_bar)); delta = z (.) w",
+   "verbatim": false
+  },
+  {
+   "where": "Section 3.1",
+   "snippet": "E[||delta||_0] = sum_i sigmoid(alpha_i - log(-l/r))",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text extraction is clean; ligatures (fi) appear as unicode glyphs. Figure data (Fig 1 left, Fig 2, Fig 3) are plots with no numeric text; Fig 1 right is a table printed beside the caption.",
+  "No embedded instructions found. No arXiv id printed on the PDF."
+ ]
+}

@@ -145,6 +145,30 @@ Labs, upstream (Apache-2.0; READMEs partly in Chinese): [4-1 perception MCP serv
 
 ---
 
+## Pitfalls
+
+- **Treating tool descriptions as trusted config.** Symptom: a server update quietly adds an instruction such as reading `~/.ssh` and passing it as `notes`. Fix: review descriptions as code, diff them on every update, namespace per server, and break the lethal triad.
+- **A tool name that implies the work is finished.** Symptom: the model treats `phone_call` as complete when it returns. Fix: name the initiation, as in `initiate_phone_call`, and report `phone_call_connected` and `phone_call_ended` as later events.
+- **Auto-retrying a write with no idempotency key.** Symptom: one transient timeout becomes three charged invoices. Fix: a key on the call, or query before mutate.
+
+## Try it
+
+1. A `send_invoice` tool has no idempotency key and the call timed out. Which two patterns make a retry safe?
+
+   <details><summary>Answer</summary>
+
+   Query before mutate: check whether the invoice already exists before sending again. Or a two-phase call: `prepare_invoice` returns a preview and a confirm token, and `commit_invoice` accepts the token once, so a retry with a spent token is rejected.
+
+   </details>
+
+## Interview checklist
+
+| Prompt | Answer in one line |
+|---|---|
+| A payment tool timed out and the customer was charged three times. What went wrong? | A non-idempotent write was auto-retried. Tools without idempotency keys must not be auto-retried, and the fix is a key on the call plus a query-before-mutate check. |
+| When do you choose MCP over an in-process tool? | When several callers need it, a security boundary must be crossed, it deploys independently, discovery matters or it holds its own state. Otherwise default to in-process. |
+| How do you design a tool that takes minutes? | Name the initiation (`initiate_phone_call`), return a task ID at once, give it `get_status` and `cancel`, and deliver completion as a later event. |
+
 ## Next
 
 [04-execution-boundaries.md](04-execution-boundaries.md): where the tools are allowed to run.

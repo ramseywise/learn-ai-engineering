@@ -1,0 +1,531 @@
+{
+ "schema": 1,
+ "key": "1408.5882",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/kim-2014-convolutional-neural-networks-sentence-classification.pdf",
+ "bib": {
+  "title": "Convolutional Neural Networks for Sentence Classification",
+  "authors": [
+   "Yoon Kim"
+  ],
+  "first_author": "Kim",
+  "year": 2014,
+  "venue": "EMNLP 2014 (pp. 1746-1751)",
+  "arxiv": "1408.5882",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 23164,
+  "chars_total": 23164,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can a simple one-layer CNN over pre-trained word vectors classify sentences well, and does fine-tuning or freezing the vectors matter?",
+ "hypothesis": "Pre-trained word vectors are universal feature extractors that help across tasks; a two-channel (static plus fine-tuned) model was hoped to reduce overfitting.",
+ "contributions": [
+  "Simple CNN with static word2vec vectors and little tuning is strong on 7 benchmarks",
+  "Task-specific fine-tuning gives further gains",
+  "Multichannel variant combining static and fine-tuned vectors",
+  "Improves state of the art on 4 of 7 tasks"
+ ],
+ "method": {
+  "summary": "A single convolution layer with filter widths 3, 4, 5 over concatenated word vectors, max-over-time pooling, dropout and a softmax layer. Four variants: random init, static word2vec, fine-tuned word2vec, and two-channel.",
+  "task": "sentence classification (sentiment, subjectivity, question type, opinion polarity)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "MR",
+    "role": "both",
+    "size": "10662 sentences, 2 classes, avg length 20",
+    "split": "10-fold CV",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "SST-1",
+    "role": "both",
+    "size": "11855, 5 classes, avg length 18",
+    "split": "standard train/dev/test; test 2210",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "SST-2",
+    "role": "both",
+    "size": "9613, 2 classes, avg length 19",
+    "split": "standard split; test 1821",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "Subj",
+    "role": "both",
+    "size": "10000, 2 classes, avg length 23",
+    "split": "10-fold CV",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "TREC",
+    "role": "both",
+    "size": "5952, 6 classes, avg length 10",
+    "split": "test 500",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "CR",
+    "role": "both",
+    "size": "3775, 2 classes, avg length 19",
+    "split": "10-fold CV",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "MPQA",
+    "role": "both",
+    "size": "10606, 2 classes, avg length 3",
+    "split": "10-fold CV",
+    "source": null,
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "CNN-rand",
+    "role": "baseline",
+    "params": null,
+    "architecture": "1-layer CNN, random word vectors trained",
+    "init_from": "random",
+    "tokenizer": null,
+    "vocab": "Table 1 |V| per dataset",
+    "layers": "1 conv layer",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "CNN-static",
+    "role": "proposed",
+    "params": null,
+    "architecture": "same, word2vec frozen (unknown words random, also frozen)",
+    "init_from": "word2vec CBOW, 300-d, 100B words Google News",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "1 conv layer",
+    "hidden": "300-d vectors",
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "CNN-non-static",
+    "role": "proposed",
+    "params": null,
+    "architecture": "same, word2vec fine-tuned per task",
+    "init_from": "word2vec",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "1 conv layer",
+    "hidden": "300-d vectors",
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "CNN-multichannel",
+    "role": "proposed",
+    "params": null,
+    "architecture": "two channels both init from word2vec; gradients only through one",
+    "init_from": "word2vec",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "1 conv layer",
+    "hidden": "300-d vectors",
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": null,
+   "optimizer": "SGD over shuffled mini-batches with Adadelta update rule",
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "50",
+   "steps": null,
+   "epochs": "early stopping on dev set; number not stated",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": "0.5 on penultimate layer",
+   "regularisation": "l2-norm constraint s=3 on weight vectors",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": "inferred: CV-fold assignment, unknown-word init and CNN init kept fixed within each dataset; number of runs not stated",
+   "other": {
+    "activation": "rectified linear units",
+    "filters": "windows h=3,4,5 with 100 feature maps each",
+    "tuning": "grid search on SST-2 dev set; 10% of train held out as dev when no standard dev set",
+    "sst_note": "SST-1/2 trained on phrases and sentences, scored on sentences only",
+    "unknown_word_init": "random; slight gain from U[-a,a] matching pre-trained variance"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {
+    "test_time": "weights scaled by p, no dropout"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "accuracy",
+     "definition": "test set accuracy (10-fold CV mean where no standard split)",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "RAE",
+    "MV-RNN",
+    "RNTN",
+    "DCNN",
+    "Paragraph-Vec",
+    "CCAE",
+    "Sent-Parser",
+    "NBSVM",
+    "MNB",
+    "G-Dropout",
+    "F-Dropout",
+    "Tree-CRF",
+    "CRF-PR",
+    "SVMS"
+   ],
+   "protocol": "Single reported number per cell; no variance or significance test stated."
+  },
+  "availability": {
+   "code": null,
+   "weights": "word2vec vectors public (code.google.com/p/word2vec)",
+   "data": "public datasets, URLs in footnotes"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.other.filters",
+    "quote": "filter windows (h) of 3, 4, 5 with 100 feature maps each, dropout rate (p) of 0.5, l2 constraint (s) of 3, and",
+    "where": "Sec 3.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Randomly initialised CNN (CNN-rand) scores far below static word2vec on MR.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "76.1",
+   "unit": "%",
+   "baseline_value": "81.0",
+   "n": null,
+   "setup": "Single 1-conv-layer CNN, word2vec 300-d vectors, test accuracy, MR, CNN-rand",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row CNN-rand, column MR"
+  },
+  {
+   "claim": "Static word2vec vectors lift MR accuracy over random init by about 5 points.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "81.0",
+   "unit": "%",
+   "baseline_value": "76.1",
+   "n": null,
+   "setup": "Single 1-conv-layer CNN, word2vec 300-d vectors, test accuracy, MR, CNN-static",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row CNN-static, column MR"
+  },
+  {
+   "claim": "Static vectors lift Subj accuracy over random init.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "93.0",
+   "unit": "%",
+   "baseline_value": "89.6",
+   "n": null,
+   "setup": "Single 1-conv-layer CNN, word2vec 300-d vectors, test accuracy, Subj, CNN-static vs CNN-rand 89.6",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row CNN-static, column Subj"
+  },
+  {
+   "claim": "Static vectors lift SST-2 accuracy over random init.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "86.8",
+   "unit": "%",
+   "baseline_value": "82.7",
+   "n": null,
+   "setup": "Single 1-conv-layer CNN, word2vec 300-d vectors, test accuracy, SST-2, CNN-static vs CNN-rand 82.7",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row CNN-static, column SST-2"
+  },
+  {
+   "claim": "Fine-tuning vectors (non-static) gives the best SST-1 among the four CNN variants.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "48.0",
+   "unit": "%",
+   "baseline_value": "45.5",
+   "n": null,
+   "setup": "Single 1-conv-layer CNN, word2vec 300-d vectors, test accuracy, SST-1 fine-grained 5-class, CNN-non-static vs CNN-static 45.5",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row CNN-non-static, column SST-1"
+  },
+  {
+   "claim": "Non-static beats static on TREC.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "93.6",
+   "unit": "%",
+   "baseline_value": "92.8",
+   "n": null,
+   "setup": "Single 1-conv-layer CNN, word2vec 300-d vectors, test accuracy, TREC, CNN-non-static vs CNN-static 92.8",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row CNN-non-static, column TREC"
+  },
+  {
+   "claim": "Non-static is slightly worse than static on CR and MPQA, so fine-tuning does not always help.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "84.3",
+   "unit": "%",
+   "baseline_value": "84.7",
+   "n": null,
+   "setup": "Single 1-conv-layer CNN, word2vec 300-d vectors, test accuracy, CR, CNN-non-static vs CNN-static 84.7",
+   "note": "MPQA: non-static 89.5 vs static 89.6",
+   "where": "Table 2",
+   "table": "Table 2, row CNN-non-static, column CR"
+  },
+  {
+   "claim": "Multichannel is best on SST-2 and CR but mixed elsewhere.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "88.1",
+   "unit": "%",
+   "baseline_value": "87.2",
+   "n": null,
+   "setup": "Single 1-conv-layer CNN, word2vec 300-d vectors, test accuracy, SST-2, CNN-multichannel vs CNN-non-static 87.2",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row CNN-multichannel, column SST-2"
+  },
+  {
+   "claim": "Static CNN is competitive with DCNN on SST-2, tied at 86.8.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "86.8",
+   "unit": "%",
+   "baseline_value": "86.8",
+   "n": null,
+   "setup": "Single 1-conv-layer CNN, word2vec 300-d vectors, test accuracy, SST-2, CNN-static vs DCNN (Kalchbrenner 2014)",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row DCNN (Kalchbrenner et al., 2014), column SST-2"
+  },
+  {
+   "claim": "Dropout added 2%-4% relative performance consistently.",
+   "kind": "measured",
+   "source": null,
+   "metric": "relative accuracy gain",
+   "value": "2%-4%",
+   "unit": "relative",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Single 1-conv-layer CNN, word2vec 300-d vectors, test accuracy, all datasets, observation without table",
+   "note": null,
+   "where": "Sec 4.3",
+   "quote": "Dropout consistently added 2%–4% relative"
+  },
+  {
+   "claim": "Kalchbrenner et al.'s Max-TDNN with random init gets 37.4% on SST-1 versus 45.0% for this CNN-rand; authors attribute it to capacity (multiple filter widths and feature maps).",
+   "kind": "reported",
+   "source": "Kalchbrenner et al. 2014",
+   "metric": "accuracy",
+   "value": "37.4",
+   "unit": "%",
+   "baseline_value": "45.0",
+   "n": null,
+   "setup": "Single 1-conv-layer CNN, word2vec 300-d vectors, test accuracy, SST-1, random init",
+   "note": "Quote only anchors the 45.0; 37.4% appears on the preceding line: 'obtains 37.4% on the SST-1'",
+   "where": "Sec 4.3",
+   "quote": "dataset, compared to 45.0% for our model."
+  },
+  {
+   "claim": "Fine-tuning moves 'good' away from 'bad': in word2vec good is most similar to bad, which is no longer so after fine-tuning on SST-2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "qualitative",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Multichannel model, SST-2, top-4 cosine neighbours, static vs non-static channel",
+   "note": null,
+   "where": "Table 3, Sec 4.2"
+  },
+  {
+   "claim": "Pre-trained vectors are described as universal feature extractors reusable across tasks.",
+   "kind": "claim",
+   "source": null,
+   "metric": "accuracy",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Seven classification datasets",
+   "note": null,
+   "where": "Sec 4"
+  }
+ ],
+ "limits": [
+  "Multichannel gains over single channel are mixed; authors say further work on regularising fine-tuning is warranted",
+  "No variance, seeds count or significance tests reported",
+  "Hyperparameters tuned on SST-2 dev only, then reused",
+  "Unclear whether word2vec beats Collobert's Wikipedia vectors because of architecture or the 100B-word corpus",
+  "Static word vectors are context-free; superseded by contextual models"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "static vs non-static",
+   "definition": "static: word vectors kept fixed during training; non-static: fine-tuned by backpropagation",
+   "where": "Sec 3.3"
+  },
+  {
+   "term": "multichannel",
+   "definition": "two sets of word vectors, each filter applied to both, gradients through only one",
+   "where": "Sec 3.3"
+  },
+  {
+   "term": "max-over-time pooling",
+   "definition": "take the max of each feature map as that filter's feature, handling variable sentence length",
+   "where": "Sec 2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Collobert et al. 2011 Natural Language Processing (Almost) from Scratch",
+   "year": 2011,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "architecture is a slight variant",
+   "quote": null
+  },
+  {
+   "work": "Mikolov et al. 2013 word2vec",
+   "year": 2013,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "pre-trained vectors",
+   "quote": null
+  },
+  {
+   "work": "Kalchbrenner et al. 2014 DCNN",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "reports much worse CNN with similar architecture",
+   "quote": null
+  },
+  {
+   "work": "Socher et al. 2013 RNTN / Stanford Sentiment Treebank",
+   "year": 2013,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "SST data and baseline",
+   "quote": null
+  },
+  {
+   "work": "Hinton et al. 2012 dropout",
+   "year": 2012,
+   "arxiv": "1207.0580",
+   "relation": "uses-method",
+   "note": "regularisation",
+   "quote": null
+  },
+  {
+   "work": "Zeiler 2012 Adadelta",
+   "year": 2012,
+   "arxiv": "1212.5701",
+   "relation": "uses-method",
+   "note": "update rule",
+   "quote": null
+  },
+  {
+   "work": "Razavian et al. 2014 CNN Features off-the-shelf",
+   "year": 2014,
+   "arxiv": "1403.6382",
+   "relation": "related",
+   "note": "philosophically similar: pretrained feature extractors transfer",
+   "quote": null
+  },
+  {
+   "work": "Le and Mikolov 2014 Paragraph Vectors",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Figure 1",
+   "caption": "Model architecture with two channels for an example sentence.",
+   "page": 2,
+   "why": "Shows n x k sentence matrix, conv filters, max-over-time pooling, dropout softmax in one picture"
+  },
+  {
+   "figure": "Table 3",
+   "caption": "Top 4 neighboring words based on cosine similarity for vectors in the static channel and fine-tuned vectors in the non-static channel (SST-2)",
+   "page": 5,
+   "why": "Concrete view of static vs fine-tuned embeddings: good/bad separated after tuning"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 2",
+   "snippet": "ci = f(w · xi:i+h−1 + b).",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Figure 1 is an image; only its labels extracted. Table 1 and 2 text flattened column by column."
+ ]
+}

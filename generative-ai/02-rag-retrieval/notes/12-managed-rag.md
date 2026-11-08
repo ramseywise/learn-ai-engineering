@@ -245,7 +245,7 @@ two calls took under 0.35 s: True
 0.66  Refund policy (2024 archive) kb-05  'unds are available within 14 days.'
 ```
 
-Four results went in and two came out: the duplicate of `kb-04` lost on its fingerprint and the runbook fell below the threshold. The stale `kb-05` is still there, with a score that gives no hint it is out of date, saying 14 days next to the current page's 30. A managed index won't catch that. It takes the metadata filter from [03](03-keyword-semantic-and-hybrid-search.md), or removing the page.
+Four results went in and two came out: the duplicate of `kb-04` lost on its fingerprint and the runbook fell below the threshold. The stale `kb-05` is still there, with a score that gives no hint it is out of date, saying 14 days next to the current page's 30. A managed index won't catch that. It takes the metadata filter from [03b](03b-metadata-filters-hybrid-search-and-evaluating-a-retriever.md#metadata-filtering), or removing the page.
 
 ### Where the code lives
 

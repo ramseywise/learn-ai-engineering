@@ -1,0 +1,567 @@
+{
+ "schema": 1,
+ "key": "https://doi.org/10.1609/aaai.v32i1.12340",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/vijayakumar-2018-diverse-beam-search-improved-description.pdf",
+ "bib": {
+  "title": "Diverse Beam Search: Decoding Diverse Solutions from Neural Sequence Models",
+  "authors": [
+   "Ashwin K Vijayakumar",
+   "Michael Cogswell",
+   "Ramprasath R. Selvaraju",
+   "Qing Sun",
+   "Stefan Lee",
+   "David Crandall",
+   "Dhruv Batra"
+  ],
+  "first_author": "Vijayakumar",
+  "year": 2018,
+  "venue": "preprint (arXiv v2, 22 Oct 2018; the cited AAAI 2018 paper is the shorter 'Improved Description of Complex Scenes' version)",
+  "arxiv": "1610.02424",
+  "doi": "10.1609/aaai.v32i1.12340"
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 48034,
+  "chars_total": 48034,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can beam search be changed to return a list of diverse high-quality sequences without extra compute, and does that improve top-1 and oracle quality?",
+ "hypothesis": "Optimising a diversity-augmented objective across groups of beams yields more diverse and better lists than plain beam search or earlier diversity heuristics.",
+ "contributions": [
+  "Diverse Beam Search, a doubly greedy (over time and groups) approximate inference algorithm",
+  "Results on image captioning, visual question generation and machine translation",
+  "Analysis of image complexity vs gain from diversity, with a human preference study",
+  "Sensitivity analysis of G, lambda and diversity function"
+ ],
+ "method": {
+  "summary": "Beam budget B is split into G groups of B'=B/G; groups are decoded left to right in order, each group running beam search on log-probs plus lambda times a dissimilarity to earlier groups' choices (Hamming by default). Compared to BS, Li & Jurafsky 2016 and Li et al. 2015 on captioning, VQG and En-Fr MT with oracle accuracy and distinct n-grams.",
+  "task": "diverse decoding for neural sequence models (captioning, VQG, MT)",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "COCO",
+    "role": "eval",
+    "size": null,
+    "split": "Karpathy & Fei-Fei public splits; 5000 test images implied by bin sizes 745+3416+839",
+    "source": "Lin et al. 2014",
+    "preprocessing": null
+   },
+   {
+    "name": "PASCAL-50S",
+    "role": "eval",
+    "size": null,
+    "split": "test only, except 200 validation images for tuning",
+    "source": "Vedantam et al. 2015",
+    "preprocessing": null
+   },
+   {
+    "name": "VQG",
+    "role": "eval",
+    "size": "5000 COCO images, 5 questions each",
+    "split": null,
+    "source": "Mostafazadeh et al. 2016",
+    "preprocessing": null
+   },
+   {
+    "name": "Europarl En-Fr",
+    "role": "train",
+    "size": null,
+    "split": "newstest2012 tuning; newstest2013 and 2014 evaluation",
+    "source": "europarl; WMT news-test",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "neuraltalk2 captioner (Vinyals et al. 2015) and VQG variant",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "CNN + LSTM captioner",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "dl4mt-tutorial attention NMT (Bahdanau et al. 2014)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "bidirectional GRU encoder with attention, decoder",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "SVR difficulty predictor",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "Support Vector Regressor on ResNet features",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "correlation": "0.41 with ground truth"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "Diverse Beam Search; baselines BS, Li & Jurafsky 2016 intra-sibling rank, Li et al. 2015 MMI-style U(y) penalty",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "B=20 returned sequences per input; no seeds or repeated runs stated",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "B": "20 (all tables)",
+    "G": "G=B=20 for reported results; G=1 is plain BS",
+    "lambda": "grid searched on validation set per task; 0.2 to 0.8 works well; exact chosen values not stated in text",
+    "diversity_function": "Hamming (best); also cumulative (temperature Gamma), n-gram, neural-embedding (word2vec)",
+    "re-ranking": "none; lists sorted by log-probability",
+    "delta": "sum over beams in group of sequence dissimilarity; Eq 3 sums over earlier groups h<g with lambda_g"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Oracle accuracy @k",
+     "definition": "max of task metric (SPICE for captions/VQG, sentence BLEU-4 for MT) over k list members",
+     "unit": "metric points",
+     "higher_is_better": true
+    },
+    {
+     "name": "Distinct n-grams",
+     "definition": "count of distinct n-grams in the list divided by total words generated",
+     "unit": "ratio",
+     "higher_is_better": true
+    },
+    {
+     "name": "Human preference",
+     "definition": "forced choice DBS vs BS captions, majority vote of 5 turkers",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Beam search",
+    "Li & Jurafsky 2016",
+    "Li et al. 2015"
+   ],
+   "protocol": "single run per configuration, no significance tests stated; own reimplementation of the baselines; lists sorted by log-prob, no reranker"
+  },
+  "availability": {
+   "code": "https://github.com/ashwinkalyan/dbs; demo dbs.cloudcv.org",
+   "weights": null,
+   "data": null
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "DBS yields roughly 3x more distinct 4-grams than BS in COCO captioning (13.44 vs 5.67).",
+   "kind": "measured",
+   "source": null,
+   "metric": "distinct 4-grams (per word)",
+   "value": "13.44",
+   "unit": null,
+   "baseline_value": "5.67",
+   "n": null,
+   "setup": "COCO test (Karpathy split), neuraltalk2 captioner (Vinyals et al. 2015), B=20, G=B",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1 top, COCO, rows DBS vs BS, column Distinct n-Grams n=4"
+  },
+  {
+   "claim": "Oracle SPICE@20 on COCO: DBS 28.09 vs BS 27.34.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Oracle SPICE@20",
+   "value": "28.09",
+   "unit": null,
+   "baseline_value": "27.34",
+   "n": null,
+   "setup": "COCO test (Karpathy split), neuraltalk2 captioner (Vinyals et al. 2015), B=20, G=B",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1 top, COCO, column Oracle SPICE@20, rows DBS and BS"
+  },
+  {
+   "claim": "On PASCAL-50S (test only, train/test mismatch) DBS improves Oracle@20 by 7.24% over BS and 9.60% over Li & Jurafsky.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Oracle@20 improvement over BS",
+   "value": "7.24%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "PASCAL-50S, captioner trained on COCO, B=20",
+   "note": null,
+   "where": "Sec 5.3",
+   "quote": "7.24% and 9.60% Oracle@20 improvements against BS"
+  },
+  {
+   "claim": "PASCAL-50S Oracle SPICE@20: DBS 9.293 vs BS 8.74.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Oracle SPICE@20",
+   "value": "9.293",
+   "unit": null,
+   "baseline_value": "8.74",
+   "n": null,
+   "setup": "PASCAL-50S, B=20",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1 top, PASCAL-50S, column Oracle SPICE@20, rows DBS and BS"
+  },
+  {
+   "claim": "DBS finds a higher-probability top-1 than BS of same width on PASCAL-50S (max log-prob -6.53 vs -6.91).",
+   "kind": "measured",
+   "source": null,
+   "metric": "max log-probability",
+   "value": "-6.53",
+   "unit": null,
+   "baseline_value": "-6.91",
+   "n": null,
+   "setup": "PASCAL-50S test, same B",
+   "note": "text breaks across line: 'maximum log-probability of -' / '6.53 as against -6.91'",
+   "where": "Sec 5.3",
+   "quote": "6.53 as against -6.91 got by BS of same beam width"
+  },
+  {
+   "claim": "Gain of DBS over BS at Oracle SPICE@20 grows with image complexity: 0.67 (Simple), 0.91 (Average), 1.13 (Complex).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Oracle SPICE@20 gain over BS (Complex)",
+   "value": "1.13",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "COCO, B=20; bins from SVR difficulty predictor",
+   "note": null,
+   "where": "Sec 5.3, Table 1 bottom",
+   "quote": "improvements over BS of 0.67, 0.91, and 1.13 for Simple, Average, and Complex images"
+  },
+  {
+   "claim": "Human forced-choice: DBS captions preferred over BS 60% of the time.",
+   "kind": "measured",
+   "source": null,
+   "metric": "preference for DBS",
+   "value": "60%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "PASCAL-50S, AMT annotators, forced choice, shuffled lists",
+   "note": null,
+   "where": "Sec 5.3",
+   "quote": "DBS captions were preferred over BS 60% of the time by human annotators"
+  },
+  {
+   "claim": "Preference for DBS by difficulty is about 50%, 69% and 83% (Simple, Average, Difficult), correlation 0.73 with difficulty.",
+   "kind": "measured",
+   "source": null,
+   "metric": "correlation of difficulty and DBS preference",
+   "value": "0.73",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "PASCAL-50S; appendix Table 4 gives 50.51%, 69.92%, 83.63% over 481/409/110 images with majority vote (>=3/5 turkers)",
+   "note": "main text rounds to 50/69/83%; appendix prints 69.92% and 83.63%; bin counts in Table 4 (481/409/110=1000) differ from COCO bin sizes",
+   "where": "Sec 5.3, Table 4",
+   "quote": "positive correlation (ρ = 0.73) between difﬁculty scores and humans preferring DBS to BS"
+  },
+  {
+   "claim": "VQG: DBS Oracle SPICE@20 27.94 vs BS 26.74; distinct 4-grams 12.24 vs 5.23.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Oracle SPICE@20",
+   "value": "27.94",
+   "unit": null,
+   "baseline_value": "26.74",
+   "n": null,
+   "setup": "VQG (5000 COCO images, 5 questions each), B=20",
+   "note": "Li & Jurafsky VQG row repeats the COCO row's @10/@20/n=2-4 values exactly (25.23, 27.59, 2.40, 5.69, 8.94), likely a copy error in the paper.",
+   "where": "Table 2",
+   "table": "Table 2 top, VQG, rows DBS and BS, columns Oracle SPICE@20 and n=4"
+  },
+  {
+   "claim": "En-Fr MT: DBS Oracle BLEU-4@20 18.77 vs BS 18.44; Li et al. (2015) is slightly higher at 18.86.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Oracle BLEU-4@20",
+   "value": "18.77",
+   "unit": null,
+   "baseline_value": "18.44",
+   "n": null,
+   "setup": "newstest-2013, B=20, GRU encoder-decoder with attention (dl4mt), europarl train",
+   "note": "DBS does not win every MT column: Li et al. (2015) has 18.86 at @20 and 17.97 at @10 vs DBS 17.80",
+   "where": "Table 3",
+   "table": "Table 3, row DBS vs Beam Search vs Li et al. (2015), column @20"
+  },
+  {
+   "claim": "En-Fr MT top-1 BLEU-4: DBS 13.69 vs BS 13.52.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU-4 @1",
+   "value": "13.69",
+   "unit": null,
+   "baseline_value": "13.52",
+   "n": null,
+   "setup": "newstest-2013, B=20",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, rows DBS and Beam Search, column @1"
+  },
+  {
+   "claim": "MT distinct-4: DBS 5.54 vs BS 3.23.",
+   "kind": "measured",
+   "source": null,
+   "metric": "distinct-4",
+   "value": "5.54",
+   "unit": null,
+   "baseline_value": "3.23",
+   "n": null,
+   "setup": "newstest-2013, B=20",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, rows DBS and Beam Search, column distinct-4"
+  },
+  {
+   "claim": "Staggered parallel DBS runs in T+G steps versus T x G for the black-box Gimpel et al. approach.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "algorithmic analysis",
+   "note": null,
+   "where": "Sec 3",
+   "quote": "This parallel algorithm completes in T + G time steps compared to T × G running time"
+  },
+  {
+   "claim": "DBS is guaranteed to be at least as good as a beam search of size B/G because group 1 is undiversified.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "algorithmic argument",
+   "note": null,
+   "where": "Sec 3",
+   "quote": "guaranteed to be at least as good as"
+  },
+  {
+   "claim": "A wide range of diversity strengths lambda (0.2 to 0.8) works well; too high overpowers model probability and gives ungrammatical outputs.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "lambda tuned by grid search on validation set per task",
+   "note": "the grid-search values are only in Fig 6a, not read here",
+   "where": "Sec 5.1, Fig 6a",
+   "quote": "wide range of λ values (0.2 to 0.8) work well"
+  },
+  {
+   "claim": "G=B (max exploration) is used for reported results; G=1 reduces DBS to BS.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "all experiments with B=20",
+   "note": null,
+   "where": "Sec 5.1",
+   "quote": "use G=B to report results unless mentioned otherwise"
+  },
+  {
+   "claim": "Hamming diversity performs best among the diversity functions tried despite simplicity; others beat BS.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "captioning, appendix Fig 6b",
+   "note": null,
+   "where": "Sec 5.1, Fig 6b",
+   "quote": "hamming diversity achieves the best oracle performance"
+  },
+  {
+   "claim": "Difficulty predictor (SVR on ResNet features) correlates 0.41 with human difficulty; COCO bins Simple/Average/Complex hold 745/3416/839 images (mu=3.3, sigma=0.61).",
+   "kind": "measured",
+   "source": null,
+   "metric": "correlation",
+   "value": "0.41",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "bins at mu-sigma and mu+sigma",
+   "note": null,
+   "where": "Sec 5.2",
+   "quote": "This model achieves a 0.41 correlation with the ground truth"
+  }
+ ],
+ "limits": [
+  "No variance, seeds or significance tests reported; gains are small in absolute SPICE/BLEU terms.",
+  "Models are 2015-era LSTM/GRU captioners and NMT; no Transformer or LLM experiments.",
+  "MT: DBS is not best on every oracle column (Li et al. 2015 higher at @10 and @20).",
+  "Baselines are the authors' own reimplementations; Li & Jurafsky / Li et al. use re-rankers originally, dropped here.",
+  "Oracle metrics measure the best of 20, which rewards diversity by construction; top-1 gains are small.",
+  "lambda values per task are not printed; sensitivity shown only in figures.",
+  "Dissimilarity is token-level; authors note initial words dominate diversity.",
+  "Table 2 Li & Jurafsky VQG row appears to copy COCO values."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Oracle accuracy",
+   "definition": "Oracle or top-k accuracy for some task-specific metric like BLEU is the maximum value of the metric over a list of k potential solutions.",
+   "where": "Sec 5"
+  },
+  {
+   "term": "Diverse Beam Search",
+   "definition": "beam budget divided into G groups with a dissimilarity term between groups, optimised doubly greedily over time and groups",
+   "where": "Sec 3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Gimpel et al. 2013, systematic exploration of diversity in MT",
+   "year": 2013,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "black-box DivMBest with beam search; DBS integrates diversity inside the beam",
+   "quote": null
+  },
+  {
+   "work": "Batra et al. 2012, Diverse M-Best Solutions in MRFs",
+   "year": 2012,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "DivMBest greedy diversity",
+   "quote": null
+  },
+  {
+   "work": "Li & Jurafsky 2016, Mutual information and diverse decoding for NMT",
+   "year": 2016,
+   "arxiv": "1601.00372",
+   "relation": "baseline",
+   "note": "intra-sibling rank penalty",
+   "quote": null
+  },
+  {
+   "work": "Li et al. 2015, diversity-promoting objective for conversation models",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "P(y|x) - lambda U(y)",
+   "quote": null
+  },
+  {
+   "work": "Vinyals et al. 2015, Show and Tell / neuraltalk2",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "captioning model",
+   "quote": null
+  },
+  {
+   "work": "Bahdanau et al. 2014, attention NMT",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "MT model via dl4mt",
+   "quote": null
+  },
+  {
+   "work": "Mostafazadeh et al. 2016, Generating natural questions about an image",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "VQG",
+   "quote": null
+  },
+  {
+   "work": "Lin et al. 2014 COCO; Vedantam et al. 2015 PASCAL-50S",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "captioning data",
+   "quote": null
+  },
+  {
+   "work": "Ionescu et al. 2016, How hard can it be",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "image difficulty scores",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Comparing image captioning outputs decoded by BS and our method, Diverse Beam Search (DBS)",
+   "page": 2,
+   "why": "BS near-duplicate captions with shared search tree prefixes vs DBS captions"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Diverse beam search operates left-to-right through time and top to bottom through groups.",
+   "page": 4,
+   "why": "B=6, G=3 diagram of group-wise stepping and the score adjustment"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Effect of increasing the number of groups G.",
+   "page": 13,
+   "why": "shows BS to DBS transition as G goes 1,3,6 at B=6"
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "grid search of lambda; effect of diversity function forms",
+   "page": 13,
+   "why": "lambda robustness and Hamming best"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 3, p4",
+   "snippet": "Y^g_[t] = argmax over y^g_1..y^g_B' of sum_b [ Theta(y^g_b,[t]) + sum_{h=1}^{g-1} lambda_g Delta(y^g_b,[t], Y^h_[t]) ] s.t. distinct, lambda_g >= 0",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "The PDF is the arXiv v2 text (title 'Diverse Beam Search: Decoding Diverse Solutions from Neural Sequence Models', 16 pp), not the AAAI-18 'Improved Description of Complex Scenes' wording; the file name and ledger key follow the AAAI DOI.",
+  "Table text order is flattened; row/column mapping inferred from order.",
+  "No embedded instructions found."
+ ]
+}

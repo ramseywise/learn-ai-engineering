@@ -544,7 +544,7 @@ producer.produce(topic=topic, key=key_serializer(key, ctx), value=value_serializ
 producer.flush()
 ```
 
-The registry rejects a producer whose schema breaks the subject's compatibility rule, which turns "an event schema changed and nobody told us" (a scenario in [architecture and governance](../../07-architecture-and-governance/notes/01-data-architectures-mesh-fabric-mdw.md)) from a silent downstream break into a failed deploy upstream.
+The registry rejects a producer whose schema breaks the subject's compatibility rule, which turns "an event schema changed and nobody told us" (a scenario in [architecture and governance](../../07-architecture-and-governance/notes/01b-data-mesh-topologies-and-scenarios.md)) from a silent downstream break into a failed deploy upstream.
 
 ### Processing the stream: four ways in the module
 

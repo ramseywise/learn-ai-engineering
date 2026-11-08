@@ -395,7 +395,7 @@ replay, latest rate:     30.0
 replay, versioned rate:  26.0
 ```
 
-The same sales and the same rates give a different answer on replay, because the local table has moved on. Giving each version of the rate an ID and storing it on the sale makes the join deterministic, the same answer as a [Type 2 dimension](../../02-ingest-and-modelling/notes/02-dimensional-modelling.md) in a warehouse, at the cost of keeping every version (p. 476). State like this also has to survive a crash, which is done with a remote store, a local copy replicated elsewhere, periodic snapshots as in Flink, a changelog topic as in Kafka Streams, or by replaying a short window (pp. 478-479).
+The same sales and the same rates give a different answer on replay, because the local table has moved on. Giving each version of the rate an ID and storing it on the sale makes the join deterministic, the same answer as a [Type 2 dimension](../../02-ingest-and-modelling/notes/02b-dimensional-modelling-history-and-conformed-dimensions.md) in a warehouse, at the cost of keeping every version (p. 476). State like this also has to survive a crash, which is done with a remote store, a local copy replicated elsewhere, periodic snapshots as in Flink, a changelog topic as in Kafka Streams, or by replaying a short window (pp. 478-479).
 
 ## Operating a stream: lag
 

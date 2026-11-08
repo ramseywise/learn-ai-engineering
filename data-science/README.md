@@ -187,7 +187,7 @@ Each pillar has a README with its reading order, a `references.md` that maps its
 |---|---|
 | Fit every preprocessing step inside the CV loop, since a scaler fitted on all the data leaks | [Features and pipelines](01-classical-ml/notes/03-feature-engineering-and-pipelines.md), [evaluation](01-classical-ml/notes/04-model-evaluation.md) |
 | Compare every score against a dummy baseline before reading it as good | [Evaluation](01-classical-ml/notes/04-model-evaluation.md) |
-| Choose the metric from the business cost, and pick the threshold separately from the model | [Evaluation](01-classical-ml/notes/04-model-evaluation.md) |
+| Choose the metric from the business cost, and pick the threshold separately from the model | [Evaluation](01-classical-ml/notes/04-model-evaluation.md), [thresholds](01-classical-ml/notes/04b-thresholds-pr-roc-and-calibration.md) |
 | High train and low test scores mean variance, so add data or regularise. Both low means bias, so add capacity | [Foundations](01-classical-ml/notes/01-statistical-foundations.md), [projects](02-deep-learning/notes/03-structuring-ml-projects.md) |
 | On tabular data, try gradient boosting before a neural net | [Ensembles](01-classical-ml/notes/06-ensembles.md), [boosting in practice](01-classical-ml/notes/07-boosting-in-practice.md) |
 | Scale features for kNN, SVMs, PCA and gradient descent, as trees don't care | [Supervised](01-classical-ml/notes/02-supervised-learning.md), [unsupervised](01-classical-ml/notes/05-unsupervised-learning.md) |

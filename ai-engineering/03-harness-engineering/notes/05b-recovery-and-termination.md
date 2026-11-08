@@ -119,6 +119,9 @@ How much the error is worth, and where it stops paying. In InterCode ([arXiv:230
 
 The same loop with a real stopping rule, and its blind spot. ChatTester ([arXiv:2305.04207](https://arxiv.org/abs/2305.04207) (Yuan et al., FSE 2024)) feeds Java compiler errors, the buggy line and the missing class context back to gpt-3.5-turbo, and counts a round as invalid when the error count doesn't fall; once more than three invalid rounds have accumulated, the loop ends. On 100 focal methods the repair loop alone lifted compilation from 39.0% to 60.6% and passing tests from 22.3% to 34.0% (73.3% and 41.0% with an intention-first prompt added), at about 30 s per round. It repairs only compile errors, because a failing run could mean a bad test or a bad method, and that leaves the main failure untouched: in the 1,000-method baseline study, **85.5% of tests that compiled but failed did so on an assertion, and every one inspected was a wrong assertion rather than a real bug**. A green compile is layer 1 of the [termination check](05-verification-loops.md#the-three-layer-termination-check), not evidence the test checks anything.
 
+![ChatTester: an initial test generator infers the method intention, then an iterative test refiner compiles each generated test and feeds error messages back through a controller that continues or terminates](../sources/images/yuan-chattester-fig7.png)
+*Image Source: Yuan et al., [No More Manual Tests? Evaluating and Improving ChatGPT for Unit Test Generation](https://arxiv.org/abs/2305.04207) (FSE 2024), Fig. 7*
+
 ---
 
 ## Reasoning budgets

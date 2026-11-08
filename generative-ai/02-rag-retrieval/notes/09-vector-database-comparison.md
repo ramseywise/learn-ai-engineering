@@ -215,7 +215,7 @@ can I get my money back
 
 Two things to read in the output. On the error code, BM25 returns the one document that holds it and nothing else, which is why you keep a keyword path. On the refund question, BM25 has only the word "back" to go on, so it returns kb-03 for "Back off for that long". RRF then puts kb-03 on top. It is first in the keyword list and fifth in the dense list, which the printout's `dense(q, 3)` hides, so it scores 1/61 + 1/65 against kb-04's 1/61. Fusion is not magic: a weak keyword match with one hit counts as much as a strong semantic one. A reranker or a stricter keyword query fixes this.
 
-Keep the permissions predicate in both queries, as [note 07](07-rag-in-production.md#permissions-belong-in-retrieval) argues. The internal runbook kb-18 never appears here, and it would have appeared for the refund question without that `WHERE`.
+Keep the permissions predicate in both queries, as [note 07](07b-security-changing-text-multimodal-and-live-indexes.md#permissions-belong-in-retrieval) argues. The internal runbook kb-18 never appears here, and it would have appeared for the refund question without that `WHERE`.
 
 ### ChromaDB
 Optional backend in the pipeline (`pip install chromadb` or `uv sync --extra chroma`). Its index class uses `PersistentClient` with HNSW cosine distance.
@@ -366,7 +366,7 @@ The gap grows with the corpus, and the rebuild is the mild case: it also means h
 <summary>Answers</summary>
 
 1. 1,000,000 × 384 × 4 bytes is 1.54 GB, so it fits, and the scan should take about five times the 200,000 row, around 20 ms. It is a fine plan for one user and a poor one under load, because each query holds a core for that long.
-2. The refund question now returns kb-18 in second place, the internal runbook, ahead of kb-05. That is the leak from [note 07](07-rag-in-production.md), and it takes one missing clause.
+2. The refund question now returns kb-18 in second place, the internal runbook, ahead of kb-05. That is the leak from [note 07b](07b-security-changing-text-multimodal-and-live-indexes.md), and it takes one missing clause.
 3. `vector` with HNSW, since 1,536 is under the 2,000 limit. At 3,072 you must move to `halfvec`, shorten the embedding if the model supports it, or search exactly, and you re-embed the corpus in any case.
 
 </details>

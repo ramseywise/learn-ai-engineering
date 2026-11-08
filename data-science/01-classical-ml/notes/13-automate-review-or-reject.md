@@ -372,15 +372,15 @@ And the win depends on the person. The assumed analyst is better than the model,
 ## Pitfalls
 
 - **Optimising the straight-through rate.** It rose towards 100% as cost rose by 2.49 euros per invoice. Treat it as a capacity constraint, not an objective.
-- **Assuming the person is perfect.** A perfect-clerk rule never opens the reject route here, and it costs 0.115 euros per invoice on every seed. Measure the catch rate by seeding known problems.
+- **Assuming the person is perfect.** A perfect-clerk rule never opens the reject route here, costing 0.115 euros per invoice on every seed. Measure the catch rate with seeded known problems.
 - **Sending the highest scores to review.** At 5% capacity that cost 5.279 against 4.661. Rank by expected saving.
 - **Checking AUC after a change to class weights.** AUC stayed at 0.855 while the priced cost doubled. Check calibration near the thresholds.
 - **Watching only input and score drift.** A new fraud type moved PSI by 0.001 and more than doubled the error on paid invoices.
 - **Treating PSI as bad news.** The largest PSI, 0.251, came with an unchanged error rate on paid invoices.
-- **Picking the largest share that looks safe on validation.** It broke its target up to 69% of the time. Use a bound, and count the labels the bound needs.
+- **Picking the largest share that looks safe on validation.** It broke its target up to 69% of the time. Use a bound, and count the labels it needs.
 - **Reading "90% coverage" as 90% of the cases you care about.** Marginal coverage of problems was 3.4%.
 - **Carrying a certificate across a shift.** The 2% guarantee became 3.77% under the new fraud type.
-- **Fitting a threshold per customer on a handful of labels.** With no problem in the labels the fit pays everything, which cost up to 1.883 euros per invoice at 20 labels. Shrink each customer towards the shared answer.
+- **Fitting a threshold per customer on a handful of labels.** With no problem in the labels the fit pays everything: up to 1.883 euros per invoice at 20 labels. Shrink each customer towards the shared answer.
 - **Setting one error target when costs vary.** Thresholds per invoice raised the error rate on paid invoices and cut the money lost.
 
 ## Try it
@@ -394,10 +394,10 @@ And the win depends on the person. The assumed analyst is better than the model,
 <details><summary>Answers</summary>
 
 1. $p_{\text{pay}} = (10 + 0.02\times30)/(0.75\times150 + 0.02\times30) = 10.6/113.1 = 0.094$. $p_{\text{reject}} = (30\times0.98 - 10)/(0.25\times150 + 30\times0.98) = 19.4/66.9 = 0.290$. Both match the row for review 10, catch 0.750.
-2. The thresholds become $d$ and $1-d$. They meet at $d = 1/2$, and above that the lower is above the upper, so the review line is never the lowest. The rule falls back to one threshold at 1/2. That's Bartlett and Wegkamp's "we never reject if $d > 1/2$".
-3. Reviewing everything costs the review price plus a fixed amount, and one threshold has no review in it. So the two are equal at $3 + (5.802 - 4.471) = 4.331$ euros.
-4. SGR on 2,000 labels paid nothing on all 200 draws, so you can promise nothing yet at that confidence. Ask for many more labels (50,000 got to 19%), a looser target (2% with 10,000 labels paid 65%), or a price, which needs far fewer labels.
-5. Conformal calibrates on the ranks of the scores within each class, so it picks its own cut-offs from data and doesn't need the score to be a probability. The priced thresholds take the score's value at face value. Note that a search on validation also survived, for the same reason.
+2. The thresholds become $d$ and $1-d$. They meet at $d = 1/2$, and above that the lower is above the upper, so the review line is never the lowest. The rule falls back to one threshold, as in Bartlett and Wegkamp's "we never reject if $d > 1/2$".
+3. Reviewing everything costs the review price plus a fixed amount; one threshold has no review in it. They are equal at $3 + (5.802 - 4.471) = 4.331$ euros.
+4. SGR on 2,000 labels paid nothing on all 200 draws, so you can promise nothing yet at that confidence. Ask for many more labels (50,000 got to 19%), a looser target (2% with 10,000 labels paid 65%), or a price, which needs far fewer.
+5. Conformal calibrates on the ranks of the scores within each class and doesn't need the score to be a probability. The priced thresholds take the score's value at face value. A search on validation also survived, for the same reason.
 
 </details>
 
@@ -405,9 +405,9 @@ And the win depends on the person. The assumed analyst is better than the model,
 
 | Question | Answer |
 |---|---|
-| What is a reject option? | A classifier may abstain and pass a case to a person. In the literature "reject" means abstain, not an automated "no". |
+| What is a reject option? | A classifier may abstain and pass a case to a person. "Reject" in the literature means abstain, not an automated "no". |
 | Coverage, selective risk? | Coverage is the share the model decides alone. Selective risk is the error rate on that share. |
-| How do you set two thresholds? | Write each route's expected cost as a line in $p$ and take the crossings. Costs of errors, of review and the person's accuracy all enter. |
+| How do you set two thresholds? | Write each route's expected cost as a line in $p$; take the crossings. Error costs, review cost and the person's accuracy all enter. |
 | What's Chow's rule, in its symmetric form? | With errors costing 1 and abstaining $d$: abstain when $d \le \eta \le 1-d$, and never abstain if $d > 1/2$. |
 | Why not optimise straight-through rate? | Raising it to 100% here cost 2.49 euros per invoice. It's a capacity constraint, not a goal. |
 | Who should go to review under a capacity limit? | The cases where review saves the most, close to where pay and reject cost the same. Not the highest scores. |
@@ -416,12 +416,12 @@ And the win depends on the person. The assumed analyst is better than the model,
 | Search or formula for thresholds? | With calibrated scores and known prices the formula won on 18 of 20 seeds. Search if the score is only a ranking. |
 | Which drift can't a label-free dashboard see? | Concept drift. PSI stayed at 0.001 and the paid error more than doubled. |
 | Can Platt fix concept drift? | No. It lifts everyone. Here the error stayed at 2.9% and throughput fell to 25%. You need new labels and a retrain. |
-| What does SGR give you? | The largest coverage with a binomial bound on selective risk at chosen confidence, for any score that ranks. It needs many labels when the target sits close to the error on the safest cases. |
-| Marginal vs class-conditional conformal? | Marginal averages over everyone: 90% coverage covered 3.4% of problems. Class-conditional calibrates per class and holds for any scorer, given exchangeability. |
-| Is conformal a good router? | Not for binary decisions with known costs. It's two thresholds picked by coverage, so it can't beat pricing. |
+| What does SGR give you? | The largest coverage with a binomial bound on selective risk at chosen confidence, for any ranking score. It needs many labels when the target sits near the error on the safest cases. |
+| Marginal vs class-conditional conformal? | Marginal averages over everyone: 90% coverage covered 3.4% of problems. Class-conditional calibrates per class, for any scorer, given exchangeability. |
+| Is conformal a good router? | Not for binary decisions with known costs: it's two thresholds picked by coverage, so it can't beat pricing. |
 | One threshold or one per customer? | Neither. Partially pool: shrink each customer's log-odds offset by $\tau^2/(\tau^2 + v_k)$, so its labels move it only as far as they justify. |
-| How do results carry over? | The method carries over, the numbers don't. On credit the same policy automated 24%, and a weaker analyst cut the saving from 93.58 to 17.94. |
+| How do results carry over? | The method does, the numbers don't. On credit the same policy automated 24%, and a weaker analyst cut the saving from 93.58 to 17.94. |
 
 ## Next
 
-[Learning from corrections](14-learning-from-corrections.md): what the people in the review queue teach the model, what they can't, and how to measure the invoices nobody looks at. To see where this router sits in a whole system, from the first question to monitoring, read [DE 06/06](../../../data-engineering/06-ml-platform/notes/06-ml-system-framing-to-monitoring.md).
+[Learning from corrections](14-learning-from-corrections.md): what the people in the review queue teach the model, what they can't, and how to measure the invoices nobody looks at. For where this router sits in a whole system, read [DE 06/06](../../../data-engineering/06-ml-platform/notes/06-ml-system-framing-to-monitoring.md).

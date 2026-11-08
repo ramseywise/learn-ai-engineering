@@ -1,0 +1,612 @@
+{
+ "schema": 1,
+ "key": "https://openalex.org/W2140679639",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/bengio-2000-neural-probabilistic-language-model.pdf",
+ "bib": {
+  "title": "A Neural Probabilistic Language Model",
+  "authors": [
+   "Yoshua Bengio",
+   "Réjean Ducharme",
+   "Pascal Vincent",
+   "Christian Jauvin"
+  ],
+  "first_author": "Bengio",
+  "year": 2003,
+  "venue": "Journal of Machine Learning Research 3 (2003) 1137-1155",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 56866,
+  "chars_total": 56866,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can learning a distributed word representation jointly with a neural next-word probability function fight the curse of dimensionality and beat smoothed n-gram language models?",
+ "hypothesis": "Similar words get nearby feature vectors, and a smooth probability function over them lets each training sentence inform exponentially many neighbouring sentences, improving generalisation and use of longer contexts.",
+ "contributions": [
+  "Joint learning of word feature vectors C and a neural probability function g",
+  "Large-scale training (millions of parameters) with data-parallel and parameter-parallel implementations",
+  "Perplexity gains over state-of-the-art n-grams on Brown and AP News, with benefit from longer context"
+ ],
+ "method": {
+  "summary": "Feed-forward network: each of the n-1 context words is mapped through a shared |V| x m lookup matrix C, concatenated, passed through an optional tanh hidden layer and optional direct linear connections, then a softmax over the vocabulary. Trained by stochastic gradient ascent on penalised log-likelihood, optionally mixed with an interpolated trigram.",
+  "task": "statistical language modelling (next-word prediction)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Brown corpus",
+    "role": "both",
+    "size": "1,181,041 words; 47,578 distinct words reduced to |V|=16,383 (frequency <=3 merged into one symbol)",
+    "split": "first 800,000 train, next 200,000 validation, last 181,041 test",
+    "source": "Brown corpus",
+    "preprocessing": "case kept, punctuation and text/paragraph separators kept as tokens; words with frequency <=3 merged into a single symbol"
+   },
+   {
+    "name": "AP News 1995-1996",
+    "role": "both",
+    "size": "train 13,994,528 words; validation 963,138; test 963,071; 148,721 distinct words reduced to |V|=17,964",
+    "split": "train/validation/test as sizes",
+    "source": "Associated Press News",
+    "preprocessing": "kept most frequent words and punctuation, lowercased, numeric forms mapped to special symbols, rare words to a special symbol, proper nouns to another special symbol"
+   }
+  ],
+  "models": [
+   {
+    "name": "Neural probabilistic LM (MLP1-MLP10)",
+    "role": "proposed",
+    "params": "inferred: formula |V|(1+nm+h)+h(1+(n-1)m); for AP net (|V|=17,964,n=6,h=60,m=100) about 11.3M by that formula, paper says largest network is almost 100 megabytes",
+    "architecture": "shared word-feature lookup C, tanh hidden layer, optional direct connections, softmax output",
+    "init_from": "random initialisation of word features and weights",
+    "tokenizer": "word-level",
+    "vocab": "16,383 (Brown), 17,964 (AP)",
+    "layers": "one tanh hidden layer plus linear shared feature layer",
+    "hidden": "h=0, 50 or 100 (Brown); 60 (AP)",
+    "heads": null,
+    "context": "n=3 or 5 (Brown), n=6 (AP), i.e. n-1 previous words",
+    "other": {
+     "m word features": "30 or 60 (Brown), 100 (AP)",
+     "Brown configs": "MLP1-2 n5 h50 m60 direct; MLP3-4 n5 h0 m60 direct; MLP5-6 n5 h50 m30 direct; MLP7-8 n3 h50 m30 direct; MLP9-10 n5 h100 m30 no direct; even numbers are mixed with trigram"
+    }
+   },
+   {
+    "name": "Interpolated (deleted interpolation) trigram",
+    "role": "baseline",
+    "params": null,
+    "architecture": "mixture of uniform, unigram, bigram, trigram with weights conditional on discretised context frequency, weights fit by EM (~5 iterations) on validation set",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "2 words",
+    "other": {}
+   },
+   {
+    "name": "Modified Kneser-Ney back-off n-gram (SRILM)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "back-off n-gram, orders 3 to 5",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "2 to 4 words",
+    "other": {}
+   },
+   {
+    "name": "Class-based n-gram (SRILM)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "class-based back-off n-gram; classes 150-2000, orders 3 to 5",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "2 to 4 words",
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "maximise penalised log-likelihood L = (1/T) sum_t log f(w_t, ...; theta) + R(theta)",
+   "optimizer": "stochastic gradient ascent, one update per word, asynchronous or parameter-parallel",
+   "lr": "initial 1e-3, eps_t = eps_0/(1+r t) with r=1e-8",
+   "lr_schedule": "eps_t = eps_0 / (1 + r t), t = number of parameter updates",
+   "warmup": null,
+   "batch_size": "1 example per update",
+   "steps": null,
+   "epochs": "Brown: apparent convergence after about 10 to 20 epochs; AP: 5 epochs",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": "1e-4 (Brown), 1e-5 (AP), applied to weights and C, not biases",
+   "dropout": null,
+   "regularisation": "weight decay; early stopping on validation (needed only on Brown)",
+   "hardware": "cluster of 1.2 GHz Athlon processors (32 x 2 CPUs), Myrinet network, MPI; 40 CPUs for AP run",
+   "compute": "AP: 5 epochs in approximately three weeks with 40 CPUs",
+   "wall_clock": "about three weeks (AP)",
+   "seeds": null,
+   "other": {
+    "mixing": "NN probabilities mixed with interpolated trigram at fixed weight 0.5 (tables), or learned weight / frequency-conditional weights",
+    "softmax stability": "subtract max of y_j before exponentiating (extra Allreduce)"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "test perplexity",
+     "definition": "geometric average of 1/P(w_t|w_1^{t-1}), exponential of average negative log-likelihood; all tokens including punctuation treated alike, no special end-of-sentence handling",
+     "unit": "perplexity",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "deleted-interpolation trigram",
+    "modified Kneser-Ney back-off orders 3 to 5",
+    "class-based n-grams"
+   ],
+   "protocol": "single runs reported; validation set used for model selection, weight decay, early stopping, n-gram order and class count; no seeds or significance tests stated"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": null
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.lr",
+    "quote": "the initial learning rate was set to εo = 10−3",
+    "where": "Sec 4"
+   },
+   {
+    "field": "results Table 1/2 columns",
+    "quote": "The last three columns give perplexity on the training, validation and test sets.",
+    "where": "Table 1 caption; Table 2 rows have only two numbers (valid, test inferred)"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "On Brown, the best neural net (MLP10, mixed 0.5 with interpolated trigram) reaches test perplexity 252 versus 312 for the best n-gram (class-based back-off, 500 classes), about 24% lower.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test perplexity",
+   "value": "252",
+   "unit": null,
+   "baseline_value": "312",
+   "n": null,
+   "setup": "Brown corpus, 800,000 train / 200,000 validation / 181,041 test words, |V|=16,383; test perplexity (lower is better); MLP10: n=5, h=100, m=30, no direct connections, mix yes",
+   "note": "Column assignment (valid vs test) inferred from the flattened table and the caption's 33%/24% figures: 336/252=1.33, 312/252=1.24.",
+   "where": "Table 1, p.1149",
+   "table": "Table 1, row MLP10, column test"
+  },
+  {
+   "claim": "Neural net beats best n-gram by about 24% test perplexity on Brown and about 8% on AP News.",
+   "kind": "measured",
+   "source": null,
+   "metric": "relative test perplexity gap vs best-on-validation n-gram",
+   "value": "24%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Brown corpus, 800,000 train / 200,000 validation / 181,041 test words, |V|=16,383; test perplexity (lower is better) and AP News 1995-96, 13,994,528 train words, |V|=17,964; test perplexity, 5 epochs, ~3 weeks on 40 CPUs",
+   "note": null,
+   "where": "Sec 4.2, p.1148",
+   "quote": "with a test perplexity difference of about 24% on"
+  },
+  {
+   "claim": "On AP News, MLP10 (n=6, h=60, m=100, direct, mixed) gets test perplexity 109 vs 117 for the 5-gram modified Kneser-Ney back-off and 132 for the deleted-interpolation trigram.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test perplexity",
+   "value": "109",
+   "unit": null,
+   "baseline_value": "117",
+   "n": null,
+   "setup": "AP News 1995-96, 13,994,528 train words, |V|=17,964; test perplexity, 5 epochs, ~3 weeks on 40 CPUs",
+   "note": "Text says 8% gap; 117/109 is about 7%, 119/109 about 9%; the paper's 8% is not exactly reproduced from the table as flattened. Column order valid/test inferred.",
+   "where": "Table 2, p.1150",
+   "table": "Table 2, row MLP10, column test"
+  },
+  {
+   "claim": "The neural net gain over the interpolated trigram on Brown: trigram test perplexity is 33% above the lowest-validation neural net.",
+   "kind": "measured",
+   "source": null,
+   "metric": "relative test perplexity",
+   "value": "33%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Brown corpus, 800,000 train / 200,000 validation / 181,041 test words, |V|=16,383; test perplexity (lower is better)",
+   "note": null,
+   "where": "Table 1 caption",
+   "quote": "plexity that is 33% above that of the neural network with the lowest validation perplexity."
+  },
+  {
+   "claim": "Unmixed neural nets also beat n-grams: MLP1 (n=5, h=50, m=60, direct) test perplexity 268 vs 336 for the deleted-interpolation trigram.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test perplexity",
+   "value": "268",
+   "unit": null,
+   "baseline_value": "336",
+   "n": null,
+   "setup": "Brown corpus, 800,000 train / 200,000 validation / 181,041 test words, |V|=16,383; test perplexity (lower is better)",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row MLP1, column test"
+  },
+  {
+   "claim": "Hidden units help: with no hidden layer (h=0) test perplexity is 310 vs 268 with h=50 (same n=5, m=60, direct).",
+   "kind": "measured",
+   "source": null,
+   "metric": "test perplexity",
+   "value": "310",
+   "unit": null,
+   "baseline_value": "268",
+   "n": null,
+   "setup": "Brown corpus, 800,000 train / 200,000 validation / 181,041 test words, |V|=16,383; test perplexity (lower is better)",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row MLP3 vs MLP1, column test"
+  },
+  {
+   "claim": "More context helps the neural net but not the n-grams on Brown: n=5 MLP5 test 279 vs n=3 MLP7 293 (h=50, m=30); Kneser-Ney 3/4/5-gram test 323/321/321.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test perplexity",
+   "value": "279",
+   "unit": null,
+   "baseline_value": "293",
+   "n": null,
+   "setup": "Brown corpus, 800,000 train / 200,000 validation / 181,041 test words, |V|=16,383; test perplexity (lower is better)",
+   "note": "Paper text: going from 2 words of context to 4 improved the network, not the n-grams.",
+   "where": "Table 1; Sec 4.2",
+   "table": "Table 1, rows MLP5, MLP7, Kneser-Ney back-off orders 3 to 5"
+  },
+  {
+   "claim": "Mixing the NN with the interpolated trigram (weight 0.5) always lowers perplexity, e.g. MLP1 268 to MLP2 257.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test perplexity",
+   "value": "257",
+   "unit": null,
+   "baseline_value": "268",
+   "n": null,
+   "setup": "Brown corpus, 800,000 train / 200,000 validation / 181,041 test words, |V|=16,383; test perplexity (lower is better)",
+   "note": null,
+   "where": "Table 1; Sec 4.2",
+   "table": "Table 1, row MLP2, column test"
+  },
+  {
+   "claim": "Direct input-to-output connections: without them the network took about twice as long to converge (20 epochs instead of 10) to slightly lower perplexity.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "20 epochs vs 10",
+   "unit": "epochs",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Brown corpus, 800,000 train / 200,000 validation / 181,041 test words, |V|=16,383; test perplexity (lower is better)",
+   "note": null,
+   "where": "Sec 4.2, p.1148",
+   "quote": "took twice as much time to converge (20 epochs instead of 10)"
+  },
+  {
+   "claim": "Parameter count formula is |V|(1+nm+h)+h(1+(n-1)m), dominated by |V|(nm+h); scales linearly in |V| and n.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Sec 2 model",
+   "note": null,
+   "where": "p.1143"
+  },
+  {
+   "claim": "Output-layer weighted sums are about 99.7% of per-example computation for the AP network (|V|=17,964, h=60, n=6, m=100).",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": "99.7%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "AP News architecture",
+   "note": null,
+   "where": "Sec 3.2, p.1145",
+   "quote": "99.7%"
+  },
+  {
+   "claim": "Parameter-parallel training on 1.2 GHz Athlon cluster (32 x 2 CPUs, Myrinet) had communication overhead of only 1/15 of epoch time, near-perfect speed-up.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "1/15",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "AP News 1995-96, 13,994,528 train words, |V|=17,964; test perplexity, 5 epochs, ~3 weeks on 40 CPUs",
+   "note": null,
+   "where": "Sec 3.2, p.1146",
+   "quote": "communication overhead was only 1/15th of the total time"
+  },
+  {
+   "claim": "Unsurprising negative result: fixed word features from principal components of co-occurrence counts (LSI-like) did not work; joint learning of features and model was useful.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "unreported experiment, no numbers",
+   "note": null,
+   "where": "Sec 1.2, p.1141",
+   "quote": "We tried (unsuccessfully) using as ﬁxed word features"
+  },
+  {
+   "claim": "Conclusion: improvement over smoothed trigram is between 10 and 20% in perplexity.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "10 to 20%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "both corpora",
+   "note": null,
+   "where": "Sec 6",
+   "quote": "differences between 10 and 20% in perplexity"
+  },
+  {
+   "claim": "Curse-of-dimensionality example: joint over 10 words with |V|=100,000 has about 10^50 - 1 free parameters.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Intro",
+   "note": "Printed as 10000010-1 = 1050-1 due to lost superscripts.",
+   "where": "p.1137"
+  },
+  {
+   "claim": "Importance-sampling training speed-up of 100-fold is cited (Bengio and Senecal 2003).",
+   "kind": "reported",
+   "source": null,
+   "metric": null,
+   "value": "100-fold",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "energy-based variant, cited not run here",
+   "note": null,
+   "where": "Sec 5.1",
+   "quote": "yielding a 100-fold speed-up"
+  }
+ ],
+ "limits": [
+  "Training cost: AP run took three weeks on 40 CPUs for 5 epochs; authors say the model is expensive and needs speed-ups",
+  "Only fixed small windows (n up to 6); no long-context mechanism, recurrence suggested as future work",
+  "Polysemous words get a single vector (authors concede)",
+  "Word vectors randomly initialised; knowledge-based init untested",
+  "Single runs, no variance reported; Table 2 gain is 8%, smaller on the larger corpus",
+  "Quantitative evaluation is perplexity only; no downstream task (speech recognition cited to Schwenk and Gauvain 2002)",
+  "Learned word vectors are not inspected or evaluated"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "distributed word feature vector",
+   "definition": "a real-valued vector in R^m associated with each word in the vocabulary",
+   "where": "Sec 1.1"
+  },
+  {
+   "term": "perplexity",
+   "definition": "geometric average of 1/P(w_t|w_1^{t-1}), also the exponential of the average negative log-likelihood",
+   "where": "Sec 2"
+  },
+  {
+   "term": "curse of dimensionality",
+   "definition": "a word sequence tested on is likely different from all those seen in training",
+   "where": "Abstract"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Bengio and Bengio 2000a,b, neural nets for high-dimensional discrete distributions",
+   "year": 2000,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "same decomposition with parameter sharing across positions",
+   "quote": null
+  },
+  {
+   "work": "Hinton 1986, Learning distributed representations of concepts",
+   "year": 1986,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "distributed representations for symbols",
+   "quote": null
+  },
+  {
+   "work": "Elman 1990",
+   "year": 1990,
+   "arxiv": null,
+   "relation": "related",
+   "note": "connectionist precursor",
+   "quote": null
+  },
+  {
+   "work": "Miikkulainen and Dyer 1991",
+   "year": 1991,
+   "arxiv": null,
+   "relation": "related",
+   "note": "earlier neural language modelling",
+   "quote": null
+  },
+  {
+   "work": "Xu and Rudnicky 2000",
+   "year": 2000,
+   "arxiv": null,
+   "relation": "related",
+   "note": "independent NN LM, no hidden units, single input word",
+   "quote": null
+  },
+  {
+   "work": "Jelinek and Mercer 1980 interpolated trigram",
+   "year": 1980,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "main baseline and mixture partner",
+   "quote": null
+  },
+  {
+   "work": "Katz 1987 back-off",
+   "year": 1987,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "back-off trigram",
+   "quote": null
+  },
+  {
+   "work": "Kneser and Ney 1995; Chen and Goodman 1999",
+   "year": 1999,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "modified Kneser-Ney, best n-gram at high order on AP",
+   "quote": null
+  },
+  {
+   "work": "Brown et al. 1992 class-based n-grams; Ney and Kneser 1993; Niesler et al. 1998",
+   "year": 1992,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "class-based n-grams, best on Brown",
+   "quote": null
+  },
+  {
+   "work": "Stolcke 2002, SRILM",
+   "year": 2002,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "n-gram implementation",
+   "quote": null
+  },
+  {
+   "work": "Deerwester et al. 1990, LSA; Schutze 1993",
+   "year": 1990,
+   "arxiv": null,
+   "relation": "related",
+   "note": "vector word representations from co-occurrence; PCA features tried and failed",
+   "quote": null
+  },
+  {
+   "work": "Hinton 2000 products of experts",
+   "year": 2000,
+   "arxiv": null,
+   "relation": "related",
+   "note": "basis for energy-minimisation variant",
+   "quote": null
+  },
+  {
+   "work": "Bengio and Senecal 2003, importance sampling",
+   "year": 2003,
+   "arxiv": null,
+   "relation": "related",
+   "note": "100-fold training speed-up",
+   "quote": null
+  },
+  {
+   "work": "Schwenk and Gauvain 2002",
+   "year": 2002,
+   "arxiv": null,
+   "relation": "related",
+   "note": "connectionist LM for speech recognition",
+   "quote": null
+  },
+  {
+   "work": "Goodman 2001, A bit of progress in language modeling",
+   "year": 2001,
+   "arxiv": null,
+   "relation": "related",
+   "note": "combined tricks give substantial n-gram gains",
+   "quote": null
+  },
+  {
+   "work": "Brown corpus; AP News 1995-1996",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "evaluation corpora",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Neural architecture: f(i,w_{t-1},...,w_{t-n+1}) = g(i,C(w_{t-1}),...,C(w_{t-n+1})) where g is the neural network and C(i) is the i-th word feature vector.",
+   "page": "1142 (PDF p.6)",
+   "why": "Shows index lookup into shared matrix C, concatenation, tanh layer, softmax over vocabulary; the origin of the embedding-table picture."
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Comparative results on the Brown corpus.",
+   "page": "1149",
+   "why": "All ablations (context, hidden units, direct connections, mixing) vs n-gram baselines."
+  },
+  {
+   "figure": "Table 2",
+   "caption": "Comparative results on the AP News corpus.",
+   "page": "1150",
+   "why": "Large-corpus result."
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 1, p.1143",
+   "snippet": "y = b+Wx+U tanh(d +Hx)",
+   "verbatim": true
+  },
+  {
+   "where": "Sec 2 p.1142",
+   "snippet": "x = (C(wt−1),C(wt−2),··· ,C(wt−n+1))",
+   "verbatim": true
+  },
+  {
+   "where": "p.1143",
+   "snippet": "|V|(1 + nm + h) + h(1 + (n −1)m)",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Tables 1 and 2 are flattened column-wise in the text; rows were reconstructed by position. In Table 1 the deleted-interpolation row prints an extra '31' before 352/336 (meaning unclear, perhaps a bin count).",
+  "Table 2 rows show only two numbers per baseline row, assigned as valid, test; MLP10 has 104, 109.",
+  "No instructions embedded in the PDF text.",
+  "arXiv and DOI absent from PDF; JMLR version, not the NIPS 2000 original."
+ ]
+}

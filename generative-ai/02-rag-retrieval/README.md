@@ -34,7 +34,7 @@ The whole pillar follows one running example. Tallybook is a small invoicing pro
 ## Reading order
 
 1. Read [01 The RAG pipeline](notes/01-rag-pipeline.md) and [01b](notes/01b-index-structures-and-agentic-rag.md) for the map.
-2. Work through 02–07, the DeepLearning.AI course condensed with its lab code and worked examples, one note per module (02 and 06 each run over two parts: 02 and 02b, 06 and 06b).
+2. Work through 02–07, the DeepLearning.AI course condensed with its lab code and worked examples, one note per module (02, 03, 06 and 07 each run over two parts: 02 and 02b, 03 and 03b, 06 and 06b, 07 and 07b).
 3. Read 08–12 as case studies: Bayer's PRINCE stack (08 and 08b), then the production support agent's store comparison, cache, ablations and managed backends.
 4. Keep the [rules of thumb](#rules-of-thumb) as the one-page summary, and the [deck](slides/rag-retrieval.pptx) for review.
 
@@ -46,13 +46,15 @@ Notes 01 and 01b are the overview. Notes 02–07 are the course. Notes 08–12 a
 | 1b | [Index-time structures, agentic and conversational RAG](notes/01b-index-structures-and-agentic-rag.md) | RAPTOR, GraphRAG and filesystems, embed one thing and return another, agentic vs. single-pass RAG, multi-turn RAG, a similarity floor |
 | 2 | [Why RAG, and the augmented prompt](notes/02-why-rag-and-the-augmented-prompt.md) | The knowledge gap, retriever vs. LLM, why not stuff the prompt, the smallest RAG as an f-string, Assignment 1 news RAG |
 | 2b | [Training the retriever and the reader](notes/02b-training-the-retriever-and-the-reader.md) | Five ways to train the two halves, RETRO and InstructRetro, why kNN-LM works, RPT's self-retrieval, what readers do with new knowledge |
-| 3 | [Keyword, semantic and hybrid search](notes/03-keyword-semantic-and-hybrid-search.md) | TF-IDF, BM25 (k1, b), embeddings and cosine, metadata filters, RRF, Recall@k / MRR / nDCG with worked numbers |
+| 3 | [Keyword and semantic search](notes/03-keyword-semantic-and-hybrid-search.md) | TF-IDF, BM25 (k1, b), BM25 from scratch, embeddings and cosine, how embedders are trained |
+| 3b | [Metadata filters, hybrid search and evaluating a retriever](notes/03b-metadata-filters-hybrid-search-and-evaluating-a-retriever.md) | Metadata filters, RRF, Recall@k / MRR / nDCG with worked numbers |
 | 4 | [Vector databases and ANN](notes/04-vector-databases-and-ann.md) | KNN vs. ANN, NSW and HNSW, the Weaviate API: collections, `near_text`, `bm25`, `hybrid`, rerank |
 | 5 | [Chunking and index-time structure](notes/05-chunking-query-parsing-and-reranking.md) | Why chunk, chunking strategies and overlap, chunking code, index small and return large, the Pro Git four-strategy experiment |
 | 5b | [Query parsing, conversational retrieval and reranking](notes/05b-query-parsing-conversational-retrieval-and-reranking.md) | Query rewriting, GLiNER, HyDE, multi-query, self-query filters, chat rewriting, bi- vs. cross-encoder vs. ColBERT, over-retrieve and rerank |
 | 6 | [Generation for RAG](notes/06-generation-for-rag.md) | Sampling (temperature, top-p), choosing an LLM, grounded prompts, structured output, passage order and count |
 | 6b | [Hallucinations, evaluation and fine-tuning](notes/06b-hallucinations-evaluation-and-fine-tuning.md) | Hallucinations and citations, RAGAS, agentic routing, RAG vs. fine-tuning |
-| 7 | [RAG in production](notes/07-rag-in-production.md) | Failure stories, the scope × evaluator matrix, Phoenix tracing, quantization, cost and latency budgets, security, text that changes by legal effect, multimodal RAG |
+| 7 | [RAG in production](notes/07-rag-in-production.md) | Failure stories, the scope × evaluator matrix, Phoenix tracing, quantization, cost and latency budgets, monitoring |
+| 7b | [Security, changing text, multimodal RAG and live indexes](notes/07b-security-changing-text-multimodal-and-live-indexes.md) | Permissions at retrieval, tenancy, poisoning, text that changes by legal effect, multimodal RAG, keeping a live index in sync |
 | 8 | [Agentic RAG: the PRINCE stack](notes/08-agentic-rag-prince.md) | Intent clarification, ingestion, the query-time pipeline, Text-to-SQL |
 | 8b | [Routing, sub-agents and evaluation](notes/08b-routing-sub-agents-and-evaluation.md) | The router, domain sub-agents, context discipline, NER metadata repair, evaluation, when agentic RAG pays |
 | 9 | [Vector database comparison](notes/09-vector-database-comparison.md) | Side-by-side stores, when to use which, embedding ↔ dimension compatibility, HNSW vs. ANNOY, migration |
@@ -89,18 +91,18 @@ Notes 01 and 01b are the overview. Notes 02–07 are the course. Notes 08–12 a
 | Rule | Note |
 |---|---|
 | Ingestion quality sets the ceiling. Fix parsing before tuning retrieval | [01](notes/01-rag-pipeline.md) |
-| Default to hybrid search (BM25 + dense + RRF) | [03](notes/03-keyword-semantic-and-hybrid-search.md) |
-| Track Recall@k first: generation can't fix a missing document | [03](notes/03-keyword-semantic-and-hybrid-search.md) |
+| Default to hybrid search (BM25 + dense + RRF) | [3b](notes/03b-metadata-filters-hybrid-search-and-evaluating-a-retriever.md) |
+| Track Recall@k first: generation can't fix a missing document | [3b](notes/03b-metadata-filters-hybrid-search-and-evaluating-a-retriever.md) |
 | Check your embedder's token limit. Past it, text is silently dropped | [03](notes/03-keyword-semantic-and-hybrid-search.md) |
-| Use metadata filters for constraints and search for relevance | [03](notes/03-keyword-semantic-and-hybrid-search.md), [04](notes/04-vector-databases-and-ann.md) |
+| Use metadata filters for constraints and search for relevance | [3b](notes/03b-metadata-filters-hybrid-search-and-evaluating-a-retriever.md), [04](notes/04-vector-databases-and-ann.md) |
 | Start with fixed-size or recursive chunks and 10–20% overlap; measure before getting clever | [05](notes/05-chunking-query-parsing-and-reranking.md) |
 | Over-retrieve 20–50, rerank to 3–10 | [5b](notes/05b-query-parsing-conversational-retrieval-and-reranking.md) |
 | Rewrite conversational queries with a small LLM; treat HyDE as an experiment | [5b](notes/05b-query-parsing-conversational-retrieval-and-reranking.md) |
 | Low temperature and an "answer only from the context" prompt with citations for factual RAG | [06](notes/06-generation-for-rag.md) |
 | Trace from day one; evaluate components and the system | [07](notes/07-rag-in-production.md) |
 | Cut prompt tokens before changing models | [07](notes/07-rag-in-production.md) |
-| Filter by user permission at retrieval time. Prompt instructions are not access control | [07](notes/07-rag-in-production.md) |
-| Put the as-of date in the query for text that changes by legal effect. Filter on effective dates, not publication dates | [07](notes/07-rag-in-production.md) |
+| Filter by user permission at retrieval time. Prompt instructions are not access control | [7b](notes/07b-security-changing-text-multimodal-and-live-indexes.md) |
+| Put the as-of date in the query for text that changes by legal effect. Filter on effective dates, not publication dates | [7b](notes/07b-security-changing-text-multimodal-and-live-indexes.md) |
 | Ask a clarifying question before retrieving on an ambiguous query | [08](notes/08-agentic-rag-prince.md) |
 | Counting, filtering and aggregation are Text-to-SQL jobs, not vector search | [01](notes/01-rag-pipeline.md), [08](notes/08-agentic-rag-prince.md) |
 | On a small eval set, test a difference with a paired bootstrap before believing it | [11](notes/11-retrieval-improvements.md) |
@@ -123,7 +125,7 @@ uv run versioned_rules_lab.py               # as-of retrieval over a generated, 
 ```
 README.md      this file: what, why, reading order, rules of thumb, resource map
 references.md  every source the notes cite, mapped to notes; source quality
-notes/         01–12; figures and code inline
+notes/         01–12 (with b parts); figures and code inline
 practice/      ragkit.py (Tallybook corpus and retrieval kit), versioned_rules_lab.py, check_blocks.py
 slides/        deck.yaml and the built deck
 sources/       paper PDFs, routed book chapters (<book-slug>/chNN-*.pdf)
@@ -165,7 +167,7 @@ None are copied. Every upstream lab is linked, with its label in the note's `## 
 | DLAI M1–M5 ungraded labs and Assignments 1–5 | [upstream](https://github.com/MohammadWasiq0786/Deeplearning.ai-RAG); notes 02–07 | needs API key (Together.ai via the Coursera proxy); M3–M5 also need embedded Weaviate + a local inference server; M5 needs Phoenix |
 | BM25 from scratch | [01 § BM25 from scratch](notes/01-rag-pipeline.md#bm25-from-scratch); engine at [Li 3-5](https://github.com/bojieli/ai-agent-book/tree/main/chapter3/sparse-embedding) | runs offline |
 | Retrieved few-shot examples with ChromaDB | [01 § Text-to-SQL](notes/01-rag-pipeline.md#text-to-sql-is-a-retrieval-strategy); DAIR [`pe-rag.ipynb`](https://github.com/dair-ai/Prompt-Engineering-Guide/blob/main/notebooks/pe-rag.ipynb) | legacy |
-| Versioned rules: as-of retrieval, cross-references, obligation records, change detection, citation checks | [practice/versioned_rules_lab.py](practice/versioned_rules_lab.py); [07 § Text that changes by legal effect](notes/07-rag-in-production.md#text-that-changes-by-legal-effect) | runs offline |
+| Versioned rules: as-of retrieval, cross-references, obligation records, change detection, citation checks | [practice/versioned_rules_lab.py](practice/versioned_rules_lab.py); [07 § Text that changes by legal effect](notes/07b-security-changing-text-multimodal-and-live-indexes.md#text-that-changes-by-legal-effect) | runs offline |
 | Li ch. 3 labs (ANNOY vs. HNSW, hybrid + rerank, agentic RAG, RAPTOR vs. GraphRAG) | [upstream](https://github.com/bojieli/ai-agent-book/tree/main/chapter3) | needs API key |
 
 ### Readings

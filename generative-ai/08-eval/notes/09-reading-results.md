@@ -236,6 +236,9 @@ The same arithmetic applies to testing several fixes at once. At 95% confidence 
 
 **A flat accuracy can hide a difficulty gap.** [arXiv:2410.01792](https://arxiv.org/abs/2410.01792) (McCoy et al., 2024-10, preprint) tests o1-preview-2024-09-12 on tasks where earlier LLMs did better on high-probability outputs. o1 still showed it: shift-cipher accuracy rose from 47% in the lowest-probability bin to 92% in the highest. On acronyms accuracy was almost identical for the common and rare variant (100% against 99.9%), yet o1 spent more thinking tokens on the rare one. When a reasoning model's score looks flat across slices, log its reasoning-token count per slice too, because cost can show a gap the pass rate hides. The sample sizes, runs and prompts are not reported, and the o1 figures are single-snapshot.
 
+![Median tokens o1-preview used on rare against common variants of five tasks: more on shift ciphers and acronyms, the same on the other three](../sources/images/mccoy-2024-o1-fig4.png)
+*Image Source: McCoy et al., [When a language model is optimized for reasoning, does it still show embers of autoregression? An analysis of OpenAI o1](https://arxiv.org/abs/2410.01792) (2024), Fig. 4*
+
 ## Read the transcripts
 
 Numbers say how much. Transcripts say why. Before accepting any change in a score:
@@ -292,6 +295,9 @@ Decision: do not ship. Investigate refusal behavior for non-English.
 ### Reading someone else's model comparison
 
 A vendor report and a third-party replication of it can disagree by several points on the same benchmark, and the setup explains it. Akter et al. ([arXiv:2312.11444](https://arxiv.org/abs/2312.11444) (Akter et al., 2023-12, preprint)) re-ran Gemini Pro, GPT 3.5 Turbo, GPT 4 Turbo and Mixtral through one harness with the same prompts and evaluators (single sample per item, temperature 0, queried 11-22 December 2023). Gemini Pro scored 65.22% on 5-shot MMLU against 67.75% for GPT 3.5 Turbo, and 59.76% on HumanEval Pass@1 against 74.39%, well below the Gemini report, which used self-consistency, so these are not the vendor's numbers. Gaps of one to four points came from one run with no interval. The translation row flips on a filter: Gemini blocked more than half the responses in 12 of 20 languages, so FLORES chrF was 21.68 over all 20 languages against 40.00 for GPT 3.5 Turbo, but 53.31 against 52.43 on the 8 languages it mostly answered. Answer matching had been changed by the authors, and WebArena used different temperatures per vendor.
+
+![One-harness results for Gemini Pro, GPT 3.5 Turbo, GPT 4 Turbo and Mixtral across ten datasets](../sources/images/akter-2023-gemini-benchmark-table1.png)
+*Image Source: Akter et al., [An In-depth Look at Gemini's Language Abilities](https://arxiv.org/abs/2312.11444) (2023), Table 1*
 
 A survey that collects wins is a weaker comparison. Chen et al. ([arXiv:2311.16989](https://arxiv.org/abs/2311.16989) (Chen et al., 2023-11, preprint; read as arXiv v4)) gather every task where an open model was reported on par with or above GPT-3.5-turbo, taking numbers from model papers and leaderboards with no run of their own. Judge, shots and decoding go unstated, and the winners are mostly task-specific fine-tunes (WizardMath-70B at 81.6 on GSM8K against 57.1) set beside a general chat model. Rankings change by benchmark: Zephyr-7B beats Llama-2-70B-chat on MT-Bench (7.34 against 6.86) but scores 52.15 on the Open LLM Leaderboard. Its prose and tables disagree in places; cite the table cell. Contamination is named as a risk but not checked for any row. Read such a table as a list of claims to retest on your own tasks, not as a ranking.
 

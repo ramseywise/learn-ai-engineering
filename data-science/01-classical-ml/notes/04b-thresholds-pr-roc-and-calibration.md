@@ -185,6 +185,12 @@ Gaussian naive Bayes on a one-hot table is a deliberately bad case: its scores p
 
 Deep networks made calibration a live research question. Guo et al. found modern deep nets overconfident ([arXiv:1706.04599](https://arxiv.org/abs/1706.04599), ICML 2017). On CIFAR-100 a 5-layer LeNet's confidence matched its accuracy, while a 110-layer ResNet was more accurate but much more confident than it was right. Depth, width, weight decay and batch norm all moved calibration. Of the post-hoc fixes they tested, temperature scaling (a one-parameter Platt scaling) worked best on most datasets. Minderer et al. revisit this on recent ImageNet classifiers, and release measurements for 180 models from 16 families ([arXiv:2106.07998](https://arxiv.org/abs/2106.07998), NeurIPS 2021). On ImageNet validation, scored by top-label expected calibration error (ECE, the average gap between confidence and accuracy, here in 100 equal-mass bins), their results suggest no general trend for recent or highly accurate networks to be poorly calibrated compared with older or less accurate ones, though within most families the larger, more accurate members have slightly higher ECE. Recent non-convolutional families (vision transformers, MLP-Mixer) are among the best calibrated, more clearly after temperature scaling, since BiT, a ConvNet, overlaps them before it. Size and pretraining don't fully explain the gap, though the pretraining test used BiT alone. The authors speculate that architecture, in particular its spatial inductive bias, plays an important role, and their abstract says the results suggest it is a major determinant.
 
+![Confidence histograms (top) and reliability diagrams (bottom) on CIFAR-100: LeNet bars follow the diagonal, ResNet bars fall below it with confidence piled near 1.0](../../sources/images/guo-calibration-fig1.png)
+*Image Source: Guo et al., *On Calibration of Modern Neural Networks* (ICML 2017), Fig. 1*
+
+![Left: ImageNet ECE against error for recent model families, mostly low; right: confidence histograms and reliability diagrams for five models close to the diagonal](../../sources/images/minderer-calibration-fig1.png)
+*Image Source: Minderer et al., *Revisiting the Calibration of Modern Neural Networks* (NeurIPS 2021), Fig. 1*
+
 Three points are easy to miss:
 
 - **What temperature scaling removes.** It leaves accuracy alone and corrects average over- or underconfidence. Differences between families remain after it.
@@ -195,7 +201,33 @@ These are 2021 image classifiers, so don't carry the ranking to other domains or
 
 [Imbalance, errors and drift](10-imbalance-errors-and-drift.md#calibration-the-bridge-from-score-to-price) shows why it matters to a lender, who has to turn a score into a price.
 
----
+## Pitfalls
+
+| Pitfall | Symptom | Fix |
+|---|---|---|
+| ROC AUC on heavy imbalance | AUC looks high but the flagged set is mostly false positives | Read precision–recall as well |
+| Picking the threshold on the test set | Test precision is exactly on target, then drifts in production | Tune on validation or with `TunedThresholdClassifierCV` |
+| Taking probabilities at face value | Decile of 0.8 scores contains 60% positives | Plot a reliability diagram and recalibrate on held-out data |
+
+## Try it
+
+1. On the adult block, change the business rule to "catch 80% of high earners" and read the threshold and precision from the validation curve.
+
+<details>
+<summary>Answers</summary>
+
+1. Take the last index where `r[:-1] >= 0.80`, since recall falls as the threshold rises. Precision is well below the 80% of the block above: the two targets pull against each other, which is the trade-off a business has to settle.
+
+</details>
+
+## Interview checklist
+
+| Question | Answer |
+|---|---|
+| What does AUC mean? | The probability a random positive ranks above a random negative |
+| ROC or PR on imbalance? | PR: it ignores the large pool of true negatives |
+| How do you pick a threshold? | From the cost of each error, on validation data, then report on test once |
+| What is calibration, and how do you fix it? | Whether scores match frequencies. Reliability diagram; Platt, isotonic, or temperature scaling |
 
 ## Next
 
