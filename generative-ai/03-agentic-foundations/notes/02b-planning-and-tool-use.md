@@ -12,13 +12,16 @@ sources:
   - "Pan et al. 2025, CoAT: Chain-of-Associated-Thoughts, Findings of EMNLP 2025 — https://arxiv.org/abs/2502.02390"
 confidence: medium
 cleaned: 2026-11-06
+  - Chen et al. 2024, When is Tree Search Useful for LLM Planning? It Depends on the Discriminator — https://arxiv.org/abs/2402.10890
+  - Chi et al. 2024, ThoughtSculpt: Reasoning with Intermediate Revision and Search — https://arxiv.org/abs/2404.05966
+  - Wu et al. 2024, Beyond Examples: High-level Automated Reasoning Paradigm in In-Context Learning via MCTS — https://arxiv.org/abs/2411.18478
 ---
 
 # 2b — Planning and tool use
 
 > A ReAct agent decides its next tool one step at a time. Most of the measured gains in this chapter come from writing more of that decision down first: which tool each step uses, what is known after each step, and which steps don't depend on each other.
 
-[Note 02](02-tool-use-and-react.md) built the loop: the model emits a tool call, the harness runs it, the result goes back into the context, repeat. [04's planning strategies](04-multi-agent-design-patterns.md#planning-strategies) sorted the ways to plan by where each fails, from decomposition-first to interleaved. This chapter sits between them. It takes the restock agent from 02 and asks four practical questions. Should the plan name the tool for each step? Should the agent restate what it knows as it goes? Which calls can run at the same time? And how does the agent pick a tool when there are hundreds?
+[Note 02](02-tool-use-and-react.md) built the loop: the model emits a tool call, the harness runs it, the result goes back into the context, repeat. [04's planning strategies](04c-planning-architectures-and-failure.md#planning-strategies) sorted the ways to plan by where each fails, from decomposition-first to interleaved. This chapter sits between them. It takes the restock agent from 02 and asks four practical questions. Should the plan name the tool for each step? Should the agent restate what it knows as it goes? Which calls can run at the same time? And how does the agent pick a tool when there are hundreds?
 
 The papers here are recent and mostly preprints, each tested on one or two benchmarks. Read the numbers as the size of an effect under one setup, not as rules.
 
@@ -41,6 +44,8 @@ In an agent the harness can do this for the model: after each tool result, write
 Training can make the habit stick. PDDL-INSTRUCT ([arXiv:2509.13351](https://arxiv.org/abs/2509.13351) (Verma et al., 2025-09, preprint)) fine-tunes the model to write, for every action, the preconditions it checked, the effects it applied and the full resulting state, and uses a plan validator's feedback on which precondition or effect was wrong during training. On 100 PlanBench tasks per domain, Llama-3-8B's valid plans went from 28% to 94% on Blocksworld, 1% to 64% on Mystery Blocksworld and 11% to 79% on Logistics, with one generation and no feedback at test time. Detailed feedback beat valid/invalid feedback by 5–15 points. The baseline is the untuned model, not a prompted or sampled one, and training and test tasks come from the same domains.
 
 CoAT ([arXiv:2502.02390](https://arxiv.org/abs/2502.02390) (Pan et al., Findings of EMNLP 2025)) adds a related step to tree search over reasoning: at each node the model writes or retrieves "associated" facts before expanding. With the search held fixed, that step raised the score on the authors' own 205-question set from 0.67 to 0.77 (Qwen2.5-32B), judged by rubric with the judge model unnamed. Its comparison with single-pass models is not compute-matched, and the paper reports no cost beyond saying reasoning takes longer.
+
+Whether search over plans pays depends on what picks among the branches. Chen et al. ([arXiv:2402.10890](https://arxiv.org/abs/2402.10890) (Chen et al., 2024-02, preprint)) replaced the discriminator with an oracle whose accuracy they could cap. With CodeLlama-13B-Instruct as generator (5 samples at temperature 0.6) on text-to-SQL (Spider, Bird) and GSM8K, **tree search needed a discriminator of about 90% accuracy to beat plain re-ranking significantly, and below 80% it did worse than re-ranking**, while costing 10-20 times more time (296 s against 17 s per Bird example with a naive discriminator). With real discriminators no method beat re-ranking significantly on Spider, and in 29 of 37 cases where iterative correction lost to re-ranking, the error was in the discriminator, not the search. ThoughtSculpt ([arXiv:2404.05966](https://arxiv.org/abs/2404.05966) (Chi et al., 2024-04, preprint)) is the case where the evaluator is strong enough: MCTS that revises a node from the evaluator's feedback reached 89.9% interestingness on story-outline improvement against 72.1% for Tree of Thoughts (GPT-3.5, 50 outlines, scored by a Flan-T5 evaluator trained on GPT-3.5 outlines). On a 20-puzzle mini-crossword with GPT-4 it scored 54.0% of words against 39.5%, at roughly twice ToT's cost per case. Swapping the evaluator for Llama3.1-8B cost more (99.0% to 96.3% coverage on constrained generation) than swapping the generator (98.5%). Put the budget into the verifier first; both studies are single runs on small sets. HiAR-ICL ([arXiv:2411.18478](https://arxiv.org/abs/2411.18478) (Wu et al., 2024-11, preprint)) moves the search offline: MCTS over five reasoning actions on 200 seed questions yields reusable "thought cards", and at inference the five nearest cards guide a single pass checked by a process reward model plus a self-consistency vote. Qwen2.5-7B-Instruct reached 80.6% on MATH500 against GPT-4o's 77.2% (CoT with self-consistency over 4), and end-to-end time per sample was 7.0 times lower than rStar on MATH (Llama3-8B), with the offline cost counted. Random action chains in place of cards cost 10.4 points on a four-task average. Baselines for the tree methods are mostly copied from their papers, and cards are built from the same benchmark's training questions.
 
 ---
 
@@ -174,7 +179,7 @@ sequential {'itemA': 60, 'itemB': 84, 'itemC': 1} waits: 9
 parallel {'itemA': 60, 'itemB': 84, 'itemC': 1} waits: 2
 ```
 
-Same answers, two waits instead of nine. ReAct would also spend nine *model* turns here, one per call. The planned executor spends one turn writing the plan and none choosing tools, because the plan names them. What it gives up is adaptation: if `get_stock` fails, nothing downstream runs, and the plan needs a repair step (04's [decomposition-first plans](04-multi-agent-design-patterns.md#planning-strategies) section covers local repair).
+Same answers, two waits instead of nine. ReAct would also spend nine *model* turns here, one per call. The planned executor spends one turn writing the plan and none choosing tools, because the plan names them. What it gives up is adaptation: if `get_stock` fails, nothing downstream runs, and the plan needs a repair step (04's [decomposition-first plans](04c-planning-architectures-and-failure.md#planning-strategies) section covers local repair).
 
 ---
 
@@ -221,4 +226,4 @@ Same answers, two waits instead of nine. ReAct would also spend nine *model* tur
 
 ## Next
 
-→ [03 — memory as an operating system](03-memory-as-an-operating-system.md): what the loop remembers between turns, and how the agent edits it with the same tool calls.
+→ [02c — MCP, code execution and safe tool calls](02c-mcp-code-and-safe-tool-calls.md): serving tools over a protocol, running generated code, reliable calls and prompt-injection defenses. Then [03 — memory as an operating system](03-memory-as-an-operating-system.md): what the loop remembers between turns, and how the agent edits it with the same tool calls.

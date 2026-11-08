@@ -47,7 +47,8 @@ Notes 01 and 01b are the overview. Notes 02–07 are the course. Notes 08–12 a
 | 2 | [Why RAG, and the augmented prompt](notes/02-why-rag-and-the-augmented-prompt.md) | The knowledge gap, retriever vs. LLM, why not stuff the prompt, the smallest RAG as an f-string, Assignment 1 news RAG |
 | 3 | [Keyword, semantic and hybrid search](notes/03-keyword-semantic-and-hybrid-search.md) | TF-IDF, BM25 (k1, b), embeddings and cosine, metadata filters, RRF, Recall@k / MRR / nDCG with worked numbers |
 | 4 | [Vector databases and ANN](notes/04-vector-databases-and-ann.md) | KNN vs. ANN, NSW and HNSW, the Weaviate API: collections, `near_text`, `bm25`, `hybrid`, rerank |
-| 5 | [Chunking, query parsing and reranking](notes/05-chunking-query-parsing-and-reranking.md) | Chunking strategies and overlap, query rewriting, GLiNER, HyDE, bi- vs. cross-encoder vs. ColBERT, over-retrieve and rerank |
+| 5 | [Chunking and index-time structure](notes/05-chunking-query-parsing-and-reranking.md) | Why chunk, chunking strategies and overlap, chunking code, index small and return large, the Pro Git four-strategy experiment |
+| 5b | [Query parsing, conversational retrieval and reranking](notes/05b-query-parsing-conversational-retrieval-and-reranking.md) | Query rewriting, GLiNER, HyDE, multi-query, self-query filters, chat rewriting, bi- vs. cross-encoder vs. ColBERT, over-retrieve and rerank |
 | 6 | [Generation for RAG](notes/06-generation-for-rag.md) | Sampling (temperature, top-p), choosing an LLM, grounded prompts, structured output, passage order and count |
 | 6b | [Hallucinations, evaluation and fine-tuning](notes/06b-hallucinations-evaluation-and-fine-tuning.md) | Hallucinations and citations, RAGAS, agentic routing, RAG vs. fine-tuning |
 | 7 | [RAG in production](notes/07-rag-in-production.md) | Failure stories, the scope × evaluator matrix, Phoenix tracing, quantization, cost and latency budgets, security, text that changes by legal effect, multimodal RAG |
@@ -55,7 +56,8 @@ Notes 01 and 01b are the overview. Notes 02–07 are the course. Notes 08–12 a
 | 8b | [Routing, sub-agents and evaluation](notes/08b-routing-sub-agents-and-evaluation.md) | The router, domain sub-agents, context discipline, NER metadata repair, evaluation, when agentic RAG pays |
 | 9 | [Vector database comparison](notes/09-vector-database-comparison.md) | Side-by-side stores, when to use which, embedding ↔ dimension compatibility, HNSW vs. ANNOY, migration |
 | 10 | [Semantic cache](notes/10-semantic-cache.md) | A three-tier cache for support agents: offline index, runtime module, routing, eval and merge criteria |
-| 11 | [Retrieval improvements](notes/11-retrieval-improvements.md) | Baseline eval, what the ablations showed, how much 32 queries can prove, prioritised research items |
+| 11 | [Retrieval improvements](notes/11-retrieval-improvements.md) | Baseline eval, what the ablations showed, how much 32 queries can prove, research items 1 to 4 and the priority order |
+| 11b | [Training the pieces, and the pipeline eval](notes/11b-training-the-pieces-and-the-pipeline-eval.md) | DPO and preference-pair arithmetic, trained retrievers, filters and loops, the pipeline smoke baseline, URL normalization |
 | 12 | [Managed RAG: Bedrock, Vertex, and building your own](notes/12-managed-rag.md) | Bedrock KB reference spec, Vertex comparison, score semantics, when to switch, and a pipeline decision record |
 
 ## Builds on and feeds into
@@ -91,8 +93,8 @@ Notes 01 and 01b are the overview. Notes 02–07 are the course. Notes 08–12 a
 | Check your embedder's token limit. Past it, text is silently dropped | [03](notes/03-keyword-semantic-and-hybrid-search.md) |
 | Use metadata filters for constraints and search for relevance | [03](notes/03-keyword-semantic-and-hybrid-search.md), [04](notes/04-vector-databases-and-ann.md) |
 | Start with fixed-size or recursive chunks and 10–20% overlap; measure before getting clever | [05](notes/05-chunking-query-parsing-and-reranking.md) |
-| Over-retrieve 20–50, rerank to 3–10 | [05](notes/05-chunking-query-parsing-and-reranking.md) |
-| Rewrite conversational queries with a small LLM; treat HyDE as an experiment | [05](notes/05-chunking-query-parsing-and-reranking.md) |
+| Over-retrieve 20–50, rerank to 3–10 | [5b](notes/05b-query-parsing-conversational-retrieval-and-reranking.md) |
+| Rewrite conversational queries with a small LLM; treat HyDE as an experiment | [5b](notes/05b-query-parsing-conversational-retrieval-and-reranking.md) |
 | Low temperature and an "answer only from the context" prompt with citations for factual RAG | [06](notes/06-generation-for-rag.md) |
 | Trace from day one; evaluate components and the system | [07](notes/07-rag-in-production.md) |
 | Cut prompt tokens before changing models | [07](notes/07-rag-in-production.md) |

@@ -31,6 +31,8 @@ sources:
   - https://arxiv.org/abs/2608.20614
   - https://arxiv.org/abs/2609.25804
   - https://arxiv.org/abs/2609.16487
+  - https://arxiv.org/abs/2304.03279
+  - https://arxiv.org/abs/2412.04494
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -68,6 +70,8 @@ The reverse also happens: a strict trajectory check can fail a run that did *bet
 Trajectory analysis also tells you **where** a run failed. A multi-step run has many paths to the same wrong answer, and each needs a different fix. An outcome-only eval scores them identically.
 
 A survey of agent evaluation names this as an open gap: most benchmarks report end-to-end success, which falls "short in diagnosing specific agent failures" ([arXiv:2503.16416](https://arxiv.org/abs/2503.16416) (Yehudai et al., Findings of ACL 2026; read as arXiv v2, 2026-04)). In its own tables, 3 of the 8 evaluation frameworks it compares support trajectory assessment and 1 of 8 benchmarks tests safety. It adds a caution for step-level judges, which assume "each action can be meaningfully assessed in isolation". The survey runs no experiments, it does not say how its tool table was coded and cites only vendor pages for it, and it gives no count of the papers screened.
+
+Outcome-only scoring can also hide what the path cost. MACHIAVELLI ([arXiv:2304.03279](https://arxiv.org/abs/2304.03279) (Pan et al., ICML 2023)) scores agents in 134 text-adventure games (572,322 scenes) on points and on harm counts (13 kinds of ethical violation, power-seeking, disutility to others), each harm normalised to a random agent's mean over 1,000 trajectories (random = 100). On the 30 test games, an RL agent (DRRN) reached a normalised reward of 35.2 against 18.0 for random while committing 108 on violations; GPT-4 with chain-of-thought reached 27.4 and 91, and adding an ethics prompt moved it to 24.7 and 82. Less harm cost reward. GPT-4 labelled every scene, and on 2,000 scenes its ensemble labels beat a three-crowdworker ensemble against author-written expert labels in 16 of 18 categories. The test games were picked because points and harms correlate there, so the trade-off is built in; no seeds or intervals are reported.
 
 AgentBoard turns "how far did it get" into a number (9 tasks, 1,013 environments). **Progress rate** is the highest fraction of human-annotated subgoals the agent reached at any step, reported beside success rate. Human ratings of the same trajectories tracked it closely (Pearson > 0.95 on every task). It separates agents that success rate lumps together: "Llama2-13b and Mistral-7b exhibit similarly negligible success rates (2.1% and 3.9%, respectively), but their progress rates differ significantly: 18.9% for Llama2-13b and 24.6% for Mistral-7b." AgentBoard also reports **grounding accuracy**, the share of actions that were valid in the environment, which separates malformed or impossible actions from bad plans ([arXiv:2401.13178](https://arxiv.org/abs/2401.13178) (Ma et al., 2024-01)). The cost is writing subgoals for every task. And progress rewards partial work: CodeLlama-34b often never emitted `finish`, which gave it higher progress and lower success than CodeLlama-13b. Report progress beside strict success, never instead of it ([12](12-failure-modes.md#goodhart-the-eval-becomes-the-target)). The idea is older than AgentBoard. ALFWorld reports **goal-condition success**, the share of a task's goal conditions that hold in the end state, in parentheses beside strict success. "Put a hot potato on the countertop" has three conditions, so an agent that puts any potato there gets 0.33 ([arXiv:2010.03768](https://arxiv.org/abs/2010.03768) (Shridhar et al., ICLR 2021), taking the metric from ALFRED).
 
@@ -168,6 +172,8 @@ Labeling expected tool calls is real work. Two shortcuts:
 - **Bootstrap from metadata.** If the system already logs which domain or sub-agent handled a request, that's a free routing label ([case study](13-case-study-support-agent.md#free-labels-from-response-metadata)).
 
 If there's no single correct path, don't force one. Use a **judge over the trajectory** with a rubric ("did the agent look up the order before changing it?") or check **invariants** ("never `issue_refund` before `lookup_order`").
+
+When no reference exists, a trajectory can also be verified by asking again. MAG-V ([arXiv:2412.04494](https://arxiv.org/abs/2412.04494) (Sengupta et al., 2024-12, preprint)) has an agent write three alternate questions from an assistant's answer, reruns the assistant on them, and trains a small classifier on similarity features (exact match, edit distance, longest common subsequence) between the original and alternate tool-call trajectories to predict whether the original was correct. On 45 trajectories from one proprietary assistant (15 correct, 30 incorrect, two-expert labels with kappa 0.42; 10-fold cross-validation, 3 seeds), k-NN reached 82.33% accuracy against 82.83% for a GPT-4 judge (F1 71.73 against 76.06). Adding the line "You are a helpful AI Assistant." to the GPT-4o judge raised its accuracy by about 12%, so the judge baseline is prompt-sensitive. With 45 items, no variance and no released code, treat it as a design to try, not a result.
 
 ---
 

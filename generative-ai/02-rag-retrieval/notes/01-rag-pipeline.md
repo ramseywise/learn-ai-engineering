@@ -2,6 +2,7 @@
 origin: curated  # was: notion-export + ai-engineering/02-context-engineering/notes/04-retrieval.md (pipeline material moved here) - "Manning, Raghavan & Schütze, Introduction to Information Retrieval (Cambridge, 2008), ch. 8"
 confidence: medium
 sources:
+  - https://arxiv.org/abs/2404.19543
   - https://arxiv.org/abs/2510.18234
   - https://arxiv.org/abs/2212.10496
   - https://arxiv.org/abs/2312.10997
@@ -58,6 +59,8 @@ The same progression in practice, each step adding control at the cost of latenc
 | **Agentic RAG** | The model decides *whether*, *what* and *when* to retrieve, and loops until it has enough | Multi-step questions ([01b](01b-index-structures-and-agentic-rag.md#agentic-rag)) |
 | **Graph-enhanced RAG** | Entities and relations extracted into a graph; retrieval walks edges | Multi-hop and "how is X related to Y" questions ([05-graph](../../../ai-engineering/05-graph-engineering/README.md)) |
 | **Text-to-SQL** | Generate a query against structured data instead of searching chunks | Filtering, counting, aggregation ([below](#text-to-sql-is-a-retrieval-strategy)) |
+
+The Hu and Lu survey sorts retrieval-augmented models by how retriever and model interact: sequential single-shot (RAG, FiD), sequential multiple (FLARE-style active retrieval), and parallel interpolation of the two output distributions, $p(y|x)=\lambda p_R+(1-\lambda)p_{LM}$ as in kNN-LM. It names poor robustness, poor retrieval quality, cost and narrow applications as open problems. It reports no comparative experiments and stops at early 2024 ([arXiv:2404.19543](https://arxiv.org/abs/2404.19543), Hu & Lu, 2024-04, v2 2025-06, preprint).
 
 ### Where naive RAG fails
 

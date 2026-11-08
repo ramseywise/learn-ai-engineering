@@ -41,7 +41,7 @@ Guardrails are defense in depth. No single one suffices, so layer specialized on
 | Execution | Tool risk rating by reversibility, permission level and financial impact; high risk → review or human confirmation |
 | Output | PII filter; brand/content validation |
 
-The diagram shows the two kinds of path an attack can take. Retrieved data enters at the same point as user input, which is why [prompt injection](02-tool-use-and-react.md#prompt-injection-six-defenses) is a design problem and not only a filtering one.
+The diagram shows the two kinds of path an attack can take. Retrieved data enters at the same point as user input, which is why [prompt injection](02c-mcp-code-and-safe-tool-calls.md#prompt-injection-six-defenses) is a design problem and not only a filtering one.
 
 This is the map. The rails themselves are in [safety 03 — guardrail models](../../../ai-engineering/09-safety-and-security/notes/03-guardrail-models.md) (where each sits, what a guard model is, how to measure one, and the reference design for classifier guardrails) and [safety 04 — tool and execution sandboxing](../../../ai-engineering/09-safety-and-security/notes/04-tool-and-execution-sandboxing.md) (the action rail).
 

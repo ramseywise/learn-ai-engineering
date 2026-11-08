@@ -207,7 +207,7 @@ The optimization pass started by asking whether these were the right tasks at al
 |---|---|---|
 | **Prompt chaining** | Sequential steps, with optional gates between them | Outline → check against criteria → draft |
 | **Routing** | Classify the input, then send it to a specialized prompt or model | Support triage: billing / technical / general; small model for easy queries |
-| **Parallelization** | *Sectioning* (independent subtasks) or *voting* (same task N times) | Content moderation on several axes at once; self-consistency ([03](03-core-techniques.md#self-consistency)) |
+| **Parallelization** | *Sectioning* (independent subtasks) or *voting* (same task N times) | Content moderation on several axes at once; self-consistency ([03](03b-chain-of-thought-and-reasoning.md#self-consistency)) |
 | **Orchestrator–workers** | An LLM splits the task dynamically and delegates | Multi-file code changes |
 | **Evaluator–optimizer** | One prompt generates, another critiques, loop | Translation with a critic; Reflexion |
 

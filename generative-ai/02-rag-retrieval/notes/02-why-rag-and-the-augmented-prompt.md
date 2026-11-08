@@ -52,7 +52,7 @@ Notes 02–07 condense Zain Hasan's *Retrieval Augmented Generation* course (Dee
 | **02 (this note)** | M1 RAG overview | Why retrieve at all? |
 | [03](03-keyword-semantic-and-hybrid-search.md) | M2 Information retrieval | How does the retriever rank? |
 | [04](04-vector-databases-and-ann.md) | M3 part 1 | How does it rank fast, at scale? |
-| [05](05-chunking-query-parsing-and-reranking.md) | M3 part 2 | What goes in, what query goes out, what comes back? |
+| [05](05-chunking-query-parsing-and-reranking.md), [5b](05b-query-parsing-conversational-retrieval-and-reranking.md) | M3 part 2 | What goes in, what query goes out, what comes back? |
 | [06](06-generation-for-rag.md) | M4 LLMs and text generation | How does the LLM use what came back? |
 | [07](07-rag-in-production.md) | M5 RAG in production | How do you evaluate, trace and run it? |
 

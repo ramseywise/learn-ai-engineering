@@ -16,6 +16,8 @@ sources:
   - https://arxiv.org/abs/2410.05229
   - https://arxiv.org/abs/2502.16797
   - https://arxiv.org/abs/2506.02126
+  - https://arxiv.org/abs/2312.11444
+  - https://arxiv.org/abs/2311.16989
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -284,6 +286,14 @@ Cost per success    $0.014          $0.016          +14%
 Flipped tasks read: 18 / 18 — 9 of 11 regressions are `refusal` on non-English
 Decision: do not ship. Investigate refusal behavior for non-English.
 ```
+
+---
+
+### Reading someone else's model comparison
+
+A vendor report and a third-party replication of it can disagree by several points on the same benchmark, and the setup explains it. Akter et al. ([arXiv:2312.11444](https://arxiv.org/abs/2312.11444) (Akter et al., 2023-12, preprint)) re-ran Gemini Pro, GPT 3.5 Turbo, GPT 4 Turbo and Mixtral through one harness with the same prompts and evaluators (single sample per item, temperature 0, queried 11-22 December 2023). Gemini Pro scored 65.22% on 5-shot MMLU against 67.75% for GPT 3.5 Turbo, and 59.76% on HumanEval Pass@1 against 74.39%, well below the Gemini report, which used self-consistency, so these are not the vendor's numbers. Gaps of one to four points came from one run with no interval. The translation row flips on a filter: Gemini blocked more than half the responses in 12 of 20 languages, so FLORES chrF was 21.68 over all 20 languages against 40.00 for GPT 3.5 Turbo, but 53.31 against 52.43 on the 8 languages it mostly answered. Answer matching had been changed by the authors, and WebArena used different temperatures per vendor.
+
+A survey that collects wins is a weaker comparison. Chen et al. ([arXiv:2311.16989](https://arxiv.org/abs/2311.16989) (Chen et al., 2023-11, preprint; read as arXiv v4)) gather every task where an open model was reported on par with or above GPT-3.5-turbo, taking numbers from model papers and leaderboards with no run of their own. Judge, shots and decoding go unstated, and the winners are mostly task-specific fine-tunes (WizardMath-70B at 81.6 on GSM8K against 57.1) set beside a general chat model. Rankings change by benchmark: Zephyr-7B beats Llama-2-70B-chat on MT-Bench (7.34 against 6.86) but scores 52.15 on the Open LLM Leaderboard. Its prose and tables disagree in places; cite the table cell. Contamination is named as a risk but not checked for any row. Read such a table as a list of claims to retest on your own tasks, not as a ranking.
 
 ---
 

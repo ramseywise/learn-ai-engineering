@@ -26,7 +26,7 @@ Huyen splits inference optimization into three levels (*AI Engineering*, ch. 9):
 
 | Level | What you change | Examples | Notes |
 |---|---|---|---|
-| **Model** | The artifact itself | Quantization, distillation, pruning, speculative decoding, attention variants | [08](08-adaptive-inference.md), [07](07-prefill-decode-kv-cache.md) |
+| **Model** | The artifact itself | Quantization, distillation, pruning, speculative decoding, attention variants | [08](08-adaptive-inference.md), [08c](08c-quantization-and-low-precision.md), [07](07-prefill-decode-kv-cache.md) |
 | **Hardware** | Where and how it runs | GPU choice, memory hierarchy, kernels, compilers | 02–04 (planned), [05](05-compilers-and-frameworks.md) |
 | **Service** | How requests meet the model | Batching, routing, disaggregation, prompt caching, parallelism | [06](06-serving-at-scale.md), [07](07-prefill-decode-kv-cache.md) |
 
@@ -221,7 +221,7 @@ Fregly's other ch. 1 points:
 | Compile, fuse, CUDA graphs | Cuts launch overhead; large on small-batch decode | [05](05-compilers-and-frameworks.md) |
 | Continuous batching, routing, parallelism | Throughput; TP also cuts latency | [06](06-serving-at-scale.md) |
 | KV cache management, prefix caching, disaggregation | Memory capacity, TTFT, goodput | [07](07-prefill-decode-kv-cache.md) |
-| Quantization, speculative decoding | Bandwidth per token, decode latency | [08](08-adaptive-inference.md) |
+| Quantization, speculative decoding | Bandwidth per token, decode latency | [08](08-adaptive-inference.md), [08c](08c-quantization-and-low-precision.md) |
 | Checklist and AI-assisted kernel search | Systematic coverage | [09](09-checklist-and-ai-assisted-tuning.md) |
 
 Huyen's ranking of the techniques with the widest impact, across the companies she surveyed: **quantization, tensor parallelism, replica parallelism and attention optimization** (*AI Engineering*, ch. 9).

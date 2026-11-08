@@ -482,7 +482,7 @@ The date has to follow the answer through three later steps:
 |---|---|
 | Multimodal embeddings | Text and images in one vector space; a text query finds an image |
 | Vision-language models | Images split into patches, each a token (100–1,000 per image) |
-| PDF RAG without parsing | Embed each page image as patch vectors and score ColBERT-style (note [05](05-chunking-query-parsing-and-reranking.md)); many vectors per page |
+| PDF RAG without parsing | Embed each page image as patch vectors and score ColBERT-style (note [5b](05b-query-parsing-conversational-retrieval-and-reranking.md)); many vectors per page |
 
 Huyen's version of the first row uses CLIP: embed all texts and images with CLIP, embed the query, and return the nearest of both kinds (*AI Engineering*, ch. 6). Raieli and Iuculano set out the three designs (*Building AI Agents*, ch. 6):
 

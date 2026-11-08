@@ -1,0 +1,652 @@
+{
+ "schema": 1,
+ "key": "2311.12022",
+ "pdf": "generative-ai/08-eval/sources/rein-2023-gpqa.pdf",
+ "bib": {
+  "title": "GPQA: A Graduate-Level Google-Proof Q&A Benchmark",
+  "authors": [
+   "David Rein",
+   "Betty Li Hou",
+   "Asa Cooper Stickland",
+   "Jackson Petty",
+   "Richard Yuanzhe Pang",
+   "Julien Dirani",
+   "Julian Michael",
+   "Samuel R. Bowman"
+  ],
+  "first_author": "Rein",
+  "year": 2023,
+  "venue": "preprint",
+  "arxiv": "2311.12022",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 103149,
+  "chars_total": 103149,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "benchmark",
+ "question": "Can one build multiple-choice science questions that domain experts answer reliably but highly skilled non-experts with unrestricted web access and frontier LLMs cannot, to serve as a testbed for scalable oversight?",
+ "hypothesis": "Questions written by PhD-level experts and filtered by expert agreement and non-expert failure will be objective yet Google-proof, and hard for current LLMs.",
+ "contributions": [
+  "GPQA, 448 graduate-level multiple-choice questions in biology, physics and chemistry (main set), with a 546-question extended set and a 198-question diamond set",
+  "A multi-stage pipeline of question writing, expert validation, revision and non-expert validation with incentive payments",
+  "Analysis of question objectivity (expert accuracy, post-hoc agreement) and difficulty (non-expert accuracy)",
+  "Closed-book and open-book (search) baselines for Llama-2-70B-chat, GPT-3.5-turbo-16k and GPT-4"
+ ],
+ "method": {
+  "summary": "61 Upwork contractors with or pursuing PhDs write questions, which pass through a first expert validation, writer revision, a second expert validation and three skilled non-expert validators with web access (no LLMs). Questions are filtered into Extended (546), main GPQA (448) and Diamond (198) sets by expert agreement and non-expert accuracy. Three LLMs are evaluated closed-book with four prompt styles and GPT-4 open-book with a search tool.",
+  "task": "Graduate-level 4-way multiple-choice QA in biology, physics, chemistry; testbed for scalable oversight",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "GPQA Extended",
+    "role": "eval",
+    "size": "546 questions (564 collected, 18 removed to an unreleased held-out set)",
+    "split": "full set",
+    "source": "Written and validated by 61 Upwork contractors; github.com/idavidrein/gpqa",
+    "preprocessing": "Median question length incl. choices 561 characters / 146 tokens (tiktoken); mean 630 characters / 169 tokens (main set). Questions by one writer who used ChatGPT, and by writers whose expert accuracy was below non-expert accuracy, were removed retroactively."
+   },
+   {
+    "name": "GPQA (main set)",
+    "role": "eval",
+    "size": "448 questions",
+    "split": ">=1/2 experts agree and <=2/3 non-experts correct; removes questions where both experts were wrong and all three non-experts right",
+    "source": "Subset of Extended",
+    "preprocessing": "Also keeps questions where second expert erred but gave a clear mistake or showed understanding of the explanation"
+   },
+   {
+    "name": "GPQA Diamond",
+    "role": "eval",
+    "size": "198 questions",
+    "split": "2/2 experts agree and <=1/3 non-experts correct",
+    "source": "Subset of Extended",
+    "preprocessing": "First expert must answer correctly; second expert either correct or explains mistake clearly"
+   },
+   {
+    "name": "Answer-only spurious-feature check data",
+    "role": "dev",
+    "size": "564-question extended set, 80%/20% train/validation split",
+    "split": "80/20",
+    "source": "GPQA",
+    "preprocessing": "Answer order randomised; T5-small and T5-base fine-tuned for span identification of the correct label, plus a single-layer CBOW classifier on RoBERTa embeddings; none beat chance"
+   }
+  ],
+  "models": [
+   {
+    "name": "Llama-2-70B-chat",
+    "role": "evaluated",
+    "params": "70B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-3.5-turbo-16k",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "16k (from model name)",
+    "other": {}
+   },
+   {
+    "name": "GPT-4",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "version": "not stated beyond OpenAI model index reference, accessed 2023-11-18"
+    }
+   },
+   {
+    "name": "T5-small and T5-base",
+    "role": "baseline",
+    "params": null,
+    "architecture": "encoder-decoder",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "answer-only fine-tuning to detect spurious features in choices"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "not stated; single run per model and prompt implied by one number per cell",
+   "prompting": "Four closed-book methods: zero-shot, few-shot, zero-shot CoT, few-shot CoT (5 expert-written examples with writer explanations as reasoning chains). Answers extracted by regex on phrases like 'answer is'. Open-book: self-ask style prompt with a search tool (Search query:, expandable URLs, PDFs not expandable), backoff to few-shot CoT answer on abstention.",
+   "retrieval": "Internet search tool for GPT-4 open-book; search engine not named",
+   "parameters": {
+    "few_shot_k": "5 examples (genetics, chemistry titration, quantum SHO, organic chemistry, molecular biology) in the printed prompt",
+    "backoff": "GPT-4 with search abstained on 37.2% of main set; backoff to few-shot CoT answer used in Table 5 only"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Accuracy",
+     "definition": "Fraction of questions answered correctly (abstentions count as not correct unless backed off); chance 25%",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Abstention rate",
+     "definition": "Fraction of questions the model declines to answer",
+     "unit": "%",
+     "higher_is_better": false
+    },
+    {
+     "name": "Post-hoc agreement",
+     "definition": "Share of expert validations where the expert, after seeing the writer's answer and explanation, agrees the answer is uncontroversially correct",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Expected calibration error",
+     "definition": "Mean gap between stated confidence (25/40/55/70/85/99%) and actual accuracy, weighted by bin size",
+     "unit": "ECE",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "Expert human validators",
+    "Non-expert human validators",
+    "Llama-2-70B-chat",
+    "GPT-3.5-turbo-16k",
+    "GPT-4",
+    "GPT-4 with search"
+   ],
+   "protocol": "Human accuracies reported with 95% confidence intervals on the extended set; model accuracies reported per subset without intervals or repeated runs."
+  },
+  "availability": {
+   "code": "https://github.com/idavidrein/gpqa/",
+   "weights": null,
+   "data": "https://github.com/idavidrein/gpqa/ (authors request that examples are not revealed online; canary string included)"
+  },
+  "prompts": [
+   {
+    "purpose": "Zero-shot (instruction suffix; question and choices precede it)",
+    "text": "Format your response as follows: \"The correct answer is (insert answer here)\".",
+    "where": "Appendix A.3.1, p.19"
+   },
+   {
+    "purpose": "Zero-shot CoT (suffix after question and choices; then a second call asks for the final answer)",
+    "text": "Let’s think step by step:",
+    "where": "Appendix A.3.1, p.20"
+   },
+   {
+    "purpose": "Few-shot CoT",
+    "text": "Here are some example questions from experts. An explanation is given before the final answer. Answer the final question yourself, giving your reasoning beforehand.",
+    "where": "Appendix A.3.1, p.20"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "inference.samples",
+    "quote": null,
+    "where": "Paper reports no seeds, runs or temperature for model baselines"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Expert validators (PhD holders or students in the field) reach 65% accuracy on GPQA, 74% when clear mistakes identified in retrospect are discounted.",
+   "kind": "measured",
+   "source": null,
+   "metric": "expert accuracy",
+   "value": "65",
+   "unit": "%",
+   "baseline_value": "74 (discounting clear mistakes)",
+   "n": 546,
+   "setup": "GPQA Extended, second expert validator on revised question; 4-way multiple choice, chance 25%",
+   "quote": "experts who have or are pursuing PhDs in the corresponding domains reach 65% accuracy (74% when discounting clear mistakes the experts identified in retrospect)",
+   "table": null,
+   "note": "Table 2 prints 64.8 for extended set; Table 5 prints 65.4 for expert validators on the same 546 questions. Section 3.1 gives 66.5% +/-4.0% (first expert) and 64.8% +/-4.0% (second expert), 95% CI.",
+   "where": "Abstract; Sec 3.1"
+  },
+  {
+   "claim": "Highly skilled non-expert validators with unrestricted web access reach only 34% accuracy on the extended set.",
+   "kind": "measured",
+   "source": null,
+   "metric": "non-expert accuracy",
+   "value": "34.1",
+   "unit": "%",
+   "baseline_value": "25 (chance)",
+   "n": 546,
+   "setup": "GPQA Extended before filtering; three non-experts per question, PhD-level in other domains, web allowed, LLM assistants forbidden",
+   "quote": "average non-expert validator accuracy is 34.1% ± 2.3%",
+   "table": null,
+   "note": "Abstract rounds to 34%; Table 5 prints 33.9 for non-expert validators.",
+   "where": "Sec 3.2"
+  },
+  {
+   "claim": "Non-expert validators spent a long time per question: average 37 minutes, median 30.",
+   "kind": "measured",
+   "source": null,
+   "metric": "non-expert time per question",
+   "value": "37",
+   "unit": "minutes (mean)",
+   "baseline_value": "15 (minimum required)",
+   "n": null,
+   "setup": "Non-expert validation, web access allowed; 15 minute minimum",
+   "quote": "on average non-expert validators spend 37 minutes on each question (median 30 minutes)",
+   "table": null,
+   "note": "Abstract says 'on average over 30 minutes'; Fig 1 says 'avg ~37 min'. Sec 3.2: 90% of validations over 15 minutes, top 20% at least 45 minutes.",
+   "where": "Sec 2.1 Non-Expert Validation"
+  },
+  {
+   "claim": "Strongest closed-book baseline, GPT-4 with few-shot CoT, scores 38.7% on the extended set.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "38.7",
+   "unit": "%",
+   "baseline_value": "25 (chance)",
+   "n": 546,
+   "setup": "GPQA Extended, GPT-4, 5-shot chain-of-thought using writers' explanations",
+   "quote": null,
+   "table": "Table 5, row Few-Shot CoT GPT-4, column Extended Set",
+   "note": "Same row: main 39.7, diamond 38.8. Abstract states 39% for strongest GPT-4 baseline.",
+   "where": "Table 5"
+  },
+  {
+   "claim": "GPT-4 with search (backoff to CoT on abstention) scores 39.4% on the extended set, barely above closed-book GPT-4.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "39.4",
+   "unit": "%",
+   "baseline_value": "38.7",
+   "n": 546,
+   "setup": "GPQA Extended, GPT-4 with search tool built on self-ask, backoff to few-shot CoT when it abstains",
+   "quote": "It gets 39.4% accuracy on the extended set of questions, which is only very slightly higher than few-shot CoT GPT-4.",
+   "table": null,
+   "note": "Without backoff (Table 6) GPT-4 with search gets 28.2 extended, 28.7 main, 27.6 diamond. Main set: 41.0 with backoff.",
+   "where": "Sec 4 Open-Book; Table 5, Table 6"
+  },
+  {
+   "claim": "GPT-4 with search abstains on 37.2% of the main set versus 4.0% for few-shot CoT GPT-4.",
+   "kind": "measured",
+   "source": null,
+   "metric": "abstention rate",
+   "value": "37.2",
+   "unit": "%",
+   "baseline_value": "4.0",
+   "n": 448,
+   "setup": "GPQA main set",
+   "quote": "GPT-4 with search abstains from answering 37.2% of questions on the main set, compared to few-shot CoT GPT-4's abstention rate of 4.0%",
+   "table": null,
+   "note": null,
+   "where": "Sec 4 Open-Book; Table 7"
+  },
+  {
+   "claim": "Llama-2-70B-chat and GPT-3.5-turbo-16k are near chance with few-shot CoT.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "30.4",
+   "unit": "%",
+   "baseline_value": "28.2 (GPT-3.5-turbo-16k)",
+   "n": 546,
+   "setup": "GPQA Extended, Llama-2-70B-chat few-shot CoT",
+   "quote": "between 28% and 31% accuracy with few-shot chain-of-thought prompting",
+   "table": "Table 5, row Few-Shot CoT Llama-2-70B-chat, column Extended Set",
+   "note": null,
+   "where": "Sec 4 Closed-Book"
+  },
+  {
+   "claim": "GPQA has three nested sets: Extended 546, main 448, Diamond 198.",
+   "kind": "measured",
+   "source": null,
+   "metric": "question count",
+   "value": "448",
+   "unit": "questions",
+   "baseline_value": null,
+   "n": 448,
+   "setup": "Main set: >=1/2 experts agree and <=2/3 non-experts correct; Diamond (198): 2/2 experts agree and <=1/3 non-experts correct",
+   "quote": "we remove these questions to form GPQA (composed of 448 questions) as the main set",
+   "table": null,
+   "note": "Diamond: 'GPQA Diamond (the diamond set, composed of 198 questions)'. 564 collected, 18 held out, 546 extended. Appendix A.2 calls the extended set '564-question'.",
+   "where": "Sec 2.3; Table 2"
+  },
+  {
+   "claim": "On Diamond, expert validators score 81.3% and non-experts 22.1%, but both are biased by selection.",
+   "kind": "measured",
+   "source": null,
+   "metric": "validator accuracy",
+   "value": "81.3",
+   "unit": "%",
+   "baseline_value": "22.1 (non-expert)",
+   "n": 198,
+   "setup": "GPQA Diamond; filtering used these same validators' answers, so figures are skewed",
+   "quote": null,
+   "table": "Table 2, row GPQA Diamond, column Expert Acc. (%)",
+   "note": "Table 5 prints 81.2 expert and 21.9 non-expert for diamond. Main set: 71.9 expert, 30.4 non-expert (Table 2); 72.5 and 30.5 in Table 5.",
+   "where": "Table 2"
+  },
+  {
+   "claim": "Post-hoc agreement is higher than expert accuracy: first validator 80.1%, second 85.4%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "post-hoc agreement",
+   "value": "85.4",
+   "unit": "%",
+   "baseline_value": "64.8 (second expert accuracy)",
+   "n": 546,
+   "setup": "Extended set, second expert validator",
+   "quote": "the second expert validator indicates positive post-hoc agreement on 85.4% of the questions",
+   "table": null,
+   "note": "First expert validator: 80.1%.",
+   "where": "Sec 3.1"
+  },
+  {
+   "claim": "Of 191 second-expert mistakes, 46% (categories 1 to 3) were followed by feedback saying the question is correct; 28.3% were judged bad questions.",
+   "kind": "measured",
+   "source": null,
+   "metric": "share of expert errors where question judged good",
+   "value": "46",
+   "unit": "%",
+   "baseline_value": null,
+   "n": 191,
+   "setup": "Manual classification of second expert feedback on extended set into 8 categories",
+   "quote": "Overall, 46% of the time when an expert validator answers differently from the question writer, after they read the question writer's explanation they clearly communicate that they believe the question is correct.",
+   "table": null,
+   "note": "Table 4 totals: 45.6% good, 24.1% unsure, 28.3% bad, 2.1% feedback missing. Category 1 clear mistake: 48 (25.1%); 8 answer is wrong: 23 (12.0%).",
+   "where": "Sec 3.1; Table 4"
+  },
+  {
+   "claim": "Estimated question objectivity is 73.6% (excluding clear expert mistakes) to 76.4% (also counting demonstrated understanding); headline conservative estimate 74%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "objectivity rate",
+   "value": "73.6",
+   "unit": "%",
+   "baseline_value": "76.4 (more permissive)",
+   "n": 546,
+   "setup": "Extended set, expert error rate with clear mistakes excluded",
+   "quote": "Excluding these cases from the expert validator error rate, we get a question objectivity proportion of 73.6%.",
+   "table": null,
+   "note": "Authors warn of false positives since feedback is subjective.",
+   "where": "Sec 3.1"
+  },
+  {
+   "claim": "Experts reported sufficient expertise on 90.7% of second validations on the extended set (93.5% main, 97.0% diamond).",
+   "kind": "measured",
+   "source": null,
+   "metric": "sufficient expertise",
+   "value": "90.7",
+   "unit": "%",
+   "baseline_value": null,
+   "n": 546,
+   "setup": "Second expert validations, self-reported",
+   "quote": "In 90.7% of second expert validations on the extended set, expert validators reported that they did feel like they had sufficient expertise to answer the questions correctly.",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.1; Table 2"
+  },
+  {
+   "claim": "Expert accuracy varies by domain: biology 66.7, physics 57.3, chemistry 72.0; non-expert 43.2, 32.5, 31.4.",
+   "kind": "measured",
+   "source": null,
+   "metric": "expert accuracy by domain",
+   "value": "57.3",
+   "unit": "%",
+   "baseline_value": "32.5 (non-expert, physics)",
+   "n": 227,
+   "setup": "Extended set, physics questions",
+   "quote": null,
+   "table": "Table 3, row Physics, column Expert Acc. (%)",
+   "note": "Biology 105 questions, chemistry 214. Table 3 caption mentions GPT-4 accuracy but no column is printed. Text gives GPT-4 few-shot CoT: biology 58.1%, physics 37.0%, chemistry 31.8%. Organic chemistry expert accuracy 81% vs 55% for rest of chemistry.",
+   "where": "Table 3; Sec 3.1; Sec 4"
+  },
+  {
+   "claim": "GPT-4 few-shot CoT is stronger on biology (58.1%) than physics (37.0%) and chemistry (31.8%).",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy by domain",
+   "value": "58.1",
+   "unit": "%",
+   "baseline_value": null,
+   "n": 105,
+   "setup": "Extended set biology questions, GPT-4 few-shot CoT",
+   "quote": "accuracy on biology questions (58.1%) is higher than physics (37.0%) and chemistry (31.8%)",
+   "table": null,
+   "note": null,
+   "where": "Sec 4"
+  },
+  {
+   "claim": "Expert and non-expert calibration ECE are similar (0.13 and 0.12) but non-experts are overconfident outside the 25% bin.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ECE",
+   "value": "0.13",
+   "unit": "ECE (expert)",
+   "baseline_value": "0.12 (non-expert)",
+   "n": null,
+   "setup": "Discrete confidences 25/40/55/70/85/99%",
+   "quote": "ECE values for expert and non-expert validators are 0.13 and 0.12 respectively.",
+   "table": null,
+   "note": "Fig 5 prints 0.1259 and 0.1188.",
+   "where": "Appendix A.2"
+  },
+  {
+   "claim": "Answer-only classifiers (T5 and CBOW) fail to beat chance at picking the correct answer, suggesting no easy spurious features.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "25",
+   "unit": "% (chance)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "80/20 split of extended set, answer choices only, randomised order",
+   "quote": "T5 is unable to attain better than 25%",
+   "table": null,
+   "note": "Authors note the same methods also failed on a 350-entry SNLI subsample, so the test has limited sensitivity.",
+   "where": "Appendix A.2"
+  },
+  {
+   "claim": "Estimated average payment to contractors is about $95 per hour, maximum possible $150.",
+   "kind": "measured",
+   "source": null,
+   "metric": "hourly pay",
+   "value": "95",
+   "unit": "$ per hour",
+   "baseline_value": "150 (max)",
+   "n": 61,
+   "setup": "61 Upwork contractors; most pay from quality-conditional bonuses",
+   "quote": "we estimate an average hourly payment of approximately $95 per hour",
+   "table": null,
+   "note": null,
+   "where": "Sec 2.1"
+  }
+ ],
+ "limits": [
+  "Small size (448 examples) gives little statistical power: detecting differences needs large effects such as 50% to 60% accuracy for over 80% power; not suited to model training.",
+  "Non-experts are highly skilled PhD-level people, so their accuracy is an upper bound; future oversight experiments must measure non-expert accuracy independently.",
+  "Main and Diamond validator accuracies are biased by selection (filtering used the same validators); true values lie between extended and subset values.",
+  "Some non-experts may have had nearby expertise, possibly inflating non-expert accuracy.",
+  "Objectivity estimate (74%) rests on subjective manual classification of expert feedback; false positives possible. Roughly a quarter of expert errors came from questions judged bad.",
+  "Expert pool from Upwork with no regional or demographic balance; wording biases noted (masculine pronouns); not a representative sample of scientific questions.",
+  "Imperfect proxy for supervising superhuman systems.",
+  "Search baseline is weak: 37.2% abstention, unnamed search tool; authors cannot rule out that prompt changes would raise accuracy a lot.",
+  "Model baselines have no seeds, temperature or repeated runs reported; 2023 models (GPT-4, Llama-2-70B-chat) have been far surpassed since.",
+  "Only 2 of Irving and Askell's 9 desiderata unmet: available data (small) and testing known biases."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Google-proof",
+   "definition": "Questions that highly skilled non-experts with unrestricted web access (no LLMs) still answer with low accuracy",
+   "where": "Abstract"
+  },
+  {
+   "term": "GPQA Diamond",
+   "definition": "198 questions where both experts agree and at most 1 of 3 non-experts answers correctly",
+   "where": "Table 2"
+  },
+  {
+   "term": "Expert agreement",
+   "definition": "Expert answers correctly, or after seeing the answer clearly explains the mistake or shows understanding of the writer's explanation",
+   "where": "Fig 1 caption; Table 2 caption"
+  },
+  {
+   "term": "Post-hoc agreement",
+   "definition": "Expert's judgement after seeing writer's answer that the question is objective and its answer uncontroversially correct",
+   "where": "Sec 3.1"
+  },
+  {
+   "term": "Scalable oversight",
+   "definition": "Reliably extracting truthful information from models on questions we cannot produce or verify the truth for ourselves",
+   "where": "Sec 1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Measuring progress on scalable oversight for large language models",
+   "year": 2022,
+   "arxiv": "2211.03540",
+   "relation": "extends",
+   "note": "Sandwiching experiments that GPQA is built to support",
+   "quote": null
+  },
+  {
+   "work": "AI safety needs social scientists",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Irving and Askell nine desiderata; GPQA meets seven",
+   "quote": null
+  },
+  {
+   "work": "QuALITY",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Similar effort but expertise gap simulated by reading a passage",
+   "quote": null
+  },
+  {
+   "work": "ExpertQA",
+   "year": 2023,
+   "arxiv": "2309.07852",
+   "relation": "related",
+   "note": "Expert-sourced but answers not checked against other experts or non-expert difficulty",
+   "quote": null
+  },
+  {
+   "work": "MMLU",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Curated standardised-test benchmark contrasted with GPQA",
+   "quote": null
+  },
+  {
+   "work": "Measuring and narrowing the compositionality gap (self-ask)",
+   "year": 2022,
+   "arxiv": "2210.03350",
+   "relation": "uses-method",
+   "note": "Basis of open-book search prompt",
+   "quote": null
+  },
+  {
+   "work": "Large language models are zero-shot reasoners",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Zero-shot CoT prompt",
+   "quote": null
+  },
+  {
+   "work": "A comprehensive evaluation of tool-assisted generation strategies",
+   "year": 2023,
+   "arxiv": "2310.10062",
+   "relation": "related",
+   "note": "Cited for LLMs struggling to use search tools",
+   "quote": null
+  },
+  {
+   "work": "Llama 2",
+   "year": 2023,
+   "arxiv": "2307.09288",
+   "relation": "evaluates",
+   "note": "Llama-2-70B-chat baseline",
+   "quote": null
+  },
+  {
+   "work": "GPT-4 technical report",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "GPT-4 baseline",
+   "quote": null
+  },
+  {
+   "work": "Debate helps supervise unreliable experts",
+   "year": 2023,
+   "arxiv": "2311.08702",
+   "relation": "related",
+   "note": "Companion debate experiments on QuALITY",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Our data creation pipeline. First, a question is written, and one expert in the same domain as the question gives their answer and feedback including suggested revisions to the question. Then, the question writer revises the question, and this revised question is sent to another expert in the same domain, as well as three non-expert validators who have expertise in other domains.",
+   "page": 3,
+   "why": "Shows the full write, validate, revise, non-expert-check pipeline and the Diamond inclusion rule in one diagram."
+  },
+  {
+   "figure": "Table 2",
+   "caption": "Counts, expert accuracy, and non-expert accuracy for the extended set, the main set, and the diamond set.",
+   "page": 6,
+   "why": "Gives the three set sizes, filter rules and validator accuracies side by side."
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Heatmap of the accuracy of validators with expertise in each domain (columns), when they answer questions in each domain (rows).",
+   "page": 9,
+   "why": "Diagonal vs off-diagonal makes the expertise gap visible per domain."
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Extended-set accuracies differ between Table 2 (expert 64.8, non-expert 34.1) and Table 5 (65.4, 33.9); diamond and main also differ slightly. Not explained.",
+  "Appendix A.2 calls the extended set '564-question' while Section 2.3 says 564 collected and 546 kept.",
+  "Table 3 caption says GPT-4 accuracy per domain is shown but no such column is printed; values are in Sec 4 text.",
+  "Venue: PDF shows only 'arXiv:2311.12022v1 [cs.AI] 20 Nov 2023', no conference or journal.",
+  "No embedded instructions found. The PDF asks readers not to reveal dataset examples in plain text online; a canary string in the PDF was not reproduced here."
+ ]
+}

@@ -27,6 +27,7 @@ sources:
   - https://arxiv.org/abs/2402.14740
   - https://arxiv.org/abs/2301.04104 (DreamerV3; Nature 2025)
   - https://arxiv.org/abs/2502.21321 (Kumar et al., LLM post-training survey)
+  - https://arxiv.org/abs/2301.01379 (Ahilan, A Succinct Summary of Reinforcement Learning)
 ---
 
 # 1 — RL Foundations for LLMs
@@ -132,6 +133,8 @@ and GRPO estimates it from a group of sampled answers (see
 
 All three are instances of **generalized policy iteration**: evaluate the current policy,
 make it greedier against that evaluation, repeat.
+
+Two facts from a short tutorial summary of RL ([arXiv:2301.01379](https://arxiv.org/abs/2301.01379) (Ahilan, 2023-01, preprint)) explain why the table's methods differ beyond bias and variance. Repeated Bellman expectation backups converge because the backup is a γ-contraction in the infinity norm, which needs γ < 1 in an infinite-horizon problem. And on a fixed batch of experience, Monte Carlo converges to the value that minimises squared error on the observed returns, while TD(0) converges to the value of the maximum-likelihood Markov model of that data, so the two can disagree. The paper is a proof-sketch summary of Sutton and Barto and Silver's course, with no experiments, and stops before PPO.
 
 ### Algorithm families
 

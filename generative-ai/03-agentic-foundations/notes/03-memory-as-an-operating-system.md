@@ -29,6 +29,8 @@ sources:
   - https://arxiv.org/abs/2602.07755
 confidence: high
 cleaned: 2026-11-01
+  - Schuurmans 2023, Memory Augmented Large Language Models are Computationally Universal — https://arxiv.org/abs/2301.04589
+  - Liu et al. 2024, From LLM to Conversational Agent: A Memory Enhanced Architecture with Fine-Tuning of Large Language Models (RAISE) — https://arxiv.org/abs/2401.02777
 ---
 
 # 3 — Memory as an operating system
@@ -75,6 +77,8 @@ The four ideas:
 2. **Inner thoughts.** The agent reasons privately; the user sees only what it sends.
 3. **Every output is a tool call.** Even replying to the user is a tool (`send_message`).
 4. **Looping via heartbeats.** A tool call can set `request_heartbeat=True` to get another turn without waiting for the user.
+
+The analogy has a formal floor. Schuurmans ([arXiv:2301.04589](https://arxiv.org/abs/2301.04589) (Schuurmans, 2023-01, preprint)) shows a model that conditions on a bounded context is a finite automaton, and that giving it a read/write associative memory plus a regex loop removes the limit: Flan-U-PaLM 540B with a dictionary as memory simulated a universal Turing machine (15 states, 2 symbols) with all 29 state-symbol prompts answered correctly in one greedy call each. The model is the CPU, the dictionary the RAM, and one key holds the next prompt. This is a proof of capability, not a memory design: it checked one model once with no failure rates, and the author reports it was brittle (other LLMs failed, prompts had to be terse, if-then-else was not reliable).
 
 ---
 
@@ -373,6 +377,8 @@ better_prompt = optimizer.invoke({
 })
 ```
 
+RAISE ([arXiv:2401.02777](https://arxiv.org/abs/2401.02777) (Liu et al., 2024-01, preprint)) is a small worked case of prompt-assembled memory rather than paging. It extends ReAct with a scratchpad (dialogue-level, short-term) and retrieved examples (turn-level, long-term). In the fine-tuned Qwen-14B-Chat block, quality rose step by step as each was added: ReAct 7.52, plus scratchpad 7.61, plus examples 7.66, RAISE 7.71 (100 held-out real-estate chat scenes, human-scored, 848 training scenes). Under GPT-4 prompting RAISE (7.69) did not beat ReAct plus examples (7.72), so the memory gain is small and shows mainly after fine-tuning; one in-house dataset, no significance test, and no long-conversation test.
+
 ---
 
 ## Shared memory across agents
@@ -383,7 +389,7 @@ Blocks are database rows, so two agents can attach the same block. Lab 6 gives a
 
 *Figure: shared blocks (Letta course, L4).*
 
-The multi-agent side of Lab 6 is in [04 — multi-agent design patterns](04-multi-agent-design-patterns.md#letta-agents-as-services-with-shared-memory).
+The multi-agent side of Lab 6 is in [04 — multi-agent design patterns](04c-planning-architectures-and-failure.md#letta-agents-as-services-with-shared-memory).
 
 ---
 

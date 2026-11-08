@@ -233,7 +233,7 @@ Training on the hard data at 512 moved accuracy from 0.396 to 0.496. Keeping the
 
 ## 4-bit on a Mac
 
-[bitsandbytes 0.50.0](https://github.com/bitsandbytes-foundation/bitsandbytes/releases/tag/0.50.0) (July 2026) says all 4-bit configurations "now work on MPS", with torch 2.9 or later, and the Transformers guide recommends 4-bit with LoRA for models that don't fit. Training on a 4-bit base is usually called QLoRA ([arXiv:2305.14314](https://arxiv.org/abs/2305.14314), NeurIPS 2023). The 4-bit type here, NF4 ([4-bit formats](../../07-inference-engineering/notes/08-adaptive-inference.md#weight-formats-you-will-meet)), stores 16 levels per value, spaced to match a normal distribution. It worked:
+[bitsandbytes 0.50.0](https://github.com/bitsandbytes-foundation/bitsandbytes/releases/tag/0.50.0) (July 2026) says all 4-bit configurations "now work on MPS", with torch 2.9 or later, and the Transformers guide recommends 4-bit with LoRA for models that don't fit. Training on a 4-bit base is usually called QLoRA ([arXiv:2305.14314](https://arxiv.org/abs/2305.14314), NeurIPS 2023). The 4-bit type here, NF4 ([4-bit formats](../../07-inference-engineering/notes/08c-quantization-and-low-precision.md#weight-formats-you-will-meet)), stores 16 levels per value, spaced to match a normal distribution. It worked:
 
 | Base | Weights in memory | Driver memory in training | Seconds per step | Field accuracy (sd) |
 |---|---:|---:|---:|---:|

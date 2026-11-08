@@ -155,7 +155,7 @@ flowchart LR
 
 ### The max-score pool over Tallybook
 
-Why keep the maximum and not the sum? A sum rewards a chunk for being found often, and paraphrases of one question are not independent votes, so a chunk that matches a common phrase climbs. The maximum asks a different question: did any phrasing find this chunk strongly? That is what expansion is for. The [multi-query demo in note 05](05-chunking-query-parsing-and-reranking.md) fused rankings with RRF, which looks only at positions. PRINCE's choice needs comparable scores, which it gets by running the same weighted search each time.
+Why keep the maximum and not the sum? A sum rewards a chunk for being found often, and paraphrases of one question are not independent votes, so a chunk that matches a common phrase climbs. The maximum asks a different question: did any phrasing find this chunk strongly? That is what expansion is for. The [multi-query demo in note 5b](05b-query-parsing-conversational-retrieval-and-reranking.md) fused rankings with RRF, which looks only at positions. PRINCE's choice needs comparable scores, which it gets by running the same weighted search each time.
 
 The code below follows steps 2 to 4 with PRINCE's weights. The filter and the expansions are written by hand where the LLMs would be.
 
@@ -273,7 +273,7 @@ The chapter's improvement list:
 - Add BM25 for hybrid search.
 - Use a multi-index library (Superlinked) to weight several embeddings per item.
 
-Chat memory is in [note 05](05-chunking-query-parsing-and-reranking.md#conversational-retrieval), BM25 in [note 03](03-keyword-semantic-and-hybrid-search.md), and the router in [08b § routing](08b-routing-sub-agents-and-evaluation.md#routing).
+Chat memory is in [note 5b](05b-query-parsing-conversational-retrieval-and-reranking.md#conversational-retrieval), BM25 in [note 03](03-keyword-semantic-and-hybrid-search.md), and the router in [08b § routing](08b-routing-sub-agents-and-evaluation.md#routing).
 
 ---
 

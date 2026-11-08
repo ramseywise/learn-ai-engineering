@@ -169,7 +169,7 @@ The biggest lever for code is the same as everywhere: **context** — the releva
 - **Use familiar visual conventions.** Standard chart types and diagram formats work better than invented ones — the Little Red Riding Hood principle for images.
 - For long documents with images, the long-context ordering advice still holds: content first, question last ([02](02-prompt-anatomy.md#ordering)).
 
-Multimodal CoT (rationale first, then answer) is in [03](03-core-techniques.md#chain-of-thought).
+Multimodal CoT (rationale first, then answer) is in [03](03b-chain-of-thought-and-reasoning.md#chain-of-thought).
 
 Images also matter for training. Text-only pretraining is approaching "the whole public internet" as a ceiling, and images and video add a different kind of signal (spatial reasoning, physical common sense, social cues), not just more of the same.
 

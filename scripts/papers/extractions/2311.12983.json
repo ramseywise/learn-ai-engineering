@@ -1,0 +1,486 @@
+{
+ "schema": 1,
+ "key": "2311.12983",
+ "pdf": "generative-ai/08-eval/sources/mialon-2023-gaia.pdf",
+ "bib": {
+  "title": "GAIA: A Benchmark for General AI Assistants",
+  "authors": [
+   "Grégoire Mialon",
+   "Clémentine Fourrier",
+   "Craig Swift",
+   "Thomas Wolf",
+   "Yann LeCun",
+   "Thomas Scialom"
+  ],
+  "first_author": "Mialon",
+  "year": 2023,
+  "venue": "preprint",
+  "arxiv": "2311.12983",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 82173,
+  "chars_total": 82173,
+  "engine": "pymupdf",
+  "skipped": "reference list skimmed only"
+ },
+ "type": "benchmark",
+ "question": "Can a benchmark of conceptually simple real-world assistant questions, hard for AI tools but easy for humans, measure general-assistant ability with simple automatic scoring?",
+ "hypothesis": "Tasks that are conceptually simple for humans but need robust multi-step tool use are a better yardstick for general assistants than tasks that are ever harder for humans.",
+ "contributions": [
+  "GAIA: 466 human-written questions with unique factoid answers, three difficulty levels",
+  "Question design and two-stage validation methodology",
+  "Evaluation of GPT-4 with and without plugins, GPT-4 Turbo, AutoGPT (GPT-4), a search engine and humans",
+  "Release of 166 annotated dev questions and 300 questions with held-out answers behind a leaderboard"
+ ],
+ "method": {
+  "summary": "466 questions written by compensated Surge AI annotators from author-made seeds, each answered by the creator and independently by two new annotators; questions kept if answers agree. Systems are prompted zero-shot with a format-fixing system prompt and scored by quasi exact match on the FINAL ANSWER.",
+  "task": "general AI assistant question answering with web browsing, tool use, multi-modality and file reading",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "GAIA",
+    "role": "eval",
+    "size": "466 questions (146 Level 1, 245 Level 2, 75 Level 3)",
+    "split": "166 dev with annotations and answers; 300 with answers withheld for leaderboard",
+    "source": "human-written by Surge AI annotators; Hugging Face gaia-benchmark",
+    "preprocessing": "623 newly crafted questions validated by two new annotators each; 68% valid as is, rest repaired or removed"
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT4",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT4 Turbo",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "AutoGPT (GPT4 backend)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "git hash": "ed172dec1947466cc0942abf75bb77b027cd433d"
+    }
+   },
+   {
+    "name": "GPT4 + plugins",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "selection": "manual ChatGPT queries; Advanced Data Analysis mode or up to three third-party plugins chosen by authors per task (oracle)"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "APIs run three times, average reported; GPT4 + plugins single manual run; search engine and humans single",
+   "prompting": "zero-shot; system prompt fixes the FINAL ANSWER format (number, few words, or comma separated list; no units, articles, abbreviations)",
+   "retrieval": null,
+   "parameters": {},
+   "other": {
+    "timing": "API times from running 20 questions then averaging"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Score",
+     "definition": "quasi exact match of FINAL ANSWER against single ground truth after normalization by answer type",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Avg. time to answer",
+     "definition": "mean minutes per question",
+     "unit": "mins",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "Human annotators",
+    "Search engine (first results page checked)"
+   ],
+   "protocol": "Automatic scoring function released with leaderboard; human score is fraction correct among validation annotators' attempts on valid questions; trace not evaluated"
+  },
+  "availability": {
+   "code": "https://huggingface.co/gaia-benchmark",
+   "weights": null,
+   "data": "166 dev questions with answers, 300 without answers, leaderboard"
+  },
+  "prompts": [
+   {
+    "purpose": "system prompt for answer format",
+    "text": "You are a general AI assistant. I will ask you a question. Report your thoughts, and finish your answer with the following template: FINAL ANSWER: [YOUR FINAL ANSWER]. YOUR FINAL ANSWER should be a number OR as few words as possible OR a comma separated list of numbers and/or strings. If you are asked for a number, don't use comma to write your number neither use units such as $ or percent sign unless specified otherwise. If you are asked for a string, don't use articles, neither abbreviations (e.g. for cities), and write the digits in plain text unless specified otherwise. If you are asked for a comma separated list, apply the above rules depending of whether the element to be put in the list is a number or a string.",
+    "where": "Fig 2, p5"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Human respondents score 92% against 15% for GPT-4 with plugins.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Score",
+   "value": 92,
+   "unit": "%",
+   "baseline_value": 15,
+   "n": null,
+   "setup": "GAIA, human annotators vs GPT-4 + plugins (manually chosen)",
+   "quote": "we show that human respondents obtain 92% vs. 15% for GPT-4 equipped with plugins",
+   "table": null,
+   "note": "15% is only in the abstract; Table 4 gives plugins 30.3/9.7/0 per level, no overall figure",
+   "where": "Abstract"
+  },
+  {
+   "claim": "GPT-4 plugins Level 1 score.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Score",
+   "value": 30.3,
+   "unit": "%",
+   "baseline_value": null,
+   "n": 146,
+   "setup": "GAIA 466 questions (146 L1, 245 L2, 75 L3), zero-shot with system prompt, quasi exact match; GPT-4 with manually selected plugins (oracle), single manual run",
+   "quote": null,
+   "table": "Table 4, row GPT4 + plugins*, column Level 1",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "GPT-4 plugins Level 2 score.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Score",
+   "value": 9.7,
+   "unit": "%",
+   "baseline_value": null,
+   "n": 245,
+   "setup": "GAIA 466 questions (146 L1, 245 L2, 75 L3), zero-shot with system prompt, quasi exact match; GPT-4 with manually selected plugins",
+   "quote": null,
+   "table": "Table 4, row GPT4 + plugins*, column Level 2",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "Every system scores 0 on Level 3.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Score",
+   "value": 0,
+   "unit": "%",
+   "baseline_value": 87.3,
+   "n": 75,
+   "setup": "GAIA 466 questions (146 L1, 245 L2, 75 L3), zero-shot with system prompt, quasi exact match; all LLM systems, search engine; humans 87.3",
+   "quote": null,
+   "table": "Table 4, column Level 3",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "Human score by level: 93.9 / 91.8 / 87.3.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Score",
+   "value": 93.9,
+   "unit": "%",
+   "baseline_value": null,
+   "n": 146,
+   "setup": "Validation annotators on valid questions, Level 1",
+   "quote": null,
+   "table": "Table 4, row Human annotator, column Level 1",
+   "note": "Level 2 91.8, Level 3 87.3; Table 3 prints 94/92/87",
+   "where": "Table 4"
+  },
+  {
+   "claim": "GPT-4 without plugins scores 9.1 on L1 and 2.6 on L2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Score",
+   "value": 9.1,
+   "unit": "%",
+   "baseline_value": null,
+   "n": 146,
+   "setup": "GAIA 466 questions (146 L1, 245 L2, 75 L3), zero-shot with system prompt, quasi exact match; GPT4 no tools, mean of 3 runs",
+   "quote": null,
+   "table": "Table 4, row GPT4, column Level 1",
+   "note": "9.1 ± 2.5 L1; 2.6 ± 0.6 L2",
+   "where": "Table 4"
+  },
+  {
+   "claim": "GPT-4 Turbo scores 13.0 on L1 and 5.5 on L2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Score",
+   "value": 13.0,
+   "unit": "%",
+   "baseline_value": null,
+   "n": 146,
+   "setup": "GAIA 466 questions (146 L1, 245 L2, 75 L3), zero-shot with system prompt, quasi exact match; GPT4 Turbo, mean of 3 runs",
+   "quote": null,
+   "table": "Table 4, row GPT4 Turbo, column Level 1",
+   "note": "13.0 ± 2.1 L1; 5.5 ± 1.4 L2",
+   "where": "Table 4"
+  },
+  {
+   "claim": "AutoGPT (GPT-4) scores 14.4 on L1 and 0.4 on L2, slow (7.6 and 11.7 min).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Score",
+   "value": 14.4,
+   "unit": "%",
+   "baseline_value": null,
+   "n": 146,
+   "setup": "GAIA 466 questions (146 L1, 245 L2, 75 L3), zero-shot with system prompt, quasi exact match; AutoGPT with GPT4 backend",
+   "quote": null,
+   "table": "Table 4, row AutoGPT (GPT4 backend), column Level 1",
+   "note": "L2 0.4; text calls L1/L2 results disappointing",
+   "where": "Table 4"
+  },
+  {
+   "claim": "A search engine answers 7.4% of Level 1 and 0% of Level 2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Score",
+   "value": 7.4,
+   "unit": "%",
+   "baseline_value": null,
+   "n": 146,
+   "setup": "GAIA 466 questions (146 L1, 245 L2, 75 L3), zero-shot with system prompt, quasi exact match; questions typed into a search engine; answer deducible from first results page",
+   "quote": null,
+   "table": "Table 4, row Search engine, column Level 1",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "Humans take 6.8 / 10.5 / 17.7 minutes per level.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Avg. time to answer",
+   "value": 17.7,
+   "unit": "mins",
+   "baseline_value": null,
+   "n": 75,
+   "setup": "Human annotators, Level 3 average time to answer",
+   "quote": null,
+   "table": "Table 4, row Human annotator, column Level 3 time",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "GPT-4 plugins answer fast (0.65 min L1) relative to AutoGPT (7.6 min).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Avg. time to answer",
+   "value": 0.65,
+   "unit": "mins",
+   "baseline_value": null,
+   "n": 146,
+   "setup": "GPT4 + plugins Level 1 time",
+   "quote": null,
+   "table": "Table 4, row GPT4 + plugins*, column Level 1 time",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "68% of crafted questions were valid as is; 75% L1, 68% L2, 47% L3.",
+   "kind": "measured",
+   "source": null,
+   "metric": "valid question rate",
+   "value": 68,
+   "unit": "%",
+   "baseline_value": null,
+   "n": 623,
+   "setup": "623 new questions, each answered by two new annotators",
+   "quote": "68% of the questions were good as is, while the rest had to be corrected or removed.",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.4, Table 3"
+  },
+  {
+   "claim": "Two annotator rounds plus repairs cost about two hours of annotator time per question.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 2,
+   "unit": "hours",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Question creation, validation by two annotators, repairs",
+   "quote": "We estimate the creation of a question, including its validation by two supplementary annotators and potential repairs, to require two hours of annotator time.",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.4"
+  }
+ ],
+ "limits": [
+  "Trace/plan is not evaluated, only final answer (Sec 6)",
+  "GPT-4 plugins score is an oracle: plugins hand-selected per question, manual ChatGPT queries, not reproducible; plugins change or disappear",
+  "AutoGPT underperformance may stem from its use of the GPT4 API (prompt and generation parameters); needs re-evaluation",
+  "OpenAI API gives no tool-call logs, so no fine-grained analysis; only strongest tool-capable LLMs evaluated",
+  "English only, annotators US-based; possible residual ambiguity; some questions unnaturally detailed",
+  "Few questions (466) vs MMLU ~15,000; benchmark will decay via contamination or web content disappearing",
+  "Levels are loose proxies from annotator step and tool counts, not hard constraints; no decoding parameters reported",
+  "Overall 15% for GPT-4 plugins appears only in abstract, not derivable from Table 4 without weighting",
+  "Dated: 2023 models; later systems have far higher scores (not in this source)"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "t-AGI",
+   "definition": "a t-AGI beats, on most tasks, most human experts who are given time t to perform the task",
+   "where": "footnote 4"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "AgentBench",
+   "year": 2023,
+   "arxiv": "2308.03688",
+   "relation": "related",
+   "note": "closed-environment agent benchmark GAIA contrasts with",
+   "quote": null
+  },
+  {
+   "work": "ToolQA",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "reuses existing datasets, contamination risk",
+   "quote": null
+  },
+  {
+   "work": "API-Bank",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "API-pool tool benchmark",
+   "quote": null
+  },
+  {
+   "work": "Gorilla APIBench",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "tests calls to specific APIs",
+   "quote": null
+  },
+  {
+   "work": "OpenAGI",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "closest benchmark; focuses on current capabilities",
+   "quote": null
+  },
+  {
+   "work": "MMLU",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "related",
+   "note": "contrasted: hard for humans, multiple choice, near saturated",
+   "quote": null
+  },
+  {
+   "work": "GPT-4 / ChatGPT plugins",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "main evaluated system",
+   "quote": null
+  },
+  {
+   "work": "AutoGPT",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "GPT-4 backend agent",
+   "quote": null
+  },
+  {
+   "work": "Levels of AGI (Morris et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "framework in which solving GAIA is placed",
+   "quote": null
+  },
+  {
+   "work": "Judging LLM-as-a-judge (Zheng et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "model-based evaluation GAIA avoids",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 4",
+   "caption": "Scores and time to answer per method and level. GPT4 + plugins score should be seen as an oracle since the plugins were chosen manually depending on the question. Human score refers to the score obtained by our annotators when validating the questions.",
+   "page": 8,
+   "why": "shows score and time per method and level in one view: humans near 90%, all LLM systems low and zero at Level 3"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "To answer GAIA, an AI assistant such as GPT4 (here equipped with a code interpreter) needs to complete a few steps, potentially using tools or reading files.",
+   "page": 5,
+   "why": "shows the system prompt and a full worked question"
+  },
+  {
+   "figure": "Fig 1",
+   "caption": "Sample GAIA questions.",
+   "page": 2,
+   "why": "one example per level"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "No venue printed; PDF shows only arXiv:2311.12983v1 [cs.CL], dated November 23, 2023 (arXiv stamp 21 Nov 2023), so venue recorded as preprint",
+  "Abstract says 466 questions with 300 answers withheld; Intro says 166 dev + 300 unannotated"
+ ]
+}

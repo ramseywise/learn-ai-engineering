@@ -90,7 +90,7 @@ In multi-turn settings three things change (memory-side treatment in [02-context
 2. **The challenge is continuity and intent resolution, not only relevance.** Follow-ups contain pronouns, ellipsis, references ("what about the second one?") and topic drift. Query rewriting and memory selection often matter more than the retrieval model.
 3. **The agent decides when and where to retrieve.** Retrieving every turn can be wasteful or harmful. Policies like "reuse previous evidence", "retrieve only if needed" or "ask a clarifying question first" become part of the system.
 
-The mechanics (rewriting with CONQRR, history-aware retrieval, the dual retrieval data flow and the benchmarks) are in [05 § conversational retrieval](05-chunking-query-parsing-and-reranking.md#conversational-retrieval).
+The mechanics (rewriting with CONQRR, history-aware retrieval, the dual retrieval data flow and the benchmarks) are in [5b § conversational retrieval](05b-query-parsing-conversational-retrieval-and-reranking.md#conversational-retrieval).
 
 ---
 

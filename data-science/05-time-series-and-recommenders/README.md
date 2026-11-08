@@ -38,7 +38,7 @@ Comes after [classical ML](../01-classical-ml/README.md) and [deep learning](../
 | [DA 06/01 Forecasting](../../data-analytics/06-applied-analyses/notes/01-forecasting.md) | Baselines, and a forecast taken through to a decision |
 | [DA 06/05 Segmentation and RFM](../../data-analytics/06-applied-analyses/notes/05-segmentation-and-rfm.md) | The segments in the cash-flow case |
 | [DS 01/07 Boosting in practice](../01-classical-ml/notes/07-boosting-in-practice.md) | The trees under LambdaMART |
-| [GA 02/05 Chunking, query parsing and reranking](../../generative-ai/02-rag-retrieval/notes/05-chunking-query-parsing-and-reranking.md) | A neural reranker, the same pair scoring over text |
+| [GA 02/05b Query parsing, conversational retrieval and reranking](../../generative-ai/02-rag-retrieval/notes/05b-query-parsing-conversational-retrieval-and-reranking.md) | A neural reranker, the same pair scoring over text |
 
 **Feeds into**
 

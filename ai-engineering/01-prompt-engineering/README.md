@@ -43,7 +43,7 @@ The rules from the topic notes on one page. Each group links to the note that ex
 - Pick a **familiar document type** (email, report, transcript) that the model has seen completed many times.
 - Version the **template**, not the rendered prompt.
 
-**Choosing a technique** ([03](notes/03-core-techniques.md))
+**Choosing a technique** ([03](notes/03-core-techniques.md), [3b](notes/03b-chain-of-thought-and-reasoning.md))
 - Start with **zero-shot**. Add **few-shot** examples (diverse, consistent, shuffled) for format or style.
 - Use **CoT** for multi-step reasoning on standard models. Use **self-consistency** when you can afford several samples.
 - Use **PAL** for arithmetic, **ReAct** for tool use, and **Reflexion** when there's a checkable signal to retry against.
@@ -123,7 +123,8 @@ A prompt eval harness: three prompt variants over twelve labelled tickets, three
 
 **Techniques**
 
-3. [Core techniques](notes/03-core-techniques.md) — zero/few-shot, CoT, self-consistency, ToT, PAL, ReAct, Reflexion and more, with a "which technique when" table.
+3. [Core techniques](notes/03-core-techniques.md) — zero/few-shot, ReAct, ART, Active-Prompt, Reflexion and more, with a "which technique when" table.
+   - 3b. [Chain-of-thought and reasoning techniques](notes/03b-chain-of-thought-and-reasoning.md) — CoT and its variants, self-consistency, generated knowledge, ToT, PAL.
 4. [Controlling output](notes/04-controlling-output.md) — sampling, stop sequences, the structured-output ladder, logprobs, fine-tuning.
 5. [Tools and function calling](notes/05-tools-and-function-calling.md) — the loop, writing tool definitions, safety gates, debugging.
 6. [Chaining and workflows](notes/06-chaining-and-workflows.md) — prompt chains, topologies, Anthropic's workflow patterns, workflows vs. agents.

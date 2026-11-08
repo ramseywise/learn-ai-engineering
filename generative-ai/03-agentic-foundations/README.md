@@ -70,12 +70,14 @@ sources/       chapter PDFs (Generative AI Design Patterns, AI Agents: The Defin
 |---|---|---|
 | 1 | [Agent fundamentals](notes/01-agent-fundamentals.md) | The restock agent, Agent = LLM + context + tools, the context ablation, ReAct trajectory, a loop in one screen, model-as-agent, agents as state machines, choosing and staffing models, workflow vs autonomous, how agents learn |
 | 1b | [What an agent costs](notes/01b-what-an-agent-costs.md) | Why tokens grow with the square of the steps, cost-of-pass, which components pay (Efficient Agents), the levers and their costs, where the competence lives, what must persist across runtimes |
-| 2 | [Tool use and the ReAct loop](notes/02-tool-use-and-react.md) | The four-step tool-call mechanism, the raw loop, ReAct as a prompt, what reasoning steps fix and what they do not, caller/executor split, MCP servers, code execution, reliability rules, always call a tool first, tool preselection, six prompt-injection defenses |
+| 2 | [Tool use and the ReAct loop](notes/02-tool-use-and-react.md) | The four-step tool-call mechanism, the raw loop, ReAct as a prompt, what reasoning steps fix and what they do not, caller/executor split |
 | 2b | [Planning and tool use](notes/02b-planning-and-tool-use.md) | Plans that name the tool per step (Routine), restating state (AoT+), plan DAGs and parallel calls (GAP, task-decoupled planning), tool retrieval and tool-description repair, a planned executor |
+| 2c | [MCP, code execution and safe tool calls](notes/02c-mcp-code-and-safe-tool-calls.md) | MCP servers (tools, resources, prompts), code execution instead of a tool list, reliability rules, always call a tool first, tool preselection, six prompt-injection defenses |
 | 3 | [Memory as an operating system](notes/03-memory-as-an-operating-system.md) | MemGPT's OS analogy, context compilation, core/recall/archival tiers, heartbeats, the Letta API, agentic RAG, P28 memory types, LangMem, shared blocks |
 | 3b | [Learning from experience](notes/03b-learning-from-experience.md) | Skill libraries vs plain context, raw vs distilled memory, transfer across tasks and models, gating and retiring skills, measuring whether a store helps |
-| 4 | [Multi-agent design patterns](notes/04-multi-agent-design-patterns.md) | Ng's four patterns, AutoGen L1–L6 (conversation, sequential chats, reflection, tool use, coding, planning), planning strategies (plan-and-execute, ToT), Letta multi-agent, P23 architectures, supervisor/hierarchical/swarm, why multi-agent systems fail |
+| 4 | [Multi-agent design patterns](notes/04-multi-agent-design-patterns.md) | Ng's four patterns, AutoGen L1–L6 (conversation, sequential chats, reflection, tool use, coding, planning with a group chat), the three stop conditions, speaker transitions |
 | 4b | [When more agents pay](notes/04b-when-more-agents-pay.md) | Teams vs one agent at matched budget, voting vs diverse teams, latency vs compute, extra machinery against a stronger model, token cost of agent societies |
+| 4c | [Planning, architectures and why teams fail](notes/04c-planning-architectures-and-failure.md) | Planning strategies (plan-and-execute, ToT), Letta multi-agent, P23 architectures, supervisor/hierarchical/swarm, why multi-agent systems fail |
 | 5 | [Framework survey](notes/05-framework-survey.md) | AutoGen, CrewAI, LangGraph deep research, Google ADK, OpenAI Agents SDK, smolagents, LangGraph subgraphs and `interrupt`, MCP vs A2A, MLflow eval, choosing a framework |
 | 6 | [Google ADK intensive](notes/06-google-adk-intensive.md) | Kaggle five-day course notes, Days 1–3: agentic engineering, tests vs evals, trajectory evaluation, context types, the new SDLC, harness, protocols, agent skills |
 | 7 | [Guardrails and autonomy](notes/07-guardrails-and-autonomy.md) | Where controls sit, lowering risk before filtering (P29–P32), self-check limits, execution gates, what the user must see, autonomy levels |
@@ -103,25 +105,25 @@ sources/       chapter PDFs (Generative AI Design Patterns, AI Agents: The Defin
 | Rule | Note |
 |---|---|
 | The model proposes a call; your code decides whether and how to run it | [02](notes/02-tool-use-and-react.md) |
-| Keep the tool list to roughly 3–10 tools, each with one job and a clear description | [02](notes/02-tool-use-and-react.md) |
-| Never make the model fill in values your code already knows | [02](notes/02-tool-use-and-react.md) |
+| Keep the tool list to roughly 3–10 tools, each with one job and a clear description | [02c](notes/02c-mcp-code-and-safe-tool-calls.md) |
+| Never make the model fill in values your code already knows | [02c](notes/02c-mcp-code-and-safe-tool-calls.md) |
 | Return readable errors from tools so the model can retry | [02](notes/02-tool-use-and-react.md), [05](notes/05-framework-survey.md) |
-| Generated code runs in a sandbox, never on the host | [02](notes/02-tool-use-and-react.md) |
-| Tool output is untrusted input: pick a prompt-injection pattern before you ship | [02](notes/02-tool-use-and-react.md) |
+| Generated code runs in a sandbox, never on the host | [02c](notes/02c-mcp-code-and-safe-tool-calls.md) |
+| Tool output is untrusted input: pick a prompt-injection pattern before you ship | [02c](notes/02c-mcp-code-and-safe-tool-calls.md) |
 | Small core memory, big searchable archive; show the agent what it is not seeing | [03](notes/03-memory-as-an-operating-system.md) |
 | Tell the agent when to save and when to search; it will not do either by default | [03](notes/03-memory-as-an-operating-system.md) |
 | Every multi-agent conversation needs a turn cap and a semantic stop | [04](notes/04-multi-agent-design-patterns.md) |
 | Constrain who speaks after whom; free speaker selection derails | [04](notes/04-multi-agent-design-patterns.md) |
-| Share facts through shared state, not through more messages | [04](notes/04-multi-agent-design-patterns.md) |
-| Start with one agent; most multi-agent failures are coordination failures | [04](notes/04-multi-agent-design-patterns.md) |
+| Share facts through shared state, not through more messages | [04c](notes/04c-planning-architectures-and-failure.md) |
+| Start with one agent; most multi-agent failures are coordination failures | [04](notes/04-multi-agent-design-patterns.md), [04c](notes/04c-planning-architectures-and-failure.md) |
 | Pick the framework by its unit of programming: conversation, crew, graph or agent object | [05](notes/05-framework-survey.md) |
 | Use plain code or a fixed workflow when the steps are known; reach for an agent only when the path depends on what it finds | [01](notes/01-agent-fundamentals.md) |
 | Cap the loop and make the last step a wrap-up, not a silent cutoff | [01](notes/01-agent-fundamentals.md) |
 | A prompt restriction is not a permission: enforce limits in credentials and code | [07](notes/07-guardrails-and-autonomy.md) |
 | Staff models by role: a cheap fast model for routine steps, a reasoning budget only where it pays | [01](notes/01-agent-fundamentals.md) |
-| Past roughly ten tools, retrieve the relevant few per turn instead of sending all of them | [02](notes/02-tool-use-and-react.md) |
+| Past roughly ten tools, retrieve the relevant few per turn instead of sending all of them | [02b](notes/02b-planning-and-tool-use.md), [02c](notes/02c-mcp-code-and-safe-tool-calls.md) |
 | Plan with the model, execute arithmetic and lookups in code | [02](notes/02-tool-use-and-react.md) |
-| Count the calls before you search over plans: width and depth multiply | [04](notes/04-multi-agent-design-patterns.md) |
+| Count the calls before you search over plans: width and depth multiply | [04c](notes/04c-planning-architectures-and-failure.md) |
 | Keep the verbatim record and curate the index on top of it | [03](notes/03-memory-as-an-operating-system.md) |
 | Never put a side effect in the same node as an `interrupt` | [05](notes/05-framework-survey.md) |
 | Evaluate the trajectory as well as the output: a lucky run passes an output check | [06](notes/06-google-adk-intensive.md) |

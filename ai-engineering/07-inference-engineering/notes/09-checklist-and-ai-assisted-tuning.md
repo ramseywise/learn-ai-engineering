@@ -52,7 +52,7 @@ Fregly's appendix is a checklist of roughly 175–180 items in 18 categories, co
 
 ### 5. Kernels and precision
 
-20. Go to FP8 first, then validate NVFP4 or INT4 against your evals ([08](08-adaptive-inference.md#quantization)).
+20. Go to FP8 first, then validate NVFP4 or INT4 against your evals ([08c](08c-quantization-and-low-precision.md#quantization)).
 21. Add speculative decoding at low-to-moderate batch ([08](08-adaptive-inference.md#speculative-decoding)).
 22. Try 2:4 structured sparsity only where kernels support it. The appendix gives up to ~2× on the sparse [matmuls](../../../generative-ai/01-llm-fundamentals/notes/02-attention-and-the-transformer-block.md#matrix-products-transpose-and-rank), not end-to-end.
 23. Autotune kernels for your shapes (`max-autotune`, engine tuners). The appendix gives 20–30% on the tuned kernels.

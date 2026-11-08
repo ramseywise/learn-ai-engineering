@@ -12,6 +12,9 @@ sources:
   - https://arxiv.org/abs/2505.22954
   - https://arxiv.org/abs/2601.21557
   - https://arxiv.org/abs/2603.28052
+  - https://arxiv.org/abs/2412.13194
+  - https://arxiv.org/abs/2402.15809
+  - https://arxiv.org/abs/2412.14352
 confidence: medium
 cleaned: 2026-11-01
 ---
@@ -34,6 +37,8 @@ The same shape appears at three scales:
 | Practitioner | The loop's config files | The evolve loop (below) |
 | Research | The training code, or the search method itself | `autoresearch`, bilevel autoresearch |
 | Frontier | The next model | Recursive self-improvement |
+
+The word "self-improvement" also names something much smaller. A survey of LLM inference-time self-improvement ([arXiv:2412.14352](https://arxiv.org/abs/2412.14352) (Dong et al., 2024-12, preprint)) defines it as relying on the model's frozen parameters, with no training and no parameter updates, and sorts the methods into three groups: independent (decoding and sampling), context-aware (prompting and retrieval) and model-aided (a draft, guide or reward model, or a tool). Each of those improves one answer and leaves nothing behind. Level 4 differs in that it changes persistent state that the next run starts from. The survey's practical warnings carry over: sampling several generations costs more inference time than changing the decoding itself, and anything that depends on an external datastore or guide model needs maintenance and is only as good as that auxiliary model. It is a catalogue with no benchmark comparisons, and it does not cover agent loops or reflection.
 
 ---
 
@@ -236,6 +241,8 @@ compiled = optimizer.compile(dspy.ChainOfThought(ThreatClassifier),
 Score the result on held-out cases before it ships. For each refinement, record three things: the problem you saw, the change you made, and the metric that will show whether it worked. Without that record nobody can tell later which edit fixed what, or roll one back.
 
 **Compiling workflows.** A browser trajectory that repeats with different parameters can be compiled into a parameterized script, with state checks before each action, after each action, and on the final state. The script is only a `candidate` until it has been replayed from a clean reset. When any check fails, it moves to `invalid` and the agent falls back to exploring. In PreAct this gave an **8.5–13× speedup** on repeated tasks. Without the final-state check, you get 100% replay coverage on a task that never completed.
+
+**Two research loops that act on this advice.** LearnAct ([arXiv:2402.15809](https://arxiv.org/abs/2402.15809) (Zhao et al., COLM 2024)) learns by editing the agent's action functions and their instructions from failed training runs, and keeps an edit only if it scores better when the training tasks are run again. At each step it samples several candidate edits and selects on a score that adds the training success rate to the share of executed actions that were valid. With a GPT-4 agent and a GPT-4 learner, three training instances per task and the mean of three runs, it reached an average success rate of **72.2% on AlfWorld against 54.7% for ReAct plus Reflexion**, and 82.8% against 66.7% on a robotic-planning set. With a GPT-3.5 Turbo agent the AlfWorld figures were 35.8% against 18.6%. The authors call the gap in the paper's abstract 32%, but that is relative, and the absolute gap is 17.5 points. About 90% of the learning steps rewrote an existing function, and the other steps added a note. The ablations back the "verify before you keep" rule. Removing the sampling of candidates dropped AlfWorld to 62.4%, and removing function updating to 62.0%. Learning peaked at about two iterations, and longer learning overfit to the training cases. It covers two text-based domains with GPT-4 as the learner for every agent (including the GPT-3.5 one), no variance estimate and no test-set sizes given. The PAE paper ([arXiv:2412.13194](https://arxiv.org/abs/2412.13194) (Zhou et al., 2024-12, preprint)) closes the other loop, the one the first section says open-weight models can run. A proposer writes web tasks for each site, the agent attempts them, an evaluator scores each trajectory from its last three screenshots as success or failure, and the agent is fine-tuned on its own successes (filtered behaviour cloning, with no value function). Starting from a model fine-tuned on trajectories from Claude 3 Sonnet, a LLaVa-1.6 34B agent rose from 22.2% to **33.0% on WebVoyager** (557 tasks over 13 sites, scored by a Claude auto-annotator), and the 7B model from 14.9% to 22.3%, which matches the 34B model before PAE. Skills carried to 85 unseen sites by 7.2 points (7B) and 5.3 points (34B). The evaluator design mattered: the pass/fail verdict on the final screenshots beat step-based and function-based evaluators, and the step-based one even scored below the starting checkpoint. A Qwen2VL-7B proposer and evaluator still lifted the 7B agent from 18.0% to 23.1% on a WebArena subset, though the main results use Claude 3 Sonnet because the authors find open VLMs hallucinate too much to judge reliably. The evaluator disagreed with human labels on 8.6% of trajectories (200 per method, five annotators). It is web navigation only, the baseline is itself distilled from Claude, and no seeds or variance are given. This loop changes weights, not a harness, so it is the RL branch of level 4.
 
 ### Updating the update method
 

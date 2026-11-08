@@ -3,6 +3,7 @@ origin: synthesis
 sources:
   - "Huyen, AI Engineering (O'Reilly, 2025), ch. 1–2"
   - https://arxiv.org/abs/2201.08239
+  - https://arxiv.org/abs/2310.03533
   - https://arxiv.org/abs/2304.00612
   - https://arxiv.org/abs/2301.06627
   - https://arxiv.org/abs/2009.11462
@@ -26,7 +27,7 @@ Our ticket assistant tells a customer that refunds take fourteen days. The polic
 
 Huyen calls the probabilistic nature of a model the root of its two most reported problems (*AI Engineering*, ch. 2):
 
-- **Inconsistency.** Sampling makes outputs vary by design. Fixing the temperature, top-p, top-k and seed reduces this but does not remove it: hosted models run on different machines, which do not execute the same arithmetic in exactly the same way, and on an API you do not choose the machine. Cache answers that must stay the same.
+- **Inconsistency.** Sampling makes outputs vary by design. Fixing the temperature, top-p, top-k and seed reduces this but does not remove it: hosted models run on different machines, which do not execute the same arithmetic in exactly the same way, and on an API you do not choose the machine. Cache answers that must stay the same. In code generation the spread is large: a software-engineering survey cites a study of repeated ChatGPT requests in which over 60% of tasks had zero equal test output across requests, and notes that executing the code against tests is the check that catches a wrong answer ([arXiv:2310.03533](https://arxiv.org/abs/2310.03533) (Fan et al., 2023-11, preprint)). Both are reported from other work, on 2023 models.
 - **Hallucination.** Huyen reports two hypotheses for *why*, neither settled. In the first (Ortega et al., 2021, DeepMind), a model cannot tell the text it was given from the text it generated, so an early wrong token gets treated as fact and built on; Zhang et al. (2023) call this snowballing, with an example where a model, having started from a wrong assumption, claims that 9,677 is divisible by 13 although it answers correctly when asked directly. In the second (Leo Gao, then John Schulman in an April 2023 talk, both at OpenAI), supervised fine-tuning teaches a model to imitate labelers' answers that use knowledge the model does not have, which trains it to make things up. The first blames self-supervision, the second supervision, so they can both be true. Schulman said RLHF reduced hallucination at OpenAI; the InstructGPT paper measured the opposite, with RLHF plus SFT hallucinating more than SFT alone on its closed-domain tasks, even though labelers preferred the RLHF model overall. The practical upshot is the same either way: answer from provided context, ask for concise answers (fewer tokens, fewer chances to invent), and check claims.
 
 ---

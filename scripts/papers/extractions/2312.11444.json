@@ -1,0 +1,817 @@
+{
+ "schema": 1,
+ "key": "2312.11444",
+ "pdf": "generative-ai/08-eval/sources/akter-2023-depth-look-gemini-s-language.pdf",
+ "bib": {
+  "title": "An In-depth Look at Gemini’s Language Abilities",
+  "authors": [
+   "Syeda Nahida Akter",
+   "Zichun Yu",
+   "Aashiq Muhamed",
+   "Tianyue Ou",
+   "Alex Bäuerle",
+   "Ángel Alexander Cabrera",
+   "Krish Dholakia",
+   "Chenyan Xiong",
+   "Graham Neubig"
+  ],
+  "first_author": "Akter",
+  "year": 2023,
+  "venue": "preprint",
+  "arxiv": "2312.11444",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 64679,
+  "chars_total": 64679,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "benchmark",
+ "question": "How do Gemini Pro and the OpenAI GPT 3.5 Turbo / GPT 4 Turbo models compare on language tasks when all are run with the same prompts and evaluation, and where does each excel?",
+ "hypothesis": "Implied: Google's first-party claim that Gemini Pro is comparable to GPT 3.5 Turbo may not hold under independent, identical-prompt evaluation.",
+ "contributions": [
+  "A third-party, objective comparison of OpenAI GPT and Google Gemini models with reproducible code and fully transparent results.",
+  "An in-depth analysis of the results, identifying areas where one of the two model classes excels."
+ ],
+ "method": {
+  "summary": "Four models (Gemini Pro, GPT 3.5 Turbo, GPT 4 Turbo, Mixtral) were queried through LiteLLM on 10 datasets spanning knowledge QA, reasoning, math, code, translation and web agents, with identical prompts and evaluators drawn from standard repositories (sometimes the Gemini team's recommended prompts). Results are broken down by question length, answer type, subtask and other slices with the Zeno tool.",
+  "task": "Benchmarking of LLM language abilities (MMLU, BBH, GSM8K, SVAMP, ASDIV, MAWPS, HumanEval, ODEX, FLORES-200, WebArena)",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "MMLU",
+    "role": "eval",
+    "size": "14,042 test samples, 57 tasks",
+    "split": "test",
+    "source": "Hendrycks et al. 2021",
+    "preprocessing": "5-shot standard prompts; also 5-shot CoT from chain-of-thought-hub"
+   },
+   {
+    "name": "BIG-Bench Hard",
+    "role": "eval",
+    "size": "27 tasks, mostly 250 QA pairs each",
+    "split": null,
+    "source": "Suzgun et al. 2022",
+    "preprocessing": "3-shot CoT from Eleuther harness; answer matching changed to last word for multiple-choice tasks"
+   },
+   {
+    "name": "GSM8K, SVAMP, ASDIV, MAWPS",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Cobbe 2021; Patel 2021; Miao 2020; Koncel-Kedziorski 2016",
+    "preprocessing": "8-shot CoT; answer = last number in generated text"
+   },
+   {
+    "name": "HumanEval",
+    "role": "eval",
+    "size": "164 test samples",
+    "split": null,
+    "source": "Chen et al. 2021",
+    "preprocessing": "rudimentary post-processing: strip markdown code blocks, extract function, truncate trailing prose; missing imports not fixed"
+   },
+   {
+    "name": "ODEX",
+    "role": "eval",
+    "size": "439 test samples",
+    "split": null,
+    "source": "Wang et al. 2022b",
+    "preprocessing": "same as HumanEval"
+   },
+   {
+    "name": "FLORES-200",
+    "role": "eval",
+    "size": "1012 test sentences per language pair, 20 languages (English to X only)",
+    "split": "test",
+    "source": "NLLB Team 2022; language subset from Robinson et al. 2023",
+    "preprocessing": null
+   },
+   {
+    "name": "WebArena",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Zhou et al. 2023b",
+    "preprocessing": "observation limit 1920 tokens using gpt-4-1106-preview tokenizer"
+   }
+  ],
+  "models": [
+   {
+    "name": "Gemini Pro",
+    "role": "evaluated",
+    "params": "not disclosed",
+    "architecture": "Transformer, trained multimodally",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "access": "Google Vertex AI",
+     "safety": "safety filters disabled for main results; gemini-pro-filtered = filters on"
+    }
+   },
+   {
+    "name": "GPT 3.5 Turbo",
+    "role": "evaluated",
+    "params": "not disclosed",
+    "architecture": "instruction tuned, RLHF, text only",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "access": "OpenAI API",
+     "exact version string": null
+    }
+   },
+   {
+    "name": "GPT 4 Turbo",
+    "role": "evaluated",
+    "params": "not disclosed",
+    "architecture": "GPT-4 family second generation, multimodal",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "access": "OpenAI API",
+     "note": "WebArena observation limit uses tokenizer of gpt-4-1106-preview"
+    }
+   },
+   {
+    "name": "Mixtral",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "sparse mixture of experts, 8 groups of parameters, two used per token",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "version": "mistralai/Mixtral-8x7b-Instruct-v0.1",
+     "access": "Together API"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "greedy (temperature 0) for MMLU, BBH, math, code; temperature 0.3 for translation; provider defaults for WebArena",
+   "temperature": "0 (MMLU, BBH, math), 0.0 (code), 0.3 (FLORES), Gemini 0.9 / GPT 1.0 (WebArena)",
+   "top_p": "1 (FLORES); Gemini 1.0 / GPT 0.9 (WebArena)",
+   "max_tokens": "500 (FLORES); not stated for others",
+   "samples": "one response per item; no self-consistency or multiple sampling; no seeds or repeated runs stated",
+   "prompting": "few-shot: MMLU 5-shot (and 5-shot CoT with 'Let's think step by step.'), BBH 3-shot CoT, math 8-shot CoT, code zero-shot, FLORES 5-shot (zero-shot in Appendix C), WebArena 2-shot CoT with and without UA hint",
+   "retrieval": null,
+   "parameters": {
+    "gemini_safety_filter": "disabled for main results",
+    "flores_context_length": "-1",
+    "queried_dates": "December 11-22, 2023",
+    "results_as_of": "December 27, 2023",
+    "interface": "LiteLLM"
+   },
+   "other": {
+    "pricing_per_1M_tokens_input_output": "Gemini Pro $1.00/$2.00 (character price x4); GPT 3.5 Turbo $1.00/$2.00; GPT 4 Turbo $10.00/$30.00; Mixtral $0.60/$0.60"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Accuracy",
+     "definition": "MMLU: first generated character (5-shot) or extracted answer with default 'C' (CoT); BBH: last word for multiple-choice else 'So the answer is' match; math: last number in output",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Pass@1",
+     "definition": "execution-based, single output passes test cases",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "chrF (chrF2++)",
+     "definition": "sentence-level averaged, sacreBLEU implementation, character and word n-gram overlap",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Success rate (SR)",
+     "definition": "WebArena execution-based; task counts as success if the final goal is achieved",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "GPT 3.5 Turbo",
+    "GPT 4 Turbo",
+    "Mixtral",
+    "Google Translate (MT)",
+    "NLLB-MoE (MT)"
+   ],
+   "protocol": "Single run per model and dataset; same prompts and evaluators for all models; no significance tests or confidence intervals; results as of 27 December 2023."
+  },
+  "availability": {
+   "code": "https://github.com/neulab/gemini-benchmark",
+   "weights": null,
+   "data": "results and model predictions in the repo and Zeno online report browser"
+  },
+  "prompts": [
+   {
+    "purpose": "Code generation (HumanEval/ODEX), Table 6",
+    "text": "Write the following python3 function:\n[CODE BLOCK]",
+    "where": "Appendix B, Table 6"
+   },
+   {
+    "purpose": "Code generation prompt in Sec 6.1",
+    "text": "Complete the following python3 function: ",
+    "where": "Sec 6.1"
+   },
+   {
+    "purpose": "FLORES zero-shot translation",
+    "text": "This is an English to [TGT] translation, please provide the [TGT] translation for this sentence. Do not provide any explanations or text apart from the translation.\n[SRC]: [src-sentence]\n[TGT]:",
+    "where": "Table 7"
+   },
+   {
+    "purpose": "FLORES five-shot translation",
+    "text": "This is an English to [TGT] translation, please provide the [TGT] translation for these sentences:\n[SRC]: [src-sentence] [TGT]: [tgt-sentence] [repeated five times, paraphrase]\nPlease provide the translation for the following sentence. Do not provide any explanations or text apart from the translation.\n[SRC]: [src-sentence]\n[TGT]:",
+    "where": "Table 7"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "inference.parameters.queried_dates",
+    "quote": "between December 11-22, 2023",
+    "where": "Sec 2.2"
+   },
+   {
+    "field": "models Mixtral version",
+    "quote": "we had inadvertently used a non-official",
+    "where": "Acknowledgements (v2 uses mistralai/Mixtral-8x7b-Instruct-v0.1)"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Gemini Pro is slightly below GPT 3.5 Turbo on MMLU 5-shot and far below GPT 4 Turbo; Mixtral beats both Gemini Pro and GPT 3.5 Turbo here",
+   "kind": "measured",
+   "source": null,
+   "metric": "MMLU 5-shot accuracy",
+   "value": "65.22",
+   "unit": "%",
+   "baseline_value": "67.75 (GPT 3.5 Turbo)",
+   "n": null,
+   "setup": "MMLU, 57 tasks, 14,042 test samples, 5-shot, greedy, temperature 0, first generated character taken as answer; Gemini Pro safety filter disabled; other models GPT 4 Turbo 80.48, Mixtral 68.81",
+   "note": null,
+   "where": "Table 1; Sec 3.2",
+   "table": "Table 1, row MMLU (5-shot), column Gemini Pro"
+  },
+  {
+   "claim": "With chain-of-thought, MMLU accuracy falls for Gemini Pro and Mixtral and the Gemini-GPT 3.5 gap widens",
+   "kind": "measured",
+   "source": null,
+   "metric": "MMLU CoT accuracy",
+   "value": "62.09",
+   "unit": "%",
+   "baseline_value": "70.07 (GPT 3.5 Turbo)",
+   "n": null,
+   "setup": "MMLU 5-shot CoT (chain-of-thought-hub, 'Let's think step by step.'), greedy; default answer 'C' when none extractable; GPT 4 Turbo 78.95, Mixtral 59.57",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row MMLU (CoT), column Gemini Pro"
+  },
+  {
+   "claim": "Gemini Pro's MMLU predictions are skewed toward answer D, unlike the other models",
+   "kind": "measured",
+   "source": null,
+   "metric": "answer-position bias",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "MMLU 5-shot; Fig 2 shows ratio of A-D predictions per model; value not stated in text",
+   "note": null,
+   "where": "Sec 3.2, Fig 2",
+   "quote": "Gemini has a very skewed label distribution, biased towards selecting the final choice of"
+  },
+  {
+   "claim": "With safety filtering on, Gemini Pro response rate on MMLU subtasks drops for sensitive topics",
+   "kind": "measured",
+   "source": null,
+   "metric": "API response rate",
+   "value": "28",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MMLU human_sexuality subtask, Gemini Pro with default safety filters (gemini-pro-filtered); moral_scenarios 85%, most others >95%",
+   "note": null,
+   "where": "Sec 3.2",
+   "quote": "moral_scenarios at 85% and human_sexuality at 28%"
+  },
+  {
+   "claim": "Gemini Pro is below GPT 3.5 Turbo on BIG-Bench Hard and well below GPT 4 Turbo; Mixtral lowest of the three",
+   "kind": "measured",
+   "source": null,
+   "metric": "BBH accuracy",
+   "value": "67.53",
+   "unit": "%",
+   "baseline_value": "71.02 (GPT 3.5 Turbo)",
+   "n": null,
+   "setup": "BIG-Bench Hard, 27 tasks, ~250 items each, 3-shot CoT from Eleuther harness, greedy; modified answer matching (last word for multiple-choice tasks); GPT 4 Turbo 83.90, Mixtral 60.76",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row BIG-Bench-Hard, column Gemini Pro"
+  },
+  {
+   "claim": "Gemini Pro degrades more than GPT models on longer BBH questions",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy by question length",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "BBH, Fig 7, buckets <=30,30-50,50-70,>70 words; no numbers in text",
+   "note": null,
+   "where": "Sec 4.2",
+   "quote": "Gemini Pro underperformed on longer, more complex questions while the GPT models were more"
+  },
+  {
+   "claim": "Gemini Pro is below GPT 3.5 Turbo on GSM8K, and far below GPT 4 Turbo",
+   "kind": "measured",
+   "source": null,
+   "metric": "GSM8K accuracy",
+   "value": "76.42",
+   "unit": "%",
+   "baseline_value": "78.01 (GPT 3.5 Turbo)",
+   "n": null,
+   "setup": "GSM8K, 8-shot CoT (Eleuther/Wei), greedy temperature 0, answer = last number in output; GPT 4 Turbo 92.72, Mixtral 71.65",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row GSM8K, column Gemini Pro"
+  },
+  {
+   "claim": "Gemini Pro trails GPT 3.5 Turbo on SVAMP",
+   "kind": "measured",
+   "source": null,
+   "metric": "SVAMP accuracy",
+   "value": "81.10",
+   "unit": "%",
+   "baseline_value": "82.30 (GPT 3.5 Turbo)",
+   "n": null,
+   "setup": "8-shot CoT, greedy; GPT 4 Turbo 92.60, Mixtral 81.60 (Mixtral above Gemini Pro here)",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row SVAMP, column Gemini Pro"
+  },
+  {
+   "claim": "Gemini Pro trails GPT 3.5 Turbo on ASDIV",
+   "kind": "measured",
+   "source": null,
+   "metric": "ASDIV accuracy",
+   "value": "85.31",
+   "unit": "%",
+   "baseline_value": "89.07 (GPT 3.5 Turbo)",
+   "n": null,
+   "setup": "8-shot CoT, greedy; GPT 4 Turbo 92.75, Mixtral 83.16",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row ASDIV, column Gemini Pro"
+  },
+  {
+   "claim": "Gemini Pro trails GPT 3.5 Turbo on MAWPS; all models above 90%",
+   "kind": "measured",
+   "source": null,
+   "metric": "MAWPS accuracy",
+   "value": "96.50",
+   "unit": "%",
+   "baseline_value": "98.00 (GPT 3.5 Turbo)",
+   "n": null,
+   "setup": "8-shot CoT, greedy; GPT 4 Turbo 98.67, Mixtral 96.00",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row MAWPS, column Gemini Pro"
+  },
+  {
+   "claim": "On GSM8K Gemini Pro beats GPT 3.5 Turbo only on the longest chains of thought (>100) and underperforms on shorter ones",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "GSM8K, Fig 14, buckets by label length; no numbers in text",
+   "note": null,
+   "where": "Sec 5.2, Fig 14",
+   "quote": "Gemini Pro is superior to GPT 3.5 Turbo in the most complex examples where the"
+  },
+  {
+   "claim": "Gemini Pro is below GPT 3.5 Turbo and GPT 4 Turbo on HumanEval, 15 points below GPT 3.5",
+   "kind": "measured",
+   "source": null,
+   "metric": "HumanEval Pass@1",
+   "value": "59.76",
+   "unit": "%",
+   "baseline_value": "74.39 (GPT 3.5 Turbo)",
+   "n": null,
+   "setup": "HumanEval 164 samples, zero-shot, temperature 0.0, prompt 'Complete the following python3 function: ', rudimentary post-processing, missing imports not fixed; GPT 4 Turbo 76.83, Mixtral 45.12",
+   "note": "Authors say this is significantly lower than the Gemini report and suspect prompting differences (footnote 10). Table 6 lists a different prompt text, 'Write the following python3 function:'.",
+   "where": "Table 1; Sec 6",
+   "table": "Table 1, row HumanEval, column Gemini Pro"
+  },
+  {
+   "claim": "Gemini Pro scores below GPT 3.5 Turbo and about equal to Mixtral on ODEX; GPT 3.5 Turbo beats GPT 4 Turbo here",
+   "kind": "measured",
+   "source": null,
+   "metric": "ODEX Pass@1",
+   "value": "39.86",
+   "unit": "%",
+   "baseline_value": "52.62 (GPT 3.5 Turbo)",
+   "n": null,
+   "setup": "ODEX 439 samples, zero-shot, temperature 0.0; GPT 4 Turbo 45.79, Mixtral 40.55",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row ODEX, column Gemini Pro"
+  },
+  {
+   "claim": "Gemini Pro matches GPT 3.5 on short HumanEval solutions (<100) but falls behind by large margins on longer ones",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "HumanEval, Fig 16a, gold solution length buckets; no numbers in text",
+   "note": null,
+   "where": "Sec 6.2",
+   "quote": "it falls behind by large margins when the"
+  },
+  {
+   "claim": "On FLORES 5-shot restricted to unblocked languages, Gemini Pro edges GPT 3.5 Turbo but trails GPT 4 Turbo",
+   "kind": "measured",
+   "source": null,
+   "metric": "chrF (average over unblocked languages)",
+   "value": "53.31",
+   "unit": "chrF %",
+   "baseline_value": "52.43 (GPT 3.5 Turbo)",
+   "n": null,
+   "setup": "FLORES-200, 1012 test sentences, English to X, 20 languages, 5-shot, temperature 0.3, top_p 1, max_tokens 500; GPT 4 Turbo 54.00, Mixtral 40.97; unblocked = >50% of samples not blocked (8 languages)",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row FLORES (5-shot) Unblocked, column Gemini Pro"
+  },
+  {
+   "claim": "Over all 20 languages Gemini Pro falls far below both GPT models because it blocks responses",
+   "kind": "measured",
+   "source": null,
+   "metric": "chrF (average over all languages)",
+   "value": "21.68",
+   "unit": "chrF %",
+   "baseline_value": "40.00 (GPT 3.5 Turbo)",
+   "n": null,
+   "setup": "FLORES-200 5-shot, all 20 languages, safety filters disabled yet 'Blocked Response' errors still occurred; GPT 4 Turbo 48.24, Mixtral 30.27",
+   "note": null,
+   "where": "Table 1; Sec 7.2",
+   "table": "Table 1, row FLORES (5-shot) All, column Gemini Pro"
+  },
+  {
+   "claim": "Gemini Pro blocked >50% of responses in 12 of 20 languages, mostly lower-resource ones, where chrF is near zero",
+   "kind": "measured",
+   "source": null,
+   "metric": "chrF e.g. ckb_Arab",
+   "value": "0.00",
+   "unit": "chrF %",
+   "baseline_value": "26.69 (GPT 3.5 Turbo)",
+   "n": null,
+   "setup": "FLORES 5-shot; dagger marks >50% blocked",
+   "note": null,
+   "where": "Table 4; Sec 7.2",
+   "table": "Table 4, row ckb_Arab, column Gemini Pro",
+   "quote": "Gemini Pro’s lower performance in 12/20 languages is due to its tendency to block responses on"
+  },
+  {
+   "claim": "Gemini Pro scores best of all systems on three languages (South Levantine Arabic, Romanian, Mesopotamian Arabic), and beats both GPT models on 5 of 20",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "FLORES 5-shot, Table 4 (ajp_Arab 50.64, ron_Latin 65.09 vs Google 65.08, acm_Arab 49.05)",
+   "note": "Table 4 shows Gemini ron_Latin 65.09 vs Google 65.08.",
+   "where": "Sec 7.2",
+   "quote": "even having the best accuracy on 3: South"
+  },
+  {
+   "claim": "Gemini Pro beats GPT 3.5 Turbo and GPT 4 Turbo on 5 of 8 unblocked languages, mostly high-resource",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "FLORES 5-shot, Fig 19",
+   "note": null,
+   "where": "Sec 7.2",
+   "quote": "Gemini Pro outperforms GPT 3.5"
+  },
+  {
+   "claim": "Gemini Pro is below GPT 3.5 Turbo and far below GPT 4 Turbo on WebArena",
+   "kind": "measured",
+   "source": null,
+   "metric": "WebArena success rate",
+   "value": "7.12",
+   "unit": "%",
+   "baseline_value": "8.87 (GPT 3.5 Turbo)",
+   "n": null,
+   "setup": "WebArena, 2-shot CoT prompts with unachievable (UA) hint, default provider hyperparameters (Gemini temperature 0.9, top-p 1.0; GPT temperature 1.0, top-p 0.9), observation limit 1920 tokens; GPT 4 Turbo 14.90 (CoT, no UA hint), Mixtral 1.39",
+   "note": "Text Sec 8.2 states 'With UA hint, Gemini-Pro achieves an overall 7.09 percent success rate' while Table 1/5 print 7.12. Hyperparameters differ between Gemini and GPT runs.",
+   "where": "Table 1, Table 5",
+   "table": "Table 1, row WebArena, column Gemini Pro"
+  },
+  {
+   "claim": "Without the UA hint Gemini Pro scores lower; GPT 3.5 Turbo drops from 8.87 to 6.36",
+   "kind": "measured",
+   "source": null,
+   "metric": "WebArena success rate no UA hint",
+   "value": "6.25",
+   "unit": "%",
+   "baseline_value": "6.36 (GPT 3.5 Turbo)",
+   "n": null,
+   "setup": "WebArena CoT without UA hint",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row GEMINI-PRO (CoT yes, UA hint no), column SR"
+  },
+  {
+   "claim": "With the UA hint Gemini Pro predicts most tasks unachievable, far above GPT 3.5 Turbo and the true rate",
+   "kind": "measured",
+   "source": null,
+   "metric": "fraction predicted unachievable",
+   "value": "80.6",
+   "unit": "%",
+   "baseline_value": "47.7 (GPT 3.5 Turbo)",
+   "n": null,
+   "setup": "WebArena with UA hint; true unachievable share is 4.4%",
+   "note": null,
+   "where": "Sec 8.2, Fig 22",
+   "quote": "Gemini-Pro predicts over 80.6% of the tasks as"
+  },
+  {
+   "claim": "Most Gemini Pro WebArena trajectories are under ten steps and responses under 100 characters, versus 10-30 steps and over 300 characters for GPT models",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "WebArena, Fig 24",
+   "note": null,
+   "where": "Sec 8.2",
+   "quote": "more than half of"
+  },
+  {
+   "claim": "Gemini Pro does better than GPT 3.5 Turbo on WebArena multi-site tasks but worse on gitlab and maps",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "WebArena Fig 23",
+   "note": null,
+   "where": "Sec 8.2",
+   "quote": "It performs better than"
+  },
+  {
+   "claim": "Authors' overall conclusion: Gemini Pro is comparable but slightly inferior to GPT 3.5 Turbo on English tasks, better for translation into languages it does not block",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "All 10 datasets, API queries 11-22 December 2023, results as of 27 December 2023",
+   "note": null,
+   "where": "Abstract",
+   "quote": "Gemini Pro excels in translation into other languages for the languages"
+  },
+  {
+   "claim": "Switching from zero-shot to 5-shot translation prompts adds chrF for all models",
+   "kind": "measured",
+   "source": null,
+   "metric": "chrF gain, Gemini Pro",
+   "value": "1.8",
+   "unit": "chrF",
+   "baseline_value": null,
+   "n": null,
+   "setup": "FLORES, unblocked and all instances; GPT 4 Turbo +2.87, GPT 3.5 Turbo +0.8, Mixtral +4.75",
+   "note": "Appendix C text writes 'GPT 5 Turbo' and 'GPT 2.5 Turbo', evidently typos for GPT 4 Turbo and GPT 3.5 Turbo.",
+   "where": "Appendix C",
+   "quote": "Pro gains 1.8 chrf"
+  }
+ ],
+ "limits": [
+  "Snapshot of ever-changing API systems, results current as of 27 December 2023 and may change as models are upgraded; exact API model version strings are not given.",
+  "Results depend on the chosen prompts and generation parameters; all models were affected by prompt selection and GPT models seemed more robust to small prompt variations.",
+  "No self-consistency or multi-sample decoding, unlike the Gemini report, so numbers are not comparable to Google's own and the authors say results could change significantly with more prompt engineering.",
+  "Data leakage was not measured; mitigated only by breadth of tasks and WebArena.",
+  "Numbers are lower than those in the Gemini and Mixtral technical reports (MMLU, HumanEval), attributed to prompt sensitivity; HumanEval gap unresolved.",
+  "Single run, no confidence intervals or significance tests; many differences are 1-4 points.",
+  "Gemini Ultra not tested (not publicly available); multimodal ability excluded; translation limited to English to X.",
+  "Gemini Pro safety filters were disabled for main results, but blocked responses still hit low-resource languages; with filters on, response rate and scores drop.",
+  "WebArena hyperparameters differ between Gemini (temp 0.9, top-p 1.0) and GPT (temp 1.0, top-p 0.9) runs, so that comparison is not hyperparameter-identical.",
+  "Some evaluator changes (BBH last-word, math last-number) deviate from the Eleuther harness defaults to avoid penalising format.",
+  "Mixtral version was initially a third-party non-official one; v2 corrected it."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "UA hint",
+   "definition": "the 'unachievable' hint telling the WebArena agent to terminate when it believes the task cannot be done",
+   "where": "Sec 8.1"
+  },
+  {
+   "term": "blocked language",
+   "definition": "a language where >50% of Gemini Pro samples return a Blocked Response error",
+   "where": "Sec 7.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Gemini: A family of highly capable multimodal models",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "First-party report whose Pro~GPT 3.5 claims are tested",
+   "quote": null
+  },
+  {
+   "work": "Mixtral of experts",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "open-source reference model",
+   "quote": null
+  },
+  {
+   "work": "Language models are few-shot learners",
+   "year": 2020,
+   "arxiv": "2005.14165",
+   "relation": "related",
+   "note": "GPT series",
+   "quote": null
+  },
+  {
+   "work": "MMLU (Hendrycks et al.)",
+   "year": 2021,
+   "arxiv": "2009.03300",
+   "relation": "uses-data",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "Challenging BIG-Bench tasks (Suzgun et al.)",
+   "year": 2022,
+   "arxiv": "2210.09261",
+   "relation": "uses-data",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "Training verifiers to solve math word problems (GSM8K)",
+   "year": 2021,
+   "arxiv": "2110.14168",
+   "relation": "uses-data",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "Evaluating large language models trained on code (HumanEval)",
+   "year": 2021,
+   "arxiv": "2107.03374",
+   "relation": "uses-data",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "Execution-based evaluation for open-domain code generation (ODEX)",
+   "year": 2022,
+   "arxiv": "2212.10481",
+   "relation": "uses-data",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "WebArena",
+   "year": 2023,
+   "arxiv": "2307.13854",
+   "relation": "uses-data",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "No language left behind (FLORES-200, NLLB-MoE)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "also baseline",
+   "quote": null
+  },
+  {
+   "work": "ChatGPT MT: Competitive for high- (but not low-) resource languages (Robinson et al.)",
+   "year": 2023,
+   "arxiv": "2309.07423",
+   "relation": "uses-method",
+   "note": "20-language FLORES subset",
+   "quote": null
+  },
+  {
+   "work": "Chain-of-thought hub (Fu et al.)",
+   "year": 2023,
+   "arxiv": "2305.17306",
+   "relation": "uses-method",
+   "note": "MMLU CoT prompts",
+   "quote": null
+  },
+  {
+   "work": "Eleuther LM evaluation harness (Gao et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "prompts and evaluators",
+   "quote": null
+  },
+  {
+   "work": "Zeno (Cabrera et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "results browser",
+   "quote": null
+  },
+  {
+   "work": "Self-consistency (Wang et al.)",
+   "year": 2022,
+   "arxiv": "2203.11171",
+   "relation": "related",
+   "note": "used by Gemini report, not here",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Table 1",
+   "caption": "Main results of our benchmarking. The best model is listed in bold, and the second best model is underlined.",
+   "page": 2,
+   "why": "All 10 datasets x 4 models in one table; best single figure for the note."
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Ratio of multiple-choice answers being predicted by models",
+   "page": 4,
+   "why": "Shows Gemini Pro's skew toward D."
+  },
+  {
+   "figure": "Fig 18/19",
+   "caption": "Number of samples blocked by Gemini Pro; chrF on blocked and unblocked languages",
+   "page": 14,
+   "why": "Shows that the translation average is a filter effect."
+  },
+  {
+   "figure": "Table 4",
+   "caption": "Machine translation performance (chrF (%) scores) across models for all languages using 5-shot prompt.",
+   "page": 13,
+   "why": "Per-language chrF with blocked-language marks."
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Venue: PDF header states only 'arXiv:2312.11444v2 [cs.CL] 24 Dec 2023', no conference; recorded as preprint.",
+  "Figures are plots, so per-subtask numbers are not in text.",
+  "Text 7.09 vs Table 7.12 for Gemini WebArena with UA hint; Appendix C typos 'GPT 5 Turbo', 'GPT 2.5 Turbo'.",
+  "Two code prompts printed: Sec 6.1 'Complete the following python3 function: ' vs Table 6 'Write the following python3 function:'.",
+  "Table 1 fetched via text extraction with cell order; best/underline formatting lost, so which model is best was derived from values.",
+  "No embedded instructions found."
+ ]
+}
