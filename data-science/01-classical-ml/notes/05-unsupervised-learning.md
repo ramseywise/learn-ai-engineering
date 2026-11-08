@@ -16,6 +16,7 @@ sources:
   - https://doi.org/10.5555/1283383.1283494
   - https://arxiv.org/abs/1802.03426
   - https://doi.org/10.1371/journal.pcbi.1011288
+  - Bruce and Bruce, Practical Statistics for Data Scientists (O'Reilly, 2017), ch. 7
   - James, Witten, Hastie, Tibshirani and Taylor, An Introduction to Statistical Learning with Applications in Python (Springer, 2023), ch. 12
 confidence: high
 cleaned: 2026-11-02
@@ -53,6 +54,8 @@ Blocks run top to bottom from this `notes/` folder. Figures attributed to M&G ar
 **Scale train and test with the same fitted scaler.** Fitting a second `MinMaxScaler` on the test set maps it to [0, 1] independently and shifts every point relative to the training data: M&G's plot shows the test points visibly displaced. `fit` on train, `transform` both, inside a pipeline ([03](03-feature-engineering-and-pipelines.md#pipelines)).
 
 Effect on a kernel SVM on breast cancer (`SVC(C=100)`, `random_state=0`, scaler fitted on train only): 0.63 unscaled, 0.97 with `MinMaxScaler`, 0.96 with `StandardScaler` (*Introduction to ML with Python*, ch. 3, "Applying data transformations").
+
+K-means is just as sensitive. On Bruce and Bruce's loan-default table (six variables, $k=4$, `nstart=10`), clustering the raw columns gives sizes 55, 1,218, 7,686 and 14,177, and `annual_inc` and `revol_bal` drive the split: the 55-loan cluster has a mean income of 491,522 against 42,539 in the largest. After z-scoring the sizes are 5,429, 6,396, 7,493 and 3,818, and the clusters separate on other variables too, such as `revol_util` (30.7 to 77.7). The book adds that z-scoring before PCA is the same as running PCA on the correlation matrix instead of the covariance matrix (*Practical Statistics*, ch. 7; one run, so the cluster boundaries themselves are not stable).
 
 ---
 
@@ -233,6 +236,8 @@ Start with every point as its own cluster; repeatedly merge the two most similar
 | `average` | Has smallest average pairwise distance | |
 | `complete` | Has smallest maximum pairwise distance | |
 | `single` | Has smallest minimum distance | Chains; one giant cluster |
+
+On the same pair of oil-stock returns (XOM and CVX), Bruce and Bruce find single linkage puts almost all points in one cluster and every other measure except Ward leaves a cluster of a few outliers; Ward looks most like k-means (*Practical Statistics*, ch. 7, Fig. 7-8).
 
 No `predict` for new points. The merge history is a tree, drawn as a **dendrogram**:
 

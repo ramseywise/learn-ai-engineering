@@ -9,7 +9,7 @@ sources:
   - https://doi.org/10.3368/jhr.50.2.317 (Cameron and Miller, J. Human Resources, 2015; authors' draft, sections cited only)
   - https://www.statsmodels.org/stable/mixed_linear.html
   - McElreath, Statistical Rethinking (draft of November 2015) (McElreath, draft of November 2015, ch. 12 and 13)
-  - McElreath, Statistical Rethinking (CRC Press, first edition), https://xcelab.net/rm/statistical-rethinking/ (ch. 7)
+  - McElreath, Statistical Rethinking (CRC Press, first edition), https://xcelab.net/rm/statistical-rethinking/ (ch. 7 and 12)
 confidence: high
 cleaned: 2026-11-02
 ---
@@ -457,6 +457,11 @@ grand mean: MixedLM 42.46 (SE 1.72), PyMC 42.35 (sd 2.54)
 
 `MixedLM` gives τ as 2.52 with no interval, and its standard error for the mean, 1.72, treats that τ as known. PyMC reports τ between 0.37 and 9.74, and a posterior sd for the mean of 2.54. That is the honest amount of ignorance, and it depends on the half-normal(10) prior. This run had one divergence at `target_accept=0.95`, which is a small warning rather than a clean bill of health. Check it again on a real dataset before relying on the tail of τ.
 
+![Absolute error of no-pooling (blue) and partial-pooling (open) estimates across 60 simulated ponds of four sizes](../../sources/images/statistical-rethinking-fig12-3.png)
+*Image Source: McElreath, *Statistical Rethinking* (CRC Press), Fig. 12.3*
+
+McElreath's version of this check: 60 simulated ponds of 5, 10, 25 and 35 tadpoles, one dataset. Partial pooling has the lower average error at every size, and the gap is widest for the 5-tadpole ponds (*Statistical Rethinking*, ch. 12). [Chapter 7b](07b-varying-slopes-measurement-error-and-missing-data.md) continues with effective parameters, varying slopes, measurement error and missing data.
+
 **The caveat on the 2012 paper.** Gelman has qualified it himself. [Gelman and Loken's *The garden of forking paths*](https://sites.stat.columbia.edu/gelman/research/unpublished/p_hacking.pdf) (unpublished working paper, 2013) says: "We have elsewhere argued that multilevel modeling can resolve multiple-comparisons issues (Gelman, Hill, and Yajima, 2012) but the practical difficulties of such an approach are not trivial. When the number of comparisons is small or the problem is highly structured, inference can be sensitive to model assumptions." A year later he titled a blog post "In one of life's horrible ironies, I wrote a paper 'Why we (usually) don't have to worry about multiple comparisons' but now I spend lots of time worrying about multiple comparisons". [Mayo reproduces that post](https://errorstatistics.com/2014/10/14/gelman-recognizes-his-error-statistical-bayesian-foundations/), and that is where it was read. Pooling also analyses only the comparisons you put in the model, so segments chosen after seeing the data still need counting. The paper's own limit applies too: "multilevel modeling can prove to be more of a challenge for complicated structures". The sensible reading is that partial pooling is a better default than either raw per-segment numbers or Bonferroni, not a licence to stop worrying.
 
 ## A conversion outcome, in PyMC only
@@ -579,4 +584,4 @@ exercise 4: tau 3.0, RMSE 1.36 against 1.17, ratio 0.86
 
 ## Next
 
-That closes the pillar. [Visualisation and storytelling](../../05-visualisation-and-storytelling/README.md) is how you present these answers to the people who decide. Model building continues in [data-science](../../../data-science/README.md), pipelines in [data-engineering](../../../data-engineering/README.md), and LLM applications in [generative-ai](../../../generative-ai/README.md).
+[Chapter 7b](07b-varying-slopes-measurement-error-and-missing-data.md) adds effective parameters, varying slopes with correlated shrinkage, non-centring, measurement error and imputation. After that the pillar closes: [Visualisation and storytelling](../../05-visualisation-and-storytelling/README.md) is how you present these answers to the people who decide. Model building continues in [data-science](../../../data-science/README.md), pipelines in [data-engineering](../../../data-engineering/README.md), and LLM applications in [generative-ai](../../../generative-ai/README.md).

@@ -5,6 +5,7 @@ sources:
   - ../practice/ng-deep-learning/Neural Networks and Deep Learning/
   - https://www.coursera.org/specializations/deep-learning
   - Buduma, Fundamentals of Deep Learning (O'Reilly, 2017)
+  - James et al., An Introduction to Statistical Learning with Applications in Python (Springer, 2023), ch. 10
   - https://www.tensorflow.org/guide/migrate
   - "Raschka, Build a Large Language Model (From Scratch) (Manning, 2024), appendix A"
   - https://doi.org/10.1038/323533a0
@@ -49,6 +50,12 @@ The Ng DL convention stores examples as **columns**: $X$ is $(n_x, m)$, $W^{[l]}
 Why a non-linear $g$ at all: a stack of linear layers multiplies out to one linear layer, so depth buys nothing without it.
 
 Parameters are counted per layer as inputs times outputs plus one bias per output. Buduma's MNIST network (784 inputs, two hidden layers of 30, a 10-way softmax) has $784\cdot30+30 + 30\cdot30+30 + 30\cdot10+10 = 24{,}790$ parameters, which the book rounds to "nearly 25,000" (*Fundamentals of Deep Learning*, ch. 2). It prefers tanh to sigmoid because tanh is zero-centred, and calls ReLU the "restricted linear unit" where the name is *rectified* (ch. 1). The backward recursion of the section below is its ch. 2 derivation, written for a sigmoid network with squared error: $\partial E/\partial y_i = \sum_j w_{ij}\,y_j(1-y_j)\,\partial E/\partial y_j$.
+
+*ISLP* uses a larger MNIST network (two hidden layers of 256 and 128 units, 10 outputs) and counts it the same way: $(784\cdot256+256) + (256\cdot128+128) + (128\cdot10+10) = 200{,}960 + 32{,}896 + 1{,}290 = 235{,}146$ parameters (*ISLP*, ch. 10). Multinomial logistic regression on the same pixels needs 7,065 by the book's count ($785 \times 9$, one class as reference), so the network has more than 33 times as many, and almost four times as many parameters as the 60,000 training images. The lab's own softmax regression is written with a full 784-to-10 layer, which is 7,850.
+
+![ISLP's two-hidden-layer network for MNIST: 784 inputs, hidden layers of K1 = 256 and K2 = 128 units, 10 outputs, weights W1, W2 and B.](../../sources/images/islp-fig10-4.png)
+
+*Image Source: James et al., *An Introduction to Statistical Learning with Applications in Python* (Springer, 2023), Fig. 10.4*
 
 **Logistic regression with a neural-network mindset** (course 1, week 2) is the one-layer case: flatten 64×64×3 cat images into 12,288-vectors, `sigmoid(w.T @ X + b)`, [cross-entropy](../../../generative-ai/01-llm-fundamentals/notes/06-pretraining-data-and-objectives.md#entropy-cross-entropy-kl-and-perplexity) cost, gradient descent. Your notebook reaches about 70% test accuracy, and the point is the structure rather than the score.
 

@@ -9,6 +9,7 @@ sources:
   - https://doi.org/10.1214/10-STS330 (Shmueli, Statistical Science, 2010; link only, read in full)
   - https://doi.org/10.1214/ss/1009213726 (Breiman, Statistical Science, 2001; link only, paper and discussion read)
   - James, Witten, Hastie, Tibshirani and Taylor, An Introduction to Statistical Learning with Applications in Python (Springer, 2023), ch. 1-2
+  - Efron and Hastie, Computer Age Statistical Inference (Cambridge University Press, 2016), ch. 7
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -166,6 +167,8 @@ You need far less probability theory to *use* these models than the textbooks co
 
 The Bayesian reading of the same models (priors as regularisers, posteriors instead of point estimates, MCMC) lives in the data-analytics subject: [`data-analytics/04-bayesian-analysis/`](../../../data-analytics/04-bayesian-analysis/README.md). Ridge regression is the MAP estimate under a Gaussian prior on the weights; lasso is the MAP estimate under a Laplace prior. That is the bridge between the two subjects.
 
+Efron and Hastie give the same bridge with numbers. For $N$ independent $N(\theta_i, 1)$ observations with $N \ge 4$, the James-Stein rule, which shrinks every estimate toward the grand mean, has lower total squared error than the raw estimates for every $\theta$, with no prior assumed, so the unshrunk maximum-likelihood estimate is inadmissible. Under the matching Bayes model with $N=20$ and prior variance $A=1$, the risks are 20 for the raw estimates, 11.5 for James-Stein and 10 for the true Bayes rule. The guarantee assumes the variance is known and counts total error: in the book's 1000-run baseball simulation (18 players, 90 at bats each) James-Stein wins for 14 of 18 players and loses for the four with the most extreme true averages. For ridge, a prior $\beta \sim N(0, (\sigma^2/\lambda) I)$ gives a posterior mean equal to the ridge estimate $(S + \lambda I)^{-1} S \hat\beta$. On the diabetes data (442 patients, 10 standardised predictors, $\lambda = 0.1$) ridge cuts the standard error of the `tc` coefficient from 416.2 to 43.6 and flips `ldl` from +476.7 to −70.8. The authors add that the two effects, less variance and more bias, nearly offset each other for predicting the response, so the gain is in the coefficients, not necessarily the predictions (*Computer Age*, ch. 7).
+
 ---
 
 ## Train, validation, test
@@ -253,7 +256,7 @@ These books live in data-analytics' [`sources/`](../../../data-analytics/sources
 | Müller & Guido, *Introduction to Machine Learning with Python* | ch. 1–6, 8 → 01–06; ch. 7 → [NLP](../../03-nlp/README.md) | The code-first companion; notebooks in [practice](../practice/intro-to-ml-in-python) |
 | Bruce, Bruce & Gedeck, *Practical Statistics for Data Scientists* | ch. 1–3 before 04 | Working statistics, chapter-level |
 | Reinhart, *Statistics Done Wrong* | Before reading any metric in 04 | Inference pitfalls |
-| Efron & Hastie, *Computer Age Statistical Inference* | After 06 | Frequentist-to-Bayes bridge, bootstrap, boosting theory |
+| Efron & Hastie, *Computer Age Statistical Inference* | After 06; ch. 7 → 01 (James-Stein, ridge as a prior); ch. 8 → [02](02-supervised-learning.md) (spam tree) | Frequentist-to-Bayes bridge, bootstrap, boosting theory |
 | Downey, *Think Bayes*; McElreath, *Statistical Rethinking* | With the data-analytics Bayesian notes | Bayesian intuition |
 
 Return to these after each later note: a technique you have just used makes the chapter that explains it readable.

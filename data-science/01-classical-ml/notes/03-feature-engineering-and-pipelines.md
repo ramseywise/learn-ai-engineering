@@ -7,6 +7,7 @@ sources:
   - Müller and Guido, Introduction to Machine Learning with Python (O'Reilly, 2016)
   - https://arxiv.org/abs/1201.0490
   - James, Witten, Hastie, Tibshirani and Taylor, An Introduction to Statistical Learning with Applications in Python (Springer, 2023), ch. 6-7
+  - McKinney, Python for Data Analysis, 2nd ed. (O'Reilly, 2017), ch. 13
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -371,6 +372,8 @@ CV the pipeline: -0.03
 The correct answer is that there is no signal, and a score below zero says so. Selecting outside the loop reported a strong model on random numbers. The book's run of the same recipe (100 × 10,000 Gaussian noise, `SelectPercentile` at 5%, ridge, 5-fold) gets 0.91 outside the loop and −0.25 inside a `Pipeline` (*Introduction to ML with Python*, ch. 6, "Information leakage"). The book is candid that the scaler version of the bug is usually mild: on breast cancer, scaling outside the loop reports CV 0.98 against 0.97 test, and the pipeline gives the same 0.97 test score and the same best `C` and `gamma`. Leakage through selection or feature extraction, which learns from the target or from structure in the data, is the one that can be large.
 
 **Rule:** any step with a `fit` (scaling, imputation, encoding, selection, PCA, target encoding, vectorising text) must be refit inside each fold. A `Pipeline` does that for you. Resampling is the same kind of step: in [note 10](10-imbalance-errors-and-drift.md#the-leak-resampling-before-you-split), SMOTE before the split reports a ROC-AUC of 0.98 for a model that truly scores 0.70.
+
+McKinney calls such steps *stateful transformations*: Patsy's `standardize(x0)` and `center(x1)` must reuse the training mean and standard deviation on new rows, which `patsy.build_design_matrices([X.design_info], new_data)` does. His worked case also shows the pitfall. On the Titanic training file (177 training rows and 86 test rows lack `Age`) he fills `Age` with the training median, then fits logistic regression on `Pclass`, `IsFemale` and `Age`. Four-fold CV with `C=10` scores 0.7723, 0.8027, 0.7703 and 0.7883 (mean 0.783). The median was computed on all training rows before the folds were cut, so every fold's validation rows helped set it. For a median that leak is tiny, but the clean version puts `SimpleImputer(strategy="median")` inside a `Pipeline`. The book makes no claim that the features are good (*Python for Data Analysis*, ch. 13).
 
 ---
 

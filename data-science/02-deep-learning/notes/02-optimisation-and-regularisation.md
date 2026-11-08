@@ -4,6 +4,7 @@ sources:
   - ../practice/ng-deep-learning/Improving Deep Neural Networks Hyperparameter tuning, Regularization and Optimization/
   - https://www.coursera.org/specializations/deep-learning
   - Buduma, Fundamentals of Deep Learning (O'Reilly, 2017)
+  - James et al., An Introduction to Statistical Learning with Applications in Python (Springer, 2023), ch. 10
   - https://proceedings.mlr.press/v9/glorot10a.html
   - https://arxiv.org/abs/1502.01852
   - https://jmlr.org/papers/v15/srivastava14a.html
@@ -324,6 +325,8 @@ Your **Regularization** notebook uses data from a French football goalkeeper, de
 Dropout comes from Srivastava et al., who frame it as training an exponential family of thinned networks that share weights ([JMLR 2014](https://jmlr.org/papers/v15/srivastava14a.html)). To make overfitting visible on digits I took 300 training rows and replaced the labels of 30% with random ones. A wide network has the capacity to memorise those flips:
 
 Buduma's ch. 2 adds two details. Max-norm clips each neuron's incoming weight vector to a radius $c$ (typically 3 or 4) after each step, and dropout there is *inverted*: survivors are divided by the keep probability $p$ in training so that $E[\text{output}] = p\cdot x/p = x$ and no rescaling is needed at test time (*Fundamentals of Deep Learning*, ch. 2). Its $p$ is the keep probability, the reverse of PyTorch's. It also gives a decision rule for the three-way split: training error that stalls means rethink the architecture, validation error that stalls while training improves means regularise, and a poor test score means more data.
+
+*ISLP* gives the MNIST numbers for the 235,146-parameter network, which has far more parameters than training images (*ISLP*, ch. 10). In its text, test error is 2.3% with ridge regularisation, 1.8% with dropout, 7.2% for multinomial logistic regression and 12.7% for LDA, all on the 10,000 test images. The authors reached 1.8% "after some trial and error" and say finer tuning gets under 1%. The lab's run is a different setup: 40% dropout after the first hidden layer, 30% after the second, 30 epochs, batches of 256, a 20% validation split (so 48,000 training images) and a single run. It scores 0.9681 test accuracy, which is 3.2% error, and the lab's softmax regression scores 0.9241, 7.6% error against the text's 7.2%. Do not read 1.8% against 3.2% as a contradiction: the book calls the first a tuned result, and the lab does not say it reproduces it. The fit took 245 s on an M1 Pro. The book also notes that SGD itself acts like approximately quadratic regularisation, and that validation loss began to rise by about 30 epochs, so early stopping is a further form of it.
 
 ```python
 g = torch.Generator().manual_seed(0)

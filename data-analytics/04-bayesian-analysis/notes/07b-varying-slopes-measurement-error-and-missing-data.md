@@ -109,7 +109,7 @@ With plenty of data the two forms are equivalent, and the non-centred one is not
 
 ## Measurement error
 
-Larkspur's segment conversion rates arrive with standard errors, large for small segments. Treating them as exact has two costs. A noisy outcome is handled by regression anyway, but a noisy predictor attenuates the slope toward zero. McElreath's states data, divorce rate with a known standard error against age at marriage, gives an age-at-marriage slope of -0.55 (sd 0.21) once the divorce error is modelled, against about -1 in his chapter 5, and "ignoring measurement error tends to exaggerate associations between outcomes and predictors" (*Statistical Rethinking*, ch. 14). The mechanism is the shrinkage of chapter 7: each observation is a draw around an unknown true value with known sd, the true values become parameters, and the regression line and the estimates pull on each other. The rule he gives is "do not average, model". On simulated data with a true slope of 1.0, 50 units, known standard errors on both variables:
+Larkspur's segment conversion rates arrive with standard errors, large for small segments. Treating them as exact has two costs. A noisy outcome is handled by regression anyway, but a noisy predictor attenuates the slope toward zero. McElreath's states data, divorce rate with a known standard error against age at marriage, gives an age-at-marriage slope of -0.55 (sd 0.21) once the divorce error is modelled, roughly half the slope of the version that ignores it, and "ignoring measurement error tends to exaggerate associations between outcomes and predictors" (*Statistical Rethinking*, ch. 14). The mechanism is the shrinkage of chapter 7: each observation is a draw around an unknown true value with known sd, the true values become parameters, and the regression line and the estimates pull on each other. The rule he gives is "do not average, model". On simulated data with a true slope of 1.0, 50 units, known standard errors on both variables:
 
 ```python
 rng = np.random.default_rng(14)
@@ -134,7 +134,7 @@ ignores error  slope 0.81 (sd 0.14), divergences 0
 models error   slope 0.94 (sd 0.10), divergences 9
 ```
 
-The naive slope is attenuated to 0.81 and its interval would miss the truth by more than one sd; modelling the error recovers 0.94 with a smaller sd. The measurement-error model raised 9 divergences here, the same warning as above, and needs a non-centred form or a higher `target_accept` before you rely on it. McElreath's own example sets the predictor-error model against an outcome-error model and finds the coefficients "essentially unchanged", because his marriage-rate standard errors were small against its spread; the benefit depends on how large the errors are against the variation. He also notes that the error treats age at marriage as exact.
+The naive slope is attenuated to 0.81 and its interval would miss the truth by more than one sd; modelling the error recovers 0.94 with a smaller sd. The measurement-error model raised 9 divergences here, the same warning as above, and needs a non-centred form or a higher `target_accept` before you rely on it. McElreath's own example sets the predictor-error model against an outcome-error model and finds the coefficients on age at marriage and marriage rate essentially unchanged, so the benefit depends on which cases carry the error and how large it is against the variation (*Statistical Rethinking*, ch. 14).
 
 ![Shrinkage from modelling measurement error: estimate minus observed divergence against its standard error, and regression lines with and without error](../../sources/images/statistical-rethinking-fig14-2.png)
 *Image Source: McElreath, *Statistical Rethinking* (CRC Press), Fig. 14.2*
@@ -167,7 +167,7 @@ impute, no link to mass   bn 0.26 (sd 0.22)   true 0.50
 impute, N ~ mass          bn 0.41 (sd 0.26)   true 0.50
 ```
 
-The direction matches the book. The naive imputation model, which ignores the link to mass, pulls the slope to 0.26 and shrinks the standard error to 0.22, which is more confident and more wrong than the complete cases. Letting the predictor depend on mass moves it back to 0.41. In this draw the complete cases happened to land on the truth (0.49, with a wider sd of 0.31), so one run does not show imputation winning on accuracy. What it shows is the sd falling from 0.31 to 0.26 when the imputation model is right, and the estimate going wrong when it is not. McElreath's practice problem 14H3 makes the stakes plain: one imputed predictor value, with an outcome of 100, is enough to reverse the sign of a slope.
+The direction matches the book. The naive imputation model, which ignores the link to mass, pulls the slope to 0.26 and shrinks the standard error to 0.22, which is more confident and more wrong than the complete cases. Letting the predictor depend on mass moves it back to 0.41. In this draw the complete cases happened to land on the truth (0.49, with a wider sd of 0.31), so one run does not show imputation winning on accuracy. What it shows is the sd falling from 0.31 to 0.26 when the imputation model is right, and the estimate going wrong when it is not.
 
 ## Pitfalls
 

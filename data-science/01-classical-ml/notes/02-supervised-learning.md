@@ -4,7 +4,7 @@ sources:
   - https://github.com/amueller/introduction_to_ml_with_python
   - Müller and Guido, Introduction to Machine Learning with Python (O'Reilly, 2016)
   - James, Witten, Hastie, Tibshirani and Taylor, An Introduction to Statistical Learning with Applications in Python (Springer, 2023), ch. 2-4, 6, 9, 10
-  - Bruce, Bruce and Gedeck, Practical Statistics for Data Scientists, 2nd ed. (O'Reilly, 2020), ch. 6
+  - Bruce and Bruce, Practical Statistics for Data Scientists (O'Reilly, 2017), ch. 6
   - Efron and Hastie, Computer Age Statistical Inference (Cambridge University Press, 2016), ch. 8
   - ../practice/intro-to-ml-in-python/02-supervised-learning.ipynb
   - https://www.coursera.org/specializations/machine-learning-introduction
@@ -80,7 +80,7 @@ for k in range(1, 11):
 
 The single-neighbour model gets every training point right and is the worst on test. That is overfitting made visible.
 
-KNN also yields a score, not just a vote: the fraction of the $k$ neighbours in the positive class. In PSDS's loan example, 14 of the 20 nearest loans to a new one defaulted, so the label is default and the propensity is $14/20 = 0.7$. That fraction is what lets you move the cutoff below 0.5 when the positive class is rare (*PSDS*, ch. 6).
+KNN also yields a score, not just a vote: the fraction of the $k$ neighbours in the positive class. In Bruce and Bruce's loan example, 14 of the 20 nearest loans to a new one defaulted, so the label is default and the propensity is $14/20 = 0.7$. That fraction is what lets you move the cutoff below 0.5 when the positive class is rare (*Practical Statistics*, ch. 6).
 
 ISLP puts numbers on the same U-shape with a known answer. On its simulated two-class data (100 points per class), the best any classifier can do is the Bayes error, 0.1304 on the test set; KNN with $K=10$ gets 0.1363, while $K=1$ and $K=100$ get 0.1695 and 0.1925 (low bias and high variance at one end, the reverse at the other). Over 200 training and 5,000 test points the test error is U-shaped in $1/K$ with its minimum near $K=10$ and the training error is 0 at $K=1$ (*ISLP*, ch. 2; the chapter prints the Bayes error as 0.133 in one place and 0.1304 in another). Against OLS, KNN pays for dimension: with 50 training points and a strongly non-linear truth it wins at one or two predictors and loses from four, and adding noise predictors up to $p=20$ multiplies its test MSE more than ten-fold (*ISLP*, ch. 3, Figs. 3.19 and 3.20, simulated data).
 

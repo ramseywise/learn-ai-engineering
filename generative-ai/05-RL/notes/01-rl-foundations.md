@@ -5,6 +5,7 @@ cleaned: 2026-11-01
 sources:
   - "Sutton & Barto, \"Reinforcement Learning: An Introduction\" (2nd ed., MIT Press, 2018), ch. 1–4, 13"
   - https://arxiv.org/abs/2412.05265 (Murphy, RL overview, 2024 preprint, ch. 1, 3, 7)
+  - "Lattimore & Szepesvári, \"Bandit Algorithms\" (Cambridge University Press, 2020), ch. 1, 4, 6–12, 15–19"
   - "Phil Winder, \"Reinforcement Learning: Industrial Applications of Intelligent Agents\" (O'Reilly, 2020), ch. 1–9, 11"
   - https://arxiv.org/abs/2203.02155 (InstructGPT)
   - https://arxiv.org/abs/2305.18290 (DPO)
@@ -369,7 +370,7 @@ immediate reward) or **explore** new actions that might yield higher rewards in 
 run? Strategies:
 - **ε-greedy:** With probability ε, take a random action; otherwise exploit. Murphy notes it explores every action with probability at least ε/|A| forever, so it is suboptimal unless ε is annealed to 0 (*RL: A Comprehensive Overview*, ch. 1, Sec. 1.3.5). Boltzmann selection is smoother: with τ = 1, estimated rewards of 4.90 and 5.10 give about 0.45 and 0.55, where ε-greedy would give a hard 0.05/0.95 split (his Table 1.2, with ε = 0.1 and two actions; the Boltzmann values check against exp(R̂/τ))
 - **UCB (Upper Confidence Bound):** Choose actions with high uncertainty to reduce
-  uncertainty faster
+  uncertainty faster. Guarantees are in the regret block below (*Bandit Algorithms*, ch. 7)
 - **Entropy regularization (SAC; optional in PPO):** Add an entropy bonus to the objective to
   encourage diverse action distributions. The PPO paper includes one for its Atari runs and
   turns it off for continuous control ([arXiv:1707.06347](https://arxiv.org/abs/1707.06347)).
@@ -378,6 +379,18 @@ run? Strategies:
 
 - **Measured on the 10-armed testbed** (2,000 random problems, rewards N(q*, 1), 1,000 steps): greedy gets about 1 reward per step against 1.54 possible; ε = 0.1 never exceeds 91% optimal actions; optimistic initial values (Q₁ = +5, α = 0.1) start worse than ε-greedy and end better, but only help stationary problems; UCB with c = 2 beats ε = 0.1 after the first k steps (`A = argmax[Q(a) + c·√(ln t / N(a))]`); a gradient bandit with a baseline is unaffected when every mean shifts by +4, and without the baseline degrades. The gradient bandit's expected update equals the gradient of expected reward, so it is stochastic gradient ascent and the direct ancestor of REINFORCE below, with the baseline only reducing variance. Across a parameter sweep from 1/128 to 4, every method traces an inverted U, and UCB comes out best on this problem (*RL: An Introduction*, ch. 2). Exact Bayesian lookahead over 1,000 two-action steps has 2^2000 leaves, which is why Thompson sampling is used instead.
 - **Regret and the noisy TV (Murphy, ch. 7).** Regret measures return lost against the best policy in hindsight. For a tabular episodic MDP with horizon H, S states, A actions and T steps, the optimal minimax regret is O(√(HSAT)) (*RL: A Comprehensive Overview*, ch. 7, Sec. 7.1). Exact Bayes-optimal planning merges identical belief states, yet a bandit with n arms and horizon h still has O(h^2n) of them (about 10^12 for the two-arm, 1,000-step case above), and Gittins indices solve only the infinite-horizon discounted, context-free case (Sec. 7.2.1). Posterior sampling is the cheap alternative: sample one model from the posterior each episode and act greedily on it. Prompting an LLM to do this worked on 3-state RiverSwim and failed at 4 states (as reported, Sec. 7.2.2). Rewarding raw prediction error as intrinsic motivation invites the *noisy TV* problem, an agent that stares at unpredictable noise, while information gain, ICM or a KL reward avoid it (Sec. 7.4).
+- **Regret guarantees (Lattimore & Szepesvári).** Regret is R_n = nμ* − E[ΣX_t], which equals Σ_i Δ_i·E[T_i(n)], the gap times the expected pull count of each arm (*Bandit Algorithms*, ch. 4, Lemma 4.5). Bounds below assume k arms, horizon n and 1-subgaussian rewards unless stated.
+  - *Explore-then-commit* on two arms with gap Δ, tuned to Δ: R_n ≤ min{nΔ, Δ + (4/Δ)(1 + max{0, log(nΔ²/4)})}. A commit time chosen from n alone gives only O(n^(2/3)) (ch. 6, Eq. 6.6, Exercise 6.5).
+  - *UCB* with confidence δ = 1/n²: R_n ≤ 3ΣΔ_i + Σ 16 log n/Δ_i, and gap-free 8√(nk log n) + 3ΣΔ_i. It needs n in advance (ch. 7). The anytime variant: limsup R_n/log n ≤ Σ 2/Δ_i (ch. 8). MOSS drops the log factor, 39√(kn) + ΣΔ_i (ch. 9, Thm 9.1). For Bernoulli rewards KL-UCB has limsup R_n/log n ≤ ΣΔ_i/d(μ_i, μ*) and is never worse than UCB, since d ≥ 2Δ² (ch. 10, Thm 10.6).
+  - *Adversarial rewards in [0,1]:* Exp3 with η = √(2 log k/(nk)) gets R_n ≤ √(2nk log k) in expectation, yet its regret is heavy-tailed: some bandit has P(regret ≥ n/4) > 1/131 (ch. 11, Thm 11.2, Note 1). Exp3-IX biases the estimator upward, so with probability 1−δ the regret is O(√(nk log(k/δ))) (ch. 12). In the book's k = 5, n = 10⁴ run its *expected* regret is higher than Exp3's (Fig. 12.1).
+  - *Floors.* Any policy has some Gaussian instance with R_n ≥ (1/27)√((k−1)n) once n ≥ k−1 (ch. 15, Thm 15.2, sketched in ch. 13). A policy consistent on an unstructured class has liminf R_n/log n ≥ Σ Δ_i/d_inf; for unit-variance Gaussians that is Σ 2/Δ_i, so the UCB asymptotics above are tight (ch. 16, Thm 16.2 and Table 16.1; the 2/Δ form is our substitution). Beating that line on one instance costs regret elsewhere (Fig. 16.1). Expected regret ≤ B√((k−1)n) also forces a tail: some Gaussian instance has regret ≥ ¼·min{n, (1/B)√((k−1)n·log(1/4δ))} with probability ≥ δ (ch. 17, Thm 17.1).
+
+![Regret against difficulty for several policies. A horizontal line marks the minimax floor of order √n, and a rising line marks the instance-optimal floor. An over-specialised policy sits at n almost everywhere and dips far below the instance line on one instance.](../sources/images/bandit-algorithms-fig16-1.png)
+*Image Source: Lattimore & Szepesvári, *Bandit Algorithms* (Cambridge University Press, 2020), Fig. 16.1. Schematic.*
+
+![Regret of Exp3 (dotted) and Exp3-IX (solid) against the gap Δ on a 5-armed Bernoulli bandit with n = 10,000. Both curves peak near Δ = 0.1, at about 258 for Exp3 and 302 for Exp3-IX, and fall to about 215 and 221 at Δ = 0.5.](../sources/images/bandit-algorithms-fig12-1.png)
+*Image Source: Lattimore & Szepesvári, *Bandit Algorithms* (Cambridge University Press, 2020), Fig. 12.1.*
+
 - **Softmax (Boltzmann) selection:** sample actions with probability ∝ `exp(Q/τ)`. Unlike
   ε-greedy, which explores uniformly, it explores in proportion to how promising each action
   looks. Winder recommends feeding it advantages rather than raw values (*Reinforcement
@@ -415,6 +428,11 @@ analytics for the case with no context, and for Thompson sampling. Two results a
   too slowly for online decisions. The robust choice was **NeuralLinear**: a network learns a
   representation, and an exact Bayesian linear regression on its last layer supplies the
   uncertainty.
+
+- **Linear and expert-advised bandits (Lattimore & Szepesvári).** With a known feature map and 1-subgaussian noise, LinUCB keeps a ridge estimate and a confidence ellipsoid. If θ* stays inside it with probability 1−δ, the regret is at most √(8·n·β_n·log(det V_n/det V_0)) (ch. 19, Thm 19.2), which is O(d√n·log(nL)) for δ = 1/n (Cor. 19.3). In the book's d = 5, n = 5,000 sphere run LinUCB's regret stays under 500 as the arm count k grows to 1,000, while UCB's climbs past 4,000 (Fig. 19.1). For adversarial contexts, Exp4 over M experts gets √(2nk log M), with oblivious experts and known n. A finite policy class Φ gives √(2nk log|Φ|), against 2√(nk|C|log k) for one Exp3 per context (ch. 18, Thm 18.1).
+
+![Expected regret of UCB (solid) and LinUCB (dotted). Left: a 2-armed Gaussian bandit, n = 1,000, against the gap, where UCB is lower. Right: a linear bandit with d = 5, n = 5,000 against the number of arms k, where LinUCB stays under 500 and UCB climbs to about 4,000.](../sources/images/bandit-algorithms-fig19-1.png)
+*Image Source: Lattimore & Szepesvári, *Bandit Algorithms* (Cambridge University Press, 2020), Fig. 19.1.*
 
 Zhou's survey ([arXiv:1508.03326](https://arxiv.org/abs/1508.03326)) covers the wider family:
 stochastic vs adversarial rewards, and UCB vs Thompson variants.

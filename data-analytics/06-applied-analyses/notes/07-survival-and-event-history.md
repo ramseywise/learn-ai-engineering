@@ -1,6 +1,7 @@
 ---
 origin: synthesis
 sources:
+  - "Efron and Hastie, Computer Age Statistical Inference (Cambridge University Press, 2016), chapter 9, survival analysis and the EM algorithm"
   - "https://miguelhernan.org/whatifbook (Hernán and Robins, Causal Inference: What If, chapter 17)"
   - https://lifelines.readthedocs.io/en/latest/jupyter_notebooks/Proportional%20hazard%20assumption.html (lifelines documentation, Testing the proportional hazard assumption and Time varying survival regression)
 confidence: high
@@ -88,6 +89,10 @@ Both averages fall far short of the true mean of 401.8 days. The **Kaplan-Meier 
 
 Its median of 255 days is close to the true 248. Notice what it cannot do: the data stop at 1,088 days, while the generator's longest lifetime runs to over 10,000. No method reads a full mean out of three years of data without assuming a shape for the tail, so report the median or a **restricted mean**, the average days subscribed within a stated horizon. Here that is 361 days within the first 1,080, against a truth of 355.
 
+The estimator is older than the software. An insurer's life table builds the same product from one year of policy data: at each age the hazard is deaths over policy holders, and multiplying one minus the hazard from age 30 gives a 30-year-old's chance of living past 80 as 0.506, with no need to wait fifty years (*Computer Age*, ch. 9, Table 9.1, a fictitious company with deaths based on 2010 US male rates). It assumes the hazards do not drift over calendar time. The interval around a curve comes from Greenwood's formula: the standard deviation of the survival estimate at time *j* is the estimate times the square root of the sum, over exits up to *j*, of y/(n(n − y)), where n is the number at risk and y the exits at that time (*Computer Age*, ch. 9, eq. 9.18). The shaded bands above are that formula. The book's head and neck cancer trial shows its limit: Kaplan-Meier medians of 324 days for chemotherapy plus radiation against 182 for chemotherapy alone (51 and 45 patients), yet Greenwood bars at any single day overlap enough to leave the comparison unclear. A curve-by-curve interval is a poor test of a difference, which is the reason for the log-rank test below.
+
+Censoring is also a missing-data problem, and the same book makes the link with the EM algorithm (*Computer Age*, ch. 9, section 9.5). Take 40 points from a bivariate normal with the second coordinate missing for the last 20. Fill the gaps with 0, estimate the means, spreads and correlation, replace each missing value by its conditional expectation under that fit, and repeat. The correlation estimate climbs from 0.162 at step 1 to 0.823 by step 20 and is still creeping in the third decimal, so convergence can be slow. The point to keep is that "still here" is one more kind of missing value, which a method must model rather than fill with the last day seen.
+
 ## Who leaves first: Kaplan-Meier by channel
 
 ```python
@@ -119,6 +124,8 @@ The **log-rank test** compares, at each exit, how many exits each group had with
 From here the event is a cancel, and a downgrade simply ends a subscriber's time at risk, because the question is about cancels. We come back to that choice under competing risks.
 
 The **Cox proportional hazards model** (Cox, 1972) says each subscriber's hazard is a common baseline hazard over tenure, whatever shape that takes, multiplied by a factor for their characteristics. It never estimates the baseline, only the factors. Each factor is a **hazard ratio**: 0.8 means that at any given tenure this group's chance of leaving now is 20% lower. "Proportional" is the assumption that this ratio holds still over tenure.
+
+The estimation trick is worth knowing, because it explains the sentence "never estimates the baseline". At each exit time, the chance that the person who left is subscriber *i*, among everyone still at risk, is proportional to exp(c'β) for their covariates c. Multiply those chances over all exits and the baseline hazard cancels, leaving the **partial likelihood** L(β) = ∏ exp(c_i'β) / Σ_{k at risk} exp(c_k'β), which is then maximised like an ordinary likelihood (*Computer Age*, ch. 9, eq. 9.38). The book's pediatric cancer table shows how to read the output: with 1,620 children and 160 observed deaths, a standardised distance from the treatment centre has a hazard ratio of 1.34 per standard deviation (95% interval 1.17 to 1.55, z = 4.12), calendar date of entry 0.63 (0.54 to 0.74, z = −5.86, which the authors read as a treatment protocol that improved), and age 0.79 (0.67 to 0.94). Sex (0.98) and race (1.33, p = .095) show no clear effect. Only 160 events carry the whole fit, so the count of events, not of rows, sets the precision; the same is true of a churn model with a long list of covariates and few cancels. The authors note that the partial likelihood is highly efficient when proportional hazards holds, which is the assumption the check below tests.
 
 ```python
 # From here the event is a cancel, and a downgrade ends a subscriber's time at risk, because the question is about cancels.
@@ -288,6 +295,12 @@ Note that `lifelines` offers `check_assumptions` on `CoxPHFitter`. The page on t
 ## A survival model is a logistic regression on person-periods
 
 Every 30-day stretch of every subscriber is one row, with `cancel` equal to 1 in the month it happened. That makes a table ready for the [logistic regression of the statistics pillar](../../02-probability-and-statistics/notes/06-regression-and-glms.md): the outcome is "cancelled this month, given still here", which is a hazard. The model is called **discrete-time hazard**, and each person's successive rows multiply back into a survival curve.
+
+Smoothing the hazard over tenure is where this model earns its place. The book fits the same idea to a trial life table with 47 monthly rows, treating the monthly deaths as independent binomials and putting a cubic-linear spline in tenure, with a knot at month 11, on the logit; the hazard view separates the two arms where the survival curves did not (*Computer Age*, ch. 9, Fig. 9.2). Both arms peak at about month 5 and then decline slowly, and after the first year the chemotherapy-only hazard is about 2.5 times the combination arm's, with intervals that do not overlap at months 15 and 30.
+
+![Parametric hazard curves for two trial arms: both peak near month 5 at 0.15 and 0.12 deaths per month, then decline, with the chemotherapy-only arm about 2.5 times higher after month 11](../../sources/images/computer-age-statistical-inference-fig9-2.png)
+
+*Image Source: Efron & Hastie, *Computer Age Statistical Inference* (Cambridge University Press, 2016), Fig. 9.2. Spline-logistic hazard fits to the NCOG head and neck cancer trial, 47 monthly rows per arm; standard errors shown at months 15 and 30.*
 
 ```python
 periods["paid_social"] = (periods.channel == "paid_social").astype(int)

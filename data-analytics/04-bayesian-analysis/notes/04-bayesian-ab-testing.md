@@ -5,6 +5,7 @@ sources:
   - https://www.evanmiller.org/bayesian-ab-testing.html
   - https://www.chrisstucchio.com/blog/2014/bayesian_ab_decision_rule.html (Stucchio, expected-loss decision rule)
   - ../../03-experimentation-and-causality/practice/AB-Bayes/AB_Testing_with_Python.ipynb
+  - McElreath, Statistical Rethinking (CRC Press, first edition), https://xcelab.net/rm/statistical-rethinking/ (ch. 15)
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -257,6 +258,8 @@ The columns give how often each rule ships B when B has no effect, when it costs
 **Row 4.** A minimum sample size is what protects you. Waiting until day 14 and then applying the same rule drops harmful shipping to 3.8%, about what the daily probability rule manages, while still shipping real wins essentially always. Running full weeks also handles day-of-week effects.
 
 The rule is therefore: an expected-loss threshold, a minimum sample size set in advance, and full weeks. Also, don't call the test "immune to peeking" in a planning meeting, because the second row of this table says it isn't. These figures depend on this setup (effect sizes, traffic, ε), and you should rerun `simulate` with yours.
+
+McElreath's closing chapter makes the same argument from the other side: an analysis plan fixed before the data arrives (a mock analysis, registered publicly, with any later changes documented and justified) is the part of the pipeline that a researcher controls, and an analysis designed after seeing the data can overfit in ways that priors and regularisation cannot reliably repair (*Statistical Rethinking*, ch. 15). It is an essay, with no numbers of its own to test.
 
 ## Ranking with few observations
 
